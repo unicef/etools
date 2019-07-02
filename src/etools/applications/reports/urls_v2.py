@@ -13,13 +13,14 @@ from etools.applications.reports.views.v2 import (
     LowerResultsListAPIView,
     OutputDetailAPIView,
     OutputListAPIView,
+    ResultFrameworkView,
     ResultIndicatorListAPIView,
     SpecialReportingRequirementListCreateView,
     SpecialReportingRequirementRetrieveUpdateDestroyView,
 )
 
 api = routers.DefaultRouter()
-api.register(r'sections', SectionViewSet, base_name='sections')
+api.register(r'sections', SectionViewSet, basename='sections')
 
 app_name = 'reports'
 urlpatterns = (
@@ -60,6 +61,11 @@ urlpatterns = (
         r'interventions/special-reporting-requirements/(?P<pk>\d+)/$',
         view=SpecialReportingRequirementRetrieveUpdateDestroyView.as_view(),
         name="interventions-special-reporting-requirements-update",
+    ),
+    url(
+        r'interventions/results/(?P<pk>\d+)/$',
+        view=ResultFrameworkView.as_view(),
+        name="interventions-results-framework",
     ),
     url(r'^', include(api.urls))
 )

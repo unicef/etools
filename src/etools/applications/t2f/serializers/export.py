@@ -8,6 +8,7 @@ from etools.applications.t2f.models import TravelAttachment
 class TravelActivityExportSerializer(serializers.Serializer):
     reference_number = serializers.CharField(source='travel.reference_number', read_only=True)
     traveler = serializers.CharField(source='travel.traveler.get_full_name', read_only=True)
+    purpose = serializers.CharField(source='travel.purpose', read_only=True)
     section = serializers.CharField(source='travel.section.name', read_only=True)
     office = serializers.CharField(source='travel.office.name', read_only=True)
     status = serializers.CharField(source='travel.status', read_only=True)
@@ -18,8 +19,8 @@ class TravelActivityExportSerializer(serializers.Serializer):
     pd_reference = serializers.ReadOnlyField(source='activity.partnership.number', read_only=True)
     results = serializers.CharField(source='activity.result.name', read_only=True)
     locations = serializers.SerializerMethodField()
-    start_date = serializers.DateTimeField(source='travel.start_date', format='%d-%b-%Y', read_only=True)
-    end_date = serializers.DateTimeField(source='travel.end_date', format='%d-%b-%Y', read_only=True)
+    start_date = serializers.DateField(source='travel.start_date', format='%d-%b-%Y', read_only=True)
+    end_date = serializers.DateField(source='travel.end_date', format='%d-%b-%Y', read_only=True)
     is_secondary_traveler = serializers.SerializerMethodField()
     primary_traveler_name = serializers.SerializerMethodField()
     hact_visit_report = serializers.SerializerMethodField(
@@ -30,6 +31,7 @@ class TravelActivityExportSerializer(serializers.Serializer):
         fields = (
             'reference_number',
             'traveler',
+            'purpose',
             'office',
             'section',
             'status',
@@ -78,8 +80,8 @@ class TravelAdminExportSerializer(serializers.Serializer):
     status = serializers.CharField(source='travel.status', read_only=True)
     origin = serializers.CharField()
     destination = serializers.CharField()
-    departure_time = serializers.DateTimeField(source='departure_date', format='%d-%b-%Y %I:%M %p')
-    arrival_time = serializers.DateTimeField(source='arrival_date', format='%d-%b-%Y %I:%M %p')
+    departure_time = serializers.DateField(source='departure_date', format='%d-%b-%Y')
+    arrival_time = serializers.DateField(source='arrival_date', format='%d-%b-%Y')
     dsa_area = serializers.CharField(source='dsa_region.area_code', read_only=True)
     overnight_travel = serializers.BooleanField()
     mode_of_travel = serializers.CharField()

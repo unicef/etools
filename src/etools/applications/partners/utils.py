@@ -442,7 +442,7 @@ def send_intervention_draft_notification():
     """Send an email to PD/SHPD/SSFA's focal point(s) if in draft status"""
     for intervention in Intervention.objects.filter(
             status=Intervention.DRAFT,
-            created__lt=datetime.date.today() - datetime.timedelta(days=7),
+            created__lt=(datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=7)).date(),
     ):
         recipients = [
             u.user.email for u in intervention.unicef_focal_points.all()

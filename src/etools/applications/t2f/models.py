@@ -1,9 +1,11 @@
+import datetime
 import logging
 from decimal import Decimal
 
 from django.conf import settings
 from django.contrib.postgres.fields.array import ArrayField
-from django.db import connection, models
+from django.db import connection, models, transaction
+from django.db.models import Q
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.timezone import now as timezone_now
@@ -14,12 +16,12 @@ from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation
 from unicef_notification.utils import send_notification
 
-from etools.applications.EquiTrack.urlresolvers import build_frontend_url
 from etools.applications.action_points.models import ActionPoint
+from etools.applications.core.urlresolvers import build_frontend_url
 from etools.applications.t2f.serializers.mailing import TravelMailSerializer
 from etools.applications.users.models import WorkspaceCounter
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class TransitionError(RuntimeError):
@@ -28,7 +30,7 @@ class TransitionError(RuntimeError):
     """
 
 
-class TravelType(object):
+class TravelType:
     PROGRAMME_MONITORING = 'Programmatic Visit'
     SPOT_CHECK = 'Spot Check'
     ADVOCACY = 'Advocacy'
@@ -49,7 +51,7 @@ class TravelType(object):
 
 # TODO: all of these models that only have 1 field should be a choice field on the models that are using it
 # for many-to-many array fields are recommended
-class ModeOfTravel(object):
+class ModeOfTravel:
     PLANE = 'Plane'
     BUS = 'Bus'
     CAR = 'Car'
@@ -65,7 +67,8 @@ class ModeOfTravel(object):
 
 
 def make_travel_reference_number():
-    numeric_part = connection.tenant.counters.get_next_value(WorkspaceCounter.TRAVEL_REFERENCE)
+    with transaction.atomic():
+        numeric_part = connection.tenant.counters.get_next_value(WorkspaceCounter.TRAVEL_REFERENCE)
     year = timezone_now().year
     return '{}/{}'.format(year, numeric_part)
 
@@ -134,11 +137,11 @@ class Travel(models.Model):
         on_delete=models.CASCADE,
     )
     section = models.ForeignKey(
-        'reports.Sector', null=True, blank=True, related_name='+', verbose_name=_('Section'),
+        'reports.Section', null=True, blank=True, related_name='+', verbose_name=_('Section'),
         on_delete=models.CASCADE,
     )
-    start_date = models.DateTimeField(null=True, blank=True, verbose_name=_('Start Date'))
-    end_date = models.DateTimeField(null=True, blank=True, verbose_name=_('End Date'))
+    start_date = models.DateField(null=True, blank=True, verbose_name=_('Start Date'))
+    end_date = models.DateField(null=True, blank=True, verbose_name=_('End Date'))
     purpose = models.CharField(max_length=500, default='', blank=True, verbose_name=_('Purpose'))
     additional_note = models.TextField(default='', blank=True, verbose_name=_('Additional Note'))
     international_travel = models.NullBooleanField(default=False, null=True, blank=True,
@@ -175,6 +178,31 @@ class Travel(models.Model):
     def check_trip_report(self):
         if not self.report_note:
             raise TransitionError('Field report has to be filled.')
+        return True
+
+    def check_trip_dates(self):
+        if self.start_date and self.end_date:
+            start_date = self.start_date
+            end_date = self.end_date
+            travel_q = Q(traveler=self.traveler)
+            travel_q &= ~Q(status__in=[Travel.PLANNED, Travel.CANCELLED])
+            travel_q &= Q(
+                start_date__range=(
+                    start_date,
+                    end_date - datetime.timedelta(days=1),
+                )
+            ) | Q(
+                end_date__range=(
+                    start_date + datetime.timedelta(days=1),
+                    end_date,
+                )
+            )
+            travel_q &= ~Q(pk=self.pk)
+            if Travel.objects.filter(travel_q).exists():
+                raise TransitionError(
+                    'You have an existing trip with overlapping dates. '
+                    'Please adjust your trip accordingly.'
+                )
         return True
 
     def check_state_flow(self):
@@ -236,8 +264,11 @@ class Travel(models.Model):
                 target=CANCELLED)
     def cancel(self):
         self.canceled_at = timezone_now()
+        recipients = [self.traveler.email]
+        if self.status == Travel.APPROVED:
+            recipients.append(self.supervisor.email)
         self.send_notification_email('Travel #{} was cancelled.'.format(self.reference_number),
-                                     self.traveler.email,
+                                     recipients,
                                      'emails/cancelled.html')
 
     @transition(status, source=[CANCELLED, REJECTED], target=PLANNED)
@@ -245,7 +276,7 @@ class Travel(models.Model):
         pass
 
     @transition(status, source=[SUBMITTED, APPROVED, PLANNED, CANCELLED], target=COMPLETED,
-                conditions=[check_trip_report, check_state_flow])
+                conditions=[check_trip_report, check_trip_dates, check_state_flow])
     def mark_as_completed(self):
         self.completed_at = timezone_now()
         if not self.ta_required and self.status == self.PLANNED:
@@ -267,7 +298,7 @@ class Travel(models.Model):
                 act.partner.spot_checks(event_date=self.end_date, update_one=True)
 
         except Exception:
-            log.exception('Exception while trying to update hact values.')
+            logger.exception('Exception while trying to update hact values.')
 
     @transition(status, target=PLANNED)
     def reset_status(self):
@@ -277,8 +308,9 @@ class Travel(models.Model):
         # TODO this could be async to avoid too long api calls in case of mail server issue
         serializer = TravelMailSerializer(self, context={})
 
+        recipients = recipient if isinstance(recipient, list) else [recipient]
         send_notification(
-            recipients=[recipient],
+            recipients=recipients,
             from_address=settings.DEFAULT_FROM_EMAIL,  # TODO what should sender be?
             subject=subject,
             html_content_filename=template_name,
@@ -313,7 +345,7 @@ class TravelActivity(models.Model):
     locations = models.ManyToManyField('locations.Location', related_name='+', verbose_name=_('Locations'))
     primary_traveler = models.ForeignKey(
         settings.AUTH_USER_MODEL, verbose_name=_('Primary Traveler'), on_delete=models.CASCADE)
-    date = models.DateTimeField(null=True, blank=True, verbose_name=_('Date'))
+    date = models.DateField(null=True, blank=True, verbose_name=_('Date'))
 
     class Meta:
         verbose_name_plural = _("Travel Activities")
@@ -361,8 +393,8 @@ class ItineraryItem(models.Model):
     )
     origin = models.CharField(max_length=255, verbose_name=_('Origin'))
     destination = models.CharField(max_length=255, verbose_name=_('Destination'))
-    departure_date = models.DateTimeField(verbose_name=_('Departure Date'))
-    arrival_date = models.DateTimeField(verbose_name=_('Arrival Date'))
+    departure_date = models.DateField(verbose_name=_('Departure Date'))
+    arrival_date = models.DateField(verbose_name=_('Arrival Date'))
     dsa_region = models.ForeignKey(
         'publics.DSARegion', related_name='+', null=True, blank=True,
         verbose_name=_('DSA Region'),

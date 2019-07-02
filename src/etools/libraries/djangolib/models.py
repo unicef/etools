@@ -1,9 +1,18 @@
 import weakref
+from datetime import datetime
 
 from django.contrib.auth.models import Group
-from django.db.models import Aggregate, CharField, Value
+from django.db import models
+from django.db.models import Aggregate
+from django.db.models.query import QuerySet
+from django.db.models.query_utils import Q
+from django.utils.timezone import now
 
 from model_utils.managers import InheritanceManager
+from pytz import UTC
+
+# UTC have to be here to be able to directly compare with the values from the db (orm always returns tz aware values)
+EPOCH_ZERO = datetime(1970, 1, 1, tzinfo=UTC)
 
 
 class GroupWrapper(object):
@@ -58,24 +67,28 @@ class GroupWrapper(object):
             instance.invalidate_cache()
 
 
-class StringConcat(Aggregate):
+class StringConcat(models.Aggregate):
     """ A custom aggregation function that returns "," separated strings """
-
+    allow_distinct = True
     function = 'GROUP_CONCAT'
     template = '%(function)s(%(distinct)s%(expressions)s)'
 
     def __init__(self, expression, separator=",", distinct=False, **extra):
         super().__init__(
             expression,
-            Value(separator),
+            models.Value(separator),
             distinct='DISTINCT ' if distinct else '',
-            output_field=CharField(),
+            output_field=models.CharField(),
             **extra
         )
 
     def as_postgresql(self, compiler, connection):
         self.function = 'STRING_AGG'
         return super().as_sql(compiler, connection)
+
+
+class MaxDistinct(models.Max):
+    allow_distinct = True
 
 
 class DSum(Aggregate):
@@ -98,3 +111,53 @@ class InheritedModelMixin(object):
             return self
 
         return manager.get_subclass(pk=self.pk)
+
+
+class ValidityQuerySet(QuerySet):
+    """
+    Queryset which overwrites the delete method to support soft delete functionality
+    By default it filters out all soft deleted instances
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        if self.model:
+            self.add_intial_q()
+
+    def delete(self):
+        self.update(deleted_at=now())
+
+    def add_intial_q(self):
+        self.query.add_q(Q(deleted_at=EPOCH_ZERO))
+
+
+class SoftDeleteMixin(models.Model):
+    """
+    This is a mixin to support soft deletion for specific models. This behavior is required to keep everything in the
+    database but still hide it from the end users. Example: Country changes currency - the old one has to be kept but
+    hidden (soft deleted)
+
+    The functionality achieved by using the SoftDeleteMixin and the ValidityQuerySet. Both of them are depending on the
+    `deleted_at` field, which defaults to EPOCH_ZERO to allow unique constrains in the db.
+    IMPORTANT: Default has to be a value - boolean field or nullable datetime would not work
+    IMPORTANT #2: This model does not prevent cascaded deletion - this can only happen if the soft deleted model points
+                  to one which actually deletes the entity from the database
+    """
+
+    deleted_at = models.DateTimeField(default=EPOCH_ZERO, verbose_name='Deleted At')
+
+    # IMPORTANT: The order of these two queryset is important. The normal queryset has to be defined first to have that
+    #            as a default queryset
+    admin_objects = QuerySet.as_manager()
+    objects = ValidityQuerySet.as_manager()
+
+    class Meta:
+        abstract = True
+
+    def force_delete(self, using=None, keep_parents=False):
+        return super().delete(using, keep_parents)
+
+    def delete(self, *args, **kwargs):
+        self.deleted_at = now()
+        self.save()

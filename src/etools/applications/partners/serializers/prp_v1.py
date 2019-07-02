@@ -4,13 +4,23 @@ from django.db import connection
 
 from rest_framework import serializers
 from unicef_attachments.fields import AttachmentSingleFileField
-
 from unicef_locations.models import Location
-from etools.applications.partners.models import (Intervention, InterventionAmendment,
-                                                 PartnerOrganization, PartnerStaffMember,)
-from etools.applications.reports.models import (AppliedIndicator, Disaggregation,
-                                                DisaggregationValue, LowerResult, Result, ReportingRequirement,
-                                                SpecialReportingRequirement)
+
+from etools.applications.partners.models import (
+    Intervention,
+    InterventionAmendment,
+    PartnerOrganization,
+    PartnerStaffMember,
+)
+from etools.applications.reports.models import (
+    AppliedIndicator,
+    Disaggregation,
+    DisaggregationValue,
+    LowerResult,
+    ReportingRequirement,
+    Result,
+    SpecialReportingRequirement,
+)
 from etools.applications.reports.serializers.v1 import SectionSerializer
 
 

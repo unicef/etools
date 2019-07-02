@@ -9,6 +9,7 @@ from django.db import connection, models
 from django.db.models.signals import post_save
 from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
+
 from django_tenants.models import TenantMixin
 from model_utils.models import TimeStampedModel
 
@@ -108,12 +109,7 @@ class Country(TenantMixin):
                                        blank=True)
 
     # TODO: rename the related name as it's inappropriate for relating offices to countries.. should be office_countries
-    offices = models.ManyToManyField('Office', related_name='offices', verbose_name=_('Offices'))
-
-    threshold_tre_usd = models.DecimalField(max_digits=20, decimal_places=4, default=None, null=True,
-                                            verbose_name=_('Threshold TRE (USD)'))
-    threshold_tae_usd = models.DecimalField(max_digits=20, decimal_places=4, default=None, null=True,
-                                            verbose_name=_('Threshold TAE (USD)'))
+    offices = models.ManyToManyField('Office', related_name='offices', verbose_name=_('Offices'), blank=True)
 
     def __str__(self):
         return self.name
@@ -252,7 +248,7 @@ class UserProfile(models.Model):
     oic = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, verbose_name=_('OIC'),
                             null=True, blank=True)  # related oic_set
 
-    # TODO: figure this out when we need to autmatically map to groups
+    # TODO: figure this out when we need to automatically map to groups
     # vision_roles = ArrayField(models.CharField(max_length=20, blank=True, choices=VISION_ROLES),
     #                           blank=True, null=True)
 

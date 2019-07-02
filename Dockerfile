@@ -15,7 +15,7 @@ RUN apk add \
     libxslt-dev \
     xmlsec-dev
 RUN apk add postgresql-dev \
-    libffi-dev\
+    libffi-dev \
     jpeg-dev
 
 RUN apk add --update-cache --repository http://dl-3.alpinelinux.org/alpine/edge/testing/ \
@@ -47,7 +47,10 @@ RUN apk add --upgrade apk-tools
 RUN apk add postgresql-client
 RUN apk add openssl \
     ca-certificates \
-    libressl2.7-libcrypto
+    libressl2.7-libcrypto \
+    libmagic \
+    libxslt
+
 RUN apk add geos \
     gdal --update-cache --repository http://dl-3.alpinelinux.org/alpine/edge/testing/
 
@@ -57,6 +60,7 @@ ADD manage.py /code/manage.py
 WORKDIR /code/
 
 COPY --from=builder /usr/local/lib/python3.6/site-packages /usr/local/lib/python3.6/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
 
 ENV PYTHONUNBUFFERED 1
 ENV PYTHONPATH /code

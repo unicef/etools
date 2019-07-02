@@ -1,6 +1,4 @@
-import functools
-import operator
-
+from django.db import transaction
 from django.db.models import Q
 from django.utils.translation import ugettext as _
 
@@ -9,9 +7,10 @@ from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_csv.renderers import CSVRenderer, JSONRenderer
+from unicef_restlib.views import QueryStringFilterMixin
 
-from etools.applications.EquiTrack.mixins import ExportModelMixin
-from etools.applications.EquiTrack.renderers import CSVFlatRenderer
+from etools.applications.core.mixins import ExportModelMixin
+from etools.applications.core.renderers import CSVFlatRenderer
 from etools.applications.funds.models import (
     Donor,
     FundsCommitmentHeader,
@@ -39,53 +38,20 @@ from etools.applications.funds.serializers import (
     FundsReservationItemSerializer,
     GrantSerializer,
 )
+from etools.applications.funds.tasks import sync_single_delegated_fr
 from etools.applications.partners.filters import PartnerScopeFilter
 from etools.applications.partners.models import Intervention
 from etools.applications.partners.permissions import PartnershipManagerPermission
+from etools.applications.vision.exceptions import VisionSyncException
 
 
 class FRsView(APIView):
     """
-    Returns the FRs requested with the values query param
+    Returns the FRs requested with the values query param,
+    The get endpoint in this view is meant to validate / validate and import FRs in order to be able to associate them
+    with interventions.
     """
     permission_classes = (permissions.IsAdminUser,)
-
-    def filter_by_donors(self, qs, donor_pks):
-        grant_numbers = Grant.objects.values_list(
-            "name",
-            flat=True
-        ).filter(donor__pk__in=donor_pks)
-        qs = self.filter_by_grants(qs, None, list(grant_numbers))
-        return qs
-
-    def filter_by_grants(self, qs, grant_pks, grant_numbers=[]):
-        """Filter queryset by grant ids provided
-
-        `name` field in Grants table matches `grant_number` in
-        FundsReservationItem, from FundsReservationItem we can
-        access FundsReservationHeader
-        """
-        if not isinstance(grant_numbers, list):
-            return qs.none()
-
-        if grant_pks:
-            grant_qs = Grant.objects.values_list(
-                "name",
-                flat=True
-            ).filter(pk__in=grant_pks)
-            if grant_numbers:
-                grant_qs = grant_qs.filter(name__in=grant_numbers)
-            grant_numbers = grant_qs
-
-        if not grant_numbers:
-            qs = qs.none()
-        else:
-            fr_headers = FundsReservationItem.objects.values_list(
-                "fund_reservation__pk",
-                flat=True
-            ).filter(grant_number__in=grant_numbers)
-            qs = qs.filter(pk__in=fr_headers)
-        return qs
 
     def get(self, request, format=None):
         values = request.query_params.get("values", '').split(",")
@@ -94,13 +60,24 @@ class FRsView(APIView):
         if not values[0]:
             return self.bad_request('Values are required')
 
+        if len(values) > len(set(values)):
+            return self.bad_request('You have duplicate records of the same FR, please make sure to add'
+                                    ' each FR only one time')
+
         qs = FundsReservationHeader.objects.filter(fr_number__in=values)
 
         not_found = set(values) - set(qs.values_list('fr_number', flat=True))
         if not_found:
             nf = list(not_found)
-            nf.sort()
-            return self.bad_request('The FR {} could not be found on eTools'.format(', '.join(nf)))
+            with transaction.atomic():
+                for delegated_fr in nf:
+                    # try to get this fr from vision
+                    try:
+                        sync_single_delegated_fr(request.user.profile.country.business_area_code, delegated_fr)
+                    except VisionSyncException as e:
+                        return self.bad_request('The FR {} could not be found in eTools and could not be synced '
+                                                'from Vision. {}'.format(delegated_fr, e))
+            qs._result_cache = None
 
         if intervention_id:
             qs = qs.filter((Q(intervention__id=intervention_id) | Q(intervention__isnull=True)))
@@ -113,15 +90,7 @@ class FRsView(APIView):
         else:
             qs = qs.filter(intervention__isnull=True)
 
-        donors = [x for x in request.query_params.get("donors", "").split(",") if x]
-        if donors:
-            qs = self.filter_by_donors(qs, donors)
-
-        grants = [x for x in request.query_params.get("grants", "").split(",") if x]
-        if grants:
-            qs = self.filter_by_grants(qs, grants)
-
-        if not grants and not donors and qs.count() != len(values):
+        if qs.count() != len(values):
             return self.bad_request('One or more of the FRs are used by another PD/SSFA '
                                     'or could not be found in eTools.')
 
@@ -149,7 +118,7 @@ class FRsView(APIView):
         return Response(data={'error': _(error_message)}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class FundsReservationHeaderListAPIView(ExportModelMixin, ListAPIView):
+class FundsReservationHeaderListAPIView(QueryStringFilterMixin, ExportModelMixin, ListAPIView):
     """
     Returns a list of FundsReservationHeaders.
     """
@@ -160,6 +129,11 @@ class FundsReservationHeaderListAPIView(ExportModelMixin, ListAPIView):
         JSONRenderer,
         CSVRenderer,
         CSVFlatRenderer,
+    )
+    queryset = FundsReservationHeader.objects.all()
+    search_terms = ('intervention__number__icontains', 'vendor_code__icontains', 'fr_number__icontains')
+    filters = (
+        ('partners', 'intervention__agreement__partner__pk__in'),
     )
 
     def get_serializer_class(self):
@@ -174,26 +148,8 @@ class FundsReservationHeaderListAPIView(ExportModelMixin, ListAPIView):
                 return FundsReservationHeaderExportFlatSerializer
         return super().get_serializer_class()
 
-    def get_queryset(self, format=None):
-        q = FundsReservationHeader.objects.all()
-        query_params = self.request.query_params
 
-        if query_params:
-            queries = []
-            if "search" in query_params.keys():
-                queries.append(
-                    Q(intervention__number__icontains=query_params.get("search")) |
-                    Q(vendor_code__icontains=query_params.get("search")) |
-                    Q(fr_number__icontains=query_params.get("search"))
-                )
-            if queries:
-                expression = functools.reduce(operator.and_, queries)
-                q = q.filter(expression)
-
-        return q
-
-
-class FundsReservationItemListAPIView(ExportModelMixin, ListAPIView):
+class FundsReservationItemListAPIView(QueryStringFilterMixin, ExportModelMixin, ListAPIView):
     """
     Returns a list of FundsReservationItems.
     """
@@ -205,6 +161,9 @@ class FundsReservationItemListAPIView(ExportModelMixin, ListAPIView):
         CSVRenderer,
         CSVFlatRenderer,
     )
+    queryset = FundsReservationItem.objects.all()
+    search_terms = ('fund_reservation__intervention__number__icontains', 'fund_reservation__fr_number__icontains',
+                    'fund_reservation__fr_ref_number__icontains')
 
     def get_serializer_class(self):
         """
@@ -218,26 +177,8 @@ class FundsReservationItemListAPIView(ExportModelMixin, ListAPIView):
                 return FundsReservationItemExportFlatSerializer
         return super().get_serializer_class()
 
-    def get_queryset(self, format=None):
-        q = FundsReservationItem.objects.all()
-        query_params = self.request.query_params
 
-        if query_params:
-            queries = []
-            if "search" in query_params.keys():
-                queries.append(
-                    Q(fund_reservation__intervention__number__icontains=query_params.get("search")) |
-                    Q(fund_reservation__fr_number__icontains=query_params.get("search")) |
-                    Q(fund_reservation__fr_ref_number__icontains=query_params.get("search"))
-                )
-            if queries:
-                expression = functools.reduce(operator.and_, queries)
-                q = q.filter(expression)
-
-        return q
-
-
-class FundsCommitmentHeaderListAPIView(ExportModelMixin, ListAPIView):
+class FundsCommitmentHeaderListAPIView(QueryStringFilterMixin, ExportModelMixin, ListAPIView):
     """
     Returns a list of FundsCommitmentHeaders.
     """
@@ -250,25 +191,11 @@ class FundsCommitmentHeaderListAPIView(ExportModelMixin, ListAPIView):
         CSVFlatRenderer,
     )
 
-    def get_queryset(self, format=None):
-        q = FundsCommitmentHeader.objects.all()
-        query_params = self.request.query_params
-
-        if query_params:
-            queries = []
-            if "search" in query_params.keys():
-                queries.append(
-                    Q(vendor_code__icontains=query_params.get("search")) |
-                    Q(fc_number__icontains=query_params.get("search"))
-                )
-            if queries:
-                expression = functools.reduce(operator.and_, queries)
-                q = q.filter(expression)
-
-        return q
+    queryset = FundsCommitmentHeader.objects.all()
+    search_terms = ('vendor_code__icontains', 'fc_number__icontains')
 
 
-class FundsCommitmentItemListAPIView(ExportModelMixin, ListAPIView):
+class FundsCommitmentItemListAPIView(QueryStringFilterMixin, ExportModelMixin, ListAPIView):
     """
     Returns a list of FundsCommitmentItems.
     """
@@ -280,6 +207,9 @@ class FundsCommitmentItemListAPIView(ExportModelMixin, ListAPIView):
         CSVRenderer,
         CSVFlatRenderer,
     )
+    queryset = FundsCommitmentItem.objects.all()
+    search_terms = ('fund_commitment__vendor_code__icontains', 'fund_commitment__fc_number__icontains',
+                    'fr_ref_number__icontains')
 
     def get_serializer_class(self):
         """
@@ -291,26 +221,8 @@ class FundsCommitmentItemListAPIView(ExportModelMixin, ListAPIView):
                 return FundsCommitmentItemExportFlatSerializer
         return super().get_serializer_class()
 
-    def get_queryset(self, format=None):
-        q = FundsCommitmentItem.objects.all()
-        query_params = self.request.query_params
 
-        if query_params:
-            queries = []
-            if "search" in query_params.keys():
-                queries.append(
-                    Q(fund_commitment__vendor_code__icontains=query_params.get("search")) |
-                    Q(fund_commitment__fc_number__icontains=query_params.get("search")) |
-                    Q(fr_ref_number__icontains=query_params.get("search"))
-                )
-            if queries:
-                expression = functools.reduce(operator.and_, queries)
-                q = q.filter(expression)
-
-        return q
-
-
-class GrantListAPIView(ExportModelMixin, ListAPIView):
+class GrantListAPIView(QueryStringFilterMixin, ExportModelMixin, ListAPIView):
     """
     Returns a list of Grants.
     """
@@ -322,6 +234,9 @@ class GrantListAPIView(ExportModelMixin, ListAPIView):
         CSVRenderer,
         CSVFlatRenderer,
     )
+    queryset = Grant.objects.all()
+    search_terms = ('fund_commitment__vendor_code__icontains', 'fund_commitment__fc_number__icontains',
+                    'fr_ref_number__icontains')
 
     def get_serializer_class(self):
         """
@@ -333,26 +248,8 @@ class GrantListAPIView(ExportModelMixin, ListAPIView):
                 return GrantExportFlatSerializer
         return super().get_serializer_class()
 
-    def get_queryset(self, format=None):
-        q = Grant.objects.all()
-        query_params = self.request.query_params
 
-        if query_params:
-            queries = []
-            if "search" in query_params.keys():
-                queries.append(
-                    Q(fund_commitment__vendor_code__icontains=query_params.get("search")) |
-                    Q(fund_commitment__fc_number__icontains=query_params.get("search")) |
-                    Q(fr_ref_number__icontains=query_params.get("search"))
-                )
-            if queries:
-                expression = functools.reduce(operator.and_, queries)
-                q = q.filter(expression)
-
-        return q
-
-
-class DonorListAPIView(ExportModelMixin, ListAPIView):
+class DonorListAPIView(QueryStringFilterMixin, ExportModelMixin, ListAPIView):
     """
     Returns a list of Donors.
     """
@@ -364,6 +261,8 @@ class DonorListAPIView(ExportModelMixin, ListAPIView):
         CSVRenderer,
         CSVFlatRenderer,
     )
+    queryset = Donor.objects.all()
+    search_terms = ('name__icontains', )
 
     def get_serializer_class(self):
         """
@@ -376,19 +275,3 @@ class DonorListAPIView(ExportModelMixin, ListAPIView):
             if query_params.get("format") == 'csv_flat':
                 return DonorExportFlatSerializer
         return super().get_serializer_class()
-
-    def get_queryset(self, format=None):
-        q = Donor.objects.all()
-        query_params = self.request.query_params
-
-        if query_params:
-            queries = []
-            if "search" in query_params.keys():
-                queries.append(
-                    Q(name__icontains=query_params.get("search"))
-                )
-            if queries:
-                expression = functools.reduce(operator.and_, queries)
-                q = q.filter(expression)
-
-        return q

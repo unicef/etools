@@ -31,7 +31,7 @@ from etools.applications.audit.transitions.conditions import (
 )
 from etools.applications.audit.transitions.serializers import EngagementCancelSerializer
 from etools.applications.audit.utils import generate_final_report
-from etools.applications.EquiTrack.urlresolvers import build_frontend_url
+from etools.applications.core.urlresolvers import build_frontend_url
 from etools.applications.partners.models import PartnerOrganization, PartnerStaffMember
 from etools.libraries.djangolib.models import GroupWrapper, InheritedModelMixin
 from etools.libraries.djangolib.utils import get_environment
@@ -86,8 +86,7 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
         DISPLAY_STATUSES.cancelled: 'date_of_cancel'
     }
 
-    status = FSMField(verbose_name=_('Status'), max_length=30, choices=STATUSES, default=STATUSES.partner_contacted,
-                      protected=True)
+    status = FSMField(verbose_name=_('Status'), max_length=30, choices=STATUSES, default=STATUSES.partner_contacted)
 
     # auditor - partner organization from agreement
     agreement = models.ForeignKey(
@@ -95,7 +94,7 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
         on_delete=models.CASCADE,
     )
     po_item = models.ForeignKey(
-        PurchaseOrderItem, verbose_name=_('PO Item Number'), null=True,
+        PurchaseOrderItem, verbose_name=_('PO Item Number'), null=True, blank=True,
         on_delete=models.CASCADE,
     )
 
@@ -166,7 +165,7 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
 
     cancel_comment = models.TextField(blank=True, verbose_name=_('Cancel Comment'))
 
-    active_pd = models.ManyToManyField('partners.Intervention', verbose_name=_('Active PDs'))
+    active_pd = models.ManyToManyField('partners.Intervention', verbose_name=_('Active PDs'), blank=True)
 
     authorized_officers = models.ManyToManyField(
         PartnerStaffMember, verbose_name=_('Authorized Officers'), blank=True, related_name="engagement_authorizations"
@@ -438,7 +437,7 @@ class SpotCheck(Engagement):
     @transition('status', source=Engagement.STATUSES.report_submitted, target=Engagement.STATUSES.final,
                 permission=has_action_permission(action='finalize'))
     def finalize(self, *args, **kwargs):
-        self.partner.spot_checks(update_one=True, event_date=self.date_of_draft_report_to_unicef)
+        self.partner.spot_checks(update_one=True, event_date=self.date_of_draft_report_to_ip)
         return super().finalize(*args, **kwargs)
 
     def get_object_url(self, **kwargs):
@@ -675,6 +674,7 @@ class Audit(Engagement):
             AuditSerializer,
             AuditPDFSerializer,
             'audit/audit_pdf.html',
+            'audit_final_report.pdf',
         )
 
 
@@ -724,9 +724,9 @@ class KeyInternalControl(models.Model):
         on_delete=models.CASCADE,
     )
 
-    recommendation = models.TextField(verbose_name=_('Recommendation'), blank=True)
-    audit_observation = models.TextField(verbose_name=_('Audit Observation'), blank=True)
-    ip_response = models.TextField(verbose_name=_('IP response'), blank=True)
+    recommendation = models.TextField(verbose_name=_('Recommendation'))
+    audit_observation = models.TextField(verbose_name=_('Audit Observation'))
+    ip_response = models.TextField(verbose_name=_('IP response'))
 
     class Meta:
         ordering = ('id', )

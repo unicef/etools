@@ -3,7 +3,7 @@ from django.conf.urls import include, url
 from etools.applications.t2f.models import Travel
 from etools.applications.t2f.views.dashboard import ActionPointDashboardViewSet, TravelDashboardViewSet
 from etools.applications.t2f.views.exports import TravelActivityExport, TravelAdminExport
-from etools.applications.t2f.views.generics import PermissionMatrixView, StaticDataView, VendorNumberListView
+from etools.applications.t2f.views.generics import PermissionMatrixView, StaticDataView
 from etools.applications.t2f.views.travel import (
     TravelActivityPerInterventionViewSet,
     TravelActivityViewSet,
@@ -30,7 +30,6 @@ travel_attachments = TravelAttachmentViewSet.as_view({'get': 'list',
 travel_attachment_details = TravelAttachmentViewSet.as_view({'delete': 'destroy'})
 
 clone_travel_for_secondary_traveler = TravelDetailsViewSet.as_view({'post': 'clone_for_secondary_traveler'})
-clone_travel_for_driver = TravelDetailsViewSet.as_view({'post': 'clone_for_driver'})
 
 action_points_dashboard_list = ActionPointDashboardViewSet.as_view({'get': 'list'})
 
@@ -42,7 +41,6 @@ travel_details_patterns = ((
     url(r'^attachments/(?P<attachment_pk>[0-9]+)/$', travel_attachment_details, name='attachment_details'),
     url(details_state_changes_pattern, travel_details_state_change, name='state_change'),
     url(r'duplicate_travel/$', clone_travel_for_secondary_traveler, name='clone_for_secondary_traveler'),
-    url(r'^add_driver/$', clone_travel_for_driver, name='clone_for_driver'),
 ), 'details')
 
 
@@ -74,6 +72,4 @@ urlpatterns = ((
     url(r'^static_data/$', StaticDataView.as_view(), name='static_data'),
     url(r'^permission_matrix/$', PermissionMatrixView.as_view(), name='permission_matrix'),
     url(r'^action_points/', include(action_points_patterns)),
-    url(r'^vendor_numbers/$', VendorNumberListView.as_view(), name='vendor_numbers'),
-
 ), 't2f')

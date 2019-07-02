@@ -4,11 +4,11 @@ from datetime import datetime
 from django.core.management import BaseCommand
 from django.db import transaction
 
-from etools.libraries.pythonlib.encoders import CustomJSONEncoder
-from etools.applications.EquiTrack.util_scripts import set_country
+from etools.applications.core.util_scripts import set_country
 from etools.applications.hact.models import HactHistory
 from etools.applications.partners.models import hact_default, PartnerOrganization, PlannedEngagement
 from etools.applications.users.models import Country
+from etools.libraries.pythonlib.encoders import CustomJSONEncoder
 
 
 class Command(BaseCommand):

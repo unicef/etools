@@ -9,7 +9,7 @@ from django.utils.translation import ugettext as _
 from rest_framework.serializers import ValidationError
 
 
-class BaseTransitionCheck(object):
+class BaseTransitionCheck:
     def get_errors(self, *args, **kwargs):
         return {}
 
@@ -134,8 +134,7 @@ class EngagementSubmitReportRequiredFieldsCheck(BaseRequiredFieldsCheck):
 
 class SPSubmitReportRequiredFieldsCheck(EngagementSubmitReportRequiredFieldsCheck):
     fields = EngagementSubmitReportRequiredFieldsCheck.fields + [
-        'total_amount_tested', 'total_amount_of_ineligible_expenditure', 'internal_controls',
-        'exchange_rate',
+        'total_amount_tested', 'internal_controls', 'exchange_rate',
     ]
 
 

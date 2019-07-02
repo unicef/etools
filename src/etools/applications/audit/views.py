@@ -59,6 +59,7 @@ from etools.applications.audit.serializers.attachments import (
     SpotCheckAttachmentLinkSerializer,
 )
 from etools.applications.audit.serializers.auditor import (
+    AuditorFirmExportSerializer,
     AuditorFirmLightSerializer,
     AuditorFirmSerializer,
     AuditorStaffMemberSerializer,
@@ -182,6 +183,13 @@ class AuditorFirmViewSet(
     def users(self, request, *args, **kwargs):
         return AuditUsersViewSet.as_view()(request._request, *args, **kwargs)
 
+    @action(detail=False, methods=['get'], url_path='current_tenant')
+    def current_tenant(self, request, *args, **kwargs):
+        queryset = self.get_queryset().filter(
+            pk__in=Engagement.objects.values_list('agreement__auditor_firm', flat=True))
+        serializer = AuditorFirmExportSerializer(queryset, many=True)
+        return Response(serializer.data)
+
 
 class PurchaseOrderViewSet(
     BaseAuditViewSet,
@@ -207,7 +215,7 @@ class PurchaseOrderViewSet(
 
         if not instance:
             handler = POSynchronizer(
-                country=request.user.profile.country,
+                business_area_code=request.user.profile.country.business_area_code,
                 object_number=kwargs.get('order_number')
             )
             handler.sync()
@@ -263,7 +271,7 @@ class EngagementViewSet(
         SearchFilter, DisplayStatusFilter, DjangoFilterBackend,
         UniqueIDOrderingFilter, OrderingFilter,
     )
-    search_fields = ('partner__name', 'agreement__auditor_firm__name')
+    search_fields = ('partner__name', 'agreement__auditor_firm__name', '=id')
     ordering_fields = ('agreement__order_number', 'agreement__auditor_firm__name',
                        'partner__name', 'engagement_type', 'status')
     filter_class = EngagementFilter
@@ -478,7 +486,8 @@ class AuditorStaffMembersViewSet(
     filter_backends = (OrderingFilter, SearchFilter, DjangoFilterBackend, )
     ordering_fields = ('user__email', 'user__first_name', 'id', )
     search_fields = ('user__first_name', 'user__email', 'user__last_name', )
-    filter_fields = ('user__profile__country__schema_name', 'user__profile__country__name')
+    filter_fields = ('user__profile__country__schema_name', 'user__profile__country__name',
+                     'user__profile__countries_available__schema_name', 'user__profile__countries_available__name')
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -492,7 +501,20 @@ class AuditorStaffMembersViewSet(
         self.check_serializer_permissions(serializer, edit=True)
 
         instance = serializer.save(auditor_firm=self.get_parent_object(), **kwargs)
-        instance.user.profile.country = self.request.user.profile.country
+        if not instance.user.profile.country:
+            instance.user.profile.country = self.request.user.profile.country
+        instance.user.profile.countries_available.add(self.request.user.profile.country)
+        instance.user.groups.add(Auditor.as_group())
+        instance.user.profile.save()
+
+    def perform_update(self, serializer):
+        self.check_serializer_permissions(serializer, edit=True)
+
+        super().perform_update(serializer)
+        instance = serializer.save(auditor_firm=self.get_parent_object())
+        if not instance.user.profile.country:
+            instance.user.profile.country = self.request.user.profile.country
+        instance.user.profile.countries_available.add(self.request.user.profile.country)
         instance.user.profile.save()
 
     def perform_destroy(self, instance):

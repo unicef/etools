@@ -1,31 +1,31 @@
 from collections import namedtuple
 
 from django.conf import settings
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse
 from django.utils.http import urlsafe_base64_decode
 from django.views.generic import TemplateView, View
-from django.contrib.auth.mixins import LoginRequiredMixin
 
 from easy_pdf.views import PDFTemplateView
 from rest_framework import mixins, viewsets
+from unicef_vision.utils import get_data_from_insight
 
 from etools.applications.partners.models import Agreement, FileType
 from etools.applications.partners.serializers.v1 import FileTypeSerializer
-from etools.applications.vision.utils import get_data_from_insight
 
 
 class PCAPDFView(LoginRequiredMixin, PDFTemplateView):
-    template_name = "partners/pca/english_pdf.html"
+    template_name = "pca/english_pdf.html"
     # TODO add proper templates for different languages
     language_templates_mapping = {
-        "arabic": "partners/pca/arabic_pdf.html",
-        "english": "partners/pca/english_pdf.html",
-        "french": "partners/pca/french_pdf.html",
-        "portuguese": "partners/pca/portuguese_pdf.html",
-        "russian": "partners/pca/russian_pdf.html",
-        "spanish": "partners/pca/spanish_pdf.html",
-        "ifrc_english": "partners/pca/ifrc_english_pdf.html",
-        "ifrc_french": "partners/pca/ifrc_french_pdf.html"
+        "arabic": "pca/arabic_pdf.html",
+        "english": "pca/english_pdf.html",
+        "french": "pca/french_pdf.html",
+        "portuguese": "pca/portuguese_pdf.html",
+        "russian": "pca/russian_pdf.html",
+        "spanish": "pca/spanish_pdf.html",
+        "ifrc_english": "pca/ifrc_english_pdf.html",
+        "ifrc_french": "pca/ifrc_french_pdf.html"
     }
 
     def get_pdf_filename(self):

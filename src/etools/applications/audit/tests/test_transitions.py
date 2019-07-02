@@ -21,10 +21,10 @@ from etools.applications.audit.transitions.conditions import (
     EngagementSubmitReportRequiredFieldsCheck,
     SPSubmitReportRequiredFieldsCheck,
 )
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 
 
-class EngagementCheckTransitionsTestCaseMixin(object):
+class EngagementCheckTransitionsTestCaseMixin:
     fixtures = ('audit_risks_blueprints', )
 
     def _test_transition(self, user, action, expected_response, errors=None, data=None):
@@ -227,6 +227,8 @@ class TestSCTransitionsTestCase(
         with patch(self.filepath, self.mock_filepath):
             self._test_finalize(self.unicef_focal_point, status.HTTP_200_OK)
         self.assertTrue(attachment_qs.exists())
+        attachment = attachment_qs.get()
+        assert attachment.file
 
     def test_cancel_auditor(self):
         self._test_cancel(self.auditor, status.HTTP_403_FORBIDDEN)
@@ -250,7 +252,7 @@ class TestSCTransitionsTestCase(
         self._test_cancel(self.unicef_focal_point, status.HTTP_403_FORBIDDEN)
 
 
-class EngagementCheckTransitionsMetadataTestCaseMixin(object):
+class EngagementCheckTransitionsMetadataTestCaseMixin:
     def _test_allowed_actions(self, user, actions):
         response = self.forced_auth_req(
             'options', self.engagement_url(), user=user

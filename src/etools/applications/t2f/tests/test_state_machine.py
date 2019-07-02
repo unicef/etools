@@ -1,17 +1,20 @@
+import datetime
 import json
 from collections import defaultdict
-from datetime import datetime, timedelta
+from unittest.mock import Mock, patch
 
+from django.conf import settings
 from django.core import mail
 from django.urls import reverse
 
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.publics.tests.factories import (
     PublicsBusinessAreaFactory,
     PublicsCurrencyFactory,
     PublicsDSARegionFactory,
 )
 from etools.applications.t2f.models import ModeOfTravel, Travel
+from etools.applications.t2f.serializers.mailing import TravelMailSerializer
 from etools.applications.t2f.tests.factories import TravelFactory
 from etools.applications.users.tests.factories import UserFactory
 
@@ -64,16 +67,16 @@ class StateMachineTest(BaseTenantTestCase):
 
         data = {'itinerary': [{'origin': 'Berlin',
                                'destination': 'Budapest',
-                               'departure_date': '2017-04-14T17:06:55.821490',
-                               'arrival_date': '2017-04-15T17:06:55.821490',
+                               'departure_date': '2017-04-14',
+                               'arrival_date': '2017-04-15',
                                'dsa_region': dsa_region.id,
                                'overnight_travel': False,
                                'mode_of_travel': ModeOfTravel.RAIL,
                                'airlines': []},
                               {'origin': 'Budapest',
                                'destination': 'Berlin',
-                               'departure_date': '2017-05-20T12:06:55.821490',
-                               'arrival_date': '2017-05-21T12:06:55.821490',
+                               'departure_date': '2017-05-20',
+                               'arrival_date': '2017-05-21',
                                'dsa_region': dsa_region.id,
                                'overnight_travel': False,
                                'mode_of_travel': ModeOfTravel.RAIL,
@@ -142,16 +145,16 @@ class StateMachineTest(BaseTenantTestCase):
 
         data = {'itinerary': [{'origin': 'Berlin',
                                'destination': 'Budapest',
-                               'departure_date': '2017-04-14T17:06:55.821490',
-                               'arrival_date': '2017-04-15T17:06:55.821490',
+                               'departure_date': '2017-04-14',
+                               'arrival_date': '2017-04-15',
                                'dsa_region': dsa_region.id,
                                'overnight_travel': False,
                                'mode_of_travel': ModeOfTravel.RAIL,
                                'airlines': []},
                               {'origin': 'Budapest',
                                'destination': 'Berlin',
-                               'departure_date': '2017-05-20T12:06:55.821490',
-                               'arrival_date': '2017-05-21T12:06:55.821490',
+                               'departure_date': '2017-05-20',
+                               'arrival_date': '2017-05-21',
                                'dsa_region': dsa_region.id,
                                'overnight_travel': False,
                                'mode_of_travel': ModeOfTravel.RAIL,
@@ -219,9 +222,9 @@ class StateMachineTest(BaseTenantTestCase):
         data = {'traveler': self.traveler.id,
                 'ta_required': False,
                 'international_travel': False,
-                'start_date': datetime.utcnow(),
+                'start_date': datetime.date.today(),
                 'report': 'something',
-                'end_date': datetime.utcnow() + timedelta(hours=10),
+                'end_date': datetime.date.today() + datetime.timedelta(days=1),
                 'supervisor': self.unicef_staff.id}
         response = self.forced_auth_req('post', reverse('t2f:travels:list:state_change',
                                                         kwargs={'transition_name': Travel.COMPLETE}),
@@ -237,8 +240,8 @@ class StateMachineTest(BaseTenantTestCase):
                 'ta_required': False,
                 'international_travel': False,
                 'report': 'something',
-                'start_date': datetime.utcnow(),
-                'end_date': datetime.utcnow() + timedelta(hours=10),
+                'start_date': datetime.date.today(),
+                'end_date': datetime.date.today() + datetime.timedelta(days=1),
                 'supervisor': self.unicef_staff.id}
         response = self.forced_auth_req('post', reverse('t2f:travels:list:state_change',
                                                         kwargs={'transition_name': 'save_and_submit'}),
@@ -316,16 +319,16 @@ class StateMachineTest(BaseTenantTestCase):
 
         data = {'itinerary': [{'origin': 'Berlin',
                                'destination': 'Budapest',
-                               'departure_date': '2017-04-14T17:06:55.821490',
-                               'arrival_date': '2017-04-15T17:06:55.821490',
+                               'departure_date': '2017-04-14',
+                               'arrival_date': '2017-04-15',
                                'dsa_region': dsa_region.id,
                                'overnight_travel': False,
                                'mode_of_travel': ModeOfTravel.RAIL,
                                'airlines': []},
                               {'origin': 'Budapest',
                                'destination': 'Berlin',
-                               'departure_date': '2017-05-20T12:06:55.821490',
-                               'arrival_date': '2017-05-21T12:06:55.821490',
+                               'departure_date': '2017-05-20',
+                               'arrival_date': '2017-05-21',
                                'dsa_region': dsa_region.id,
                                'overnight_travel': False,
                                'mode_of_travel': ModeOfTravel.RAIL,
@@ -350,3 +353,39 @@ class StateMachineTest(BaseTenantTestCase):
                                                                 'transition_name': 'approve'}),
                                         data=response_json, user=self.unicef_staff)
         self.assertEqual(response.status_code, 200)
+
+    def test_cancel_notification(self):
+        travel = TravelFactory(
+            traveler=self.unicef_staff,
+            supervisor=self.unicef_staff,
+            status=Travel.APPROVED,
+        )
+        self.assertEqual(travel.status, Travel.APPROVED)
+        mock_send = Mock()
+        with patch("etools.applications.t2f.models.send_notification", mock_send):
+            self.forced_auth_req(
+                'post',
+                reverse(
+                    't2f:travels:details:state_change',
+                    kwargs={
+                        'travel_pk': travel.pk,
+                        'transition_name': Travel.CANCEL,
+                    },
+                ),
+                user=self.unicef_staff,
+            )
+        mock_send.assert_called_with(
+            recipients=[
+                travel.traveler.email,
+                travel.supervisor.email,
+            ],
+            from_address=settings.DEFAULT_FROM_EMAIL,
+            subject='Travel #{} was cancelled.'.format(
+                travel.reference_number,
+            ),
+            html_content_filename='emails/cancelled.html',
+            context={
+                "travel": TravelMailSerializer(travel, context={}).data,
+                "url": travel.get_object_url(),
+            }
+        )

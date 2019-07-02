@@ -9,7 +9,7 @@ from rest_framework.exceptions import PermissionDenied, ValidationError
 from etools.applications.permissions2.conditions import GroupCondition, NewObjectCondition
 
 
-class FSMTransitionActionMixin(object):
+class FSMTransitionActionMixin:
     def get_transition(self, action, instance=None):
         if not instance:
             instance = self.get_object()
@@ -73,7 +73,7 @@ class FSMTransitionActionMixin(object):
         return self.retrieve(request, *args, **kwargs)
 
 
-class PermissionContextMixin(object):
+class PermissionContextMixin:
     def get_object(self):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
         if lookup_url_kwarg not in self.kwargs:

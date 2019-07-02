@@ -61,8 +61,8 @@ from etools.applications.tpm.serializers.attachments import (
     TPMActivityAttachmentLinkSerializer,
     TPMAttachmentLinkSerializer,
     TPMPartnerAttachmentsSerializer,
-    TPMVisitAttachmentsSerializer,
     TPMVisitAttachmentLinkSerializer,
+    TPMVisitAttachmentsSerializer,
     TPMVisitReportAttachmentsSerializer,
 )
 from etools.applications.tpm.serializers.partner import (
@@ -167,7 +167,7 @@ class TPMPartnerViewSet(
 
         if not instance:
             handler = TPMPartnerManualSynchronizer(
-                country=request.user.profile.country,
+                business_area_code=request.user.profile.country.business_area_code,
                 object_number=kwargs.get('vendor_number')
             )
             handler.sync()
@@ -221,9 +221,11 @@ class TPMStaffMembersViewSet(
 
     def perform_create(self, serializer, **kwargs):
         self.check_serializer_permissions(serializer, edit=True)
-
         instance = serializer.save(tpm_partner=self.get_parent_object(), **kwargs)
-        instance.user.profile.country = self.request.user.profile.country
+        if not instance.user.profile.country:
+            instance.user.profile.country = self.request.user.profile.country
+        instance.user.profile.countries_available.add(self.request.user.profile.country)
+        instance.user.groups.add(ThirdPartyMonitor.as_group())
         instance.user.profile.save()
 
     @action(detail=False, methods=['get'], url_path='export', renderer_classes=(TPMPartnerContactsCSVRenderer,))
@@ -409,7 +411,7 @@ class TPMVisitViewSet(
     @action(detail=False, methods=['get'], url_path='activities/export', renderer_classes=(TPMActivityCSVRenderer,))
     def activities_export(self, request, *args, **kwargs):
         tpm_activities = TPMActivity.objects.filter(
-            tpm_visit__in=self.get_queryset(),
+            tpm_visit__in=self.filter_queryset(self.get_queryset()),
         ).prefetch_related(
             'tpm_visit', 'section', 'locations', 'cp_output'
         ).order_by('tpm_visit', 'id')
@@ -421,7 +423,7 @@ class TPMVisitViewSet(
     @action(detail=False, methods=['get'], url_path='locations/export', renderer_classes=(TPMLocationCSVRenderer,))
     def locations_export(self, request, *args, **kwargs):
         tpm_locations = TPMActivity.locations.through.objects.filter(
-            activity__in=self.get_queryset().values_list('tpm_activities__id', flat=True),
+            activity__in=self.filter_queryset(self.get_queryset()).values_list('tpm_activities__id', flat=True),
         ).prefetch_related(
             'activity', 'location', 'activity__tpmactivity__tpm_visit', 'activity__tpmactivity__section',
             'activity__cp_output'

@@ -1,12 +1,10 @@
 from django.contrib.auth import get_user_model
-from django.core import mail
 from django.core.management import call_command
 
 from unicef_attachments.utils import get_denormalize_func
 
 from etools.applications.attachments.tests.factories import AttachmentFactory
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.tpm.models import ThirdPartyMonitor
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.tpm.tests.factories import TPMPartnerFactory, TPMPartnerStaffMemberFactory, TPMVisitFactory
 
 
@@ -52,15 +50,6 @@ class TPMStaffMemberTestCase(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.firm = TPMPartnerFactory()
         call_command('update_notifications')
-
-    def test_signal(self):
-        ThirdPartyMonitor.invalidate_cache()
-
-        staff_member = TPMPartnerStaffMemberFactory(tpm_partner=self.firm)
-
-        self.assertIn(ThirdPartyMonitor.name, staff_member.user.groups.values_list('name', flat=True))
-
-        self.assertEqual(len(mail.outbox), 0)
 
     def test_post_delete(self):
         staff_member = TPMPartnerStaffMemberFactory(tpm_partner=self.firm)

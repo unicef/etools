@@ -18,10 +18,10 @@ from unicef_snapshot.models import Activity
 
 from etools.applications.attachments.models import AttachmentFlat
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
+from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.mixins import URLAssertionMixin
 from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.environment.tests.factories import TenantSwitchFactory
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.EquiTrack.tests.mixins import URLAssertionMixin
 from etools.applications.partners.models import Intervention, InterventionAmendment, InterventionResultLink
 from etools.applications.partners.permissions import InterventionPermissions
 from etools.applications.partners.tests.factories import (
@@ -117,8 +117,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
         setup_intervention_test_data(self)
 
     def tearDown(self):
-        cache.delete("public-intervention-permissions")
-        cache.delete("public-agreement-permissions")
+        cache.clear()
         if hasattr(self, "ts"):
             self.ts.delete()
 
@@ -1625,6 +1624,24 @@ class TestInterventionAmendmentCreateAPIView(BaseTenantTestCase):
         self.assertEquals(response.data['types'],
                           {0: [ErrorDetail(string='"invalid_choice" is not a valid choice.', code=f'{invalid_type}')]})
 
+    def test_create_amendment_other_type_no_description(self):
+        response = self._make_request(
+            user=self.partnership_manager_user,
+            data={
+                "types": [InterventionAmendment.OTHER],
+                "signed_amendment": self.uploaded_file,
+            },
+            request_format='multipart',
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(
+            response.data['non_field_errors'], [ErrorDetail(
+                string="Other description required, if type 'Other' selected.",
+                code='invalid'
+            )]
+        )
+
     def test_create_amendment_invalid_file(self):
         response = self._make_request(
             user=self.partnership_manager_user,
@@ -1745,7 +1762,6 @@ class TestInterventionAmendmentCreateAPIView(BaseTenantTestCase):
         assert flat.pd_ssfa_number
 
     def test_create_amendment_with_internal_prc_review_none(self):
-        self.data["internal_prc_review"] = None
         response = self._make_request(
             user=self.partnership_manager_user,
             data=self.data,
@@ -1772,7 +1788,7 @@ class TestInterventionAmendmentCreateAPIView(BaseTenantTestCase):
             ['Cannot add a new amendment while another amendment is in progress.']
         )
 
-    def _make_request(self, user=None, data=None, request_format='json', **kwargs):
+    def _make_request(self, user=None, data="", request_format='json', **kwargs):
         return self.forced_auth_req('post', self.url, user=user, data=data, request_format=request_format, **kwargs)
 
 

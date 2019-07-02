@@ -20,10 +20,11 @@ from rest_framework.permissions import IsAdminUser, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework_csv import renderers as r
 from unicef_restlib.views import QueryStringFilterMixin
+from unicef_vision.utils import get_data_from_insight
 
 from etools.applications.action_points.models import ActionPoint
-from etools.applications.EquiTrack.mixins import ExportModelMixin
-from etools.applications.EquiTrack.renderers import CSVFlatRenderer
+from etools.applications.core.mixins import ExportModelMixin
+from etools.applications.core.renderers import CSVFlatRenderer
 from etools.applications.partners.exports_v2 import (
     PartnerOrganizationCSVRenderer,
     PartnerOrganizationDashboardCsvRenderer,
@@ -73,7 +74,6 @@ from etools.applications.partners.synchronizers import PartnerSynchronizer
 from etools.applications.partners.views.helpers import set_tenant_or_fail
 from etools.applications.t2f.models import Travel, TravelActivity, TravelType
 from etools.libraries.djangolib.models import StringConcat
-from etools.applications.vision.utils import get_data_from_insight
 
 
 class PartnerOrganizationListAPIView(QueryStringFilterMixin, ExportModelMixin, ListCreateAPIView):
@@ -464,7 +464,7 @@ class PartnerOrganizationAddView(CreateAPIView):
                             status=status.HTTP_400_BAD_REQUEST)
 
         country = request.user.profile.country
-        partner_sync = PartnerSynchronizer(country=country)
+        partner_sync = PartnerSynchronizer(business_area_code=country.business_area_code)
         partner_sync._partner_save(partner_resp, full_sync=False)
 
         partner = PartnerOrganization.objects.get(
@@ -514,7 +514,7 @@ class PartnerWithSpecialAuditCompleted(PartnerOrganizationListAPIView):
         return PartnerOrganization.objects.filter(
             engagement__engagement_type=Engagement.TYPE_SPECIAL_AUDIT,
             engagement__status=Engagement.FINAL,
-            engagement__date_of_draft_report_to_unicef__year=datetime.now().year)
+            engagement__date_of_draft_report_to_ip__year=datetime.now().year)
 
 
 class PartnerWithScheduledAuditCompleted(PartnerOrganizationListAPIView):
@@ -523,7 +523,7 @@ class PartnerWithScheduledAuditCompleted(PartnerOrganizationListAPIView):
         return PartnerOrganization.objects.filter(
             engagement__engagement_type=Engagement.TYPE_AUDIT,
             engagement__status=Engagement.FINAL,
-            engagement__date_of_draft_report_to_unicef__year=datetime.now().year)
+            engagement__date_of_draft_report_to_ip__year=datetime.now().year)
 
 
 class PartnerPlannedVisitsDeleteView(DestroyAPIView):

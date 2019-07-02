@@ -1,2 +1,5 @@
-class VisionException(Exception):
-    """Vision Generic Exception"""
+
+
+class VisionSyncException(Exception):
+    def __init__(self, message):
+        self.message = message

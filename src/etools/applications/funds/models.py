@@ -166,6 +166,14 @@ class FundsReservationHeader(TimeStampedModel):
         default=False,
         verbose_name=_("Actual and DCT in various currencies"),
     )
+    completed_flag = models.BooleanField(
+        default=False,
+        verbose_name=_("FR marked as completed in Vision")
+    )
+    delegated = models.BooleanField(
+        default=False,
+        verbose_name=_("FR delegated from another CO")
+    )
 
     def __str__(self):
         return '{}'.format(

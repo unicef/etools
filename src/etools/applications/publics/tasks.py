@@ -1,7 +1,5 @@
-
 import csv
 import xml.etree.ElementTree as ET
-from collections import defaultdict
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 
@@ -13,18 +11,14 @@ from celery.utils.log import get_task_logger
 from storages.backends.azure_storage import AzureStorage
 
 from etools.applications.publics.models import (
-    BusinessArea,
     Country,
     Currency,
     DSARate,
     DSARateUpload,
     DSARegion,
     ExchangeRate,
-    Fund,
-    Grant,
     TravelAgent,
     TravelExpenseType,
-    WBS,
 )
 from etools.config.celery import app
 
@@ -112,100 +106,7 @@ def import_exchange_rates(xml_structure):
         logger.info('Exchange rate %s was updated.', currency_name)
 
 
-def _fetch_business_areas(wbs_set):
-    business_area_codes = {wbs_code[:4] for wbs_code in wbs_set}
-    business_area_qs = BusinessArea.objects.filter(code__in=business_area_codes)
-    return {ba.code: ba for ba in business_area_qs}
-
-
-def create_wbs_objects(wbs_code_set):
-    business_area_cache = _fetch_business_areas(wbs_code_set)
-
-    existing_wbs_objects = WBS.objects.filter(name__in=wbs_code_set).select_related('business_area')
-    existing_wbs_codes = {wbs.name for wbs in existing_wbs_objects}
-
-    wbs_to_create = wbs_code_set - existing_wbs_codes
-    bulk_wbs_list = []
-    for wbs_code in wbs_to_create:
-        business_area_code = wbs_code[:4]
-        wbs = WBS(name=wbs_code, business_area=business_area_cache[business_area_code])
-        bulk_wbs_list.append(wbs)
-
-    WBS.objects.bulk_create(bulk_wbs_list)
-
-    wbs_mapping = {wbs.name: wbs for wbs in WBS.objects.filter(name__in=wbs_code_set)}
-    return wbs_mapping
-
-
-def create_grant_objects(grant_code_set):
-    grant_objects = Grant.objects.filter(name__in=grant_code_set)
-    existing_grants = {g.name for g in grant_objects}
-
-    grant_to_create = grant_code_set - existing_grants
-    bulk_grant_list = []
-    for grant_code in grant_to_create:
-        grant = Grant(name=grant_code)
-        bulk_grant_list.append(grant)
-
-    Grant.objects.bulk_create(bulk_grant_list)
-
-    grant_mapping = {g.name: g for g in Grant.objects.filter(name__in=grant_code_set)}
-    return grant_mapping
-
-
-def create_fund_objects(fund_code_set):
-    fund_objects = Fund.objects.filter(name__in=fund_code_set)
-    existing_funds = {f.name for f in fund_objects}
-
-    fund_to_create = fund_code_set - existing_funds
-    bulk_fund_list = []
-    for fund_code in fund_to_create:
-        fund = Fund(name=fund_code)
-        bulk_fund_list.append(fund)
-
-    Fund.objects.bulk_create(bulk_fund_list)
-
-    fund_mapping = {f.name: f for f in Fund.objects.filter(name__in=fund_code_set)}
-    return fund_mapping
-
-
-@app.task
-def import_cost_assignments(xml_structure):
-    root = ET.fromstring(xml_structure)
-
-    groups = []
-    for row in root.iter('ROW'):
-        g = {'wbs_code': row.find('WBS_ELEMENT_EX').text,
-             'grant_code': row.find('GRANT_REF').text,
-             'fund_code': row.find('FUND_TYPE_CODE').text}
-        groups.append(g)
-
-    wbs_code_set = {g['wbs_code'] for g in groups}
-    grant_code_set = {g['grant_code'] for g in groups}
-    fund_code_set = {g['fund_code'] for g in groups}
-
-    wbs_mapping = create_wbs_objects(wbs_code_set)
-    grant_mapping = create_grant_objects(grant_code_set)
-    fund_mapping = create_fund_objects(fund_code_set)
-
-    wbs_grant_mapping = defaultdict(list)
-    grant_fund_mapping = defaultdict(list)
-    for g in groups:
-        wbs = wbs_mapping[g['wbs_code']]
-        grant = grant_mapping[g['grant_code']]
-        fund = fund_mapping[g['fund_code']]
-
-        wbs_grant_mapping[wbs].append(grant)
-        grant_fund_mapping[grant].append(fund)
-
-    for wbs, grants in wbs_grant_mapping.items():
-        wbs.grants.set(grants)
-
-    for grant, funds in grant_fund_mapping.items():
-        grant.funds.set(funds)
-
-
-class DSARateUploader(object):
+class DSARateUploader:
     FIELDS = (
         'Country Code',
         'Country Name',

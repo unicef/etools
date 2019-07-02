@@ -1,7 +1,7 @@
 from unittest.mock import patch
 
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.audit.purchase_order.tasks import update_purchase_orders
+from etools.applications.core.tests.cases import BaseTenantTestCase
 
 
 class TestUpdatePurchaseOrders(BaseTenantTestCase):

@@ -1,17 +1,21 @@
 # Python imports
 
-from django.urls import reverse
 from django.test import SimpleTestCase
-
+from django.urls import reverse
 
 from rest_framework import status
 from tablib.core import Dataset
 
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.EquiTrack.tests.mixins import URLAssertionMixin
-from etools.applications.funds.tests.factories import (DonorFactory, FundsCommitmentHeaderFactory,
-                                                       FundsCommitmentItemFactory, FundsReservationHeaderFactory,
-                                                       FundsReservationItemFactory, GrantFactory,)
+from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.mixins import URLAssertionMixin
+from etools.applications.funds.tests.factories import (
+    DonorFactory,
+    FundsCommitmentHeaderFactory,
+    FundsCommitmentItemFactory,
+    FundsReservationHeaderFactory,
+    FundsReservationItemFactory,
+    GrantFactory,
+)
 from etools.applications.users.tests.factories import UserFactory
 
 
@@ -58,8 +62,8 @@ class TestFundsReservationHeaderExportList(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 20)
-        self.assertEqual(len(dataset[0]), 20)
+        self.assertEqual(len(dataset._get_headers()), 22)
+        self.assertEqual(len(dataset[0]), 22)
 
     def test_csv_flat_export_api(self):
         response = self.forced_auth_req(
@@ -72,8 +76,8 @@ class TestFundsReservationHeaderExportList(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 20)
-        self.assertEqual(len(dataset[0]), 20)
+        self.assertEqual(len(dataset._get_headers()), 22)
+        self.assertEqual(len(dataset[0]), 22)
 
 
 class TestFundsReservationItemExportList(BaseTenantTestCase):

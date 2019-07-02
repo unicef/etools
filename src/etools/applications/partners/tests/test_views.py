@@ -22,8 +22,8 @@ from unicef_snapshot.models import Activity
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.attachments.tests.factories import AttachmentFileTypeFactory
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.EquiTrack.tests.mixins import URLAssertionMixin
+from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.mixins import URLAssertionMixin
 from etools.applications.funds.models import FundsCommitmentHeader, FundsCommitmentItem
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
 from etools.applications.partners.models import (
@@ -45,6 +45,7 @@ from etools.applications.partners.tests.factories import (
     AgreementAmendmentFactory,
     AgreementFactory,
     InterventionFactory,
+    InterventionPlannedVisitsFactory,
     InterventionReportingPeriodFactory,
     InterventionResultLinkFactory,
     PartnerFactory,
@@ -1417,7 +1418,7 @@ class TestInterventionViews(BaseTenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('Document type PD or SHPD can only be associated with a PCA agreement.', response.data)
+        self.assertIn('Document type PD or HPD can only be associated with a PCA agreement.', response.data)
 
     def test_intervention_validation_dates(self):
         today = datetime.date.today()
@@ -1463,6 +1464,41 @@ class TestInterventionViews(BaseTenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_intervention_update_planned_visits_year_change(self):
+        intervention = InterventionFactory()
+        visit = InterventionPlannedVisitsFactory(intervention=intervention)
+        visit_qs = InterventionPlannedVisits.objects.filter(
+            intervention=intervention,
+        )
+        self.assertEqual(visit_qs.count(), 1)
+        new_year = visit.year + 1
+        self.assertNotEqual(visit.year, new_year)
+        data = {
+            "planned_visits": {
+                "id": visit.pk,
+                "year": new_year,
+                "programmatic": 2,
+                "spot_checks": 1,
+                "audit": 1,
+                "quarter": "q1",
+            },
+        }
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse(
+                "partners_api:intervention-detail",
+                args=[intervention.pk]
+            ),
+            user=self.partnership_manager_user,
+            data=data,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(visit_qs.count(), 1)
+        visit.refresh_from_db()
+        self.assertEqual(visit.year, new_year)
 
     def test_intervention_update_planned_visits_fail_due_terminated_status(self):
         self.intervention_obj.status = Intervention.TERMINATED
@@ -1932,7 +1968,7 @@ class TestPartnerOrganizationDashboardAPIView(BaseTenantTestCase):
         self.assertEqual(self.record['action_points'], 6)
 
     def test_no_recent_programmatic_visit(self):
-        self.assertEquals(self.record['last_pv_date'].date(), datetime.date.today() - datetime.timedelta(200))
+        self.assertEquals(self.record['last_pv_date'], datetime.date.today() - datetime.timedelta(200))
         self.assertEquals(self.record['days_last_pv'], 200)
         self.assertTrue(self.record['alert_no_recent_pv'])
         self.assertFalse(self.record['alert_no_pv'])

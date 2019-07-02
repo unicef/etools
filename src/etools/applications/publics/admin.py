@@ -1,37 +1,7 @@
-
 from django.contrib import admin
-from django.db.models import ForeignKey, ManyToManyField, OneToOneField
 
 from etools.applications.publics import models
-from etools.applications.publics.models import EPOCH_ZERO
-from etools.applications.publics.views import WBSGrantFundView
-
-
-class AdminListMixin(object):
-    exclude_fields = ['id', 'deleted_at']
-    custom_fields = ['is_deleted']
-
-    def __init__(self, model, admin_site):
-        """
-        Gather all the fields from model meta expect fields in 'exclude_fields'.
-        Add all fields listed in 'custom_fields'. Those can be admin method, model methods etc.
-        """
-        self.list_display = [field.name for field in model._meta.fields if field.name not in self.exclude_fields]
-        self.list_display += self.custom_fields
-        self.search_fields = [field.name for field in model._meta.fields if isinstance(
-            not field, (OneToOneField, ForeignKey, ManyToManyField)) and field.name not in self.exclude_fields]
-
-        super().__init__(model, admin_site)
-
-    def is_deleted(self, obj):
-        """
-        Display a deleted indicator on the admin page (green/red tick).
-        """
-        if hasattr(obj, "deleted_at"):
-            return obj.deleted_at == EPOCH_ZERO
-
-    is_deleted.short_description = 'Deleted'
-    is_deleted.boolean = True
+from etools.libraries.djangolib.admin import AdminListMixin
 
 
 class DSARateAdmin(admin.ModelAdmin):
@@ -106,24 +76,6 @@ class BusinessAreaAdmin(AdminListMixin, admin.ModelAdmin):
     pass
 
 
-class WBSAdmin(AdminListMixin, admin.ModelAdmin):
-    def save_model(self, *args, **kwargs):
-        super().save_model(*args, **kwargs)
-        WBSGrantFundView.list.invalidate()
-
-
-class GrantAdmin(AdminListMixin, admin.ModelAdmin):
-    def save_model(self, *args, **kwargs):
-        super().save_model(*args, **kwargs)
-        WBSGrantFundView.list.invalidate()
-
-
-class FundAdmin(AdminListMixin, admin.ModelAdmin):
-    def save_model(self, *args, **kwargs):
-        super().save_model(*args, **kwargs)
-        WBSGrantFundView.list.invalidate()
-
-
 class CountryAdmin(AdminListMixin, admin.ModelAdmin):
     pass
 
@@ -133,7 +85,6 @@ class DSARegionAdmin(AdminListMixin, admin.ModelAdmin):
 
 
 admin.site.register(models.DSARate, DSARateAdmin)
-admin.site.register(models.DSARateUpload, DSARateUploadAdmin)
 admin.site.register(models.TravelAgent, TravelAgentAdmin)
 admin.site.register(models.TravelExpenseType, TravelExpenseTypeAdmin)
 admin.site.register(models.Currency, CurrencyAdmin)
@@ -141,8 +92,5 @@ admin.site.register(models.ExchangeRate, ExchangeRateAdmin)
 admin.site.register(models.AirlineCompany, AirlineCompanyAdmin)
 admin.site.register(models.BusinessRegion, BusinessAreaAdmin)
 admin.site.register(models.BusinessArea, BusinessAreaAdmin)
-admin.site.register(models.WBS, WBSAdmin)
-admin.site.register(models.Grant, GrantAdmin)
-admin.site.register(models.Fund, FundAdmin)
 admin.site.register(models.Country, CountryAdmin)
 admin.site.register(models.DSARegion, DSARegionAdmin)

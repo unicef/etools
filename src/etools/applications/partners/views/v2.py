@@ -15,6 +15,7 @@ from unicef_attachments.models import FileType as AttachmentFileType
 from unicef_djangolib.fields import CURRENCIES
 from unicef_locations.models import GatewayType
 
+from etools.applications.attachments.models import AttachmentFlat
 from etools.applications.funds.models import FundsReservationItem
 from etools.applications.partners.filters import PartnerScopeFilter
 from etools.applications.partners.models import (
@@ -48,7 +49,7 @@ class PartnerStaffMemberDetailAPIView(RetrieveUpdateDestroyAPIView):
         return super().get_serializer_class()
 
 
-# TODO move in EquiTrack (after utils package has been merged in EquiTrack)
+# TODO move in core (after utils package has been merged in core)
 def choices_to_json_ready(choices, sort_choices=True):
     if isinstance(choices, dict):
         choice_list = [(k, v) for k, v in choices.items()]
@@ -94,13 +95,11 @@ class PMPStaticDropdownsListAPIView(APIView):
         intervention_amendment_types = choices_to_json_ready(InterventionAmendment.AMENDMENT_TYPES)
         location_types = GatewayType.objects.values('id', 'name', 'admin_level').order_by('id')
         currencies = choices_to_json_ready(CURRENCIES)
-        # hardcoded to partners app attachments for now
-        # once tpm and audit come online we can remove the filter
-        # on attachment file types
         attachment_types = AttachmentFileType.objects.values_list(
-            'label',
-            flat=True
+            "label",
+            flat=True,
         )
+        attachment_types_active = AttachmentFlat.get_file_types()
         partner_file_types = FileType.objects.values_list("name", flat=True)
 
         local_currency = local_workspace.local_currency.id if local_workspace.local_currency else None
@@ -122,6 +121,7 @@ class PMPStaticDropdownsListAPIView(APIView):
                 'local_currency': local_currency,
                 'location_types': location_types,
                 'attachment_types': attachment_types,
+                'attachment_types_active': attachment_types_active,
                 'partner_file_types': partner_file_types,
             },
             status=status.HTTP_200_OK

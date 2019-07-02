@@ -1,17 +1,18 @@
 from django.utils.translation import ugettext_lazy as _
 
-from etools.applications.EquiTrack.renderers import FriendlyCSVRenderer, ListSeperatorCSVRenderMixin
+from etools.applications.core.renderers import FriendlyCSVRenderer, ListSeperatorCSVRenderMixin
 
 
 class ActionPointCSVRenderer(ListSeperatorCSVRenderMixin, FriendlyCSVRenderer):
 
     header = [
-        'ref', 'cp_output', 'partner', 'office', 'section', 'category', 'assigned_to', 'due_date',
+        'ref', 'ref_link', 'cp_output', 'partner', 'office', 'section', 'category', 'assigned_to', 'due_date',
         'status', 'high_priority', 'description', 'intervention', 'pd_ssfa', 'location', 'related_module',
-        'assigned_by', 'date_of_completion', 'related_ref', 'related_object_str', 'related_object_url', 'action_taken'
+        'assigned_by', 'date_of_completion', 'related_ref', 'related_object_str', 'related_object_url', 'action_taken',
     ]
     labels = {
         'ref': _('Ref. #'),
+        'ref_link': _('Link'),
         'cp_output': _('CP Output'),
         'partner': _('Partner'),
         'office': _('Office'),

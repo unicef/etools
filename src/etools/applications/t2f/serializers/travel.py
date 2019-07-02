@@ -1,3 +1,4 @@
+import datetime
 import operator
 from itertools import chain
 
@@ -20,13 +21,7 @@ from etools.applications.action_points.serializers import ActionPointBaseSeriali
 from etools.applications.partners.models import PartnerType
 from etools.applications.publics.models import AirlineCompany
 from etools.applications.t2f.helpers.permission_matrix import PermissionMatrix
-from etools.applications.t2f.models import (
-    ItineraryItem,
-    Travel,
-    TravelActivity,
-    TravelAttachment,
-    TravelType,
-)
+from etools.applications.t2f.models import ItineraryItem, Travel, TravelActivity, TravelAttachment, TravelType
 
 itineraryItemSortKey = operator.attrgetter('departure_date')
 
@@ -99,6 +94,7 @@ class TravelActivitySerializer(PermissionBasedModelSerializer):
         required=False
     )
     action_points = ActionPointBaseSerializer(source='actionpoint_set', many=True, read_only=True, required=False)
+    date = serializers.DateField(required=True)
 
     class Meta:
         model = TravelActivity
@@ -110,6 +106,10 @@ class TravelActivitySerializer(PermissionBasedModelSerializer):
             if not attrs.get('is_primary_traveler'):
                 if not attrs.get('primary_traveler'):
                     raise ValidationError({'primary_traveler': serializers.Field.default_error_messages['required']})
+            if not attrs.get('date'):
+                raise ValidationError({
+                    'date': serializers.Field.default_error_messages['required']
+                })
 
         partner = attrs.get('partner', getattr(self.instance, 'partner', None))
         travel_type = attrs.get('travel_type', getattr(self.instance, 'travel_type', None))
@@ -205,7 +205,7 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
         if 'mode_of_travel' in attrs and attrs['mode_of_travel'] is None:
             attrs['mode_of_travel'] = []
 
-        if self.transition_name == Travel.SUBMIT_FOR_APPROVAL:
+        if self.transition_name in [Travel.SUBMIT_FOR_APPROVAL, Travel.APPROVED, Travel.COMPLETED]:
             traveler = attrs.get('traveler', None)
             if not traveler and self.instance:
                 traveler = self.instance.traveler
@@ -218,7 +218,17 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
                 # or end date between the range of the start and end date of the current trip
                 travel_q = Q(traveler=traveler)
                 travel_q &= ~Q(status__in=[Travel.PLANNED, Travel.CANCELLED])
-                travel_q &= Q(start_date__range=(start_date, end_date)) | Q(end_date__range=(start_date, end_date))
+                travel_q &= Q(
+                    start_date__range=(
+                        start_date,
+                        end_date - datetime.timedelta(days=1),
+                    )
+                ) | Q(
+                    end_date__range=(
+                        start_date + datetime.timedelta(days=1),
+                        end_date,
+                    )
+                )
 
                 # In case of first save, no id present
                 if self.instance:

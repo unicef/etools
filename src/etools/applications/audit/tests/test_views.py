@@ -15,6 +15,7 @@ from etools.applications.audit.models import Auditor, Engagement, Risk
 from etools.applications.audit.tests.base import AuditTestCaseMixin, EngagementTransitionsTestCaseMixin
 from etools.applications.audit.tests.factories import (
     AuditFactory,
+    AuditorUserFactory,
     AuditPartnerFactory,
     EngagementFactory,
     MicroAssessmentFactory,
@@ -27,7 +28,7 @@ from etools.applications.audit.tests.factories import (
     UserFactory,
 )
 from etools.applications.audit.tests.test_transitions import MATransitionsTestCaseMixin
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import PartnerType
 from etools.applications.reports.tests.factories import SectionFactory
 
@@ -297,7 +298,7 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, BaseTenantT
         self._test_list(self.usual_user, expected_status=status.HTTP_403_FORBIDDEN)
 
     def test_list_view_without_audit_organization(self):
-        user = UserFactory(unicef_user=True)
+        user = UserFactory()
         user.groups.add(Auditor.as_group())
 
         self._test_list(user, [self.engagement, self.second_engagement])
@@ -426,6 +427,10 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, BaseTenantT
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('text/csv', response['Content-Type'])
 
+    def test_search_by_id(self):
+        self._test_list(self.auditor, [self.engagement], filter_params={'search': self.engagement.pk})
+        self._test_list(self.auditor, filter_params={'search': -1})
+
 
 class BaseTestEngagementsCreateViewSet(EngagementTransitionsTestCaseMixin):
     endpoint = 'engagements'
@@ -457,7 +462,7 @@ class BaseTestEngagementsCreateViewSet(EngagementTransitionsTestCaseMixin):
         return response
 
 
-class TestEngagementCreateActivePDViewSet(object):
+class TestEngagementCreateActivePDViewSet:
     def test_partner_without_active_pd(self):
         del self.create_data['active_pd']
 
@@ -788,7 +793,7 @@ class TestAuditorFirmViewSet(AuditTestCaseMixin, BaseTenantTestCase):
 
     def test_auditor_search_view(self):
         UserFactory()
-        auditor = UserFactory(auditor=True, email='test@example.com')
+        auditor = AuditorUserFactory(email='test@example.com')
 
         response = self.forced_auth_req(
             'get',
@@ -846,8 +851,8 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.data[0]['email'], user.email)
 
     def test_staff_search(self):
-        UserFactory(auditor=True, partner_firm=self.auditor_firm)
-        user = UserFactory(auditor=True, partner_firm=self.auditor_firm, email='test_unique@example.com')
+        AuditorUserFactory(partner_firm=self.auditor_firm)
+        user = AuditorUserFactory(partner_firm=self.auditor_firm, email='test_unique@example.com')
 
         response = self.forced_auth_req(
             'get',
@@ -896,7 +901,7 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_assign_existing_user(self):
-        user = UserFactory(unicef_user=True)
+        user = UserFactory()
 
         response = self.forced_auth_req(
             'post',
@@ -910,7 +915,7 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.data['user']['email'], user.email)
 
     def test_assign_existing_auditor(self):
-        user = UserFactory(auditor=True)
+        user = AuditorUserFactory()
 
         response = self.forced_auth_req(
             'post',
@@ -922,10 +927,10 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('user', response.data)
-        self.assertEqual(response.data['user'][0], 'User is already assigned to auditor firm.')
+        self.assertIn('User is already assigned to', response.data['user'][0])
 
     def test_deactivate_auditor_flow(self):
-        user = UserFactory(auditor=True, partner_firm=self.auditor_firm, is_active=True)
+        user = AuditorUserFactory(partner_firm=self.auditor_firm, is_active=True)
 
         list_response = self.forced_auth_req(
             'get',
@@ -1026,6 +1031,7 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
             },
             user=self.unicef_focal_point
         )
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_usual_user_update_view(self):

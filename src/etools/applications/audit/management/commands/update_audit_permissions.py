@@ -2,13 +2,24 @@
 from django.core.management import BaseCommand
 from django.db.models import Q
 
-from etools.applications.action_points.conditions import ActionPointAuthorCondition, ActionPointAssignedByCondition, \
-    ActionPointAssigneeCondition
+from etools.applications.action_points.conditions import (
+    ActionPointAssignedByCondition,
+    ActionPointAssigneeCondition,
+    ActionPointAuthorCondition,
+)
 from etools.applications.action_points.models import ActionPoint
-from etools.applications.audit.conditions import (AuditModuleCondition, AuditStaffMemberCondition,
-                                                  EngagementStaffMemberCondition,)
-from etools.applications.audit.models import Auditor, Engagement, UNICEFAuditFocalPoint, UNICEFUser, \
-    EngagementActionPoint
+from etools.applications.audit.conditions import (
+    AuditModuleCondition,
+    AuditStaffMemberCondition,
+    EngagementStaffMemberCondition,
+)
+from etools.applications.audit.models import (
+    Auditor,
+    Engagement,
+    EngagementActionPoint,
+    UNICEFAuditFocalPoint,
+    UNICEFUser,
+)
 from etools.applications.permissions2.conditions import GroupCondition, NewObjectCondition, ObjectStatusCondition
 from etools.applications.permissions2.models import Permission
 from etools.applications.permissions2.utils import get_model_target
@@ -264,7 +275,8 @@ class Command(BaseCommand):
             self.engagement_overview_page +
             self.engagement_status_auto_date_fields +
             self.engagement_status_editable_date_fields +
-            self.engagement_attachments_block
+            self.engagement_attachments_block +
+            self.report_editable_block
         )
 
         self.add_permissions([self.focal_point, self.auditor], 'edit', [

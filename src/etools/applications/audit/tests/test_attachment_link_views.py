@@ -12,13 +12,13 @@ from etools.applications.audit.tests.factories import (
     SpotCheckFactory,
     UserFactory,
 )
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 
 
 class TestEngagementAttachmentsView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.user = UserFactory(unicef_user=True)
+        cls.user = UserFactory()
         cls.engagement = EngagementFactory()
         cls.attachment = AttachmentFactory(content_object=cls.engagement)
 
@@ -45,7 +45,7 @@ class TestEngagementAttachmentsView(BaseTenantTestCase):
 class TestSpotCheckAttachmentsView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.user = UserFactory(unicef_user=True)
+        cls.user = UserFactory()
         cls.spotcheck = SpotCheckFactory()
         cls.attachment = AttachmentFactory(content_object=cls.spotcheck)
 
@@ -72,7 +72,7 @@ class TestSpotCheckAttachmentsView(BaseTenantTestCase):
 class TestMicroAssessmentAttachmentsView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.user = UserFactory(unicef_user=True)
+        cls.user = UserFactory()
         cls.microassessment = MicroAssessmentFactory()
         cls.attachment = AttachmentFactory(content_object=cls.microassessment)
 
@@ -105,7 +105,7 @@ class TestMicroAssessmentAttachmentsView(BaseTenantTestCase):
 class TestAuditAttachmentsView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.user = UserFactory(unicef_user=True)
+        cls.user = UserFactory()
         cls.audit = AuditFactory()
         cls.attachment = AttachmentFactory(content_object=cls.audit)
 
@@ -132,7 +132,7 @@ class TestAuditAttachmentsView(BaseTenantTestCase):
 class TestSpecialAuditAttachmentsView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.user = UserFactory(unicef_user=True)
+        cls.user = UserFactory()
         cls.specialaudit = SpecialAuditFactory()
         cls.attachment = AttachmentFactory(content_object=cls.specialaudit)
 

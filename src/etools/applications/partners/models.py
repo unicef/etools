@@ -19,7 +19,7 @@ from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation, CurrencyField
 from unicef_locations.models import Location
 
-from etools.applications.EquiTrack.permissions import import_permissions
+from etools.applications.core.permissions import import_permissions
 from etools.applications.funds.models import FundsReservationHeader
 from etools.applications.partners.validation import interventions as intervention_validation
 from etools.applications.partners.validation.agreements import (
@@ -28,10 +28,10 @@ from etools.applications.partners.validation.agreements import (
     agreements_illegal_transition,
 )
 from etools.applications.reports.models import CountryProgramme, Indicator, Result, Section
-from etools.applications.t2f.models import Travel, TravelType
-from etools.applications.tpm.models import TPMVisit
+from etools.applications.t2f.models import Travel, TravelActivity, TravelType
+from etools.applications.tpm.models import TPMActivity, TPMVisit
 from etools.applications.users.models import Office
-from etools.libraries.djangolib.models import StringConcat
+from etools.libraries.djangolib.models import MaxDistinct, StringConcat
 from etools.libraries.pythonlib.datetime import get_current_year, get_quarter
 from etools.libraries.pythonlib.encoders import CustomJSONEncoder
 
@@ -138,7 +138,7 @@ class WorkspaceFileType(models.Model):
         return self.name
 
 
-class PartnerType(object):
+class PartnerType:
     BILATERAL_MULTILATERAL = 'Bilateral / Multilateral'
     CIVIL_SOCIETY_ORGANIZATION = 'Civil Society Organization'
     GOVERNMENT = 'Government'
@@ -683,37 +683,18 @@ class PartnerOrganization(TimeStampedModel):
             )
 
             pv = pv_year.count()
-            pvq1 = pv_year.filter(end_date__month__in=[1, 2, 3]).count()
-            pvq2 = pv_year.filter(end_date__month__in=[4, 5, 6]).count()
-            pvq3 = pv_year.filter(end_date__month__in=[7, 8, 9]).count()
-            pvq4 = pv_year.filter(end_date__month__in=[10, 11, 12]).count()
+            pvq1 = pv_year.filter(end_date__quarter=1).count()
+            pvq2 = pv_year.filter(end_date__quarter=2).count()
+            pvq3 = pv_year.filter(end_date__quarter=3).count()
+            pvq4 = pv_year.filter(end_date__quarter=4).count()
 
-            # TPM visit are counted one per month maximum
-            tpmv = TPMVisit.objects.filter(
-                tpm_activities__partner=self, status=TPMVisit.UNICEF_APPROVED,
-                date_of_unicef_approved__year=datetime.datetime.now().year
-            ).distinct()
+            tpmv = TPMActivity.objects.filter(is_pv=True, partner=self, tpm_visit__status=TPMVisit.UNICEF_APPROVED,
+                                              date__year=datetime.datetime.now().year)
 
-            tpmv1 = sum([
-                tpmv.filter(date_of_unicef_approved__month=1).exists(),
-                tpmv.filter(date_of_unicef_approved__month=2).exists(),
-                tpmv.filter(date_of_unicef_approved__month=3).exists()
-            ])
-            tpmv2 = sum([
-                tpmv.filter(date_of_unicef_approved__month=4).exists(),
-                tpmv.filter(date_of_unicef_approved__month=5).exists(),
-                tpmv.filter(date_of_unicef_approved__month=6).exists()
-            ])
-            tpmv3 = sum([
-                tpmv.filter(date_of_unicef_approved__month=7).exists(),
-                tpmv.filter(date_of_unicef_approved__month=8).exists(),
-                tpmv.filter(date_of_unicef_approved__month=9).exists()
-            ])
-            tpmv4 = sum([
-                tpmv.filter(date_of_unicef_approved__month=10).exists(),
-                tpmv.filter(date_of_unicef_approved__month=11).exists(),
-                tpmv.filter(date_of_unicef_approved__month=12).exists()
-            ])
+            tpmv1 = tpmv.filter(date__quarter=1).count()
+            tpmv2 = tpmv.filter(date__quarter=2).count()
+            tpmv3 = tpmv.filter(date__quarter=3).count()
+            tpmv4 = tpmv.filter(date__quarter=4).count()
 
             tpm_total = tpmv1 + tpmv2 + tpmv3 + tpmv4
 
@@ -744,14 +725,13 @@ class PartnerOrganization(TimeStampedModel):
             hact['spot_checks']['completed'][quarter_name] = scq
         else:
             audit_spot_check = SpotCheck.objects.filter(
-                partner=self, status=Engagement.FINAL,
-                date_of_draft_report_to_unicef__year=datetime.datetime.now().year
-            )
+                partner=self, date_of_draft_report_to_ip__year=datetime.datetime.now().year
+            ).exclude(status=Engagement.CANCELLED)
 
-            asc1 = audit_spot_check.filter(date_of_draft_report_to_unicef__month__in=[1, 2, 3]).count()
-            asc2 = audit_spot_check.filter(date_of_draft_report_to_unicef__month__in=[4, 5, 6]).count()
-            asc3 = audit_spot_check.filter(date_of_draft_report_to_unicef__month__in=[7, 8, 9]).count()
-            asc4 = audit_spot_check.filter(date_of_draft_report_to_unicef__month__in=[10, 11, 12]).count()
+            asc1 = audit_spot_check.filter(date_of_draft_report_to_ip__quarter=1).count()
+            asc2 = audit_spot_check.filter(date_of_draft_report_to_ip__quarter=2).count()
+            asc3 = audit_spot_check.filter(date_of_draft_report_to_ip__quarter=3).count()
+            asc4 = audit_spot_check.filter(date_of_draft_report_to_ip__quarter=4).count()
 
             hact['spot_checks']['completed']['q1'] = asc1
             hact['spot_checks']['completed']['q2'] = asc2
@@ -778,12 +758,12 @@ class PartnerOrganization(TimeStampedModel):
         else:
             audits = Audit.objects.filter(
                 partner=self,
-                status=Engagement.FINAL,
-                date_of_draft_report_to_unicef__year=datetime.datetime.now().year).count()
+                date_of_draft_report_to_ip__year=datetime.datetime.now().year
+            ).exclude(status=Engagement.CANCELLED).count()
             s_audits = SpecialAudit.objects.filter(
                 partner=self,
-                status=Engagement.FINAL,
-                date_of_draft_report_to_unicef__year=datetime.datetime.now().year).count()
+                date_of_draft_report_to_ip__year=datetime.datetime.now().year
+            ).exclude(status=Engagement.CANCELLED).count()
             completed_audit = audits + s_audits
         hact['audits']['completed'] = completed_audit
         self.hact_values = hact
@@ -793,8 +773,10 @@ class PartnerOrganization(TimeStampedModel):
         from etools.applications.audit.models import Audit, Engagement
 
         hact = self.get_hact_json()
-        audits = Audit.objects.filter(partner=self, status=Engagement.FINAL,
-                                      date_of_draft_report_to_unicef__year=datetime.datetime.today().year)
+        audits = Audit.objects.filter(
+            partner=self, status=Engagement.FINAL,
+            date_of_draft_report_to_ip__year=datetime.datetime.today().year
+        ).exclude(status=Engagement.CANCELLED)
         hact['outstanding_findings'] = sum([
             audit.pending_unsupported_amount for audit in audits if audit.pending_unsupported_amount])
         hact['assurance_coverage'] = self.assurance_coverage
@@ -1518,7 +1500,7 @@ class InterventionManager(models.Manager):
             donors=StringConcat("frs__fr_items__donor", separator="|", distinct=True),
             donor_codes=StringConcat("frs__fr_items__donor_code", separator="|", distinct=True),
             grants=StringConcat("frs__fr_items__grant_number", separator="|", distinct=True),
-            max_fr_currency=Max("frs__currency", output_field=CharField(), distinct=True),
+            max_fr_currency=MaxDistinct("frs__currency", output_field=CharField(), distinct=True),
             multi_curr_flag=Count(Case(When(frs__multi_curr_flag=True, then=1)))
         )
         return qs
@@ -1587,11 +1569,11 @@ class Intervention(TimeStampedModel):
         (TERMINATED, "Terminated"),
     )
     PD = 'PD'
-    SHPD = 'SHPD'
+    SHPD = 'HPD'
     SSFA = 'SSFA'
     INTERVENTION_TYPES = (
         (PD, 'Programme Document'),
-        (SHPD, 'Simplified Humanitarian Programme Document'),
+        (SHPD, 'Humanitarian Programme Document'),
         (SSFA, 'SSFA'),
     )
 
@@ -1847,6 +1829,16 @@ class Intervention(TimeStampedModel):
         return sum(1 for day in days if day.weekday() < 5)
 
     @property
+    def days_from_last_pv(self):
+        ta = TravelActivity.objects.filter(
+            partnership__pk=self.pk,
+            travel_type=TravelType.PROGRAMME_MONITORING,
+            travels__status=Travel.COMPLETED,
+            date__isnull=False,
+        ).order_by('date').last()
+        return (datetime.date.today() - ta.date).days if ta else '-'
+
+    @property
     def cp_output_names(self):
         return ', '.join(link.cp_output.name for link in self.result_links.all())
 
@@ -2095,13 +2087,25 @@ class InterventionAmendment(TimeStampedModel):
     RESULTS = 'results'
     BUDGET = 'budget'
     OTHER = 'other'
+    TYPE_ADMIN_ERROR = 'admin_error'
+    TYPE_BUDGET_LTE_20 = 'budget_lte_20'
+    TYPE_BUDGET_GT_20 = 'budget_gt_20'
+    TYPE_CHANGE = 'change'
+    TYPE_NO_COST = 'no_cost'
 
     AMENDMENT_TYPES = Choices(
+        (TYPE_ADMIN_ERROR, 'Type 1: Administrative error (correction)'),
+        (TYPE_BUDGET_LTE_20, 'Type 2: Budget <= 20%'),
+        (TYPE_BUDGET_GT_20, 'Type 3: Budget > 20%'),
+        (TYPE_CHANGE, 'Type 4: Changes to planned results'),
+        (TYPE_NO_COST, 'Type 5: No cost extension'),
+        (OTHER, 'Type 6: Other')
+    )
+    AMENDMENT_TYPES_OLD = [
         (DATES, 'Dates'),
         (RESULTS, 'Results'),
         (BUDGET, 'Budget'),
-        (OTHER, 'Other')
-    )
+    ]
 
     intervention = models.ForeignKey(
         Intervention,
@@ -2113,7 +2117,7 @@ class InterventionAmendment(TimeStampedModel):
     types = ArrayField(models.CharField(
         max_length=50,
         verbose_name=_('Types'),
-        choices=AMENDMENT_TYPES))
+        choices=AMENDMENT_TYPES + AMENDMENT_TYPES_OLD))
 
     other_description = models.CharField(
         verbose_name=_("Description"),
@@ -2290,7 +2294,6 @@ class FileType(models.Model):
     """
     FACE = 'FACE'
     PROGRESS_REPORT = 'Progress Report'
-    PARTNERSHIP_REVIEW = 'Partnership Review'
     FINAL_PARTNERSHIP_REVIEW = 'Final Partnership Review'
     CORRESPONDENCE = 'Correspondence'
     SUPPLY_PLAN = 'Supply/Distribution Plan'
@@ -2299,7 +2302,6 @@ class FileType(models.Model):
     NAME_CHOICES = Choices(
         (FACE, FACE),
         (PROGRESS_REPORT, PROGRESS_REPORT),
-        (PARTNERSHIP_REVIEW, PARTNERSHIP_REVIEW),
         (FINAL_PARTNERSHIP_REVIEW, FINAL_PARTNERSHIP_REVIEW),
         (CORRESPONDENCE, CORRESPONDENCE),
         (SUPPLY_PLAN, SUPPLY_PLAN),

@@ -14,15 +14,17 @@ from unicef_notification.models import EmailTemplate
 
 from etools.applications.audit.models import RiskBluePrint
 from etools.applications.audit.tests.factories import (
+    AuditFocalPointUserFactory,
     AuditorStaffMemberFactory,
+    AuditorUserFactory,
     AuditPartnerFactory,
     RiskFactory,
-    UserFactory,
 )
+from etools.applications.users.tests.factories import SimpleUserFactory, UserFactory
 from etools.libraries.djangolib.models import GroupWrapper
 
 
-class AuditTestCaseMixin(object):
+class AuditTestCaseMixin:
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
@@ -43,14 +45,14 @@ class AuditTestCaseMixin(object):
 
         self.auditor_firm = AuditPartnerFactory()
 
-        self.auditor = UserFactory(auditor=True, partner_firm=self.auditor_firm,
-                                   profile__countries_available=[connection.tenant])
-        self.unicef_user = UserFactory(first_name='UNICEF User', unicef_user=True,
+        self.auditor = AuditorUserFactory(partner_firm=self.auditor_firm,
+                                          profile__countries_available=[connection.tenant])
+        self.unicef_user = UserFactory(first_name='UNICEF User',
                                        profile__countries_available=[connection.tenant])
-        self.unicef_focal_point = UserFactory(first_name='UNICEF Audit Focal Point', audit_focal_point=True,
-                                              profile__countries_available=[connection.tenant])
-        self.usual_user = UserFactory(first_name='Unknown user',
-                                      profile__countries_available=[connection.tenant])
+        self.unicef_focal_point = AuditFocalPointUserFactory(first_name='UNICEF Audit Focal Point',
+                                                             profile__countries_available=[connection.tenant])
+        self.usual_user = SimpleUserFactory(first_name='Unknown user',
+                                            profile__countries_available=[connection.tenant])
 
 
 class EngagementTransitionsTestCaseMixin(AuditTestCaseMixin):

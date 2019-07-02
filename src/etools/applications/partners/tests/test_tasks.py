@@ -14,7 +14,7 @@ from unicef_attachments.models import Attachment
 
 import etools.applications.partners.tasks
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
 from etools.applications.partners.models import Agreement, Intervention
 from etools.applications.partners.tests.factories import (
@@ -68,7 +68,7 @@ class TestGetInterventionContext(BaseTenantTestCase):
         self.assertEqual(result['partner'], self.intervention.agreement.partner.name)
         self.assertEqual(result['start_date'], 'None')
         self.assertEqual(result['url'],
-                         'https://{}/pmp/interventions/{}/details'.format(settings.HOST, self.intervention.id))
+                         '{}/pmp/interventions/{}/details'.format(settings.HOST, self.intervention.id))
         self.assertEqual(result['unicef_focal_points'], [])
 
     def test_non_trivial_intervention(self):
@@ -88,7 +88,7 @@ class TestGetInterventionContext(BaseTenantTestCase):
         self.assertEqual(result['partner'], self.intervention.agreement.partner.name)
         self.assertEqual(result['start_date'], '2017-08-01')
         self.assertEqual(result['url'],
-                         'https://{}/pmp/interventions/{}/details'.format(settings.HOST, self.intervention.id))
+                         '{}/pmp/interventions/{}/details'.format(settings.HOST, self.intervention.id))
         self.assertEqual(result['unicef_focal_points'], [self.focal_point_user.email])
 
 
@@ -1033,8 +1033,9 @@ class TestCheckInterventionDraftStatus(BaseTenantTestCase):
 
     def test_task(self):
         send_path = "etools.applications.partners.utils.send_notification_with_template"
+        tz = timezone.get_default_timezone()
         intervention = InterventionFactory(status=Intervention.DRAFT)
-        intervention.created = datetime.datetime(2018, 1, 1, 12, 55, 12, 12345)
+        intervention.created = datetime.datetime(2018, 1, 1, 12, 55, 12, 12345, tzinfo=tz)
         intervention.save()
         mock_send = mock.Mock()
         with mock.patch(send_path, mock_send):

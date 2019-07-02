@@ -1,148 +1,17 @@
 
 import json
 
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.publics import synchronizers
 from etools.applications.publics.models import (
     Country as PublicsCountry,
     Currency,
     ExchangeRate,
-    Fund,
-    Grant,
     TravelAgent,
     TravelExpenseType,
-    WBS,
 )
-from etools.applications.publics.tests.factories import (
-    PublicsBusinessAreaFactory,
-    PublicsCountryFactory,
-    PublicsFundFactory,
-    PublicsGrantFactory,
-    TravelAgentFactory,
-)
+from etools.applications.publics.tests.factories import PublicsCountryFactory, TravelAgentFactory
 from etools.applications.users.models import Country
-
-
-class TestCostAssignmentSynch(BaseTenantTestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.country = Country.objects.first()
-        cls.business = PublicsBusinessAreaFactory(code="666")
-
-    def setUp(self):
-        self.grant = PublicsGrantFactory()
-        self.fund = PublicsFundFactory()
-        self.data = {
-            "WBS_ELEMENT_EX": "666/987",
-            "FUND": {"FUND_ROW": [
-                {"GRANT_NBR": "123", "FUND_TYPE_CODE": "321"},
-            ]}
-        }
-        self.expected_data = {
-            "wbs": self.data["WBS_ELEMENT_EX"],
-            "grants": [
-                {"grant_name": "123", "fund_type": "321"}
-            ]
-        }
-        self.adapter = synchronizers.CostAssignmentSynch(self.country)
-
-    def test_init(self):
-        a = synchronizers.CostAssignmentSynch(self.country)
-        self.assertEqual(len(a.grants.keys()), Grant.objects.count())
-        self.assertEqual(len(a.funds.keys()), Fund.objects.count())
-        self.assertIsNone(a.business_area)
-        self.assertEqual(a.wbss, {})
-
-    def test_local_get_or_create_grant_create(self):
-        """Check grant is created"""
-        name = "New Grant"
-        grant_qs = Grant.objects.filter(name=name)
-        self.assertFalse(grant_qs.exists())
-        self.assertEqual(self.adapter.grants, {self.grant.name: self.grant})
-        response = self.adapter.local_get_or_create_grant(name)
-        self.assertIsInstance(response, Grant)
-        self.assertTrue(grant_qs.exists())
-        self.assertEqual(self.adapter.grants, {
-            name: response,
-            self.grant.name: self.grant
-        })
-
-    def test_local_get_or_create_grant(self):
-        """If grant exists, then just return the grant"""
-        self.assertEqual(self.adapter.grants, {self.grant.name: self.grant})
-        response = self.adapter.local_get_or_create_grant(self.grant.name)
-        self.assertEqual(response, self.grant)
-        self.assertEqual(self.adapter.grants, {self.grant.name: self.grant})
-
-    def test_local_get_or_create_fund_create(self):
-        """Check fund is created"""
-        name = "New Fund"
-        fund_qs = Fund.objects.filter(name=name)
-        self.assertFalse(fund_qs.exists())
-        funds_pre = self.adapter.funds
-        response = self.adapter.local_get_or_create_fund(name)
-        self.assertIsInstance(response, Fund)
-        self.assertTrue(fund_qs.exists())
-        funds_pre[name] = response
-        self.assertEqual(self.adapter.funds, funds_pre)
-
-    def test_local_get_or_create_fund(self):
-        """If fund exists, then just return the fund"""
-        funds_pre = self.adapter.funds
-        response = self.adapter.local_get_or_create_fund(self.fund.name)
-        self.assertEqual(response, self.fund)
-        self.assertEqual(self.adapter.funds, funds_pre)
-
-    def test_local_get_or_create_wbs_create(self):
-        """Check WBS is created"""
-        name = "New WBS"
-        wbs_qs = WBS.objects.filter(name=name)
-        self.assertFalse(wbs_qs.exists())
-        response = self.adapter.local_get_or_create_WBS(name)
-        self.assertIsInstance(response, WBS)
-        self.assertTrue(wbs_qs.exists())
-
-    def test_local_get_or_create_wbs(self):
-        """Check if WBS is in wbss list then return it"""
-        name = "New WBS"
-        wbs_qs = WBS.objects.filter(name=name)
-        self.assertFalse(wbs_qs.exists())
-        self.adapter.wbss = {name: "Random"}
-        response = self.adapter.local_get_or_create_WBS(name)
-        self.assertEqual(response, "Random")
-        self.assertFalse(wbs_qs.exists())
-
-    def test_create_or_update_record(self):
-        """Check that funds, grants associated with relevant objects"""
-        wbs_qs = WBS.objects.filter(name=self.data["WBS_ELEMENT_EX"])
-        grant_qs = Grant.objects.filter(name="123")
-        fund_qs = Fund.objects.filter(name="321")
-        self.assertFalse(wbs_qs.exists())
-        self.assertFalse(grant_qs.exists())
-        self.assertFalse(fund_qs.exists())
-        self.adapter.create_or_update_record(self.expected_data)
-        self.assertTrue(wbs_qs.exists())
-        self.assertTrue(grant_qs.exists())
-        self.assertTrue(fund_qs.exists())
-        wbs = wbs_qs.first()
-        grant = grant_qs.first()
-        fund = fund_qs.first()
-        self.assertIn(grant, wbs.grants.all())
-        self.assertIn(fund, grant.funds.all())
-
-    def test_convert_records(self):
-        self.assertEqual(
-            self.adapter._convert_records(json.dumps(self.data)),
-            self.data
-        )
-
-    def test_map_object(self):
-        response = self.adapter._map_object(self.data)
-        self.assertEqual(response, self.expected_data)
-
-    def test_save_records(self):
-        response = self.adapter._save_records({"ROWSET": {"ROW": [self.data]}})
-        self.assertEqual(response, 1)
 
 
 class TestCurrencySynchronizer(BaseTenantTestCase):
@@ -159,7 +28,7 @@ class TestCurrencySynchronizer(BaseTenantTestCase):
             "VALID_FROM": "1-Jan-16",
             "VALID_TO": "31-Dec-17",
         }
-        self.adapter = synchronizers.CurrencySynchronizer(self.country)
+        self.adapter = synchronizers.CurrencySynchronizer(self.country.business_area_code)
 
     def test_convert_records(self):
         self.assertEqual(
@@ -189,7 +58,7 @@ class TestTravelAgenciesSynchronizer(BaseTenantTestCase):
             "VENDOR_CITY": "New York",
             "VENDOR_CTRY_CODE": "USD",
         }
-        self.adapter = synchronizers.TravelAgenciesSynchronizer(self.country)
+        self.adapter = synchronizers.TravelAgenciesSynchronizer(self.country.business_area_code)
 
     def test_convert_records(self):
         self.assertEqual(

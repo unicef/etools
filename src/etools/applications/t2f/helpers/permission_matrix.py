@@ -1,18 +1,99 @@
-import json
-import os
-import pprint
 from collections import defaultdict
 
 from django.core.cache import cache
+from django.utils.translation import ugettext_lazy as _
 
-import yaml
-
-from etools.applications import t2f
-from etools.applications.t2f import UserTypes
-from etools.applications.t2f.models import Travel
+from etools.applications.t2f.permission_action_points import action_points
 from etools.applications.t2f.permissions import permissions
 
 PERMISSION_MATRIX_CACHE_KEY = 't2f_permission_matrix'
+
+REPORT_PERMISSIONS = {
+    'Supervisor': {
+        'completed': {'edit': False, 'view': True},
+        'rejected': {'edit': False, 'view': True},
+        'planned': {'edit': False, 'view': True},
+        'submitted': {'edit': False, 'view': True},
+        'cancelled': {'edit': False, 'view': True},
+        'approved': {'edit': False, 'view': True}
+    },
+    'Finance Focal Point': {
+        'completed': {'edit': False, 'view': True},
+        'rejected': {'edit': False, 'view': True},
+        'planned': {'edit': False, 'view': True},
+        'submitted': {'edit': False, 'view': True},
+        'cancelled': {'edit': False, 'view': True},
+        'approved': {'edit': False, 'view': True}
+    },
+    'God': {
+        'completed': {'edit': True, 'view': True},
+        'rejected': {'edit': True, 'view': True},
+        'planned': {'edit': True, 'view': True},
+        'submitted': {'edit': True, 'view': True},
+        'cancelled': {'edit': True, 'view': True},
+        'approved': {'edit': True, 'view': True}
+    },
+    'Anyone': {
+        'completed': {'edit': False, 'view': True},
+        'rejected': {'edit': False, 'view': True},
+        'planned': {'edit': False, 'view': True},
+        'submitted': {'edit': False, 'view': True},
+        'cancelled': {'edit': False, 'view': True},
+        'approved': {'edit': False, 'view': True}
+    },
+    'Representative': {
+        'completed': {'edit': False, 'view': True},
+        'rejected': {'edit': False, 'view': True},
+        'planned': {'edit': False, 'view': True},
+        'submitted': {'edit': False, 'view': True},
+        'cancelled': {'edit': False, 'view': True},
+        'approved': {'edit': False, 'view': True}
+    },
+    'Travel Focal Point': {
+        'completed': {'edit': False, 'view': True},
+        'rejected': {'edit': False, 'view': True},
+        'planned': {'edit': False, 'view': True},
+        'submitted': {'edit': False, 'view': True},
+        'cancelled': {'edit': False, 'view': True},
+        'approved': {'edit': False, 'view': True}
+    },
+    'Traveler': {
+        'completed': {'edit': False, 'view': True},
+        'rejected': {'edit': True, 'view': True},
+        'planned': {'edit': True, 'view': True},
+        'submitted': {'edit': True, 'view': True},
+        'cancelled': {'edit': False, 'view': True},
+        'approved': {'edit': True, 'view': True}
+    },
+    'Travel Administrator': {
+        'completed': {'edit': False, 'view': True},
+        'rejected': {'edit': True, 'view': True},
+        'planned': {'edit': True, 'view': True},
+        'submitted': {'edit': True, 'view': True},
+        'cancelled': {'edit': False, 'view': True},
+        'approved': {'edit': False, 'view': True}
+    }
+}
+
+
+class UserTypes:
+    ANYONE = 'Anyone'
+    TRAVELER = 'Traveler'
+    TRAVEL_ADMINISTRATOR = 'Travel Administrator'
+    SUPERVISOR = 'Supervisor'
+    TRAVEL_FOCAL_POINT = 'Travel Focal Point'
+    FINANCE_FOCAL_POINT = 'Finance Focal Point'
+    REPRESENTATIVE = 'Representative'
+
+    CHOICES = (
+        (ANYONE, _('Anyone')),
+        (TRAVELER, _('Traveler')),
+        (TRAVEL_ADMINISTRATOR, _('Travel Administrator')),
+        (SUPERVISOR, _('Supervisor')),
+        (TRAVEL_FOCAL_POINT, _('Travel Focal Point')),
+        (FINANCE_FOCAL_POINT, _('Finance Focal Point')),
+        (REPRESENTATIVE, _('Representative')),
+    )
 
 
 def get_user_role_list(user, travel=None):
@@ -40,22 +121,52 @@ def get_user_role_list(user, travel=None):
     return roles
 
 
+def convert_permissions_structure():
+    """Convert permissions from
+    (edit/view, model, field) | permission
+    to
+    model | field | edit/view | permission
+    """
+    to_format = {}
+    for user, states in permissions.items():
+        to_format[user] = {}
+        for state, actions in states.items():
+            data = defaultdict(dict)
+            for key, perm in actions.items():
+                action, model, field = key
+                model = "baseDetails" if model == "travel" else model
+                if model not in data:
+                    data[model] = {
+                        field: {action: perm},
+                        action: perm,
+                        "edit" if action == "view" else "view": False,
+                    }
+                else:
+                    if field not in data[model]:
+                        data[model][field] = {action: perm}
+                    else:
+                        data[model][field][action] = perm
+                    if perm:
+                        data[model][action] = perm
+            to_format[user][state] = data
+            # add report model permissions
+            to_format[user][state]["report"] = REPORT_PERMISSIONS[user][state]
+    return to_format
+
+
 def get_permission_matrix():
     permission_matrix = cache.get(PERMISSION_MATRIX_CACHE_KEY)
     if not permission_matrix:
-        path = os.path.join(
-            os.path.dirname(t2f.__file__),
-            "permission_matrix.json",
-        )
-
-        with open(path) as permission_matrix_file:
-            permission_matrix = json.loads(permission_matrix_file.read())
+        permission_matrix = {
+            "action_point": action_points,
+            "travel": convert_permissions_structure()
+        }
         cache.set(PERMISSION_MATRIX_CACHE_KEY, permission_matrix)
 
     return permission_matrix
 
 
-class PermissionMatrix(object):
+class PermissionMatrix:
     VIEW = 'view'
     EDIT = 'edit'
 
@@ -89,118 +200,3 @@ class FakePermissionMatrix(PermissionMatrix):
 
     def get_permission_dict(self):
         return {}
-
-
-# TODO may remove the following code, once satisfied with above changes
-def get_permission_matrix_old():
-    path = os.path.join(
-        os.path.dirname(t2f.__file__),
-        "permission_matrix.yaml",
-    )
-    with open(path) as permission_matrix_file:
-        permission_matrix = yaml.load(permission_matrix_file.read())
-    return permission_matrix
-
-
-def parse_permission_matrix(filename):
-    """Extra data from permission_matrix
-
-    Default expected permission is;
-    - `edit`: False
-    - `view`: True
-
-    For each record check if it is different to the default
-    if so, take note
-
-    Structure of permission_matrix is;
-    Travel: {
-       "User Role": {
-         "Status": {
-           "Model": {
-             "edit": ...,
-             "view": ...,
-             "<field_name>": {
-               "edit": ...,
-               "view": ...,
-             },
-           },
-         },
-      },
-    }
-    """
-    def machine_readable(data):
-        # display results in machine readable format
-        # d = {"user": {"status": {"model": {"field": {"perm": "value"}}}}}
-        result = {}
-        state_choices = [x[0] for x in Travel.CHOICES]
-        for user_type, states in data.items():
-            result[user_type] = {}
-            for state, models in states.items():
-                if state not in state_choices:
-                    continue
-                result[user_type][state] = defaultdict(bool)
-                for model, fields in models.items():
-                    for field, perm_types in fields.items():
-                        for perm_type, perm in perm_types.items():
-                            if field == "all":
-                                key = (perm_type, "travel", model)
-                            else:
-                                key = (perm_type, model, field)
-                            result[user_type][state][key] |= perm
-
-        pp = pprint.PrettyPrinter(indent=4)
-        with open(filename, "w") as fp:
-            fp.write("permissions = {}".format(
-                pp.pformat(result).replace(
-                    "defaultdict(<class 'bool'>,", ""
-                ).replace(
-                    "})", "}"
-                )
-            ))
-
-    matrix = get_permission_matrix_old()
-    model_fields = defaultdict(set)
-    results = {}
-    for user in matrix["travel"]:
-        data = {}
-        for status in matrix["travel"][user]:
-            data[status] = defaultdict()
-            for model in matrix["travel"][user][status]:
-                model_key = "travel" if model == "baseDetails" else model
-                data[status][model_key] = defaultdict(dict)
-                for field in matrix["travel"][user][status][model]:
-                    model_fields[model_key].add(
-                        "all" if field in ["edit", "view"] else field
-                    )
-                    perm_dict = matrix["travel"][user][status][model][field]
-                    if field in ["edit", "view"]:
-                        data[status][model_key]["all"][field] = perm_dict
-                    else:
-                        for perm in ["edit", "view"]:
-                            perm_value = perm_dict[perm]
-                            data[status][model_key][field][perm] = perm_value
-        results[user] = data
-
-    machine_readable(results)
-
-
-def convert_matrix_to_json(filename=None):
-    """Take old permission matrix in yaml format and convert to json"""
-    matrix = get_permission_matrix_old()
-
-    # remove obsolete states
-    results = {"action_point": matrix["action_point"], "travel": {}}
-    state_choices = [x[0] for x in Travel.CHOICES]
-    for user, states in matrix["travel"].items():
-        results["travel"][user] = {}
-        for state, models in states.items():
-            if state in state_choices:
-                results["travel"][user][state] = models
-
-    filename = filename if filename else os.path.join(
-        os.path.dirname(t2f.__file__),
-        "permission_matrix.json",
-    )
-
-    with open(filename, "w") as fp:
-        fp.write(json.dumps(results))

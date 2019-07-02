@@ -5,11 +5,12 @@ from django.utils.translation import ugettext as _
 
 from rest_framework import status
 
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.permissions2.tests.mixins import TransitionPermissionsTestCaseMixin
 from etools.applications.tpm.models import TPMVisit
 from etools.applications.tpm.tests.base import TPMTestCaseMixin
-from etools.applications.tpm.tests.factories import TPMVisitFactory, UserFactory
-from etools.applications.permissions2.tests.mixins import TransitionPermissionsTestCaseMixin
+from etools.applications.tpm.tests.factories import TPMUserFactory, TPMVisitFactory
+from etools.applications.users.tests.factories import PMEUserFactory, UserFactory
 
 
 class TPMTransitionTestCase(TPMTestCaseMixin, BaseTenantTestCase):
@@ -38,8 +39,8 @@ class TestTPMTransitionConditions(TPMTransitionTestCase):
     def setUpTestData(cls):
         super().setUpTestData()
 
-        cls.pme_user = UserFactory(pme=True)
-        cls.tpm_user = UserFactory(tpm=True)
+        cls.pme_user = PMEUserFactory()
+        cls.tpm_user = TPMUserFactory()
         cls.tpm_staff = cls.tpm_user.tpmpartners_tpmpartnerstaffmember
         cls.tpm_partner = cls.tpm_staff.tpm_partner
 
@@ -243,7 +244,7 @@ class PMEPermissionsForTPMTransitionTestCase(TPMTransitionPermissionsTestCase):
     def setUpTestData(cls):
         super().setUpTestData()
 
-        cls.user = UserFactory(pme=True)
+        cls.user = PMEUserFactory()
         cls.user_role = 'PME'
 
 
@@ -254,7 +255,7 @@ class FPPermissionsForTpmTransitionTestCase(TPMTransitionPermissionsTestCase):
     def setUpTestData(cls):
         super().setUpTestData()
 
-        cls.user = UserFactory(unicef_user=True)
+        cls.user = UserFactory()
         cls.user_role = 'UNICEF Focal Point'
 
     def create_object(self, transition, **kwargs):
@@ -274,10 +275,10 @@ class TPMPermissionsForTPMTransitionTestCase(TPMTransitionPermissionsTestCase):
     def setUpTestData(cls):
         super().setUpTestData()
 
-        cls.user = UserFactory(tpm=True)
+        cls.user = TPMUserFactory()
         cls.user_role = 'Simple Third Party Monitor'
 
-        cls.second_user = UserFactory(tpm=True, tpm_partner=cls.user.tpmpartners_tpmpartnerstaffmember.tpm_partner)
+        cls.second_user = TPMUserFactory(tpm_partner=cls.user.tpmpartners_tpmpartnerstaffmember.tpm_partner)
 
     def create_object(self, transition, **kwargs):
         opts = {
@@ -310,7 +311,7 @@ class TPMFocalPointPermissionsForTPMTransitionTestCase(TPMTransitionPermissionsT
     def setUpTestData(cls):
         super().setUpTestData()
 
-        cls.user = UserFactory(tpm=True)
+        cls.user = TPMUserFactory()
         cls.user_role = 'Third Party Focal Point'
 
     def create_object(self, transition, **kwargs):
@@ -339,5 +340,5 @@ class UserPermissionForTPMTransitionTestCase(TPMTransitionPermissionsTestCase):
     def setUpTestData(cls):
         super().setUpTestData()
 
-        cls.user = UserFactory(unicef_user=True)
+        cls.user = UserFactory()
         cls.user_role = 'UNICEF User'

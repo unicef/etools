@@ -66,10 +66,6 @@ class Migration(migrations.Migration):
                 ('delegate', models.BooleanField(default=False, verbose_name='Delegate')),
                 ('business_area', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE,
                                                     related_name='+', to='publics.BusinessArea', verbose_name='Business Area')),
-                ('fund', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.DO_NOTHING,
-                                           related_name='+', to='publics.Fund', verbose_name='Fund')),
-                ('grant', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.DO_NOTHING,
-                                            related_name='+', to='publics.Grant', verbose_name='Grant')),
             ],
         ),
         migrations.CreateModel(
@@ -115,14 +111,8 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('amount', models.DecimalField(decimal_places=10, max_digits=20)),
-                ('fund', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.DO_NOTHING,
-                                           related_name='+', to='publics.Fund', verbose_name='Fund')),
-                ('grant', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.DO_NOTHING,
-                                            related_name='+', to='publics.Grant', verbose_name='Grant')),
                 ('invoice', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE,
                                               related_name='items', to='t2f.Invoice', verbose_name='Invoice')),
-                ('wbs', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.DO_NOTHING,
-                                          related_name='+', to='publics.WBS', verbose_name='')),
             ],
         ),
         migrations.CreateModel(
@@ -187,7 +177,7 @@ class Migration(migrations.Migration):
                 ('office', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE,
                                              related_name='+', to='users.Office', verbose_name='Office')),
                 ('sector', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE,
-                                             related_name='+', to='reports.Sector', verbose_name='Section')),
+                                             related_name='+', to='reports.Section', verbose_name='Section')),
                 ('supervisor', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE,
                                                  related_name='+', to=settings.AUTH_USER_MODEL, verbose_name='Supervisor')),
                 ('traveler', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE,
@@ -264,12 +254,6 @@ class Migration(migrations.Migration):
             name='travel',
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE,
                                     related_name='cost_assignments', to='t2f.Travel', verbose_name='Travel'),
-        ),
-        migrations.AddField(
-            model_name='costassignment',
-            name='wbs',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.DO_NOTHING,
-                                    related_name='+', to='publics.WBS', verbose_name='WBS'),
         ),
         migrations.AddField(
             model_name='clearances',

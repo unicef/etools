@@ -21,8 +21,8 @@ from rest_framework_csv import renderers as r
 from unicef_restlib.views import QueryStringFilterMixin
 from unicef_snapshot.models import Activity
 
-from etools.applications.EquiTrack.mixins import ExportModelMixin
-from etools.applications.EquiTrack.renderers import CSVFlatRenderer
+from etools.applications.core.mixins import ExportModelMixin
+from etools.applications.core.renderers import CSVFlatRenderer
 from etools.applications.partners.exports_v2 import InterventionCSVRenderer, InterventionLocationCSVRenderer
 from etools.applications.partners.filters import (
     AppliedIndicatorsFilter,
@@ -634,7 +634,7 @@ class InterventionIndicatorsUpdateView(RetrieveUpdateDestroyAPIView):
         return super().delete(request, *args, **kwargs)
 
 
-class InterventionLocation(object):
+class InterventionLocation:
     """Helper: we'll use one of these per row of output in InterventionLocationListAPIView"""
     def __init__(self, intervention, location, section):
         self.intervention = intervention
@@ -650,7 +650,7 @@ class InterventionLocation(object):
         )
 
 
-class InterventionLocationListAPIView(ListAPIView):
+class InterventionLocationListAPIView(QueryStringFilterMixin, ListAPIView):
     """
     API to export a list of intervention locations.
 
@@ -666,6 +666,27 @@ class InterventionLocationListAPIView(ListAPIView):
     renderer_classes = (
         JSONRenderer,
         InterventionLocationCSVRenderer,
+    )
+
+    filters = (
+        ('status', 'status__in'),
+        ('document_type', 'document_type__in'),
+        ('sections', 'sections__in'),
+        ('office', 'offices__in'),
+        ('country_programmes', 'country_programme__in'),
+        ('donors', 'frs__fr_items__donor__in'),
+        ('grants', 'frs__fr_items__grant_number__in'),
+        ('results', 'result_links__cp_output__in'),
+        ('unicef_focal_points', 'unicef_focal_points__in'),
+        ('interventions', 'pk__in'),
+        ('cp_outputs', 'result_links__cp_output__in'),
+        ('cluster', 'result_links__ll_results__applied_indicators__cluster_indicator_title__icontains'),
+        ('unicef_focal_points', 'unicef_focal_points__in'),
+        ('start', 'start__gte'),
+        ('end', 'end__lte'),
+        ('end_after', 'end__gte'),
+        ('location', 'result_links__ll_results__applied_indicators__locations__name__icontains'),
+        ('partners', 'agreement__partner__in'),
     )
 
     def list(self, request, *args, **kwargs):

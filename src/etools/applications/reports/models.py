@@ -8,7 +8,6 @@ from django.utils.translation import ugettext as _
 from model_utils.fields import AutoCreatedField, AutoLastModifiedField
 from model_utils.models import TimeStampedModel
 from mptt.models import MPTTModel, TreeForeignKey
-
 from unicef_locations.models import Location
 
 
@@ -130,7 +129,7 @@ class ResultType(models.Model):
         return self.name
 
 
-class Sector(TimeStampedModel):
+class Section(TimeStampedModel):
     """
     Represents a section
     """
@@ -144,15 +143,13 @@ class Sector(TimeStampedModel):
 
     class Meta:
         ordering = ['name']
+        db_table = 'reports_sector'
 
     def __str__(self):
         return '{} {}'.format(
             self.alternate_id if self.alternate_id else '',
             self.name
         )
-
-
-Section = Sector
 
 
 class ResultManager(models.Manager):
@@ -172,7 +169,7 @@ class Result(MPTTModel):
     Represents a result, wbs is unique
 
     Relates to :model:`reports.CountryProgramme`
-    Relates to :model:`reports.Sector`
+    Relates to :model:`reports.Section`
     Relates to :model:`reports.ResultType`
     """
     country_programme = models.ForeignKey(
@@ -225,6 +222,11 @@ class Result(MPTTModel):
         verbose_name=_("Humanitarian Tag"),
         default=False,
     )
+    humanitarian_marker_code = models.CharField(verbose_name=_("Humanitarian Marker Code"),
+                                                max_length=255, blank=True, null=True)
+    humanitarian_marker_name = models.CharField(verbose_name=_("Humanitarian Marker Name"),
+                                                max_length=255, blank=True, null=True)
+
     # This must be nullable so it can be optional without breaking
     # uniqueness
     wbs = models.CharField(
@@ -300,10 +302,11 @@ class Result(MPTTModel):
     def output_name(self):
         assert self.result_type.name == ResultType.OUTPUT
 
-        return '{}{}{}'.format(
+        return '{}{}{}-[{}]'.format(
             '[Expired] ' if self.expired else '',
             'Special- ' if self.special else '',
-            self.name
+            self.name,
+            self.wbs
         )
 
     @cached_property

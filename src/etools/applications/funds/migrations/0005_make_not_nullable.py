@@ -3,7 +3,7 @@
 from django.db import migrations, models
 from unicef_djangolib.fields import CurrencyField
 
-import etools.applications.EquiTrack
+import etools.applications.core
 
 
 class Migration(migrations.Migration):

@@ -4,6 +4,7 @@ from rest_framework import serializers
 from unicef_attachments.fields import FileTypeModelChoiceField
 from unicef_attachments.models import AttachmentLink, FileType
 from unicef_attachments.serializers import AttachmentLinkSerializer, BaseAttachmentSerializer
+
 from etools.applications.attachments.utils import get_file_type
 
 

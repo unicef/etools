@@ -1,6 +1,6 @@
 from mock import Mock, patch
 
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.hact.models import AggregateHact
 from etools.applications.hact.tasks import update_aggregate_hact_values, update_hact_for_country, update_hact_values
 from etools.applications.hact.tests.factories import AggregateHactFactory
@@ -31,7 +31,7 @@ class TestHactForCountry(BaseTenantTestCase):
         logs = VisionSyncLog.objects.all()
         self.assertEqual(logs.count(), 0)
         PartnerFactory(name="Partner XYZ", reported_cy=20000)
-        update_hact_for_country(self.tenant.name)
+        update_hact_for_country(self.tenant.business_area_code)
         self.assertEqual(logs.count(), 1)
 
         log = logs.first()

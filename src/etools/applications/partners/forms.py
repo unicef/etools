@@ -1,4 +1,3 @@
-
 import logging
 
 from django import forms
@@ -10,7 +9,12 @@ from django.utils.translation import ugettext as _
 
 from unicef_djangolib.forms import AutoSizeTextForm
 
-from etools.applications.partners.models import PartnerOrganization, PartnerStaffMember, PartnerType
+from etools.applications.partners.models import (
+    InterventionAttachment,
+    PartnerOrganization,
+    PartnerStaffMember,
+    PartnerType,
+)
 
 logger = logging.getLogger('partners.forms')
 
@@ -85,3 +89,20 @@ class PartnerStaffMemberForm(forms.ModelForm):
                     raise ValidationError({'active': self.ERROR_MESSAGES['user_unavailable']})
 
         return cleaned_data
+
+
+class InterventionAttachmentForm(forms.ModelForm):
+    class Meta:
+        model = InterventionAttachment
+        fields = (
+            'type',
+            'attachment',
+        )
+
+    def __init__(self, *args, **kwargs):
+        instance = kwargs.get("instance", None)
+        if instance:
+            attachment = instance.attachment_file.last()
+            if attachment:
+                instance.attachment = attachment.file
+        super().__init__(*args, **kwargs)

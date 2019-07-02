@@ -1,7 +1,6 @@
-
+import datetime
 import json
 import logging
-from datetime import datetime
 
 from django.urls import reverse
 
@@ -9,7 +8,7 @@ import pytz
 from freezegun import freeze_time
 from pytz import UTC
 
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.publics.tests.factories import (
     PublicsBusinessAreaFactory,
     PublicsCurrencyFactory,
@@ -40,8 +39,8 @@ class OverlappingTravelsTest(BaseTenantTestCase):
         cls.travel = TravelFactory(reference_number=make_travel_reference_number(),
                                    traveler=cls.traveler,
                                    supervisor=cls.unicef_staff,
-                                   start_date=datetime(2017, 4, 4, 12, 00, tzinfo=UTC),
-                                   end_date=datetime(2017, 4, 14, 16, 00, tzinfo=UTC))
+                                   start_date=datetime.date(2017, 4, 4),
+                                   end_date=datetime.date(2017, 4, 14))
         ItineraryItemFactory(travel=cls.travel)
         ItineraryItemFactory(travel=cls.travel)
         cls.travel.submit_for_approval()
@@ -54,16 +53,16 @@ class OverlappingTravelsTest(BaseTenantTestCase):
 
         data = {'itinerary': [{'origin': 'Berlin',
                                'destination': 'Budapest',
-                               'departure_date': '2017-04-07T17:06:55.821490',
-                               'arrival_date': '2017-04-08T17:06:55.821490',
+                               'departure_date': '2017-04-07',
+                               'arrival_date': '2017-04-08',
                                'dsa_region': dsa_region.id,
                                'overnight_travel': False,
                                'mode_of_travel': ModeOfTravel.RAIL,
                                'airlines': []},
                               {'origin': 'Budapest',
                                'destination': 'Berlin',
-                               'departure_date': '2017-05-20T12:06:55.821490',
-                               'arrival_date': '2017-05-21T12:06:55.821490',
+                               'departure_date': '2017-05-20',
+                               'arrival_date': '2017-05-21',
                                'dsa_region': dsa_region.id,
                                'overnight_travel': False,
                                'mode_of_travel': ModeOfTravel.RAIL,
@@ -74,8 +73,8 @@ class OverlappingTravelsTest(BaseTenantTestCase):
                 'mode_of_travel': [ModeOfTravel.BOAT],
                 'traveler': self.traveler.id,
                 'supervisor': self.unicef_staff.id,
-                'start_date': '2017-04-07T15:02:13+01:00',
-                'end_date': '2017-05-22T15:02:13+01:00',
+                'start_date': '2017-04-07',
+                'end_date': '2017-05-22',
                 'currency': currency.id,
                 'purpose': 'Purpose',
                 'additional_note': 'Notes'}
@@ -86,7 +85,7 @@ class OverlappingTravelsTest(BaseTenantTestCase):
 
         travel_id = response_json['id']
 
-        with freeze_time(datetime(2017, 4, 14, 16, 00, tzinfo=UTC)):
+        with freeze_time(datetime.datetime(2017, 4, 14, 16, 00, tzinfo=UTC)):
             response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                             kwargs={'travel_pk': travel_id,
                                                                     'transition_name': Travel.SUBMIT_FOR_APPROVAL}),
@@ -98,21 +97,21 @@ class OverlappingTravelsTest(BaseTenantTestCase):
 
     def test_almost_overlapping_trips(self):
         currency = PublicsCurrencyFactory()
-        dsa_rate = PublicsDSARateFactory(effective_from_date=datetime(2017, 4, 10, 16, 00, tzinfo=UTC))
+        dsa_rate = PublicsDSARateFactory(effective_from_date=datetime.datetime(2017, 4, 10, 16, 00, tzinfo=UTC))
         dsa_region = dsa_rate.region
 
         data = {'itinerary': [{'origin': 'Berlin',
                                'destination': 'Budapest',
-                               'departure_date': '2017-04-14T17:06:55.821490',
-                               'arrival_date': '2017-04-15T17:06:55.821490',
+                               'departure_date': '2017-04-14',
+                               'arrival_date': '2017-04-15',
                                'dsa_region': dsa_region.id,
                                'overnight_travel': False,
                                'mode_of_travel': ModeOfTravel.RAIL,
                                'airlines': []},
                               {'origin': 'Budapest',
                                'destination': 'Berlin',
-                               'departure_date': '2017-05-20T12:06:55.821490',
-                               'arrival_date': '2017-05-21T12:06:55.821490',
+                               'departure_date': '2017-05-20',
+                               'arrival_date': '2017-05-21',
                                'dsa_region': dsa_region.id,
                                'overnight_travel': False,
                                'mode_of_travel': ModeOfTravel.RAIL,
@@ -123,8 +122,8 @@ class OverlappingTravelsTest(BaseTenantTestCase):
                 'mode_of_travel': [ModeOfTravel.BOAT],
                 'traveler': self.traveler.id,
                 'supervisor': self.unicef_staff.id,
-                'start_date': '2017-04-14T16:05:00+00:00',
-                'end_date': '2017-05-22T15:02:13+00:00',
+                'start_date': '2017-04-14',
+                'end_date': '2017-05-22',
                 'currency': currency.id,
                 'purpose': 'Purpose',
                 'additional_note': 'Notes'}
@@ -133,7 +132,7 @@ class OverlappingTravelsTest(BaseTenantTestCase):
                                         data=data, user=self.traveler)
         response_json = json.loads(response.rendered_content)
 
-        with freeze_time(datetime(2017, 4, 14, 16, 00, tzinfo=UTC)):
+        with freeze_time(datetime.datetime(2017, 4, 14, 16, 00, tzinfo=UTC)):
             response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                             kwargs={'travel_pk': response_json['id'],
                                                                     'transition_name': Travel.SUBMIT_FOR_APPROVAL}),
@@ -148,16 +147,16 @@ class OverlappingTravelsTest(BaseTenantTestCase):
 
         data = {'itinerary': [{'origin': 'Berlin',
                                'destination': 'Budapest',
-                               'departure_date': '2017-04-14T17:06:55.821490',
-                               'arrival_date': '2017-04-15T17:06:55.821490',
+                               'departure_date': '2017-04-14',
+                               'arrival_date': '2017-04-15',
                                'dsa_region': dsa_region.id,
                                'overnight_travel': False,
                                'mode_of_travel': ModeOfTravel.RAIL,
                                'airlines': []},
                               {'origin': 'Budapest',
                                'destination': 'Berlin',
-                               'departure_date': '2017-05-20T12:06:55.821490',
-                               'arrival_date': '2017-05-21T12:06:55.821490',
+                               'departure_date': '2017-05-20',
+                               'arrival_date': '2017-05-21',
                                'dsa_region': dsa_region.id,
                                'overnight_travel': False,
                                'mode_of_travel': ModeOfTravel.RAIL,
@@ -168,8 +167,8 @@ class OverlappingTravelsTest(BaseTenantTestCase):
                 'mode_of_travel': [ModeOfTravel.BOAT],
                 'traveler': self.traveler.id,
                 'supervisor': self.unicef_staff.id,
-                'start_date': '2017-04-14T16:05:00+00:00',
-                'end_date': '2017-05-22T15:02:13+00:00',
+                'start_date': '2017-04-14',
+                'end_date': '2017-05-22',
                 'currency': currency.id,
                 'purpose': 'Purpose',
                 'additional_note': 'Notes'}
@@ -178,7 +177,7 @@ class OverlappingTravelsTest(BaseTenantTestCase):
                                         data=data, user=self.traveler)
         response_json = json.loads(response.rendered_content)
 
-        with freeze_time(datetime(2017, 4, 14, 16, 00, tzinfo=UTC)):
+        with freeze_time(datetime.datetime(2017, 4, 14, 16, 00, tzinfo=UTC)):
             response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                             kwargs={'travel_pk': response_json['id'],
                                                                     'transition_name': Travel.SUBMIT_FOR_APPROVAL}),
@@ -196,8 +195,8 @@ class OverlappingTravelsTest(BaseTenantTestCase):
             {
                 'origin': 'Berlin',
                 'destination': 'Budapest',
-                'departure_date': '2017-04-10T16:05:00+00:00',
-                'arrival_date': '2017-04-15T17:06:55.821490',
+                'departure_date': '2017-04-10',
+                'arrival_date': '2017-04-15',
                 'dsa_region': dsa_region.id,
                 'overnight_travel': False,
                 'mode_of_travel': ModeOfTravel.RAIL,
@@ -206,8 +205,8 @@ class OverlappingTravelsTest(BaseTenantTestCase):
             {
                 'origin': 'Budapest',
                 'destination': 'Berlin',
-                'departure_date': '2017-05-20T12:06:55.821490',
-                'arrival_date': '2017-05-21T12:06:55.821490',
+                'departure_date': '2017-05-20',
+                'arrival_date': '2017-05-21',
                 'dsa_region': dsa_region.id,
                 'overnight_travel': False,
                 'mode_of_travel': ModeOfTravel.RAIL,
@@ -220,33 +219,40 @@ class OverlappingTravelsTest(BaseTenantTestCase):
                                                                  'transition_name': Travel.SUBMIT_FOR_APPROVAL}),
                                         data=response_json, user=self.traveler)
         response_json = json.loads(response.rendered_content)
+        assert response.status_code == 400
         self.assertEqual(response_json,
                          {'non_field_errors': ['You have an existing trip with overlapping dates. '
                                                'Please adjust your trip accordingly.']})
 
     def test_daylight_saving(self):
         budapest_tz = pytz.timezone('Europe/Budapest')
-        self.travel.end_date = budapest_tz.localize(datetime(2017, 10, 29, 2, 0), is_dst=True)
+        self.travel.end_date = budapest_tz.localize(
+            datetime.datetime(2017, 10, 29, 2, 0),
+            is_dst=True
+        ).date()
         self.travel.save()
 
         # Same date as the previous, but it's already after daylight saving
-        start_date = budapest_tz.localize(datetime(2017, 10, 29, 2, 0), is_dst=False).isoformat()
+        start_date = budapest_tz.localize(
+            datetime.datetime(2017, 10, 29, 2, 0),
+            is_dst=False
+        ).isoformat()[:10]
 
         currency = PublicsCurrencyFactory()
         dsa_region = PublicsDSARegionFactory()
 
         data = {'itinerary': [{'origin': 'Berlin',
                                'destination': 'Budapest',
-                               'departure_date': '2017-04-14T17:06:55.821490',
-                               'arrival_date': '2017-04-15T17:06:55.821490',
+                               'departure_date': '2017-04-14',
+                               'arrival_date': '2017-04-15',
                                'dsa_region': dsa_region.id,
                                'overnight_travel': False,
                                'mode_of_travel': ModeOfTravel.RAIL,
                                'airlines': []},
                               {'origin': 'Budapest',
                                'destination': 'Berlin',
-                               'departure_date': '2017-05-20T12:06:55.821490',
-                               'arrival_date': '2017-05-21T12:06:55.821490',
+                               'departure_date': '2017-05-20',
+                               'arrival_date': '2017-05-21',
                                'dsa_region': dsa_region.id,
                                'overnight_travel': False,
                                'mode_of_travel': ModeOfTravel.RAIL,
@@ -258,7 +264,7 @@ class OverlappingTravelsTest(BaseTenantTestCase):
                 'traveler': self.traveler.id,
                 'supervisor': self.unicef_staff.id,
                 'start_date': start_date,
-                'end_date': '2017-05-22T15:02:13+00:00',
+                'end_date': '2017-05-22',
                 'currency': currency.id,
                 'purpose': 'Purpose',
                 'additional_note': 'Notes'}
@@ -266,3 +272,119 @@ class OverlappingTravelsTest(BaseTenantTestCase):
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'),
                                         data=data, user=self.traveler)
         self.assertEqual(response.status_code, 201)
+
+    def test_start_end_match(self):
+        # the new itinerary start date matches the end date of a
+        # current itinerary
+        currency = PublicsCurrencyFactory()
+        dsa_region = PublicsDSARegionFactory()
+
+        data = {'itinerary': [{'origin': 'Berlin',
+                               'destination': 'Budapest',
+                               'departure_date': '2017-04-14',
+                               'arrival_date': '2017-04-20',
+                               'dsa_region': dsa_region.id,
+                               'overnight_travel': False,
+                               'mode_of_travel': ModeOfTravel.RAIL,
+                               'airlines': []},
+                              {'origin': 'Budapest',
+                               'destination': 'Berlin',
+                               'departure_date': '2017-05-20',
+                               'arrival_date': '2017-05-21',
+                               'dsa_region': dsa_region.id,
+                               'overnight_travel': False,
+                               'mode_of_travel': ModeOfTravel.RAIL,
+                               'airlines': []}],
+                'activities': [],
+                'ta_required': True,
+                'international_travel': False,
+                'mode_of_travel': [ModeOfTravel.BOAT],
+                'traveler': self.traveler.id,
+                'supervisor': self.unicef_staff.id,
+                'start_date': '2017-04-14',
+                'end_date': '2017-05-22',
+                'currency': currency.id,
+                'purpose': 'Purpose',
+                'additional_note': 'Notes'}
+
+        response = self.forced_auth_req(
+            'post',
+            reverse('t2f:travels:list:index'),
+            data=data,
+            user=self.traveler,
+        )
+        response_json = json.loads(response.rendered_content)
+
+        travel_id = response_json['id']
+
+        response = self.forced_auth_req(
+            'post',
+            reverse(
+                't2f:travels:details:state_change',
+                kwargs={
+                    'travel_pk': travel_id,
+                    'transition_name': Travel.SUBMIT_FOR_APPROVAL,
+                }
+            ),
+            data=response_json,
+            user=self.traveler,
+        )
+        assert response.status_code == 200
+
+    def test_end_start_match(self):
+        # the new itinerary end date matches the start date
+        # of a current itinerary
+        currency = PublicsCurrencyFactory()
+        dsa_region = PublicsDSARegionFactory()
+
+        data = {'itinerary': [{'origin': 'Berlin',
+                               'destination': 'Budapest',
+                               'departure_date': '2017-03-14',
+                               'arrival_date': '2017-03-20',
+                               'dsa_region': dsa_region.id,
+                               'overnight_travel': False,
+                               'mode_of_travel': ModeOfTravel.RAIL,
+                               'airlines': []},
+                              {'origin': 'Budapest',
+                               'destination': 'Berlin',
+                               'departure_date': '2017-03-25',
+                               'arrival_date': '2017-04-04',
+                               'dsa_region': dsa_region.id,
+                               'overnight_travel': False,
+                               'mode_of_travel': ModeOfTravel.RAIL,
+                               'airlines': []}],
+                'activities': [],
+                'ta_required': True,
+                'international_travel': False,
+                'mode_of_travel': [ModeOfTravel.BOAT],
+                'traveler': self.traveler.id,
+                'supervisor': self.unicef_staff.id,
+                'start_date': '2017-03-14',
+                'end_date': '2017-04-04',
+                'currency': currency.id,
+                'purpose': 'Purpose',
+                'additional_note': 'Notes'}
+
+        response = self.forced_auth_req(
+            'post',
+            reverse('t2f:travels:list:index'),
+            data=data,
+            user=self.traveler,
+        )
+        response_json = json.loads(response.rendered_content)
+
+        travel_id = response_json['id']
+
+        response = self.forced_auth_req(
+            'post',
+            reverse(
+                't2f:travels:details:state_change',
+                kwargs={
+                    'travel_pk': travel_id,
+                    'transition_name': Travel.SUBMIT_FOR_APPROVAL,
+                }
+            ),
+            data=response_json,
+            user=self.traveler,
+        )
+        assert response.status_code == 200

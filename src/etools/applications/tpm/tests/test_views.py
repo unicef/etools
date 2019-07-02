@@ -12,17 +12,25 @@ from unicef_attachments.models import AttachmentLink
 from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.attachments.tests.factories import (
     AttachmentFactory,
-    AttachmentLinkFactory,
     AttachmentFileTypeFactory,
+    AttachmentLinkFactory,
 )
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import PartnerType
 from etools.applications.partners.tests.factories import InterventionAttachmentFactory
 from etools.applications.reports.tests.factories import SectionFactory
 from etools.applications.tpm.models import ThirdPartyMonitor, TPMVisit
 from etools.applications.tpm.tests.base import TPMTestCaseMixin
-from etools.applications.tpm.tests.factories import _FUZZY_END_DATE, TPMPartnerFactory, TPMVisitFactory, UserFactory
-from etools.applications.utils.common.tests.test_utils import TestExportMixin
+from etools.applications.tpm.tests.factories import (
+    _FUZZY_END_DATE,
+    OfficeFactory,
+    TPMActivityFactory,
+    TPMPartnerFactory,
+    TPMUserFactory,
+    TPMVisitFactory,
+)
+from etools.applications.users.tests.factories import UserFactory
+from etools.libraries.djangolib.tests.utils import TestExportMixin
 
 
 class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase):
@@ -97,8 +105,70 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
             }
         )
 
+    def test_list_view_filter_office_single(self):
+        staff = self.tpm_user.tpmpartners_tpmpartnerstaffmember
+        visit = TPMVisitFactory(
+            status=TPMVisit.ASSIGNED,
+            tpm_partner=staff.tpm_partner,
+            tpm_partner_focal_points=[staff]
+        )
+        office = OfficeFactory()
+        TPMActivityFactory(tpm_visit=visit, offices=[office])
+        TPMVisitFactory(
+            status=TPMVisit.ASSIGNED,
+            tpm_partner=staff.tpm_partner,
+            tpm_partner_focal_points=[staff]
+        )
+        self.assertIn(
+            visit,
+            TPMVisit.objects.filter(tpm_activities__offices=office),
+        )
+        self._test_list_view(
+            self.tpm_user,
+            [visit],
+            filters={"tpm_activities__offices": office.pk}
+        )
+
+    def test_list_view_filter_office_multiple(self):
+        staff = self.tpm_user.tpmpartners_tpmpartnerstaffmember
+        visit_1 = TPMVisitFactory(
+            status=TPMVisit.ASSIGNED,
+            tpm_partner=staff.tpm_partner,
+            tpm_partner_focal_points=[staff]
+        )
+        office_1 = OfficeFactory()
+        TPMActivityFactory(tpm_visit=visit_1, offices=[office_1])
+        visit_2 = TPMVisitFactory(
+            status=TPMVisit.ASSIGNED,
+            tpm_partner=staff.tpm_partner,
+            tpm_partner_focal_points=[staff]
+        )
+        office_2 = OfficeFactory()
+        TPMActivityFactory(tpm_visit=visit_2, offices=[office_2])
+        TPMVisitFactory(
+            status=TPMVisit.ASSIGNED,
+            tpm_partner=staff.tpm_partner,
+            tpm_partner_focal_points=[staff]
+        )
+        self.assertEqual(
+            list(TPMVisit.objects.filter(
+                tpm_activities__offices__in=[office_1, office_2]
+            ).all()),
+            [visit_1, visit_2],
+        )
+        self._test_list_view(
+            self.tpm_user,
+            [visit_1, visit_2],
+            filters={
+                "tpm_activities__offices__in": ",".join([
+                    str(office_1.pk),
+                    str(office_2.pk),
+                ]),
+            }
+        )
+
     def test_list_view_without_tpm_organization(self):
-        user = UserFactory(unicef_user=True)
+        user = UserFactory()
         user.groups.add(ThirdPartyMonitor.as_group())
 
         self._test_list_view(user, [])
@@ -674,7 +744,7 @@ class TestPartnerAttachmentsView(TPMTestCaseMixin, BaseTenantTestCase):
         response = self.forced_auth_req(
             'post',
             reverse('tpm:partner-attachments-list', args=[partner.id]),
-            user=UserFactory(tpm=True, tpm_partner=partner),
+            user=TPMUserFactory(tpm_partner=partner),
             request_format='multipart',
             data={
                 'file_type': AttachmentFileTypeFactory(code='tpm_partner').id,

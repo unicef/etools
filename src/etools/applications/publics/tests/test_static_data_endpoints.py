@@ -5,7 +5,7 @@ from django.urls import reverse
 
 import factory
 
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.publics.models import Currency, TravelExpenseType
 from etools.applications.publics.tests.factories import (
     PublicsAirlineCompanyFactory,
@@ -14,10 +14,7 @@ from etools.applications.publics.tests.factories import (
     PublicsCurrencyFactory,
     PublicsDSARateFactory,
     PublicsDSARegionFactory,
-    PublicsFundFactory,
-    PublicsGrantFactory,
     PublicsTravelExpenseTypeFactory,
-    PublicsWBSFactory,
     TravelAgentFactory,
 )
 from etools.applications.users.tests.factories import UserFactory
@@ -57,9 +54,6 @@ class StaticDataEndpoints(BaseTenantTestCase):
         country = PublicsCountryFactory(currency=None)
         PublicsDSARegionFactory(country=country)
         PublicsBusinessAreaFactory()
-        PublicsWBSFactory(business_area=None)
-        PublicsGrantFactory()
-        PublicsFundFactory()
         PublicsTravelExpenseTypeFactory()
 
         with self.assertNumQueries(11):

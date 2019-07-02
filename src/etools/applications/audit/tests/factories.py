@@ -6,16 +6,33 @@ from django.contrib.auth.models import Group
 import factory
 from factory import fuzzy
 
-from etools.applications.audit.models import (Audit, Auditor, DetailedFindingInfo, Engagement,
-                                              Finding, KeyInternalControl, MicroAssessment,
-                                              Risk, RiskBluePrint, RiskCategory, SpecialAudit, SpecificProcedure,
-                                              SpotCheck, UNICEFAuditFocalPoint, UNICEFUser,)
-from etools.applications.audit.purchase_order.models import (AuditorFirm, AuditorStaffMember,
-                                                             PurchaseOrder, PurchaseOrderItem,)
+from etools.applications.audit.models import (
+    Audit,
+    Auditor,
+    DetailedFindingInfo,
+    Engagement,
+    Finding,
+    KeyInternalControl,
+    MicroAssessment,
+    Risk,
+    RiskBluePrint,
+    RiskCategory,
+    SpecialAudit,
+    SpecificProcedure,
+    SpotCheck,
+    UNICEFAuditFocalPoint,
+    UNICEFUser,
+)
+from etools.applications.audit.purchase_order.models import (
+    AuditorFirm,
+    AuditorStaffMember,
+    PurchaseOrder,
+    PurchaseOrderItem,
+)
 from etools.applications.firms.tests.factories import BaseFirmFactory, BaseStaffMemberFactory
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.tests.factories import AgreementFactory, InterventionFactory, PartnerFactory
-from etools.applications.users.tests.factories import UserFactory as BaseUserFactory
+from etools.applications.users.tests.factories import UserFactory
 
 
 class FuzzyBooleanField(fuzzy.BaseFuzzyAttribute):
@@ -31,42 +48,16 @@ class PartnerWithAgreementsFactory(PartnerFactory):
     agreements = factory.RelatedFactory(AgreementWithInterventionsFactory, 'partner')
 
 
-class UserFactory(BaseUserFactory):
-    """
-    User factory with ability to quickly assign auditor portal related groups with special logic for auditor.
-    """
-    class Params:
-        unicef_user = factory.Trait(
-            groups=[UNICEFUser.name],
-        )
+class AuditFocalPointUserFactory(UserFactory):
+    groups__data = [UNICEFUser.name, UNICEFAuditFocalPoint.name]
 
-        audit_focal_point = factory.Trait(
-            groups=[UNICEFUser.name, UNICEFAuditFocalPoint.name],
-        )
 
-        auditor = factory.Trait(
-            groups=[Auditor.name],
-        )
-
-    @factory.post_generation
-    def groups(self, create, extracted, **kwargs):
-        if not create:
-            return
-
-        if extracted is not None:
-            extracted = extracted[:]
-            for i, group in enumerate(extracted):
-                if isinstance(group, str):
-                    extracted[i] = Group.objects.get_or_create(name=group)[0]
-
-            self.groups.add(*extracted)
+class AuditorUserFactory(UserFactory):
+    groups__data = [Auditor.name]
 
     @factory.post_generation
     def partner_firm(self, create, extracted, **kwargs):
         if not create:
-            return
-
-        if Auditor.name not in self.groups.values_list('name', flat=True):
             return
 
         if not extracted:

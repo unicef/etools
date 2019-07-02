@@ -3,11 +3,12 @@ from unittest.mock import Mock, patch
 
 from django.conf import settings
 from django.core.management import call_command
+from django.utils import timezone
 
 from unicef_attachments.models import Attachment
 
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
 from etools.applications.partners.models import Agreement, Intervention
 from etools.applications.partners.tests.factories import (
@@ -364,7 +365,8 @@ class TestSendInterventionDraftNotifications(BaseTenantTestCase):
     def test_command(self):
         send_path = "etools.applications.partners.utils.send_notification_with_template"
         intervention = InterventionFactory(status=Intervention.DRAFT)
-        intervention.created = datetime.datetime(2018, 1, 1, 12, 55, 12, 12345)
+        tz = timezone.get_default_timezone()
+        intervention.created = datetime.datetime(2018, 1, 1, 12, 55, 12, 12345, tzinfo=tz)
         intervention.save()
         mock_send = Mock()
         with patch(send_path, mock_send):

@@ -1,19 +1,7 @@
 import functools
 import operator
 
-from django.db.models import (
-    Case,
-    CharField,
-    Count,
-    F,
-    Max,
-    Min,
-    OuterRef,
-    Q,
-    Subquery,
-    Sum,
-    When,
-)
+from django.db.models import Case, CharField, Count, F, Max, Min, OuterRef, Q, Subquery, Sum, When
 
 from rest_framework.generics import ListCreateAPIView
 from rest_framework.permissions import IsAdminUser
@@ -25,7 +13,8 @@ from etools.applications.action_points.models import ActionPoint
 from etools.applications.partners.exports_v2 import PartnershipDashCSVRenderer
 from etools.applications.partners.models import FileType, Intervention, InterventionAttachment
 from etools.applications.partners.serializers.dashboards import InterventionDashSerializer
-from etools.applications.t2f.models import Travel, TravelType, TravelActivity
+from etools.applications.t2f.models import Travel, TravelActivity, TravelType
+from etools.libraries.djangolib.models import MaxDistinct
 
 
 class InterventionPartnershipDashView(QueryStringFilterMixin, ListCreateAPIView):
@@ -85,7 +74,7 @@ class InterventionPartnershipDashView(QueryStringFilterMixin, ListCreateAPIView)
             Sum("frs__actual_amt"),
             Sum("frs__actual_amt_local"),
             Count("frs__currency", distinct=True),
-            max_fr_currency=Max("frs__currency", output_field=CharField(), distinct=True),
+            max_fr_currency=MaxDistinct("frs__currency", output_field=CharField(), distinct=True),
             multi_curr_flag=Count(Case(When(frs__multi_curr_flag=True, then=1))),
             has_final_partnership_review=Subquery(final_partnership_review_qs),
             action_points=Subquery(action_points_qs),

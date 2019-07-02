@@ -8,30 +8,12 @@ from django.db.models.functions import Coalesce
 
 from dateutil.relativedelta import relativedelta
 
-from etools.applications.EquiTrack.util_scripts import set_country
-from etools.applications.audit.models import Audit, Engagement, MicroAssessment, SpecialAudit, SpotCheck
-from etools.applications.management.issues.checks import recheck_all_open_issues, run_all_checks
+from etools.applications.core.util_scripts import set_country
 from etools.applications.partners.models import Intervention, PartnerOrganization
 from etools.applications.users.models import Country
 from etools.config.celery import app
 
 logger = logging.getLogger(__name__)
-
-
-@app.task
-def run_all_checks_task():
-    """
-    Run all configured IssueChecks against the entire database.
-    """
-    run_all_checks()
-
-
-@app.task
-def recheck_all_open_issues_task():
-    """
-    Recheck all unresolved FlaggedIssue objects for resolution.
-    """
-    recheck_all_open_issues()
 
 
 @app.task
@@ -163,37 +145,3 @@ def pmp_indicator_report(writer, **kwargs):
                     'Partner Link': '{}/pmp/partners/{}/details'.format(base_url, partner.pk),
                     'Intervention Link': '{}/pmp/interventions/{}/details'.format(base_url, intervention.pk),
                 })
-
-
-@app.task
-def fam_report(writer, **kwargs):
-    countries = kwargs.get('countries', None)
-    start_date = kwargs.get('start_date', None)
-    if start_date:
-        start_date = datetime.strptime(start_date.pop(), '%Y-%m-%d')
-    else:
-        start_date = date.today() + relativedelta(months=-1)
-
-    engagements = (SpotCheck, Audit, SpecialAudit, MicroAssessment)
-    fieldnames = ['Country'] + ['{}-{}'.format(model._meta.verbose_name_raw, status_display)
-                                for model in engagements for _, status_display in Engagement.STATUSES]
-    dict_writer = writer(fieldnames=fieldnames)
-    dict_writer.writeheader()
-
-    qs = Country.objects.exclude(schema_name__in=['public', 'uat', 'frg'])
-    if countries:
-        qs = qs.filter(schema_name__in=countries.pop().split(','))
-
-    for country in qs:
-        set_country(country.name)
-        row_dict = {'Country': country.name}
-        for model in engagements:
-            for status, status_display in Engagement.STATUSES:
-                filter_dict = {
-                    'status': status,
-                    'start_date__month': start_date.month,
-                    'start_date__year': start_date.year,
-                }
-                row_dict['{}-{}'.format(
-                    model._meta.verbose_name_raw, status_display)] = model.objects.filter(**filter_dict).count()
-        dict_writer.writerow(row_dict)

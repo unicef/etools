@@ -7,8 +7,11 @@ from django.contrib.auth.admin import UserAdmin
 from django.http.response import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
+
+from django_tenants.admin import TenantAdminMixin
 from django_tenants.utils import get_public_schema_name
 
+from etools.applications.funds.tasks import sync_all_delegated_frs, sync_country_delegated_fr
 from etools.applications.hact.tasks import update_hact_for_country, update_hact_values
 from etools.applications.users.models import Country, Office, UserProfile, WorkspaceCounter
 from etools.applications.vision.tasks import sync_handler, vision_sync_task
@@ -171,6 +174,7 @@ class UserAdminPlus(UserAdmin):
         'is_staff',
         'is_superuser',
         'is_active',
+        'country',
     ]
 
     def get_urls(self):
@@ -190,6 +194,11 @@ class UserAdminPlus(UserAdmin):
         user = get_object_or_404(get_user_model(), pk=pk)
         sync_user.delay(user.username)
         return HttpResponseRedirect(reverse('admin:users_user_change', args=[user.pk]))
+
+    def country(self, obj):
+        return obj.profile.country
+
+    country.admin_order_field = 'profile__country'
 
     def office(self, obj):
         return obj.profile.office
@@ -227,7 +236,7 @@ class UserAdminPlus(UserAdmin):
         return fields
 
 
-class CountryAdmin(admin.ModelAdmin):
+class CountryAdmin(TenantAdminMixin, admin.ModelAdmin):
     change_form_template = 'admin/users/country/change_form.html'
 
     def has_add_permission(self, request):
@@ -258,6 +267,8 @@ class CountryAdmin(admin.ModelAdmin):
         custom_urls = [
             url(r'^(?P<pk>\d+)/sync_fc/$', wrap(self.sync_fund_commitment), name='users_country_fund_commitment'),
             url(r'^(?P<pk>\d+)/sync_fr/$', wrap(self.sync_fund_reservation), name='users_country_fund_reservation'),
+            url(r'^(?P<pk>\d+)/sync_delegated_fr/$', wrap(self.sync_fund_reservation_delegated),
+                name='users_country_fund_reservation_delegated'),
             url(r'^(?P<pk>\d+)/sync_partners/$', wrap(self.sync_partners), name='users_country_partners'),
             url(r'^(?P<pk>\d+)/sync_programme/$', wrap(self.sync_programme), name='users_country_programme'),
             url(r'^(?P<pk>\d+)/sync_ram/$', wrap(self.sync_ram), name='users_country_ram'),
@@ -268,6 +279,14 @@ class CountryAdmin(admin.ModelAdmin):
 
     def sync_fund_commitment(self, request, pk):
         return self.execute_sync(pk, 'fund_commitment')
+
+    def sync_fund_reservation_delegated(self, request, pk):
+        country = Country.objects.get(pk=pk)
+        if country.schema_name == get_public_schema_name():
+            sync_all_delegated_frs.delay()
+        else:
+            sync_country_delegated_fr.delay(country.business_area_code)
+        return HttpResponseRedirect(reverse('admin:users_country_change', args=[country.pk]))
 
     def sync_fund_reservation(self, request, pk):
         return self.execute_sync(pk, 'fund_reservation')
@@ -290,7 +309,7 @@ class CountryAdmin(admin.ModelAdmin):
         if country.schema_name == get_public_schema_name():
             vision_sync_task(synchronizers=[synchronizer, ])
         else:
-            sync_handler.delay(country.name, synchronizer)
+            sync_handler.delay(country.business_area_code, synchronizer)
         return HttpResponseRedirect(reverse('admin:users_country_change', args=[country.pk]))
 
     def update_hact(self, request, pk):
@@ -299,7 +318,7 @@ class CountryAdmin(admin.ModelAdmin):
             update_hact_values()
             messages.info(request, "HACT update has been scheduled for all countries")
         else:
-            update_hact_for_country.delay(country_name=country.name)
+            update_hact_for_country.delay(business_area_code=country.business_area_code)
             messages.info(request, "HACT update has been started for %s" % country.name)
         return HttpResponseRedirect(reverse('admin:users_country_change', args=[country.pk]))
 

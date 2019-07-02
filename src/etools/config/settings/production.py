@@ -5,16 +5,6 @@ from cryptography.x509 import load_pem_x509_certificate
 
 from etools.config.settings.base import *  # noqa: F403
 
-# raven (Sentry): https://github.com/getsentry/raven-python
-RAVEN_CONFIG = {
-    'dsn': get_from_secrets_or_env('SENTRY_DSN'),  # noqa: F405
-}
-# Override default client, in order to send extra data to Sentry
-SENTRY_CLIENT = 'etools.config.sentry.EToolsSentryClient'
-INSTALLED_APPS += (  # noqa: F405
-    'raven.contrib.django.raven_compat',
-)
-
 # Security settings for production
 ALLOWED_HOSTS = [
     # Nope, regular expressions are not supported for this setting
@@ -73,5 +63,5 @@ if not get_from_secrets_or_env('DISABLE_JWT_LOGIN', False):
         'JWT_LEEWAY': 60,
         'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=3000),  # noqa: F405
         'JWT_AUDIENCE': 'https://etools.unicef.org/',
-        'JWT_PAYLOAD_HANDLER': 'etools.applications.EquiTrack.auth.custom_jwt_payload_handler'
+        'JWT_PAYLOAD_HANDLER': 'etools.applications.core.auth.custom_jwt_payload_handler'
     })

@@ -7,20 +7,15 @@ from django.core.management.base import BaseCommand
 from django.db import connection
 from django.db.transaction import atomic
 
-from etools.applications.partners.models import PartnerOrganization
 from etools.applications.publics.models import (
     AirlineCompany,
     BusinessArea,
     BusinessRegion,
     Country,
     Currency,
-    DSARegion,
-    Fund,
-    Grant,
     TravelExpenseType,
-    WBS,
 )
-from etools.applications.users.models import Country as UserCountry, Office
+from etools.applications.users.models import Country as UserCountry
 
 
 # DEVELOPMENT CODE -
@@ -39,7 +34,6 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('username', nargs=1)
         parser.add_argument('password', nargs=1, default='password')
-        parser.add_argument('-u', '--with_users', action='store_true', default=False)
         parser.add_argument('-o', '--with_offices', action='store_true', default=False)
         parser.add_argument('-p', '--with_partners', action='store_true', default=False)
 
@@ -53,25 +47,12 @@ class Command(BaseCommand):
         country = user.profile.country
         connection.set_tenant(country)
 
-        if options.get('with_users'):
-            self._load_users()
-
         self._load_airlines()
-
-        if options.get('with_offices'):
-            self._load_offices()
-
-        if options.get('with_partners'):
-            self._load_partners()
 
         self._load_business_areas()
         self._load_currencies()
         self._load_countries()
 
-        self._load_dsa_regions(country)
-        self._add_wbs()
-        self._add_grants()
-        self._add_funds()
         self._add_expense_types()
         self._add_user_groups()
 
@@ -290,26 +271,6 @@ class Command(BaseCommand):
                 'ISK', 'TTD', 'OMR', 'BRL', 'SBD', 'PLN', 'KES', 'SVC', 'USD', 'AZM', 'TOP', 'GNF', 'WST', 'IQD', 'ERN',
                 'BAM', 'SCR', 'CAD', 'GYD', 'KWD', 'BIF', 'PGK', 'SOS', 'SGD', 'UZS', 'STD', 'IRR', 'CNY', 'XOF', 'TND',
                 'NZD', 'LVL', 'BSD', 'KGS', 'ARS', 'BMD', 'RSD', 'BHD', 'JPY', 'SDG']
-        # data = [('United States dollar', 'USD'),
-        #         ('Euro', 'EUR'),
-        #         ('Japanese yen', 'JPY'),
-        #         ('Pound sterling', 'GBP'),
-        #         ('Australian dollar', 'AUD'),
-        #         ('Canadian dollar', 'CAD'),
-        #         ('Swiss franc', 'CHF'),
-        #         ('Chinese yuan', 'CNY'),
-        #         ('Swedish krona', 'SEK'),
-        #         ('Mexican peso', 'MXN'),
-        #         ('New Zealand dollar', 'NZD'),
-        #         ('Singapore dollar', 'SGD'),
-        #         ('Hong Kong dollar', 'HKD'),
-        #         ('Norwegian krone', 'NOK'),
-        #         ('South Korean won', 'KRW'),
-        #         ('Turkish lira', 'TRY'),
-        #         ('Indian rupee', 'INR'),
-        #         ('Russian ruble', 'RUB'),
-        #         ('Brazilian real', 'BRL'),
-        #         ('South African rand', 'ZAR')]
 
         for code in data:
             name = code
@@ -803,46 +764,6 @@ class Command(BaseCommand):
             else:
                 self.stdout.write('Country found: {}'.format(name))
 
-    def _load_users(self):
-        User = get_user_model()
-        user_full_names = ['Kathryn Cruz', 'Jonathan Wright', 'Timothy Kelly', 'Brenda Nguyen', 'Matthew Morales',
-                           'Timothy Watson', 'Jacqueline Brooks', 'Steve Olson', 'Lawrence Patterson', 'Lois Jones',
-                           'Margaret White', 'Clarence Stanley', 'Bruce Williamson', 'Susan Carroll', 'Philip Wood',
-                           'Emily Jenkins', 'Christina Robinson', 'Jason Young', 'Joyce Freeman', 'Jack Murphy',
-                           'Katherine Garcia', 'Sean Perkins', 'Howard Peterson', 'Denise Coleman', 'Benjamin Evans',
-                           'Carl Watkins', 'Martin Morris', 'Nicole Stephens', 'Thomas Willis', 'Ann Ferguson',
-                           'Russell Hanson', 'Janet Johnston', 'Adam Bowman', 'Elizabeth Mendoza', 'Helen Robertson',
-                           'Wanda Fowler', 'Roger Richardson', 'Bobby Carroll', 'Donna Sims', 'Shawn Peters',
-                           'Lisa Davis', 'Laura Riley', 'Jason Freeman', 'Ashley Hill', 'Joseph Gonzales',
-                           'Brenda Dixon', 'Paul Wilson', 'Tammy Reyes', 'Beverly Bishop', 'James Weaver',
-                           'Samuel Vasquez', 'Albert Baker', 'Keith Wright', 'Michael Hart', 'Shirley Allen',
-                           'Samuel Gutierrez', 'Cynthia Riley', 'Roy Simpson', 'Raymond Wagner', 'Eric Taylor',
-                           'Steven Bell', 'Jane Powell', 'Paula Morales', 'James Hamilton', 'Shirley Perez',
-                           'Maria Olson', 'Amy Dunn', 'Frances Bowman', 'Billy Lawrence', 'Beverly Howell', 'Amy Sims',
-                           'Carlos Sanchez', 'Nicholas Harvey', 'Walter Wheeler', 'Bruce Morales', 'Kathy Reynolds',
-                           'Lisa Lopez', 'Ann Medina', 'Raymond Washington', 'Jessica Brown', 'Harold Stone',
-                           'Paul Hill', 'Wayne Foster', 'Brian Garza', 'Craig Sims', 'Adam Morales', 'Brandon Miller',
-                           'Dennis Green', 'Linda Banks', 'Sandra Dunn', 'Randy Rogers', 'Jimmy West', 'Julia Grant',
-                           'Judy Ryan', 'William Carroll', 'Mary Rose', 'Ann Nelson', 'Rebecca Hill', 'Robert Rivera',
-                           'Rebecca Weaver']
-
-        for full_name in user_full_names:
-            first_name, last_name = full_name.split()
-            username = full_name.replace(' ', '_').lower()
-            email = f"{username}@example.com"
-            u, created = User.objects.get_or_create(
-                username=username,
-                email=email,
-                defaults={
-                    'first_name': first_name,
-                    'last_name': last_name
-                },
-            )
-            if created:
-                self.stdout.write('User created: {} ({})'.format(full_name, username))
-            else:
-                self.stdout.write('User found: {} ({})'.format(full_name, username))
-
     def _load_airlines(self):
         airlines = [('American Airlines', 'AA', 1, 'AAL', 'United States'),
                     ('Blue Panorama', 'BV', 4, 'BPA', 'Italy'),
@@ -969,152 +890,6 @@ class Command(BaseCommand):
             else:
                 self.stdout.write('Airline found: {}'.format(airline_name))
 
-    def _load_offices(self):
-        offices = ('Pulilab', 'Unicef HQ')
-
-        for office_name in offices:
-            o, created = Office.objects.get_or_create(name=office_name)
-            if created:
-                o.offices.add(connection.tenant)
-                self.stdout.write('Office created: {}'.format(office_name))
-            else:
-                self.stdout.write('Office found: {}'.format(office_name))
-
-    def _load_partners(self):
-        partners = ['Dynazzy', 'Yodoo', 'Omba', 'Eazzy', 'Avamba', 'Jaxworks', 'Thoughtmix', 'Bubbletube', 'Mydo',
-                    'Photolist', 'Gevee', 'Buzzdog', 'Quinu', 'Edgewire', 'Yambee', 'Ntag', 'Muxo',
-                    'Edgetag', 'Tagfeed', 'BlogXS', 'Feedbug', 'Babblestorm', 'Skimia', 'Linkbridge', 'Fatz', 'Kwimbee',
-                    'Yodo', 'Skibox', 'Zoomzone', 'Meemm', 'Twitterlist', 'Kwilith', 'Skipfire', 'Wikivu', 'Topicblab',
-                    'BlogXS', 'Brightbean', 'Skimia', 'Mycat', 'Tagcat', 'Meedoo', 'Vitz', 'Realblab', 'Babbleopia',
-                    'Pixonyx', 'Dabshots', 'Gabcube', 'Yoveo', 'Realblab', 'Tagcat']
-
-        for partner_name in partners:
-            p, created = PartnerOrganization.objects.get_or_create(name=partner_name)
-            if created:
-                self.stdout.write('Partner created: {}'.format(partner_name))
-            else:
-                self.stdout.write('Partner found: {}'.format(partner_name))
-
-    def _load_dsa_regions(self, country):
-        dsa_region_data = [
-            {
-                'country': Country.objects.filter(name='Hungary').last(),
-                'area_name': 'Everywhere',
-                'area_code': country.business_area_code,
-                # 'user_defined': {
-                #     'dsa_amount_usd': 300,
-                #     'room_rate': 120,
-                #     'dsa_amount_60plus_usd': 200,
-                #     'dsa_amount_60plus_local': 56000,
-                #     'dsa_amount_local': 84000,
-                #     'finalization_date': datetime.now().date(),
-                #     'eff_date': datetime.now().date(),
-                # }
-            }, {
-                'country': Country.objects.filter(name='Germany').last(),
-                'area_name': 'Everywhere',
-                'area_code': country.business_area_code,
-                # 'user_defined': {
-                #     'dsa_amount_usd': 400,
-                #     'room_rate': 150,
-                #     'dsa_amount_60plus_usd': 260,
-                #     'dsa_amount_60plus_local': 238.68,
-                #     'dsa_amount_local': 367.21,
-                #     'finalization_date': datetime.now().date(),
-                #     'eff_date': datetime.now().date(),
-                # }
-            }]
-        for data in dsa_region_data:
-            name = data.pop('country')
-            d, created = DSARegion.objects.get_or_create(country=name, defaults=data)
-            if created:
-                self.stdout.write('DSA Region created: {}'.format(name))
-            else:
-                self.stdout.write('DSA Region found: {}'.format(name))
-
-    def _add_wbs(self):
-        wbs_data_list = [
-            {'name': 'WBS #1'},
-            {'name': 'WBS #2'},
-            {'name': 'WBS #3'},
-        ]
-
-        for data in wbs_data_list:
-            name = data.pop('name')
-            r, created = WBS.objects.get_or_create(name=name)
-            if created:
-                self.stdout.write('WBS created: {}'.format(name))
-            else:
-                self.stdout.write('WBS found: {}'.format(name))
-
-    def _add_grants(self):
-        wbs_1 = WBS.objects.get(name='WBS #1')
-        wbs_2 = WBS.objects.get(name='WBS #2')
-        wbs_3 = WBS.objects.get(name='WBS #3')
-
-        grant_data_list = [
-            {'name': 'Grant #1',
-             'wbs': wbs_1},
-            {'name': 'Grant #2',
-             'wbs': wbs_1},
-            {'name': 'Grant #3',
-             'wbs': wbs_2},
-            {'name': 'Grant #4',
-             'wbs': wbs_2},
-            {'name': 'Grant #5',
-             'wbs': wbs_3}
-        ]
-
-        for data in grant_data_list:
-            name = data.pop('name')
-            wbs = data.pop("wbs")
-            g, created = Grant.objects.get_or_create(name=name, defaults=data)
-            g.wbs.set([wbs])
-            if created:
-                self.stdout.write('Grant created: {}'.format(name))
-            else:
-                self.stdout.write('Grant found: {}'.format(name))
-
-    def _add_funds(self):
-        grant_1 = Grant.objects.get(name='Grant #1')
-        grant_2 = Grant.objects.get(name='Grant #2')
-        grant_3 = Grant.objects.get(name='Grant #3')
-        grant_4 = Grant.objects.get(name='Grant #4')
-        grant_5 = Grant.objects.get(name='Grant #5')
-
-        fund_data_list = [
-            {'name': 'Fund #1',
-             'grant': grant_1},
-            {'name': 'Fund #2',
-             'grant': grant_1},
-            {'name': 'Fund #3',
-             'grant': grant_2},
-            {'name': 'Fund #4',
-             'grant': grant_3},
-            {'name': 'Fund #5',
-             'grant': grant_3},
-            {'name': 'Fund #6',
-             'grant': grant_4},
-            {'name': 'Fund #7',
-             'grant': grant_4},
-            {'name': 'Fund #8',
-             'grant': grant_5},
-            {'name': 'Fund #4',
-             'grant': grant_5},
-            {'name': 'Fund #4',
-             'grant': grant_5},
-        ]
-
-        for data in fund_data_list:
-            name = data.pop('name')
-            grant = data.pop('grant')
-            f, created = Fund.objects.get_or_create(name=name, defaults=data)
-            grant.funds.add(f)
-            if created:
-                self.stdout.write('Fund created: {}'.format(name))
-            else:
-                self.stdout.write('Fund found: {}'.format(name))
-
     def _add_expense_types(self):
         expense_type_data = [
             {'title': 'Food',
@@ -1144,5 +919,3 @@ class Command(BaseCommand):
                 self.stdout.write('Group created: {}'.format(name))
             else:
                 self.stdout.write('Group found: {}'.format(name))
-
-# DEVELOPMENT CODE - END

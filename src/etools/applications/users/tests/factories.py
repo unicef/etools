@@ -6,9 +6,9 @@ from django.db.models import signals
 import factory
 from factory.fuzzy import FuzzyText
 
-from etools.applications.EquiTrack.tests.cases import SCHEMA_NAME
-from etools.applications.users import models
+from etools.applications.core.tests.cases import SCHEMA_NAME
 from etools.applications.publics.tests.factories import PublicsCurrencyFactory
+from etools.applications.users import models
 
 
 class GroupFactory(factory.django.DjangoModelFactory):
@@ -45,6 +45,7 @@ class CountryFactory(factory.django.DjangoModelFactory):
     local_currency = factory.SubFactory(PublicsCurrencyFactory)
 
 
+@factory.django.mute_signals(signals.pre_save, signals.post_save)
 class ProfileFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.UserProfile
@@ -54,12 +55,10 @@ class ProfileFactory(factory.django.DjangoModelFactory):
     office = factory.SubFactory(OfficeFactory)
     job_title = 'Chief Tester'
     phone_number = '0123456789'
+    partner_staff_member = None
     # We pass in profile=None to prevent UserFactory from creating another profile
     # (this disables the RelatedFactory)
-    user = factory.SubFactory(
-        'etools.applications.users.tests.factories.UserFactory',
-        profile=None
-    )
+    user = factory.SubFactory('etools.applications.users.tests.factories.UserFactory', profile=None)
 
     @factory.post_generation
     def countries_available(self, create, extracted, **kwargs):
@@ -77,11 +76,31 @@ class UserFactory(factory.django.DjangoModelFactory):
     email = factory.Sequence(lambda n: "user{}@example.com".format(n))
     password = factory.PostGenerationMethodCall('set_password', 'test')
 
+    # unicef user is set as group by default, but we can easily overwrite it by passing empty list
+    groups__data = ['UNICEF User']
+
     # We pass in 'user' to link the generated Profile to our just-generated User
     # This will call ProfileFactory(user=our_new_user), thus skipping the SubFactory.
     profile = factory.RelatedFactory(ProfileFactory, 'user')
 
     @factory.post_generation
-    def groups(self, create, extracted, **kwargs):
-        group, created = Group.objects.get_or_create(name='UNICEF User')
-        self.groups.add(group)
+    def groups(self, create, extracted, data=None, **kwargs):
+        if not create:
+            return
+
+        extracted = (extracted or []) + (data or [])
+
+        if extracted:
+            for i, group in enumerate(extracted):
+                if isinstance(group, str):
+                    extracted[i] = Group.objects.get_or_create(name=group)[0]
+
+            self.groups.add(*extracted)
+
+
+class SimpleUserFactory(UserFactory):
+    groups__data = []
+
+
+class PMEUserFactory(UserFactory):
+    groups__data = ['UNICEF User', 'PME']
