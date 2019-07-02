@@ -4,7 +4,7 @@ from decimal import Decimal
 
 from django.contrib.postgres.fields import JSONField
 from django.db import models
-from django.db.models import Count, Sum
+from django.db.models import Count, Q, Sum
 from django.db.models.functions import Coalesce
 from django.utils.translation import ugettext_lazy as _
 
@@ -210,8 +210,9 @@ class AggregateHact(TimeStampedModel):
 
     @staticmethod
     def get_spot_checks_completed():
-        qs = SpotCheck.objects.filter(date_of_draft_report_to_ip__year=datetime.now().year).exclude(
-            status=Engagement.CANCELLED)
+        qs = SpotCheck.objects.filter(
+            Q(partner__reported_cy__gt=0) | Q(partner__total_ct_cy__gt=0), partner__hidden=False,
+            date_of_draft_report_to_ip__year=datetime.now().year).exclude(status=Engagement.CANCELLED)
         return [
             ['Completed by', 'Count'],
             ['Staff', qs.filter(agreement__auditor_firm__unicef_users_allowed=True).count()],
@@ -227,6 +228,7 @@ class AggregateHact(TimeStampedModel):
             },
             'spot_checks': {
                 'completed': SpotCheck.objects.filter(
+                    Q(partner__reported_cy__gt=0) | Q(partner__total_ct_cy__gt=0), partner__hidden=False,
                     date_of_draft_report_to_ip__year=datetime.now().year).exclude(
                     status=Engagement.CANCELLED).count(),
                 'min_required': sum([p.min_req_spot_checks for p in self.get_queryset()]),
@@ -234,12 +236,15 @@ class AggregateHact(TimeStampedModel):
                     'planned_engagement__spot_check_follow_up'), 0))['total']
             },
             'scheduled_audit': Audit.objects.filter(
+                Q(partner__reported_cy__gt=0) | Q(partner__total_ct_cy__gt=0), partner__hidden=False,
                 date_of_draft_report_to_ip__year=datetime.now().year).exclude(
                 status=Engagement.CANCELLED).count(),
             'special_audit': SpecialAudit.objects.filter(
+                Q(partner__reported_cy__gt=0) | Q(partner__total_ct_cy__gt=0), partner__hidden=False,
                 date_of_draft_report_to_ip__year=datetime.now().year).exclude(
                 status=Engagement.CANCELLED).count(),
             'micro_assessment': MicroAssessment.objects.filter(
+                Q(partner__reported_cy__gt=0) | Q(partner__total_ct_cy__gt=0), partner__hidden=False,
                 date_of_draft_report_to_ip__year=datetime.now().year).exclude(
                 status=Engagement.CANCELLED).count(),
             'missing_micro_assessment': PartnerOrganization.objects.hact_active(
@@ -248,8 +253,9 @@ class AggregateHact(TimeStampedModel):
 
     @staticmethod
     def get_financial_findings():
-        audits = Audit.objects.filter(date_of_draft_report_to_ip__year=datetime.now().year).exclude(
-            status=Engagement.CANCELLED)
+        audits = Audit.objects.filter(
+            Q(partner__reported_cy__gt=0) | Q(partner__total_ct_cy__gt=0), partner__hidden=False,
+            date_of_draft_report_to_ip__year=datetime.now().year).exclude(status=Engagement.CANCELLED)
 
         refunds = audits.filter(amount_refunded__isnull=False).aggregate(
             total=Coalesce(Sum('amount_refunded'), 0))['total']
@@ -276,6 +282,7 @@ class AggregateHact(TimeStampedModel):
         outstanding = _ff - _ar - _asdp - _wor
 
         outstanding_audits_y1 = Audit.objects.filter(
+            Q(partner__reported_cy__gt=0) | Q(partner__total_ct_cy__gt=0), partner__hidden=False,
             date_of_draft_report_to_ip__year=datetime.now().year - 1).exclude(status=Engagement.CANCELLED)
         _ff_y1 = outstanding_audits_y1.filter(financial_findings__isnull=False).aggregate(
             total=Coalesce(Sum('financial_findings'), 0))['total']
@@ -338,8 +345,9 @@ class AggregateHact(TimeStampedModel):
     @staticmethod
     def get_financial_findings_numbers():
 
-        audits = Audit.objects.filter(date_of_draft_report_to_ip__year=datetime.now().year).exclude(
-            status=Engagement.CANCELLED)
+        audits = Audit.objects.filter(
+            Q(partner__reported_cy__gt=0) | Q(partner__total_ct_cy__gt=0), partner__hidden=False,
+            date_of_draft_report_to_ip__year=datetime.now().year).exclude(status=Engagement.CANCELLED)
         return [
             {
                 'name': 'Number of High Priority Findings',
