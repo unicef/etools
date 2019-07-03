@@ -31,6 +31,7 @@ from etools.applications.partners.filters import (
     PartnerScopeFilter,
 )
 from etools.applications.partners.models import (
+    Agreement,
     Intervention,
     InterventionAmendment,
     InterventionAttachment,
@@ -146,6 +147,15 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
             'result_links'
         ]
         nested_related_names = ['ll_results']
+
+        if request.data.get('document_type') == Intervention.SSFA:
+            agreement = Agreement.objects.get(pk=request.data.get('agreement'))
+            if agreement and agreement.interventions.all().count():
+                raise ValidationError(
+                    'You can only add one SSFA Document for each SSFA Agreement',
+                    status.HTTP_400_BAD_REQUEST
+                )
+
         serializer = self.my_create(request,
                                     related_fields,
                                     nested_related_names=nested_related_names,
