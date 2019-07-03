@@ -20,7 +20,7 @@ from etools.applications.reports.views.v2 import (
 )
 
 api = routers.DefaultRouter()
-api.register(r'sections', SectionViewSet, base_name='sections')
+api.register(r'sections', SectionViewSet, basename='sections')
 
 app_name = 'reports'
 urlpatterns = (

@@ -6,14 +6,14 @@ from unicef_restlib.routers import NestedComplexRouter
 from etools.applications.audit import views
 
 root_api = routers.SimpleRouter()
-root_api.register(r'audit-firms', views.AuditorFirmViewSet, base_name='audit-firms')
-root_api.register(r'purchase-orders', views.PurchaseOrderViewSet, base_name='purchase-orders')
-root_api.register(r'engagements', views.EngagementViewSet, base_name='engagements')
-root_api.register(r'micro-assessments', views.MicroAssessmentViewSet, base_name='micro-assessments')
-root_api.register(r'spot-checks', views.SpotCheckViewSet, base_name='spot-checks')
-root_api.register(r'staff-spot-checks', views.StaffSpotCheckViewSet, base_name='staff-spot-checks')
-root_api.register(r'audits', views.AuditViewSet, base_name='audits')
-root_api.register(r'special-audits', views.SpecialAuditViewSet, base_name='special-audits')
+root_api.register(r'audit-firms', views.AuditorFirmViewSet, basename='audit-firms')
+root_api.register(r'purchase-orders', views.PurchaseOrderViewSet, basename='purchase-orders')
+root_api.register(r'engagements', views.EngagementViewSet, basename='engagements')
+root_api.register(r'micro-assessments', views.MicroAssessmentViewSet, basename='micro-assessments')
+root_api.register(r'spot-checks', views.SpotCheckViewSet, basename='spot-checks')
+root_api.register(r'staff-spot-checks', views.StaffSpotCheckViewSet, basename='staff-spot-checks')
+root_api.register(r'audits', views.AuditViewSet, basename='audits')
+root_api.register(r'special-audits', views.SpecialAuditViewSet, basename='special-audits')
 
 auditor_staffmember_api = NestedComplexRouter(root_api, r'audit-firms', lookup='auditor_firm')
 auditor_staffmember_api.register(r'staff-members', views.AuditorStaffMembersViewSet, base_name='auditorstaffmembers')
