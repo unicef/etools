@@ -18,7 +18,7 @@ from etools.applications.tpm.views import (
 )
 
 tpm_partners_api = routers.SimpleRouter()
-tpm_partners_api.register(r'partners', TPMPartnerViewSet, base_name='partners')
+tpm_partners_api.register(r'partners', TPMPartnerViewSet, basename='partners')
 
 tpm_staffmember_api = NestedComplexRouter(tpm_partners_api, r'partners', lookup='tpm_partner')
 tpm_staffmember_api.register(r'staff-members', TPMStaffMembersViewSet, base_name='tpmstaffmembers')
@@ -27,7 +27,7 @@ partner_attachments_api = NestedComplexRouter(tpm_partners_api, r'partners')
 partner_attachments_api.register(r'attachments', PartnerAttachmentsViewSet, base_name='partner-attachments')
 
 tpm_visits_api = routers.SimpleRouter()
-tpm_visits_api.register(r'visits', TPMVisitViewSet, base_name='visits')
+tpm_visits_api.register(r'visits', TPMVisitViewSet, basename='visits')
 
 visit_attachments_api = NestedComplexRouter(tpm_visits_api, r'visits')
 visit_attachments_api.register('report-attachments', VisitReportAttachmentsViewSet,

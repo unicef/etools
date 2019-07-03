@@ -98,7 +98,6 @@ class FileTypeFactory(factory.django.DjangoModelFactory):
     name = fuzzy.FuzzyChoice([
         'FACE',
         'Progress Report',
-        'Partnership Review',
         'Final Partnership Review',
         'Correspondence',
         'Supply/Distribution Plan',

@@ -427,6 +427,10 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, BaseTenantT
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('text/csv', response['Content-Type'])
 
+    def test_search_by_id(self):
+        self._test_list(self.auditor, [self.engagement], filter_params={'search': self.engagement.pk})
+        self._test_list(self.auditor, filter_params={'search': -1})
+
 
 class BaseTestEngagementsCreateViewSet(EngagementTransitionsTestCaseMixin):
     endpoint = 'engagements'
