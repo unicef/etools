@@ -19,7 +19,6 @@ sphinx = "*"
 vcrpy = "*"
 
 [packages]
-azure-storage = "==0.20.2"
 carto = "==1.4"
 celery = "==4.3"
 dj-database-url = "==0.5"
@@ -45,7 +44,7 @@ django-ordered-model = "==3.1.1"
 django-post_office = "==3.1.0"
 django-redis-cache = "==2.0"
 django-rest-swagger = "==2.2"
-django-storages = "==1.6.6"
+django-storages = {extras = ["azure"],version = "==1.7.1"}
 django-tenants = "==2.2.2"
 django-timezone-field = "==3.0"
 django-waffle = "==0.16"
