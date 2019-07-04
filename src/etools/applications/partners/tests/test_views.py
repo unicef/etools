@@ -1423,7 +1423,6 @@ class TestInterventionViews(BaseTenantTestCase):
     def test_intervention_validation_multiple_agreement_ssfa(self):
         self.agreement.agreement_type = Agreement.SSFA
         self.agreement.save()
-        # self.agreement.
         intervention = Intervention.objects.get(id=self.intervention["id"])
         intervention.document_type = Intervention.SSFA
         intervention.save()

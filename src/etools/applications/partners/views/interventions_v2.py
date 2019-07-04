@@ -150,7 +150,7 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
 
         if request.data.get('document_type') == Intervention.SSFA:
             agreement = Agreement.objects.get(pk=request.data.get('agreement'))
-            if agreement and agreement.interventions.all().count():
+            if agreement and agreement.interventions.count():
                 raise ValidationError(
                     'You can only add one SSFA Document for each SSFA Agreement',
                     status.HTTP_400_BAD_REQUEST
