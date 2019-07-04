@@ -26,6 +26,7 @@ from etools.applications.partners.views.interventions_v2 import (
     InterventionLocationListAPIView,
     InterventionLowerResultListCreateView,
     InterventionLowerResultUpdateView,
+    InterventionPlannedVisitsDeleteView,
     InterventionRamIndicatorsView,
     InterventionReportingPeriodDetailView,
     InterventionReportingPeriodListCreateView,
@@ -33,7 +34,6 @@ from etools.applications.partners.views.interventions_v2 import (
     InterventionResultLinkListCreateView,
     InterventionResultLinkUpdateView,
     InterventionResultListAPIView,
-    InterventionPlannedVisitsDeleteView,
 )
 from etools.applications.partners.views.partner_organization_v2 import (
     PartnerNotAssuranceCompliant,
