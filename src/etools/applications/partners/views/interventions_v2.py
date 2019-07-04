@@ -34,9 +34,9 @@ from etools.applications.partners.models import (
     Intervention,
     InterventionAmendment,
     InterventionAttachment,
+    InterventionPlannedVisits,
     InterventionReportingPeriod,
     InterventionResultLink,
-    InterventionPlannedVisits,
 )
 from etools.applications.partners.permissions import PartnershipManagerPermission, PartnershipManagerRepPermission
 from etools.applications.partners.serializers.exports.interventions import (
