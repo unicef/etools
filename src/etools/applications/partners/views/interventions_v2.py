@@ -36,6 +36,7 @@ from etools.applications.partners.models import (
     InterventionAttachment,
     InterventionReportingPeriod,
     InterventionResultLink,
+    InterventionPlannedVisits,
 )
 from etools.applications.partners.permissions import PartnershipManagerPermission, PartnershipManagerRepPermission
 from etools.applications.partners.serializers.exports.interventions import (
@@ -800,3 +801,24 @@ class InterventionRamIndicatorsView(APIView):
         return Response(
             self.serializer_class(data).data
         )
+
+
+class InterventionPlannedVisitsDeleteView(DestroyAPIView):
+    permission_classes = (PartnershipManagerPermission,)
+
+    def delete(self, request, *args, **kwargs):
+        intervention = get_object_or_404(
+            Intervention,
+            pk=int(kwargs['intervention_pk'])
+        )
+        if intervention.status != Intervention.DRAFT:
+            raise ValidationError("Planned visits can only be deleted in Draft status")
+
+        intervention_planned_visit = get_object_or_404(
+            InterventionPlannedVisits,
+            pk=int(kwargs['pk']),
+            intervention=int(kwargs['intervention_pk'])
+        )
+        self.check_object_permissions(request, intervention_planned_visit)
+        intervention_planned_visit.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

@@ -1554,6 +1554,34 @@ class TestInterventionViews(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data['planned_visits'], ['Planned Visit to be set only at Partner level'])
 
+    def test_intervention_delete_planned_visits(self):
+        response = self.forced_auth_req(
+            'delete',
+            reverse(
+                "partners_api:interventions-planned-visits-delete",
+                args=[self.intervention_obj.id, self.planned_visit.id]
+            ),
+            user=self.partnership_manager_user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        with self.assertRaises(InterventionPlannedVisits.DoesNotExist):
+            self.planned_visit.refresh_from_db()
+
+    def test_intervention_delete_planned_visits_nondraft_fail(self):
+        self.intervention_obj.status = Intervention.SIGNED
+        self.intervention_obj.save()
+        response = self.forced_auth_req(
+            'delete',
+            reverse(
+                "partners_api:interventions-planned-visits-delete",
+                args=[self.intervention_obj.id, self.planned_visit.id]
+            ),
+            user=self.partnership_manager_user,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('Planned visits can only be deleted in Draft status', response.data)
+
     def test_intervention_filter(self):
         country_programme = CountryProgrammeFactory()
         office = OfficeFactory()
