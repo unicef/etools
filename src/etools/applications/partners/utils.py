@@ -54,7 +54,7 @@ def get_from_datetime(**kwargs):
         return make_aware(datetime.datetime(1970, 1, 1))
 
     # Start with midnight this morning, timezone-aware
-    from_datetime = now().replace(hour=0, minute=0, second=0, microsecond=0)
+    from_datetime = make_aware(datetime.datetime.combine(now(), datetime.time.min))
 
     # Adjust per the arguments
     if kwargs.get("days"):
@@ -440,9 +440,10 @@ def send_agreement_suspended_notification(agreement, user):
 
 def send_intervention_draft_notification():
     """Send an email to PD/SHPD/SSFA's focal point(s) if in draft status"""
+    sdate_diff = make_aware(datetime.datetime.combine(now(), datetime.time.min) - datetime.timedelta(days=7))
     for intervention in Intervention.objects.filter(
             status=Intervention.DRAFT,
-            created__lt=(datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=7)).date(),
+            created__lt=sdate_diff,
     ):
         recipients = [
             u.user.email for u in intervention.unicef_focal_points.all()
