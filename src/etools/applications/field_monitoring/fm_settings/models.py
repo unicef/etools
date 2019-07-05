@@ -99,14 +99,14 @@ class Question(models.Model):
         ('choices', _('Choices')),
     )
 
-    TARGETS = Choices(
+    LEVELS = Choices(
         ('partner', _('Partner')),
         ('output', _('Output')),
         ('intervention', _('PD/SSFA')),
     )
 
     answer_type = models.CharField(max_length=10, choices=ANSWER_TYPES, verbose_name=_('Answer Type'))
-    level = models.CharField(max_length=15, choices=TARGETS, verbose_name=_('Level'))
+    level = models.CharField(max_length=15, choices=LEVELS, verbose_name=_('Level'))
     methods = models.ManyToManyField(Method, blank=True, verbose_name=_('Methods'))
     category = models.ForeignKey(Category, on_delete=models.CASCADE, verbose_name=_('Category'))
     sections = models.ManyToManyField(Section, blank=True, verbose_name=_('Sections'))
@@ -127,9 +127,9 @@ class Option(models.Model):
     Possible answers for question in case of choices
     """
 
-    question = models.ForeignKey(Question, on_delete=models.CASCADE, verbose_name=_('Question'))
+    question = models.ForeignKey(Question, related_name='options', verbose_name=_('Question'), on_delete=models.CASCADE)
     label = models.CharField(max_length=50, verbose_name=_('Label'))
-    value = AutoSlugField(populate_from='question_text', verbose_name=_('Value'))
+    value = AutoSlugField(populate_from='label', verbose_name=_('Value'))
 
     class Meta:
         verbose_name = _('Option')
