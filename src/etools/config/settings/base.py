@@ -182,7 +182,6 @@ SHARED_APPS = (
     'easy_pdf',
     'ordered_model',
     'social_django',
-    'django_extensions',
     'etools.applications.vision',
     'etools.applications.publics',
     'etools.applications.users',
@@ -195,7 +194,7 @@ SHARED_APPS = (
     'waffle',
     'etools.applications.permissions2',
     'etools.applications.permissions_simplified',
-    'etools.applications.field_monitoring.shared',
+    'etools.applications.field_monitoring.shared', # todo: remove
     'unicef_notification',
 )
 
@@ -217,7 +216,10 @@ TENANT_APPS = (
     'etools.applications.management',
     'etools.applications.action_points',
     'etools.applications.field_monitoring.fm_settings',
+    'etools.applications.field_monitoring.monitoring_activities',
     'etools.applications.field_monitoring.planning',
+    'etools.applications.field_monitoring.data_collection',
+    'etools.applications.field_monitoring.visits', # todo: remove
     'unicef_snapshot',
     'unicef_attachments',
     'unicef_vision',

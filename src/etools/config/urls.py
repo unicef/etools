@@ -79,7 +79,7 @@ urlpatterns = [
     url(r'^locations/', include('unicef_locations.urls')),
     url(r'^locations/cartodbtables/$', CartoDBTablesView.as_view(), name='cartodbtables'),
     url(r'^locations/autocomplete/$', LocationQuerySetView.as_view(), name='locations_autocomplete'),
-    url(r'^api/v1/field-monitoring/', include('etools.applications.field_monitoring.urls')),
+    # url(r'^api/v1/field-monitoring/', include('etools.applications.field_monitoring.urls')),
 
     # GIS API urls
     url(r'^api/management/gis/', include('etools.applications.management.urls_gis')),

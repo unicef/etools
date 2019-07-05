@@ -1,14 +1,16 @@
+from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
-from django.contrib.postgres.fields import ArrayField
-from django.db import models, connection
+from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
+from model_utils import Choices
 from model_utils.models import TimeStampedModel
-
 from unicef_locations.models import Location
 
-from etools.applications.field_monitoring.fm_settings.models import LocationSite, CPOutputConfig
-from etools.applications.publics.models import SoftDeleteMixin
+from etools.applications.field_monitoring.fm_settings.models import LocationSite
+from etools.applications.field_monitoring.fm_settings.models import Question
+from etools.applications.partners.models import PartnerOrganization, Intervention
+from etools.applications.reports.models import Result
 
 
 class YearPlan(TimeStampedModel):
@@ -45,35 +47,82 @@ class YearPlan(TimeStampedModel):
         return 'Year Plan for {}'.format(self.year)
 
 
-def _default_plan_by_month():
-    return [0] * 12
+class LogIssue(TimeStampedModel):
+    STATUS_CHOICES = Choices(
+        ('new', 'New'),
+        ('past', 'Past'),
+    )
+    RELATED_TO_TYPE_CHOICES = Choices(
+        ('cp_output', _('CP Output')),
+        ('partner', _('Partner')),
+        ('location', _('Location/Site')),
+    )
 
-
-class Task(SoftDeleteMixin, TimeStampedModel):
-    year_plan = models.ForeignKey(YearPlan, verbose_name=_('Year Plan'), related_name='tasks',
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='created_logissues',
+                               verbose_name=_('Issue Raised By'),
+                               on_delete=models.CASCADE)
+    cp_output = models.ForeignKey(Result, blank=True, null=True, verbose_name=_('CP Output'),
                                   on_delete=models.CASCADE)
-    plan_by_month = ArrayField(models.PositiveSmallIntegerField(default=0, blank=True), default=_default_plan_by_month,
-                               verbose_name=_('Plan By Month'), blank=True)
-    location = models.ForeignKey(Location, verbose_name=_('Location'), related_name='tasks',
-                                 on_delete=models.CASCADE)
-    location_site = models.ForeignKey(LocationSite, blank=True, null=True, verbose_name=_('Site'), related_name='tasks',
-                                      on_delete=models.CASCADE)
-    cp_output_config = models.ForeignKey(CPOutputConfig, verbose_name=_('CP Output Config'), related_name='tasks',
-                                         on_delete=models.CASCADE)
-    partner = models.ForeignKey('partners.PartnerOrganization', verbose_name=_('Partner'), related_name='tasks',
+    partner = models.ForeignKey(PartnerOrganization, blank=True, null=True, verbose_name=_('Partner'),
                                 on_delete=models.CASCADE)
-    intervention = models.ForeignKey('partners.Intervention', verbose_name=_('PD or SSFA'), related_name='+',
-                                     blank=True, null=True, on_delete=models.CASCADE)
+    location = models.ForeignKey(Location, blank=True, null=True, verbose_name=_('Location'),
+                                 on_delete=models.CASCADE)
+    location_site = models.ForeignKey(LocationSite, blank=True, null=True, verbose_name=_('Site'),
+                                      on_delete=models.CASCADE)
+
+    issue = models.TextField(verbose_name=_('Issue For Attention/Probing'))
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default=STATUS_CHOICES.new)
+    attachments = GenericRelation('unicef_attachments.Attachment', verbose_name=_('Attachments'), blank=True)
+    history = GenericRelation('unicef_snapshot.Activity', object_id_field='target_object_id',
+                              content_type_field='target_content_type')
 
     class Meta:
-        verbose_name = _('Task')
-        verbose_name_plural = _('Tasks')
+        verbose_name = _('Log Issue')
+        verbose_name_plural = _('Log Issues')
         ordering = ('id',)
 
+    def __str__(self):
+        return '{}: {}'.format(self.related_to, self.issue)
+
     @property
-    def reference_number(self):
-        return '{}/{}/{}/FMT'.format(
-            connection.tenant.country_short_code or '',
-            self.created.year,
-            self.id,
-        )
+    def related_to(self):
+        return self.cp_output or self.partner or self.location_site or self.location
+
+    @property
+    def related_to_type(self):
+        if self.cp_output:
+            return self.RELATED_TO_TYPE_CHOICES.cp_output
+        elif self.partner:
+            return self.RELATED_TO_TYPE_CHOICES.partner
+        elif self.location:
+            return self.RELATED_TO_TYPE_CHOICES.location
+
+
+class QuestionTargetMixin(models.Model):
+    partner = models.ForeignKey(PartnerOrganization, blank=True, null=True, verbose_name=_('Partner'),
+                                on_delete=models.CASCADE)
+    cp_output = models.ForeignKey(Result, blank=True, null=True, verbose_name=_('Partner'),
+                                  on_delete=models.CASCADE)
+    intervention = models.ForeignKey(Intervention, blank=True, null=True, verbose_name=_('Partner'),
+                                     on_delete=models.CASCADE)
+
+    @property
+    def related_to(self):
+        return self.partner or self.cp_output or self.intervention
+
+    class Meta:
+        abstract = True
+
+
+class QuestionTemplate(QuestionTargetMixin, models.Model):
+    question = models.ForeignKey(Question, on_delete=models.CASCADE, verbose_name=_('Question'))
+    is_active = models.BooleanField(default=True, verbose_name=_('Is Active'))
+    specific_details = models.TextField(verbose_name=_('Specific Details To Probe'), blank=True)
+
+    class Meta:
+        verbose_name = _('Question Template')
+        verbose_name_plural = _('Question Templates')
+        ordering = ('id',)
+
+    def __str__(self):
+        return 'Question Template for {}'.format(self.related_to)
