@@ -2,11 +2,10 @@ from django.contrib.gis.geos import GEOSGeometry
 
 import factory
 from factory import fuzzy
-
 from unicef_locations.models import GatewayType
 from unicef_locations.tests.factories import LocationFactory
 
-from etools.applications.field_monitoring.fm_settings.models import Method, LocationSite, Category, Question, Option
+from etools.applications.field_monitoring.fm_settings.models import Category, LocationSite, Method, Option, Question
 
 
 class MethodFactory(factory.DjangoModelFactory):

@@ -3,6 +3,7 @@ from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
+
 from unicef_attachments.models import Attachment
 
 from etools.applications.field_monitoring.fm_settings.models import Method, Question

@@ -1,12 +1,11 @@
 from django.contrib.gis.db.models import PointField
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
-from django_extensions.db.fields import AutoSlugField
-from model_utils import FieldTracker, Choices
 
+from django_extensions.db.fields import AutoSlugField
+from model_utils import Choices, FieldTracker
 from model_utils.models import TimeStampedModel
 from ordered_model.models import OrderedModel
-
 from unicef_locations.models import Location
 
 from etools.applications.reports.models import Section

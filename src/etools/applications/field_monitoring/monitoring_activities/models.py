@@ -1,13 +1,13 @@
 from django.conf import settings
-from django.db import models, connection
+from django.db import connection, models
 from django.utils.translation import ugettext_lazy as _
-from model_utils import Choices
 
+from model_utils import Choices
 from model_utils.models import TimeStampedModel
 from unicef_locations.models import Location
 
 from etools.applications.field_monitoring.fm_settings.models import LocationSite
-from etools.applications.partners.models import PartnerOrganization, Intervention
+from etools.applications.partners.models import Intervention, PartnerOrganization
 from etools.applications.reports.models import Result
 from etools.applications.tpm.tpmpartners.models import TPMPartner
 from etools.libraries.djangolib.models import SoftDeleteMixin
