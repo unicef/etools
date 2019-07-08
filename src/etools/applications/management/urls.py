@@ -1,7 +1,11 @@
 from django.conf.urls import url
+from django.urls import include
+
+from rest_framework import routers
 
 from etools.applications.management.views.general import InvalidateCache, SyncCountries, SyncFRs
 from etools.applications.management.views.reports import LoadResultStructure
+from etools.applications.management.views.sections import SessionManagementView
 from etools.applications.management.views.tasks_endpoints import (
     PMPIndicatorsReportView,
     SyncAllUsers,
@@ -12,6 +16,9 @@ from etools.applications.management.views.tasks_endpoints import (
     UsersReportView,
 )
 from etools.applications.management.views.v1 import ActiveUsers, AgreementsStatisticsView, PortalDashView
+
+router = routers.DefaultRouter()
+router.register(r'sessions', SessionManagementView, base_name='session_management')
 
 app_name = 'management'
 
@@ -32,4 +39,5 @@ urlpatterns = ((
     url(r'^tasks/send_test_email/$', TestSendEmailAPIView.as_view(), name='tasks_send_test_email'),
     url(r'^reports/users/$', UsersReportView.as_view(), name='reports_users'),
     url(r'^reports/pmp_indicators/$', PMPIndicatorsReportView.as_view(), name='reports_pmp_indicators'),
+    url(r'^', include(router.urls)),
 ), 'management')
