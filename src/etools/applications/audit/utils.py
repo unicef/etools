@@ -4,7 +4,7 @@ from django.core.files.base import ContentFile
 from easy_pdf.rendering import render_to_pdf
 from unicef_attachments.models import Attachment, FileType
 
-from etools.applications.attachments.models import generate_file_path
+from unicef_attachments.models import generate_file_path
 
 
 def generate_final_report(obj, code, labels, pdf, template, filename):
