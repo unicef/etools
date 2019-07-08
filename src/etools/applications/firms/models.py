@@ -66,7 +66,7 @@ class BaseFirm(TimeStampedModel, models.Model):
 
     class Meta:
         abstract = True
-        ordering = ('id',)
+        ordering = ('name',)
         verbose_name = _('Organization')
         verbose_name_plural = _('Organizations')
 

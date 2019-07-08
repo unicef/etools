@@ -96,6 +96,8 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
 
     search_terms = ('title__icontains', 'agreement__partner__name__icontains', 'number__icontains')
     filters = (
+        ('partners', 'agreement__partner__in'),
+        ('agreements', 'agreement__in'),
         ('document_type', 'document_type__in'),
         ('cp_outputs', 'result_links__cp_output__pk__in'),
         ('country_programme', 'country_programme__in'),
@@ -687,6 +689,7 @@ class InterventionLocationListAPIView(QueryStringFilterMixin, ListAPIView):
         ('end_after', 'end__gte'),
         ('location', 'result_links__ll_results__applied_indicators__locations__name__icontains'),
         ('partners', 'agreement__partner__in'),
+        ('agreements', 'agreement__in'),
     )
 
     def list(self, request, *args, **kwargs):
