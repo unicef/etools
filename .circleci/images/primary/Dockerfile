@@ -1,4 +1,4 @@
-FROM python:3.6.4-alpine
+FROM python:3.7.3-alpine
 # test-base-p3-v2
 RUN echo "http://dl-3.alpinelinux.org/alpine/edge/main" >> /etc/apk/repositories
 RUN apk update
