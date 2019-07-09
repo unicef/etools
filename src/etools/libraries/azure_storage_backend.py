@@ -3,7 +3,6 @@ from datetime import datetime, timedelta
 
 from django.utils.deconstruct import deconstructible
 
-from azure.storage import AccessPolicy, SharedAccessPolicy
 from storages.backends.azure_storage import AzureStorage
 from storages.utils import setting
 
@@ -25,24 +24,23 @@ class EToolsAzureStorage(AzureStorage):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._connection = None
+        self._service = None
 
-    def url(self, name):
-        if hasattr(self.connection, 'make_blob_url'):
+    def url(self, name, expire=None):
+        if hasattr(self.service, 'make_blob_url'):
             if self.auto_sign:
-                access_policy = AccessPolicy()
-                access_policy.start = (datetime.utcnow() + timedelta(seconds=-120)).strftime('%Y-%m-%dT%H:%M:%SZ')
-                access_policy.expiry = (datetime.utcnow() + timedelta(seconds=self.ap_expiry)).strftime('%Y-%m-%dT%H:%M:%SZ')
-                access_policy.permission = self.azure_access_policy_permission
-                sap = SharedAccessPolicy(access_policy)
-                sas_token = self.connection.generate_shared_access_signature(
+                start = (datetime.utcnow() + timedelta(seconds=-120)).strftime('%Y-%m-%dT%H:%M:%SZ')
+                expiry = (datetime.utcnow() + timedelta(seconds=self.ap_expiry)).strftime('%Y-%m-%dT%H:%M:%SZ')
+                sas_token = self.service.generate_blob_shared_access_signature(
                     self.azure_container,
-                    blob_name=name,
-                    shared_access_policy=sap,
+                    name,
+                    permission=self.azure_access_policy_permission,
+                    expiry=expiry,
+                    start=start,
                 )
             else:
                 sas_token = None
-            return self.connection.make_blob_url(
+            return self.service.make_blob_url(
                 container_name=self.azure_container,
                 blob_name=name,
                 protocol=self.azure_protocol,
