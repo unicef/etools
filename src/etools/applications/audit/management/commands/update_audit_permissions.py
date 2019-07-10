@@ -361,7 +361,7 @@ class Command(BaseCommand):
         )
         self.add_permissions(
             self.focal_point, 'edit',
-            self.follow_up_editable_page,
+            self.follow_up_editable_page + self.report_attachments_block,
             condition=final_engagement_condition
         )
 
