@@ -216,7 +216,6 @@ TENANT_APPS = (
     'etools.applications.management',
     'etools.applications.action_points',
     'etools.applications.field_monitoring.fm_settings',
-    'etools.applications.field_monitoring.monitoring_activities',
     'etools.applications.field_monitoring.planning',
     'etools.applications.field_monitoring.data_collection',
     'etools.applications.field_monitoring.visits',  # todo: remove
