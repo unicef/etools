@@ -10,12 +10,23 @@ from unicef_restlib.serializers import UserContextSerializerMixin
 from unicef_snapshot.serializers import SnapshotModelSerializer
 
 from etools.applications.action_points.serializers import HistorySerializer
-from etools.applications.field_monitoring.planning.models import LogIssue
+from etools.applications.field_monitoring.planning.models import LogIssue, YearPlan
 from etools.applications.field_monitoring.fm_settings.serializers import LocationSiteLightSerializer
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.permissions_simplified.serializers import SafeReadOnlySerializerMixin
 from etools.applications.reports.serializers.v2 import OutputListSerializer
 from etools.applications.users.serializers_v3 import MinimalUserSerializer
+
+
+class YearPlanSerializer(SafeReadOnlySerializerMixin, SnapshotModelSerializer):
+    history = HistorySerializer(many=True, label=_('History'), read_only=True)
+
+    class Meta:
+        model = YearPlan
+        fields = (
+            'prioritization_criteria', 'methodology_notes', 'target_visits',
+            'modalities', 'partner_engagement', 'other_aspects', 'history',
+        )
 
 
 class LogIssueAttachmentSerializer(SafeReadOnlySerializerMixin, BaseAttachmentSerializer):

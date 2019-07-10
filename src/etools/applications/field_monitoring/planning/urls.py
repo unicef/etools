@@ -6,10 +6,12 @@ from unicef_restlib.routers import NestedComplexRouter
 
 from etools.applications.field_monitoring.planning.views import (
     LogIssuesViewSet,
-    LogIssueAttachmentsViewSet
+    LogIssueAttachmentsViewSet,
+    YearPlanViewSet
 )
 
 root_api = routers.SimpleRouter()
+root_api.register(r'year-plan', YearPlanViewSet, base_name='year-plan')
 root_api.register(r'log-issues', LogIssuesViewSet, base_name='log-issues')
 
 log_issues_api = NestedComplexRouter(root_api, r'log-issues')

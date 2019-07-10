@@ -1,9 +1,25 @@
+from datetime import date
+
 import factory
 from factory import fuzzy
 
 from etools.applications.attachments.tests.factories import AttachmentFactory
-from etools.applications.field_monitoring.planning.models import LogIssue
+from etools.applications.field_monitoring.planning.models import LogIssue, YearPlan
 from etools.applications.users.tests.factories import UserFactory
+
+
+class YearPlanFactory(factory.DjangoModelFactory):
+    year = date.today().year
+
+    prioritization_criteria = fuzzy.FuzzyText()
+    methodology_notes = fuzzy.FuzzyText()
+    target_visits = fuzzy.FuzzyInteger(0, 100)
+    modalities = fuzzy.FuzzyText()
+    partner_engagement = fuzzy.FuzzyText()
+
+    class Meta:
+        model = YearPlan
+        django_get_or_create = ('year',)
 
 
 class LogIssueFactory(factory.DjangoModelFactory):
