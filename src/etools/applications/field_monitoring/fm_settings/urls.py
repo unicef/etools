@@ -1,9 +1,17 @@
 from django.conf.urls import include, url
 
 from rest_framework_nested import routers
-from unicef_restlib.routers import NestedComplexRouter
 
-from etools.applications.field_monitoring.fm_settings.views import *
+# from unicef_restlib.routers import NestedComplexRouter
+from etools.applications.field_monitoring.fm_settings.views import (
+    FieldMonitoringGeneralAttachmentsViewSet,
+    FMLocationsViewSet,
+    InterventionLocationsView,
+    LocationsCountryView,
+    LocationSitesViewSet,
+    MethodsViewSet,
+    ResultsViewSet,
+)
 
 root_api = routers.SimpleRouter()
 root_api.register(r'methods', MethodsViewSet, base_name='methods')

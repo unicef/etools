@@ -1,18 +1,18 @@
-from unittest import skip
-
 from django.contrib.gis.geos import GEOSGeometry
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
 from django.urls import reverse
+
 from factory import fuzzy
-
 from rest_framework import status
-
+from unicef_attachments.models import Attachment
 from unicef_locations.tests.factories import LocationFactory
 
+from etools.applications.attachments.tests.factories import AttachmentFileTypeFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
-from etools.applications.field_monitoring.fm_settings.tests.factories import (
-    LocationSiteFactory)
+from etools.applications.field_monitoring.fm_settings.tests.factories import LocationSiteFactory
 from etools.applications.field_monitoring.tests.base import FMBaseTestCaseMixin
+from etools.applications.partners.tests.factories import InterventionFactory
 from etools.libraries.djangolib.tests.utils import TestExportMixin
 
 
@@ -263,7 +263,6 @@ class LocationSitesViewTestCase(TestExportMixin, FMBaseTestCaseMixin, BaseTenant
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    @skip('exports are not implemented yet')
     def test_csv_export(self):
         LocationSiteFactory()
         site2 = LocationSiteFactory()
@@ -272,7 +271,6 @@ class LocationSitesViewTestCase(TestExportMixin, FMBaseTestCaseMixin, BaseTenant
 
         self._test_export(self.unicef_user, 'field_monitoring_settings:sites-export')
 
-    @skip('exports are not implemented yet')
     def test_csv_export_no_sites(self):
         self._test_export(self.unicef_user, 'field_monitoring_settings:sites-export')
 
@@ -306,3 +304,54 @@ class LocationsCountryViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         )
 
         self.assertEqual(response.data['point']['type'], 'Point')
+
+
+class TestFieldMonitoringGeneralAttachmentsView(FMBaseTestCaseMixin, BaseTenantTestCase):
+    def test_add(self):
+        attachments_num = Attachment.objects.filter(code='fm_common').count()
+        self.assertEqual(attachments_num, 0)
+
+        create_response = self.forced_auth_req(
+            'post',
+            reverse('field_monitoring_settings:general-attachments-list'),
+            user=self.fm_user,
+            request_format='multipart',
+            data={
+                'file_type': AttachmentFileTypeFactory(code='fm_common').id,
+                'file': SimpleUploadedFile('hello_world.txt', u'hello world!'.encode('utf-8')),
+            }
+        )
+        self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
+
+        list_response = self.forced_auth_req(
+            'get',
+            reverse('field_monitoring_settings:general-attachments-list'),
+            user=self.unicef_user
+        )
+        self.assertEqual(list_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(list_response.data['results']), attachments_num + 1)
+
+    def test_add_unicef(self):
+        create_response = self.forced_auth_req(
+            'post',
+            reverse('field_monitoring_settings:general-attachments-list'),
+            user=self.unicef_user,
+            request_format='multipart',
+            data={}
+        )
+        self.assertEqual(create_response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class TestInterventionLocationsView(FMBaseTestCaseMixin, BaseTenantTestCase):
+    def test_list(self):
+        intervention = InterventionFactory()
+        intervention.flat_locations.add(*[LocationFactory() for i in range(2)])
+        LocationFactory()
+
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_settings:intervention-locations', args=[intervention.pk]),
+            user=self.unicef_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 2)

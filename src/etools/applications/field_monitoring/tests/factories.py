@@ -2,7 +2,7 @@ from django.contrib.auth.models import Group
 
 import factory
 
-from etools.applications.field_monitoring.groups import UNICEFUser, FMUser, PME
+from etools.applications.field_monitoring.groups import FMUser, PME, UNICEFUser
 from etools.applications.firms.tests.factories import BaseUserFactory
 
 
@@ -12,21 +12,23 @@ class UserFactory(BaseUserFactory):
     """
     class Params:
         unicef_user = factory.Trait(
-            groups=[UNICEFUser.name],
+            groups__data=[UNICEFUser.name],
         )
 
         fm_user = factory.Trait(
-            groups=[UNICEFUser.name, FMUser.name],
+            groups__data=[UNICEFUser.name, FMUser.name],
         )
 
         pme = factory.Trait(
-            groups=[UNICEFUser.name, PME.name],
+            groups__data=[UNICEFUser.name, PME.name],
         )
 
     @factory.post_generation
-    def groups(self, create, extracted, **kwargs):
+    def groups(self, create, extracted, data=None, **kwargs):
         if not create:
             return
+
+        extracted = (extracted or []) + (data or [])
 
         if extracted is not None:
             extracted = extracted[:]

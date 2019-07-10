@@ -4,7 +4,6 @@ from django.contrib.gis.db.models import Collect
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
-
 from unicef_attachments.fields import FileTypeModelChoiceField
 from unicef_attachments.models import FileType
 from unicef_attachments.serializers import BaseAttachmentSerializer
