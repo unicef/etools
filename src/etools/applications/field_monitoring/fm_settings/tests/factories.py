@@ -5,8 +5,10 @@ from factory import fuzzy
 from unicef_locations.models import GatewayType
 from unicef_locations.tests.factories import LocationFactory
 
-from etools.applications.field_monitoring.fm_settings.models import Category, Method, Option, Question
-from etools.applications.field_monitoring.planning.models import LocationSite
+from etools.applications.attachments.tests.factories import AttachmentFactory
+from etools.applications.field_monitoring.fm_settings.models import Category, Method, Option, Question, LocationSite, \
+    LogIssue
+from etools.applications.users.tests.factories import UserFactory
 
 
 class MethodFactory(factory.DjangoModelFactory):
@@ -57,3 +59,21 @@ class QuestionFactory(factory.DjangoModelFactory):
             count = 2
 
         OptionFactory.create_batch(count, question=self)
+
+
+class LogIssueFactory(factory.DjangoModelFactory):
+    author = factory.SubFactory(UserFactory)
+    issue = fuzzy.FuzzyText()
+
+    attachments__count = 0
+
+    class Meta:
+        model = LogIssue
+
+    @factory.post_generation
+    def attachments(self, create, extracted, count, **kwargs):
+        if not create:
+            return
+
+        for i in range(count):
+            AttachmentFactory(content_object=self)

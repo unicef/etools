@@ -3,7 +3,7 @@ from django.dispatch import receiver
 
 from unicef_locations.cache import invalidate_cache
 
-from etools.applications.field_monitoring.planning.models import LocationSite
+from etools.applications.field_monitoring.fm_settings.models import LocationSite
 
 
 @receiver(post_save, sender=LocationSite)

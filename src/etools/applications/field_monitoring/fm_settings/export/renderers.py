@@ -34,3 +34,17 @@ class LocationSiteCSVRenderer(CSVRenderer):
     @property
     def header(self):
         return self.labels.keys()
+
+
+class LogIssueCSVRenderer(CSVRenderer):
+    labels = {
+        'related_to': _('Related To'),
+        'name': _('Name'),
+        'issue': _('Issue for Attention'),
+        'status': _('Status'),
+        'attachments': _('Attachments'),
+    }
+
+    @property
+    def header(self):
+        return self.labels.keys()
