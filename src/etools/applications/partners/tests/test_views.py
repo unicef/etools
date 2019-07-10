@@ -1922,6 +1922,7 @@ class TestPartnerOrganizationDashboardAPIView(BaseTenantTestCase):
             outstanding_dct_amount_6_to_9_months_usd=69,
             outstanding_dct_amount_more_than_9_months_usd=90,
             partner_type=PartnerType.UN_AGENCY,
+            core_values_assessment_date=datetime.date.today() - datetime.timedelta(30),
         )
 
         cls.unicef_staff = UserFactory(is_staff=True)
@@ -1957,6 +1958,7 @@ class TestPartnerOrganizationDashboardAPIView(BaseTenantTestCase):
         self.assertEqual(self.record['total_ct_ytd'], 123.0)
         self.assertEqual(self.record['outstanding_dct_amount_6_to_9_months_usd'], 69.00)
         self.assertEqual(self.record['outstanding_dct_amount_more_than_9_months_usd'], 90.00)
+        self.assertEqual(self.record['core_value_assessment_expiring'].split()[0], '30')
 
     def test_sections(self):
         self.assertEqual(self.record['sections'], '{}|{}'.format(self.sec1.name, self.sec2.name))
