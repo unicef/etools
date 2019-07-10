@@ -3,10 +3,10 @@ from django.dispatch import receiver
 
 from unicef_locations.cache import invalidate_cache
 
-from etools.applications.field_monitoring.fm_settings.models import LocationSite
+from etools.applications.field_monitoring.planning.models import LocationSite
 
 
 @receiver(post_save, sender=LocationSite)
 def update_location_site_receiver(instance, created, **kwargs):
-    # LocationSitesViewSet.list.invalidate()
+    # todo: what happened with LocationSitesViewSet.list.invalidate() ?
     invalidate_cache()

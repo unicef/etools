@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from etools.applications.field_monitoring.planning.models import LogIssue, YearPlan
+from etools.applications.field_monitoring.planning.models import LogIssue, YearPlan, LocationSite
 
 
 @admin.register(YearPlan)
@@ -9,6 +9,13 @@ class YearPlanAdmin(admin.ModelAdmin):
 
     def has_add_permission(self, request):
         return False
+
+
+@admin.register(LocationSite)
+class LocationSiteAdmin(admin.ModelAdmin):
+    list_display = ('parent', 'name', 'p_code', 'is_active',)
+    list_filter = ('is_active',)
+    search_fields = ('name', 'p_code')
 
 
 @admin.register(LogIssue)

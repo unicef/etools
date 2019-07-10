@@ -4,7 +4,6 @@ from django.utils.translation import ugettext_lazy as _
 from ordered_model.admin import OrderedModelAdmin
 
 from etools.applications.field_monitoring.fm_settings.models import (
-    LocationSite,
     Option,
     Question,
     Method
@@ -14,13 +13,6 @@ from etools.applications.field_monitoring.fm_settings.models import (
 @admin.register(Method)
 class MethodAdmin(OrderedModelAdmin):
     list_display = ('name',)
-
-
-@admin.register(LocationSite)
-class LocationSiteAdmin(admin.ModelAdmin):
-    list_display = ('parent', 'name', 'p_code', 'is_active',)
-    list_filter = ('is_active',)
-    search_fields = ('name', 'p_code')
 
 
 class QuestionOptionsInline(admin.StackedInline):

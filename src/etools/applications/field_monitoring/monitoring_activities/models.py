@@ -6,7 +6,7 @@ from model_utils import Choices
 from model_utils.models import TimeStampedModel
 from unicef_locations.models import Location
 
-from etools.applications.field_monitoring.fm_settings.models import LocationSite
+from etools.applications.field_monitoring.planning.models import LocationSite
 from etools.applications.partners.models import Intervention, PartnerOrganization
 from etools.applications.reports.models import Result
 from etools.applications.tpm.tpmpartners.models import TPMPartner
