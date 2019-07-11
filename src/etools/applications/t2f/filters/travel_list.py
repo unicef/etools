@@ -39,6 +39,7 @@ class TravelFilterBoxFilter(BaseFilterBoxFilter):
     serializer_class = TravelFilterBoxSerializer
 
     def _get_filter_kwargs(self, request, queryset, view):
+
         data = super()._get_filter_kwargs(request, queryset, view)
 
         # Construct a backend readable date
