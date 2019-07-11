@@ -90,6 +90,7 @@ class MonitoringActivity(SoftDeleteMixin, TimeStampedModel):
         ('details_configured', _('Details Configured')),
         ('checklist_configured', _('Checklist Configured')),
         ('assigned', _('Assigned')),
+        ('accepted', _('Accepted')),
         ('data_collected', _('Data Collected')),
         ('report_submitted', _('Report Submitted')),
         ('completed', _('Completed')),
@@ -146,13 +147,18 @@ class MonitoringActivity(SoftDeleteMixin, TimeStampedModel):
 
     @transition(field=status, source=STATUSES.checklist_configured, target=STATUSES.assigned)
     def assign(self):
+        if self.activity_type == self.TYPES.staff:
+            self.accept()
+
+    @transition(field=status, source=STATUSES.assigned, target=STATUSES.accepted)
+    def accept(self):
         pass
 
-    @transition(field=status, source=STATUSES.checklist_configured, target=STATUSES.draft)
+    @transition(field=status, source=STATUSES.assigned, target=STATUSES.draft)
     def reject(self):
         pass
 
-    @transition(field=status, source=STATUSES.assigned, target=STATUSES.data_collected)
+    @transition(field=status, source=STATUSES.accepted, target=STATUSES.data_collected)
     def mark_data_collected(self):
         pass
 
@@ -167,7 +173,7 @@ class MonitoringActivity(SoftDeleteMixin, TimeStampedModel):
     @transition(field=status, target=STATUSES.cancelled,
                 source=[
                     STATUSES.draft, STATUSES.details_configured, STATUSES.checklist_configured,
-                    STATUSES.assigned, STATUSES.data_collected
+                    STATUSES.assigned, STATUSES.accepted, STATUSES.data_collected
                 ])
     def cancel(self):
         pass
