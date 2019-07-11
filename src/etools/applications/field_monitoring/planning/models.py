@@ -2,6 +2,7 @@ from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models, connection
 from django.utils.translation import ugettext_lazy as _
+from django_fsm import transition, FSMField
 from model_utils import Choices
 
 from model_utils.models import TimeStampedModel
@@ -84,6 +85,17 @@ class MonitoringActivity(SoftDeleteMixin, TimeStampedModel):
         ('tpm', _('TPM')),
     )
 
+    STATUSES = Choices(
+        ('draft', _('Draft')),
+        ('details_configured', _('Details Configured')),
+        ('checklist_configured', _('Checklist Configured')),
+        ('assigned', _('Assigned')),
+        ('data_collected', _('Data Collected')),
+        ('report_submitted', _('Report Submitted')),
+        ('completed', _('Completed')),
+        ('cancelled', _('Cancelled')),
+    )
+
     activity_type = models.CharField(max_length=10, choices=TYPES)
 
     tpm_partner = models.ForeignKey(TPMPartner, blank=True, null=True, verbose_name=_('TPM Partner'),
@@ -106,6 +118,8 @@ class MonitoringActivity(SoftDeleteMixin, TimeStampedModel):
     start_date = models.DateField(verbose_name=_('Start Date'), blank=True, null=True)
     end_date = models.DateField(verbose_name=_('End Date'), blank=True, null=True)
 
+    status = FSMField(verbose_name=_('Status'), max_length=20, choices=STATUSES, default=STATUSES.draft)
+
     class Meta:
         verbose_name = _('Monitoring Activity')
         verbose_name_plural = _('Monitoring Activities')
@@ -121,3 +135,39 @@ class MonitoringActivity(SoftDeleteMixin, TimeStampedModel):
             self.created.year,
             self.id,
         )
+
+    @transition(field=status, source=STATUSES.draft, target=STATUSES.details_configured)
+    def mark_details_configured(self):
+        pass
+
+    @transition(field=status, source=STATUSES.details_configured, target=STATUSES.checklist_configured)
+    def mark_checklist_configured(self):
+        pass
+
+    @transition(field=status, source=STATUSES.checklist_configured, target=STATUSES.assigned)
+    def assign(self):
+        pass
+
+    @transition(field=status, source=STATUSES.checklist_configured, target=STATUSES.draft)
+    def reject(self):
+        pass
+
+    @transition(field=status, source=STATUSES.assigned, target=STATUSES.data_collected)
+    def mark_data_collected(self):
+        pass
+
+    @transition(field=status, source=STATUSES.data_collected, target=STATUSES.report_submitted)
+    def submit_report(self):
+        pass
+
+    @transition(field=status, source=STATUSES.report_submitted, target=STATUSES.completed)
+    def complete(self):
+        pass
+
+    @transition(field=status, target=STATUSES.cancelled,
+                source=[
+                    STATUSES.draft, STATUSES.details_configured, STATUSES.checklist_configured,
+                    STATUSES.assigned, STATUSES.data_collected
+                ])
+    def cancel(self):
+        pass

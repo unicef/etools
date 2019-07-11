@@ -3,7 +3,7 @@ from datetime import date
 import factory
 from factory import fuzzy
 
-from etools.applications.field_monitoring.planning.models import YearPlan
+from etools.applications.field_monitoring.planning.models import YearPlan, MonitoringActivity
 
 
 class YearPlanFactory(factory.DjangoModelFactory):
@@ -20,3 +20,6 @@ class YearPlanFactory(factory.DjangoModelFactory):
         django_get_or_create = ('year',)
 
 
+class MonitoringActivityFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = MonitoringActivity
