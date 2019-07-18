@@ -16,7 +16,6 @@ from unicef_snapshot.serializers import SnapshotModelSerializer
 from etools.applications.action_points.serializers import HistorySerializer
 from etools.applications.field_monitoring.fm_settings.models import Method, LocationSite, LogIssue
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
-from etools.applications.permissions_simplified.serializers import SafeReadOnlySerializerMixin
 from etools.applications.reports.serializers.v2 import OutputListSerializer
 from etools.applications.users.serializers_v3 import MinimalUserSerializer
 
@@ -27,7 +26,7 @@ class MethodSerializer(serializers.ModelSerializer):
         fields = ('id', 'name')
 
 
-class FieldMonitoringGeneralAttachmentSerializer(SafeReadOnlySerializerMixin, BaseAttachmentSerializer):
+class FieldMonitoringGeneralAttachmentSerializer(BaseAttachmentSerializer):
     file_type = FileTypeModelChoiceField(
         label=_('Document Type'), queryset=FileType.objects.filter(code='fm_common')
     )
@@ -43,7 +42,7 @@ class ResultSerializer(OutputListSerializer):
         pass
 
 
-class LocationSiteLightSerializer(SafeReadOnlySerializerMixin, serializers.ModelSerializer):
+class LocationSiteLightSerializer(serializers.ModelSerializer):
     parent = LocationSerializer(read_only=True)
     is_active = serializers.ChoiceField(choices=(
         (True, _('Active')),
@@ -81,12 +80,12 @@ class LocationFullSerializer(LocationLightSerializer):
         return json.loads(point.json)
 
 
-class LogIssueAttachmentSerializer(SafeReadOnlySerializerMixin, BaseAttachmentSerializer):
+class LogIssueAttachmentSerializer(BaseAttachmentSerializer):
     class Meta(BaseAttachmentSerializer.Meta):
         pass
 
 
-class LogIssueSerializer(UserContextSerializerMixin, SafeReadOnlySerializerMixin, SnapshotModelSerializer):
+class LogIssueSerializer(UserContextSerializerMixin, SnapshotModelSerializer):
     author = MinimalUserSerializer(read_only=True, label=LogIssue._meta.get_field('author').verbose_name)
     closed_by = serializers.SerializerMethodField(label=_('Issue Closed By'))
     related_to_type = serializers.ChoiceField(choices=LogIssue.RELATED_TO_TYPE_CHOICES, read_only=True,

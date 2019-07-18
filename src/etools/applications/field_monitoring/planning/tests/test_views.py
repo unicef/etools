@@ -6,8 +6,9 @@ from rest_framework import status
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.field_monitoring.planning.models import YearPlan
-from etools.applications.field_monitoring.planning.tests.factories import YearPlanFactory
+from etools.applications.field_monitoring.planning.tests.factories import YearPlanFactory, MonitoringActivityFactory
 from etools.applications.field_monitoring.tests.base import FMBaseTestCaseMixin
+from etools.applications.tpm.tests.factories import TPMPartnerFactory
 
 
 class YearPlanViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
@@ -47,3 +48,33 @@ class YearPlanViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
             'prioritization_criteria', 'methodology_notes', 'target_visits', 'modalities', 'partner_engagement'
         ]:
             self.assertEqual(getattr(year_plan, field), response.data[field])
+
+
+class ActivitiesViewTestCae(FMBaseTestCaseMixin, BaseTenantTestCase):
+    def test_update_tpm_partner_success(self):
+        activity = MonitoringActivityFactory(activity_type='tpm')
+
+        response = self.forced_auth_req(
+            'patch', reverse('field_monitoring_planning:activities-detail', args=[activity.pk]),
+            user=self.fm_user,
+            data={
+                'tpm_partner': TPMPartnerFactory().pk
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_update_tpm_partner_staff_activity(self):
+        activity = MonitoringActivityFactory(activity_type='staff')
+
+        response = self.forced_auth_req(
+            'patch', reverse('field_monitoring_planning:activities-detail', args=[activity.pk]),
+            user=self.fm_user,
+            data={
+                'tpm_partner': TPMPartnerFactory().pk
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(len(response.data), 1)
+        self.assertIn('TPM Partner', response.data[0])

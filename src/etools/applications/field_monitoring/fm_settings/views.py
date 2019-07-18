@@ -24,7 +24,7 @@ from etools.applications.field_monitoring.fm_settings.serializers import (
     FieldMonitoringGeneralAttachmentSerializer,
     MethodSerializer,
     LocationSiteSerializer, LocationFullSerializer, LogIssueSerializer, LogIssueAttachmentSerializer)
-from etools.applications.field_monitoring.permissions import IsEditAction, IsPME, IsReadAction, UserIsFieldMonitor
+from etools.applications.field_monitoring.permissions import IsEditAction, IsPME, IsReadAction, IsFieldMonitor
 from etools.applications.field_monitoring.views import FMBaseViewSet, FMBaseAttachmentsViewSet
 from etools.applications.permissions_simplified.permissions import PermissionQ as Q
 
@@ -50,9 +50,9 @@ class FieldMonitoringGeneralAttachmentsViewSet(
     viewsets.ModelViewSet
 ):
     permission_classes = FMBaseViewSet.permission_classes + [
-        Q(IsReadAction) | (Q(IsEditAction) & Q(UserIsFieldMonitor))
+        Q(IsReadAction) | Q(IsEditAction, IsFieldMonitor)
     ]
-    # write_permission_classes = [UserIsFieldMonitor]
+    # write_permission_classes = [IsFieldMonitor]
     # metadata_class = SimplePermissionBasedMetadata
     queryset = Attachment.objects.filter(code='fm_common')
     serializer_class = FieldMonitoringGeneralAttachmentSerializer
@@ -141,9 +141,9 @@ class LogIssuesViewSet(
     viewsets.ModelViewSet
 ):
     permission_classes = FMBaseViewSet.permission_classes + [
-        Q(IsReadAction) | (Q(IsEditAction) & Q(UserIsFieldMonitor))
+        Q(IsReadAction) | Q(IsEditAction, IsFieldMonitor)
     ]
-    # write_permission_classes = [UserIsFieldMonitor]
+    # write_permission_classes = [IsFieldMonitor]
     # metadata_class = SimplePermissionBasedMetadata
     queryset = LogIssue.objects.prefetch_related(
         'author', 'history', 'cp_output', 'partner', 'location', 'location_site', 'attachments',
@@ -184,9 +184,9 @@ class LogIssueAttachmentsViewSet(
     FMBaseAttachmentsViewSet
 ):
     permission_classes = FMBaseViewSet.permission_classes + [
-        Q(IsReadAction) | (Q(IsEditAction) & Q(UserIsFieldMonitor))
+        Q(IsReadAction) | Q(IsEditAction, IsFieldMonitor)
     ]
-    # write_permission_classes = [UserIsFieldMonitor]
+    # write_permission_classes = [IsFieldMonitor]
     # metadata_class = SimplePermissionBasedMetadata
     serializer_class = LogIssueAttachmentSerializer
     related_model = LogIssue

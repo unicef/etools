@@ -1,9 +1,11 @@
-from datetime import date
+from datetime import date, timedelta
 
 import factory
 from factory import fuzzy
+from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.field_monitoring.planning.models import YearPlan, MonitoringActivity
+from etools.applications.tpm.tests.factories import TPMPartnerFactory
 
 
 class YearPlanFactory(factory.DjangoModelFactory):
@@ -21,5 +23,12 @@ class YearPlanFactory(factory.DjangoModelFactory):
 
 
 class MonitoringActivityFactory(factory.DjangoModelFactory):
+    # tpm_partner = factory.SubFactory(TPMPartnerFactory)
+    activity_type = 'staff'
+    location = factory.SubFactory(LocationFactory)
+
+    start_date = date.today()
+    end_date = date.today() + timedelta(days=30)
+
     class Meta:
         model = MonitoringActivity

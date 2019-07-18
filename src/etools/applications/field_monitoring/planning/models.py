@@ -8,6 +8,7 @@ from model_utils import Choices
 from model_utils.models import TimeStampedModel
 from unicef_locations.models import Location
 
+from etools.applications.core.permissions import import_permissions
 from etools.applications.field_monitoring.fm_settings.models import Question, LocationSite
 from etools.applications.partners.models import Intervention, PartnerOrganization
 from etools.applications.reports.models import Result
@@ -136,6 +137,11 @@ class MonitoringActivity(SoftDeleteMixin, TimeStampedModel):
             self.created.year,
             self.id,
         )
+
+    @classmethod
+    def permission_structure(cls):
+        permissions = import_permissions(cls.__name__)
+        return permissions
 
     @transition(field=status, source=STATUSES.draft, target=STATUSES.details_configured)
     def mark_details_configured(self):

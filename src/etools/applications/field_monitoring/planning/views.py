@@ -1,28 +1,34 @@
+import logging
 from datetime import date
 
+from django.db import transaction
 from django.http import Http404
 from django.utils.translation import ugettext_lazy as _
+from django_filters.rest_framework import DjangoFilterBackend
+from etools_validator.mixins import ValidatorViewMixin
 from rest_framework import viewsets, mixins
+from rest_framework.exceptions import ValidationError
+from rest_framework.response import Response
 
-from etools.applications.field_monitoring.permissions import IsReadAction, IsEditAction, UserIsFieldMonitor
-from etools.applications.field_monitoring.planning.models import YearPlan
-from etools.applications.field_monitoring.planning.serializers import YearPlanSerializer
+from etools.applications.field_monitoring.permissions import IsReadAction, IsEditAction, IsFieldMonitor
+from etools.applications.field_monitoring.planning.activity_validation.validator import ActivityValid
+from etools.applications.field_monitoring.planning.models import YearPlan, QuestionTemplate, MonitoringActivity
+from etools.applications.field_monitoring.planning.serializers import YearPlanSerializer, QuestionTemplateSerializer, \
+    MonitoringActivityLightSerializer, MonitoringActivitySerializer
 from etools.applications.field_monitoring.views import FMBaseViewSet
+from etools.applications.permissions2.views import FSMTransitionActionMixin
 from etools.applications.permissions_simplified.permissions import PermissionQ as Q
 
 
 class YearPlanViewSet(
     FMBaseViewSet,
-    # SimplePermittedViewSetMixin,
     mixins.RetrieveModelMixin,
     mixins.UpdateModelMixin,
     viewsets.GenericViewSet
 ):
     permission_classes = FMBaseViewSet.permission_classes + [
-        Q(IsReadAction) | (Q(IsEditAction) & Q(UserIsFieldMonitor))
+        Q(IsReadAction) | Q(IsEditAction, IsFieldMonitor)
     ]
-    # write_permission_classes = [UserIsFieldMonitor]
-    # metadata_class = SimplePermissionBasedMetadata
     queryset = YearPlan.objects.all()
     serializer_class = YearPlanSerializer
 
@@ -54,3 +60,84 @@ class YearPlanViewSet(
         self.check_object_permissions(self.request, obj)
 
         return obj
+
+
+class QuestionTemplateViewSet(
+    FMBaseViewSet,
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet,
+):
+
+    permission_classes = FMBaseViewSet.permission_classes + [
+        Q(IsReadAction) | Q(IsEditAction, IsFieldMonitor)
+    ]
+    queryset = QuestionTemplate.objects.all()
+    serializer_class = QuestionTemplateSerializer
+    filter_backends = (DjangoFilterBackend,)
+    filter_fields = ('is_active', 'partner', 'cp_output', 'intervention',)
+
+    def get_view_name(self):
+        return _('Templates')
+
+
+class MonitoringActivitiesViewSet(
+    ValidatorViewMixin,
+    FMBaseViewSet,
+    # FSMTransitionActionMixin, # todo: not sure about it. need to re-think, or at least apply validator in hook
+    viewsets.ModelViewSet,
+):
+    """
+    Retrieve and Update Agreement.
+    """
+    queryset = MonitoringActivity.objects.all()
+    serializer_class = MonitoringActivitySerializer
+    serializer_action_classes = {
+        'list': MonitoringActivityLightSerializer
+    }
+    permission_classes = FMBaseViewSet.permission_classes + [
+        Q(IsReadAction)  # list/retrieve
+        | Q(IsEditAction, IsFieldMonitor)  # update (todo: transitions are here; they need to be filtered out)
+    ]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        if self.action == 'list':
+            queryset.prefetch_related('tpm_partner', 'person_responsible', 'location', 'location_site')
+
+        return queryset
+
+    # todo
+    # SERIALIZER_MAP = {
+    #     'planned_budget': InterventionBudgetCUSerializer,
+    #     'planned_visits': PlannedVisitsCUSerializer,
+    #     'result_links': InterventionResultCUSerializer
+    # }
+
+    # todo: do we update all information including nested data simultaneously?
+    @transaction.atomic
+    def update(self, request, *args, **kwargs):
+        # todo
+        # related_fields = ['planned_budget',
+        #                   'planned_visits',
+        #                   'result_links']
+        related_fields = []
+        # todo
+        # nested_related_names = ['ll_results']
+        nested_related_names = []
+        instance, old_instance, serializer = self.my_update(
+            request,
+            related_fields,
+            nested_related_names=nested_related_names,
+            **kwargs
+        )
+
+        validator = ActivityValid(instance, old=old_instance, user=request.user)
+        if not validator.is_valid:
+            logging.debug(validator.errors)
+            raise ValidationError(validator.errors)
+
+        # return Response(serializer(instance, context=self.get_serializer_context()).data) # todo
+        return Response(serializer.data)
