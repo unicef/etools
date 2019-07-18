@@ -50,9 +50,9 @@ class YearPlanViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
             self.assertEqual(getattr(year_plan, field), response.data[field])
 
 
-class ActivitiesViewTestCae(FMBaseTestCaseMixin, BaseTenantTestCase):
-    def test_update_tpm_partner_success(self):
-        activity = MonitoringActivityFactory(activity_type='tpm')
+class ActivitiesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
+    def test_update_draft_success(self):
+        activity = MonitoringActivityFactory(activity_type='tpm', tpm_partner=None)
 
         response = self.forced_auth_req(
             'patch', reverse('field_monitoring_planning:activities-detail', args=[activity.pk]),
@@ -63,6 +63,7 @@ class ActivitiesViewTestCae(FMBaseTestCaseMixin, BaseTenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsNotNone(response.data['tpm_partner'])
 
     def test_update_tpm_partner_staff_activity(self):
         activity = MonitoringActivityFactory(activity_type='staff')

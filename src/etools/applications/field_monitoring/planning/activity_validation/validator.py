@@ -1,29 +1,22 @@
-from django.utils.translation import ugettext_lazy as _
-
-from etools_validator.exceptions import StateValidationError, BasicValidationError
+from etools_validator.exceptions import StateValidationError
 from etools_validator.utils import check_rigid_fields, check_required_fields
 from etools_validator.validation import CompleteValidation
 
 from etools.applications.field_monitoring.planning.activity_validation.permissions import ActivityPermissions
-from etools.applications.field_monitoring.planning.models import MonitoringActivity
-
-
-def staff_activity_has_no_tpm_partner(i):
-    if i.activity_type == MonitoringActivity.TYPES.staff and i.tpm_partner:
-        raise BasicValidationError(_('TPM Partner selected for staff activity'))
-    return True
+from etools.applications.field_monitoring.planning.activity_validation.validations.basic import \
+    tpm_staff_members_belongs_to_the_partner, staff_activity_has_no_tpm_partner
+from etools.applications.field_monitoring.planning.activity_validation.validations.state import \
+    tpm_partner_is_assigned_for_tpm_activity
 
 
 class ActivityValid(CompleteValidation):
     VALIDATION_CLASS = 'field_monitoring_planning.MonitoringActivity'
     BASIC_VALIDATIONS = [
         staff_activity_has_no_tpm_partner,
+        tpm_staff_members_belongs_to_the_partner,
     ]
 
-    VALID_ERRORS = {
-        # 'suspended_expired_error': 'State suspended cannot be modified since the end date of '
-        #                            'the intervention surpasses today',
-    }
+    VALID_ERRORS = {}
 
     PERMISSIONS_CLASS = ActivityPermissions
 
@@ -43,14 +36,13 @@ class ActivityValid(CompleteValidation):
         if not rigid_valid:
             raise StateValidationError(['Cannot change fields while in {}: {}'.format(intervention.status, field)])
 
-    def state_draft_valid(self, intervention, user=None):
-        self.check_required_fields(intervention)
-        self.check_rigid_fields(intervention, related=True)
+    def state_draft_valid(self, instance, user=None):
+        self.check_required_fields(instance)
+        self.check_rigid_fields(instance, related=True)
         return True
 
-    # def state_signed_valid(self, intervention, user=None):
-    #     self.check_required_fields(intervention)
-    #     self.check_rigid_fields(intervention, related=True)
-    #     if intervention.contingency_pd is False and intervention.total_unicef_budget == 0:
-    #         raise StateValidationError([_('UNICEF Cash $ or UNICEF Supplies $ should not be 0')])
-    #     return True
+    def state_details_configured_valid(self, instance, user=None):
+        self.check_required_fields(instance)
+        self.check_rigid_fields(instance, related=True)
+        tpm_partner_is_assigned_for_tpm_activity(instance)
+        return True
