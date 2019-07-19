@@ -1,4 +1,5 @@
 import datetime
+import json
 import random
 
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -487,6 +488,30 @@ class TestEngagementCreateActivePDViewSet:
         response = self._do_create(self.unicef_focal_point, self.create_data)
 
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+
+    def test_attachments(self):
+        file_type_engagement = AttachmentFileTypeFactory(
+            code="audit_engagement",
+        )
+        attachment_engagement = AttachmentFactory(
+            file="test_engagement.pdf",
+            file_type=None,
+            code="",
+        )
+        self.create_data["engagement_attachments"] = attachment_engagement.pk
+
+        response = self._do_create(self.unicef_focal_point, self.create_data)
+
+        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+
+        data = json.loads(response.content)
+        engagement_val = data["engagement_attachments"]
+        self.assertIsNotNone(engagement_val)
+        self.assertTrue(
+            engagement_val.endswith(attachment_engagement.file.name)
+        )
+        attachment_engagement.refresh_from_db()
+        self.assertEqual(attachment_engagement.file_type, file_type_engagement)
 
 
 class TestMicroAssessmentCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEngagementsCreateViewSet,

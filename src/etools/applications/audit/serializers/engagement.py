@@ -3,9 +3,9 @@ from copy import copy
 from django.utils.translation import ugettext as _
 
 from rest_framework import serializers
-from unicef_attachments.fields import FileTypeModelChoiceField
+from unicef_attachments.fields import AttachmentSingleFileField, FileTypeModelChoiceField
 from unicef_attachments.models import FileType
-from unicef_attachments.serializers import BaseAttachmentSerializer
+from unicef_attachments.serializers import AttachmentSerializerMixin, BaseAttachmentSerializer
 from unicef_restlib.fields import SeparatedReadWriteField
 from unicef_restlib.serializers import WritableNestedParentSerializerMixin, WritableNestedSerializerMixin
 
@@ -220,9 +220,12 @@ class SpecificProcedureSerializer(WritableNestedSerializerMixin,
         ]
 
 
-class EngagementSerializer(EngagementDatesValidation,
-                           WritableNestedParentSerializerMixin,
-                           EngagementListSerializer):
+class EngagementSerializer(
+        AttachmentSerializerMixin,
+        EngagementDatesValidation,
+        WritableNestedParentSerializerMixin,
+        EngagementListSerializer
+):
     staff_members = SeparatedReadWriteField(
         read_field=AuditorStaffMemberSerializer(many=True, required=False), label=_('Audit Staff Team Members')
     )
@@ -235,6 +238,9 @@ class EngagementSerializer(EngagementDatesValidation,
     )
 
     specific_procedures = SpecificProcedureSerializer(many=True, label=_('Specific Procedure To Be Performed'))
+    engagement_attachments = AttachmentSingleFileField(required=False)
+    report_attachments = AttachmentSingleFileField(required=False)
+    final_report = AttachmentSingleFileField(required=False)
 
     class Meta(EngagementListSerializer.Meta):
         fields = EngagementListSerializer.Meta.fields + [
@@ -249,6 +255,9 @@ class EngagementSerializer(EngagementDatesValidation,
             'date_of_draft_report_to_unicef', 'date_of_comments_by_unicef',
             'date_of_report_submit', 'date_of_final_report', 'date_of_cancel',
             'cancel_comment', 'specific_procedures',
+            'engagement_attachments',
+            'report_attachments',
+            'final_report',
         ]
         extra_kwargs = {
             field: {'required': True} for field in [
