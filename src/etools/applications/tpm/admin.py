@@ -5,7 +5,7 @@ from etools.libraries.djangolib.admin import AdminListMixin
 
 
 @admin.register(models.TPMActivity)
-class TPMActivityInline(admin.ModelAdmin):
+class TPMActivityAdmin(admin.ModelAdmin):
     list_display = (
         '__str__',
     )
@@ -18,6 +18,7 @@ class TPMActivityInline(admin.ModelAdmin):
         'unicef_focal_points',
         'offices',
     )
+    raw_id_fields = ('partner', 'intervention', 'cp_output')
 
 
 @admin.register(models.TPMVisit)
