@@ -564,3 +564,7 @@ ATTACHMENT_DENORMALIZE_FUNC = "etools.applications.attachments.utils.denormalize
 
 GEOS_LIBRARY_PATH = os.getenv('GEOS_LIBRARY_PATH', '/usr/lib/libgeos_c.so.1')  # default path
 GDAL_LIBRARY_PATH = os.getenv('GDAL_LIBRARY_PATH', '/usr/lib/libgdal.so.20')  # default path
+
+SHELL_PLUS_PRE_IMPORTS = (
+    ('etools.applications.core.util_scripts', '*'),
+)
