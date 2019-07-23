@@ -139,5 +139,4 @@ class MonitoringActivitiesViewSet(
             logging.debug(validator.errors)
             raise ValidationError(validator.errors)
 
-        # return Response(serializer(instance, context=self.get_serializer_context()).data) # todo
-        return Response(serializer.data)
+        return Response(self.get_serializer_class()(instance, context=self.get_serializer_context()).data)

@@ -79,3 +79,17 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(len(response.data), 1)
         self.assertIn('TPM Partner', response.data[0])
+
+    def test_auto_accept_activity(self):
+        activity = MonitoringActivityFactory(activity_type='staff', status='checklist_configured')
+
+        response = self.forced_auth_req(
+            'patch', reverse('field_monitoring_planning:activities-detail', args=[activity.pk]),
+            user=self.fm_user,
+            data={
+                'status': 'assigned'
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['status'], 'accepted')

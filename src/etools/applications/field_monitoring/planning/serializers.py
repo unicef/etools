@@ -41,7 +41,8 @@ class MonitoringActivityLightSerializer(serializers.ModelSerializer):
             'id',
             'activity_type', 'tpm_partner',
             'location',
-            'start_date', 'end_date'
+            'start_date', 'end_date',
+            'status',
         )
 
 

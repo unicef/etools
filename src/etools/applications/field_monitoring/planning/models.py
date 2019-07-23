@@ -98,6 +98,13 @@ class MonitoringActivity(SoftDeleteMixin, TimeStampedModel):
         ('cancelled', _('Cancelled')),
     )
 
+    TRANSITION_SIDE_EFFECTS = {
+    }
+
+    AUTO_TRANSITIONS = {
+        'assigned': ['accepted']
+    }
+
     activity_type = models.CharField(max_length=10, choices=TYPES)
 
     tpm_partner = models.ForeignKey(TPMPartner, blank=True, null=True, verbose_name=_('TPM Partner'),
@@ -151,12 +158,11 @@ class MonitoringActivity(SoftDeleteMixin, TimeStampedModel):
     def mark_checklist_configured(self):
         pass
 
-    @transition(field=status, source=STATUSES.checklist_configured, target=STATUSES.assigned)
+    @transition(field=status, source=STATUSES.checklist_configured, target=[STATUSES.assigned])
     def assign(self):
-        if self.activity_type == self.TYPES.staff:
-            self.accept()
+        pass
 
-    @transition(field=status, source=STATUSES.assigned, target=STATUSES.accepted)
+    @transition(field=status, source=STATUSES.assigned, target=[STATUSES.accepted])
     def accept(self):
         pass
 
