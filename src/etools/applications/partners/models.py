@@ -909,7 +909,8 @@ class PlannedEngagement(TimeStampedModel):
     @cached_property
     def spot_check_required(self):
         completed_audit = self.partner.get_hact_json()['audits']['completed']
-        return self.spot_check_follow_up + self.partner.min_req_spot_checks - completed_audit
+        required = self.spot_check_follow_up + self.partner.min_req_spot_checks - completed_audit
+        return max(0, required)
 
     @cached_property
     def required_audit(self):
