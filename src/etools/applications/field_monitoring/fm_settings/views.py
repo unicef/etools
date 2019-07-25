@@ -26,7 +26,7 @@ from etools.applications.field_monitoring.fm_settings.serializers import (
     LocationSiteSerializer, LocationFullSerializer, LogIssueSerializer, LogIssueAttachmentSerializer)
 from etools.applications.field_monitoring.permissions import IsEditAction, IsPME, IsReadAction, IsFieldMonitor
 from etools.applications.field_monitoring.views import FMBaseViewSet, FMBaseAttachmentsViewSet
-from etools.applications.permissions_simplified.permissions import PermissionQ as Q
+from etools.applications.field_monitoring.combinable_permissions.permissions import PermissionQ as Q
 
 
 class MethodsViewSet(

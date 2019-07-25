@@ -16,8 +16,7 @@ from etools.applications.field_monitoring.planning.models import YearPlan, Quest
 from etools.applications.field_monitoring.planning.serializers import YearPlanSerializer, QuestionTemplateSerializer, \
     MonitoringActivityLightSerializer, MonitoringActivitySerializer
 from etools.applications.field_monitoring.views import FMBaseViewSet
-from etools.applications.permissions2.views import FSMTransitionActionMixin
-from etools.applications.permissions_simplified.permissions import PermissionQ as Q
+from etools.applications.field_monitoring.combinable_permissions.permissions import PermissionQ as Q
 
 
 class YearPlanViewSet(
@@ -85,7 +84,6 @@ class QuestionTemplateViewSet(
 class MonitoringActivitiesViewSet(
     ValidatorViewMixin,
     FMBaseViewSet,
-    # FSMTransitionActionMixin, # todo: not sure about it. need to re-think, or at least apply validator in hook
     viewsets.ModelViewSet,
 ):
     """
@@ -98,7 +96,7 @@ class MonitoringActivitiesViewSet(
     }
     permission_classes = FMBaseViewSet.permission_classes + [
         Q(IsReadAction)  # list/retrieve
-        | Q(IsEditAction, IsFieldMonitor)  # update (todo: transitions are here; they need to be filtered out)
+        | Q(IsEditAction, IsFieldMonitor)  # update
     ]
 
     def get_queryset(self):

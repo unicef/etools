@@ -4,6 +4,7 @@ from django.utils import tree
 from rest_framework.permissions import BasePermission
 
 
+# todo: move to the utils or something like that
 class BaseQ(tree.Node):
     """
     Base class for logic nodes.

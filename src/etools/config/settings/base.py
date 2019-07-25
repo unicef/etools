@@ -193,7 +193,6 @@ SHARED_APPS = (
     'etools.applications.tpm.tpmpartners',
     'waffle',
     'etools.applications.permissions2',
-    'etools.applications.permissions_simplified',
     'etools.applications.field_monitoring.shared',  # todo: remove
     'unicef_notification',
 )

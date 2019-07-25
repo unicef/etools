@@ -6,7 +6,7 @@ from etools.applications.field_monitoring.planning.activity_validation.permissio
 from etools.applications.field_monitoring.planning.activity_validation.validations.basic import \
     tpm_staff_members_belongs_to_the_partner, staff_activity_has_no_tpm_partner
 from etools.applications.field_monitoring.planning.activity_validation.validations.state import \
-    tpm_partner_is_assigned_for_tpm_activity
+    tpm_partner_is_assigned_for_tpm_activity, at_least_one_item_added
 
 
 class ActivityValid(CompleteValidation):
@@ -45,4 +45,5 @@ class ActivityValid(CompleteValidation):
         self.check_required_fields(instance)
         self.check_rigid_fields(instance, related=True)
         tpm_partner_is_assigned_for_tpm_activity(instance)
+        at_least_one_item_added(instance)
         return True

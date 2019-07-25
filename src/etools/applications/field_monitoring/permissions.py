@@ -1,7 +1,7 @@
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 
 from etools.applications.field_monitoring.groups import FMUser, PME
-from etools.applications.permissions_simplified.permissions import PermissionQ, UserInGroup
+from etools.applications.field_monitoring.combinable_permissions.permissions import PermissionQ, UserInGroup
 
 
 class SimplePermission(BasePermission):
