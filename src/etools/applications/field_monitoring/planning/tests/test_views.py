@@ -93,3 +93,32 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['status'], 'accepted')
+
+    def test_cancel_activity(self):
+        activity = MonitoringActivityFactory(status='checklist_configured')
+
+        response = self.forced_auth_req(
+            'patch', reverse('field_monitoring_planning:activities-detail', args=[activity.pk]),
+            user=self.fm_user,
+            data={
+                'status': 'cancelled'
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['status'], 'cancelled')
+
+    def test_cancel_submitted_activity_fail(self):
+        activity = MonitoringActivityFactory(status='report_submitted')
+
+        response = self.forced_auth_req(
+            'patch', reverse('field_monitoring_planning:activities-detail', args=[activity.pk]),
+            user=self.fm_user,
+            data={
+                'status': 'cancelled'
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(len(response.data), 1)
+        self.assertIn('generic_transition_fail', response.data[0])

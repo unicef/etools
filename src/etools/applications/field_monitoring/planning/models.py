@@ -158,11 +158,11 @@ class MonitoringActivity(SoftDeleteMixin, TimeStampedModel):
     def mark_checklist_configured(self):
         pass
 
-    @transition(field=status, source=STATUSES.checklist_configured, target=[STATUSES.assigned])
+    @transition(field=status, source=STATUSES.checklist_configured, target=STATUSES.assigned)
     def assign(self):
         pass
 
-    @transition(field=status, source=STATUSES.assigned, target=[STATUSES.accepted])
+    @transition(field=status, source=STATUSES.assigned, target=STATUSES.accepted)
     def accept(self):
         pass
 
@@ -188,4 +188,12 @@ class MonitoringActivity(SoftDeleteMixin, TimeStampedModel):
                     STATUSES.assigned, STATUSES.accepted, STATUSES.data_collected
                 ])
     def cancel(self):
+        pass
+
+    # todo: remove this as far best solution will be found
+    @transition(field=status, target=STATUSES.cancelled,
+                source=[
+                    STATUSES.report_submitted, STATUSES.completed
+                ], permission=lambda *args: False)
+    def cancel_disabled(self):
         pass
