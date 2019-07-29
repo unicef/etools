@@ -12,7 +12,8 @@ from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.attachments.tests.factories import AttachmentFileTypeFactory, AttachmentFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
-from etools.applications.field_monitoring.fm_settings.tests.factories import LocationSiteFactory, LogIssueFactory
+from etools.applications.field_monitoring.fm_settings.tests.factories import LocationSiteFactory, LogIssueFactory, \
+    CategoryFactory, QuestionFactory, MethodFactory
 from etools.applications.field_monitoring.fm_settings.models import LogIssue
 from etools.applications.field_monitoring.tests.base import FMBaseTestCaseMixin
 from etools.applications.partners.tests.factories import InterventionFactory, PartnerFactory
@@ -583,3 +584,91 @@ class TestLogIssueAttachmentsView(FMBaseTestCaseMixin, BaseTenantTestCase):
             data={}
         )
         self.assertEqual(create_response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class TestCategoriesView(FMBaseTestCaseMixin, BaseTenantTestCase):
+    def test_list(self):
+        CategoryFactory.create_batch(5)
+
+        response = self.forced_auth_req(
+            'get',
+            reverse('field_monitoring_settings:categories-list'),
+            user=self.usual_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 5)
+
+
+class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
+    def test_list(self):
+        QuestionFactory.create_batch(2)
+        QuestionFactory.create_batch(3, answer_type='choices', options__count=2)
+
+        response = self.forced_auth_req(
+            'get',
+            reverse('field_monitoring_settings:questions-list'),
+            user=self.usual_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 5)
+
+    def test_create(self):
+        response = self.forced_auth_req(
+            'post',
+            reverse('field_monitoring_settings:questions-list'),
+            user=self.fm_user,
+            data={
+                'answer_type': 'text',
+                'level': 'partner',
+                'methods': [MethodFactory().id,],
+                'category': CategoryFactory().id,
+                'sections': [],
+                'text': 'Test Question',
+                'is_hact': False
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_create_with_options(self):
+        response = self.forced_auth_req(
+            'post',
+            reverse('field_monitoring_settings:questions-list'),
+            user=self.fm_user,
+            data={
+                'answer_type': 'choices',
+                'level': 'partner',
+                'methods': [MethodFactory().id,],
+                'category': CategoryFactory().id,
+                'sections': [],
+                'options': [
+                    {'label': 'Option #1', 'value': '1'},
+                    {'label': 'Option #2', 'value': '2'},
+                ],
+                'text': 'Test Question',
+                'is_hact': False
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(len(response.data['options']), 2)
+
+    def test_update(self):
+        question = QuestionFactory(answer_type='choices', options__count=2)
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse('field_monitoring_settings:questions-detail', args=[question.id,]),
+            user=self.fm_user,
+            data={
+                'title': 'New title',
+                'options': [
+                    {'id': question.options.first().id, '_delete': True},
+                    {'label': '1', 'value': '1'},
+                    {'label': '2', 'value': '2'},
+                ]
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['options']), 3)

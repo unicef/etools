@@ -59,6 +59,8 @@ class Question(models.Model):
     sections = models.ManyToManyField(Section, blank=True, verbose_name=_('Sections'))
     text = models.TextField(verbose_name=_('Question Text'))
     is_hact = models.BooleanField(default=False, verbose_name=_('Count as HACT'))
+    is_custom = models.BooleanField(default=False, verbose_name=_('Is Custom'))
+    is_active = models.BooleanField(default=False, verbose_name=_('Is Active'))
 
     class Meta:
         verbose_name = _('Question')
@@ -105,8 +107,6 @@ class LocationSite(TimeStampedModel):
 
     point = PointField(verbose_name=_("Point"), null=True, blank=True)
     is_active = models.BooleanField(verbose_name=_("Active"), default=True, blank=True)
-
-    security_detail = models.TextField(verbose_name=_('Detail on Security'), blank=True)
 
     tracker = FieldTracker(['point'])
 

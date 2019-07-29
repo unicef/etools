@@ -19,11 +19,12 @@ from etools.applications.field_monitoring.fm_settings.export.serializers import 
 from etools.applications.field_monitoring.fm_settings.filters import LogIssueNameOrderingFilter, \
     LogIssueRelatedToTypeFilter, LogIssueMonitoringActivityFilter
 
-from etools.applications.field_monitoring.fm_settings.models import Method, LocationSite, LogIssue
+from etools.applications.field_monitoring.fm_settings.models import Method, LocationSite, LogIssue, Question, Category
 from etools.applications.field_monitoring.fm_settings.serializers import (
     FieldMonitoringGeneralAttachmentSerializer,
     MethodSerializer,
-    LocationSiteSerializer, LocationFullSerializer, LogIssueSerializer, LogIssueAttachmentSerializer)
+    LocationSiteSerializer, LocationFullSerializer, LogIssueSerializer, LogIssueAttachmentSerializer,
+    QuestionSerializer, CategorySerializer)
 from etools.applications.field_monitoring.permissions import IsEditAction, IsPME, IsReadAction, IsFieldMonitor
 from etools.applications.field_monitoring.views import FMBaseViewSet, FMBaseAttachmentsViewSet
 from etools.applications.field_monitoring.combinable_permissions.permissions import PermissionQ as Q
@@ -31,29 +32,20 @@ from etools.applications.field_monitoring.combinable_permissions.permissions imp
 
 class MethodsViewSet(
     FMBaseViewSet,
-    # SimplePermittedViewSetMixin,
     mixins.ListModelMixin,
     viewsets.GenericViewSet
 ):
     permission_classes = [
         Q(IsReadAction) | (Q(IsEditAction) & Q(IsPME))
     ]
-    # write_permission_classes = [IsPME]
-    # metadata_class = SimplePermissionBasedMetadata
     queryset = Method.objects.all()
     serializer_class = MethodSerializer
 
 
-class FieldMonitoringGeneralAttachmentsViewSet(
-    FMBaseViewSet,
-    # SimplePermittedViewSetMixin,
-    viewsets.ModelViewSet
-):
+class FieldMonitoringGeneralAttachmentsViewSet(FMBaseViewSet, viewsets.ModelViewSet):
     permission_classes = FMBaseViewSet.permission_classes + [
         Q(IsReadAction) | Q(IsEditAction, IsFieldMonitor)
     ]
-    # write_permission_classes = [IsFieldMonitor]
-    # metadata_class = SimplePermissionBasedMetadata
     queryset = Attachment.objects.filter(code='fm_common')
     serializer_class = FieldMonitoringGeneralAttachmentSerializer
 
@@ -73,16 +65,10 @@ class InterventionLocationsView(FMBaseViewSet, generics.ListAPIView):
         return queryset.filter(intervention_flat_locations=self.kwargs['intervention_pk'])
 
 
-class LocationSitesViewSet(
-    FMBaseViewSet,
-    # SimplePermittedViewSetMixin,
-    viewsets.ModelViewSet,
-):
+class LocationSitesViewSet(FMBaseViewSet, viewsets.ModelViewSet):
     permission_classes = FMBaseViewSet.permission_classes + [
         Q(IsReadAction) | (Q(IsEditAction) & Q(IsPME))
     ]
-    # write_permission_classes = [IsPME]
-    # metadata_class = SimplePermissionBasedMetadata
     queryset = LocationSite.objects.prefetch_related('parent').order_by('parent__name', 'name')
     serializer_class = LocationSiteSerializer
     filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
@@ -135,16 +121,10 @@ class FMLocationsViewSet(FMBaseViewSet, mixins.ListModelMixin, viewsets.GenericV
         )
 
 
-class LogIssuesViewSet(
-    FMBaseViewSet,
-    # SimplePermittedViewSetMixin,
-    viewsets.ModelViewSet
-):
+class LogIssuesViewSet(FMBaseViewSet, viewsets.ModelViewSet):
     permission_classes = FMBaseViewSet.permission_classes + [
         Q(IsReadAction) | Q(IsEditAction, IsFieldMonitor)
     ]
-    # write_permission_classes = [IsFieldMonitor]
-    # metadata_class = SimplePermissionBasedMetadata
     queryset = LogIssue.objects.prefetch_related(
         'author', 'history', 'cp_output', 'partner', 'location', 'location_site', 'attachments',
     )
@@ -179,17 +159,32 @@ class LogIssuesViewSet(
         })
 
 
-class LogIssueAttachmentsViewSet(
-    # SimplePermittedViewSetMixin,
-    FMBaseAttachmentsViewSet
-):
+class LogIssueAttachmentsViewSet(FMBaseAttachmentsViewSet):
     permission_classes = FMBaseViewSet.permission_classes + [
         Q(IsReadAction) | Q(IsEditAction, IsFieldMonitor)
     ]
-    # write_permission_classes = [IsFieldMonitor]
-    # metadata_class = SimplePermissionBasedMetadata
     serializer_class = LogIssueAttachmentSerializer
     related_model = LogIssue
 
     def get_view_name(self):
         return _('Attachments')
+
+
+class CategoriesViewSet(FMBaseViewSet, viewsets.ReadOnlyModelViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+
+
+class QuestionsViewSet(
+    FMBaseViewSet,
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet
+):
+    permission_classes = FMBaseViewSet.permission_classes + [
+        Q(IsReadAction) | Q(IsEditAction, IsFieldMonitor)
+    ]
+    queryset = Question.objects.prefetch_related('options')
+    serializer_class = QuestionSerializer

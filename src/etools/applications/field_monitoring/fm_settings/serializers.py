@@ -10,12 +10,14 @@ from unicef_attachments.models import FileType
 from unicef_attachments.serializers import BaseAttachmentSerializer
 from unicef_locations.serializers import LocationSerializer, LocationLightSerializer
 from unicef_restlib.fields import SeparatedReadWriteField
-from unicef_restlib.serializers import UserContextSerializerMixin
+from unicef_restlib.serializers import UserContextSerializerMixin, WritableNestedSerializerMixin
 from unicef_snapshot.serializers import SnapshotModelSerializer
 
 from etools.applications.action_points.serializers import HistorySerializer
-from etools.applications.field_monitoring.fm_settings.models import Method, LocationSite, LogIssue
+from etools.applications.field_monitoring.fm_settings.models import Method, LocationSite, LogIssue, Question, Option, \
+    Category
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
+from etools.applications.reports.serializers.v1 import SectionSerializer
 from etools.applications.reports.serializers.v2 import OutputListSerializer
 from etools.applications.users.serializers_v3 import MinimalUserSerializer
 
@@ -42,6 +44,36 @@ class ResultSerializer(OutputListSerializer):
         pass
 
 
+class OptionSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
+    class Meta(WritableNestedSerializerMixin.Meta):
+        model = Option
+        fields = ('id', 'label', 'value')
+
+
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ('id', 'name')
+
+
+class QuestionSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
+    sections = SeparatedReadWriteField(read_field=SectionSerializer(many=True))
+    options = OptionSerializer(many=True, required=False)
+
+    class Meta(WritableNestedSerializerMixin.Meta):
+        model = Question
+        fields = (
+            'id', 'answer_type', 'level', 'options',
+            'methods', 'category', 'sections', 'text',
+            'is_hact', 'is_active', 'is_custom'
+        )
+        read_only_fields = ('is_custom',)
+
+    def create(self, validated_data):
+        validated_data['is_custom'] = True
+        return super().create(validated_data)
+
+
 class LocationSiteLightSerializer(serializers.ModelSerializer):
     parent = LocationSerializer(read_only=True)
     is_active = serializers.ChoiceField(choices=(
@@ -51,7 +83,7 @@ class LocationSiteLightSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = LocationSite
-        fields = ['id', 'name', 'p_code', 'parent', 'point', 'security_detail', 'is_active']
+        fields = ['id', 'name', 'p_code', 'parent', 'point', 'is_active']
         extra_kwargs = {
             'point': {'required': True},
         }

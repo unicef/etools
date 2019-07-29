@@ -60,6 +60,20 @@ class Finding(models.Model):
         return '{}: {} - {}'.format(self.started_checklist, self.activity_question, self.value)
 
 
+class ActivityQuestionOverallFinding(models.Model):
+    activity_question = models.OneToOneField(ActivityQuestion, related_name='overall_finding',
+                                             verbose_name=_('Activity'), on_delete=models.CASCADE)
+    value = JSONField(null=True, blank=True, verbose_name=_('Value'))
+
+    class Meta:
+        verbose_name = _('Overall Activity Question Finding')
+        verbose_name_plural = _('Overall Activity Question Findings')
+        ordering = ('id',)
+
+    def __str__(self):
+        return '{} - {}'.format(self.activity_question, self.value)
+
+
 class ChecklistOverallFinding(QuestionTargetMixin, models.Model):
     started_checklist = models.ForeignKey(StartedChecklist, related_name='overall_findings',
                                           verbose_name=_('Checklist'), on_delete=models.CASCADE)
@@ -79,7 +93,7 @@ class ActivityOverallFinding(QuestionTargetMixin, models.Model):
     monitoring_activity = models.ForeignKey(MonitoringActivity, related_name='overall_findings',
                                             verbose_name=_('Activity'), on_delete=models.CASCADE)
     narrative_finding = models.TextField(blank=True, verbose_name=_('Narrative Finding'))
-    attachments = GenericRelation(Attachment, verbose_name=_('Attachments'), blank=True)
+    on_track = models.NullBooleanField()
 
     class Meta:
         verbose_name = _('Activity Overall Finding')
