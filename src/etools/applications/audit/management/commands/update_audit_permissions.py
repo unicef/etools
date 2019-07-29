@@ -282,7 +282,7 @@ class Command(BaseCommand):
         self.add_permissions([self.focal_point, self.auditor], 'edit', [
             'purchase_order.auditorfirm.staff_members',
             'purchase_order.auditorstaffmember.*',
-        ])
+        ] + self.engagement_attachments_block + self.report_attachments_block)
 
         self.add_permissions(self.focal_point, 'edit', [
             'purchase_order.purchaseorder.contract_end_date',
@@ -291,7 +291,7 @@ class Command(BaseCommand):
         # new object: focal point can add
         self.add_permissions(
             self.focal_point, 'edit',
-            self.engagement_overview_editable_page + self.engagement_attachments_block,
+            self.engagement_overview_editable_page,
             condition=self.new_engagement()
         )
 
@@ -325,7 +325,7 @@ class Command(BaseCommand):
 
         self.add_permissions(
             self.focal_point, 'edit',
-            self.staff_members_block + self.engagement_attachments_block,
+            self.staff_members_block,
             condition=partner_contacted_condition
         )
         self.add_permissions(
@@ -361,7 +361,7 @@ class Command(BaseCommand):
         )
         self.add_permissions(
             self.focal_point, 'edit',
-            self.follow_up_editable_page + self.report_attachments_block,
+            self.follow_up_editable_page,
             condition=final_engagement_condition
         )
 
