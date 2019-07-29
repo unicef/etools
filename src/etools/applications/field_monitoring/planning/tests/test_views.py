@@ -6,7 +6,7 @@ from rest_framework import status
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.field_monitoring.planning.models import YearPlan
-from etools.applications.field_monitoring.planning.tests.factories import YearPlanFactory, MonitoringActivityFactory
+from etools.applications.field_monitoring.planning.tests.factories import MonitoringActivityFactory, YearPlanFactory
 from etools.applications.field_monitoring.tests.base import FMBaseTestCaseMixin
 from etools.applications.tpm.tests.factories import TPMPartnerFactory
 

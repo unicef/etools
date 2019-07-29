@@ -1,10 +1,10 @@
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
-from django_filters.rest_framework import DjangoFilterBackend
 
-from rest_framework import generics, mixins, viewsets, views
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import generics, mixins, views, viewsets
 from rest_framework.decorators import action
-from rest_framework.filters import SearchFilter, OrderingFilter
+from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from unicef_attachments.models import Attachment
@@ -12,22 +12,33 @@ from unicef_locations.cache import etag_cached
 from unicef_locations.models import Location
 from unicef_locations.serializers import LocationLightSerializer
 
-from etools.applications.field_monitoring.fm_settings.export.renderers import LocationSiteCSVRenderer, \
-    LogIssueCSVRenderer
-from etools.applications.field_monitoring.fm_settings.export.serializers import LocationSiteExportSerializer, \
-    LogIssueExportSerializer
-from etools.applications.field_monitoring.fm_settings.filters import LogIssueNameOrderingFilter, \
-    LogIssueRelatedToTypeFilter, LogIssueMonitoringActivityFilter
-
-from etools.applications.field_monitoring.fm_settings.models import Method, LocationSite, LogIssue, Question, Category
-from etools.applications.field_monitoring.fm_settings.serializers import (
-    FieldMonitoringGeneralAttachmentSerializer,
-    MethodSerializer,
-    LocationSiteSerializer, LocationFullSerializer, LogIssueSerializer, LogIssueAttachmentSerializer,
-    QuestionSerializer, CategorySerializer)
-from etools.applications.field_monitoring.permissions import IsEditAction, IsPME, IsReadAction, IsFieldMonitor
-from etools.applications.field_monitoring.views import FMBaseViewSet, FMBaseAttachmentsViewSet
 from etools.applications.field_monitoring.combinable_permissions.permissions import PermissionQ as Q
+from etools.applications.field_monitoring.fm_settings.export.renderers import (
+    LocationSiteCSVRenderer,
+    LogIssueCSVRenderer,
+)
+from etools.applications.field_monitoring.fm_settings.export.serializers import (
+    LocationSiteExportSerializer,
+    LogIssueExportSerializer,
+)
+from etools.applications.field_monitoring.fm_settings.filters import (
+    LogIssueMonitoringActivityFilter,
+    LogIssueNameOrderingFilter,
+    LogIssueRelatedToTypeFilter,
+)
+from etools.applications.field_monitoring.fm_settings.models import Category, LocationSite, LogIssue, Method, Question
+from etools.applications.field_monitoring.fm_settings.serializers import (
+    CategorySerializer,
+    FieldMonitoringGeneralAttachmentSerializer,
+    LocationFullSerializer,
+    LocationSiteSerializer,
+    LogIssueAttachmentSerializer,
+    LogIssueSerializer,
+    MethodSerializer,
+    QuestionSerializer,
+)
+from etools.applications.field_monitoring.permissions import IsEditAction, IsFieldMonitor, IsPME, IsReadAction
+from etools.applications.field_monitoring.views import FMBaseAttachmentsViewSet, FMBaseViewSet
 
 
 class MethodsViewSet(

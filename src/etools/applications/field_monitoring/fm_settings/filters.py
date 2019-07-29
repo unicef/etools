@@ -1,5 +1,6 @@
 from django.db import models
-from django.db.models import Case, When, F
+from django.db.models import Case, F, When
+
 from rest_framework.filters import BaseFilterBackend
 
 from etools.applications.field_monitoring.fm_settings.models import LogIssue

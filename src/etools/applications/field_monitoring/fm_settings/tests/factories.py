@@ -6,8 +6,14 @@ from unicef_locations.models import GatewayType
 from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.attachments.tests.factories import AttachmentFactory
-from etools.applications.field_monitoring.fm_settings.models import Category, Method, Option, Question, LocationSite, \
-    LogIssue
+from etools.applications.field_monitoring.fm_settings.models import (
+    Category,
+    LocationSite,
+    LogIssue,
+    Method,
+    Option,
+    Question,
+)
 from etools.applications.users.tests.factories import UserFactory
 
 

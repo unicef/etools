@@ -11,7 +11,7 @@ from ordered_model.models import OrderedModel
 from unicef_locations.models import Location
 
 from etools.applications.partners.models import PartnerOrganization
-from etools.applications.reports.models import Section, Result
+from etools.applications.reports.models import Result, Section
 
 
 class Method(models.Model):

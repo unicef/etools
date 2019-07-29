@@ -1,7 +1,6 @@
 from django.conf.urls import include, url
 
 from rest_framework_nested import routers
-
 from unicef_restlib.routers import NestedComplexRouter
 
 from etools.applications.field_monitoring.fm_settings import views

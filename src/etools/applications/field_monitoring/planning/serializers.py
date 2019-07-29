@@ -1,14 +1,14 @@
 from django.utils.translation import ugettext_lazy as _
+
 from rest_framework import serializers
 from unicef_locations.serializers import LocationSerializer
 from unicef_restlib.fields import SeparatedReadWriteField
-
 from unicef_snapshot.serializers import SnapshotModelSerializer
 
 from etools.applications.action_points.serializers import HistorySerializer
 from etools.applications.field_monitoring.fm_settings.serializers import LocationSiteSerializer
 from etools.applications.field_monitoring.planning.activity_validation.permissions import ActivityPermissions
-from etools.applications.field_monitoring.planning.models import YearPlan, QuestionTemplate, MonitoringActivity
+from etools.applications.field_monitoring.planning.models import MonitoringActivity, QuestionTemplate, YearPlan
 from etools.applications.partners.serializers.interventions_v2 import MinimalInterventionListSerializer
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.reports.serializers.v2 import MinimalOutputListSerializer

@@ -1,15 +1,15 @@
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
-from django.db import models, connection
+from django.db import connection, models
 from django.utils.translation import ugettext_lazy as _
-from django_fsm import transition, FSMField
-from model_utils import Choices
 
+from django_fsm import FSMField, transition
+from model_utils import Choices
 from model_utils.models import TimeStampedModel
 from unicef_locations.models import Location
 
 from etools.applications.core.permissions import import_permissions
-from etools.applications.field_monitoring.fm_settings.models import Question, LocationSite
+from etools.applications.field_monitoring.fm_settings.models import LocationSite, Question
 from etools.applications.partners.models import Intervention, PartnerOrganization
 from etools.applications.reports.models import Result
 from etools.applications.tpm.tpmpartners.models import TPMPartner

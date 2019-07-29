@@ -1,4 +1,5 @@
 from django.test import TestCase
+
 from rest_framework.permissions import BasePermission
 
 from etools.applications.field_monitoring.combinable_permissions.permissions import PermissionQ

@@ -8,14 +8,20 @@ from rest_framework.exceptions import ValidationError
 from unicef_attachments.fields import FileTypeModelChoiceField
 from unicef_attachments.models import FileType
 from unicef_attachments.serializers import BaseAttachmentSerializer
-from unicef_locations.serializers import LocationSerializer, LocationLightSerializer
+from unicef_locations.serializers import LocationLightSerializer, LocationSerializer
 from unicef_restlib.fields import SeparatedReadWriteField
 from unicef_restlib.serializers import UserContextSerializerMixin, WritableNestedSerializerMixin
 from unicef_snapshot.serializers import SnapshotModelSerializer
 
 from etools.applications.action_points.serializers import HistorySerializer
-from etools.applications.field_monitoring.fm_settings.models import Method, LocationSite, LogIssue, Question, Option, \
-    Category
+from etools.applications.field_monitoring.fm_settings.models import (
+    Category,
+    LocationSite,
+    LogIssue,
+    Method,
+    Option,
+    Question,
+)
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.reports.serializers.v1 import SectionSerializer
 from etools.applications.reports.serializers.v2 import OutputListSerializer

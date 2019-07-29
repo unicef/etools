@@ -4,19 +4,24 @@ from datetime import date
 from django.db import transaction
 from django.http import Http404
 from django.utils.translation import ugettext_lazy as _
+
 from django_filters.rest_framework import DjangoFilterBackend
 from etools_validator.mixins import ValidatorViewMixin
-from rest_framework import viewsets, mixins
+from rest_framework import mixins, viewsets
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
-from etools.applications.field_monitoring.permissions import IsReadAction, IsEditAction, IsFieldMonitor
-from etools.applications.field_monitoring.planning.activity_validation.validator import ActivityValid
-from etools.applications.field_monitoring.planning.models import YearPlan, QuestionTemplate, MonitoringActivity
-from etools.applications.field_monitoring.planning.serializers import YearPlanSerializer, QuestionTemplateSerializer, \
-    MonitoringActivityLightSerializer, MonitoringActivitySerializer
-from etools.applications.field_monitoring.views import FMBaseViewSet
 from etools.applications.field_monitoring.combinable_permissions.permissions import PermissionQ as Q
+from etools.applications.field_monitoring.permissions import IsEditAction, IsFieldMonitor, IsReadAction
+from etools.applications.field_monitoring.planning.activity_validation.validator import ActivityValid
+from etools.applications.field_monitoring.planning.models import MonitoringActivity, QuestionTemplate, YearPlan
+from etools.applications.field_monitoring.planning.serializers import (
+    MonitoringActivityLightSerializer,
+    MonitoringActivitySerializer,
+    QuestionTemplateSerializer,
+    YearPlanSerializer,
+)
+from etools.applications.field_monitoring.views import FMBaseViewSet
 
 
 class YearPlanViewSet(

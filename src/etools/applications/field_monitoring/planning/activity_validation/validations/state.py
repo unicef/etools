@@ -1,4 +1,5 @@
 from django.utils.translation import ugettext_lazy as _
+
 from etools_validator.exceptions import StateValidationError
 
 from etools.applications.field_monitoring.planning.models import MonitoringActivity

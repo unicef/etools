@@ -7,7 +7,7 @@ from django.utils.translation import ugettext_lazy as _
 from unicef_attachments.models import Attachment
 
 from etools.applications.field_monitoring.fm_settings.models import Method, Question
-from etools.applications.field_monitoring.planning.models import QuestionTargetMixin, MonitoringActivity
+from etools.applications.field_monitoring.planning.models import MonitoringActivity, QuestionTargetMixin
 
 
 class ActivityQuestion(QuestionTargetMixin, models.Model):

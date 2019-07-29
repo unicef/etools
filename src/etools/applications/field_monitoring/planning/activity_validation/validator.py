@@ -1,12 +1,16 @@
 from etools_validator.exceptions import StateValidationError
-from etools_validator.utils import check_rigid_fields, check_required_fields
+from etools_validator.utils import check_required_fields, check_rigid_fields
 from etools_validator.validation import CompleteValidation
 
 from etools.applications.field_monitoring.planning.activity_validation.permissions import ActivityPermissions
-from etools.applications.field_monitoring.planning.activity_validation.validations.basic import \
-    tpm_staff_members_belongs_to_the_partner, staff_activity_has_no_tpm_partner
-from etools.applications.field_monitoring.planning.activity_validation.validations.state import \
-    tpm_partner_is_assigned_for_tpm_activity, at_least_one_item_added
+from etools.applications.field_monitoring.planning.activity_validation.validations.basic import (
+    staff_activity_has_no_tpm_partner,
+    tpm_staff_members_belongs_to_the_partner,
+)
+from etools.applications.field_monitoring.planning.activity_validation.validations.state import (
+    at_least_one_item_added,
+    tpm_partner_is_assigned_for_tpm_activity,
+)
 
 
 class ActivityValid(CompleteValidation):

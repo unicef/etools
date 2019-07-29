@@ -10,11 +10,16 @@ from rest_framework import status
 from unicef_attachments.models import Attachment
 from unicef_locations.tests.factories import LocationFactory
 
-from etools.applications.attachments.tests.factories import AttachmentFileTypeFactory, AttachmentFactory
+from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
-from etools.applications.field_monitoring.fm_settings.tests.factories import LocationSiteFactory, LogIssueFactory, \
-    CategoryFactory, QuestionFactory, MethodFactory
 from etools.applications.field_monitoring.fm_settings.models import LogIssue
+from etools.applications.field_monitoring.fm_settings.tests.factories import (
+    CategoryFactory,
+    LocationSiteFactory,
+    LogIssueFactory,
+    MethodFactory,
+    QuestionFactory,
+)
 from etools.applications.field_monitoring.tests.base import FMBaseTestCaseMixin
 from etools.applications.partners.tests.factories import InterventionFactory, PartnerFactory
 from etools.applications.reports.models import ResultType
