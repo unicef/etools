@@ -35,9 +35,6 @@ class MethodsViewSet(
     mixins.ListModelMixin,
     viewsets.GenericViewSet
 ):
-    permission_classes = [
-        Q(IsReadAction) | (Q(IsEditAction) & Q(IsPME))
-    ]
     queryset = Method.objects.all()
     serializer_class = MethodSerializer
 
