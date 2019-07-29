@@ -5,7 +5,6 @@ from factory import fuzzy
 from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.field_monitoring.planning.models import YearPlan, MonitoringActivity
-from etools.applications.tpm.tests.factories import TPMPartnerFactory
 
 
 class YearPlanFactory(factory.DjangoModelFactory):

@@ -95,8 +95,7 @@ class MonitoringActivitiesViewSet(
         'list': MonitoringActivityLightSerializer
     }
     permission_classes = FMBaseViewSet.permission_classes + [
-        Q(IsReadAction)  # list/retrieve
-        | Q(IsEditAction, IsFieldMonitor)  # update
+        Q(IsReadAction) | Q(IsEditAction, IsFieldMonitor)
     ]
 
     def get_queryset(self):

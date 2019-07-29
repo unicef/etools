@@ -29,6 +29,5 @@ class ActivityQuestionsViewSet(
     queryset = ActivityQuestion.objects.all()
     serializer_class = ActivityQuestionSerializer
     permission_classes = FMBaseViewSet.permission_classes + [
-        Q(IsReadAction)
-        | Q(IsEditAction, IsFieldMonitor)
+        Q(IsReadAction) | Q(IsEditAction, IsFieldMonitor)
     ]

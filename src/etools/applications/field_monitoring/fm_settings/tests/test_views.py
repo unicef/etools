@@ -620,7 +620,7 @@ class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
             data={
                 'answer_type': 'text',
                 'level': 'partner',
-                'methods': [MethodFactory().id,],
+                'methods': [MethodFactory().id, ],
                 'category': CategoryFactory().id,
                 'sections': [],
                 'text': 'Test Question',
@@ -638,7 +638,7 @@ class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
             data={
                 'answer_type': 'choices',
                 'level': 'partner',
-                'methods': [MethodFactory().id,],
+                'methods': [MethodFactory().id, ],
                 'category': CategoryFactory().id,
                 'sections': [],
                 'options': [
@@ -658,7 +658,7 @@ class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
 
         response = self.forced_auth_req(
             'patch',
-            reverse('field_monitoring_settings:questions-detail', args=[question.id,]),
+            reverse('field_monitoring_settings:questions-detail', args=[question.id, ]),
             user=self.fm_user,
             data={
                 'title': 'New title',
