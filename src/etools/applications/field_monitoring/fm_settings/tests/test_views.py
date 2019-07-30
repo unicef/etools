@@ -202,7 +202,6 @@ class LocationSitesViewTestCase(TestExportMixin, FMBaseTestCaseMixin, BaseTenant
             user=self.pme,
             data={
                 'name': site.name,
-                'security_detail': site.security_detail,
                 'point': {
                     "type": "Point",
                     "coordinates": [125.6, 10.1]
@@ -237,7 +236,6 @@ class LocationSitesViewTestCase(TestExportMixin, FMBaseTestCaseMixin, BaseTenant
             user=self.pme,
             data={
                 'name': fuzzy.FuzzyText().fuzz(),
-                'security_detail': fuzzy.FuzzyText().fuzz(),
             }
         )
 

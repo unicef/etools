@@ -16,7 +16,6 @@ class LocationSiteExportSerializer(serializers.Serializer):
     lat = serializers.SerializerMethodField()
     long = serializers.SerializerMethodField()
     active = serializers.SerializerMethodField()
-    security_detail = serializers.CharField()
 
     def get_parents_info(self, obj):
         parents = list(obj.parent.get_ancestors(include_self=True))

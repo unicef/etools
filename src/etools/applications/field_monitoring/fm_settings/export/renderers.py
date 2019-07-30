@@ -27,7 +27,6 @@ class LocationSiteCSVRenderer(CSVRenderer):
             'lat': _('Lat'),
             'long': _('Long'),
             'active': _('Active'),
-            'security_detail': _('Detail on Security'),
         })
         return labels
 
