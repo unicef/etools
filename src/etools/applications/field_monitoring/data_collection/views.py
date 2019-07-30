@@ -1,3 +1,5 @@
+from django.utils.translation import ugettext_lazy as _
+
 from rest_framework import mixins, viewsets
 from unicef_restlib.views import NestedViewSetMixin
 
@@ -6,10 +8,10 @@ from etools.applications.field_monitoring.data_collection.models import Activity
 from etools.applications.field_monitoring.data_collection.serializers import (
     ActivityDataCollectionSerializer,
     ActivityQuestionSerializer,
-)
-from etools.applications.field_monitoring.permissions import IsEditAction, IsFieldMonitor, IsReadAction
+    ActivityReportAttachmentSerializer)
+from etools.applications.field_monitoring.permissions import IsEditAction, IsFieldMonitor, IsReadAction, IsTeamMember
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
-from etools.applications.field_monitoring.views import FMBaseViewSet
+from etools.applications.field_monitoring.views import FMBaseViewSet, FMBaseAttachmentsViewSet
 
 
 class ActivityDataCollectionViewSet(
@@ -17,8 +19,24 @@ class ActivityDataCollectionViewSet(
     mixins.RetrieveModelMixin,
     viewsets.GenericViewSet,
 ):
+    permission_classes = FMBaseViewSet.permission_classes + [
+        Q(IsReadAction) | Q(IsEditAction, IsTeamMember)
+    ]
     queryset = MonitoringActivity.objects.all()
     serializer_class = ActivityDataCollectionSerializer
+
+
+class ActivityReportAttachmentsViewSet(FMBaseAttachmentsViewSet):
+    serializer_class = ActivityReportAttachmentSerializer
+    related_model = MonitoringActivity
+
+    def get_view_name(self):
+        return _('Report Attachments')
+
+    def get_parent_filter(self):
+        data = super().get_parent_filter()
+        data['code'] = 'report_attachments'
+        return data
 
 
 class ActivityQuestionsViewSet(

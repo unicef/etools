@@ -1,6 +1,7 @@
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
+from unicef_attachments.serializers import BaseAttachmentSerializer
 from unicef_locations.serializers import LocationSerializer
 from unicef_restlib.fields import SeparatedReadWriteField
 from unicef_snapshot.serializers import SnapshotModelSerializer
@@ -75,3 +76,12 @@ class MonitoringActivitySerializer(MonitoringActivityLightSerializer):
         ps = MonitoringActivity.permission_structure()
         permissions = ActivityPermissions(user=user, instance=self.instance, permission_structure=ps)
         return permissions.get_permissions()
+
+
+class ActivityAttachmentSerializer(BaseAttachmentSerializer):
+    class Meta(BaseAttachmentSerializer.Meta):
+        pass
+
+    def create(self, validated_data):
+        validated_data['code'] = 'attachments'
+        return super().create(validated_data)

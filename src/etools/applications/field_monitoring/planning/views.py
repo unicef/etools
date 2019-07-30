@@ -20,8 +20,8 @@ from etools.applications.field_monitoring.planning.serializers import (
     MonitoringActivitySerializer,
     QuestionTemplateSerializer,
     YearPlanSerializer,
-)
-from etools.applications.field_monitoring.views import FMBaseViewSet
+    ActivityAttachmentSerializer)
+from etools.applications.field_monitoring.views import FMBaseViewSet, FMBaseAttachmentsViewSet
 
 
 class YearPlanViewSet(
@@ -142,3 +142,19 @@ class MonitoringActivitiesViewSet(
             raise ValidationError(validator.errors)
 
         return Response(self.get_serializer_class()(instance, context=self.get_serializer_context()).data)
+
+
+class ActivityAttachmentsViewSet(FMBaseAttachmentsViewSet):
+    permission_classes = FMBaseViewSet.permission_classes + [
+        Q(IsReadAction) | Q(IsEditAction, IsFieldMonitor)
+    ]
+    serializer_class = ActivityAttachmentSerializer
+    related_model = MonitoringActivity
+
+    def get_view_name(self):
+        return _('Attachments')
+
+    def get_parent_filter(self):
+        data = super().get_parent_filter()
+        data['code'] = 'attachments'
+        return data

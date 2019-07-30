@@ -6,6 +6,8 @@ from django.utils.translation import ugettext_lazy as _
 from django_fsm import FSMField, transition
 from model_utils import Choices
 from model_utils.models import TimeStampedModel
+from unicef_attachments.models import Attachment
+from unicef_djangolib.fields import CodedGenericRelation
 from unicef_locations.models import Location
 
 from etools.applications.core.permissions import import_permissions
@@ -128,6 +130,11 @@ class MonitoringActivity(SoftDeleteMixin, TimeStampedModel):
     end_date = models.DateField(verbose_name=_('End Date'), blank=True, null=True)
 
     status = FSMField(verbose_name=_('Status'), max_length=20, choices=STATUSES, default=STATUSES.draft)
+
+    attachments = CodedGenericRelation(Attachment, verbose_name=_('Activity Attachments'),
+                                       code='attachments', blank=True)
+    report_attachments = CodedGenericRelation(Attachment, verbose_name=_('Activity Attachments'),
+                                              code='report_attachments', blank=True)
 
     class Meta:
         verbose_name = _('Monitoring Activity')
