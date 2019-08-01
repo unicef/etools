@@ -9,6 +9,8 @@ from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.field_monitoring.planning.models import YearPlan
 from etools.applications.field_monitoring.planning.tests.factories import MonitoringActivityFactory, YearPlanFactory
 from etools.applications.field_monitoring.tests.base import FMBaseTestCaseMixin
+from etools.applications.field_monitoring.tests.factories import UserFactory
+from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.tpm.tests.factories import TPMPartnerFactory
 
 
@@ -123,6 +125,32 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(len(response.data), 1)
         self.assertIn('generic_transition_fail', response.data[0])
+
+    def test_flow(self):
+        activity = MonitoringActivityFactory(activity_type='staff', status='draft')
+
+        team_member = UserFactory(unicef_user=True)
+        activity.team_members.add(team_member)
+
+        activity.partners.add(PartnerFactory())
+
+        def goto(next_status, user):
+            response = self.forced_auth_req(
+                'patch', reverse('field_monitoring_planning:activities-detail', args=[activity.pk]),
+                user=user,
+                data={
+                    'status': next_status
+                }
+            )
+
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        goto('details_configured', self.fm_user)
+        goto('checklist_configured', self.fm_user)
+        goto('assigned', self.fm_user)
+        goto('data_collected', team_member)
+        goto('report_submitted', team_member)
+        goto('completed', self.fm_user)
 
 
 class TestActivityAttachmentsView(FMBaseTestCaseMixin, BaseTenantTestCase):

@@ -12,6 +12,8 @@ from unicef_locations.models import Location
 
 from etools.applications.core.permissions import import_permissions
 from etools.applications.field_monitoring.fm_settings.models import LocationSite, Question
+from etools.applications.field_monitoring.planning.transitions.permissions import user_is_field_monitor_permission, \
+    user_is_data_collector_permission
 from etools.applications.partners.models import Intervention, PartnerOrganization
 from etools.applications.reports.models import Result
 from etools.applications.tpm.tpmpartners.models import TPMPartner
@@ -157,35 +159,43 @@ class MonitoringActivity(SoftDeleteMixin, TimeStampedModel):
         permissions = import_permissions(cls.__name__)
         return permissions
 
-    @transition(field=status, source=STATUSES.draft, target=STATUSES.details_configured)
+    @transition(field=status, source=STATUSES.draft, target=STATUSES.details_configured,
+                permission=user_is_field_monitor_permission)
     def mark_details_configured(self):
         pass
 
-    @transition(field=status, source=STATUSES.details_configured, target=STATUSES.checklist_configured)
+    @transition(field=status, source=STATUSES.details_configured, target=STATUSES.checklist_configured,
+                permission=user_is_field_monitor_permission)
     def mark_checklist_configured(self):
         pass
 
-    @transition(field=status, source=STATUSES.checklist_configured, target=STATUSES.assigned)
+    @transition(field=status, source=STATUSES.checklist_configured, target=STATUSES.assigned,
+                permission=user_is_field_monitor_permission)
     def assign(self):
         pass
 
-    @transition(field=status, source=STATUSES.assigned, target=STATUSES.accepted)
+    @transition(field=status, source=STATUSES.assigned, target=STATUSES.accepted,
+                permission=user_is_data_collector_permission)
     def accept(self):
         pass
 
-    @transition(field=status, source=STATUSES.assigned, target=STATUSES.draft)
+    @transition(field=status, source=STATUSES.assigned, target=STATUSES.draft,
+                permission=user_is_data_collector_permission)
     def reject(self):
         pass
 
-    @transition(field=status, source=STATUSES.accepted, target=STATUSES.data_collected)
+    @transition(field=status, source=STATUSES.accepted, target=STATUSES.data_collected,
+                permission=user_is_data_collector_permission)
     def mark_data_collected(self):
         pass
 
-    @transition(field=status, source=STATUSES.data_collected, target=STATUSES.report_submitted)
+    @transition(field=status, source=STATUSES.data_collected, target=STATUSES.report_submitted,
+                permission=user_is_data_collector_permission)
     def submit_report(self):
         pass
 
-    @transition(field=status, source=STATUSES.report_submitted, target=STATUSES.completed)
+    @transition(field=status, source=STATUSES.report_submitted, target=STATUSES.completed,
+                permission=user_is_field_monitor_permission)
     def complete(self):
         pass
 
@@ -193,7 +203,8 @@ class MonitoringActivity(SoftDeleteMixin, TimeStampedModel):
                 source=[
                     STATUSES.draft, STATUSES.details_configured, STATUSES.checklist_configured,
                     STATUSES.assigned, STATUSES.accepted, STATUSES.data_collected
-                ])
+                ],
+                permission=user_is_field_monitor_permission)
     def cancel(self):
         pass
 

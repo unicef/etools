@@ -12,7 +12,8 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
 from etools.applications.field_monitoring.combinable_permissions.permissions import PermissionQ as Q
-from etools.applications.field_monitoring.permissions import IsEditAction, IsFieldMonitor, IsReadAction
+from etools.applications.field_monitoring.permissions import IsEditAction, IsFieldMonitor, IsReadAction, IsTeamMember, \
+    IsPersonResponsible, IsObjectAction, IsListAction
 from etools.applications.field_monitoring.planning.activity_validation.validator import ActivityValid
 from etools.applications.field_monitoring.planning.models import MonitoringActivity, QuestionTemplate, YearPlan
 from etools.applications.field_monitoring.planning.serializers import (
@@ -100,7 +101,9 @@ class MonitoringActivitiesViewSet(
         'list': MonitoringActivityLightSerializer
     }
     permission_classes = FMBaseViewSet.permission_classes + [
-        Q(IsReadAction) | Q(IsEditAction, IsFieldMonitor)
+        Q(IsReadAction) |
+        Q(IsEditAction, IsListAction, IsFieldMonitor) |
+        Q(IsEditAction, IsObjectAction, Q(IsFieldMonitor, IsTeamMember, IsPersonResponsible, connector=Q.OR))
     ]
 
     def get_queryset(self):

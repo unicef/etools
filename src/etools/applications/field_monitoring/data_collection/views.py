@@ -9,7 +9,8 @@ from etools.applications.field_monitoring.data_collection.serializers import (
     ActivityDataCollectionSerializer,
     ActivityQuestionSerializer,
     ActivityReportAttachmentSerializer)
-from etools.applications.field_monitoring.permissions import IsEditAction, IsFieldMonitor, IsReadAction, IsTeamMember
+from etools.applications.field_monitoring.permissions import IsEditAction, IsReadAction, IsTeamMember, \
+    IsPersonResponsible
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.field_monitoring.views import FMBaseViewSet, FMBaseAttachmentsViewSet
 
@@ -20,7 +21,7 @@ class ActivityDataCollectionViewSet(
     viewsets.GenericViewSet,
 ):
     permission_classes = FMBaseViewSet.permission_classes + [
-        Q(IsReadAction) | Q(IsEditAction, IsTeamMember)
+        Q(IsReadAction) | Q(IsEditAction, Q(IsTeamMember) | Q(IsPersonResponsible))
     ]
     queryset = MonitoringActivity.objects.all()
     serializer_class = ActivityDataCollectionSerializer
@@ -48,6 +49,3 @@ class ActivityQuestionsViewSet(
 ):
     queryset = ActivityQuestion.objects.all()
     serializer_class = ActivityQuestionSerializer
-    permission_classes = FMBaseViewSet.permission_classes + [
-        Q(IsReadAction) | Q(IsEditAction, IsFieldMonitor)
-    ]

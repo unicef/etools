@@ -26,20 +26,12 @@ class IsReadAction(SimplePermission):
 IsEditAction = ~PermissionQ(IsReadAction)
 
 
-class IsFSMTransition(BasePermission):
-    def has_permission(self, request, view):
-        return False
-
-    def has_object_permission(self, request, view, obj):
-        return view.name == 'transition'
+class IsObjectAction(SimplePermission):
+    def has_access(self, request, view, instance=None):
+        return (view.lookup_url_kwarg or view.lookup_field) in view.kwargs
 
 
-def transition_is(action):
-    class TransitionPermission(BasePermission):
-        def has_object_permission(self, request, view, obj):
-            return self.kwargs.get('action') == action
-
-    return TransitionPermission
+IsListAction = ~IsObjectAction
 
 
 class IsFMUser(UserInGroup):
@@ -50,30 +42,20 @@ class IsPME(UserInGroup):
     group = PME.name
 
 
-def activity_is(status):
-    class ActivityStatusPermission(BasePermission):
-        def has_object_permission(self, request, view, obj):
-            return obj.status == status
-
-    return ActivityStatusPermission
-
-
-class UserIsDataCollector(BasePermission):
-    def has_object_permission(self, request, view, obj):
-        return request.user in obj.team_members.all()
-
-
-class UserIsPersonResponsible(BasePermission):
-    def has_object_permission(self, request, view, obj):
-        return request.user == obj.person_responsible
-
-
 IsFieldMonitor = IsFMUser | IsPME
 
 
 class IsTeamMember(BasePermission):
     def has_permission(self, request, view):
-        return False
+        return True
 
     def has_object_permission(self, request, view, obj):
         return request.user in obj.team_members.all()
+
+
+class IsPersonResponsible(BasePermission):
+    def has_permission(self, request, view):
+        return True
+
+    def has_object_permission(self, request, view, obj):
+        return request.user == obj.person_responsible
