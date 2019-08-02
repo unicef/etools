@@ -183,7 +183,7 @@ class TestAzureStorage(TestCase):
                 "x-ms-version": '2018-03-28',
             }
         )
-        assert self.backend.size(self.resource) == str(TEST_FILESIZE)
+        assert self.backend.size(self.resource) == TEST_FILESIZE
 
     def test_url(self):
         assert self.backend.url(self.resource) == 'https://{}.blob.core.windows.net/{}/{}'.format(

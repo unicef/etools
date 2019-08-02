@@ -22,7 +22,7 @@ class AuditorStaffMember(BaseStaffMember):
 
     def __str__(self):
         auditor_firm_name = ' ({})'.format(self.auditor_firm.name) if hasattr(self, 'auditor_firm') else ''
-        return self.get_full_name() + auditor_firm_name
+        return f'{self.get_full_name()} {auditor_firm_name} [{self.user.email}]'
 
     def send_user_appointed_email(self, engagement):
         context = {

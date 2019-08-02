@@ -40,4 +40,4 @@ class TPMPartnerStaffMember(BaseStaffMember):
         verbose_name=_('Receive Notifications on TPM Tasks'), default=False)
 
     def __str__(self):
-        return self.get_full_name()
+        return f'{self.get_full_name()} {self.tpm_partner} [{self.user.email}]'

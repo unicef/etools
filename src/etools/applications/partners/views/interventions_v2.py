@@ -34,6 +34,7 @@ from etools.applications.partners.models import (
     Intervention,
     InterventionAmendment,
     InterventionAttachment,
+    InterventionPlannedVisits,
     InterventionReportingPeriod,
     InterventionResultLink,
 )
@@ -96,6 +97,8 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
 
     search_terms = ('title__icontains', 'agreement__partner__name__icontains', 'number__icontains')
     filters = (
+        ('partners', 'agreement__partner__in'),
+        ('agreements', 'agreement__in'),
         ('document_type', 'document_type__in'),
         ('cp_outputs', 'result_links__cp_output__pk__in'),
         ('country_programme', 'country_programme__in'),
@@ -687,6 +690,7 @@ class InterventionLocationListAPIView(QueryStringFilterMixin, ListAPIView):
         ('end_after', 'end__gte'),
         ('location', 'result_links__ll_results__applied_indicators__locations__name__icontains'),
         ('partners', 'agreement__partner__in'),
+        ('agreements', 'agreement__in'),
     )
 
     def list(self, request, *args, **kwargs):
@@ -800,3 +804,24 @@ class InterventionRamIndicatorsView(APIView):
         return Response(
             self.serializer_class(data).data
         )
+
+
+class InterventionPlannedVisitsDeleteView(DestroyAPIView):
+    permission_classes = (PartnershipManagerPermission,)
+
+    def delete(self, request, *args, **kwargs):
+        intervention = get_object_or_404(
+            Intervention,
+            pk=int(kwargs['intervention_pk'])
+        )
+        if intervention.status != Intervention.DRAFT:
+            raise ValidationError("Planned visits can only be deleted in Draft status")
+
+        intervention_planned_visit = get_object_or_404(
+            InterventionPlannedVisits,
+            pk=int(kwargs['pk']),
+            intervention=int(kwargs['intervention_pk'])
+        )
+        self.check_object_permissions(request, intervention_planned_visit)
+        intervention_planned_visit.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

@@ -26,6 +26,7 @@ from etools.applications.partners.views.interventions_v2 import (
     InterventionLocationListAPIView,
     InterventionLowerResultListCreateView,
     InterventionLowerResultUpdateView,
+    InterventionPlannedVisitsDeleteView,
     InterventionRamIndicatorsView,
     InterventionReportingPeriodDetailView,
     InterventionReportingPeriodListCreateView,
@@ -220,6 +221,11 @@ urlpatterns = (
         r'interventions/(?P<intervention_pk>\d+)/output_cp_indicators/(?P<cp_output_pk>\d+)/$',
         view=InterventionRamIndicatorsView.as_view(http_method_names=['get']),
         name="interventions-output-cp-indicators",
+    ),
+    url(
+        r'interventions/(?P<intervention_pk>\d+)/planned-visits/(?P<pk>\d+)/$',
+        view=InterventionPlannedVisitsDeleteView.as_view(http_method_names=['delete']),
+        name="interventions-planned-visits-delete",
     ),
 
     url(r'^dropdowns/static/$',
