@@ -1,4 +1,3 @@
-
 from datetime import datetime
 
 from etools.applications.audit.models import Audit, Engagement
@@ -12,7 +11,7 @@ from etools.applications.audit.tests.factories import (
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.hact.tests.factories import AggregateHactFactory
 from etools.applications.partners.models import PartnerOrganization, PartnerType
-from etools.applications.partners.tests.factories import PartnerFactory
+from etools.applications.partners.tests.factories import PartnerFactory, PlannedEngagementFactory
 
 
 class TestAggregateHact(BaseTenantTestCase):
@@ -45,6 +44,8 @@ class TestAggregateHact(BaseTenantTestCase):
             reported_cy=52000.0,
             total_ct_ytd=550000.0,
         )
+        PlannedEngagementFactory(partner=cls.partner, spot_check_follow_up=3)
+        PlannedEngagementFactory(partner=cls.partner2, spot_check_follow_up=2)
 
         AuditFactory(
             status=Engagement.FINAL,
@@ -126,7 +127,7 @@ class TestAggregateHact(BaseTenantTestCase):
         self.assertEqual(assurance_activities['programmatic_visits']['completed'], 0)
         self.assertEqual(assurance_activities['programmatic_visits']['min_required'], 5)
         self.assertEqual(assurance_activities['spot_checks']['completed'], 0)
-        self.assertEqual(assurance_activities['spot_checks']['min_required'], 6)
+        self.assertEqual(assurance_activities['spot_checks']['required'], 6)
         self.assertEqual(assurance_activities['scheduled_audit'], 1)
         self.assertEqual(assurance_activities['special_audit'], 1)
         self.assertEqual(assurance_activities['micro_assessment'], 1)

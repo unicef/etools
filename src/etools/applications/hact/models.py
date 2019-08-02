@@ -231,7 +231,8 @@ class AggregateHact(TimeStampedModel):
                     Q(partner__reported_cy__gt=0) | Q(partner__total_ct_cy__gt=0), partner__hidden=False,
                     date_of_draft_report_to_ip__year=datetime.now().year).exclude(
                     status=Engagement.CANCELLED).count(),
-                'required': sum([p.planned_engagement.spot_check_required for p in self.get_queryset()]),
+                'required': sum([p.planned_engagement.spot_check_required for p in self.get_queryset().filter(
+                    planned_engagement__isnull=False)]),
                 'follow_up': self.get_queryset().aggregate(total=Coalesce(Sum(
                     'planned_engagement__spot_check_follow_up'), 0))['total']
             },
