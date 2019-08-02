@@ -88,6 +88,7 @@ class ActionPointViewSet(
     )}
     filter_fields.update({
         'status': ['exact', 'in'],
+        'section': ['exact', 'in'],
         'due_date': ['exact', 'lte', 'gte']
     })
 
