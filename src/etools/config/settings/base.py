@@ -212,6 +212,7 @@ TENANT_APPS = (
     'etools.applications.firms',
     'etools.applications.management',
     'etools.applications.action_points',
+    'etools.applications.psea',
     'unicef_snapshot',
     'unicef_attachments',
     'unicef_vision',
