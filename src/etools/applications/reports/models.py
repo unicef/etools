@@ -140,6 +140,7 @@ class Section(TimeStampedModel):
     alternate_name = models.CharField(max_length=255, null=True, default='', verbose_name=_('Alternate Name'))
     dashboard = models.BooleanField(default=False, verbose_name=_('Dashboard'))
     color = models.CharField(max_length=7, null=True, blank=True, verbose_name=_('Color'))
+    active = models.BooleanField(default=True, verbose_name=_('Active'))
 
     class Meta:
         ordering = ['name']

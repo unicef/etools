@@ -34,6 +34,7 @@ from etools.applications.partners.views.interventions_v2 import (
     InterventionResultLinkListCreateView,
     InterventionResultLinkUpdateView,
     InterventionResultListAPIView,
+    InterventionWithAppliedIndicatorsView,
 )
 from etools.applications.partners.views.partner_organization_v2 import (
     PartnerNotAssuranceCompliant,
@@ -134,6 +135,10 @@ urlpatterns = (
     url(r'^interventions/$',
         view=InterventionListAPIView.as_view(http_method_names=['get', 'post']),
         name='intervention-list'),
+
+    url(r'^interventions/applied-indicators/$',
+        view=InterventionWithAppliedIndicatorsView.as_view(http_method_names=['get', ]),
+        name='intervention-applied-indicators-list'),
 
     url(r'^interventions/result-links/(?P<result_link_pk>\d+)/lower-results/$',
         view=InterventionLowerResultListCreateView.as_view(http_method_names=['get', 'post']),

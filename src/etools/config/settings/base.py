@@ -476,15 +476,6 @@ if ALLOW_BASIC_AUTH:
         'etools.applications.core.auth.DRFBasicAuthMixin',
     )
 
-ISSUE_CHECKS = [
-    'etools.applications.management.issues.project_checks.ActivePCANoSignedDocCheck',
-    'etools.applications.management.issues.project_checks.PdOutputsWrongCheck',
-    'etools.applications.management.issues.project_checks.InterventionsAssociatedSSFACheck',
-    'etools.applications.management.issues.project_checks.InterventionsAreValidCheck',
-    'etools.applications.management.issues.project_checks.PDAmendmentsMissingFilesCheck',
-    'etools.applications.management.issues.project_checks.PCAAmendmentsMissingFilesCheck',
-]
-
 EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS = get_from_secrets_or_env(
     'EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS', 'integrity1@unicef.org'
 )

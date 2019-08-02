@@ -50,6 +50,7 @@ from etools.applications.partners.serializers.exports.interventions import (
     InterventionResultExportSerializer,
 )
 from etools.applications.partners.serializers.interventions_v2 import (
+    BasicInterventionListSerializer,
     InterventionAmendmentCUSerializer,
     InterventionAttachmentSerializer,
     InterventionBudgetCUSerializer,
@@ -214,6 +215,22 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
                 response['Content-Disposition'] = f"attachment;filename={filename}.csv"
 
         return response
+
+
+class InterventionWithAppliedIndicatorsView(QueryStringFilterMixin, ListAPIView):
+    """ Interventions."""
+    queryset = Intervention.objects.all()
+    serializer_class = BasicInterventionListSerializer
+    permission_classes = (PartnershipManagerPermission,)
+
+    filters = (
+        ('sections', 'sections__in'),
+        ('status', 'status__in'),
+    )
+
+    def get_queryset(self):
+        return super().get_queryset().select_related('agreement__partner').prefetch_related(
+            'result_links__ll_results__applied_indicators__indicator')
 
 
 class InterventionListDashView(InterventionListBaseView):
