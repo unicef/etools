@@ -4,7 +4,7 @@ from django.utils.translation import ugettext as _
 
 from rest_framework import serializers
 from unicef_attachments.fields import AttachmentSingleFileField, FileTypeModelChoiceField
-from unicef_attachments.models import FileType
+from unicef_attachments.models import FileType, Attachment
 from unicef_attachments.serializers import AttachmentSerializerMixin, BaseAttachmentSerializer
 from unicef_restlib.fields import SeparatedReadWriteField
 from unicef_restlib.serializers import WritableNestedParentSerializerMixin, WritableNestedSerializerMixin
@@ -65,17 +65,26 @@ class PartnerOrganizationLightSerializer(PartnerOrganizationListSerializer):
         }
 
 
-class EngagementAttachmentSerializer(BaseAttachmentSerializer):
+class EngagementAttachmentSerializer(serializers.ModelSerializer):
+    pk = serializers.IntegerField()
     file_type = FileTypeModelChoiceField(
-        label=_('Document Type'), queryset=FileType.objects.filter(code='audit_engagement')
+        label=_('Document Type'),
+        queryset=FileType.objects.filter(code='audit_engagement'),
     )
+    url = serializers.SerializerMethodField()
 
-    class Meta(BaseAttachmentSerializer.Meta):
-        pass
+    class Meta:
+        model = Attachment
+        fields = ("pk", "file_type", "url", "uploaded_by")
 
-    def create(self, validated_data):
+    def update(self, instance, validated_data):
         validated_data['code'] = 'audit_engagement'
-        return super().create(validated_data)
+        return super().update(instance, validated_data)
+
+    def get_url(self, obj):
+        if obj.file:
+            return obj.file.url
+        return ""
 
 
 class ReportAttachmentSerializer(BaseAttachmentSerializer):
