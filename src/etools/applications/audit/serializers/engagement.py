@@ -4,7 +4,7 @@ from django.utils.translation import ugettext as _
 
 from rest_framework import serializers
 from unicef_attachments.fields import AttachmentSingleFileField, FileTypeModelChoiceField
-from unicef_attachments.models import FileType, Attachment
+from unicef_attachments.models import Attachment, FileType
 from unicef_attachments.serializers import AttachmentSerializerMixin
 from unicef_restlib.fields import SeparatedReadWriteField
 from unicef_restlib.serializers import WritableNestedParentSerializerMixin, WritableNestedSerializerMixin
