@@ -1,6 +1,9 @@
 from django.core.management.base import BaseCommand
+from django.db import connection
 
 from unicef_attachments.utils import cleanup_filetypes
+
+from etools.applications.users.models import Country
 from etools.libraries.tenant_support.utils import run_on_all_tenants
 
 
