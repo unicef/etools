@@ -87,17 +87,26 @@ class EngagementAttachmentSerializer(serializers.ModelSerializer):
         return ""
 
 
-class ReportAttachmentSerializer(BaseAttachmentSerializer):
+class ReportAttachmentSerializer(serializers.ModelSerializer):
+    pk = serializers.IntegerField()
     file_type = FileTypeModelChoiceField(
-        label=_('Document Type'), queryset=FileType.objects.filter(code='audit_report')
+        label=_('Document Type'),
+        queryset=FileType.objects.filter(code='audit_report'),
     )
+    url = serializers.SerializerMethodField()
 
-    class Meta(BaseAttachmentSerializer.Meta):
-        pass
+    class Meta:
+        model = Attachment
+        fields = ("pk", "file_type", "url", "uploaded_by")
 
-    def create(self, validated_data):
+    def update(self, instance, validated_data):
         validated_data['code'] = 'audit_report'
-        return super().create(validated_data)
+        return super().update(instance, validated_data)
+
+    def get_url(self, obj):
+        if obj.file:
+            return obj.file.url
+        return ""
 
 
 class EngagementActionPointSerializer(PermissionsBasedSerializerMixin, ActionPointBaseSerializer):
