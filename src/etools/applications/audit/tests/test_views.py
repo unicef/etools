@@ -2,6 +2,7 @@ import datetime
 import json
 import random
 
+from django.contrib.contenttypes.models import ContentType
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
 from django.urls import reverse
@@ -1209,28 +1210,71 @@ class TestEngagementPartnerView(AuditTestCaseMixin, BaseTenantTestCase):
 
 
 class TestEngagementAttachmentsView(MATransitionsTestCaseMixin, BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.file_type = AttachmentFileTypeFactory(code='audit_engagement')
+
     def test_list(self):
         attachments_num = self.engagement.engagement_attachments.count()
-
-        create_response = self.forced_auth_req(
-            'post',
-            reverse('audit:engagement-attachments-list', args=[self.engagement.id]),
-            user=self.unicef_focal_point,
-            request_format='multipart',
-            data={
-                'file_type': AttachmentFileTypeFactory(code='audit_engagement').id,
-                'file': SimpleUploadedFile('hello_world.txt', 'hello world!'.encode('utf-8')),
-            }
-        )
-        self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
-
         response = self.forced_auth_req(
             'get',
-            reverse('audit:engagement-attachments-list', args=[self.engagement.id]),
+            reverse(
+                'audit:engagement-attachments-list',
+                args=[self.engagement.pk],
+            ),
             user=self.unicef_focal_point
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data['results']), attachments_num + 1)
+        self.assertEqual(len(response.data['results']), attachments_num)
+
+    def test_post(self):
+        attachment = AttachmentFactory(file="sample.pdf")
+        self.assertIsNone(attachment.object_id)
+        self.assertNotEqual(attachment.code, "audit_engagement")
+
+        response = self.forced_auth_req(
+            'post',
+            reverse(
+                'audit:engagement-attachments-list',
+                args=[self.engagement.pk],
+            ),
+            user=self.unicef_focal_point,
+            data={
+                'file_type': self.file_type.pk,
+                'pk': attachment.pk,
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        attachment.refresh_from_db()
+        self.assertEqual(attachment.object_id, self.engagement.pk)
+        self.assertEqual(attachment.code, "audit_engagement")
+
+    def test_patch(self):
+        file_type_old = AttachmentFileTypeFactory(code="different_engagement")
+        attachment = AttachmentFactory(
+            file="sample.pdf",
+            file_type=file_type_old,
+            content_type=ContentType.objects.get_for_model(Engagement),
+            object_id=self.engagement.pk,
+            code="audit_engagement",
+        )
+        self.assertNotEqual(attachment.file_type, self.file_type)
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse(
+                'audit:engagement-attachments-detail',
+                args=[self.engagement.pk, attachment.pk],
+            ),
+            user=self.unicef_focal_point,
+            data={
+                "file_type": self.file_type.pk,
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        attachment.refresh_from_db()
+        self.assertEqual(attachment.file_type, self.file_type)
 
     def test_create_meta_focal_point(self):
         response = self.forced_auth_req(
