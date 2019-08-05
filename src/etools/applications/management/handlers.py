@@ -13,7 +13,7 @@ class MigrationException(Exception):
 
 
 class NotDeactivatedException(MigrationException):
-    """Exception thrown when deactivated is still referenced"""
+    """Exception thrown when an active objects is still referenced by a inactive section"""
 
 
 class IndicatorSectionInconsistentException(MigrationException):
@@ -47,8 +47,8 @@ class SectionHandler:
         TPMVisit.REPORT_REJECTED
     ]
 
-    # dictionary with info related to the model, active queryset (object relevant to the migration)
-    # attribute name and type of relation
+    # dictionary to mark instances, for each model that has a m2m relationship to Sections,
+    # in order to follow up later and clean (remove references to old sections) them.
     queryset_migration_mapping = {
         'interventions': (
             Intervention.objects.filter(status__in=intervention_updatable_status),
@@ -91,17 +91,16 @@ class SectionHandler:
     @staticmethod
     @atomic
     def merge(new_section_name, sections_to_merge):
-        """Create two or more sections into a new section migrating active objects"""
+        """Merge two or more sections into a newly create section and migrating active objects"""
         from_instances = Section.objects.filter(pk__in=sections_to_merge)
         to_instance = Section.objects.create(name=new_section_name)
         from_instances.update(active=False)
 
         # m2m relation need to be cleaned at the end
         m2m_to_clean = {
-            'interventions': []
         }
         for from_instance in from_instances:
-            SectionHandler.__update_objects(from_instance, to_instance, m2m_to_clean)
+            m2m_to_clean = SectionHandler.__update_objects(from_instance, to_instance, m2m_to_clean)
         SectionHandler.__clean_m2m(from_instances, m2m_to_clean)
 
         # history
@@ -124,15 +123,13 @@ class SectionHandler:
         from_instance.save()
 
         new_sections = []
-        # m2m relation need to be cleaned at the end
-        m2m_to_clean = {
-            'interventions': []
-        }
-
+        # m2m relation need to be cleaned at the end.
+        # It's a dictionary to mark instances for each model in a Many to Many Relationshipm that we follow up for cleaning at the end of
+        m2m_to_clean = {}
         for new_section_name, queryset_mapping_dict in new_section_2_new_querysets.items():
             to_instance, _ = Section.objects.get_or_create(name=new_section_name)
             new_sections.append(to_instance)
-            SectionHandler.__update_objects(from_instance, to_instance, m2m_to_clean, queryset_mapping_dict)
+            m2m_to_clean = SectionHandler.__update_objects(from_instance, to_instance, m2m_to_clean, queryset_mapping_dict)
 
         SectionHandler.__clean_m2m([from_instance], m2m_to_clean)
 
@@ -149,8 +146,24 @@ class SectionHandler:
     @staticmethod
     def __update_objects(from_instance, to_instance, m2m_to_clean, section_split_dict=None):
         """
-        update eTools queryset from one instance to another
-        section_split_dict has the redistribution mapping after a section is closed
+        It updates sections (from from_instance to to_instance) for all instances of all models defined in
+        queryset_migration_mapping as keys, following the filters defined in that mapping.
+
+        Params:
+            from_instance: Section, instance of section to map from.
+            to_instance: Section, instance of Section model that is desired to map all instances of models defined in
+                        queryset_migration_mapping
+
+            m2m_to_clean: dict, key: model, value: list of pk of objects marked for removing the to_instance Section
+
+            section_split_dict: dict, key: name of new section, value dict with model and pk of instances to migrate
+                "Nutrition": {
+                    'interventions': [1, 3],
+                    'applied_indicators': [1],
+                    'travels': [2, 4 ],
+                    'tpm_activities': [],
+                    'action_points': [3],
+                },
         """
         for model_key in SectionHandler.queryset_migration_mapping.keys():
             qs, section_attribute, relation = SectionHandler.queryset_migration_mapping[model_key]
@@ -161,10 +174,13 @@ class SectionHandler:
 
             if relation == SectionHandler.M2M:
                 to_update = SectionHandler.__update_m2m(qs, section_attribute, from_instance, to_instance)
+                if model_key not in m2m_to_clean:
+                    m2m_to_clean[model_key] = []
                 m2m_to_clean[model_key].extend(to_update)
 
             elif relation == SectionHandler.FK:
                 SectionHandler.__update_fk(qs, section_attribute, from_instance, to_instance)
+        return m2m_to_clean
 
     @staticmethod
     def __update_fk(qs, section_attribute, old_section, new_section):
