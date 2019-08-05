@@ -91,11 +91,11 @@ class TestSectionHandler(BaseTenantTestCase):
 
         SectionHandler.merge('Health and Nutrition', [self.health.pk, self.nutrition.pk])
 
-        h_n = Section.objects.get(name='Health and Nutrition')
+        health_and_nutrition = Section.objects.get(name='Health and Nutrition')
         self.__check_history(4, 2, 1, SectionHistory.MERGE, 2, 1)
         self.__check_section(self.health, (1, 1, 1, 0))
         self.__check_section(self.nutrition, (1, 0, 1, 1))
-        self.__check_section(h_n, (2, 3, 2, 1))
+        self.__check_section(health_and_nutrition, (2, 3, 2, 1))
         self.__check_section(self.ict, (1, 1, 1, 0))
 
     def test_close_ok(self):
@@ -157,14 +157,14 @@ class TestSectionHandler(BaseTenantTestCase):
         self.__check_history(3, 0, 0, None, None, None)
         self.__check_before()
         close_dict = {
-            "Hea": {
+            "Health 1": {
                 'interventions': [self.intervention1.pk, self.intervention3.pk],
                 'applied_indicators': [self.applied_indicator1.pk],
                 'travels': [self.travel2.pk, ],
                 'tpm_activities': [],
                 'action_points': [self.action_point.pk],
             },
-            "Lth": {
+            "Health 2": {
                 'interventions': [self.intervention1.pk],
                 'applied_indicators': [self.applied_indicator5.pk],
                 'travels': [self.travel1.pk, self.travel2.pk],
