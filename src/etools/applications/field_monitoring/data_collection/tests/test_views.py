@@ -1,6 +1,7 @@
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import connection
 from django.urls import reverse
+
 from rest_framework import status
 
 from etools.applications.core.tests.cases import BaseTenantTestCase

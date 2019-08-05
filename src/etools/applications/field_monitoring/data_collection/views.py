@@ -3,16 +3,20 @@ from django.utils.translation import ugettext_lazy as _
 from rest_framework import mixins, viewsets
 from unicef_restlib.views import NestedViewSetMixin
 
-from etools.applications.field_monitoring.combinable_permissions.permissions import PermissionQ as Q
 from etools.applications.field_monitoring.data_collection.models import ActivityQuestion
 from etools.applications.field_monitoring.data_collection.serializers import (
     ActivityDataCollectionSerializer,
     ActivityQuestionSerializer,
-    ActivityReportAttachmentSerializer)
-from etools.applications.field_monitoring.permissions import IsEditAction, IsReadAction, IsTeamMember, \
-    IsPersonResponsible
+    ActivityReportAttachmentSerializer,
+)
+from etools.applications.field_monitoring.permissions import (
+    IsEditAction,
+    IsPersonResponsible,
+    IsReadAction,
+    IsTeamMember,
+)
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
-from etools.applications.field_monitoring.views import FMBaseViewSet, FMBaseAttachmentsViewSet
+from etools.applications.field_monitoring.views import FMBaseAttachmentsViewSet, FMBaseViewSet
 
 
 class ActivityDataCollectionViewSet(
@@ -21,7 +25,7 @@ class ActivityDataCollectionViewSet(
     viewsets.GenericViewSet,
 ):
     permission_classes = FMBaseViewSet.permission_classes + [
-        Q(IsReadAction) | Q(IsEditAction, Q(IsTeamMember) | Q(IsPersonResponsible))
+        IsReadAction | (IsEditAction & (IsTeamMember | IsPersonResponsible))
     ]
     queryset = MonitoringActivity.objects.all()
     serializer_class = ActivityDataCollectionSerializer

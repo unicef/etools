@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import connection, models
+from django.db.models.base import ModelBase
 from django.utils.translation import ugettext_lazy as _
 
 from django_fsm import FSMField, transition
@@ -12,8 +13,11 @@ from unicef_locations.models import Location
 
 from etools.applications.core.permissions import import_permissions
 from etools.applications.field_monitoring.fm_settings.models import LocationSite, Question
-from etools.applications.field_monitoring.planning.transitions.permissions import user_is_field_monitor_permission, \
-    user_is_data_collector_permission
+from etools.applications.field_monitoring.planning.mixins import ProtectUnknownTransitionsMeta
+from etools.applications.field_monitoring.planning.transitions.permissions import (
+    user_is_data_collector_permission,
+    user_is_field_monitor_permission,
+)
 from etools.applications.partners.models import Intervention, PartnerOrganization
 from etools.applications.reports.models import Result
 from etools.applications.tpm.tpmpartners.models import TPMPartner
@@ -84,7 +88,16 @@ class QuestionTemplate(QuestionTargetMixin, models.Model):
         return 'Question Template for {}'.format(self.related_to)
 
 
-class MonitoringActivity(SoftDeleteMixin, TimeStampedModel):
+class MonitoringActivityMeta(ProtectUnknownTransitionsMeta, ModelBase):
+    pass
+
+
+class MonitoringActivity(
+    SoftDeleteMixin,
+    TimeStampedModel,
+    models.Model,
+    metaclass=MonitoringActivityMeta
+):
     TYPES = Choices(
         ('staff', _('Staff')),
         ('tpm', _('TPM')),
@@ -206,12 +219,4 @@ class MonitoringActivity(SoftDeleteMixin, TimeStampedModel):
                 ],
                 permission=user_is_field_monitor_permission)
     def cancel(self):
-        pass
-
-    # todo: remove this as far best solution will be found
-    @transition(field=status, target=STATUSES.cancelled,
-                source=[
-                    STATUSES.report_submitted, STATUSES.completed
-                ], permission=lambda *args: False)
-    def cancel_disabled(self):
         pass

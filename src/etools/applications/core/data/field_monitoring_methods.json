@@ -3,14 +3,14 @@
         "model": "field_monitoring_settings.method",
         "pk": 1,
         "fields": {
-            "name": "Key Informant"
+            "name": "Key Informant Interview"
         }
     },
     {
         "model": "field_monitoring_settings.method",
         "pk": 2,
         "fields": {
-            "name": "Focus Groups"
+            "name": "Focus Group Discussion"
         }
     },
     {
@@ -31,7 +31,7 @@
         "model": "field_monitoring_settings.method",
         "pk": 5,
         "fields": {
-            "name": "Method X"
+            "name": "Participatory appraisal"
         }
     }
 ]

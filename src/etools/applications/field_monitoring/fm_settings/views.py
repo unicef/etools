@@ -12,7 +12,6 @@ from unicef_locations.cache import etag_cached
 from unicef_locations.models import Location
 from unicef_locations.serializers import LocationLightSerializer
 
-from etools.applications.field_monitoring.combinable_permissions.permissions import PermissionQ as Q
 from etools.applications.field_monitoring.fm_settings.export.renderers import (
     LocationSiteCSVRenderer,
     LogIssueCSVRenderer,
@@ -52,7 +51,7 @@ class MethodsViewSet(
 
 class FieldMonitoringGeneralAttachmentsViewSet(FMBaseViewSet, viewsets.ModelViewSet):
     permission_classes = FMBaseViewSet.permission_classes + [
-        Q(IsReadAction) | Q(IsEditAction, IsFieldMonitor)
+        IsReadAction | (IsEditAction & IsFieldMonitor)
     ]
     queryset = Attachment.objects.filter(code='fm_common')
     serializer_class = FieldMonitoringGeneralAttachmentSerializer
@@ -75,7 +74,7 @@ class InterventionLocationsView(FMBaseViewSet, generics.ListAPIView):
 
 class LocationSitesViewSet(FMBaseViewSet, viewsets.ModelViewSet):
     permission_classes = FMBaseViewSet.permission_classes + [
-        Q(IsReadAction) | (Q(IsEditAction) & Q(IsPME))
+        IsReadAction | (IsEditAction & IsPME)
     ]
     queryset = LocationSite.objects.prefetch_related('parent').order_by('parent__name', 'name')
     serializer_class = LocationSiteSerializer
@@ -131,7 +130,7 @@ class FMLocationsViewSet(FMBaseViewSet, mixins.ListModelMixin, viewsets.GenericV
 
 class LogIssuesViewSet(FMBaseViewSet, viewsets.ModelViewSet):
     permission_classes = FMBaseViewSet.permission_classes + [
-        Q(IsReadAction) | Q(IsEditAction, IsFieldMonitor)
+        IsReadAction | (IsEditAction & IsFieldMonitor)
     ]
     queryset = LogIssue.objects.prefetch_related(
         'author', 'history', 'cp_output', 'partner', 'location', 'location_site', 'attachments',
@@ -169,7 +168,7 @@ class LogIssuesViewSet(FMBaseViewSet, viewsets.ModelViewSet):
 
 class LogIssueAttachmentsViewSet(FMBaseAttachmentsViewSet):
     permission_classes = FMBaseViewSet.permission_classes + [
-        Q(IsReadAction) | Q(IsEditAction, IsFieldMonitor)
+        IsReadAction | (IsEditAction & IsFieldMonitor)
     ]
     serializer_class = LogIssueAttachmentSerializer
     related_model = LogIssue
@@ -192,7 +191,7 @@ class QuestionsViewSet(
     viewsets.GenericViewSet
 ):
     permission_classes = FMBaseViewSet.permission_classes + [
-        Q(IsReadAction) | Q(IsEditAction, IsFieldMonitor)
+        IsReadAction | (IsEditAction & IsFieldMonitor)
     ]
     queryset = Question.objects.prefetch_related('options')
     serializer_class = QuestionSerializer

@@ -69,7 +69,7 @@ class QuestionSerializer(WritableNestedSerializerMixin, serializers.ModelSeriali
     class Meta(WritableNestedSerializerMixin.Meta):
         model = Question
         fields = (
-            'id', 'answer_type', 'level', 'options',
+            'id', 'answer_type', 'choices_size', 'level', 'options',
             'methods', 'category', 'sections', 'text',
             'is_hact', 'is_active', 'is_custom'
         )

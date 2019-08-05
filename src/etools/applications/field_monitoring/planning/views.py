@@ -11,18 +11,25 @@ from rest_framework import mixins, viewsets
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
-from etools.applications.field_monitoring.combinable_permissions.permissions import PermissionQ as Q
-from etools.applications.field_monitoring.permissions import IsEditAction, IsFieldMonitor, IsReadAction, IsTeamMember, \
-    IsPersonResponsible, IsObjectAction, IsListAction
+from etools.applications.field_monitoring.permissions import (
+    IsEditAction,
+    IsFieldMonitor,
+    IsListAction,
+    IsObjectAction,
+    IsPersonResponsible,
+    IsReadAction,
+    IsTeamMember,
+)
 from etools.applications.field_monitoring.planning.activity_validation.validator import ActivityValid
 from etools.applications.field_monitoring.planning.models import MonitoringActivity, QuestionTemplate, YearPlan
 from etools.applications.field_monitoring.planning.serializers import (
+    ActivityAttachmentSerializer,
     MonitoringActivityLightSerializer,
     MonitoringActivitySerializer,
     QuestionTemplateSerializer,
     YearPlanSerializer,
-    ActivityAttachmentSerializer)
-from etools.applications.field_monitoring.views import FMBaseViewSet, FMBaseAttachmentsViewSet
+)
+from etools.applications.field_monitoring.views import FMBaseAttachmentsViewSet, FMBaseViewSet
 
 
 class YearPlanViewSet(
@@ -32,7 +39,7 @@ class YearPlanViewSet(
     viewsets.GenericViewSet
 ):
     permission_classes = FMBaseViewSet.permission_classes + [
-        Q(IsReadAction) | Q(IsEditAction, IsFieldMonitor)
+        IsReadAction | (IsEditAction & IsFieldMonitor)
     ]
     queryset = YearPlan.objects.all()
     serializer_class = YearPlanSerializer
@@ -76,7 +83,7 @@ class QuestionTemplateViewSet(
 ):
 
     permission_classes = FMBaseViewSet.permission_classes + [
-        Q(IsReadAction) | Q(IsEditAction, IsFieldMonitor)
+        (IsReadAction) | (IsEditAction & IsFieldMonitor)
     ]
     queryset = QuestionTemplate.objects.all()
     serializer_class = QuestionTemplateSerializer
@@ -101,9 +108,9 @@ class MonitoringActivitiesViewSet(
         'list': MonitoringActivityLightSerializer
     }
     permission_classes = FMBaseViewSet.permission_classes + [
-        Q(IsReadAction) |
-        Q(IsEditAction, IsListAction, IsFieldMonitor) |
-        Q(IsEditAction, IsObjectAction, Q(IsFieldMonitor, IsTeamMember, IsPersonResponsible, connector=Q.OR))
+        IsReadAction |
+        (IsEditAction & IsListAction & IsFieldMonitor) |
+        (IsEditAction & (IsObjectAction & (IsFieldMonitor | IsTeamMember | IsPersonResponsible)))
     ]
 
     def get_queryset(self):
@@ -149,7 +156,7 @@ class MonitoringActivitiesViewSet(
 
 class ActivityAttachmentsViewSet(FMBaseAttachmentsViewSet):
     permission_classes = FMBaseViewSet.permission_classes + [
-        Q(IsReadAction) | Q(IsEditAction, IsFieldMonitor)
+        IsReadAction | (IsEditAction & IsFieldMonitor)
     ]
     serializer_class = ActivityAttachmentSerializer
     related_model = MonitoringActivity

@@ -1,7 +1,16 @@
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 
-from etools.applications.field_monitoring.combinable_permissions.permissions import PermissionQ, UserInGroup
 from etools.applications.field_monitoring.groups import FMUser, PME
+
+
+class UserInGroup(BasePermission):
+    """
+    Allow access if user is in specific group.
+    """
+    group = None
+
+    def has_permission(self, request, view):
+        return self.group in map(lambda g: g.name, request.user.groups.all())
 
 
 class SimplePermission(BasePermission):
@@ -17,18 +26,21 @@ class SimplePermission(BasePermission):
     def has_object_permission(self, request, view, obj):
         return self.has_access(request, view, instance=obj)
 
+    class Meta:
+        abstract = True
+
 
 class IsReadAction(SimplePermission):
     def has_access(self, request, view, **kwargs):
         return request.method in SAFE_METHODS
 
 
-IsEditAction = ~PermissionQ(IsReadAction)
+IsEditAction = ~IsReadAction
 
 
 class IsObjectAction(SimplePermission):
     def has_access(self, request, view, instance=None):
-        return (view.lookup_url_kwarg or view.lookup_field) in view.kwargs
+        return view.detail
 
 
 IsListAction = ~IsObjectAction

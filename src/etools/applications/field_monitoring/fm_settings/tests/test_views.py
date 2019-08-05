@@ -12,7 +12,7 @@ from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
-from etools.applications.field_monitoring.fm_settings.models import LogIssue
+from etools.applications.field_monitoring.fm_settings.models import LogIssue, Question
 from etools.applications.field_monitoring.fm_settings.tests.factories import (
     CategoryFactory,
     LocationSiteFactory,
@@ -605,7 +605,7 @@ class TestCategoriesView(FMBaseTestCaseMixin, BaseTenantTestCase):
 class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
     def test_list(self):
         QuestionFactory.create_batch(2)
-        QuestionFactory.create_batch(3, answer_type='choices', options__count=2)
+        QuestionFactory.create_batch(3, answer_type=Question.ANSWER_TYPES.likert_scale, options__count=2)
 
         response = self.forced_auth_req(
             'get',
@@ -639,7 +639,7 @@ class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
             reverse('field_monitoring_settings:questions-list'),
             user=self.fm_user,
             data={
-                'answer_type': 'choices',
+                'answer_type': 'likert_scale',
                 'level': 'partner',
                 'methods': [MethodFactory().id, ],
                 'category': CategoryFactory().id,
@@ -657,7 +657,7 @@ class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(len(response.data['options']), 2)
 
     def test_update(self):
-        question = QuestionFactory(answer_type='choices', options__count=2)
+        question = QuestionFactory(answer_type=Question.ANSWER_TYPES.likert_scale, options__count=2)
 
         response = self.forced_auth_req(
             'patch',

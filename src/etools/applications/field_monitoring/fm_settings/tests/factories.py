@@ -1,7 +1,7 @@
 from django.contrib.gis.geos import GEOSGeometry
 
 import factory
-from factory import fuzzy
+from factory import fuzzy, LazyAttribute
 from unicef_locations.models import GatewayType
 from unicef_locations.tests.factories import LocationFactory
 
@@ -52,6 +52,7 @@ class OptionFactory(factory.DjangoModelFactory):
 class QuestionFactory(factory.DjangoModelFactory):
     category = factory.SubFactory(CategoryFactory)
     answer_type = fuzzy.FuzzyChoice(dict(Question.ANSWER_TYPES).keys())
+    choices_size = factory.Maybe(LazyAttribute(lambda self: self.answer_type == Question.ANSWER_TYPES.likert_scale), 3)
     level = fuzzy.FuzzyChoice(dict(Question.LEVELS).keys())
     text = fuzzy.FuzzyText()
 
@@ -60,7 +61,7 @@ class QuestionFactory(factory.DjangoModelFactory):
 
     @factory.post_generation
     def options(self, created, extracted, count=0, **kwargs):
-        if not count and self.answer_type == Question.ANSWER_TYPES.choices:
+        if not count and self.answer_type == Question.ANSWER_TYPES.likert_scale:
             count = 2
 
         OptionFactory.create_batch(count, question=self)
