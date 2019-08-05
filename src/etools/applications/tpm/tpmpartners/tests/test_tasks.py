@@ -3,37 +3,34 @@ from unittest.mock import Mock, patch
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.tpm.tests.factories import TPMPartnerFactory
 from etools.applications.tpm.tpmpartners.tasks import update_tpm_partners
-from etools.applications.users.models import Country
-from etools.applications.users.tests.factories import CountryFactory
 
 
 class TestUpdateTpmPartners(BaseTenantTestCase):
 
     def _build_country(self, name):
-        """
-        Given a name (e.g. 'test1'), creates a Country object via FactoryBoy. The object is not saved to the database.
-        It exists only in memory. We must be careful not to save this because creating a new Country in the database
-        complicates schemas.
-        """
-        country = CountryFactory.build(name='Country {}'.format(name.title()),
-                                       schema_name=name,
-                                       business_area_code='ZZZ {}'.format(name.title()))
-        country.vision_sync_enabled = True
-        # We'll want to check vision_last_synced as part of the tests, so set it to a known value.
-        country.vision_last_synced = None
-        # We mock save() so we can see if it was called or not, also to prevent database changes.
-        country.save = Mock()
 
-        return country
+        class CountryMock:
+
+            def __init__(self, name):
+                self.name = 'Country {}'.format(name.title())
+                self.schema_name = name
+                self.business_area_code = 'ZZZ {}'.format(name.title())
+                self.vision_sync_enabled = True
+
+            def __str__(self):
+                return self.name
+
+        return CountryMock(name)
 
     @patch('etools.applications.tpm.tpmpartners.tasks.logger', spec=['info', 'error'])
     @patch("etools.applications.tpm.tpmpartners.synchronizers.TPMPartnerSynchronizer.sync")
     @patch('etools.applications.vision.tasks.Country')
     def test_update_tpm_partners(self, country_rel, mock_send, logger):
 
-        country = self._build_country('test_country')
-        Country.objects.filter = Mock(return_value=[country])
-        Country.objects.get = Mock(return_value=country)
+        # create a country from a 'fake' class, creating a real country messes up a bunch of other tests
+        country_mock = self._build_country('test_country')
+        country_rel.objects.filter = Mock(return_value=[country_mock])
+        country_rel.objects.get = Mock(return_value=country_mock)
 
         TPMPartnerFactory()
 
