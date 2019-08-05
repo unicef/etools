@@ -1193,7 +1193,7 @@ class TestEngagementAttachmentsView(MATransitionsTestCaseMixin, BaseTenantTestCa
             user=self.unicef_focal_point,
             request_format='multipart',
             data={
-                'file_type': AttachmentFileTypeFactory(code='audit_engagement').id,
+                'file_type': AttachmentFileTypeFactory(group=['audit_engagement']).id,
                 'file': SimpleUploadedFile('hello_world.txt', 'hello world!'.encode('utf-8')),
             }
         )
@@ -1238,7 +1238,7 @@ class TestEngagementReportAttachmentsView(MATransitionsTestCaseMixin, BaseTenant
             user=self.auditor,
             request_format='multipart',
             data={
-                'file_type': AttachmentFileTypeFactory(code='audit_report').id,
+                'file_type': AttachmentFileTypeFactory(group=["audit_report"]).id,
                 'file': SimpleUploadedFile('hello_world.txt', 'hello world!'.encode('utf-8')),
             }
         )

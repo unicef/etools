@@ -72,9 +72,7 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
             agreement=agreement,
             status=Intervention.CLOSED
         )
-        cls.file_type = AttachmentFileTypeFactory(
-            code="partners_partner_assessment"
-        )
+        cls.file_type = AttachmentFileTypeFactory()
 
         cls.url = reverse(
             "partners_api:partner-detail",
@@ -699,6 +697,7 @@ class TestPartnerOrganizationAssessmentUpdateDeleteView(BaseTenantTestCase):
             completed_date=None,
             report=None,
         )
+        AttachmentFileTypeFactory(code="partners_assessment_report")
         self.attachment = AttachmentFactory(
             file="test_file.pdf",
             file_type=None,

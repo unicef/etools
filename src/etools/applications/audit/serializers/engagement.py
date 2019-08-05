@@ -67,7 +67,8 @@ class PartnerOrganizationLightSerializer(PartnerOrganizationListSerializer):
 
 class EngagementAttachmentSerializer(BaseAttachmentSerializer):
     file_type = FileTypeModelChoiceField(
-        label=_('Document Type'), queryset=FileType.objects.filter(code='audit_engagement')
+        label=_('Document Type'),
+        queryset=FileType.objects.group_by('audit_engagement'),
     )
 
     class Meta(BaseAttachmentSerializer.Meta):
@@ -80,7 +81,8 @@ class EngagementAttachmentSerializer(BaseAttachmentSerializer):
 
 class ReportAttachmentSerializer(BaseAttachmentSerializer):
     file_type = FileTypeModelChoiceField(
-        label=_('Document Type'), queryset=FileType.objects.filter(code='audit_report')
+        label=_('Document Type'),
+        queryset=FileType.objects.group_by('audit_report')
     )
 
     class Meta(BaseAttachmentSerializer.Meta):

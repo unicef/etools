@@ -468,9 +468,7 @@ class TestAgreementCreateAPIView(BaseTenantTestCase):
         cls.partnership_manager_user.groups.add(GroupFactory())
         cls.partnership_manager_user.profile.partner_staff_member = partner_staff.id
         cls.partnership_manager_user.save()
-        cls.file_type_agreement = AttachmentFileTypeFactory(
-            code="partners_agreement"
-        )
+        cls.file_type_agreement = AttachmentFileTypeFactory()
 
     def test_minimal_create(self):
         """Test passing as few fields as possible to create"""
@@ -532,9 +530,7 @@ class TestAgreementAPIFileAttachments(BaseTenantTestCase):
             partner=cls.partner,
             attached_agreement=None,
         )
-        cls.file_type_agreement = AttachmentFileTypeFactory(
-            code="partners_agreement"
-        )
+        cls.file_type_agreement = AttachmentFileTypeFactory()
 
     def _get_and_assert_response(self):
         """Helper method to get the agreement and verify some basic about the response JSON (which it returns)."""
@@ -694,9 +690,7 @@ class TestAgreementAPIView(BaseTenantTestCase):
         cls.intervention = InterventionFactory(
             agreement=cls.agreement,
             document_type=Intervention.PD)
-        cls.file_type_agreement = AttachmentFileTypeFactory(
-            code="partners_agreement"
-        )
+        cls.file_type_agreement = AttachmentFileTypeFactory()
 
     def test_cp_end_date_update(self):
         data = {
