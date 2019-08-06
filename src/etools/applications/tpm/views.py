@@ -310,8 +310,7 @@ class TPMVisitViewSet(
     viewsets.GenericViewSet
 ):
     metadata_class = PermissionBasedMetadata
-    queryset = TPMVisit.objects.all().prefetch_related(
-        'tpm_partner',
+    queryset = TPMVisit.objects.select_related('tpm_partner').prefetch_related(
         'tpm_activities__unicef_focal_points',
     )
     serializer_class = TPMVisitSerializer

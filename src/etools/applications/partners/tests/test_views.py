@@ -1420,6 +1420,30 @@ class TestInterventionViews(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('Document type PD or HPD can only be associated with a PCA agreement.', response.data)
 
+    def test_intervention_validation_multiple_agreement_ssfa(self):
+        self.agreement.agreement_type = Agreement.SSFA
+        self.agreement.save()
+        intervention = Intervention.objects.get(id=self.intervention["id"])
+        intervention.document_type = Intervention.SSFA
+        intervention.save()
+        self.agreement.interventions.add(intervention)
+
+        response = self.forced_auth_req(
+            'post',
+            reverse(
+                "partners_api:intervention-list"
+            ),
+            user=self.partnership_manager_user,
+            data={
+                "agreement": self.agreement.id,
+                "document_type": Intervention.SSFA,
+                "status": Intervention.DRAFT,
+                "title": "test"
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('You can only add one SSFA Document for each SSFA Agreement', response.data)
+
     def test_intervention_validation_dates(self):
         today = datetime.date.today()
         data = {

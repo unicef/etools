@@ -24,6 +24,7 @@ class TPMActivityExportSerializer(serializers.Serializer):
     visit_information = serializers.CharField(source='tpm_visit.visit_information')
     visit_status = serializers.CharField(source='tpm_visit.get_status_display')
     activity = serializers.SerializerMethodField()
+    is_pv = serializers.BooleanField()
     section = serializers.CharField()
     cp_output = serializers.CharField()
     partner = serializers.CharField()
