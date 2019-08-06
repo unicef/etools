@@ -116,6 +116,22 @@ class SectionHandler:
         """
         Close a section and split the active objects according the mapping dictionary
         new_section_2_new_querysets has a mapping of the instances to be mapped to new section
+        {
+            "Nutrition": {
+                'interventions': [1, 3],
+                'applied_indicators': [1],
+                'travels': [2, 4 ],
+                'tpm_activities': [],
+                'action_points': [3],
+            },
+            "Health": {
+                'interventions': [1, 5],
+                'applied_indicators': [2],
+                'travels': [4 ],
+                'tpm_activities': [],
+                'action_points': [1],
+            }
+        }
         """
 
         from_instance = Section.objects.get(pk=from_instance_pk)
