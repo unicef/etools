@@ -299,7 +299,7 @@ class Command(BaseCommand):
                              condition=tpm_reported_condition)
         self.add_permissions(self.pme, 'edit', ['tpm.tpmvisit.approval_comment', 'tpm.tpmvisit.report_reject_comments'],
                              condition=tpm_reported_condition)
-        self.add_permissions(self.pme, 'action',
+        self.add_permissions([self.pme, self.focal_point], 'action',
                              ['tpm.tpmvisit.approve', 'tpm.tpmvisit.reject_report'],
                              condition=tpm_reported_condition)
 
