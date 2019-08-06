@@ -51,7 +51,6 @@ from etools.applications.partners.serializers.exports.interventions import (
     InterventionResultExportSerializer,
 )
 from etools.applications.partners.serializers.interventions_v2 import (
-    BasicInterventionListSerializer,
     InterventionAmendmentCUSerializer,
     InterventionAttachmentSerializer,
     InterventionBudgetCUSerializer,
@@ -68,6 +67,7 @@ from etools.applications.partners.serializers.interventions_v2 import (
     InterventionResultCUSerializer,
     InterventionResultLinkSimpleCUSerializer,
     InterventionResultSerializer,
+    InterventionToIndicatorsListSerializer,
     MinimalInterventionListSerializer,
     PlannedVisitsCUSerializer,
 )
@@ -230,7 +230,7 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
 class InterventionWithAppliedIndicatorsView(QueryStringFilterMixin, ListAPIView):
     """ Interventions."""
     queryset = Intervention.objects.all()
-    serializer_class = BasicInterventionListSerializer
+    serializer_class = InterventionToIndicatorsListSerializer
     permission_classes = (PartnershipManagerPermission,)
 
     filters = (

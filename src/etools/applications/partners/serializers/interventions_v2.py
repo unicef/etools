@@ -266,7 +266,7 @@ class MinimalInterventionListSerializer(serializers.ModelSerializer):
         )
 
 
-class BasicInterventionListSerializer(serializers.ModelSerializer):
+class InterventionToIndicatorsListSerializer(serializers.ModelSerializer):
     partner_name = serializers.CharField(source='agreement.partner.name')
     indicators = serializers.SerializerMethodField()
 
