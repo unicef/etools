@@ -213,8 +213,10 @@ class SectionHandler:
     def __disabled_section_check(old_section):
         """Checks that the old section is not referenced by any active objects"""
         for _, (qs, attribute_name, _) in SectionHandler.queryset_migration_mapping.items():
-            if qs.filter(**{attribute_name: old_section}).exists():
-                raise NotDeactivatedException(f'{qs.model.__name__} in active status exists')
+            active_references = qs.filter(**{attribute_name: old_section})
+            if active_references.exists():
+                pks = ' '.join(str(pk) for pk in active_references.values_list('pk', flat=True))
+                raise NotDeactivatedException(f'{qs.model.__name__} in active status exists {pks}')
 
     @staticmethod
     def __consistent_indicators_check(new_sections):

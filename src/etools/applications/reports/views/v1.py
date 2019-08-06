@@ -3,6 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
+from unicef_restlib.views import QueryStringFilterMixin
 
 from etools.applications.reports.models import CountryProgramme, Indicator, Result, ResultType, Section, Unit
 from etools.applications.reports.serializers.v1 import (
@@ -25,7 +26,8 @@ class ResultTypeViewSet(mixins.ListModelMixin,
     serializer_class = ResultTypeSerializer
 
 
-class SectionViewSet(mixins.RetrieveModelMixin,
+class SectionViewSet(QueryStringFilterMixin,
+                     mixins.RetrieveModelMixin,
                      mixins.ListModelMixin,
                      mixins.CreateModelMixin,
                      viewsets.GenericViewSet):
@@ -34,7 +36,9 @@ class SectionViewSet(mixins.RetrieveModelMixin,
     """
     queryset = Section.objects.all()
     serializer_class = SectionCreateSerializer
-
+    filters = (
+        ('active', 'active'),
+    )
 
 class ResultViewSet(viewsets.ModelViewSet):
     """
