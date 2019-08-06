@@ -40,6 +40,7 @@ class SectionViewSet(QueryStringFilterMixin,
         ('active', 'active'),
     )
 
+
 class ResultViewSet(viewsets.ModelViewSet):
     """
     Returns a list of all Results
