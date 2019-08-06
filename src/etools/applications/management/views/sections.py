@@ -24,8 +24,8 @@ class SectionsManagementView(viewsets.ViewSet):
 
         try:
             section = SectionHandler.new(new_section_name)
-        except IntegrityError:
-            return Response(f'Section {new_section_name} already exist', status=status.HTTP_400_BAD_REQUEST)
+        except IntegrityError as e:
+            return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
 
         return Response({
             'id': section.id,
@@ -42,8 +42,8 @@ class SectionsManagementView(viewsets.ViewSet):
             return Response(_('Unable to unpack'), status=status.HTTP_400_BAD_REQUEST)
         try:
             section = SectionHandler.merge(new_section_name, sections_to_merge)
-        except IntegrityError:
-            return Response(f'Section {new_section_name} already exist', status=status.HTTP_400_BAD_REQUEST)
+        except IntegrityError as e:
+            return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
 
         return Response({
             'id': section.id,
