@@ -3,7 +3,7 @@ import operator
 from datetime import date, datetime
 
 from django.db import models, transaction
-from django.db.models import Case, DateTimeField, DurationField, ExpressionWrapper, F, Max, Q, When
+from django.db.models import Case, DateTimeField, DurationField, ExpressionWrapper, F, Max, OuterRef, Q, Subquery, When
 from django.shortcuts import get_object_or_404
 
 from etools_validator.mixins import ValidatorViewMixin
@@ -227,12 +227,18 @@ class PartnerOrganizationDashboardAPIView(ExportModelMixin, QueryStringFilterMix
     queryset = PartnerOrganization.objects.active()
 
     def get_queryset(self, format=None):
+
+        core_value_assessment_expiring = PartnerOrganization.objects.filter(pk=OuterRef("pk")).annotate(
+            times_to_expire=ExpressionWrapper(datetime.today() - F('core_values_assessment_date'),
+                                              output_field=DurationField())).values('times_to_expire')
+
         qs = self.queryset.prefetch_related(
             'agreements__interventions__sections',
             'agreements__interventions__flat_locations',
         ).annotate(
             sections=StringConcat("agreements__interventions__sections__name", separator="|", distinct=True),
             locations=StringConcat("agreements__interventions__flat_locations__name", separator="|", distinct=True),
+            core_value_assessment_expiring=Subquery(core_value_assessment_expiring),
         )
 
         queries = []
