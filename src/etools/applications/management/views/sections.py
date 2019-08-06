@@ -28,7 +28,7 @@ class SectionsManagementView(viewsets.ViewSet):
             return Response(f'Section {new_section_name} already exist', status=status.HTTP_400_BAD_REQUEST)
 
         return Response({
-            'pk': section.pk,
+            'id': section.id,
             'name': section.name,
         })
 
@@ -46,7 +46,7 @@ class SectionsManagementView(viewsets.ViewSet):
             return Response(f'Section {new_section_name} already exist', status=status.HTTP_400_BAD_REQUEST)
 
         return Response({
-            'pk': section.pk,
+            'id': section.id,
             'name': section.name,
         })
 
@@ -61,5 +61,5 @@ class SectionsManagementView(viewsets.ViewSet):
             return Response(_('Unable to unpack'), status=status.HTTP_400_BAD_REQUEST)
 
         sections = SectionHandler.close(old_section, objects_dict)
-        data = [{'pk': section.pk, 'name': section.name} for section in sections]
+        data = [{'id': section.id, 'name': section.name} for section in sections]
         return Response(data)

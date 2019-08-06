@@ -10,13 +10,11 @@ class SectionHistory(TimeStampedModel):
     """ Model to keep history of Section changes"""
     CREATE = 'create'
     MERGE = 'merge'
-    SPLIT = 'split'
     CLOSE = 'close'
 
     TYPES = (
         (CREATE, 'Create'),
         (MERGE, 'Merge'),
-        (SPLIT, 'Split'),
         (CLOSE, 'Close'),
     )
 

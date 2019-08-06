@@ -169,7 +169,7 @@ class SectionHandler:
             qs, section_attribute, relation = SectionHandler.queryset_migration_mapping[model_key]
 
             if section_split_dict:  # if it's a close we filter the queryset
-                instance_pks = section_split_dict[model_key] if section_split_dict else []
+                instance_pks = section_split_dict[model_key] if section_split_dict and model_key in section_split_dict else []
                 qs = qs.filter(pk__in=instance_pks)
 
             if relation == SectionHandler.M2M:
