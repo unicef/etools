@@ -12,7 +12,7 @@ class Activity(models.Model):
         on_delete=models.CASCADE,
     )
     intervention = models.ForeignKey(
-        'partners.Intervention', verbose_name=_('Intervention'), null=True,
+        'partners.Intervention', verbose_name=_('Intervention'), null=True, blank=True,
         on_delete=models.CASCADE,
     )
     cp_output = models.ForeignKey(
