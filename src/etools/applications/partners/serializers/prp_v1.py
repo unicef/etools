@@ -222,7 +222,6 @@ class SpecialReportingRequirementsSerializer(serializers.ModelSerializer):
 
 class PRPInterventionListSerializer(serializers.ModelSerializer):
 
-    # todo: do these need to be lowercased?
     amendments = InterventionAmendmentSerializer(read_only=True, many=True)
     offices = serializers.SlugRelatedField(many=True, read_only=True, slug_field='name')
     business_area_code = serializers.SerializerMethodField()
@@ -280,6 +279,7 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'title',
+            'document_type',
             'business_area_code',
             'offices',
             'number',
