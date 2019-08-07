@@ -61,13 +61,8 @@ travel_patterns = ((
 ), 'travels')
 
 
-action_points_patterns = ((
-    url(r'^dashboard/$', action_points_dashboard_list, name='dashboard'),
-), 'action_points')
-
 urlpatterns = ((
     url(r'^travels/', include(travel_patterns)),
     url(r'^static_data/$', StaticDataView.as_view(), name='static_data'),
     url(r'^permission_matrix/$', PermissionMatrixView.as_view(), name='permission_matrix'),
-    url(r'^action_points/', include(action_points_patterns)),
 ), 't2f')
