@@ -1,9 +1,9 @@
 from rest_framework import serializers
 
-from .models import PSEA
+from etools.applications.psea.models import Engagement
 
 
-class PSEASerializer(serializers.ModelSerializer):
+class EngagementSerializer(serializers.ModelSerializer):
     class Meta:
-        model = PSEA
+        model = Engagement
         fields = '__all__'

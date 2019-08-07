@@ -2,11 +2,11 @@ from django.conf.urls import include, url
 
 from rest_framework_nested import routers
 
-from .views import PSEAViewSet
+from etools.applications.psea.views import EngagementViewSet
 
 root_api = routers.SimpleRouter()
 
-root_api.register(r'psea', PSEAViewSet, basename='psea')
+root_api.register(r'engagement', EngagementViewSet, basename='engagement')
 
 
 app_name = 'psea'
