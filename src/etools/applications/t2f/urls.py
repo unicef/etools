@@ -1,7 +1,7 @@
 from django.conf.urls import include, url
 
 from etools.applications.t2f.models import Travel
-from etools.applications.t2f.views.dashboard import ActionPointDashboardViewSet, TravelDashboardViewSet
+from etools.applications.t2f.views.dashboard import TravelDashboardViewSet
 from etools.applications.t2f.views.exports import TravelActivityExport, TravelAdminExport
 from etools.applications.t2f.views.generics import PermissionMatrixView, StaticDataView
 from etools.applications.t2f.views.travel import (
@@ -30,8 +30,6 @@ travel_attachments = TravelAttachmentViewSet.as_view({'get': 'list',
 travel_attachment_details = TravelAttachmentViewSet.as_view({'delete': 'destroy'})
 
 clone_travel_for_secondary_traveler = TravelDetailsViewSet.as_view({'post': 'clone_for_secondary_traveler'})
-
-action_points_dashboard_list = ActionPointDashboardViewSet.as_view({'get': 'list'})
 
 details_state_changes_pattern = r"^(?P<transition_name>{})/$".format("|".join(Travel.TRANSACTIONS))
 
