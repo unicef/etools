@@ -1,3 +1,5 @@
+from django.db.models import CharField, Count, Sum
+
 from rest_framework.generics import get_object_or_404, ListAPIView
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
@@ -13,6 +15,7 @@ from etools.applications.partners.serializers.prp_v1 import (
     PRPPartnerOrganizationListSerializer,
 )
 from etools.applications.partners.views.helpers import set_tenant_or_fail
+from etools.libraries.djangolib.models import MaxDistinct
 
 
 class PRPPDFileView(APIView):
@@ -61,7 +64,11 @@ class PRPInterventionListAPIView(QueryStringFilterMixin, ListAPIView):
         'amendments',
         'flat_locations',
         'sections'
-    ).exclude(status=Intervention.DRAFT)
+    ).exclude(status=Intervention.DRAFT).annotate(
+        Count("frs__currency", distinct=True),
+        Sum("frs__actual_amt_local"),
+        max_fr_currency=MaxDistinct("frs__currency", output_field=CharField(), distinct=True),
+    )
 
     filters = (
         ('country_programme', 'agreement__country_programme'),
