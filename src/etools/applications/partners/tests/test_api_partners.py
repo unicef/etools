@@ -473,6 +473,63 @@ class TestPartnerOrganizationAddView(BaseTenantTestCase):
             {"error": "This vendor number already exists in eTools"}
         )
 
+    def test_missing_required_keys(self):
+        mock_insight = Mock(return_value=(True, {
+            "ROWSET": {
+                "ROW": {
+                    "VENDOR_CODE": "321",
+                }
+            }
+        }))
+        with patch(INSIGHT_PATH, mock_insight):
+            response = self.forced_auth_req(
+                'post',
+                "{}?vendor=321".format(self.url),
+                data={},
+                view=self.view
+            )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.data,
+            {"error": "Partner skipped because one or more of the required fields are missing"}
+        )
+
+    def test_invalid_partner_type(self):
+        vendor_number = "321"
+        mock_insight = Mock(return_value=(True, {
+            "ROWSET": {
+                "ROW": {
+                    "PARTNER_TYPE_DESC": "SOMETHING INVALID",
+                    "VENDOR_CODE": vendor_number,
+                    "VENDOR_NAME": "New Partner",
+                    "CSO_TYPE": "National NGO",
+                    "CORE_VALUE_ASSESSMENT_DT": "01-Jan-01",
+                    'TOTAL_CASH_TRANSFERRED_CP': "2,000",
+                    'TOTAL_CASH_TRANSFERRED_CY': "2,000",
+                    'NET_CASH_TRANSFERRED_CY': "2,000",
+                    'TOTAL_CASH_TRANSFERRED_YTD': "2,000",
+                    'REPORTED_CY': "2,000",
+                    "COUNTRY": "239",
+                    "MARKED_FOR_DELETION": 'true',
+                    "POSTING_BLOCK": 'true',
+                }
+            }
+        }))
+        with patch(INSIGHT_PATH, mock_insight):
+            response = self.forced_auth_req(
+                'post',
+                "{}?vendor=321".format(self.url),
+                data={},
+                view=self.view
+            )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        qs = PartnerOrganization.objects.filter(vendor_number=vendor_number)
+        self.assertTrue(qs.exists())
+        partner = qs.first()
+        self.assertEqual(partner.hidden, True)
+        self.assertEqual(partner.blocked, True)
+        self.assertEqual(partner.deleted_flag, True)
+
     def test_post(self):
         self.assertFalse(
             PartnerOrganization.objects.filter(name="New Partner").exists()
@@ -484,8 +541,12 @@ class TestPartnerOrganizationAddView(BaseTenantTestCase):
                     "VENDOR_NAME": "New Partner",
                     "PARTNER_TYPE_DESC": "UN AGENCY",
                     "CSO_TYPE": "National NGO",
-                    "TOTAL_CASH_TRANSFERRED_CP": "2,000",
                     "CORE_VALUE_ASSESSMENT_DT": "01-Jan-01",
+                    'TOTAL_CASH_TRANSFERRED_CP': "2,000",
+                    'TOTAL_CASH_TRANSFERRED_CY': "2,000",
+                    'NET_CASH_TRANSFERRED_CY': "2,000",
+                    'TOTAL_CASH_TRANSFERRED_YTD': "2,000",
+                    'REPORTED_CY': "2,000",
                     "COUNTRY": "239",
                 }
             }
