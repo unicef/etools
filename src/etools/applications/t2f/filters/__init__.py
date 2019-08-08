@@ -1,4 +1,3 @@
-
 from django.db.models import F
 from django.db.models.query_utils import Q
 
@@ -80,6 +79,12 @@ class BaseFilterBoxFilter(BaseFilterBackend):
         if statuses is not None:
             statuses = statuses.split(',')
             queryset = queryset.filter(status__in=statuses)
+
+        mf_sections = request.query_params.get('mf_sections', None)
+        if mf_sections is not None:
+            mf_sections = mf_sections.split(',')
+            queryset = queryset.filter(section__in=mf_sections)
+
         # To have proper keys in data dict, the serializer renames the incoming values according to the needs
         return queryset.filter(**data)
 
