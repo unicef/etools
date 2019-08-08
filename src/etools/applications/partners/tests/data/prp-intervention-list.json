@@ -88,6 +88,8 @@
     "cso_budget_currency": "",
     "id": 642,
     "cso_budget": "0.00",
+    "disbursement": null,
+    "disbursement_percent": null,
     "document_type": "PD",
     "update_date": "2017-10-12T08:10:43.708677Z"
   }
