@@ -14,10 +14,10 @@ defaults = {
     UNICEF is granting you access to the Financial Assurance Module in eTools.
     Please refer below for additional information.
 
-    Engagement Type: {{ engagement.engagement_type }}
-    Partner: {{ engagement.partner }}
+    Assessment Type: {{ assessment.assessment_type }}
+    Partner: {{ assessment.partner }}
 
-    Please click this link to complete the report: {{ engagement.object_url }}
+    Please click this link to complete the report: {{ assessment.object_url }}
 
     Thank you.
     """),
@@ -31,10 +31,10 @@ defaults = {
     UNICEF is granting you access to the Financial Assurance Module in eTools.<br/>
     Please refer below for additional information.<br/><br/>
 
-    Engagement Type: {{ engagement.engagement_type }}<br/>
-    Partner: {{ engagement.partner }}<br/><br/>
+    Assessment Type: {{ assessment.assessment_type }}<br/>
+    Partner: {{ assessment.partner }}<br/><br/>
 
-    Please click <a href="{{ engagement.object_url }}">this link</a> to complete the report.<br/><br/>
+    Please click <a href="{{ assessment.object_url }}">this link</a> to complete the report.<br/><br/>
 
     Thank you.
     {% endblock %}

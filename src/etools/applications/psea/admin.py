@@ -1,10 +1,10 @@
 from django.contrib import admin
 
-from etools.applications.psea.models import Answer, Engagement, Evidence, Indicator
+from etools.applications.psea.models import Answer, Assessment, Evidence, Indicator
 
 
-@admin.register(Engagement)
-class EngagementAdmin(admin.ModelAdmin):
+@admin.register(Assessment)
+class AssessmentAdmin(admin.ModelAdmin):
     list_display = ('partner', 'get_status', 'overall_rating', )
     list_filter = ('partner', 'overall_rating')
     search_fields = ('partner__name', )
@@ -18,9 +18,9 @@ class EngagementAdmin(admin.ModelAdmin):
 
 @admin.register(Answer)
 class AnswerAdmin(admin.ModelAdmin):
-    list_display = ('engagement', 'indicator', 'rating')
-    list_filter = ('engagement', 'rating')
-    raw_id_fields = ('engagement', 'indicator',)
+    list_display = ('assessment', 'indicator', 'rating')
+    list_filter = ('assessment', 'rating')
+    raw_id_fields = ('assessment', 'indicator',)
 
 
 @admin.register(Evidence)

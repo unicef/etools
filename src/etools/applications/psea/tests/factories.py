@@ -29,28 +29,28 @@ class EvidenceFactory(factory.django.DjangoModelFactory):
         model = models.Evidence
 
 
-class EngagementFactory(factory.django.DjangoModelFactory):
+class AssessmentFactory(factory.django.DjangoModelFactory):
     partner = factory.SubFactory(PartnerFactory)
 
     class Meta:
-        model = models.Engagement
+        model = models.Assessment
 
     @factory.post_generation
     def status(self, create, extracted, **kwargs):
         if not create:
             return
-        EngagementStatusFactory(engagement=self)
+        AssessmentStatusFactory(assessment=self)
 
 
-class EngagementStatusFactory(factory.django.DjangoModelFactory):
-    engagement = factory.SubFactory(EngagementFactory)
+class AssessmentStatusFactory(factory.django.DjangoModelFactory):
+    assessment = factory.SubFactory(AssessmentFactory)
 
     class Meta:
-        model = models.EngagementStatus
+        model = models.AssessmentStatus
 
 
 class AnswerFactory(factory.django.DjangoModelFactory):
-    engagement = factory.SubFactory(EngagementFactory)
+    assessment = factory.SubFactory(AssessmentFactory)
     indicator = factory.SubFactory(IndicatorFactory)
     rating = factory.SubFactory(RatingFactory)
 
@@ -67,7 +67,7 @@ class AnswerEvidenceFactory(factory.django.DjangoModelFactory):
 
 
 class AssessorFactory(factory.django.DjangoModelFactory):
-    engagement = factory.SubFactory(EngagementFactory)
+    assessment = factory.SubFactory(AssessmentFactory)
     assessor_type = models.Assessor.TYPE_UNICEF
     unicef_user = factory.SubFactory(UserFactory)
 

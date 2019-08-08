@@ -56,12 +56,12 @@ class Evidence(TimeStampedModel):
         return f'{self.label}'
 
 
-class Engagement(TimeStampedModel):
+class Assessment(TimeStampedModel):
     partner = models.ForeignKey(
         'partners.PartnerOrganization',
         verbose_name=_('Partner'),
         on_delete=models.CASCADE,
-        related_name="psea_engagement",
+        related_name="psea_assessment",
     )
     overall_rating = models.IntegerField(null=True, blank=True)
     date_of_field_visit = models.DateField(
@@ -73,21 +73,22 @@ class Engagement(TimeStampedModel):
         settings.AUTH_USER_MODEL,
         blank=True,
         verbose_name=_('UNICEF Focal Points'),
+        related_name="psea_assessments",
     )
 
     class Meta:
-        verbose_name = _('Engagement')
-        verbose_name_plural = _('Engagements')
+        verbose_name = _('Assessment')
+        verbose_name_plural = _('Assessments')
         ordering = ("-date_of_field_visit",)
 
     def __str__(self):
         return f'{self.partner} [{self.status()}]'
 
     def status(self):
-        return EngagementStatus.objects.filter(engagement=self).first()
+        return AssessmentStatus.objects.filter(assessment=self).first()
 
     def assessment(self):
-        result = Answer.objects.filter(engagement=self).aggregate(
+        result = Answer.objects.filter(assessment=self).aggregate(
             assessment=Sum("rating__weight")
         )
         if result:
@@ -95,7 +96,7 @@ class Engagement(TimeStampedModel):
         return None
 
 
-class EngagementStatus(TimeStampedModel):
+class AssessmentStatus(TimeStampedModel):
     STATUS_DRAFT = 'draft'
     STATUS_ASSIGNED = 'assigned'
     STATUS_IN_PROGRESS = 'in_progress'
@@ -112,9 +113,9 @@ class EngagementStatus(TimeStampedModel):
         (STATUS_CANCELLED, _('Cancelled')),
     )
 
-    engagement = models.ForeignKey(
-        Engagement,
-        verbose_name=_("Engagement"),
+    assessment = models.ForeignKey(
+        Assessment,
+        verbose_name=_("Assessment"),
         on_delete=models.CASCADE,
     )
     status = FSMField(
@@ -125,8 +126,8 @@ class EngagementStatus(TimeStampedModel):
     )
 
     class Meta:
-        verbose_name = _("Engagement Status")
-        verbose_name_plural = _("Engagement Statuses")
+        verbose_name = _("Assessment Status")
+        verbose_name_plural = _("Assessment Statuses")
         ordering = ("-created",)
 
     def __str__(self):
@@ -134,9 +135,9 @@ class EngagementStatus(TimeStampedModel):
 
 
 class Answer(TimeStampedModel):
-    engagement = models.ForeignKey(
-        Engagement,
-        verbose_name=_('Engagement'),
+    assessment = models.ForeignKey(
+        Assessment,
+        verbose_name=_('Assessment'),
         on_delete=models.CASCADE,
     )
     indicator = models.ForeignKey(
@@ -166,7 +167,7 @@ class Answer(TimeStampedModel):
         verbose_name_plural = _('Answers')
 
     def __str__(self):
-        return f'{self.engagement} [{self.rating}]'
+        return f'{self.assessment} [{self.rating}]'
 
 
 class AnswerEvidence(TimeStampedModel):
@@ -205,9 +206,9 @@ class Assessor(TimeStampedModel):
         (TYPE_VENDOR, _("Vendor")),
     )
 
-    engagement = models.ForeignKey(
-        Engagement,
-        verbose_name=_("Engagement"),
+    assessment = models.ForeignKey(
+        Assessment,
+        verbose_name=_("Assessment"),
         on_delete=models.CASCADE,
     )
     assessor_type = models.CharField(

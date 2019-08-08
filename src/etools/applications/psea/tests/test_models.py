@@ -1,12 +1,12 @@
 from etools.applications.audit.tests.factories import AuditPartnerFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
-from etools.applications.psea.models import Answer, Assessor, EngagementStatus
+from etools.applications.psea.models import Answer, Assessor, AssessmentStatus
 from etools.applications.psea.tests.factories import (
     AnswerEvidenceFactory,
     AnswerFactory,
     AssessorFactory,
-    EngagementFactory,
-    EngagementStatusFactory,
+    AssessmentFactory,
+    AssessmentStatusFactory,
     EvidenceFactory,
     IndicatorFactory,
     RatingFactory,
@@ -32,65 +32,65 @@ class TestEvidence(BaseTenantTestCase):
         self.assertEqual(str(evidence), "Test Evidence")
 
 
-class TestEngagement(BaseTenantTestCase):
+class TestAssessment(BaseTenantTestCase):
     def test_string(self):
-        engagement = EngagementFactory()
-        self.assertEqual(str(engagement), f"{engagement.partner} [Draft]")
+        assessment = AssessmentFactory()
+        self.assertEqual(str(assessment), f"{assessment.partner} [Draft]")
 
     def test_status(self):
-        engagement = EngagementFactory()
+        assessment = AssessmentFactory()
         self.assertEqual(
-            engagement.status().status,
-            EngagementStatus.STATUS_DRAFT,
+            assessment.status().status,
+            AssessmentStatus.STATUS_DRAFT,
         )
-        EngagementStatusFactory(
-            engagement=engagement,
-            status=EngagementStatus.STATUS_ASSIGNED,
+        AssessmentStatusFactory(
+            assessment=assessment,
+            status=AssessmentStatus.STATUS_ASSIGNED,
         )
-        EngagementStatusFactory(
-            engagement=engagement,
-            status=EngagementStatus.STATUS_IN_PROGRESS,
+        AssessmentStatusFactory(
+            assessment=assessment,
+            status=AssessmentStatus.STATUS_IN_PROGRESS,
         )
-        status = EngagementStatusFactory(
-            engagement=engagement,
-            status=EngagementStatus.STATUS_ASSIGNED,
+        status = AssessmentStatusFactory(
+            assessment=assessment,
+            status=AssessmentStatus.STATUS_ASSIGNED,
         )
-        self.assertEqual(engagement.status(), status)
+        self.assertEqual(assessment.status(), status)
 
     def test_assessment_none(self):
-        engagement = EngagementFactory()
-        self.assertFalse(Answer.objects.filter(engagement=engagement).exists())
-        self.assertIsNone(engagement.assessment())
+        assessment = AssessmentFactory()
+        self.assertFalse(Answer.objects.filter(assessment=assessment).exists())
+        self.assertIsNone(assessment.assessment())
 
     def test_assessment(self):
-        engagement = EngagementFactory()
+        assessment = AssessmentFactory()
         rating_high = RatingFactory(weight=10)
         rating_medium = RatingFactory(weight=5)
         rating_low = RatingFactory(weight=1)
 
-        AnswerFactory(engagement=engagement, rating=rating_high)
-        self.assertEqual(engagement.assessment(), 10)
+        AnswerFactory(assessment=assessment, rating=rating_high)
+        self.assertEqual(assessment.assessment(), 10)
 
-        AnswerFactory(engagement=engagement, rating=rating_medium)
-        self.assertEqual(engagement.assessment(), 15)
+        AnswerFactory(assessment=assessment, rating=rating_medium)
+        self.assertEqual(assessment.assessment(), 15)
 
-        AnswerFactory(engagement=engagement, rating=rating_low)
-        self.assertEqual(engagement.assessment(), 16)
+        AnswerFactory(assessment=assessment, rating=rating_low)
+        self.assertEqual(assessment.assessment(), 16)
 
-        AnswerFactory(engagement=engagement, rating=rating_high)
-        self.assertEqual(engagement.assessment(), 26)
+        AnswerFactory(assessment=assessment, rating=rating_high)
+        self.assertEqual(assessment.assessment(), 26)
 
 
-class TestEngagementStatus(BaseTenantTestCase):
+class TestAssessmentStatus(BaseTenantTestCase):
     def test_string(self):
-        status = EngagementStatusFactory()
+        status = AssessmentStatusFactory()
         self.assertEqual(str(status), "Draft")
 
 
 class TestAnswer(BaseTenantTestCase):
     def test_string(self):
         answer = AnswerFactory()
-        self.assertEqual(str(answer), f"{answer.engagement} [{answer.rating}]")
+        self.assertEqual(str(answer), f"{answer.assessment} [{answer.rating}]")
 
 
 class TestAnswerEvidence(BaseTenantTestCase):

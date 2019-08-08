@@ -5,11 +5,11 @@ from rest_framework.permissions import IsAuthenticated
 from unicef_restlib.pagination import DynamicPageNumberPagination
 from unicef_restlib.views import SafeTenantViewSetMixin
 
-from etools.applications.psea.models import Engagement
-from etools.applications.psea.serializers import EngagementSerializer
+from etools.applications.psea.models import Assessment
+from etools.applications.psea.serializers import AssessmentSerializer
 
 
-class EngagementViewSet(
+class AssessmentViewSet(
         SafeTenantViewSetMixin,
         mixins.CreateModelMixin,
         mixins.ListModelMixin,
@@ -18,9 +18,9 @@ class EngagementViewSet(
     pagination_class = DynamicPageNumberPagination
     permission_classes = [IsAuthenticated, ]
 
-    queryset = Engagement.objects.all()
-    serializer_class = EngagementSerializer
+    queryset = Assessment.objects.all()
+    serializer_class = AssessmentSerializer
 
     filter_backends = (SearchFilter, DjangoFilterBackend, OrderingFilter)
     search_fields = ('partner__name', )
-    export_filename = 'Engagement'
+    export_filename = 'Assessment'
