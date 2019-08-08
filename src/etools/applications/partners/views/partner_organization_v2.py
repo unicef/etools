@@ -471,6 +471,12 @@ class PartnerOrganizationAddView(CreateAPIView):
 
         country = request.user.profile.country
         partner_sync = PartnerSynchronizer(business_area_code=country.business_area_code)
+
+        partner_resp = partner_sync._filter_records([partner_resp]).pop()
+        if not partner_resp:
+            return Response({"error": 'Partner skipped because one or more of the required fields are missing'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
         partner_sync._partner_save(partner_resp, full_sync=False)
 
         partner = PartnerOrganization.objects.get(
