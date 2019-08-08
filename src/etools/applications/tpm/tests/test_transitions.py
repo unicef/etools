@@ -249,7 +249,10 @@ class PMEPermissionsForTPMTransitionTestCase(TPMTransitionPermissionsTestCase):
 
 
 class FPPermissionsForTpmTransitionTestCase(TPMTransitionPermissionsTestCase):
-    ALLOWED_TRANSITION = []
+    ALLOWED_TRANSITION = [
+        ('tpm_reported', 'reject_report'),
+        ('tpm_reported', 'approve'),
+    ]
 
     @classmethod
     def setUpTestData(cls):

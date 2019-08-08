@@ -224,6 +224,14 @@ class AppliedIndicatorCUSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class AppliedIndicatorBasicSerializer(serializers.ModelSerializer):
+    title = serializers.ReadOnlyField(source='indicator.title')
+
+    class Meta:
+        model = AppliedIndicator
+        fields = ('pk', 'title', 'section')
+
+
 class ClusterSerializer(serializers.ModelSerializer):
 
     class Meta:
