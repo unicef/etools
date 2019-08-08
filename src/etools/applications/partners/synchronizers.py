@@ -260,8 +260,6 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
             'GOVERNMENT': 'Government',
             'UN AGENCY': 'UN Agency',
         }
-        if 'PARTNER_TYPE_DESC' in partner:
-            return type_mapping.get(partner['PARTNER_TYPE_DESC'].upper(), None)
 
     @staticmethod
     def get_partner_rating(partner):
