@@ -65,48 +65,55 @@ class PartnerOrganizationLightSerializer(PartnerOrganizationListSerializer):
         }
 
 
+class AttachmentField(serializers.Field):
+    def to_representation(self, value):
+        if not value:
+            return None
+
+        attachment = Attachment.objects.get(pk=value)
+        if not getattr(attachment.file, "url", None):
+            return None
+
+        url = attachment.file.url
+        request = self.context.get('request', None)
+        if request is not None:
+            return request.build_absolute_uri(url)
+        return url
+
+    def to_internal_value(self, data):
+        return data
+
+
 class EngagementAttachmentSerializer(serializers.ModelSerializer):
-    pk = serializers.IntegerField()
+    attachment = AttachmentField(source="pk")
     file_type = FileTypeModelChoiceField(
         label=_('Document Type'),
         queryset=FileType.objects.filter(code='audit_engagement'),
     )
-    url = serializers.SerializerMethodField()
 
     class Meta:
         model = Attachment
-        fields = ("pk", "file_type", "url", "uploaded_by")
+        fields = ("attachment", "file_type")
 
     def update(self, instance, validated_data):
         validated_data['code'] = 'audit_engagement'
         return super().update(instance, validated_data)
 
-    def get_url(self, obj):
-        if obj.file:
-            return obj.file.url
-        return ""
-
 
 class ReportAttachmentSerializer(serializers.ModelSerializer):
-    pk = serializers.IntegerField()
+    attachment = AttachmentField(source="pk")
     file_type = FileTypeModelChoiceField(
         label=_('Document Type'),
         queryset=FileType.objects.filter(code='audit_report'),
     )
-    url = serializers.SerializerMethodField()
 
     class Meta:
         model = Attachment
-        fields = ("pk", "file_type", "url", "uploaded_by")
+        fields = ("attachment", "file_type")
 
     def update(self, instance, validated_data):
         validated_data['code'] = 'audit_report'
         return super().update(instance, validated_data)
-
-    def get_url(self, obj):
-        if obj.file:
-            return obj.file.url
-        return ""
 
 
 class EngagementActionPointSerializer(PermissionsBasedSerializerMixin, ActionPointBaseSerializer):
