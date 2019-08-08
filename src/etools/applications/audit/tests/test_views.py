@@ -1241,7 +1241,7 @@ class TestEngagementAttachmentsView(MATransitionsTestCaseMixin, BaseTenantTestCa
             user=self.unicef_focal_point,
             data={
                 'file_type': self.file_type.pk,
-                'pk': attachment.pk,
+                'attachment': attachment.pk,
             }
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -1330,7 +1330,7 @@ class TestEngagementReportAttachmentsView(MATransitionsTestCaseMixin, BaseTenant
             user=self.unicef_focal_point,
             data={
                 'file_type': self.file_type.pk,
-                'pk': attachment.pk,
+                'attachment': attachment.pk,
             }
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
