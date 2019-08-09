@@ -5,8 +5,8 @@ from rest_framework.permissions import IsAuthenticated
 from unicef_restlib.pagination import DynamicPageNumberPagination
 from unicef_restlib.views import SafeTenantViewSetMixin
 
-from etools.applications.psea.models import Assessment
-from etools.applications.psea.serializers import AssessmentSerializer
+from etools.applications.psea.models import Assessment, Assessor
+from etools.applications.psea.serializers import AssessmentSerializer, AssessorSerializer
 
 
 class AssessmentViewSet(
@@ -24,3 +24,15 @@ class AssessmentViewSet(
     filter_backends = (SearchFilter, DjangoFilterBackend, OrderingFilter)
     search_fields = ('partner__name', )
     export_filename = 'Assessment'
+
+
+class AssessorViewSet(
+        SafeTenantViewSetMixin,
+        mixins.CreateModelMixin,
+        mixins.UpdateModelMixin,
+        mixins.RetrieveModelMixin,
+        viewsets.GenericViewSet,
+):
+    permission_classes = [IsAuthenticated, ]
+    queryset = Assessor.objects.all()
+    serializer_class = AssessorSerializer
