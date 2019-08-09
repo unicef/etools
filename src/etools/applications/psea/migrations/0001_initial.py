@@ -106,7 +106,7 @@ class Migration(migrations.Migration):
                 ('order_number', models.CharField(blank=True, max_length=30, verbose_name='Order Number')),
                 ('assessment', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='psea.Assessment', verbose_name='Assessment')),
                 ('auditor_firm', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='purchase_order.AuditorFirm', verbose_name='Auditor')),
-                ('auditor_firm_staff', models.ManyToManyField(to='purchase_order.AuditorStaffMember', verbose_name='Auditor Staff')),
+                ('auditor_firm_staff', models.ManyToManyField(blank=True, to='purchase_order.AuditorStaffMember', verbose_name='Auditor Staff')),
                 ('focal_points', models.ManyToManyField(blank=True, related_name='assessor_focal_point', to=settings.AUTH_USER_MODEL, verbose_name='UNICEF Focal Points')),
                 ('user', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL, verbose_name='User')),
             ],

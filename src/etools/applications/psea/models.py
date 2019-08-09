@@ -253,6 +253,7 @@ class Assessor(TimeStampedModel):
     )
     auditor_firm_staff = models.ManyToManyField(
         AuditorStaffMember,
+        blank=True,
         verbose_name=_("Auditor Staff"),
     )
     focal_points = models.ManyToManyField(
