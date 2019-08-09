@@ -208,3 +208,72 @@ class TestAssessorViewSet(BaseTenantTestCase):
         self.assertEqual(len(staff), 2)
         self.assertIn(staff_1, staff)
         self.assertIn(staff_2, staff)
+
+    def test_patch_vendor_to_unicef(self):
+        firm = AuditPartnerFactory()
+        staff_1 = AuditorStaffMemberFactory(auditor_firm=firm)
+        staff_2 = AuditorStaffMemberFactory(auditor_firm=firm)
+        assessment = AssessmentFactory()
+        assessor = AssessorFactory(
+            assessor_type=Assessor.TYPE_VENDOR,
+            auditor_firm=firm,
+            order_number="123",
+        )
+        assessor.auditor_firm_staff.set([staff_1, staff_2])
+        assessor.focal_points.set([self.user])
+
+        response = self.forced_auth_req(
+            "patch",
+            reverse('psea:assessor-detail', args=[assessor.pk]),
+            user=self.user,
+            data={
+                "assessor_type": Assessor.TYPE_UNICEF,
+                "user": self.user.pk,
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        assessor.refresh_from_db()
+        self._validate_assessor(assessor, {
+            "assessment": assessment.pk,
+            "assessor_type": Assessor.TYPE_UNICEF,
+            "user": self.user,
+            "focal_points": self.user,
+            "order_number": "",
+        })
+        self.assertEqual(list(assessor.auditor_firm_staff.all()), [])
+
+    def test_patch_unicef_to_vendor(self):
+        firm = AuditPartnerFactory()
+        staff_1 = AuditorStaffMemberFactory(auditor_firm=firm)
+        staff_2 = AuditorStaffMemberFactory(auditor_firm=firm)
+        assessment = AssessmentFactory()
+        assessor = AssessorFactory(
+            assessor_type=Assessor.TYPE_UNICEF,
+            user=self.user,
+        )
+        assessor.focal_points.set([self.user])
+
+        response = self.forced_auth_req(
+            "patch",
+            reverse('psea:assessor-detail', args=[assessor.pk]),
+            user=self.user,
+            data={
+                "assessor_type": Assessor.TYPE_VENDOR,
+                "auditor_firm": firm.pk,
+                "order_number": "321",
+                "auditor_firm_staff": [staff_1.pk, staff_2.pk],
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        assessor.refresh_from_db()
+        self._validate_assessor(assessor, {
+            "assessment": assessment.pk,
+            "assessor_type": Assessor.TYPE_VENDOR,
+            "focal_points": self.user,
+            "order_number": "321",
+            "auditor_firm": firm,
+        })
+        staff = assessor.auditor_firm_staff.all()
+        self.assertEqual(len(staff), 2)
+        self.assertIn(staff_1, staff)
+        self.assertIn(staff_2, staff)

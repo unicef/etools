@@ -43,6 +43,10 @@ class AssessorSerializer(serializers.ModelSerializer):
         if assessor_type in [Assessor.TYPE_EXTERNAL, Assessor.TYPE_UNICEF]:
             if not data.get("user"):
                 raise serializers.ValidationError(_("User is required."))
+            # ensure to clear data
+            data["auditor_firm"] = None
+            data["auditor_firm_staff"] = []
+            data["order_number"] = ""
         elif assessor_type == Assessor.TYPE_VENDOR:
             if not data.get("auditor_firm"):
                 raise serializers.validationError(
@@ -52,4 +56,6 @@ class AssessorSerializer(serializers.ModelSerializer):
                 raise serializers.validationError(
                     _("PO Number is required."),
                 )
+            # ensure to clear data
+            data["user"] = None
         return data
