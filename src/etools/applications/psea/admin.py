@@ -8,7 +8,6 @@ class AssessmentAdmin(admin.ModelAdmin):
     list_display = ('partner', 'get_status', 'overall_rating', )
     list_filter = ('partner', 'overall_rating')
     search_fields = ('partner__name', )
-    filter_horizontal = ('focal_points', )
     raw_id_fields = ('partner', )
 
     def get_status(self, obj):

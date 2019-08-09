@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.db import models
 from django.db.models import Sum
+from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
 from django_fsm import FSMField
@@ -57,6 +58,11 @@ class Evidence(TimeStampedModel):
 
 
 class Assessment(TimeStampedModel):
+    reference_number = models.CharField(
+        max_length=100,
+        verbose_name=_("Reference Number"),
+        unique=True,
+    )
     partner = models.ForeignKey(
         'partners.PartnerOrganization',
         verbose_name=_('Partner'),
@@ -64,22 +70,16 @@ class Assessment(TimeStampedModel):
         related_name="psea_assessment",
     )
     overall_rating = models.IntegerField(null=True, blank=True)
-    date_of_field_visit = models.DateField(
-        verbose_name=_('Date of Field Visit'),
+    assessment_date = models.DateField(
+        verbose_name=_('Assessment Date'),
         null=True,
         blank=True,
-    )
-    focal_points = models.ManyToManyField(
-        settings.AUTH_USER_MODEL,
-        blank=True,
-        verbose_name=_('UNICEF Focal Points'),
-        related_name="psea_assessments",
     )
 
     class Meta:
         verbose_name = _('Assessment')
         verbose_name_plural = _('Assessments')
-        ordering = ("-date_of_field_visit",)
+        ordering = ("-assessment_date",)
 
     def __str__(self):
         return f'{self.partner} [{self.status()}]'
@@ -87,13 +87,29 @@ class Assessment(TimeStampedModel):
     def status(self):
         return AssessmentStatus.objects.filter(assessment=self).first()
 
-    def assessment(self):
+    def rating(self):
         result = Answer.objects.filter(assessment=self).aggregate(
             assessment=Sum("rating__weight")
         )
         if result:
             return result["assessment"]
         return None
+
+    def get_reference_number(self):
+        # potential that this could return the same
+        # value if called simultaneously, although
+        # not expecting there to be a large change this happens
+        return "{year}/{num}".format(
+            year=timezone.now().year,
+            num=Assessment.objects.count() + 1,
+        )
+
+    def save(self, *args, **kwargs):
+        if not self.reference_number:
+            self.reference_number = self.get_reference_number()
+        super().save(*args, **kwargs)
+        if not self.status():
+            AssessmentStatus.objects.create(assessment=self)
 
 
 class AssessmentStatus(TimeStampedModel):
@@ -196,14 +212,14 @@ class AnswerEvidence(TimeStampedModel):
 
 
 class Assessor(TimeStampedModel):
-    TYPE_SSA = "ssa"
+    TYPE_EXTERNAL = "external"
     TYPE_UNICEF = "unicef"
     TYPE_VENDOR = "vendor"
 
     TYPE_CHOICES = Choices(
-        (TYPE_SSA, _("SSA")),
-        (TYPE_UNICEF, _("UNICEF")),
-        (TYPE_VENDOR, _("Vendor")),
+        (TYPE_EXTERNAL, _("External Individual")),
+        (TYPE_UNICEF, _("UNICEF Staff")),
+        (TYPE_VENDOR, _("Assessing Firm")),
     )
 
     assessment = models.ForeignKey(
@@ -216,9 +232,9 @@ class Assessor(TimeStampedModel):
         max_length=30,
         choices=TYPE_CHOICES,
     )
-    unicef_user = models.ForeignKey(
+    user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        verbose_name=_("UNICEF User"),
+        verbose_name=_("User"),
         null=True,
         blank=True,
         on_delete=models.CASCADE,
@@ -237,9 +253,15 @@ class Assessor(TimeStampedModel):
         unique=True,
         max_length=30
     )
-    audit_firm_staff = models.ManyToManyField(
+    auditor_firm_staff = models.ManyToManyField(
         AuditorStaffMember,
         verbose_name=_("Auditor Staff"),
+    )
+    focal_points = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        blank=True,
+        verbose_name=_('UNICEF Focal Points'),
+        related_name="assessor_focal_point",
     )
 
     class Meta:
@@ -249,4 +271,4 @@ class Assessor(TimeStampedModel):
     def __str__(self):
         if self.assessor_type == Assessor.TYPE_VENDOR:
             return f"{self.auditor_firm}"
-        return f"{self.unicef_user}"
+        return f"{self.user}"

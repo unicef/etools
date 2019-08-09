@@ -1,12 +1,14 @@
+from django.utils import timezone
+
 from etools.applications.audit.tests.factories import AuditPartnerFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
-from etools.applications.psea.models import Answer, Assessor, AssessmentStatus
+from etools.applications.psea.models import Answer, Assessment, AssessmentStatus, Assessor
 from etools.applications.psea.tests.factories import (
     AnswerEvidenceFactory,
     AnswerFactory,
-    AssessorFactory,
     AssessmentFactory,
     AssessmentStatusFactory,
+    AssessorFactory,
     EvidenceFactory,
     IndicatorFactory,
     RatingFactory,
@@ -57,28 +59,36 @@ class TestAssessment(BaseTenantTestCase):
         )
         self.assertEqual(assessment.status(), status)
 
-    def test_assessment_none(self):
+    def test_rating_none(self):
         assessment = AssessmentFactory()
         self.assertFalse(Answer.objects.filter(assessment=assessment).exists())
-        self.assertIsNone(assessment.assessment())
+        self.assertIsNone(assessment.rating())
 
-    def test_assessment(self):
+    def test_rating(self):
         assessment = AssessmentFactory()
         rating_high = RatingFactory(weight=10)
         rating_medium = RatingFactory(weight=5)
         rating_low = RatingFactory(weight=1)
 
         AnswerFactory(assessment=assessment, rating=rating_high)
-        self.assertEqual(assessment.assessment(), 10)
+        self.assertEqual(assessment.rating(), 10)
 
         AnswerFactory(assessment=assessment, rating=rating_medium)
-        self.assertEqual(assessment.assessment(), 15)
+        self.assertEqual(assessment.rating(), 15)
 
         AnswerFactory(assessment=assessment, rating=rating_low)
-        self.assertEqual(assessment.assessment(), 16)
+        self.assertEqual(assessment.rating(), 16)
 
         AnswerFactory(assessment=assessment, rating=rating_high)
-        self.assertEqual(assessment.assessment(), 26)
+        self.assertEqual(assessment.rating(), 26)
+
+    def test_get_reference_number(self):
+        assessment = AssessmentFactory()
+        num = Assessment.objects.count()
+        self.assertEqual(
+            assessment.get_reference_number(),
+            f"{timezone.now().year}/{num + 1}",
+        )
 
 
 class TestAssessmentStatus(BaseTenantTestCase):
@@ -104,15 +114,15 @@ class TestAssessor(BaseTenantTestCase):
         user = UserFactory()
         assessor = AssessorFactory(
             assessor_type=Assessor.TYPE_UNICEF,
-            unicef_user=user
+            user=user
         )
         self.assertEqual(str(assessor), f"{user}")
 
-    def test_string_ssa(self):
+    def test_string_external(self):
         user = UserFactory()
         assessor = AssessorFactory(
-            assessor_type=Assessor.TYPE_SSA,
-            unicef_user=user
+            assessor_type=Assessor.TYPE_EXTERNAL,
+            user=user
         )
         self.assertEqual(str(assessor), f"{user}")
 

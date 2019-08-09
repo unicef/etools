@@ -69,7 +69,7 @@ class AnswerEvidenceFactory(factory.django.DjangoModelFactory):
 class AssessorFactory(factory.django.DjangoModelFactory):
     assessment = factory.SubFactory(AssessmentFactory)
     assessor_type = models.Assessor.TYPE_UNICEF
-    unicef_user = factory.SubFactory(UserFactory)
+    user = factory.SubFactory(UserFactory)
 
     class Meta:
         model = models.Assessor
