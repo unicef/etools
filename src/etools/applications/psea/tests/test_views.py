@@ -3,6 +3,7 @@ from django.utils import timezone
 
 from rest_framework import status
 
+from etools.applications.audit.tests.factories import AuditPartnerFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.psea.models import Assessment, AssessmentStatus, Assessor
@@ -57,6 +58,16 @@ class TestAssessorViewSet(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.user = UserFactory()
 
+    def _validate_assessor(self, assessor, expected):
+        self.assertEqual(assessor.assessor_type, expected.get("assessor_type"))
+        self.assertEqual(assessor.user, expected.get("user"))
+        self.assertIn(
+            expected.get("focal_points"),
+            assessor.focal_points.all(),
+        )
+        self.assertEqual(assessor.auditor_firm, expected.get("auditor_firm"))
+        self.assertEqual(assessor.order_number, expected.get("order_number"))
+
     def test_get(self):
         assessor = AssessorFactory()
         response = self.forced_auth_req(
@@ -66,7 +77,7 @@ class TestAssessorViewSet(BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-    def test_post(self):
+    def test_post_unicef(self):
         assessment = AssessmentFactory()
         assessor_qs = Assessor.objects.filter(assessment=assessment)
         self.assertFalse(assessor_qs.exists())
@@ -85,6 +96,66 @@ class TestAssessorViewSet(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertTrue(assessor_qs.exists())
         assessor = assessor_qs.first()
-        self.assertEqual(assessor.assessor_type, Assessor.TYPE_UNICEF)
-        self.assertEqual(assessor.user, self.user)
-        self.assertIn(self.user, assessor.focal_points.all())
+        self._validate_assessor(assessor, {
+            "assessor_type": Assessor.TYPE_UNICEF,
+            "user": self.user,
+            "focal_points": self.user,
+            "auditor_firm": None,
+            "order_number": "",
+        })
+
+    def test_post_external(self):
+        assessment = AssessmentFactory()
+        assessor_qs = Assessor.objects.filter(assessment=assessment)
+        self.assertFalse(assessor_qs.exists())
+
+        response = self.forced_auth_req(
+            "post",
+            reverse('psea:assessor-list'),
+            user=self.user,
+            data={
+                "assessment": assessment.pk,
+                "assessor_type": Assessor.TYPE_EXTERNAL,
+                "user": self.user.pk,
+                "focal_points": [self.user.pk],
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(assessor_qs.exists())
+        assessor = assessor_qs.first()
+        self._validate_assessor(assessor, {
+            "assessor_type": Assessor.TYPE_EXTERNAL,
+            "user": self.user,
+            "focal_points": self.user,
+            "auditor_firm": None,
+            "order_number": "",
+        })
+
+    def test_post_vendor(self):
+        firm = AuditPartnerFactory()
+        assessment = AssessmentFactory()
+        assessor_qs = Assessor.objects.filter(assessment=assessment)
+        self.assertFalse(assessor_qs.exists())
+
+        response = self.forced_auth_req(
+            "post",
+            reverse('psea:assessor-list'),
+            user=self.user,
+            data={
+                "assessment": assessment.pk,
+                "assessor_type": Assessor.TYPE_VENDOR,
+                "auditor_firm": firm.pk,
+                "order_number": "123",
+                "focal_points": [self.user.pk],
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(assessor_qs.exists())
+        assessor = assessor_qs.first()
+        self._validate_assessor(assessor, {
+            "assessor_type": Assessor.TYPE_VENDOR,
+            "user": None,
+            "focal_points": self.user,
+            "auditor_firm": firm,
+            "order_number": "123",
+        })
