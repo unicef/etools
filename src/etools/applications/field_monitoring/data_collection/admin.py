@@ -18,7 +18,7 @@ class ActivityQuestionOverallFindingInline(admin.TabularInline):
     min_num = 0
 
 
-@admin.site.register(ActivityQuestion)
+@admin.register(ActivityQuestion)
 class ActivityQuestionAdmin(admin.ModelAdmin):
     list_display = ('monitoring_activity', 'question', 'is_enabled', 'specific_details')
     list_filter = ('question', 'is_enabled')
@@ -26,7 +26,7 @@ class ActivityQuestionAdmin(admin.ModelAdmin):
     inlines = (FindingAdminInline, ActivityQuestionOverallFindingInline)
 
 
-@admin.site.register(StartedChecklist)
+@admin.register(StartedChecklist)
 class StartedChecklistAdmin(admin.ModelAdmin):
     list_display = ('monitoring_activity', 'method', 'information_source', 'author')
     list_filter = ('method',)
@@ -34,7 +34,7 @@ class StartedChecklistAdmin(admin.ModelAdmin):
     inlines = (FindingAdminInline, ChecklistOverallFindingInline)
 
 
-@admin.site.register(ActivityOverallFinding)
+@admin.register(ActivityOverallFinding)
 class ActivityOverallFindingAdmin(admin.ModelAdmin):
     list_display = ('monitoring_activity', 'narrative_finding')
     list_filter = ('on_track', )

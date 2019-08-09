@@ -47,8 +47,8 @@ class StartedChecklist(models.Model):
 class Finding(models.Model):
     started_checklist = models.ForeignKey(StartedChecklist, related_name='findings', verbose_name=_('Checklist'),
                                           on_delete=models.CASCADE)
-    activity_question = models.ForeignKey(MonitoringActivity, related_name='findings', verbose_name=_('Activity'),
-                                          on_delete=models.CASCADE)
+    activity_question = models.ForeignKey(ActivityQuestion, related_name='findings',
+                                          verbose_name=_('Activity Question'), on_delete=models.CASCADE)
     value = JSONField(null=True, blank=True, verbose_name=_('Value'))
 
     class Meta:
