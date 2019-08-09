@@ -248,9 +248,7 @@ class Assessor(TimeStampedModel):
     )
     order_number = models.CharField(
         verbose_name=_('Order Number'),
-        null=True,
         blank=True,
-        unique=True,
         max_length=30
     )
     auditor_firm_staff = models.ManyToManyField(

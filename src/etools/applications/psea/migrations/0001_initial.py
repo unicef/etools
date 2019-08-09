@@ -103,7 +103,7 @@ class Migration(migrations.Migration):
                 ('created', model_utils.fields.AutoCreatedField(default=django.utils.timezone.now, editable=False, verbose_name='created')),
                 ('modified', model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, editable=False, verbose_name='modified')),
                 ('assessor_type', models.CharField(choices=[('external', 'External Individual'), ('unicef', 'UNICEF Staff'), ('vendor', 'Assessing Firm')], max_length=30, verbose_name='Type')),
-                ('order_number', models.CharField(blank=True, max_length=30, null=True, unique=True, verbose_name='Order Number')),
+                ('order_number', models.CharField(blank=True, max_length=30, verbose_name='Order Number')),
                 ('assessment', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='psea.Assessment', verbose_name='Assessment')),
                 ('auditor_firm', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='purchase_order.AuditorFirm', verbose_name='Auditor')),
                 ('auditor_firm_staff', models.ManyToManyField(to='purchase_order.AuditorStaffMember', verbose_name='Auditor Staff')),
