@@ -39,6 +39,7 @@ class AuditorStaffMemberSerializer(BaseStaffMemberSerializer):
     def validate(self, attrs):
         validated_data = super().validate(attrs)
         user_pk = validated_data.pop('user_pk', None)
+
         if user_pk:
             if hasattr(user_pk, 'purchase_order_auditorstaffmember'):
                 firm = user_pk.purchase_order_auditorstaffmember.auditor_firm
@@ -47,12 +48,13 @@ class AuditorStaffMemberSerializer(BaseStaffMemberSerializer):
                 validated_data['user'] = user_pk
         elif 'user' not in validated_data:
             raise serializers.ValidationError({'user': _('This field is required.')})
-        else:
-            try:
-                email = validated_data['user'].get('email', 'invalid')
-                validated_data['user'] = get_user_model().objects.get(email=email)
-            except get_user_model().DoesNotExist:
-                pass
+        elif 'user' in validated_data:
+            email = validated_data['user'].get('email', None)
+            if not AuditorStaffMember.objects.filter(user__email=email).exists():
+                try:
+                    validated_data['user'] = get_user_model().objects.get(email=email, email__isnull=False)
+                except get_user_model().DoesNotExist:
+                    pass
 
         return validated_data
 
