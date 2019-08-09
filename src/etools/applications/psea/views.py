@@ -13,6 +13,8 @@ class AssessmentViewSet(
         SafeTenantViewSetMixin,
         mixins.CreateModelMixin,
         mixins.ListModelMixin,
+        mixins.UpdateModelMixin,
+        mixins.RetrieveModelMixin,
         viewsets.GenericViewSet,
 ):
     pagination_class = DynamicPageNumberPagination

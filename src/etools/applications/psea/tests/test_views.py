@@ -29,6 +29,26 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data.get("results")), num)
 
+    def test_get(self):
+        partner = PartnerFactory()
+        date = str(timezone.now().date())
+        assessment = AssessmentFactory(
+            partner=partner,
+            assessment_date=date,
+        )
+
+        response = self.forced_auth_req(
+            "get",
+            reverse('psea:assessment-detail', args=[assessment.pk]),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data
+        self.assertEqual(data["id"], assessment.pk),
+        self.assertEqual(data["partner"], partner.pk),
+        self.assertEqual(data["assessment_date"], date),
+        self.assertEqual(data["status"], "Draft")
+
     def test_post(self):
         partner = PartnerFactory()
         assessment_qs = Assessment.objects.filter(partner=partner)
@@ -51,6 +71,23 @@ class TestAssessmentViewSet(BaseTenantTestCase):
             assessment.status().status,
             AssessmentStatus.STATUS_DRAFT,
         )
+
+    def test_patch(self):
+        partner_1 = PartnerFactory()
+        partner_2 = PartnerFactory()
+        assessment = AssessmentFactory(partner=partner_1)
+
+        response = self.forced_auth_req(
+            "patch",
+            reverse('psea:assessment-detail', args=[assessment.pk]),
+            user=self.user,
+            data={
+                "partner": partner_2.pk
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        assessment.refresh_from_db()
+        self.assertEqual(assessment.partner, partner_2)
 
 
 class TestAssessorViewSet(BaseTenantTestCase):
