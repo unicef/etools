@@ -39,14 +39,17 @@ class AssessmentFactory(factory.django.DjangoModelFactory):
     def status(self, create, extracted, **kwargs):
         if not create:
             return
-        AssessmentStatusFactory(assessment=self)
+        AssessmentStatusHistoryFactory(assessment=self)
 
 
-class AssessmentStatusFactory(factory.django.DjangoModelFactory):
+class AssessmentStatusHistoryFactory(factory.django.DjangoModelFactory):
     assessment = factory.SubFactory(AssessmentFactory)
+    status = fuzzy.FuzzyChoice(
+        [x[0] for x in models.Assessment.STATUS_CHOICES],
+    )
 
     class Meta:
-        model = models.AssessmentStatus
+        model = models.AssessmentStatusHistory
 
 
 class AnswerFactory(factory.django.DjangoModelFactory):

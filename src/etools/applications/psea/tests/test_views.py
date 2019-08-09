@@ -6,7 +6,7 @@ from rest_framework import status
 from etools.applications.audit.tests.factories import AuditorStaffMemberFactory, AuditPartnerFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.tests.factories import PartnerFactory
-from etools.applications.psea.models import Assessment, AssessmentStatus, Assessor
+from etools.applications.psea.models import Assessment, Assessor
 from etools.applications.psea.tests.factories import AssessmentFactory, AssessorFactory
 from etools.applications.users.tests.factories import UserFactory
 
@@ -47,7 +47,7 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         self.assertEqual(data["id"], assessment.pk),
         self.assertEqual(data["partner"], partner.pk),
         self.assertEqual(data["assessment_date"], date),
-        self.assertEqual(data["status"], "Draft")
+        self.assertEqual(data["status"], "draft")
 
     def test_post(self):
         partner = PartnerFactory()
@@ -67,10 +67,7 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         assessment = assessment_qs.first()
         self.assertIsNotNone(assessment.reference_number)
         self.assertEqual(assessment.assessment_date, timezone.now().date())
-        self.assertEqual(
-            assessment.status().status,
-            AssessmentStatus.STATUS_DRAFT,
-        )
+        self.assertEqual(assessment.status, Assessment.STATUS_DRAFT)
 
     def test_patch(self):
         partner_1 = PartnerFactory()
@@ -200,7 +197,6 @@ class TestAssessorViewSet(BaseTenantTestCase):
     def test_patch_vendor(self):
         firm_1 = AuditPartnerFactory()
         firm_2 = AuditPartnerFactory()
-        assessment = AssessmentFactory()
         assessor = AssessorFactory(
             assessor_type=Assessor.TYPE_VENDOR,
             auditor_firm=firm_1,
@@ -223,7 +219,6 @@ class TestAssessorViewSet(BaseTenantTestCase):
         firm = AuditPartnerFactory()
         staff_1 = AuditorStaffMemberFactory(auditor_firm=firm)
         staff_2 = AuditorStaffMemberFactory(auditor_firm=firm)
-        assessment = AssessmentFactory()
         assessor = AssessorFactory(
             assessor_type=Assessor.TYPE_VENDOR,
             auditor_firm=firm,

@@ -7,16 +7,12 @@ from etools.applications.psea.models import Assessment, Assessor
 
 
 class AssessmentSerializer(serializers.ModelSerializer):
-    status = serializers.SerializerMethodField()
     rating = serializers.SerializerMethodField()
 
     class Meta:
         model = Assessment
         fields = '__all__'
         read_only_fields = ["reference_number"]
-
-    def get_status(self, obj):
-        return str(obj.status())
 
     def get_rating(self, obj):
         return obj.rating()

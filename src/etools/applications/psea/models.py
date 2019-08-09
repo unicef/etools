@@ -58,6 +58,22 @@ class Evidence(TimeStampedModel):
 
 
 class Assessment(TimeStampedModel):
+    STATUS_DRAFT = 'draft'
+    STATUS_ASSIGNED = 'assigned'
+    STATUS_IN_PROGRESS = 'in_progress'
+    STATUS_SUBMITTED = 'submitted'
+    STATUS_FINAL = 'final'
+    STATUS_CANCELLED = 'cancelled'
+
+    STATUS_CHOICES = Choices(
+        (STATUS_DRAFT, _('Draft')),
+        (STATUS_ASSIGNED, _('Assigned')),
+        (STATUS_IN_PROGRESS, _('In Progress')),
+        (STATUS_SUBMITTED, _('Submitted')),
+        (STATUS_FINAL, _('Final')),
+        (STATUS_CANCELLED, _('Cancelled')),
+    )
+
     reference_number = models.CharField(
         max_length=100,
         verbose_name=_("Reference Number"),
@@ -75,6 +91,12 @@ class Assessment(TimeStampedModel):
         null=True,
         blank=True,
     )
+    status = FSMField(
+        verbose_name=_('Status'),
+        max_length=30,
+        choices=STATUS_CHOICES,
+        default=STATUS_DRAFT,
+    )
 
     class Meta:
         verbose_name = _('Assessment')
@@ -82,10 +104,7 @@ class Assessment(TimeStampedModel):
         ordering = ("-assessment_date",)
 
     def __str__(self):
-        return f'{self.partner} [{self.status()}]'
-
-    def status(self):
-        return AssessmentStatus.objects.filter(assessment=self).first()
+        return f'{self.partner} [{self.get_status_display()}]'
 
     def rating(self):
         result = Answer.objects.filter(assessment=self).aggregate(
@@ -108,46 +127,33 @@ class Assessment(TimeStampedModel):
         if not self.reference_number:
             self.reference_number = self.get_reference_number()
         super().save(*args, **kwargs)
-        if not self.status():
-            AssessmentStatus.objects.create(assessment=self)
+        last_status = self.status_history.first()
+        if not last_status or last_status.status != self.status:
+            AssessmentStatusHistory.objects.create(
+                assessment=self,
+                status=self.status,
+            )
 
 
-class AssessmentStatus(TimeStampedModel):
-    STATUS_DRAFT = 'draft'
-    STATUS_ASSIGNED = 'assigned'
-    STATUS_IN_PROGRESS = 'in_progress'
-    STATUS_SUBMITTED = 'submitted'
-    STATUS_FINAL = 'final'
-    STATUS_CANCELLED = 'cancelled'
-
-    STATUSE_CHOICES = Choices(
-        (STATUS_DRAFT, _('Draft')),
-        (STATUS_ASSIGNED, _('Assigned')),
-        (STATUS_IN_PROGRESS, _('In Progress')),
-        (STATUS_SUBMITTED, _('Submitted')),
-        (STATUS_FINAL, _('Final')),
-        (STATUS_CANCELLED, _('Cancelled')),
-    )
-
+class AssessmentStatusHistory(TimeStampedModel):
     assessment = models.ForeignKey(
         Assessment,
         verbose_name=_("Assessment"),
         on_delete=models.CASCADE,
+        related_name="status_history",
     )
-    status = FSMField(
-        verbose_name=_('Status'),
+    status = models.CharField(
         max_length=30,
-        choices=STATUSE_CHOICES,
-        default=STATUS_DRAFT,
+        choices=Assessment.STATUS_CHOICES,
     )
 
     class Meta:
-        verbose_name = _("Assessment Status")
-        verbose_name_plural = _("Assessment Statuses")
+        verbose_name = _("Assessment Status History")
+        verbose_name_plural = _("Assessment Status History")
         ordering = ("-created",)
 
     def __str__(self):
-        return self.get_status_display()
+        return f"{self.get_status_display()} [{self.created}]"
 
 
 class Answer(TimeStampedModel):

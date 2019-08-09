@@ -2,12 +2,12 @@ from django.utils import timezone
 
 from etools.applications.audit.tests.factories import AuditPartnerFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
-from etools.applications.psea.models import Answer, Assessment, AssessmentStatus, Assessor
+from etools.applications.psea.models import Answer, Assessment, Assessor
 from etools.applications.psea.tests.factories import (
     AnswerEvidenceFactory,
     AnswerFactory,
     AssessmentFactory,
-    AssessmentStatusFactory,
+    AssessmentStatusHistoryFactory,
     AssessorFactory,
     EvidenceFactory,
     IndicatorFactory,
@@ -38,26 +38,6 @@ class TestAssessment(BaseTenantTestCase):
     def test_string(self):
         assessment = AssessmentFactory()
         self.assertEqual(str(assessment), f"{assessment.partner} [Draft]")
-
-    def test_status(self):
-        assessment = AssessmentFactory()
-        self.assertEqual(
-            assessment.status().status,
-            AssessmentStatus.STATUS_DRAFT,
-        )
-        AssessmentStatusFactory(
-            assessment=assessment,
-            status=AssessmentStatus.STATUS_ASSIGNED,
-        )
-        AssessmentStatusFactory(
-            assessment=assessment,
-            status=AssessmentStatus.STATUS_IN_PROGRESS,
-        )
-        status = AssessmentStatusFactory(
-            assessment=assessment,
-            status=AssessmentStatus.STATUS_ASSIGNED,
-        )
-        self.assertEqual(assessment.status(), status)
 
     def test_rating_none(self):
         assessment = AssessmentFactory()
@@ -91,10 +71,10 @@ class TestAssessment(BaseTenantTestCase):
         )
 
 
-class TestAssessmentStatus(BaseTenantTestCase):
+class TestAssessmentStatusHistory(BaseTenantTestCase):
     def test_string(self):
-        status = AssessmentStatusFactory()
-        self.assertEqual(str(status), "Draft")
+        status = AssessmentStatusHistoryFactory(status=Assessment.STATUS_DRAFT)
+        self.assertEqual(str(status), f"Draft [{status.created}]")
 
 
 class TestAnswer(BaseTenantTestCase):
