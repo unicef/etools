@@ -3,7 +3,7 @@ from django.utils import timezone
 
 from rest_framework import status
 
-from etools.applications.audit.tests.factories import AuditPartnerFactory
+from etools.applications.audit.tests.factories import AuditorStaffMemberFactory, AuditPartnerFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.psea.models import Assessment, AssessmentStatus, Assessor
@@ -159,3 +159,52 @@ class TestAssessorViewSet(BaseTenantTestCase):
             "auditor_firm": firm,
             "order_number": "123",
         })
+
+    def test_patch_vendor(self):
+        firm_1 = AuditPartnerFactory()
+        firm_2 = AuditPartnerFactory()
+        assessment = AssessmentFactory()
+        assessor = AssessorFactory(
+            assessor_type=Assessor.TYPE_VENDOR,
+            auditor_firm=firm_1,
+            order_number="123",
+        )
+
+        response = self.forced_auth_req(
+            "patch",
+            reverse('psea:assessor-detail', args=[assessor.pk]),
+            user=self.user,
+            data={
+                "auditor_firm": firm_2.pk,
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        assessor.refresh_from_db()
+        self.assertEqual(assessor.auditor_firm, firm_2)
+
+    def test_patch_vendor_staff(self):
+        firm = AuditPartnerFactory()
+        staff_1 = AuditorStaffMemberFactory(auditor_firm=firm)
+        staff_2 = AuditorStaffMemberFactory(auditor_firm=firm)
+        assessment = AssessmentFactory()
+        assessor = AssessorFactory(
+            assessor_type=Assessor.TYPE_VENDOR,
+            auditor_firm=firm,
+            order_number="123",
+        )
+        self.assertEqual(list(assessor.auditor_firm_staff.all()), [])
+
+        response = self.forced_auth_req(
+            "patch",
+            reverse('psea:assessor-detail', args=[assessor.pk]),
+            user=self.user,
+            data={
+                "auditor_firm_staff": [staff_1.pk, staff_2.pk],
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        assessor.refresh_from_db()
+        staff = assessor.auditor_firm_staff.all()
+        self.assertEqual(len(staff), 2)
+        self.assertIn(staff_1, staff)
+        self.assertIn(staff_2, staff)

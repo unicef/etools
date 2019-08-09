@@ -30,7 +30,7 @@ class AssessmentSerializer(serializers.ModelSerializer):
 class AssessorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Assessor
-        exclude = ("auditor_firm_staff", )
+        fields = "__all__"
 
     def validate(self, data):
         """Ensure correct assessor setup based on assessor type
