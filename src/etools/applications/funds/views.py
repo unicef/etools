@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_csv.renderers import CSVRenderer, JSONRenderer
 from unicef_restlib.views import QueryStringFilterMixin
+from unicef_vision.exceptions import VisionException
 
 from etools.applications.core.mixins import ExportModelMixin
 from etools.applications.core.renderers import CSVFlatRenderer
@@ -42,7 +43,6 @@ from etools.applications.funds.tasks import sync_single_delegated_fr
 from etools.applications.partners.filters import PartnerScopeFilter
 from etools.applications.partners.models import Intervention
 from etools.applications.partners.permissions import PartnershipManagerPermission
-from etools.applications.vision.exceptions import VisionSyncException
 
 
 class FRsView(APIView):
@@ -74,7 +74,7 @@ class FRsView(APIView):
                     # try to get this fr from vision
                     try:
                         sync_single_delegated_fr(request.user.profile.country.business_area_code, delegated_fr)
-                    except VisionSyncException as e:
+                    except VisionException as e:
                         return self.bad_request('The FR {} could not be found in eTools and could not be synced '
                                                 'from Vision. {}'.format(delegated_fr, e))
             qs._result_cache = None
