@@ -4,7 +4,7 @@ from django.db.models import Sum
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
-from django_fsm import FSMField
+from django_fsm import FSMField, transition
 from model_utils import Choices
 from model_utils.models import TimeStampedModel
 from unicef_djangolib.fields import CodedGenericRelation
@@ -26,25 +26,7 @@ class Rating(TimeStampedModel):
         return f"{self.label}"
 
 
-class Indicator(TimeStampedModel):
-    subject = models.TextField(verbose_name=_('Subject'))
-    content = models.TextField(verbose_name=_('Content'))
-    ratings = models.ManyToManyField(Rating, verbose_name=_("Rating"))
-    active = models.BooleanField(default=True)
-
-    class Meta:
-        verbose_name = _('Indicator')
-        verbose_name_plural = _('Indicators')
-
-    def __str__(self):
-        return f'{self.subject}'
-
-
 class Evidence(TimeStampedModel):
-    indicators = models.ManyToManyField(
-        Indicator,
-        verbose_name=_('Indicators'),
-    )
     label = models.TextField(verbose_name=_("Label"))
     requires_description = models.BooleanField(default=False)
     active = models.BooleanField(default=True)
@@ -55,6 +37,21 @@ class Evidence(TimeStampedModel):
 
     def __str__(self):
         return f'{self.label}'
+
+
+class Indicator(TimeStampedModel):
+    subject = models.TextField(verbose_name=_('Subject'))
+    content = models.TextField(verbose_name=_('Content'))
+    ratings = models.ManyToManyField(Rating, verbose_name=_("Rating"))
+    evidences = models.ManyToManyField(Evidence, verbose_name=_('Evidences'))
+    active = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name = _('Indicator')
+        verbose_name_plural = _('Indicators')
+
+    def __str__(self):
+        return f'{self.subject}'
 
 
 class Assessment(TimeStampedModel):
@@ -133,6 +130,46 @@ class Assessment(TimeStampedModel):
                 assessment=self,
                 status=self.status,
             )
+
+    @transition(
+        field=status,
+        source=[STATUS_DRAFT],
+        target=[STATUS_ASSIGNED],
+    )
+    def transition_to_assigned(self):
+        """Assessment moves to assigned status"""
+
+    @transition(
+        field=status,
+        source=[STATUS_ASSIGNED],
+        target=[STATUS_IN_PROGRESS],
+    )
+    def transition_to_in_progress(self):
+        """Assessment moves to in progress status"""
+
+    @transition(
+        field=status,
+        source=[STATUS_IN_PROGRESS],
+        target=[STATUS_SUBMITTED],
+    )
+    def transition_to_submitted(self):
+        """Assessment moves to submitted status"""
+
+    @transition(
+        field=status,
+        source=[STATUS_SUBMITTED],
+        target=[STATUS_FINAL],
+    )
+    def transition_to_final(self):
+        """Assessment moves to final status"""
+
+    @transition(
+        field=status,
+        source=[STATUS_SUBMITTED],
+        target=[STATUS_IN_PROGRESS],
+    )
+    def transition_to_rejected(self):
+        """Assessment rejected"""
 
 
 class AssessmentStatusHistory(TimeStampedModel):
