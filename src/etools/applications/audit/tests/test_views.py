@@ -9,6 +9,7 @@ from django.urls import reverse
 from factory import fuzzy
 from mock import Mock, patch
 from rest_framework import status
+from unicef_attachments.models import Attachment
 
 from etools.applications.action_points.tests.factories import ActionPointCategoryFactory, ActionPointFactory
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
@@ -1215,6 +1216,14 @@ class TestEngagementAttachmentsView(MATransitionsTestCaseMixin, BaseTenantTestCa
         cls.file_type = AttachmentFileTypeFactory(code='audit_engagement')
 
     def test_list(self):
+        attachment = AttachmentFactory(
+            file="sample.pdf",
+            file_type=self.file_type,
+            content_type=ContentType.objects.get_for_model(Engagement),
+            object_id=self.engagement.pk,
+            code="audit_engagement",
+        )
+        self.engagement.engagement_attachments.add(attachment)
         attachments_num = self.engagement.engagement_attachments.count()
         response = self.forced_auth_req(
             'get',
@@ -1275,6 +1284,30 @@ class TestEngagementAttachmentsView(MATransitionsTestCaseMixin, BaseTenantTestCa
         attachment.refresh_from_db()
         self.assertEqual(attachment.file_type, self.file_type)
 
+    def test_delete(self):
+        attachment = AttachmentFactory(
+            file="sample.pdf",
+            file_type=self.file_type,
+            content_type=ContentType.objects.get_for_model(Engagement),
+            object_id=self.engagement.pk,
+            code="audit_engagement",
+        )
+        self.engagement.engagement_attachments.add(attachment)
+        attachment_qs = self.engagement.engagement_attachments
+        attachments_num = attachment_qs.count()
+
+        response = self.forced_auth_req(
+            'delete',
+            reverse(
+                'audit:engagement-attachments-detail',
+                args=[self.engagement.pk, attachment.pk],
+            ),
+            user=self.unicef_focal_point,
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(attachment_qs.count(), attachments_num - 1)
+        self.assertFalse(Attachment.objects.filter(pk=attachment.pk).exists())
+
     def test_create_meta_focal_point(self):
         response = self.forced_auth_req(
             'options',
@@ -1303,6 +1336,14 @@ class TestEngagementReportAttachmentsView(MATransitionsTestCaseMixin, BaseTenant
         cls.file_type = AttachmentFileTypeFactory(code='audit_report')
 
     def test_list(self):
+        attachment = AttachmentFactory(
+            file="sample.pdf",
+            file_type=self.file_type,
+            content_type=ContentType.objects.get_for_model(Engagement),
+            object_id=self.engagement.pk,
+            code="audit_report",
+        )
+        self.engagement.report_attachments.add(attachment)
         attachments_num = self.engagement.report_attachments.count()
 
         response = self.forced_auth_req(
@@ -1363,3 +1404,27 @@ class TestEngagementReportAttachmentsView(MATransitionsTestCaseMixin, BaseTenant
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         attachment.refresh_from_db()
         self.assertEqual(attachment.file_type, self.file_type)
+
+    def test_delete(self):
+        attachment = AttachmentFactory(
+            file="sample.pdf",
+            file_type=self.file_type,
+            content_type=ContentType.objects.get_for_model(Engagement),
+            object_id=self.engagement.pk,
+            code="audit_report",
+        )
+        self.engagement.engagement_attachments.add(attachment)
+        attachment_qs = self.engagement.report_attachments
+        attachments_num = attachment_qs.count()
+
+        response = self.forced_auth_req(
+            'delete',
+            reverse(
+                'audit:report-attachments-detail',
+                args=[self.engagement.pk, attachment.pk],
+            ),
+            user=self.unicef_focal_point,
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(attachment_qs.count(), attachments_num - 1)
+        self.assertFalse(Attachment.objects.filter(pk=attachment.pk).exists())
