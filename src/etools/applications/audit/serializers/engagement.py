@@ -85,6 +85,7 @@ class AttachmentField(serializers.Field):
 
 
 class EngagementAttachmentSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(read_only=True)
     attachment = AttachmentField(source="pk")
     file_type = FileTypeModelChoiceField(
         label=_('Document Type'),
@@ -93,7 +94,7 @@ class EngagementAttachmentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Attachment
-        fields = ("attachment", "file_type")
+        fields = ("id", "attachment", "file_type", "created")
 
     def update(self, instance, validated_data):
         validated_data['code'] = 'audit_engagement'
@@ -101,6 +102,7 @@ class EngagementAttachmentSerializer(serializers.ModelSerializer):
 
 
 class ReportAttachmentSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(read_only=True)
     attachment = AttachmentField(source="pk")
     file_type = FileTypeModelChoiceField(
         label=_('Document Type'),
@@ -109,7 +111,7 @@ class ReportAttachmentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Attachment
-        fields = ("attachment", "file_type")
+        fields = ("id", "attachment", "file_type", "created")
 
     def update(self, instance, validated_data):
         validated_data['code'] = 'audit_report'
