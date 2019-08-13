@@ -6,8 +6,14 @@ from rest_framework import status
 from etools.applications.audit.tests.factories import AuditorStaffMemberFactory, AuditPartnerFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.tests.factories import PartnerFactory
-from etools.applications.psea.models import Assessment, Assessor
-from etools.applications.psea.tests.factories import AssessmentFactory, AssessorFactory
+from etools.applications.psea.models import Assessment, Assessor, Indicator
+from etools.applications.psea.tests.factories import (
+    AssessmentFactory,
+    AssessorFactory,
+    EvidenceFactory,
+    IndicatorFactory,
+    RatingFactory,
+)
 from etools.applications.users.tests.factories import UserFactory
 
 
@@ -309,3 +315,55 @@ class TestAssessorViewSet(BaseTenantTestCase):
         self.assertEqual(len(staff), 2)
         self.assertIn(staff_1, staff)
         self.assertIn(staff_2, staff)
+
+
+class TestIndicatorViewSet(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = UserFactory()
+        cls.rating_high = RatingFactory(label="High", weight=10)
+        cls.rating_medium = RatingFactory(label="Medium", weight=20)
+        cls.rating_low = RatingFactory(label="Low", weight=30)
+        cls.rating_inactive = RatingFactory(
+            label="InActive",
+            weight=100,
+            active=False,
+        )
+        cls.evidence_1 = EvidenceFactory(label="Evidence 1")
+        cls.evidence_2 = EvidenceFactory(label="Evidence 2")
+        cls.evidence_inactive = EvidenceFactory(
+            label="Evidence InActive",
+            active=False,
+        )
+        cls.indicator = IndicatorFactory()
+        cls.indicator.ratings.set([
+            cls.rating_high,
+            cls.rating_medium,
+            cls.rating_low,
+            cls.rating_inactive
+        ])
+        cls.indicator.evidences.set([
+            cls.evidence_1,
+            cls.evidence_2,
+            cls.evidence_inactive,
+        ])
+        cls.indicator_inactive = IndicatorFactory(active=False)
+
+    def test_list(self):
+        indicator_qs = Indicator.objects.filter(active=True)
+        response = self.forced_auth_req(
+            "get",
+            reverse("psea:indicator-list"),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data
+        self.assertEqual(len(data), indicator_qs.count())
+        self.assertNotIn(
+            self.rating_inactive.pk,
+            [r["id"] for d in data for r in d["ratings"]],
+        )
+        self.assertNotIn(
+            self.evidence_inactive.pk,
+            [e["id"] for d in data for e in d["evidences"]],
+        )

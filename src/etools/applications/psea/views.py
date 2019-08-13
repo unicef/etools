@@ -5,8 +5,8 @@ from rest_framework.permissions import IsAuthenticated
 from unicef_restlib.pagination import DynamicPageNumberPagination
 from unicef_restlib.views import SafeTenantViewSetMixin
 
-from etools.applications.psea.models import Assessment, Assessor
-from etools.applications.psea.serializers import AssessmentSerializer, AssessorSerializer
+from etools.applications.psea.models import Assessment, Assessor, Indicator
+from etools.applications.psea.serializers import AssessmentSerializer, AssessorSerializer, IndicatorSerializer
 
 
 class AssessmentViewSet(
@@ -38,3 +38,13 @@ class AssessorViewSet(
     permission_classes = [IsAuthenticated, ]
     queryset = Assessor.objects.all()
     serializer_class = AssessorSerializer
+
+
+class IndicatorViewSet(
+        SafeTenantViewSetMixin,
+        mixins.ListModelMixin,
+        viewsets.GenericViewSet,
+):
+    permission_classes = [IsAuthenticated, ]
+    queryset = Indicator.objects.filter(active=True).all()
+    serializer_class = IndicatorSerializer

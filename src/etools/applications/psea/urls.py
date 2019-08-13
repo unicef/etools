@@ -12,6 +12,7 @@ root_api.register(
     basename='assessment',
 )
 root_api.register(r'assessor', views.AssessorViewSet, basename='assessor')
+root_api.register(r'indicator', views.IndicatorViewSet, basename='indicator')
 
 
 app_name = 'psea'

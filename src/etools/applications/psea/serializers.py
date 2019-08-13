@@ -3,7 +3,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
 
-from etools.applications.psea.models import Assessment, Assessor
+from etools.applications.psea.models import Assessment, Assessor, Evidence, Indicator, Rating
 
 
 class AssessmentSerializer(serializers.ModelSerializer):
@@ -55,3 +55,35 @@ class AssessorSerializer(serializers.ModelSerializer):
             # ensure to clear data
             data["user"] = None
         return data
+
+
+class ActiveListSerializer(serializers.ListSerializer):
+    def to_representation(self, data):
+        data = data.filter(active=True)
+        return super().to_representation(data)
+
+
+class EvidenceSerializer(serializers.ModelSerializer):
+    class Meta:
+        list_serializer_class = ActiveListSerializer
+        model = Evidence
+        fields = ("id", "label", "requires_description")
+
+
+class RatingSerializer(serializers.ModelSerializer):
+    class Meta:
+        list_serializer_class = ActiveListSerializer
+        model = Rating
+        fields = ("id", "label", "weight")
+
+
+class IndicatorSerializer(serializers.ModelSerializer):
+    evidences = EvidenceSerializer(many=True, read_only=True)
+    ratings = RatingSerializer(
+        many=True,
+        read_only=True,
+    )
+
+    class Meta:
+        model = Indicator
+        fields = ("id", "subject", "content", "ratings", "evidences")
