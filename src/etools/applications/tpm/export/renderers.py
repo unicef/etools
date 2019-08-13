@@ -3,17 +3,19 @@ from copy import copy
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework_csv.renderers import CSVRenderer
+from unicef_rest_export.renderers import FriendlyCSVRenderer
 
 
-class TPMActivityCSVRenderer(CSVRenderer):
+class TPMActivityCSVRenderer(FriendlyCSVRenderer):
     header = ['ref', 'visit', 'visit_status', 'activity', 'section', 'cp_output', 'partner', 'intervention', 'pd_ssfa',
-              'locations', 'date', 'unicef_focal_points', 'offices', 'tpm_focal_points', 'visit_information',
+              'locations', 'date', 'unicef_focal_points', 'offices', 'tpm_focal_points', 'visit_information', 'is_pv',
               'additional_information', 'link']
     labels = {
         'ref': _('Visit Ref. #'),
         'visit': _('Visit'),
         'visit_status': _('Status of Visit'),
         'activity': _('Task'),
+        'is_pv': _('Is Programmatic Visit'),
         'section': _('Section'),
         'cp_output': _('PD/SSFA output'),
         'partner': _('Partner'),
