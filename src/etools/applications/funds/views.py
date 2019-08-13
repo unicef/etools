@@ -63,12 +63,11 @@ class FRsView(APIView):
         if len(values) > len(set(values)):
             return self.bad_request('You have duplicate records of the same FR, please make sure to add'
                                     ' each FR only one time')
-
         qs = FundsReservationHeader.objects.filter(fr_number__in=values)
-
         not_found = set(values) - set(qs.values_list('fr_number', flat=True))
         if not_found:
             nf = list(not_found)
+            nf.sort()
             with transaction.atomic():
                 for delegated_fr in nf:
                     # try to get this fr from vision
@@ -77,6 +76,7 @@ class FRsView(APIView):
                     except VisionException as e:
                         return self.bad_request('The FR {} could not be found in eTools and could not be synced '
                                                 'from Vision. {}'.format(delegated_fr, e))
+
             qs._result_cache = None
 
         if intervention_id:
