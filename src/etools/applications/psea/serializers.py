@@ -12,7 +12,7 @@ class AssessmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Assessment
         fields = '__all__'
-        read_only_fields = ["reference_number"]
+        read_only_fields = ["reference_number", "overall_rating", "partner"]
 
     def get_rating(self, obj):
         return obj.rating()
