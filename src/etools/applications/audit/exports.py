@@ -1,4 +1,3 @@
-
 import itertools
 from collections import OrderedDict
 
@@ -28,7 +27,7 @@ class EngagementCSVRenderer(BaseCSVRenderer):
 
 class SpotCheckDetailCSVRenderer(BaseCSVRenderer):
     labels = OrderedDict((
-        ('unique_id', 'Unique ID'),
+        ('reference_number', 'Unique ID'),
         ('link', 'Hyperlink'),
         ('auditor', 'Auditor or Staff Assigned'),
         ('partner', 'IP'),
@@ -49,7 +48,7 @@ class AuditDetailCSVRenderer(BaseCSVRenderer):
     @property
     def labels(self):
         labels = OrderedDict((
-            ('unique_id', 'Unique ID'),
+            ('reference_number', 'Unique ID'),
             ('link', 'Hyperlink'),
             ('auditor', 'Auditor or Staff Assigned'),
             ('partner', 'IP'),
@@ -81,7 +80,7 @@ class MicroAssessmentDetailCSVRenderer(BaseCSVRenderer):
     @property
     def labels(self):
         labels = OrderedDict((
-            ('unique_id', 'Unique ID'),
+            ('reference_number', 'Unique ID'),
             ('link', 'Hyperlink'),
             ('auditor', 'Auditor or Staff Assigned'),
             ('partner', 'IP'),
@@ -113,7 +112,7 @@ class MicroAssessmentDetailCSVRenderer(BaseCSVRenderer):
 
 class SpecialAuditDetailCSVRenderer(BaseCSVRenderer):
     labels = OrderedDict((
-        ('unique_id', 'Unique ID'),
+        ('reference_number', 'Unique ID'),
         ('link', 'Hyperlink'),
         ('auditor', 'Auditor or Staff Assigned'),
         ('partner', 'IP'),

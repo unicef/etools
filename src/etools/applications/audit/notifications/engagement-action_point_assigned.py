@@ -10,7 +10,7 @@ defaults = {
 
     {{ action_point.assigned_by }} has assigned you an action point.
 
-    Engagement ID: {{ action_point.engagement.unique_id }}
+    Engagement ID: {{ action_point.engagement.reference_number }}
     Due Date: {{ action_point.due_date }}
     Link: {{ action_point.engagement.object_url }}
 
@@ -25,7 +25,7 @@ defaults = {
 
     {{ action_point.assigned_by }} has assigned you an action point. <br/><br/>
 
-    Engagement ID: {{ action_point.engagement.unique_id }}<br/>
+    Engagement ID: {{ action_point.engagement.reference_number }}<br/>
     Due Date: {{ action_point.due_date }}<br/>
     Link: <a href="{{ action_point.engagement.object_url }}">click here</a><br/><br/>
 

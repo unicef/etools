@@ -98,7 +98,7 @@ class EngagementPDFSerializer(serializers.ModelSerializer):
     partner = PartnerPDFSerializer()
     engagement_type_display = serializers.ReadOnlyField(source='get_engagement_type_display')
     status_display = serializers.SerializerMethodField()
-    unique_id = serializers.ReadOnlyField()
+    reference_number = serializers.ReadOnlyField()
     authorized_officers = serializers.SerializerMethodField()
     active_pd = serializers.SerializerMethodField()
     staff_members = StaffMemberPDFSerializer(many=True)
@@ -123,7 +123,7 @@ class EngagementPDFSerializer(serializers.ModelSerializer):
         model = Engagement
         fields = [
             'id', 'agreement', 'partner', 'engagement_type_display', 'engagement_type', 'status_display', 'status',
-            'unique_id', 'authorized_officers', 'active_pd', 'staff_members', 'po_item',
+            'reference_number', 'authorized_officers', 'active_pd', 'staff_members', 'po_item',
             'date_of_field_visit', 'date_of_draft_report_to_ip', 'date_of_comments_by_ip',
             'date_of_draft_report_to_unicef', 'date_of_comments_by_unicef', 'partner_contacted_at',
             'action_points', 'engagement_attachments', 'report_attachments',
@@ -240,7 +240,7 @@ class SpecialAuditPDFSerializer(EngagementPDFSerializer):
 
 
 class EngagementBaseDetailCSVSerializer(serializers.Serializer):
-    unique_id = serializers.ReadOnlyField()
+    reference_number = serializers.ReadOnlyField()
     link = serializers.ReadOnlyField(source='get_object_url')
     auditor = serializers.ReadOnlyField(source='agreement.auditor_firm')
     partner = serializers.ReadOnlyField()
