@@ -96,8 +96,12 @@ class ActionPoint(TimeStampedModel):
 
     history = GenericRelation('unicef_snapshot.Activity', object_id_field='target_object_id',
                               content_type_field='target_content_type')
-
-    tracker = FieldTracker(fields=['assigned_to'])
+    reference_number = models.CharField(
+        verbose_name=_("Reference Number"),
+        max_length=100,
+        null=True,
+    )
+    tracker = FieldTracker(fields=['assigned_to', 'reference_number'])
 
     class Meta:
         ordering = ('id', )
@@ -147,13 +151,18 @@ class ActionPoint(TimeStampedModel):
             return self.MODULE_CHOICES.t2f
         return self.MODULE_CHOICES.apd
 
-    @property
-    def reference_number(self):
+    def get_reference_number(self):
         return '{}/{}/{}/APD'.format(
             connection.tenant.country_short_code or '',
             self.created.year,
             self.id,
         )
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        if not self.reference_number:
+            self.reference_number = self.get_reference_number()
+            self.save()
 
     def get_object_url(self, **kwargs):
         return build_frontend_url('apd', 'action-points', 'detail', self.id, **kwargs)
@@ -195,7 +204,7 @@ class ActionPoint(TimeStampedModel):
         return {
             'person_responsible': self.assigned_to.get_full_name(),
             'assigned_by': self.assigned_by.get_full_name(),
-            'reference_number': self.reference_number,
+            'reference_number': self.get_reference_number(),
             'partner': self.partner.name if self.partner else '',
             'description': self.description,
             'due_date': self.due_date.strftime('%d %b %Y') if self.due_date else '',
