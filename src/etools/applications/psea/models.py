@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.db import models
+from django.db import connection, models
 from django.db.models import Sum
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
@@ -112,18 +112,17 @@ class Assessment(TimeStampedModel):
         return None
 
     def get_reference_number(self):
-        # potential that this could return the same
-        # value if called simultaneously, although
-        # not expecting there to be a large change this happens
-        return "{year}/{num}".format(
+        return "{code}/{year}PSEA{num}".format(
+            code=connection.tenant.country_short_code,
             year=timezone.now().year,
-            num=Assessment.objects.count() + 1,
+            num=self.pk,
         )
 
     def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
         if not self.reference_number:
             self.reference_number = self.get_reference_number()
-        super().save(*args, **kwargs)
+            self.save()
         last_status = self.status_history.first()
         if not last_status or last_status.status != self.status:
             AssessmentStatusHistory.objects.create(

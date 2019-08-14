@@ -1,3 +1,4 @@
+from django.db import connection
 from django.utils import timezone
 
 from etools.applications.audit.tests.factories import AuditPartnerFactory
@@ -64,10 +65,13 @@ class TestAssessment(BaseTenantTestCase):
 
     def test_get_reference_number(self):
         assessment = AssessmentFactory()
-        num = Assessment.objects.count()
         self.assertEqual(
             assessment.get_reference_number(),
-            f"{timezone.now().year}/{num + 1}",
+            "{}/{}PSEA{}".format(
+                connection.tenant.country_short_code,
+                timezone.now().year,
+                assessment.pk
+            ),
         )
 
 
