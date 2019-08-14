@@ -162,8 +162,6 @@ class TravelActivityViewSet(QueryStringFilterMixin, mixins.ListModelMixin, views
 
         qs = qs.annotate(status=Case(When(travels__traveler=F('primary_traveler'),
                                           then=F('travels__status')), output_field=CharField()))\
-            .annotate(reference_number=Case(When(travels__traveler=F('primary_traveler'),
-                                                 then=F('travels__reference_number')), output_field=CharField()))\
             .annotate(trip_id=Case(When(travels__traveler=F('primary_traveler'),
                                         then=F('travels__id')), output_field=CharField()))\
             .distinct('id')
