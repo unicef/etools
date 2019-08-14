@@ -100,6 +100,11 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
     tpm_partner_focal_points = models.ManyToManyField(
         TPMPartnerStaffMember, verbose_name=_('TPM Focal Points'), related_name='tpm_visits', blank=True
     )
+    reference_number = models.CharField(
+        verbose_name=_("Reference Number"),
+        max_length=100,
+        null=True,
+    )
 
     tpm_partner_tracker = FieldTracker(fields=['tpm_partner', ])
 
@@ -116,13 +121,18 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
     def status_date(self):
         return getattr(self, self.STATUSES_DATES[self.status])
 
-    @property
-    def reference_number(self):
+    def get_reference_number(self):
         return '{}/{}/{}/TPM'.format(
             connection.tenant.country_short_code or '',
             self.created.year,
             self.id,
         )
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        if not self.reference_number:
+            self.reference_number = self.get_reference_number()
+            self.save()
 
     @property
     def start_date(self):
