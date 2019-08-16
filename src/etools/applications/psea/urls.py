@@ -1,6 +1,7 @@
 from django.conf.urls import include, url
 
 from rest_framework_nested import routers
+from unicef_restlib.routers import NestedComplexRouter
 
 from etools.applications.psea import views
 
@@ -14,8 +15,19 @@ root_api.register(
 root_api.register(r'assessor', views.AssessorViewSet, basename='assessor')
 root_api.register(r'indicator', views.IndicatorViewSet, basename='indicator')
 
+answer_api = NestedComplexRouter(root_api, r'assessment')
+answer_api.register(r'answer', views.AnswerViewSet, base_name='answer')
+
+attachments_api = NestedComplexRouter(answer_api, r'answer')
+attachments_api.register(
+    r'attachments',
+    views.AnswerAttachmentsViewSet,
+    base_name='answer-attachments',
+)
 
 app_name = 'psea'
 urlpatterns = [
     url(r'^', include(root_api.urls)),
+    url(r'^', include(answer_api.urls)),
+    url(r'^', include(attachments_api.urls)),
 ]

@@ -1,9 +1,12 @@
+from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
+from unicef_attachments.fields import FileTypeModelChoiceField
+from unicef_attachments.models import Attachment, FileType
 
-from etools.applications.psea.models import Assessment, Assessor, Evidence, Indicator, Rating
+from etools.applications.psea.models import Answer, AnswerEvidence, Assessment, Assessor, Evidence, Indicator, Rating
 
 
 class AssessmentSerializer(serializers.ModelSerializer):
@@ -12,7 +15,7 @@ class AssessmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Assessment
         fields = '__all__'
-        read_only_fields = ["reference_number", "overall_rating", "partner"]
+        read_only_fields = ["reference_number", "overall_rating"]
 
     def get_rating(self, obj):
         return obj.rating()
@@ -87,3 +90,92 @@ class IndicatorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Indicator
         fields = ("id", "subject", "content", "ratings", "evidences")
+
+
+class AnswerAttachmentSerializer(serializers.ModelSerializer):
+    url = serializers.SerializerMethodField()
+    # attachment = serializers.IntegerField(source="pk")
+    file_type = FileTypeModelChoiceField(
+        label=_("Document Type"),
+        queryset=FileType.objects.filter(code="psea_answer"),
+    )
+
+    class Meta:
+        model = Attachment
+        fields = ("id", "url", "file_type", "created")
+
+    def update(self, instance, validated_data):
+        validated_data["code"] = "psea_answer"
+        return super().update(instance, validated_data)
+
+    def get_url(self, obj):
+        if obj.file:
+            url = obj.file.url
+            request = self.context.get("request", None)
+            if request is not None:
+                return request.build_absolute_uri(url)
+            return url
+        return ""
+
+
+class AnswerEvidenceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AnswerEvidence
+        fields = ("id", "evidence", "description")
+
+
+class AnswerSerializer(serializers.ModelSerializer):
+    attachments = AnswerAttachmentSerializer(many=True, required=False)
+    evidences = AnswerEvidenceSerializer(many=True)
+
+    class Meta:
+        model = Answer
+        fields = "__all__"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if hasattr(self, "initial_data"):
+            self.initial_data["assessment"] = self._context.get(
+                "request"
+            ).parser_context["kwargs"].get("nested_1_pk")
+
+    def create(self, validated_data):
+        evidence_data = validated_data.pop("evidences")
+        attachment_data = validated_data.pop("attachments")
+        answer = Answer.objects.create(**validated_data)
+        for evidence in evidence_data:
+            AnswerEvidence.objects.create(
+                answer=answer,
+                **evidence,
+            )
+        content_type = ContentType.objects.get_for_model(Answer)
+        used = []
+        for attachment in attachment_data:
+            for initial in self.initial_data.get("attachments"):
+                pk = initial["id"]
+                file_type = initial["file_type"]
+                if pk not in used and file_type == attachment["file_type"].pk:
+                    Attachment.objects.filter(pk=pk).update(
+                        file_type=attachment["file_type"],
+                        code="psea_answer",
+                        object_id=answer.pk,
+                        content_type=content_type,
+                    )
+                    used.append(pk)
+                    break
+        return answer
+
+    def update(self, instance, validated_data):
+        evidence_data = None
+        if "evidences" in validated_data:
+            evidence_data = validated_data.pop("evidences")
+        attachment_data = None
+        if "attachments" in validated_data:
+            attachment_data = validated_data.pop("attachments")
+
+        instance.rating = validated_data.get("rating", instance.rating)
+        instance.comments = validated_data.get("comments", instance.comments)
+        instance.save()
+
+        # TODO handle evidences/attachments
+        return instance
