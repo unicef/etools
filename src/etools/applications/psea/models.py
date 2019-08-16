@@ -7,9 +7,9 @@ from django.utils.translation import ugettext_lazy as _
 from django_fsm import FSMField, transition
 from model_utils import Choices
 from model_utils.models import TimeStampedModel
+from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation
 
-from etools.applications.attachments.models import Attachment
 from etools.applications.audit.purchase_order.models import AuditorFirm, AuditorStaffMember
 
 
@@ -216,13 +216,14 @@ class Answer(TimeStampedModel):
     attachments = CodedGenericRelation(
         Attachment,
         verbose_name=_('Attachments'),
-        code='psea',
+        code='psea_answer',
         blank=True,
     )
 
     class Meta:
         verbose_name = _('Answer')
         verbose_name_plural = _('Answers')
+        unique_together = [["assessment", "indicator"]]
 
     def __str__(self):
         return f'{self.assessment} [{self.rating}]'
@@ -233,6 +234,7 @@ class AnswerEvidence(TimeStampedModel):
         Answer,
         verbose_name=_("Answer"),
         on_delete=models.CASCADE,
+        related_name="evidences",
     )
     evidence = models.ForeignKey(
         Evidence,
