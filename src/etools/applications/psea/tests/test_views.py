@@ -431,6 +431,29 @@ class TestAnswerViewSet(BaseTenantTestCase):
         self.assertEqual(answer_evidence.evidence, self.evidence)
         self.assertEqual(len(answer.attachments.all()), 2)
 
+    def test_post_validation(self):
+        evidence = EvidenceFactory(requires_description=True)
+        self.indicator.evidences.add(evidence)
+        answer_qs = Answer.objects.filter(assessment=self.assessment)
+        self.assertFalse(answer_qs.exists())
+        response = self.forced_auth_req(
+            "post",
+            reverse("psea:answer-list", args=[self.assessment.pk]),
+            user=self.user,
+            data={
+                "indicator": self.indicator.pk,
+                "evidences": [
+                    {"evidence": self.evidence.pk},
+                    {"evidence": evidence.pk},
+                ],
+                "comments": "Sample comment",
+                "rating": self.rating.pk,
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("evidences", response.data)
+        self.assertFalse(answer_qs.exists())
+
     def test_get(self):
         answer = AnswerFactory(
             assessment=self.assessment,

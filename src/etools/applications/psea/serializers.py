@@ -7,6 +7,7 @@ from unicef_attachments.fields import FileTypeModelChoiceField
 from unicef_attachments.models import Attachment, FileType
 
 from etools.applications.psea.models import Answer, AnswerEvidence, Assessment, Assessor, Evidence, Indicator, Rating
+from etools.applications.psea.validators import EvidenceDescriptionValidator
 
 
 class AssessmentSerializer(serializers.ModelSerializer):
@@ -122,6 +123,7 @@ class AnswerEvidenceSerializer(serializers.ModelSerializer):
     class Meta:
         model = AnswerEvidence
         fields = ("id", "evidence", "description")
+        validators = [EvidenceDescriptionValidator()]
 
 
 class AnswerSerializer(serializers.ModelSerializer):
