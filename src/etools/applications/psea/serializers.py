@@ -169,13 +169,25 @@ class AnswerSerializer(serializers.ModelSerializer):
         evidence_data = None
         if "evidences" in validated_data:
             evidence_data = validated_data.pop("evidences")
-        attachment_data = None
-        if "attachments" in validated_data:
-            attachment_data = validated_data.pop("attachments")
 
         instance.rating = validated_data.get("rating", instance.rating)
         instance.comments = validated_data.get("comments", instance.comments)
         instance.save()
 
-        # TODO handle evidences/attachments
+        if evidence_data is not None:
+            evidence_current = list(instance.evidences.all())
+            for data in evidence_data:
+                answer_evidence, created = AnswerEvidence.objects.update_or_create(
+                    answer=instance,
+                    evidence=data.get("evidence"),
+                    defaults={
+                        "description": data.get("description"),
+                    }
+                )
+                if not created:
+                    evidence_current.remove(answer_evidence)
+            # delete obsolete answer evidences
+            for evidence in evidence_current:
+                evidence.delete()
+
         return instance
