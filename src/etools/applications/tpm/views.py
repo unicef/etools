@@ -72,6 +72,7 @@ from etools.applications.tpm.serializers.partner import (
 )
 from etools.applications.tpm.serializers.visit import (
     TPMActionPointSerializer,
+    TPMActivityLightSerializer,
     TPMVisitDraftSerializer,
     TPMVisitLightSerializer,
     TPMVisitSerializer,
@@ -456,6 +457,16 @@ class TPMVisitViewSet(
             },
             filename="visit_letter_{}.pdf".format(visit.reference_number)
         )
+
+
+class TPMActivityViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = TPMActivity.objects.all()
+    serializer_class = TPMActivityLightSerializer
+
+    filter_backends = (SearchFilter, OrderingFilter, DjangoFilterBackend)
+    search_fields = ('tpm_visit__tpm_partner__vendor_number', 'tpm_visit__tpm_partner__name',
+                     'partner__name', 'partner__vendor_number')
+    filter_fields = ('tpm_visit', 'section', 'offices', 'tpm_visit__tpm_partner', 'partner')
 
 
 class TPMActionPointViewSet(BaseTPMViewSet,
