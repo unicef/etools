@@ -71,6 +71,7 @@ from etools.applications.partners.serializers.interventions_v2 import (
     MinimalInterventionListSerializer,
     PlannedVisitsCUSerializer,
 )
+from etools.applications.partners.utils import send_intervention_amendment_added_notification
 from etools.applications.partners.validation.interventions import InterventionValid
 from etools.applications.reports.models import AppliedIndicator, LowerResult, ReportingRequirement
 from etools.applications.reports.serializers.v2 import AppliedIndicatorSerializer, LowerResultSimpleCUSerializer
@@ -298,11 +299,13 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
             nested_related_names=nested_related_names,
             **kwargs
         )
-
         validator = InterventionValid(instance, old=old_instance, user=request.user)
         if not validator.is_valid:
             logging.debug(validator.errors)
             raise ValidationError(validator.errors)
+
+        if old_instance and instance.in_amendment == False and old_instance.in_amendment == True:
+            send_intervention_amendment_added_notification(instance)
 
         if getattr(instance, '_prefetched_objects_cache', None):
             # If 'prefetch_related' has been applied to a queryset, we need to
