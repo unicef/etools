@@ -5,6 +5,7 @@ from decimal import Decimal
 
 from django.db.models import Sum
 
+from unicef_vision.exceptions import VisionException
 from unicef_vision.synchronizers import FileDataSynchronizer, ManualVisionSynchronizer
 from unicef_vision.utils import comp_decimals
 
@@ -14,7 +15,6 @@ from etools.applications.funds.models import (
     FundsReservationHeader,
     FundsReservationItem,
 )
-from etools.applications.vision.exceptions import VisionSyncException
 from etools.applications.vision.synchronizers import VisionDataTenantSynchronizer
 
 
@@ -124,7 +124,7 @@ class FundReservationsSynchronizer(VisionDataTenantSynchronizer):
             json_records = json.loads(records)["ROWSET"]["ROW"]
         except json.decoder.JSONDecodeError:
             if "No data exists" in records:
-                raise VisionSyncException("Vision error 400: No data could be found")
+                raise VisionException("Vision error 400: No data could be found")
             else:
                 raise
         # Since our counterpart APIs are designed in a way that can surprise us what data structure we might encounter

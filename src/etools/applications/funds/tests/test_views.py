@@ -6,7 +6,6 @@ from django.urls import reverse
 from django.utils import timezone
 
 from rest_framework import status
-from unicef_vision.exceptions import VisionException
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import (
@@ -112,14 +111,24 @@ class TestFRHeaderView(BaseTenantTestCase):
 
     @VCR.use_cassette(str(Path(__file__).parent / 'vcr_cassettes/fund_reservation_invalid.yml'))
     def test_get_fail_with_non_existant_values(self):
-        data = {'values': ','.join(['im a bad value', 'another bad value'])}
-        with self.assertRaises(VisionException):
-            status_code, result = self.run_request(data)
-            self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
-            self.assertEqual(result['error'], 'One or more of the FRs are used by another PD/SSFA '
-                                              'or could not be found in eTools.')
+        data = {'values': ','.join(['another bad value', 'im a bad value', ])}
+        status_code, result = self.run_request(data)
+        self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(result['error'], 'The FR another bad value could not be found in eTools and could not be '
+                                          'synced from Vision. Vision error 400: No data could be found')
     # TODO: add tests to cover, frs correctly brought in from mock. with correct vendor numbers, FR missing from vision,
     # FR with multiple line items, and FR with only one line item.
+
+    @VCR.use_cassette(str(Path(__file__).parent / 'vcr_cassettes/fund_reservation.yml'))
+    def test_get_fail_with_already_used_fr(self):
+        new_intervention = InterventionFactory()
+        self.fr_1.intervention = self.intervention
+        self.fr_1.save()
+        data = {'values': ','.join(['9999', self.fr_1.fr_number]),
+                'intervention': new_intervention.pk}
+        status_code, result = self.run_request(data)
+        self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(result['error'], f'FR #{self.fr_1} is already being used by PD/SSFA ref [{self.intervention}]')
 
     @VCR.use_cassette(str(Path(__file__).parent / 'vcr_cassettes/fund_reservation.yml'))
     def test_get_success_sync_vision(self):

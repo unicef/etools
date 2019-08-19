@@ -222,7 +222,6 @@ class SpecialReportingRequirementsSerializer(serializers.ModelSerializer):
 
 class PRPInterventionListSerializer(serializers.ModelSerializer):
 
-    # todo: do these need to be lowercased?
     amendments = InterventionAmendmentSerializer(read_only=True, many=True)
     offices = serializers.SlugRelatedField(many=True, read_only=True, slug_field='name')
     business_area_code = serializers.SerializerMethodField()
@@ -253,6 +252,25 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
     sections = SectionSerializer(many=True, read_only=True)
     locations = PRPLocationSerializer(source="flat_locations", many=True, read_only=True)
 
+    disbursement = serializers.DecimalField(source='frs__actual_amt_local__sum', read_only=True,
+                                            max_digits=20,
+                                            decimal_places=2)
+
+    disbursement_percent = serializers.SerializerMethodField()
+
+    def fr_currencies_ok(self, obj):
+        return obj.frs__currency__count == 1 if obj.frs__currency__count else None
+
+    def get_disbursement_percent(self, obj):
+        if obj.frs__actual_amt_local__sum is None:
+            return None
+
+        if not (self.fr_currencies_ok(obj) and obj.max_fr_currency == obj.planned_budget.currency):
+            return "%.1f" % -1.0
+        percent = obj.frs__actual_amt_local__sum / obj.total_unicef_cash * 100 \
+            if obj.total_unicef_cash and obj.total_unicef_cash > 0 else 0
+        return "%.1f" % percent
+
     def get_unicef_budget_currency(self, obj):
         # Intervention.planned_budget isn't a real field, it's a related
         # name from an InterventionBudget, and there might not be one.
@@ -280,6 +298,7 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'title',
+            'document_type',
             'business_area_code',
             'offices',
             'number',
@@ -300,5 +319,7 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
             'amendments',
             'locations',
             'unicef_budget_cash',
-            'unicef_budget_supplies'
+            'unicef_budget_supplies',
+            'disbursement',
+            'disbursement_percent'
         )
