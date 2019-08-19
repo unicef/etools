@@ -107,6 +107,13 @@ class AnswerAttachmentsViewSet(
     def get_view_name(self):
         return _('Related Documents')
 
+    def get_parent_object(self):
+        return get_object_or_404(
+            Answer,
+            assessment__pk=self.kwargs.get("nested_1_pk"),
+            indicator__pk=self.kwargs.get("nested_2_pk"),
+        )
+
     def get_parent_filter(self):
         parent = self.get_parent_object()
         if not parent:

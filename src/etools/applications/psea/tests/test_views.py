@@ -530,7 +530,11 @@ class TestAnswerAttachmentViewSet(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.file_type = AttachmentFileTypeFactory(code="psea_answer")
         cls.assessment = AssessmentFactory()
-        cls.answer = AnswerFactory(assessment=cls.assessment)
+        cls.indicator = IndicatorFactory()
+        cls.answer = AnswerFactory(
+            assessment=cls.assessment,
+            indicator=cls.indicator,
+        )
         cls.user = UserFactory()
 
     def test_list(self):
@@ -547,7 +551,7 @@ class TestAnswerAttachmentViewSet(BaseTenantTestCase):
             "get",
             reverse(
                 "psea:answer-attachments-list",
-                args=[self.assessment.pk, self.answer.pk],
+                args=[self.assessment.pk, self.indicator.pk],
             ),
             user=self.user,
         )
@@ -564,7 +568,7 @@ class TestAnswerAttachmentViewSet(BaseTenantTestCase):
             "post",
             reverse(
                 "psea:answer-attachments-list",
-                args=[self.assessment.pk, self.answer.pk],
+                args=[self.assessment.pk, self.indicator.pk],
             ),
             user=self.user,
             data={
@@ -576,3 +580,29 @@ class TestAnswerAttachmentViewSet(BaseTenantTestCase):
         attachment.refresh_from_db()
         self.assertEqual(attachment.object_id, self.answer.pk)
         self.assertEqual(attachment.code, "psea_answer")
+
+    def test_patch(self):
+        attachment = AttachmentFactory(
+            file="sample.pdf",
+            file_type=self.file_type,
+            code="psea_answer",
+            content_type=ContentType.objects.get_for_model(Answer),
+            object_id=self.answer.pk,
+        )
+        file_type = AttachmentFileTypeFactory(code="psea_answer")
+
+        response = self.forced_auth_req(
+            "patch",
+            reverse(
+                "psea:answer-attachments-detail",
+                args=[self.assessment.pk, self.indicator.pk, attachment.pk],
+            ),
+            user=self.user,
+            data={
+                "id": attachment.pk,
+                "file_type": file_type.pk,
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        attachment.refresh_from_db()
+        self.assertEqual(attachment.file_type, file_type)
