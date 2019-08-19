@@ -22,6 +22,9 @@ class TPMVisitFilter(filters.FilterSet):
     tpm_activities__offices__in = filters.BaseInFilter(
         field_name="tpm_activities__offices",
     )
+    tpm_partner_focal_points__in = filters.BaseInFilter(
+        field_name="tpm_partner_focal_points",
+    )
 
     class Meta:
         model = TPMVisit
@@ -36,5 +39,5 @@ class TPMVisitFilter(filters.FilterSet):
             'tpm_activities__date': ['exact', 'lte', 'gte', 'gt', 'lt'],
             'status': ['exact', 'in'],
             'tpm_activities__unicef_focal_points': ['exact'],
-            'tpm_partner_focal_points': ['exact'],
+            'tpm_partner_focal_points': ['exact', 'in'],
         }
