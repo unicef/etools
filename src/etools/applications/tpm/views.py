@@ -53,7 +53,7 @@ from etools.applications.tpm.export.serializers import (
     TPMPartnerExportSerializer,
     TPMVisitExportSerializer,
 )
-from etools.applications.tpm.filters import ReferenceNumberOrderingFilter, TPMVisitFilter
+from etools.applications.tpm.filters import ReferenceNumberOrderingFilter, TPMActivityFilter, TPMVisitFilter
 from etools.applications.tpm.models import PME, ThirdPartyMonitor, TPMActionPoint, TPMActivity, TPMVisit, UNICEFUser
 from etools.applications.tpm.serializers.attachments import (
     ActivityAttachmentsSerializer,
@@ -462,11 +462,11 @@ class TPMVisitViewSet(
 class TPMActivityViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = TPMActivity.objects.all()
     serializer_class = TPMActivityLightSerializer
+    filter_class = TPMActivityFilter
 
     filter_backends = (SearchFilter, OrderingFilter, DjangoFilterBackend)
     search_fields = ('tpm_visit__tpm_partner__vendor_number', 'tpm_visit__tpm_partner__name',
                      'partner__name', 'partner__vendor_number')
-    filter_fields = ('tpm_visit', 'section', 'offices', 'tpm_visit__tpm_partner', 'partner')
 
 
 class TPMActionPointViewSet(BaseTPMViewSet,
