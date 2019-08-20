@@ -12,6 +12,7 @@ from unicef_djangolib.fields import CodedGenericRelation
 
 from etools.applications.audit.purchase_order.models import AuditorFirm, AuditorStaffMember
 from etools.applications.core.permissions import import_permissions
+from etools.applications.core.urlresolvers import build_frontend_url
 
 
 class Rating(TimeStampedModel):
@@ -101,13 +102,17 @@ class Assessment(TimeStampedModel):
         verbose_name_plural = _('Assessments')
         ordering = ("-assessment_date",)
 
+    def get_object_url(self, **kwargs):
+        # TODO double check this with frontend developers
+        return build_frontend_url('psea', 'assessment', 'detail', self.id, **kwargs)
+
     @classmethod
     def permission_structure(cls):
         permissions = import_permissions(cls.__name__)
         return permissions
 
     def __str__(self):
-        return f'{self.partner} [{self.get_status_display()}]'
+        return f'{self.partner} [{self.get_status_display()}] {self.reference_number}'
 
     def rating(self):
         result = Answer.objects.filter(assessment=self).aggregate(

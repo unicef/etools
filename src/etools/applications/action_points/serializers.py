@@ -97,9 +97,8 @@ class ActionPointListSerializer(PermissionsBasedSerializerMixin, ActionPointBase
 
     class Meta(ActionPointBaseSerializer.Meta):
         fields = ActionPointBaseSerializer.Meta.fields + [
-            'related_module',
-            'cp_output', 'partner', 'intervention', 'location',
-            'engagement', 'tpm_activity', 'travel_activity',
+            'related_module', 'cp_output', 'partner', 'intervention', 'location',
+            'engagement', 'psea_assessment', 'tpm_activity', 'travel_activity',
         ]
 
 
@@ -117,6 +116,11 @@ class ActionPointCreateSerializer(ActionPointListSerializer):
             engagement = validated_data['engagement']
             validated_data.update({
                 'partner_id': engagement.partner_id,
+            })
+        elif 'psea_assessment' in validated_data:
+            psea_assessment = validated_data['psea_assessment']
+            validated_data.update({
+                'partner_id': psea_assessment.partner_id
             })
         elif 'tpm_activity' in validated_data:
             activity = validated_data['tpm_activity']
