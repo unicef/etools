@@ -304,7 +304,7 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
             logging.debug(validator.errors)
             raise ValidationError(validator.errors)
 
-        if old_instance and instance.in_amendment == False and old_instance.in_amendment == True:
+        if old_instance and not instance.in_amendment and old_instance.in_amendment:
             send_intervention_amendment_added_notification(instance)
 
         if getattr(instance, '_prefetched_objects_cache', None):

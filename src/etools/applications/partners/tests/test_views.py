@@ -1,6 +1,7 @@
 import csv
 import datetime
 import json
+from django.core.management import call_command
 from unittest import skip
 from urllib.parse import urlparse
 
@@ -1664,36 +1665,45 @@ class TestInterventionViews(BaseTenantTestCase):
         self.assertEqual(response.data[0]["id"], self.intervention["id"])
 
     def test_intervention_amendment_notificaton(self):
+        # make sure that the notification template is imported to the DB
+        call_command("update_notifications")
+
+        fr= FundsReservationHeaderFactory()
+        fr.intervention = self.intervention_obj
+        fr.save()
+
         attachment = AttachmentFactory()
-        country_programme = CountryProgrammeFactory()
         office = OfficeFactory()
         section = SectionFactory()
-        agreement = AgreementFactory(country_programme=country_programme)
 
-        self.active_intervention.in_amendment = True
-        self.active_intervention.agreement = agreement
-        self.active_intervention.country_programme = country_programme
-        self.active_intervention.start = (timezone.now().date()).isoformat()
-        self.active_intervention.unicef_focal_points.add(self.unicef_staff)
-        self.active_intervention.partner_focal_points.add(PartnerStaffFactory())
-        self.active_intervention.save()
-        self.assertEqual(self.active_intervention.status, Intervention.ACTIVE)
+        self.intervention_obj.country_programme = self.intervention_obj.agreement.country_programme
+        self.intervention_obj.status = Intervention.ACTIVE
+        self.intervention_obj.unicef_focal_points.add(self.unicef_staff)
+        self.intervention_obj.partner_focal_points.add(PartnerStaffFactory())
+        self.intervention_obj.save()
+        self.assertEqual(self.intervention_obj.status, Intervention.ACTIVE)
 
-        # user is UNICEF User
-        status_code, response = self.run_request(self.active_intervention.id, user=self.partnership_manager_user)
-        self.assertEqual(status_code, status.HTTP_200_OK)
-        self.assertEqual(self.active_intervention.in_amendment, True)
+        self.assertEqual(self.intervention_obj.in_amendment, True)
 
-        data = {'in_amendment': False, 'frs': [self.fr_1.id], 'offices': [office.pk], 'sections': [section.pk],
-                'signed_pd_attachment': attachment.pk, 'country_programme': country_programme.pk}
-        status_code, response = self.run_request(
-            self.active_intervention.id,
-            data,
-            user=self.partnership_manager_user,
-            method='patch'
-        )
-        self.active_intervention.refresh_from_db()
-        self.assertEqual(self.active_intervention.in_amendment, False)
+        data = {'in_amendment': False, 'frs': [fr.id], 'offices': [office.pk],
+                'sections': [section.pk], 'signed_pd_attachment': attachment.pk,
+                'country_programme': self.intervention_obj.country_programme.id}
+
+        mock_send = mock.Mock()
+        notifpath = "etools.applications.partners.views.interventions_v2.send_intervention_amendment_added_notification"
+        with mock.patch(notifpath, mock_send):
+            self.forced_auth_req(
+                'patch',
+                reverse('partners_api:intervention-detail',args=[self.intervention_data.get("id")]),
+                user=self.partnership_manager_user,
+                data=data
+            )
+            self.assertEqual(mock_send.call_count, 1)
+            mock_send.assert_called_with(self.intervention_obj)
+
+        self.intervention_obj.refresh_from_db()
+        self.assertEqual(self.intervention_obj.in_amendment, False)
+
 
 class TestInterventionReportingPeriodViews(BaseTenantTestCase):
 
