@@ -32,6 +32,7 @@ from etools.applications.partners.tests.factories import (
     InterventionFactory,
     InterventionResultLinkFactory,
     PartnerFactory,
+    PartnerStaffFactory,
 )
 from etools.applications.partners.tests.test_utils import setup_intervention_test_data
 from etools.applications.reports.models import AppliedIndicator, ReportingRequirement
@@ -44,7 +45,7 @@ from etools.applications.reports.tests.factories import (
     ResultFactory,
     SectionFactory,
 )
-from etools.applications.users.tests.factories import GroupFactory, UserFactory
+from etools.applications.users.tests.factories import GroupFactory, UserFactory, OfficeFactory
 from etools.libraries.djangolib.utils import get_all_field_names
 
 
@@ -550,7 +551,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
 
     @skip('add test after permissions file is ready')
     def test_permissions_for_intervention_status_active(self):
-        # intervention is in Draft status
+        # intervention is in Active status
         self.assertEqual(self.active_intervention.status, Intervention.ACTIVE)
 
         # user is UNICEF User
@@ -565,6 +566,38 @@ class TestInterventionsAPI(BaseTenantTestCase):
                               [perm for perm in edit_permissions if edit_permissions[perm]])
         self.assertCountEqual(self.REQUIRED_FIELDS['signed'],
                               [perm for perm in required_permissions if required_permissions[perm]])
+
+    def test_intervention_amendment_notificaton(self):
+        attachment = AttachmentFactory()
+        country_programme = CountryProgrammeFactory()
+        office = OfficeFactory()
+        section = SectionFactory()
+        agreement = AgreementFactory(country_programme=country_programme)
+
+        self.active_intervention.in_amendment = True
+        self.active_intervention.agreement = agreement
+        self.active_intervention.country_programme = country_programme
+        self.active_intervention.start = (timezone.now().date()).isoformat()
+        self.active_intervention.unicef_focal_points.add(self.unicef_staff)
+        self.active_intervention.partner_focal_points.add(PartnerStaffFactory())
+        self.active_intervention.save()
+        self.assertEqual(self.active_intervention.status, Intervention.ACTIVE)
+
+        # user is UNICEF User
+        status_code, response = self.run_request(self.active_intervention.id, user=self.partnership_manager_user)
+        self.assertEqual(status_code, status.HTTP_200_OK)
+        self.assertEqual(self.active_intervention.in_amendment, True)
+
+        data = {'in_amendment': False, 'frs': [self.fr_1.id], 'offices': [office.pk], 'sections': [section.pk],
+                'signed_pd_attachment': attachment.pk, 'country_programme': country_programme.pk}
+        status_code, response = self.run_request(
+            self.active_intervention.id,
+            data,
+            user=self.partnership_manager_user,
+            method='patch'
+        )
+        self.active_intervention.refresh_from_db()
+        print(status_code, response, self.active_intervention.in_amendment)
 
     def test_list_interventions(self):
         EXPECTED_QUERIES = 9
