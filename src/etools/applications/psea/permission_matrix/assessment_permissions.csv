@@ -1,0 +1,14 @@
+Field no,Verbose Name,Field Name,Group,Condition,Status,Action,Allowed
+1.1.1,Partner Name,partner,Audit Focal Point,,draft,Edit,TRUE
+1.2.1,Assessment Date,assessment_date,Audit Focal Point,,draft,Edit,TRUE
+1.2.2,Assessment Date,assessment_date,Audit Focal Point,,assigned,Edit,TRUE
+1.2.3,Assessment Date,assessment_date,Audit Focal Point,,in_progress,Edit,TRUE
+1.2.4,Assessment Date,assessment_date,Audit Focal Point,,submitted,Edit,TRUE
+1.3.1,Assessor,assessors,Audit Focal Point,,draft,Edit,TRUE
+1.4.1,Answers,answers,,user belongs,in_progress,Edit,TRUE
+1.1.2,Partner Name,partner,,,*,Required,TRUE
+1.2.5,Assessment Date,assessment_date,,,draft,Required,FALSE
+1.3.2,Assessor,assessors,,,draft,Required,FALSE
+1.4.2,Answers,answers,,,draft,Required,FALSE
+1.4.3,Answers,answers,,,assigned,Required,FALSE
+1.4.4,Answers,answers,,,in_progress,Required,FALSE

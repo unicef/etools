@@ -11,6 +11,7 @@ from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation
 
 from etools.applications.audit.purchase_order.models import AuditorFirm, AuditorStaffMember
+from etools.applications.core.permissions import import_permissions
 
 
 class Rating(TimeStampedModel):
@@ -99,6 +100,11 @@ class Assessment(TimeStampedModel):
         verbose_name = _('Assessment')
         verbose_name_plural = _('Assessments')
         ordering = ("-assessment_date",)
+
+    @classmethod
+    def permission_structure(cls):
+        permissions = import_permissions(cls.__name__)
+        return permissions
 
     def __str__(self):
         return f'{self.partner} [{self.get_status_display()}]'
@@ -197,6 +203,7 @@ class Answer(TimeStampedModel):
         Assessment,
         verbose_name=_('Assessment'),
         on_delete=models.CASCADE,
+        related_name="answers",
     )
     indicator = models.ForeignKey(
         Indicator,
@@ -270,6 +277,7 @@ class Assessor(TimeStampedModel):
         Assessment,
         verbose_name=_("Assessment"),
         on_delete=models.CASCADE,
+        related_name="assessors",
     )
     assessor_type = models.CharField(
         verbose_name=_("Type"),

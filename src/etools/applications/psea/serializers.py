@@ -7,16 +7,31 @@ from unicef_attachments.fields import FileTypeModelChoiceField
 from unicef_attachments.models import Attachment, FileType
 
 from etools.applications.psea.models import Answer, AnswerEvidence, Assessment, Assessor, Evidence, Indicator, Rating
+from etools.applications.psea.permissions import AssessmentPermissions
 from etools.applications.psea.validators import EvidenceDescriptionValidator
 
 
 class AssessmentSerializer(serializers.ModelSerializer):
     rating = serializers.SerializerMethodField()
+    permissions = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Assessment
         fields = '__all__'
         read_only_fields = ["reference_number", "overall_rating"]
+
+    def get_permissions(self, obj):
+        if isinstance(self.instance, list):
+            return []
+
+        user = self.context['request'].user
+        ps = Assessment.permission_structure()
+        permissions = AssessmentPermissions(
+            user=user,
+            instance=self.instance,
+            permission_structure=ps,
+        )
+        return permissions.get_permissions()
 
     def get_rating(self, obj):
         return obj.rating()
