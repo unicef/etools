@@ -44,7 +44,7 @@ from etools.applications.reports.tests.factories import (
     ResultFactory,
     SectionFactory,
 )
-from etools.applications.users.tests.factories import GroupFactory, UserFactory, OfficeFactory
+from etools.applications.users.tests.factories import GroupFactory, UserFactory
 from etools.libraries.djangolib.utils import get_all_field_names
 
 

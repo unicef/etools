@@ -1,12 +1,12 @@
 import csv
 import datetime
 import json
-from django.core.management import call_command
 from unittest import skip
 from urllib.parse import urlparse
 
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.management import call_command
 from django.db import connection
 from django.test import SimpleTestCase
 from django.urls import resolve, reverse
@@ -1668,7 +1668,7 @@ class TestInterventionViews(BaseTenantTestCase):
         # make sure that the notification template is imported to the DB
         call_command("update_notifications")
 
-        fr= FundsReservationHeaderFactory()
+        fr = FundsReservationHeaderFactory()
         fr.intervention = self.intervention_obj
         fr.save()
 
@@ -1694,7 +1694,7 @@ class TestInterventionViews(BaseTenantTestCase):
         with mock.patch(notifpath, mock_send):
             self.forced_auth_req(
                 'patch',
-                reverse('partners_api:intervention-detail',args=[self.intervention_data.get("id")]),
+                reverse('partners_api:intervention-detail', args=[self.intervention_data.get("id")]),
                 user=self.partnership_manager_user,
                 data=data
             )
