@@ -18,13 +18,15 @@ from etools.applications.psea.tests.factories import (
     IndicatorFactory,
     RatingFactory,
 )
-from etools.applications.users.tests.factories import UserFactory
+from etools.applications.users.tests.factories import GroupFactory, UserFactory
 
 
 class TestAssessmentViewSet(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user = UserFactory()
+        cls.focal_user = UserFactory()
+        cls.focal_user.groups.add(GroupFactory(name="Audit Focal Point"))
 
     def test_list(self):
         num = 10
@@ -79,7 +81,7 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         self.assertEqual(assessment.assessment_date, timezone.now().date())
         self.assertEqual(assessment.status, Assessment.STATUS_DRAFT)
 
-    def test_patch(self):
+    def test_validation(self):
         partner_1 = PartnerFactory()
         partner_2 = PartnerFactory()
         assessment = AssessmentFactory(partner=partner_1)
@@ -88,6 +90,23 @@ class TestAssessmentViewSet(BaseTenantTestCase):
             "patch",
             reverse('psea:assessment-detail', args=[assessment.pk]),
             user=self.user,
+            data={
+                "partner": partner_2.pk
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        assessment.refresh_from_db()
+        self.assertEqual(assessment.partner, partner_1)
+
+    def test_patch(self):
+        partner_1 = PartnerFactory()
+        partner_2 = PartnerFactory()
+        assessment = AssessmentFactory(partner=partner_1)
+
+        response = self.forced_auth_req(
+            "patch",
+            reverse('psea:assessment-detail', args=[assessment.pk]),
+            user=self.focal_user,
             data={
                 "partner": partner_2.pk
             },

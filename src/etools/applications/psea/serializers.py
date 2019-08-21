@@ -8,6 +8,7 @@ from unicef_attachments.models import Attachment, FileType
 
 from etools.applications.psea.models import Answer, AnswerEvidence, Assessment, Assessor, Evidence, Indicator, Rating
 from etools.applications.psea.permissions import AssessmentPermissions
+from etools.applications.psea.validation import AssessmentValid
 from etools.applications.psea.validators import EvidenceDescriptionValidator
 
 
@@ -32,6 +33,20 @@ class AssessmentSerializer(serializers.ModelSerializer):
             permission_structure=ps,
         )
         return permissions.get_permissions()
+
+    def validate(self, data):
+        data = super().validate(data)
+        if self.context.get('skip_global_validator', None):
+            return data
+        validator = AssessmentValid(
+            data,
+            old=self.instance,
+            user=self.context['request'].user,
+        )
+
+        if not validator.is_valid:
+            raise serializers.ValidationError({'errors': validator.errors})
+        return data
 
     def get_rating(self, obj):
         return obj.rating()

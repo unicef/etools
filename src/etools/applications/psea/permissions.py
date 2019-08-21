@@ -1,6 +1,5 @@
-from etools_validator.utils import check_rigid_related
-
 from etools.applications.partners.permissions import PMPPermissions
+from etools.applications.psea.models import Assessor
 
 
 class AssessmentPermissions(PMPPermissions):
@@ -23,9 +22,15 @@ class AssessmentPermissions(PMPPermissions):
 
         def user_belongs(instance):
             assert inbound_check, 'this function cannot be called unless instantiated with inbound_check=True'
-            # check_rigid_related checks if there were any changes from
-            # the previous amendments if there were changes it returns False
-            return not check_rigid_related(instance, 'assessment')
+            assessor_qs = Assessor.objects.filter(assessment=instance)
+            if assessor_qs.filter(user=self.user).exists():
+                return True
+            for assessor in assessor_qs.all():
+                if self.user in assessor.focal_points.all():
+                    return True
+                if assessor.auditor_firm_staff.filter(user=self.user).exists():
+                    return True
+            return False
 
         self.condition_map = {
             'user belongs': False if not inbound_check else user_belongs(
