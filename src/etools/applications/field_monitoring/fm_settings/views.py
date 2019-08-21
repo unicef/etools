@@ -195,3 +195,12 @@ class QuestionsViewSet(
     ]
     queryset = Question.objects.prefetch_related('options')
     serializer_class = QuestionSerializer
+    filter_backends = (DjangoFilterBackend, OrderingFilter)
+    filter_fields = ({
+        field: ['exact', 'in'] for field in [
+            'level', 'category', 'answer_type', 'is_hact', 'is_active'
+        ]
+    })
+    ordering_fields = (
+        'text', 'level', 'answer_type', 'category__name', 'is_active', 'is_hact'
+    )
