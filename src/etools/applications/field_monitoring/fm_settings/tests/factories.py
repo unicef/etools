@@ -66,6 +66,16 @@ class QuestionFactory(factory.DjangoModelFactory):
 
         OptionFactory.create_batch(count, question=self)
 
+    @factory.post_generation
+    def methods(self, created, extracted, **kwargs):
+        if extracted:
+            self.methods.add(*extracted)
+
+    @factory.post_generation
+    def sections(self, created, extracted, **kwargs):
+        if extracted:
+            self.sections.add(*extracted)
+
 
 class LogIssueFactory(factory.DjangoModelFactory):
     author = factory.SubFactory(UserFactory)

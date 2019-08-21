@@ -23,7 +23,7 @@ from etools.applications.field_monitoring.fm_settings.tests.factories import (
 from etools.applications.field_monitoring.tests.base import FMBaseTestCaseMixin
 from etools.applications.partners.tests.factories import InterventionFactory, PartnerFactory
 from etools.applications.reports.models import ResultType
-from etools.applications.reports.tests.factories import ResultFactory
+from etools.applications.reports.tests.factories import ResultFactory, SectionFactory
 from etools.libraries.djangolib.tests.utils import TestExportMixin
 
 
@@ -614,6 +614,67 @@ class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 5)
+
+    def test_filter_by_methods(self):
+        first_method = MethodFactory()
+        second_method = MethodFactory()
+
+        valid_questions = [
+            QuestionFactory(methods=[first_method]),
+            QuestionFactory(methods=[first_method, second_method]),
+            QuestionFactory(methods=[second_method, MethodFactory()]),
+        ]
+
+        QuestionFactory()  # no methods
+        QuestionFactory(methods=[MethodFactory()])  # another method
+
+        response = self.forced_auth_req(
+            'get',
+            reverse('field_monitoring_settings:questions-list'),
+            user=self.usual_user,
+            data={'methods__in': ','.join(map(str, [first_method.id, second_method.id]))}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], len(valid_questions))
+        self.assertListEqual(
+            [r['id'] for r in response.data['results']],
+            [q.id for q in valid_questions]
+        )
+
+    def test_combine_filter_by_methods_and_sections(self):
+        # test that combining 2+ m2m filters won't broke query
+        first_method = MethodFactory()
+        second_method = MethodFactory()
+
+        first_section = SectionFactory()
+        second_section = SectionFactory()
+
+        valid_questions = [
+            QuestionFactory(methods=[first_method], sections=[first_section, second_section]),
+            QuestionFactory(methods=[first_method, second_method], sections=[first_section]),
+            QuestionFactory(methods=[second_method, MethodFactory()], sections=[second_section, SectionFactory()]),
+        ]
+
+        QuestionFactory()  # no methods
+        QuestionFactory(methods=[MethodFactory()])  # another method
+        QuestionFactory(methods=[first_method])  # matches method, but not section
+        QuestionFactory(methods=[first_method], sections=[SectionFactory()])  # matches method, wrong section
+
+        response = self.forced_auth_req(
+            'get',
+            reverse('field_monitoring_settings:questions-list'),
+            user=self.usual_user,
+            data={
+                'methods__in': ','.join([str(first_method.id), str(second_method.id)]),
+                'sections__in': ','.join([str(first_section.id), str(second_section.id)]),
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], len(valid_questions))
+        self.assertListEqual(
+            [r['id'] for r in response.data['results']],
+            [q.id for q in valid_questions]
+        )
 
     def test_create(self):
         response = self.forced_auth_req(

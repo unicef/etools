@@ -1,9 +1,11 @@
 from django.db import models
 from django.db.models import Case, F, When
 
+from django_filters import rest_framework as filters
 from rest_framework.filters import BaseFilterBackend
 
-from etools.applications.field_monitoring.fm_settings.models import LogIssue
+from etools.applications.field_monitoring.fm_settings.models import LogIssue, Question
+from etools.applications.field_monitoring.utils.filters import M2MInFilter
 
 
 class LogIssueRelatedToTypeFilter(BaseFilterBackend):
@@ -54,3 +56,20 @@ class LogIssueNameOrderingFilter(BaseFilterBackend):
             When(location__isnull=False, then=F('location__name')),
             output_field=models.CharField()
         )).order_by(ordering)
+
+
+class QuestionsFilterSet(filters.FilterSet):
+    methods__in = M2MInFilter(field_name="methods")
+    sections__in = M2MInFilter(field_name="sections")
+
+    class Meta:
+        model = Question
+        fields = {
+            'level': ['exact', 'in'],
+            'category': ['exact', 'in'],
+            'answer_type': ['exact', 'in'],
+            'is_hact': ['exact'],
+            'is_active': ['exact'],
+            'methods': ['in'],
+            'sections': ['in'],
+        }

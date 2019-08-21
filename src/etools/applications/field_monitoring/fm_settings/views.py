@@ -24,7 +24,7 @@ from etools.applications.field_monitoring.fm_settings.filters import (
     LogIssueMonitoringActivityFilter,
     LogIssueNameOrderingFilter,
     LogIssueRelatedToTypeFilter,
-)
+    QuestionsFilterSet)
 from etools.applications.field_monitoring.fm_settings.models import Category, LocationSite, LogIssue, Method, Question
 from etools.applications.field_monitoring.fm_settings.serializers import (
     CategorySerializer,
@@ -196,11 +196,7 @@ class QuestionsViewSet(
     queryset = Question.objects.prefetch_related('options')
     serializer_class = QuestionSerializer
     filter_backends = (DjangoFilterBackend, OrderingFilter)
-    filter_fields = ({
-        field: ['exact', 'in'] for field in [
-            'level', 'category', 'answer_type', 'is_hact', 'is_active'
-        ]
-    })
+    filter_class = QuestionsFilterSet
     ordering_fields = (
         'text', 'level', 'answer_type', 'category__name', 'is_active', 'is_hact'
     )
