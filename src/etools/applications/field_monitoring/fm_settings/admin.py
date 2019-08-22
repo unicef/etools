@@ -8,7 +8,12 @@ from etools.applications.field_monitoring.fm_settings.models import LocationSite
 
 @admin.register(Method)
 class MethodAdmin(OrderedModelAdmin):
-    list_display = ('name',)
+    list_display = ('name', 'move_up_down_links')
+
+
+@admin.register
+class CategoryAdmin(OrderedModelAdmin):
+    list_display = ('name', 'move_up_down_links')
 
 
 class QuestionOptionsInline(admin.StackedInline):
