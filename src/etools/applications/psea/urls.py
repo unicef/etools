@@ -1,4 +1,4 @@
-from django.conf.urls import include, url
+from django.urls import include, path
 
 from rest_framework_nested import routers
 from unicef_restlib.routers import NestedComplexRouter
@@ -27,7 +27,7 @@ attachments_api.register(
 
 app_name = 'psea'
 urlpatterns = [
-    url(r'^', include(root_api.urls)),
-    url(r'^', include(answer_api.urls)),
-    url(r'^', include(attachments_api.urls)),
+    path('', include(root_api.urls)),
+    path('', include(answer_api.urls)),
+    path('', include(attachments_api.urls)),
 ]
