@@ -1,0 +1,26 @@
+[
+    {
+        "model": "field_monitoring_settings.category",
+        "pk": 1,
+        "fields": {
+            "name": "Demand",
+            "order": 1
+        }
+    },
+    {
+        "model": "field_monitoring_settings.category",
+        "pk": 2,
+        "fields": {
+            "name": "Supply of Service",
+            "order": 2
+        }
+    },
+    {
+        "model": "field_monitoring_settings.category",
+        "pk": 3,
+        "fields": {
+            "name": "Quality",
+            "order": 3
+        }
+    }
+]
