@@ -3,7 +3,8 @@ from django.utils.translation import ugettext_lazy as _
 
 from ordered_model.admin import OrderedModelAdmin
 
-from etools.applications.field_monitoring.fm_settings.models import LocationSite, LogIssue, Method, Option, Question
+from etools.applications.field_monitoring.fm_settings.models import LocationSite, LogIssue, Method, Option, Question, \
+    Category
 
 
 @admin.register(Method)
@@ -11,7 +12,7 @@ class MethodAdmin(OrderedModelAdmin):
     list_display = ('name', 'move_up_down_links')
 
 
-@admin.register
+@admin.register(Category)
 class CategoryAdmin(OrderedModelAdmin):
     list_display = ('name', 'move_up_down_links')
 
