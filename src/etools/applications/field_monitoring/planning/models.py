@@ -75,7 +75,8 @@ class QuestionTargetMixin(models.Model):
 
 
 class QuestionTemplate(QuestionTargetMixin, models.Model):
-    question = models.ForeignKey(Question, on_delete=models.CASCADE, verbose_name=_('Question'))
+    question = models.ForeignKey(Question, on_delete=models.CASCADE, verbose_name=_('Question'),
+                                 related_name='templates')
     is_active = models.BooleanField(default=True, verbose_name=_('Is Active'))
     specific_details = models.TextField(verbose_name=_('Specific Details To Probe'), blank=True)
 
@@ -83,6 +84,9 @@ class QuestionTemplate(QuestionTargetMixin, models.Model):
         verbose_name = _('Question Template')
         verbose_name_plural = _('Question Templates')
         ordering = ('id',)
+
+    def is_specific(self):
+        return any([self.partner_id, self.cp_output_id, self.intervention_id])
 
     def __str__(self):
         return 'Question Template for {}'.format(self.related_to)

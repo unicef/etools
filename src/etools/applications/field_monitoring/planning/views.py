@@ -11,6 +11,7 @@ from rest_framework import mixins, viewsets
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
+from etools.applications.field_monitoring.fm_settings.models import Question
 from etools.applications.field_monitoring.permissions import (
     IsEditAction,
     IsFieldMonitor,
@@ -28,7 +29,7 @@ from etools.applications.field_monitoring.planning.serializers import (
     MonitoringActivitySerializer,
     QuestionTemplateSerializer,
     YearPlanSerializer,
-)
+    TemplatedQuestionSerializer)
 from etools.applications.field_monitoring.views import FMBaseAttachmentsViewSet, FMBaseViewSet
 
 
@@ -74,21 +75,31 @@ class YearPlanViewSet(
         return obj
 
 
-class QuestionTemplateViewSet(
+class TemplatedQuestionsViewSet(
     FMBaseViewSet,
     mixins.ListModelMixin,
-    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
     mixins.UpdateModelMixin,
     viewsets.GenericViewSet,
 ):
-
     permission_classes = FMBaseViewSet.permission_classes + [
-        (IsReadAction) | (IsEditAction & IsFieldMonitor)
+        IsReadAction | (IsEditAction & IsFieldMonitor)
     ]
-    queryset = QuestionTemplate.objects.all()
-    serializer_class = QuestionTemplateSerializer
-    filter_backends = (DjangoFilterBackend,)
-    filter_fields = ('is_active', 'partner', 'cp_output', 'intervention',)
+    queryset = Question.objects.all()
+    serializer_class = TemplatedQuestionSerializer
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        queryset = queryset.filter(level=self.kwargs['level'])
+        queryset = queryset.prefetch_templates(self.kwargs['level'], self.kwargs.get('target_id'))
+        return queryset
+
+    def get_serializer(self, *args, **kwargs):
+        kwargs.update({
+            'level': self.kwargs['level'],
+            'target_id': self.kwargs.get('target_id'),
+        })
+        return super().get_serializer(*args, **kwargs)
 
     def get_view_name(self):
         return _('Templates')

@@ -4,7 +4,8 @@ import factory
 from factory import fuzzy
 from unicef_locations.tests.factories import LocationFactory
 
-from etools.applications.field_monitoring.planning.models import MonitoringActivity, YearPlan
+from etools.applications.field_monitoring.fm_settings.tests.factories import QuestionFactory
+from etools.applications.field_monitoring.planning.models import MonitoringActivity, YearPlan, QuestionTemplate
 
 
 class YearPlanFactory(factory.DjangoModelFactory):
@@ -31,3 +32,11 @@ class MonitoringActivityFactory(factory.DjangoModelFactory):
 
     class Meta:
         model = MonitoringActivity
+
+
+class QuestionTemplateFactory(factory.DjangoModelFactory):
+    question = factory.SubFactory(QuestionFactory)
+    specific_details = fuzzy.FuzzyText()
+
+    class Meta:
+        model = QuestionTemplate

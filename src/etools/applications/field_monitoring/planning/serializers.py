@@ -7,7 +7,8 @@ from unicef_restlib.fields import SeparatedReadWriteField
 from unicef_snapshot.serializers import SnapshotModelSerializer
 
 from etools.applications.action_points.serializers import HistorySerializer
-from etools.applications.field_monitoring.fm_settings.serializers import LocationSiteSerializer
+from etools.applications.field_monitoring.fm_settings.models import Question
+from etools.applications.field_monitoring.fm_settings.serializers import LocationSiteSerializer, QuestionSerializer
 from etools.applications.field_monitoring.planning.activity_validation.permissions import ActivityPermissions
 from etools.applications.field_monitoring.planning.models import MonitoringActivity, QuestionTemplate, YearPlan
 from etools.applications.partners.serializers.interventions_v2 import MinimalInterventionListSerializer
@@ -31,10 +32,48 @@ class YearPlanSerializer(SnapshotModelSerializer):
 class QuestionTemplateSerializer(serializers.ModelSerializer):
     class Meta:
         model = QuestionTemplate
-        fields = (
-            'question', 'is_active', 'specific_details',
-            'partner', 'cp_output', 'intervention',
-        )
+        fields = ('is_active', 'specific_details')
+
+
+class TemplatedQuestionSerializer(QuestionSerializer):
+    template = QuestionTemplateSerializer()
+
+    class Meta(QuestionSerializer.Meta):
+        fields = QuestionSerializer.Meta.fields + ('template',)
+        read_only_fields = QuestionSerializer.Meta.fields
+
+    def __init__(self, *args, **kwargs):
+        self.level = kwargs.pop('level')
+        self.target_id = kwargs.pop('target_id', None)
+
+        super().__init__(*args, **kwargs)
+
+    def update(self, instance, validated_data):
+        template_data = validated_data.pop('template')
+
+        instance = super().update(instance, validated_data)
+
+        template_data['question'] = instance
+
+        if instance.template is None:
+            base_template = QuestionTemplateSerializer().create(validated_data=template_data)
+            if self.target_id:
+                template_data['{}_id'.format(Question.get_target_relation_name(self.level))] = self.target_id
+                template = QuestionTemplateSerializer().create(validated_data=template_data)
+            else:
+                template = base_template
+        else:
+            if not self.target_id:
+                template = QuestionTemplateSerializer().update(instance.template, validated_data=template_data)
+            else:
+                if instance.template.is_specific():
+                    template = QuestionTemplateSerializer().update(instance.template, validated_data=template_data)
+                else:
+                    template_data['{}_id'.format(Question.get_target_relation_name(self.level))] = self.target_id
+                    template = QuestionTemplateSerializer().create(validated_data=template_data)
+
+        instance.template = template
+        return instance
 
 
 class MonitoringActivityLightSerializer(serializers.ModelSerializer):

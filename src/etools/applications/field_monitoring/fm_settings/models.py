@@ -2,6 +2,7 @@ from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.gis.db.models import PointField
 from django.db import models
+from django.db.models import QuerySet, Prefetch
 from django.utils.translation import ugettext_lazy as _
 
 from django_extensions.db.fields import AutoSlugField
@@ -38,6 +39,27 @@ class Category(OrderedModel):
         return self.name
 
 
+class QuestionsQuerySet(QuerySet):
+    def prefetch_templates(self, level, target_id=None):
+        from etools.applications.field_monitoring.planning.models import QuestionTemplate
+
+        target = Question.get_target_relation_name(level)
+        queryset = self.prefetch_related(
+            Prefetch('templates', QuestionTemplate.objects.filter(**{'{}__isnull'.format(target): True}),
+                     to_attr='base_templates')
+        )
+        if target_id:
+            queryset = queryset.prefetch_related(
+                Prefetch(
+                    'templates',
+                    QuestionTemplate.objects.filter(**{'{}__isnull'.format(target): False, target: target_id}),
+                    to_attr='specific_templates'
+                )
+            )
+
+        return queryset
+
+
 class Question(models.Model):
     ANSWER_TYPES = Choices(
         ('text', _('Text')),
@@ -63,10 +85,36 @@ class Question(models.Model):
     is_custom = models.BooleanField(default=False, verbose_name=_('Is Custom'))
     is_active = models.BooleanField(default=False, verbose_name=_('Is Active'))
 
+    objects = models.Manager.from_queryset(QuestionsQuerySet)()
+
     class Meta:
         verbose_name = _('Question')
         verbose_name_plural = _('Questions')
         ordering = ('id',)
+
+    @classmethod
+    def get_target_relation_name(cls, level):
+        return {
+            cls.LEVELS.partner: 'partner',
+            cls.LEVELS.output: 'cp_output',
+            cls.LEVELS.intervention: 'intervention',
+        }[level]
+
+    @property
+    def template(self):
+        if hasattr(self, '_template'):
+            return self._template
+
+        assert hasattr(self, 'base_templates'), 'Templates should be prefetched firstly'
+
+        if hasattr(self, 'specific_templates') and self.specific_templates:
+            return self.specific_templates[0]
+        elif self.base_templates:
+            return self.base_templates[0]
+
+    @template.setter
+    def template(self, value):
+        self._template = value
 
     def __str__(self):
         return self.text
