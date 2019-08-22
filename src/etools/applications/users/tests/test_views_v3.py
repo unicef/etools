@@ -1,4 +1,3 @@
-
 import json
 
 from django.contrib.auth import get_user_model
@@ -6,7 +5,9 @@ from django.urls import reverse
 
 from rest_framework import status
 
+from etools.applications.audit.tests.factories import AuditorUserFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.tpm.tests.factories import SimpleTPMPartnerFactory, TPMPartnerStaffMemberFactory
 from etools.applications.users.models import UserProfile
 from etools.applications.users.serializers_v3 import AP_ALLOWED_COUNTRIES
 from etools.applications.users.tests.factories import GroupFactory, UserFactory
@@ -234,3 +235,35 @@ class TestMyProfileAPIView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["oic"], self.unicef_superuser.id)
         self.assertEqual(response.data["is_superuser"], "False")
+
+
+class TestExternalUserAPIView(BaseTenantTestCase):
+    def setUp(self):
+        self.user = UserFactory()
+        self.unicef_staff = UserFactory(is_staff=True)
+        self.unicef_superuser = UserFactory(is_superuser=True)
+        self.auditor_user = AuditorUserFactory()
+        self.tpmpartner = SimpleTPMPartnerFactory()
+        self.tpmpartner_user = TPMPartnerStaffMemberFactory(
+            tpm_partner=self.tpmpartner,
+        )
+
+    def test_list(self):
+        response = self.forced_auth_req(
+            'get',
+            reverse("users_v3:external-list"),
+            user=self.unicef_staff,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+
+    def test_get(self):
+        response = self.forced_auth_req(
+            'get',
+            reverse("users_v3:external-detail", args=[self.user.pk]),
+            user=self.unicef_staff,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["id"], self.user.pk)
