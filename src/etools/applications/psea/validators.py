@@ -1,3 +1,5 @@
+from django.utils.translation import ugettext_lazy as _
+
 from rest_framework.exceptions import ValidationError
 
 
@@ -6,4 +8,4 @@ class EvidenceDescriptionValidator:
         evidence = attrs.get("evidence")
         if evidence:
             if evidence.requires_description and not attrs.get("description"):
-                raise ValidationError("Description is required.")
+                raise ValidationError(_("Description is required."))
