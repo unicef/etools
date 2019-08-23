@@ -240,6 +240,7 @@ class TestMyProfileAPIView(BaseTenantTestCase):
 class TestExternalUserAPIView(BaseTenantTestCase):
     def setUp(self):
         self.user = UserFactory()
+        ProfileFactory(countries_available=[self.tenant], user=self.user)
         self.unicef_staff = UserFactory(is_staff=True)
         self.unicef_superuser = UserFactory(is_superuser=True)
         self.auditor_user = AuditorUserFactory()
@@ -267,50 +268,50 @@ class TestExternalUserAPIView(BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["id"], self.user.pk)
-        self.assertFalse(response.data["available"])
 
-    def test_get_available(self):
-        profile = ProfileFactory(countries_available=[self.tenant])
+    def test_get_not_in_schema(self):
+        user = UserFactory()
         response = self.forced_auth_req(
             'get',
-            reverse("users_v3:external-detail", args=[profile.user.pk]),
+            reverse("users_v3:external-detail", args=[user.pk]),
             user=self.unicef_staff,
         )
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["id"], profile.user.pk)
-        self.assertTrue(response.data["available"])
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    def test_patch(self):
+    def test_post(self):
+        email = "new@example.com"
+        user_qs = get_user_model().objects.filter(email=email)
+        self.assertFalse(user_qs.exists())
+        response = self.forced_auth_req(
+            'post',
+            reverse("users_v3:external-list"),
+            user=self.unicef_staff,
+            data={
+                "email": email,
+                "first_name": "Joe",
+                "last_name": "Soap",
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(user_qs.exists())
+        user = user_qs.first()
+        self.assertIn(self.tenant, user.profile.countries_available.all())
+
+    def test_post_exists(self):
         profile = ProfileFactory()
         self.assertNotIn(self.tenant, profile.countries_available.all())
         response = self.forced_auth_req(
-            'patch',
-            reverse("users_v3:external-detail", args=[profile.user.pk]),
+            'post',
+            reverse("users_v3:external-list"),
             user=self.unicef_staff,
             data={
-                "available": True,
-            },
+                "email": profile.user.email,
+                "first_name": "Joe",
+                "last_name": "Soap",
+            }
         )
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["id"], profile.user.pk)
-        self.assertTrue(response.data["available"])
-        self.assertIn(self.tenant, profile.countries_available.all())
-
-    def test_put(self):
-        profile = ProfileFactory()
-        self.assertNotIn(self.tenant, profile.countries_available.all())
-        response = self.forced_auth_req(
-            'put',
-            reverse("users_v3:external-detail", args=[profile.user.pk]),
-            user=self.unicef_staff,
-            data={
-                "available": True,
-            },
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["id"], profile.user.pk)
-        self.assertTrue(response.data["available"])
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertIn(self.tenant, profile.countries_available.all())

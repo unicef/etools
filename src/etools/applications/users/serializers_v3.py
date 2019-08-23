@@ -127,7 +127,11 @@ class SimpleUserSerializer(serializers.ModelSerializer):
 
 
 class ExternalUserSerializer(MinimalUserSerializer):
-    available = serializers.SerializerMethodField()
+    email = serializers.EmailField(
+        label='Email address',
+        max_length=254,
+        validators=[],
+    )
 
     class Meta:
         model = get_user_model()
@@ -137,17 +141,25 @@ class ExternalUserSerializer(MinimalUserSerializer):
             'first_name',
             'middle_name',
             'last_name',
-            'available',
+            'username',
+            'email',
         )
+        read_only_fields = ["username"]
 
-    def get_available(self, obj):
-        return obj.profile.countries_available.filter(
-            schema_name=connection.schema_name
-        ).exists()
+    def add_to_country(self, instance):
+        country = Country.objects.get(schema_name=connection.schema_name)
+        if country not in instance.profile.countries_available.all():
+            instance.profile.countries_available.add(country)
 
-    def update(self, instance, validated_data):
-        if self.initial_data.get("available"):
-            country = Country.objects.get(schema_name=connection.schema_name)
-            if country not in instance.profile.countries_available.all():
-                instance.profile.countries_available.add(country)
+    def create(self, validated_data):
+        validated_data["username"] = validated_data.get("email")
+        # check if user record actually exists
+        user_qs = get_user_model().objects.filter(
+            email=validated_data.get("email"),
+        )
+        if user_qs.exists():
+            instance = user_qs.first()
+        else:
+            instance = super().create(validated_data)
+        self.add_to_country(instance)
         return instance

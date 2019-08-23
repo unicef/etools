@@ -1,6 +1,7 @@
 import logging
 
 from django.contrib.auth import get_user_model
+from django.db import connection
 from django.db.models import OuterRef, Prefetch, Q, Subquery
 
 from rest_framework import mixins, status, viewsets
@@ -100,8 +101,8 @@ class CountryView(v2.CountryView):
 class ExternalUserViewSet(
         SafeTenantViewSetMixin,
         mixins.ListModelMixin,
+        mixins.CreateModelMixin,
         mixins.RetrieveModelMixin,
-        mixins.UpdateModelMixin,
         viewsets.GenericViewSet,
 ):
     model = get_user_model()
@@ -117,7 +118,10 @@ class ExternalUserViewSet(
         from etools.applications.tpm.tpmpartners.models import TPMPartnerStaffMember
         from etools.applications.audit.purchase_order.models import AuditorStaffMember
 
-        qs = self.queryset
+        qs = self.queryset.filter(
+            profile__countries_available__schema_name=connection.schema_name,
+        )
+
         # exclude user if connected with TPMPartnerStaffMember,
         # and/or AuditorStaffMember
         tpm_staff = TPMPartnerStaffMember.objects.filter(
@@ -130,5 +134,6 @@ class ExternalUserViewSet(
             pk__in=Subquery(tpm_staff.values("user_id"))
         ).exclude(
             pk__in=Subquery(audit_staff.values("user_id"))
-        ).prefetch_related(Prefetch("profile__countries_available"))
+        )
+
         return qs
