@@ -2,7 +2,7 @@ import logging
 
 from django.contrib.auth import get_user_model
 from django.db import connection
-from django.db.models import OuterRef, Prefetch, Q, Subquery
+from django.db.models import OuterRef, Q, Subquery
 
 from rest_framework import mixins, status, viewsets
 from rest_framework.exceptions import ValidationError
