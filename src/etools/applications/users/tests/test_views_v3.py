@@ -315,3 +315,18 @@ class TestExternalUserAPIView(BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertIn(self.tenant, profile.countries_available.all())
+
+    def test_post_staff(self):
+        response = self.forced_auth_req(
+            'post',
+            reverse("users_v3:external-list"),
+            user=self.unicef_staff,
+            data={
+                "email": self.auditor_user.email,
+                "first_name": "Joe",
+                "last_name": "Soap",
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("email", response.data)

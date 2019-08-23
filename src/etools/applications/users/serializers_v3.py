@@ -5,6 +5,7 @@ from rest_framework import serializers
 
 from etools.applications.users.models import Country, UserProfile
 from etools.applications.users.serializers import GroupSerializer, SimpleCountrySerializer
+from etools.applications.users.validators import ExternalUserValidator
 
 # temporary list of Countries that will use the Auditor Portal Module.
 # Logic be removed once feature gating is in place
@@ -130,7 +131,7 @@ class ExternalUserSerializer(MinimalUserSerializer):
     email = serializers.EmailField(
         label='Email address',
         max_length=254,
-        validators=[],
+        validators=[ExternalUserValidator()],
     )
 
     class Meta:
