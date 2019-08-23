@@ -101,6 +101,7 @@ class ExternalUserViewSet(
         SafeTenantViewSetMixin,
         mixins.ListModelMixin,
         mixins.RetrieveModelMixin,
+        mixins.UpdateModelMixin,
         viewsets.GenericViewSet,
 ):
     model = get_user_model()

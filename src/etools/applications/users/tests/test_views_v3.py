@@ -280,3 +280,37 @@ class TestExternalUserAPIView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["id"], profile.user.pk)
         self.assertTrue(response.data["available"])
+
+    def test_patch(self):
+        profile = ProfileFactory()
+        self.assertNotIn(self.tenant, profile.countries_available.all())
+        response = self.forced_auth_req(
+            'patch',
+            reverse("users_v3:external-detail", args=[profile.user.pk]),
+            user=self.unicef_staff,
+            data={
+                "available": True,
+            },
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["id"], profile.user.pk)
+        self.assertTrue(response.data["available"])
+        self.assertIn(self.tenant, profile.countries_available.all())
+
+    def test_put(self):
+        profile = ProfileFactory()
+        self.assertNotIn(self.tenant, profile.countries_available.all())
+        response = self.forced_auth_req(
+            'put',
+            reverse("users_v3:external-detail", args=[profile.user.pk]),
+            user=self.unicef_staff,
+            data={
+                "available": True,
+            },
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["id"], profile.user.pk)
+        self.assertTrue(response.data["available"])
+        self.assertIn(self.tenant, profile.countries_available.all())

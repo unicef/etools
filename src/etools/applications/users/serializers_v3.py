@@ -144,3 +144,10 @@ class ExternalUserSerializer(MinimalUserSerializer):
         return obj.profile.countries_available.filter(
             schema_name=connection.schema_name
         ).exists()
+
+    def update(self, instance, validated_data):
+        if self.initial_data.get("available"):
+            country = Country.objects.get(schema_name=connection.schema_name)
+            if country not in instance.profile.countries_available.all():
+                instance.profile.countries_available.add(country)
+        return instance
