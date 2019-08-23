@@ -10,7 +10,7 @@ from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.tpm.tests.factories import SimpleTPMPartnerFactory, TPMPartnerStaffMemberFactory
 from etools.applications.users.models import UserProfile
 from etools.applications.users.serializers_v3 import AP_ALLOWED_COUNTRIES
-from etools.applications.users.tests.factories import GroupFactory, UserFactory
+from etools.applications.users.tests.factories import GroupFactory, ProfileFactory, UserFactory
 
 
 class TestCountryView(BaseTenantTestCase):
@@ -267,3 +267,16 @@ class TestExternalUserAPIView(BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["id"], self.user.pk)
+        self.assertFalse(response.data["available"])
+
+    def test_get_available(self):
+        profile = ProfileFactory(countries_available=[self.tenant])
+        response = self.forced_auth_req(
+            'get',
+            reverse("users_v3:external-detail", args=[profile.user.pk]),
+            user=self.unicef_staff,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["id"], profile.user.pk)
+        self.assertTrue(response.data["available"])

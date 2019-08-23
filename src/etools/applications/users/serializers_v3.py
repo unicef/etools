@@ -1,5 +1,5 @@
-
 from django.contrib.auth import get_user_model
+from django.db import connection
 
 from rest_framework import serializers
 
@@ -124,3 +124,23 @@ class SimpleUserSerializer(serializers.ModelSerializer):
             'profile',
             'country',
         )
+
+
+class ExternalUserSerializer(MinimalUserSerializer):
+    available = serializers.SerializerMethodField()
+
+    class Meta:
+        model = get_user_model()
+        fields = (
+            'id',
+            'name',
+            'first_name',
+            'middle_name',
+            'last_name',
+            'available',
+        )
+
+    def get_available(self, obj):
+        return obj.profile.countries_available.filter(
+            schema_name=connection.schema_name
+        ).exists()

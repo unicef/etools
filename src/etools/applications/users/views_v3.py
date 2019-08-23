@@ -1,7 +1,7 @@
 import logging
 
 from django.contrib.auth import get_user_model
-from django.db.models import OuterRef, Q, Subquery
+from django.db.models import OuterRef, Q, Subquery, Prefetch
 
 from rest_framework import mixins, status, viewsets
 from rest_framework.exceptions import ValidationError
@@ -13,6 +13,7 @@ from unicef_restlib.views import QueryStringFilterMixin, SafeTenantViewSetMixin
 from etools.applications.users import views as v1, views_v2 as v2
 from etools.applications.users.serializers_v3 import (
     CountryDetailSerializer,
+    ExternalUserSerializer,
     MinimalUserDetailSerializer,
     MinimalUserSerializer,
     ProfileRetrieveUpdateSerializer,
@@ -108,7 +109,7 @@ class ExternalUserViewSet(
         # or is excluding on @unicef.org email enough?
         Q(email__endswith="@unicef.org") | Q(is_staff=True) | Q(is_superuser=True)
     ).all()
-    serializer_class = MinimalUserSerializer
+    serializer_class = ExternalUserSerializer
     permission_classes = (IsAdminUser, )
 
     def get_queryset(self):
@@ -128,5 +129,5 @@ class ExternalUserViewSet(
             pk__in=Subquery(tpm_staff.values("user_id"))
         ).exclude(
             pk__in=Subquery(audit_staff.values("user_id"))
-        )
+        ).prefetch_related(Prefetch("profile__countries_available"))
         return qs
