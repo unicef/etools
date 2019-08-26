@@ -591,7 +591,20 @@ class BaseAuditAttachmentsViewSet(BaseAuditViewSet,
             'object_id': parent.pk
         }
 
+    def get_object(self, pk=None):
+        if pk:
+            return self.queryset.get(pk=pk)
+        elif self.kwargs.get("pk"):
+            return self.queryset.get(pk=self.kwargs.get("pk"))
+        return super().get_object()
+
     def perform_create(self, serializer):
+        serializer.instance = self.get_object(
+            pk=serializer.validated_data.get("pk")
+        )
+        serializer.save(content_object=self.get_parent_object().get_subclass())
+
+    def perform_update(self, serializer):
         serializer.save(content_object=self.get_parent_object().get_subclass())
 
 

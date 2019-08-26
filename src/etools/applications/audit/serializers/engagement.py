@@ -3,9 +3,9 @@ from copy import copy
 from django.utils.translation import ugettext as _
 
 from rest_framework import serializers
-from unicef_attachments.fields import FileTypeModelChoiceField
-from unicef_attachments.models import FileType
-from unicef_attachments.serializers import BaseAttachmentSerializer
+from unicef_attachments.fields import AttachmentSingleFileField, FileTypeModelChoiceField
+from unicef_attachments.models import Attachment, FileType
+from unicef_attachments.serializers import AttachmentSerializerMixin
 from unicef_restlib.fields import SeparatedReadWriteField
 from unicef_restlib.serializers import WritableNestedParentSerializerMixin, WritableNestedSerializerMixin
 
@@ -65,32 +65,57 @@ class PartnerOrganizationLightSerializer(PartnerOrganizationListSerializer):
         }
 
 
-class EngagementAttachmentSerializer(BaseAttachmentSerializer):
+class AttachmentField(serializers.Field):
+    def to_representation(self, value):
+        if not value:
+            return None
+
+        attachment = Attachment.objects.get(pk=value)
+        if not getattr(attachment.file, "url", None):
+            return None
+
+        url = attachment.file.url
+        request = self.context.get('request', None)
+        if request is not None:
+            return request.build_absolute_uri(url)
+        return url
+
+    def to_internal_value(self, data):
+        return data
+
+
+class EngagementAttachmentSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(read_only=True)
+    attachment = AttachmentField(source="pk")
     file_type = FileTypeModelChoiceField(
         label=_('Document Type'),
         queryset=FileType.objects.group_by('audit_engagement'),
     )
 
-    class Meta(BaseAttachmentSerializer.Meta):
-        pass
+    class Meta:
+        model = Attachment
+        fields = ("id", "attachment", "file_type", "created")
 
-    def create(self, validated_data):
+    def update(self, instance, validated_data):
         validated_data['code'] = 'audit_engagement'
-        return super().create(validated_data)
+        return super().update(instance, validated_data)
 
 
-class ReportAttachmentSerializer(BaseAttachmentSerializer):
+class ReportAttachmentSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(read_only=True)
+    attachment = AttachmentField(source="pk")
     file_type = FileTypeModelChoiceField(
         label=_('Document Type'),
         queryset=FileType.objects.group_by('audit_report')
     )
 
-    class Meta(BaseAttachmentSerializer.Meta):
-        pass
+    class Meta:
+        model = Attachment
+        fields = ("id", "attachment", "file_type", "created")
 
-    def create(self, validated_data):
+    def update(self, instance, validated_data):
         validated_data['code'] = 'audit_report'
-        return super().create(validated_data)
+        return super().update(instance, validated_data)
 
 
 class EngagementActionPointSerializer(PermissionsBasedSerializerMixin, ActionPointBaseSerializer):
@@ -222,9 +247,12 @@ class SpecificProcedureSerializer(WritableNestedSerializerMixin,
         ]
 
 
-class EngagementSerializer(EngagementDatesValidation,
-                           WritableNestedParentSerializerMixin,
-                           EngagementListSerializer):
+class EngagementSerializer(
+        AttachmentSerializerMixin,
+        EngagementDatesValidation,
+        WritableNestedParentSerializerMixin,
+        EngagementListSerializer
+):
     staff_members = SeparatedReadWriteField(
         read_field=AuditorStaffMemberSerializer(many=True, required=False), label=_('Audit Staff Team Members')
     )
@@ -237,6 +265,9 @@ class EngagementSerializer(EngagementDatesValidation,
     )
 
     specific_procedures = SpecificProcedureSerializer(many=True, label=_('Specific Procedure To Be Performed'))
+    engagement_attachments = AttachmentSingleFileField(required=False)
+    report_attachments = AttachmentSingleFileField(required=False)
+    final_report = AttachmentSingleFileField(required=False)
 
     class Meta(EngagementListSerializer.Meta):
         fields = EngagementListSerializer.Meta.fields + [
@@ -251,6 +282,9 @@ class EngagementSerializer(EngagementDatesValidation,
             'date_of_draft_report_to_unicef', 'date_of_comments_by_unicef',
             'date_of_report_submit', 'date_of_final_report', 'date_of_cancel',
             'cancel_comment', 'specific_procedures',
+            'engagement_attachments',
+            'report_attachments',
+            'final_report',
         ]
         extra_kwargs = {
             field: {'required': True} for field in [
