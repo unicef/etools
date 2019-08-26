@@ -12,11 +12,13 @@ class TestMonitoringActivityValidations(BaseTenantTestCase):
         cls.user = UserFactory(fm_user=True)
 
     def test_tpm_partner_for_staff_activity(self):
-        activity = MonitoringActivityFactory(activity_type='staff', tpm_partner=TPMPartnerFactory())
+        activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.draft, activity_type='staff',
+                                             tpm_partner=TPMPartnerFactory())
         self.assertTrue(ActivityValid(activity, user=self.user).errors)
 
     def test_tpm_partner_for_tpm_activity(self):
-        activity = MonitoringActivityFactory(activity_type='tpm', tpm_partner=TPMPartnerFactory())
+        activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.draft, activity_type='tpm',
+                                             tpm_partner=TPMPartnerFactory())
         self.assertFalse(ActivityValid(activity, user=self.user).errors)
 
     def test_empty_partner_for_tpm_activity(self):
@@ -26,16 +28,19 @@ class TestMonitoringActivityValidations(BaseTenantTestCase):
         self.assertTrue(ActivityValid(activity, user=self.user).errors)
 
     def test_empty_partner_for_tpm_activity_in_draft(self):
-        activity = MonitoringActivityFactory(activity_type='tpm', tpm_partner=None)
+        activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.draft, activity_type='tpm',
+                                             tpm_partner=None)
         self.assertFalse(ActivityValid(activity, user=self.user).errors)
 
     def test_staff_member_from_assigned_partner(self):
         tpm_partner = TPMPartnerFactory()
-        activity = MonitoringActivityFactory(activity_type='tpm', tpm_partner=tpm_partner)
+        activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.draft, activity_type='tpm',
+                                             tpm_partner=tpm_partner)
         activity.team_members.add(TPMPartnerStaffMemberFactory(tpm_partner=tpm_partner).user)
         self.assertFalse(ActivityValid(activity, user=self.user).errors)
 
     def test_staff_member_from_other_partner(self):
-        activity = MonitoringActivityFactory(activity_type='tpm', tpm_partner=TPMPartnerFactory())
+        activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.draft, activity_type='tpm',
+                                             tpm_partner=TPMPartnerFactory())
         activity.team_members.add(TPMPartnerStaffMemberFactory(tpm_partner=TPMPartnerFactory()).user)
         self.assertTrue(ActivityValid(activity, user=self.user).errors)

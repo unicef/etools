@@ -45,9 +45,39 @@ class ActivityValid(CompleteValidation):
         self.check_rigid_fields(instance, related=True)
         return True
 
-    def state_details_configured_valid(self, instance, user=None):
+    def state_checklist_valid(self, instance, user=None):
+        self.check_required_fields(instance)
+        self.check_rigid_fields(instance, related=True)
+        at_least_one_item_added(instance)
+        return True
+
+    def state_review_valid(self, instance, user=None):
+        self.check_required_fields(instance)
+        self.check_rigid_fields(instance, related=True)
+        return True
+
+    def state_assigned_valid(self, instance, user=None):
         self.check_required_fields(instance)
         self.check_rigid_fields(instance, related=True)
         tpm_partner_is_assigned_for_tpm_activity(instance)
-        at_least_one_item_added(instance)
+        return True
+
+    def state_data_collection_valid(self, instance, user=None):
+        self.check_required_fields(instance)
+        self.check_rigid_fields(instance, related=True)
+        return True
+
+    def state_report_finalization_valid(self, instance, user=None):
+        self.check_required_fields(instance)
+        self.check_rigid_fields(instance, related=True)
+        return True
+
+    def state_submitted_valid(self, instance, user=None):
+        self.check_required_fields(instance)
+        self.check_rigid_fields(instance, related=True)
+        return True
+
+    def state_completed_valid(self, instance, user=None):
+        self.check_required_fields(instance)
+        self.check_rigid_fields(instance, related=True)
         return True

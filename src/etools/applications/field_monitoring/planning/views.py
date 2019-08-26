@@ -1,7 +1,9 @@
 import logging
 from datetime import date
 
+from django.contrib.auth import get_user_model
 from django.db import transaction
+from django.db.models import Count
 from django.http import Http404
 from django.utils.translation import ugettext_lazy as _
 
@@ -9,6 +11,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from etools_validator.mixins import ValidatorViewMixin
 from rest_framework import mixins, viewsets
 from rest_framework.exceptions import ValidationError
+from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.response import Response
 
 from etools.applications.field_monitoring.fm_settings.models import Question
@@ -19,18 +22,19 @@ from etools.applications.field_monitoring.permissions import (
     IsObjectAction,
     IsPersonResponsible,
     IsReadAction,
-    IsTeamMember,
 )
 from etools.applications.field_monitoring.planning.activity_validation.validator import ActivityValid
-from etools.applications.field_monitoring.planning.models import MonitoringActivity, QuestionTemplate, YearPlan
+from etools.applications.field_monitoring.planning.filters import MonitoringActivitiesFilterSet, \
+    ReferenceNumberOrderingFilter, UserTypeFilter, UserTPMPartnerFilter
+from etools.applications.field_monitoring.planning.models import MonitoringActivity, YearPlan
 from etools.applications.field_monitoring.planning.serializers import (
     ActivityAttachmentSerializer,
     MonitoringActivityLightSerializer,
     MonitoringActivitySerializer,
-    QuestionTemplateSerializer,
     YearPlanSerializer,
-    TemplatedQuestionSerializer)
+    TemplatedQuestionSerializer, FMUserSerializer)
 from etools.applications.field_monitoring.views import FMBaseAttachmentsViewSet, FMBaseViewSet
+from etools.applications.permissions2.views import FSMTransitionActionMixin
 
 
 class YearPlanViewSet(
@@ -109,11 +113,12 @@ class MonitoringActivitiesViewSet(
     ValidatorViewMixin,
     FMBaseViewSet,
     viewsets.ModelViewSet,
+    FSMTransitionActionMixin,
 ):
     """
     Retrieve and Update Agreement.
     """
-    queryset = MonitoringActivity.objects.all()
+    queryset = MonitoringActivity.objects.annotate(checklists_count=Count('checklists'))
     serializer_class = MonitoringActivitySerializer
     serializer_action_classes = {
         'list': MonitoringActivityLightSerializer
@@ -121,8 +126,13 @@ class MonitoringActivitiesViewSet(
     permission_classes = FMBaseViewSet.permission_classes + [
         IsReadAction |
         (IsEditAction & IsListAction & IsFieldMonitor) |
-        (IsEditAction & (IsObjectAction & (IsFieldMonitor | IsTeamMember | IsPersonResponsible)))
+        (IsEditAction & (IsObjectAction & (IsFieldMonitor | IsPersonResponsible)))
     ]
+    filter_backends = (DjangoFilterBackend, ReferenceNumberOrderingFilter, OrderingFilter)
+    filter_class = MonitoringActivitiesFilterSet
+    ordering_fields = (
+        'start_date', 'end_date', 'location', 'location_site', 'activity_type', 'checklists_count', 'status'
+    )
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -132,23 +142,9 @@ class MonitoringActivitiesViewSet(
 
         return queryset
 
-    # todo
-    # SERIALIZER_MAP = {
-    #     'planned_budget': InterventionBudgetCUSerializer,
-    #     'planned_visits': PlannedVisitsCUSerializer,
-    #     'result_links': InterventionResultCUSerializer
-    # }
-
-    # todo: do we update all information including nested data simultaneously?
     @transaction.atomic
     def update(self, request, *args, **kwargs):
-        # todo
-        # related_fields = ['planned_budget',
-        #                   'planned_visits',
-        #                   'result_links']
         related_fields = []
-        # todo
-        # nested_related_names = ['ll_results']
         nested_related_names = []
         instance, old_instance, serializer = self.my_update(
             request,
@@ -163,6 +159,21 @@ class MonitoringActivitiesViewSet(
             raise ValidationError(validator.errors)
 
         return Response(self.get_serializer_class()(instance, context=self.get_serializer_context()).data)
+
+
+class FMUsersViewSet(
+    FMBaseViewSet,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet
+):
+    """
+    Endpoint to be used for filtering users by their type (unicef/tpm) and partner in case of tpm
+    """
+
+    filter_backends = (SearchFilter, UserTypeFilter, UserTPMPartnerFilter)
+    search_fields = ('email',)
+    queryset = get_user_model().objects.all()  # it's safe to use .all() here, UserTypeFilter filter unicef by default
+    serializer_class = FMUserSerializer
 
 
 class ActivityAttachmentsViewSet(FMBaseAttachmentsViewSet):

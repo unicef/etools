@@ -10,11 +10,11 @@ from etools.applications.field_monitoring.fm_settings.models import Question
 from etools.applications.field_monitoring.fm_settings.tests.factories import QuestionFactory
 from etools.applications.field_monitoring.planning.models import YearPlan
 from etools.applications.field_monitoring.planning.tests.factories import MonitoringActivityFactory, YearPlanFactory, \
-    QuestionTemplateFactory
+    QuestionTemplateFactory, PreDataCollectionActivityFactory
 from etools.applications.field_monitoring.tests.base import FMBaseTestCaseMixin
 from etools.applications.field_monitoring.tests.factories import UserFactory
 from etools.applications.partners.tests.factories import PartnerFactory
-from etools.applications.tpm.tests.factories import TPMPartnerFactory
+from etools.applications.tpm.tests.factories import TPMPartnerFactory, TPMUserFactory, SimpleTPMPartnerFactory
 
 
 class YearPlanViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
@@ -87,7 +87,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertIn('TPM Partner', response.data[0])
 
     def test_auto_accept_activity(self):
-        activity = MonitoringActivityFactory(activity_type='staff', status='checklist_configured')
+        activity = PreDataCollectionActivityFactory(activity_type='staff')
 
         response = self.forced_auth_req(
             'patch', reverse('field_monitoring_planning:activities-detail', args=[activity.pk]),
@@ -132,27 +132,31 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
     def test_flow(self):
         activity = MonitoringActivityFactory(activity_type='staff', status='draft')
 
-        team_member = UserFactory(unicef_user=True)
-        activity.team_members.add(team_member)
+        person_responsible = UserFactory(unicef_user=True)
 
         activity.partners.add(PartnerFactory())
 
-        def goto(next_status, user):
+        def goto(next_status, user, extra_data=None):
+            data = {
+                'status': next_status
+            }
+            if extra_data:
+                data.update(extra_data)
             response = self.forced_auth_req(
                 'patch', reverse('field_monitoring_planning:activities-detail', args=[activity.pk]),
                 user=user,
-                data={
-                    'status': next_status
-                }
+                data=data
             )
 
             self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        goto('details_configured', self.fm_user)
-        goto('checklist_configured', self.fm_user)
+        goto('checklist', self.fm_user)
+        goto('review', self.fm_user, {
+            'person_responsible': person_responsible.id
+        })
         goto('assigned', self.fm_user)
-        goto('data_collected', team_member)
-        goto('report_submitted', team_member)
+        goto('report_finalization', person_responsible)
+        goto('submitted', person_responsible)
         goto('completed', self.fm_user)
 
 
@@ -359,3 +363,51 @@ class TestQuestionTemplatesView(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIsNotNone(response.data['template'])
         self.assertEqual(response.data['template']['specific_details'], base_template.specific_details)
+
+
+class FMUsersViewTestCase(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_user = UserFactory(unicef_user=True, is_staff=True)
+        cls.usual_user = UserFactory(is_staff=False)
+        cls.tpm_user = TPMUserFactory(tpm_partner=SimpleTPMPartnerFactory())
+        cls.another_tpm_user = TPMUserFactory(tpm_partner=SimpleTPMPartnerFactory())
+
+    def _test_filter(self, filter_data, expected_users):
+        response = self.forced_auth_req(
+            'get',
+            reverse('field_monitoring_planning:users-list'),
+            data=filter_data,
+            user=self.unicef_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(expected_users), len(response.data['results']))
+        self.assertListEqual(
+            sorted([u.id for u in expected_users]),
+            sorted([u['id'] for u in response.data['results']])
+        )
+
+        return response
+
+    def test_filter_unicef(self):
+        response = self._test_filter({'user_type': 'unicef'}, [self.unicef_user])
+        self.assertEqual(response.data['results'][0]['user_type'], 'staff')
+
+    def test_filter_default(self):
+        self._test_filter({}, [self.unicef_user, self.usual_user, self.tpm_user, self.another_tpm_user])
+
+    def test_filter_tpm(self):
+        response = self._test_filter({'user_type': 'tpm'}, [self.tpm_user, self.another_tpm_user])
+        self.assertEqual(response.data['results'][0]['user_type'], 'tpm')
+        self.assertEqual(response.data['results'][1]['user_type'], 'tpm')
+
+    def test_filter_tpm_partner(self):
+        tpm_partner = self.tpm_user.tpmpartners_tpmpartnerstaffmember.tpm_partner.id
+
+        response = self._test_filter(
+            {'user_type': 'tpm', 'tpm_partner': tpm_partner},
+            [self.tpm_user]
+        )
+        self.assertEqual(response.data['results'][0]['user_type'], 'tpm')
+        self.assertEqual(response.data['results'][0]['tpm_partner'], tpm_partner)

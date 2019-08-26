@@ -87,6 +87,8 @@ class MonitoringActivityLightSerializer(serializers.ModelSerializer):
     interventions = SeparatedReadWriteField(read_field=MinimalInterventionListSerializer(many=True))
     cp_outputs = SeparatedReadWriteField(read_field=MinimalOutputListSerializer(many=True))
 
+    checklists_count = serializers.ReadOnlyField()
+
     class Meta:
         model = MonitoringActivity
         fields = (
@@ -96,6 +98,7 @@ class MonitoringActivityLightSerializer(serializers.ModelSerializer):
             'location', 'location_site',
             'partners', 'interventions', 'cp_outputs',
             'start_date', 'end_date',
+            'checklists_count',
             'status',
         )
 
@@ -124,3 +127,17 @@ class ActivityAttachmentSerializer(BaseAttachmentSerializer):
     def create(self, validated_data):
         validated_data['code'] = 'attachments'
         return super().create(validated_data)
+
+
+class FMUserSerializer(MinimalUserSerializer):
+    user_type = serializers.SerializerMethodField()
+    tpm_partner = serializers.ReadOnlyField(source='tpmpartners_tpmpartnerstaffmember.tpm_partner.id', allow_null=True)
+
+    class Meta(MinimalUserSerializer.Meta):
+        fields = MinimalUserSerializer.Meta.fields + (
+            'user_type', 'tpm_partner'
+        )
+
+    def get_user_type(self, obj):
+        # we check is_staff flag instead of more complex tpmpartners_tpmpartnerstaffmember to avoid unneeded db queries
+        return 'staff' if obj.is_staff else 'tpm'

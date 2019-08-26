@@ -10,6 +10,7 @@ root_api.register(r'year-plan', views.YearPlanViewSet, base_name='year-plan')
 root_api.register(r'questions/templates/(?P<level>\w+)(?:/target/(?P<target_id>\d+))?', views.TemplatedQuestionsViewSet,
                   base_name='question-templates')
 root_api.register(r'activities', views.MonitoringActivitiesViewSet, base_name='activities')
+root_api.register(r'users', views.FMUsersViewSet, base_name='users')
 
 activities_api = NestedComplexRouter(root_api, r'activities')
 activities_api.register(r'attachments', views.ActivityAttachmentsViewSet, base_name='activity-attachments')

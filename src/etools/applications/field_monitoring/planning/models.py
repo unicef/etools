@@ -15,9 +15,8 @@ from etools.applications.core.permissions import import_permissions
 from etools.applications.field_monitoring.fm_settings.models import LocationSite, Question
 from etools.applications.field_monitoring.planning.mixins import ProtectUnknownTransitionsMeta
 from etools.applications.field_monitoring.planning.transitions.permissions import (
-    user_is_data_collector_permission,
     user_is_field_monitor_permission,
-)
+    user_is_person_responsible_permission)
 from etools.applications.partners.models import Intervention, PartnerOrganization
 from etools.applications.reports.models import Result
 from etools.applications.tpm.tpmpartners.models import TPMPartner
@@ -109,12 +108,12 @@ class MonitoringActivity(
 
     STATUSES = Choices(
         ('draft', _('Draft')),
-        ('details_configured', _('Details Configured')),
-        ('checklist_configured', _('Checklist Configured')),
+        ('checklist', _('Checklist')),
+        ('review', _('Review')),
         ('assigned', _('Assigned')),
-        ('accepted', _('Accepted')),
-        ('data_collected', _('Data Collected')),
-        ('report_submitted', _('Report Submitted')),
+        ('data_collection', _('Data Collection')),
+        ('report_finalization', _('Report Finalization')),
+        ('submitted', _('Submitted')),
         ('completed', _('Completed')),
         ('cancelled', _('Cancelled')),
     )
@@ -123,7 +122,7 @@ class MonitoringActivity(
     }
 
     AUTO_TRANSITIONS = {
-        'assigned': ['accepted']
+        'assigned': ['data_collection']
     }
 
     activity_type = models.CharField(max_length=10, choices=TYPES)
@@ -176,51 +175,53 @@ class MonitoringActivity(
         permissions = import_permissions(cls.__name__)
         return permissions
 
-    @transition(field=status, source=STATUSES.draft, target=STATUSES.details_configured,
+    @transition(field=status, source=STATUSES.draft, target=STATUSES.checklist,
                 permission=user_is_field_monitor_permission)
     def mark_details_configured(self):
         pass
 
-    @transition(field=status, source=STATUSES.details_configured, target=STATUSES.checklist_configured,
+    @transition(field=status, source=STATUSES.checklist, target=STATUSES.review,
                 permission=user_is_field_monitor_permission)
     def mark_checklist_configured(self):
         pass
 
-    @transition(field=status, source=STATUSES.checklist_configured, target=STATUSES.assigned,
+    @transition(field=status, source=STATUSES.review, target=STATUSES.assigned,
                 permission=user_is_field_monitor_permission)
     def assign(self):
         pass
 
-    @transition(field=status, source=STATUSES.assigned, target=STATUSES.accepted,
-                permission=user_is_data_collector_permission)
+    @transition(field=status, source=STATUSES.assigned, target=STATUSES.data_collection,
+                permission=user_is_person_responsible_permission)
     def accept(self):
         pass
 
-    @transition(field=status, source=STATUSES.assigned, target=STATUSES.draft,
-                permission=user_is_data_collector_permission)
+    @transition(field=status, source=STATUSES.data_collection, target=STATUSES.draft,
+                permission=user_is_person_responsible_permission)
     def reject(self):
+        # todo: add rejection comment
         pass
 
-    @transition(field=status, source=STATUSES.accepted, target=STATUSES.data_collected,
-                permission=user_is_data_collector_permission)
+    @transition(field=status, source=STATUSES.data_collection, target=STATUSES.report_finalization,
+                permission=user_is_person_responsible_permission)
     def mark_data_collected(self):
         pass
 
-    @transition(field=status, source=STATUSES.data_collected, target=STATUSES.report_submitted,
-                permission=user_is_data_collector_permission)
+    @transition(field=status, source=STATUSES.report_finalization, target=STATUSES.submitted,
+                permission=user_is_person_responsible_permission)
     def submit_report(self):
         pass
 
-    @transition(field=status, source=STATUSES.report_submitted, target=STATUSES.completed,
+    @transition(field=status, source=STATUSES.submitted, target=STATUSES.completed,
                 permission=user_is_field_monitor_permission)
     def complete(self):
         pass
 
     @transition(field=status, target=STATUSES.cancelled,
                 source=[
-                    STATUSES.draft, STATUSES.details_configured, STATUSES.checklist_configured,
-                    STATUSES.assigned, STATUSES.accepted, STATUSES.data_collected
+                    STATUSES.draft, STATUSES.checklist, STATUSES.review,
+                    STATUSES.assigned, STATUSES.data_collection, STATUSES.report_finalization
                 ],
                 permission=user_is_field_monitor_permission)
     def cancel(self):
+        # todo: add cancel comment
         pass
