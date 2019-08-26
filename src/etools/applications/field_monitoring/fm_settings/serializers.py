@@ -23,7 +23,6 @@ from etools.applications.field_monitoring.fm_settings.models import (
     Question,
 )
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
-from etools.applications.reports.serializers.v1 import SectionSerializer
 from etools.applications.reports.serializers.v2 import OutputListSerializer
 from etools.applications.users.serializers_v3 import MinimalUserSerializer
 
@@ -63,7 +62,6 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class QuestionSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
-    sections = SeparatedReadWriteField(read_field=SectionSerializer(many=True))
     options = OptionSerializer(many=True, required=False)
 
     class Meta(WritableNestedSerializerMixin.Meta):
