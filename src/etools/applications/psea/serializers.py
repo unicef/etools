@@ -25,12 +25,11 @@ class AssessmentSerializer(serializers.ModelSerializer):
         if isinstance(self.instance, list):
             return []
 
-        user = self.context['request'].user
         ps = Assessment.permission_structure()
         permissions = AssessmentPermissions(
-            user=user,
-            instance=self.instance,
-            permission_structure=ps,
+            self.context['request'].user,
+            self.instance,
+            ps,
         )
         return permissions.get_permissions()
 
@@ -38,6 +37,9 @@ class AssessmentSerializer(serializers.ModelSerializer):
         data = super().validate(data)
         if self.context.get('skip_global_validator', None):
             return data
+        focal_points = None
+        if "focal_points" in data:
+            focal_points = data.pop("focal_points")
         validator = AssessmentValid(
             data,
             old=self.instance,
@@ -46,6 +48,8 @@ class AssessmentSerializer(serializers.ModelSerializer):
 
         if not validator.is_valid:
             raise serializers.ValidationError({'errors': validator.errors})
+        if focal_points is not None:
+            data["focal_points"] = focal_points
         return data
 
     def get_rating(self, obj):
@@ -54,7 +58,13 @@ class AssessmentSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         if "assessment_date" not in validated_data:
             validated_data["assessment_date"] = timezone.now().date()
-        return super().create(validated_data)
+        focal_points = None
+        if "focal_points" in validated_data:
+            focal_points = validated_data.pop("focal_points")
+        instance = super().create(validated_data)
+        if focal_points is not None:
+            instance.focal_points.set(focal_points)
+        return instance
 
 
 class AssessorSerializer(serializers.ModelSerializer):

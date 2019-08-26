@@ -95,6 +95,12 @@ class Assessment(TimeStampedModel):
         choices=STATUS_CHOICES,
         default=STATUS_DRAFT,
     )
+    focal_points = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        blank=True,
+        verbose_name=_('UNICEF Focal Points'),
+        related_name="assessor_focal_point",
+    )
 
     class Meta:
         verbose_name = _('Assessment')
@@ -307,12 +313,6 @@ class Assessor(TimeStampedModel):
         AuditorStaffMember,
         blank=True,
         verbose_name=_("Auditor Staff"),
-    )
-    focal_points = models.ManyToManyField(
-        settings.AUTH_USER_MODEL,
-        blank=True,
-        verbose_name=_('UNICEF Focal Points'),
-        related_name="assessor_focal_point",
     )
 
     class Meta:

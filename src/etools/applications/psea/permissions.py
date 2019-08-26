@@ -5,7 +5,7 @@ from etools.applications.psea.models import Assessor
 class AssessmentPermissions(PMPPermissions):
     MODEL_NAME = 'psea.Assessment'
 
-    def __init__(self, **kwargs):
+    def __init__(self, user, instance, permission_structure, **kwargs):
         """
         :param kwargs: user, instance, permission_structure
         if 'inbound_check' key, is sent in, that means that instance now
@@ -17,17 +17,17 @@ class AssessmentPermissions(PMPPermissions):
         adds an amendment. that means that we would need access to the old
         amendments, new amendments in order to check this.
         """
-        super().__init__(**kwargs)
+        super().__init__(user, instance, permission_structure, **kwargs)
         inbound_check = kwargs.get('inbound_check', False)
 
         def user_belongs(instance):
             assert inbound_check, 'this function cannot be called unless instantiated with inbound_check=True'
+            if instance.pk and self.user in instance.focal_points.all():
+                return True
             assessor_qs = Assessor.objects.filter(assessment=instance)
             if assessor_qs.filter(user=self.user).exists():
                 return True
             for assessor in assessor_qs.all():
-                if self.user in assessor.focal_points.all():
-                    return True
                 if assessor.auditor_firm_staff.filter(user=self.user).exists():
                     return True
             return False

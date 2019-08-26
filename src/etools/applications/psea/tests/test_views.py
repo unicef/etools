@@ -71,7 +71,8 @@ class TestAssessmentViewSet(BaseTenantTestCase):
             reverse('psea:assessment-list'),
             user=self.user,
             data={
-                "partner": partner.pk
+                "partner": partner.pk,
+                "focal_points": [self.user.pk],
             },
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -80,6 +81,7 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         self.assertIsNotNone(assessment.reference_number)
         self.assertEqual(assessment.assessment_date, timezone.now().date())
         self.assertEqual(assessment.status, Assessment.STATUS_DRAFT)
+        self.assertIn(self.user, assessment.focal_points.all())
 
     def test_validation(self):
         partner_1 = PartnerFactory()
@@ -102,18 +104,22 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         partner_1 = PartnerFactory()
         partner_2 = PartnerFactory()
         assessment = AssessmentFactory(partner=partner_1)
+        assessment.focal_points.set([self.user])
+        user = UserFactory()
 
         response = self.forced_auth_req(
             "patch",
             reverse('psea:assessment-detail', args=[assessment.pk]),
             user=self.focal_user,
             data={
-                "partner": partner_2.pk
+                "partner": partner_2.pk,
+                "focal_points": [user.pk],
             },
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         assessment.refresh_from_db()
         self.assertEqual(assessment.partner, partner_2)
+        self.assertEqual(list(assessment.focal_points.all()), [user])
 
 
 class TestAssessorViewSet(BaseTenantTestCase):
@@ -124,10 +130,6 @@ class TestAssessorViewSet(BaseTenantTestCase):
     def _validate_assessor(self, assessor, expected):
         self.assertEqual(assessor.assessor_type, expected.get("assessor_type"))
         self.assertEqual(assessor.user, expected.get("user"))
-        self.assertIn(
-            expected.get("focal_points"),
-            assessor.focal_points.all(),
-        )
         self.assertEqual(assessor.auditor_firm, expected.get("auditor_firm"))
         self.assertEqual(assessor.order_number, expected.get("order_number"))
 
@@ -153,7 +155,6 @@ class TestAssessorViewSet(BaseTenantTestCase):
                 "assessment": assessment.pk,
                 "assessor_type": Assessor.TYPE_UNICEF,
                 "user": self.user.pk,
-                "focal_points": [self.user.pk],
             },
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -162,7 +163,6 @@ class TestAssessorViewSet(BaseTenantTestCase):
         self._validate_assessor(assessor, {
             "assessor_type": Assessor.TYPE_UNICEF,
             "user": self.user,
-            "focal_points": self.user,
             "auditor_firm": None,
             "order_number": "",
         })
@@ -180,7 +180,6 @@ class TestAssessorViewSet(BaseTenantTestCase):
                 "assessment": assessment.pk,
                 "assessor_type": Assessor.TYPE_EXTERNAL,
                 "user": self.user.pk,
-                "focal_points": [self.user.pk],
             },
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -189,7 +188,6 @@ class TestAssessorViewSet(BaseTenantTestCase):
         self._validate_assessor(assessor, {
             "assessor_type": Assessor.TYPE_EXTERNAL,
             "user": self.user,
-            "focal_points": self.user,
             "auditor_firm": None,
             "order_number": "",
         })
@@ -209,7 +207,6 @@ class TestAssessorViewSet(BaseTenantTestCase):
                 "assessor_type": Assessor.TYPE_VENDOR,
                 "auditor_firm": firm.pk,
                 "order_number": "123",
-                "focal_points": [self.user.pk],
             },
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -218,7 +215,6 @@ class TestAssessorViewSet(BaseTenantTestCase):
         self._validate_assessor(assessor, {
             "assessor_type": Assessor.TYPE_VENDOR,
             "user": None,
-            "focal_points": self.user,
             "auditor_firm": firm,
             "order_number": "123",
         })
@@ -281,7 +277,6 @@ class TestAssessorViewSet(BaseTenantTestCase):
             order_number="123",
         )
         assessor.auditor_firm_staff.set([staff_1, staff_2])
-        assessor.focal_points.set([self.user])
 
         response = self.forced_auth_req(
             "patch",
@@ -298,7 +293,6 @@ class TestAssessorViewSet(BaseTenantTestCase):
             "assessment": assessment.pk,
             "assessor_type": Assessor.TYPE_UNICEF,
             "user": self.user,
-            "focal_points": self.user,
             "order_number": "",
         })
         self.assertEqual(list(assessor.auditor_firm_staff.all()), [])
@@ -312,7 +306,6 @@ class TestAssessorViewSet(BaseTenantTestCase):
             assessor_type=Assessor.TYPE_UNICEF,
             user=self.user,
         )
-        assessor.focal_points.set([self.user])
 
         response = self.forced_auth_req(
             "patch",
@@ -330,7 +323,6 @@ class TestAssessorViewSet(BaseTenantTestCase):
         self._validate_assessor(assessor, {
             "assessment": assessment.pk,
             "assessor_type": Assessor.TYPE_VENDOR,
-            "focal_points": self.user,
             "order_number": "321",
             "auditor_firm": firm,
         })
