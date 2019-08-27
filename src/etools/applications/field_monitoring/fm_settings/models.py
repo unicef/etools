@@ -83,7 +83,7 @@ class Question(models.Model):
     text = models.TextField(verbose_name=_('Question Text'))
     is_hact = models.BooleanField(default=False, verbose_name=_('Count as HACT'))
     is_custom = models.BooleanField(default=False, verbose_name=_('Is Custom'))
-    is_active = models.BooleanField(default=False, verbose_name=_('Is Active'))
+    is_active = models.BooleanField(default=True, verbose_name=_('Is Active'))
 
     objects = models.Manager.from_queryset(QuestionsQuerySet)()
 

@@ -40,6 +40,26 @@ class BaseMonitoringActivityFactory(factory.DjangoModelFactory):
         if extracted:
             self.team_members.add(*extracted)
 
+    @factory.post_generation
+    def sections(self, created, extracted, **kwargs):
+        if extracted:
+            self.sections.add(*extracted)
+
+    @factory.post_generation
+    def partners(self, created, extracted, **kwargs):
+        if extracted:
+            self.partners.add(*extracted)
+
+    @factory.post_generation
+    def cp_outputs(self, created, extracted, **kwargs):
+        if extracted:
+            self.cp_outputs.add(*extracted)
+
+    @factory.post_generation
+    def interventions(self, created, extracted, **kwargs):
+        if extracted:
+            self.interventions.add(*extracted)
+
 
 class DraftActivityFactory(BaseMonitoringActivityFactory):
     status = MonitoringActivity.STATUSES.draft

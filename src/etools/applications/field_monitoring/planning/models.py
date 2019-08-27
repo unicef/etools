@@ -18,7 +18,7 @@ from etools.applications.field_monitoring.planning.transitions.permissions impor
     user_is_field_monitor_permission,
     user_is_person_responsible_permission)
 from etools.applications.partners.models import Intervention, PartnerOrganization
-from etools.applications.reports.models import Result
+from etools.applications.reports.models import Result, Section
 from etools.applications.tpm.tpmpartners.models import TPMPartner
 from etools.libraries.djangolib.models import SoftDeleteMixin
 
@@ -135,6 +135,8 @@ class MonitoringActivity(
                                            verbose_name=_('Person Responsible'), related_name='+',
                                            on_delete=models.SET_NULL)
 
+    sections = models.ManyToManyField(Section, blank=True, verbose_name=_('Sections'))
+
     location = models.ForeignKey(Location, verbose_name=_('Location'), related_name='monitoring_activities',
                                  on_delete=models.CASCADE)
     location_site = models.ForeignKey(LocationSite, blank=True, null=True, verbose_name=_('Site'),
@@ -175,10 +177,41 @@ class MonitoringActivity(
         permissions = import_permissions(cls.__name__)
         return permissions
 
+    def freeze_questions_structure(self):
+        # cleanup
+        self.questions.all().delete()
+
+        from etools.applications.field_monitoring.data_collection.models import ActivityQuestion
+
+        applicable_questions = Question.objects.filter(sections__in=self.sections.values_list('pk', flat=True),
+                                                       is_active=True)
+        questions = []
+
+        # todo: refactor
+        for relation, level in (
+            ('partners', 'partner'),
+            ('cp_outputs', 'output'),
+            ('interventions', 'intervention'),
+        ):
+            for target in getattr(self, relation).all():
+                target_questions = applicable_questions.filter(level=level).prefetch_templates(level,
+                                                                                               target_id=target.id)
+                for target_question in target_questions:
+                    activity_question = ActivityQuestion(question=target_question, monitoring_activity=self)
+
+                    if target_question.template:
+                        activity_question.specific_details = target_question.template.specific_details
+
+                    setattr(activity_question, Question.get_target_relation_name(level), target)
+
+                    questions.append(activity_question)
+
+        ActivityQuestion.objects.bulk_create(questions)
+
     @transition(field=status, source=STATUSES.draft, target=STATUSES.checklist,
                 permission=user_is_field_monitor_permission)
     def mark_details_configured(self):
-        pass
+        self.freeze_questions_structure()
 
     @transition(field=status, source=STATUSES.checklist, target=STATUSES.review,
                 permission=user_is_field_monitor_permission)
