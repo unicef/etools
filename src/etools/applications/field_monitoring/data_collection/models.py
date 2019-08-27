@@ -43,6 +43,30 @@ class StartedChecklist(models.Model):
     def __str__(self):
         return 'Checklist {} for {}'.format(self.id, self.monitoring_activity)
 
+    def prepare_findings(self):
+        Finding.objects.bulk_create([
+            Finding(started_checklist=self, activity_question=question)
+            for question in self.monitoring_activity.questions.filter(is_enabled=True)
+        ])
+
+    def prepare_overall_findings(self):
+        findings = []
+        for relation, level in self.monitoring_activity.RELATIONS_MAPPING:
+            for target in getattr(self, relation).all():
+                finding = ChecklistOverallFinding(started_checklist=self)
+                setattr(finding, Question.get_target_relation_name(level), target)
+
+                findings.append(finding)
+
+        ChecklistOverallFinding.objects.bulk_create(findings)
+
+    def save(self, *kwargs):
+        create = not self.pk
+        super().save(**kwargs)
+        if create:
+            self.prepare_findings()
+            self.prepare_overall_findings()
+
 
 class Finding(models.Model):
     started_checklist = models.ForeignKey(StartedChecklist, related_name='findings', verbose_name=_('Checklist'),

@@ -125,6 +125,12 @@ class MonitoringActivity(
         'assigned': ['data_collection']
     }
 
+    RELATIONS_MAPPING = (
+        ('partners', 'partner'),
+        ('cp_outputs', 'output'),
+        ('interventions', 'intervention'),
+    )
+
     activity_type = models.CharField(max_length=10, choices=TYPES)
 
     tpm_partner = models.ForeignKey(TPMPartner, blank=True, null=True, verbose_name=_('TPM Partner'),
@@ -177,7 +183,7 @@ class MonitoringActivity(
         permissions = import_permissions(cls.__name__)
         return permissions
 
-    def freeze_questions_structure(self):
+    def prepare_questions_structure(self):
         # cleanup
         self.questions.all().delete()
 
@@ -187,12 +193,7 @@ class MonitoringActivity(
                                                        is_active=True)
         questions = []
 
-        # todo: refactor
-        for relation, level in (
-            ('partners', 'partner'),
-            ('cp_outputs', 'output'),
-            ('interventions', 'intervention'),
-        ):
+        for relation, level in self.RELATIONS_MAPPING:
             for target in getattr(self, relation).all():
                 target_questions = applicable_questions.filter(level=level).prefetch_templates(level,
                                                                                                target_id=target.id)
@@ -208,15 +209,40 @@ class MonitoringActivity(
 
         ActivityQuestion.objects.bulk_create(questions)
 
+    def prepare_activity_overall_findings(self):
+        self.overall_findings.all().delete()
+
+        from etools.applications.field_monitoring.data_collection.models import ActivityOverallFinding
+
+        findings = []
+        for relation, level in self.RELATIONS_MAPPING:
+            for target in getattr(self, relation).all():
+                finding = ActivityOverallFinding(monitoring_activity=self)
+
+                setattr(finding, Question.get_target_relation_name(level), target)
+
+                findings.append(finding)
+
+        ActivityOverallFinding.objects.bulk_create(findings)
+
+    def prepare_questions_overall_findings(self):
+        from etools.applications.field_monitoring.data_collection.models import ActivityQuestionOverallFinding
+
+        ActivityQuestionOverallFinding.objects.bulk_create([
+            ActivityQuestionOverallFinding(activity_question=question)
+            for question in self.questions.filter(is_enabled=True)
+        ])
+
     @transition(field=status, source=STATUSES.draft, target=STATUSES.checklist,
                 permission=user_is_field_monitor_permission)
     def mark_details_configured(self):
-        self.freeze_questions_structure()
+        self.prepare_questions_structure()
 
     @transition(field=status, source=STATUSES.checklist, target=STATUSES.review,
                 permission=user_is_field_monitor_permission)
     def mark_checklist_configured(self):
-        pass
+        self.prepare_activity_overall_findings()
+        self.prepare_questions_overall_findings()
 
     @transition(field=status, source=STATUSES.review, target=STATUSES.assigned,
                 permission=user_is_field_monitor_permission)

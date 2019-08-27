@@ -1,13 +1,10 @@
 from etools.applications.core.tests.cases import BaseTenantTestCase
-from etools.applications.field_monitoring.fm_settings.models import Question
-from etools.applications.field_monitoring.fm_settings.tests.factories import QuestionFactory
+from etools.applications.field_monitoring.data_collection.models import ActivityQuestionOverallFinding
 from etools.applications.field_monitoring.planning.activity_validation.validator import ActivityValid
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
-from etools.applications.field_monitoring.planning.tests.factories import MonitoringActivityFactory, \
-    QuestionTemplateFactory
+from etools.applications.field_monitoring.planning.tests.base import ConfiguredActivityQuestionsMixin
+from etools.applications.field_monitoring.planning.tests.factories import MonitoringActivityFactory
 from etools.applications.field_monitoring.tests.factories import UserFactory
-from etools.applications.partners.tests.factories import PartnerFactory
-from etools.applications.reports.tests.factories import SectionFactory
 from etools.applications.tpm.tests.factories import TPMPartnerFactory, TPMPartnerStaffMemberFactory
 
 
@@ -51,30 +48,7 @@ class TestMonitoringActivityValidations(BaseTenantTestCase):
         self.assertTrue(ActivityValid(activity, user=self.user).errors)
 
 
-class TestMonitoringActivityQuestionsFlow(BaseTenantTestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.first_partner = PartnerFactory()
-        cls.second_partner = PartnerFactory()
-
-        cls.first_section = SectionFactory()
-        cls.second_section = SectionFactory()
-        cls.third_section = SectionFactory()
-
-        cls.basic_question = QuestionFactory(level=Question.LEVELS.partner, sections=[cls.first_section, cls.third_section])
-        cls.specific_question = QuestionFactory(level=Question.LEVELS.partner, sections=[cls.second_section])
-        cls.specific_question_base_template = QuestionTemplateFactory(question=cls.specific_question)
-        cls.specific_question_specific_template = QuestionTemplateFactory(question=cls.specific_question,
-                                                                          partner=cls.second_partner)
-
-        cls.not_matched_question = QuestionFactory(level=Question.LEVELS.partner, sections=[cls.third_section])
-
-        cls.activity = MonitoringActivityFactory(
-            status=MonitoringActivity.STATUSES.draft,
-            sections=[cls.first_section, cls.second_section],
-            partners=[cls.first_partner, cls.second_partner]
-        )
-
+class TestMonitoringActivityQuestionsFlow(ConfiguredActivityQuestionsMixin, BaseTenantTestCase):
     def test_questions_freezed(self):
         self.assertEqual(self.activity.questions.count(), 0)
 
@@ -100,3 +74,26 @@ class TestMonitoringActivityQuestionsFlow(BaseTenantTestCase):
             specific_activity_questions.filter(partner=self.second_partner).get().specific_details,
             self.specific_question_specific_template.specific_details
         )
+
+    def test_overall_findings_freezed(self):
+        self.activity.mark_details_configured()
+        self.activity.save()
+
+        disabled_question = self.basic_question.activity_questions.first()
+        disabled_question.is_enabled = False
+        disabled_question.save()
+
+        self.assertEqual(self.activity.overall_findings.count(), 0)
+
+        self.activity.mark_checklist_configured()
+        self.activity.save()
+
+        self.assertListEqual(
+            [f.partner for f in self.activity.overall_findings.all()],
+            [self.first_partner, self.second_partner]
+        )
+        self.assertEqual(
+            ActivityQuestionOverallFinding.objects.filter(activity_question__monitoring_activity=self.activity).count(),
+            3
+        )
+        self.assertFalse(ActivityQuestionOverallFinding.objects.filter(activity_question=disabled_question).exists())
