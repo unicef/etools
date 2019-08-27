@@ -3,9 +3,11 @@ from django.shortcuts import get_object_or_404
 from django.utils.translation import ugettext_lazy as _
 
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import mixins, viewsets
+from rest_framework import mixins, status, viewsets
+from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 from unicef_attachments.models import Attachment
 from unicef_restlib.pagination import DynamicPageNumberPagination
 from unicef_restlib.views import NestedViewSetMixin, SafeTenantViewSetMixin
@@ -15,6 +17,7 @@ from etools.applications.psea.serializers import (
     AnswerAttachmentSerializer,
     AnswerSerializer,
     AssessmentSerializer,
+    AssessmentStatusSerializer,
     AssessorSerializer,
     IndicatorSerializer,
 )
@@ -37,6 +40,47 @@ class AssessmentViewSet(
     filter_backends = (SearchFilter, DjangoFilterBackend, OrderingFilter)
     search_fields = ('partner__name', )
     export_filename = 'Assessment'
+
+    def _set_status(self, request, assessment_status):
+        assessment = self.get_object()
+        serializer = AssessmentStatusSerializer(
+            instance=assessment,
+            data=request.data,
+            context={"request": request},
+        )
+        if serializer.is_valid():
+            assessment.status = assessment_status
+            assessment.save()
+            return Response({"status": assessment_status})
+        else:
+            return Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+    @action(detail=True, methods=["patch"])
+    def assigned(self, request, pk=None):
+        return self._set_status(request, Assessment.STATUS_ASSIGNED)
+
+    @action(detail=True, methods=["patch"])
+    def progress(self, request, pk=None):
+        return self._set_status(request, Assessment.STATUS_IN_PROGRESS)
+
+    @action(detail=True, methods=["patch"])
+    def submitted(self, request, pk=None):
+        return self._set_status(request, Assessment.STATUS_SUBMITTED)
+
+    @action(detail=True, methods=["patch"])
+    def final(self, request, pk=None):
+        return self._set_status(request, Assessment.STATUS_FINAL)
+
+    @action(detail=True, methods=["patch"])
+    def cancelled(self, request, pk=None):
+        return self._set_status(request, Assessment.STATUS_CANCELLED)
+
+    @action(detail=True, methods=["patch"])
+    def rejected(self, request, pk=None):
+        return self._set_status(request, Assessment.STATUS_IN_PROGRESS)
 
 
 class AssessorViewSet(

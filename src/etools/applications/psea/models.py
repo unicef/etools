@@ -182,6 +182,14 @@ class Assessment(TimeStampedModel):
     def transition_to_rejected(self):
         """Assessment rejected"""
 
+    @transition(
+        field=status,
+        source=[],
+        target=[STATUS_CANCELLED],
+    )
+    def transition_to_cancelled(self):
+        """Assessment cancelled"""
+
 
 class AssessmentStatusHistory(TimeStampedModel):
     assessment = models.ForeignKey(

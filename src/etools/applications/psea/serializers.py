@@ -12,14 +12,9 @@ from etools.applications.psea.validation import AssessmentValid
 from etools.applications.psea.validators import EvidenceDescriptionValidator
 
 
-class AssessmentSerializer(serializers.ModelSerializer):
-    rating = serializers.SerializerMethodField()
-    permissions = serializers.SerializerMethodField(read_only=True)
-
+class BaseAssessmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Assessment
-        fields = '__all__'
-        read_only_fields = ["reference_number", "overall_rating"]
 
     def get_permissions(self, obj):
         if isinstance(self.instance, list):
@@ -52,6 +47,15 @@ class AssessmentSerializer(serializers.ModelSerializer):
             data["focal_points"] = focal_points
         return data
 
+
+class AssessmentSerializer(BaseAssessmentSerializer):
+    rating = serializers.SerializerMethodField()
+    permissions = serializers.SerializerMethodField(read_only=True)
+
+    class Meta(BaseAssessmentSerializer.Meta):
+        fields = '__all__'
+        read_only_fields = ["reference_number", "overall_rating"]
+
     def get_rating(self, obj):
         return obj.rating()
 
@@ -65,6 +69,11 @@ class AssessmentSerializer(serializers.ModelSerializer):
         if focal_points is not None:
             instance.focal_points.set(focal_points)
         return instance
+
+
+class AssessmentStatusSerializer(BaseAssessmentSerializer):
+    class Meta(BaseAssessmentSerializer.Meta):
+        fields = ["status"]
 
 
 class AssessorSerializer(serializers.ModelSerializer):
