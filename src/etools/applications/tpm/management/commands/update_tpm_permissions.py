@@ -243,8 +243,13 @@ class Command(BaseCommand):
                              condition=self.visit_status(TPMVisit.STATUSES.draft))
 
         # visit cancelled
+        tpm_cancelled_condition = self.visit_status(TPMVisit.STATUSES.cancelled)
         self.add_permissions([self.unicef_user, self.third_party_monitor], 'view', ['tpm.tpmvisit.cancel_comment'],
                              condition=self.visit_status(TPMVisit.STATUSES.cancelled))
+        self.add_permissions(self.third_party_monitor, 'view', self.tpm_visit_details,
+                             condition=tpm_cancelled_condition)
+        self.add_permissions(self.third_party_monitor, 'view', self.visit_report,
+                             condition=tpm_cancelled_condition)
 
         # visit assigned
         self.add_permissions(self.third_party_monitor, 'view', self.tpm_visit_details,
