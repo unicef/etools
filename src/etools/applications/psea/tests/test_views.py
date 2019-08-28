@@ -5,7 +5,11 @@ from django.utils import timezone
 from rest_framework import status
 
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
-from etools.applications.audit.tests.factories import AuditorStaffMemberFactory, AuditPartnerFactory
+from etools.applications.audit.tests.factories import (
+    AuditorStaffMemberFactory,
+    AuditPartnerFactory,
+    PurchaseOrderFactory,
+)
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.psea.models import Answer, Assessment, AssessmentStatusHistory, Assessor, Indicator
@@ -336,6 +340,7 @@ class TestAssessorViewSet(BaseTenantTestCase):
 
     def test_post_vendor(self):
         firm = AuditPartnerFactory()
+        purchase_order = PurchaseOrderFactory(auditor_firm=firm)
         assessment = AssessmentFactory()
         assessor_qs = Assessor.objects.filter(assessment=assessment)
         self.assertFalse(assessor_qs.exists())
@@ -348,7 +353,7 @@ class TestAssessorViewSet(BaseTenantTestCase):
                 "assessment": assessment.pk,
                 "assessor_type": Assessor.TYPE_VENDOR,
                 "auditor_firm": firm.pk,
-                "order_number": "123",
+                "order_number": purchase_order.order_number,
             },
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -359,7 +364,7 @@ class TestAssessorViewSet(BaseTenantTestCase):
             "user": None,
             "auditor_firm": firm,
             "auditor_firm_name": firm.name,
-            "order_number": "123",
+            "order_number": purchase_order.order_number,
         })
 
     def test_patch_vendor(self):
@@ -442,6 +447,7 @@ class TestAssessorViewSet(BaseTenantTestCase):
 
     def test_patch_unicef_to_vendor(self):
         firm = AuditPartnerFactory()
+        purchase_order = PurchaseOrderFactory(auditor_firm=firm)
         staff_1 = AuditorStaffMemberFactory(auditor_firm=firm)
         staff_2 = AuditorStaffMemberFactory(auditor_firm=firm)
         assessment = AssessmentFactory()
@@ -457,7 +463,7 @@ class TestAssessorViewSet(BaseTenantTestCase):
             data={
                 "assessor_type": Assessor.TYPE_VENDOR,
                 "auditor_firm": firm.pk,
-                "order_number": "321",
+                "order_number": purchase_order.order_number,
                 "auditor_firm_staff": [staff_1.pk, staff_2.pk],
             },
         )
@@ -466,7 +472,7 @@ class TestAssessorViewSet(BaseTenantTestCase):
         self._validate_assessor(assessor, {
             "assessment": assessment.pk,
             "assessor_type": Assessor.TYPE_VENDOR,
-            "order_number": "321",
+            "order_number": purchase_order.order_number,
             "auditor_firm": firm,
             "auditor_firm_name": firm.name,
         })

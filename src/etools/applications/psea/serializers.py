@@ -6,6 +6,7 @@ from rest_framework import serializers
 from unicef_attachments.fields import FileTypeModelChoiceField
 from unicef_attachments.models import Attachment, FileType
 
+from etools.applications.audit.purchase_order.models import PurchaseOrder
 from etools.applications.psea.models import Answer, AnswerEvidence, Assessment, Assessor, Evidence, Indicator, Rating
 from etools.applications.psea.permissions import AssessmentPermissions
 from etools.applications.psea.validation import AssessmentValid
@@ -118,12 +119,21 @@ class AssessorSerializer(serializers.ModelSerializer):
             data["order_number"] = ""
         elif assessor_type == Assessor.TYPE_VENDOR:
             if not data.get("auditor_firm"):
-                raise serializers.validationError(
+                raise serializers.ValidationError(
                     _("Auditor Firm is required."),
                 )
             if not data.get("order_number"):
-                raise serializers.validationError(
+                raise serializers.ValidationError(
                     _("PO Number is required."),
+                )
+            # ensure we have a valid order number that exists
+            # for firm
+            if not PurchaseOrder.objects.filter(
+                    auditor_firm=data.get("auditor_firm"),
+                    order_number=data.get("order_number"),
+            ).exists():
+                raise serializers.ValidationError(
+                    _("PO Number is invalid."),
                 )
             # ensure to clear data
             data["user"] = None
