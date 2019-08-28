@@ -43,14 +43,22 @@ class AssessmentViewSet(
 
     def _set_status(self, request, assessment_status):
         assessment = self.get_object()
+        data = request.data
+        if "status" not in data:
+            data["status"] = assessment_status
         serializer = AssessmentStatusSerializer(
             instance=assessment,
-            data=request.data,
+            data=data,
             context={"request": request},
         )
         if serializer.is_valid():
             assessment.status = assessment_status
             assessment.save()
+            comment = serializer.validated_data.get("comment")
+            if comment is not None:
+                history = assessment.status_history.first()
+                history.comment = serializer.validated_data.get("comment")
+                history.save()
             return Response({"status": assessment_status})
         else:
             return Response(

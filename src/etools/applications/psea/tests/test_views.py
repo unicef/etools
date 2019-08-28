@@ -8,7 +8,7 @@ from etools.applications.attachments.tests.factories import AttachmentFactory, A
 from etools.applications.audit.tests.factories import AuditorStaffMemberFactory, AuditPartnerFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.tests.factories import PartnerFactory
-from etools.applications.psea.models import Answer, Assessment, Assessor, Indicator
+from etools.applications.psea.models import Answer, Assessment, AssessmentStatusHistory, Assessor, Indicator
 from etools.applications.psea.tests.factories import (
     AnswerEvidenceFactory,
     AnswerFactory,
@@ -217,11 +217,15 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         assessment.status = assessment.STATUS_SUBMITTED
         assessment.save()
         self.assertEqual(assessment.status, assessment.STATUS_SUBMITTED)
+        history_qs = AssessmentStatusHistory.objects.filter(
+            assessment=assessment,
+        )
+        status_count = history_qs.count()
         response = self.forced_auth_req(
             "patch",
             reverse("psea:assessment-rejected", args=[assessment.pk]),
             user=self.focal_user,
-            data={},
+            data={"comment": "Test reject"},
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
@@ -230,6 +234,29 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         )
         assessment.refresh_from_db()
         self.assertEqual(assessment.status, assessment.STATUS_IN_PROGRESS)
+        self.assertEqual(history_qs.count(), status_count + 1)
+        history = history_qs.first()
+        self.assertNotEqual(history.comment, "")
+
+    def test_rejected_validation(self):
+        assessment = AssessmentFactory(partner=self.partner)
+        assessment.status = assessment.STATUS_SUBMITTED
+        assessment.save()
+        self.assertEqual(assessment.status, assessment.STATUS_SUBMITTED)
+        history_qs = AssessmentStatusHistory.objects.filter(
+            assessment=assessment,
+        )
+        status_count = history_qs.count()
+        response = self.forced_auth_req(
+            "patch",
+            reverse("psea:assessment-rejected", args=[assessment.pk]),
+            user=self.focal_user,
+            data={},
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        assessment.refresh_from_db()
+        self.assertEqual(assessment.status, assessment.STATUS_SUBMITTED)
+        self.assertEqual(history_qs.count(), status_count)
 
 
 class TestAssessorViewSet(BaseTenantTestCase):
@@ -241,6 +268,11 @@ class TestAssessorViewSet(BaseTenantTestCase):
         self.assertEqual(assessor.assessor_type, expected.get("assessor_type"))
         self.assertEqual(assessor.user, expected.get("user"))
         self.assertEqual(assessor.auditor_firm, expected.get("auditor_firm"))
+        if assessor.auditor_firm:
+            self.assertEqual(
+                assessor.auditor_firm.name,
+                expected.get("auditor_firm_name"),
+            )
         self.assertEqual(assessor.order_number, expected.get("order_number"))
 
     def test_get(self):
@@ -326,6 +358,7 @@ class TestAssessorViewSet(BaseTenantTestCase):
             "assessor_type": Assessor.TYPE_VENDOR,
             "user": None,
             "auditor_firm": firm,
+            "auditor_firm_name": firm.name,
             "order_number": "123",
         })
 
@@ -435,6 +468,7 @@ class TestAssessorViewSet(BaseTenantTestCase):
             "assessor_type": Assessor.TYPE_VENDOR,
             "order_number": "321",
             "auditor_firm": firm,
+            "auditor_firm_name": firm.name,
         })
         staff = assessor.auditor_firm_staff.all()
         self.assertEqual(len(staff), 2)

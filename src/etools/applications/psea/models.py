@@ -202,6 +202,7 @@ class AssessmentStatusHistory(TimeStampedModel):
         max_length=30,
         choices=Assessment.STATUS_CHOICES,
     )
+    comment = models.TextField(blank=True)
 
     class Meta:
         verbose_name = _("Assessment Status History")

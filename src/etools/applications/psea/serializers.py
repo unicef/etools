@@ -72,14 +72,34 @@ class AssessmentSerializer(BaseAssessmentSerializer):
 
 
 class AssessmentStatusSerializer(BaseAssessmentSerializer):
+    comment = serializers.CharField(required=False)
+
     class Meta(BaseAssessmentSerializer.Meta):
-        fields = ["status"]
+        fields = ["status", "comment"]
+
+    def validate(self, data):
+        data = super().validate(data)
+        if data["status"] == Assessment.STATUS_IN_PROGRESS:
+            previous_status = self.instance.status_history.first()
+            if previous_status.status == Assessment.STATUS_SUBMITTED:
+                if not data.get("comment"):
+                    raise serializers.ValidationError(
+                        _("Comment is required when rejecting."),
+                    )
+        return data
 
 
 class AssessorSerializer(serializers.ModelSerializer):
+    auditor_firm_name = serializers.SerializerMethodField()
+
     class Meta:
         model = Assessor
         fields = "__all__"
+
+    def get_auditor_firm_name(self, obj):
+        if obj.auditor_firm:
+            return obj.auditor_firm.name
+        return ""
 
     def validate(self, data):
         """Ensure correct assessor setup based on assessor type
