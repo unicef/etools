@@ -8,6 +8,7 @@ from etools.libraries.djangolib.admin import AdminListMixin
 class TPMActivityAdmin(admin.ModelAdmin):
     list_display = (
         '__str__',
+        'is_pv'
     )
     search_fields = (
         'tpm_visit__author__username',
