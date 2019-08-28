@@ -293,11 +293,11 @@ class Assessor(TimeStampedModel):
         (TYPE_VENDOR, _("Assessing Firm")),
     )
 
-    assessment = models.ForeignKey(
+    assessment = models.OneToOneField(
         Assessment,
         verbose_name=_("Assessment"),
         on_delete=models.CASCADE,
-        related_name="assessors",
+        related_name="assessor",
     )
     assessor_type = models.CharField(
         verbose_name=_("Type"),

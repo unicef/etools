@@ -52,6 +52,7 @@ class BaseAssessmentSerializer(serializers.ModelSerializer):
 class AssessmentSerializer(BaseAssessmentSerializer):
     rating = serializers.SerializerMethodField()
     permissions = serializers.SerializerMethodField(read_only=True)
+    assessor = serializers.SerializerMethodField()
 
     class Meta(BaseAssessmentSerializer.Meta):
         fields = '__all__'
@@ -59,6 +60,16 @@ class AssessmentSerializer(BaseAssessmentSerializer):
 
     def get_rating(self, obj):
         return obj.rating()
+
+    def get_assessor(self, obj):
+        try:
+            if obj.assessor.assessor_type == assessor.TYPE_VENDOR:
+                return str(obj.assessor.auditor_firm)
+            else:
+                return str(obj.assessor.user)
+        except Assessor.DoesNotExist:
+            pass
+        return ""
 
     def create(self, validated_data):
         if "assessment_date" not in validated_data:
