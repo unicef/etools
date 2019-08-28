@@ -38,7 +38,7 @@ class TestEvidence(BaseTenantTestCase):
 class TestAssessment(BaseTenantTestCase):
     def test_string(self):
         assessment = AssessmentFactory()
-        self.assertEqual(str(assessment), f"{assessment.partner} [Draft]")
+        self.assertEqual(str(assessment), f"{assessment.partner} [Draft] {assessment.reference_number}")
 
     def test_rating_none(self):
         assessment = AssessmentFactory()

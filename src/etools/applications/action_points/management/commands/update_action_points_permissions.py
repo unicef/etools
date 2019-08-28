@@ -25,6 +25,7 @@ class Command(BaseCommand):
     action_point_related_objects = [
         'action_points.actionpoint.engagement',
         'action_points.actionpoint.tpm_activity',
+        'action_points.actionpoint.psea_assessment',
         'action_points.actionpoint.travel_activity',
     ]
 
