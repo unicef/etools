@@ -1,8 +1,10 @@
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.gis.db.models import PointField
+from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.db.models import QuerySet, Prefetch
+from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
 
 from django_extensions.db.fields import AutoSlugField
@@ -127,7 +129,7 @@ class Option(models.Model):
 
     question = models.ForeignKey(Question, related_name='options', verbose_name=_('Question'), on_delete=models.CASCADE)
     label = models.CharField(max_length=50, verbose_name=_('Label'))
-    value = AutoSlugField(populate_from='label', verbose_name=_('Value'))
+    value = JSONField(verbose_name=_('Value'), blank=True, null=True)
 
     class Meta:
         verbose_name = _('Option')
@@ -136,6 +138,11 @@ class Option(models.Model):
 
     def __str__(self):
         return self.label
+
+    def save(self, **kwargs):
+        if self.value is None:
+            self.value = slugify(self.label)
+        super().save(**kwargs)
 
 
 class LocationSite(TimeStampedModel):

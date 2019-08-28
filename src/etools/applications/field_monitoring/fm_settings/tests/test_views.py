@@ -728,7 +728,7 @@ class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-    def test_create_with_options(self):
+    def test_create_likert_scale(self):
         response = self.forced_auth_req(
             'post',
             reverse('field_monitoring_settings:questions-list'),
@@ -742,6 +742,34 @@ class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
                 'options': [
                     {'label': 'Option #1', 'value': '1'},
                     {'label': 'Option #2', 'value': '2'},
+                    {'label': 'Option #3'},  # value should be generated automatically
+                ],
+                'text': 'Test Question',
+                'is_hact': False
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(len(response.data['options']), 3)
+        self.assertListEqual(
+            [o['value'] for o in response.data['options']],
+            ['1', '2', 'option-3']
+        )
+
+    def test_create_bool(self):
+        response = self.forced_auth_req(
+            'post',
+            reverse('field_monitoring_settings:questions-list'),
+            user=self.fm_user,
+            data={
+                'answer_type': 'bool',
+                'level': 'partner',
+                'methods': [MethodFactory().id, ],
+                'category': CategoryFactory().id,
+                'sections': [],
+                'options': [
+                    {'label': 'Option #1', 'value': True},
+                    {'label': 'Option #2', 'value': False},
                 ],
                 'text': 'Test Question',
                 'is_hact': False
@@ -750,6 +778,10 @@ class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(len(response.data['options']), 2)
+        self.assertListEqual(
+            [o['value'] for o in response.data['options']],
+            [True, False]
+        )
 
     def test_update(self):
         question = QuestionFactory(answer_type=Question.ANSWER_TYPES.likert_scale, options__count=2)
