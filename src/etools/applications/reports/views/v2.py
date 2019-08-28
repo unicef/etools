@@ -368,6 +368,8 @@ class AppliedIndicatorLocationExportView(QueryStringFilterMixin, ListAPIView):
         if self.request.query_params:
             queries = []
             filters = (
+                ('partners', 'agreement__partner__in'),
+                ('agreements', 'agreement__in'),
                 ('document_type', 'document_type__in'),
                 ('country_programme', 'agreement__country_programme'),
                 ('start', 'start__gte'),
@@ -424,7 +426,8 @@ class ClusterListAPIView(ListAPIView):
         CSVRenderer,
         CSVFlatRenderer,
     )
-    queryset = AppliedIndicator.objects.filter(cluster_name__isnull=False).values('cluster_name').distinct()
+    queryset = AppliedIndicator.objects.filter(cluster_name__isnull=False).order_by(
+        'cluster_name').values('cluster_name').distinct()
 
 
 class SpecialReportingRequirementListCreateView(ListCreateAPIView):

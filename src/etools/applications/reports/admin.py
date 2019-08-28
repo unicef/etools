@@ -52,7 +52,7 @@ class SectionListFilter(admin.SimpleListFilter):
 
 class SectionAdmin(admin.ModelAdmin):
     form = AutoSizeTextForm
-    list_display = ('name', 'color', 'dashboard',)
+    list_display = ('name', 'color', 'dashboard', 'active', )
     list_editable = ('color', 'dashboard',)
 
 

@@ -140,6 +140,7 @@ class Section(TimeStampedModel):
     alternate_name = models.CharField(max_length=255, null=True, default='', verbose_name=_('Alternate Name'))
     dashboard = models.BooleanField(default=False, verbose_name=_('Dashboard'))
     color = models.CharField(max_length=7, null=True, blank=True, verbose_name=_('Color'))
+    active = models.BooleanField(default=True, verbose_name=_('Active'))
 
     class Meta:
         ordering = ['name']
@@ -369,7 +370,7 @@ class LowerResult(TimeStampedModel):
 
     class Meta:
         unique_together = (('result_link', 'code'),)
-        ordering = ('-created',)
+        ordering = ('created',)
 
     def save(self, **kwargs):
         if not self.code:
@@ -674,6 +675,7 @@ class AppliedIndicator(TimeStampedModel):
 
     class Meta:
         unique_together = (("indicator", "lower_result"),)
+        ordering = ("created",)
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)

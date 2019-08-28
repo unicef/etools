@@ -360,7 +360,7 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
             related_manager.add(*value)
 
     def update_related_objects(self, attr_name, related_data):
-        many = isinstance(self._fields[attr_name], serializers.ListSerializer)
+        many = isinstance(self.fields[attr_name], serializers.ListSerializer)
 
         try:
             related = getattr(self.instance, attr_name)
@@ -371,7 +371,7 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
             # Load the queryset
             related = related.all()
 
-            model = self._fields[attr_name].child.Meta.model
+            model = self.fields[attr_name].child.Meta.model
             related_to_delete = {o.pk for o in related}
 
             # Iterate over incoming data and create/update the models

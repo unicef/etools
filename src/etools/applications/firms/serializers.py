@@ -6,6 +6,7 @@ from rest_framework.validators import UniqueValidator
 from unicef_restlib.serializers import WritableNestedSerializerMixin
 
 from etools.applications.users.models import UserProfile
+from etools.libraries.djangolib.validators import uppercase_forbidden_validator
 
 
 class UserProfileSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
@@ -27,8 +28,8 @@ class UserSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer)
     email = serializers.EmailField(
         label=_('E-mail Address'),
         validators=[UniqueValidator(queryset=get_user_model().objects.all(),
-                                    message='This user already exists in the system')]
-    )
+                                    message='This user already exists in the system'),
+                    uppercase_forbidden_validator])
 
     class Meta(WritableNestedSerializerMixin.Meta):
         model = get_user_model()

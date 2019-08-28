@@ -124,7 +124,6 @@ MIDDLEWARE = (
     'corsheaders.middleware.CorsMiddleware',
     'etools.applications.core.middleware.EToolsTenantMiddleware',
     'waffle.middleware.WaffleMiddleware',  # needs request.tenant from EToolsTenantMiddleware
-    'etools.libraries.social_django.middleware.SocialAuthExceptionMiddleware',
 )
 WSGI_APPLICATION = 'etools.config.wsgi.application'
 
@@ -482,15 +481,6 @@ if ALLOW_BASIC_AUTH:
         'etools.applications.core.auth.DRFBasicAuthMixin',
     )
 
-ISSUE_CHECKS = [
-    'etools.applications.management.issues.project_checks.ActivePCANoSignedDocCheck',
-    'etools.applications.management.issues.project_checks.PdOutputsWrongCheck',
-    'etools.applications.management.issues.project_checks.InterventionsAssociatedSSFACheck',
-    'etools.applications.management.issues.project_checks.InterventionsAreValidCheck',
-    'etools.applications.management.issues.project_checks.PDAmendmentsMissingFilesCheck',
-    'etools.applications.management.issues.project_checks.PCAAmendmentsMissingFilesCheck',
-]
-
 EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS = get_from_secrets_or_env(
     'EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS', 'integrity1@unicef.org'
 )
@@ -570,3 +560,7 @@ ATTACHMENT_DENORMALIZE_FUNC = "etools.applications.attachments.utils.denormalize
 
 GEOS_LIBRARY_PATH = os.getenv('GEOS_LIBRARY_PATH', '/usr/lib/libgeos_c.so.1')  # default path
 GDAL_LIBRARY_PATH = os.getenv('GDAL_LIBRARY_PATH', '/usr/lib/libgdal.so.20')  # default path
+
+SHELL_PLUS_PRE_IMPORTS = (
+    ('etools.applications.core.util_scripts', '*'),
+)

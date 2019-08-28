@@ -3,6 +3,7 @@ import logging
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
+from django.http import HttpResponseRedirect
 
 import jwt
 from rest_framework.authentication import BasicAuthentication, SessionAuthentication, TokenAuthentication
@@ -11,6 +12,7 @@ from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from rest_framework_jwt.settings import api_settings
 from rest_framework_jwt.utils import jwt_payload_handler
 from social_core.backends.azuread_b2c import AzureADB2COAuth2
+from social_core.exceptions import AuthCanceled, AuthMissingParameter
 from social_core.pipeline import social_auth, user as social_core_user
 from social_django.middleware import SocialAuthExceptionMiddleware
 
@@ -101,6 +103,13 @@ class CustomAzureADBBCOAuth2(AzureADB2COAuth2):
 
 
 class CustomSocialAuthExceptionMiddleware(SocialAuthExceptionMiddleware):
+
+    def process_exception(self, request, exception):
+        if isinstance(exception, (AuthCanceled, AuthMissingParameter)):
+            return HttpResponseRedirect(self.get_redirect_uri(request, exception))
+        else:
+            raise exception
+
     def get_redirect_uri(self, request, exception):
         error = request.GET.get('error', None)
 
@@ -124,11 +133,7 @@ class CustomSocialAuthExceptionMiddleware(SocialAuthExceptionMiddleware):
                 return redirect_url
 
         # TODO: In case of password reset the state can't be verified figure out a way to log the user in after reset
-        if error is None:
-            return "/login"
-
-        strategy = getattr(request, 'social_strategy', None)
-        return strategy.setting('LOGIN_ERROR_URL')
+        return settings.LOGIN_URL
 
 
 class DRFBasicAuthMixin(BasicAuthentication):

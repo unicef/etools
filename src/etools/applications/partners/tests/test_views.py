@@ -1420,6 +1420,30 @@ class TestInterventionViews(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('Document type PD or HPD can only be associated with a PCA agreement.', response.data)
 
+    def test_intervention_validation_multiple_agreement_ssfa(self):
+        self.agreement.agreement_type = Agreement.SSFA
+        self.agreement.save()
+        intervention = Intervention.objects.get(id=self.intervention["id"])
+        intervention.document_type = Intervention.SSFA
+        intervention.save()
+        self.agreement.interventions.add(intervention)
+
+        response = self.forced_auth_req(
+            'post',
+            reverse(
+                "partners_api:intervention-list"
+            ),
+            user=self.partnership_manager_user,
+            data={
+                "agreement": self.agreement.id,
+                "document_type": Intervention.SSFA,
+                "status": Intervention.DRAFT,
+                "title": "test"
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('You can only add one SSFA Document for each SSFA Agreement', response.data)
+
     def test_intervention_validation_dates(self):
         today = datetime.date.today()
         data = {
@@ -1553,6 +1577,34 @@ class TestInterventionViews(BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data['planned_visits'], ['Planned Visit to be set only at Partner level'])
+
+    def test_intervention_delete_planned_visits(self):
+        response = self.forced_auth_req(
+            'delete',
+            reverse(
+                "partners_api:interventions-planned-visits-delete",
+                args=[self.intervention_obj.id, self.planned_visit.id]
+            ),
+            user=self.partnership_manager_user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        with self.assertRaises(InterventionPlannedVisits.DoesNotExist):
+            self.planned_visit.refresh_from_db()
+
+    def test_intervention_delete_planned_visits_nondraft_fail(self):
+        self.intervention_obj.status = Intervention.SIGNED
+        self.intervention_obj.save()
+        response = self.forced_auth_req(
+            'delete',
+            reverse(
+                "partners_api:interventions-planned-visits-delete",
+                args=[self.intervention_obj.id, self.planned_visit.id]
+            ),
+            user=self.partnership_manager_user,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('Planned visits can only be deleted in Draft status', response.data)
 
     def test_intervention_filter(self):
         country_programme = CountryProgrammeFactory()
@@ -1922,6 +1974,7 @@ class TestPartnerOrganizationDashboardAPIView(BaseTenantTestCase):
             outstanding_dct_amount_6_to_9_months_usd=69,
             outstanding_dct_amount_more_than_9_months_usd=90,
             partner_type=PartnerType.UN_AGENCY,
+            core_values_assessment_date=datetime.date.today() - datetime.timedelta(30),
         )
 
         cls.unicef_staff = UserFactory(is_staff=True)
@@ -1957,6 +2010,7 @@ class TestPartnerOrganizationDashboardAPIView(BaseTenantTestCase):
         self.assertEqual(self.record['total_ct_ytd'], 123.0)
         self.assertEqual(self.record['outstanding_dct_amount_6_to_9_months_usd'], 69.00)
         self.assertEqual(self.record['outstanding_dct_amount_more_than_9_months_usd'], 90.00)
+        self.assertEqual(self.record['core_value_assessment_expiring'].split()[0], '30')
 
     def test_sections(self):
         self.assertEqual(self.record['sections'], '{}|{}'.format(self.sec1.name, self.sec2.name))
