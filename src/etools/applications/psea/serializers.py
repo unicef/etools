@@ -63,7 +63,7 @@ class AssessmentSerializer(BaseAssessmentSerializer):
 
     def get_assessor(self, obj):
         try:
-            if obj.assessor.assessor_type == assessor.TYPE_VENDOR:
+            if obj.assessor.assessor_type == Assessor.TYPE_VENDOR:
                 return str(obj.assessor.auditor_firm)
             else:
                 return str(obj.assessor.user)
