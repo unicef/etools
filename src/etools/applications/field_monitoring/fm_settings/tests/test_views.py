@@ -615,6 +615,40 @@ class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 5)
 
+    def test_default_ordering(self):
+        questions = list(QuestionFactory.create_batch(2))
+
+        response = self.forced_auth_req(
+            'get',
+            reverse('field_monitoring_settings:questions-list'),
+            user=self.usual_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertListEqual(
+            [r['id'] for r in response.data['results']],
+            [q.id for q in reversed(questions)]
+        )
+
+    def test_ordering_by_text(self):
+        questions = [
+            QuestionFactory(text='a'),
+            QuestionFactory(text='b'),
+        ]
+
+        response = self.forced_auth_req(
+            'get',
+            reverse('field_monitoring_settings:questions-list'),
+            user=self.usual_user,
+            data={
+                'ordering': 'text'
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertListEqual(
+            [r['id'] for r in response.data['results']],
+            [q.id for q in questions]
+        )
+
     def test_filter_by_methods(self):
         first_method = MethodFactory()
         second_method = MethodFactory()
@@ -638,7 +672,7 @@ class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.data['count'], len(valid_questions))
         self.assertListEqual(
             [r['id'] for r in response.data['results']],
-            [q.id for q in valid_questions]
+            [q.id for q in reversed(valid_questions)]
         )
 
     def test_combine_filter_by_methods_and_sections(self):
@@ -673,7 +707,7 @@ class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.data['count'], len(valid_questions))
         self.assertListEqual(
             [r['id'] for r in response.data['results']],
-            [q.id for q in valid_questions]
+            [q.id for q in reversed(valid_questions)]
         )
 
     def test_create(self):

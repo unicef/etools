@@ -193,7 +193,7 @@ class QuestionsViewSet(
     permission_classes = FMBaseViewSet.permission_classes + [
         IsReadAction | (IsEditAction & IsFieldMonitor)
     ]
-    queryset = Question.objects.prefetch_related('options')
+    queryset = Question.objects.prefetch_related('options').order_by('-id')
     serializer_class = QuestionSerializer
     filter_backends = (DjangoFilterBackend, OrderingFilter)
     filter_class = QuestionsFilterSet
