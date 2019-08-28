@@ -4,6 +4,11 @@ import django.contrib.postgres.fields.jsonb
 from django.db import migrations
 
 
+def clean_options(apps, schema_editor):
+    Option = apps.get_model('field_monitoring_settings', 'Option')
+    Option.objects.all().delete()
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -11,7 +16,12 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AlterField(
+        migrations.RemoveField(
+            model_name='option',
+            name='value',
+        ),
+        migrations.RunPython(clean_options, migrations.RunPython.noop),
+        migrations.AddField(
             model_name='option',
             name='value',
             field=django.contrib.postgres.fields.jsonb.JSONField(blank=True, null=True, verbose_name='Value'),
