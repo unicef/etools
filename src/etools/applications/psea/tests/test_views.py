@@ -267,6 +267,7 @@ class TestAssessorViewSet(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user = UserFactory()
+        cls.unicef_user = UserFactory(email="staff@unicef.org")
 
     def _validate_assessor(self, assessor, expected):
         self.assertEqual(assessor.assessor_type, expected.get("assessor_type"))
@@ -300,7 +301,7 @@ class TestAssessorViewSet(BaseTenantTestCase):
             data={
                 "assessment": assessment.pk,
                 "assessor_type": Assessor.TYPE_UNICEF,
-                "user": self.user.pk,
+                "user": self.unicef_user.pk,
             },
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -308,7 +309,7 @@ class TestAssessorViewSet(BaseTenantTestCase):
         assessor = assessor_qs.first()
         self._validate_assessor(assessor, {
             "assessor_type": Assessor.TYPE_UNICEF,
-            "user": self.user,
+            "user": self.unicef_user,
             "auditor_firm": None,
             "order_number": "",
         })
@@ -432,7 +433,7 @@ class TestAssessorViewSet(BaseTenantTestCase):
             user=self.user,
             data={
                 "assessor_type": Assessor.TYPE_UNICEF,
-                "user": self.user.pk,
+                "user": self.unicef_user.pk,
             },
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -440,7 +441,7 @@ class TestAssessorViewSet(BaseTenantTestCase):
         self._validate_assessor(assessor, {
             "assessment": assessment.pk,
             "assessor_type": Assessor.TYPE_UNICEF,
-            "user": self.user,
+            "user": self.unicef_user,
             "order_number": "",
         })
         self.assertEqual(list(assessor.auditor_firm_staff.all()), [])

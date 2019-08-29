@@ -11,6 +11,7 @@ from etools.applications.psea.models import Answer, AnswerEvidence, Assessment, 
 from etools.applications.psea.permissions import AssessmentPermissions
 from etools.applications.psea.validation import AssessmentValid
 from etools.applications.psea.validators import EvidenceDescriptionValidator
+from etools.applications.users.validators import ExternalUserValidator
 
 
 class BaseAssessmentSerializer(serializers.ModelSerializer):
@@ -124,6 +125,14 @@ class AssessorSerializer(serializers.ModelSerializer):
         if assessor_type in [Assessor.TYPE_EXTERNAL, Assessor.TYPE_UNICEF]:
             if not data.get("user"):
                 raise serializers.ValidationError(_("User is required."))
+            if assessor_type == Assessor.TYPE_EXTERNAL:
+                validate = ExternalUserValidator()
+                validate(data["user"].email)
+            else:
+                if not data["user"].email.endswith("@unicef.org"):
+                    raise serializers.ValidationError(
+                        _("User does not have UNICEF email address."),
+                    )
             # ensure to clear data
             data["auditor_firm"] = None
             data["auditor_firm_staff"] = []
