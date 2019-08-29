@@ -284,8 +284,8 @@ class AnswerEvidence(TimeStampedModel):
 
 class Assessor(TimeStampedModel):
     TYPE_EXTERNAL = "external"
-    TYPE_UNICEF = "unicef"
-    TYPE_VENDOR = "vendor"
+    TYPE_UNICEF = "staff"
+    TYPE_VENDOR = "firm"
 
     TYPE_CHOICES = Choices(
         (TYPE_EXTERNAL, _("External Individual")),
