@@ -74,7 +74,7 @@ class QuestionListSerializer(serializers.ModelSerializer):
 class QuestionSerializer(WritableNestedSerializerMixin, QuestionListSerializer):
     options = OptionSerializer(many=True, required=False)
 
-    class Meta(WritableNestedSerializerMixin.Meta, QuestionListSerializer):
+    class Meta(WritableNestedSerializerMixin.Meta, QuestionListSerializer.Meta):
         fields = QuestionListSerializer.Meta.fields + ('options',)
         read_only_fields = ('is_custom',)
 
