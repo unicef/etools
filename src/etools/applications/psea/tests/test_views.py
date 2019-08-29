@@ -284,7 +284,10 @@ class TestAssessorViewSet(BaseTenantTestCase):
         assessor = AssessorFactory()
         response = self.forced_auth_req(
             "get",
-            reverse('psea:assessor-detail', args=[assessor.pk]),
+            reverse(
+                'psea:assessor-detail',
+                args=[assessor.assessment.pk, assessor.pk],
+            ),
             user=self.user,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -296,10 +299,9 @@ class TestAssessorViewSet(BaseTenantTestCase):
 
         response = self.forced_auth_req(
             "post",
-            reverse('psea:assessor-list'),
+            reverse('psea:assessor-list', args=[assessment.pk]),
             user=self.user,
             data={
-                "assessment": assessment.pk,
                 "assessor_type": Assessor.TYPE_UNICEF,
                 "user": self.unicef_user.pk,
             },
@@ -321,10 +323,9 @@ class TestAssessorViewSet(BaseTenantTestCase):
 
         response = self.forced_auth_req(
             "post",
-            reverse('psea:assessor-list'),
+            reverse('psea:assessor-list', args=[assessment.pk]),
             user=self.user,
             data={
-                "assessment": assessment.pk,
                 "assessor_type": Assessor.TYPE_EXTERNAL,
                 "user": self.user.pk,
             },
@@ -348,10 +349,9 @@ class TestAssessorViewSet(BaseTenantTestCase):
 
         response = self.forced_auth_req(
             "post",
-            reverse('psea:assessor-list'),
+            reverse('psea:assessor-list', args=[assessment.pk]),
             user=self.user,
             data={
-                "assessment": assessment.pk,
                 "assessor_type": Assessor.TYPE_VENDOR,
                 "auditor_firm": firm.pk,
                 "order_number": purchase_order.order_number,
@@ -379,7 +379,10 @@ class TestAssessorViewSet(BaseTenantTestCase):
 
         response = self.forced_auth_req(
             "patch",
-            reverse('psea:assessor-detail', args=[assessor.pk]),
+            reverse(
+                'psea:assessor-detail',
+                args=[assessor.assessment.pk, assessor.pk],
+            ),
             user=self.user,
             data={
                 "auditor_firm": firm_2.pk,
@@ -402,7 +405,10 @@ class TestAssessorViewSet(BaseTenantTestCase):
 
         response = self.forced_auth_req(
             "patch",
-            reverse('psea:assessor-detail', args=[assessor.pk]),
+            reverse(
+                'psea:assessor-detail',
+                args=[assessor.assessment.pk, assessor.pk],
+            ),
             user=self.user,
             data={
                 "auditor_firm_staff": [staff_1.pk, staff_2.pk],
@@ -421,6 +427,7 @@ class TestAssessorViewSet(BaseTenantTestCase):
         staff_2 = AuditorStaffMemberFactory(auditor_firm=firm)
         assessment = AssessmentFactory()
         assessor = AssessorFactory(
+            assessment=assessment,
             assessor_type=Assessor.TYPE_VENDOR,
             auditor_firm=firm,
             order_number="123",
@@ -429,7 +436,7 @@ class TestAssessorViewSet(BaseTenantTestCase):
 
         response = self.forced_auth_req(
             "patch",
-            reverse('psea:assessor-detail', args=[assessor.pk]),
+            reverse('psea:assessor-detail', args=[assessment.pk, assessor.pk]),
             user=self.user,
             data={
                 "assessor_type": Assessor.TYPE_UNICEF,
@@ -439,7 +446,6 @@ class TestAssessorViewSet(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         assessor.refresh_from_db()
         self._validate_assessor(assessor, {
-            "assessment": assessment.pk,
             "assessor_type": Assessor.TYPE_UNICEF,
             "user": self.unicef_user,
             "order_number": "",
@@ -453,13 +459,14 @@ class TestAssessorViewSet(BaseTenantTestCase):
         staff_2 = AuditorStaffMemberFactory(auditor_firm=firm)
         assessment = AssessmentFactory()
         assessor = AssessorFactory(
+            assessment=assessment,
             assessor_type=Assessor.TYPE_UNICEF,
             user=self.user,
         )
 
         response = self.forced_auth_req(
             "patch",
-            reverse('psea:assessor-detail', args=[assessor.pk]),
+            reverse('psea:assessor-detail', args=[assessment.pk, assessor.pk]),
             user=self.user,
             data={
                 "assessor_type": Assessor.TYPE_VENDOR,
@@ -471,7 +478,6 @@ class TestAssessorViewSet(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         assessor.refresh_from_db()
         self._validate_assessor(assessor, {
-            "assessment": assessment.pk,
             "assessor_type": Assessor.TYPE_VENDOR,
             "order_number": purchase_order.order_number,
             "auditor_firm": firm,

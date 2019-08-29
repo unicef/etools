@@ -102,6 +102,9 @@ class AssessorViewSet(
     queryset = Assessor.objects.all()
     serializer_class = AssessorSerializer
 
+    def get_queryset(self):
+        return self.queryset.filter(assessment=self.kwargs.get("nested_1_pk"))
+
 
 class IndicatorViewSet(
         SafeTenantViewSetMixin,

@@ -108,6 +108,7 @@ class AssessorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Assessor
         fields = "__all__"
+        read_only_fields = ["assessment"]
 
     def get_auditor_firm_name(self, obj):
         if obj.auditor_firm:
@@ -158,6 +159,12 @@ class AssessorSerializer(serializers.ModelSerializer):
             # ensure to clear data
             data["user"] = None
         return data
+
+    def create(self, validated_data):
+        validated_data["assessment_id"] = self.context["view"].kwargs.get(
+            "nested_1_pk",
+        )
+        return super().create(validated_data)
 
 
 class ActiveListSerializer(serializers.ListSerializer):
