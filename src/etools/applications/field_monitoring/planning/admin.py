@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from etools.applications.field_monitoring.planning.models import YearPlan, QuestionTemplate, MonitoringActivity
+from etools.applications.field_monitoring.planning.models import MonitoringActivity, QuestionTemplate, YearPlan
 
 
 @admin.register(YearPlan)

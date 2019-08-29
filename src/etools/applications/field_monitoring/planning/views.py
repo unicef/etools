@@ -24,15 +24,21 @@ from etools.applications.field_monitoring.permissions import (
     IsReadAction,
 )
 from etools.applications.field_monitoring.planning.activity_validation.validator import ActivityValid
-from etools.applications.field_monitoring.planning.filters import MonitoringActivitiesFilterSet, \
-    ReferenceNumberOrderingFilter, UserTypeFilter, UserTPMPartnerFilter
+from etools.applications.field_monitoring.planning.filters import (
+    MonitoringActivitiesFilterSet,
+    ReferenceNumberOrderingFilter,
+    UserTPMPartnerFilter,
+    UserTypeFilter,
+)
 from etools.applications.field_monitoring.planning.models import MonitoringActivity, YearPlan
 from etools.applications.field_monitoring.planning.serializers import (
     ActivityAttachmentSerializer,
+    FMUserSerializer,
     MonitoringActivityLightSerializer,
     MonitoringActivitySerializer,
+    TemplatedQuestionSerializer,
     YearPlanSerializer,
-    TemplatedQuestionSerializer, FMUserSerializer)
+)
 from etools.applications.field_monitoring.views import FMBaseAttachmentsViewSet, FMBaseViewSet
 from etools.applications.permissions2.views import FSMTransitionActionMixin
 

@@ -2,6 +2,7 @@ from rest_framework import serializers
 from unicef_attachments.serializers import BaseAttachmentSerializer
 
 from etools.applications.field_monitoring.data_collection.models import ActivityQuestion
+from etools.applications.field_monitoring.fm_settings.serializers import QuestionListSerializer
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
 
 
@@ -12,9 +13,14 @@ class ActivityDataCollectionSerializer(serializers.ModelSerializer):
 
 
 class ActivityQuestionSerializer(serializers.ModelSerializer):
+    question = QuestionListSerializer()
+
     class Meta:
         model = ActivityQuestion
-        fields = ('id', 'question', 'specific_details', 'is_enabled')
+        fields = (
+            'id', 'partner', 'cp_output', 'intervention',
+            'question', 'specific_details', 'is_enabled'
+        )
         read_only_fields = ('question',)
 
 

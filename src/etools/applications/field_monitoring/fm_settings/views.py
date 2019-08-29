@@ -24,7 +24,8 @@ from etools.applications.field_monitoring.fm_settings.filters import (
     LogIssueMonitoringActivityFilter,
     LogIssueNameOrderingFilter,
     LogIssueRelatedToTypeFilter,
-    QuestionsFilterSet)
+    QuestionsFilterSet,
+)
 from etools.applications.field_monitoring.fm_settings.models import Category, LocationSite, LogIssue, Method, Question
 from etools.applications.field_monitoring.fm_settings.serializers import (
     CategorySerializer,

@@ -1,6 +1,8 @@
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 
 from etools.applications.field_monitoring.groups import FMUser, PME
+from etools.applications.field_monitoring.planning.activity_validation.permissions import ActivityPermissions
+from etools.applications.field_monitoring.planning.models import MonitoringActivity
 
 
 class UserInGroup(BasePermission):
@@ -38,6 +40,11 @@ class IsReadAction(SimplePermission):
 IsEditAction = ~IsReadAction
 
 
+class IsParentAction(SimplePermission):
+    def has_access(self, request, view, instance=None):
+        return view.action == 'parent'
+
+
 class IsObjectAction(SimplePermission):
     def has_access(self, request, view, instance=None):
         return view.detail
@@ -65,9 +72,40 @@ class IsTeamMember(BasePermission):
         return request.user in obj.team_members.all()
 
 
+class IsActivityTeamMember(BasePermission):
+    def has_permission(self, request, view):
+        return request.user in view.get_root_object().team_members.all()
+
+    def has_object_permission(self, request, view, obj):
+        return True
+
+
 class IsPersonResponsible(BasePermission):
     def has_permission(self, request, view):
         return True
 
     def has_object_permission(self, request, view, obj):
         return request.user == obj.person_responsible
+
+
+class IsActivityPersonResponsible(BasePermission):
+    def has_permission(self, request, view):
+        return request.user == view.get_root_object().person_responsible
+
+    def has_object_permission(self, request, view, obj):
+        return True
+
+
+def activity_field_is_editable_permission(field):
+    class FieldPermission(BasePermission):
+        def has_permission(self, request, view):
+            ps = MonitoringActivity.permission_structure()
+            permissions = ActivityPermissions(
+                user=request.user, instance=view.get_root_object(), permission_structure=ps
+            )
+            return permissions.get_permissions()['edit'].get(field)
+
+        def has_object_permission(self, request, view, obj):
+            return True
+
+    return FieldPermission

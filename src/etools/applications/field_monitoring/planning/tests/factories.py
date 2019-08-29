@@ -5,7 +5,7 @@ from factory import fuzzy
 from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.field_monitoring.fm_settings.tests.factories import QuestionFactory
-from etools.applications.field_monitoring.planning.models import MonitoringActivity, YearPlan, QuestionTemplate
+from etools.applications.field_monitoring.planning.models import MonitoringActivity, QuestionTemplate, YearPlan
 from etools.applications.field_monitoring.tests.factories import UserFactory
 from etools.libraries.tests.factories import StatusFactoryMetaClass
 

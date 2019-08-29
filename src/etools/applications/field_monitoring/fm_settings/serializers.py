@@ -61,16 +61,21 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = ('id', 'name')
 
 
-class QuestionSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
-    options = OptionSerializer(many=True, required=False)
-
-    class Meta(WritableNestedSerializerMixin.Meta):
+class QuestionListSerializer(serializers.ModelSerializer):
+    class Meta:
         model = Question
         fields = (
-            'id', 'answer_type', 'choices_size', 'level', 'options',
+            'id', 'answer_type', 'choices_size', 'level',
             'methods', 'category', 'sections', 'text',
             'is_hact', 'is_active', 'is_custom'
         )
+
+
+class QuestionSerializer(WritableNestedSerializerMixin, QuestionListSerializer):
+    options = OptionSerializer(many=True, required=False)
+
+    class Meta(WritableNestedSerializerMixin.Meta, QuestionListSerializer):
+        fields = QuestionListSerializer.Meta.fields + ('options',)
         read_only_fields = ('is_custom',)
 
     def create(self, validated_data):

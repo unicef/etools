@@ -1,7 +1,13 @@
 from django.contrib import admin
 
-from etools.applications.field_monitoring.data_collection.models import ActivityQuestion, StartedChecklist, Finding, \
-    ActivityQuestionOverallFinding, ChecklistOverallFinding, ActivityOverallFinding
+from etools.applications.field_monitoring.data_collection.models import (
+    ActivityOverallFinding,
+    ActivityQuestion,
+    ActivityQuestionOverallFinding,
+    ChecklistOverallFinding,
+    Finding,
+    StartedChecklist,
+)
 
 
 class FindingAdminInline(admin.TabularInline):

@@ -9,12 +9,16 @@ from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.field_monitoring.fm_settings.models import Question
 from etools.applications.field_monitoring.fm_settings.tests.factories import QuestionFactory
 from etools.applications.field_monitoring.planning.models import YearPlan
-from etools.applications.field_monitoring.planning.tests.factories import MonitoringActivityFactory, YearPlanFactory, \
-    QuestionTemplateFactory, PreDataCollectionActivityFactory
+from etools.applications.field_monitoring.planning.tests.factories import (
+    MonitoringActivityFactory,
+    PreDataCollectionActivityFactory,
+    QuestionTemplateFactory,
+    YearPlanFactory,
+)
 from etools.applications.field_monitoring.tests.base import FMBaseTestCaseMixin
 from etools.applications.field_monitoring.tests.factories import UserFactory
 from etools.applications.partners.tests.factories import PartnerFactory
-from etools.applications.tpm.tests.factories import TPMPartnerFactory, TPMUserFactory, SimpleTPMPartnerFactory
+from etools.applications.tpm.tests.factories import SimpleTPMPartnerFactory, TPMPartnerFactory, TPMUserFactory
 
 
 class YearPlanViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):

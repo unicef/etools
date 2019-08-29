@@ -1,5 +1,6 @@
 from django.utils.translation import ugettext_lazy as _
 
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, viewsets
 from unicef_restlib.views import NestedViewSetMixin
 
@@ -10,10 +11,9 @@ from etools.applications.field_monitoring.data_collection.serializers import (
     ActivityReportAttachmentSerializer,
 )
 from etools.applications.field_monitoring.permissions import (
+    activity_field_is_editable_permission,
     IsEditAction,
-    IsPersonResponsible,
     IsReadAction,
-    IsTeamMember,
 )
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.field_monitoring.views import FMBaseAttachmentsViewSet, FMBaseViewSet
@@ -24,9 +24,6 @@ class ActivityDataCollectionViewSet(
     mixins.RetrieveModelMixin,
     viewsets.GenericViewSet,
 ):
-    permission_classes = FMBaseViewSet.permission_classes + [
-        IsReadAction | (IsEditAction & (IsTeamMember | IsPersonResponsible))
-    ]
     queryset = MonitoringActivity.objects.all()
     serializer_class = ActivityDataCollectionSerializer
 
@@ -51,5 +48,10 @@ class ActivityQuestionsViewSet(
     mixins.UpdateModelMixin,
     viewsets.GenericViewSet,
 ):
-    queryset = ActivityQuestion.objects.all()
+    permission_classes = FMBaseViewSet.permission_classes + [
+        IsReadAction | (IsEditAction & activity_field_is_editable_permission('activity_question_set'))
+    ]
+    queryset = ActivityQuestion.objects.select_related('question').order_by('partner', 'cp_output', 'intervention')
     serializer_class = ActivityQuestionSerializer
+    filter_backends = (DjangoFilterBackend,)
+    filter_fields = ('is_enabled',)

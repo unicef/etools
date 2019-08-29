@@ -3,11 +3,10 @@ from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.gis.db.models import PointField
 from django.contrib.postgres.fields import JSONField
 from django.db import models
-from django.db.models import QuerySet, Prefetch
+from django.db.models import Prefetch, QuerySet
 from django.utils.text import slugify
 from django.utils.translation import ugettext_lazy as _
 
-from django_extensions.db.fields import AutoSlugField
 from model_utils import Choices, FieldTracker
 from model_utils.models import TimeStampedModel
 from ordered_model.models import OrderedModel

@@ -3,8 +3,14 @@ from django.utils.translation import ugettext_lazy as _
 
 from ordered_model.admin import OrderedModelAdmin
 
-from etools.applications.field_monitoring.fm_settings.models import LocationSite, LogIssue, Method, Option, Question, \
-    Category
+from etools.applications.field_monitoring.fm_settings.models import (
+    Category,
+    LocationSite,
+    LogIssue,
+    Method,
+    Option,
+    Question,
+)
 
 
 @admin.register(Method)

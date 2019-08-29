@@ -4,7 +4,14 @@ from etools.applications.partners.permissions import PMPPermissions
 
 class ActivityPermissions(PMPPermissions):
     MODEL_NAME = 'field_monitoring_planning.MonitoringActivity'
-    EXTRA_FIELDS = []
+    EXTRA_FIELDS = [
+        'activity_question_set',
+        'started_checklist_set',
+        'activity_overall_finding',
+        'activity_question_overall_finding',
+        'related_documents',
+        'action_points',
+    ]
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -16,10 +23,9 @@ class ActivityPermissions(PMPPermissions):
         self.user_groups.add('All Users')
 
         def is_ma_user():
-            return self.user in self.instance.team_members.all() \
-                   or self.user == self.instance.person_responsible
+            return self.user in self.instance.team_members.all() or self.user == self.instance.person_responsible
 
         self.condition_map = {
-            'is_ma_user': is_ma_user(),
+            'is_ma_related_user': is_ma_user(),
             'tpm_visit+tpm_ma_related': self.instance.activity_type == 'tpm' and is_ma_user()
         }

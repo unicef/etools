@@ -1,4 +1,5 @@
 from django.db.models.functions import TruncYear
+
 from django_filters import rest_framework as filters
 from rest_framework.filters import BaseFilterBackend
 

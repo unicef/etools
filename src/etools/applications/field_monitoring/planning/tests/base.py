@@ -1,8 +1,10 @@
 from etools.applications.field_monitoring.fm_settings.models import Question
 from etools.applications.field_monitoring.fm_settings.tests.factories import QuestionFactory
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
-from etools.applications.field_monitoring.planning.tests.factories import QuestionTemplateFactory, \
-    MonitoringActivityFactory
+from etools.applications.field_monitoring.planning.tests.factories import (
+    MonitoringActivityFactory,
+    QuestionTemplateFactory,
+)
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.reports.tests.factories import SectionFactory
 
