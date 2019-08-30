@@ -95,7 +95,7 @@ class AssessorViewSet(
         SafeTenantViewSetMixin,
         mixins.CreateModelMixin,
         mixins.UpdateModelMixin,
-        mixins.RetrieveModelMixin,
+        mixins.ListModelMixin,
         viewsets.GenericViewSet,
 ):
     permission_classes = [IsAuthenticated, ]
@@ -104,6 +104,18 @@ class AssessorViewSet(
 
     def get_queryset(self):
         return self.queryset.filter(assessment=self.kwargs.get("nested_1_pk"))
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        try:
+            serializer = self.get_serializer(queryset.get())
+        except Assessor.DoesNotExist:
+            return Response(
+                _("Assessor does not exist."),
+                status.HTTP_404_NOT_FOUND,
+            )
+        else:
+            return Response(serializer.data)
 
 
 class IndicatorViewSet(

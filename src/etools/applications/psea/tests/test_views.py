@@ -284,13 +284,20 @@ class TestAssessorViewSet(BaseTenantTestCase):
         assessor = AssessorFactory()
         response = self.forced_auth_req(
             "get",
-            reverse(
-                'psea:assessor-detail',
-                args=[assessor.assessment.pk, assessor.pk],
-            ),
+            reverse('psea:assessor-list', args=[assessor.assessment.pk]),
             user=self.user,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["id"], assessor.pk)
+
+    def test_get_empty(self):
+        assessment = AssessmentFactory()
+        response = self.forced_auth_req(
+            "get",
+            reverse('psea:assessor-list', args=[assessment.pk]),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_post_unicef(self):
         assessment = AssessmentFactory()
