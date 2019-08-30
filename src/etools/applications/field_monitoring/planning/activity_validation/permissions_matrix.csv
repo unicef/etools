@@ -30,7 +30,11 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,started_checklist_set,All Users,is_ma_related_user,data_collection,edit,TRUE
 ,activity_overall_finding,All Users,is_ma_related_user,report_finalization,edit,TRUE
 ,activity_question_overall_finding,All Users,is_ma_related_user,report_finalization,edit,TRUE
-,related_documents,All Users,is_ma_related_user,*,edit,TRUE
+,attachments,Field Monitor,,draft,edit,TRUE
+,attachments,Field Monitor,,checklist,edit,TRUE
+,attachments,Field Monitor,,review,edit,TRUE
+,attachments,Field Monitor,,assigned,edit,TRUE
+,report_attachments,All Users,is_ma_related_user,*,edit,TRUE
 ,action_points,Field Monitor,,*,edit,TRUE
 
 

@@ -6,18 +6,19 @@ from django.urls import reverse
 from rest_framework import status
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.field_monitoring.data_collection.tests.factories import StartedChecklistFactory
 from etools.applications.field_monitoring.fm_settings.models import Question
 from etools.applications.field_monitoring.fm_settings.tests.factories import QuestionFactory
-from etools.applications.field_monitoring.planning.models import YearPlan
+from etools.applications.field_monitoring.planning.models import MonitoringActivity, YearPlan
 from etools.applications.field_monitoring.planning.tests.factories import (
     MonitoringActivityFactory,
-    PreDataCollectionActivityFactory,
     QuestionTemplateFactory,
     YearPlanFactory,
 )
 from etools.applications.field_monitoring.tests.base import FMBaseTestCaseMixin
 from etools.applications.field_monitoring.tests.factories import UserFactory
 from etools.applications.partners.tests.factories import PartnerFactory
+from etools.applications.reports.tests.factories import SectionFactory
 from etools.applications.tpm.tests.factories import SimpleTPMPartnerFactory, TPMPartnerFactory, TPMUserFactory
 
 
@@ -91,7 +92,8 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertIn('TPM Partner', response.data[0])
 
     def test_auto_accept_activity(self):
-        activity = PreDataCollectionActivityFactory(activity_type='staff')
+        activity = MonitoringActivityFactory(activity_type='staff',
+                                             status='pre_' + MonitoringActivity.STATUSES.assigned)
 
         response = self.forced_auth_req(
             'patch', reverse('field_monitoring_planning:activities-detail', args=[activity.pk]),
@@ -102,10 +104,10 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['status'], 'accepted')
+        self.assertEqual(response.data['status'], 'data_collection')
 
     def test_cancel_activity(self):
-        activity = MonitoringActivityFactory(status='checklist_configured')
+        activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.review)
 
         response = self.forced_auth_req(
             'patch', reverse('field_monitoring_planning:activities-detail', args=[activity.pk]),
@@ -119,7 +121,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.data['status'], 'cancelled')
 
     def test_cancel_submitted_activity_fail(self):
-        activity = MonitoringActivityFactory(status='report_submitted')
+        activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.submitted)
 
         response = self.forced_auth_req(
             'patch', reverse('field_monitoring_planning:activities-detail', args=[activity.pk]),
@@ -134,11 +136,14 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertIn('generic_transition_fail', response.data[0])
 
     def test_flow(self):
-        activity = MonitoringActivityFactory(activity_type='staff', status='draft')
+        activity = MonitoringActivityFactory(
+            activity_type='staff', status='draft',
+            partners=[PartnerFactory()], sections=[SectionFactory()]
+        )
 
         person_responsible = UserFactory(unicef_user=True)
 
-        activity.partners.add(PartnerFactory())
+        QuestionFactory(level=Question.LEVELS.partner, sections=activity.sections.all())
 
         def goto(next_status, user, extra_data=None):
             data = {
@@ -159,6 +164,8 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
             'person_responsible': person_responsible.id
         })
         goto('assigned', self.fm_user)
+
+        StartedChecklistFactory(monitoring_activity=activity)
         goto('report_finalization', person_responsible)
         goto('submitted', person_responsible)
         goto('completed', self.fm_user)

@@ -99,6 +99,9 @@ class IsActivityPersonResponsible(BasePermission):
 def activity_field_is_editable_permission(field):
     class FieldPermission(BasePermission):
         def has_permission(self, request, view):
+            if not view.kwargs:
+                return True
+
             ps = MonitoringActivity.permission_structure()
             permissions = ActivityPermissions(
                 user=request.user, instance=view.get_root_object(), permission_structure=ps

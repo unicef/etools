@@ -16,6 +16,7 @@ from rest_framework.response import Response
 
 from etools.applications.field_monitoring.fm_settings.models import Question
 from etools.applications.field_monitoring.permissions import (
+    activity_field_is_editable_permission,
     IsEditAction,
     IsFieldMonitor,
     IsListAction,
@@ -143,7 +144,7 @@ class MonitoringActivitiesViewSet(
     def get_queryset(self):
         queryset = super().get_queryset()
 
-        if self.action == 'list':
+        if hasattr(self, 'action') and self.action == 'list':
             queryset.prefetch_related('tpm_partner', 'person_responsible', 'location', 'location_site')
 
         return queryset
@@ -184,7 +185,7 @@ class FMUsersViewSet(
 
 class ActivityAttachmentsViewSet(FMBaseAttachmentsViewSet):
     permission_classes = FMBaseViewSet.permission_classes + [
-        IsReadAction | (IsEditAction & IsFieldMonitor)
+        IsReadAction | (IsEditAction & activity_field_is_editable_permission('attachments'))
     ]
     serializer_class = ActivityAttachmentSerializer
     related_model = MonitoringActivity

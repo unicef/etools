@@ -1,10 +1,16 @@
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.field_monitoring.data_collection.models import ActivityQuestionOverallFinding
+from etools.applications.field_monitoring.fm_settings.models import Question
+from etools.applications.field_monitoring.fm_settings.tests.factories import QuestionFactory
 from etools.applications.field_monitoring.planning.activity_validation.validator import ActivityValid
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
-from etools.applications.field_monitoring.planning.tests.base import ConfiguredActivityQuestionsMixin
-from etools.applications.field_monitoring.planning.tests.factories import MonitoringActivityFactory
+from etools.applications.field_monitoring.planning.tests.factories import (
+    MonitoringActivityFactory,
+    QuestionTemplateFactory,
+)
 from etools.applications.field_monitoring.tests.factories import UserFactory
+from etools.applications.partners.tests.factories import PartnerFactory
+from etools.applications.reports.tests.factories import SectionFactory
 from etools.applications.tpm.tests.factories import TPMPartnerFactory, TPMPartnerStaffMemberFactory
 
 
@@ -25,7 +31,7 @@ class TestMonitoringActivityValidations(BaseTenantTestCase):
 
     def test_empty_partner_for_tpm_activity(self):
         activity = MonitoringActivityFactory(
-            activity_type='tpm', tpm_partner=None, status=MonitoringActivity.STATUSES.details_configured
+            activity_type='tpm', tpm_partner=None, status=MonitoringActivity.STATUSES.checklist
         )
         self.assertTrue(ActivityValid(activity, user=self.user).errors)
 
@@ -48,7 +54,31 @@ class TestMonitoringActivityValidations(BaseTenantTestCase):
         self.assertTrue(ActivityValid(activity, user=self.user).errors)
 
 
-class TestMonitoringActivityQuestionsFlow(ConfiguredActivityQuestionsMixin, BaseTenantTestCase):
+class TestMonitoringActivityQuestionsFlow(BaseTenantTestCase):
+    def setUp(self):
+        super().setUp()
+        self.first_partner = PartnerFactory()
+        self.second_partner = PartnerFactory()
+
+        self.first_section = SectionFactory()
+        self.second_section = SectionFactory()
+        self.third_section = SectionFactory()
+
+        self.basic_question = QuestionFactory(level=Question.LEVELS.partner,
+                                              sections=[self.first_section, self.third_section])
+        self.specific_question = QuestionFactory(level=Question.LEVELS.partner, sections=[self.second_section])
+        self.specific_question_base_template = QuestionTemplateFactory(question=self.specific_question)
+        self.specific_question_specific_template = QuestionTemplateFactory(question=self.specific_question,
+                                                                           partner=self.second_partner)
+
+        self.not_matched_question = QuestionFactory(level=Question.LEVELS.partner, sections=[self.third_section])
+
+        self.activity = MonitoringActivityFactory(
+            status=MonitoringActivity.STATUSES.draft,
+            sections=[self.first_section, self.second_section],
+            partners=[self.first_partner, self.second_partner]
+        )
+
     def test_questions_freezed(self):
         self.assertEqual(self.activity.questions.count(), 0)
 

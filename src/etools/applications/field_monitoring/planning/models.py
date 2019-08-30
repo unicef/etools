@@ -120,6 +120,13 @@ class MonitoringActivity(
     )
 
     TRANSITION_SIDE_EFFECTS = {
+        'checklist': [
+            lambda i, old_instance=None, user=None: i.prepare_questions_structure(),
+        ],
+        'review': [
+            lambda i, old_instance=None, user=None: i.prepare_activity_overall_findings(),
+            lambda i, old_instance=None, user=None: i.prepare_questions_overall_findings(),
+        ],
     }
 
     AUTO_TRANSITIONS = {
@@ -285,3 +292,25 @@ class MonitoringActivity(
     def cancel(self):
         # todo: add cancel comment
         pass
+
+    @property
+    def activity_question_set(self):
+        return self.questions.filter(is_enabled=True)
+
+    @property
+    def started_checklist_set(self):
+        return self.checklists.exists()
+
+    @property
+    def activity_overall_finding(self):
+        # todo: decide what to use as value here. all overall findings should be completed?
+        return True
+
+    @property
+    def activity_question_overall_finding(self):
+        # todo: see activity_overall_finding
+        return True
+
+    @property
+    def action_points(self):
+        return True

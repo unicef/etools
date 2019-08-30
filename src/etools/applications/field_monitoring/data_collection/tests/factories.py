@@ -1,8 +1,9 @@
 import factory.fuzzy
 
-from etools.applications.field_monitoring.data_collection.models import ActivityQuestion
-from etools.applications.field_monitoring.fm_settings.tests.factories import QuestionFactory
+from etools.applications.field_monitoring.data_collection.models import ActivityQuestion, StartedChecklist
+from etools.applications.field_monitoring.fm_settings.tests.factories import MethodFactory, QuestionFactory
 from etools.applications.field_monitoring.planning.tests.factories import MonitoringActivityFactory
+from etools.applications.field_monitoring.tests.factories import UserFactory
 
 
 class ActivityQuestionFactory(factory.DjangoModelFactory):
@@ -13,3 +14,13 @@ class ActivityQuestionFactory(factory.DjangoModelFactory):
 
     class Meta:
         model = ActivityQuestion
+
+
+class StartedChecklistFactory(factory.DjangoModelFactory):
+    monitoring_activity = factory.SubFactory(MonitoringActivityFactory)
+    method = factory.SubFactory(MethodFactory)
+    information_source = factory.fuzzy.FuzzyText()
+    author = factory.SubFactory(UserFactory)
+
+    class Meta:
+        model = StartedChecklist

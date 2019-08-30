@@ -31,6 +31,9 @@ class ActivityDataCollectionViewSet(
 class ActivityReportAttachmentsViewSet(FMBaseAttachmentsViewSet):
     serializer_class = ActivityReportAttachmentSerializer
     related_model = MonitoringActivity
+    permission_classes = FMBaseViewSet.permission_classes + [
+        IsReadAction | (IsEditAction & activity_field_is_editable_permission('report_attachments'))
+    ]
 
     def get_view_name(self):
         return _('Report Attachments')

@@ -52,7 +52,7 @@ class StartedChecklist(models.Model):
     def prepare_overall_findings(self):
         findings = []
         for relation, level in self.monitoring_activity.RELATIONS_MAPPING:
-            for target in getattr(self, relation).all():
+            for target in getattr(self.monitoring_activity, relation).all():
                 finding = ChecklistOverallFinding(started_checklist=self)
                 setattr(finding, Question.get_target_relation_name(level), target)
 
@@ -60,7 +60,7 @@ class StartedChecklist(models.Model):
 
         ChecklistOverallFinding.objects.bulk_create(findings)
 
-    def save(self, *kwargs):
+    def save(self, **kwargs):
         create = not self.pk
         super().save(**kwargs)
         if create:

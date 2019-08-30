@@ -32,6 +32,8 @@ class BaseMonitoringActivityFactory(factory.DjangoModelFactory):
     start_date = date.today()
     end_date = date.today() + timedelta(days=30)
 
+    questions__count = 0
+
     class Meta:
         model = MonitoringActivity
 
@@ -60,12 +62,20 @@ class BaseMonitoringActivityFactory(factory.DjangoModelFactory):
         if extracted:
             self.interventions.add(*extracted)
 
+    @factory.post_generation
+    def questions(self, created, extracted, count=0, **kwargs):
+        if count:
+            from etools.applications.field_monitoring.data_collection.tests.factories import ActivityQuestionFactory
+
+            ActivityQuestionFactory.create_batch(count, monitoring_activity=self)
+
 
 class DraftActivityFactory(BaseMonitoringActivityFactory):
     status = MonitoringActivity.STATUSES.draft
 
 
 class ChecklistActivityFactory(DraftActivityFactory):
+    questions__count = 1
     status = MonitoringActivity.STATUSES.checklist
 
 
@@ -73,15 +83,15 @@ class ReviewActivityFactory(ChecklistActivityFactory):
     status = MonitoringActivity.STATUSES.review
 
 
+class PreAssignedActivityFactory(ReviewActivityFactory):
+    person_responsible = factory.SubFactory(UserFactory, unicef_user=True)
+
+
 class AssignedActivityFactory(ReviewActivityFactory):
     status = MonitoringActivity.STATUSES.assigned
 
 
-class PreDataCollectionActivityFactory(AssignedActivityFactory):
-    person_responsible = factory.SubFactory(UserFactory, unicef_user=True)
-
-
-class DataCollectionActivityFactory(PreDataCollectionActivityFactory):
+class DataCollectionActivityFactory(AssignedActivityFactory):
     status = MonitoringActivity.STATUSES.data_collection
 
 
@@ -106,8 +116,8 @@ class MonitoringActivityFactory(BaseMonitoringActivityFactory, metaclass=StatusF
         'draft': DraftActivityFactory,
         'checklist': ChecklistActivityFactory,
         'review': ReviewActivityFactory,
+        'pre_assigned': PreAssignedActivityFactory,
         'assigned': AssignedActivityFactory,
-        'pre_data_collection': PreDataCollectionActivityFactory,
         'data_collection': DataCollectionActivityFactory,
         'report_finalization': ReportFinalizationActivityFactory,
         'submitted': SubmittedActivityFactory,
