@@ -54,6 +54,7 @@ class AssessmentSerializer(BaseAssessmentSerializer):
     rating = serializers.SerializerMethodField()
     permissions = serializers.SerializerMethodField(read_only=True)
     assessor = serializers.SerializerMethodField()
+    partner_name = serializers.CharField(source="partner.name", read_only=True)
 
     class Meta(BaseAssessmentSerializer.Meta):
         fields = '__all__'
