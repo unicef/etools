@@ -169,7 +169,7 @@ class TestAssessmentViewSet(BaseTenantTestCase):
 
         firm = AuditPartnerFactory(name="Auditor")
         assessment = AssessmentFactory()
-        assessor = AssessorFactory(assessment=assessment, auditor_firm=firm)
+        AssessorFactory(assessment=assessment, auditor_firm=firm)
 
         response = self.forced_auth_req(
             "get",
