@@ -1,3 +1,5 @@
+import datetime
+
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from django.utils import timezone
@@ -61,10 +63,124 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.data
-        self.assertEqual(data["id"], assessment.pk),
-        self.assertEqual(data["partner"], partner.pk),
-        self.assertEqual(data["assessment_date"], date),
+        self.assertEqual(data["id"], assessment.pk)
+        self.assertEqual(data["partner"], partner.pk)
+        self.assertEqual(data["assessment_date"], date)
         self.assertEqual(data["status"], "draft")
+
+    def test_filter_status(self):
+        for _ in range(10):
+            AssessmentFactory()
+
+        status_val = Assessment.STATUS_CANCELLED
+        assessment = AssessmentFactory(status=status_val)
+        assessment.status = status_val
+        assessment.save()
+        self.assertEqual(assessment.status, status_val)
+
+        response = self.forced_auth_req(
+            "get",
+            reverse('psea:assessment-list'),
+            data={"status": status_val},
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data["results"]
+        self.assertEqual(
+            len(data),
+            Assessment.objects.filter(status=status_val).count()
+        )
+        self.assertEqual(data[0]["id"], assessment.pk)
+
+    def test_filter_partner(self):
+        for _ in range(10):
+            AssessmentFactory()
+
+        partner = PartnerFactory()
+        assessment = AssessmentFactory(partner=partner)
+
+        response = self.forced_auth_req(
+            "get",
+            reverse('psea:assessment-list'),
+            data={"partner": partner.pk},
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data["results"]
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["id"], assessment.pk)
+
+    def test_filter_focal_point(self):
+        for _ in range(10):
+            AssessmentFactory()
+
+        assessment = AssessmentFactory()
+        assessment.focal_points.set([self.user])
+
+        response = self.forced_auth_req(
+            "get",
+            reverse('psea:assessment-list'),
+            data={"unicef_focal_point": self.user.pk},
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data["results"]
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["id"], assessment.pk)
+
+    def test_filter_assessment_date(self):
+        for _ in range(10):
+            AssessmentFactory()
+
+        date = datetime.date(2001, 1, 1)
+        assessment = AssessmentFactory(assessment_date=date)
+
+        response = self.forced_auth_req(
+            "get",
+            reverse('psea:assessment-list'),
+            data={"assessment_date": date.strftime("%Y-%m-%d")},
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data["results"]
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["id"], assessment.pk)
+
+    def test_search_reference_number(self):
+        for _ in range(10):
+            AssessmentFactory()
+
+        assessment = AssessmentFactory()
+
+        response = self.forced_auth_req(
+            "get",
+            reverse('psea:assessment-list'),
+            data={"q": assessment.reference_number[-10:]},
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data["results"]
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["id"], assessment.pk)
+
+    def test_search_auditor_firm(self):
+        for _ in range(10):
+            AssessmentFactory()
+
+        firm = AuditPartnerFactory(name="Auditor")
+        assessment = AssessmentFactory()
+        assessor = AssessorFactory(assessment=assessment, auditor_firm=firm)
+
+        response = self.forced_auth_req(
+            "get",
+            reverse('psea:assessment-list'),
+            data={"q": firm.name[:5]},
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data["results"]
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["id"], assessment.pk)
 
     def test_post(self):
         partner = PartnerFactory()

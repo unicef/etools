@@ -10,7 +10,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from unicef_attachments.models import Attachment
 from unicef_restlib.pagination import DynamicPageNumberPagination
-from unicef_restlib.views import NestedViewSetMixin, SafeTenantViewSetMixin
+from unicef_restlib.views import NestedViewSetMixin, QueryStringFilterMixin, SafeTenantViewSetMixin
 
 from etools.applications.psea.models import Answer, Assessment, Assessor, Indicator
 from etools.applications.psea.serializers import (
@@ -25,6 +25,7 @@ from etools.applications.psea.serializers import (
 
 class AssessmentViewSet(
         SafeTenantViewSetMixin,
+        QueryStringFilterMixin,
         mixins.CreateModelMixin,
         mixins.ListModelMixin,
         mixins.UpdateModelMixin,
@@ -38,8 +39,22 @@ class AssessmentViewSet(
     serializer_class = AssessmentSerializer
 
     filter_backends = (SearchFilter, DjangoFilterBackend, OrderingFilter)
-    search_fields = ('partner__name', )
+    filters = (
+        ('q', [
+            'reference_number__icontains',
+            'assessor__auditor_firm__name__icontains',
+        ]),
+        ('partner', 'partner_id__in'),
+        ('status', 'status__in'),
+        ('unicef_focal_point', 'focal_points__pk__in'),
+        ('assessment_date', 'assessment_date'),
+    )
+    # TODO add sort
     export_filename = 'Assessment'
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        return qs.order_by("assessment_date", "partner__name")
 
     def _set_status(self, request, assessment_status):
         assessment = self.get_object()
