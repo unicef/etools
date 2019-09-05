@@ -220,6 +220,144 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         self.assertEqual(len(data), 1)
         self.assertEqual(data[0]["id"], assessment.pk)
 
+    def test_sort_reference_number_asc(self):
+        for _ in range(10):
+            AssessmentFactory()
+
+        response = self.forced_auth_req(
+            "get",
+            reverse('psea:assessment-list'),
+            data={"sort": "reference_number.asc"},
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data["results"]
+        self.assertEqual(len(data), Assessment.objects.count())
+        self.assertEqual(
+            data[0]["id"],
+            Assessment.objects.order_by("reference_number").first().pk,
+        )
+
+    def test_sort_reference_number_desc(self):
+        for _ in range(10):
+            AssessmentFactory()
+
+        response = self.forced_auth_req(
+            "get",
+            reverse('psea:assessment-list'),
+            data={"sort": "reference_number.desc"},
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data["results"]
+        self.assertEqual(len(data), Assessment.objects.count())
+        self.assertEqual(
+            data[0]["id"],
+            Assessment.objects.order_by("-reference_number").first().pk,
+        )
+
+    def test_sort_assessment_date_asc(self):
+        date = datetime.date.today()
+        for i in range(10):
+            AssessmentFactory(
+                assessment_date=date + datetime.timedelta(days=i),
+            )
+
+        response = self.forced_auth_req(
+            "get",
+            reverse('psea:assessment-list'),
+            data={"sort": "assessment_date.asc"},
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data["results"]
+        self.assertEqual(len(data), Assessment.objects.count())
+        self.assertEqual(
+            data[0]["id"],
+            Assessment.objects.order_by("assessment_date").first().pk,
+        )
+
+    def test_sort_assessment_date_desc(self):
+        date = datetime.date.today()
+        for i in range(10):
+            AssessmentFactory(
+                assessment_date=date + datetime.timedelta(days=i),
+            )
+
+        response = self.forced_auth_req(
+            "get",
+            reverse('psea:assessment-list'),
+            data={"sort": "assessment_date.desc"},
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data["results"]
+        self.assertEqual(len(data), Assessment.objects.count())
+        self.assertEqual(
+            data[0]["id"],
+            Assessment.objects.order_by("-assessment_date").first().pk,
+        )
+
+    def test_sort_partner_name_asc(self):
+        for _ in range(10):
+            partner = PartnerFactory()
+            AssessmentFactory(partner=partner)
+
+        response = self.forced_auth_req(
+            "get",
+            reverse('psea:assessment-list'),
+            data={"sort": "partner_name.asc"},
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data["results"]
+        self.assertEqual(len(data), Assessment.objects.count())
+        self.assertEqual(
+            data[0]["id"],
+            Assessment.objects.order_by("partner__name").first().pk,
+        )
+
+    def test_sort_partner_name_desc(self):
+        for _ in range(10):
+            partner = PartnerFactory()
+            AssessmentFactory(partner=partner)
+
+        response = self.forced_auth_req(
+            "get",
+            reverse('psea:assessment-list'),
+            data={"sort": "partner_name.desc"},
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data["results"]
+        self.assertEqual(len(data), Assessment.objects.count())
+        self.assertEqual(
+            data[0]["id"],
+            Assessment.objects.order_by("-partner__name").first().pk,
+        )
+
+    def test_sort_multiple(self):
+        for _ in range(10):
+            partner = PartnerFactory()
+            AssessmentFactory(partner=partner)
+
+        response = self.forced_auth_req(
+            "get",
+            reverse('psea:assessment-list'),
+            data={"sort": "reference_number.desc|partner_name.asc"},
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data["results"]
+        self.assertEqual(len(data), Assessment.objects.count())
+        self.assertEqual(
+            data[0]["id"],
+            Assessment.objects.order_by(
+                "-reference_number",
+                "partner__name",
+            ).first().pk,
+        )
+
     def test_post(self):
         partner = PartnerFactory()
         assessment_qs = Assessment.objects.filter(partner=partner)

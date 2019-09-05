@@ -54,9 +54,32 @@ class AssessmentViewSet(
     # TODO add sort
     export_filename = 'Assessment'
 
+    def parse_sort_params(self):
+        MAP_SORT = {
+            "reference_number": "reference_number",
+            "assessment_date": "assessment_date",
+            "partner_name": "partner__name",
+        }
+        sort_param = self.request.GET.get("sort")
+        ordering = []
+        if sort_param:
+            sort_options = sort_param.split("|")
+            for sort in sort_options:
+                field, asc_desc = sort.split(".", 2)
+                if field in MAP_SORT:
+                    ordering.append(
+                        "{}{}".format(
+                            "-" if asc_desc == "desc" else "",
+                            MAP_SORT[field],
+                        )
+                    )
+        return ordering
+
     def get_queryset(self):
         qs = super().get_queryset()
-        return qs.order_by("assessment_date", "partner__name")
+        if "sort" in self.request.GET:
+            qs = qs.order_by(*self.parse_sort_params())
+        return qs
 
     def _set_status(self, request, assessment_status):
         assessment = self.get_object()
