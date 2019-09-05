@@ -136,6 +136,7 @@ class Assessment(TimeStampedModel):
         )
 
     def save(self, *args, **kwargs):
+        self.overall_rating = self.rating()
         super().save(*args, **kwargs)
         if not self.reference_number:
             self.reference_number = self.get_reference_number()

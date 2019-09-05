@@ -50,6 +50,7 @@ class TestAssessment(BaseTenantTestCase):
         rating_high = RatingFactory(weight=10)
         rating_medium = RatingFactory(weight=5)
         rating_low = RatingFactory(weight=1)
+        self.assertIsNone(assessment.overall_rating)
 
         AnswerFactory(assessment=assessment, rating=rating_high)
         self.assertEqual(assessment.rating(), 10)
@@ -62,6 +63,10 @@ class TestAssessment(BaseTenantTestCase):
 
         AnswerFactory(assessment=assessment, rating=rating_high)
         self.assertEqual(assessment.rating(), 26)
+
+        # test that overall_rating set when assessment saved
+        assessment.save()
+        self.assertEqual(assessment.overall_rating, 26)
 
     def test_get_reference_number(self):
         assessment = AssessmentFactory()
