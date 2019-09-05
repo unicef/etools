@@ -182,6 +182,44 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         self.assertEqual(len(data), 1)
         self.assertEqual(data[0]["id"], assessment.pk)
 
+    def test_search_user_first_name(self):
+        for _ in range(10):
+            AssessmentFactory()
+
+        user = UserFactory(first_name="User First")
+        assessment = AssessmentFactory()
+        AssessorFactory(assessment=assessment, user=user)
+
+        response = self.forced_auth_req(
+            "get",
+            reverse('psea:assessment-list'),
+            data={"q": user.first_name[:5]},
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data["results"]
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["id"], assessment.pk)
+
+    def test_search_user_last_name(self):
+        for _ in range(10):
+            AssessmentFactory()
+
+        user = UserFactory(last_name="User Last")
+        assessment = AssessmentFactory()
+        AssessorFactory(assessment=assessment, user=user)
+
+        response = self.forced_auth_req(
+            "get",
+            reverse('psea:assessment-list'),
+            data={"q": user.last_name[:5]},
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data["results"]
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["id"], assessment.pk)
+
     def test_post(self):
         partner = PartnerFactory()
         assessment_qs = Assessment.objects.filter(partner=partner)

@@ -43,6 +43,8 @@ class AssessmentViewSet(
         ('q', [
             'reference_number__icontains',
             'assessor__auditor_firm__name__icontains',
+            'assessor__user__first_name__icontains',
+            'assessor__user__last_name__icontains',
         ]),
         ('partner', 'partner_id__in'),
         ('status', 'status__in'),
