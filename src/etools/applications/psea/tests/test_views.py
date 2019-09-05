@@ -146,6 +146,44 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         self.assertEqual(len(data), 1)
         self.assertEqual(data[0]["id"], assessment.pk)
 
+    def test_filter_assessor_staff(self):
+        for _ in range(10):
+            AssessmentFactory()
+
+        assessment = AssessmentFactory()
+        user = UserFactory()
+        AssessorFactory(assessment=assessment, user=user)
+
+        response = self.forced_auth_req(
+            "get",
+            reverse('psea:assessment-list'),
+            data={"assessor_staff": user.pk},
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data["results"]
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["id"], assessment.pk)
+
+    def test_filter_assessor_firm(self):
+        for _ in range(10):
+            AssessmentFactory()
+
+        firm = AuditPartnerFactory()
+        assessment = AssessmentFactory()
+        AssessorFactory(assessment=assessment, auditor_firm=firm)
+
+        response = self.forced_auth_req(
+            "get",
+            reverse('psea:assessment-list'),
+            data={"assessor_firm": firm.pk},
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data["results"]
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["id"], assessment.pk)
+
     def test_search_reference_number(self):
         for _ in range(10):
             AssessmentFactory()

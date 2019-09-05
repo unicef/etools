@@ -50,6 +50,9 @@ class AssessmentViewSet(
         ('status', 'status__in'),
         ('unicef_focal_point', 'focal_points__pk__in'),
         ('assessment_date', 'assessment_date'),
+        ('assessor_staff', 'assessor__user__pk__in'),
+        ('assessor_external', 'assessor__user__pk__in'),
+        ('assessor_firm', 'assessor__auditor_firm__pk__in'),
     )
     # TODO add sort
     export_filename = 'Assessment'
