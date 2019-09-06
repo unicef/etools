@@ -48,7 +48,12 @@ class PRPInterventionListAPIView(QueryStringFilterMixin, ListAPIView):
     permission_classes = (ListCreateAPIMixedPermission, )
     filter_backends = (PartnerScopeFilter,)
     pagination_class = PRPInterventionPagination
-    queryset = Intervention.objects.prefetch_related(
+
+    queryset = Intervention.objects.filter(
+        result_links__ll_results__applied_indicators__isnull=False,
+        reporting_requirements__isnull=False,
+        in_amendment=False
+    ).prefetch_related(
         'result_links__cp_output',
         'result_links__ll_results',
         'result_links__ll_results__applied_indicators__indicator',
