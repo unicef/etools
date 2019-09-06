@@ -54,7 +54,6 @@ class AssessmentViewSet(
         ('assessor_external', 'assessor__user__pk__in'),
         ('assessor_firm', 'assessor__auditor_firm__pk__in'),
     )
-    # TODO add sort
     export_filename = 'Assessment'
 
     def parse_sort_params(self):
