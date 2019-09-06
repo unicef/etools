@@ -222,7 +222,7 @@ def ssfa_agreement_has_no_other_intervention(i):
     if i.document_type == i.SSFA:
         if not(i.agreement.agreement_type == i.agreement.SSFA):
             raise BasicValidationError(_('Agreement selected is not of type SSFA'))
-        return i.agreement.interventions.all().count() <= 1
+        return i.agreement.interventions.count() <= 1
     return True
 
 

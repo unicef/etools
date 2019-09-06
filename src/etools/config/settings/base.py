@@ -476,15 +476,6 @@ if ALLOW_BASIC_AUTH:
         'etools.applications.core.auth.DRFBasicAuthMixin',
     )
 
-ISSUE_CHECKS = [
-    'etools.applications.management.issues.project_checks.ActivePCANoSignedDocCheck',
-    'etools.applications.management.issues.project_checks.PdOutputsWrongCheck',
-    'etools.applications.management.issues.project_checks.InterventionsAssociatedSSFACheck',
-    'etools.applications.management.issues.project_checks.InterventionsAreValidCheck',
-    'etools.applications.management.issues.project_checks.PDAmendmentsMissingFilesCheck',
-    'etools.applications.management.issues.project_checks.PCAAmendmentsMissingFilesCheck',
-]
-
 EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS = get_from_secrets_or_env(
     'EMAIL_FOR_USER_RESPONSIBLE_FOR_INVESTIGATION_ESCALATIONS', 'integrity1@unicef.org'
 )
@@ -495,17 +486,6 @@ AZURE_TOKEN_URL = 'https://login.microsoftonline.com/unicef.org/oauth2/token'
 AZURE_GRAPH_API_BASE_URL = 'https://graph.microsoft.com'
 AZURE_GRAPH_API_VERSION = 'beta'
 AZURE_GRAPH_API_PAGE_SIZE = 250
-
-# drfpaswordless: https://github.com/aaronn/django-rest-framework-passwordless
-
-PASSWORDLESS_AUTH = {
-    # we can't use email here, because to_alias field length is 40, while email can be up to 254 symbols length.
-    # with custom user model we can avoid this a bit tricky with custom property like cropped_email,
-    # but for contrib user there is nothing better than use field having appropriate max length.
-    # username is better choice as it can be only 30 symbols max and unique.
-    'PASSWORDLESS_USER_EMAIL_FIELD_NAME': 'username'
-}
-
 
 KEY = os.getenv('AZURE_B2C_CLIENT_ID', None)
 SECRET = os.getenv('AZURE_B2C_CLIENT_SECRET', None)
@@ -564,3 +544,7 @@ ATTACHMENT_DENORMALIZE_FUNC = "etools.applications.attachments.utils.denormalize
 
 GEOS_LIBRARY_PATH = os.getenv('GEOS_LIBRARY_PATH', '/usr/lib/libgeos_c.so.1')  # default path
 GDAL_LIBRARY_PATH = os.getenv('GDAL_LIBRARY_PATH', '/usr/lib/libgdal.so.20')  # default path
+
+SHELL_PLUS_PRE_IMPORTS = (
+    ('etools.applications.core.util_scripts', '*'),
+)

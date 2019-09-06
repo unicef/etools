@@ -31,6 +31,7 @@ from etools.applications.partners.filters import (
     PartnerScopeFilter,
 )
 from etools.applications.partners.models import (
+    Agreement,
     Intervention,
     InterventionAmendment,
     InterventionAttachment,
@@ -66,6 +67,7 @@ from etools.applications.partners.serializers.interventions_v2 import (
     InterventionResultCUSerializer,
     InterventionResultLinkSimpleCUSerializer,
     InterventionResultSerializer,
+    InterventionToIndicatorsListSerializer,
     MinimalInterventionListSerializer,
     PlannedVisitsCUSerializer,
 )
@@ -149,6 +151,15 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
             'result_links'
         ]
         nested_related_names = ['ll_results']
+
+        if request.data.get('document_type') == Intervention.SSFA:
+            agreement = Agreement.objects.get(pk=request.data.get('agreement'))
+            if agreement and agreement.interventions.count():
+                raise ValidationError(
+                    'You can only add one SSFA Document for each SSFA Agreement',
+                    status.HTTP_400_BAD_REQUEST
+                )
+
         serializer = self.my_create(request,
                                     related_fields,
                                     nested_related_names=nested_related_names,
@@ -214,6 +225,22 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
                 response['Content-Disposition'] = f"attachment;filename={filename}.csv"
 
         return response
+
+
+class InterventionWithAppliedIndicatorsView(QueryStringFilterMixin, ListAPIView):
+    """ Interventions."""
+    queryset = Intervention.objects.all()
+    serializer_class = InterventionToIndicatorsListSerializer
+    permission_classes = (PartnershipManagerPermission,)
+
+    filters = (
+        ('sections', 'sections__in'),
+        ('status', 'status__in'),
+    )
+
+    def get_queryset(self):
+        return super().get_queryset().select_related('agreement__partner').prefetch_related(
+            'result_links__ll_results__applied_indicators__indicator')
 
 
 class InterventionListDashView(InterventionListBaseView):

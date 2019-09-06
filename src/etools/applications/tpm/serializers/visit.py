@@ -103,6 +103,18 @@ class TPMActionPointSerializer(PermissionsBasedSerializerMixin, ActionPointBaseS
         return super().create(validated_data)
 
 
+class TPMActivityLightSerializer(serializers.ModelSerializer):
+
+    description = serializers.ReadOnlyField(source='__str__')
+
+    class Meta:
+        model = TPMActivity
+        fields = [
+            'id', 'description', 'date', 'tpm_visit', 'is_pv', 'partner', 'intervention', 'cp_output', 'section',
+            'unicef_focal_points', 'locations', 'additional_information', 'offices',
+        ]
+
+
 class TPMActivitySerializer(PermissionsBasedSerializerMixin, WritableNestedSerializerMixin,
                             ActivitySerializer):
     partner = SeparatedReadWriteField(
