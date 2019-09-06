@@ -55,6 +55,7 @@ class AssessmentSerializer(BaseAssessmentSerializer):
     permissions = serializers.SerializerMethodField(read_only=True)
     assessor = serializers.SerializerMethodField()
     partner_name = serializers.CharField(source="partner.name", read_only=True)
+    status_list = serializers.SerializerMethodField()
 
     class Meta(BaseAssessmentSerializer.Meta):
         fields = '__all__'
@@ -72,6 +73,28 @@ class AssessmentSerializer(BaseAssessmentSerializer):
         except Assessor.DoesNotExist:
             pass
         return ""
+
+    def get_status_list(self, obj):
+        if obj.status == obj.STATUS_REJECTED:
+            status_list = [
+                obj.STATUS_DRAFT,
+                obj.STATUS_REJECTED,
+                obj.STATUS_SUBMITTED,
+                obj.STATUS_FINAL,
+            ]
+        elif obj.status == obj.STATUS_CANCELLED:
+            status_list = [
+                obj.STATUS_DRAFT,
+                obj.STATUS_CANCELLED,
+            ]
+        else:
+            status_list = [
+                obj.STATUS_DRAFT,
+                obj.STATUS_IN_PROGRESS,
+                obj.STATUS_SUBMITTED,
+                obj.STATUS_FINAL,
+            ]
+        return [s for s in obj.STATUS_CHOICES if s[0] in status_list]
 
     def create(self, validated_data):
         if "assessment_date" not in validated_data:
@@ -93,13 +116,11 @@ class AssessmentStatusSerializer(BaseAssessmentSerializer):
 
     def validate(self, data):
         data = super().validate(data)
-        if data["status"] == Assessment.STATUS_IN_PROGRESS:
-            previous_status = self.instance.status_history.first()
-            if previous_status.status == Assessment.STATUS_SUBMITTED:
-                if not data.get("comment"):
-                    raise serializers.ValidationError(
-                        _("Comment is required when rejecting."),
-                    )
+        if data["status"] == Assessment.STATUS_REJECTED:
+            if not data.get("comment"):
+                raise serializers.ValidationError(
+                    _("Comment is required when rejecting."),
+                )
         return data
 
 

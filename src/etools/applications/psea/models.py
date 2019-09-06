@@ -61,6 +61,7 @@ class Assessment(TimeStampedModel):
     STATUS_ASSIGNED = 'assigned'
     STATUS_IN_PROGRESS = 'in_progress'
     STATUS_SUBMITTED = 'submitted'
+    STATUS_REJECTED = 'rejected'
     STATUS_FINAL = 'final'
     STATUS_CANCELLED = 'cancelled'
 
@@ -69,9 +70,14 @@ class Assessment(TimeStampedModel):
         (STATUS_ASSIGNED, _('Assigned')),
         (STATUS_IN_PROGRESS, _('In Progress')),
         (STATUS_SUBMITTED, _('Submitted')),
+        (STATUS_REJECTED, _('Rejected')),
         (STATUS_FINAL, _('Final')),
         (STATUS_CANCELLED, _('Cancelled')),
     )
+
+    AUTO_TRANSITIONS = {
+        STATUS_ASSIGNED: [STATUS_IN_PROGRESS],
+    }
 
     reference_number = models.CharField(
         max_length=100,
@@ -155,6 +161,7 @@ class Assessment(TimeStampedModel):
     )
     def transition_to_assigned(self):
         """Assessment moves to assigned status"""
+        # TODO needs to focal point user
 
     @transition(
         field=status,
@@ -163,6 +170,7 @@ class Assessment(TimeStampedModel):
     )
     def transition_to_in_progress(self):
         """Assessment moves to in progress status"""
+        # TODO auto
 
     @transition(
         field=status,
@@ -171,6 +179,7 @@ class Assessment(TimeStampedModel):
     )
     def transition_to_submitted(self):
         """Assessment moves to submitted status"""
+        # TODO needs to belongs
 
     @transition(
         field=status,
@@ -179,6 +188,7 @@ class Assessment(TimeStampedModel):
     )
     def transition_to_final(self):
         """Assessment moves to final status"""
+        # TODO needs to focal point user
 
     @transition(
         field=status,
@@ -187,14 +197,16 @@ class Assessment(TimeStampedModel):
     )
     def transition_to_rejected(self):
         """Assessment rejected"""
+        # TODO needs to focal point user
 
     @transition(
         field=status,
-        source=[],
+        source=[STATUS_DRAFT, STATUS_IN_PROGRESS],
         target=[STATUS_CANCELLED],
     )
     def transition_to_cancelled(self):
         """Assessment cancelled"""
+        # TODO except from SUBMITED/FINAL
 
 
 class AssessmentStatusHistory(TimeStampedModel):

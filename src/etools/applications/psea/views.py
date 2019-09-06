@@ -94,14 +94,18 @@ class AssessmentViewSet(
             context={"request": request},
         )
         if serializer.is_valid():
-            assessment.status = assessment_status
-            assessment.save()
+            # auto transition happens from assigned to in_progress
+            # need to handle the rest
+            assessment.refresh_from_db()
+            if assessment_status != Assessment.STATUS_ASSIGNED:
+                assessment.status = assessment_status
+                assessment.save()
             comment = serializer.validated_data.get("comment")
             if comment is not None:
                 history = assessment.status_history.first()
                 history.comment = serializer.validated_data.get("comment")
                 history.save()
-            return Response({"status": assessment_status})
+            return Response({"status": assessment.status})
         else:
             return Response(
                 serializer.errors,
@@ -109,28 +113,24 @@ class AssessmentViewSet(
             )
 
     @action(detail=True, methods=["patch"])
-    def assigned(self, request, pk=None):
+    def assign(self, request, pk=None):
         return self._set_status(request, Assessment.STATUS_ASSIGNED)
 
     @action(detail=True, methods=["patch"])
-    def progress(self, request, pk=None):
-        return self._set_status(request, Assessment.STATUS_IN_PROGRESS)
-
-    @action(detail=True, methods=["patch"])
-    def submitted(self, request, pk=None):
+    def submit(self, request, pk=None):
         return self._set_status(request, Assessment.STATUS_SUBMITTED)
 
     @action(detail=True, methods=["patch"])
-    def final(self, request, pk=None):
+    def finalize(self, request, pk=None):
         return self._set_status(request, Assessment.STATUS_FINAL)
 
     @action(detail=True, methods=["patch"])
-    def cancelled(self, request, pk=None):
+    def cancel(self, request, pk=None):
         return self._set_status(request, Assessment.STATUS_CANCELLED)
 
     @action(detail=True, methods=["patch"])
-    def rejected(self, request, pk=None):
-        return self._set_status(request, Assessment.STATUS_IN_PROGRESS)
+    def reject(self, request, pk=None):
+        return self._set_status(request, Assessment.STATUS_REJECTED)
 
 
 class AssessorViewSet(

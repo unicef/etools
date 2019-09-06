@@ -456,28 +456,12 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         self.assertEqual(assessment.partner, partner_2)
         self.assertEqual(list(assessment.focal_points.all()), [user])
 
-    def test_assigned(self):
+    def test_assign(self):
         assessment = AssessmentFactory(partner=self.partner)
         self.assertEqual(assessment.status, assessment.STATUS_DRAFT)
         response = self.forced_auth_req(
             "patch",
-            reverse("psea:assessment-assigned", args=[assessment.pk]),
-            user=self.focal_user,
-            data={},
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data, {"status": assessment.STATUS_ASSIGNED})
-        assessment.refresh_from_db()
-        self.assertEqual(assessment.status, assessment.STATUS_ASSIGNED)
-
-    def test_in_progress(self):
-        assessment = AssessmentFactory(partner=self.partner)
-        assessment.status = assessment.STATUS_ASSIGNED
-        assessment.save()
-        self.assertEqual(assessment.status, assessment.STATUS_ASSIGNED)
-        response = self.forced_auth_req(
-            "patch",
-            reverse("psea:assessment-progress", args=[assessment.pk]),
+            reverse("psea:assessment-assign", args=[assessment.pk]),
             user=self.focal_user,
             data={},
         )
@@ -489,14 +473,14 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         assessment.refresh_from_db()
         self.assertEqual(assessment.status, assessment.STATUS_IN_PROGRESS)
 
-    def test_submitted(self):
+    def test_submit(self):
         assessment = AssessmentFactory(partner=self.partner)
         assessment.status = assessment.STATUS_IN_PROGRESS
         assessment.save()
         self.assertEqual(assessment.status, assessment.STATUS_IN_PROGRESS)
         response = self.forced_auth_req(
             "patch",
-            reverse("psea:assessment-submitted", args=[assessment.pk]),
+            reverse("psea:assessment-submit", args=[assessment.pk]),
             user=self.focal_user,
             data={},
         )
@@ -508,14 +492,14 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         assessment.refresh_from_db()
         self.assertEqual(assessment.status, assessment.STATUS_SUBMITTED)
 
-    def test_final(self):
+    def test_finalize(self):
         assessment = AssessmentFactory(partner=self.partner)
         assessment.status = assessment.STATUS_SUBMITTED
         assessment.save()
         self.assertEqual(assessment.status, assessment.STATUS_SUBMITTED)
         response = self.forced_auth_req(
             "patch",
-            reverse("psea:assessment-final", args=[assessment.pk]),
+            reverse("psea:assessment-finalize", args=[assessment.pk]),
             user=self.focal_user,
             data={},
         )
@@ -527,14 +511,14 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         assessment.refresh_from_db()
         self.assertEqual(assessment.status, assessment.STATUS_FINAL)
 
-    def test_cancelled(self):
+    def test_cancel(self):
         assessment = AssessmentFactory(partner=self.partner)
         assessment.status = assessment.STATUS_FINAL
         assessment.save()
         self.assertEqual(assessment.status, assessment.STATUS_FINAL)
         response = self.forced_auth_req(
             "patch",
-            reverse("psea:assessment-cancelled", args=[assessment.pk]),
+            reverse("psea:assessment-cancel", args=[assessment.pk]),
             user=self.focal_user,
             data={},
         )
@@ -546,7 +530,7 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         assessment.refresh_from_db()
         self.assertEqual(assessment.status, assessment.STATUS_CANCELLED)
 
-    def test_rejected(self):
+    def test_reject(self):
         assessment = AssessmentFactory(partner=self.partner)
         assessment.status = assessment.STATUS_SUBMITTED
         assessment.save()
@@ -557,22 +541,22 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         status_count = history_qs.count()
         response = self.forced_auth_req(
             "patch",
-            reverse("psea:assessment-rejected", args=[assessment.pk]),
+            reverse("psea:assessment-reject", args=[assessment.pk]),
             user=self.focal_user,
             data={"comment": "Test reject"},
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
             response.data,
-            {"status": assessment.STATUS_IN_PROGRESS},
+            {"status": assessment.STATUS_REJECTED},
         )
         assessment.refresh_from_db()
-        self.assertEqual(assessment.status, assessment.STATUS_IN_PROGRESS)
+        self.assertEqual(assessment.status, assessment.STATUS_REJECTED)
         self.assertEqual(history_qs.count(), status_count + 1)
         history = history_qs.first()
         self.assertNotEqual(history.comment, "")
 
-    def test_rejected_validation(self):
+    def test_reject_validation(self):
         assessment = AssessmentFactory(partner=self.partner)
         assessment.status = assessment.STATUS_SUBMITTED
         assessment.save()
@@ -583,7 +567,7 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         status_count = history_qs.count()
         response = self.forced_auth_req(
             "patch",
-            reverse("psea:assessment-rejected", args=[assessment.pk]),
+            reverse("psea:assessment-reject", args=[assessment.pk]),
             user=self.focal_user,
             data={},
         )
