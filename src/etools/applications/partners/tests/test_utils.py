@@ -14,7 +14,11 @@ from etools.applications.partners import utils
 from etools.applications.partners.models import Agreement, Intervention, InterventionBudget, InterventionResultLink
 from etools.applications.partners.tests.factories import AgreementFactory, InterventionFactory, PartnerFactory
 from etools.applications.reports.models import AppliedIndicator, IndicatorBlueprint, LowerResult, ResultType
-from etools.applications.reports.tests.factories import CountryProgrammeFactory, ResultFactory
+from etools.applications.reports.tests.factories import (
+    CountryProgrammeFactory,
+    ReportingRequirementFactory,
+    ResultFactory,
+)
 from etools.applications.users.tests.factories import GroupFactory, UserFactory
 
 
@@ -52,7 +56,7 @@ def setup_intervention_test_data(test_case, include_results_and_indicators=False
         unicef_signatory=test_case.unicef_staff,
         partner_authorized_officer_signatory=test_case.partner1.staff_members.all().first()
     )
-
+    test_case.reporting_requirement = ReportingRequirementFactory(intervention=test_case.active_intervention)
     test_case.result_type = ResultType.objects.get_or_create(name=ResultType.OUTPUT)[0]
     test_case.result = ResultFactory(result_type=test_case.result_type)
 

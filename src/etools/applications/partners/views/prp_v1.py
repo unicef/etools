@@ -50,8 +50,8 @@ class PRPInterventionListAPIView(QueryStringFilterMixin, ListAPIView):
     pagination_class = PRPInterventionPagination
 
     queryset = Intervention.objects.filter(
-        result_links__ll_results__applied_indicators__id__isnull=False,
-        reporting_requirements__id__isnull=False,
+        result_links__ll_results__applied_indicators__isnull=False,
+        reporting_requirements__isnull=False,
         in_amendment=False
     ).prefetch_related(
         'result_links__cp_output',
