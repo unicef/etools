@@ -1,3 +1,5 @@
+from copy import copy
+
 from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
@@ -5,12 +7,26 @@ from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 from unicef_attachments.fields import FileTypeModelChoiceField
 from unicef_attachments.models import Attachment, FileType
+from unicef_restlib.fields import SeparatedReadWriteField
 
+from etools.applications.action_points.serializers import ActionPointBaseSerializer, HistorySerializer
 from etools.applications.audit.purchase_order.models import PurchaseOrder
-from etools.applications.psea.models import Answer, AnswerEvidence, Assessment, Assessor, Evidence, Indicator, Rating
+from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
+from etools.applications.psea.models import (
+    Answer,
+    AnswerEvidence,
+    Assessment,
+    AssessmentActionPoint,
+    Assessor,
+    Evidence,
+    Indicator,
+    Rating,
+)
 from etools.applications.psea.permissions import AssessmentPermissions
 from etools.applications.psea.validation import AssessmentValid
 from etools.applications.psea.validators import EvidenceDescriptionValidator
+from etools.applications.reports.serializers.v1 import SectionSerializer
+from etools.applications.users.serializers import OfficeSerializer
 from etools.applications.users.validators import ExternalUserValidator
 
 
@@ -122,6 +138,72 @@ class AssessmentStatusSerializer(BaseAssessmentSerializer):
                     _("Comment is required when rejecting."),
                 )
         return data
+
+
+class AssessmentActionPointSerializer(ActionPointBaseSerializer):
+    reference_number = serializers.ReadOnlyField(label=_('Reference No.'))
+    partner = MinimalPartnerOrganizationListSerializer(
+        read_only=True,
+        label=_('Related Partner'),
+    )
+    section = SeparatedReadWriteField(
+        read_field=SectionSerializer(),
+        required=True, label=_('Section of Assignee')
+    )
+    office = SeparatedReadWriteField(
+        read_field=OfficeSerializer(),
+        required=True, label=_('Office of Assignee')
+    )
+    is_responsible = serializers.SerializerMethodField()
+    history = HistorySerializer(
+        many=True,
+        label=_('History'),
+        read_only=True,
+        source='get_meaningful_history',
+    )
+    url = serializers.ReadOnlyField(label=_('Link'), source='get_object_url')
+
+    class Meta(ActionPointBaseSerializer.Meta):
+        model = AssessmentActionPoint
+        fields = ActionPointBaseSerializer.Meta.fields + [
+            'partner',
+            'psea_assessment',
+            'section',
+            'office',
+            'history',
+            'is_responsible',
+            'url',
+        ]
+        fields.remove('category')
+        extra_kwargs = copy(ActionPointBaseSerializer.Meta.extra_kwargs)
+        extra_kwargs.update({
+            'psea_assessment': {'label': _('Related Task')},
+            'high_priority': {'label': _('Priority')},
+        })
+
+    def get_is_responsible(self, obj):
+        return self.get_user() == obj.assigned_to
+
+    def create(self, validated_data):
+        activity = validated_data['psea_assessment']
+
+        validated_data.update({
+            'partner_id': activity.partner_id,
+        })
+        return super().create(validated_data)
+
+
+class AssessmentActionPointExportSerializer(serializers.Serializer):
+    ref = serializers.CharField(source='reference_number')
+    assigned_to = serializers.CharField(
+        source='assigned_to.get_full_name',
+        allow_null=True,
+    )
+    author = serializers.CharField(source='author.get_full_name')
+    section = serializers.CharField(source='tpm_activity.section')
+    status = serializers.CharField(source='get_status_display')
+    due_date = serializers.DateField(format='%d/%m/%Y')
+    description = serializers.CharField()
 
 
 class AssessorSerializer(serializers.ModelSerializer):

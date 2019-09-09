@@ -1,5 +1,6 @@
 from django.contrib.contenttypes.models import ContentType
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
 from django_filters.rest_framework import DjangoFilterBackend
@@ -12,10 +13,13 @@ from unicef_attachments.models import Attachment
 from unicef_restlib.pagination import DynamicPageNumberPagination
 from unicef_restlib.views import NestedViewSetMixin, QueryStringFilterMixin, SafeTenantViewSetMixin
 
-from etools.applications.psea.models import Answer, Assessment, Assessor, Indicator
+from etools.applications.psea.models import Answer, Assessment, AssessmentActionPoint, Assessor, Indicator
+from etools.applications.psea.renderers import AssessmentActionPointCSVRenderer
 from etools.applications.psea.serializers import (
     AnswerAttachmentSerializer,
     AnswerSerializer,
+    AssessmentActionPointExportSerializer,
+    AssessmentActionPointSerializer,
     AssessmentSerializer,
     AssessmentStatusSerializer,
     AssessorSerializer,
@@ -131,6 +135,37 @@ class AssessmentViewSet(
     @action(detail=True, methods=["patch"])
     def reject(self, request, pk=None):
         return self._set_status(request, Assessment.STATUS_REJECTED)
+
+
+class AssessmentActionPointViewSet(
+        SafeTenantViewSetMixin,
+        mixins.ListModelMixin,
+        mixins.CreateModelMixin,
+        mixins.RetrieveModelMixin,
+        mixins.UpdateModelMixin,
+        NestedViewSetMixin,
+        viewsets.GenericViewSet,
+):
+    queryset = AssessmentActionPoint.objects.all()
+    serializer_class = AssessmentActionPointSerializer
+    permission_classes = [IsAuthenticated, ]
+
+    @action(
+        detail=False,
+        methods=['get'],
+        url_path='export',
+        renderer_classes=(AssessmentActionPointCSVRenderer,),
+    )
+    def csv_export(self, request, *args, **kwargs):
+        serializer = AssessmentActionPointExportSerializer(
+            self.filter_queryset(self.get_queryset()),
+            many=True,
+        )
+        return Response(serializer.data, headers={
+            'Content-Disposition': 'attachment;filename={}_action_points_{}.csv'.format(
+                self.get_root_object().reference_number, timezone.now().date()
+            )
+        })
 
 
 class AssessorViewSet(

@@ -10,6 +10,7 @@ from model_utils.models import TimeStampedModel
 from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation
 
+from etools.applications.action_points.models import ActionPoint
 from etools.applications.audit.purchase_order.models import AuditorFirm, AuditorStaffMember
 from etools.applications.core.permissions import import_permissions
 from etools.applications.core.urlresolvers import build_frontend_url
@@ -229,6 +230,30 @@ class AssessmentStatusHistory(TimeStampedModel):
 
     def __str__(self):
         return f"{self.get_status_display()} [{self.created}]"
+
+
+class AssessmentActionPointManager(models.Manager):
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        return queryset.filter(psea_assessment__isnull=False)
+
+
+class AssessmentActionPoint(ActionPoint):
+    """This proxy class is for easier permissions assigning."""
+    objects = AssessmentActionPointManager()
+
+    class Meta(ActionPoint.Meta):
+        verbose_name = _('PSEA Assessment Action Point')
+        verbose_name_plural = _('PSEA Assessment Action Points')
+        proxy = True
+
+    def get_mail_context(self, user=None):
+        context = super().get_mail_context(user=user)
+        if self.psea_assessment:
+            context['psea_assessment'] = self.psea_assessment.get_mail_context(
+                user=user,
+            )
+        return context
 
 
 class Answer(TimeStampedModel):

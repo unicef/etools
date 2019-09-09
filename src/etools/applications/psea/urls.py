@@ -17,6 +17,17 @@ root_api.register(r'indicator', views.IndicatorViewSet, basename='indicator')
 assessor_api = NestedComplexRouter(root_api, r'assessment')
 assessor_api.register(r'assessor', views.AssessorViewSet, base_name='assessor')
 
+action_points_api = NestedComplexRouter(
+    root_api,
+    r'assessment',
+    lookup='psea_assessment',
+)
+action_points_api.register(
+    r'action-points',
+    views.AssessmentActionPointViewSet,
+    base_name='action-points',
+)
+
 answer_api = NestedComplexRouter(root_api, r'assessment')
 answer_api.register(r'answer', views.AnswerViewSet, base_name='answer')
 
@@ -30,6 +41,7 @@ attachments_api.register(
 app_name = 'psea'
 urlpatterns = [
     path('', include(root_api.urls)),
+    path('', include(action_points_api.urls)),
     path('', include(assessor_api.urls)),
     path('', include(answer_api.urls)),
     path('', include(attachments_api.urls)),

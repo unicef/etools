@@ -1,11 +1,14 @@
 import datetime
+from unittest import skip
 
 from django.contrib.contenttypes.models import ContentType
 from django.urls import reverse
 from django.utils import timezone
 
+from factory import fuzzy
 from rest_framework import status
 
+from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.audit.tests.factories import (
     AuditorStaffMemberFactory,
@@ -24,7 +27,8 @@ from etools.applications.psea.tests.factories import (
     IndicatorFactory,
     RatingFactory,
 )
-from etools.applications.users.tests.factories import GroupFactory, UserFactory
+from etools.applications.reports.tests.factories import SectionFactory
+from etools.applications.users.tests.factories import GroupFactory, PMEUserFactory, UserFactory
 
 
 class TestAssessmentViewSet(BaseTenantTestCase):
@@ -575,6 +579,104 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         assessment.refresh_from_db()
         self.assertEqual(assessment.status, assessment.STATUS_SUBMITTED)
         self.assertEqual(history_qs.count(), status_count)
+
+
+class TestAssessmentActionPointViewSet(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.pme_user = PMEUserFactory()
+        cls.unicef_user = UserFactory()
+
+    def test_action_point_added(self):
+        assessment = AssessmentFactory()
+        self.assertEqual(assessment.action_points.count(), 0)
+
+        response = self.forced_auth_req(
+            'post',
+            reverse("psea:action-points-list", args=[assessment.pk]),
+            user=self.pme_user,
+            data={
+                'psea_assessment': assessment.pk,
+                'description': fuzzy.FuzzyText(length=100).fuzz(),
+                'due_date': fuzzy.FuzzyDate(
+                    timezone.now().date(),
+                    timezone.now().date() + datetime.timedelta(days=5),
+                ).fuzz(),
+                'assigned_to': self.unicef_user.pk,
+                'office': self.pme_user.profile.office.pk,
+                'section': SectionFactory().pk,
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(assessment.action_points.count(), 1)
+        self.assertIsNotNone(assessment.action_points.first().partner)
+
+    def _test_action_point_editable(self, action_point, user, editable=True):
+        assessment = action_point.psea_assessment
+
+        response = self.forced_auth_req(
+            'options',
+            reverse(
+                "psea:action-points-detail",
+                args=[assessment.pk, action_point.pk],
+            ),
+            user=user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        if editable:
+            self.assertIn('PUT', response.data['actions'].keys())
+            self.assertCountEqual(
+                sorted([
+                    'assigned_to',
+                    'high_priority',
+                    'due_date',
+                    'description',
+                    'office', 'section',
+                    'psea_assessment',
+                ]),
+                sorted(response.data['actions']['PUT'].keys())
+            )
+        else:
+            self.assertNotIn('PUT', response.data['actions'].keys())
+
+    @skip("action points permissions not resolved, as yet")
+    def test_action_point_editable_by_pme(self):
+        assessment = AssessmentFactory()
+        action_point = ActionPointFactory(
+            psea_assessment=assessment,
+            status='pre_completed',
+        )
+
+        self._test_action_point_editable(action_point, self.pme_user)
+
+    @skip("action points permissions not resolved, as yet")
+    def test_action_point_readonly_by_unicef_user(self):
+        assessment = AssessmentFactory()
+        action_point = ActionPointFactory(
+            psea_assessment=assessment,
+            status='pre_completed',
+        )
+
+        self._test_action_point_editable(
+            action_point,
+            self.unicef_user,
+            editable=False,
+        )
+
+    @skip("action points permissions not resolved, as yet")
+    def test_action_point_readonly_on_complete_by_pme(self):
+        assessment = AssessmentFactory()
+        action_point = ActionPointFactory(
+            psea_assessment=assessment,
+            status='completed',
+        )
+
+        self._test_action_point_editable(
+            action_point,
+            self.pme_user,
+            editable=False,
+        )
 
 
 class TestAssessorViewSet(BaseTenantTestCase):
