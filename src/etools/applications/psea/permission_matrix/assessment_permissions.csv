@@ -4,7 +4,7 @@ Field no,Verbose Name,Field Name,Group,Condition,Status,Action,Allowed
 1.2.2,Assessment Date,assessment_date,Audit Focal Point,,assigned,Edit,TRUE
 1.2.3,Assessment Date,assessment_date,Audit Focal Point,,in_progress,Edit,TRUE
 1.2.4,Assessment Date,assessment_date,Audit Focal Point,,submitted,Edit,TRUE
-1.3.1,Assessor,assessors,Audit Focal Point,,draft,Edit,TRUE
+1.3.1,Assessor,assessor,UNICEF Audit Focal Point,,draft,Edit,TRUE
 1.4.1,Answers,answers,,user belongs,in_progress,Edit,TRUE
 1.1.2,Partner Name,partner,,,*,Required,TRUE
 1.2.5,Assessment Date,assessment_date,,,draft,Required,FALSE

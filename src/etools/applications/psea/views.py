@@ -5,6 +5,7 @@ from django.utils.translation import ugettext_lazy as _
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -13,6 +14,7 @@ from unicef_restlib.pagination import DynamicPageNumberPagination
 from unicef_restlib.views import NestedViewSetMixin, QueryStringFilterMixin, SafeTenantViewSetMixin
 
 from etools.applications.psea.models import Answer, Assessment, Assessor, Indicator
+from etools.applications.psea.permissions import AssessmentPermissions
 from etools.applications.psea.serializers import (
     AnswerAttachmentSerializer,
     AnswerSerializer,
@@ -147,6 +149,26 @@ class AssessorViewSet(
 
     def get_queryset(self):
         return self.queryset.filter(assessment=self.kwargs.get("nested_1_pk"))
+
+    def check_assessment_permissions(self):
+        try:
+            assessment = Assessment.objects.get(id=self.kwargs.get("nested_1_pk"))
+        except Assessment.DoesNotExist:
+            raise ValidationError("Assessment object id incorrect")
+        p = AssessmentPermissions(
+            user=self.request.user,
+            instance=assessment,
+            permission_structure=assessment.permission_structure(),
+            inbound_check=False)
+        perms = p.get_permissions()
+        if perms["edit"]["assessor"] is False:
+            raise ValidationError(f"Assessor cannot be changed, either insufficient permissions or"
+                                  f"the  field can't be changed in current status: {assessment.status}")
+        return
+
+    def dispatch(self, request, *args, **kwargs):
+        self.check_assessment_permissions()
+        return super(AssessorViewSet, self).dispatch(request, *args, **kwargs)
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
