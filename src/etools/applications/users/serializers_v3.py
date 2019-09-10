@@ -147,20 +147,37 @@ class ExternalUserSerializer(MinimalUserSerializer):
         )
         read_only_fields = ["username"]
 
-    def add_to_country(self, instance):
+    def _get_user_qs(self, data):
+        return get_user_model().objects.filter(email=data.get("email"))
+
+    def validate(self, data):
+        data = super().validate(data)
+        if not self.instance:
+            user_qs = self._get_user_qs(data)
+            if user_qs.exists():
+                exists, __ = self._in_country(user_qs.first())
+                if exists:
+                    raise serializers.ValidationError("User already exists.")
+        return data
+
+    def _in_country(self, instance):
         country = Country.objects.get(schema_name=connection.schema_name)
         if country not in instance.profile.countries_available.all():
+            return (False, country)
+        return (True, country)
+
+    def _add_to_country(self, instance):
+        exists, country = self._in_country(instance)
+        if not exists:
             instance.profile.countries_available.add(country)
 
     def create(self, validated_data):
         validated_data["username"] = validated_data.get("email")
         # check if user record actually exists
-        user_qs = get_user_model().objects.filter(
-            email=validated_data.get("email"),
-        )
+        user_qs = self._get_user_qs(validated_data)
         if user_qs.exists():
             instance = user_qs.first()
         else:
             instance = super().create(validated_data)
-        self.add_to_country(instance)
+        self._add_to_country(instance)
         return instance
