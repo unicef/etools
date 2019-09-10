@@ -28,10 +28,16 @@ action_points_api.register(
     base_name='action-points',
 )
 
+answer_list_api = NestedComplexRouter(root_api, r'assessment')
+answer_list_api.register(
+    r'answer',
+    views.AnswerListViewSet,
+    base_name='answer-list',
+)
 answer_api = NestedComplexRouter(root_api, r'assessment')
-answer_api.register(r'answer', views.AnswerViewSet, base_name='answer')
+answer_api.register(r'indicator', views.AnswerViewSet, base_name='answer')
 
-attachments_api = NestedComplexRouter(answer_api, r'answer')
+attachments_api = NestedComplexRouter(answer_api, r'indicator')
 attachments_api.register(
     r'attachments',
     views.AnswerAttachmentsViewSet,
@@ -43,6 +49,7 @@ urlpatterns = [
     path('', include(root_api.urls)),
     path('', include(action_points_api.urls)),
     path('', include(assessor_api.urls)),
+    path('', include(answer_list_api.urls)),
     path('', include(answer_api.urls)),
     path('', include(attachments_api.urls)),
 ]

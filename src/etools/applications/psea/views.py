@@ -205,13 +205,8 @@ class IndicatorViewSet(
     serializer_class = IndicatorSerializer
 
 
-class AnswerViewSet(
+class AnswerBaseViewSet(
         SafeTenantViewSetMixin,
-        mixins.ListModelMixin,
-        mixins.CreateModelMixin,
-        mixins.RetrieveModelMixin,
-        mixins.UpdateModelMixin,
-        viewsets.GenericViewSet,
 ):
     permission_classes = [IsAuthenticated, ]
     queryset = Answer.objects.all()
@@ -226,6 +221,22 @@ class AnswerViewSet(
             'assessment': parent
         }
 
+
+class AnswerListViewSet(
+        AnswerBaseViewSet,
+        mixins.ListModelMixin,
+        mixins.CreateModelMixin,
+        viewsets.GenericViewSet,
+):
+    """Not sure what happens now"""
+
+
+class AnswerViewSet(
+        AnswerBaseViewSet,
+        mixins.RetrieveModelMixin,
+        mixins.UpdateModelMixin,
+        viewsets.GenericViewSet,
+):
     def get_object(self):
         queryset = self.get_queryset()
         if "pk" in self.kwargs:

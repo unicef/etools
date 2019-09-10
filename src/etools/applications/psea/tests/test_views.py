@@ -964,7 +964,7 @@ class TestIndicatorViewSet(BaseTenantTestCase):
         )
 
 
-class TestAnswerViewSet(BaseTenantTestCase):
+class TestAnswerListViewSet(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user = UserFactory()
@@ -984,7 +984,7 @@ class TestAnswerViewSet(BaseTenantTestCase):
         ).count()
         response = self.forced_auth_req(
             "get",
-            reverse("psea:answer-list", args=[self.assessment.pk]),
+            reverse("psea:answer-list-list", args=[self.assessment.pk]),
             user=self.user,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -998,7 +998,7 @@ class TestAnswerViewSet(BaseTenantTestCase):
         self.assertFalse(answer_qs.exists())
         response = self.forced_auth_req(
             "post",
-            reverse("psea:answer-list", args=[self.assessment.pk]),
+            reverse("psea:answer-list-list", args=[self.assessment.pk]),
             user=self.user,
             data={
                 "indicator": self.indicator.pk,
@@ -1029,7 +1029,7 @@ class TestAnswerViewSet(BaseTenantTestCase):
         self.assertFalse(answer_qs.exists())
         response = self.forced_auth_req(
             "post",
-            reverse("psea:answer-list", args=[self.assessment.pk]),
+            reverse("psea:answer-list-list", args=[self.assessment.pk]),
             user=self.user,
             data={
                 "indicator": self.indicator.pk,
@@ -1044,6 +1044,20 @@ class TestAnswerViewSet(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("evidences", response.data)
         self.assertFalse(answer_qs.exists())
+
+
+class TestAnswerViewSet(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = UserFactory()
+        cls.assessment = AssessmentFactory()
+        cls.file_type = AttachmentFileTypeFactory(code="psea_answer")
+        cls.indicator = IndicatorFactory()
+        cls.rating = RatingFactory()
+        cls.indicator.ratings.add(cls.rating)
+        cls.evidence = EvidenceFactory()
+        cls.indicator.evidences.add(cls.evidence)
+        cls.content_type = ContentType.objects.get_for_model(Answer)
 
     def test_get(self):
         answer = AnswerFactory(
