@@ -36,7 +36,9 @@ class TestAssessmentViewSet(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.user = UserFactory()
         cls.focal_user = UserFactory()
-        cls.focal_user.groups.add(GroupFactory(name="Audit Focal Point"))
+        cls.focal_user.groups.add(
+            GroupFactory(name="UNICEF Audit Focal Point"),
+        )
         cls.partner = PartnerFactory()
 
     def test_list(self):
@@ -683,6 +685,7 @@ class TestAssessorViewSet(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user = UserFactory()
+        cls.user.groups.add(GroupFactory(name="UNICEF Audit Focal Point"))
         cls.unicef_user = UserFactory(email="staff@unicef.org")
 
     def _validate_assessor(self, assessor, expected):
@@ -790,6 +793,27 @@ class TestAssessorViewSet(BaseTenantTestCase):
             "auditor_firm_name": firm.name,
             "order_number": purchase_order.order_number,
         })
+
+    def test_post_permission(self):
+        firm = AuditPartnerFactory()
+        purchase_order = PurchaseOrderFactory(auditor_firm=firm)
+        assessment = AssessmentFactory()
+        assessor_qs = Assessor.objects.filter(assessment=assessment)
+        self.assertFalse(assessor_qs.exists())
+
+        response = self.forced_auth_req(
+            "post",
+            reverse('psea:assessor-list', args=[assessment.pk]),
+            user=self.unicef_user,
+            data={
+                "assessor_type": Assessor.TYPE_VENDOR,
+                "auditor_firm": firm.pk,
+                "order_number": purchase_order.order_number,
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Assessor cannot be changed", response.data[0])
+        self.assertFalse(assessor_qs.exists())
 
     def test_patch_vendor(self):
         firm_1 = AuditPartnerFactory()
@@ -910,6 +934,29 @@ class TestAssessorViewSet(BaseTenantTestCase):
         self.assertEqual(len(staff), 2)
         self.assertIn(staff_1, staff)
         self.assertIn(staff_2, staff)
+
+    def test_patch_permission(self):
+        firm_1 = AuditPartnerFactory()
+        firm_2 = AuditPartnerFactory()
+        assessor = AssessorFactory(
+            assessor_type=Assessor.TYPE_VENDOR,
+            auditor_firm=firm_1,
+            order_number="123",
+        )
+
+        response = self.forced_auth_req(
+            "patch",
+            reverse(
+                'psea:assessor-detail',
+                args=[assessor.assessment.pk, assessor.pk],
+            ),
+            user=self.unicef_user,
+            data={
+                "auditor_firm": firm_2.pk,
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Assessor cannot be changed", response.data[0])
 
 
 class TestIndicatorViewSet(BaseTenantTestCase):
