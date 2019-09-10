@@ -991,6 +991,20 @@ class TestAnswerListViewSet(BaseTenantTestCase):
         self.assertEqual(len(response.data), answer_count)
         self.assertEqual(response.data[0]["id"], answer.pk)
 
+
+class TestAnswerViewSet(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = UserFactory()
+        cls.assessment = AssessmentFactory()
+        cls.file_type = AttachmentFileTypeFactory(code="psea_answer")
+        cls.indicator = IndicatorFactory()
+        cls.rating = RatingFactory()
+        cls.indicator.ratings.add(cls.rating)
+        cls.evidence = EvidenceFactory()
+        cls.indicator.evidences.add(cls.evidence)
+        cls.content_type = ContentType.objects.get_for_model(Answer)
+
     def test_post(self):
         attachment_1 = AttachmentFactory(file="sample_1.pdf")
         attachment_2 = AttachmentFactory(file="sample_2.pdf")
@@ -998,10 +1012,12 @@ class TestAnswerListViewSet(BaseTenantTestCase):
         self.assertFalse(answer_qs.exists())
         response = self.forced_auth_req(
             "post",
-            reverse("psea:answer-list-list", args=[self.assessment.pk]),
+            reverse(
+                "psea:answer-detail",
+                args=[self.assessment.pk, self.indicator.pk],
+            ),
             user=self.user,
             data={
-                "indicator": self.indicator.pk,
                 "evidences": [
                     {"evidence": self.evidence.pk},
                 ],
@@ -1016,6 +1032,7 @@ class TestAnswerListViewSet(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertTrue(answer_qs.exists())
         answer = answer_qs.first()
+        self.assertEqual(answer.indicator, self.indicator)
         self.assertEqual(answer.rating, self.rating)
         self.assertEqual(len(answer.evidences.all()), 1)
         answer_evidence = answer.evidences.first()
@@ -1029,10 +1046,12 @@ class TestAnswerListViewSet(BaseTenantTestCase):
         self.assertFalse(answer_qs.exists())
         response = self.forced_auth_req(
             "post",
-            reverse("psea:answer-list-list", args=[self.assessment.pk]),
+            reverse(
+                "psea:answer-detail",
+                args=[self.assessment.pk, self.indicator.pk],
+            ),
             user=self.user,
             data={
-                "indicator": self.indicator.pk,
                 "evidences": [
                     {"evidence": self.evidence.pk},
                     {"evidence": evidence.pk},
@@ -1044,20 +1063,6 @@ class TestAnswerListViewSet(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("evidences", response.data)
         self.assertFalse(answer_qs.exists())
-
-
-class TestAnswerViewSet(BaseTenantTestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.user = UserFactory()
-        cls.assessment = AssessmentFactory()
-        cls.file_type = AttachmentFileTypeFactory(code="psea_answer")
-        cls.indicator = IndicatorFactory()
-        cls.rating = RatingFactory()
-        cls.indicator.ratings.add(cls.rating)
-        cls.evidence = EvidenceFactory()
-        cls.indicator.evidences.add(cls.evidence)
-        cls.content_type = ContentType.objects.get_for_model(Answer)
 
     def test_get(self):
         answer = AnswerFactory(
