@@ -1,9 +1,11 @@
 from django.contrib.contenttypes.models import ContentType
+from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
 from django_filters.rest_framework import DjangoFilterBackend
+from etools_validator.mixins import ValidatorViewMixin
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
@@ -27,10 +29,12 @@ from etools.applications.psea.serializers import (
     AssessorSerializer,
     IndicatorSerializer,
 )
+from etools.applications.psea.validation import AssessmentValid
 
 
 class AssessmentViewSet(
         SafeTenantViewSetMixin,
+        ValidatorViewMixin,
         QueryStringFilterMixin,
         mixins.CreateModelMixin,
         mixins.ListModelMixin,
@@ -88,6 +92,68 @@ class AssessmentViewSet(
         if "sort" in self.request.GET:
             qs = qs.order_by(*self.parse_sort_params())
         return qs
+
+    @transaction.atomic
+    def create(self, request, *args, **kwargs):
+        related_fields = []
+        nested_related_names = []
+        serializer = self.my_create(
+            request,
+            related_fields,
+            nested_related_names=nested_related_names,
+            **kwargs,
+        )
+
+        instance = serializer.instance
+
+        validator = AssessmentValid(instance, user=request.user)
+        if not validator.is_valid:
+            raise ValidationError(validator.errors)
+
+        headers = self.get_success_headers(serializer.data)
+        if getattr(instance, '_prefetched_objects_cache', None):
+            # If 'prefetch_related' has been applied to a queryset, we need to
+            # refresh the instance from the database.
+            instance = self.get_object()
+        return Response(
+            AssessmentSerializer(
+                instance,
+                context=self.get_serializer_context(),
+            ).data,
+            status=status.HTTP_201_CREATED,
+            headers=headers
+        )
+
+    @transaction.atomic
+    def update(self, request, *args, **kwargs):
+        related_fields = []
+        nested_related_names = []
+        instance, old_instance, serializer = self.my_update(
+            request,
+            related_fields,
+            nested_related_names=nested_related_names,
+            **kwargs
+        )
+
+        validator = AssessmentValid(
+            instance,
+            old=old_instance,
+            user=request.user,
+        )
+        if not validator.is_valid:
+            raise ValidationError(validator.errors)
+
+        if getattr(instance, '_prefetched_objects_cache', None):
+            # If 'prefetch_related' has been applied to a queryset, we need to
+            # refresh the instance from the database.
+            instance = self.get_object()
+
+        return Response(
+            AssessmentSerializer(
+                instance,
+                context=self.get_serializer_context(),
+            ).data
+        )
 
     def _set_status(self, request, assessment_status):
         assessment = self.get_object()
