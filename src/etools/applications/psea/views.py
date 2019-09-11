@@ -363,6 +363,7 @@ class AnswerViewSet(
         mixins.CreateModelMixin,
         mixins.RetrieveModelMixin,
         mixins.UpdateModelMixin,
+        mixins.DestroyModelMixin,
         viewsets.GenericViewSet,
 ):
     def get_object(self):

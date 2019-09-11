@@ -1212,6 +1212,26 @@ class TestAnswerViewSet(BaseTenantTestCase):
         answer.refresh_from_db()
         self.assertEqual(len(answer.evidences.all()), 2)
 
+    def test_delete(self):
+        answer = AnswerFactory(
+            assessment=self.assessment,
+            indicator=self.indicator,
+            rating=self.rating,
+        )
+        AnswerEvidenceFactory(answer=answer, evidence=self.evidence)
+        answer_qs = Answer.objects.filter(pk=answer.pk)
+        self.assertTrue(answer_qs.exists())
+        response = self.forced_auth_req(
+            "delete",
+            reverse(
+                "psea:answer-detail",
+                args=[self.assessment.pk, self.indicator.pk],
+            ),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(answer_qs.exists())
+
 
 class TestAnswerAttachmentViewSet(BaseTenantTestCase):
     @classmethod
