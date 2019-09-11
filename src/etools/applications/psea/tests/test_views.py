@@ -2,6 +2,7 @@ import datetime
 from unittest import skip
 
 from django.contrib.contenttypes.models import ContentType
+from django.core.management import call_command
 from django.urls import reverse
 from django.utils import timezone
 
@@ -28,7 +29,7 @@ from etools.applications.psea.tests.factories import (
     RatingFactory,
 )
 from etools.applications.reports.tests.factories import SectionFactory
-from etools.applications.users.tests.factories import GroupFactory, PMEUserFactory, UserFactory
+from etools.applications.users.tests.factories import GroupFactory, UserFactory
 
 
 class TestAssessmentViewSet(BaseTenantTestCase):
@@ -586,26 +587,34 @@ class TestAssessmentViewSet(BaseTenantTestCase):
 class TestAssessmentActionPointViewSet(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.pme_user = PMEUserFactory()
+        call_command('update_psea_permissions', verbosity=0)
+        cls.focal_user = UserFactory()
+        cls.focal_user.groups.add(
+            GroupFactory(name="UNICEF Audit Focal Point"),
+        )
         cls.unicef_user = UserFactory()
 
+    @skip("action points permissions not resolved, as yet")
     def test_action_point_added(self):
         assessment = AssessmentFactory()
+        assessment.status = Assessment.STATUS_FINAL
+        assessment.save()
+        assessment.focal_points.set([self.focal_user])
         self.assertEqual(assessment.action_points.count(), 0)
 
         response = self.forced_auth_req(
             'post',
             reverse("psea:action-points-list", args=[assessment.pk]),
-            user=self.pme_user,
+            user=self.focal_user,
             data={
-                'psea_assessment': assessment.pk,
+                # 'psea_assessment': assessment.pk,
                 'description': fuzzy.FuzzyText(length=100).fuzz(),
                 'due_date': fuzzy.FuzzyDate(
                     timezone.now().date(),
                     timezone.now().date() + datetime.timedelta(days=5),
                 ).fuzz(),
                 'assigned_to': self.unicef_user.pk,
-                'office': self.pme_user.profile.office.pk,
+                'office': self.focal_user.profile.office.pk,
                 'section': SectionFactory().pk,
             }
         )
@@ -642,15 +651,14 @@ class TestAssessmentActionPointViewSet(BaseTenantTestCase):
         else:
             self.assertNotIn('PUT', response.data['actions'].keys())
 
-    @skip("action points permissions not resolved, as yet")
-    def test_action_point_editable_by_pme(self):
+    def test_action_point_editable_by_focal_user(self):
         assessment = AssessmentFactory()
         action_point = ActionPointFactory(
             psea_assessment=assessment,
             status='pre_completed',
         )
 
-        self._test_action_point_editable(action_point, self.pme_user)
+        self._test_action_point_editable(action_point, self.focal_user)
 
     @skip("action points permissions not resolved, as yet")
     def test_action_point_readonly_by_unicef_user(self):
