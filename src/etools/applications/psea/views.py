@@ -352,7 +352,10 @@ class AnswerListViewSet(
         mixins.ListModelMixin,
         viewsets.GenericViewSet,
 ):
-    """Not sure what happens now"""
+    def get_queryset(self):
+        return super().get_queryset().filter(
+            assessment__pk=self.kwargs.get("nested_1_pk"),
+        )
 
 
 class AnswerViewSet(
