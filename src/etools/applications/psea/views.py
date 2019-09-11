@@ -368,11 +368,11 @@ class AnswerViewSet(
 ):
     def get_object(self):
         queryset = self.get_queryset()
-        if "pk" in self.kwargs:
-            obj = get_object_or_404(queryset, indicator__pk=self.kwargs["pk"])
-        else:
-            obj = super().get_object()
-        return obj
+        return get_object_or_404(
+            queryset,
+            assessment__pk=self.kwargs.get("nested_1_pk"),
+            indicator__pk=self.kwargs["pk"],
+        )
 
     def post(self, request, *arg, **kwargs):
         request.data["indicator"] = kwargs.get("pk")
