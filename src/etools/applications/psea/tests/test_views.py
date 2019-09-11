@@ -1189,10 +1189,22 @@ class TestAnswerViewSet(BaseTenantTestCase):
             rating=self.rating,
             comments="Initial comment",
         )
+        AttachmentFactory(
+            file="sample_1.pdf",
+            file_type=self.file_type,
+            object_id=answer.pk,
+            content_type=self.content_type,
+            code="psea_answer",
+        )
         AnswerEvidenceFactory(answer=answer, evidence=self.evidence)
+        attachment = AttachmentFactory(
+            file="sample_2.pdf",
+            file_type=self.file_type,
+        )
         evidence = EvidenceFactory()
         self.indicator.evidences.add(evidence)
         self.assertEqual(len(answer.evidences.all()), 1)
+        self.assertEqual(len(answer.attachments.all()), 1)
         response = self.forced_auth_req(
             "patch",
             reverse(
@@ -1206,11 +1218,16 @@ class TestAnswerViewSet(BaseTenantTestCase):
                     {"evidence": self.evidence.pk},
                     {"evidence": evidence.pk},
                 ],
+                "attachments": [
+                    {"id": attachment.pk, "file_type": self.file_type.pk},
+                ]
             },
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         answer.refresh_from_db()
         self.assertEqual(len(answer.evidences.all()), 2)
+        self.assertEqual(len(answer.attachments.all()), 1)
+        self.assertEqual(answer.attachments.first(), attachment)
 
     def test_delete(self):
         answer = AnswerFactory(

@@ -382,6 +382,31 @@ class AnswerSerializer(serializers.ModelSerializer):
                 "request"
             ).parser_context["kwargs"].get("nested_1_pk")
 
+    def _set_attachments(self, answer, attachment_data):
+        content_type = ContentType.objects.get_for_model(Answer)
+        current = list(Attachment.objects.filter(
+            object_id=answer.pk,
+            content_type=content_type,
+        ).all())
+        used = []
+        for attachment in attachment_data:
+            for initial in self.initial_data.get("attachments"):
+                pk = initial["id"]
+                file_type = initial.get("file_type")
+                if pk not in used and file_type == attachment["file_type"].pk:
+                    attachment = Attachment.objects.filter(pk=pk).update(
+                        file_type=attachment["file_type"],
+                        code="psea_answer",
+                        object_id=answer.pk,
+                        content_type=content_type,
+                    )
+                    used.append(pk)
+                    if attachment in current:
+                        current.remove(attachment)
+                    break
+        for attachment in current:
+            attachment.delete()
+
     def create(self, validated_data):
         evidence_data = validated_data.pop("evidences")
         attachment_data = validated_data.pop("attachments")
@@ -391,27 +416,16 @@ class AnswerSerializer(serializers.ModelSerializer):
                 answer=answer,
                 **evidence,
             )
-        content_type = ContentType.objects.get_for_model(Answer)
-        used = []
-        for attachment in attachment_data:
-            for initial in self.initial_data.get("attachments"):
-                pk = initial["id"]
-                file_type = initial["file_type"]
-                if pk not in used and file_type == attachment["file_type"].pk:
-                    Attachment.objects.filter(pk=pk).update(
-                        file_type=attachment["file_type"],
-                        code="psea_answer",
-                        object_id=answer.pk,
-                        content_type=content_type,
-                    )
-                    used.append(pk)
-                    break
+        self._set_attachments(answer, attachment_data)
         return answer
 
     def update(self, instance, validated_data):
         evidence_data = None
         if "evidences" in validated_data:
             evidence_data = validated_data.pop("evidences")
+        attachment_data = None
+        if "attachments" in validated_data:
+            attachment_data = validated_data.pop("attachments")
 
         instance.rating = validated_data.get("rating", instance.rating)
         instance.comments = validated_data.get("comments", instance.comments)
@@ -433,4 +447,6 @@ class AnswerSerializer(serializers.ModelSerializer):
             for evidence in evidence_current:
                 evidence.delete()
 
+        if attachment_data is not None:
+            self._set_attachments(instance, attachment_data)
         return instance
