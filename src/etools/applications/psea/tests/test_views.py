@@ -8,6 +8,7 @@ from django.utils import timezone
 
 from factory import fuzzy
 from rest_framework import status
+from unicef_attachments.models import Attachment
 
 from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
@@ -1334,3 +1335,25 @@ class TestAnswerAttachmentViewSet(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         attachment.refresh_from_db()
         self.assertEqual(attachment.file_type, file_type)
+
+    def test_delete(self):
+        attachment = AttachmentFactory(
+            file="sample.pdf",
+            file_type=self.file_type,
+            code="psea_answer",
+            content_type=ContentType.objects.get_for_model(Answer),
+            object_id=self.answer.pk,
+        )
+        attachment_qs = Attachment.objects.filter(pk=attachment.pk)
+        self.assertTrue(attachment_qs.exists())
+
+        response = self.forced_auth_req(
+            "delete",
+            reverse(
+                "psea:answer-attachments-detail",
+                args=[self.assessment.pk, self.indicator.pk, attachment.pk],
+            ),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(attachment_qs.exists())

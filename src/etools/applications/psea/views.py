@@ -393,6 +393,7 @@ class AnswerAttachmentsViewSet(
         mixins.CreateModelMixin,
         mixins.RetrieveModelMixin,
         mixins.UpdateModelMixin,
+        mixins.DestroyModelMixin,
         NestedViewSetMixin,
         viewsets.GenericViewSet,
 ):
