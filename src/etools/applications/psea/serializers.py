@@ -392,6 +392,7 @@ class AnswerSerializer(serializers.ModelSerializer):
         for attachment in attachment_data:
             for initial in self.initial_data.get("attachments"):
                 pk = initial["id"]
+                current = [a for a in current if a.pk != pk]
                 file_type = initial.get("file_type")
                 if pk not in used and file_type == attachment["file_type"].pk:
                     attachment = Attachment.objects.filter(pk=pk).update(
@@ -401,8 +402,6 @@ class AnswerSerializer(serializers.ModelSerializer):
                         content_type=content_type,
                     )
                     used.append(pk)
-                    if attachment in current:
-                        current.remove(attachment)
                     break
         for attachment in current:
             attachment.delete()

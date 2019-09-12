@@ -1189,7 +1189,7 @@ class TestAnswerViewSet(BaseTenantTestCase):
             rating=self.rating,
             comments="Initial comment",
         )
-        AttachmentFactory(
+        attachment_1 = AttachmentFactory(
             file="sample_1.pdf",
             file_type=self.file_type,
             object_id=answer.pk,
@@ -1197,7 +1197,7 @@ class TestAnswerViewSet(BaseTenantTestCase):
             code="psea_answer",
         )
         AnswerEvidenceFactory(answer=answer, evidence=self.evidence)
-        attachment = AttachmentFactory(
+        attachment_2 = AttachmentFactory(
             file="sample_2.pdf",
             file_type=self.file_type,
         )
@@ -1219,15 +1219,18 @@ class TestAnswerViewSet(BaseTenantTestCase):
                     {"evidence": evidence.pk},
                 ],
                 "attachments": [
-                    {"id": attachment.pk, "file_type": self.file_type.pk},
+                    {"id": attachment_1.pk, "file_type": self.file_type.pk},
+                    {"id": attachment_2.pk, "file_type": self.file_type.pk},
                 ]
             },
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         answer.refresh_from_db()
         self.assertEqual(len(answer.evidences.all()), 2)
-        self.assertEqual(len(answer.attachments.all()), 1)
-        self.assertEqual(answer.attachments.first(), attachment)
+        attachments = list(answer.attachments.all())
+        self.assertEqual(len(attachments), 2)
+        self.assertIn(attachment_1, attachments)
+        self.assertIn(attachment_2, attachments)
 
     def test_delete(self):
         answer = AnswerFactory(
