@@ -7,6 +7,7 @@ from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 from unicef_attachments.fields import FileTypeModelChoiceField
 from unicef_attachments.models import Attachment, FileType
+from unicef_rest_export.serializers import ExportSerializer
 from unicef_restlib.fields import SeparatedReadWriteField
 
 from etools.applications.action_points.serializers import ActionPointBaseSerializer, HistorySerializer
@@ -122,6 +123,35 @@ class AssessmentSerializer(BaseAssessmentSerializer):
         if focal_points is not None:
             instance.focal_points.set(focal_points)
         return instance
+
+
+class AssessmentExportDataSerializer(AssessmentSerializer):
+    class Meta(AssessmentSerializer.Meta):
+        fields = [
+            "id",
+            "reference_number",
+            "assessment_date",
+            "partner_name",
+            "status",
+            "rating",
+            "assessor",
+            "focal_points",
+        ]
+
+
+class AssessmentExportSerializer(ExportSerializer):
+    def transform_focal_points(self, data):
+        return ", ".join([str(u.user) for u in data.focal_points.all()])
+
+    def transform_dataset(self, dataset):
+        transform_fields = [
+            # "focal_points",
+        ]
+        print(dataset)
+        for field in transform_fields:
+            func = getattr(self, "transform_{}".format(field))
+            dataset.add_formatter(self.get_header_label(field), func)
+        return dataset
 
 
 class AssessmentStatusSerializer(BaseAssessmentSerializer):

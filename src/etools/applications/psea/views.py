@@ -13,6 +13,8 @@ from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from unicef_attachments.models import Attachment
+from unicef_rest_export.renderers import ExportBaseRenderer, ExportCSVRenderer, ExportOpenXMLRenderer
+from unicef_rest_export.views import EXPORT_RENDERERS, ExportMixin
 from unicef_restlib.pagination import DynamicPageNumberPagination
 from unicef_restlib.views import NestedViewSetMixin, QueryStringFilterMixin, SafeTenantViewSetMixin
 
@@ -34,6 +36,8 @@ from etools.applications.psea.serializers import (
     AnswerSerializer,
     AssessmentActionPointExportSerializer,
     AssessmentActionPointSerializer,
+    AssessmentExportDataSerializer,
+    AssessmentExportSerializer,
     AssessmentSerializer,
     AssessmentStatusSerializer,
     AssessorSerializer,
@@ -46,6 +50,7 @@ class AssessmentViewSet(
         SafeTenantViewSetMixin,
         ValidatorViewMixin,
         QueryStringFilterMixin,
+        ExportMixin,
         mixins.CreateModelMixin,
         mixins.ListModelMixin,
         mixins.UpdateModelMixin,
@@ -76,6 +81,7 @@ class AssessmentViewSet(
         ('assessor_firm', 'assessor__auditor_firm__pk__in'),
     )
     export_filename = 'Assessment'
+    export_serializer_class = AssessmentExportSerializer
 
     def parse_sort_params(self):
         MAP_SORT = {
@@ -214,6 +220,68 @@ class AssessmentViewSet(
     @action(detail=True, methods=["patch"])
     def reject(self, request, pk=None):
         return self._set_status(request, Assessment.STATUS_REJECTED)
+
+    @action(
+        detail=False,
+        methods=['get'],
+        url_path='export/xlsx',
+        renderer_classes=(ExportOpenXMLRenderer,),
+    )
+    def list_export_xlsx(self, request, *args, **kwargs):
+        self.serializer_class = AssessmentExportDataSerializer
+        assessments = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(assessments, many=True)
+        return Response(serializer.data, headers={
+            'Content-Disposition': 'attachment;filename=assessments_{}.xlsx'.format(
+                timezone.now().date(),
+            )
+        })
+
+    @action(
+        detail=True,
+        methods=['get'],
+        url_path='export/xlsx',
+        renderer_classes=(ExportOpenXMLRenderer,),
+    )
+    def single_export_xlsx(self, request, *args, **kwargs):
+        self.serializer_class = AssessmentExportDataSerializer
+        serializer = self.get_serializer([self.get_object()], many=True)
+        return Response(serializer.data, headers={
+            'Content-Disposition': 'attachment;filename={}_{}.xlsx'.format(
+                self.get_object().reference_number, timezone.now().date()
+            )
+        })
+
+    @action(
+        detail=False,
+        methods=['get'],
+        url_path='export/csv',
+        renderer_classes=(ExportCSVRenderer,),
+    )
+    def list_export_csv(self, request, *args, **kwargs):
+        self.serializer_class = AssessmentExportDataSerializer
+        assessments = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(assessments, many=True)
+        return Response(serializer.data, headers={
+            'Content-Disposition': 'attachment;filename=assessments_{}.csv'.format(
+                timezone.now().date(),
+            )
+        })
+
+    @action(
+        detail=True,
+        methods=['get'],
+        url_path='export/csv',
+        renderer_classes=(ExportCSVRenderer,),
+    )
+    def single_export_csv(self, request, *args, **kwargs):
+        self.serializer_class = AssessmentExportDataSerializer
+        serializer = self.get_serializer([self.get_object()], many=True)
+        return Response(serializer.data, headers={
+            'Content-Disposition': 'attachment;filename={}_{}.csv'.format(
+                self.get_object().reference_number, timezone.now().date()
+            )
+        })
 
 
 class AssessmentActionPointViewSet(

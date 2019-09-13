@@ -9,6 +9,7 @@ from django.utils import timezone
 from factory import fuzzy
 from rest_framework import status
 from unicef_attachments.models import Attachment
+from unicef_rest_export import renderers
 
 from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
@@ -583,6 +584,76 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         assessment.refresh_from_db()
         self.assertEqual(assessment.status, assessment.STATUS_SUBMITTED)
         self.assertEqual(history_qs.count(), status_count)
+
+    def test_list_export_csv(self):
+        assessment = AssessmentFactory(partner=self.partner)
+        assessment.focal_points.set([self.user])
+        response = self.forced_auth_req(
+            "get",
+            reverse("psea:assessment-list-export-csv"),
+            user=self.focal_user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(
+            isinstance(
+                response.accepted_renderer,
+                renderers.ExportCSVRenderer,
+            )
+        )
+
+    def test_get_export_csv(self):
+        assessment = AssessmentFactory(partner=self.partner)
+        assessment.focal_points.set([self.user])
+        response = self.forced_auth_req(
+            "get",
+            reverse(
+                "psea:assessment-single-export-csv",
+                args=[assessment.pk],
+            ),
+            user=self.focal_user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(
+            isinstance(
+                response.accepted_renderer,
+                renderers.ExportCSVRenderer,
+            )
+        )
+
+    def test_list_export_xlsx(self):
+        assessment = AssessmentFactory(partner=self.partner)
+        assessment.focal_points.set([self.user])
+        response = self.forced_auth_req(
+            "get",
+            reverse("psea:assessment-list-export-xlsx"),
+            user=self.focal_user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(
+            isinstance(
+                response.accepted_renderer,
+                renderers.ExportOpenXMLRenderer,
+            )
+        )
+
+    def test_get_export_xlsx(self):
+        assessment = AssessmentFactory(partner=self.partner)
+        assessment.focal_points.set([self.user])
+        response = self.forced_auth_req(
+            "get",
+            reverse(
+                "psea:assessment-single-export-xlsx",
+                args=[assessment.pk],
+            ),
+            user=self.focal_user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(
+            isinstance(
+                response.accepted_renderer,
+                renderers.ExportOpenXMLRenderer,
+            )
+        )
 
 
 class TestAssessmentActionPointViewSet(BaseTenantTestCase):
