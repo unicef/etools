@@ -125,7 +125,9 @@ class AssessmentSerializer(BaseAssessmentSerializer):
         return instance
 
 
-class AssessmentExportDataSerializer(AssessmentSerializer):
+class AssessmentExportSerializer(AssessmentSerializer):
+    focal_points = serializers.SerializerMethodField()
+
     class Meta(AssessmentSerializer.Meta):
         fields = [
             "id",
@@ -138,20 +140,8 @@ class AssessmentExportDataSerializer(AssessmentSerializer):
             "focal_points",
         ]
 
-
-class AssessmentExportSerializer(ExportSerializer):
-    def transform_focal_points(self, data):
-        return ", ".join([str(u.user) for u in data.focal_points.all()])
-
-    def transform_dataset(self, dataset):
-        transform_fields = [
-            # "focal_points",
-        ]
-        print(dataset)
-        for field in transform_fields:
-            func = getattr(self, "transform_{}".format(field))
-            dataset.add_formatter(self.get_header_label(field), func)
-        return dataset
+    def get_focal_points(self, obj):
+        return ", ".join([str(u) for u in obj.focal_points.all()])
 
 
 class AssessmentStatusSerializer(BaseAssessmentSerializer):

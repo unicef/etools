@@ -36,7 +36,6 @@ from etools.applications.psea.serializers import (
     AnswerSerializer,
     AssessmentActionPointExportSerializer,
     AssessmentActionPointSerializer,
-    AssessmentExportDataSerializer,
     AssessmentExportSerializer,
     AssessmentSerializer,
     AssessmentStatusSerializer,
@@ -81,7 +80,6 @@ class AssessmentViewSet(
         ('assessor_firm', 'assessor__auditor_firm__pk__in'),
     )
     export_filename = 'Assessment'
-    export_serializer_class = AssessmentExportSerializer
 
     def parse_sort_params(self):
         MAP_SORT = {
@@ -228,7 +226,7 @@ class AssessmentViewSet(
         renderer_classes=(ExportOpenXMLRenderer,),
     )
     def list_export_xlsx(self, request, *args, **kwargs):
-        self.serializer_class = AssessmentExportDataSerializer
+        self.serializer_class = AssessmentExportSerializer
         assessments = self.filter_queryset(self.get_queryset())
         serializer = self.get_serializer(assessments, many=True)
         return Response(serializer.data, headers={
@@ -244,7 +242,7 @@ class AssessmentViewSet(
         renderer_classes=(ExportOpenXMLRenderer,),
     )
     def single_export_xlsx(self, request, *args, **kwargs):
-        self.serializer_class = AssessmentExportDataSerializer
+        self.serializer_class = AssessmentExportSerializer
         serializer = self.get_serializer([self.get_object()], many=True)
         return Response(serializer.data, headers={
             'Content-Disposition': 'attachment;filename={}_{}.xlsx'.format(
@@ -259,7 +257,7 @@ class AssessmentViewSet(
         renderer_classes=(ExportCSVRenderer,),
     )
     def list_export_csv(self, request, *args, **kwargs):
-        self.serializer_class = AssessmentExportDataSerializer
+        self.serializer_class = AssessmentExportSerializer
         assessments = self.filter_queryset(self.get_queryset())
         serializer = self.get_serializer(assessments, many=True)
         return Response(serializer.data, headers={
@@ -275,7 +273,7 @@ class AssessmentViewSet(
         renderer_classes=(ExportCSVRenderer,),
     )
     def single_export_csv(self, request, *args, **kwargs):
-        self.serializer_class = AssessmentExportDataSerializer
+        self.serializer_class = AssessmentExportSerializer
         serializer = self.get_serializer([self.get_object()], many=True)
         return Response(serializer.data, headers={
             'Content-Disposition': 'attachment;filename={}_{}.csv'.format(
