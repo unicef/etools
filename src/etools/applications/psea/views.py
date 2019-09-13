@@ -13,8 +13,8 @@ from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from unicef_attachments.models import Attachment
-from unicef_rest_export.renderers import ExportBaseRenderer, ExportCSVRenderer, ExportOpenXMLRenderer
-from unicef_rest_export.views import EXPORT_RENDERERS, ExportMixin
+from unicef_rest_export.renderers import ExportCSVRenderer, ExportOpenXMLRenderer
+from unicef_rest_export.views import ExportMixin
 from unicef_restlib.pagination import DynamicPageNumberPagination
 from unicef_restlib.views import NestedViewSetMixin, QueryStringFilterMixin, SafeTenantViewSetMixin
 
@@ -295,7 +295,7 @@ class AssessmentActionPointViewSet(
     # metadata_class = PermissionBasedMetadata
     queryset = AssessmentActionPoint.objects.all()
     serializer_class = AssessmentActionPointSerializer
-    permission_classes = [IsAuthenticated]  #, NestedPermission]
+    permission_classes = [IsAuthenticated]  # , NestedPermission]
 
     # def get_permission_context(self):
     #     context = super().get_permission_context()

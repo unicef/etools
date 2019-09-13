@@ -7,7 +7,6 @@ from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 from unicef_attachments.fields import FileTypeModelChoiceField
 from unicef_attachments.models import Attachment, FileType
-from unicef_rest_export.serializers import ExportSerializer
 from unicef_restlib.fields import SeparatedReadWriteField
 
 from etools.applications.action_points.serializers import ActionPointBaseSerializer, HistorySerializer
