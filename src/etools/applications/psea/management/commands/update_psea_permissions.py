@@ -23,6 +23,7 @@ class Command(BaseCommand):
     ]
 
     follow_up_editable_page = ['psea.assessment']
+    follow_up_page = follow_up_editable_page + action_points_block
 
     focal_point = 'focal_point'
     unicef_user = 'unicef_user'
@@ -171,12 +172,12 @@ class Command(BaseCommand):
         #     self.report_block,
         #     condition=final_assessment_condition
         # )
-        # self.add_permissions(
-        #     self.all_unicef_users,
-        #     'view',
-        #     self.follow_up_page,
-        #     condition=final_assessment_condition
-        # )
+        self.add_permissions(
+            self.all_unicef_users,
+            'view',
+            self.follow_up_page,
+            # condition=final_assessment_condition
+        )
         self.add_permissions(
             self.focal_point,
             'edit',
@@ -193,14 +194,8 @@ class Command(BaseCommand):
         self.add_permissions(
             self.focal_point,
             'edit',
-            'psea.assessment.action_points',
-            condition=final_assessment_condition + self.new_action_point(),
-        )
-        self.add_permissions(
-            self.focal_point,
-            'edit',
-            'psea.assessmentactionpoint.*',
-            condition=final_assessment_condition + self.new_action_point(),
+            self.action_points_block,
+            condition=self.new_action_point(),
         )
         self.add_permissions(
             self.action_points_editors,

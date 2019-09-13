@@ -18,16 +18,16 @@ from unicef_rest_export.views import ExportMixin
 from unicef_restlib.pagination import DynamicPageNumberPagination
 from unicef_restlib.views import NestedViewSetMixin, QueryStringFilterMixin, SafeTenantViewSetMixin
 
-# from etools.applications.action_points.conditions import (
-#     ActionPointAssignedByCondition,
-#     ActionPointAssigneeCondition,
-#     ActionPointAuthorCondition,
-# )
-# from etools.applications.permissions2.conditions import ObjectStatusCondition
-# from etools.applications.permissions2.drf_permissions import NestedPermission
-# from etools.applications.permissions2.metadata import PermissionBasedMetadata
+from etools.applications.action_points.conditions import (
+    ActionPointAssignedByCondition,
+    ActionPointAssigneeCondition,
+    ActionPointAuthorCondition,
+)
+from etools.applications.permissions2.conditions import ObjectStatusCondition
+from etools.applications.permissions2.drf_permissions import NestedPermission
+from etools.applications.permissions2.metadata import PermissionBasedMetadata
 from etools.applications.permissions2.views import PermittedSerializerMixin
-# from etools.applications.psea.conditions import PSEAModuleCondition
+from etools.applications.psea.conditions import PSEAModuleCondition
 from etools.applications.psea.models import Answer, Assessment, AssessmentActionPoint, Assessor, Indicator
 from etools.applications.psea.permissions import AssessmentPermissions
 from etools.applications.psea.renderers import AssessmentActionPointCSVRenderer
@@ -284,33 +284,33 @@ class AssessmentViewSet(
 
 class AssessmentActionPointViewSet(
         SafeTenantViewSetMixin,
-        NestedViewSetMixin,
-        # PermittedSerializerMixin,
+        PermittedSerializerMixin,
         mixins.ListModelMixin,
         mixins.CreateModelMixin,
         mixins.RetrieveModelMixin,
         mixins.UpdateModelMixin,
+        NestedViewSetMixin,
         viewsets.GenericViewSet,
 ):
-    # metadata_class = PermissionBasedMetadata
+    metadata_class = PermissionBasedMetadata
     queryset = AssessmentActionPoint.objects.all()
     serializer_class = AssessmentActionPointSerializer
-    permission_classes = [IsAuthenticated]  # , NestedPermission]
+    permission_classes = [IsAuthenticated, NestedPermission]
 
-    # def get_permission_context(self):
-    #     context = super().get_permission_context()
-    #     context.append(PSEAModuleCondition())
-    #     return context
+    def get_permission_context(self):
+        context = super().get_permission_context()
+        context.append(PSEAModuleCondition())
+        return context
 
-    # def get_obj_permission_context(self, obj):
-    #     context = super().get_obj_permission_context(obj)
-    #     context.extend([
-    #         ObjectStatusCondition(obj),
-    #         ActionPointAuthorCondition(obj, self.request.user),
-    #         ActionPointAssignedByCondition(obj, self.request.user),
-    #         ActionPointAssigneeCondition(obj, self.request.user),
-    #     ])
-    #     return context
+    def get_obj_permission_context(self, obj):
+        context = super().get_obj_permission_context(obj)
+        context.extend([
+            ObjectStatusCondition(obj),
+            ActionPointAuthorCondition(obj, self.request.user),
+            ActionPointAssignedByCondition(obj, self.request.user),
+            ActionPointAssigneeCondition(obj, self.request.user),
+        ])
+        return context
 
     @action(
         detail=False,

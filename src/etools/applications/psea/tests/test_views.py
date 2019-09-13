@@ -1,5 +1,4 @@
 import datetime
-from unittest import skip
 
 from django.contrib.contenttypes.models import ContentType
 from django.core.management import call_command
@@ -665,8 +664,10 @@ class TestAssessmentActionPointViewSet(BaseTenantTestCase):
             GroupFactory(name="UNICEF Audit Focal Point"),
         )
         cls.unicef_user = UserFactory()
+        cls.unicef_user.groups.add(
+            GroupFactory(name="UNICEF User"),
+        )
 
-    @skip("action points permissions not resolved, as yet")
     def test_action_point_added(self):
         assessment = AssessmentFactory()
         assessment.status = Assessment.STATUS_FINAL
@@ -679,7 +680,6 @@ class TestAssessmentActionPointViewSet(BaseTenantTestCase):
             reverse("psea:action-points-list", args=[assessment.pk]),
             user=self.focal_user,
             data={
-                # 'psea_assessment': assessment.pk,
                 'description': fuzzy.FuzzyText(length=100).fuzz(),
                 'due_date': fuzzy.FuzzyDate(
                     timezone.now().date(),
@@ -715,15 +715,14 @@ class TestAssessmentActionPointViewSet(BaseTenantTestCase):
                     'high_priority',
                     'due_date',
                     'description',
-                    'office', 'section',
-                    'psea_assessment',
+                    'office',
+                    'section',
                 ]),
                 sorted(response.data['actions']['PUT'].keys())
             )
         else:
             self.assertNotIn('PUT', response.data['actions'].keys())
 
-    @skip("action points permissions not resolved, as yet")
     def test_action_point_editable_by_focal_user(self):
         assessment = AssessmentFactory()
         action_point = ActionPointFactory(
@@ -733,7 +732,6 @@ class TestAssessmentActionPointViewSet(BaseTenantTestCase):
 
         self._test_action_point_editable(action_point, self.focal_user)
 
-    @skip("action points permissions not resolved, as yet")
     def test_action_point_readonly_by_unicef_user(self):
         assessment = AssessmentFactory()
         action_point = ActionPointFactory(
@@ -744,20 +742,6 @@ class TestAssessmentActionPointViewSet(BaseTenantTestCase):
         self._test_action_point_editable(
             action_point,
             self.unicef_user,
-            editable=False,
-        )
-
-    @skip("action points permissions not resolved, as yet")
-    def test_action_point_readonly_on_complete_by_pme(self):
-        assessment = AssessmentFactory()
-        action_point = ActionPointFactory(
-            psea_assessment=assessment,
-            status='completed',
-        )
-
-        self._test_action_point_editable(
-            action_point,
-            self.pme_user,
             editable=False,
         )
 

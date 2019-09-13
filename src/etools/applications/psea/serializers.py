@@ -12,6 +12,7 @@ from unicef_restlib.fields import SeparatedReadWriteField
 from etools.applications.action_points.serializers import ActionPointBaseSerializer, HistorySerializer
 from etools.applications.audit.purchase_order.models import PurchaseOrder
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
+from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
 from etools.applications.psea.models import (
     Answer,
     AnswerEvidence,
@@ -159,7 +160,7 @@ class AssessmentStatusSerializer(BaseAssessmentSerializer):
         return data
 
 
-class AssessmentActionPointSerializer(ActionPointBaseSerializer):
+class AssessmentActionPointSerializer(PermissionsBasedSerializerMixin, ActionPointBaseSerializer):
     reference_number = serializers.ReadOnlyField(label=_('Reference No.'))
     partner = MinimalPartnerOrganizationListSerializer(
         read_only=True,
@@ -186,7 +187,6 @@ class AssessmentActionPointSerializer(ActionPointBaseSerializer):
         model = AssessmentActionPoint
         fields = ActionPointBaseSerializer.Meta.fields + [
             'partner',
-            'psea_assessment',
             'section',
             'office',
             'history',
@@ -204,11 +204,12 @@ class AssessmentActionPointSerializer(ActionPointBaseSerializer):
         return self.get_user() == obj.assigned_to
 
     def create(self, validated_data):
-        activity = validated_data['psea_assessment']
-
-        validated_data.update({
-            'partner_id': activity.partner_id,
-        })
+        assessment_pk = self.context[
+            "request"
+        ].parser_context["kwargs"].get("psea_assessment_pk")
+        assessment = Assessment.objects.get(pk=assessment_pk)
+        validated_data['psea_assessment'] = assessment
+        validated_data.update({'partner_id': assessment.partner_id})
         return super().create(validated_data)
 
 
