@@ -46,7 +46,8 @@ class TestAssessmentViewSet(BaseTenantTestCase):
     def test_list(self):
         num = 10
         for _ in range(num):
-            AssessmentFactory()
+            assessment = AssessmentFactory()
+            AnswerFactory(assessment=assessment)
 
         response = self.forced_auth_req(
             "get",

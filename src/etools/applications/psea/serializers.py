@@ -79,9 +79,18 @@ class AssessmentSerializer(BaseAssessmentSerializer):
         read_only_fields = ["reference_number", "overall_rating"]
 
     def get_overall_rating(self, obj):
-        if obj.overall_rating:
-            return obj.overall_rating
-        return obj.rating()
+        if not obj.overall_rating:
+            display = "Unknown"
+        elif obj.overall_rating <= 11:
+            display = "Negative"
+        elif obj.overall_rating >= 20:
+            display = "Low"
+        else:
+            display = "Moderate"
+        return {
+            "value": obj.overall_rating,
+            "display": display,
+        }
 
     def get_assessor(self, obj):
         try:
