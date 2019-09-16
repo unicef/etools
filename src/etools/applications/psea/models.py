@@ -14,7 +14,11 @@ from etools.applications.action_points.models import ActionPoint
 from etools.applications.audit.purchase_order.models import AuditorFirm, AuditorStaffMember
 from etools.applications.core.permissions import import_permissions
 from etools.applications.core.urlresolvers import build_frontend_url
-from etools.applications.psea.validation import assessment_illegal_transition
+from etools.applications.psea.validation import (
+    assessment_focal_point_user,
+    assessment_illegal_transition,
+    assessment_user_belongs,
+)
 
 
 class Rating(TimeStampedModel):
@@ -147,6 +151,17 @@ class Assessment(TimeStampedModel):
         self.overall_rating = self.rating()
         self.save()
 
+    def user_belongs(self, user):
+        if self.pk and user in self.focal_points.all():
+            return True
+        assessor_qs = Assessor.objects.filter(assessment=self)
+        if assessor_qs.filter(user=user).exists():
+            return True
+        for assessor in assessor_qs.all():
+            if assessor.auditor_firm_staff.filter(user=user).exists():
+                return True
+        return False
+
     def save(self, *args, **kwargs):
         self.overall_rating = self.rating()
         super().save(*args, **kwargs)
@@ -164,10 +179,10 @@ class Assessment(TimeStampedModel):
         field=status,
         source=[STATUS_DRAFT],
         target=[STATUS_ASSIGNED],
+        permission=assessment_focal_point_user,
     )
     def transition_to_assigned(self):
         """Assessment moves to assigned status"""
-        # TODO needs to focal point user
 
     @transition(
         field=status,
@@ -176,34 +191,33 @@ class Assessment(TimeStampedModel):
     )
     def transition_to_in_progress(self):
         """Assessment moves to in progress status"""
-        # TODO auto
 
     @transition(
         field=status,
         source=[STATUS_IN_PROGRESS],
         target=[STATUS_SUBMITTED],
+        permission=assessment_user_belongs,
     )
     def transition_to_submitted(self):
         """Assessment moves to submitted status"""
-        # TODO needs to belongs
 
     @transition(
         field=status,
         source=[STATUS_SUBMITTED],
         target=[STATUS_FINAL],
+        permission=assessment_focal_point_user,
     )
     def transition_to_final(self):
         """Assessment moves to final status"""
-        # TODO needs to focal point user
 
     @transition(
         field=status,
         source=[STATUS_SUBMITTED],
         target=[STATUS_IN_PROGRESS],
+        permission=assessment_focal_point_user,
     )
     def transition_to_rejected(self):
         """Assessment rejected"""
-        # TODO needs to focal point user
 
     @transition(
         field=status,
@@ -212,7 +226,6 @@ class Assessment(TimeStampedModel):
     )
     def transition_to_cancelled(self):
         """Assessment cancelled"""
-        # TODO except from SUBMITED/FINAL
 
     @transition(
         field=status,
@@ -252,7 +265,7 @@ class Assessment(TimeStampedModel):
         conditions=[assessment_illegal_transition],
     )
     def transition_to_final_invalid(self):
-        """Not allowed to move to final status, excetp from submitted"""
+        """Not allowed to move to final status, except from submitted"""
 
     @transition(
         field=status,
@@ -267,7 +280,21 @@ class Assessment(TimeStampedModel):
         conditions=[assessment_illegal_transition],
     )
     def transition_to_rejected_invalid(self):
-        """Not allowed to move to rejected status, excetp from submitted"""
+        """Not allowed to move to rejected status, except from submitted"""
+
+    @transition(
+        field=status,
+        source=[
+            STATUS_DRAFT,
+            STATUS_ASSIGNED,
+            STATUS_IN_PROGRESS,
+            STATUS_REJECTED,
+        ],
+        target=[STATUS_CANCELLED],
+        conditions=[assessment_illegal_transition],
+    )
+    def transition_to_cancelled_invalid(self):
+        """Allowed to move to rejected status, except from submitted/final"""
 
 
 class AssessmentStatusHistory(TimeStampedModel):

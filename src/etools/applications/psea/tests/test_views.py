@@ -486,6 +486,7 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         assessment = AssessmentFactory(partner=self.partner)
         assessment.status = assessment.STATUS_IN_PROGRESS
         assessment.save()
+        assessment.focal_points.add(self.focal_user)
         AnswerFactory(assessment=assessment)
         self.assertEqual(assessment.status, assessment.STATUS_IN_PROGRESS)
         response = self.forced_auth_req(

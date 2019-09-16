@@ -83,3 +83,15 @@ class AssessmentValid(CompleteValidation):
 
 def assessment_illegal_transition(assessment):
     return False
+
+
+def assessment_focal_point_user(assessment, user):
+    if not user.groups.filter(name__in=['UNICEF Audit Focal Point']).count():
+        raise TransitionError(
+            ['Only Audit Focal Point can execute this transition']
+        )
+    return True
+
+
+def assessment_user_belongs(assessment, user):
+    return assessment.user_belongs(user)
