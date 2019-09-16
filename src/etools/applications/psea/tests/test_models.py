@@ -79,6 +79,14 @@ class TestAssessment(BaseTenantTestCase):
             ),
         )
 
+    def test_update_rating(self):
+        assessment = AssessmentFactory()
+        rating_medium = RatingFactory(weight=5)
+        AnswerFactory(assessment=assessment, rating=rating_medium)
+        assessment.update_rating()
+        assessment.refresh_from_db()
+        self.assertEqual(assessment.overall_rating, 5)
+
 
 class TestAssessmentStatusHistory(BaseTenantTestCase):
     def test_string(self):
@@ -90,6 +98,14 @@ class TestAnswer(BaseTenantTestCase):
     def test_string(self):
         answer = AnswerFactory()
         self.assertEqual(str(answer), f"{answer.assessment} [{answer.rating}]")
+
+    def test_save(self):
+        """Ensure assessment rating updated"""
+        assessment = AssessmentFactory()
+        rating = RatingFactory(weight=10)
+        self.assertIsNone(assessment.overall_rating)
+        answer = AnswerFactory(assessment=assessment, rating=rating)
+        self.assertEqual(assessment.overall_rating, 10)
 
 
 class TestAnswerEvidence(BaseTenantTestCase):

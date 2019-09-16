@@ -68,7 +68,7 @@ class BaseAssessmentSerializer(serializers.ModelSerializer):
 
 
 class AssessmentSerializer(BaseAssessmentSerializer):
-    rating = serializers.SerializerMethodField()
+    overall_rating = serializers.SerializerMethodField()
     permissions = serializers.SerializerMethodField(read_only=True)
     assessor = serializers.SerializerMethodField()
     partner_name = serializers.CharField(source="partner.name", read_only=True)
@@ -78,7 +78,9 @@ class AssessmentSerializer(BaseAssessmentSerializer):
         fields = '__all__'
         read_only_fields = ["reference_number", "overall_rating"]
 
-    def get_rating(self, obj):
+    def get_overall_rating(self, obj):
+        if obj.overall_rating:
+            return obj.overall_rating
         return obj.rating()
 
     def get_assessor(self, obj):

@@ -143,6 +143,10 @@ class Assessment(TimeStampedModel):
             num=self.pk,
         )
 
+    def update_rating(self):
+        self.overall_rating = self.rating()
+        self.save()
+
     def save(self, *args, **kwargs):
         self.overall_rating = self.rating()
         super().save(*args, **kwargs)
@@ -348,6 +352,10 @@ class Answer(TimeStampedModel):
 
     def __str__(self):
         return f'{self.assessment} [{self.rating}]'
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self.assessment.update_rating()
 
 
 class AnswerEvidence(TimeStampedModel):
