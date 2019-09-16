@@ -104,7 +104,7 @@ class TestAnswer(BaseTenantTestCase):
         assessment = AssessmentFactory()
         rating = RatingFactory(weight=10)
         self.assertIsNone(assessment.overall_rating)
-        answer = AnswerFactory(assessment=assessment, rating=rating)
+        AnswerFactory(assessment=assessment, rating=rating)
         self.assertEqual(assessment.overall_rating, 10)
 
 
