@@ -1,5 +1,4 @@
 from etools.applications.partners.permissions import PMPPermissions
-from etools.applications.psea.models import Assessor
 
 
 class AssessmentPermissions(PMPPermissions):
@@ -21,6 +20,8 @@ class AssessmentPermissions(PMPPermissions):
         inbound_check = kwargs.get('inbound_check', False)
 
         def user_belongs(instance):
+            from etools.applications.psea.models import Assessor
+
             assert inbound_check, 'this function cannot be called unless instantiated with inbound_check=True'
             if instance.pk and self.user in instance.focal_points.all():
                 return True

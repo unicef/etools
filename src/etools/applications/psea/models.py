@@ -14,6 +14,7 @@ from etools.applications.action_points.models import ActionPoint
 from etools.applications.audit.purchase_order.models import AuditorFirm, AuditorStaffMember
 from etools.applications.core.permissions import import_permissions
 from etools.applications.core.urlresolvers import build_frontend_url
+from etools.applications.psea.validation import assessment_illegal_transition
 
 
 class Rating(TimeStampedModel):
@@ -208,6 +209,61 @@ class Assessment(TimeStampedModel):
     def transition_to_cancelled(self):
         """Assessment cancelled"""
         # TODO except from SUBMITED/FINAL
+
+    @transition(
+        field=status,
+        source=[],
+        target=[STATUS_DRAFT],
+        conditions=[assessment_illegal_transition],
+    )
+    def transition_to_draft_invalid(self):
+        """Not allowed to move back to draft status"""
+
+    @transition(
+        field=status,
+        source=[
+            STATUS_IN_PROGRESS,
+            STATUS_SUBMITTED,
+            STATUS_REJECTED,
+            STATUS_FINAL,
+            STATUS_CANCELLED,
+        ],
+        target=[STATUS_ASSIGNED],
+        conditions=[assessment_illegal_transition],
+    )
+    def transition_to_assigned_invalid(self):
+        """Not allowed to move back to assigned status"""
+
+    @transition(
+        field=status,
+        source=[
+            STATUS_DRAFT,
+            STATUS_ASSIGNED,
+            STATUS_IN_PROGRESS,
+            STATUS_REJECTED,
+            STATUS_FINAL,
+            STATUS_CANCELLED,
+        ],
+        target=[STATUS_FINAL],
+        conditions=[assessment_illegal_transition],
+    )
+    def transition_to_final_invalid(self):
+        """Not allowed to move to final status, excetp from submitted"""
+
+    @transition(
+        field=status,
+        source=[
+            STATUS_DRAFT,
+            STATUS_ASSIGNED,
+            STATUS_IN_PROGRESS,
+            STATUS_FINAL,
+            STATUS_CANCELLED,
+        ],
+        target=[STATUS_REJECTED],
+        conditions=[assessment_illegal_transition],
+    )
+    def transition_to_rejected_invalid(self):
+        """Not allowed to move to rejected status, excetp from submitted"""
 
 
 class AssessmentStatusHistory(TimeStampedModel):
