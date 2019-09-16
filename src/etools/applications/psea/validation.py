@@ -1,4 +1,4 @@
-from etools_validator.exceptions import StateValidationError
+from etools_validator.exceptions import StateValidationError, TransitionError
 from etools_validator.utils import check_required_fields, check_rigid_fields
 from etools_validator.validation import CompleteValidation
 
