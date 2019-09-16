@@ -485,6 +485,7 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         assessment = AssessmentFactory(partner=self.partner)
         assessment.status = assessment.STATUS_IN_PROGRESS
         assessment.save()
+        AnswerFactory(assessment=assessment)
         self.assertEqual(assessment.status, assessment.STATUS_IN_PROGRESS)
         response = self.forced_auth_req(
             "patch",
@@ -504,6 +505,7 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         assessment = AssessmentFactory(partner=self.partner)
         assessment.status = assessment.STATUS_SUBMITTED
         assessment.save()
+        AnswerFactory(assessment=assessment)
         self.assertEqual(assessment.status, assessment.STATUS_SUBMITTED)
         response = self.forced_auth_req(
             "patch",
@@ -523,6 +525,7 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         assessment = AssessmentFactory(partner=self.partner)
         assessment.status = assessment.STATUS_FINAL
         assessment.save()
+        AnswerFactory(assessment=assessment)
         self.assertEqual(assessment.status, assessment.STATUS_FINAL)
         response = self.forced_auth_req(
             "patch",
@@ -542,6 +545,7 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         assessment = AssessmentFactory(partner=self.partner)
         assessment.status = assessment.STATUS_SUBMITTED
         assessment.save()
+        AnswerFactory(assessment=assessment)
         self.assertEqual(assessment.status, assessment.STATUS_SUBMITTED)
         history_qs = AssessmentStatusHistory.objects.filter(
             assessment=assessment,

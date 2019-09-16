@@ -54,15 +54,32 @@ class AssessmentValid(CompleteValidation):
         self.check_rigid_fields(assessment, related=True)
         return True
 
-    def state_signed_valid(self, assessment, user=None):
+    def state_in_progress_valid(self, assessment, user=None):
         self.check_required_fields(assessment)
         self.check_rigid_fields(assessment, related=True)
         return True
 
-    def state_ended_valid(self, assessment, user=None):
+    def state_submitted_valid(self, assessment, user=None):
         self.check_required_fields(assessment)
         self.check_rigid_fields(assessment, related=True)
-        # today = date.today()
-        # if not today > agreement.end:
-        #     raise StateValidationError([_('Today is not after the end date')])
         return True
+
+    def state_rejected_valid(self, assessment, user=None):
+        self.check_required_fields(assessment)
+        self.check_rigid_fields(assessment, related=True)
+        return True
+
+    def state_final_valid(self, assessment, user=None):
+        self.check_required_fields(assessment)
+        self.check_rigid_fields(assessment, related=True)
+        return True
+
+    # Allow cancel anytime?
+    # def state_cancelled_valid(self, assessment, user=None):
+    #     self.check_required_fields(assessment)
+    #     self.check_rigid_fields(assessment, related=True)
+    #     return True
+
+
+def assessment_illegal_transition(assessment):
+    return False

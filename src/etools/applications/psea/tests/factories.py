@@ -1,3 +1,5 @@
+import datetime
+
 import factory
 from factory import fuzzy
 
@@ -31,6 +33,7 @@ class EvidenceFactory(factory.django.DjangoModelFactory):
 
 class AssessmentFactory(factory.django.DjangoModelFactory):
     partner = factory.SubFactory(PartnerFactory)
+    assessment_date = fuzzy.FuzzyDate(datetime.date.today())
 
     class Meta:
         model = models.Assessment
