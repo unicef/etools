@@ -25,7 +25,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,team_members,All Users,tpm_visit+tpm_ma_related,data_collection,edit,TRUE
 ,partners,Field Monitor,,draft,edit,TRUE
 ,interventions,Field Monitor,,draft,edit,TRUE
-,cp_ouptuts,Field Monitor,,draft,edit,TRUE
+,cp_outputs,Field Monitor,,draft,edit,TRUE
 ,activity_question_set,Field Monitor,,checklist,edit,TRUE
 ,started_checklist_set,All Users,is_ma_related_user,data_collection,edit,TRUE
 ,activity_overall_finding,All Users,is_ma_related_user,report_finalization,edit,TRUE
@@ -62,3 +62,28 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,completed_date,All Users,,completed,required,TRUE
 ,submitted_date,All Users,,submitted,required,TRUE
 ,submitted_date,All Users,,completed,required,TRUE
+
+
+
+,location,All Users,,*,view,TRUE
+,location_site,All Users,,*,view,TRUE
+,start_date,All Users,,*,view,TRUE
+,end_date,All Users,,*,view,TRUE
+,field_office,All Users,,*,view,TRUE
+,activity_type,All Users,,*,view,TRUE
+,person_responsible,All Users,,*,view,TRUE
+,sections,All Users,,*,view,TRUE
+,tpm_partner,All Users,,*,view,TRUE
+,team_members,All Users,,*,view,TRUE
+,partners,All Users,,*,view,TRUE
+,interventions,All Users,,*,view,TRUE
+,cp_outputs,All Users,,*,view,TRUE
+,attachments,All Users,,*,view,TRUE
+,report_attachments,All Users,,*,view,TRUE
+
+,action_points,All Users,,*,view,TRUE
+,activity_question_set,All Users,,*,view,TRUE
+,started_checklist_set,All Users,,*,view,TRUE
+,activity_overall_finding,All Users,,*,view,TRUE
+,activity_question_overall_finding,All Users,,*,view,TRUE
+,report_attachments,All Users,,*,view,TRUE

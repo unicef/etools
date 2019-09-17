@@ -13,9 +13,10 @@ from etools.applications.field_monitoring.planning.activity_validation.permissio
 from etools.applications.field_monitoring.planning.models import MonitoringActivity, QuestionTemplate, YearPlan
 from etools.applications.partners.serializers.interventions_v2 import MinimalInterventionListSerializer
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
+from etools.applications.reports.serializers.v1 import SectionSerializer
 from etools.applications.reports.serializers.v2 import MinimalOutputListSerializer
 from etools.applications.tpm.serializers.partner import TPMPartnerLightSerializer
-from etools.applications.users.serializers import MinimalUserSerializer
+from etools.applications.users.serializers import MinimalUserSerializer, OfficeSerializer
 
 
 class YearPlanSerializer(SnapshotModelSerializer):
@@ -106,10 +107,12 @@ class MonitoringActivityLightSerializer(serializers.ModelSerializer):
 class MonitoringActivitySerializer(MonitoringActivityLightSerializer):
     permissions = serializers.SerializerMethodField(read_only=True)
     team_members = SeparatedReadWriteField(read_field=MinimalUserSerializer(many=True))
+    field_office = SeparatedReadWriteField(read_field=OfficeSerializer())
+    sections = SeparatedReadWriteField(read_field=SectionSerializer())
 
     class Meta(MonitoringActivityLightSerializer.Meta):
         fields = MonitoringActivityLightSerializer.Meta.fields + (
-            'team_members',
+            'team_members', 'field_office', 'sections',
             'permissions',
         )
 

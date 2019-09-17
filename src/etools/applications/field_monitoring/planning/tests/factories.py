@@ -7,6 +7,7 @@ from unicef_locations.tests.factories import LocationFactory
 from etools.applications.field_monitoring.fm_settings.tests.factories import QuestionFactory
 from etools.applications.field_monitoring.planning.models import MonitoringActivity, QuestionTemplate, YearPlan
 from etools.applications.field_monitoring.tests.factories import UserFactory
+from etools.applications.users.tests.factories import OfficeFactory
 from etools.libraries.tests.factories import StatusFactoryMetaClass
 
 
@@ -85,6 +86,7 @@ class ReviewActivityFactory(ChecklistActivityFactory):
 
 class PreAssignedActivityFactory(ReviewActivityFactory):
     person_responsible = factory.SubFactory(UserFactory, unicef_user=True)
+    field_office = factory.SubFactory(OfficeFactory)
 
 
 class AssignedActivityFactory(ReviewActivityFactory):

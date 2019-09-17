@@ -76,6 +76,18 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertListEqual([r['id'] for r in response.data['results']], [a.id for a in activities])
 
+    def test_details(self):
+        activity = MonitoringActivityFactory(activity_type='staff', team_members=[UserFactory(unicef_user=True)])
+
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_planning:activities-detail', args=[activity.pk]),
+            user=self.unicef_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('team_members', response.data['permissions']['view'])
+        self.assertTrue(response.data['permissions']['view']['team_members'])
+
     def test_update_draft_success(self):
         activity = MonitoringActivityFactory(activity_type='tpm', tpm_partner=None)
 
