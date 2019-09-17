@@ -18,6 +18,7 @@ from etools.applications.psea.models import (
     AnswerEvidence,
     Assessment,
     AssessmentActionPoint,
+    AssessmentStatusHistory,
     Assessor,
     Evidence,
     Indicator,
@@ -156,11 +157,17 @@ class AssessmentExportSerializer(AssessmentSerializer):
         return ", ".join([str(u) for u in obj.focal_points.all()])
 
 
-class AssessmentStatusSerializer(BaseAssessmentSerializer):
+class AssessmentStatusSerializer(AssessmentSerializer):
+    class Meta(AssessmentSerializer.Meta):
+        read_only_fields = ["reference_number", "overall_rating"]
+
+
+class AssessmentStatusHistorySerializer(serializers.ModelSerializer):
     comment = serializers.CharField(required=False)
 
-    class Meta(BaseAssessmentSerializer.Meta):
-        fields = ["status", "comment"]
+    class Meta:
+        model = AssessmentStatusHistory
+        fields = ["assessment", "status", "comment"]
 
     def validate(self, data):
         data = super().validate(data)
@@ -170,14 +177,6 @@ class AssessmentStatusSerializer(BaseAssessmentSerializer):
                     _("Comment is required when rejecting."),
                 )
         return data
-
-    def update(self, instance, validated_data):
-        instance = super().update(instance, validated_data)
-        if instance.status == Assessment.STATUS_REJECTED:
-            history = instance.status_history.first()
-            history.comment = validated_data.get("comment")
-            history.save()
-        return instance
 
 
 class AssessmentActionPointSerializer(PermissionsBasedSerializerMixin, ActionPointBaseSerializer):

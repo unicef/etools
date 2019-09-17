@@ -478,8 +478,8 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
-            response.data,
-            {"status": assessment.STATUS_IN_PROGRESS},
+            response.data.get("status"),
+            assessment.STATUS_IN_PROGRESS,
         )
         assessment.refresh_from_db()
         self.assertEqual(assessment.status, assessment.STATUS_IN_PROGRESS)
@@ -499,8 +499,8 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
-            response.data,
-            {"status": assessment.STATUS_SUBMITTED},
+            response.data.get("status"),
+            assessment.STATUS_SUBMITTED,
         )
         assessment.refresh_from_db()
         self.assertEqual(assessment.status, assessment.STATUS_SUBMITTED)
@@ -519,8 +519,8 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
-            response.data,
-            {"status": assessment.STATUS_FINAL},
+            response.data.get("status"),
+            assessment.STATUS_FINAL,
         )
         assessment.refresh_from_db()
         self.assertEqual(assessment.status, assessment.STATUS_FINAL)
@@ -539,8 +539,8 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
-            response.data,
-            {"status": assessment.STATUS_CANCELLED},
+            response.data.get("status"),
+            assessment.STATUS_CANCELLED,
         )
         assessment.refresh_from_db()
         self.assertEqual(assessment.status, assessment.STATUS_CANCELLED)
@@ -563,8 +563,8 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
-            response.data,
-            {"status": assessment.STATUS_REJECTED},
+            response.data.get("status"),
+            assessment.STATUS_REJECTED,
         )
         assessment.refresh_from_db()
         self.assertEqual(assessment.status, assessment.STATUS_REJECTED)

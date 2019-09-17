@@ -38,6 +38,7 @@ from etools.applications.psea.serializers import (
     AssessmentActionPointSerializer,
     AssessmentExportSerializer,
     AssessmentSerializer,
+    AssessmentStatusHistorySerializer,
     AssessmentStatusSerializer,
     AssessorSerializer,
     IndicatorSerializer,
@@ -80,6 +81,10 @@ class AssessmentViewSet(
         ('assessor_firm', 'assessor__auditor_firm__pk__in'),
     )
     export_filename = 'Assessment'
+
+    SERIALIZER_MAP = {
+        "status_history": AssessmentStatusHistorySerializer,
+    }
 
     def parse_sort_params(self):
         MAP_SORT = {
@@ -141,7 +146,7 @@ class AssessmentViewSet(
 
     @transaction.atomic
     def update(self, request, *args, **kwargs):
-        related_fields = []
+        related_fields = ["status_history"]
         nested_related_names = []
         instance, old_instance, serializer = self.my_update(
             request,
@@ -172,7 +177,17 @@ class AssessmentViewSet(
 
     def _set_status(self, request, assessment_status):
         self.serializer_class = AssessmentStatusSerializer
+        status = {
+            "status": assessment_status,
+        }
+        comment = request.data.get("comment")
+        if comment:
+            status["comment"] = comment
+        request.data.clear()
         request.data.update({"status": assessment_status})
+        request.data.update(
+            {"status_history": [status]},
+        )
         return self.update(request, partial=True)
 
     @action(detail=True, methods=["patch"])

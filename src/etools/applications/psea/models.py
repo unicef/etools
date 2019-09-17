@@ -168,12 +168,6 @@ class Assessment(TimeStampedModel):
         if not self.reference_number:
             self.reference_number = self.get_reference_number()
             self.save()
-        last_status = self.status_history.first()
-        if not last_status or last_status.status != self.status:
-            AssessmentStatusHistory.objects.create(
-                assessment=self,
-                status=self.status,
-            )
 
     @transition(
         field=status,
