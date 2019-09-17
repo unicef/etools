@@ -164,40 +164,16 @@ class AssessmentViewSet(
             instance = self.get_object()
 
         return Response(
-            AssessmentSerializer(
+            self.serializer_class(
                 instance,
                 context=self.get_serializer_context(),
             ).data
         )
 
     def _set_status(self, request, assessment_status):
-        assessment = self.get_object()
-        data = request.data
-        if "status" not in data:
-            data["status"] = assessment_status
-        serializer = AssessmentStatusSerializer(
-            instance=assessment,
-            data=data,
-            context={"request": request},
-        )
-        if serializer.is_valid():
-            # auto transition happens from assigned to in_progress
-            # need to handle the rest
-            assessment.refresh_from_db()
-            if assessment_status != Assessment.STATUS_ASSIGNED:
-                assessment.status = assessment_status
-                assessment.save()
-            comment = serializer.validated_data.get("comment")
-            if comment is not None:
-                history = assessment.status_history.first()
-                history.comment = serializer.validated_data.get("comment")
-                history.save()
-            return Response({"status": assessment.status})
-        else:
-            return Response(
-                serializer.errors,
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        self.serializer_class = AssessmentStatusSerializer
+        request.data.update({"status": assessment_status})
+        return self.update(request, partial=True)
 
     @action(detail=True, methods=["patch"])
     def assign(self, request, pk=None):
@@ -440,7 +416,29 @@ class AnswerViewSet(
             indicator__pk=self.kwargs["pk"],
         )
 
+    def check_assessment_permissions(self, user):
+        try:
+            assessment = Assessment.objects.get(
+                pk=self.kwargs.get("nested_1_pk"),
+            )
+        except Assessment.DoesNotExist:
+            raise ValidationError("Assessment object id incorrect")
+        p = AssessmentPermissions(
+            user=user,
+            instance=assessment,
+            permission_structure=assessment.permission_structure(),
+            inbound_check=True)
+        perms = p.get_permissions()
+        if perms["edit"]["answers"] is False:
+            raise ValidationError(
+                f"Answers cannot be changed, either insufficient permissions"
+                f" or the field can't be changed in current status: "
+                f"{assessment.status}",
+            )
+        return
+
     def post(self, request, *arg, **kwargs):
+        self.check_assessment_permissions(request.user)
         request.data["indicator"] = kwargs.get("pk")
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)

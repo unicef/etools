@@ -20,7 +20,7 @@ class AssessmentPermissions(PMPPermissions):
         inbound_check = kwargs.get('inbound_check', False)
 
         self.condition_map = {
-            'user belongs': False if not inbound_check else self.instance.user_belongs(
-                self.user,
+            'user belongs': False if not inbound_check else instance.user_belongs(
+                user,
             )
         }

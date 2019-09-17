@@ -409,6 +409,7 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         partner = PartnerFactory()
         assessment_qs = Assessment.objects.filter(partner=partner)
         self.assertFalse(assessment_qs.exists())
+        date = timezone.now().date()
 
         response = self.forced_auth_req(
             "post",
@@ -417,13 +418,14 @@ class TestAssessmentViewSet(BaseTenantTestCase):
             data={
                 "partner": partner.pk,
                 "focal_points": [self.user.pk],
+                "assessment_date": date,
             },
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertTrue(assessment_qs.exists())
         assessment = assessment_qs.first()
         self.assertIsNotNone(assessment.reference_number)
-        self.assertEqual(assessment.assessment_date, timezone.now().date())
+        self.assertEqual(assessment.assessment_date, date)
         self.assertEqual(assessment.status, Assessment.STATUS_DRAFT)
         self.assertIn(self.user, assessment.focal_points.all())
 
@@ -1126,6 +1128,10 @@ class TestAnswerViewSet(BaseTenantTestCase):
     def test_post(self):
         attachment_1 = AttachmentFactory(file="sample_1.pdf")
         attachment_2 = AttachmentFactory(file="sample_2.pdf")
+        self.assessment.status = Assessment.STATUS_IN_PROGRESS
+        self.assessment.save()
+        AssessorFactory(assessment=self.assessment, user=self.user)
+        self.assertTrue(self.assessment.user_belongs(self.user))
         answer_qs = Answer.objects.filter(assessment=self.assessment)
         self.assertFalse(answer_qs.exists())
         response = self.forced_auth_req(
@@ -1160,6 +1166,8 @@ class TestAnswerViewSet(BaseTenantTestCase):
     def test_post_validation(self):
         evidence = EvidenceFactory(requires_description=True)
         self.indicator.evidences.add(evidence)
+        self.assessment.status = Assessment.STATUS_IN_PROGRESS
+        self.assessment.save()
         answer_qs = Answer.objects.filter(assessment=self.assessment)
         self.assertFalse(answer_qs.exists())
         response = self.forced_auth_req(

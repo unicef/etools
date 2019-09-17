@@ -73,10 +73,11 @@ class AssessmentSerializer(BaseAssessmentSerializer):
     assessor = serializers.SerializerMethodField()
     partner_name = serializers.CharField(source="partner.name", read_only=True)
     status_list = serializers.SerializerMethodField()
+    assessment_date = serializers.DateField(required=True)
 
     class Meta(BaseAssessmentSerializer.Meta):
         fields = '__all__'
-        read_only_fields = ["reference_number", "overall_rating"]
+        read_only_fields = ["reference_number", "overall_rating", "status"]
 
     def get_overall_rating(self, obj):
         if not obj.overall_rating:
@@ -169,6 +170,14 @@ class AssessmentStatusSerializer(BaseAssessmentSerializer):
                     _("Comment is required when rejecting."),
                 )
         return data
+
+    def update(self, instance, validated_data):
+        instance = super().update(instance, validated_data)
+        if instance.status == Assessment.STATUS_REJECTED:
+            history = instance.status_history.first()
+            history.comment = validated_data.get("comment")
+            history.save()
+        return instance
 
 
 class AssessmentActionPointSerializer(PermissionsBasedSerializerMixin, ActionPointBaseSerializer):
