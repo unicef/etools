@@ -17,10 +17,9 @@ class AssessmentPermissions(PMPPermissions):
         amendments, new amendments in order to check this.
         """
         super().__init__(user, instance, permission_structure, **kwargs)
-        inbound_check = kwargs.get('inbound_check', False)
 
         self.condition_map = {
-            'user belongs': False if not inbound_check else instance.user_belongs(
+            'user belongs': instance.user_belongs(
                 user,
             )
         }
