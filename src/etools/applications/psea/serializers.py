@@ -75,6 +75,7 @@ class AssessmentSerializer(BaseAssessmentSerializer):
     partner_name = serializers.CharField(source="partner.name", read_only=True)
     status_list = serializers.SerializerMethodField()
     assessment_date = serializers.DateField(required=True)
+    rejected_comment = serializers.SerializerMethodField()
 
     class Meta(BaseAssessmentSerializer.Meta):
         fields = '__all__'
@@ -125,6 +126,14 @@ class AssessmentSerializer(BaseAssessmentSerializer):
                 obj.STATUS_FINAL,
             ]
         return [s for s in obj.STATUS_CHOICES if s[0] in status_list]
+
+    def get_rejected_comment(self, obj):
+        rejected_qs = obj.status_history.filter(
+            status=Assessment.STATUS_REJECTED,
+        )
+        if rejected_qs.exists():
+            return rejected_qs.first().comment
+        return ""
 
     def create(self, validated_data):
         if "assessment_date" not in validated_data:
