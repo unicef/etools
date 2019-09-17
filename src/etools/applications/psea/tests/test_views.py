@@ -1168,6 +1168,8 @@ class TestAnswerViewSet(BaseTenantTestCase):
         self.indicator.evidences.add(evidence)
         self.assessment.status = Assessment.STATUS_IN_PROGRESS
         self.assessment.save()
+        AssessorFactory(assessment=self.assessment, user=self.user)
+        self.assertTrue(self.assessment.user_belongs(self.user))
         answer_qs = Answer.objects.filter(assessment=self.assessment)
         self.assertFalse(answer_qs.exists())
         response = self.forced_auth_req(
