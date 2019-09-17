@@ -62,6 +62,20 @@ class YearPlanViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
 
 class ActivitiesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
+    def test_list(self):
+        activities = [
+            MonitoringActivityFactory(activity_type='tpm', tpm_partner=None),
+            MonitoringActivityFactory(activity_type='staff'),
+        ]
+
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_planning:activities-list'),
+            user=self.unicef_user,
+            data={'page': 1, 'page_size': 10}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertListEqual([r['id'] for r in response.data['results']], [a.id for a in activities])
+
     def test_update_draft_success(self):
         activity = MonitoringActivityFactory(activity_type='tpm', tpm_partner=None)
 

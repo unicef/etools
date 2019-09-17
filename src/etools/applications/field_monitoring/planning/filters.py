@@ -8,6 +8,7 @@ from etools.applications.field_monitoring.utils.filters import M2MInFilter
 
 
 class MonitoringActivitiesFilterSet(filters.FilterSet):
+    team_members__in = M2MInFilter(field_name="team_members")
     partners__in = M2MInFilter(field_name="partners")
     interventions__in = M2MInFilter(field_name="interventions")
     cp_outputs__in = M2MInFilter(field_name="cp_outputs")
@@ -17,7 +18,7 @@ class MonitoringActivitiesFilterSet(filters.FilterSet):
         fields = {
             'activity_type': ['exact'],
             'tpm_partner': ['exact', 'in'],
-            'team_members': ['exact', 'in'],
+            'team_members': ['in'],
             'person_responsible': ['exact', 'in'],
             'location': ['exact', 'in'],
             'location_site': ['exact', 'in'],
