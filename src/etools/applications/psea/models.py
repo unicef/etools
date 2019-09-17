@@ -229,7 +229,14 @@ class Assessment(TimeStampedModel):
 
     @transition(
         field=status,
-        source=[],
+        source=[
+            STATUS_ASSIGNED,
+            STATUS_IN_PROGRESS,
+            STATUS_SUBMITTED,
+            STATUS_REJECTED,
+            STATUS_FINAL,
+            STATUS_CANCELLED,
+        ],
         target=[STATUS_DRAFT],
         conditions=[assessment_illegal_transition],
     )
@@ -258,7 +265,6 @@ class Assessment(TimeStampedModel):
             STATUS_ASSIGNED,
             STATUS_IN_PROGRESS,
             STATUS_REJECTED,
-            STATUS_FINAL,
             STATUS_CANCELLED,
         ],
         target=[STATUS_FINAL],
