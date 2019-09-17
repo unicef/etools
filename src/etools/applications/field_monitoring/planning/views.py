@@ -96,7 +96,7 @@ class TemplatedQuestionsViewSet(
     permission_classes = FMBaseViewSet.permission_classes + [
         IsReadAction | (IsEditAction & IsFieldMonitor)
     ]
-    queryset = Question.objects.all()
+    queryset = Question.objects.filter(is_active=True)
     serializer_class = TemplatedQuestionSerializer
 
     def get_queryset(self):
