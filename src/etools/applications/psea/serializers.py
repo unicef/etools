@@ -33,17 +33,19 @@ from etools.applications.users.validators import ExternalUserValidator
 
 
 class BaseAssessmentSerializer(serializers.ModelSerializer):
+    permissions = serializers.SerializerMethodField(read_only=True)
+
     class Meta:
         model = Assessment
 
     def get_permissions(self, obj):
-        if isinstance(self.instance, list):
+        if isinstance(obj, list):
             return []
 
         ps = Assessment.permission_structure()
         permissions = AssessmentPermissions(
             self.context['request'].user,
-            self.instance,
+            obj,
             ps,
         )
         return permissions.get_permissions()
@@ -70,7 +72,6 @@ class BaseAssessmentSerializer(serializers.ModelSerializer):
 
 class AssessmentSerializer(BaseAssessmentSerializer):
     overall_rating = serializers.SerializerMethodField()
-    permissions = serializers.SerializerMethodField(read_only=True)
     assessor = serializers.SerializerMethodField()
     partner_name = serializers.CharField(source="partner.name", read_only=True)
     status_list = serializers.SerializerMethodField()
