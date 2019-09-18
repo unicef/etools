@@ -1,7 +1,10 @@
 from django.contrib.contenttypes.models import ContentType
+from django.http import Http404
 
 from rest_framework import viewsets
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 from unicef_attachments.models import Attachment
 from unicef_restlib.pagination import DynamicPageNumberPagination
 from unicef_restlib.views import MultiSerializerViewSetMixin, NestedViewSetMixin, SafeTenantViewSetMixin
@@ -18,9 +21,21 @@ class FMBaseViewSet(
     permission_classes = [IsAuthenticated, ]
 
 
+class AttachmentFileTypesViewMixin:
+    @action(detail=False, methods=['GET'], url_path='file-types', url_name='file-types')
+    def file_types(self, request, *args, **kwargs):
+        serializer_class = self.get_serializer_class()
+        declared_fields = serializer_class._declared_fields
+        if 'file_type' not in declared_fields:
+            raise Http404
+
+        return Response(data=declared_fields['file_type'].choices)
+
+
 class FMBaseAttachmentsViewSet(
     FMBaseViewSet,
     NestedViewSetMixin,
+    AttachmentFileTypesViewMixin,
     viewsets.ModelViewSet
 ):
     metadata_class = BaseMetadata

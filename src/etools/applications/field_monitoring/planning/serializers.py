@@ -1,6 +1,8 @@
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
+from unicef_attachments.fields import FileTypeModelChoiceField
+from unicef_attachments.models import FileType
 from unicef_attachments.serializers import BaseAttachmentSerializer
 from unicef_locations.serializers import LocationSerializer
 from unicef_restlib.fields import SeparatedReadWriteField
@@ -124,6 +126,10 @@ class MonitoringActivitySerializer(MonitoringActivityLightSerializer):
 
 
 class ActivityAttachmentSerializer(BaseAttachmentSerializer):
+    file_type = FileTypeModelChoiceField(
+        label=_('Document Type'), queryset=FileType.objects.filter(code='fm_common')
+    )
+
     class Meta(BaseAttachmentSerializer.Meta):
         pass
 

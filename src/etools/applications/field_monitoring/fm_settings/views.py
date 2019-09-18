@@ -38,7 +38,11 @@ from etools.applications.field_monitoring.fm_settings.serializers import (
     QuestionSerializer,
 )
 from etools.applications.field_monitoring.permissions import IsEditAction, IsFieldMonitor, IsPME, IsReadAction
-from etools.applications.field_monitoring.views import FMBaseAttachmentsViewSet, FMBaseViewSet
+from etools.applications.field_monitoring.views import (
+    AttachmentFileTypesViewMixin,
+    FMBaseAttachmentsViewSet,
+    FMBaseViewSet,
+)
 
 
 class MethodsViewSet(
@@ -50,7 +54,11 @@ class MethodsViewSet(
     serializer_class = MethodSerializer
 
 
-class FieldMonitoringGeneralAttachmentsViewSet(FMBaseViewSet, viewsets.ModelViewSet):
+class FieldMonitoringGeneralAttachmentsViewSet(
+    FMBaseViewSet,
+    AttachmentFileTypesViewMixin,
+    viewsets.ModelViewSet
+):
     permission_classes = FMBaseViewSet.permission_classes + [
         IsReadAction | (IsEditAction & IsFieldMonitor)
     ]

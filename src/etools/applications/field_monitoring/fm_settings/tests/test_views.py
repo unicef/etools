@@ -350,6 +350,19 @@ class TestFieldMonitoringGeneralAttachmentsView(FMBaseTestCaseMixin, BaseTenantT
         )
         self.assertEqual(create_response.status_code, status.HTTP_403_FORBIDDEN)
 
+    def test_file_types(self):
+        wrong_file_type = AttachmentFileTypeFactory()
+        file_type = AttachmentFileTypeFactory(code='fm_common')
+
+        response = self.forced_auth_req(
+            'get',
+            reverse('field_monitoring_settings:general-attachments-file-types'),
+            user=self.unicef_user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn(file_type.id, response.data)
+        self.assertNotIn(wrong_file_type.id, response.data)
+
 
 class TestInterventionLocationsView(FMBaseTestCaseMixin, BaseTenantTestCase):
     def test_list(self):

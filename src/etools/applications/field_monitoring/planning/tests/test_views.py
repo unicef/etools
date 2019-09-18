@@ -5,6 +5,7 @@ from django.urls import reverse
 
 from rest_framework import status
 
+from etools.applications.attachments.tests.factories import AttachmentFileTypeFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.field_monitoring.data_collection.tests.factories import StartedChecklistFactory
 from etools.applications.field_monitoring.fm_settings.models import Question
@@ -236,6 +237,19 @@ class TestActivityAttachmentsView(FMBaseTestCaseMixin, BaseTenantTestCase):
             data={}
         )
         self.assertEqual(create_response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_file_types(self):
+        wrong_file_type = AttachmentFileTypeFactory()
+        file_type = AttachmentFileTypeFactory(code='fm_common')
+
+        response = self.forced_auth_req(
+            'get',
+            reverse('field_monitoring_planning:activity-attachments-file-types', args=[self.activity.pk]),
+            user=self.unicef_user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn(file_type.id, response.data)
+        self.assertNotIn(wrong_file_type.id, response.data)
 
 
 class TestQuestionTemplatesView(FMBaseTestCaseMixin, BaseTenantTestCase):
