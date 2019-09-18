@@ -662,6 +662,30 @@ class TestAssessmentViewSet(BaseTenantTestCase):
             )
         )
 
+    def test_answer_permissions(self):
+        assessment = AssessmentFactory(partner=self.partner)
+        AssessorFactory(
+            assessment=assessment,
+            user=self.user,
+            assessor_type=Assessor.TYPE_UNICEF,
+        )
+        for assessment_status in Assessment.STATUS_CHOICES:
+            assessment.status = assessment_status
+            assessment.save()
+            response = self.forced_auth_req(
+                "get",
+                reverse("psea:assessment-detail", args=[assessment.pk]),
+                user=self.user,
+            )
+
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            perm = response.data["permissions"]["edit"]["answers"]
+
+            if assessment.status == Assessment.STATUS_IN_PROGRESS:
+                self.assertTrue(perm)
+            else:
+                self.assertFalse(perm)
+
 
 class TestAssessmentActionPointViewSet(BaseTenantTestCase):
     @classmethod
