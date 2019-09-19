@@ -90,6 +90,7 @@ class AssessmentSerializer(BaseAssessmentSerializer):
             status_list = [
                 obj.STATUS_DRAFT,
                 obj.STATUS_REJECTED,
+                obj.STATUS_IN_PROGRESS,
                 obj.STATUS_SUBMITTED,
                 obj.STATUS_FINAL,
             ]
