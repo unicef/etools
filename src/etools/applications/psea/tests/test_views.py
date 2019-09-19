@@ -11,8 +11,8 @@ from unicef_attachments.models import Attachment
 from unicef_rest_export import renderers
 
 from etools.applications.action_points.tests.factories import ActionPointFactory
-from etools.applications.audit.models import UNICEFAuditFocalPoint
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
+from etools.applications.audit.models import UNICEFAuditFocalPoint
 from etools.applications.audit.tests.factories import (
     AuditorStaffMemberFactory,
     AuditPartnerFactory,
