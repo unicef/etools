@@ -4,6 +4,7 @@ from django.urls import reverse
 
 from rest_framework import status
 
+from etools.applications.attachments.tests.factories import AttachmentFileTypeFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.field_monitoring.data_collection.tests.factories import ActivityQuestionFactory
 from etools.applications.field_monitoring.planning.tests.factories import MonitoringActivityFactory
@@ -35,6 +36,7 @@ class TestActivityReportAttachmentsView(FMBaseTestCaseMixin, BaseTenantTestCase)
             request_format='multipart',
             data={
                 'file': SimpleUploadedFile('hello_world.txt', u'hello world!'.encode('utf-8')),
+                'file_type': AttachmentFileTypeFactory(code='fm_common').id,
             }
         )
         self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)

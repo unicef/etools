@@ -225,6 +225,7 @@ class TestActivityAttachmentsView(FMBaseTestCaseMixin, BaseTenantTestCase):
             request_format='multipart',
             data={
                 'file': SimpleUploadedFile('hello_world.txt', u'hello world!'.encode('utf-8')),
+                'file_type': AttachmentFileTypeFactory(code='fm_common').id,
             }
         )
         self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
