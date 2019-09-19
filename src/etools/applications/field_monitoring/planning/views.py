@@ -145,7 +145,10 @@ class MonitoringActivitiesViewSet(
         queryset = super().get_queryset()
 
         if hasattr(self, 'action') and self.action == 'list':
-            queryset.prefetch_related('tpm_partner', 'person_responsible', 'location', 'location_site')
+            queryset.prefetch_related(
+                'tpm_partner', 'person_responsible', 'location', 'location_site',
+                'team_members', 'partners', 'interventions', 'cp_outputs'
+            )
 
         return queryset
 

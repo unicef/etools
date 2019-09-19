@@ -85,6 +85,7 @@ class MonitoringActivityLightSerializer(serializers.ModelSerializer):
     location_site = SeparatedReadWriteField(read_field=LocationSiteSerializer())
 
     person_responsible = SeparatedReadWriteField(read_field=MinimalUserSerializer())
+    team_members = SeparatedReadWriteField(read_field=MinimalUserSerializer(many=True))
 
     partners = SeparatedReadWriteField(read_field=MinimalPartnerOrganizationListSerializer(many=True))
     interventions = SeparatedReadWriteField(read_field=MinimalInterventionListSerializer(many=True))
@@ -97,7 +98,7 @@ class MonitoringActivityLightSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'reference_number',
             'activity_type', 'tpm_partner',
-            'person_responsible',
+            'person_responsible', 'team_members',
             'location', 'location_site',
             'partners', 'interventions', 'cp_outputs',
             'start_date', 'end_date',
@@ -108,14 +109,12 @@ class MonitoringActivityLightSerializer(serializers.ModelSerializer):
 
 class MonitoringActivitySerializer(MonitoringActivityLightSerializer):
     permissions = serializers.SerializerMethodField(read_only=True)
-    team_members = SeparatedReadWriteField(read_field=MinimalUserSerializer(many=True))
     field_office = SeparatedReadWriteField(read_field=OfficeSerializer())
     sections = SeparatedReadWriteField(read_field=SectionSerializer())
 
     class Meta(MonitoringActivityLightSerializer.Meta):
         fields = MonitoringActivityLightSerializer.Meta.fields + (
-            'team_members', 'field_office', 'sections',
-            'permissions',
+            'field_office', 'sections', 'permissions',
         )
 
     def get_permissions(self, obj):
