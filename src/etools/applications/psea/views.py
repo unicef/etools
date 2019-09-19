@@ -24,6 +24,7 @@ from etools.applications.action_points.conditions import (
     ActionPointAssigneeCondition,
     ActionPointAuthorCondition,
 )
+from etools.applications.audit.models import UNICEFAuditFocalPoint
 from etools.applications.permissions2.conditions import ObjectStatusCondition
 from etools.applications.permissions2.drf_permissions import NestedPermission
 from etools.applications.permissions2.metadata import PermissionBasedMetadata
@@ -113,6 +114,18 @@ class AssessmentViewSet(
         if "sort" in self.request.GET:
             qs = qs.order_by(*self.parse_sort_params())
         return qs
+
+    def _user_in_focal_group(self):
+        # check if user in focal group
+        # doing it here allows us to do this once
+        # and not for each assessment in the list
+        self.user_in_focal_group = self.request.user.groups.filter(
+            name__in=[UNICEFAuditFocalPoint.name],
+        ).exists()
+
+    def list(self, request):
+        self._user_in_focal_group()
+        return super().list(request)
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
@@ -204,6 +217,7 @@ class AssessmentViewSet(
         )
 
     def _set_status(self, request, assessment_status):
+        self._user_in_focal_group()
         self.serializer_class = AssessmentStatusSerializer
         status = {
             "status": assessment_status,
