@@ -38,13 +38,16 @@ class BaseAssessmentSerializer(serializers.ModelSerializer):
         model = Assessment
 
     def get_permissions(self, obj):
-        user = self.context['request'].user
+        # don't provide permissions for list view
         if self.context["view"].action == "list":
-            in_focal_group = self.context["view"].user_in_focal_group
-            if not obj.user_belongs(user) or not in_focal_group:
-                return []
+            return []
+
         ps = Assessment.permission_structure()
-        permissions = AssessmentPermissions(user, obj, ps)
+        permissions = AssessmentPermissions(
+            self.context['request'].user,
+            obj,
+            ps,
+        )
         return permissions.get_permissions()
 
 
@@ -122,12 +125,12 @@ class AssessmentSerializer(BaseAssessmentSerializer):
             return []
 
         user = self.context['request'].user
-        in_focal_group = user.groups.filter(
+        is_focal_group = user.groups.filter(
             name__in=[UNICEFAuditFocalPoint.name],
         ).exists()
         user_belongs = obj.user_belongs(user)
         available_actions = []
-        if in_focal_group:
+        if is_focal_group:
             if obj.status in [obj.STATUS_DRAFT]:
                 available_actions.append(obj.STATUS_ASSIGNED)
             if obj.status not in [obj.STATUS_FINAL]:
