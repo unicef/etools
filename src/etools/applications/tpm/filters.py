@@ -51,4 +51,5 @@ class TPMActivityFilter(filters.FilterSet):
             'tpm_visit__tpm_partner': ['exact'],
             'partner': ['exact', 'in'],
             'tpm_visit__status': ['exact', 'in'],
+            'is_pv': ['exact', ],
         }
