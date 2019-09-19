@@ -11,6 +11,7 @@ from unicef_attachments.models import Attachment
 from unicef_rest_export import renderers
 
 from etools.applications.action_points.tests.factories import ActionPointFactory
+from etools.applications.audit.models import UNICEFAuditFocalPoint
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.audit.tests.factories import (
     AuditorStaffMemberFactory,
@@ -39,7 +40,7 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         cls.user = UserFactory()
         cls.focal_user = UserFactory()
         cls.focal_user.groups.add(
-            GroupFactory(name="UNICEF Audit Focal Point"),
+            GroupFactory(name=UNICEFAuditFocalPoint.name),
         )
         cls.partner = PartnerFactory()
 
@@ -68,7 +69,7 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         response = self.forced_auth_req(
             "get",
             reverse('psea:assessment-detail', args=[assessment.pk]),
-            user=self.user,
+            user=self.focal_user,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.data
@@ -76,6 +77,10 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         self.assertEqual(data["partner"], partner.pk)
         self.assertEqual(data["assessment_date"], date)
         self.assertEqual(data["status"], "draft")
+        self.assertEqual(
+            data["available_actions"],
+            [Assessment.STATUS_ASSIGNED, Assessment.STATUS_CANCELLED],
+        )
 
     def test_filter_status(self):
         for _ in range(10):
@@ -728,7 +733,7 @@ class TestAssessmentActionPointViewSet(BaseTenantTestCase):
         call_command('update_psea_permissions', verbosity=0)
         cls.focal_user = UserFactory()
         cls.focal_user.groups.add(
-            GroupFactory(name="UNICEF Audit Focal Point"),
+            GroupFactory(name=UNICEFAuditFocalPoint.name),
         )
         cls.unicef_user = UserFactory()
         cls.unicef_user.groups.add(
@@ -817,7 +822,7 @@ class TestAssessorViewSet(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user = UserFactory()
-        cls.user.groups.add(GroupFactory(name="UNICEF Audit Focal Point"))
+        cls.user.groups.add(GroupFactory(name=UNICEFAuditFocalPoint.name))
         cls.unicef_user = UserFactory(email="staff@unicef.org")
 
     def _validate_assessor(self, assessor, expected):

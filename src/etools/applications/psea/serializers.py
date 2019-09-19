@@ -9,6 +9,7 @@ from unicef_attachments.models import Attachment, FileType
 from unicef_restlib.fields import SeparatedReadWriteField
 
 from etools.applications.action_points.serializers import ActionPointBaseSerializer, HistorySerializer
+from etools.applications.audit.models import UNICEFAuditFocalPoint
 from etools.applications.audit.purchase_order.models import PurchaseOrder
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
@@ -37,7 +38,8 @@ class BaseAssessmentSerializer(serializers.ModelSerializer):
         model = Assessment
 
     def get_permissions(self, obj):
-        if isinstance(obj, list):
+        # don't provide permissions for list view
+        if self.context["view"].action == "list":
             return []
 
         ps = Assessment.permission_structure()
@@ -56,6 +58,7 @@ class AssessmentSerializer(BaseAssessmentSerializer):
     status_list = serializers.SerializerMethodField()
     assessment_date = serializers.DateField(required=True)
     rejected_comment = serializers.SerializerMethodField()
+    available_actions = serializers.SerializerMethodField()
 
     class Meta(BaseAssessmentSerializer.Meta):
         fields = '__all__'
@@ -115,6 +118,27 @@ class AssessmentSerializer(BaseAssessmentSerializer):
         if rejected_qs.exists():
             return rejected_qs.first().comment
         return ""
+
+    def get_available_actions(self, obj):
+        # don't provide available actions for list view
+        if self.context["view"].action == "list":
+            return []
+
+        user = self.context['request'].user
+        is_focal_group = user.groups.filter(
+            name__in=[UNICEFAuditFocalPoint.name],
+        ).exists()
+        user_belongs = obj.user_belongs(user)
+        available_actions = []
+        if is_focal_group:
+            if obj.status in [obj.STATUS_DRAFT]:
+                available_actions.append(obj.STATUS_ASSIGNED)
+            if obj.status not in [obj.STATUS_FINAL]:
+                available_actions.append(obj.STATUS_CANCELLED)
+        if user_belongs:
+            if obj.status in [obj.STATUS_IN_PROGRESS]:
+                available_actions.append(obj.STATUS_SUBMITTED)
+        return available_actions
 
 
 class AssessmentExportSerializer(AssessmentSerializer):

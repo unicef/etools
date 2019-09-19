@@ -2,6 +2,7 @@ from etools_validator.exceptions import StateValidationError, TransitionError
 from etools_validator.utils import check_required_fields, check_rigid_fields
 from etools_validator.validation import CompleteValidation
 
+from etools.applications.audit.models import UNICEFAuditFocalPoint
 from etools.applications.psea.permissions import AssessmentPermissions
 
 
@@ -86,7 +87,7 @@ def assessment_illegal_transition(assessment):
 
 
 def assessment_focal_point_user(assessment, user):
-    if not user.groups.filter(name__in=['UNICEF Audit Focal Point']).count():
+    if not user.groups.filter(name__in=[UNICEFAuditFocalPoint.name]).count():
         raise TransitionError(
             ['Only Audit Focal Point can execute this transition']
         )
