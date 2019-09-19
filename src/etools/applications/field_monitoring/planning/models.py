@@ -140,7 +140,7 @@ class MonitoringActivity(
         ('interventions', 'intervention'),
     )
 
-    activity_type = models.CharField(max_length=10, choices=TYPES)
+    activity_type = models.CharField(max_length=10, choices=TYPES, default=TYPES.staff)
 
     tpm_partner = models.ForeignKey(TPMPartner, blank=True, null=True, verbose_name=_('TPM Partner'),
                                     on_delete=models.CASCADE)
@@ -156,7 +156,7 @@ class MonitoringActivity(
     sections = models.ManyToManyField(Section, blank=True, verbose_name=_('Sections'))
 
     location = models.ForeignKey(Location, verbose_name=_('Location'), related_name='monitoring_activities',
-                                 on_delete=models.CASCADE)
+                                 blank=True, null=True, on_delete=models.CASCADE)
     location_site = models.ForeignKey(LocationSite, blank=True, null=True, verbose_name=_('Site'),
                                       related_name='monitoring_activities', on_delete=models.CASCADE)
 

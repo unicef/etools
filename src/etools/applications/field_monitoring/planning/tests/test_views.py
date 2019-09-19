@@ -63,6 +63,15 @@ class YearPlanViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
 
 class ActivitiesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
+    def test_create_empty_visit(self):
+        response = self.forced_auth_req(
+            'post', reverse('field_monitoring_planning:activities-list'),
+            user=self.fm_user,
+            data={}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
     def test_list(self):
         activities = [
             MonitoringActivityFactory(activity_type='tpm', tpm_partner=None),
