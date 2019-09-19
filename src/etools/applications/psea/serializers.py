@@ -1,7 +1,6 @@
 from copy import copy
 
 from django.contrib.contenttypes.models import ContentType
-from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
@@ -25,7 +24,6 @@ from etools.applications.psea.models import (
     Rating,
 )
 from etools.applications.psea.permissions import AssessmentPermissions
-from etools.applications.psea.validation import AssessmentValid
 from etools.applications.psea.validators import EvidenceDescriptionValidator
 from etools.applications.reports.serializers.v1 import SectionSerializer
 from etools.applications.users.serializers import OfficeSerializer
@@ -49,25 +47,6 @@ class BaseAssessmentSerializer(serializers.ModelSerializer):
             ps,
         )
         return permissions.get_permissions()
-
-    def validate(self, data):
-        data = super().validate(data)
-        if self.context.get('skip_global_validator', None):
-            return data
-        focal_points = None
-        if "focal_points" in data:
-            focal_points = data.pop("focal_points")
-        validator = AssessmentValid(
-            data,
-            old=self.instance,
-            user=self.context['request'].user,
-        )
-
-        if not validator.is_valid:
-            raise serializers.ValidationError({'errors': validator.errors})
-        if focal_points is not None:
-            data["focal_points"] = focal_points
-        return data
 
 
 class AssessmentSerializer(BaseAssessmentSerializer):
@@ -135,17 +114,6 @@ class AssessmentSerializer(BaseAssessmentSerializer):
         if rejected_qs.exists():
             return rejected_qs.first().comment
         return ""
-
-    def create(self, validated_data):
-        if "assessment_date" not in validated_data:
-            validated_data["assessment_date"] = timezone.now().date()
-        focal_points = None
-        if "focal_points" in validated_data:
-            focal_points = validated_data.pop("focal_points")
-        instance = super().create(validated_data)
-        if focal_points is not None:
-            instance.focal_points.set(focal_points)
-        return instance
 
 
 class AssessmentExportSerializer(AssessmentSerializer):

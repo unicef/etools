@@ -1,5 +1,6 @@
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
+from django.db.models import ObjectDoesNotExist
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
@@ -148,12 +149,39 @@ class AssessmentViewSet(
     def update(self, request, *args, **kwargs):
         related_fields = ["status_history"]
         nested_related_names = []
+        related_non_serialized_fields = ["focal_points"]
+
+        # FIXME move to etools_validator library
+        # store old related field data
+        instance = self.get_object()
+        old_related_data = []
+        for field in related_non_serialized_fields:
+            try:
+                rel_field_val = getattr(instance, field)
+            except ObjectDoesNotExist:
+                pass
+            else:
+                prop = f"{field}_old"
+
+                try:
+                    val = list(rel_field_val.all())
+                except AttributeError:
+                    # This means OneToOne field
+                    val = rel_field_val
+
+                old_related_data.append((prop, val))
+
         instance, old_instance, serializer = self.my_update(
             request,
             related_fields,
             nested_related_names=nested_related_names,
             **kwargs
         )
+
+        # FIXME move to etools_validator library
+        # add old related field data to old instance
+        for field, val in old_related_data:
+            setattr(old_instance, field, val)
 
         validator = AssessmentValid(
             instance,

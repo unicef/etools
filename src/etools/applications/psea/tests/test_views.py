@@ -686,6 +686,41 @@ class TestAssessmentViewSet(BaseTenantTestCase):
             else:
                 self.assertFalse(perm)
 
+    def test_focal_point_permissions(self):
+        assessment = AssessmentFactory(partner=self.partner)
+        self.assertNotIn(self.user, assessment.focal_points.all())
+
+        response = self.forced_auth_req(
+            "patch",
+            reverse('psea:assessment-detail', args=[assessment.pk]),
+            user=self.user,
+            data={
+                "focal_points": [self.user.pk],
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        assessment.refresh_from_db()
+        self.assertIn(self.user, assessment.focal_points.all())
+
+        # change assessment status to FINAL and attempt to add/change
+        # focal points for assessment
+        assessment.status = Assessment.STATUS_FINAL
+        assessment.save()
+        AnswerFactory(assessment=assessment)
+        self.assertEqual(assessment.status, Assessment.STATUS_FINAL)
+        self.assertNotIn(self.focal_user, assessment.focal_points.all())
+        response = self.forced_auth_req(
+            "patch",
+            reverse('psea:assessment-detail', args=[assessment.pk]),
+            user=self.user,
+            data={
+                "focal_points": [self.focal_user.pk],
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        assessment.refresh_from_db()
+        self.assertNotIn(self.focal_user, assessment.focal_points.all())
+
 
 class TestAssessmentActionPointViewSet(BaseTenantTestCase):
     @classmethod
