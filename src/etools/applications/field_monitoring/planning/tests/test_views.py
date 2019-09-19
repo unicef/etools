@@ -10,7 +10,7 @@ from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.field_monitoring.data_collection.tests.factories import StartedChecklistFactory
 from etools.applications.field_monitoring.fm_settings.models import Question
 from etools.applications.field_monitoring.fm_settings.tests.factories import QuestionFactory
-from etools.applications.field_monitoring.planning.models import MonitoringActivity, YearPlan
+from etools.applications.field_monitoring.planning.models import MonitoringActivity, QuestionTemplate, YearPlan
 from etools.applications.field_monitoring.planning.tests.factories import (
     MonitoringActivityFactory,
     QuestionTemplateFactory,
@@ -340,6 +340,9 @@ class TestQuestionTemplatesView(FMBaseTestCaseMixin, BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIsNotNone(response.data['template'])
+        self.assertNotEqual(
+            QuestionTemplate.objects.get(question=question, partner__isnull=True).specific_details, 'new_details'
+        )
         self.assertEqual(response.data['template']['specific_details'], 'new_details')
         self.assertEqual(question.templates.count(), 2)
 

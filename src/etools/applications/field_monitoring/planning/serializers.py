@@ -59,12 +59,12 @@ class TemplatedQuestionSerializer(QuestionSerializer):
         template_data['question'] = instance
 
         if instance.template is None:
-            base_template = QuestionTemplateSerializer().create(validated_data=template_data)
             if self.target_id:
+                QuestionTemplateSerializer().create(validated_data={'question': instance})
                 template_data['{}_id'.format(Question.get_target_relation_name(self.level))] = self.target_id
                 template = QuestionTemplateSerializer().create(validated_data=template_data)
             else:
-                template = base_template
+                template = QuestionTemplateSerializer().create(validated_data=template_data)
         else:
             if not self.target_id:
                 template = QuestionTemplateSerializer().update(instance.template, validated_data=template_data)
