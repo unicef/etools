@@ -1,12 +1,14 @@
-import json
-
 from django.urls import reverse
 
-from unicef_locations.tests.factories import CartoDBTableFactory, GatewayTypeFactory, LocationFactory
+from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
-from etools.applications.tpm.tests.factories import TPMVisitFactory, TPMPartnerFactory, TPMUserFactory, \
-    TPMActivityFactory
+from etools.applications.tpm.tests.factories import (
+    TPMActivityFactory,
+    TPMPartnerFactory,
+    TPMUserFactory,
+    TPMVisitFactory,
+)
 from etools.libraries.tests.api_checker import AssertTimeStampedMixin, ViewSetChecker
 
 
@@ -25,7 +27,6 @@ class TestAPIActivities(AssertTimeStampedMixin, BaseTenantTestCase, metaclass=Vi
                                 tpm_activities__count=0)
 
         activity = TPMActivityFactory(tpm_visit=visit, locations=[location])
-
 
         return {
             'tpm_partner': tpm_partner,
