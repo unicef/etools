@@ -295,7 +295,6 @@ class AllowSafeAuthendicated(permissions.BasePermission):
         return False
 
 
-
 class ReadOnlyAPIUser(permissions.BasePermission):
     """Permission class for Views that only allow read and only for backend api users or superusers
         GET users must be either (a) superusers or (b) in the Limited API group.

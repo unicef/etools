@@ -11,8 +11,10 @@ from unicef_restlib.fields import SeparatedReadWriteField
 from etools.applications.action_points.serializers import ActionPointBaseSerializer, HistorySerializer
 from etools.applications.audit.models import UNICEFAuditFocalPoint
 from etools.applications.audit.purchase_order.models import PurchaseOrder
-from etools.applications.partners.serializers.partner_organization_v2 import PartnerOrgPSEADetailsSerializer,\
-    MinimalPartnerOrganizationListSerializer
+from etools.applications.partners.serializers.partner_organization_v2 import (
+    MinimalPartnerOrganizationListSerializer,
+    PartnerOrgPSEADetailsSerializer,
+)
 from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
 from etools.applications.psea.models import (
     Answer,

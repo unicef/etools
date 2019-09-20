@@ -229,6 +229,7 @@ class PartnerOrgPSEADetailsSerializer(serializers.ModelSerializer):
             "authorized_officers"
         )
 
+
 class MinimalPartnerOrganizationListSerializer(serializers.ModelSerializer):
 
     class Meta:
