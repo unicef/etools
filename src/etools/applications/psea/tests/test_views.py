@@ -80,10 +80,7 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         self.assertEqual(data["partner"], partner.pk)
         self.assertEqual(data["assessment_date"], date)
         self.assertEqual(data["status"], "draft")
-        self.assertEqual(
-            data["available_actions"],
-            [Assessment.STATUS_ASSIGNED, Assessment.STATUS_CANCELLED],
-        )
+        self.assertEqual(data["available_actions"], ["assign", "cancel"])
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_filter_status(self):

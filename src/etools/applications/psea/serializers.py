@@ -128,6 +128,14 @@ class AssessmentSerializer(BaseAssessmentSerializer):
         if self.context["view"].action == "list":
             return []
 
+        ACTION_MAP = {
+            Assessment.STATUS_ASSIGNED: "assign",
+            Assessment.STATUS_CANCELLED: "cancel",
+            Assessment.STATUS_SUBMITTED: "submit",
+            Assessment.STATUS_REJECTED: "reject",
+            Assessment.STATUS_FINAL: "finalize",
+        }
+
         user = self.context['request'].user
         is_focal_group = user.groups.filter(
             name__in=[UNICEFAuditFocalPoint.name],
@@ -136,12 +144,12 @@ class AssessmentSerializer(BaseAssessmentSerializer):
         available_actions = []
         if is_focal_group:
             if obj.status in [obj.STATUS_DRAFT]:
-                available_actions.append(obj.STATUS_ASSIGNED)
+                available_actions.append(ACTION_MAP.get(obj.STATUS_ASSIGNED))
             if obj.status not in [obj.STATUS_FINAL]:
-                available_actions.append(obj.STATUS_CANCELLED)
+                available_actions.append(ACTION_MAP.get(obj.STATUS_CANCELLED))
         if user_belongs:
             if obj.status in [obj.STATUS_IN_PROGRESS]:
-                available_actions.append(obj.STATUS_SUBMITTED)
+                available_actions.append(ACTION_MAP.get(obj.STATUS_SUBMITTED))
         return available_actions
 
 
