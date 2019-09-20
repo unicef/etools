@@ -459,11 +459,13 @@ class FMUsersViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         return response
 
     def test_filter_unicef(self):
-        response = self._test_filter({'user_type': 'unicef'}, [self.unicef_user])
+        response = self._test_filter({'user_type': 'unicef'}, [self.unicef_user, self.fm_user, self.pme])
         self.assertEqual(response.data['results'][0]['user_type'], 'staff')
 
     def test_filter_default(self):
-        self._test_filter({}, [self.unicef_user, self.usual_user, self.tpm_user, self.another_tpm_user])
+        self._test_filter({}, [
+            self.unicef_user, self.fm_user, self.pme, self.usual_user, self.tpm_user, self.another_tpm_user
+        ])
 
     def test_filter_tpm(self):
         response = self._test_filter({'user_type': 'tpm'}, [self.tpm_user, self.another_tpm_user])
@@ -484,20 +486,20 @@ class FMUsersViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 class CPOutputsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
     def test_filter_by_partners(self):
         ResultFactory(result_type__name=ResultType.OUTPUT)
-        correct_one = InterventionResultLinkFactory(cp_output__result_type__name=ResultType.OUTPUT).cp_output
+        result_link = InterventionResultLinkFactory(cp_output__result_type__name=ResultType.OUTPUT)
 
         response = self.forced_auth_req(
             'get',
             reverse('field_monitoring_planning:cp_outputs-list'),
             user=self.unicef_user,
             data={
-                'partners__in': str(correct_one.intervention.agreement.partner.id)
+                'partners__in': str(result_link.intervention.agreement.partner.id)
             }
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 1)
-        self.assertListEqual(response.data['results'][0], correct_one.id)
+        self.assertEqual(response.data['results'][0]['id'], result_link.cp_output.id)
 
 
 class InterventionsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
