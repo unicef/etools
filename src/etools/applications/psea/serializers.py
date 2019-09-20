@@ -369,6 +369,7 @@ class IndicatorSerializer(serializers.ModelSerializer):
             "subject",
             "content",
             "ratings",
+            "rating_instructions",
             "evidences",
             "document_types",
         )
