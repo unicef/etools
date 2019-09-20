@@ -214,7 +214,8 @@
             "content": "Do organizational policies include: A) a clear definition of SEA; B) a clear description of behaviour expected of personnel (incorporating the IASC's Six Core Principles Relating to SEA) and; C) an explicit statement of zero tolerance for SEA?\n\nAre all personnel required to receive and sign organizational policies related to PSEA (e.g. code of conduct)?\n\nDoes the organizational policy on PSEA apply to all personnel, including employees, volunteers, contractors, and others?",
             "ratings": [1, 2, 3],
             "evidences": [1, 2, 3],
-            "active": true
+            "active": true,
+            "order": 1
         }
     },
     {
@@ -225,7 +226,8 @@
             "content": "Are roles and responsibilities for management and personnel on PSEA clearly defined?\n\nAre reference-checking procedures in place for job candidates, including checking for prior involvement in SEA or other safeguarding concerns?\n\nIs adherence to the organization's code of conduct/PSEA policy included in supervision meetings/performance appraisals?\n\nDo contracts and partnership agreements have a clause requiring contractors, suppliers, consultants and sub-partners to commit to a zero-tolerance policy on SEA and to take measures to prevent SEA?\n\nAre there established disciplinary action(s) in cases of substantiated allegations?\n\nDoes the organization have documentation of all SEA allegations involving personnel and its response (e.g. reporting, investigations, referrals)?",
             "ratings": [1, 2, 3],
             "evidences": [4, 5, 6, 7, 3],
-            "active": true
+            "active": true,
+            "order": 2
         }
     },
     {
@@ -236,7 +238,8 @@
             "content": "Are all personnel required to attend the training?\n\nIs the training delivered in-person, interactive, and tailored to the specific audience?",
             "ratings": [1, 2, 3],
             "evidences": [8, 9, 3],
-            "active": true
+            "active": true,
+            "order": 3
         }
     },
     {
@@ -247,7 +250,8 @@
             "content": "Has the organization employed a wide variety of channels to communicate messages?\n\nAre messages and communication materials adapted to target audiences (e.g. relevant languages/communication styles)?",
             "ratings": [1, 2, 3],
             "evidences": [10, 3],
-            "active": true
+            "active": true,
+            "order": 4
         }
     },
     {
@@ -258,7 +262,8 @@
             "content": "Are SEA risk mitigation and risk management incorporated into the organization's programme management cycle (e.g. needs assessment, programme design, M&E framework)?\n\nDo these efforts involve consultations with programme participants and local communities?\n\nAre there general prevention measures for PSEA in the organization's standard program design?",
             "ratings": [1, 2, 3],
             "evidences": [11, 12, 13, 3],
-            "active": true
+            "active": true,
+            "order": 5
         }
     },
     {
@@ -269,7 +274,8 @@
             "content": "Are there measures in place to protect those reporting violations (e.g. whistleblower policy)?\n\nDoes the organization limit the number of people with access to reported information and remove identifying information of those involved when sharing information? Is it possible for personnel and others to report anonymously?\n\nAre those reporting concerns informed how information will be shared, with whom and for what purpose?\n\nIs the reporting mechanism easy-to-use and adapted to its target audience?\n\nAre there procedures for referring reports on SEA to other entities in the case that a report involves personnel of that other entity?",
             "ratings": [1, 2, 3],
             "evidences": [14, 15, 3],
-            "active": true
+            "active": true,
+            "order": 6
         }
     },
     {
@@ -280,7 +286,8 @@
             "content": "Are survivors provided with assistance regardless of their decision to investigate or identify the alleged perpetrator?\n\nIs there an updated list of relevant local service providers?\n\nIs there an established system for referring survivors for assistance?\n\nIs there a survivor-centered approach to assistance (i.e. safety, confidentiality, respect, non-discrimination)? Where the case concerns a child, are the best interests of the child prioritized?",
             "ratings": [1, 2, 3],
             "evidences": [16, 17, 3],
-            "active": true
+            "active": true,
+            "order": 7
         }
     },
     {
@@ -291,7 +298,8 @@
             "content": "Is there an established process for reviewing allegations of SEA and deciding on next steps (e.g. assistance for survivors and/or others, need for investigation, reporting to others)?\n\nDoes the organization have access to and the resources needed to hire an experienced, impartial and trained investigator for an investigation on SEA?\n\nIs there an established system for organizational oversight of an investigation (e.g. managing the investigator(s), information-sharing/communications, conflicts of interest, risk assessments)?\n\nCan the organization provide protection and others support needed for survivors, witnesses, whistleblowers and others before, during and after the investigation?",
             "ratings": [1, 2, 3],
             "evidences": [18, 19, 20, 3],
-            "active": true
+            "active": true,
+            "order": 8
         }
     }
 ]

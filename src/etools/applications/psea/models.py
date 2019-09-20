@@ -7,6 +7,7 @@ from django.utils.translation import ugettext_lazy as _
 from django_fsm import FSMField, transition
 from model_utils import Choices
 from model_utils.models import TimeStampedModel
+from ordered_model.models import OrderedModel
 from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation
 
@@ -47,7 +48,7 @@ class Evidence(TimeStampedModel):
         return f'{self.label}'
 
 
-class Indicator(TimeStampedModel):
+class Indicator(OrderedModel, TimeStampedModel):
     subject = models.TextField(verbose_name=_('Subject'))
     content = models.TextField(verbose_name=_('Content'))
     ratings = models.ManyToManyField(Rating, verbose_name=_("Rating"))
