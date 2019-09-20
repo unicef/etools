@@ -9,7 +9,7 @@ from etools.applications.field_monitoring.planning.tests.factories import (
     QuestionTemplateFactory,
 )
 from etools.applications.field_monitoring.tests.factories import UserFactory
-from etools.applications.partners.tests.factories import PartnerFactory
+from etools.applications.partners.tests.factories import InterventionFactory, PartnerFactory
 from etools.applications.reports.tests.factories import SectionFactory
 from etools.applications.tpm.tests.factories import TPMPartnerFactory, TPMPartnerStaffMemberFactory
 
@@ -51,6 +51,17 @@ class TestMonitoringActivityValidations(BaseTenantTestCase):
         activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.draft, activity_type='tpm',
                                              tpm_partner=TPMPartnerFactory())
         activity.team_members.add(TPMPartnerStaffMemberFactory(tpm_partner=TPMPartnerFactory()).user)
+        self.assertTrue(ActivityValid(activity, user=self.user).errors)
+
+    def test_interventions_without_partner(self):
+        activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.draft, activity_type='staff',
+                                             interventions=[InterventionFactory()])
+        self.assertTrue(ActivityValid(activity, user=self.user).errors)
+
+    def test_interventions_without_output(self):
+        intervention = InterventionFactory()
+        activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.draft, activity_type='staff',
+                                             interventions=[intervention], partners=[intervention.agreement.partner])
         self.assertTrue(ActivityValid(activity, user=self.user).errors)
 
 
