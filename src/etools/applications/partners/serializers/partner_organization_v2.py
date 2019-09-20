@@ -204,6 +204,31 @@ class PartnerOrganizationListSerializer(serializers.ModelSerializer):
         )
 
 
+class PartnerOrgPSEADetailsSerializer(serializers.ModelSerializer):
+    authorized_officers = serializers.SerializerMethodField()
+
+    def get_authorized_officers(self, obj):
+        officers = PartnerStaffMember.objects.filter(agreement_authorizations__partner=obj)
+        return PartnerStaffMemberDetailSerializer(officers, many=True).data
+
+    class Meta:
+        model = PartnerOrganization
+        fields = (
+            "street_address",
+            "last_assessment_date",
+            "address",
+            "city",
+            "postal_code",
+            "country",
+            "id",
+            "vendor_number",
+            "name",
+            "short_name",
+            "partner_type",
+            "cso_type",
+            "authorized_officers"
+        )
+
 class MinimalPartnerOrganizationListSerializer(serializers.ModelSerializer):
 
     class Meta:

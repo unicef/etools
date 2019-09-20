@@ -11,7 +11,7 @@ from unicef_restlib.fields import SeparatedReadWriteField
 from etools.applications.action_points.serializers import ActionPointBaseSerializer, HistorySerializer
 from etools.applications.audit.models import UNICEFAuditFocalPoint
 from etools.applications.audit.purchase_order.models import PurchaseOrder
-from etools.applications.partners.serializers.partner_organization_v2 import PartnerOrganizationListSerializer,\
+from etools.applications.partners.serializers.partner_organization_v2 import PartnerOrgPSEADetailsSerializer,\
     MinimalPartnerOrganizationListSerializer
 from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
 from etools.applications.psea.models import (
@@ -144,7 +144,7 @@ class AssessmentSerializer(BaseAssessmentSerializer):
 
 
 class AssessmentDetailSerializer(AssessmentSerializer):
-    partner_details = PartnerOrganizationListSerializer(source="partner", read_only=True)
+    partner_details = PartnerOrgPSEADetailsSerializer(source="partner", read_only=True)
     focal_points_details = MinimalUserSerializer(source="focal_points", many=True, read_only=True)
 
     class Meta(AssessmentSerializer.Meta):

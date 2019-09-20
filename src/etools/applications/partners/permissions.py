@@ -286,7 +286,7 @@ class ListCreateAPIMixedPermission(permissions.BasePermission):
             return False
 
 
-class ListPartnerPermissions(permissions.BasePermission):
+class AllowSafeAuthendicated(permissions.BasePermission):
     """"only read peremissions if authenticated, no write"""
     def has_permission(self, request, view):
         if request.method in permissions.SAFE_METHODS:
