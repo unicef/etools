@@ -1,6 +1,6 @@
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
-from django.db.models import ObjectDoesNotExist
+from django.db.models import ObjectDoesNotExist, Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
@@ -37,6 +37,7 @@ from etools.applications.psea.serializers import (
     AnswerSerializer,
     AssessmentActionPointExportSerializer,
     AssessmentActionPointSerializer,
+    AssessmentDetailSerializer,
     AssessmentExportSerializer,
     AssessmentSerializer,
     AssessmentStatusHistorySerializer,
@@ -110,6 +111,10 @@ class AssessmentViewSet(
 
     def get_queryset(self):
         qs = super().get_queryset()
+        user = self.request.user
+        # if the user is not unicef, filter only what they can see
+        if not user.is_unicef_user():
+            qs = qs.filter(Q(assessor__auditor_firm_staff__user=user) | Q(assessor__user=user))
         if "sort" in self.request.GET:
             qs = qs.order_by(*self.parse_sort_params())
         return qs
@@ -137,7 +142,7 @@ class AssessmentViewSet(
             # refresh the instance from the database.
             instance = self.get_object()
         return Response(
-            AssessmentSerializer(
+            AssessmentDetailSerializer(
                 instance,
                 context=self.get_serializer_context(),
             ).data,
@@ -197,7 +202,7 @@ class AssessmentViewSet(
             instance = self.get_object()
 
         return Response(
-            self.serializer_class(
+            AssessmentDetailSerializer(
                 instance,
                 context=self.get_serializer_context(),
             ).data
@@ -217,6 +222,10 @@ class AssessmentViewSet(
             {"status_history": [status]},
         )
         return self.update(request, partial=True)
+
+    def retrieve(self, request, *args, **kwargs):
+        self.serializer_class = AssessmentDetailSerializer
+        return super(AssessmentViewSet, self).retrieve(request, *args, **kwargs)
 
     @action(detail=True, methods=["patch"])
     def assign(self, request, pk=None):

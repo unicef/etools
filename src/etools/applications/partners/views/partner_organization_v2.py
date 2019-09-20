@@ -42,11 +42,10 @@ from etools.applications.partners.models import (
     PlannedEngagement,
 )
 from etools.applications.partners.permissions import (
-    ListCreateAPIMixedPermission,
     PartnershipManagerPermission,
     PartnershipManagerRepPermission,
     PartnershipSeniorManagerPermission,
-)
+    ListPartnerPermissions)
 from etools.applications.partners.serializers.exports.partner_organization import (
     AssessmentExportFlatSerializer,
     AssessmentExportSerializer,
@@ -83,7 +82,7 @@ class PartnerOrganizationListAPIView(QueryStringFilterMixin, ExportModelMixin, L
     """
     queryset = PartnerOrganization.objects.all()
     serializer_class = PartnerOrganizationListSerializer
-    permission_classes = (ListCreateAPIMixedPermission,)
+    permission_classes = (ListPartnerPermissions,)
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
         r.JSONRenderer,
@@ -115,6 +114,16 @@ class PartnerOrganizationListAPIView(QueryStringFilterMixin, ExportModelMixin, L
     def get_queryset(self, format=None):
         q = PartnerOrganization.objects.all()
         query_params = self.request.query_params
+        user = self.request.user
+        if not user.is_unicef_user() or not user.groups.filter(name="Read-Only API").exists():
+            module = query_params.get('externals_module', None)
+            # if there is no module set, filter all out.
+            if not module:
+                return PartnerOrganization.objects.none()
+            if module == "psea":
+                q = q.filter(Q(psea_assessment__assessor__auditor_firm_staff__user=user) |
+                             Q(psea_assessment__assessor__user=user))
+
         workspace = query_params.get('workspace', None)
         if workspace:
             set_tenant_or_fail(workspace)

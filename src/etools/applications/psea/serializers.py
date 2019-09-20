@@ -11,7 +11,8 @@ from unicef_restlib.fields import SeparatedReadWriteField
 from etools.applications.action_points.serializers import ActionPointBaseSerializer, HistorySerializer
 from etools.applications.audit.models import UNICEFAuditFocalPoint
 from etools.applications.audit.purchase_order.models import PurchaseOrder
-from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
+from etools.applications.partners.serializers.partner_organization_v2 import PartnerOrganizationListSerializer,\
+    MinimalPartnerOrganizationListSerializer
 from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
 from etools.applications.psea.models import (
     Answer,
@@ -28,6 +29,7 @@ from etools.applications.psea.permissions import AssessmentPermissions
 from etools.applications.psea.validators import EvidenceDescriptionValidator
 from etools.applications.reports.serializers.v1 import SectionSerializer
 from etools.applications.users.serializers import OfficeSerializer
+from etools.applications.users.serializers_v3 import MinimalUserSerializer
 from etools.applications.users.validators import ExternalUserValidator
 
 
@@ -139,6 +141,15 @@ class AssessmentSerializer(BaseAssessmentSerializer):
             if obj.status in [obj.STATUS_IN_PROGRESS]:
                 available_actions.append(obj.STATUS_SUBMITTED)
         return available_actions
+
+
+class AssessmentDetailSerializer(AssessmentSerializer):
+    partner_details = PartnerOrganizationListSerializer(source="partner", read_only=True)
+    focal_points_details = MinimalUserSerializer(source="focal_points", many=True, read_only=True)
+
+    class Meta(AssessmentSerializer.Meta):
+        fields = '__all__'
+        read_only_fields = ["reference_number", "overall_rating", "status"]
 
 
 class AssessmentExportSerializer(AssessmentSerializer):
