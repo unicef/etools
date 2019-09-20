@@ -549,3 +549,5 @@ GDAL_LIBRARY_PATH = os.getenv('GDAL_LIBRARY_PATH', '/usr/lib/libgdal.so.20')  # 
 SHELL_PLUS_PRE_IMPORTS = (
     ('etools.applications.core.util_scripts', '*'),
 )
+
+UNICEF_USER_EMAIL = "@unicef.org"

@@ -225,7 +225,7 @@ class AssessmentViewSet(
 
     def retrieve(self, request, *args, **kwargs):
         self.serializer_class = AssessmentDetailSerializer
-        return super(AssessmentViewSet, self).retrieve(request, *args, **kwargs)
+        return super().retrieve(request, *args, **kwargs)
 
     @action(detail=True, methods=["patch"])
     def assign(self, request, pk=None):

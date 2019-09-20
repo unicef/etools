@@ -150,8 +150,7 @@ class AssessmentDetailSerializer(AssessmentSerializer):
     focal_points_details = MinimalUserSerializer(source="focal_points", many=True, read_only=True)
 
     class Meta(AssessmentSerializer.Meta):
-        fields = '__all__'
-        read_only_fields = ["reference_number", "overall_rating", "status"]
+        """Same as AssessmentSerializer"""
 
 
 class AssessmentExportSerializer(AssessmentSerializer):
