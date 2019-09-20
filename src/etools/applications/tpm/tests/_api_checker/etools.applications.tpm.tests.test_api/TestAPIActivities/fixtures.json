@@ -1,0 +1,763 @@
+{
+    "tpm_partner": {
+        "master": {
+            "model": "tpmpartners.tpmpartner",
+            "pk": 492,
+            "fields": {
+                "created": "2019-09-19T07:34:03.332Z",
+                "modified": "2019-09-19T07:34:03.352Z",
+                "vendor_number": "2019/1",
+                "name": "Parker, Kennedy and Berry",
+                "street_address": "393 Kristina Squares",
+                "city": "Huntland",
+                "postal_code": "90533",
+                "country": "Saint Helena",
+                "email": "xwells@allen.net",
+                "phone_number": "001-446-858-3812x6534",
+                "vision_synced": false,
+                "blocked": false,
+                "hidden": false,
+                "deleted_flag": false,
+                "countries": [
+                    1
+                ]
+            }
+        },
+        "deps": [
+            {
+                "model": "users.country",
+                "pk": 1,
+                "fields": {
+                    "schema_name": "test",
+                    "name": "",
+                    "country_short_code": "TST",
+                    "long_name": "",
+                    "business_area_code": "ZZZ",
+                    "latitude": null,
+                    "longitude": null,
+                    "initial_zoom": 8,
+                    "vision_sync_enabled": true,
+                    "vision_last_synced": null,
+                    "local_currency": null,
+                    "offices": [
+                        11292,
+                        11293,
+                        11294
+                    ]
+                }
+            },
+            {
+                "model": "users.office",
+                "pk": 11292,
+                "fields": {
+                    "name": "An Office",
+                    "zonal_chief": null
+                }
+            },
+            {
+                "model": "users.office",
+                "pk": 11293,
+                "fields": {
+                    "name": "An Office",
+                    "zonal_chief": null
+                }
+            },
+            {
+                "model": "users.office",
+                "pk": 11294,
+                "fields": {
+                    "name": "An Office",
+                    "zonal_chief": null
+                }
+            }
+        ]
+    },
+    "tpm_user": {
+        "master": {
+            "model": "users.user",
+            "pk": 6805,
+            "fields": {
+                "created": "2019-09-19T07:34:03.353Z",
+                "modified": "2019-09-19T07:34:03.365Z",
+                "username": "XOfKuPDaquFC",
+                "email": "macioce@unicef.org",
+                "password": "md5$XbIjeC7ucPdW$8cb2bb0a846ce4d410e716317152ae05",
+                "first_name": "",
+                "middle_name": "",
+                "last_name": "",
+                "date_joined": "2019-09-19T07:34:03.353Z",
+                "last_login": null,
+                "is_active": true,
+                "is_staff": false,
+                "is_superuser": false,
+                "groups": [
+                    1
+                ],
+                "user_permissions": []
+            }
+        },
+        "deps": [
+            {
+                "model": "auth.group",
+                "pk": 1,
+                "fields": {
+                    "name": "Third Party Monitor",
+                    "permissions": []
+                }
+            }
+        ]
+    },
+    "location": {
+        "master": {
+            "model": "locations.location",
+            "pk": 1914,
+            "fields": {
+                "name": "Location 0",
+                "gateway": 1914,
+                "latitude": null,
+                "longitude": null,
+                "p_code": "PCODE0",
+                "parent": null,
+                "geom": null,
+                "point": "SRID=4326;POINT (20 20)",
+                "is_active": true,
+                "created": "2019-09-19T07:34:03.367Z",
+                "modified": "2019-09-19T07:34:03.367Z",
+                "lft": 1,
+                "rght": 2,
+                "tree_id": 1,
+                "level": 0
+            }
+        },
+        "deps": [
+            {
+                "model": "locations.gatewaytype",
+                "pk": 1914,
+                "fields": {
+                    "created": "2019-09-19T07:34:03.366Z",
+                    "modified": "2019-09-19T07:34:03.366Z",
+                    "name": "GatewayType 0",
+                    "admin_level": 0
+                }
+            }
+        ]
+    },
+    "visit": {
+        "master": {
+            "model": "tpm.tpmvisit",
+            "pk": 700,
+            "fields": {
+                "created": "2019-09-19T07:34:03.397Z",
+                "modified": "2019-09-19T07:34:03.409Z",
+                "deleted_at": "1970-01-01T00:00:00Z",
+                "author": 6806,
+                "tpm_partner": 492,
+                "status": "tpm_accepted",
+                "cancel_comment": "",
+                "reject_comment": "",
+                "approval_comment": "",
+                "visit_information": "",
+                "date_of_assigned": "2019-09-19",
+                "date_of_cancelled": null,
+                "date_of_tpm_accepted": "2019-09-19",
+                "date_of_tpm_rejected": null,
+                "date_of_tpm_reported": null,
+                "date_of_tpm_report_rejected": null,
+                "date_of_unicef_approved": null,
+                "tpm_partner_focal_points": [
+                    1507
+                ]
+            }
+        },
+        "deps": [
+            {
+                "model": "users.user",
+                "pk": 6806,
+                "fields": {
+                    "created": "2019-09-19T07:34:03.382Z",
+                    "modified": "2019-09-19T07:34:03.396Z",
+                    "username": "EAFQOpwvTKej",
+                    "email": "user1@example.com",
+                    "password": "md5$TQ8lzwMBHotE$4e69ecd5bfe16fab75871318a0614425",
+                    "first_name": "",
+                    "middle_name": "",
+                    "last_name": "",
+                    "date_joined": "2019-09-19T07:34:03.383Z",
+                    "last_login": null,
+                    "is_active": true,
+                    "is_staff": false,
+                    "is_superuser": false,
+                    "groups": [
+                        466,
+                        467
+                    ],
+                    "user_permissions": []
+                }
+            },
+            {
+                "model": "auth.group",
+                "pk": 466,
+                "fields": {
+                    "name": "UNICEF User",
+                    "permissions": []
+                }
+            },
+            {
+                "model": "auth.group",
+                "pk": 467,
+                "fields": {
+                    "name": "PME",
+                    "permissions": []
+                }
+            },
+            {
+                "model": "tpmpartners.tpmpartner",
+                "pk": 492,
+                "fields": {
+                    "created": "2019-09-19T07:34:03.332Z",
+                    "modified": "2019-09-19T07:34:03.352Z",
+                    "vendor_number": "2019/1",
+                    "name": "Parker, Kennedy and Berry",
+                    "street_address": "393 Kristina Squares",
+                    "city": "Huntland",
+                    "postal_code": "90533",
+                    "country": "Saint Helena",
+                    "email": "xwells@allen.net",
+                    "phone_number": "001-446-858-3812x6534",
+                    "vision_synced": false,
+                    "blocked": false,
+                    "hidden": false,
+                    "deleted_flag": false,
+                    "countries": [
+                        1
+                    ]
+                }
+            },
+            {
+                "model": "users.country",
+                "pk": 1,
+                "fields": {
+                    "schema_name": "test",
+                    "name": "",
+                    "country_short_code": "TST",
+                    "long_name": "",
+                    "business_area_code": "ZZZ",
+                    "latitude": null,
+                    "longitude": null,
+                    "initial_zoom": 8,
+                    "vision_sync_enabled": true,
+                    "vision_last_synced": null,
+                    "local_currency": null,
+                    "offices": [
+                        11292,
+                        11293,
+                        11294
+                    ]
+                }
+            },
+            {
+                "model": "users.office",
+                "pk": 11292,
+                "fields": {
+                    "name": "An Office",
+                    "zonal_chief": null
+                }
+            },
+            {
+                "model": "users.office",
+                "pk": 11293,
+                "fields": {
+                    "name": "An Office",
+                    "zonal_chief": null
+                }
+            },
+            {
+                "model": "users.office",
+                "pk": 11294,
+                "fields": {
+                    "name": "An Office",
+                    "zonal_chief": null
+                }
+            },
+            {
+                "model": "tpmpartners.tpmpartnerstaffmember",
+                "pk": 1507,
+                "fields": {
+                    "user": 6805,
+                    "tpm_partner": 492,
+                    "receive_tpm_notifications": false
+                }
+            },
+            {
+                "model": "users.user",
+                "pk": 6805,
+                "fields": {
+                    "created": "2019-09-19T07:34:03.353Z",
+                    "modified": "2019-09-19T07:34:03.365Z",
+                    "username": "XOfKuPDaquFC",
+                    "email": "macioce@unicef.org",
+                    "password": "md5$XbIjeC7ucPdW$8cb2bb0a846ce4d410e716317152ae05",
+                    "first_name": "",
+                    "middle_name": "",
+                    "last_name": "",
+                    "date_joined": "2019-09-19T07:34:03.353Z",
+                    "last_login": null,
+                    "is_active": true,
+                    "is_staff": false,
+                    "is_superuser": false,
+                    "groups": [
+                        1
+                    ],
+                    "user_permissions": []
+                }
+            },
+            {
+                "model": "auth.group",
+                "pk": 1,
+                "fields": {
+                    "name": "Third Party Monitor",
+                    "permissions": []
+                }
+            }
+        ]
+    },
+    "activity": {
+        "master": {
+            "model": "tpm.tpmactivity",
+            "pk": 1603,
+            "fields": {
+                "tpm_visit": 700,
+                "section": 1710,
+                "additional_information": "",
+                "is_pv": false,
+                "locations": [
+                    1915
+                ],
+                "unicef_focal_points": [],
+                "offices": []
+            }
+        },
+        "deps": [
+            {
+                "model": "partners.partnerorganization",
+                "pk": 2055,
+                "fields": {
+                    "created": "2019-09-19T07:34:03.411Z",
+                    "modified": "2019-09-19T07:34:03.414Z",
+                    "partner_type": "",
+                    "cso_type": null,
+                    "name": "Partner 0",
+                    "short_name": "",
+                    "description": "",
+                    "shared_with": null,
+                    "street_address": null,
+                    "city": null,
+                    "postal_code": null,
+                    "country": null,
+                    "address": null,
+                    "email": null,
+                    "phone_number": null,
+                    "vendor_number": null,
+                    "alternate_id": null,
+                    "alternate_name": null,
+                    "rating": null,
+                    "type_of_assessment": null,
+                    "last_assessment_date": null,
+                    "core_values_assessment_date": null,
+                    "vision_synced": false,
+                    "blocked": false,
+                    "deleted_flag": false,
+                    "manually_blocked": false,
+                    "hidden": false,
+                    "total_ct_cp": null,
+                    "total_ct_cy": null,
+                    "net_ct_cy": null,
+                    "reported_cy": null,
+                    "total_ct_ytd": null,
+                    "outstanding_dct_amount_6_to_9_months_usd": null,
+                    "outstanding_dct_amount_more_than_9_months_usd": null,
+                    "hact_values": {
+                        "audits": {
+                            "completed": 0,
+                            "minimum_requirements": 0
+                        },
+                        "spot_checks": {
+                            "completed": {
+                                "q1": 0,
+                                "q2": 0,
+                                "q3": 0,
+                                "q4": 0,
+                                "total": 0
+                            },
+                            "follow_up_required": 0
+                        },
+                        "assurance_coverage": "void",
+                        "programmatic_visits": {
+                            "planned": {
+                                "q1": 0,
+                                "q2": 0,
+                                "q3": 0,
+                                "q4": 0,
+                                "total": 0
+                            },
+                            "completed": {
+                                "q1": 0,
+                                "q2": 0,
+                                "q3": 0,
+                                "q4": 0,
+                                "total": 0
+                            }
+                        },
+                        "outstanding_findings": 0
+                    },
+                    "basis_for_risk_rating": ""
+                }
+            },
+            {
+                "model": "partners.intervention",
+                "pk": 2099,
+                "fields": {
+                    "created": "2019-09-19T07:34:03.437Z",
+                    "modified": "2019-09-19T07:34:03.460Z",
+                    "document_type": "",
+                    "agreement": 2020,
+                    "country_programme": null,
+                    "number": "TST/PCA20192020/20192099",
+                    "title": "Intervention Title 0",
+                    "status": "draft",
+                    "start": null,
+                    "end": null,
+                    "submission_date": "2019-09-19",
+                    "submission_date_prc": null,
+                    "reference_number_year": 2019,
+                    "review_date_prc": null,
+                    "prc_review_document": "",
+                    "signed_pd_document": "",
+                    "signed_by_unicef_date": null,
+                    "signed_by_partner_date": null,
+                    "unicef_signatory": null,
+                    "partner_authorized_officer_signatory": null,
+                    "contingency_pd": false,
+                    "activation_letter": "",
+                    "termination_doc": "",
+                    "population_focus": null,
+                    "in_amendment": false,
+                    "metadata": {},
+                    "unicef_focal_points": [],
+                    "partner_focal_points": [],
+                    "sections": [],
+                    "offices": [],
+                    "flat_locations": []
+                }
+            },
+            {
+                "model": "partners.agreement",
+                "pk": 2020,
+                "fields": {
+                    "created": "2019-09-19T07:34:03.417Z",
+                    "modified": "2019-09-19T07:34:03.436Z",
+                    "partner": 2055,
+                    "country_programme": 2020,
+                    "agreement_type": "PCA",
+                    "agreement_number": "TST/PCA20192020",
+                    "attached_agreement": "",
+                    "start": "2019-09-19",
+                    "end": "2019-12-31",
+                    "reference_number_year": 2019,
+                    "special_conditions_pca": false,
+                    "signed_by_unicef_date": "2019-09-19",
+                    "signed_by": null,
+                    "signed_by_partner_date": "2019-09-19",
+                    "partner_manager": null,
+                    "status": "signed",
+                    "authorized_officers": []
+                }
+            },
+            {
+                "model": "reports.countryprogramme",
+                "pk": 2020,
+                "fields": {
+                    "name": "Country Programme 0",
+                    "wbs": "0000/A0/00",
+                    "invalid": false,
+                    "from_date": "2019-01-01",
+                    "to_date": "2019-12-31"
+                }
+            },
+            {
+                "model": "reports.result",
+                "pk": 1896,
+                "fields": {
+                    "country_programme": null,
+                    "result_type": 1896,
+                    "sector": null,
+                    "name": "Result 0",
+                    "code": null,
+                    "from_date": "2019-01-01",
+                    "to_date": "2019-12-31",
+                    "parent": null,
+                    "humanitarian_tag": false,
+                    "humanitarian_marker_code": null,
+                    "humanitarian_marker_name": null,
+                    "wbs": null,
+                    "vision_id": null,
+                    "gic_code": null,
+                    "gic_name": null,
+                    "sic_code": null,
+                    "sic_name": null,
+                    "activity_focus_code": null,
+                    "activity_focus_name": null,
+                    "hidden": false,
+                    "ram": false,
+                    "created": "2019-09-19T07:34:03.441Z",
+                    "modified": "2019-09-19T07:34:03.441Z",
+                    "lft": 1,
+                    "rght": 2,
+                    "tree_id": 1,
+                    "level": 0
+                }
+            },
+            {
+                "model": "reports.resulttype",
+                "pk": 1896,
+                "fields": {
+                    "name": "ResultType 0"
+                }
+            },
+            {
+                "model": "activities.activity",
+                "pk": 1603,
+                "fields": {
+                    "partner": 2055,
+                    "intervention": 2099,
+                    "cp_output": 1896,
+                    "date": "2019-09-17",
+                    "locations": [
+                        1915
+                    ]
+                }
+            },
+            {
+                "model": "locations.location",
+                "pk": 1915,
+                "fields": {
+                    "name": "Location 1",
+                    "gateway": 1915,
+                    "latitude": null,
+                    "longitude": null,
+                    "p_code": "PCODE1",
+                    "parent": null,
+                    "geom": null,
+                    "point": "SRID=4326;POINT (20 20)",
+                    "is_active": true,
+                    "created": "2019-09-19T07:34:03.467Z",
+                    "modified": "2019-09-19T07:34:03.467Z",
+                    "lft": 1,
+                    "rght": 2,
+                    "tree_id": 2,
+                    "level": 0
+                }
+            },
+            {
+                "model": "locations.gatewaytype",
+                "pk": 1915,
+                "fields": {
+                    "created": "2019-09-19T07:34:03.466Z",
+                    "modified": "2019-09-19T07:34:03.466Z",
+                    "name": "GatewayType 1",
+                    "admin_level": 1
+                }
+            },
+            {
+                "model": "tpm.tpmvisit",
+                "pk": 700,
+                "fields": {
+                    "created": "2019-09-19T07:34:03.397Z",
+                    "modified": "2019-09-19T07:34:03.409Z",
+                    "deleted_at": "1970-01-01T00:00:00Z",
+                    "author": 6806,
+                    "tpm_partner": 492,
+                    "status": "tpm_accepted",
+                    "cancel_comment": "",
+                    "reject_comment": "",
+                    "approval_comment": "",
+                    "visit_information": "",
+                    "date_of_assigned": "2019-09-19",
+                    "date_of_cancelled": null,
+                    "date_of_tpm_accepted": "2019-09-19",
+                    "date_of_tpm_rejected": null,
+                    "date_of_tpm_reported": null,
+                    "date_of_tpm_report_rejected": null,
+                    "date_of_unicef_approved": null,
+                    "tpm_partner_focal_points": [
+                        1507
+                    ]
+                }
+            },
+            {
+                "model": "users.user",
+                "pk": 6806,
+                "fields": {
+                    "created": "2019-09-19T07:34:03.382Z",
+                    "modified": "2019-09-19T07:34:03.396Z",
+                    "username": "EAFQOpwvTKej",
+                    "email": "user1@example.com",
+                    "password": "md5$TQ8lzwMBHotE$4e69ecd5bfe16fab75871318a0614425",
+                    "first_name": "",
+                    "middle_name": "",
+                    "last_name": "",
+                    "date_joined": "2019-09-19T07:34:03.383Z",
+                    "last_login": null,
+                    "is_active": true,
+                    "is_staff": false,
+                    "is_superuser": false,
+                    "groups": [
+                        466,
+                        467
+                    ],
+                    "user_permissions": []
+                }
+            },
+            {
+                "model": "auth.group",
+                "pk": 466,
+                "fields": {
+                    "name": "UNICEF User",
+                    "permissions": []
+                }
+            },
+            {
+                "model": "auth.group",
+                "pk": 467,
+                "fields": {
+                    "name": "PME",
+                    "permissions": []
+                }
+            },
+            {
+                "model": "tpmpartners.tpmpartner",
+                "pk": 492,
+                "fields": {
+                    "created": "2019-09-19T07:34:03.332Z",
+                    "modified": "2019-09-19T07:34:03.352Z",
+                    "vendor_number": "2019/1",
+                    "name": "Parker, Kennedy and Berry",
+                    "street_address": "393 Kristina Squares",
+                    "city": "Huntland",
+                    "postal_code": "90533",
+                    "country": "Saint Helena",
+                    "email": "xwells@allen.net",
+                    "phone_number": "001-446-858-3812x6534",
+                    "vision_synced": false,
+                    "blocked": false,
+                    "hidden": false,
+                    "deleted_flag": false,
+                    "countries": [
+                        1
+                    ]
+                }
+            },
+            {
+                "model": "users.country",
+                "pk": 1,
+                "fields": {
+                    "schema_name": "test",
+                    "name": "",
+                    "country_short_code": "TST",
+                    "long_name": "",
+                    "business_area_code": "ZZZ",
+                    "latitude": null,
+                    "longitude": null,
+                    "initial_zoom": 8,
+                    "vision_sync_enabled": true,
+                    "vision_last_synced": null,
+                    "local_currency": null,
+                    "offices": [
+                        11292,
+                        11293,
+                        11294
+                    ]
+                }
+            },
+            {
+                "model": "users.office",
+                "pk": 11292,
+                "fields": {
+                    "name": "An Office",
+                    "zonal_chief": null
+                }
+            },
+            {
+                "model": "users.office",
+                "pk": 11293,
+                "fields": {
+                    "name": "An Office",
+                    "zonal_chief": null
+                }
+            },
+            {
+                "model": "users.office",
+                "pk": 11294,
+                "fields": {
+                    "name": "An Office",
+                    "zonal_chief": null
+                }
+            },
+            {
+                "model": "tpmpartners.tpmpartnerstaffmember",
+                "pk": 1507,
+                "fields": {
+                    "user": 6805,
+                    "tpm_partner": 492,
+                    "receive_tpm_notifications": false
+                }
+            },
+            {
+                "model": "users.user",
+                "pk": 6805,
+                "fields": {
+                    "created": "2019-09-19T07:34:03.353Z",
+                    "modified": "2019-09-19T07:34:03.365Z",
+                    "username": "XOfKuPDaquFC",
+                    "email": "macioce@unicef.org",
+                    "password": "md5$XbIjeC7ucPdW$8cb2bb0a846ce4d410e716317152ae05",
+                    "first_name": "",
+                    "middle_name": "",
+                    "last_name": "",
+                    "date_joined": "2019-09-19T07:34:03.353Z",
+                    "last_login": null,
+                    "is_active": true,
+                    "is_staff": false,
+                    "is_superuser": false,
+                    "groups": [
+                        1
+                    ],
+                    "user_permissions": []
+                }
+            },
+            {
+                "model": "auth.group",
+                "pk": 1,
+                "fields": {
+                    "name": "Third Party Monitor",
+                    "permissions": []
+                }
+            },
+            {
+                "model": "reports.section",
+                "pk": 1710,
+                "fields": {
+                    "created": "2019-09-19T07:34:03.461Z",
+                    "modified": "2019-09-19T07:34:03.461Z",
+                    "name": "Section 0",
+                    "description": null,
+                    "alternate_id": null,
+                    "alternate_name": "",
+                    "dashboard": false,
+                    "color": null,
+                    "active": true
+                }
+            }
+        ]
+    }
+}
