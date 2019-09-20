@@ -48,6 +48,13 @@ class AuditorStaffMemberSerializer(BaseStaffMemberSerializer):
                 validated_data['user'] = user_pk
         elif 'user' not in validated_data:
             raise serializers.ValidationError({'user': _('This field is required.')})
+        elif 'user' in validated_data:
+            email = validated_data['user'].get('email', None)
+            if not AuditorStaffMember.objects.filter(user__email=email).exists():
+                try:
+                    validated_data['user'] = get_user_model().objects.get(email=email, email__isnull=False)
+                except get_user_model().DoesNotExist:
+                    pass
 
         return validated_data
 
