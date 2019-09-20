@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import connection
-from django.test import SimpleTestCase, override_settings
+from django.test import override_settings, SimpleTestCase
 from django.urls import resolve, reverse
 from django.utils import timezone
 
