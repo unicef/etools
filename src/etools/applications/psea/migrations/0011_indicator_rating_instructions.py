@@ -13,6 +13,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='indicator',
             name='rating_instructions',
-            field=models.TextField(blank=True, verbose_name='Raring Instructions'),
+            field=models.TextField(blank=True, verbose_name='Rating Instructions'),
         ),
     ]

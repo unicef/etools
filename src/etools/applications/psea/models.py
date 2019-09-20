@@ -53,7 +53,7 @@ class Indicator(OrderedModel, TimeStampedModel):
     content = models.TextField(verbose_name=_('Content'))
     ratings = models.ManyToManyField(Rating, verbose_name=_("Rating"))
     rating_instructions = models.TextField(
-        verbose_name=_("Raring Instructions"),
+        verbose_name=_("Rating Instructions"),
         blank=True,
     )
     evidences = models.ManyToManyField(Evidence, verbose_name=_('Evidences'))
