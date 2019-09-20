@@ -12,7 +12,7 @@
         "pk": 2,
         "model": "psea.Rating",
         "fields": {
-            "label": "Need to improve",
+            "label": "Progressing",
             "weight": 2,
             "active": true
         }
