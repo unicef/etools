@@ -5,6 +5,8 @@ from rest_framework.filters import BaseFilterBackend
 
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.field_monitoring.utils.filters import M2MInFilter
+from etools.applications.partners.models import Intervention
+from etools.applications.reports.models import Result
 
 
 class MonitoringActivitiesFilterSet(filters.FilterSet):
@@ -63,3 +65,22 @@ class UserTPMPartnerFilter(BaseFilterBackend):
         return queryset.filter(
             tpmpartners_tpmpartnerstaffmember__tpm_partner=value
         )
+
+
+class CPOutputsFilterSet(filters.FilterSet):
+    partners__in = filters.BaseInFilter(
+        field_name='intervention_links__intervention__agreement__partner', distinct=True
+    )
+
+    class Meta:
+        model = Result
+        fields = ['partners__in']
+
+
+class InterventionsFilterSet(filters.FilterSet):
+    partners__in = filters.BaseInFilter(field_name='agreement__partner')
+    cp_outputs__in = filters.BaseInFilter(field_name='result_links__cp_output', distinct=True)
+
+    class Meta:
+        model = Intervention
+        fields = ['partners__in', 'cp_outputs__in']

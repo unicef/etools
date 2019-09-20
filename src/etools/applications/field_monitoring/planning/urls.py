@@ -11,6 +11,8 @@ root_api.register(r'questions/templates/(?P<level>\w+)(?:/target/(?P<target_id>\
                   base_name='question-templates')
 root_api.register(r'activities', views.MonitoringActivitiesViewSet, base_name='activities')
 root_api.register(r'users', views.FMUsersViewSet, base_name='users')
+root_api.register(r'cp-outputs', views.CPOutputsViewSet, base_name='cp_outputs')
+root_api.register(r'interventions', views.InterventionsViewSet, base_name='interventions')
 
 activities_api = NestedComplexRouter(root_api, r'activities')
 activities_api.register(r'attachments', views.ActivityAttachmentsViewSet, base_name='activity-attachments')

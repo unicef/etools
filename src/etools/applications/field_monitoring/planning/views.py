@@ -26,6 +26,8 @@ from etools.applications.field_monitoring.permissions import (
 )
 from etools.applications.field_monitoring.planning.activity_validation.validator import ActivityValid
 from etools.applications.field_monitoring.planning.filters import (
+    CPOutputsFilterSet,
+    InterventionsFilterSet,
     MonitoringActivitiesFilterSet,
     ReferenceNumberOrderingFilter,
     UserTPMPartnerFilter,
@@ -41,7 +43,11 @@ from etools.applications.field_monitoring.planning.serializers import (
     YearPlanSerializer,
 )
 from etools.applications.field_monitoring.views import FMBaseAttachmentsViewSet, FMBaseViewSet
+from etools.applications.partners.models import Intervention
+from etools.applications.partners.serializers.interventions_v2 import MinimalInterventionListSerializer
 from etools.applications.permissions2.views import FSMTransitionActionMixin
+from etools.applications.reports.models import Result, ResultType
+from etools.applications.reports.serializers.v2 import MinimalOutputListSerializer
 
 
 class YearPlanViewSet(
@@ -184,6 +190,28 @@ class FMUsersViewSet(
     search_fields = ('email',)
     queryset = get_user_model().objects.all()  # it's safe to use .all() here, UserTypeFilter filter unicef by default
     serializer_class = FMUserSerializer
+
+
+class CPOutputsViewSet(
+    FMBaseViewSet,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet,
+):
+    filter_backends = (DjangoFilterBackend,)
+    filter_class = CPOutputsFilterSet
+    queryset = Result.objects.filter(result_type__name=ResultType.OUTPUT)
+    serializer_class = MinimalOutputListSerializer
+
+
+class InterventionsViewSet(
+    FMBaseViewSet,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet,
+):
+    filter_backends = (DjangoFilterBackend,)
+    filter_class = InterventionsFilterSet
+    queryset = Intervention.objects.all()
+    serializer_class = MinimalInterventionListSerializer
 
 
 class ActivityAttachmentsViewSet(FMBaseAttachmentsViewSet):

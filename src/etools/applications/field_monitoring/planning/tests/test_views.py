@@ -18,8 +18,13 @@ from etools.applications.field_monitoring.planning.tests.factories import (
 )
 from etools.applications.field_monitoring.tests.base import FMBaseTestCaseMixin
 from etools.applications.field_monitoring.tests.factories import UserFactory
-from etools.applications.partners.tests.factories import PartnerFactory
-from etools.applications.reports.tests.factories import SectionFactory
+from etools.applications.partners.tests.factories import (
+    InterventionFactory,
+    InterventionResultLinkFactory,
+    PartnerFactory,
+)
+from etools.applications.reports.models import ResultType
+from etools.applications.reports.tests.factories import ResultFactory, SectionFactory
 from etools.applications.tpm.tests.factories import SimpleTPMPartnerFactory, TPMPartnerFactory, TPMUserFactory
 
 
@@ -429,11 +434,10 @@ class TestQuestionTemplatesView(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.data['template']['specific_details'], base_template.specific_details)
 
 
-class FMUsersViewTestCase(BaseTenantTestCase):
+class FMUsersViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.unicef_user = UserFactory(unicef_user=True, is_staff=True)
-        cls.usual_user = UserFactory(is_staff=False)
+        super().setUpTestData()
         cls.tpm_user = TPMUserFactory(tpm_partner=SimpleTPMPartnerFactory())
         cls.another_tpm_user = TPMUserFactory(tpm_partner=SimpleTPMPartnerFactory())
 
@@ -475,3 +479,57 @@ class FMUsersViewTestCase(BaseTenantTestCase):
         )
         self.assertEqual(response.data['results'][0]['user_type'], 'tpm')
         self.assertEqual(response.data['results'][0]['tpm_partner'], tpm_partner)
+
+
+class CPOutputsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
+    def test_filter_by_partners(self):
+        ResultFactory(result_type__name=ResultType.OUTPUT)
+        correct_one = InterventionResultLinkFactory(cp_output__result_type__name=ResultType.OUTPUT).cp_output
+
+        response = self.forced_auth_req(
+            'get',
+            reverse('field_monitoring_planning:cp_outputs-list'),
+            user=self.unicef_user,
+            data={
+                'partners__in': str(correct_one.intervention.agreement.partner.id)
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 1)
+        self.assertListEqual(response.data['results'][0], correct_one.id)
+
+
+class InterventionsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
+    def _test_filter(self, data, expected_results):
+        response = self.forced_auth_req(
+            'get',
+            reverse('field_monitoring_planning:interventions-list'),
+            user=self.unicef_user,
+            data=data
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), len(expected_results))
+        self.assertListEqual(
+            [r['id'] for r in response.data['results']],
+            [r.id for r in expected_results]
+        )
+
+    def test_filter_by_outputs(self):
+        InterventionFactory()
+        result_link = InterventionResultLinkFactory(cp_output__result_type__name=ResultType.OUTPUT)
+
+        self._test_filter(
+            {'cp_outputs__in': str(result_link.cp_output.id)},
+            [result_link.intervention]
+        )
+
+    def test_filter_by_partners(self):
+        InterventionFactory()
+        result_link = InterventionResultLinkFactory()
+
+        self._test_filter(
+            {'partners__in': str(result_link.intervention.agreement.partner.id)},
+            [result_link.intervention]
+        )
