@@ -42,7 +42,7 @@ from etools.applications.partners.models import (
     PlannedEngagement,
 )
 from etools.applications.partners.permissions import (
-    AllowSafeAuthendicated,
+    AllowSafeAuthenticated,
     PartnershipManagerPermission,
     PartnershipManagerRepPermission,
     PartnershipSeniorManagerPermission,
@@ -83,7 +83,7 @@ class PartnerOrganizationListAPIView(QueryStringFilterMixin, ExportModelMixin, L
     """
     queryset = PartnerOrganization.objects.all()
     serializer_class = PartnerOrganizationListSerializer
-    permission_classes = (AllowSafeAuthendicated,)
+    permission_classes = (AllowSafeAuthenticated,)
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
         r.JSONRenderer,
@@ -394,7 +394,7 @@ class PartnerStaffMemberListAPIVIew(ExportModelMixin, ListAPIView):
     """
     queryset = PartnerStaffMember.objects.all()
     serializer_class = PartnerStaffMemberDetailSerializer
-    permission_classes = (AllowSafeAuthendicated,)
+    permission_classes = (AllowSafeAuthenticated,)
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
         r.JSONRenderer,
