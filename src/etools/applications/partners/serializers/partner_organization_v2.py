@@ -205,11 +205,10 @@ class PartnerOrganizationListSerializer(serializers.ModelSerializer):
 
 
 class PartnerOrgPSEADetailsSerializer(serializers.ModelSerializer):
-    authorized_officers = serializers.SerializerMethodField()
+    staff_members = serializers.SerializerMethodField()
 
-    def get_authorized_officers(self, obj):
-        officers = PartnerStaffMember.objects.filter(agreement_authorizations__partner=obj)
-        return PartnerStaffMemberDetailSerializer(officers, many=True).data
+    def get_staff_members(self, obj):
+        return [s.get_full_name() for s in obj.staff_members.all()]
 
     class Meta:
         model = PartnerOrganization
@@ -226,7 +225,7 @@ class PartnerOrgPSEADetailsSerializer(serializers.ModelSerializer):
             "short_name",
             "partner_type",
             "cso_type",
-            "authorized_officers"
+            "staff_members"
         )
 
 
