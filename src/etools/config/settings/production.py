@@ -15,6 +15,12 @@ ALLOWED_HOSTS = [
     'etools-test.unicef.org',
     '0.0.0.0'
 ]
+
+ENV_HOST = get_from_secrets_or_env('DJANGO_ALLOWED_HOST', None)
+if ENV_HOST:
+    ALLOWED_HOSTS.append(ENV_HOST)
+
+
 SECRET_KEY = os.environ["SECRET_KEY"]  # noqa: F405
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SECURE_SSL_REDIRECT = True
