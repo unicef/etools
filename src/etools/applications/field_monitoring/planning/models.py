@@ -160,9 +160,11 @@ class MonitoringActivity(
     location_site = models.ForeignKey(LocationSite, blank=True, null=True, verbose_name=_('Site'),
                                       related_name='monitoring_activities', on_delete=models.CASCADE)
 
-    partners = models.ManyToManyField(PartnerOrganization, verbose_name=_('Partner'), related_name='+', blank=True)
+    partners = models.ManyToManyField(PartnerOrganization, verbose_name=_('Partner'),
+                                      related_name='monitoring_activities', blank=True)
     interventions = models.ManyToManyField(Intervention, verbose_name=_('PD/SSFA'), related_name='+', blank=True)
-    cp_outputs = models.ManyToManyField(Result, verbose_name=_('Outputs'), related_name='+', blank=True)
+    cp_outputs = models.ManyToManyField(Result, verbose_name=_('Outputs'), related_name='monitoring_activities',
+                                        blank=True)
 
     start_date = models.DateField(verbose_name=_('Start Date'), blank=True, null=True)
     end_date = models.DateField(verbose_name=_('End Date'), blank=True, null=True)

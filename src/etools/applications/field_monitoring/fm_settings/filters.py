@@ -28,18 +28,15 @@ class LogIssueRelatedToTypeFilter(BaseFilterBackend):
 
 class LogIssueMonitoringActivityFilter(BaseFilterBackend):
     def filter_queryset(self, request, queryset, view):
-        filter_value = request.query_params.get('visit')
-        if filter_value is None:
+        activity = request.query_params.get('activity')
+        if activity is None:
             return queryset
 
-        raise NotImplementedError
         return queryset.filter(
-            models.Q(cp_output__fm_config__tasks__visits=filter_value) |
-            models.Q(partner__tasks__visits=filter_value) |
-            models.Q(location__tasks__visits=filter_value) |
-            models.Q(location__visits=filter_value) |
-            models.Q(location_site__tasks__visits=filter_value) |
-            models.Q(location_site__visits=filter_value)
+            models.Q(cp_output__monitoring_activities=activity) |
+            models.Q(partner__monitoring_activities=activity) |
+            models.Q(location__monitoring_activities=activity) |
+            models.Q(location_site__monitoring_activities=activity)
         ).distinct()
 
 

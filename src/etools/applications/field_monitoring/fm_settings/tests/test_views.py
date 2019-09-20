@@ -20,6 +20,7 @@ from etools.applications.field_monitoring.fm_settings.tests.factories import (
     MethodFactory,
     QuestionFactory,
 )
+from etools.applications.field_monitoring.planning.tests.factories import MonitoringActivityFactory
 from etools.applications.field_monitoring.tests.base import FMBaseTestCaseMixin
 from etools.applications.partners.tests.factories import InterventionFactory, PartnerFactory
 from etools.applications.reports.models import ResultType
@@ -468,17 +469,15 @@ class LogIssueViewTestCase(FMBaseTestCaseMixin, TestExportMixin, BaseTenantTestC
         self.assertEqual(response.data['results'][2]['related_to_type'], LogIssue.RELATED_TO_TYPE_CHOICES.location)
         self.assertEqual(response.data['results'][3]['related_to_type'], LogIssue.RELATED_TO_TYPE_CHOICES.location)
 
-    @skip('activity factory is not ready')
     def test_filter_by_monitoring_activity(self):
-        # visit = VisitFactory(location=LocationFactory())
-        visit = None
+        activity = MonitoringActivityFactory(location=LocationFactory())
         LogIssueFactory()
-        log_issue = LogIssueFactory(location=visit.location)
+        log_issue = LogIssueFactory(location=activity.location)
 
         response = self.forced_auth_req(
             'get', reverse('field_monitoring_settings:log-issues-list'),
             user=self.unicef_user,
-            data={'visit': visit.id}
+            data={'activity': activity.id}
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
