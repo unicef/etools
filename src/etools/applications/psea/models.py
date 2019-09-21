@@ -52,6 +52,10 @@ class Indicator(OrderedModel, TimeStampedModel):
     subject = models.TextField(verbose_name=_('Subject'))
     content = models.TextField(verbose_name=_('Content'))
     ratings = models.ManyToManyField(Rating, verbose_name=_("Rating"))
+    rating_instructions = models.TextField(
+        verbose_name=_("Rating Instructions"),
+        blank=True,
+    )
     evidences = models.ManyToManyField(Evidence, verbose_name=_('Evidences'))
     active = models.BooleanField(default=True)
 

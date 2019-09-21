@@ -61,6 +61,24 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         self.assertEqual(len(response.data.get("results")), num)
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_list_external_user(self):
+        num = 10
+        for _ in range(num):
+            assessment = AssessmentFactory()
+            AnswerFactory(assessment=assessment)
+        external_user = UserFactory(email="me@extra.example.com")
+        assessor = AssessorFactory(user=external_user)
+        assessment = AssessmentFactory(assessor=assessor)
+
+        response = self.forced_auth_req(
+            "get",
+            reverse('psea:assessment-list'),
+            user=external_user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data.get("results")), 1)
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_get(self):
         partner = PartnerFactory()
         date = str(timezone.now().date())
