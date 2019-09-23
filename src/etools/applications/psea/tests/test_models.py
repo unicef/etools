@@ -40,6 +40,13 @@ class TestAssessment(BaseTenantTestCase):
         assessment = AssessmentFactory()
         self.assertEqual(str(assessment), f"{assessment.partner} [Draft] {assessment.reference_number}")
 
+    def test_answers_complete(self):
+        assessment = AssessmentFactory()
+        indicator = IndicatorFactory()
+        self.assertFalse(assessment.answers_complete())
+        AnswerFactory(assessment=assessment, indicator=indicator)
+        self.assertTrue(assessment.answers_complete())
+
     def test_rating_none(self):
         assessment = AssessmentFactory()
         self.assertFalse(Answer.objects.filter(assessment=assessment).exists())
