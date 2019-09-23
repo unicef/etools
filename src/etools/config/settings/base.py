@@ -551,3 +551,7 @@ SHELL_PLUS_PRE_IMPORTS = (
 )
 
 UNICEF_USER_EMAIL = "@unicef.org"
+PSEA_ASSESSMENT_FINAL_RECIPIENTS = get_from_secrets_or_env(
+    'PSEA_ASSESSMENT_FINAL_RECIPIENTS',
+    '',
+).split(',')

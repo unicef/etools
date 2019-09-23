@@ -3,6 +3,7 @@ from etools.applications.partners.permissions import PMPPermissions
 
 class AssessmentPermissions(PMPPermissions):
     MODEL_NAME = 'psea.Assessment'
+    EXTRA_FIELDS = ["info_card"]
 
     def __init__(self, user, instance, permission_structure, **kwargs):
         """
