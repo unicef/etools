@@ -458,7 +458,7 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         response = self.forced_auth_req(
             "post",
             reverse('psea:assessment-list'),
-            user=self.user,
+            user=self.focal_user,
             data={
                 "partner": partner.pk,
                 "focal_points": [self.user.pk],
@@ -472,6 +472,23 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         self.assertEqual(assessment.assessment_date, date)
         self.assertEqual(assessment.status, Assessment.STATUS_DRAFT)
         self.assertIn(self.user, assessment.focal_points.all())
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_post_permission(self):
+        partner = PartnerFactory()
+        assessment_qs = Assessment.objects.filter(partner=partner)
+        self.assertFalse(assessment_qs.exists())
+
+        response = self.forced_auth_req(
+            "post",
+            reverse('psea:assessment-list'),
+            user=self.user,
+            data={
+                "partner": partner.pk,
+                "focal_points": [self.user.pk],
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_validation(self):

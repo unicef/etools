@@ -137,12 +137,23 @@ class Assessment(TimeStampedModel):
     def __str__(self):
         return f'{self.partner} [{self.get_status_display()}] {self.reference_number}'
 
-    def rating(self):
-        result = Answer.objects.filter(assessment=self).aggregate(
-            assessment=Sum("rating__weight")
+    def answers_complete(self):
+        """Check if all answers have been provided"""
+        indicators_qs = Indicator.objects.filter(active=True)
+        answers_qs = self.answers.filter(
+            indicator__pk__in=indicators_qs.values_list("pk", flat=True),
         )
-        if result:
-            return result["assessment"]
+        if indicators_qs.count() == answers_qs.count():
+            return True
+        return False
+
+    def rating(self):
+        if self.answers_complete():
+            result = Answer.objects.filter(assessment=self).aggregate(
+                assessment=Sum("rating__weight")
+            )
+            if result:
+                return result["assessment"]
         return None
 
     def get_reference_number(self):

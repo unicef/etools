@@ -1,6 +1,7 @@
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
 from django.db.models import ObjectDoesNotExist, Q
+from django.http import HttpResponseForbidden
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
@@ -24,6 +25,7 @@ from etools.applications.action_points.conditions import (
     ActionPointAssigneeCondition,
     ActionPointAuthorCondition,
 )
+from etools.applications.audit.models import UNICEFAuditFocalPoint
 from etools.applications.permissions2.conditions import ObjectStatusCondition
 from etools.applications.permissions2.drf_permissions import NestedPermission
 from etools.applications.permissions2.metadata import PermissionBasedMetadata
@@ -121,6 +123,11 @@ class AssessmentViewSet(
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
+        if not request.user.groups.filter(
+                name__in=[UNICEFAuditFocalPoint.name]
+        ).exists():
+            return HttpResponseForbidden()
+
         related_fields = []
         nested_related_names = []
         serializer = self.my_create(
