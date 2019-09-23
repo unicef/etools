@@ -1,4 +1,5 @@
 import datetime
+from unittest.mock import Mock, patch
 
 from django.contrib.contenttypes.models import ContentType
 from django.core.management import call_command
@@ -38,6 +39,7 @@ from etools.applications.users.tests.factories import GroupFactory, UserFactory
 class TestAssessmentViewSet(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
+        cls.send_path = "etools.applications.psea.serializers.send_notification_with_template"
         cls.user = UserFactory()
         cls.focal_user = UserFactory()
         cls.focal_user.groups.add(
@@ -558,12 +560,14 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         assessment.save()
         AnswerFactory(assessment=assessment)
         self.assertEqual(assessment.status, assessment.STATUS_SUBMITTED)
-        response = self.forced_auth_req(
-            "patch",
-            reverse("psea:assessment-finalize", args=[assessment.pk]),
-            user=self.focal_user,
-            data={},
-        )
+        mock_send = Mock()
+        with patch(self.send_path, mock_send):
+            response = self.forced_auth_req(
+                "patch",
+                reverse("psea:assessment-finalize", args=[assessment.pk]),
+                user=self.focal_user,
+                data={},
+            )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
             response.data.get("status"),
@@ -571,6 +575,19 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         )
         assessment.refresh_from_db()
         self.assertEqual(assessment.status, assessment.STATUS_FINAL)
+        self.assertEqual(mock_send.call_count, 1)
+
+        # ensure notification not sent again, on subsequent finalize call
+        mock_send = Mock()
+        with patch(self.send_path, mock_send):
+            response = self.forced_auth_req(
+                "patch",
+                reverse("psea:assessment-finalize", args=[assessment.pk]),
+                user=self.focal_user,
+                data={},
+            )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(mock_send.call_count, 0)
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_cancel(self):
