@@ -12,3 +12,4 @@ Field no,Verbose Name,Field Name,Group,Condition,Status,Action,Allowed
 1.3.2,Assessor,assessors,,,draft,Required,FALSE
 1.4.2,Answers,answers,,,submitted,Required,TRUE
 1.4.3,Answers,answers,,,final,Required,TRUE
+1.5.0,Info Card,info_card,,,final,Edit,FALSE

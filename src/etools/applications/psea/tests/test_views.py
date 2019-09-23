@@ -101,6 +101,7 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         self.assertEqual(data["assessment_date"], date)
         self.assertEqual(data["status"], "draft")
         self.assertEqual(data["available_actions"], ["assign", "cancel"])
+        self.assertTrue(data["permissions"]["edit"]["info_card"])
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_filter_status(self):
@@ -573,6 +574,7 @@ class TestAssessmentViewSet(BaseTenantTestCase):
             response.data.get("status"),
             assessment.STATUS_FINAL,
         )
+        self.assertFalse(response.data["permissions"]["edit"]["info_card"])
         assessment.refresh_from_db()
         self.assertEqual(assessment.status, assessment.STATUS_FINAL)
         self.assertEqual(mock_send.call_count, 1)
