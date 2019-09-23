@@ -62,7 +62,6 @@ class AssessmentSerializer(BaseAssessmentSerializer):
     assessor = serializers.SerializerMethodField()
     partner_name = serializers.CharField(source="partner.name", read_only=True)
     status_list = serializers.SerializerMethodField()
-    assessment_date = serializers.DateField()
     rejected_comment = serializers.SerializerMethodField()
     available_actions = serializers.SerializerMethodField()
 
