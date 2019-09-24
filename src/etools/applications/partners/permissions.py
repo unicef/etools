@@ -286,6 +286,15 @@ class ListCreateAPIMixedPermission(permissions.BasePermission):
             return False
 
 
+class AllowSafeAuthenticated(permissions.BasePermission):
+    """"only read peremissions if authenticated, no write"""
+    def has_permission(self, request, view):
+        if request.method in permissions.SAFE_METHODS:
+            if request.user.is_authenticated:
+                return True
+        return False
+
+
 class ReadOnlyAPIUser(permissions.BasePermission):
     """Permission class for Views that only allow read and only for backend api users or superusers
         GET users must be either (a) superusers or (b) in the Limited API group.
