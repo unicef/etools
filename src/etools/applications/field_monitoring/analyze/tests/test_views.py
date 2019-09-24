@@ -6,7 +6,11 @@ from django.utils import timezone
 from rest_framework import status
 from unicef_locations.tests.factories import LocationFactory
 
+from etools.applications.action_points.models import ActionPoint
+from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.field_monitoring.fm_settings.models import LogIssue
+from etools.applications.field_monitoring.fm_settings.tests.factories import LogIssueFactory
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.field_monitoring.planning.tests.factories import MonitoringActivityFactory
 from etools.applications.field_monitoring.tests.factories import UserFactory
@@ -192,3 +196,90 @@ class GeographicCoverageViewTestCase(BaseTenantTestCase):
         self.assertEqual(response.data[0]['completed_visits'], 2)
         self.assertEqual(response.data[1]['id'], second_location.id)
         self.assertEqual(response.data[1]['completed_visits'], 0)
+
+
+class IssuesPartnersViewTestCase(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.user = UserFactory(unicef_user=True)
+
+    def test_response(self):
+        partner = PartnerFactory()
+        PartnerFactory()
+
+        LogIssueFactory.create_batch(size=2, partner=partner, status=LogIssue.STATUS_CHOICES.new)
+        LogIssueFactory(partner=partner, status=LogIssue.STATUS_CHOICES.past)
+
+        ActionPointFactory.create_batch(size=3, partner=partner, status=ActionPoint.STATUS_OPEN)
+        ActionPointFactory(partner=partner, status=ActionPoint.STATUS_COMPLETED)
+
+        with self.assertNumQueries(1):
+            response = self.forced_auth_req(
+                'get',
+                reverse('field_monitoring_analyze:issues-partners'),
+                user=self.user
+            )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['id'], partner.id)
+        self.assertEqual(response.data[0]['log_issues_count'], 2)
+        self.assertEqual(response.data[0]['action_points_count'], 3)
+
+
+class IssuesCPOutputsViewTestCase(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.user = UserFactory(unicef_user=True)
+
+    def test_response(self):
+        cp_output = ResultFactory(result_type__name=ResultType.OUTPUT)
+        ResultFactory(result_type__name=ResultType.OUTPUT)
+
+        LogIssueFactory.create_batch(size=3, cp_output=cp_output, status=LogIssue.STATUS_CHOICES.new)
+        LogIssueFactory(cp_output=cp_output, status=LogIssue.STATUS_CHOICES.past)
+
+        ActionPointFactory.create_batch(size=2, cp_output=cp_output, status=ActionPoint.STATUS_OPEN)
+        ActionPointFactory(cp_output=cp_output, status=ActionPoint.STATUS_COMPLETED)
+
+        with self.assertNumQueries(1):
+            response = self.forced_auth_req(
+                'get',
+                reverse('field_monitoring_analyze:issues-cp_outputs'),
+                user=self.user
+            )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['id'], cp_output.id)
+        self.assertEqual(response.data[0]['log_issues_count'], 3)
+        self.assertEqual(response.data[0]['action_points_count'], 2)
+
+
+class IssuesLocationsViewTestCase(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.user = UserFactory(unicef_user=True)
+
+    def test_response(self):
+        location = LocationFactory()
+        LocationFactory()
+
+        LogIssueFactory.create_batch(size=4, location=location, status=LogIssue.STATUS_CHOICES.new)
+        LogIssueFactory(location=location, status=LogIssue.STATUS_CHOICES.past)
+
+        ActionPointFactory.create_batch(size=3, location=location, status=ActionPoint.STATUS_OPEN)
+        ActionPointFactory(location=location, status=ActionPoint.STATUS_COMPLETED)
+
+        with self.assertNumQueries(1):
+            response = self.forced_auth_req(
+                'get',
+                reverse('field_monitoring_analyze:issues-locations'),
+                user=self.user
+            )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['id'], location.id)
+        self.assertEqual(response.data[0]['log_issues_count'], 4)
+        self.assertEqual(response.data[0]['action_points_count'], 3)

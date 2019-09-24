@@ -111,7 +111,6 @@ class CoverageGeographicSerializer(serializers.ModelSerializer):
 
 
 class MonitoringActivityHACTSerializer(serializers.ModelSerializer):
-    # todo: filter outputs / interventions by partner???????
     cp_outputs = MinimalOutputListSerializer(many=True)
     interventions = MinimalInterventionListSerializer(many=True)
 
@@ -133,4 +132,40 @@ class HACTSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'name',
             'visits', 'visits_count',
+        ]
+
+
+class PartnerIssuesSerializer(serializers.ModelSerializer):
+    log_issues_count = serializers.ReadOnlyField()
+    action_points_count = serializers.ReadOnlyField()
+
+    class Meta:
+        model = PartnerOrganization
+        fields = [
+            'id', 'name',
+            'log_issues_count', 'action_points_count'
+        ]
+
+
+class CPOutputIssuesSerializer(serializers.ModelSerializer):
+    log_issues_count = serializers.ReadOnlyField()
+    action_points_count = serializers.ReadOnlyField()
+
+    class Meta:
+        model = Result
+        fields = [
+            'id', 'name',
+            'log_issues_count', 'action_points_count'
+        ]
+
+
+class LocationIssuesSerializer(serializers.ModelSerializer):
+    log_issues_count = serializers.ReadOnlyField()
+    action_points_count = serializers.ReadOnlyField()
+
+    class Meta:
+        model = Result
+        fields = [
+            'id', 'name',
+            'log_issues_count', 'action_points_count'
         ]

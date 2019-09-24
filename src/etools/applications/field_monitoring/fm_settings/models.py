@@ -212,13 +212,13 @@ class LogIssue(TimeStampedModel):
                                verbose_name=_('Issue Raised By'),
                                on_delete=models.CASCADE)
     cp_output = models.ForeignKey(Result, blank=True, null=True, verbose_name=_('CP Output'),
-                                  on_delete=models.CASCADE)
+                                  on_delete=models.CASCADE, related_name='log_issues')
     partner = models.ForeignKey(PartnerOrganization, blank=True, null=True, verbose_name=_('Partner'),
-                                on_delete=models.CASCADE)
+                                on_delete=models.CASCADE, related_name='log_issues')
     location = models.ForeignKey(Location, blank=True, null=True, verbose_name=_('Location'),
-                                 on_delete=models.CASCADE)
+                                 on_delete=models.CASCADE, related_name='log_issues')
     location_site = models.ForeignKey(LocationSite, blank=True, null=True, verbose_name=_('Site'),
-                                      on_delete=models.CASCADE)
+                                      on_delete=models.CASCADE, related_name='log_issues')
 
     issue = models.TextField(verbose_name=_('Issue For Attention/Probing'))
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default=STATUS_CHOICES.new)

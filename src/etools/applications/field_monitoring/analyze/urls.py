@@ -13,9 +13,9 @@ urlpatterns = [
         url(r'geographic/$', views.CoverageGeographicView.as_view(), name='coverage-geographic'),
     ])),
     url(r'hact/$', views.HACTView.as_view(), name='hact'),
-    # url(r'issues/', include([
-    #     url(r'issues/partners/$', views., name=''),
-    #     url(r'issues/interventions/$', views., name=''),
-    #     url(r'issues/locations/$', views., name=''),
-    # ])),
+    url(r'issues/', include([
+        url(r'partners/$', views.IssuesPartnersView.as_view(), name='issues-partners'),
+        url(r'cp-outputs/$', views.IssuesCPOutputsView.as_view(), name='issues-cp_outputs'),
+        url(r'locations/$', views.IssuesLocationsView.as_view(), name='issues-locations'),
+    ])),
 ]
