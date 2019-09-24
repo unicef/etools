@@ -162,7 +162,8 @@ class MonitoringActivity(
 
     partners = models.ManyToManyField(PartnerOrganization, verbose_name=_('Partner'),
                                       related_name='monitoring_activities', blank=True)
-    interventions = models.ManyToManyField(Intervention, verbose_name=_('PD/SSFA'), related_name='+', blank=True)
+    interventions = models.ManyToManyField(Intervention, related_name='monitoring_activities',
+                                           blank=True, verbose_name=_('PD/SSFA'))
     cp_outputs = models.ManyToManyField(Result, verbose_name=_('Outputs'), related_name='monitoring_activities',
                                         blank=True)
 

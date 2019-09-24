@@ -216,6 +216,7 @@ TENANT_APPS = (
     'etools.applications.field_monitoring.fm_settings',
     'etools.applications.field_monitoring.planning',
     'etools.applications.field_monitoring.data_collection',
+    'etools.applications.field_monitoring.analyze',
     'etools.applications.field_monitoring.visits',  # todo: remove
     'unicef_snapshot',
     'unicef_attachments',
