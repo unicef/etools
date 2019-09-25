@@ -107,6 +107,7 @@ class TPMActivityLightSerializer(serializers.ModelSerializer):
 
     description = serializers.ReadOnlyField(source='__str__')
     partner_name = serializers.ReadOnlyField(source='partner.name')
+    tpm_partner_name = serializers.ReadOnlyField(source='tpm_partner.name')
     visit_reference = serializers.ReadOnlyField(source='tpm_visit.reference_number')
     status = serializers.ReadOnlyField(source='tpm_visit.get_status_display')
     locations_details = LocationLightSerializer(source='locations', read_only=True, many=True)
@@ -114,9 +115,9 @@ class TPMActivityLightSerializer(serializers.ModelSerializer):
     class Meta:
         model = TPMActivity
         fields = [
-            'id', 'description', 'date', 'tpm_visit', 'visit_reference', 'is_pv', 'partner', 'partner_name', 'status',
-            'intervention', 'cp_output', 'section', 'unicef_focal_points', 'additional_information', 'offices',
-            'locations', 'locations_details'
+            'id', 'description', 'date', 'tpm_visit', 'visit_reference', 'is_pv', 'partner', 'partner_name',
+            'tpm_partner_name', 'status', 'intervention', 'cp_output', 'section', 'unicef_focal_points',
+            'additional_information', 'offices', 'locations', 'locations_details'
         ]
 
 
