@@ -1,5 +1,6 @@
 from django.db import models
 from django.db.models import Prefetch, Count, Q, Max, Min, Subquery, OuterRef
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -24,12 +25,6 @@ class OverallView(APIView):
 class HACTView(ListAPIView):
     serializer_class = HACTSerializer
     queryset = PartnerOrganization.objects.filter(monitoring_activities__isnull=False).order_by('id').distinct()
-    queryset = queryset.annotate(
-        visits_count=Count(
-            'monitoring_activities',
-            filter=Q(monitoring_activities__status=MonitoringActivity.STATUSES.completed)
-        ),
-    )
     queryset = queryset.prefetch_related(
         Prefetch(
             'monitoring_activities',
@@ -40,40 +35,46 @@ class HACTView(ListAPIView):
         ),
     )
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        activities_filter = Q(monitoring_activities__status=MonitoringActivity.STATUSES.completed)
+        queryset = queryset.annotate(
+            completed_visits=Count('monitoring_activities', filter=activities_filter),
+        )
+        return queryset
+
 
 class CoveragePartnersView(ListAPIView):
     serializer_class = PartnersCoverageSerializer
     queryset = PartnerOrganization.objects.filter(monitoring_activities__isnull=False).order_by('id').distinct()
-    queryset = queryset.annotate(
-        completed_visits=Count(
-            'monitoring_activities',
-            filter=Q(monitoring_activities__status=MonitoringActivity.STATUSES.completed)
-        ),
-        last_visit=Max(
-            'monitoring_activities__end_date',
-            filter=Q(monitoring_activities__status=MonitoringActivity.STATUSES.completed)
-        ),
-    )
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        activities_filter = Q(monitoring_activities__status=MonitoringActivity.STATUSES.completed)
+        queryset = queryset.annotate(
+            completed_visits=Count('monitoring_activities', filter=activities_filter),
+            last_visit=Max('monitoring_activities__end_date', filter=activities_filter),
+        )
+        return queryset
 
 
 class CoverageInterventionsView(ListAPIView):
     serializer_class = InterventionCoverageSerializer
     queryset = Intervention.objects.filter(monitoring_activities__isnull=False).order_by('id').distinct()
-    queryset = queryset.annotate(
-        completed_visits=Count(
-            'monitoring_activities',
-            filter=Q(monitoring_activities__status=MonitoringActivity.STATUSES.completed)
-        ),
-        first_visit=Min(
-            'monitoring_activities__end_date',
-            filter=Q(monitoring_activities__status=MonitoringActivity.STATUSES.completed)
-        ),
-        last_visit=Max(
-            'monitoring_activities__end_date',
-            filter=Q(monitoring_activities__status=MonitoringActivity.STATUSES.completed)
-        ),
-    )
     queryset = queryset.prefetch_related(None)  # no need to use any prefetch here
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        activities_filter = Q(monitoring_activities__status=MonitoringActivity.STATUSES.completed)
+        queryset = queryset.annotate(
+            completed_visits=Count('monitoring_activities', filter=activities_filter),
+            first_visit=Min('monitoring_activities__end_date', filter=activities_filter),
+            last_visit=Max('monitoring_activities__end_date', filter=activities_filter),
+        )
+        return queryset
 
 
 class CoverageCPOutputsView(ListAPIView):
@@ -81,31 +82,36 @@ class CoverageCPOutputsView(ListAPIView):
     queryset = Result.objects.filter(
         result_type__name=ResultType.OUTPUT, monitoring_activities__isnull=False
     ).order_by('id').distinct()
-    queryset = queryset.annotate(
-        completed_visits=Count(
-            'monitoring_activities',
-            filter=Q(monitoring_activities__status=MonitoringActivity.STATUSES.completed)
-        ),
-        first_visit=Min(
-            'monitoring_activities__end_date',
-            filter=Q(monitoring_activities__status=MonitoringActivity.STATUSES.completed)
-        ),
-        last_visit=Max(
-            'monitoring_activities__end_date',
-            filter=Q(monitoring_activities__status=MonitoringActivity.STATUSES.completed)
-        ),
-    )
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        activities_filter = Q(monitoring_activities__status=MonitoringActivity.STATUSES.completed)
+        queryset = queryset.annotate(
+            completed_visits=Count('monitoring_activities', filter=activities_filter),
+            first_visit=Min('monitoring_activities__end_date', filter=activities_filter),
+            last_visit=Max('monitoring_activities__end_date', filter=activities_filter),
+        )
+        return queryset
 
 
 class CoverageGeographicView(ListAPIView):
     serializer_class = CoverageGeographicSerializer
     queryset = Location.objects.filter(parent__gateway__admin_level=0)
-    queryset = queryset.annotate(
-        completed_visits=Count(
-            'monitoring_activities',
-            filter=Q(monitoring_activities__status=MonitoringActivity.STATUSES.completed)
-        ),
-    )
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        activities_filter = Q(monitoring_activities__status=MonitoringActivity.STATUSES.completed)
+        if 'sections__in' in self.request.query_params:
+            activities_filter = activities_filter & Q(
+                monitoring_activities__sections__in=self.request.query_params['sections__in'].split(',')
+            )
+
+        queryset = queryset.annotate(
+            completed_visits=Count('monitoring_activities', filter=activities_filter, distinct=True),
+        )
+        return queryset
 
 
 class IssuesPartnersView(ListAPIView):

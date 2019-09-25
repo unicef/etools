@@ -16,7 +16,7 @@ from etools.applications.field_monitoring.planning.tests.factories import Monito
 from etools.applications.field_monitoring.tests.factories import UserFactory
 from etools.applications.partners.tests.factories import PartnerFactory, InterventionFactory
 from etools.applications.reports.models import ResultType
-from etools.applications.reports.tests.factories import ResultFactory
+from etools.applications.reports.tests.factories import ResultFactory, SectionFactory
 
 
 class OverallViewTestCase(BaseTenantTestCase):
@@ -172,17 +172,36 @@ class GeographicCoverageViewTestCase(BaseTenantTestCase):
         super().setUpTestData()
         cls.user = UserFactory(unicef_user=True)
 
-    def test_response(self):
-        country = LocationFactory(gateway__admin_level=0)
-        first_location = LocationFactory(parent=country)
-        second_location = LocationFactory(parent=country)
-        LocationFactory(parent=first_location)  # hidden
+        cls.country = LocationFactory(gateway__admin_level=0)
+        cls.first_location = LocationFactory(parent=cls.country)
+        cls.second_location = LocationFactory(parent=cls.country)
+        LocationFactory(parent=cls.first_location)  # hidden
 
-        MonitoringActivityFactory.create_batch(
-            size=2, location=first_location, status=MonitoringActivity.STATUSES.completed
+        cls.section_education = SectionFactory(name='Education')
+        cls.section_protection = SectionFactory(name='Protection')
+
+        cls.protection_activities = MonitoringActivityFactory.create_batch(
+            size=2, location=cls.first_location, status=MonitoringActivity.STATUSES.completed,
+            sections=[cls.section_protection],
         )
-        MonitoringActivityFactory(location=first_location, status=MonitoringActivity.STATUSES.draft)
+        cls.education_activities = MonitoringActivityFactory.create_batch(
+            size=3, location=cls.first_location, status=MonitoringActivity.STATUSES.completed,
+            sections=[cls.section_education],
+        )
 
+        # one activity with both sections
+        cls.protection_activities[0].sections.add(cls.section_education)
+        cls.education_activities.append(cls.protection_activities[0])
+
+        cls.no_section_activity = MonitoringActivityFactory(
+            location=cls.first_location, status=MonitoringActivity.STATUSES.completed
+        )
+
+        cls.draft_activity = MonitoringActivityFactory(
+            location=cls.first_location, status=MonitoringActivity.STATUSES.draft
+        )
+
+    def test_response(self):
         with self.assertNumQueries(1):
             response = self.forced_auth_req(
                 'get',
@@ -192,10 +211,36 @@ class GeographicCoverageViewTestCase(BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)
-        self.assertEqual(response.data[0]['id'], first_location.id)
-        self.assertEqual(response.data[0]['completed_visits'], 2)
-        self.assertEqual(response.data[1]['id'], second_location.id)
+        self.assertEqual(response.data[0]['id'], self.first_location.id)
+        self.assertEqual(response.data[0]['completed_visits'], 6)
+        self.assertEqual(response.data[1]['id'], self.second_location.id)
         self.assertEqual(response.data[1]['completed_visits'], 0)
+
+    def test_filter_by_section(self):
+        with self.assertNumQueries(1):
+            response = self.forced_auth_req(
+                'get',
+                reverse('field_monitoring_analyze:coverage-geographic'),
+                user=self.user,
+                data={'sections__in': str(self.section_protection.id)}
+            )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data[0]['id'], self.first_location.id)
+        self.assertEqual(response.data[0]['completed_visits'], 2)
+
+    def test_filter_by_multiple_sections(self):
+        with self.assertNumQueries(1):
+            response = self.forced_auth_req(
+                'get',
+                reverse('field_monitoring_analyze:coverage-geographic'),
+                user=self.user,
+                data={'sections__in': ','.join(map(str, [self.section_protection.id, self.section_education.id]))}
+            )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data[0]['id'], self.first_location.id)
+        self.assertEqual(response.data[0]['completed_visits'], 5)
 
 
 class IssuesPartnersViewTestCase(BaseTenantTestCase):
