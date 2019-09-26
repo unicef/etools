@@ -402,14 +402,14 @@ class IndicatorSerializer(serializers.ModelSerializer):
         # group field PR (#2462) is merged
         # relying on the indicator_pk from psea_indicator fixture
         MAP_INDICATOR_DOC_TYPE = {
-            1: [34, 35],
-            2: [36, 37, 38, 39],
-            3: [40, 41],
-            4: [42],
-            5: [43, 44, 45],
-            6: [46, 47],
-            7: [48, 49],
-            8: [50, 51, 52],
+            1: [34, 35, 53],
+            2: [36, 37, 38, 39, 53],
+            3: [40, 41, 53],
+            4: [42, 53],
+            5: [43, 44, 45, 53],
+            6: [46, 47, 53],
+            7: [48, 49, 53],
+            8: [50, 51, 52, 53],
         }
         return FileType.objects.filter(
             pk__in=MAP_INDICATOR_DOC_TYPE.get(obj.pk, []),
