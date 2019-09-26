@@ -167,9 +167,7 @@ class Assessment(TimeStampedModel):
         self.overall_rating = self.rating()
         self.save()
 
-    def user_belongs(self, user):
-        if self.pk and user in self.focal_points.all():
-            return True
+    def user_is_assessor(self, user):
         assessor_qs = Assessor.objects.filter(assessment=self)
         if assessor_qs.filter(user=user).exists():
             return True
@@ -177,6 +175,11 @@ class Assessment(TimeStampedModel):
             if assessor.auditor_firm_staff.filter(user=user).exists():
                 return True
         return False
+
+    def user_belongs(self, user):
+        if self.pk and user in self.focal_points.all():
+            return True
+        return self.user_is_assessor(user)
 
     def save(self, *args, **kwargs):
         self.overall_rating = self.rating()
@@ -204,7 +207,7 @@ class Assessment(TimeStampedModel):
 
     @transition(
         field=status,
-        source=[STATUS_IN_PROGRESS],
+        source=[STATUS_IN_PROGRESS, STATUS_REJECTED],
         target=[STATUS_SUBMITTED],
         permission=assessment_user_belongs,
     )
@@ -223,7 +226,7 @@ class Assessment(TimeStampedModel):
     @transition(
         field=status,
         source=[STATUS_SUBMITTED],
-        target=[STATUS_IN_PROGRESS],
+        target=[STATUS_REJECTED],
         permission=assessment_focal_point_user,
     )
     def transition_to_rejected(self):
