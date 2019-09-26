@@ -402,7 +402,7 @@ class IndicatorSerializer(serializers.ModelSerializer):
         # group field PR (#2462) is merged
         # relying on the indicator_pk from psea_indicator fixture
         MAP_INDICATOR_DOC_TYPE = {
-            1: [34, 35, 53],
+            1: [34, 35, 53, 54],
             2: [36, 37, 38, 39, 53],
             3: [40, 41, 53],
             4: [42, 53],

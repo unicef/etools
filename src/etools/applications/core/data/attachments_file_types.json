@@ -461,11 +461,21 @@
     },
     {
         "model": "unicef_attachments.filetype",
-        "pk": 52,
+        "pk": 53,
         "fields": {
             "order": 0,
             "label": "Other",
             "name": "other",
+            "code": "psea_answer"
+        }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 54,
+        "fields": {
+            "order": 0,
+            "label": "Documentation of standard procedure",
+            "name": "documentation_of_standard_procedure",
             "code": "psea_answer"
         }
     }
