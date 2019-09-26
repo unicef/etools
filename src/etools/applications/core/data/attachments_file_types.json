@@ -458,5 +458,15 @@
             "name": "psea_investigation_policy_procedure",
             "code": "psea_answer"
         }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 53,
+        "fields": {
+            "order": 0,
+            "label": "Other",
+            "name": "other",
+            "code": "psea_answer"
+        }
     }
 ]
