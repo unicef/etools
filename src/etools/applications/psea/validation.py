@@ -61,6 +61,12 @@ class AssessmentValid(CompleteValidation):
         return True
 
     def state_submitted_valid(self, assessment, user=None):
+        # make the errors prettier for certain requirements that are more likely to be overlooked.
+        if not assessment.assessment_date:
+            raise StateValidationError(["Assessment Date is required to submit (Details -> Assessment Information ->"
+                                        " Assessment Date)"])
+        if not assessment.overall_rating:
+            raise StateValidationError(["You must provide a rating to all indicators in order to submit"])
         self.check_required_fields(assessment)
         self.check_rigid_fields(assessment, related=True)
         return True
