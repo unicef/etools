@@ -307,16 +307,14 @@ class Assessment(TimeStampedModel):
     @transition(
         field=status,
         source=[
-            STATUS_DRAFT,
-            STATUS_ASSIGNED,
-            STATUS_IN_PROGRESS,
-            STATUS_REJECTED,
+            STATUS_SUBMITTED,
+            STATUS_FINAL,
         ],
         target=[STATUS_CANCELLED],
         conditions=[assessment_illegal_transition],
     )
     def transition_to_cancelled_invalid(self):
-        """Allowed to move to rejected status, except from submitted/final"""
+        """Allowed to move to cancelled status, except from submitted/final"""
 
 
 class AssessmentStatusHistory(TimeStampedModel):

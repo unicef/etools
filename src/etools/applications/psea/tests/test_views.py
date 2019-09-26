@@ -611,10 +611,10 @@ class TestAssessmentViewSet(BaseTenantTestCase):
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_cancel(self):
         assessment = AssessmentFactory(partner=self.partner)
-        assessment.status = assessment.STATUS_FINAL
+        assessment.status = assessment.STATUS_IN_PROGRESS
         assessment.save()
         AnswerFactory(assessment=assessment)
-        self.assertEqual(assessment.status, assessment.STATUS_FINAL)
+        self.assertEqual(assessment.status, assessment.STATUS_IN_PROGRESS)
         response = self.forced_auth_req(
             "patch",
             reverse("psea:assessment-cancel", args=[assessment.pk]),
@@ -628,6 +628,25 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         )
         assessment.refresh_from_db()
         self.assertEqual(assessment.status, assessment.STATUS_CANCELLED)
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_cancel_assessor(self):
+        assessment = AssessmentFactory(partner=self.partner)
+        assessment.status = assessment.STATUS_IN_PROGRESS
+        assessment.save()
+        AnswerFactory(assessment=assessment)
+        user = UserFactory()
+        AssessorFactory(assessment=assessment, user=user)
+        self.assertEqual(assessment.status, assessment.STATUS_IN_PROGRESS)
+        response = self.forced_auth_req(
+            "patch",
+            reverse("psea:assessment-cancel", args=[assessment.pk]),
+            user=user,
+            data={},
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        assessment.refresh_from_db()
+        self.assertEqual(assessment.status, assessment.STATUS_IN_PROGRESS)
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_reject(self):
