@@ -170,6 +170,11 @@ class Assessment(TimeStampedModel):
     def user_belongs(self, user):
         if self.pk and user in self.focal_points.all():
             return True
+        if self.user_assessor(user):
+            return True
+        return False
+
+    def user_assessor(self, user):
         assessor_qs = Assessor.objects.filter(assessment=self)
         if assessor_qs.filter(user=user).exists():
             return True
@@ -233,6 +238,7 @@ class Assessment(TimeStampedModel):
         field=status,
         source=[STATUS_DRAFT, STATUS_IN_PROGRESS],
         target=[STATUS_CANCELLED],
+        permission=assessment_focal_point_user,
     )
     def transition_to_cancelled(self):
         """Assessment cancelled"""
