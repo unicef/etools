@@ -167,9 +167,7 @@ class Assessment(TimeStampedModel):
         self.overall_rating = self.rating()
         self.save()
 
-    def user_belongs(self, user):
-        if self.pk and user in self.focal_points.all():
-            return True
+    def user_is_assessor(self, user):
         assessor_qs = Assessor.objects.filter(assessment=self)
         if assessor_qs.filter(user=user).exists():
             return True
@@ -177,6 +175,11 @@ class Assessment(TimeStampedModel):
             if assessor.auditor_firm_staff.filter(user=user).exists():
                 return True
         return False
+
+    def user_belongs(self, user):
+        if self.pk and user in self.focal_points.all():
+            return True
+        return self.user_is_assessor(user)
 
     def save(self, *args, **kwargs):
         self.overall_rating = self.rating()
@@ -204,7 +207,7 @@ class Assessment(TimeStampedModel):
 
     @transition(
         field=status,
-        source=[STATUS_IN_PROGRESS],
+        source=[STATUS_IN_PROGRESS, STATUS_REJECTED],
         target=[STATUS_SUBMITTED],
         permission=assessment_user_belongs,
     )
@@ -223,7 +226,7 @@ class Assessment(TimeStampedModel):
     @transition(
         field=status,
         source=[STATUS_SUBMITTED],
-        target=[STATUS_IN_PROGRESS],
+        target=[STATUS_REJECTED],
         permission=assessment_focal_point_user,
     )
     def transition_to_rejected(self):
@@ -233,6 +236,7 @@ class Assessment(TimeStampedModel):
         field=status,
         source=[STATUS_DRAFT, STATUS_IN_PROGRESS],
         target=[STATUS_CANCELLED],
+        permission=assessment_focal_point_user,
     )
     def transition_to_cancelled(self):
         """Assessment cancelled"""
@@ -301,16 +305,14 @@ class Assessment(TimeStampedModel):
     @transition(
         field=status,
         source=[
-            STATUS_DRAFT,
-            STATUS_ASSIGNED,
-            STATUS_IN_PROGRESS,
-            STATUS_REJECTED,
+            STATUS_SUBMITTED,
+            STATUS_FINAL,
         ],
         target=[STATUS_CANCELLED],
         conditions=[assessment_illegal_transition],
     )
     def transition_to_cancelled_invalid(self):
-        """Allowed to move to rejected status, except from submitted/final"""
+        """Allowed to move to cancelled status, except from submitted/final"""
 
 
 class AssessmentStatusHistory(TimeStampedModel):
@@ -482,3 +484,9 @@ class Assessor(TimeStampedModel):
         if self.assessor_type == Assessor.TYPE_VENDOR:
             return f"{self.auditor_firm}"
         return f"{self.user}"
+
+    def get_recipients(self):
+        if self.assessor_type in [self.TYPE_EXTERNAL, self.TYPE_UNICEF]:
+            return [self.user.email]
+        else:
+            return [s.user.email for s in self.auditor_firm_staff.all()]

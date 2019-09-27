@@ -1,13 +1,11 @@
 from copy import copy
 
-from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
 from unicef_attachments.fields import FileTypeModelChoiceField
 from unicef_attachments.models import Attachment, FileType
-from unicef_notification.utils import send_notification_with_template
 from unicef_restlib.fields import SeparatedReadWriteField
 
 from etools.applications.action_points.serializers import ActionPointBaseSerializer, HistorySerializer
@@ -71,13 +69,13 @@ class AssessmentSerializer(BaseAssessmentSerializer):
 
     def get_overall_rating(self, obj):
         if not obj.overall_rating:
-            display = "Unknown"
+            display = "-"
         elif obj.overall_rating <= 11:
-            display = "Negative"
+            display = "High"
+        elif 11 < obj.overall_rating <= 19:
+            display = "Moderate"
         elif obj.overall_rating >= 20:
             display = "Low"
-        else:
-            display = "Moderate"
         return {
             "value": obj.overall_rating,
             "display": display,
@@ -141,15 +139,17 @@ class AssessmentSerializer(BaseAssessmentSerializer):
         is_focal_group = user.groups.filter(
             name__in=[UNICEFAuditFocalPoint.name],
         ).exists()
-        user_belongs = obj.user_belongs(user)
         available_actions = []
         if is_focal_group:
             if obj.status in [obj.STATUS_DRAFT]:
                 available_actions.append(ACTION_MAP.get(obj.STATUS_ASSIGNED))
+            if obj.status in [obj.STATUS_SUBMITTED]:
+                available_actions.append(ACTION_MAP.get(obj.STATUS_REJECTED))
+                available_actions.append(ACTION_MAP.get(obj.STATUS_FINAL))
             if obj.status not in [obj.STATUS_FINAL]:
                 available_actions.append(ACTION_MAP.get(obj.STATUS_CANCELLED))
-        if user_belongs:
-            if obj.status in [obj.STATUS_IN_PROGRESS]:
+        if obj.user_is_assessor(user):
+            if obj.status in [obj.STATUS_IN_PROGRESS, obj.STATUS_REJECTED]:
                 available_actions.append(ACTION_MAP.get(obj.STATUS_SUBMITTED))
         return available_actions
 
@@ -192,16 +192,6 @@ class AssessmentStatusSerializer(AssessmentSerializer):
                 f"Status is already {self.instance.status}"
             )
         return data
-
-    def save(self, *args, **kwargs):
-        instance = super().save(*args, **kwargs)
-        if instance.status == Assessment.STATUS_FINAL:
-            send_notification_with_template(
-                recipients=[settings.PSEA_ASSESSMENT_FINAL_RECIPIENTS],
-                template_name="psea/assessment/final",
-                context={"assessment": instance}
-            )
-        return instance
 
 
 class AssessmentStatusHistorySerializer(serializers.ModelSerializer):
@@ -402,14 +392,14 @@ class IndicatorSerializer(serializers.ModelSerializer):
         # group field PR (#2462) is merged
         # relying on the indicator_pk from psea_indicator fixture
         MAP_INDICATOR_DOC_TYPE = {
-            1: [34, 35],
-            2: [36, 37, 38, 39],
-            3: [40, 41],
-            4: [42],
-            5: [43, 44, 45],
-            6: [46, 47],
-            7: [48, 49],
-            8: [50, 51, 52],
+            1: [34, 35, 53, 54],
+            2: [36, 37, 38, 39, 53],
+            3: [40, 41, 53],
+            4: [42, 53],
+            5: [43, 44, 45, 53],
+            6: [46, 47, 53],
+            7: [48, 49, 53],
+            8: [50, 51, 52, 53],
         }
         return FileType.objects.filter(
             pk__in=MAP_INDICATOR_DOC_TYPE.get(obj.pk, []),
