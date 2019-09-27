@@ -16,8 +16,11 @@ from etools.applications.audit.purchase_order.models import AuditorFirm, Auditor
 from etools.applications.core.permissions import import_permissions
 from etools.applications.core.urlresolvers import build_frontend_url
 from etools.applications.psea.validation import (
+    assessment_assigned,
+    assessment_final,
     assessment_focal_point_user,
     assessment_illegal_transition,
+    assessment_rejected,
     assessment_user_belongs,
 )
 
@@ -88,6 +91,11 @@ class Assessment(TimeStampedModel):
 
     AUTO_TRANSITIONS = {
         STATUS_ASSIGNED: [STATUS_IN_PROGRESS],
+    }
+    TRANSITION_SIDE_EFFECTS = {
+        STATUS_ASSIGNED: [assessment_assigned],
+        STATUS_REJECTED: [assessment_rejected],
+        STATUS_FINAL: [assessment_final],
     }
 
     reference_number = models.CharField(

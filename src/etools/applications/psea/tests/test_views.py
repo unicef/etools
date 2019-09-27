@@ -39,7 +39,7 @@ from etools.applications.users.tests.factories import GroupFactory, UserFactory
 class TestAssessmentViewSet(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.send_path = "etools.applications.psea.views.send_notification_with_template"
+        cls.send_path = "etools.applications.psea.validation.send_notification_with_template"
         cls.user = UserFactory()
         cls.focal_user = UserFactory()
         cls.focal_user.groups.add(

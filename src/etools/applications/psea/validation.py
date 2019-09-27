@@ -1,6 +1,9 @@
+from django.conf import settings
+
 from etools_validator.exceptions import StateValidationError, TransitionError
 from etools_validator.utils import check_required_fields, check_rigid_fields
 from etools_validator.validation import CompleteValidation
+from unicef_notification.utils import send_notification_with_template
 
 from etools.applications.audit.models import UNICEFAuditFocalPoint
 from etools.applications.psea.permissions import AssessmentPermissions
@@ -102,3 +105,27 @@ def assessment_focal_point_user(assessment, user):
 
 def assessment_user_belongs(assessment, user):
     return assessment.user_belongs(user)
+
+
+def assessment_assigned(assessment, old_instance=None, user=None):
+    send_notification_with_template(
+        recipients=assessment.assessor.get_recipients(),
+        template_name="psea/assessment/assigned",
+        context={"assessment": assessment}
+    )
+
+
+def assessment_rejected(assessment, old_instance=None, user=None):
+    send_notification_with_template(
+        recipients=assessment.assessor.get_recipients(),
+        template_name="psea/assessment/rejected",
+        context={"assessment": assessment}
+    )
+
+
+def assessment_final(assessment, old_instance=None, user=None):
+    send_notification_with_template(
+        recipients=[settings.PSEA_ASSESSMENT_FINAL_RECIPIENTS],
+        template_name="psea/assessment/final",
+        context={"assessment": assessment}
+    )
