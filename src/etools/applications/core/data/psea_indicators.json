@@ -207,13 +207,22 @@
         }
     },
     {
+        "pk": 21,
+        "model": "psea.Evidence",
+        "fields": {
+            "label": "Documentation of standard procedure",
+            "requires_description": false,
+            "active": true
+        }
+    },
+    {
         "pk": 1,
         "model": "psea.Indicator",
         "fields": {
             "subject": "An organizational policy exists (as part of code of conduct and/or a comprehensive SEA policy) and is signed by all personnel.",
             "content": "Do organizational policies include: A) a clear definition of SEA; B) a clear description of behaviour expected of personnel (incorporating the IASC's Six Core Principles Relating to SEA) and; C) an explicit statement of zero tolerance for SEA?\n\nAre all personnel required to receive and sign organizational policies related to PSEA (e.g. code of conduct)?\n\nDoes the organizational policy on PSEA apply to all personnel, including employees, volunteers, contractors, and others?",
             "ratings": [1, 2, 3],
-            "evidences": [1, 2, 3],
+            "evidences": [1, 2, 3, 21],
             "active": true,
             "order": 1
         }

@@ -69,13 +69,13 @@ class AssessmentSerializer(BaseAssessmentSerializer):
 
     def get_overall_rating(self, obj):
         if not obj.overall_rating:
-            display = "Unknown"
+            display = "-"
         elif obj.overall_rating <= 11:
             display = "High"
+        elif 11 < obj.overall_rating <= 19:
+            display = "Moderate"
         elif obj.overall_rating >= 20:
             display = "Low"
-        else:
-            display = "Moderate"
         return {
             "value": obj.overall_rating,
             "display": display,
@@ -139,15 +139,18 @@ class AssessmentSerializer(BaseAssessmentSerializer):
         is_focal_group = user.groups.filter(
             name__in=[UNICEFAuditFocalPoint.name],
         ).exists()
-        user_belongs = obj.user_belongs(user)
+        user_is_assessor = obj.user_belongs(user)
         available_actions = []
         if is_focal_group:
             if obj.status in [obj.STATUS_DRAFT]:
                 available_actions.append(ACTION_MAP.get(obj.STATUS_ASSIGNED))
+            if obj.status in [obj.STATUS_SUBMITTED]:
+                available_actions.append(ACTION_MAP.get(obj.STATUS_REJECTED))
+                available_actions.append(ACTION_MAP.get(obj.STATUS_FINAL))
             if obj.status not in [obj.STATUS_FINAL]:
                 available_actions.append(ACTION_MAP.get(obj.STATUS_CANCELLED))
-        if user_belongs:
-            if obj.status in [obj.STATUS_IN_PROGRESS]:
+        if user_is_assessor:
+            if obj.status in [obj.STATUS_IN_PROGRESS, obj.STATUS_REJECTED]:
                 available_actions.append(ACTION_MAP.get(obj.STATUS_SUBMITTED))
         return available_actions
 
@@ -390,7 +393,7 @@ class IndicatorSerializer(serializers.ModelSerializer):
         # group field PR (#2462) is merged
         # relying on the indicator_pk from psea_indicator fixture
         MAP_INDICATOR_DOC_TYPE = {
-            1: [34, 35, 53],
+            1: [34, 35, 53, 54],
             2: [36, 37, 38, 39, 53],
             3: [40, 41, 53],
             4: [42, 53],
