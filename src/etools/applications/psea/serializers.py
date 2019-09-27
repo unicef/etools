@@ -69,7 +69,7 @@ class AssessmentSerializer(BaseAssessmentSerializer):
 
     def get_overall_rating(self, obj):
         if not obj.overall_rating:
-            display = "-"
+            display = ""
         elif obj.overall_rating <= 11:
             display = "High"
         elif 11 < obj.overall_rating <= 19:
