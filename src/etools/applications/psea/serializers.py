@@ -139,7 +139,6 @@ class AssessmentSerializer(BaseAssessmentSerializer):
         is_focal_group = user.groups.filter(
             name__in=[UNICEFAuditFocalPoint.name],
         ).exists()
-        user_is_assessor = obj.user_belongs(user)
         available_actions = []
         if is_focal_group:
             if obj.status in [obj.STATUS_DRAFT]:
@@ -149,7 +148,7 @@ class AssessmentSerializer(BaseAssessmentSerializer):
                 available_actions.append(ACTION_MAP.get(obj.STATUS_FINAL))
             if obj.status not in [obj.STATUS_FINAL]:
                 available_actions.append(ACTION_MAP.get(obj.STATUS_CANCELLED))
-        if user_is_assessor:
+        if obj.user_is_assessor(user):
             if obj.status in [obj.STATUS_IN_PROGRESS, obj.STATUS_REJECTED]:
                 available_actions.append(ACTION_MAP.get(obj.STATUS_SUBMITTED))
         return available_actions
