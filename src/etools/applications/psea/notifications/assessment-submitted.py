@@ -1,7 +1,6 @@
 from unicef_notification.utils import strip_text
 
 # Receiver: Vendor Master Team, GSSC
-# Subject:
 
 name = 'psea/assessment/submitted'
 defaults = {
