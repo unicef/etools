@@ -34,6 +34,7 @@ class Command(BaseCommand):
         'tpm.tpmvisit.locations',
         'tpm.tpmvisit.sections',
         'tpm.tpmvisit.unicef_focal_points',
+        'tpm.tpmvisit.tpm_partner_focal_points',
     ]
 
     status_dates = [
@@ -242,8 +243,13 @@ class Command(BaseCommand):
                              condition=self.visit_status(TPMVisit.STATUSES.draft))
 
         # visit cancelled
+        tpm_cancelled_condition = self.visit_status(TPMVisit.STATUSES.cancelled)
         self.add_permissions([self.unicef_user, self.third_party_monitor], 'view', ['tpm.tpmvisit.cancel_comment'],
                              condition=self.visit_status(TPMVisit.STATUSES.cancelled))
+        self.add_permissions(self.third_party_monitor, 'view', self.tpm_visit_details,
+                             condition=tpm_cancelled_condition)
+        self.add_permissions(self.third_party_monitor, 'view', self.visit_report,
+                             condition=tpm_cancelled_condition)
 
         # visit assigned
         self.add_permissions(self.third_party_monitor, 'view', self.tpm_visit_details,
@@ -294,11 +300,12 @@ class Command(BaseCommand):
         self.add_permissions(self.unicef_user, 'view', self.action_points_block,
                              condition=tpm_reported_condition)
 
-        self.add_permissions(self.pme, 'view', 'tpm.tpmactivity.pv_applicable',
+        self.add_permissions([self.pme, self.focal_point], 'view', 'tpm.tpmactivity.pv_applicable',
                              condition=tpm_reported_condition)
-        self.add_permissions(self.pme, 'edit', ['tpm.tpmvisit.approval_comment', 'tpm.tpmvisit.report_reject_comments'],
+        self.add_permissions([self.pme, self.focal_point], 'edit',
+                             ['tpm.tpmvisit.approval_comment', 'tpm.tpmvisit.report_reject_comments'],
                              condition=tpm_reported_condition)
-        self.add_permissions(self.pme, 'action',
+        self.add_permissions([self.pme, self.focal_point], 'action',
                              ['tpm.tpmvisit.approve', 'tpm.tpmvisit.reject_report'],
                              condition=tpm_reported_condition)
 

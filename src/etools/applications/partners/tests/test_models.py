@@ -13,7 +13,7 @@ from mock import Mock, patch
 
 from etools.applications.audit.models import Engagement
 from etools.applications.audit.tests.factories import AuditFactory, SpecialAuditFactory, SpotCheckFactory
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
 from etools.applications.partners import models
 from etools.applications.partners.tests.factories import (
@@ -472,7 +472,6 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
         self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['total'], 0)
         visit = TPMVisitFactory(
             status=TPMVisit.UNICEF_APPROVED,
-            date_of_unicef_approved=datetime.datetime(datetime.datetime.today().year, 5, 1)
         )
         visit2 = TPMVisitFactory(
             status=TPMVisit.UNICEF_APPROVED,
@@ -481,21 +480,31 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
         TPMActivityFactory(
             tpm_visit=visit,
             partner=self.partner_organization,
+            is_pv=True,
+            date=datetime.datetime(datetime.datetime.today().year, 5, 1)
         )
         TPMActivityFactory(
             tpm_visit=visit,
             partner=self.partner_organization,
+            is_pv=True,
+            date=datetime.datetime(datetime.datetime.today().year, 9, 1)
+        )
+        TPMActivityFactory(
+            tpm_visit=visit,
+            partner=self.partner_organization,
+            date=datetime.datetime(datetime.datetime.today().year, 5, 1)
         )
         TPMActivityFactory(
             tpm_visit=visit2,
             partner=self.partner_organization,
+            date=datetime.datetime(datetime.datetime.today().year, 5, 1)
         )
 
         self.partner_organization.programmatic_visits()
-        self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['total'], 1)
+        self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['total'], 2)
         self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['q1'], 0)
         self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['q2'], 1)
-        self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['q3'], 0)
+        self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['q3'], 1)
         self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['q4'], 0)
 
     @freeze_time("2013-12-26")
@@ -526,7 +535,17 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
         SpotCheckFactory(
             partner=self.partner_organization,
             status=Engagement.FINAL,
-            date_of_draft_report_to_unicef=datetime.datetime(datetime.datetime.today().year, 4, 1)
+            date_of_draft_report_to_ip=datetime.datetime(datetime.datetime.today().year, 4, 1)
+        )
+        SpotCheckFactory(
+            partner=self.partner_organization,
+            status=Engagement.CANCELLED,
+            date_of_draft_report_to_ip=datetime.datetime(datetime.datetime.today().year, 4, 10)
+        )
+        SpotCheckFactory(
+            partner=self.partner_organization,
+            status=Engagement.REPORT_SUBMITTED,
+            date_of_draft_report_to_ip=None
         )
         self.partner_organization.spot_checks()
         self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['total'], 1)
@@ -548,12 +567,22 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
         AuditFactory(
             partner=self.partner_organization,
             status=Engagement.FINAL,
-            date_of_draft_report_to_unicef=datetime.datetime(datetime.datetime.today().year, 4, 1)
+            date_of_draft_report_to_ip=datetime.datetime(datetime.datetime.today().year, 4, 1)
         )
         SpecialAuditFactory(
             partner=self.partner_organization,
+            status=Engagement.REPORT_SUBMITTED,
+            date_of_draft_report_to_ip=datetime.datetime(datetime.datetime.today().year, 8, 1)
+        )
+        AuditFactory(
+            partner=self.partner_organization,
             status=Engagement.FINAL,
-            date_of_draft_report_to_unicef=datetime.datetime(datetime.datetime.today().year, 8, 1)
+            date_of_draft_report_to_ip=None
+        )
+        SpecialAuditFactory(
+            partner=self.partner_organization,
+            status=Engagement.CANCELLED,
+            date_of_draft_report_to_ip=datetime.datetime(datetime.datetime.today().year, 8, 1)
         )
         self.partner_organization.audits_completed()
         self.assertEqual(self.partner_organization.hact_values['audits']['completed'], 2)
@@ -1576,10 +1605,33 @@ class TestPlannedEngagement(BaseTenantTestCase):
             special_audit=False
         )
 
-    def test_properties(self):
+    def test_spot_check_planned(self):
         self.assertEquals(self.engagement.total_spot_check_planned, 3)
+
+    def test_required_audit(self):
         self.assertEquals(self.engagement.required_audit, 1)
+
+    def test_spot_check_required(self):
         self.assertEquals(self.engagement.spot_check_required, self.engagement.partner.min_req_spot_checks + 3)
+
+    def test_spot_check_required_with_completed_audit(self):
+        partner = PartnerFactory(name="Partner")
+        hact = partner.get_hact_json()
+        hact['audits']['completed'] = 1
+        partner.save()
+
+        pe = PlannedEngagementFactory(
+            partner=partner,
+            spot_check_follow_up=3,
+            spot_check_planned_q1=2,
+            spot_check_planned_q2=1,
+            spot_check_planned_q3=0,
+            spot_check_planned_q4=0,
+            scheduled_audit=True,
+            special_audit=False
+        )
+
+        self.assertEquals(pe.spot_check_required, pe.partner.min_req_spot_checks + 2)
 
 
 class TestPartnerPlannedVisits(BaseTenantTestCase):

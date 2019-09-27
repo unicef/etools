@@ -107,14 +107,6 @@ class TravelDetailsViewSet(mixins.RetrieveModelMixin,
         serializer = CloneOutputSerializer(clone, context=self.get_serializer_context())
         return Response(serializer.data, status.HTTP_201_CREATED)
 
-    @atomic
-    def clone_for_driver(self, request, *args, **kwargs):
-        traveler = self._get_traveler_for_cloning()
-        helper = CloneTravelHelper(self.get_object())
-        clone = helper.clone_for_driver(traveler)
-        serializer = CloneOutputSerializer(clone, context=self.get_serializer_context())
-        return Response(serializer.data, status.HTTP_201_CREATED)
-
     def _get_traveler_for_cloning(self):
         parameter_serializer = CloneParameterSerializer(data=self.request.data)
         parameter_serializer.is_valid(raise_exception=True)
@@ -193,7 +185,6 @@ class TravelActivityPerInterventionViewSet(QueryStringFilterMixin, mixins.ListMo
 
     def get_queryset(self):
         qs = TravelActivity.objects.prefetch_related('travels', 'primary_traveler', 'locations')
-        qs = qs.filter(travel_type__in=[TravelType.SPOT_CHECK, TravelType.PROGRAMME_MONITORING])
 
         query_params = self.request.query_params
         if query_params:

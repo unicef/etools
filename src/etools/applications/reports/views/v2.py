@@ -20,23 +20,27 @@ from rest_framework.generics import (
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework_csv.renderers import CSVRenderer, JSONRenderer
+from unicef_rest_export.views import ExportView
 from unicef_restlib.views import QueryStringFilterMixin
 
-from etools.applications.EquiTrack.mixins import ExportModelMixin
-from etools.applications.EquiTrack.renderers import CSVFlatRenderer
+from etools.applications.core.mixins import ExportModelMixin
+from etools.applications.core.renderers import CSVFlatRenderer
 from etools.applications.partners.filters import PartnerScopeFilter
-from etools.applications.partners.models import Intervention
+from etools.applications.partners.models import Intervention, InterventionResultLink
 from etools.applications.partners.permissions import PartnershipManagerPermission, PartnershipManagerRepPermission
 from etools.applications.reports.models import (
     AppliedIndicator,
     CountryProgramme,
     Disaggregation,
     Indicator,
+    IndicatorBlueprint,
     LowerResult,
     Result,
+    ResultType,
     SpecialReportingRequirement,
-    ResultType, IndicatorBlueprint)
+)
 from etools.applications.reports.permissions import PMEPermission
+from etools.applications.reports.renderers import ResultFrameworkRenderer
 from etools.applications.reports.serializers.exports import (
     AppliedIndicatorExportFlatSerializer,
     AppliedIndicatorExportSerializer,
@@ -51,6 +55,8 @@ from etools.applications.reports.serializers.v2 import (
     LowerResultSerializer,
     MinimalOutputListSerializer,
     OutputListSerializer,
+    ResultFrameworkExportSerializer,
+    ResultFrameworkSerializer,
     SpecialReportingRequirementSerializer,
 )
 
@@ -362,6 +368,8 @@ class AppliedIndicatorLocationExportView(QueryStringFilterMixin, ListAPIView):
         if self.request.query_params:
             queries = []
             filters = (
+                ('partners', 'agreement__partner__in'),
+                ('agreements', 'agreement__in'),
                 ('document_type', 'document_type__in'),
                 ('country_programme', 'agreement__country_programme'),
                 ('start', 'start__gte'),
@@ -418,7 +426,8 @@ class ClusterListAPIView(ListAPIView):
         CSVRenderer,
         CSVFlatRenderer,
     )
-    queryset = AppliedIndicator.objects.filter(cluster_name__isnull=False).values('cluster_name').distinct()
+    queryset = AppliedIndicator.objects.filter(cluster_name__isnull=False).order_by(
+        'cluster_name').values('cluster_name').distinct()
 
 
 class SpecialReportingRequirementListCreateView(ListCreateAPIView):
@@ -450,3 +459,35 @@ class SpecialReportingRequirementRetrieveUpdateDestroyView(RetrieveUpdateDestroy
                 _("Cannot delete special reporting requirements in the past.")
             )
         return super().destroy(request, *args, **kwargs)
+
+
+class ResultFrameworkView(ExportView):
+    serializer_class = ResultFrameworkSerializer
+    export_serializer_class = ResultFrameworkExportSerializer
+    permission_classes = (PartnershipManagerPermission, )
+    renderer_classes = (ResultFrameworkRenderer, )
+
+    def get_queryset(self, format=None):
+        qs = InterventionResultLink.objects.filter(
+            intervention=self.kwargs.get("pk")
+        )
+        data = []
+        for result_link in qs:
+            data.append(result_link)
+            for l in result_link.ll_results.all():
+                data += l.applied_indicators.all()
+        return data
+
+    def finalize_response(self, request, response, *args, **kwargs):
+        response = super().finalize_response(
+            request,
+            response,
+            *args,
+            **kwargs,
+        )
+        if response.accepted_renderer.format == "docx_table":
+            intervention = self.get_queryset()[0].intervention
+            response["content-disposition"] = "attachment; filename={}_results.docx".format(
+                intervention.reference_number
+            )
+        return response

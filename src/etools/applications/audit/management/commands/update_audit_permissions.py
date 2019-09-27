@@ -2,13 +2,24 @@
 from django.core.management import BaseCommand
 from django.db.models import Q
 
-from etools.applications.action_points.conditions import ActionPointAuthorCondition, ActionPointAssignedByCondition, \
-    ActionPointAssigneeCondition
+from etools.applications.action_points.conditions import (
+    ActionPointAssignedByCondition,
+    ActionPointAssigneeCondition,
+    ActionPointAuthorCondition,
+)
 from etools.applications.action_points.models import ActionPoint
-from etools.applications.audit.conditions import (AuditModuleCondition, AuditStaffMemberCondition,
-                                                  EngagementStaffMemberCondition,)
-from etools.applications.audit.models import Auditor, Engagement, UNICEFAuditFocalPoint, UNICEFUser, \
-    EngagementActionPoint
+from etools.applications.audit.conditions import (
+    AuditModuleCondition,
+    AuditStaffMemberCondition,
+    EngagementStaffMemberCondition,
+)
+from etools.applications.audit.models import (
+    Auditor,
+    Engagement,
+    EngagementActionPoint,
+    UNICEFAuditFocalPoint,
+    UNICEFUser,
+)
 from etools.applications.permissions2.conditions import GroupCondition, NewObjectCondition, ObjectStatusCondition
 from etools.applications.permissions2.models import Permission
 from etools.applications.permissions2.utils import get_model_target
@@ -264,13 +275,14 @@ class Command(BaseCommand):
             self.engagement_overview_page +
             self.engagement_status_auto_date_fields +
             self.engagement_status_editable_date_fields +
-            self.engagement_attachments_block
+            self.engagement_attachments_block +
+            self.report_editable_block
         )
 
         self.add_permissions([self.focal_point, self.auditor], 'edit', [
             'purchase_order.auditorfirm.staff_members',
             'purchase_order.auditorstaffmember.*',
-        ])
+        ] + self.engagement_attachments_block + self.report_attachments_block)
 
         self.add_permissions(self.focal_point, 'edit', [
             'purchase_order.purchaseorder.contract_end_date',
@@ -279,7 +291,7 @@ class Command(BaseCommand):
         # new object: focal point can add
         self.add_permissions(
             self.focal_point, 'edit',
-            self.engagement_overview_editable_page + self.engagement_attachments_block,
+            self.engagement_overview_editable_page,
             condition=self.new_engagement()
         )
 
@@ -313,7 +325,7 @@ class Command(BaseCommand):
 
         self.add_permissions(
             self.focal_point, 'edit',
-            self.staff_members_block + self.engagement_attachments_block,
+            self.staff_members_block,
             condition=partner_contacted_condition
         )
         self.add_permissions(

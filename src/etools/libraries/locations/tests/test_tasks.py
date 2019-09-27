@@ -4,10 +4,11 @@ from unicef_locations.models import Location
 from unicef_locations.tests.factories import CartoDBTableFactory, LocationFactory
 
 from etools.libraries.locations import tasks_cartodb
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import Intervention
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
 from etools.applications.partners.tests.factories import InterventionFactory
 from etools.applications.users.tests.factories import UserFactory
+# from etools.libraries.locations import tasks
 
 
 class TestLocationViews(BaseTenantTestCase):

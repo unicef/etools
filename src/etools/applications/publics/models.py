@@ -1,68 +1,13 @@
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 
-from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.db.models import QuerySet
-from django.db.models.query_utils import Q
 from django.db.utils import IntegrityError
 from django.utils.timezone import now
 from django.utils.translation import ugettext_lazy as _
 
-from pytz import UTC
-
-# UTC have to be here to be able to directly compare with the values from the db (orm always returns tz aware values)
-EPOCH_ZERO = datetime(1970, 1, 1, tzinfo=UTC)
-
-
-class ValidityQuerySet(QuerySet):
-    """
-    Queryset which overwrites the delete method to support soft delete functionality
-    By default it filters out all soft deleted instances
-    """
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        if self.model:
-            self.add_intial_q()
-
-    def delete(self):
-        self.update(deleted_at=now())
-
-    def add_intial_q(self):
-        self.query.add_q(Q(deleted_at=EPOCH_ZERO))
-
-
-class SoftDeleteMixin(models.Model):
-    """
-    This is a mixin to support soft deletion for specific models. This behavior is required to keep everything in the
-    database but still hide it from the end users. Example: Country changes currency - the old one has to be kept but
-    hidden (soft deleted)
-
-    The functionality achieved by using the SoftDeleteMixin and the ValidityQuerySet. Both of them are depending on the
-    `deleted_at` field, which defaults to EPOCH_ZERO to allow unique constrains in the db.
-    IMPORTANT: Default has to be a value - boolean field or nullable datetime would not work
-    IMPORTANT #2: This model does not prevent cascaded deletion - this can only happen if the soft deleted model points
-                  to one which actually deletes the entity from the database
-    """
-
-    deleted_at = models.DateTimeField(default=EPOCH_ZERO, verbose_name='Deleted At')
-
-    # IMPORTANT: The order of these two queryset is important. The normal queryset has to be defined first to have that
-    #            as a default queryset
-    admin_objects = QuerySet.as_manager()
-    objects = ValidityQuerySet.as_manager()
-
-    class Meta:
-        abstract = True
-
-    def force_delete(self, using=None, keep_parents=False):
-        return super().delete(using, keep_parents)
-
-    def delete(self, *args, **kwargs):
-        self.deleted_at = now()
-        self.save()
+from etools.libraries.djangolib.models import SoftDeleteMixin, ValidityQuerySet
 
 
 class TravelAgent(SoftDeleteMixin, models.Model):
@@ -301,37 +246,3 @@ class DSARate(models.Model):
         return '{} ({} - {})'.format(self.region.label,
                                      self.effective_from_date.isoformat(),
                                      self.effective_to_date.isoformat())
-
-
-class DSARateUpload(models.Model):
-    UPLOADED = 'uploaded'
-    PROCESSING = 'processing'
-    FAILED = 'failed'
-    DONE = 'done'
-    STATUS = (
-        (UPLOADED, 'Uploaded'),
-        (PROCESSING, 'Processing'),
-        (FAILED, 'Failed'),
-        (DONE, 'Done'),
-    )
-
-    dsa_file = models.FileField(upload_to="publics/dsa_rate/", verbose_name=_('DSA File'))
-    status = models.CharField(
-        max_length=64,
-        blank=True,
-        default='',
-        choices=STATUS,
-        verbose_name=_('Status')
-    )
-    upload_date = models.DateTimeField(auto_now_add=True, verbose_name=_('Upload Date'))
-    errors = JSONField(blank=True, null=True, default=dict, verbose_name=_('Errors'))
-
-    def save(self, *args, **kwargs):
-        if not self.pk:
-            self.status = DSARateUpload.UPLOADED
-            super().save(*args, **kwargs)
-            # resolve circular imports with inline importing
-            from etools.applications.publics.tasks import upload_dsa_rates
-            upload_dsa_rates.delay(self.pk)
-        else:
-            super().save(*args, **kwargs)

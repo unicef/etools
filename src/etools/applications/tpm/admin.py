@@ -1,18 +1,25 @@
 from django.contrib import admin
 
-from etools.applications.publics.admin import AdminListMixin
-from etools.applications.tpm import models, forms
+from etools.applications.tpm import forms, models
+from etools.libraries.djangolib.admin import AdminListMixin
 
 
 @admin.register(models.TPMActivity)
-class TPMActivityInline(admin.ModelAdmin):
+class TPMActivityAdmin(admin.ModelAdmin):
     list_display = (
         '__str__',
+        'is_pv'
     )
     search_fields = (
         'tpm_visit__author__username',
         'tpm_visit__tpm_partner__name',
     )
+    filter_horizontal = (
+        'locations',
+        'unicef_focal_points',
+        'offices',
+    )
+    raw_id_fields = ('partner', 'intervention', 'cp_output')
 
 
 @admin.register(models.TPMVisit)
@@ -21,6 +28,9 @@ class TPMVisitAdmin(AdminListMixin, admin.ModelAdmin):
     list_display = ('tpm_partner', 'status', )
     list_filter = (
         'status',
+    )
+    filter_horizontal = (
+        'tpm_partner_focal_points',
     )
 
     def __init__(self, model, admin_site):

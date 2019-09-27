@@ -15,10 +15,11 @@ python -W ignore manage.py makemigrations --dry-run --check
 # Check code style unless running under tox, in which case tox runs flake8 separately
 if [[ $RUNNING_UNDER_TOX != 1 ]] ; then
     time flake8 src/
+    time isort -rc src/ --check-only
 fi
 
 # Run unittests and coverage report
 coverage erase
 time coverage run manage.py test --noinput --keepdb "$@"
 coverage report -m
-
+coverage html

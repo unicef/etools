@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import connection
-from django.test import SimpleTestCase
+from django.test import override_settings, SimpleTestCase
 from django.urls import resolve, reverse
 from django.utils import timezone
 
@@ -22,8 +22,8 @@ from unicef_snapshot.models import Activity
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.attachments.tests.factories import AttachmentFileTypeFactory
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.EquiTrack.tests.mixins import URLAssertionMixin
+from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.mixins import URLAssertionMixin
 from etools.applications.funds.models import FundsCommitmentHeader, FundsCommitmentItem
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
 from etools.applications.partners.models import (
@@ -45,6 +45,7 @@ from etools.applications.partners.tests.factories import (
     AgreementAmendmentFactory,
     AgreementFactory,
     InterventionFactory,
+    InterventionPlannedVisitsFactory,
     InterventionReportingPeriodFactory,
     InterventionResultLinkFactory,
     PartnerFactory,
@@ -184,15 +185,17 @@ class TestAPIPartnerOrganizationListView(BaseTenantTestCase):
         self.assertIn('id', response_json[0].keys())
         self.assertEqual(response_json[0]['id'], self.partner.id)
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_simple(self):
         """exercise simple fetch"""
         response = self.forced_auth_req('get', self.url)
         self.assertResponseFundamentals(response)
 
     def test_no_permission_user_forbidden(self):
-        """Ensure a non-staff user gets the 403 smackdown"""
+        """Ensure a non-staff user gets no data"""
         response = self.forced_auth_req('get', self.url, user=UserFactory())
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, [])
 
     def test_unauthenticated_user_forbidden(self):
         """Ensure an unauthenticated user gets the 403 smackdown"""
@@ -209,16 +212,19 @@ class TestAPIPartnerOrganizationListView(BaseTenantTestCase):
         response = self.forced_auth_req('get', self.url, user=user)
         self.assertResponseFundamentals(response)
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_staff_access(self):
         """Ensure a staff user has access"""
         response = self.forced_auth_req('get', self.url, user=self.user)
         self.assertResponseFundamentals(response)
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_verbosity_minimal(self):
         """Exercise behavior when verbosity=minimal"""
         response = self.forced_auth_req('get', self.url, data={"verbosity": "minimal"})
         self.assertResponseFundamentals(response, sorted(("id", "name")))
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_verbosity_other(self):
         """Exercise behavior when verbosity != minimal. ('minimal' is the only accepted value for verbosity;
         other values are ignored.)
@@ -226,6 +232,7 @@ class TestAPIPartnerOrganizationListView(BaseTenantTestCase):
         response = self.forced_auth_req('get', self.url, data={"verbosity": "banana"})
         self.assertResponseFundamentals(response)
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_filter_partner_type(self):
         """Ensure filtering by partner type works as expected"""
         # Make another partner that should be excluded from the search results.
@@ -233,6 +240,7 @@ class TestAPIPartnerOrganizationListView(BaseTenantTestCase):
         response = self.forced_auth_req('get', self.url, data={"partner_type": PartnerType.UN_AGENCY})
         self.assertResponseFundamentals(response)
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_filter_cso_type(self):
         """Ensure filtering by CSO type works as expected"""
         # Make another partner that should be excluded from the search results.
@@ -240,6 +248,7 @@ class TestAPIPartnerOrganizationListView(BaseTenantTestCase):
         response = self.forced_auth_req('get', self.url, data={"cso_type": "International"})
         self.assertResponseFundamentals(response)
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_filter_hidden(self):
         """Ensure filtering by the hidden flag works as expected"""
         # Make another partner that should be excluded from the search results.
@@ -262,6 +271,7 @@ class TestAPIPartnerOrganizationListView(BaseTenantTestCase):
         self.assertIsInstance(response_json, list)
         self.assertEqual(len(response_json), 0)
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_search_name(self):
         """Test that name search matches substrings and is case-independent"""
         # Make another partner that should be excluded from the search results.
@@ -269,6 +279,7 @@ class TestAPIPartnerOrganizationListView(BaseTenantTestCase):
         response = self.forced_auth_req('get', self.url, data={"search": "PARTNER"})
         self.assertResponseFundamentals(response)
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_search_short_name(self):
         """Test that short name search matches substrings and is case-independent"""
         # Make another partner that should be excluded from the search results.
@@ -276,6 +287,7 @@ class TestAPIPartnerOrganizationListView(BaseTenantTestCase):
         response = self.forced_auth_req('get', self.url, data={"search": "SHORT"})
         self.assertResponseFundamentals(response)
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_values_positive(self):
         """Ensure that passing the values param w/partner ids returns only data for those partners"""
         # In contrast to the other tests, this test uses the two partners I create here and filters out self.partner.
@@ -299,6 +311,7 @@ class TestAPIPartnerOrganizationListView(BaseTenantTestCase):
 
         self.assertCountEqual(ids_in_response, (p1.id, p2.id))
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_values_negative(self):
         """Ensure that garbage values are handled properly"""
         response = self.forced_auth_req('get', self.url, data={"values": "banana"})
@@ -335,6 +348,7 @@ class TestPartnerOrganizationListViewForCSV(BaseTenantTestCase):
         # Undo the monkey patch.
         partner_organization_v2.PartnerOrganizationExportSerializer = PartnerOrganizationExportSerializer
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_format_csv(self):
         """Exercise the view-specific aspects of passing query param format=csv. This does not test the serializer
         function, it only tests that the expected serializer is invoked and returns something CSV-like.
@@ -426,6 +440,7 @@ class TestPartnershipViews(BaseTenantTestCase):
             types=[InterventionAmendment.RESULTS],
         )
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_api_partners_list(self):
         response = self.forced_auth_req('get', '/api/v2/partners/', user=self.unicef_staff)
 
@@ -433,6 +448,7 @@ class TestPartnershipViews(BaseTenantTestCase):
         self.assertEqual(len(response.data), 1)
         self.assertIn("Partner", response.data[0]["name"])
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_api_partners_list_specify_workspace(self):
         # specifying current tenant works
         response = self.forced_auth_req('get', '/api/v2/partners/', user=self.unicef_staff,
@@ -1031,6 +1047,7 @@ class TestPartnerStaffMemberAPIView(BaseTenantTestCase):
             args=[cls.partner.pk]
         )
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_get(self):
         response = self.forced_auth_req(
             'get',
@@ -1419,6 +1436,30 @@ class TestInterventionViews(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('Document type PD or HPD can only be associated with a PCA agreement.', response.data)
 
+    def test_intervention_validation_multiple_agreement_ssfa(self):
+        self.agreement.agreement_type = Agreement.SSFA
+        self.agreement.save()
+        intervention = Intervention.objects.get(id=self.intervention["id"])
+        intervention.document_type = Intervention.SSFA
+        intervention.save()
+        self.agreement.interventions.add(intervention)
+
+        response = self.forced_auth_req(
+            'post',
+            reverse(
+                "partners_api:intervention-list"
+            ),
+            user=self.partnership_manager_user,
+            data={
+                "agreement": self.agreement.id,
+                "document_type": Intervention.SSFA,
+                "status": Intervention.DRAFT,
+                "title": "test"
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('You can only add one SSFA Document for each SSFA Agreement', response.data)
+
     def test_intervention_validation_dates(self):
         today = datetime.date.today()
         data = {
@@ -1463,6 +1504,41 @@ class TestInterventionViews(BaseTenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_intervention_update_planned_visits_year_change(self):
+        intervention = InterventionFactory()
+        visit = InterventionPlannedVisitsFactory(intervention=intervention)
+        visit_qs = InterventionPlannedVisits.objects.filter(
+            intervention=intervention,
+        )
+        self.assertEqual(visit_qs.count(), 1)
+        new_year = visit.year + 1
+        self.assertNotEqual(visit.year, new_year)
+        data = {
+            "planned_visits": {
+                "id": visit.pk,
+                "year": new_year,
+                "programmatic": 2,
+                "spot_checks": 1,
+                "audit": 1,
+                "quarter": "q1",
+            },
+        }
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse(
+                "partners_api:intervention-detail",
+                args=[intervention.pk]
+            ),
+            user=self.partnership_manager_user,
+            data=data,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(visit_qs.count(), 1)
+        visit.refresh_from_db()
+        self.assertEqual(visit.year, new_year)
 
     def test_intervention_update_planned_visits_fail_due_terminated_status(self):
         self.intervention_obj.status = Intervention.TERMINATED
@@ -1517,6 +1593,34 @@ class TestInterventionViews(BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data['planned_visits'], ['Planned Visit to be set only at Partner level'])
+
+    def test_intervention_delete_planned_visits(self):
+        response = self.forced_auth_req(
+            'delete',
+            reverse(
+                "partners_api:interventions-planned-visits-delete",
+                args=[self.intervention_obj.id, self.planned_visit.id]
+            ),
+            user=self.partnership_manager_user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        with self.assertRaises(InterventionPlannedVisits.DoesNotExist):
+            self.planned_visit.refresh_from_db()
+
+    def test_intervention_delete_planned_visits_nondraft_fail(self):
+        self.intervention_obj.status = Intervention.SIGNED
+        self.intervention_obj.save()
+        response = self.forced_auth_req(
+            'delete',
+            reverse(
+                "partners_api:interventions-planned-visits-delete",
+                args=[self.intervention_obj.id, self.planned_visit.id]
+            ),
+            user=self.partnership_manager_user,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('Planned visits can only be deleted in Draft status', response.data)
 
     def test_intervention_filter(self):
         country_programme = CountryProgrammeFactory()
@@ -1886,6 +1990,7 @@ class TestPartnerOrganizationDashboardAPIView(BaseTenantTestCase):
             outstanding_dct_amount_6_to_9_months_usd=69,
             outstanding_dct_amount_more_than_9_months_usd=90,
             partner_type=PartnerType.UN_AGENCY,
+            core_values_assessment_date=datetime.date.today() - datetime.timedelta(30),
         )
 
         cls.unicef_staff = UserFactory(is_staff=True)
@@ -1921,6 +2026,7 @@ class TestPartnerOrganizationDashboardAPIView(BaseTenantTestCase):
         self.assertEqual(self.record['total_ct_ytd'], 123.0)
         self.assertEqual(self.record['outstanding_dct_amount_6_to_9_months_usd'], 69.00)
         self.assertEqual(self.record['outstanding_dct_amount_more_than_9_months_usd'], 90.00)
+        self.assertEqual(self.record['core_value_assessment_expiring'].split()[0], '30')
 
     def test_sections(self):
         self.assertEqual(self.record['sections'], '{}|{}'.format(self.sec1.name, self.sec2.name))
@@ -1932,7 +2038,7 @@ class TestPartnerOrganizationDashboardAPIView(BaseTenantTestCase):
         self.assertEqual(self.record['action_points'], 6)
 
     def test_no_recent_programmatic_visit(self):
-        self.assertEquals(self.record['last_pv_date'].date(), datetime.date.today() - datetime.timedelta(200))
+        self.assertEquals(self.record['last_pv_date'], datetime.date.today() - datetime.timedelta(200))
         self.assertEquals(self.record['days_last_pv'], 200)
         self.assertTrue(self.record['alert_no_recent_pv'])
         self.assertFalse(self.record['alert_no_pv'])

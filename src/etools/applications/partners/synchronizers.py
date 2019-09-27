@@ -6,19 +6,18 @@ from decimal import Decimal
 from django.core.exceptions import ValidationError
 from django.db import connection, transaction
 
+from unicef_vision.loaders import VISION_NO_DATA_MESSAGE
+from unicef_vision.synchronizers import FileDataSynchronizer
+from unicef_vision.utils import comp_decimals
+
 from etools.applications.partners.models import PartnerOrganization, PlannedEngagement
 from etools.applications.partners.tasks import notify_partner_hidden
-from etools.applications.vision.utils import comp_decimals
-from etools.applications.vision.vision_data_synchronizer import (
-    FileDataSynchronizer,
-    VISION_NO_DATA_MESSAGE,
-    VisionDataSynchronizer,
-)
+from etools.applications.vision.synchronizers import VisionDataTenantSynchronizer
 
 logger = logging.getLogger(__name__)
 
 
-class PartnerSynchronizer(VisionDataSynchronizer):
+class PartnerSynchronizer(VisionDataTenantSynchronizer):
 
     ENDPOINT = 'GetPartnerDetailsInfo_json'
     REQUIRED_KEYS = (
@@ -282,11 +281,11 @@ class FilePartnerSynchronizer(FileDataSynchronizer, PartnerSynchronizer):
     >>> from etools.applications.users.models import Country
     >>> country = Country.objects.get(name='Indonesia')
     >>> filename = '/home/user/Downloads/partners.json'
-    >>> FilePartnerSynchronizer(country, filename).sync()
+    >>> FilePartnerSynchronizer(country.business_area_code, filename).sync()
     """
 
 
-class DirectCashTransferSynchronizer(VisionDataSynchronizer):
+class DirectCashTransferSynchronizer(VisionDataTenantSynchronizer):
 
     model = PartnerOrganization
 

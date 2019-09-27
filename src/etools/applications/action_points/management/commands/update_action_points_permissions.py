@@ -1,8 +1,13 @@
 from django.core.management import BaseCommand
 
 from etools.applications.action_points.conditions import (
-    ActionPointAssignedByCondition, ActionPointAssigneeCondition, ActionPointAuthorCondition,
-    ActionPointModuleCondition, RelatedActionPointCondition, UnRelatedActionPointCondition)
+    ActionPointAssignedByCondition,
+    ActionPointAssigneeCondition,
+    ActionPointAuthorCondition,
+    ActionPointModuleCondition,
+    RelatedActionPointCondition,
+    UnRelatedActionPointCondition,
+)
 from etools.applications.action_points.models import ActionPoint, PME, UNICEFUser
 from etools.applications.permissions2.conditions import GroupCondition, NewObjectCondition, ObjectStatusCondition
 from etools.applications.permissions2.models import Permission
@@ -20,6 +25,7 @@ class Command(BaseCommand):
     action_point_related_objects = [
         'action_points.actionpoint.engagement',
         'action_points.actionpoint.tpm_activity',
+        'action_points.actionpoint.psea_assessment',
         'action_points.actionpoint.travel_activity',
     ]
 

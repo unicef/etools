@@ -10,8 +10,8 @@ from rest_framework.views import APIView
 from unicef_restlib.permissions import IsSuperUser
 
 from etools.applications.hact.tasks import update_aggregate_hact_values, update_hact_values
-from etools.applications.management.tasks import fam_report, pmp_indicator_report, send_test_email, user_report
-from etools.libraries.azure_graph_api.tasks import sync_delta_users
+from etools.applications.management.tasks import pmp_indicator_report, send_test_email, user_report
+from etools.libraries.azure_graph_api.tasks import sync_all_users, sync_delta_users
 
 
 class BasicTaskAPIView(APIView, metaclass=ABCMeta):
@@ -54,6 +54,11 @@ class BasicReportAPIView(APIView, metaclass=ABCMeta):
         return f'{self.base_filename}_as_of_{today}'
 
 
+class SyncAllUsers(BasicTaskAPIView):
+    task_function = sync_all_users
+    success_message = 'Task generated Successfully: Sync All Users'
+
+
 class SyncDeltaUsers(BasicTaskAPIView):
     task_function = sync_delta_users
     success_message = 'Task generated Successfully: Sync Delta Users'
@@ -92,8 +97,3 @@ class UsersReportView(BasicReportAPIView):
 class PMPIndicatorsReportView(BasicReportAPIView):
     report_function = pmp_indicator_report
     base_filename = 'pmp_indicators_report'
-
-
-class FamReportView(BasicReportAPIView):
-    report_function = fam_report
-    base_filename = 'fam_report'

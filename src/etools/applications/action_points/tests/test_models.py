@@ -8,7 +8,8 @@ from etools.applications.action_points.models import ActionPoint
 from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.audit.models import MicroAssessment
 from etools.applications.audit.tests.factories import MicroAssessmentFactory
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.psea.tests.factories import AssessmentFactory
 from etools.applications.t2f.tests.factories import TravelActivityFactory, TravelFactory
 from etools.applications.tpm.tests.factories import TPMVisitFactory
 from etools.applications.users.tests.factories import UserFactory
@@ -54,6 +55,10 @@ class TestActionPointModel(BaseTenantTestCase):
         action_point = ActionPointFactory(tpm_activity=TPMVisitFactory(tpm_activities__count=1).tpm_activities.first())
         self.assertEqual(action_point.related_module, ActionPoint.MODULE_CHOICES.tpm)
 
+    def test_psea_related(self):
+        action_point = ActionPointFactory(psea_assessment=AssessmentFactory())
+        self.assertEqual(action_point.related_module, ActionPoint.MODULE_CHOICES.psea)
+
     def test_t2f_related(self):
         action_point = ActionPointFactory(travel_activity=TravelActivityFactory())
         self.assertEqual(action_point.related_module, ActionPoint.MODULE_CHOICES.t2f)
@@ -85,6 +90,14 @@ class TestActionPointModel(BaseTenantTestCase):
         self.assertEqual(
             action_point.related_object_str,
             'Micro Assessment {}'.format(action_point.engagement.reference_number)
+        )
+
+    def test_psea_related_str(self):
+        action_point = ActionPointFactory(psea_assessment=AssessmentFactory())
+        self.assertEqual(
+            action_point.related_object_str,
+            f'{action_point.psea_assessment.partner} [{action_point.psea_assessment.get_status_display()}] '
+            f'{action_point.psea_assessment.reference_number}'
         )
 
     def test_tpm_related_str(self):

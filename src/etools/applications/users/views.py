@@ -3,9 +3,8 @@ import logging
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError as DjangoValidationError
-from django.db import connection
 from django.http import HttpResponseForbidden, HttpResponseRedirect
-from django.views.generic import FormView, RedirectView
+from django.views.generic import RedirectView
 from django.views.generic.detail import DetailView
 
 from rest_framework import mixins, status, viewsets
@@ -17,7 +16,6 @@ from rest_framework.views import APIView
 
 from etools.applications.audit.models import Auditor
 from etools.applications.tpm.models import ThirdPartyMonitor
-from etools.applications.users.forms import ProfileForm
 from etools.applications.users.models import Country, Office, UserProfile
 from etools.applications.users.serializers import (
     CountrySerializer,
@@ -28,21 +26,10 @@ from etools.applications.users.serializers import (
     SimpleProfileSerializer,
     SimpleUserSerializer,
     UserCreationSerializer,
-    UserSerializer,
 )
 from etools.libraries.azure_graph_api.tasks import retrieve_user_info
 
 logger = logging.getLogger(__name__)
-
-
-class UserAuthAPIView(RetrieveAPIView):
-    # TODO: Consider removing now use JWT
-    model = get_user_model()
-    serializer_class = UserSerializer
-
-    def get_object(self, queryset=None, **kwargs):
-        user = self.request.user
-        return user
 
 
 class ADUserAPIView(DetailView):
@@ -198,44 +185,6 @@ class UsersDetailAPIView(RetrieveAPIView):
             data,
             status=status.HTTP_200_OK
         )
-
-
-class ProfileEdit(FormView):
-
-    template_name = 'users/profile.html'
-    form_class = ProfileForm
-    success_url = 'complete'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context.update({
-            'office_list': connection.tenant.offices.all().order_by('name'),
-        })
-        return context
-
-    def form_valid(self, form):
-        # This method is called when valid form data has been POSTed.
-        # It should return an HttpResponse.
-        profile, created = UserProfile.objects.get_or_create(
-            user=self.request.user
-        )
-        profile.office = form.cleaned_data['office']
-        profile.job_title = form.cleaned_data['job_title']
-        profile.phone_number = form.cleaned_data['phone_number']
-        profile.save()
-        return super().form_valid(form)
-
-    def get_initial(self):
-        """  Returns the initial data to use for forms on this view.  """
-        initial = super().get_initial()
-        try:
-            profile = self.request.user.profile
-            initial['office'] = profile.office
-            initial['job_title'] = profile.job_title
-            initial['phone_number'] = profile.phone_number
-        except UserProfile.DoesNotExist:
-            pass
-        return initial
 
 
 class GroupViewSet(mixins.RetrieveModelMixin,

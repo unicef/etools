@@ -4,17 +4,11 @@ from django.contrib import admin
 from waffle.admin import FlagAdmin, SwitchAdmin
 from waffle.models import Flag, Switch
 
-from etools.applications.environment.models import IssueCheckConfig, TenantFlag, TenantSwitch
-
-
-@admin.register(IssueCheckConfig)
-class IssueCheckConfigAdmin(admin.ModelAdmin):
-    list_display = ['check_id', 'is_active']
-    list_filter = ['is_active']
+from etools.applications.environment.models import TenantFlag, TenantSwitch
 
 
 class TenantFlagAdmin(FlagAdmin):
-    filter_horizontal = ['countries']
+    filter_horizontal = ['countries', 'groups']
 
 
 class TenantSwitchAdmin(SwitchAdmin):

@@ -21,13 +21,7 @@ from etools.applications.action_points.serializers import ActionPointBaseSeriali
 from etools.applications.partners.models import PartnerType
 from etools.applications.publics.models import AirlineCompany
 from etools.applications.t2f.helpers.permission_matrix import PermissionMatrix
-from etools.applications.t2f.models import (
-    ItineraryItem,
-    Travel,
-    TravelActivity,
-    TravelAttachment,
-    TravelType,
-)
+from etools.applications.t2f.models import ItineraryItem, Travel, TravelActivity, TravelAttachment, TravelType
 
 itineraryItemSortKey = operator.attrgetter('departure_date')
 
@@ -100,6 +94,7 @@ class TravelActivitySerializer(PermissionBasedModelSerializer):
         required=False
     )
     action_points = ActionPointBaseSerializer(source='actionpoint_set', many=True, read_only=True, required=False)
+    date = serializers.DateField(required=True)
 
     class Meta:
         model = TravelActivity
@@ -111,6 +106,10 @@ class TravelActivitySerializer(PermissionBasedModelSerializer):
             if not attrs.get('is_primary_traveler'):
                 if not attrs.get('primary_traveler'):
                     raise ValidationError({'primary_traveler': serializers.Field.default_error_messages['required']})
+            if not attrs.get('date'):
+                raise ValidationError({
+                    'date': serializers.Field.default_error_messages['required']
+                })
 
         partner = attrs.get('partner', getattr(self.instance, 'partner', None))
         travel_type = attrs.get('travel_type', getattr(self.instance, 'travel_type', None))
@@ -220,14 +219,14 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
                 travel_q = Q(traveler=traveler)
                 travel_q &= ~Q(status__in=[Travel.PLANNED, Travel.CANCELLED])
                 travel_q &= Q(
-                    start_date__date__range=(
-                        start_date.date(),
-                        end_date.date() - datetime.timedelta(days=1),
+                    start_date__range=(
+                        start_date,
+                        end_date - datetime.timedelta(days=1),
                     )
                 ) | Q(
-                    end_date__date__range=(
-                        start_date.date() + datetime.timedelta(days=1),
-                        end_date.date(),
+                    end_date__range=(
+                        start_date + datetime.timedelta(days=1),
+                        end_date,
                     )
                 )
 
@@ -361,7 +360,7 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
             related_manager.add(*value)
 
     def update_related_objects(self, attr_name, related_data):
-        many = isinstance(self._fields[attr_name], serializers.ListSerializer)
+        many = isinstance(self.fields[attr_name], serializers.ListSerializer)
 
         try:
             related = getattr(self.instance, attr_name)
@@ -372,7 +371,7 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
             # Load the queryset
             related = related.all()
 
-            model = self._fields[attr_name].child.Meta.model
+            model = self.fields[attr_name].child.Meta.model
             related_to_delete = {o.pk for o in related}
 
             # Iterate over incoming data and create/update the models

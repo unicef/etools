@@ -1,0 +1,37 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      User-Agent:
+      - python-requests/2.21.0
+    method: GET
+    uri: http://invalid_vision_url/GetFundsReservationInfo_JSON/another%20bad%20value
+  response:
+    body:
+      string: '"<Error><Code>1002<\/Code><UserMessage>Application Error<\/UserMessage><DevMessage>No
+        data exists for the row or column.<\/DevMessage><MoreInfo>,at,UNICEF,BI,WebServices,DataAccess,OracleDBConnection,ExecuteOracleReaderCommand,String,ProcName,CommandType,cmdType,String,paramName,OracleType,paramType,String,paramValues,ParameterDirection,paramDirections,at,UNICEF,BI,WebServices,DataAccess,BIServiceDA,GetFundsReservation,String,businessAreaCode,at,UNICEF,BI,WebServices,Business,BIServiceBO,GetFundsReservation,JSON,String,businessAreaCode,<\/MoreInfo><\/Error>"'
+    headers:
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Tue, 13 Aug 2019 17:44:46 GMT
+      Server:
+      - Microsoft-IIS/8.5 Microsoft-HTTPAPI/2.0
+      Vary:
+      - Accept-Encoding
+      X-Powered-By:
+      - ASP.NET
+      content-length:
+      - '564'
+    status:
+      code: 200
+      message: OK
+version: 1

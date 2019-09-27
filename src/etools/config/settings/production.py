@@ -5,16 +5,6 @@ from cryptography.x509 import load_pem_x509_certificate
 
 from etools.config.settings.base import *  # noqa: F403
 
-# raven (Sentry): https://github.com/getsentry/raven-python
-RAVEN_CONFIG = {
-    'dsn': get_from_secrets_or_env('SENTRY_DSN'),  # noqa: F405
-}
-# Override default client, in order to send extra data to Sentry
-SENTRY_CLIENT = 'etools.config.sentry.EToolsSentryClient'
-INSTALLED_APPS += (  # noqa: F405
-    'raven.contrib.django.raven_compat',
-)
-
 # Security settings for production
 ALLOWED_HOSTS = [
     # Nope, regular expressions are not supported for this setting
@@ -25,6 +15,12 @@ ALLOWED_HOSTS = [
     'etools-test.unicef.org',
     '0.0.0.0'
 ]
+
+ENV_HOST = get_from_secrets_or_env('DJANGO_ALLOWED_HOST', None)
+if ENV_HOST:
+    ALLOWED_HOSTS.append(ENV_HOST)
+
+
 SECRET_KEY = os.environ["SECRET_KEY"]  # noqa: F405
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SECURE_SSL_REDIRECT = True
@@ -73,5 +69,5 @@ if not get_from_secrets_or_env('DISABLE_JWT_LOGIN', False):
         'JWT_LEEWAY': 60,
         'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=3000),  # noqa: F405
         'JWT_AUDIENCE': 'https://etools.unicef.org/',
-        'JWT_PAYLOAD_HANDLER': 'etools.applications.EquiTrack.auth.custom_jwt_payload_handler'
+        'JWT_PAYLOAD_HANDLER': 'etools.applications.core.auth.custom_jwt_payload_handler'
     })

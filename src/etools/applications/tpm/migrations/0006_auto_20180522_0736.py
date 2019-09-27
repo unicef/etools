@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 
 from django.db import migrations
 
-
 # tpm action point, action point
 statuses_mapping = {
     'open': 'open',

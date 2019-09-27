@@ -1,4 +1,3 @@
-
 from datetime import datetime
 
 from etools.applications.audit.models import Audit, Engagement
@@ -9,10 +8,10 @@ from etools.applications.audit.tests.factories import (
     SpecialAuditFactory,
     SpotCheckFactory,
 )
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.hact.tests.factories import AggregateHactFactory
 from etools.applications.partners.models import PartnerOrganization, PartnerType
-from etools.applications.partners.tests.factories import PartnerFactory
+from etools.applications.partners.tests.factories import PartnerFactory, PlannedEngagementFactory
 
 
 class TestAggregateHact(BaseTenantTestCase):
@@ -45,29 +44,33 @@ class TestAggregateHact(BaseTenantTestCase):
             reported_cy=52000.0,
             total_ct_ytd=550000.0,
         )
+        PlannedEngagementFactory(partner=cls.partner, spot_check_follow_up=3)
+        PlannedEngagementFactory(partner=cls.partner2, spot_check_follow_up=2)
 
         AuditFactory(
             status=Engagement.FINAL,
             audit_opinion=Audit.OPTION_UNQUALIFIED,
-            date_of_draft_report_to_unicef=datetime(datetime.today().year, 1, 3),
+            date_of_draft_report_to_ip=datetime(datetime.today().year, 1, 3),
             additional_supporting_documentation_provided=1000.0,
             justification_provided_and_accepted=20000.0,
             write_off_required=30000.0,
             amount_refunded=400000.0,
             audited_expenditure=50.0,
             financial_findings=999.0,
+            partner__reported_cy=550000.0,
         )
 
         AuditFactory(
             status=Engagement.FINAL,
             audit_opinion=Audit.OPTION_UNQUALIFIED,
-            date_of_draft_report_to_unicef=datetime(datetime.today().year - 1, 1, 3),
+            date_of_draft_report_to_ip=datetime(datetime.today().year - 1, 1, 3),
             additional_supporting_documentation_provided=10.0,
             justification_provided_and_accepted=20.0,
             write_off_required=30.0,
             amount_refunded=40.0,
             audited_expenditure=50.0,
             financial_findings=100.0,
+            partner__reported_cy=550000.0,
         )
 
     def test_cash_transfers_amounts(self):
@@ -94,15 +97,15 @@ class TestAggregateHact(BaseTenantTestCase):
 
     def test_get_spot_checks_completed(self):
         SpotCheckFactory(
-            status=Engagement.FINAL, date_of_draft_report_to_unicef=datetime(datetime.today().year, 12, 5))
+            partner__reported_cy=550000.0, status=Engagement.FINAL, date_of_draft_report_to_ip=datetime(datetime.today().year, 12, 5))
         SpotCheckFactory(
-            status=Engagement.FINAL, date_of_draft_report_to_unicef=datetime(datetime.today().year - 1, 12, 5))
+            partner__reported_cy=550000.0, status=Engagement.FINAL, date_of_draft_report_to_ip=datetime(datetime.today().year - 1, 12, 5))
         SpotCheckFactory(
-            status=Engagement.FINAL,
-            date_of_draft_report_to_unicef=datetime(datetime.today().year, 6, 3),
+            partner__reported_cy=550000.0, status=Engagement.FINAL,
+            date_of_draft_report_to_ip=datetime(datetime.today().year, 6, 3),
             agreement__auditor_firm__unicef_users_allowed=True)
         SpotCheckFactory(
-            status=Engagement.REPORT_SUBMITTED, date_of_draft_report_to_unicef=datetime(datetime.today().year, 2, 1))
+            status=Engagement.REPORT_SUBMITTED, date_of_draft_report_to_ip=datetime(datetime.today().year - 1, 2, 1))
 
         spot_checks_completed = self.aggregate_hact.get_spot_checks_completed()
         self.assertEqual(len(spot_checks_completed), 3)
@@ -111,17 +114,20 @@ class TestAggregateHact(BaseTenantTestCase):
 
     def test_get_assurance_activities(self):
         SpecialAuditFactory(
-            status=Engagement.FINAL, date_of_draft_report_to_unicef=datetime(datetime.today().year, 2, 3))
+            partner__reported_cy=550000.0, status=Engagement.FINAL,
+            date_of_draft_report_to_ip=datetime(datetime.today().year, 2, 3))
         SpecialAuditFactory(
-            status=Engagement.FINAL, date_of_draft_report_to_unicef=datetime(datetime.today().year - 1, 2, 3))
+            partner__reported_cy=550000.0, status=Engagement.FINAL,
+            date_of_draft_report_to_ip=datetime(datetime.today().year - 1, 2, 3))
         MicroAssessmentFactory(
-            status=Engagement.FINAL, date_of_draft_report_to_unicef=datetime(datetime.today().year, 8, 10))
+            partner__reported_cy=550000.0, status=Engagement.FINAL,
+            date_of_draft_report_to_ip=datetime(datetime.today().year, 8, 10))
         assurance_activities = self.aggregate_hact.get_assurance_activities()
         self.assertEqual(len(list(assurance_activities.keys())), 6)
         self.assertEqual(assurance_activities['programmatic_visits']['completed'], 0)
         self.assertEqual(assurance_activities['programmatic_visits']['min_required'], 5)
         self.assertEqual(assurance_activities['spot_checks']['completed'], 0)
-        self.assertEqual(assurance_activities['spot_checks']['min_required'], 1)
+        self.assertEqual(assurance_activities['spot_checks']['required'], 6)
         self.assertEqual(assurance_activities['scheduled_audit'], 1)
         self.assertEqual(assurance_activities['special_audit'], 1)
         self.assertEqual(assurance_activities['micro_assessment'], 1)
@@ -153,25 +159,28 @@ class TestAggregateHact(BaseTenantTestCase):
         RiskFactory(
             value=4,
             engagement=AuditFactory(
+                partner__reported_cy=550000.0,
                 status=Engagement.FINAL,
                 audit_opinion=Audit.OPTION_QUALIFIED,
-                date_of_draft_report_to_unicef=datetime(datetime.today().year, 1, 3),
+                date_of_draft_report_to_ip=datetime(datetime.today().year, 1, 3),
             )
         )
         RiskFactory(
             value=2,
             engagement=AuditFactory(
-                status=Engagement.FINAL,
+                partner__reported_cy=550000.0,
+                status=Engagement.REPORT_SUBMITTED,
                 audit_opinion=Audit.OPTION_ADVERSE,
-                date_of_draft_report_to_unicef=datetime(datetime.today().year - 1, 4, 7),
+                date_of_draft_report_to_ip=datetime(datetime.today().year - 1, 4, 7),
             )
         )
         RiskFactory(
             value=1,
             engagement=AuditFactory(
+                partner__reported_cy=550000.0,
                 status=Engagement.PARTNER_CONTACTED,
                 audit_opinion=Audit.OPTION_DENIAL,
-                date_of_draft_report_to_unicef=datetime(datetime.today().year, 4, 7),
+                date_of_draft_report_to_ip=datetime(datetime.today().year - 1, 4, 7),
             )
         )
 

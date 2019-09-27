@@ -2,12 +2,9 @@ from django.urls import reverse
 
 from rest_framework import status
 
-from etools.applications.attachments.tests.factories import (
-    AttachmentFactory,
-    AttachmentFileTypeFactory,
-)
+from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.audit.tests.factories import EngagementFactory
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import PartnerType
 from etools.applications.partners.tests.factories import (
     AgreementAmendmentFactory,
@@ -19,11 +16,7 @@ from etools.applications.partners.tests.factories import (
     InterventionResultLinkFactory,
     PartnerFactory,
 )
-from etools.applications.tpm.tests.factories import (
-    SimpleTPMPartnerFactory,
-    TPMActivityFactory,
-    TPMVisitFactory,
-)
+from etools.applications.tpm.tests.factories import SimpleTPMPartnerFactory, TPMActivityFactory, TPMVisitFactory
 from etools.applications.users.tests.factories import UserFactory
 
 

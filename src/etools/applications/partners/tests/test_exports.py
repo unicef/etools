@@ -2,10 +2,12 @@
 import datetime
 import tempfile
 
+from django.test import override_settings
+
 from rest_framework import status
 from tablib.core import Dataset
 
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import Intervention, PartnerOrganization, PartnerType
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
@@ -252,6 +254,7 @@ class TestModelExport(BaseTenantTestCase):
         )
         )
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_partners_export_api(self):
         response = self.forced_auth_req(
             'get',

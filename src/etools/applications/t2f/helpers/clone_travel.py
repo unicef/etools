@@ -2,7 +2,7 @@
 from django.core.exceptions import ObjectDoesNotExist
 
 
-class CloneTravelHelper(object):
+class CloneTravelHelper:
     def __init__(self, travel):
         self.travel = travel
 
@@ -12,14 +12,6 @@ class CloneTravelHelper(object):
         new_travel = self._do_the_cloning(new_traveler, fk_related, o2o_related)
         new_travel.activities.set(self.travel.activities.all())
 
-        return new_travel
-
-    def clone_for_driver(self, new_traveler):
-        fk_related = ['itinerary']
-        o2o_related = []
-        new_travel = self._do_the_cloning(new_traveler, fk_related, o2o_related)
-        new_travel.is_driver = True
-        new_travel.save()
         return new_travel
 
     def _do_the_cloning(self, new_traveler, fk_related, o2o_related):

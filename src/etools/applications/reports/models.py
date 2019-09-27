@@ -8,7 +8,6 @@ from django.utils.translation import ugettext as _
 from model_utils.fields import AutoCreatedField, AutoLastModifiedField
 from model_utils.models import TimeStampedModel
 from mptt.models import MPTTModel, TreeForeignKey
-
 from unicef_locations.models import Location
 
 
@@ -130,7 +129,7 @@ class ResultType(models.Model):
         return self.name
 
 
-class Sector(TimeStampedModel):
+class Section(TimeStampedModel):
     """
     Represents a section
     """
@@ -141,18 +140,17 @@ class Sector(TimeStampedModel):
     alternate_name = models.CharField(max_length=255, null=True, default='', verbose_name=_('Alternate Name'))
     dashboard = models.BooleanField(default=False, verbose_name=_('Dashboard'))
     color = models.CharField(max_length=7, null=True, blank=True, verbose_name=_('Color'))
+    active = models.BooleanField(default=True, verbose_name=_('Active'))
 
     class Meta:
         ordering = ['name']
+        db_table = 'reports_sector'
 
     def __str__(self):
         return '{} {}'.format(
             self.alternate_id if self.alternate_id else '',
             self.name
         )
-
-
-Section = Sector
 
 
 class ResultManager(models.Manager):
@@ -172,7 +170,7 @@ class Result(MPTTModel):
     Represents a result, wbs is unique
 
     Relates to :model:`reports.CountryProgramme`
-    Relates to :model:`reports.Sector`
+    Relates to :model:`reports.Section`
     Relates to :model:`reports.ResultType`
     """
     country_programme = models.ForeignKey(
@@ -305,10 +303,11 @@ class Result(MPTTModel):
     def output_name(self):
         assert self.result_type.name == ResultType.OUTPUT
 
-        return '{}{}{}'.format(
+        return '{}{}{}-[{}]'.format(
             '[Expired] ' if self.expired else '',
             'Special- ' if self.special else '',
-            self.name
+            self.name,
+            self.wbs
         )
 
     @cached_property
@@ -371,7 +370,7 @@ class LowerResult(TimeStampedModel):
 
     class Meta:
         unique_together = (('result_link', 'code'),)
-        ordering = ('-created',)
+        ordering = ('created',)
 
     def save(self, **kwargs):
         if not self.code:
@@ -676,6 +675,7 @@ class AppliedIndicator(TimeStampedModel):
 
     class Meta:
         unique_together = (("indicator", "lower_result"),)
+        ordering = ("created",)
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)

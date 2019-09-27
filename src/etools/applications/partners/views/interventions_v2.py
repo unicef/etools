@@ -21,8 +21,8 @@ from rest_framework_csv import renderers as r
 from unicef_restlib.views import QueryStringFilterMixin
 from unicef_snapshot.models import Activity
 
-from etools.applications.EquiTrack.mixins import ExportModelMixin
-from etools.applications.EquiTrack.renderers import CSVFlatRenderer
+from etools.applications.core.mixins import ExportModelMixin
+from etools.applications.core.renderers import CSVFlatRenderer
 from etools.applications.partners.exports_v2 import InterventionCSVRenderer, InterventionLocationCSVRenderer
 from etools.applications.partners.filters import (
     AppliedIndicatorsFilter,
@@ -31,9 +31,11 @@ from etools.applications.partners.filters import (
     PartnerScopeFilter,
 )
 from etools.applications.partners.models import (
+    Agreement,
     Intervention,
     InterventionAmendment,
     InterventionAttachment,
+    InterventionPlannedVisits,
     InterventionReportingPeriod,
     InterventionResultLink,
 )
@@ -65,6 +67,7 @@ from etools.applications.partners.serializers.interventions_v2 import (
     InterventionResultCUSerializer,
     InterventionResultLinkSimpleCUSerializer,
     InterventionResultSerializer,
+    InterventionToIndicatorsListSerializer,
     MinimalInterventionListSerializer,
     PlannedVisitsCUSerializer,
 )
@@ -96,6 +99,8 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
 
     search_terms = ('title__icontains', 'agreement__partner__name__icontains', 'number__icontains')
     filters = (
+        ('partners', 'agreement__partner__in'),
+        ('agreements', 'agreement__in'),
         ('document_type', 'document_type__in'),
         ('cp_outputs', 'result_links__cp_output__pk__in'),
         ('country_programme', 'country_programme__in'),
@@ -146,6 +151,15 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
             'result_links'
         ]
         nested_related_names = ['ll_results']
+
+        if request.data.get('document_type') == Intervention.SSFA:
+            agreement = Agreement.objects.get(pk=request.data.get('agreement'))
+            if agreement and agreement.interventions.count():
+                raise ValidationError(
+                    'You can only add one SSFA Document for each SSFA Agreement',
+                    status.HTTP_400_BAD_REQUEST
+                )
+
         serializer = self.my_create(request,
                                     related_fields,
                                     nested_related_names=nested_related_names,
@@ -211,6 +225,22 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
                 response['Content-Disposition'] = f"attachment;filename={filename}.csv"
 
         return response
+
+
+class InterventionWithAppliedIndicatorsView(QueryStringFilterMixin, ListAPIView):
+    """ Interventions."""
+    queryset = Intervention.objects.all()
+    serializer_class = InterventionToIndicatorsListSerializer
+    permission_classes = (PartnershipManagerPermission,)
+
+    filters = (
+        ('sections', 'sections__in'),
+        ('status', 'status__in'),
+    )
+
+    def get_queryset(self):
+        return super().get_queryset().select_related('agreement__partner').prefetch_related(
+            'result_links__ll_results__applied_indicators__indicator')
 
 
 class InterventionListDashView(InterventionListBaseView):
@@ -634,7 +664,7 @@ class InterventionIndicatorsUpdateView(RetrieveUpdateDestroyAPIView):
         return super().delete(request, *args, **kwargs)
 
 
-class InterventionLocation(object):
+class InterventionLocation:
     """Helper: we'll use one of these per row of output in InterventionLocationListAPIView"""
     def __init__(self, intervention, location, section):
         self.intervention = intervention
@@ -650,7 +680,7 @@ class InterventionLocation(object):
         )
 
 
-class InterventionLocationListAPIView(ListAPIView):
+class InterventionLocationListAPIView(QueryStringFilterMixin, ListAPIView):
     """
     API to export a list of intervention locations.
 
@@ -666,6 +696,28 @@ class InterventionLocationListAPIView(ListAPIView):
     renderer_classes = (
         JSONRenderer,
         InterventionLocationCSVRenderer,
+    )
+
+    filters = (
+        ('status', 'status__in'),
+        ('document_type', 'document_type__in'),
+        ('sections', 'sections__in'),
+        ('office', 'offices__in'),
+        ('country_programmes', 'country_programme__in'),
+        ('donors', 'frs__fr_items__donor__in'),
+        ('grants', 'frs__fr_items__grant_number__in'),
+        ('results', 'result_links__cp_output__in'),
+        ('unicef_focal_points', 'unicef_focal_points__in'),
+        ('interventions', 'pk__in'),
+        ('cp_outputs', 'result_links__cp_output__in'),
+        ('cluster', 'result_links__ll_results__applied_indicators__cluster_indicator_title__icontains'),
+        ('unicef_focal_points', 'unicef_focal_points__in'),
+        ('start', 'start__gte'),
+        ('end', 'end__lte'),
+        ('end_after', 'end__gte'),
+        ('location', 'result_links__ll_results__applied_indicators__locations__name__icontains'),
+        ('partners', 'agreement__partner__in'),
+        ('agreements', 'agreement__in'),
     )
 
     def list(self, request, *args, **kwargs):
@@ -779,3 +831,24 @@ class InterventionRamIndicatorsView(APIView):
         return Response(
             self.serializer_class(data).data
         )
+
+
+class InterventionPlannedVisitsDeleteView(DestroyAPIView):
+    permission_classes = (PartnershipManagerPermission,)
+
+    def delete(self, request, *args, **kwargs):
+        intervention = get_object_or_404(
+            Intervention,
+            pk=int(kwargs['intervention_pk'])
+        )
+        if intervention.status != Intervention.DRAFT:
+            raise ValidationError("Planned visits can only be deleted in Draft status")
+
+        intervention_planned_visit = get_object_or_404(
+            InterventionPlannedVisits,
+            pk=int(kwargs['pk']),
+            intervention=int(kwargs['intervention_pk'])
+        )
+        self.check_object_permissions(request, intervention_planned_visit)
+        intervention_planned_visit.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

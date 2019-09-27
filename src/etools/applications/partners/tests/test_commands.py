@@ -8,7 +8,7 @@ from django.utils import timezone
 from unicef_attachments.models import Attachment
 
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
 from etools.applications.partners.models import Agreement, Intervention
 from etools.applications.partners.tests.factories import (

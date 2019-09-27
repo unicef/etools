@@ -1,4 +1,5 @@
 import datetime
+
 from django.apps import apps
 from django.utils.lru_cache import lru_cache
 from django.utils.translation import ugettext as _
@@ -17,7 +18,7 @@ from etools.libraries.pythonlib.collections import HashableDict
 READ_ONLY_API_GROUP_NAME = 'Read-Only API'
 
 
-class PMPPermissions(object):
+class PMPPermissions:
     # this property specifies an array of model properties in order to check against the permission matrix. The fields
     # declared under this property need to be both property on the model and delcared in the permission matrix
     EXTRA_FIELDS = []
@@ -283,6 +284,15 @@ class ListCreateAPIMixedPermission(permissions.BasePermission):
         else:
             # This class shouldn't see methods other than GET and POST, but regardless the answer is 'no you may not'.
             return False
+
+
+class AllowSafeAuthenticated(permissions.BasePermission):
+    """"only read peremissions if authenticated, no write"""
+    def has_permission(self, request, view):
+        if request.method in permissions.SAFE_METHODS:
+            if request.user.is_authenticated:
+                return True
+        return False
 
 
 class ReadOnlyAPIUser(permissions.BasePermission):

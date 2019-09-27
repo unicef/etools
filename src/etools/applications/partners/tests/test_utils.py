@@ -1,33 +1,24 @@
 import datetime
-from mock import Mock, patch
 
 from django.conf import settings
 from django.core.management import call_command
 from django.utils import timezone
 
-from etools.applications.attachments.tests.factories import AttachmentFileTypeFactory
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
-from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
+from mock import Mock, patch
 from unicef_locations.tests.factories import GatewayTypeFactory, LocationFactory
+
+from etools.applications.attachments.tests.factories import AttachmentFileTypeFactory
+from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
 from etools.applications.partners import utils
-from etools.applications.partners.models import (
-    Agreement,
-    Intervention,
-    InterventionBudget,
-    InterventionResultLink,
+from etools.applications.partners.models import Agreement, Intervention, InterventionBudget, InterventionResultLink
+from etools.applications.partners.tests.factories import AgreementFactory, InterventionFactory, PartnerFactory
+from etools.applications.reports.models import AppliedIndicator, IndicatorBlueprint, LowerResult, ResultType
+from etools.applications.reports.tests.factories import (
+    CountryProgrammeFactory,
+    ReportingRequirementFactory,
+    ResultFactory,
 )
-from etools.applications.partners.tests.factories import (
-    AgreementFactory,
-    InterventionFactory,
-    PartnerFactory,
-)
-from etools.applications.reports.models import (
-    AppliedIndicator,
-    IndicatorBlueprint,
-    LowerResult,
-    ResultType,
-)
-from etools.applications.reports.tests.factories import CountryProgrammeFactory, ResultFactory
 from etools.applications.users.tests.factories import GroupFactory, UserFactory
 
 
@@ -65,7 +56,7 @@ def setup_intervention_test_data(test_case, include_results_and_indicators=False
         unicef_signatory=test_case.unicef_staff,
         partner_authorized_officer_signatory=test_case.partner1.staff_members.all().first()
     )
-
+    test_case.reporting_requirement = ReportingRequirementFactory(intervention=test_case.active_intervention)
     test_case.result_type = ResultType.objects.get_or_create(name=ResultType.OUTPUT)[0]
     test_case.result = ResultFactory(result_type=test_case.result_type)
 

@@ -39,7 +39,9 @@ class HactHistoryAPIView(QueryStringFilterMixin, ListAPIView):
 
     def get_renderer_context(self):
         context = super().get_renderer_context()
-        data = self.get_queryset().first().partner_values
+        data = {}
+        if self.get_queryset().exists():
+            data = self.get_queryset().first().partner_values
         try:
             data = json.loads(data)
         except (ValueError, TypeError):
@@ -84,8 +86,8 @@ class GraphHactExportView(DetailView):
              partner_values['assurance_activities']['programmatic_visits']['min_required']),
             ('Assessment and Assurance Activities', 'Spot Checks: Completed',
              partner_values['assurance_activities']['spot_checks']['completed']),
-            ('Assessment and Assurance Activities', 'Spot Checks: Minimum Required',
-             partner_values['assurance_activities']['spot_checks']['min_required']),
+            ('Assessment and Assurance Activities', 'Spot Checks: Required',
+             partner_values['assurance_activities']['spot_checks']['required']),
             ('Assessment and Assurance Activities', 'Micro Assessments: Completed',
              partner_values['assurance_activities']['micro_assessment']),
             ('Assessment and Assurance Activities', 'Micro Assessments: Expiring',

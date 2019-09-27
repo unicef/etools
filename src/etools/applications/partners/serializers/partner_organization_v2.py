@@ -22,8 +22,8 @@ from etools.applications.partners.models import (
     PlannedEngagement,
 )
 from etools.applications.partners.serializers.interventions_v2 import (
-    InterventionMonitorSerializer,
     InterventionListSerializer,
+    InterventionMonitorSerializer,
 )
 
 
@@ -204,6 +204,31 @@ class PartnerOrganizationListSerializer(serializers.ModelSerializer):
         )
 
 
+class PartnerOrgPSEADetailsSerializer(serializers.ModelSerializer):
+    staff_members = serializers.SerializerMethodField()
+
+    def get_staff_members(self, obj):
+        return [s.get_full_name() for s in obj.staff_members.all()]
+
+    class Meta:
+        model = PartnerOrganization
+        fields = (
+            "street_address",
+            "last_assessment_date",
+            "address",
+            "city",
+            "postal_code",
+            "country",
+            "id",
+            "vendor_number",
+            "name",
+            "short_name",
+            "partner_type",
+            "cso_type",
+            "staff_members"
+        )
+
+
 class MinimalPartnerOrganizationListSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -331,6 +356,7 @@ class PartnerOrganizationDashboardSerializer(serializers.ModelSerializer):
     total_ct_ytd = serializers.FloatField(read_only=True)
     outstanding_dct_amount_6_to_9_months_usd = serializers.FloatField(read_only=True)
     outstanding_dct_amount_more_than_9_months_usd = serializers.FloatField(read_only=True)
+    core_value_assessment_expiring = serializers.DurationField(read_only=True)
 
     class Meta:
         model = PartnerOrganization
@@ -346,6 +372,7 @@ class PartnerOrganizationDashboardSerializer(serializers.ModelSerializer):
             'outstanding_dct_amount_more_than_9_months_usd',
             'vendor_number',
             'partner_type',
+            'core_value_assessment_expiring',
         )
 
 

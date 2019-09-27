@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 
 from django_tenants.utils import schema_context
 
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase, SCHEMA_NAME
+from etools.applications.core.tests.cases import BaseTenantTestCase, SCHEMA_NAME
 from etools.applications.users import tasks
 from etools.applications.users.models import UserProfile
 from etools.applications.users.tests.factories import CountryFactory, GroupFactory, ProfileFactory, UserFactory

@@ -1,25 +1,26 @@
-{% extends "base.html" %}
+{% extends "login_base.html" %}
 
-{% block body %}
+{% block content %}
+<div class="errorContent">
     <section id="error-container">
 
         <div class="block-error">
 
             <header>
-                <h1 class="error primary-txt">404</h1>
-
-                <p class="text-center primary-txt">Page not found</p>
+                <h1 class="error primary-txt">404 - Page Not Found</h1>
             </header>
 
             <p class="text-center">We're having trouble loading the page you are looking for.</p>
             {% for message in messages %}
-                <p class="text-center">{{ message }}</p>
+            <p class="text-center">{{ message }}</p>
             {% endfor %}
 
             <div class="row">
                 <div class="col-md-6">
                     <a class="btn btn-info btn-block btn-3d" href="{% url 'dashboard' %}">Back to Dashboard</a>
                 </div>
+                <br>
+                <br>
                 <div class="col-md-6">
                     <button class="btn btn-primary btn-block btn-3d" onclick="history.back();">Previous Page</button>
                 </div>
@@ -27,4 +28,5 @@
         </div>
 
     </section>
+</div>
 {% endblock %}

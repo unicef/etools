@@ -1,79 +1,24 @@
-
-from django.contrib.contenttypes.fields import GenericForeignKey
-from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.utils.translation import ugettext as _
 
-from etools.applications.management.issues.exceptions import IssueFoundException
+from model_utils.models import TimeStampedModel
 
-ISSUE_CATEGORY_DATA = 'data'
-ISSUE_CATEGORY_COMPLIANCE = 'compliance'
-ISSUE_CATEGORY_CHOICES = (
-    (ISSUE_CATEGORY_DATA, 'Data Issue'),
-    (ISSUE_CATEGORY_COMPLIANCE, 'Compliance Issue'),
-)
-
-ISSUE_STATUS_NEW = 'new'
-ISSUE_STATUS_PENDING = 'pending'
-ISSUE_STATUS_REACTIVATED = 'reactivated'
-ISSUE_STATUS_RESOLVED = 'resolved'
-ISSUE_STATUS_CHOICES = (
-    (ISSUE_STATUS_NEW, 'New (untriaged)'),
-    (ISSUE_STATUS_PENDING, 'Pending (triaged, not resolved)'),
-    (ISSUE_STATUS_REACTIVATED, 'Reactivated (was resolved but not fixed)'),
-    (ISSUE_STATUS_RESOLVED, 'Resolved'),
-)
+from etools.applications.reports.models import Section
 
 
-class FlaggedIssue(models.Model):
-    # generic foreign key to any object in the DB
-    # https://docs.djangoproject.com/en/1.11/ref/contrib/contenttypes/#generic-relations
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, verbose_name=_('Content Type'))
-    object_id = models.PositiveIntegerField(db_index=True, verbose_name=_('Object ID'))
-    content_object = GenericForeignKey('content_type', 'object_id')
+class SectionHistory(TimeStampedModel):
+    """ Model to keep history of Section changes"""
+    CREATE = 'create'
+    MERGE = 'merge'
+    CLOSE = 'close'
 
-    date_created = models.DateTimeField(auto_now_add=True, verbose_name=_('Creation Date'))
-    date_updated = models.DateTimeField(auto_now=True, verbose_name=_('Updated Date'))
-    issue_category = models.CharField(max_length=32, choices=ISSUE_CATEGORY_CHOICES, default=ISSUE_CATEGORY_DATA,
-                                      db_index=True, verbose_name=_('Issue Category'))
-    issue_status = models.CharField(max_length=32, choices=ISSUE_STATUS_CHOICES, default=ISSUE_STATUS_NEW,
-                                    db_index=True, verbose_name=_('Issue Status'))
-    issue_id = models.CharField(
-        max_length=100,
-        help_text='A readable ID associated with the specific issue, e.g. "pca-no-attachment"',
-        db_index=True,
-        verbose_name=_('Issue ID')
+    TYPES = (
+        (CREATE, 'Create'),
+        (MERGE, 'Merge'),
+        (CLOSE, 'Close'),
     )
-    message = models.TextField(verbose_name=_('Message'))
 
-    def recheck(self):
-        from etools.applications.management.issues.checks import get_issue_check_by_id  # noqa
-        check = get_issue_check_by_id(self.issue_id)
-        try:
-            check.run_check(self.content_object, metadata=check.get_object_metadata(self.content_object))
-        except IssueFoundException as e:
-            # don't change status unless it was marked resolved
-            if self.issue_status == ISSUE_STATUS_RESOLVED:
-                self.issue_status = ISSUE_STATUS_REACTIVATED
-            self.message = str(e)
-            self.save()
-        else:
-            self.issue_status = ISSUE_STATUS_RESOLVED
-            self.save()
+    from_sections = models.ManyToManyField(Section, blank=True, verbose_name=_('From'), related_name='history_from')
+    to_sections = models.ManyToManyField(Section, blank=True, verbose_name=_('To'), related_name='history_to')
 
-    @classmethod
-    def get_or_new(cls, content_object, issue_id):
-        """
-        Like get_or_create except doesn't actually create the object in the database, and only
-        allows for a limited set of fields.
-        """
-        try:
-            # we can't query on content_object directly without defining a GenericRelation on every
-            # model, so just do it manually from the content type and id
-            ct = ContentType.objects.get_for_model(content_object)
-            return cls.objects.get(content_type=ct, object_id=content_object.pk, issue_id=issue_id)
-        except FlaggedIssue.DoesNotExist:
-            return cls(content_object=content_object, issue_id=issue_id)
-
-    def __str__(self):
-        return self.message
+    history_type = models.CharField(verbose_name=_("Name"), max_length=10, choices=TYPES)

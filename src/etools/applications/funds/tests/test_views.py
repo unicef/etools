@@ -1,24 +1,22 @@
 import json
 from datetime import datetime, timedelta
+from pathlib import Path
 
 from django.urls import reverse
 from django.utils import timezone
 
 from rest_framework import status
 
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import (
     DonorFactory,
     FundsReservationHeaderFactory,
     FundsReservationItemFactory,
     GrantFactory,
 )
-from etools.applications.partners.tests.factories import (
-    AgreementFactory,
-    InterventionFactory,
-    PartnerFactory,
-)
+from etools.applications.partners.tests.factories import AgreementFactory, InterventionFactory, PartnerFactory
 from etools.applications.users.tests.factories import UserFactory
+from etools.libraries.tests.vcrpy import VCR
 
 
 class TestFRHeaderView(BaseTenantTestCase):
@@ -111,11 +109,36 @@ class TestFRHeaderView(BaseTenantTestCase):
         self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(result['error'], 'Values are required')
 
-    def test_get_fail_with_nonexistant_values(self):
-        data = {'values': ','.join(['im a bad value', 'another bad value'])}
+    @VCR.use_cassette(str(Path(__file__).parent / 'vcr_cassettes/fund_reservation_invalid.yml'))
+    def test_get_fail_with_non_existant_values(self):
+        data = {'values': ','.join(['another bad value', 'im a bad value', ])}
         status_code, result = self.run_request(data)
         self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(result['error'], 'The FR another bad value, im a bad value could not be found on eTools')
+        self.assertEqual(result['error'], 'The FR another bad value could not be found in eTools and could not be '
+                                          'synced from Vision. Vision error 400: No data could be found')
+    # TODO: add tests to cover, frs correctly brought in from mock. with correct vendor numbers, FR missing from vision,
+    # FR with multiple line items, and FR with only one line item.
+
+    @VCR.use_cassette(str(Path(__file__).parent / 'vcr_cassettes/fund_reservation.yml'))
+    def test_get_fail_with_already_used_fr(self):
+        new_intervention = InterventionFactory()
+        self.fr_1.intervention = self.intervention
+        self.fr_1.save()
+        data = {'values': ','.join(['9999', self.fr_1.fr_number]),
+                'intervention': new_intervention.pk}
+        status_code, result = self.run_request(data)
+        self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(result['error'], f'FR #{self.fr_1} is already being used by PD/SSFA ref [{self.intervention}]')
+
+    @VCR.use_cassette(str(Path(__file__).parent / 'vcr_cassettes/fund_reservation.yml'))
+    def test_get_success_sync_vision(self):
+        self.fr_1.intervention = self.intervention
+        self.fr_1.save()
+        data = {'values': ','.join(['9999', self.fr_1.fr_number]),
+                'intervention': self.intervention.id}
+        status_code, result = self.run_request(data)
+        self.assertEqual(status_code, status.HTTP_200_OK)
+        self.assertEqual(len(result['frs']), 2)
 
     def test_get_fail_with_intervention_id(self):
         other_intervention = InterventionFactory()
@@ -200,25 +223,6 @@ class TestFRHeaderView(BaseTenantTestCase):
         self.assertEqual(status_code, status.HTTP_200_OK)
         self.assertEqual(len(result['frs']), 2)
 
-    def test_grants_filter_invalid(self):
-        """Check that filtering on invalid grant returns 400"""
-        grant_number = "G123"
-        GrantFactory(name=grant_number)
-        FundsReservationItemFactory(
-            fund_reservation=self.fr_1,
-            grant_number=grant_number
-        )
-        data = {
-            "values": self.fr_1.fr_number,
-            "grants": "404",
-        }
-        status_code, result = self.run_request(data)
-        self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn(
-            'please make sure to select FRs that relate to the PD/SSFA Partner',
-            result['error']
-        )
-
     def test_donors_filter(self):
         """Check that filtering on donor returns expected result"""
         donor = DonorFactory()
@@ -269,57 +273,6 @@ class TestFRHeaderView(BaseTenantTestCase):
         status_code, result = self.run_request(data)
         self.assertEqual(status_code, status.HTTP_200_OK)
         self.assertEqual(len(result['frs']), 2)
-
-    def test_donors_filter_invalid(self):
-        """Check that filtering on invalid donors returns 400"""
-        donor = DonorFactory()
-        grant_number = "G123"
-        GrantFactory(
-            donor=donor,
-            name=grant_number,
-        )
-        FundsReservationItemFactory(
-            fund_reservation=self.fr_1,
-            grant_number=grant_number
-        )
-        data = {
-            "values": self.fr_1.fr_number,
-            "donors": "404",
-        }
-        status_code, result = self.run_request(data)
-        self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn(
-            'please make sure to select FRs that relate to the PD/SSFA Partner',
-            result['error']
-        )
-
-    def test_grant_donors_mismatch(self):
-        """Check that filtering on donors and grant not related to donor,
-        returns 400
-        """
-        donor = DonorFactory()
-        GrantFactory(
-            donor=donor,
-        )
-        grant_number = "G123"
-        grant = GrantFactory(
-            name=grant_number,
-        )
-        FundsReservationItemFactory(
-            fund_reservation=self.fr_1,
-            grant_number=grant_number
-        )
-        data = {
-            "values": self.fr_1.fr_number,
-            "grants": grant.pk,
-            "donors": donor.pk,
-        }
-        status_code, result = self.run_request(data)
-        self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn(
-            'please make sure to select FRs that relate to the PD/SSFA Partner',
-            result['error']
-        )
 
     def test_frs_vendor_code_mismatch(self):
         data = {'values': ','.join([self.fr_1.fr_number, self.fr_3.fr_number])}

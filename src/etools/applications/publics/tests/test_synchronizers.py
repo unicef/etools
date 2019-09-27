@@ -1,7 +1,7 @@
 
 import json
 
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.publics import synchronizers
 from etools.applications.publics.models import (
     Country as PublicsCountry,
@@ -10,10 +10,7 @@ from etools.applications.publics.models import (
     TravelAgent,
     TravelExpenseType,
 )
-from etools.applications.publics.tests.factories import (
-    PublicsCountryFactory,
-    TravelAgentFactory,
-)
+from etools.applications.publics.tests.factories import PublicsCountryFactory, TravelAgentFactory
 from etools.applications.users.models import Country
 
 
@@ -31,7 +28,7 @@ class TestCurrencySynchronizer(BaseTenantTestCase):
             "VALID_FROM": "1-Jan-16",
             "VALID_TO": "31-Dec-17",
         }
-        self.adapter = synchronizers.CurrencySynchronizer(self.country)
+        self.adapter = synchronizers.CurrencySynchronizer(self.country.business_area_code)
 
     def test_convert_records(self):
         self.assertEqual(
@@ -61,7 +58,7 @@ class TestTravelAgenciesSynchronizer(BaseTenantTestCase):
             "VENDOR_CITY": "New York",
             "VENDOR_CTRY_CODE": "USD",
         }
-        self.adapter = synchronizers.TravelAgenciesSynchronizer(self.country)
+        self.adapter = synchronizers.TravelAgenciesSynchronizer(self.country.business_area_code)
 
     def test_convert_records(self):
         self.assertEqual(

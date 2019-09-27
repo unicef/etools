@@ -7,17 +7,19 @@ import rest_framework_jwt.views
 from rest_framework_nested import routers
 from rest_framework_swagger.renderers import OpenAPIRenderer
 
-from etools.applications.EquiTrack.views import (
-    IssueJWTRedirectView,
-    logout_view,
-    MainView,
-)
+from etools.applications.core.schemas import get_schema_view, get_swagger_view
+from etools.applications.core.views import IssueJWTRedirectView, logout_view, MainView
 from etools.applications.management.urls import urlpatterns as management_urls
 from etools.applications.partners.views.v1 import FileTypeViewSet
 from etools.applications.publics import urls as publics_patterns
 from etools.applications.publics.views import StaticDataView
-from etools.applications.reports.views.v1 import IndicatorViewSet, ResultTypeViewSet, ResultViewSet, UnitViewSet, \
-    SectionViewSet
+from etools.applications.reports.views.v1 import (
+    IndicatorViewSet,
+    ResultTypeViewSet,
+    ResultViewSet,
+    SectionViewSet,
+    UnitViewSet,
+)
 from etools.applications.t2f.urls import urlpatterns as t2f_patterns
 from etools.applications.users.views import (
     CountriesViewSet,
@@ -26,7 +28,8 @@ from etools.applications.users.views import (
     OfficeViewSet,
     UserViewSet,
 )
-from etools.applications.EquiTrack.schemas import get_schema_view, get_swagger_view
+# these imports are used to autodiscover admin forms located outside of INSTALLED_APPS(the libraries folder for example)
+from etools.libraries.locations import admin as locations_admin  # noqa: ignore=F401
 from etools.libraries.locations.views import (
     CartoDBTablesView,
     LocationQuerySetView,
@@ -34,8 +37,6 @@ from etools.libraries.locations.views import (
     LocationsViewSet,
     LocationTypesViewSet,
 )
-# these imports are used to autodiscover admin forms located outside of INSTALLED_APPS(the libraries folder for example)
-from etools.libraries.locations import admin as locations_admin # noqa: ignore=F401
 
 # ******************  API docs and schemas  ******************************
 schema_view = get_swagger_view(title='eTools API')
@@ -48,23 +49,23 @@ schema_view_json_openapi = get_schema_view(title="eTools API", renderer_classes=
 api = routers.SimpleRouter()
 
 # ******************  API version 1  ******************************
-api.register(r'partners/file-types', FileTypeViewSet, base_name='filetypes')
+api.register(r'partners/file-types', FileTypeViewSet, basename='filetypes')
 
-api.register(r'users', UserViewSet, base_name='users')
-api.register(r'groups', GroupViewSet, base_name='groups')
-api.register(r'offices', OfficeViewSet, base_name='offices')
+api.register(r'users', UserViewSet, basename='users')
+api.register(r'groups', GroupViewSet, basename='groups')
+api.register(r'offices', OfficeViewSet, basename='offices')
 
-api.register(r'sections', SectionViewSet, base_name='sections')
+api.register(r'sections', SectionViewSet, basename='sections')
 
-api.register(r'reports/result-types', ResultTypeViewSet, base_name='resulttypes')
-api.register(r'reports/indicators', IndicatorViewSet, base_name='indicators')
-api.register(r'reports/results', ResultViewSet, base_name='results')
-api.register(r'reports/units', UnitViewSet, base_name='units')
-api.register(r'reports/sectors', SectionViewSet, base_name='sectors')  # TODO remove me (keeping this for trips...)
+api.register(r'reports/result-types', ResultTypeViewSet, basename='resulttypes')
+api.register(r'reports/indicators', IndicatorViewSet, basename='indicators')
+api.register(r'reports/results', ResultViewSet, basename='results')
+api.register(r'reports/units', UnitViewSet, basename='units')
+api.register(r'reports/sectors', SectionViewSet, basename='sectors')  # TODO remove me (keeping this for trips...)
 
-api.register(r'locations', LocationsViewSet, base_name='locations')
-api.register(r'locations-light', LocationsLightViewSet, base_name='locations-light')
-api.register(r'locations-types', LocationTypesViewSet, base_name='locationtypes')
+api.register(r'locations', LocationsViewSet, basename='locations')
+api.register(r'locations-light', LocationsLightViewSet, basename='locations-light')
+api.register(r'locations-types', LocationTypesViewSet, basename='locationtypes')
 
 urlpatterns = [
     # Used for admin and dashboard pages in django
@@ -94,6 +95,7 @@ urlpatterns = [
     url(r'^api/tpm/', include('etools.applications.tpm.urls')),
     url(r'^api/audit/', include('etools.applications.audit.urls')),
     url(r'^api/action-points/', include('etools.applications.action_points.urls')),
+    url(r'^api/psea/', include('etools.applications.psea.urls')),
     url(r'^api/v2/reports/', include('etools.applications.reports.urls_v2')),
     url(r'^api/v2/', include('etools.applications.partners.urls_v2', namespace='partners_api')),
     url(r'^api/prp/v1/', include('etools.applications.partners.prp_urls', namespace='prp_api_v1')),

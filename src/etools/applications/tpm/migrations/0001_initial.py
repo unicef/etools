@@ -56,7 +56,7 @@ class Migration(migrations.Migration):
                 ('additional_information', models.TextField(blank=True, verbose_name='Additional Information')),
                 ('is_pv', models.BooleanField(default=False, verbose_name='HACT Programmatic Visit')),
                 ('section', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE,
-                                              related_name='tpm_activities', to='reports.Sector', verbose_name='Section')),
+                                              related_name='tpm_activities', to='reports.Section', verbose_name='Section')),
             ],
             options={
                 'ordering': ['tpm_visit', 'id'],

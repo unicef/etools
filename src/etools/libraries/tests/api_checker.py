@@ -1,6 +1,8 @@
 import datetime
 
-from drf_api_checker.unittest import ApiCheckerMixin as BaseApiCheckerMixin, ApiCheckerBase
+from django.conf import settings
+
+from drf_api_checker.unittest import ApiCheckerBase, ApiCheckerMixin as BaseApiCheckerMixin
 from rest_framework.response import Response
 
 from etools.applications.users.tests.factories import UserFactory
@@ -9,7 +11,11 @@ from etools.applications.users.tests.factories import UserFactory
 class ApiCheckerMixin(BaseApiCheckerMixin):
     def setUp(self):
         super().setUp()
-        self.user = UserFactory(username='user', is_staff=True)
+        self.user = UserFactory(
+            username='user',
+            is_staff=True,
+            email=f"me{settings.UNICEF_USER_EMAIL}",
+        )
         self.client.login(username='user', password='test')
 
 

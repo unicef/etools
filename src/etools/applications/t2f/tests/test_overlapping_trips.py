@@ -8,7 +8,7 @@ import pytz
 from freezegun import freeze_time
 from pytz import UTC
 
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.publics.tests.factories import (
     PublicsBusinessAreaFactory,
     PublicsCurrencyFactory,
@@ -39,8 +39,8 @@ class OverlappingTravelsTest(BaseTenantTestCase):
         cls.travel = TravelFactory(reference_number=make_travel_reference_number(),
                                    traveler=cls.traveler,
                                    supervisor=cls.unicef_staff,
-                                   start_date=datetime.datetime(2017, 4, 4, 12, 00, tzinfo=UTC),
-                                   end_date=datetime.datetime(2017, 4, 14, 16, 00, tzinfo=UTC))
+                                   start_date=datetime.date(2017, 4, 4),
+                                   end_date=datetime.date(2017, 4, 14))
         ItineraryItemFactory(travel=cls.travel)
         ItineraryItemFactory(travel=cls.travel)
         cls.travel.submit_for_approval()
@@ -53,16 +53,16 @@ class OverlappingTravelsTest(BaseTenantTestCase):
 
         data = {'itinerary': [{'origin': 'Berlin',
                                'destination': 'Budapest',
-                               'departure_date': '2017-04-07T17:06:55.821490',
-                               'arrival_date': '2017-04-08T17:06:55.821490',
+                               'departure_date': '2017-04-07',
+                               'arrival_date': '2017-04-08',
                                'dsa_region': dsa_region.id,
                                'overnight_travel': False,
                                'mode_of_travel': ModeOfTravel.RAIL,
                                'airlines': []},
                               {'origin': 'Budapest',
                                'destination': 'Berlin',
-                               'departure_date': '2017-05-20T12:06:55.821490',
-                               'arrival_date': '2017-05-21T12:06:55.821490',
+                               'departure_date': '2017-05-20',
+                               'arrival_date': '2017-05-21',
                                'dsa_region': dsa_region.id,
                                'overnight_travel': False,
                                'mode_of_travel': ModeOfTravel.RAIL,
@@ -73,8 +73,8 @@ class OverlappingTravelsTest(BaseTenantTestCase):
                 'mode_of_travel': [ModeOfTravel.BOAT],
                 'traveler': self.traveler.id,
                 'supervisor': self.unicef_staff.id,
-                'start_date': '2017-04-07T15:02:13+01:00',
-                'end_date': '2017-05-22T15:02:13+01:00',
+                'start_date': '2017-04-07',
+                'end_date': '2017-05-22',
                 'currency': currency.id,
                 'purpose': 'Purpose',
                 'additional_note': 'Notes'}
@@ -102,16 +102,16 @@ class OverlappingTravelsTest(BaseTenantTestCase):
 
         data = {'itinerary': [{'origin': 'Berlin',
                                'destination': 'Budapest',
-                               'departure_date': '2017-04-14T17:06:55.821490',
-                               'arrival_date': '2017-04-15T17:06:55.821490',
+                               'departure_date': '2017-04-14',
+                               'arrival_date': '2017-04-15',
                                'dsa_region': dsa_region.id,
                                'overnight_travel': False,
                                'mode_of_travel': ModeOfTravel.RAIL,
                                'airlines': []},
                               {'origin': 'Budapest',
                                'destination': 'Berlin',
-                               'departure_date': '2017-05-20T12:06:55.821490',
-                               'arrival_date': '2017-05-21T12:06:55.821490',
+                               'departure_date': '2017-05-20',
+                               'arrival_date': '2017-05-21',
                                'dsa_region': dsa_region.id,
                                'overnight_travel': False,
                                'mode_of_travel': ModeOfTravel.RAIL,
@@ -122,8 +122,8 @@ class OverlappingTravelsTest(BaseTenantTestCase):
                 'mode_of_travel': [ModeOfTravel.BOAT],
                 'traveler': self.traveler.id,
                 'supervisor': self.unicef_staff.id,
-                'start_date': '2017-04-14T16:05:00+00:00',
-                'end_date': '2017-05-22T15:02:13+00:00',
+                'start_date': '2017-04-14',
+                'end_date': '2017-05-22',
                 'currency': currency.id,
                 'purpose': 'Purpose',
                 'additional_note': 'Notes'}
@@ -147,16 +147,16 @@ class OverlappingTravelsTest(BaseTenantTestCase):
 
         data = {'itinerary': [{'origin': 'Berlin',
                                'destination': 'Budapest',
-                               'departure_date': '2017-04-14T17:06:55.821490',
-                               'arrival_date': '2017-04-15T17:06:55.821490',
+                               'departure_date': '2017-04-14',
+                               'arrival_date': '2017-04-15',
                                'dsa_region': dsa_region.id,
                                'overnight_travel': False,
                                'mode_of_travel': ModeOfTravel.RAIL,
                                'airlines': []},
                               {'origin': 'Budapest',
                                'destination': 'Berlin',
-                               'departure_date': '2017-05-20T12:06:55.821490',
-                               'arrival_date': '2017-05-21T12:06:55.821490',
+                               'departure_date': '2017-05-20',
+                               'arrival_date': '2017-05-21',
                                'dsa_region': dsa_region.id,
                                'overnight_travel': False,
                                'mode_of_travel': ModeOfTravel.RAIL,
@@ -167,8 +167,8 @@ class OverlappingTravelsTest(BaseTenantTestCase):
                 'mode_of_travel': [ModeOfTravel.BOAT],
                 'traveler': self.traveler.id,
                 'supervisor': self.unicef_staff.id,
-                'start_date': '2017-04-14T16:05:00+00:00',
-                'end_date': '2017-05-22T15:02:13+00:00',
+                'start_date': '2017-04-14',
+                'end_date': '2017-05-22',
                 'currency': currency.id,
                 'purpose': 'Purpose',
                 'additional_note': 'Notes'}
@@ -195,8 +195,8 @@ class OverlappingTravelsTest(BaseTenantTestCase):
             {
                 'origin': 'Berlin',
                 'destination': 'Budapest',
-                'departure_date': '2017-04-10T16:05:00+00:00',
-                'arrival_date': '2017-04-15T17:06:55.821490',
+                'departure_date': '2017-04-10',
+                'arrival_date': '2017-04-15',
                 'dsa_region': dsa_region.id,
                 'overnight_travel': False,
                 'mode_of_travel': ModeOfTravel.RAIL,
@@ -205,8 +205,8 @@ class OverlappingTravelsTest(BaseTenantTestCase):
             {
                 'origin': 'Budapest',
                 'destination': 'Berlin',
-                'departure_date': '2017-05-20T12:06:55.821490',
-                'arrival_date': '2017-05-21T12:06:55.821490',
+                'departure_date': '2017-05-20',
+                'arrival_date': '2017-05-21',
                 'dsa_region': dsa_region.id,
                 'overnight_travel': False,
                 'mode_of_travel': ModeOfTravel.RAIL,
@@ -226,27 +226,33 @@ class OverlappingTravelsTest(BaseTenantTestCase):
 
     def test_daylight_saving(self):
         budapest_tz = pytz.timezone('Europe/Budapest')
-        self.travel.end_date = budapest_tz.localize(datetime.datetime(2017, 10, 29, 2, 0), is_dst=True)
+        self.travel.end_date = budapest_tz.localize(
+            datetime.datetime(2017, 10, 29, 2, 0),
+            is_dst=True
+        ).date()
         self.travel.save()
 
         # Same date as the previous, but it's already after daylight saving
-        start_date = budapest_tz.localize(datetime.datetime(2017, 10, 29, 2, 0), is_dst=False).isoformat()
+        start_date = budapest_tz.localize(
+            datetime.datetime(2017, 10, 29, 2, 0),
+            is_dst=False
+        ).isoformat()[:10]
 
         currency = PublicsCurrencyFactory()
         dsa_region = PublicsDSARegionFactory()
 
         data = {'itinerary': [{'origin': 'Berlin',
                                'destination': 'Budapest',
-                               'departure_date': '2017-04-14T17:06:55.821490',
-                               'arrival_date': '2017-04-15T17:06:55.821490',
+                               'departure_date': '2017-04-14',
+                               'arrival_date': '2017-04-15',
                                'dsa_region': dsa_region.id,
                                'overnight_travel': False,
                                'mode_of_travel': ModeOfTravel.RAIL,
                                'airlines': []},
                               {'origin': 'Budapest',
                                'destination': 'Berlin',
-                               'departure_date': '2017-05-20T12:06:55.821490',
-                               'arrival_date': '2017-05-21T12:06:55.821490',
+                               'departure_date': '2017-05-20',
+                               'arrival_date': '2017-05-21',
                                'dsa_region': dsa_region.id,
                                'overnight_travel': False,
                                'mode_of_travel': ModeOfTravel.RAIL,
@@ -258,7 +264,7 @@ class OverlappingTravelsTest(BaseTenantTestCase):
                 'traveler': self.traveler.id,
                 'supervisor': self.unicef_staff.id,
                 'start_date': start_date,
-                'end_date': '2017-05-22T15:02:13+00:00',
+                'end_date': '2017-05-22',
                 'currency': currency.id,
                 'purpose': 'Purpose',
                 'additional_note': 'Notes'}
@@ -275,16 +281,16 @@ class OverlappingTravelsTest(BaseTenantTestCase):
 
         data = {'itinerary': [{'origin': 'Berlin',
                                'destination': 'Budapest',
-                               'departure_date': '2017-04-14T17:06:55.821490',
-                               'arrival_date': '2017-04-20T17:06:55.821490',
+                               'departure_date': '2017-04-14',
+                               'arrival_date': '2017-04-20',
                                'dsa_region': dsa_region.id,
                                'overnight_travel': False,
                                'mode_of_travel': ModeOfTravel.RAIL,
                                'airlines': []},
                               {'origin': 'Budapest',
                                'destination': 'Berlin',
-                               'departure_date': '2017-05-20T12:06:55.821490',
-                               'arrival_date': '2017-05-21T12:06:55.821490',
+                               'departure_date': '2017-05-20',
+                               'arrival_date': '2017-05-21',
                                'dsa_region': dsa_region.id,
                                'overnight_travel': False,
                                'mode_of_travel': ModeOfTravel.RAIL,
@@ -295,8 +301,8 @@ class OverlappingTravelsTest(BaseTenantTestCase):
                 'mode_of_travel': [ModeOfTravel.BOAT],
                 'traveler': self.traveler.id,
                 'supervisor': self.unicef_staff.id,
-                'start_date': '2017-04-14T15:06:55+01:00',
-                'end_date': '2017-05-22T15:02:13+01:00',
+                'start_date': '2017-04-14',
+                'end_date': '2017-05-22',
                 'currency': currency.id,
                 'purpose': 'Purpose',
                 'additional_note': 'Notes'}
@@ -333,16 +339,16 @@ class OverlappingTravelsTest(BaseTenantTestCase):
 
         data = {'itinerary': [{'origin': 'Berlin',
                                'destination': 'Budapest',
-                               'departure_date': '2017-03-14T17:06:55.821490',
-                               'arrival_date': '2017-03-20T17:06:55.821490',
+                               'departure_date': '2017-03-14',
+                               'arrival_date': '2017-03-20',
                                'dsa_region': dsa_region.id,
                                'overnight_travel': False,
                                'mode_of_travel': ModeOfTravel.RAIL,
                                'airlines': []},
                               {'origin': 'Budapest',
                                'destination': 'Berlin',
-                               'departure_date': '2017-03-25T12:06:55.821490',
-                               'arrival_date': '2017-04-04T12:06:55.821490',
+                               'departure_date': '2017-03-25',
+                               'arrival_date': '2017-04-04',
                                'dsa_region': dsa_region.id,
                                'overnight_travel': False,
                                'mode_of_travel': ModeOfTravel.RAIL,
@@ -353,8 +359,8 @@ class OverlappingTravelsTest(BaseTenantTestCase):
                 'mode_of_travel': [ModeOfTravel.BOAT],
                 'traveler': self.traveler.id,
                 'supervisor': self.unicef_staff.id,
-                'start_date': '2017-03-14T15:06:55+01:00',
-                'end_date': '2017-04-04T15:02:13+01:00',
+                'start_date': '2017-03-14',
+                'end_date': '2017-04-04',
                 'currency': currency.id,
                 'purpose': 'Purpose',
                 'additional_note': 'Notes'}

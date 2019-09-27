@@ -1,10 +1,10 @@
 from django.contrib import admin
 
 from etools.applications.action_points.admin import ActionPointAdmin
-from etools.applications.publics.admin import AdminListMixin
 from etools.applications.t2f import models
-from etools.applications.t2f.models import T2FActionPoint
 from etools.applications.t2f.forms import T2FActionPointAdminForm
+from etools.applications.t2f.models import T2FActionPoint
+from etools.libraries.djangolib.admin import AdminListMixin
 
 
 @admin.register(models.Travel)
@@ -54,6 +54,10 @@ class TravelActivityAdmin(admin.ModelAdmin):
     raw_id_fields = (
         'primary_traveler',
     )
+    filter_horizontal = (
+        'locations',
+        'travels',
+    )
 
 
 @admin.register(models.ItineraryItem)
@@ -74,6 +78,9 @@ class ItineraryItemAdmin(admin.ModelAdmin):
         'arrival_date',
         'origin',
         'destination'
+    )
+    filter_horizontal = (
+        'airlines',
     )
 
 

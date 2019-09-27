@@ -7,7 +7,7 @@ from django.urls import reverse
 from django_tenants.utils import schema_context
 from mock import ANY, Mock, patch
 
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.hact.tasks import update_hact_for_country
 from etools.applications.users.admin import CountryAdmin, ProfileAdmin, ProfileInline, UserAdminPlus
 from etools.applications.users.models import Country, User, UserProfile

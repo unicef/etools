@@ -215,7 +215,7 @@ class PurchaseOrderViewSet(
 
         if not instance:
             handler = POSynchronizer(
-                country=request.user.profile.country,
+                business_area_code=request.user.profile.country.business_area_code,
                 object_number=kwargs.get('order_number')
             )
             handler.sync()
@@ -271,10 +271,10 @@ class EngagementViewSet(
         SearchFilter, DisplayStatusFilter, DjangoFilterBackend,
         UniqueIDOrderingFilter, OrderingFilter,
     )
-    search_fields = ('partner__name', 'agreement__auditor_firm__name')
+    search_fields = ('partner__name', 'agreement__auditor_firm__name', '=id')
     ordering_fields = ('agreement__order_number', 'agreement__auditor_firm__name',
                        'partner__name', 'engagement_type', 'status')
-    filter_class = EngagementFilter
+    filterset_class = EngagementFilter
     export_filename = 'engagements'
 
     ENGAGEMENT_MAPPING = {
@@ -486,7 +486,8 @@ class AuditorStaffMembersViewSet(
     filter_backends = (OrderingFilter, SearchFilter, DjangoFilterBackend, )
     ordering_fields = ('user__email', 'user__first_name', 'id', )
     search_fields = ('user__first_name', 'user__email', 'user__last_name', )
-    filter_fields = ('user__profile__country__schema_name', 'user__profile__country__name')
+    filter_fields = ('user__profile__country__schema_name', 'user__profile__country__name',
+                     'user__profile__countries_available__schema_name', 'user__profile__countries_available__name')
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -500,7 +501,20 @@ class AuditorStaffMembersViewSet(
         self.check_serializer_permissions(serializer, edit=True)
 
         instance = serializer.save(auditor_firm=self.get_parent_object(), **kwargs)
-        instance.user.profile.country = self.request.user.profile.country
+        if not instance.user.profile.country:
+            instance.user.profile.country = self.request.user.profile.country
+        instance.user.profile.countries_available.add(self.request.user.profile.country)
+        instance.user.groups.add(Auditor.as_group())
+        instance.user.profile.save()
+
+    def perform_update(self, serializer):
+        self.check_serializer_permissions(serializer, edit=True)
+
+        super().perform_update(serializer)
+        instance = serializer.save(auditor_firm=self.get_parent_object())
+        if not instance.user.profile.country:
+            instance.user.profile.country = self.request.user.profile.country
+        instance.user.profile.countries_available.add(self.request.user.profile.country)
         instance.user.profile.save()
 
     def perform_destroy(self, instance):
@@ -577,7 +591,20 @@ class BaseAuditAttachmentsViewSet(BaseAuditViewSet,
             'object_id': parent.pk
         }
 
+    def get_object(self, pk=None):
+        if pk:
+            return self.queryset.get(pk=pk)
+        elif self.kwargs.get("pk"):
+            return self.queryset.get(pk=self.kwargs.get("pk"))
+        return super().get_object()
+
     def perform_create(self, serializer):
+        serializer.instance = self.get_object(
+            pk=serializer.validated_data.get("pk")
+        )
+        serializer.save(content_object=self.get_parent_object().get_subclass())
+
+    def perform_update(self, serializer):
         serializer.save(content_object=self.get_parent_object().get_subclass())
 
 

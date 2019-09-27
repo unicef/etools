@@ -7,7 +7,7 @@ from django.db.models import Manager, QuerySet
 from rest_framework import serializers
 from unicef_restlib.fields import CommaSeparatedExportField
 
-from etools.applications.EquiTrack.urlresolvers import build_frontend_url
+from etools.applications.core.urlresolvers import build_frontend_url
 
 
 class UsersExportField(serializers.Field):
@@ -21,8 +21,10 @@ class UsersExportField(serializers.Field):
 class TPMActivityExportSerializer(serializers.Serializer):
     ref = serializers.CharField(source='tpm_visit.reference_number')
     visit = serializers.CharField(source='tpm_visit')
+    visit_information = serializers.CharField(source='tpm_visit.visit_information')
     visit_status = serializers.CharField(source='tpm_visit.get_status_display')
     activity = serializers.SerializerMethodField()
+    is_pv = serializers.BooleanField()
     section = serializers.CharField()
     cp_output = serializers.CharField()
     partner = serializers.CharField()
@@ -51,6 +53,7 @@ class TPMLocationExportSerializer(serializers.Serializer):
     intervention = serializers.CharField(source='activity.tpmactivity.intervention.reference_number', allow_null=True)
     pd_ssfa = serializers.CharField(source='activity.tpmactivity.intervention.title', allow_null=True)
     location = serializers.CharField()
+    visit_information = serializers.CharField(source='activity.tpmactivity.tpm_visit.visit_information')
     date = serializers.DateField(source='activity.tpmactivity.date', format='%d/%m/%Y')
     unicef_focal_points = UsersExportField(source='activity.tpmactivity.unicef_focal_points')
     offices = CommaSeparatedExportField(source='activity.tpmactivity.offices')
@@ -98,6 +101,7 @@ class TPMVisitExportSerializer(serializers.Serializer):
     report_link = serializers.SerializerMethodField()
     attachments = serializers.SerializerMethodField()
     additional_information = CommaSeparatedExportField(source='tpm_activities.additional_information', allow_null=True)
+    visit_information = serializers.CharField()
     link = serializers.CharField(source='get_object_url')
 
     def get_report_link(self, obj):

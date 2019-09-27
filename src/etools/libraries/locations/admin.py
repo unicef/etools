@@ -1,4 +1,3 @@
-from celery import chain
 from django.contrib.gis import admin
 from django.db import transaction
 
@@ -20,6 +19,9 @@ from etools.libraries.locations.tasks_arcgis import (
     import_arcgis_locations,
     cleanup_arcgis_obsolete_locations,
 )
+from celery import chain
+from unicef_locations.admin import CartoDBTableAdmin
+from unicef_locations.models import CartoDBTable, Location, LocationRemapHistory
 
 
 class EtoolsCartoDBTableAdmin(CartoDBTableAdmin):

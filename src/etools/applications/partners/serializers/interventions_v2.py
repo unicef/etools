@@ -1,4 +1,4 @@
-from datetime import datetime, date
+from datetime import date, datetime
 from operator import itemgetter
 
 from django.db import transaction
@@ -28,6 +28,7 @@ from etools.applications.partners.models import (
 from etools.applications.partners.permissions import InterventionPermissions
 from etools.applications.reports.models import AppliedIndicator, LowerResult, ReportingRequirement
 from etools.applications.reports.serializers.v2 import (
+    AppliedIndicatorBasicSerializer,
     IndicatorSerializer,
     LowerResultCUSerializer,
     LowerResultSerializer,
@@ -95,7 +96,7 @@ class PlannedVisitsCUSerializer(serializers.ModelSerializer):
         try:
             self.instance = self.Meta.model.objects.get(
                 intervention=self.initial_data.get("intervention"),
-                year=self.initial_data.get("year"),
+                pk=self.initial_data.get("id"),
             )
             if self.instance.intervention.agreement.partner.partner_type == PartnerType.GOVERNMENT:
                 raise ValidationError("Planned Visit to be set only at Partner level")
@@ -262,6 +263,27 @@ class MinimalInterventionListSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'title',
+        )
+
+
+class InterventionToIndicatorsListSerializer(serializers.ModelSerializer):
+    partner_name = serializers.CharField(source='agreement.partner.name')
+    indicators = serializers.SerializerMethodField()
+
+    def get_indicators(self, obj):
+        qs = [ai for rl in obj.result_links.all() for ll in rl.ll_results.all() for ai in ll.applied_indicators.all()]
+        return AppliedIndicatorBasicSerializer(qs, many=True).data
+
+    class Meta:
+        model = Intervention
+        fields = (
+            'id',
+            'title',
+            'number',
+            'partner_name',
+            'status',
+            'indicators',
+            'sections'
         )
 
 

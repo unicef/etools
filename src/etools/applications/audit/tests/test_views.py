@@ -1,13 +1,15 @@
 import datetime
+import json
 import random
 
-from django.core.files.uploadedfile import SimpleUploadedFile
+from django.contrib.contenttypes.models import ContentType
 from django.core.management import call_command
 from django.urls import reverse
 
 from factory import fuzzy
 from mock import Mock, patch
 from rest_framework import status
+from unicef_attachments.models import Attachment
 
 from etools.applications.action_points.tests.factories import ActionPointCategoryFactory, ActionPointFactory
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
@@ -15,6 +17,7 @@ from etools.applications.audit.models import Auditor, Engagement, Risk
 from etools.applications.audit.tests.base import AuditTestCaseMixin, EngagementTransitionsTestCaseMixin
 from etools.applications.audit.tests.factories import (
     AuditFactory,
+    AuditorUserFactory,
     AuditPartnerFactory,
     EngagementFactory,
     MicroAssessmentFactory,
@@ -25,9 +28,9 @@ from etools.applications.audit.tests.factories import (
     SpotCheckFactory,
     StaffSpotCheckFactory,
     UserFactory,
-    AuditorUserFactory)
+)
 from etools.applications.audit.tests.test_transitions import MATransitionsTestCaseMixin
-from etools.applications.EquiTrack.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import PartnerType
 from etools.applications.reports.tests.factories import SectionFactory
 
@@ -426,6 +429,10 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, BaseTenantT
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('text/csv', response['Content-Type'])
 
+    def test_search_by_id(self):
+        self._test_list(self.auditor, [self.engagement], filter_params={'search': self.engagement.pk})
+        self._test_list(self.auditor, filter_params={'search': -1})
+
 
 class BaseTestEngagementsCreateViewSet(EngagementTransitionsTestCaseMixin):
     endpoint = 'engagements'
@@ -457,7 +464,7 @@ class BaseTestEngagementsCreateViewSet(EngagementTransitionsTestCaseMixin):
         return response
 
 
-class TestEngagementCreateActivePDViewSet(object):
+class TestEngagementCreateActivePDViewSet:
     def test_partner_without_active_pd(self):
         del self.create_data['active_pd']
 
@@ -482,6 +489,30 @@ class TestEngagementCreateActivePDViewSet(object):
         response = self._do_create(self.unicef_focal_point, self.create_data)
 
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+
+    def test_attachments(self):
+        file_type_engagement = AttachmentFileTypeFactory(
+            code="audit_engagement",
+        )
+        attachment_engagement = AttachmentFactory(
+            file="test_engagement.pdf",
+            file_type=None,
+            code="",
+        )
+        self.create_data["engagement_attachments"] = attachment_engagement.pk
+
+        response = self._do_create(self.unicef_focal_point, self.create_data)
+
+        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+
+        data = json.loads(response.content)
+        engagement_val = data["engagement_attachments"]
+        self.assertIsNotNone(engagement_val)
+        self.assertTrue(
+            engagement_val.endswith(attachment_engagement.file.name)
+        )
+        attachment_engagement.refresh_from_db()
+        self.assertEqual(attachment_engagement.file_type, file_type_engagement)
 
 
 class TestMicroAssessmentCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEngagementsCreateViewSet,
@@ -1179,28 +1210,103 @@ class TestEngagementPartnerView(AuditTestCaseMixin, BaseTenantTestCase):
 
 
 class TestEngagementAttachmentsView(MATransitionsTestCaseMixin, BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.file_type = AttachmentFileTypeFactory(code='audit_engagement')
+
     def test_list(self):
-        attachments_num = self.engagement.engagement_attachments.count()
-
-        create_response = self.forced_auth_req(
-            'post',
-            reverse('audit:engagement-attachments-list', args=[self.engagement.id]),
-            user=self.unicef_focal_point,
-            request_format='multipart',
-            data={
-                'file_type': AttachmentFileTypeFactory(code='audit_engagement').id,
-                'file': SimpleUploadedFile('hello_world.txt', 'hello world!'.encode('utf-8')),
-            }
+        attachment = AttachmentFactory(
+            file="sample.pdf",
+            file_type=self.file_type,
+            content_type=ContentType.objects.get_for_model(Engagement),
+            object_id=self.engagement.pk,
+            code="audit_engagement",
         )
-        self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
-
+        self.engagement.engagement_attachments.add(attachment)
+        attachments_num = self.engagement.engagement_attachments.count()
         response = self.forced_auth_req(
             'get',
-            reverse('audit:engagement-attachments-list', args=[self.engagement.id]),
+            reverse(
+                'audit:engagement-attachments-list',
+                args=[self.engagement.pk],
+            ),
             user=self.unicef_focal_point
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data['results']), attachments_num + 1)
+        self.assertEqual(len(response.data['results']), attachments_num)
+
+    def test_post(self):
+        attachment = AttachmentFactory(file="sample.pdf")
+        self.assertIsNone(attachment.object_id)
+        self.assertNotEqual(attachment.code, "audit_engagement")
+
+        response = self.forced_auth_req(
+            'post',
+            reverse(
+                'audit:engagement-attachments-list',
+                args=[self.engagement.pk],
+            ),
+            user=self.unicef_focal_point,
+            data={
+                'file_type': self.file_type.pk,
+                'attachment': attachment.pk,
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        attachment.refresh_from_db()
+        self.assertEqual(attachment.object_id, self.engagement.pk)
+        self.assertEqual(attachment.code, "audit_engagement")
+
+    def test_patch(self):
+        file_type_old = AttachmentFileTypeFactory(code="different_engagement")
+        attachment = AttachmentFactory(
+            file="sample.pdf",
+            file_type=file_type_old,
+            content_type=ContentType.objects.get_for_model(Engagement),
+            object_id=self.engagement.pk,
+            code="audit_engagement",
+        )
+        self.assertNotEqual(attachment.file_type, self.file_type)
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse(
+                'audit:engagement-attachments-detail',
+                args=[self.engagement.pk, attachment.pk],
+            ),
+            user=self.unicef_focal_point,
+            data={
+                "file_type": self.file_type.pk,
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        attachment.refresh_from_db()
+        self.assertEqual(attachment.file_type, self.file_type)
+
+    def test_delete(self):
+        attachment = AttachmentFactory(
+            file="sample.pdf",
+            file_type=self.file_type,
+            content_type=ContentType.objects.get_for_model(Engagement),
+            object_id=self.engagement.pk,
+            code="audit_engagement",
+        )
+        self.engagement.engagement_attachments.add(attachment)
+        attachment_qs = self.engagement.engagement_attachments
+        attachments_num = attachment_qs.count()
+
+        response = self.forced_auth_req(
+            'delete',
+            reverse(
+                'audit:engagement-attachments-detail',
+                args=[self.engagement.pk, attachment.pk],
+            ),
+            user=self.unicef_focal_point,
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(attachment_qs.count(), attachments_num - 1)
+        self.assertFalse(Attachment.objects.filter(pk=attachment.pk).exists())
 
     def test_create_meta_focal_point(self):
         response = self.forced_auth_req(
@@ -1224,25 +1330,101 @@ class TestEngagementAttachmentsView(MATransitionsTestCaseMixin, BaseTenantTestCa
 
 
 class TestEngagementReportAttachmentsView(MATransitionsTestCaseMixin, BaseTenantTestCase):
-    def test_list(self):
-        attachments_num = self.engagement.report_attachments.count()
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.file_type = AttachmentFileTypeFactory(code='audit_report')
 
-        create_response = self.forced_auth_req(
-            'post',
-            reverse('audit:report-attachments-list', args=[self.engagement.id]),
-            user=self.auditor,
-            request_format='multipart',
-            data={
-                'file_type': AttachmentFileTypeFactory(code='audit_report').id,
-                'file': SimpleUploadedFile('hello_world.txt', 'hello world!'.encode('utf-8')),
-            }
+    def test_list(self):
+        attachment = AttachmentFactory(
+            file="sample.pdf",
+            file_type=self.file_type,
+            content_type=ContentType.objects.get_for_model(Engagement),
+            object_id=self.engagement.pk,
+            code="audit_report",
         )
-        self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
+        self.engagement.report_attachments.add(attachment)
+        attachments_num = self.engagement.report_attachments.count()
 
         response = self.forced_auth_req(
             'get',
-            reverse('audit:report-attachments-list', args=[self.engagement.id]),
+            reverse(
+                'audit:report-attachments-list',
+                args=[self.engagement.pk],
+            ),
             user=self.auditor
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data['results']), attachments_num + 1)
+        self.assertEqual(len(response.data['results']), attachments_num)
+
+    def test_post(self):
+        attachment = AttachmentFactory(file="sample.pdf")
+        self.assertIsNone(attachment.object_id)
+        self.assertNotEqual(attachment.code, "audit_report")
+
+        response = self.forced_auth_req(
+            'post',
+            reverse(
+                'audit:report-attachments-list',
+                args=[self.engagement.pk],
+            ),
+            user=self.unicef_focal_point,
+            data={
+                'file_type': self.file_type.pk,
+                'attachment': attachment.pk,
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        attachment.refresh_from_db()
+        self.assertEqual(attachment.object_id, self.engagement.pk)
+        self.assertEqual(attachment.code, "audit_report")
+
+    def test_patch(self):
+        file_type_old = AttachmentFileTypeFactory(code="different_report")
+        attachment = AttachmentFactory(
+            file="sample.pdf",
+            file_type=file_type_old,
+            content_type=ContentType.objects.get_for_model(Engagement),
+            object_id=self.engagement.pk,
+            code="audit_report",
+        )
+        self.assertNotEqual(attachment.file_type, self.file_type)
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse(
+                'audit:report-attachments-detail',
+                args=[self.engagement.pk, attachment.pk],
+            ),
+            user=self.unicef_focal_point,
+            data={
+                "file_type": self.file_type.pk,
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        attachment.refresh_from_db()
+        self.assertEqual(attachment.file_type, self.file_type)
+
+    def test_delete(self):
+        attachment = AttachmentFactory(
+            file="sample.pdf",
+            file_type=self.file_type,
+            content_type=ContentType.objects.get_for_model(Engagement),
+            object_id=self.engagement.pk,
+            code="audit_report",
+        )
+        self.engagement.engagement_attachments.add(attachment)
+        attachment_qs = self.engagement.report_attachments
+        attachments_num = attachment_qs.count()
+
+        response = self.forced_auth_req(
+            'delete',
+            reverse(
+                'audit:report-attachments-detail',
+                args=[self.engagement.pk, attachment.pk],
+            ),
+            user=self.unicef_focal_point,
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(attachment_qs.count(), attachments_num - 1)
+        self.assertFalse(Attachment.objects.filter(pk=attachment.pk).exists())
