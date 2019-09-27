@@ -1,13 +1,11 @@
 from copy import copy
 
-from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
 from unicef_attachments.fields import FileTypeModelChoiceField
 from unicef_attachments.models import Attachment, FileType
-from unicef_notification.utils import send_notification_with_template
 from unicef_restlib.fields import SeparatedReadWriteField
 
 from etools.applications.action_points.serializers import ActionPointBaseSerializer, HistorySerializer
@@ -192,16 +190,6 @@ class AssessmentStatusSerializer(AssessmentSerializer):
                 f"Status is already {self.instance.status}"
             )
         return data
-
-    def save(self, *args, **kwargs):
-        instance = super().save(*args, **kwargs)
-        if instance.status == Assessment.STATUS_FINAL:
-            send_notification_with_template(
-                recipients=[settings.PSEA_ASSESSMENT_FINAL_RECIPIENTS],
-                template_name="psea/assessment/final",
-                context={"assessment": instance}
-            )
-        return instance
 
 
 class AssessmentStatusHistorySerializer(serializers.ModelSerializer):

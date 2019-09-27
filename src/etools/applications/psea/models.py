@@ -228,7 +228,7 @@ class Assessment(TimeStampedModel):
     @transition(
         field=status,
         source=[STATUS_SUBMITTED],
-        target=[STATUS_IN_PROGRESS],
+        target=[STATUS_REJECTED],
         permission=assessment_focal_point_user,
     )
     def transition_to_rejected(self):
@@ -486,3 +486,9 @@ class Assessor(TimeStampedModel):
         if self.assessor_type == Assessor.TYPE_VENDOR:
             return f"{self.auditor_firm}"
         return f"{self.user}"
+
+    def get_recipients(self):
+        if self.assessor_type in [self.TYPE_EXTERNAL, self.TYPE_UNICEF]:
+            return [self.user.email]
+        else:
+            return [s.user.email for s in self.auditor_firm_staff.all()]

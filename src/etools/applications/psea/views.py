@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
 from django.db.models import ObjectDoesNotExist, Q
@@ -15,6 +16,7 @@ from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from unicef_attachments.models import Attachment
+from unicef_notification.utils import send_notification_with_template
 from unicef_rest_export.renderers import ExportCSVRenderer, ExportOpenXMLRenderer
 from unicef_rest_export.views import ExportMixin
 from unicef_restlib.pagination import DynamicPageNumberPagination
@@ -228,7 +230,30 @@ class AssessmentViewSet(
         request.data.update(
             {"status_history": [status]},
         )
-        return self.update(request, partial=True)
+        response = self.update(request, partial=True)
+
+        instance = self.get_object()
+        if instance.status == Assessment.STATUS_FINAL:
+            send_notification_with_template(
+                recipients=[settings.PSEA_ASSESSMENT_FINAL_RECIPIENTS],
+                template_name="psea/assessment/final",
+                context={"assessment": instance}
+            )
+        # assigned status is automatically moved to in progress
+        elif instance.status == Assessment.STATUS_IN_PROGRESS:
+            send_notification_with_template(
+                recipients=instance.assessor.get_recipients(),
+                template_name="psea/assessment/assigned",
+                context={"assessment": instance}
+            )
+        elif instance.status == Assessment.STATUS_REJECTED:
+            send_notification_with_template(
+                recipients=instance.assessor.get_recipients(),
+                template_name="psea/assessment/rejected",
+                context={"assessment": instance}
+            )
+
+        return response
 
     def retrieve(self, request, *args, **kwargs):
         self.serializer_class = AssessmentDetailSerializer
