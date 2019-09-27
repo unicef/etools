@@ -39,7 +39,7 @@ from etools.applications.users.tests.factories import GroupFactory, UserFactory
 class TestAssessmentViewSet(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.send_path = "etools.applications.psea.serializers.send_notification_with_template"
+        cls.send_path = "etools.applications.psea.views.send_notification_with_template"
         cls.user = UserFactory()
         cls.focal_user = UserFactory()
         cls.focal_user.groups.add(
@@ -534,12 +534,15 @@ class TestAssessmentViewSet(BaseTenantTestCase):
     def test_assign(self):
         assessment = AssessmentFactory(partner=self.partner)
         self.assertEqual(assessment.status, assessment.STATUS_DRAFT)
-        response = self.forced_auth_req(
-            "patch",
-            reverse("psea:assessment-assign", args=[assessment.pk]),
-            user=self.focal_user,
-            data={},
-        )
+        AssessorFactory(assessment=assessment)
+        mock_send = Mock()
+        with patch(self.send_path, mock_send):
+            response = self.forced_auth_req(
+                "patch",
+                reverse("psea:assessment-assign", args=[assessment.pk]),
+                user=self.focal_user,
+                data={},
+            )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
             response.data.get("status"),
@@ -547,6 +550,21 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         )
         assessment.refresh_from_db()
         self.assertEqual(assessment.status, assessment.STATUS_IN_PROGRESS)
+        self.assertEqual(mock_send.call_count, 1)
+
+        # no subsequent assign requests allowed
+        mock_send = Mock()
+        with patch(self.send_path, mock_send):
+            response = self.forced_auth_req(
+                "patch",
+                reverse("psea:assessment-assign", args=[assessment.pk]),
+                user=self.focal_user,
+                data={},
+            )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        assessment.refresh_from_db()
+        self.assertEqual(assessment.status, assessment.STATUS_IN_PROGRESS)
+        self.assertEqual(mock_send.call_count, 0)
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_submit(self):
@@ -611,10 +629,10 @@ class TestAssessmentViewSet(BaseTenantTestCase):
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_cancel(self):
         assessment = AssessmentFactory(partner=self.partner)
-        assessment.status = assessment.STATUS_FINAL
+        assessment.status = assessment.STATUS_IN_PROGRESS
         assessment.save()
         AnswerFactory(assessment=assessment)
-        self.assertEqual(assessment.status, assessment.STATUS_FINAL)
+        self.assertEqual(assessment.status, assessment.STATUS_IN_PROGRESS)
         response = self.forced_auth_req(
             "patch",
             reverse("psea:assessment-cancel", args=[assessment.pk]),
@@ -630,22 +648,44 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         self.assertEqual(assessment.status, assessment.STATUS_CANCELLED)
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_cancel_assessor(self):
+        assessment = AssessmentFactory(partner=self.partner)
+        assessment.status = assessment.STATUS_IN_PROGRESS
+        assessment.save()
+        AnswerFactory(assessment=assessment)
+        user = UserFactory()
+        AssessorFactory(assessment=assessment, user=user)
+        self.assertEqual(assessment.status, assessment.STATUS_IN_PROGRESS)
+        response = self.forced_auth_req(
+            "patch",
+            reverse("psea:assessment-cancel", args=[assessment.pk]),
+            user=user,
+            data={},
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        assessment.refresh_from_db()
+        self.assertEqual(assessment.status, assessment.STATUS_IN_PROGRESS)
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_reject(self):
         assessment = AssessmentFactory(partner=self.partner)
         assessment.status = assessment.STATUS_SUBMITTED
         assessment.save()
+        AssessorFactory(assessment=assessment)
         AnswerFactory(assessment=assessment)
         self.assertEqual(assessment.status, assessment.STATUS_SUBMITTED)
         history_qs = AssessmentStatusHistory.objects.filter(
             assessment=assessment,
         )
         status_count = history_qs.count()
-        response = self.forced_auth_req(
-            "patch",
-            reverse("psea:assessment-reject", args=[assessment.pk]),
-            user=self.focal_user,
-            data={"comment": "Test reject"},
-        )
+        mock_send = Mock()
+        with patch(self.send_path, mock_send):
+            response = self.forced_auth_req(
+                "patch",
+                reverse("psea:assessment-reject", args=[assessment.pk]),
+                user=self.focal_user,
+                data={"comment": "Test reject"},
+            )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
             response.data.get("status"),
@@ -656,27 +696,44 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         self.assertEqual(history_qs.count(), status_count + 1)
         history = history_qs.first()
         self.assertNotEqual(history.comment, "")
+        self.assertEqual(mock_send.call_count, 1)
+
+        # check that subsequent reject requests are not valid
+        mock_send = Mock()
+        with patch(self.send_path, mock_send):
+            response = self.forced_auth_req(
+                "patch",
+                reverse("psea:assessment-reject", args=[assessment.pk]),
+                user=self.focal_user,
+                data={"comment": "Test reject"},
+            )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(mock_send.call_count, 0)
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_reject_validation(self):
         assessment = AssessmentFactory(partner=self.partner)
         assessment.status = assessment.STATUS_SUBMITTED
         assessment.save()
+        AssessorFactory(assessment=assessment)
         self.assertEqual(assessment.status, assessment.STATUS_SUBMITTED)
         history_qs = AssessmentStatusHistory.objects.filter(
             assessment=assessment,
         )
         status_count = history_qs.count()
-        response = self.forced_auth_req(
-            "patch",
-            reverse("psea:assessment-reject", args=[assessment.pk]),
-            user=self.focal_user,
-            data={},
-        )
+        mock_send = Mock()
+        with patch(self.send_path, mock_send):
+            response = self.forced_auth_req(
+                "patch",
+                reverse("psea:assessment-reject", args=[assessment.pk]),
+                user=self.focal_user,
+                data={},
+            )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         assessment.refresh_from_db()
         self.assertEqual(assessment.status, assessment.STATUS_SUBMITTED)
         self.assertEqual(history_qs.count(), status_count)
+        self.assertEqual(mock_send.call_count, 0)
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_list_export_csv(self):
