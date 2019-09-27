@@ -14,7 +14,7 @@ defaults = {
     Date of Assessment: {{ assessment.assessment_date }}
 
     Comment: {{ rejected_comment }}
-    
+
     Please click <a href="{{ url }}">this link</a> to complete the report.<br/><br/>
 
     Please note that this is an automated email and the mailbox is not monitored. Please do not reply to it.
