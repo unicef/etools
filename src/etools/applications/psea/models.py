@@ -129,6 +129,14 @@ class Assessment(TimeStampedModel):
         # TODO double check this with frontend developers
         return build_frontend_url('psea', 'assessment', 'detail', self.id, **kwargs)
 
+    def get_rejected_comment(self):
+        rejected_qs = self.status_history.filter(
+            status=Assessment.STATUS_REJECTED,
+        )
+        if rejected_qs.exists():
+            return rejected_qs.first().comment
+        return None
+
     @classmethod
     def permission_structure(cls):
         permissions = import_permissions(cls.__name__)
@@ -146,6 +154,9 @@ class Assessment(TimeStampedModel):
         if indicators_qs.count() == answers_qs.count():
             return True
         return False
+
+    def get_focal_recipients(self):
+        return [u.email for u in self.focal_points.all()]
 
     def rating(self):
         if self.answers_complete():

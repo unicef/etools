@@ -233,25 +233,39 @@ class AssessmentViewSet(
         response = self.update(request, partial=True)
 
         instance = self.get_object()
-        if instance.status == Assessment.STATUS_FINAL:
-            send_notification_with_template(
-                recipients=[settings.PSEA_ASSESSMENT_FINAL_RECIPIENTS],
-                template_name="psea/assessment/final",
-                context={"assessment": instance}
-            )
-        # assigned status is automatically moved to in progress
-        elif instance.status == Assessment.STATUS_IN_PROGRESS:
-            send_notification_with_template(
-                recipients=instance.assessor.get_recipients(),
-                template_name="psea/assessment/assigned",
-                context={"assessment": instance}
-            )
-        elif instance.status == Assessment.STATUS_REJECTED:
-            send_notification_with_template(
-                recipients=instance.assessor.get_recipients(),
-                template_name="psea/assessment/rejected",
-                context={"assessment": instance}
-            )
+        if instance.status in [Assessment.STATUS_REJECTED, Assessment.STATUS_FINAL,
+                               Assessment.STATUS_IN_PROGRESS, Assessment.STATUS_SUBMITTED]:
+            context = {
+                "partner": instance.partner,
+                "url": instance.get_object_url(user=request.user),
+                "assessment": instance
+            }
+            if instance.status == Assessment.STATUS_FINAL:
+                send_notification_with_template(
+                    recipients=[settings.PSEA_ASSESSMENT_FINAL_RECIPIENTS],
+                    template_name="psea/assessment/final",
+                    context=context,
+                )
+            # assigned status is automatically moved to in progress
+            elif instance.status == Assessment.STATUS_IN_PROGRESS:
+                send_notification_with_template(
+                    recipients=instance.assessor.get_recipients(),
+                    template_name="psea/assessment/assigned",
+                    context=context
+                )
+            elif instance.status == Assessment.STATUS_REJECTED:
+                context["rejected_comment"] = instance.get_rejected_comment()
+                send_notification_with_template(
+                    recipients=instance.assessor.get_recipients(),
+                    template_name="psea/assessment/rejected",
+                    context=context
+                )
+            elif instance.status == Assessment.STATUS_SUBMITTED:
+                send_notification_with_template(
+                    recipients=instance.get_focal_recipients(),
+                    template_name="psea/assessment/submitted",
+                    context=context
+                )
 
         return response
 
