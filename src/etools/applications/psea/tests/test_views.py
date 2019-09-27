@@ -575,12 +575,14 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         AnswerFactory(assessment=assessment)
         self.assertEqual(assessment.status, assessment.STATUS_IN_PROGRESS)
 
-        response = self.forced_auth_req(
-            "patch",
-            reverse("psea:assessment-submit", args=[assessment.pk]),
-            user=self.focal_user,
-            data={},
-        )
+        mock_send = Mock()
+        with patch(self.send_path, mock_send):
+            response = self.forced_auth_req(
+                "patch",
+                reverse("psea:assessment-submit", args=[assessment.pk]),
+                user=self.focal_user,
+                data={},
+            )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
             response.data.get("status"),
