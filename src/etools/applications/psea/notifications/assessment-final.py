@@ -1,15 +1,15 @@
 name = 'psea/assessment/final'
 defaults = {
     'description': 'PSEA Assessment Final.',
-    'subject': 'PSEA Assessment',
+    'subject': 'PSEA Assessment for {{ partner.name }}',
     'content': """
     Dear Colleagues,
 
     Please note that a PSEA assessment was completed for the following Partner:
 
-    Vendor Number: {{ assessment.partner.vendor_number }}
+    Vendor Number: {{ partner.vendor_number }}
 
-    Vendor Name: {{ assessment.partner.name }}
+    Vendor Name: {{ partner.name }}
 
     PSEA Risk Rating: {{ assessment.overall_rating }}
 
