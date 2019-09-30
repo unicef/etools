@@ -137,7 +137,7 @@ class TestAssessment(BaseTenantTestCase):
         assessment = AssessmentFactory()
         user = UserFactory()
         self.assertFalse(assessment.user_belongs(user))
-        assessor = AssessorFactory(
+        AssessorFactory(
             assessment=assessment,
             user=user,
             assessor_type=Assessor.TYPE_EXTERNAL,
@@ -166,13 +166,6 @@ class TestAssessment(BaseTenantTestCase):
             "url": assessment.get_object_url(user=user),
             "assessment": assessment,
         })
-
-    def test_answers_complete(self):
-        assessment = AssessmentFactory()
-        indicator = IndicatorFactory()
-        self.assertFalse(assessment.answers_complete())
-        AnswerFactory(assessment=assessment, indicator=indicator)
-        self.assertTrue(assessment.answers_complete())
 
     def test_get_reference_number(self):
         assessment = AssessmentFactory()
