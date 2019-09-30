@@ -69,7 +69,7 @@ class AssessmentSerializer(BaseAssessmentSerializer):
 
     def get_overall_rating(self, obj):
         if not obj.overall_rating:
-            display = "-"
+            display = ""
         elif obj.overall_rating <= 11:
             display = "High"
         elif 11 < obj.overall_rating <= 19:
@@ -115,12 +115,7 @@ class AssessmentSerializer(BaseAssessmentSerializer):
         return [s for s in obj.STATUS_CHOICES if s[0] in status_list]
 
     def get_rejected_comment(self, obj):
-        rejected_qs = obj.status_history.filter(
-            status=Assessment.STATUS_REJECTED,
-        )
-        if rejected_qs.exists():
-            return rejected_qs.first().comment
-        return ""
+        return obj.get_rejected_comment() or ""
 
     def get_available_actions(self, obj):
         # don't provide available actions for list view

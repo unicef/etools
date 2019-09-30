@@ -21,6 +21,7 @@ from etools.applications.psea.validation import (
     assessment_focal_point_user,
     assessment_illegal_transition,
     assessment_rejected,
+    assessment_submitted,
     assessment_user_belongs,
 )
 
@@ -94,6 +95,7 @@ class Assessment(TimeStampedModel):
     }
     TRANSITION_SIDE_EFFECTS = {
         STATUS_ASSIGNED: [assessment_assigned],
+        STATUS_SUBMITTED: [assessment_submitted],
         STATUS_REJECTED: [assessment_rejected],
         STATUS_FINAL: [assessment_final],
     }
@@ -137,6 +139,14 @@ class Assessment(TimeStampedModel):
         # TODO double check this with frontend developers
         return build_frontend_url('psea', 'assessment', 'detail', self.id, **kwargs)
 
+    def get_rejected_comment(self):
+        rejected_qs = self.status_history.filter(
+            status=Assessment.STATUS_REJECTED,
+        )
+        if rejected_qs.exists():
+            return rejected_qs.first().comment
+        return None
+
     @classmethod
     def permission_structure(cls):
         permissions = import_permissions(cls.__name__)
@@ -154,6 +164,12 @@ class Assessment(TimeStampedModel):
         if indicators_qs.count() == answers_qs.count():
             return True
         return False
+
+    def get_recipients(self):
+        return self.assessor.get_recipients()
+
+    def get_focal_recipients(self):
+        return [u.email for u in self.focal_points.all()]
 
     def rating(self):
         if self.answers_complete():
@@ -188,6 +204,13 @@ class Assessment(TimeStampedModel):
         if self.pk and user in self.focal_points.all():
             return True
         return self.user_is_assessor(user)
+
+    def get_email_context(self, user):
+        return {
+            "partner": self.partner,
+            "url": self.get_object_url(user=user),
+            "assessment": self
+        }
 
     def save(self, *args, **kwargs):
         self.overall_rating = self.rating()
