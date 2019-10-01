@@ -205,7 +205,7 @@ class Assessment(TimeStampedModel):
             return True
         return self.user_is_assessor(user)
 
-    def get_email_context(self, user):
+    def get_mail_context(self, user):
         return {
             "partner": self.partner,
             "url": self.get_object_url(user=user),

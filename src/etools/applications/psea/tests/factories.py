@@ -3,6 +3,7 @@ import datetime
 import factory
 from factory import fuzzy
 
+from etools.applications.action_points.tests.factories import BaseActionPointFactory
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.psea import models
 from etools.applications.users.tests.factories import UserFactory
@@ -53,6 +54,13 @@ class AssessmentStatusHistoryFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = models.AssessmentStatusHistory
+
+
+class AssessmentActionPointFactory(BaseActionPointFactory):
+    psea_assessment = factory.SubFactory(AssessmentFactory)
+
+    class Meta:
+        model = models.AssessmentActionPoint
 
 
 class AnswerFactory(factory.django.DjangoModelFactory):

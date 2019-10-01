@@ -7,6 +7,7 @@ from etools.applications.psea.models import Answer, Assessment, Assessor
 from etools.applications.psea.tests.factories import (
     AnswerEvidenceFactory,
     AnswerFactory,
+    AssessmentActionPointFactory,
     AssessmentFactory,
     AssessmentStatusHistoryFactory,
     AssessorFactory,
@@ -158,10 +159,10 @@ class TestAssessment(BaseTenantTestCase):
         assessor.auditor_firm_staff.set([staff])
         self.assertTrue(assessment.user_belongs(user))
 
-    def test_get_email_context(self):
+    def test_get_mail_context(self):
         user = UserFactory()
         assessment = AssessmentFactory()
-        self.assertEqual(assessment.get_email_context(user), {
+        self.assertEqual(assessment.get_mail_context(user), {
             "partner": assessment.partner,
             "url": assessment.get_object_url(user=user),
             "assessment": assessment,
@@ -191,6 +192,21 @@ class TestAssessmentStatusHistory(BaseTenantTestCase):
     def test_string(self):
         status = AssessmentStatusHistoryFactory(status=Assessment.STATUS_DRAFT)
         self.assertEqual(str(status), f"Draft [{status.created}]")
+
+
+class TestAssessmentActionPoint(BaseTenantTestCase):
+    def test_get_mail_context(self):
+        user = UserFactory()
+        assessment = AssessmentFactory()
+        ap = AssessmentActionPointFactory(
+            psea_assessment=assessment,
+        )
+        context = ap.get_mail_context(user=user)
+        self.assertEqual(context["psea_assessment"], {
+            "partner": assessment.partner,
+            "url": assessment.get_object_url(user=user),
+            "assessment": assessment,
+        })
 
 
 class TestAnswer(BaseTenantTestCase):
