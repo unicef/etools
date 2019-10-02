@@ -6,6 +6,10 @@ from etools.applications.psea.tests.factories import AnswerFactory, AssessmentFa
 from etools.applications.users.tests.factories import UserFactory
 
 
+def expected_status_list(statuses):
+    return [s for s in Assessment.STATUS_CHOICES if s[0] in statuses]
+
+
 class TestAssessmentSerializer(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
@@ -78,13 +82,10 @@ class TestAssessmentSerializer(BaseTenantTestCase):
         )
         self.assertEqual(self.serializer.get_assessor(assessment), "Firm Name")
 
-    def _expected_status_list(self, statuses):
-        return [s for s in Assessment.STATUS_CHOICES if s[0] in statuses]
-
     def test_get_status_list_default(self):
         assessment = AssessmentFactory()
         status_list = self.serializer.get_status_list(assessment)
-        self.assertEqual(status_list, self._expected_status_list([
+        self.assertEqual(status_list, expected_status_list([
             assessment.STATUS_DRAFT,
             assessment.STATUS_IN_PROGRESS,
             assessment.STATUS_SUBMITTED,
@@ -96,7 +97,7 @@ class TestAssessmentSerializer(BaseTenantTestCase):
         assessment.status = assessment.STATUS_CANCELLED
         assessment.save()
         status_list = self.serializer.get_status_list(assessment)
-        self.assertEqual(status_list, self._expected_status_list([
+        self.assertEqual(status_list, expected_status_list([
             assessment.STATUS_DRAFT,
             assessment.STATUS_CANCELLED,
         ]))
@@ -106,7 +107,7 @@ class TestAssessmentSerializer(BaseTenantTestCase):
         assessment.status = assessment.STATUS_REJECTED
         assessment.save()
         status_list = self.serializer.get_status_list(assessment)
-        self.assertEqual(status_list, self._expected_status_list([
+        self.assertEqual(status_list, expected_status_list([
             assessment.STATUS_DRAFT,
             assessment.STATUS_REJECTED,
             assessment.STATUS_IN_PROGRESS,
