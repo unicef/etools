@@ -1,9 +1,12 @@
+from unittest.mock import Mock
+
+from etools.applications.audit.models import UNICEFAuditFocalPoint
 from etools.applications.audit.tests.factories import AuditPartnerFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.psea import serializers
 from etools.applications.psea.models import Assessment, Assessor
 from etools.applications.psea.tests.factories import AnswerFactory, AssessmentFactory, AssessorFactory, RatingFactory
-from etools.applications.users.tests.factories import UserFactory
+from etools.applications.users.tests.factories import GroupFactory, UserFactory
 
 
 def expected_status_list(statuses):
@@ -13,7 +16,19 @@ def expected_status_list(statuses):
 class TestAssessmentSerializer(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.serializer = serializers.AssessmentSerializer()
+        cls.mock_view = Mock(action="retrieve")
+        cls.focal_user = UserFactory()
+        cls.focal_user.groups.add(
+            GroupFactory(name=UNICEFAuditFocalPoint.name),
+        )
+        cls.mock_request = Mock(user=cls.focal_user)
+        cls.serializer = serializers.AssessmentSerializer(
+            context={"view": cls.mock_view, "request": cls.mock_request},
+        )
+
+    def setUp(self):
+        self.mock_view.action = "retrieve"
+        self.mock_request.user = self.focal_user
 
     def test_get_overall_rating_none(self):
         assessment = AssessmentFactory()
@@ -114,3 +129,42 @@ class TestAssessmentSerializer(BaseTenantTestCase):
             assessment.STATUS_SUBMITTED,
             assessment.STATUS_FINAL,
         ]))
+
+    def test_get_available_actions_view_list(self):
+        assessment = AssessmentFactory()
+        self.assertEqual(assessment.status, assessment.STATUS_DRAFT)
+        self.serializer.context["view"].action = "list"
+        self.assertEqual(
+            self.serializer.get_available_actions(assessment),
+            [],
+        )
+
+    def test_get_available_actions_draft_focal(self):
+        assessment = AssessmentFactory()
+        self.assertEqual(assessment.status, assessment.STATUS_DRAFT)
+        self.assertEqual(
+            self.serializer.get_available_actions(assessment),
+            ["assign", "cancel"],
+        )
+
+    def test_get_available_actions_submitted_focal(self):
+        assessment = AssessmentFactory()
+        assessment.status = assessment.STATUS_SUBMITTED
+        assessment.save()
+        self.assertEqual(assessment.status, assessment.STATUS_SUBMITTED)
+        self.assertEqual(
+            self.serializer.get_available_actions(assessment),
+            ["reject", "finalize", "cancel"],
+        )
+
+    def test_get_available_actions_assessor_in_progress(self):
+        assessment = AssessmentFactory()
+        assessment.status = assessment.STATUS_IN_PROGRESS
+        assessment.save()
+        assessor = AssessorFactory(assessment=assessment)
+        self.assertEqual(assessment.status, assessment.STATUS_IN_PROGRESS)
+        self.serializer.context["request"].user = assessor.user
+        self.assertEqual(
+            self.serializer.get_available_actions(assessment),
+            ["submit"],
+        )
