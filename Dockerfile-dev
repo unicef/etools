@@ -33,7 +33,7 @@ RUN pip install --upgrade \
     wheel \
     pipenv
 
-# RUN pip install --upgrade arcgis --no-deps
+RUN pip install --upgrade arcgis --no-deps
 
 WORKDIR /etools/
 ADD Pipfile .

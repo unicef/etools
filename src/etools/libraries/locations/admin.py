@@ -65,16 +65,16 @@ class EtoolsArcgisDBTableAdmin(ArcgisDBTableAdmin):
 
         # import locations from top to bottom
         queryset = sorted(queryset, key=lambda l: (l.tree_id, l.lft, l.pk))
-        carto_tables = [qry.pk for qry in queryset]
+        arcgis_tables = [qry.pk for qry in queryset]
 
-        for table in carto_tables:
+        for table in arcgis_tables:
             task_list += [
                 validate_arcgis_locations_in_use.si(table),
                 import_arcgis_locations.si(table),
             ]
 
         # clean up locations from bottom to top, it's easier to validate parents this way
-        for table in reversed(carto_tables):
+        for table in reversed(arcgis_tables):
             task_list += [cleanup_arcgis_obsolete_locations.si(table)]
 
         if task_list:
@@ -102,5 +102,6 @@ class RemapAdmin(admin.ModelAdmin):
 
 admin.site.unregister(CartoDBTable)
 admin.site.register(CartoDBTable, EtoolsCartoDBTableAdmin)
+admin.site.unregister(ArcgisDBTable)
 admin.site.register(ArcgisDBTable, EtoolsArcgisDBTableAdmin)
 admin.site.register(LocationRemapHistory, RemapAdmin)
