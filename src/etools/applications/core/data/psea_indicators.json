@@ -3,7 +3,7 @@
         "pk": 1,
         "model": "psea.Rating",
         "fields": {
-            "label": "High",
+            "label": "Absent",
             "weight": 1,
             "active": true
         }
@@ -12,7 +12,7 @@
         "pk": 2,
         "model": "psea.Rating",
         "fields": {
-            "label": "Moderate",
+            "label": "Progressing",
             "weight": 2,
             "active": true
         }
@@ -21,7 +21,7 @@
         "pk": 3,
         "model": "psea.Rating",
         "fields": {
-            "label": "Low",
+            "label": "Adequate",
             "weight": 3,
             "active": true
         }
