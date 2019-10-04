@@ -274,7 +274,7 @@ class EngagementViewSet(
     search_fields = ('partner__name', 'agreement__auditor_firm__name', '=id')
     ordering_fields = ('agreement__order_number', 'agreement__auditor_firm__name',
                        'partner__name', 'engagement_type', 'status')
-    filter_class = EngagementFilter
+    filterset_class = EngagementFilter
     export_filename = 'engagements'
 
     ENGAGEMENT_MAPPING = {

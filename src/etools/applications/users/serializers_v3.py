@@ -1,10 +1,11 @@
-
 from django.contrib.auth import get_user_model
+from django.db import connection
 
 from rest_framework import serializers
 
 from etools.applications.users.models import Country, UserProfile
 from etools.applications.users.serializers import GroupSerializer, SimpleCountrySerializer
+from etools.applications.users.validators import ExternalUserValidator
 
 # temporary list of Countries that will use the Auditor Portal Module.
 # Logic be removed once feature gating is in place
@@ -91,6 +92,7 @@ class ProfileRetrieveUpdateSerializer(serializers.ModelSerializer):
     is_active = serializers.CharField(source='user.is_active', read_only=True)
     country = CountrySerializer(read_only=True)
     show_ap = serializers.SerializerMethodField()
+    is_unicef_user = serializers.SerializerMethodField()
 
     class Meta:
         model = UserProfile
@@ -104,6 +106,9 @@ class ProfileRetrieveUpdateSerializer(serializers.ModelSerializer):
         if obj.country and obj.country.name in AP_ALLOWED_COUNTRIES:
             return True
         return False
+
+    def get_is_unicef_user(self, obj):
+        return obj.user.is_unicef_user()
 
 
 class SimpleUserSerializer(serializers.ModelSerializer):
@@ -124,3 +129,59 @@ class SimpleUserSerializer(serializers.ModelSerializer):
             'profile',
             'country',
         )
+
+
+class ExternalUserSerializer(MinimalUserSerializer):
+    email = serializers.EmailField(
+        label='Email address',
+        max_length=254,
+        validators=[ExternalUserValidator()],
+    )
+
+    class Meta:
+        model = get_user_model()
+        fields = (
+            'id',
+            'name',
+            'first_name',
+            'middle_name',
+            'last_name',
+            'username',
+            'email',
+        )
+        read_only_fields = ["username"]
+
+    def _get_user_qs(self, data):
+        return get_user_model().objects.filter(email=data.get("email"))
+
+    def validate(self, data):
+        data = super().validate(data)
+        if not self.instance:
+            user_qs = self._get_user_qs(data)
+            if user_qs.exists():
+                exists, __ = self._in_country(user_qs.first())
+                if exists:
+                    raise serializers.ValidationError("User already exists.")
+        return data
+
+    def _in_country(self, instance):
+        country = Country.objects.get(schema_name=connection.schema_name)
+        if country not in instance.profile.countries_available.all():
+            return (False, country)
+        return (True, country)
+
+    def _add_to_country(self, instance):
+        exists, country = self._in_country(instance)
+        if not exists:
+            instance.profile.countries_available.add(country)
+
+    def create(self, validated_data):
+        validated_data["username"] = validated_data.get("email")
+        # check if user record actually exists
+        user_qs = self._get_user_qs(validated_data)
+        if user_qs.exists():
+            instance = user_qs.first()
+        else:
+            instance = super().create(validated_data)
+        self._add_to_country(instance)
+        return instance

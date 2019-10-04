@@ -12,6 +12,7 @@ from etools.applications.action_points.tests.factories import ActionPointCategor
 from etools.applications.audit.tests.factories import MicroAssessmentFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.tests.factories import PartnerFactory
+from etools.applications.psea.tests.factories import AssessmentFactory
 from etools.applications.reports.tests.factories import SectionFactory
 from etools.applications.t2f.tests.factories import TravelActivityFactory, TravelFactory
 from etools.applications.tpm.tests.factories import TPMVisitFactory
@@ -266,6 +267,7 @@ class TestActionPointViewSet(TestExportMixin, ActionPointsTestCaseMixin, BaseTen
             status='open', comments__count=1,
             tpm_activity=TPMVisitFactory(tpm_activities__count=1).tpm_activities.first()
         )
+        ActionPointFactory(psea_assessment=AssessmentFactory())
         traveler = UserFactory()
         ActionPointFactory(
             status='open',
@@ -375,6 +377,7 @@ class TestActionPointsListViewMetadada(TestActionPointsViewMetadata, BaseTenantT
                 'travel_activity',
                 'engagement',
                 'tpm_activity',
+                'psea_assessment',
             ]
         )
 

@@ -28,7 +28,7 @@ class ActionPointAdmin(SnapshotModelAdmin):
     inlines = (CommentInline, ActivityInline, )
     readonly_fields = ('status', )
     raw_id_fields = ('section', 'office', 'location', 'cp_output', 'partner', 'intervention', 'tpm_activity',
-                     'travel_activity', 'engagement', 'author', 'assigned_by', 'assigned_to')
+                     'psea_assessment', 'travel_activity', 'engagement', 'author', 'assigned_by', 'assigned_to')
 
 
 admin.site.register(ActionPoint, ActionPointAdmin)
