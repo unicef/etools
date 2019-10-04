@@ -60,6 +60,7 @@ class Indicator(OrderedModel, TimeStampedModel):
     active = models.BooleanField(default=True)
 
     class Meta:
+        ordering = ("order",)
         verbose_name = _('Indicator')
         verbose_name_plural = _('Indicators')
 
