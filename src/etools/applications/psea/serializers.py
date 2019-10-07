@@ -275,7 +275,7 @@ class AssessmentActionPointExportSerializer(serializers.Serializer):
 class AssessorSerializer(serializers.ModelSerializer):
     auditor_firm_name = serializers.SerializerMethodField()
     assessor_details = serializers.SerializerMethodField()
-    user_details = serializers.SerializerMethodField()
+    user_details = MinimalUserSerializer(source="user", read_only=True)
 
     class Meta:
         model = Assessor
@@ -288,11 +288,6 @@ class AssessorSerializer(serializers.ModelSerializer):
     def get_auditor_firm_name(self, obj):
         if obj.auditor_firm:
             return obj.auditor_firm.name
-        return ""
-
-    def get_user_details(self, obj):
-        if obj.assessor_type != Assessor.TYPE_VENDOR:
-            return MinimalUserSerializer(instance=obj.user).data
         return ""
 
     def validate(self, data):
