@@ -1,314 +1,376 @@
 [
-    {
-        "pk": 1,
-        "model": "psea.Rating",
-        "fields": {
-            "label": "High",
-            "weight": 1,
-            "active": true
-        }
-    },
-    {
-        "pk": 2,
-        "model": "psea.Rating",
-        "fields": {
-            "label": "Moderate",
-            "weight": 2,
-            "active": true
-        }
-    },
-    {
-        "pk": 3,
-        "model": "psea.Rating",
-        "fields": {
-            "label": "Low",
-            "weight": 3,
-            "active": true
-        }
-    },
-    {
-        "pk": 1,
-        "model": "psea.Evidence",
-        "fields": {
-            "label": "Code of Conduct",
-            "requires_description": false,
-            "active": true
-        }
-    },
-    {
-        "pk": 2,
-        "model": "psea.Evidence",
-        "fields": {
-            "label": "PSEA Policy",
-            "requires_description": false,
-            "active": true
-        }
-    },
-    {
-        "pk": 3,
-        "model": "psea.Evidence",
-        "fields": {
-            "label": "Other (please specify)",
-            "requires_description": true,
-            "active": true
-        }
-    },
-    {
-        "pk": 4,
-        "model": "psea.Evidence",
-        "fields": {
-            "label": "Relevant human resources policies",
-            "requires_description": false,
-            "active": true
-        }
-    },
-    {
-        "pk": 5,
-        "model": "psea.Evidence",
-        "fields": {
-            "label": "Recruitment procedure (e.g. screening of candidates)",
-            "requires_description": false,
-            "active": true
-        }
-    },
-    {
-        "pk": 6,
-        "model": "psea.Evidence",
-        "fields": {
-            "label": "ToR (e.g. PSEA-related responsibilities)",
-            "requires_description": false,
-            "active": true
-        }
-    },
-    {
-        "pk": 7,
-        "model": "psea.Evidence",
-        "fields": {
-            "label": "Contracts/partnership agreements",
-            "requires_description": false,
-            "active": true
-        }
-    },
-    {
-        "pk": 8,
-        "model": "psea.Evidence",
-        "fields": {
-            "label": "Training Agenda",
-            "requires_description": false,
-            "active": true
-        }
-    },
-    {
-        "pk": 9,
-        "model": "psea.Evidence",
-        "fields": {
-            "label": "Attendance sheets",
-            "requires_description": false,
-            "active": true
-        }
-    },
-    {
-        "pk": 10,
-        "model": "psea.Evidence",
-        "fields": {
-            "label": "Communication materials",
-            "requires_description": false,
-            "active": true
-        }
-    },
-    {
-        "pk": 11,
-        "model": "psea.Evidence",
-        "fields": {
-            "label": "Needs assessments",
-            "requires_description": false,
-            "active": true
-        }
-    },
-    {
-        "pk": 12,
-        "model": "psea.Evidence",
-        "fields": {
-            "label": "Risk assessments",
-            "requires_description": false,
-            "active": true
-        }
-    },
-    {
-        "pk": 13,
-        "model": "psea.Evidence",
-        "fields": {
-            "label": "M&E framework",
-            "requires_description": false,
-            "active": true
-        }
-    },
-    {
-        "pk": 14,
-        "model": "psea.Evidence",
-        "fields": {
-            "label": "Description of reporting mechanism(s)",
-            "requires_description": false,
-            "active": true
-        }
-    },
-    {
-        "pk": 15,
-        "model": "psea.Evidence",
-        "fields": {
-            "label": "Whistleblower policy",
-            "requires_description": false,
-            "active": true
-        }
-    },
-    {
-        "pk": 16,
-        "model": "psea.Evidence",
-        "fields": {
-            "label": "List of service providers",
-            "requires_description": false,
-            "active": true
-        }
-    },
-    {
-        "pk": 17,
-        "model": "psea.Evidence",
-        "fields": {
-            "label": "Referral form for survivors of GBV/SEA",
-            "requires_description": false,
-            "active": true
-        }
-    },
-    {
-        "pk": 18,
-        "model": "psea.Evidence",
-        "fields": {
-            "label": "Name(s) of possible investigator(s)",
-            "requires_description": false,
-            "active": true
-        }
-    },
-    {
-        "pk": 19,
-        "model": "psea.Evidence",
-        "fields": {
-            "label": "Dedicated resources for investigation(s) and/or commitment of partner for support",
-            "requires_description": false,
-            "active": true
-        }
-    },
-    {
-        "pk": 20,
-        "model": "psea.Evidence",
-        "fields": {
-            "label": "PSEA investigation policy/procedure",
-            "requires_description": false,
-            "active": true
-        }
-    },
-    {
-        "pk": 21,
-        "model": "psea.Evidence",
-        "fields": {
-            "label": "Documentation of standard procedure",
-            "requires_description": false,
-            "active": true
-        }
-    },
-    {
-        "pk": 1,
-        "model": "psea.Indicator",
-        "fields": {
-            "subject": "An organizational policy exists (as part of code of conduct and/or a comprehensive SEA policy) and is signed by all personnel.",
-            "content": "Do organizational policies include: A) a clear definition of SEA; B) a clear description of behaviour expected of personnel (incorporating the IASC's Six Core Principles Relating to SEA) and; C) an explicit statement of zero tolerance for SEA?\n\nAre all personnel required to receive and sign organizational policies related to PSEA (e.g. code of conduct)?\n\nDoes the organizational policy on PSEA apply to all personnel, including employees, volunteers, contractors, and others?",
-            "ratings": [1, 2, 3],
-            "evidences": [1, 2, 3, 21],
-            "active": true,
-            "order": 1
-        }
-    },
-    {
-        "pk": 2,
-        "model": "psea.Indicator",
-        "fields": {
-            "subject": "The organization's management and HR systems account for PSEA.",
-            "content": "Are roles and responsibilities for management and personnel on PSEA clearly defined?\n\nAre reference-checking procedures in place for job candidates, including checking for prior involvement in SEA or other safeguarding concerns?\n\nIs adherence to the organization's code of conduct/PSEA policy included in supervision meetings/performance appraisals?\n\nDo contracts and partnership agreements have a clause requiring contractors, suppliers, consultants and sub-partners to commit to a zero-tolerance policy on SEA and to take measures to prevent SEA?\n\nAre there established disciplinary action(s) in cases of substantiated allegations?\n\nDoes the organization have documentation of all SEA allegations involving personnel and its response (e.g. reporting, investigations, referrals)?",
-            "ratings": [1, 2, 3],
-            "evidences": [4, 5, 6, 7, 3],
-            "active": true,
-            "order": 2
-        }
-    },
-    {
-        "pk": 3,
-        "model": "psea.Indicator",
-        "fields": {
-            "subject": "The organization holds mandatory training for personnel on the organization's SEA policy and procedures at least once per year.",
-            "content": "Are all personnel required to attend the training?\n\nIs the training delivered in-person, interactive, and tailored to the specific audience?",
-            "ratings": [1, 2, 3],
-            "evidences": [8, 9, 3],
-            "active": true,
-            "order": 3
-        }
-    },
-    {
-        "pk": 4,
-        "model": "psea.Indicator",
-        "fields": {
-            "subject": "Programme participants are consistently informed about the organization's zero-tolerance policy on SEA and how to report allegations during programme implementation in a way that all groups, including children, can understand.",
-            "content": "Has the organization employed a wide variety of channels to communicate messages?\n\nAre messages and communication materials adapted to target audiences (e.g. relevant languages/communication styles)?",
-            "ratings": [1, 2, 3],
-            "evidences": [10, 3],
-            "active": true,
-            "order": 4
-        }
-    },
-    {
-        "pk": 5,
-        "model": "psea.Indicator",
-        "fields": {
-            "subject": "The organization systematically assesses SEA-related risks and devises risk mitigation/prevention strategies.",
-            "content": "Are SEA risk mitigation and risk management incorporated into the organization's programme management cycle (e.g. needs assessment, programme design, M&E framework)?\n\nDo these efforts involve consultations with programme participants and local communities?\n\nAre there general prevention measures for PSEA in the organization's standard program design?",
-            "ratings": [1, 2, 3],
-            "evidences": [11, 12, 13, 3],
-            "active": true,
-            "order": 5
-        }
-    },
-    {
-        "pk": 6,
-        "model": "psea.Indicator",
-        "fields": {
-            "subject": "The organization has set up clear procedures for personnel and programme participants to report SEA allegations that comply with core standards for reporting (i.e. safety, confidentiality, transparency, accessibility).",
-            "content": "Are there measures in place to protect those reporting violations (e.g. whistleblower policy)?\n\nDoes the organization limit the number of people with access to reported information and remove identifying information of those involved when sharing information? Is it possible for personnel and others to report anonymously?\n\nAre those reporting concerns informed how information will be shared, with whom and for what purpose?\n\nIs the reporting mechanism easy-to-use and adapted to its target audience?\n\nAre there procedures for referring reports on SEA to other entities in the case that a report involves personnel of that other entity?",
-            "ratings": [1, 2, 3],
-            "evidences": [14, 15, 3],
-            "active": true,
-            "order": 6
-        }
-    },
-    {
-        "pk": 7,
-        "model": "psea.Indicator",
-        "fields": {
-            "subject": "The organization has a functioning system to ensure survivors of SEA allegedly perpetrated by their personnel receive immediate professional assistance, by providing them with direct services or referring them to relevant service providers.",
-            "content": "Are survivors provided with assistance regardless of their decision to investigate or identify the alleged perpetrator?\n\nIs there an updated list of relevant local service providers?\n\nIs there an established system for referring survivors for assistance?\n\nIs there a survivor-centered approach to assistance (i.e. safety, confidentiality, respect, non-discrimination)? Where the case concerns a child, are the best interests of the child prioritized?",
-            "ratings": [1, 2, 3],
-            "evidences": [16, 17, 3],
-            "active": true,
-            "order": 7
-        }
-    },
-    {
-        "pk": 8,
-        "model": "psea.Indicator",
-        "fields": {
-            "subject": "The organization has an established process and plan for ensuring credible, external investigation into SEA allegations involving its personnel.",
-            "content": "Is there an established process for reviewing allegations of SEA and deciding on next steps (e.g. assistance for survivors and/or others, need for investigation, reporting to others)?\n\nDoes the organization have access to and the resources needed to hire an experienced, impartial and trained investigator for an investigation on SEA?\n\nIs there an established system for organizational oversight of an investigation (e.g. managing the investigator(s), information-sharing/communications, conflicts of interest, risk assessments)?\n\nCan the organization provide protection and others support needed for survivors, witnesses, whistleblowers and others before, during and after the investigation?",
-            "ratings": [1, 2, 3],
-            "evidences": [18, 19, 20, 3],
-            "active": true,
-            "order": 8
-        }
+{
+    "model": "psea.rating",
+    "pk": 1,
+    "fields": {
+        "label": "Absent",
+        "weight": 1,
+        "active": true
     }
+},
+{
+    "model": "psea.rating",
+    "pk": 2,
+    "fields": {
+        "label": "Progressing",
+        "weight": 2,
+        "active": true
+    }
+},
+{
+    "model": "psea.rating",
+    "pk": 3,
+    "fields": {
+        "label": "Adequate",
+        "weight": 3,
+        "active": true
+    }
+},
+{
+    "model": "psea.evidence",
+    "pk": 1,
+    "fields": {
+        "label": "Code of Conduct",
+        "requires_description": false,
+        "active": true
+    }
+},
+{
+    "model": "psea.evidence",
+    "pk": 2,
+    "fields": {
+        "label": "PSEA Policy",
+        "requires_description": false,
+        "active": true
+    }
+},
+{
+    "model": "psea.evidence",
+    "pk": 3,
+    "fields": {
+        "label": "Other (please specify)",
+        "requires_description": true,
+        "active": true
+    }
+},
+{
+    "model": "psea.evidence",
+    "pk": 4,
+    "fields": {
+        "label": "Relevant human resources policies",
+        "requires_description": false,
+        "active": true
+    }
+},
+{
+    "model": "psea.evidence",
+    "pk": 5,
+    "fields": {
+        "label": "Recruitment procedure (e.g. screening of candidates)",
+        "requires_description": false,
+        "active": true
+    }
+},
+{
+    "model": "psea.evidence",
+    "pk": 6,
+    "fields": {
+        "label": "ToR (e.g. PSEA-related responsibilities)",
+        "requires_description": false,
+        "active": true
+    }
+},
+{
+    "model": "psea.evidence",
+    "pk": 7,
+    "fields": {
+        "label": "Contracts/partnership agreements",
+        "requires_description": false,
+        "active": true
+    }
+},
+{
+    "model": "psea.evidence",
+    "pk": 8,
+    "fields": {
+        "label": "Training Agenda",
+        "requires_description": false,
+        "active": true
+    }
+},
+{
+    "model": "psea.evidence",
+    "pk": 9,
+    "fields": {
+        "label": "Attendance sheets",
+        "requires_description": false,
+        "active": true
+    }
+},
+{
+    "model": "psea.evidence",
+    "pk": 10,
+    "fields": {
+        "label": "Communication materials",
+        "requires_description": false,
+        "active": true
+    }
+},
+{
+    "model": "psea.evidence",
+    "pk": 11,
+    "fields": {
+        "label": "Needs assessments",
+        "requires_description": false,
+        "active": true
+    }
+},
+{
+    "model": "psea.evidence",
+    "pk": 12,
+    "fields": {
+        "label": "Risk assessments",
+        "requires_description": false,
+        "active": true
+    }
+},
+{
+    "model": "psea.evidence",
+    "pk": 13,
+    "fields": {
+        "label": "M&E framework",
+        "requires_description": false,
+        "active": true
+    }
+},
+{
+    "model": "psea.evidence",
+    "pk": 14,
+    "fields": {
+        "label": "Description of reporting mechanism(s)",
+        "requires_description": false,
+        "active": true
+    }
+},
+{
+    "model": "psea.evidence",
+    "pk": 15,
+    "fields": {
+        "label": "Whistleblower policy",
+        "requires_description": false,
+        "active": true
+    }
+},
+{
+    "model": "psea.evidence",
+    "pk": 16,
+    "fields": {
+        "label": "List of service providers",
+        "requires_description": false,
+        "active": true
+    }
+},
+{
+    "model": "psea.evidence",
+    "pk": 17,
+    "fields": {
+        "label": "Referral form for survivors of GBV/SEA",
+        "requires_description": false,
+        "active": true
+    }
+},
+{
+    "model": "psea.evidence",
+    "pk": 18,
+    "fields": {
+        "label": "Name(s) of possible investigator(s)",
+        "requires_description": false,
+        "active": true
+    }
+},
+{
+    "model": "psea.evidence",
+    "pk": 19,
+    "fields": {
+        "label": "Dedicated resources for investigation(s) and/or commitment of partner for support",
+        "requires_description": false,
+        "active": true
+    }
+},
+{
+    "model": "psea.evidence",
+    "pk": 20,
+    "fields": {
+        "label": "PSEA investigation policy/procedure",
+        "requires_description": false,
+        "active": true
+    }
+},
+{
+    "model": "psea.evidence",
+    "pk": 21,
+    "fields": {
+        "label": "Documentation of standard procedure",
+        "requires_description": false,
+        "active": true
+    }
+},
+{
+    "model": "psea.evidence",
+    "pk": 22,
+    "fields": {
+        "label": "Annual training plan",
+        "requires_description": false,
+        "active": true
+    }
+},
+{
+    "model": "psea.evidence",
+    "pk": 23,
+    "fields": {
+        "label": "Description of referral process for survivors of GBV/SEA",
+        "requires_description": false,
+        "active": true
+    }
+},
+{
+    "model": "psea.evidence",
+    "pk": 24,
+    "fields": {
+        "label": "Written process for review of SEA allegations",
+        "requires_description": false,
+        "active": true
+    }
+},
+{
+    "model": "psea.indicator",
+    "pk": 1,
+    "fields": {
+        "order": 1,
+        "subject": "Core Standard 1: Organizational Policy",
+        "content": "An organizational policy exists and is signed by all personnel (see:<a href=\"https://unicef.sharepoint.com/:w:/r/sites/DAPM/_layouts/15/Doc.aspx?sourcedoc=%7B42E6DD24-5001-42C8-9050-B4ACAD0C4289%7D&file=PSEA%20Toolkit%20Field%20Tested%20Draft%20July%2022%202019.docx&action=default&mobileredirect=true&cid=7aa0aeea-cb8e-489c-89bd-2e6e77316cdc\"> PSEA</a> Toolkit Section 4.2.1. Policies). (Note that the policy may exist as part of a code of conduct and/or a comprehensive SEA policy.)<ul><li>Criteria 1: Organizational policy includes: <ul><li>a) a definition of SEA (that is aligned with the <a href=\"https://undocs.org/ST/SGB/2003/13\">UN's definition</a>);</li><li>b) a description of behavior expected of personnel on- and off-duty (reflecting the <a href=\"https://interagencystandingcommittee.org/principals/documents-public/iasc-six-core-principles-relating-sexual-exploitation-and-abuse-2002\">IASC\u2019s Six Core Principles Relating to SEA</a>); </li><li>and c) an explicit statement of zero-tolerance for SEA (i.e. SEA as a ground for disciplinary actions, which may result in termination of employment).</li></ul></li><li>Criteria 2: The organizational policy on PSEA (e.g. code of conduct) is signed by all personnel, including employees, volunteers, contractors, and others.</li><li>Criteria 3: The organization displays information on PSEA policy and procedure, including the code of conduct and reporting channel details, in its own offices and at project sites.</li></ul>",
+        "rating_instructions": "",
+        "active": true,
+        "ratings": [
+            1,
+            2,
+            3
+        ],
+        "evidences": [
+            1,
+            2,
+            3,
+            21
+        ]
+    }
+},
+{
+    "model": "psea.indicator",
+    "pk": 2,
+    "fields": {
+        "order": 2,
+        "subject": "Core Standard 2: Organizational Management and HR Systems",
+        "content": "The organization\u2019s management and HR systems account for PSEA (see : <a href=\"https://unicef.sharepoint.com/:w:/r/sites/DAPM/_layouts/15/Doc.aspx?sourcedoc=%7B42E6DD24-5001-42C8-9050-B4ACAD0C4289%7D&file=PSEA%20Toolkit%20Field%20Tested%20Draft%20July%2022%202019.docx&action=default&mobileredirect=true&cid=7aa0aeea-cb8e-489c-89bd-2e6e77316cdc\">PSEA Toolkit</a> Section 4.2.2. Procedures).<ul><li>Criteria 1: The organization defines roles and responsibilities of personnel with specific PSEA-related responsibilities in their contracts and/or ToR. </li><li>Criteria 2: The organization\u2019s contracts and partnership agreements include a standard clause requiring contractors, suppliers, consultants and sub-partners to commit to a zero-tolerance policy on SEA and to take measures to prevent and respond to SEA.</li><li>Criteria 3: There is a systematic vetting procedure in place for job candidates (e.g. reference checks, police records, Google searches) in accordance with local laws regarding employment, privacy and data protection, including checking for prior involvement in SEA or other safeguarding concerns.</li></ul>",
+        "rating_instructions": "",
+        "active": true,
+        "ratings": [
+            1,
+            2,
+            3
+        ],
+        "evidences": [
+            3,
+            5,
+            6,
+            7
+        ]
+    }
+},
+{
+    "model": "psea.indicator",
+    "pk": 3,
+    "fields": {
+        "order": 3,
+        "subject": "Core Standard 3: Mandatory Training",
+        "content": "The organization holds mandatory trainings for personnel on the organization\u2019s SEA policy and procedures (see : <a href=\"https://unicef.sharepoint.com/:w:/r/sites/DAPM/_layouts/15/Doc.aspx?sourcedoc=%7B42E6DD24-5001-42C8-9050-B4ACAD0C4289%7D&file=PSEA%20Toolkit%20Field%20Tested%20Draft%20July%2022%202019.docx&action=default&mobileredirect=true&cid=7aa0aeea-cb8e-489c-89bd-2e6e77316cdc\">PSEA Toolkit</a> Section 4.3.1. Training). (Note this training can be delivered online or in-person.)<ul><li>Criteria 1: The organization has a plan for training all personnel on PSEA.</li><li>Criteria 2: The training includes <ul><li>1) a definition of SEA (that is aligned with the <a href=\"https://undocs.org/ST/SGB/2003/13\">UN's definition</a>);</li><li>2) a prohibition of SEA; </li><li>and 3) actions that personnel are required to take (i.e. prompt reporting of allegations and referral of survivors).</li></ul></li><li>Criteria 3: The organization requires all personnel to participate in its PSEA training and retains an internal record of attendance (i.e. name of trainees, date of training, type of training, training provider).</li></ul>",
+        "rating_instructions": "",
+        "active": true,
+        "ratings": [
+            1,
+            2,
+            3
+        ],
+        "evidences": [
+            3,
+            8,
+            9,
+            22
+        ]
+    }
+},
+{
+    "model": "psea.indicator",
+    "pk": 4,
+    "fields": {
+        "order": 4,
+        "subject": "Core Standard 4: Reporting",
+        "content": "The organization has mechanisms and procedures for personnel, beneficiaries and communities, including children, to report SEA allegations that comply with core standards for reporting (i.e. safety, confidentiality, transparency, accessibility) and ensures that beneficiaries are aware of these (see <a href=\"https://unicef.sharepoint.com/:w:/r/sites/DAPM/_layouts/15/Doc.aspx?sourcedoc=%7B42E6DD24-5001-42C8-9050-B4ACAD0C4289%7D&file=PSEA%20Toolkit%20Field%20Tested%20Draft%20July%2022%202019.docx&action=default&mobileredirect=true&cid=7aa0aeea-cb8e-489c-89bd-2e6e77316cdc\">PSEA Toolkit</a> Section 4.3.2. Awareness-raising and Section 5.2. Reporting Mechanisms).<ul><li>Criteria 1: The organization has communication materials on PSEA and reporting channels available in locally relevant languages and presented in a way that all groups, including children, understand. </li><li>Criteria 2: The organization has a description of how personnel and beneficiaries can report SEA allegations and the organization\u2019s procedures for handling these allegations, including those involving personnel of other entities. </li><li>Criteria 3: The organization limits the number of people with access to reported information and removes identifying information of those involved when sharing information.</li></ul>",
+        "rating_instructions": "",
+        "active": true,
+        "ratings": [
+            1,
+            2,
+            3
+        ],
+        "evidences": [
+            3,
+            14,
+            15
+        ]
+    }
+},
+{
+    "model": "psea.indicator",
+    "pk": 5,
+    "fields": {
+        "order": 5,
+        "subject": "Core Standard 5: Assistance and Referrals",
+        "content": "The organization has a system to ensure survivors of SEA, including children, receive immediate professional assistance, referring them to relevant service providers (see <a href=\"https://unicef.sharepoint.com/:w:/r/sites/DAPM/_layouts/15/Doc.aspx?sourcedoc=%7B42E6DD24-5001-42C8-9050-B4ACAD0C4289%7D&file=PSEA%20Toolkit%20Field%20Tested%20Draft%20July%2022%202019.docx&action=default&mobileredirect=true&cid=7aa0aeea-cb8e-489c-89bd-2e6e77316cdc\">PSEA Toolkit</a> Section 6.2. Assistance and Referrals).<ul><li>Criteria 1: The organization has an updated list of local service providers and/or contact with local GBV coordination mechanisms (i.e. GBV sub-cluster) for all programme sites/areas.</li><li>Criteria 2: The organization has a procedure to guide the referral process, outlining the steps that personnel, particularly those receiving complaints, need to take, including follow-up to referrals.</li><li>Criteria 3: The organization has a referral form for survivors of GBV/SEA.</li></ul>",
+        "rating_instructions": "",
+        "active": true,
+        "ratings": [
+            1,
+            2,
+            3
+        ],
+        "evidences": [
+            3,
+            16,
+            17,
+            23
+        ]
+    }
+},
+{
+    "model": "psea.indicator",
+    "pk": 6,
+    "fields": {
+        "order": 6,
+        "subject": "Core Standard 6: Investigations",
+        "content": "The organization has a process and plan for ensuring investigation into SEA allegations involving its personnel (see <a href=\"https://unicef.sharepoint.com/:w:/r/sites/DAPM/_layouts/15/Doc.aspx?sourcedoc=%7B42E6DD24-5001-42C8-9050-B4ACAD0C4289%7D&file=PSEA%20Toolkit%20Field%20Tested%20Draft%20July%2022%202019.docx&action=default&mobileredirect=true&cid=7aa0aeea-cb8e-489c-89bd-2e6e77316cdc\">PSEA Toolkit</a> Section 7.2. Investigation Procedures).<ul><li>Criteria 1: The organization has a process for reviewing allegations of SEA and deciding on the need for investigation and other next steps (e.g. assistance for adult/child survivors and/or others, need for investigation); this involves a system for recording all SEA allegations involving its personnel and its response measures. </li><li>Criteria 2: The organization has access to an experienced, impartial and trained investigator to conduct an investigation on SEA; this may involve using in-house capacity, hiring an external investigator, or getting a commitment of partner(s) for support.</li><li>Criteria 3: The organization has a system for providing organizational oversight of an investigation (e.g. information-sharing/communications, risk assessments), including disciplinary measures in case of substantiated allegations.</li></ul>",
+        "rating_instructions": "",
+        "active": true,
+        "ratings": [
+            1,
+            2,
+            3
+        ],
+        "evidences": [
+            3,
+            19,
+            20,
+            24
+        ]
+    }
+}
 ]

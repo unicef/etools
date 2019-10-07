@@ -274,11 +274,15 @@ class AssessmentActionPointExportSerializer(serializers.Serializer):
 
 class AssessorSerializer(serializers.ModelSerializer):
     auditor_firm_name = serializers.SerializerMethodField()
+    assessor_details = serializers.SerializerMethodField()
+
+    def get_assessor_details(self, obj):
+        return obj.__str__()
 
     class Meta:
         model = Assessor
         fields = "__all__"
-        read_only_fields = ["assessment"]
+        read_only_fields = ["assessment", "assessor_details"]
 
     def get_auditor_firm_name(self, obj):
         if obj.auditor_firm:
@@ -388,13 +392,11 @@ class IndicatorSerializer(serializers.ModelSerializer):
         # relying on the indicator_pk from psea_indicator fixture
         MAP_INDICATOR_DOC_TYPE = {
             1: [34, 35, 53, 54],
-            2: [36, 37, 38, 39, 53],
-            3: [40, 41, 53],
-            4: [42, 53],
-            5: [43, 44, 45, 53],
-            6: [46, 47, 53],
-            7: [48, 49, 53],
-            8: [50, 51, 52, 53],
+            2: [37, 38, 39, 53],
+            3: [55, 40, 41, 53],
+            4: [46, 47, 53],
+            5: [48, 56, 49, 53],
+            6: [51, 52, 57, 53],
         }
         return FileType.objects.filter(
             pk__in=MAP_INDICATOR_DOC_TYPE.get(obj.pk, []),
