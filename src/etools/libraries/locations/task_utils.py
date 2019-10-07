@@ -237,7 +237,7 @@ def filter_remapped_locations(remap_row):
 
 
 def create_location(pcode, carto_table, parent, parent_instance, site_name, row,
-                    sites_not_added, sites_created, sites_updated, sites_remapped):
+                    sites_not_added, sites_created, sites_updated):
     """
     :param pcode: pcode of the new/updated location
     :param carto_table:
@@ -248,16 +248,16 @@ def create_location(pcode, carto_table, parent, parent_instance, site_name, row,
     :param sites_not_added:
     :param sites_created:
     :param sites_updated:
-    :param sites_remapped:
     :return:
     """
 
-    logger.info('{}: {} ({}){}'.format(
-        'Importing location ',
+    logger.info('{}: {} ({})'.format(
+        'Importing location',
         pcode,
         carto_table.location_type.name
     ))
 
+    location = None
     try:
         # TODO: revisit this, maybe include (location name?) carto_table in the check
         # see below at update branch - names can be updated for existing locations with the same code
@@ -268,7 +268,7 @@ def create_location(pcode, carto_table, parent, parent_instance, site_name, row,
             carto_table.location_type, site_name, pcode
         ))
         sites_not_added += 1
-        return False, sites_not_added, sites_created, sites_updated, sites_remapped
+        return False, sites_not_added, sites_created, sites_updated
 
     except Location.DoesNotExist:
         pass
@@ -285,7 +285,7 @@ def create_location(pcode, carto_table, parent, parent_instance, site_name, row,
 
         if not row['the_geom']:
             sites_not_added += 1
-            return False, sites_not_added, sites_created, sites_updated, sites_remapped
+            return False, sites_not_added, sites_created, sites_updated
 
         if 'Point' in row['the_geom']:
             create_args['point'] = row['the_geom']
@@ -298,7 +298,7 @@ def create_location(pcode, carto_table, parent, parent_instance, site_name, row,
         except IntegrityError:
             logger.exception('Error while creating location: %s', site_name)
             sites_not_added += 1
-            return False, sites_not_added, sites_created, sites_updated, sites_remapped
+            return False, sites_not_added, sites_created, sites_updated
 
         logger.info('{}: {} ({})'.format(
             'Added',
@@ -306,11 +306,11 @@ def create_location(pcode, carto_table, parent, parent_instance, site_name, row,
             carto_table.location_type.name
         ))
 
-        return True, sites_not_added, sites_created, sites_updated, sites_remapped
+        return True, sites_not_added, sites_created, sites_updated
 
     else:
         if not row['the_geom']:
-            return False, sites_not_added, sites_created, sites_updated, sites_remapped
+            return False, sites_not_added, sites_created, sites_updated
 
         # names can be updated for existing locations with the same code
         location.name = site_name
@@ -332,7 +332,7 @@ def create_location(pcode, carto_table, parent, parent_instance, site_name, row,
             location.save()
         except IntegrityError:
             logger.exception('Error while saving location: %s', site_name)
-            return False, sites_not_added, sites_created, sites_updated, sites_remapped
+            return False, sites_not_added, sites_created, sites_updated
 
         sites_updated += 1
         logger.info('{}: {} ({})'.format(
@@ -341,7 +341,7 @@ def create_location(pcode, carto_table, parent, parent_instance, site_name, row,
             carto_table.location_type.name
         ))
 
-        return True, sites_not_added, sites_created, sites_updated, sites_remapped
+        return True, sites_not_added, sites_created, sites_updated
 
 
 def remap_location(carto_table, new_pcode, remapped_pcodes):
@@ -361,7 +361,9 @@ def remap_location(carto_table, new_pcode, remapped_pcodes):
     logger.info('Preparing to remap : [{}] to {}'.format(",".join(remapped_pcodes), new_pcode))
 
     try:
-        new_location = Location.objects.get(p_code=new_pcode, gateway=carto_table.location_type)
+        new_location = Location.objects.all_locations().get(p_code=new_pcode)
+        # the approach below is not good - remap should work across location levels, and probably for archived locs too
+        # new_location = Location.objects.get(p_code=new_pcode, gateway=carto_table.location_type)
     except Location.MultipleObjectsReturned:
         logger.warning("REMAP: multiple locations found for new pcode: {} ({})".format(
             new_pcode, carto_table.location_type
