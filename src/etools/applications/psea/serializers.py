@@ -275,14 +275,15 @@ class AssessmentActionPointExportSerializer(serializers.Serializer):
 class AssessorSerializer(serializers.ModelSerializer):
     auditor_firm_name = serializers.SerializerMethodField()
     assessor_details = serializers.SerializerMethodField()
-
-    def get_assessor_details(self, obj):
-        return obj.__str__()
+    user_details = MinimalUserSerializer(source="user", read_only=True)
 
     class Meta:
         model = Assessor
         fields = "__all__"
         read_only_fields = ["assessment", "assessor_details"]
+
+    def get_assessor_details(self, obj):
+        return obj.__str__()
 
     def get_auditor_firm_name(self, obj):
         if obj.auditor_firm:
