@@ -271,15 +271,10 @@ class EngagementSerializer(
 
     class Meta(EngagementListSerializer.Meta):
         fields = EngagementListSerializer.Meta.fields + [
-            'total_value', 'staff_members', 'active_pd',
-            'authorized_officers',
-
-            'joint_audit', 'shared_ip_with', 'exchange_rate',
-
-            'start_date', 'end_date',
-            'partner_contacted_at', 'date_of_field_visit',
-            'date_of_draft_report_to_ip', 'date_of_comments_by_ip',
-            'date_of_draft_report_to_unicef', 'date_of_comments_by_unicef',
+            'total_value', 'staff_members', 'active_pd', 'authorized_officers',
+            'joint_audit', 'shared_ip_with', 'exchange_rate', 'currency_of_report',
+            'start_date', 'end_date', 'partner_contacted_at', 'date_of_field_visit', 'date_of_draft_report_to_ip',
+            'date_of_comments_by_ip', 'date_of_draft_report_to_unicef', 'date_of_comments_by_unicef',
             'date_of_report_submit', 'date_of_final_report', 'date_of_cancel',
             'cancel_comment', 'specific_procedures',
             'engagement_attachments',
@@ -289,7 +284,6 @@ class EngagementSerializer(
         extra_kwargs = {
             field: {'required': True} for field in [
                 'start_date', 'end_date', 'total_value',
-
                 'partner_contacted_at',
                 'date_of_field_visit',
                 'date_of_draft_report_to_ip',
@@ -452,6 +446,7 @@ class MicroAssessmentSerializer(ActivePDValidationMixin, RiskCategoriesUpdateMix
         ]
         fields.remove('specific_procedures')
         fields.remove('exchange_rate')
+        fields.remove('currency_of_report')
         extra_kwargs = EngagementSerializer.Meta.extra_kwargs.copy()
         extra_kwargs.update({
             'engagement_type': {'read_only': True},
@@ -551,6 +546,7 @@ class SpecialAuditSerializer(EngagementSerializer):
             'other_recommendations',
         ]
         fields.remove('exchange_rate')
+        fields.remove('currency_of_report')
         extra_kwargs = EngagementSerializer.Meta.extra_kwargs.copy()
         extra_kwargs.update({
             'start_date': {'required': False},
