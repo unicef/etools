@@ -282,11 +282,11 @@ class Command(BaseCommand):
         self.add_permissions([self.focal_point, self.auditor], 'edit', [
             'purchase_order.auditorfirm.staff_members',
             'purchase_order.auditorstaffmember.*',
-        ] + self.engagement_attachments_block + self.report_attachments_block)
+        ] + self.engagement_attachments_block)
 
         self.add_permissions(self.focal_point, 'edit', [
             'purchase_order.purchaseorder.contract_end_date',
-        ])
+        ] + self.report_attachments_block)
 
         # new object: focal point can add
         self.add_permissions(
@@ -305,6 +305,7 @@ class Command(BaseCommand):
 
         # ip_contacted: auditor can edit, everybody else can view, focal point can cancel and edit staff members
         partner_contacted_condition = self.engagement_status(Engagement.STATUSES.partner_contacted)
+        self.add_permissions(self.auditor, 'edit', self.report_attachments_block, condition=partner_contacted_condition)
         self.add_permissions(
             self.engagement_staff_auditor, 'view',
             self.report_readonly_block,
@@ -336,6 +337,7 @@ class Command(BaseCommand):
 
         # report submitted. focal point can finalize. all can view
         report_submitted_condition = self.engagement_status(Engagement.STATUSES.report_submitted)
+        self.add_permissions(self.auditor, 'edit', self.report_attachments_block, condition=report_submitted_condition)
         self.add_permissions(
             self.focal_point, 'action',
             'audit.engagement.finalize',
