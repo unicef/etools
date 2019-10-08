@@ -11,13 +11,13 @@ from unicef_locations.models import CartoDBTable, Location, LocationRemapHistory
 
 from etools.libraries.locations.task_utils import (
     create_location,
-    remap_location,
     duplicate_pcodes_exist,
+    filter_remapped_locations,
     get_cartodb_locations,
     get_location_ids_in_use,
+    remap_location,
     save_location_remap_history,
     validate_remap_table,
-    filter_remapped_locations,
 )
 
 logger = get_task_logger(__name__)
