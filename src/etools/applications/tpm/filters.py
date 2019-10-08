@@ -53,4 +53,5 @@ class TPMActivityFilter(filters.FilterSet):
             'tpm_visit__status': ['exact', 'in'],
             'is_pv': ['exact', ],
             'date': ['exact', 'year'],
+            'intervention': ['exact', 'in'],
         }
