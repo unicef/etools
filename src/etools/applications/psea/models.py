@@ -206,11 +206,14 @@ class Assessment(TimeStampedModel):
         return self.user_is_assessor(user)
 
     def get_mail_context(self, user):
-        return {
+        context = {
             "partner": self.partner,
             "url": self.get_object_url(user=user),
             "assessment": self
         }
+        if self.status == self.STATUS_REJECTED:
+            context["rejected_comment"] = self.get_rejected_comment()
+        return context
 
     def save(self, *args, **kwargs):
         self.overall_rating = self.rating()
