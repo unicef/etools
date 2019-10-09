@@ -166,7 +166,7 @@ def validate_remap_table(database_pcodes, new_carto_pcodes, carto_table, sql_cli
     return remap_table_valid, remapped_pcode_pairs, remap_old_pcodes, remap_new_pcodes
 
 
-def duplicate_pcodes_exist(database_pcodes, new_carto_pcodes, remap_old_pcodes):  # pragma: no-cover
+def duplicate_pcodes_exist(database_pcodes, new_carto_pcodes, remap_old_pcodes, remap_new_pcodes):  # pragma: no-cover
     duplicates_found = False
     temp = {}
     duplicate_database_pcodes = []
@@ -203,6 +203,9 @@ def duplicate_pcodes_exist(database_pcodes, new_carto_pcodes, remap_old_pcodes):
         logger.exception("Duplicates found in the remap table `old pcode` column: {}".
                          format(','.join(duplicate_remap_old_pcodes)))
         duplicates_found = True
+
+    if len(remap_new_pcodes) != len(set(remap_new_pcodes)):
+        logger.info("Duplicates found in the remap table new pcodes(at this point not an issue)")
 
     return duplicates_found
 

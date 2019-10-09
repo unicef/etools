@@ -109,7 +109,7 @@ def update_sites_from_cartodb(carto_table_pk):
             return results
 
         # check for  duplicate pcodes in both local and Carto data
-        if duplicate_pcodes_exist(database_pcodes, new_carto_pcodes, remap_old_pcodes):
+        if duplicate_pcodes_exist(database_pcodes, new_carto_pcodes, remap_old_pcodes, remap_new_pcodes):
             return results
 
         # wrap Location tree updates in a transaction, to prevent an invalid tree state due to errors
@@ -191,12 +191,14 @@ def update_sites_from_cartodb(carto_table_pk):
                             continue
 
                     # create the location or update the existing based on type and code
-                    succ, sites_not_added, sites_created, sites_updated = create_location(
+                    success, sites_not_added, sites_created, sites_updated = create_location(
                         carto_pcode, carto_table,
                         parent, parent_instance,
                         site_name, row,
                         sites_not_added, sites_created, sites_updated
                     )
+                    if success:
+                        logger.warning("Location level {} imported with success".format(carto_table.location_type))
 
                 orphaned_old_pcodes = set(database_pcodes) - (set(new_carto_pcodes) | set(remap_old_pcodes))
                 if orphaned_old_pcodes:  # pragma: no-cover
