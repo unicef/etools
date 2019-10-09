@@ -119,20 +119,17 @@ def update_sites_from_cartodb(carto_table_pk):
 
             # disable tree 'generation' during single row updates, rebuild the tree after the rows are updated.
             with Location.objects.disable_mptt_updates():
-                # update locations in two steps: step 1: remap, step 2: update. THe reason of this approach is that
+                # update locations in two steps: first remap, then update the data. The reason of this approach is that
                 # a remapped 'old' pcode can appear as a newly inserted pcode. Remapping before updating/inserting
-                # should prevent the problem of archiving 'good' locations when remapping.
+                # should prevent the problem of archiving locations when remapping and updating at the same time.
 
                 # REMAP locations
                 if carto_table.remap_table_name and len(remap_table_pcode_pairs) > 0:
                     # remapped_pcode_pairs ex.: {'old_pcode': 'ET0721', 'new_pcode': 'ET0714'}
-                    # TODO: enable filter after done with testing
-                    '''
                     remap_table_pcode_pairs = list(filter(
                         filter_remapped_locations,
                         remap_table_pcode_pairs
                     ))
-                    '''
 
                     aggregated_remapped_pcode_pairs = {}
                     for row in rows:
@@ -246,7 +243,6 @@ def cleanup_obsolete_locations(carto_table_pk):
         if carto_table.remap_table_name:
             remap_qry = 'select old_pcode::text, new_pcode::text from {}'.format(carto_table.remap_table_name)
             remap_table_pcode_pairs = sql_client.send(remap_qry)['rows']
-            remap_table_pcode_pairs = list(filter(filter_remapped_locations, remap_table_pcode_pairs))
 
     except CartoException as e:
         logger.exception("CartoDB exception occured during the data validation.")
