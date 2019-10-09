@@ -78,7 +78,7 @@ class TestAssessment(BaseTenantTestCase):
 
     def test_rejected_comment(self):
         assessment = AssessmentFactory()
-        self.assertIsNone(assessment.get_rejected_comment())
+        self.assertFalse(assessment.get_rejected_comment())
         AssessmentStatusHistoryFactory(
             assessment=assessment,
             status=Assessment.STATUS_REJECTED,
