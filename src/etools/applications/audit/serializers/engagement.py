@@ -492,13 +492,11 @@ class AuditSerializer(ActivePDValidationMixin, RiskCategoriesUpdateMixin, Engage
         model = Audit
         risk_categories_fields = ('key_internal_weakness', )
         fields = EngagementSerializer.Meta.fields + [
-            'audited_expenditure', 'financial_findings', 'financial_finding_set', 'percent_of_audited_expenditure',
-            'audit_opinion', 'number_of_financial_findings',
-            'key_internal_weakness', 'key_internal_controls',
-
-            'amount_refunded', 'additional_supporting_documentation_provided',
-            'justification_provided_and_accepted', 'write_off_required', 'pending_unsupported_amount',
-            'explanation_for_additional_information',
+            'audited_expenditure', 'audited_expenditure_local', 'financial_findings', 'financial_findings_local',
+            'financial_finding_set', 'percent_of_audited_expenditure', 'audit_opinion', 'number_of_financial_findings',
+            'key_internal_weakness', 'key_internal_controls', 'amount_refunded',
+            'additional_supporting_documentation_provided', 'justification_provided_and_accepted', 'write_off_required',
+            'pending_unsupported_amount', 'explanation_for_additional_information',
         ]
         fields.remove('specific_procedures')
         extra_kwargs = EngagementSerializer.Meta.extra_kwargs.copy()
