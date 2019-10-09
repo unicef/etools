@@ -154,7 +154,7 @@ class TestAssessmentSerializer(BaseTenantTestCase):
         self.assertEqual(assessment.status, assessment.STATUS_SUBMITTED)
         self.assertEqual(
             self.serializer.get_available_actions(assessment),
-            ["reject", "finalize", "cancel"],
+            ["reject", "finalize"],
         )
 
     def test_get_available_actions_assessor_in_progress(self):
