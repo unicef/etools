@@ -55,6 +55,15 @@ class AssessmentValid(CompleteValidation):
         self.check_rigid_fields(assessment, related=True)
         return True
 
+    def state_assigned_valid(self, assessment, user=None):
+        # make sure assessor has staff members assigned if vendor type
+        if assessment.assessor.assessor_type == assessment.assessor.TYPE_VENDOR:
+            if not assessment.assessor.auditor_firm_staff.exists():
+                raise StateValidationError(["Staff member(s) required"])
+        self.check_required_fields(assessment)
+        self.check_rigid_fields(assessment, related=True)
+        return True
+
     def state_in_progress_valid(self, assessment, user=None):
         self.check_required_fields(assessment)
         self.check_rigid_fields(assessment, related=True)
