@@ -14,12 +14,12 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='audit',
             name='audited_expenditure_local',
-            field=models.DecimalField(blank=True, decimal_places=2, max_digits=20, null=True, verbose_name='Audited Expenditure $'),
+            field=models.DecimalField(blank=True, decimal_places=2, max_digits=20, null=True, verbose_name='Audited Expenditure Local Currency'),
         ),
         migrations.AddField(
             model_name='audit',
             name='financial_findings_local',
-            field=models.DecimalField(blank=True, decimal_places=2, max_digits=20, null=True, verbose_name='Financial Findings $'),
+            field=models.DecimalField(blank=True, decimal_places=2, max_digits=20, null=True, verbose_name='Financial Findings Local Currency'),
         ),
         migrations.AddField(
             model_name='engagement',
