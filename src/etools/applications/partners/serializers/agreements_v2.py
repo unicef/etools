@@ -10,7 +10,7 @@ from etools.applications.partners.serializers.partner_organization_v2 import (
     PartnerStaffMemberNestedSerializer,
     SimpleStaffMemberSerializer,
 )
-from etools.applications.partners.validation.agreements import AgreementValid
+from etools.applications.partners.validation.agreements import AgreementAmendmentValid, AgreementValid
 from etools.applications.reports.models import CountryProgramme
 from etools.applications.users.serializers import SimpleUserSerializer
 
@@ -25,6 +25,30 @@ class AgreementAmendmentCreateUpdateSerializer(AttachmentSerializerMixin, serial
     class Meta:
         model = AgreementAmendment
         fields = "__all__"
+
+    def validate(self, data):
+        data = super().validate(data)
+        if self.context.get('skip_global_validator', None):
+            return data
+
+        # if parent involved then want to pull attachments
+        self.attachment_data = data.get("signed_amendment_attachment")
+        if not self.context.get("view", False):
+            if "signed_amendment_attachment" in data:
+                data.pop("signed_amendment_attachment")
+
+        validator = AgreementAmendmentValid(
+            data,
+            old=self.instance,
+            user=self.context['request'].user,
+        )
+
+        if not self.context.get("view", False) and self.attachment_data:
+            data["signed_amendment_attachment"] = self.attachment_data
+
+        if not validator.is_valid:
+            raise serializers.ValidationError({'errors': validator.errors})
+        return data
 
 
 class AgreementAmendmentListSerializer(serializers.ModelSerializer):
