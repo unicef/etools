@@ -1,3 +1,4 @@
+from django.db.models.fields.related_descriptors import ForwardManyToOneDescriptor, ManyToManyDescriptor
 from django.db.transaction import atomic
 
 from etools.applications.action_points.models import ActionPoint
@@ -21,9 +22,6 @@ class IndicatorSectionInconsistentException(MigrationException):
 
 
 class SectionHandler:
-
-    FK = 'fk'
-    M2M = 'm2m'
 
     intervention_updatable_status = [
         Intervention.DRAFT,
@@ -53,27 +51,22 @@ class SectionHandler:
         'interventions': (
             Intervention.objects.filter(status__in=intervention_updatable_status),
             'sections',
-            M2M
         ),
         'applied_indicators': (
             AppliedIndicator.objects.filter(lower_result__result_link__intervention__status__in=intervention_updatable_status),
             'section',
-            FK
         ),
         'travels': (
             Travel.objects.filter(status__in=travel_updatable_status),
             'section',
-            FK
         ),
         'tpm_activities': (
             TPMActivity.objects.filter(tpm_visit__status__in=tpm_visit_updatable_status),
             'section',
-            FK
         ),
         'action_points': (
             ActionPoint.objects.filter(status=ActionPoint.STATUS_OPEN),
             'section',
-            FK
         )
     }
 
@@ -182,19 +175,20 @@ class SectionHandler:
                 },
         """
         for model_key in SectionHandler.queryset_migration_mapping.keys():
-            qs, section_attribute, relation = SectionHandler.queryset_migration_mapping[model_key]
+            qs, section_attribute = SectionHandler.queryset_migration_mapping[model_key]
 
             if section_split_dict:  # if it's a close we filter the queryset
                 instance_pks = section_split_dict[model_key] if section_split_dict and model_key in section_split_dict else []
                 qs = qs.filter(pk__in=instance_pks)
 
-            if relation == SectionHandler.M2M:
+            relation = getattr(qs.model, section_attribute)
+            if isinstance(relation, ManyToManyDescriptor):
                 to_update = SectionHandler.__update_m2m(qs, section_attribute, from_instance, to_instance)
                 if model_key not in m2m_to_clean:
                     m2m_to_clean[model_key] = []
                 m2m_to_clean[model_key].extend(to_update)
 
-            elif relation == SectionHandler.FK:
+            elif isinstance(relation, ForwardManyToOneDescriptor):
                 SectionHandler.__update_fk(qs, section_attribute, from_instance, to_instance)
         return m2m_to_clean
 
@@ -219,7 +213,7 @@ class SectionHandler:
         NOTE: This step has to be done when the add of all section has been completed
         """
         for model_key, to_clean in m2m_to_clean.items():
-            qs, section_attribute, relation = SectionHandler.queryset_migration_mapping[model_key]
+            qs, section_attribute = SectionHandler.queryset_migration_mapping[model_key]
             for instance in qs.filter(pk__in=to_clean):
                 attr = getattr(instance, section_attribute)
                 for from_instance in from_instances:
@@ -228,7 +222,7 @@ class SectionHandler:
     @staticmethod
     def __disabled_section_check(old_section):
         """Checks that the old section is not referenced by any active objects"""
-        for _, (qs, attribute_name, _) in SectionHandler.queryset_migration_mapping.items():
+        for _, (qs, attribute_name) in SectionHandler.queryset_migration_mapping.items():
             active_references = qs.filter(**{attribute_name: old_section})
             if active_references.exists():
                 pks = ' '.join(str(pk) for pk in active_references.values_list('pk', flat=True))
