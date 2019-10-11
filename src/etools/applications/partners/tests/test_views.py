@@ -56,13 +56,14 @@ from etools.applications.partners.views import partner_organization_v2, v2
 from etools.applications.reports.models import ResultType
 from etools.applications.reports.tests.factories import (
     CountryProgrammeFactory,
+    OfficeFactory,
     ResultFactory,
     ResultTypeFactory,
     SectionFactory,
 )
 from etools.applications.t2f.models import Travel, TravelType
 from etools.applications.t2f.tests.factories import TravelActivityFactory, TravelFactory
-from etools.applications.users.tests.factories import GroupFactory, OfficeFactory, UserFactory
+from etools.applications.users.tests.factories import GroupFactory, UserFactory
 
 
 class URLsTestCase(URLAssertionMixin, SimpleTestCase):
