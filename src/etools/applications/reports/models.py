@@ -1,5 +1,6 @@
 from datetime import date
 
+from django.conf import settings
 from django.contrib.postgres.fields import JSONField
 from django.db import models, transaction
 from django.utils.functional import cached_property
@@ -850,3 +851,27 @@ class SpecialReportingRequirement(TimeStampedModel):
 
     def __str__(self):
         return str(self.due_date)
+
+
+class Office(models.Model):
+    """
+    Represents an office for the country
+
+    Relates to :model:`AUTH_USER_MODEL`
+    """
+
+    name = models.CharField(max_length=254, verbose_name=_('Name'))
+    zonal_chief = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        blank=True,
+        null=True,
+        related_name='offices',
+        verbose_name='Chief',
+        on_delete=models.CASCADE,
+    )
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        ordering = ('name', )
