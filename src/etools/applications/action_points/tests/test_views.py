@@ -420,7 +420,6 @@ class TestOpenActionPointDetailViewMetadata(TestActionPointsDetailViewMetadata, 
         'assigned_to',
         'high_priority',
         'comments',
-
         'cp_output',
         'partner',
         'intervention',
