@@ -3,7 +3,7 @@ from django.utils.encoding import force_text
 
 from rest_framework import serializers
 
-from etools.applications.users.models import Country, Group, Office, UserProfile
+from etools.applications.users.models import Country, Group, UserProfile
 
 
 class SimpleCountrySerializer(serializers.ModelSerializer):
@@ -82,12 +82,6 @@ class UserProfileCreationSerializer(serializers.ModelSerializer):
             'id',
             'user',
         )
-
-
-class OfficeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Office
-        fields = "__all__"
 
 
 class GroupSerializer(serializers.ModelSerializer):

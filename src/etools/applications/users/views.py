@@ -16,12 +16,11 @@ from rest_framework.views import APIView
 
 from etools.applications.audit.models import Auditor
 from etools.applications.tpm.models import ThirdPartyMonitor
-from etools.applications.users.models import Country, Office, UserProfile
+from etools.applications.users.models import Country, UserProfile
 from etools.applications.users.serializers import (
     CountrySerializer,
     GroupSerializer,
     MinimalUserSerializer,
-    OfficeSerializer,
     ProfileRetrieveUpdateSerializer,
     SimpleProfileSerializer,
     SimpleUserSerializer,
@@ -278,29 +277,6 @@ class UserViewSet(mixins.RetrieveModelMixin,
 
         serializer = get_serializer(queryset, many=True, context=self.get_serializer_context())
         return Response(serializer.data)
-
-
-class OfficeViewSet(mixins.RetrieveModelMixin,
-                    mixins.ListModelMixin,
-                    mixins.CreateModelMixin,
-                    viewsets.GenericViewSet):
-    """
-    Returns a list of all Offices
-    """
-    serializer_class = OfficeSerializer
-    permission_classes = (IsAdminUser,)
-
-    def get_queryset(self):
-        queryset = Office.objects.all()
-        if "values" in self.request.query_params.keys():
-            # Used for ghost data - filter in all(), and return straight away.
-            try:
-                ids = [int(x) for x in self.request.query_params.get("values").split(",")]
-            except ValueError:
-                raise ValidationError("ID values must be integers")
-            else:
-                queryset = queryset.filter(id__in=ids)
-        return queryset
 
 
 class CountriesViewSet(ListAPIView):

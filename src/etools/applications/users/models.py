@@ -228,7 +228,7 @@ class UserProfile(models.Model):
     countries_available = models.ManyToManyField(Country, blank=True, related_name="accessible_by",
                                                  verbose_name=_('Countries Available'))
     office = models.ForeignKey(
-        Office, null=True, blank=True, verbose_name=_('Office'),
+        "reports.Office", null=True, blank=True, verbose_name=_('Office'),
         on_delete=models.CASCADE,
     )
     job_title = models.CharField(max_length=255, null=True, blank=True, verbose_name=_('Job Title'))

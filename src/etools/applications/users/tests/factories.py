@@ -8,6 +8,7 @@ from factory.fuzzy import FuzzyText
 
 from etools.applications.core.tests.cases import SCHEMA_NAME
 from etools.applications.publics.tests.factories import PublicsCurrencyFactory
+from etools.applications.reports.tests.factories import OfficeFactory
 from etools.applications.users import models
 
 
@@ -17,22 +18,6 @@ class GroupFactory(factory.django.DjangoModelFactory):
         django_get_or_create = ('name',)
 
     name = "Partnership Manager"
-
-
-class OfficeFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = models.Office
-
-    name = 'An Office'
-
-    @classmethod
-    def _create(cls, model_class, *args, **kwargs):
-        obj = super()._create(model_class, *args, **kwargs)
-
-        if hasattr(connection.tenant, 'id') and connection.tenant.schema_name != 'public':
-            connection.tenant.offices.add(obj)
-
-        return obj
 
 
 class CountryFactory(factory.django.DjangoModelFactory):

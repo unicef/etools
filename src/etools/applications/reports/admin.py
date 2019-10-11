@@ -13,6 +13,7 @@ from etools.applications.reports.models import (
     Indicator,
     IndicatorBlueprint,
     LowerResult,
+    Office,
     Result,
     Section,
     Unit,
@@ -228,3 +229,4 @@ admin.site.register(IndicatorBlueprint)
 admin.site.register(AppliedIndicator, AppliedIndicatorAdmin)
 admin.site.register(Disaggregation)
 admin.site.register(DisaggregationValue, DisaggregationValueAdmin)
+admin.site.register(Office)
