@@ -133,3 +133,10 @@ class SpecialReportingRequirementFactory(factory.django.DjangoModelFactory):
 
     due_date = fuzzy.FuzzyDate(datetime.date(2001, 1, 1))
     description = fuzzy.FuzzyText(length=50)
+
+
+class OfficeFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.Office
+
+    name = fuzzy.FuzzyText(length=50)

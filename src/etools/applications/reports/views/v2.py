@@ -17,8 +17,10 @@ from rest_framework.generics import (
     RetrieveUpdateAPIView,
     RetrieveUpdateDestroyAPIView,
 )
+from rest_framework.mixins import CreateModelMixin, ListModelMixin, RetrieveModelMixin
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
+from rest_framework.viewsets import GenericViewSet
 from rest_framework_csv.renderers import CSVRenderer, JSONRenderer
 from unicef_rest_export.views import ExportView
 from unicef_restlib.views import QueryStringFilterMixin
@@ -35,6 +37,7 @@ from etools.applications.reports.models import (
     Indicator,
     IndicatorBlueprint,
     LowerResult,
+    Office,
     Result,
     ResultType,
     SpecialReportingRequirement,
@@ -54,6 +57,7 @@ from etools.applications.reports.serializers.v2 import (
     DisaggregationSerializer,
     LowerResultSerializer,
     MinimalOutputListSerializer,
+    OfficeSerializer,
     OutputListSerializer,
     ResultFrameworkExportSerializer,
     ResultFrameworkSerializer,
@@ -491,3 +495,28 @@ class ResultFrameworkView(ExportView):
                 intervention.reference_number
             )
         return response
+
+
+class OfficeViewSet(
+        RetrieveModelMixin,
+        ListModelMixin,
+        CreateModelMixin,
+        GenericViewSet,
+):
+    """
+    Returns a list of all Offices
+    """
+    serializer_class = OfficeSerializer
+    permission_classes = (IsAdminUser,)
+
+    def get_queryset(self):
+        queryset = Office.objects.all()
+        if "values" in self.request.query_params.keys():
+            # Used for ghost data - filter in all(), and return straight away.
+            try:
+                ids = [int(x) for x in self.request.query_params.get("values").split(",")]
+            except ValueError:
+                raise ValidationError("ID values must be integers")
+            else:
+                queryset = queryset.filter(id__in=ids)
+        return queryset
