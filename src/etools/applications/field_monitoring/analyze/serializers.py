@@ -125,7 +125,7 @@ class MonitoringActivityHACTSerializer(serializers.ModelSerializer):
 
 class HACTSerializer(serializers.ModelSerializer):
     visits = MonitoringActivityHACTSerializer(many=True)
-    visits_count = ReadOnlyField()
+    visits_count = ReadOnlyField(source='completed_visits')
 
     class Meta:
         model = PartnerOrganization
