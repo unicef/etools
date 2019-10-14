@@ -327,7 +327,7 @@ class TPMVisitViewSet(
     ordering_fields = (
         'tpm_partner__name', 'status'
     )
-    filter_class = TPMVisitFilter
+    filterset_class = TPMVisitFilter
 
     def get_queryset(self):
         queryset = super().get_queryset().distinct()
@@ -462,7 +462,7 @@ class TPMVisitViewSet(
 class TPMActivityViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = TPMActivity.objects.all()
     serializer_class = TPMActivityLightSerializer
-    filter_class = TPMActivityFilter
+    filterset_class = TPMActivityFilter
 
     filter_backends = (SearchFilter, OrderingFilter, DjangoFilterBackend)
     search_fields = ('tpm_visit__tpm_partner__vendor_number', 'tpm_visit__tpm_partner__name',

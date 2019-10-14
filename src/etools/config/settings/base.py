@@ -213,6 +213,7 @@ TENANT_APPS = (
     'etools.applications.firms',
     'etools.applications.management',
     'etools.applications.action_points',
+    'etools.applications.psea',
     'etools.applications.field_monitoring.fm_settings',
     'etools.applications.field_monitoring.planning',
     'etools.applications.field_monitoring.data_collection',
@@ -493,17 +494,6 @@ AZURE_GRAPH_API_BASE_URL = 'https://graph.microsoft.com'
 AZURE_GRAPH_API_VERSION = 'beta'
 AZURE_GRAPH_API_PAGE_SIZE = 250
 
-# drfpaswordless: https://github.com/aaronn/django-rest-framework-passwordless
-
-PASSWORDLESS_AUTH = {
-    # we can't use email here, because to_alias field length is 40, while email can be up to 254 symbols length.
-    # with custom user model we can avoid this a bit tricky with custom property like cropped_email,
-    # but for contrib user there is nothing better than use field having appropriate max length.
-    # username is better choice as it can be only 30 symbols max and unique.
-    'PASSWORDLESS_USER_EMAIL_FIELD_NAME': 'username'
-}
-
-
 KEY = os.getenv('AZURE_B2C_CLIENT_ID', None)
 SECRET = os.getenv('AZURE_B2C_CLIENT_SECRET', None)
 
@@ -565,3 +555,9 @@ GDAL_LIBRARY_PATH = os.getenv('GDAL_LIBRARY_PATH', '/usr/lib/libgdal.so.20')  # 
 SHELL_PLUS_PRE_IMPORTS = (
     ('etools.applications.core.util_scripts', '*'),
 )
+
+UNICEF_USER_EMAIL = "@unicef.org"
+PSEA_ASSESSMENT_FINAL_RECIPIENTS = get_from_secrets_or_env(
+    'PSEA_ASSESSMENT_FINAL_RECIPIENTS',
+    '',
+).split(',')
