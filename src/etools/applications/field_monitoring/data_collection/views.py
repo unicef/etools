@@ -54,7 +54,8 @@ class ActivityQuestionsViewSet(
     permission_classes = FMBaseViewSet.permission_classes + [
         IsReadAction | (IsEditAction & activity_field_is_editable_permission('activity_question_set'))
     ]
-    queryset = ActivityQuestion.objects.select_related('question').order_by('partner', 'cp_output', 'intervention')
+    queryset = ActivityQuestion.objects.select_related('question', 'partner', 'cp_output', 'intervention')
+    queryset = queryset.order_by('partner', 'cp_output', 'intervention')
     serializer_class = ActivityQuestionSerializer
     filter_backends = (DjangoFilterBackend,)
     filter_fields = ('is_enabled',)

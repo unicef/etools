@@ -8,6 +8,9 @@ from unicef_attachments.serializers import BaseAttachmentSerializer
 from etools.applications.field_monitoring.data_collection.models import ActivityQuestion
 from etools.applications.field_monitoring.fm_settings.serializers import QuestionListSerializer
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
+from etools.applications.partners.serializers.interventions_v2 import MinimalInterventionListSerializer
+from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
+from etools.applications.reports.serializers.v2 import MinimalOutputListSerializer
 
 
 class ActivityDataCollectionSerializer(serializers.ModelSerializer):
@@ -18,6 +21,9 @@ class ActivityDataCollectionSerializer(serializers.ModelSerializer):
 
 class ActivityQuestionSerializer(serializers.ModelSerializer):
     question = QuestionListSerializer()
+    partner = MinimalPartnerOrganizationListSerializer()
+    cp_output = MinimalOutputListSerializer()
+    intervention = MinimalInterventionListSerializer()
 
     class Meta:
         model = ActivityQuestion
