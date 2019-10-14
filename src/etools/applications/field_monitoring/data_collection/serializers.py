@@ -1,6 +1,7 @@
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
+from rest_framework_bulk import BulkListSerializer, BulkSerializerMixin
 from unicef_attachments.fields import FileTypeModelChoiceField
 from unicef_attachments.models import FileType
 from unicef_attachments.serializers import BaseAttachmentSerializer
@@ -19,7 +20,7 @@ class ActivityDataCollectionSerializer(serializers.ModelSerializer):
         fields = ('id',)
 
 
-class ActivityQuestionSerializer(serializers.ModelSerializer):
+class ActivityQuestionSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     question = QuestionListSerializer()
     partner = MinimalPartnerOrganizationListSerializer()
     cp_output = MinimalOutputListSerializer()
@@ -27,6 +28,7 @@ class ActivityQuestionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ActivityQuestion
+        list_serializer_class = BulkListSerializer
         fields = (
             'id', 'partner', 'cp_output', 'intervention',
             'question', 'specific_details', 'is_enabled'

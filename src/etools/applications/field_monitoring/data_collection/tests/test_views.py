@@ -105,6 +105,30 @@ class TestActivityQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['is_enabled'], False)
 
+    def test_bulk_update(self):
+        activity = MonitoringActivityFactory(status='checklist')
+        first_question = ActivityQuestionFactory(is_enabled=True, monitoring_activity=activity)
+        second_question = ActivityQuestionFactory(is_enabled=False, monitoring_activity=activity)
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse(
+                'field_monitoring_data_collection:activity-questions-list', args=(activity.pk,)
+            ),
+            user=self.fm_user,
+            data=[
+                {'id': first_question.id, 'is_enabled': False},
+                {'id': second_question.id, 'is_enabled': True},
+            ]
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+        self.assertEqual(response.data[0]['id'], first_question.id)
+        self.assertEqual(response.data[0]['is_enabled'], False)
+        self.assertEqual(response.data[1]['id'], second_question.id)
+        self.assertEqual(response.data[1]['is_enabled'], True)
+
     def test_update_in_wrong_status_disallowed(self):
         question = ActivityQuestionFactory(monitoring_activity__status='review')
 

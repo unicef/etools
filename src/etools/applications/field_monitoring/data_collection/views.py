@@ -2,6 +2,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, viewsets
+from rest_framework_bulk import BulkUpdateModelMixin
 from unicef_restlib.views import NestedViewSetMixin
 
 from etools.applications.field_monitoring.data_collection.models import ActivityQuestion
@@ -49,6 +50,7 @@ class ActivityQuestionsViewSet(
     NestedViewSetMixin,
     mixins.ListModelMixin,
     mixins.UpdateModelMixin,
+    BulkUpdateModelMixin,
     viewsets.GenericViewSet,
 ):
     permission_classes = FMBaseViewSet.permission_classes + [
