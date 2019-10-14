@@ -39,7 +39,7 @@ from etools.applications.users.tests.factories import GroupFactory, UserFactory
 class TestAssessmentViewSet(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.send_path = "etools.applications.psea.views.send_notification_with_template"
+        cls.send_path = "etools.applications.psea.validation.send_notification_with_template"
         cls.user = UserFactory()
         cls.focal_user = UserFactory()
         cls.focal_user.groups.add(
@@ -567,6 +567,46 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         self.assertEqual(mock_send.call_count, 0)
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_assign_staff_member_required(self):
+        assessment = AssessmentFactory(partner=self.partner)
+        self.assertEqual(assessment.status, assessment.STATUS_DRAFT)
+        firm = AuditPartnerFactory()
+        staff = AuditorStaffMemberFactory(auditor_firm=firm)
+        assessor = AssessorFactory(
+            assessment=assessment,
+            assessor_type=Assessor.TYPE_VENDOR,
+            auditor_firm=firm,
+        )
+        mock_send = Mock()
+        with patch(self.send_path, mock_send):
+            response = self.forced_auth_req(
+                "patch",
+                reverse("psea:assessment-assign", args=[assessment.pk]),
+                user=self.focal_user,
+                data={},
+            )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(mock_send.call_count, 0)
+
+        assessor.auditor_firm_staff.add(staff)
+
+        with patch(self.send_path, mock_send):
+            response = self.forced_auth_req(
+                "patch",
+                reverse("psea:assessment-assign", args=[assessment.pk]),
+                user=self.focal_user,
+                data={},
+            )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.data.get("status"),
+            assessment.STATUS_IN_PROGRESS,
+        )
+        assessment.refresh_from_db()
+        self.assertEqual(assessment.status, assessment.STATUS_IN_PROGRESS)
+        self.assertEqual(mock_send.call_count, 1)
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_submit(self):
         assessment = AssessmentFactory(partner=self.partner)
         assessment.status = assessment.STATUS_IN_PROGRESS
@@ -590,6 +630,7 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         )
         assessment.refresh_from_db()
         self.assertEqual(assessment.status, assessment.STATUS_SUBMITTED)
+        self.assertEqual(mock_send.call_count, 1)
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_finalize(self):

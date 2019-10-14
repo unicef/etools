@@ -141,7 +141,11 @@ class AssessmentSerializer(BaseAssessmentSerializer):
             if obj.status in [obj.STATUS_SUBMITTED]:
                 available_actions.append(ACTION_MAP.get(obj.STATUS_REJECTED))
                 available_actions.append(ACTION_MAP.get(obj.STATUS_FINAL))
-            if obj.status not in [obj.STATUS_FINAL]:
+            if obj.status not in [
+                    obj.STATUS_CANCELLED,
+                    obj.STATUS_SUBMITTED,
+                    obj.STATUS_FINAL,
+            ]:
                 available_actions.append(ACTION_MAP.get(obj.STATUS_CANCELLED))
         if obj.user_is_assessor(user):
             if obj.status in [obj.STATUS_IN_PROGRESS, obj.STATUS_REJECTED]:
@@ -363,7 +367,6 @@ class RatingSerializer(serializers.ModelSerializer):
 
 
 class IndicatorSerializer(serializers.ModelSerializer):
-    subject = serializers.SerializerMethodField()
     evidences = EvidenceSerializer(many=True, read_only=True)
     ratings = RatingSerializer(
         many=True,
@@ -382,9 +385,6 @@ class IndicatorSerializer(serializers.ModelSerializer):
             "evidences",
             "document_types",
         )
-
-    def get_subject(self, obj):
-        return f"{obj.order}. {obj.subject}"
 
     def get_document_types(self, obj):
         """Get document types limited to indicator"""
