@@ -33,7 +33,7 @@ class ActivityQuestionSerializer(BulkSerializerMixin, serializers.ModelSerialize
             'id', 'partner', 'cp_output', 'intervention',
             'question', 'specific_details', 'is_enabled'
         )
-        read_only_fields = ('question',)
+        read_only_fields = ('question', 'partner', 'cp_output', 'intervention',)
 
 
 class ActivityReportAttachmentSerializer(BaseAttachmentSerializer):
