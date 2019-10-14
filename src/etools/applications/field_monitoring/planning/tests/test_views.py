@@ -211,6 +211,17 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         goto('submitted', person_responsible)
         goto('completed', self.fm_user)
 
+    def test_sections_are_displayed_correctly(self):
+        activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.draft, sections=[SectionFactory()])
+
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_planning:activities-detail', args=[activity.pk]),
+            user=self.unicef_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsNotNone(response.data['sections'][0]['name'])
+
 
 class TestActivityAttachmentsView(FMBaseTestCaseMixin, BaseTenantTestCase):
     @classmethod
