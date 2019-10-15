@@ -290,6 +290,7 @@ class EngagementSerializer(
                 'date_of_comments_by_ip',
                 'date_of_draft_report_to_unicef',
                 'date_of_comments_by_unicef',
+                'currency_of_report',
             ]
         }
         extra_kwargs['engagement_type'] = {'label': _('Engagement Type')}
