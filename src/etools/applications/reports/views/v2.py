@@ -59,6 +59,7 @@ from etools.applications.reports.serializers.v2 import (
     ResultFrameworkSerializer,
     SpecialReportingRequirementSerializer,
 )
+from etools.libraries.djangolib.views import ExportFilenameMixin
 
 
 class OutputListAPIView(ListAPIView):
@@ -275,7 +276,8 @@ class AppliedIndicatorListAPIView(ExportModelMixin, ListAPIView):
         return q
 
 
-class AppliedIndicatorLocationExportView(QueryStringFilterMixin, ListAPIView):
+class AppliedIndicatorLocationExportView(ExportFilenameMixin, QueryStringFilterMixin, ListAPIView):
+    filename = 'PD_result'
 
     def get(self, request, *args, **kwargs):
 
@@ -305,12 +307,8 @@ class AppliedIndicatorLocationExportView(QueryStringFilterMixin, ListAPIView):
             'ind_location': 'Location',
         }
 
-        today = '{:%Y_%m_%d}'.format(datetime.date.today())
-        country_code = self.request.tenant.country_short_code
-        filename = f'PD_result_as_of_{today}_{country_code}'
-
         response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = f'attachment; filename="{filename}.csv"'
+        response['Content-Disposition'] = self.export_content_dispostion(self.filename)
 
         writer = csv.DictWriter(response, fieldnames)
         writer.writerow(fieldnames)

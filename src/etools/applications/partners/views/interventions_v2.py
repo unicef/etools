@@ -1,11 +1,10 @@
 import copy
-import datetime
 import functools
 import logging
 import operator
 
 from django.contrib.contenttypes.models import ContentType
-from django.db import connection, transaction
+from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 
@@ -74,7 +73,7 @@ from etools.applications.partners.serializers.interventions_v2 import (
 from etools.applications.partners.validation.interventions import InterventionValid
 from etools.applications.reports.models import AppliedIndicator, LowerResult, ReportingRequirement
 from etools.applications.reports.serializers.v2 import AppliedIndicatorSerializer, LowerResultSimpleCUSerializer
-from etools.applications.users.models import Country
+from etools.libraries.djangolib.views import ExportFilenameMixin
 
 
 class InterventionListBaseView(ValidatorViewMixin, ListCreateAPIView):
@@ -83,7 +82,7 @@ class InterventionListBaseView(ValidatorViewMixin, ListCreateAPIView):
         return qs
 
 
-class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, InterventionListBaseView):
+class InterventionListAPIView(ExportFilenameMixin, QueryStringFilterMixin, ExportModelMixin, InterventionListBaseView):
     """
     Create new Interventions.
     Returns a list of Interventions.
@@ -96,6 +95,7 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
         InterventionCSVRenderer,
         CSVFlatRenderer,
     )
+    filename = 'PD_budget'
 
     search_terms = ('title__icontains', 'agreement__partner__name__icontains', 'number__icontains')
     filters = (
@@ -219,10 +219,7 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
         response = super().list(request)
         if "format" in query_params.keys():
             if query_params.get("format") in ['csv', "csv_flat"]:
-                country = Country.objects.get(schema_name=connection.schema_name)
-                today = '{:%Y_%m_%d}'.format(datetime.date.today())
-                filename = f"PD_budget_as_of_{today}_{country.country_short_code}"
-                response['Content-Disposition'] = f"attachment;filename={filename}.csv"
+                response['Content-Disposition'] = self.export_content_dispostion(self.filename)
 
         return response
 
@@ -680,7 +677,7 @@ class InterventionLocation:
         )
 
 
-class InterventionLocationListAPIView(QueryStringFilterMixin, ListAPIView):
+class InterventionLocationListAPIView(ExportFilenameMixin, QueryStringFilterMixin, ListAPIView):
     """
     API to export a list of intervention locations.
 
@@ -739,10 +736,7 @@ class InterventionLocationListAPIView(QueryStringFilterMixin, ListAPIView):
 
         query_params = self.request.query_params
         if query_params.get("format") in ['csv', 'csv_flat']:
-            country = Country.objects.get(schema_name=connection.schema_name)
-            today = '{:%Y_%m_%d}'.format(datetime.date.today())
-            filename = f"PD_locations_as_of_{today}_{country.country_short_code}"
-            response['Content-Disposition'] = "attachment;filename=%s.csv" % filename
+            response['Content-Disposition'] = self.export_content_dispostion('PD_locations')
 
         return response
 

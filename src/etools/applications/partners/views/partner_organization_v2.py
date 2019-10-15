@@ -74,6 +74,7 @@ from etools.applications.partners.synchronizers import PartnerSynchronizer
 from etools.applications.partners.views.helpers import set_tenant_or_fail
 from etools.applications.t2f.models import Travel, TravelActivity, TravelType
 from etools.libraries.djangolib.models import StringConcat
+from etools.libraries.djangolib.views import ExportFilenameMixin
 
 
 class PartnerOrganizationListAPIView(QueryStringFilterMixin, ExportModelMixin, ListCreateAPIView):
@@ -96,6 +97,7 @@ class PartnerOrganizationListAPIView(QueryStringFilterMixin, ExportModelMixin, L
         ('rating', 'rating__in'),
     )
     search_terms = ('name__icontains', 'vendor_number__icontains', 'short_name__icontains')
+    filename = 'partner'
 
     def get_serializer_class(self, format=None):
         """
@@ -168,8 +170,7 @@ class PartnerOrganizationListAPIView(QueryStringFilterMixin, ExportModelMixin, L
         response = super().list(request)
         if "format" in query_params.keys():
             if query_params.get("format") in ['csv', 'csv_flat']:
-                response['Content-Disposition'] = "attachment;filename=partner.csv"
-
+                response['Content-Disposition'] = self.export_content_dispostion(self.filename)
         return response
 
 
@@ -218,12 +219,12 @@ class PartnerOrganizationDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroy
         return Response(PartnerOrganizationDetailSerializer(instance).data)
 
 
-class PartnerOrganizationDashboardAPIView(ExportModelMixin, QueryStringFilterMixin, ListAPIView):
+class PartnerOrganizationDashboardAPIView(ExportFilenameMixin, ExportModelMixin, QueryStringFilterMixin, ListAPIView):
     """Returns a list of Implementing partners for the dashboard."""
 
     permission_classes = (IsAuthenticatedOrReadOnly,)
     serializer_class = PartnerOrganizationDashboardSerializer
-    base_filename = 'IP_dashboard'
+    filename = 'IP_dashboard'
     renderer_classes = (r.JSONRenderer, PartnerOrganizationDashboardCsvRenderer)
 
     filters = (
@@ -273,8 +274,7 @@ class PartnerOrganizationDashboardAPIView(ExportModelMixin, QueryStringFilterMix
 
         if "format" in query_params.keys():
             if query_params.get("format") == 'csv':
-                filename = self.get_filename()
-                response['Content-Disposition'] = f"attachment;filename={filename}.csv"
+                response['Content-Disposition'] = self.export_content_dispostion(self.filename)
         return response
 
     def get_filename(self):
@@ -347,7 +347,7 @@ class PartnerOrganizationDashboardAPIView(ExportModelMixin, QueryStringFilterMix
             item['alert_active_pd_for_ended_pca'] = True if item['id'] in qs else False
 
 
-class PartnerOrganizationHactAPIView(ListAPIView):
+class PartnerOrganizationHactAPIView(ExportFilenameMixin, ListAPIView):
 
     """
     Create new Partners.
@@ -370,6 +370,7 @@ class PartnerOrganizationHactAPIView(ListAPIView):
         if "format" in query_params.keys():
             if query_params.get("format") == 'csv':
                 response['Content-Disposition'] = f"attachment;filename={self.filename}.csv"
+                response['Content-Disposition'] = self.export_content_dispostion(self.filename)
         return response
 
 

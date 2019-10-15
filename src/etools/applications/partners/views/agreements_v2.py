@@ -34,9 +34,11 @@ from etools.applications.partners.serializers.exports.agreements import (
 )
 from etools.applications.partners.utils import send_agreement_suspended_notification
 from etools.applications.partners.validation.agreements import AgreementValid
+from etools.libraries.djangolib.views import ExportFilenameMixin
 
 
-class AgreementListAPIView(QueryStringFilterMixin, ExportModelMixin, ValidatorViewMixin, ListCreateAPIView):
+class AgreementListAPIView(ExportFilenameMixin, QueryStringFilterMixin, ExportModelMixin, ValidatorViewMixin,
+                           ListCreateAPIView):
     """
     Create new Agreements.
     Returns a list of Agreements.
@@ -49,6 +51,7 @@ class AgreementListAPIView(QueryStringFilterMixin, ExportModelMixin, ValidatorVi
         AgreementCSVRenderer,
         CSVFlatRenderer,
     )
+    filename = 'agreements'
 
     filters = (
         ('agreement_type', 'agreement_type__in'),
@@ -106,7 +109,7 @@ class AgreementListAPIView(QueryStringFilterMixin, ExportModelMixin, ValidatorVi
         response = super().list(request)
         if "format" in query_params.keys():
             if query_params.get("format") in ['csv', 'csv_flat']:
-                response['Content-Disposition'] = "attachment;filename=agreements.csv"
+                response['Content-Disposition'] = self.export_content_dispostion(self.filename)
 
         return response
 
@@ -188,6 +191,7 @@ class AgreementAmendmentListAPIView(ExportModelMixin, ListAPIView):
         r.CSVRenderer,
         CSVFlatRenderer,
     )
+    filename = 'agreement_amendments'
 
     def get_serializer_class(self, format=None):
         """
@@ -232,7 +236,7 @@ class AgreementAmendmentListAPIView(ExportModelMixin, ListAPIView):
         response = super().list(request)
         if "format" in query_params.keys():
             if query_params.get("format") in ['csv', 'csv_flat']:
-                response['Content-Disposition'] = "attachment;filename=agreement_amendments.csv"
+                response['Content-Disposition'] = self.export_content_dispostion(self.filename)
 
         return response
 

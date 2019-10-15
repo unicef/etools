@@ -16,9 +16,10 @@ from etools.applications.hact.serializers import (
     HactHistoryExportSerializer,
     HactHistorySerializer,
 )
+from etools.libraries.djangolib.views import ExportFilenameMixin
 
 
-class HactHistoryAPIView(QueryStringFilterMixin, ListAPIView):
+class HactHistoryAPIView(ExportFilenameMixin, QueryStringFilterMixin, ListAPIView):
     """
     Returns HACT history.
     """
@@ -57,7 +58,7 @@ class HactHistoryAPIView(QueryStringFilterMixin, ListAPIView):
         query_params = self.request.query_params
         response = super().list(request)
         if query_params.get("format") == 'csv':
-            response['Content-Disposition'] = "attachment;filename={}.csv".format(self.filename)
+            response['Content-Disposition'] = self.export_content_dispostion(self.filename)
         return response
 
 
@@ -69,7 +70,7 @@ class GraphHactView(RetrieveAPIView):
     serializer_class = AggregateHactSerializer
 
 
-class GraphHactExportView(DetailView):
+class GraphHactExportView(ExportFilenameMixin, DetailView):
     model = AggregateHact
     slug_field = slug_url_kwarg = 'year'
     fieldnames = ['Label', 'Column', 'Value']
@@ -77,7 +78,7 @@ class GraphHactExportView(DetailView):
 
     def get(self, request, *args, **kwargs):
         response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = f'attachment; filename="{self.filename}.csv"'
+        response['Content-Disposition'] = self.export_content_dispostion(self.filename)
         partner_values = json.loads(self.get_object().partner_values)
         export_values = (
             ('Assessment and Assurance Activities', 'Programmatic Visits: Completed',

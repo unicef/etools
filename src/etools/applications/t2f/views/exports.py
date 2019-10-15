@@ -14,6 +14,7 @@ from etools.applications.t2f.filters import travel_list
 from etools.applications.t2f.models import ItineraryItem, Travel, TravelActivity
 from etools.applications.t2f.serializers.export import TravelActivityExportSerializer, TravelAdminExportSerializer
 from etools.applications.t2f.views import T2FPagePagination
+from etools.libraries.djangolib.views import ExportFilenameMixin
 
 
 class ExportBaseView(generics.GenericAPIView):
@@ -84,8 +85,9 @@ class TravelActivityExport(QueryStringFilterMixin, ExportBaseView):
         return response
 
 
-class TravelAdminExport(ExportBaseView):
+class TravelAdminExport(ExportFilenameMixin, ExportBaseView):
     serializer_class = TravelAdminExportSerializer
+    filename = 'travel_admin_export'
 
     def get(self, request):
         travel_queryset = self.filter_queryset(self.get_queryset())
@@ -96,5 +98,5 @@ class TravelAdminExport(ExportBaseView):
         serializer = self.get_serializer(queryset, many=True)
 
         response = Response(data=serializer.data, status=status.HTTP_200_OK)
-        response['Content-Disposition'] = 'attachment; filename="TravelAdminExport.csv"'
+        response['Content-Disposition'] = self.export_content_dispostion(self.filename)
         return response

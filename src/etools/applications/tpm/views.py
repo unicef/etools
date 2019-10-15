@@ -118,6 +118,7 @@ class TPMPartnerViewSet(
     filter_fields = (
         'blocked', 'hidden', 'deleted_flag',
     )
+    filename = 'tpm_vendors'
 
     def get_queryset(self):
         queryset = super().get_queryset()
