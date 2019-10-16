@@ -11,6 +11,8 @@ from model_utils.models import TimeStampedModel
 from mptt.models import MPTTModel, TreeForeignKey
 from unicef_locations.models import Location
 
+from etools.applications.users.models import UserProfile
+
 
 class Quarter(models.Model):
 
@@ -875,3 +877,19 @@ class Office(models.Model):
 
     class Meta:
         ordering = ('name', )
+
+
+class UserProfileOffice(models.Model):
+    profile = models.OneToOneField(
+        UserProfile,
+        verbose_name=_('Profile'),
+        on_delete=models.CASCADE,
+        related_name="profile_office",
+    )
+    office = models.ForeignKey(
+        "reports.Office",
+        null=True,
+        blank=True,
+        verbose_name=_('Office'),
+        on_delete=models.CASCADE,
+    )

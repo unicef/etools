@@ -139,3 +139,11 @@ class OfficeFactory(factory.django.DjangoModelFactory):
         model = models.Office
 
     name = fuzzy.FuzzyText(length=50)
+
+
+class UserProfileOfficeFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.UserProfileOffice
+        django_get_or_create = ('profile', )
+
+    office = factory.SubFactory(OfficeFactory)

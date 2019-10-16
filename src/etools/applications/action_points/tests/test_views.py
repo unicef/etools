@@ -32,7 +32,7 @@ class TestActionPointViewSet(TestExportMixin, ActionPointsTestCaseMixin, BaseTen
             'description': 'do something',
             'due_date': date.today(),
             'assigned_to': cls.pme_user.id,
-            'office': cls.pme_user.profile.office.id,
+            'office': cls.pme_user.profile.profile_office.office.id,
             'section': SectionFactory().id,
             'partner': PartnerFactory().id,
         }

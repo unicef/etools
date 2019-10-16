@@ -49,7 +49,7 @@ class BaseActionPointFactory(factory.DjangoModelFactory):
     author = factory.SubFactory(UserFactory)
     assigned_by = factory.SubFactory(UserFactory)
     section = factory.SubFactory(SectionFactory)
-    office = factory.SelfAttribute('author.profile.office')
+    office = factory.SelfAttribute('author.profile.profile_office.office')
 
     assigned_to = factory.SubFactory(UserFactory)
 

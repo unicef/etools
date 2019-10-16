@@ -7,7 +7,7 @@ from factory.fuzzy import FuzzyText
 
 from etools.applications.core.tests.cases import SCHEMA_NAME
 from etools.applications.publics.tests.factories import PublicsCurrencyFactory
-from etools.applications.reports.tests.factories import OfficeFactory
+from etools.applications.reports.tests.factories import OfficeFactory, UserProfileOfficeFactory
 from etools.applications.users import models
 
 
@@ -36,7 +36,6 @@ class ProfileFactory(factory.django.DjangoModelFactory):
         django_get_or_create = ('user',)
 
     country = factory.SubFactory(CountryFactory)
-    office = factory.SubFactory(OfficeFactory)
     job_title = 'Chief Tester'
     phone_number = '0123456789'
     partner_staff_member = None
@@ -49,6 +48,21 @@ class ProfileFactory(factory.django.DjangoModelFactory):
         if extracted is not None:
             for country in extracted:
                 self.countries_available.add(country)
+
+    @factory.post_generation
+    def profile_office(self, create, extracted, **kwargs):
+        if not create:
+            return
+
+        office = extracted or factory.SubFactory(OfficeFactory)
+        return UserProfileOfficeFactory(profile=self, office=office)
+
+
+@factory.django.mute_signals(signals.pre_save, signals.post_save)
+class ProfileLightFactory(ProfileFactory):
+    @factory.post_generation
+    def profile_office(self, create, extracted, **kwargs):
+        return
 
 
 @factory.django.mute_signals(signals.pre_save, signals.post_save)

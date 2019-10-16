@@ -35,7 +35,7 @@ class ProfileInline(admin.StackedInline):
         'countries_available',
     )
     search_fields = (
-        'office__name',
+        'profile_office__office__name',
         'country__name',
         'user__email'
     )
@@ -64,6 +64,12 @@ class ProfileInline(admin.StackedInline):
         return super().formfield_for_manytomany(
             db_field, request, **kwargs
         )
+
+    def office(self, obj):
+        try:
+            return obj.profile.profile_office.office
+        except AttributeError:
+            return None
 
 
 class ProfileAdmin(admin.ModelAdmin):
@@ -101,7 +107,7 @@ class ProfileAdmin(admin.ModelAdmin):
         'countries_available',
     )
     search_fields = (
-        'office__name',
+        'profile_office__office__name',
         'country__name',
         'user__email'
     )
@@ -148,6 +154,12 @@ class ProfileAdmin(admin.ModelAdmin):
         return super().formfield_for_manytomany(
             db_field, request, **kwargs
         )
+
+    def office(self, obj):
+        try:
+            return obj.profile.profile_office.office
+        except AttributeError:
+            return None
 
     def save_model(self, request, obj, form, change):
         if form.data.get('supervisor'):
@@ -201,7 +213,10 @@ class UserAdminPlus(UserAdmin):
     country.admin_order_field = 'profile__country'
 
     def office(self, obj):
-        return obj.profile.office
+        try:
+            return obj.profile.profile_office.office
+        except AttributeError:
+            return None
 
     def has_add_permission(self, request):
         return False
