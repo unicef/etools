@@ -4,6 +4,7 @@ import re
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.db import connection
+from django.db.models import Q
 
 from etools.applications.users.models import Country, UserProfile
 
@@ -20,8 +21,9 @@ def printtf(*args):
 
 
 def set_country(name):
-    connection.set_tenant(Country.objects.get(name=name))
-    logger.info('Set in {} workspace'.format(name))
+    country = Country.objects.get(Q(name=name) | Q(country_short_code=name) | Q(schema_name=name))
+    connection.set_tenant(country)
+    logger.info(f'Set in {country.name} workspace')
 
 
 def local_country_keep():

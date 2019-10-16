@@ -15,7 +15,7 @@ from model_utils.managers import InheritanceManager
 from model_utils.models import TimeStampedModel
 from ordered_model.models import OrderedModel
 from unicef_attachments.models import Attachment
-from unicef_djangolib.fields import CodedGenericRelation
+from unicef_djangolib.fields import CodedGenericRelation, CurrencyField
 from unicef_notification.utils import send_notification_with_template
 
 from etools.applications.action_points.models import ActionPoint
@@ -112,6 +112,7 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
     exchange_rate = models.DecimalField(
         verbose_name=_('Exchange Rate'), blank=True, default=0, decimal_places=2, max_digits=20
     )
+    currency_of_report = CurrencyField(verbose_name=_("Currency of Report"), null=True, blank=True)
 
     engagement_attachments = CodedGenericRelation(
         Attachment, verbose_name=_('Related Documents'), code='audit_engagement', blank=True
@@ -605,10 +606,16 @@ class Audit(Engagement):
         (OPTION_ADVERSE, _("Adverse opinion")),
     )
 
+    # USD
     audited_expenditure = models.DecimalField(verbose_name=_('Audited Expenditure $'), blank=True, default=0,
                                               decimal_places=2, max_digits=20)
     financial_findings = models.DecimalField(verbose_name=_('Financial Findings $'), blank=True, default=0,
                                              decimal_places=2, max_digits=20)
+    # local currency
+    audited_expenditure_local = models.DecimalField(verbose_name=_('Audited Expenditure Local Currency'),
+                                                    blank=True, null=True, decimal_places=2, max_digits=20)
+    financial_findings_local = models.DecimalField(verbose_name=_('Financial Findings Local Currency'),
+                                                   blank=True, null=True, decimal_places=2, max_digits=20)
     audit_opinion = models.CharField(
         verbose_name=_('Audit Opinion'), max_length=20, choices=OPTIONS, default='', blank=True,
     )

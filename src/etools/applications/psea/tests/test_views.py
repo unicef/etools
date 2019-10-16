@@ -39,7 +39,7 @@ from etools.applications.users.tests.factories import GroupFactory, UserFactory
 class TestAssessmentViewSet(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.send_path = "etools.applications.psea.views.send_notification_with_template"
+        cls.send_path = "etools.applications.psea.validation.send_notification_with_template"
         cls.user = UserFactory()
         cls.focal_user = UserFactory()
         cls.focal_user.groups.add(
@@ -630,6 +630,7 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         )
         assessment.refresh_from_db()
         self.assertEqual(assessment.status, assessment.STATUS_SUBMITTED)
+        self.assertEqual(mock_send.call_count, 1)
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_finalize(self):

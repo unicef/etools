@@ -16,8 +16,12 @@ from etools.applications.audit.purchase_order.models import AuditorFirm, Auditor
 from etools.applications.core.permissions import import_permissions
 from etools.applications.core.urlresolvers import build_frontend_url
 from etools.applications.psea.validation import (
+    assessment_assigned,
+    assessment_final,
     assessment_focal_point_user,
     assessment_illegal_transition,
+    assessment_rejected,
+    assessment_submitted,
     assessment_user_belongs,
 )
 
@@ -60,6 +64,7 @@ class Indicator(OrderedModel, TimeStampedModel):
     active = models.BooleanField(default=True)
 
     class Meta:
+        ordering = ("order",)
         verbose_name = _('Indicator')
         verbose_name_plural = _('Indicators')
 
@@ -88,6 +93,12 @@ class Assessment(TimeStampedModel):
 
     AUTO_TRANSITIONS = {
         STATUS_ASSIGNED: [STATUS_IN_PROGRESS],
+    }
+    TRANSITION_SIDE_EFFECTS = {
+        STATUS_ASSIGNED: [assessment_assigned],
+        STATUS_SUBMITTED: [assessment_submitted],
+        STATUS_REJECTED: [assessment_rejected],
+        STATUS_FINAL: [assessment_final],
     }
 
     reference_number = models.CharField(
@@ -155,6 +166,9 @@ class Assessment(TimeStampedModel):
             return True
         return False
 
+    def get_recipients(self):
+        return self.assessor.get_recipients()
+
     def get_focal_recipients(self):
         return [u.email for u in self.focal_points.all()]
 
@@ -191,6 +205,16 @@ class Assessment(TimeStampedModel):
         if self.pk and user in self.focal_points.all():
             return True
         return self.user_is_assessor(user)
+
+    def get_mail_context(self, user):
+        context = {
+            "partner": self.partner,
+            "url": self.get_object_url(user=user),
+            "assessment": self
+        }
+        if self.status == self.STATUS_REJECTED:
+            context["rejected_comment"] = self.get_rejected_comment()
+        return context
 
     def save(self, *args, **kwargs):
         self.overall_rating = self.rating()
