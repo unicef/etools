@@ -17,7 +17,7 @@ def set_reference_number(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('action_points', '0009_auto_20190523_1146'),
+        ('action_points', '0010_actionpoint_psea_assessment'),
     ]
 
     operations = [
