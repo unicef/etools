@@ -426,7 +426,8 @@ class ClusterListAPIView(ListAPIView):
         CSVRenderer,
         CSVFlatRenderer,
     )
-    queryset = AppliedIndicator.objects.filter(cluster_name__isnull=False).values('cluster_name').distinct()
+    queryset = AppliedIndicator.objects.filter(cluster_name__isnull=False).order_by(
+        'cluster_name').values('cluster_name').distinct()
 
 
 class SpecialReportingRequirementListCreateView(ListCreateAPIView):

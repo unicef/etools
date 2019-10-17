@@ -1,6 +1,7 @@
 import datetime
 import json
 
+from django.test import override_settings
 from django.urls import reverse
 
 from rest_framework import status
@@ -56,6 +57,7 @@ class TestPartnerOrganizationModelExport(PartnerModelExportTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_csv_export_api(self):
         response = self.forced_auth_req(
             'get',
@@ -131,6 +133,7 @@ class TestPartnerOrganizationModelExport(PartnerModelExportTestCase):
             ),
         ))
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_csv_flat_export_api(self):
         response = self.forced_auth_req(
             'get',
@@ -145,6 +148,7 @@ class TestPartnerOrganizationModelExport(PartnerModelExportTestCase):
         self.assertEqual(len(dataset._get_headers()), 49)
         self.assertEqual(len(dataset[0]), 49)
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_csv_flat_export_api_hact_value_string(self):
         partner = self.partner
         partner.pk = None
@@ -164,6 +168,7 @@ class TestPartnerOrganizationModelExport(PartnerModelExportTestCase):
         self.assertEqual(len(dataset._get_headers()), 49)
         self.assertEqual(len(dataset[0]), 49)
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_csv_flat_export_api_hidden(self):
         response = self.forced_auth_req(
             'get',
@@ -190,6 +195,7 @@ class TestPartnerStaffMemberModelExport(PartnerModelExportTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_csv_export_api(self):
         response = self.forced_auth_req(
             'get',
@@ -204,6 +210,7 @@ class TestPartnerStaffMemberModelExport(PartnerModelExportTestCase):
         self.assertEqual(len(dataset._get_headers()), 10)
         self.assertEqual(len(dataset[0]), 10)
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_csv_flat_export_api(self):
         response = self.forced_auth_req(
             'get',

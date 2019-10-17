@@ -67,7 +67,7 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
         send_mail(subject, message, from_email, [self.email], **kwargs)
 
     def is_unicef_user(self):
-        return self.email.endswith('@unicef.org')
+        return self.email.endswith(settings.UNICEF_USER_EMAIL)
 
     @cached_property
     def full_name(self):

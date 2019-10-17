@@ -1,0 +1,763 @@
+{
+    "tpm_partner": {
+        "master": {
+            "model": "tpmpartners.tpmpartner",
+            "pk": 322,
+            "fields": {
+                "created": "2019-09-25T14:45:19.611Z",
+                "modified": "2019-09-25T14:45:19.633Z",
+                "vendor_number": "2019/1",
+                "name": "Pierce, Davis and Parsons",
+                "street_address": "0797 Jackson Summit",
+                "city": "Sarahfort",
+                "postal_code": "17902",
+                "country": "Finland",
+                "email": "jimmy79@hotmail.com",
+                "phone_number": "+1-112-145-0698x81424",
+                "vision_synced": false,
+                "blocked": false,
+                "hidden": false,
+                "deleted_flag": false,
+                "countries": [
+                    1
+                ]
+            }
+        },
+        "deps": [
+            {
+                "model": "users.country",
+                "pk": 1,
+                "fields": {
+                    "schema_name": "test",
+                    "name": "",
+                    "country_short_code": "TST",
+                    "long_name": "",
+                    "business_area_code": "ZZZ",
+                    "latitude": null,
+                    "longitude": null,
+                    "initial_zoom": 8,
+                    "vision_sync_enabled": true,
+                    "vision_last_synced": null,
+                    "local_currency": null,
+                    "offices": [
+                        7275,
+                        7276,
+                        7277
+                    ]
+                }
+            },
+            {
+                "model": "users.office",
+                "pk": 7275,
+                "fields": {
+                    "name": "An Office",
+                    "zonal_chief": null
+                }
+            },
+            {
+                "model": "users.office",
+                "pk": 7276,
+                "fields": {
+                    "name": "An Office",
+                    "zonal_chief": null
+                }
+            },
+            {
+                "model": "users.office",
+                "pk": 7277,
+                "fields": {
+                    "name": "An Office",
+                    "zonal_chief": null
+                }
+            }
+        ]
+    },
+    "tpm_user": {
+        "master": {
+            "model": "users.user",
+            "pk": 4416,
+            "fields": {
+                "created": "2019-09-25T14:45:19.634Z",
+                "modified": "2019-09-25T14:45:19.646Z",
+                "username": "OPaDOKLzmcUM",
+                "email": "macioce@unicef.org",
+                "password": "md5$6QCpOPM7Uogf$770b2b4243a7e51b3f7ea6e55b3f4c95",
+                "first_name": "",
+                "middle_name": "",
+                "last_name": "",
+                "date_joined": "2019-09-25T14:45:19.634Z",
+                "last_login": null,
+                "is_active": true,
+                "is_staff": false,
+                "is_superuser": false,
+                "groups": [
+                    1
+                ],
+                "user_permissions": []
+            }
+        },
+        "deps": [
+            {
+                "model": "auth.group",
+                "pk": 1,
+                "fields": {
+                    "name": "Third Party Monitor",
+                    "permissions": []
+                }
+            }
+        ]
+    },
+    "location": {
+        "master": {
+            "model": "locations.location",
+            "pk": 1168,
+            "fields": {
+                "name": "Location 0",
+                "gateway": 1168,
+                "latitude": null,
+                "longitude": null,
+                "p_code": "PCODE0",
+                "parent": null,
+                "geom": null,
+                "point": "SRID=4326;POINT (20 20)",
+                "is_active": true,
+                "created": "2019-09-25T14:45:19.648Z",
+                "modified": "2019-09-25T14:45:19.648Z",
+                "lft": 1,
+                "rght": 2,
+                "tree_id": 1,
+                "level": 0
+            }
+        },
+        "deps": [
+            {
+                "model": "locations.gatewaytype",
+                "pk": 1168,
+                "fields": {
+                    "created": "2019-09-25T14:45:19.647Z",
+                    "modified": "2019-09-25T14:45:19.647Z",
+                    "name": "GatewayType 0",
+                    "admin_level": 0
+                }
+            }
+        ]
+    },
+    "visit": {
+        "master": {
+            "model": "tpm.tpmvisit",
+            "pk": 460,
+            "fields": {
+                "created": "2019-09-25T14:45:19.681Z",
+                "modified": "2019-09-25T14:45:19.696Z",
+                "deleted_at": "1970-01-01T00:00:00Z",
+                "author": 4417,
+                "tpm_partner": 322,
+                "status": "tpm_accepted",
+                "cancel_comment": "",
+                "reject_comment": "",
+                "approval_comment": "",
+                "visit_information": "",
+                "date_of_assigned": "2019-09-25",
+                "date_of_cancelled": null,
+                "date_of_tpm_accepted": "2019-09-25",
+                "date_of_tpm_rejected": null,
+                "date_of_tpm_reported": null,
+                "date_of_tpm_report_rejected": null,
+                "date_of_unicef_approved": null,
+                "tpm_partner_focal_points": [
+                    924
+                ]
+            }
+        },
+        "deps": [
+            {
+                "model": "users.user",
+                "pk": 4417,
+                "fields": {
+                    "created": "2019-09-25T14:45:19.666Z",
+                    "modified": "2019-09-25T14:45:19.679Z",
+                    "username": "QJTKmTgbXTeQ",
+                    "email": "user1@example.com",
+                    "password": "md5$scStdjLFpZVC$42b0bc5bf0cdf3f4cf619424ba3e7e91",
+                    "first_name": "",
+                    "middle_name": "",
+                    "last_name": "",
+                    "date_joined": "2019-09-25T14:45:19.667Z",
+                    "last_login": null,
+                    "is_active": true,
+                    "is_staff": false,
+                    "is_superuser": false,
+                    "groups": [
+                        274,
+                        275
+                    ],
+                    "user_permissions": []
+                }
+            },
+            {
+                "model": "auth.group",
+                "pk": 274,
+                "fields": {
+                    "name": "UNICEF User",
+                    "permissions": []
+                }
+            },
+            {
+                "model": "auth.group",
+                "pk": 275,
+                "fields": {
+                    "name": "PME",
+                    "permissions": []
+                }
+            },
+            {
+                "model": "tpmpartners.tpmpartner",
+                "pk": 322,
+                "fields": {
+                    "created": "2019-09-25T14:45:19.611Z",
+                    "modified": "2019-09-25T14:45:19.633Z",
+                    "vendor_number": "2019/1",
+                    "name": "Pierce, Davis and Parsons",
+                    "street_address": "0797 Jackson Summit",
+                    "city": "Sarahfort",
+                    "postal_code": "17902",
+                    "country": "Finland",
+                    "email": "jimmy79@hotmail.com",
+                    "phone_number": "+1-112-145-0698x81424",
+                    "vision_synced": false,
+                    "blocked": false,
+                    "hidden": false,
+                    "deleted_flag": false,
+                    "countries": [
+                        1
+                    ]
+                }
+            },
+            {
+                "model": "users.country",
+                "pk": 1,
+                "fields": {
+                    "schema_name": "test",
+                    "name": "",
+                    "country_short_code": "TST",
+                    "long_name": "",
+                    "business_area_code": "ZZZ",
+                    "latitude": null,
+                    "longitude": null,
+                    "initial_zoom": 8,
+                    "vision_sync_enabled": true,
+                    "vision_last_synced": null,
+                    "local_currency": null,
+                    "offices": [
+                        7275,
+                        7276,
+                        7277
+                    ]
+                }
+            },
+            {
+                "model": "users.office",
+                "pk": 7275,
+                "fields": {
+                    "name": "An Office",
+                    "zonal_chief": null
+                }
+            },
+            {
+                "model": "users.office",
+                "pk": 7276,
+                "fields": {
+                    "name": "An Office",
+                    "zonal_chief": null
+                }
+            },
+            {
+                "model": "users.office",
+                "pk": 7277,
+                "fields": {
+                    "name": "An Office",
+                    "zonal_chief": null
+                }
+            },
+            {
+                "model": "tpmpartners.tpmpartnerstaffmember",
+                "pk": 924,
+                "fields": {
+                    "user": 4416,
+                    "tpm_partner": 322,
+                    "receive_tpm_notifications": false
+                }
+            },
+            {
+                "model": "users.user",
+                "pk": 4416,
+                "fields": {
+                    "created": "2019-09-25T14:45:19.634Z",
+                    "modified": "2019-09-25T14:45:19.646Z",
+                    "username": "OPaDOKLzmcUM",
+                    "email": "macioce@unicef.org",
+                    "password": "md5$6QCpOPM7Uogf$770b2b4243a7e51b3f7ea6e55b3f4c95",
+                    "first_name": "",
+                    "middle_name": "",
+                    "last_name": "",
+                    "date_joined": "2019-09-25T14:45:19.634Z",
+                    "last_login": null,
+                    "is_active": true,
+                    "is_staff": false,
+                    "is_superuser": false,
+                    "groups": [
+                        1
+                    ],
+                    "user_permissions": []
+                }
+            },
+            {
+                "model": "auth.group",
+                "pk": 1,
+                "fields": {
+                    "name": "Third Party Monitor",
+                    "permissions": []
+                }
+            }
+        ]
+    },
+    "activity": {
+        "master": {
+            "model": "tpm.tpmactivity",
+            "pk": 1049,
+            "fields": {
+                "tpm_visit": 460,
+                "section": 1175,
+                "additional_information": "",
+                "is_pv": false,
+                "locations": [
+                    1169
+                ],
+                "unicef_focal_points": [],
+                "offices": []
+            }
+        },
+        "deps": [
+            {
+                "model": "partners.partnerorganization",
+                "pk": 1484,
+                "fields": {
+                    "created": "2019-09-25T14:45:19.698Z",
+                    "modified": "2019-09-25T14:45:19.701Z",
+                    "partner_type": "",
+                    "cso_type": null,
+                    "name": "Partner 0",
+                    "short_name": "",
+                    "description": "",
+                    "shared_with": null,
+                    "street_address": null,
+                    "city": null,
+                    "postal_code": null,
+                    "country": null,
+                    "address": null,
+                    "email": null,
+                    "phone_number": null,
+                    "vendor_number": null,
+                    "alternate_id": null,
+                    "alternate_name": null,
+                    "rating": null,
+                    "type_of_assessment": null,
+                    "last_assessment_date": null,
+                    "core_values_assessment_date": null,
+                    "vision_synced": false,
+                    "blocked": false,
+                    "deleted_flag": false,
+                    "manually_blocked": false,
+                    "hidden": false,
+                    "total_ct_cp": null,
+                    "total_ct_cy": null,
+                    "net_ct_cy": null,
+                    "reported_cy": null,
+                    "total_ct_ytd": null,
+                    "outstanding_dct_amount_6_to_9_months_usd": null,
+                    "outstanding_dct_amount_more_than_9_months_usd": null,
+                    "hact_values": {
+                        "audits": {
+                            "completed": 0,
+                            "minimum_requirements": 0
+                        },
+                        "spot_checks": {
+                            "completed": {
+                                "q1": 0,
+                                "q2": 0,
+                                "q3": 0,
+                                "q4": 0,
+                                "total": 0
+                            },
+                            "follow_up_required": 0
+                        },
+                        "assurance_coverage": "void",
+                        "programmatic_visits": {
+                            "planned": {
+                                "q1": 0,
+                                "q2": 0,
+                                "q3": 0,
+                                "q4": 0,
+                                "total": 0
+                            },
+                            "completed": {
+                                "q1": 0,
+                                "q2": 0,
+                                "q3": 0,
+                                "q4": 0,
+                                "total": 0
+                            }
+                        },
+                        "outstanding_findings": 0
+                    },
+                    "basis_for_risk_rating": ""
+                }
+            },
+            {
+                "model": "partners.intervention",
+                "pk": 1482,
+                "fields": {
+                    "created": "2019-09-25T14:45:19.727Z",
+                    "modified": "2019-09-25T14:45:19.754Z",
+                    "document_type": "",
+                    "agreement": 1482,
+                    "country_programme": null,
+                    "number": "TST/PCA20191482/20191482",
+                    "title": "Intervention Title 0",
+                    "status": "draft",
+                    "start": null,
+                    "end": null,
+                    "submission_date": "2019-09-25",
+                    "submission_date_prc": null,
+                    "reference_number_year": 2019,
+                    "review_date_prc": null,
+                    "prc_review_document": "",
+                    "signed_pd_document": "",
+                    "signed_by_unicef_date": null,
+                    "signed_by_partner_date": null,
+                    "unicef_signatory": null,
+                    "partner_authorized_officer_signatory": null,
+                    "contingency_pd": false,
+                    "activation_letter": "",
+                    "termination_doc": "",
+                    "population_focus": null,
+                    "in_amendment": false,
+                    "metadata": {},
+                    "unicef_focal_points": [],
+                    "partner_focal_points": [],
+                    "sections": [],
+                    "offices": [],
+                    "flat_locations": []
+                }
+            },
+            {
+                "model": "partners.agreement",
+                "pk": 1482,
+                "fields": {
+                    "created": "2019-09-25T14:45:19.704Z",
+                    "modified": "2019-09-25T14:45:19.726Z",
+                    "partner": 1484,
+                    "country_programme": 1482,
+                    "agreement_type": "PCA",
+                    "agreement_number": "TST/PCA20191482",
+                    "attached_agreement": "",
+                    "start": "2019-09-25",
+                    "end": "2019-12-31",
+                    "reference_number_year": 2019,
+                    "special_conditions_pca": false,
+                    "signed_by_unicef_date": "2019-09-25",
+                    "signed_by": null,
+                    "signed_by_partner_date": "2019-09-25",
+                    "partner_manager": null,
+                    "status": "signed",
+                    "authorized_officers": []
+                }
+            },
+            {
+                "model": "reports.countryprogramme",
+                "pk": 1482,
+                "fields": {
+                    "name": "Country Programme 0",
+                    "wbs": "0000/A0/00",
+                    "invalid": false,
+                    "from_date": "2019-01-01",
+                    "to_date": "2019-12-31"
+                }
+            },
+            {
+                "model": "reports.result",
+                "pk": 1195,
+                "fields": {
+                    "country_programme": null,
+                    "result_type": 1195,
+                    "sector": null,
+                    "name": "Result 0",
+                    "code": null,
+                    "from_date": "2019-01-01",
+                    "to_date": "2019-12-31",
+                    "parent": null,
+                    "humanitarian_tag": false,
+                    "humanitarian_marker_code": null,
+                    "humanitarian_marker_name": null,
+                    "wbs": null,
+                    "vision_id": null,
+                    "gic_code": null,
+                    "gic_name": null,
+                    "sic_code": null,
+                    "sic_name": null,
+                    "activity_focus_code": null,
+                    "activity_focus_name": null,
+                    "hidden": false,
+                    "ram": false,
+                    "created": "2019-09-25T14:45:19.732Z",
+                    "modified": "2019-09-25T14:45:19.732Z",
+                    "lft": 1,
+                    "rght": 2,
+                    "tree_id": 1,
+                    "level": 0
+                }
+            },
+            {
+                "model": "reports.resulttype",
+                "pk": 1195,
+                "fields": {
+                    "name": "ResultType 0"
+                }
+            },
+            {
+                "model": "activities.activity",
+                "pk": 1049,
+                "fields": {
+                    "partner": 1484,
+                    "intervention": 1482,
+                    "cp_output": 1195,
+                    "date": "2019-09-26",
+                    "locations": [
+                        1169
+                    ]
+                }
+            },
+            {
+                "model": "locations.location",
+                "pk": 1169,
+                "fields": {
+                    "name": "Location 1",
+                    "gateway": 1169,
+                    "latitude": null,
+                    "longitude": null,
+                    "p_code": "PCODE1",
+                    "parent": null,
+                    "geom": null,
+                    "point": "SRID=4326;POINT (20 20)",
+                    "is_active": true,
+                    "created": "2019-09-25T14:45:19.762Z",
+                    "modified": "2019-09-25T14:45:19.762Z",
+                    "lft": 1,
+                    "rght": 2,
+                    "tree_id": 2,
+                    "level": 0
+                }
+            },
+            {
+                "model": "locations.gatewaytype",
+                "pk": 1169,
+                "fields": {
+                    "created": "2019-09-25T14:45:19.761Z",
+                    "modified": "2019-09-25T14:45:19.761Z",
+                    "name": "GatewayType 1",
+                    "admin_level": 1
+                }
+            },
+            {
+                "model": "tpm.tpmvisit",
+                "pk": 460,
+                "fields": {
+                    "created": "2019-09-25T14:45:19.681Z",
+                    "modified": "2019-09-25T14:45:19.696Z",
+                    "deleted_at": "1970-01-01T00:00:00Z",
+                    "author": 4417,
+                    "tpm_partner": 322,
+                    "status": "tpm_accepted",
+                    "cancel_comment": "",
+                    "reject_comment": "",
+                    "approval_comment": "",
+                    "visit_information": "",
+                    "date_of_assigned": "2019-09-25",
+                    "date_of_cancelled": null,
+                    "date_of_tpm_accepted": "2019-09-25",
+                    "date_of_tpm_rejected": null,
+                    "date_of_tpm_reported": null,
+                    "date_of_tpm_report_rejected": null,
+                    "date_of_unicef_approved": null,
+                    "tpm_partner_focal_points": [
+                        924
+                    ]
+                }
+            },
+            {
+                "model": "users.user",
+                "pk": 4417,
+                "fields": {
+                    "created": "2019-09-25T14:45:19.666Z",
+                    "modified": "2019-09-25T14:45:19.679Z",
+                    "username": "QJTKmTgbXTeQ",
+                    "email": "user1@example.com",
+                    "password": "md5$scStdjLFpZVC$42b0bc5bf0cdf3f4cf619424ba3e7e91",
+                    "first_name": "",
+                    "middle_name": "",
+                    "last_name": "",
+                    "date_joined": "2019-09-25T14:45:19.667Z",
+                    "last_login": null,
+                    "is_active": true,
+                    "is_staff": false,
+                    "is_superuser": false,
+                    "groups": [
+                        274,
+                        275
+                    ],
+                    "user_permissions": []
+                }
+            },
+            {
+                "model": "auth.group",
+                "pk": 274,
+                "fields": {
+                    "name": "UNICEF User",
+                    "permissions": []
+                }
+            },
+            {
+                "model": "auth.group",
+                "pk": 275,
+                "fields": {
+                    "name": "PME",
+                    "permissions": []
+                }
+            },
+            {
+                "model": "tpmpartners.tpmpartner",
+                "pk": 322,
+                "fields": {
+                    "created": "2019-09-25T14:45:19.611Z",
+                    "modified": "2019-09-25T14:45:19.633Z",
+                    "vendor_number": "2019/1",
+                    "name": "Pierce, Davis and Parsons",
+                    "street_address": "0797 Jackson Summit",
+                    "city": "Sarahfort",
+                    "postal_code": "17902",
+                    "country": "Finland",
+                    "email": "jimmy79@hotmail.com",
+                    "phone_number": "+1-112-145-0698x81424",
+                    "vision_synced": false,
+                    "blocked": false,
+                    "hidden": false,
+                    "deleted_flag": false,
+                    "countries": [
+                        1
+                    ]
+                }
+            },
+            {
+                "model": "users.country",
+                "pk": 1,
+                "fields": {
+                    "schema_name": "test",
+                    "name": "",
+                    "country_short_code": "TST",
+                    "long_name": "",
+                    "business_area_code": "ZZZ",
+                    "latitude": null,
+                    "longitude": null,
+                    "initial_zoom": 8,
+                    "vision_sync_enabled": true,
+                    "vision_last_synced": null,
+                    "local_currency": null,
+                    "offices": [
+                        7275,
+                        7276,
+                        7277
+                    ]
+                }
+            },
+            {
+                "model": "users.office",
+                "pk": 7275,
+                "fields": {
+                    "name": "An Office",
+                    "zonal_chief": null
+                }
+            },
+            {
+                "model": "users.office",
+                "pk": 7276,
+                "fields": {
+                    "name": "An Office",
+                    "zonal_chief": null
+                }
+            },
+            {
+                "model": "users.office",
+                "pk": 7277,
+                "fields": {
+                    "name": "An Office",
+                    "zonal_chief": null
+                }
+            },
+            {
+                "model": "tpmpartners.tpmpartnerstaffmember",
+                "pk": 924,
+                "fields": {
+                    "user": 4416,
+                    "tpm_partner": 322,
+                    "receive_tpm_notifications": false
+                }
+            },
+            {
+                "model": "users.user",
+                "pk": 4416,
+                "fields": {
+                    "created": "2019-09-25T14:45:19.634Z",
+                    "modified": "2019-09-25T14:45:19.646Z",
+                    "username": "OPaDOKLzmcUM",
+                    "email": "macioce@unicef.org",
+                    "password": "md5$6QCpOPM7Uogf$770b2b4243a7e51b3f7ea6e55b3f4c95",
+                    "first_name": "",
+                    "middle_name": "",
+                    "last_name": "",
+                    "date_joined": "2019-09-25T14:45:19.634Z",
+                    "last_login": null,
+                    "is_active": true,
+                    "is_staff": false,
+                    "is_superuser": false,
+                    "groups": [
+                        1
+                    ],
+                    "user_permissions": []
+                }
+            },
+            {
+                "model": "auth.group",
+                "pk": 1,
+                "fields": {
+                    "name": "Third Party Monitor",
+                    "permissions": []
+                }
+            },
+            {
+                "model": "reports.section",
+                "pk": 1175,
+                "fields": {
+                    "created": "2019-09-25T14:45:19.756Z",
+                    "modified": "2019-09-25T14:45:19.756Z",
+                    "name": "Section 0",
+                    "description": null,
+                    "alternate_id": null,
+                    "alternate_name": "",
+                    "dashboard": false,
+                    "color": null,
+                    "active": true
+                }
+            }
+        ]
+    }
+}

@@ -12,6 +12,7 @@ class Category(OrderedModel, TimeStampedModel):
         ('t2f', _('Trip Management')),
         ('tpm', _('Third Party Monitoring')),
         ('audit', _('Financial Assurance')),
+        ('psea', _('PSEA Assessment')),
     )
 
     module = models.CharField(max_length=10, choices=MODULE_CHOICES, verbose_name=_('Module'))

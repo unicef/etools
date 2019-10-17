@@ -7,8 +7,6 @@ include *.py
 recursive-include docs *
 recursive-include src/etools *
 
-recursive-include src/requirements *.txt
-
 exclude src/etools/settings/custom.*.py
 exclude .coverage
 exclude .coveragerc
@@ -34,9 +32,7 @@ exclude docker-compose_v2.yml
 exclude docs
 exclude runtests.sh
 exclude screenshots
-exclude src/requirements/input
 exclude wait-for-it.sh
-exclude requirements.txt
 
 exclude refactor.sh
 exclude setup.in

@@ -25,10 +25,12 @@ class RelatedModuleFilter(BaseFilterBackend):
         related_instance_filters = {
             ActionPoint.MODULE_CHOICES.t2f: {'travel_activity__isnull': False},
             ActionPoint.MODULE_CHOICES.tpm: {'tpm_activity__isnull': False},
+            ActionPoint.MODULE_CHOICES.psea: {'psea_assessment__isnull': False},
             ActionPoint.MODULE_CHOICES.audit: {'engagement__isnull': False},
             ActionPoint.MODULE_CHOICES.apd: {
                 'travel_activity__isnull': True,
                 'tpm_activity__isnull': True,
+                'psea_assessment__isnull': True,
                 'engagement__isnull': True
             },
         }

@@ -134,13 +134,13 @@ class EngagementSubmitReportRequiredFieldsCheck(BaseRequiredFieldsCheck):
 
 class SPSubmitReportRequiredFieldsCheck(EngagementSubmitReportRequiredFieldsCheck):
     fields = EngagementSubmitReportRequiredFieldsCheck.fields + [
-        'total_amount_tested', 'internal_controls', 'exchange_rate',
+        'total_amount_tested', 'internal_controls', 'currency_of_report',
     ]
 
 
 class AuditSubmitReportRequiredFieldsCheck(EngagementSubmitReportRequiredFieldsCheck):
     fields = EngagementSubmitReportRequiredFieldsCheck.fields + [
-        'audited_expenditure', 'audit_opinion', 'exchange_rate',
+        'audited_expenditure', 'audit_opinion', 'currency_of_report',
     ]
 
 

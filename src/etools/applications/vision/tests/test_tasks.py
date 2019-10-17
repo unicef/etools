@@ -152,7 +152,7 @@ class TestVisionSyncTask(SimpleTestCase):
         self.assertEqual(mock_logger.call_args[0], (expected_msg, ))
         self.assertEqual(mock_logger.call_args[1], {})
 
-    @override_settings(CELERY_ALWAYS_EAGER=True, CELERY_EAGER_PROPAGATES_EXCEPTIONS=True)
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=True, CELERY_EAGER_PROPAGATES_EXCEPTIONS=True)
     def test_sync_no_args_success_case(self, mock_logger, mock_django_db_connection, mock_handler, mock_send_to_slack,
                                        countryMock):
         """Exercise etools.applications.vision.tasks.vision_sync_task() called without passing any argument"""
@@ -170,7 +170,7 @@ class TestVisionSyncTask(SimpleTestCase):
         self._assertSlackNotified(mock_send_to_slack)
         self._assertLoggerMessages(mock_logger)
 
-    @override_settings(CELERY_ALWAYS_EAGER=True, CELERY_EAGER_PROPAGATES_EXCEPTIONS=True)
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=True, CELERY_EAGER_PROPAGATES_EXCEPTIONS=True)
     def test_sync_country_filter_args(self, mock_logger, mock_django_db_connection, mock_handler, mock_send_to_slack,
                                       countryMock):
         """
@@ -190,7 +190,7 @@ class TestVisionSyncTask(SimpleTestCase):
         self._assertSlackNotified(mock_send_to_slack, selected_countries)
         self._assertLoggerMessages(mock_logger, selected_countries)
 
-    @override_settings(CELERY_ALWAYS_EAGER=True, CELERY_EAGER_PROPAGATES_EXCEPTIONS=True)
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=True, CELERY_EAGER_PROPAGATES_EXCEPTIONS=True)
     def test_sync_synchronizer_filter_args(self, mock_logger, mock_django_db_connection, mock_handler,
                                            mock_send_to_slack, countryMock):
         """
@@ -211,7 +211,7 @@ class TestVisionSyncTask(SimpleTestCase):
         self._assertSlackNotified(mock_send_to_slack, None, selected_synchronizers)
         self._assertLoggerMessages(mock_logger, None, selected_synchronizers)
 
-    @override_settings(CELERY_ALWAYS_EAGER=True, CELERY_EAGER_PROPAGATES_EXCEPTIONS=True)
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=True, CELERY_EAGER_PROPAGATES_EXCEPTIONS=True)
     def test_sync_country_and_synchronizer_filter_args(self, mock_logger, mock_django_db_connection, mock_handler,
                                                        mock_send_to_slack, countryMock):
         """
@@ -245,7 +245,7 @@ class TestSyncHandlerTask(BaseTenantTestCase):
     @mock.patch('etools.applications.vision.tasks.logger.info')
     @mock.patch('etools.applications.vision.tasks.Country')
     @mock.patch('etools.applications.vision.tasks.ProgrammeSynchronizer.sync')
-    @override_settings(CELERY_ALWAYS_EAGER=True, CELERY_EAGER_PROPAGATES_EXCEPTIONS=True)
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=True, CELERY_EAGER_PROPAGATES_EXCEPTIONS=True)
     def test_sync_success(self, Handler, Country, mock_logger_info):
         """Exercise etools.applications.vision.tasks.sync_handler() success scenario, one matching country."""
         Country.objects.get = mock.Mock(return_value=self.country)
@@ -262,7 +262,7 @@ class TestSyncHandlerTask(BaseTenantTestCase):
     @mock.patch('etools.applications.vision.tasks.logger.error')
     @mock.patch('etools.applications.vision.tasks.Country')
     @mock.patch('etools.applications.vision.tasks.ProgrammeSynchronizer.sync', side_effect=VisionException('banana'))
-    @override_settings(CELERY_ALWAYS_EAGER=True, CELERY_EAGER_PROPAGATES_EXCEPTIONS=False)
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=True, CELERY_EAGER_PROPAGATES_EXCEPTIONS=False)
     def test_sync_vision_error(self, Handler, Country, mock_logger_error, mock_logger_info):
         """Exercise etools.applications.vision.tasks.sync_handler() which receive an exception from Vision."""
         Country.objects.get = mock.Mock(return_value=self.country)
@@ -278,7 +278,7 @@ class TestSyncHandlerTask(BaseTenantTestCase):
         self.assertEqual(mock_logger_info.call_args[1], {})
 
     @mock.patch('etools.applications.vision.tasks.logger.error')
-    @override_settings(CELERY_ALWAYS_EAGER=True, CELERY_EAGER_PROPAGATES_EXCEPTIONS=True)
+    @override_settings(CELERY_TASK_ALWAYS_EAGER=True, CELERY_EAGER_PROPAGATES_EXCEPTIONS=True)
     def test_sync_country_does_not_exist(self, mock_logger):
         """
         Exercise etools.applications.vision.tasks.sync_handler() called with a country name that doesn't match a country

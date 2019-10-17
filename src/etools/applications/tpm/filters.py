@@ -3,7 +3,7 @@ from django.db.models.functions import TruncYear
 from django_filters import rest_framework as filters
 from rest_framework.filters import BaseFilterBackend
 
-from etools.applications.tpm.models import TPMVisit
+from etools.applications.tpm.models import TPMActivity, TPMVisit
 
 
 class ReferenceNumberOrderingFilter(BaseFilterBackend):
@@ -19,9 +19,8 @@ class ReferenceNumberOrderingFilter(BaseFilterBackend):
 
 
 class TPMVisitFilter(filters.FilterSet):
-    tpm_activities__offices__in = filters.BaseInFilter(
-        field_name="tpm_activities__offices",
-    )
+    tpm_activities__offices__in = filters.BaseInFilter(field_name="tpm_activities__offices")
+    tpm_partner_focal_points__in = filters.BaseInFilter(field_name="tpm_partner_focal_points")
 
     class Meta:
         model = TPMVisit
@@ -36,5 +35,23 @@ class TPMVisitFilter(filters.FilterSet):
             'tpm_activities__date': ['exact', 'lte', 'gte', 'gt', 'lt'],
             'status': ['exact', 'in'],
             'tpm_activities__unicef_focal_points': ['exact'],
-            'tpm_partner_focal_points': ['exact'],
+            'tpm_partner_focal_points': ['exact', 'in'],
+        }
+
+
+class TPMActivityFilter(filters.FilterSet):
+    offices__in = filters.BaseInFilter(field_name="offices")
+
+    class Meta:
+        model = TPMActivity
+        fields = {
+            'tpm_visit': ['exact'],
+            'section': ['exact', 'in'],
+            'offices': ['exact', 'in'],
+            'tpm_visit__tpm_partner': ['exact'],
+            'partner': ['exact', 'in'],
+            'tpm_visit__status': ['exact', 'in'],
+            'is_pv': ['exact', ],
+            'date': ['exact', 'year'],
+            'intervention': ['exact', 'in'],
         }

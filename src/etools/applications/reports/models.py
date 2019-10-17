@@ -370,7 +370,7 @@ class LowerResult(TimeStampedModel):
 
     class Meta:
         unique_together = (('result_link', 'code'),)
-        ordering = ('-created',)
+        ordering = ('created',)
 
     def save(self, **kwargs):
         if not self.code:
@@ -675,6 +675,7 @@ class AppliedIndicator(TimeStampedModel):
 
     class Meta:
         unique_together = (("indicator", "lower_result"),)
+        ordering = ("created",)
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)

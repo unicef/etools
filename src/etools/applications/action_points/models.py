@@ -42,58 +42,39 @@ class ActionPoint(TimeStampedModel):
     )
 
     author = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='created_action_points',
-                               verbose_name=_('Author'),
-                               on_delete=models.CASCADE,
-                               )
+                               verbose_name=_('Author'), on_delete=models.CASCADE)
     assigned_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='+', verbose_name=_('Assigned By'),
-                                    on_delete=models.CASCADE,
-                                    )
+                                    on_delete=models.CASCADE)
     assigned_to = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='assigned_action_points',
-                                    verbose_name=_('Assigned To'),
-                                    on_delete=models.CASCADE,
-                                    )
-
+                                    verbose_name=_('Assigned To'), on_delete=models.CASCADE)
     status = FSMField(verbose_name=_('Status'), max_length=10, choices=STATUSES, default=STATUSES.open, protected=True)
-
     category = models.ForeignKey(Category, verbose_name=_('Category'), blank=True, null=True, on_delete=models.CASCADE)
     description = models.TextField(verbose_name=_('Description'))
     due_date = models.DateField(verbose_name=_('Due Date'), blank=True, null=True)
     high_priority = models.BooleanField(default=False, verbose_name=_('High Priority'))
-
     section = models.ForeignKey('reports.Section', verbose_name=_('Section'), blank=True, null=True,
-                                on_delete=models.CASCADE,
-                                )
+                                on_delete=models.CASCADE)
     office = models.ForeignKey('users.Office', verbose_name=_('Office'), blank=True, null=True,
-                               on_delete=models.CASCADE,
-                               )
-
+                               on_delete=models.CASCADE)
     location = models.ForeignKey('locations.Location', verbose_name=_('Location'), blank=True, null=True,
-                                 on_delete=models.CASCADE,
-                                 )
+                                 on_delete=models.CASCADE)
     partner = models.ForeignKey('partners.PartnerOrganization', verbose_name=_('Partner'), blank=True, null=True,
-                                on_delete=models.CASCADE,
-                                )
+                                on_delete=models.CASCADE)
     cp_output = models.ForeignKey('reports.Result', verbose_name=_('CP Output'), blank=True, null=True,
-                                  on_delete=models.CASCADE,
-                                  )
+                                  on_delete=models.CASCADE)
     intervention = models.ForeignKey('partners.Intervention', verbose_name=_('PD/SSFA'), blank=True, null=True,
-                                     on_delete=models.CASCADE,
-                                     )
+                                     on_delete=models.CASCADE)
     engagement = models.ForeignKey('audit.Engagement', verbose_name=_('Engagement'), blank=True, null=True,
-                                   related_name='action_points', on_delete=models.CASCADE,
-                                   )
+                                   related_name='action_points', on_delete=models.CASCADE)
+    psea_assessment = models.ForeignKey('psea.Assessment', verbose_name=_('PSEA Assessment'), blank=True, null=True,
+                                        related_name='action_points', on_delete=models.CASCADE)
     tpm_activity = models.ForeignKey('tpm.TPMActivity', verbose_name=_('TPM Activity'), blank=True, null=True,
-                                     related_name='action_points', on_delete=models.CASCADE,
-                                     )
+                                     related_name='action_points', on_delete=models.CASCADE)
     travel_activity = models.ForeignKey('t2f.TravelActivity', verbose_name=_('Travel Activity'), blank=True, null=True,
-                                        on_delete=models.CASCADE,
-                                        )
-
+                                        on_delete=models.CASCADE)
     date_of_completion = MonitorField(verbose_name=_('Date Action Point Completed'), null=True, blank=True,
                                       default=None, monitor='status', when=[STATUSES.completed])
-
     comments = GenericRelation('django_comments.Comment', object_id_field='object_pk')
-
     history = GenericRelation('unicef_snapshot.Activity', object_id_field='target_object_id',
                               content_type_field='target_content_type')
 
@@ -110,7 +91,7 @@ class ActionPoint(TimeStampedModel):
 
     @property
     def related_object(self):
-        return self.engagement_subclass or self.tpm_activity or self.travel_activity
+        return self.engagement_subclass or self.tpm_activity or self.travel_activity or self.psea_assessment
 
     @property
     def related_object_str(self):
@@ -121,7 +102,7 @@ class ActionPoint(TimeStampedModel):
         if self.tpm_activity:
             return 'Task No {0} for Visit {1}'.format(obj.task_number, obj.tpm_visit.reference_number)
 
-        if self.travel_activity:
+        elif self.travel_activity:
             if self.travel_activity.travel:
                 return 'Task No {0} for Visit {1}'.format(obj.task_number, obj.travel.reference_number)
             else:
@@ -141,10 +122,12 @@ class ActionPoint(TimeStampedModel):
     def related_module(self):
         if self.engagement:
             return self.MODULE_CHOICES.audit
-        if self.tpm_activity:
+        elif self.tpm_activity:
             return self.MODULE_CHOICES.tpm
-        if self.travel_activity:
+        elif self.travel_activity:
             return self.MODULE_CHOICES.t2f
+        elif self.psea_assessment:
+            return self.MODULE_CHOICES.psea
         return self.MODULE_CHOICES.apd
 
     @property

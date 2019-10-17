@@ -59,7 +59,6 @@ class IndicatorBlueprintCUSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         # always try to get first
-        validated_data['title'] = validated_data['title'].title()
         return IndicatorBlueprint.objects.get_or_create(**validated_data)[0]
 
 
