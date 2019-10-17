@@ -225,5 +225,245 @@
             "code": "tpm_report_attachments",
             "group": ["tpm_report_attachments"]
         }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 34,
+        "fields": {
+            "order": 0,
+            "label": "Code of Conduct",
+            "name": "code_of_conduct",
+            "code": "psea_answer"
+        }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 35,
+        "fields": {
+            "order": 0,
+            "label": "PSEA Policy",
+            "name": "psea_policy",
+            "code": "psea_answer"
+        }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 36,
+        "fields": {
+            "order": 0,
+            "label": "Relevant human resources policies",
+            "name": "relevant_human_resources_policies",
+            "code": "psea_answer"
+        }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 37,
+        "fields": {
+            "order": 0,
+            "label": "Recruitment procedure",
+            "name": "recruitment_procedure",
+            "code": "psea_answer"
+        }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 38,
+        "fields": {
+            "order": 0,
+            "label": "ToR",
+            "name": "tor",
+            "code": "psea_answer"
+        }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 39,
+        "fields": {
+            "order": 0,
+            "label": "Contracts/partnership agreements",
+            "name": "contracts_partnership_agreements",
+            "code": "psea_answer"
+        }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 40,
+        "fields": {
+            "order": 0,
+            "label": "Training Agenda",
+            "name": "training_agenda",
+            "code": "psea_answer"
+        }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 41,
+        "fields": {
+            "order": 0,
+            "label": "Attendance sheets",
+            "name": "attendance_sheets",
+            "code": "psea_answer"
+        }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 42,
+        "fields": {
+            "order": 0,
+            "label": "Communication materials",
+            "name": "communication_materials",
+            "code": "psea_answer"
+        }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 43,
+        "fields": {
+            "order": 0,
+            "label": "Needs assessments",
+            "name": "needs_assessments",
+            "code": "psea_answer"
+        }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 44,
+        "fields": {
+            "order": 0,
+            "label": "Risk assessments",
+            "name": "risk_assessments",
+            "code": "psea_answer"
+        }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 45,
+        "fields": {
+            "order": 0,
+            "label": "M&E framework",
+            "name": "m_e_framework",
+            "code": "psea_answer"
+        }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 46,
+        "fields": {
+            "order": 0,
+            "label": "Description of reportings mechanism(s)",
+            "name": "description_of_reporting_mechanisms",
+            "code": "psea_answer"
+        }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 47,
+        "fields": {
+            "order": 0,
+            "label": "Whistleblower policy",
+            "name": "whistleblower_policy",
+            "code": "psea_answer"
+        }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 48,
+        "fields": {
+            "order": 0,
+            "label": "List of service providers",
+            "name": "list_of_service_providers",
+            "code": "psea_answer"
+        }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 49,
+        "fields": {
+            "order": 0,
+            "label": "Referral form for survivors of GBV/SEA",
+            "name": "referral_form_for_survivors_of_gbv_sea",
+            "code": "psea_answer"
+        }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 50,
+        "fields": {
+            "order": 0,
+            "label": "Name(s) of possible investigator(s)",
+            "name": "names_of_possible_investigators",
+            "code": "psea_answer"
+        }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 51,
+        "fields": {
+            "order": 0,
+            "label": "Dedicated resources for investigation(s)",
+            "name": "dedicated_resources_for_investigations",
+            "code": "psea_answer"
+        }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 52,
+        "fields": {
+            "order": 0,
+            "label": "PSEA investigation policy/procedure",
+            "name": "psea_investigation_policy_procedure",
+            "code": "psea_answer"
+        }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 53,
+        "fields": {
+            "order": 0,
+            "label": "Other",
+            "name": "other",
+            "code": "psea_answer"
+        }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 54,
+        "fields": {
+            "order": 0,
+            "label": "Documentation of standard procedure",
+            "name": "documentation_of_standard_procedure",
+            "code": "psea_answer"
+        }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 55,
+        "fields": {
+            "order": 0,
+            "label": "Annual training plan",
+            "name": "annual_training_plan",
+            "code": "psea_answer"
+        }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 56,
+        "fields": {
+            "order": 0,
+            "label": "Description of referral process for survivors of GBV/SEA",
+            "name": "description_of_referral_process_for_survivors_of_gbvsea",
+            "code": "psea_answer"
+        }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 57,
+        "fields": {
+            "order": 0,
+            "label": "Written process for review of SEA",
+            "name": "written_process_for_review_of_sea",
+            "code": "psea_answer"
+        }
     }
 ]
