@@ -183,7 +183,6 @@ class TravelActivityPerInterventionViewSet(QueryStringFilterMixin, mixins.ListMo
 
     def get_queryset(self):
         qs = TravelActivity.objects.prefetch_related('travels', 'primary_traveler', 'locations')
-        qs = qs.filter(travel_type__in=[TravelType.SPOT_CHECK, TravelType.PROGRAMME_MONITORING])
 
         query_params = self.request.query_params
         if query_params:

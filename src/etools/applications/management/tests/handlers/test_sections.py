@@ -1,7 +1,7 @@
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
-from etools.applications.management.handlers import (
+from etools.applications.management.handlers.sections import (
     IndicatorSectionInconsistentException,
     NotDeactivatedException,
     SectionHandler,
