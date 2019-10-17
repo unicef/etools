@@ -152,6 +152,8 @@ class ActionPoint(TimeStampedModel):
         return self.MODULE_CHOICES.apd
 
     def get_reference_number(self):
+        if self.reference_number:
+            return self.reference_number
         return '{}/{}/{}/APD'.format(
             connection.tenant.country_short_code or '',
             self.created.year,
