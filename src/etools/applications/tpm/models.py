@@ -128,8 +128,8 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel):
             self.id,
         )
 
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
+    def save(self, **kwargs):
+        super().save(**kwargs)
         if not self.reference_number:
             self.reference_number = self.get_reference_number()
             self.save()
