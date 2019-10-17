@@ -389,10 +389,10 @@ class TravelActivity(models.Model):
     def __str__(self):
         return '{} - {}'.format(self.travel_type, self.date)
 
-    def save(self, *args, **kwargs):
+    def save(self, **kwargs):
         if self.pk and not self.reference_number:
             self.reference_number = self.get_reference_number()
-        super().save(*args, **kwargs)
+        super().save(**kwargs)
 
 
 class ItineraryItem(models.Model):
