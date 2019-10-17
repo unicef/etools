@@ -204,6 +204,31 @@ class PartnerOrganizationListSerializer(serializers.ModelSerializer):
         )
 
 
+class PartnerOrgPSEADetailsSerializer(serializers.ModelSerializer):
+    staff_members = serializers.SerializerMethodField()
+
+    def get_staff_members(self, obj):
+        return [s.get_full_name() for s in obj.staff_members.all()]
+
+    class Meta:
+        model = PartnerOrganization
+        fields = (
+            "street_address",
+            "last_assessment_date",
+            "address",
+            "city",
+            "postal_code",
+            "country",
+            "id",
+            "vendor_number",
+            "name",
+            "short_name",
+            "partner_type",
+            "cso_type",
+            "staff_members"
+        )
+
+
 class MinimalPartnerOrganizationListSerializer(serializers.ModelSerializer):
 
     class Meta:
