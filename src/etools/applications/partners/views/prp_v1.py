@@ -1,4 +1,4 @@
-from django.db.models import CharField, Count, Sum
+from django.db.models import CharField, Count, OuterRef, Subquery, Sum
 
 from rest_framework.generics import get_object_or_404, ListAPIView
 from rest_framework.pagination import LimitOffsetPagination
@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from unicef_restlib.views import QueryStringFilterMixin
 
+from etools.applications.funds.models import FundsReservationHeader
 from etools.applications.partners.filters import PartnerScopeFilter
 from etools.applications.partners.models import Intervention, PartnerOrganization
 from etools.applications.partners.permissions import ListCreateAPIMixedPermission, ReadOnlyAPIUser
@@ -48,7 +49,16 @@ class PRPInterventionListAPIView(QueryStringFilterMixin, ListAPIView):
     permission_classes = (ListCreateAPIMixedPermission, )
     filter_backends = (PartnerScopeFilter,)
     pagination_class = PRPInterventionPagination
-    queryset = Intervention.objects.prefetch_related(
+
+    frs_query = FundsReservationHeader.objects.filter(
+        intervention=OuterRef("pk")
+    ).order_by().values("intervention")
+
+    queryset = Intervention.objects.filter(
+        result_links__ll_results__applied_indicators__isnull=False,
+        reporting_requirements__isnull=False,
+        in_amendment=False
+    ).prefetch_related(
         'result_links__cp_output',
         'result_links__ll_results',
         'result_links__ll_results__applied_indicators__indicator',
@@ -65,8 +75,12 @@ class PRPInterventionListAPIView(QueryStringFilterMixin, ListAPIView):
         'flat_locations',
         'sections'
     ).exclude(status=Intervention.DRAFT).annotate(
-        Count("frs__currency", distinct=True),
-        Sum("frs__actual_amt_local"),
+        frs__actual_amt_local__sum=Subquery(
+            frs_query.annotate(total=Sum("actual_amt_local")).values("total")[:1]
+        ),
+        frs__currency__count=Subquery(
+            frs_query.annotate(total=Count("currency", distinct=True)).values("total")[:1]
+        ),
         max_fr_currency=MaxDistinct("frs__currency", output_field=CharField(), distinct=True),
     )
 

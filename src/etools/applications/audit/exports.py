@@ -57,6 +57,8 @@ class AuditDetailCSVRenderer(BaseCSVRenderer):
             ('total_value', 'Total value of selected FACE form(s)'),
             ('audited_expenditure', 'Audited Expenditure'),
             ('financial_findings', 'Financial Findings'),
+            ('audited_expenditure_local', 'Audited Expenditure Local Currency'),
+            ('financial_findings_local', 'Financial Findings Local Currency'),
             ('audit_opinion', 'Audit Opinion'),
             ('amount_refunded', 'Amount Refunded'),
             ('additional_supporting_documentation_provided', 'Additional Supporting Documentation Provided'),
