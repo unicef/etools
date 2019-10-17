@@ -13,14 +13,11 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('--schema', dest='schema')
 
-    def run(self):
-        cleanup_filetypes()
-
     def handle(self, *args, **options):
         if options['schema']:
             countries = Country.objects.exclude(name__iexact='global')
             country = countries.get(schema_name=options['schema'])
             connection.set_tenant(country)
-            self.run()
+            cleanup_filetypes()
         else:
             run_on_all_tenants(self.run)
