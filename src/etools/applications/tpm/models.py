@@ -33,7 +33,7 @@ from etools.libraries.djangolib.utils import get_environment
 from etools.libraries.fsm.views import has_action_permission
 
 
-class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
+class TPMVisit(SoftDeleteMixin, TimeStampedModel):
 
     DRAFT = 'draft'
     ASSIGNED = 'assigned'
