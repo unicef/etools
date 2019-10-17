@@ -28,6 +28,7 @@ from etools.applications.users.serializers import (
     UserCreationSerializer,
 )
 from etools.libraries.azure_graph_api.tasks import retrieve_user_info
+from etools.libraries.djangolib.views import ExternalModuleFilterMixin
 
 logger = logging.getLogger(__name__)
 
@@ -280,7 +281,8 @@ class UserViewSet(mixins.RetrieveModelMixin,
         return Response(serializer.data)
 
 
-class OfficeViewSet(mixins.RetrieveModelMixin,
+class OfficeViewSet(ExternalModuleFilterMixin,
+                    mixins.RetrieveModelMixin,
                     mixins.ListModelMixin,
                     mixins.CreateModelMixin,
                     viewsets.GenericViewSet):
@@ -289,9 +291,11 @@ class OfficeViewSet(mixins.RetrieveModelMixin,
     """
     serializer_class = OfficeSerializer
     permission_classes = (IsAdminUser,)
+    queryset = Office.objects.all()
+    module2filters = {'tpm': ['tpmactivity__tpm_visit__tpm_partner__staff_members__user', ]}
 
     def get_queryset(self):
-        queryset = Office.objects.all()
+        qs = super().get_queryset()
         if "values" in self.request.query_params.keys():
             # Used for ghost data - filter in all(), and return straight away.
             try:
@@ -299,8 +303,8 @@ class OfficeViewSet(mixins.RetrieveModelMixin,
             except ValueError:
                 raise ValidationError("ID values must be integers")
             else:
-                queryset = queryset.filter(id__in=ids)
-        return queryset
+                qs = qs.filter(id__in=ids)
+        return qs
 
 
 class CountriesViewSet(ListAPIView):
