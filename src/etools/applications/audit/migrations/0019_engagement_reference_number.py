@@ -13,7 +13,7 @@ def set_reference_number(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('audit', '0017_auto_20190501_1858'),
+        ('audit', '0018_auto_20191008_2235'),
     ]
 
     operations = [
