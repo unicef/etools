@@ -201,12 +201,18 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
             self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         goto('checklist', self.fm_user)
+        goto('draft', self.fm_user)
+        goto('checklist', self.fm_user)
         goto('review', self.fm_user, {
             'person_responsible': person_responsible.id
         })
+        goto('checklist', self.fm_user)
+        goto('review', self.fm_user)
         goto('assigned', self.fm_user)
 
         StartedChecklistFactory(monitoring_activity=activity)
+        goto('report_finalization', person_responsible)
+        goto('data_collection', person_responsible)
         goto('report_finalization', person_responsible)
         goto('submitted', person_responsible)
         goto('completed', self.fm_user)

@@ -253,15 +253,30 @@ class MonitoringActivity(
     def mark_details_configured(self):
         self.prepare_questions_structure()
 
+    @transition(field=status, source=STATUSES.checklist, target=STATUSES.draft,
+                permission=user_is_field_monitor_permission)
+    def revert_details_configured(self):
+        pass
+
     @transition(field=status, source=STATUSES.checklist, target=STATUSES.review,
                 permission=user_is_field_monitor_permission)
     def mark_checklist_configured(self):
         self.prepare_activity_overall_findings()
         self.prepare_questions_overall_findings()
 
+    @transition(field=status, source=STATUSES.review, target=STATUSES.checklist,
+                permission=user_is_field_monitor_permission)
+    def revert_checklist_configured(self):
+        pass
+
     @transition(field=status, source=STATUSES.review, target=STATUSES.assigned,
                 permission=user_is_field_monitor_permission)
     def assign(self):
+        pass
+
+    @transition(field=status, source=STATUSES.assigned, target=STATUSES.review,
+                permission=user_is_field_monitor_permission)
+    def revert_assign(self):
         pass
 
     @transition(field=status, source=STATUSES.assigned, target=STATUSES.data_collection,
@@ -278,6 +293,11 @@ class MonitoringActivity(
     @transition(field=status, source=STATUSES.data_collection, target=STATUSES.report_finalization,
                 permission=user_is_person_responsible_permission)
     def mark_data_collected(self):
+        pass
+
+    @transition(field=status, source=STATUSES.report_finalization, target=STATUSES.data_collection,
+                permission=user_is_person_responsible_permission)
+    def revert_data_collected(self):
         pass
 
     @transition(field=status, source=STATUSES.report_finalization, target=STATUSES.submitted,
