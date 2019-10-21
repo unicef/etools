@@ -10,7 +10,7 @@ from django.views.generic.detail import DetailView
 from rest_framework import mixins, status, viewsets
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import ListAPIView, RetrieveAPIView, RetrieveUpdateAPIView
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.permissions import IsAdminUser, IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -290,7 +290,7 @@ class OfficeViewSet(ExternalModuleFilterMixin,
     Returns a list of all Offices
     """
     serializer_class = OfficeSerializer
-    permission_classes = (IsAdminUser,)
+    permission_classes = (IsAuthenticatedOrReadOnly,)
     queryset = Office.objects.all()
     module2filters = {'tpm': ['tpmactivity__tpm_visit__tpm_partner__staff_members__user', ]}
 
