@@ -2,39 +2,6 @@
 
 from django.db import connection, migrations
 
-from etools.applications.core.tests.cases import SCHEMA_NAME
-
-
-def remove_pd_pca_document_types(apps, schema_editor):
-    """Remove PD/PCA document types, but need to convert those
-    objects using them.
-
-    'PD' document types converted to 'Signed PD/SSFA'
-    'PCA' document types converted to 'Signed PCA'
-    """
-    if connection.tenant.schema_name != SCHEMA_NAME:
-        AttachmentFileType = apps.get_model('unicef_attachments', 'filetype')
-        Attachment = apps.get_model('unicef_attachments', 'attachment')
-
-        mapping = [
-            ("pd", "signed_pd/ssfa"),
-            ("pca", "attached_agreement"),
-        ]
-        for from_filetype_name, to_filetype_name in mapping:
-            try:
-                from_filetype = AttachmentFileType.objects.filter(
-                    name=from_filetype_name
-                )
-                to_filetype = AttachmentFileType.objects.get(name=to_filetype_name)
-                for attachment in Attachment.objects.filter(file_type__in=from_filetype):
-                    attachment.filetype = to_filetype
-                    attachment.save()
-                for filetype in from_filetype:
-                    filetype.delete()
-            except AttachmentFileType.DoesNotExist:
-                # schema may not have this file type so ignore
-                pass
-
 
 class Migration(migrations.Migration):
 
@@ -43,8 +10,4 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(
-            remove_pd_pca_document_types,
-            migrations.RunPython.noop,
-        )
     ]
