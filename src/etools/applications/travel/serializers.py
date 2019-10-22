@@ -11,7 +11,7 @@ from etools.applications.action_points.serializers import ActionPointBaseSeriali
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
 from etools.applications.reports.serializers.v1 import SectionSerializer
-from etools.applications.travel.models import Itinerary, ItineraryActionPoint, ItineraryStatusHistory
+from etools.applications.travel.models import ActivityActionPoint, Itinerary, ItineraryStatusHistory
 from etools.applications.travel.permissions import ItineraryPermissions
 from etools.applications.users.serializers import OfficeSerializer
 
@@ -203,7 +203,7 @@ class ItineraryStatusHistorySerializer(serializers.ModelSerializer):
         return data
 
 
-class ItineraryActionPointSerializer(
+class ActivityActionPointSerializer(
         PermissionsBasedSerializerMixin,
         ActionPointBaseSerializer,
 ):
@@ -230,7 +230,7 @@ class ItineraryActionPointSerializer(
     url = serializers.ReadOnlyField(label=_('Link'), source='get_object_url')
 
     class Meta(ActionPointBaseSerializer.Meta):
-        model = ItineraryActionPoint
+        model = ActivityActionPoint
         fields = ActionPointBaseSerializer.Meta.fields + [
             'partner',
             'section',
@@ -259,7 +259,7 @@ class ItineraryActionPointSerializer(
         return super().create(validated_data)
 
 
-class ItineraryActionPointExportSerializer(serializers.Serializer):
+class ActivityActionPointExportSerializer(serializers.Serializer):
     ref = serializers.CharField(source='reference_number')
     assigned_to = serializers.CharField(
         source='assigned_to.get_full_name',
