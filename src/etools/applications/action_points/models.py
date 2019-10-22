@@ -72,6 +72,13 @@ class ActionPoint(TimeStampedModel):
                                      related_name='action_points', on_delete=models.CASCADE)
     travel_activity = models.ForeignKey('t2f.TravelActivity', verbose_name=_('Travel Activity'), blank=True, null=True,
                                         on_delete=models.CASCADE)
+    travel = models.ForeignKey(
+        'travel.Activity',
+        verbose_name=_('Travel Activity'),
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+    )
     date_of_completion = MonitorField(verbose_name=_('Date Action Point Completed'), null=True, blank=True,
                                       default=None, monitor='status', when=[STATUSES.completed])
     comments = GenericRelation('django_comments.Comment', object_id_field='object_pk')
