@@ -96,6 +96,7 @@ urlpatterns = [
     url(r'^api/audit/', include('etools.applications.audit.urls')),
     url(r'^api/action-points/', include('etools.applications.action_points.urls')),
     url(r'^api/psea/', include('etools.applications.psea.urls')),
+    url(r'^api/travel/', include('etools.applications.travel.urls')),
     url(r'^api/v2/reports/', include('etools.applications.reports.urls_v2')),
     url(r'^api/v2/', include('etools.applications.partners.urls_v2', namespace='partners_api')),
     url(r'^api/prp/v1/', include('etools.applications.partners.prp_urls', namespace='prp_api_v1')),

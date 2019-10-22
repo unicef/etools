@@ -73,6 +73,7 @@ def import_permissions(model_name):
         'Intervention': settings.PACKAGE_ROOT + '/applications/partners/permission_matrix/intervention_permissions.csv',
         'Agreement': settings.PACKAGE_ROOT + '/applications/partners/permission_matrix/agreement_permissions.csv',
         'Assessment': settings.PACKAGE_ROOT + '/applications/psea/permission_matrix/assessment_permissions.csv',
+        'Itinerary': settings.PACKAGE_ROOT + '/applications/travel/permission_matrix/itinerary_permissions.csv',
     }
 
     def process_file():

@@ -3,7 +3,7 @@ from django.utils.translation import ugettext_lazy as _
 from rest_framework_csv.renderers import CSVRenderer
 
 
-class ItineraryActionPointCSVRenderer(CSVRenderer):
+class ActivityActionPointCSVRenderer(CSVRenderer):
     header = [
         'ref',
         'assigned_to',

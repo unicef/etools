@@ -24,11 +24,11 @@ from etools.applications.permissions2.drf_permissions import NestedPermission
 from etools.applications.permissions2.metadata import PermissionBasedMetadata
 from etools.applications.permissions2.views import PermittedSerializerMixin
 from etools.applications.travel.conditions import TravelModuleCondition
-from etools.applications.travel.models import Itinerary, ItineraryActionPoint
-from etools.applications.travel.renderers import ItineraryActionPointCSVRenderer
+from etools.applications.travel.models import ActivityActionPoint, Itinerary
+from etools.applications.travel.renderers import ActivityActionPointCSVRenderer
 from etools.applications.travel.serializers import (
-    ItineraryActionPointExportSerializer,
-    ItineraryActionPointSerializer,
+    ActivityActionPointExportSerializer,
+    ActivityActionPointSerializer,
     ItineraryExportSerializer,
     ItinerarySerializer,
     ItineraryStatusHistorySerializer,
@@ -60,7 +60,7 @@ class ItineraryViewSet(
         ('q', [
             'reference_number__icontains',
             'supervisor__first_name__icontains',
-            'supervisor__user__last_name__icontains',
+            'supervisor__last_name__icontains',
             'traveller__first_name__icontains',
             'traveller__last_name__icontains',
         ]),
@@ -272,7 +272,7 @@ class ItineraryViewSet(
         })
 
 
-class ItineraryActionPointViewSet(
+class ActivityActionPointViewSet(
         SafeTenantViewSetMixin,
         PermittedSerializerMixin,
         mixins.ListModelMixin,
@@ -283,8 +283,8 @@ class ItineraryActionPointViewSet(
         viewsets.GenericViewSet,
 ):
     metadata_class = PermissionBasedMetadata
-    queryset = ItineraryActionPoint.objects.all()
-    serializer_class = ItineraryActionPointSerializer
+    queryset = ActivityActionPoint.objects.all()
+    serializer_class = ActivityActionPointSerializer
     permission_classes = [IsAuthenticated, NestedPermission]
 
     def get_permission_context(self):
@@ -306,10 +306,10 @@ class ItineraryActionPointViewSet(
         detail=False,
         methods=['get'],
         url_path='export',
-        renderer_classes=(ItineraryActionPointCSVRenderer,),
+        renderer_classes=(ActivityActionPointCSVRenderer,),
     )
     def csv_export(self, request, *args, **kwargs):
-        serializer = ItineraryActionPointExportSerializer(
+        serializer = ActivityActionPointExportSerializer(
             self.filter_queryset(self.get_queryset()),
             many=True,
         )
