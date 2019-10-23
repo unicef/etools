@@ -17,7 +17,7 @@ from etools.applications.partners.serializers.interventions_v2 import MinimalInt
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.reports.serializers.v1 import SectionSerializer
 from etools.applications.reports.serializers.v2 import MinimalOutputListSerializer
-from etools.applications.tpm.serializers.partner import TPMPartnerLightSerializer
+from etools.applications.tpm.tpmpartners.models import TPMPartner
 from etools.applications.users.serializers import MinimalUserSerializer, OfficeSerializer
 
 
@@ -79,8 +79,16 @@ class TemplatedQuestionSerializer(QuestionSerializer):
         return instance
 
 
+class TPMPartnerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TPMPartner
+        fields = [
+            'id', 'vendor_number', 'name', 'email', 'phone_number',
+        ]
+
+
 class MonitoringActivityLightSerializer(serializers.ModelSerializer):
-    tpm_partner = SeparatedReadWriteField(read_field=TPMPartnerLightSerializer())
+    tpm_partner = SeparatedReadWriteField(read_field=TPMPartnerSerializer())
     location = SeparatedReadWriteField(read_field=LocationSerializer())
     location_site = SeparatedReadWriteField(read_field=LocationSiteSerializer())
 

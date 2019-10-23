@@ -116,6 +116,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIsNotNone(response.data['tpm_partner'])
+        self.assertNotEqual(response.data['tpm_partner'], {})
 
     def test_update_tpm_partner_staff_activity(self):
         activity = MonitoringActivityFactory(activity_type='staff')
