@@ -3,19 +3,23 @@ import time
 
 import celery
 from celery.utils.log import get_task_logger
+from arcgis.gis import GIS
 from arcgis.features import FeatureCollection, Feature, FeatureLayer, FeatureSet
 from django.db import IntegrityError, transaction
+from django.db.models import Q
 from django.utils.encoding import force_text
 from django.contrib.gis.geos import Polygon, MultiPolygon, Point
 
-from unicef_locations.models import ArcgisDBTable, Location
+from unicef_locations.models import ArcgisDBTable, Location, LocationRemapHistory
 from .task_utils import create_location, validate_remap_table, duplicate_pcodes_exist
 from etools.libraries.locations.task_utils import (
     get_location_ids_in_use,
+    remap_location,
     save_location_remap_history,
     validate_remap_table,
     duplicate_pcodes_exist,
-    create_location,
+    filter_remapped_locations,
+    create_location
 )
 
 
@@ -25,37 +29,45 @@ logger = get_task_logger(__name__)
 @celery.current_app.task
 def validate_arcgis_locations_in_use(arcgis_table_pk):
     try:
-        carto_table = ArcgisDBTable.objects.get(pk=arcgis_table_pk)
+        arcgis_table = ArcgisDBTable.objects.get(pk=arcgis_table_pk)
     except ArcgisDBTable.DoesNotExist as e:
         logger.exception('Cannot retrieve ArcgisDBTable with pk: %s', arcgis_table_pk)
         raise e
 
     database_pcodes = []
-    for row in Location.objects.all_locations().filter(gateway=carto_table.location_type).values('p_code'):
+    for row in Location.objects.all_locations().filter(gateway=arcgis_table.location_type).values('p_code'):
         database_pcodes.append(row['p_code'])
 
-    auth_client = LocationsCartoNoAuthClient(base_url="https://{}.carto.com/".format(carto_table.domain))
-    sql_client = SQLClient(auth_client)
-
     try:
-        qry = sql_client.send('select array_agg({}) AS aggregated_pcodes from {}'.format(
-            carto_table.pcode_col,
-            carto_table.table_name,
-        ))
-        new_carto_pcodes = qry['rows'][0]['aggregated_pcodes'] \
-            if len(qry['rows']) > 0 and "aggregated_pcodes" in qry['rows'][0] else []
+        # if the layer/table is public it does not have to receive auth obj
+        feature_layer = FeatureLayer(arcgis_table.service_url)
+        # gis_auth = GIS('https://[user].maps.arcgis.com', '[user]', '[pwd]')
+        # feature_layer = FeatureLayer(arcgis_table.service_url, gis=gis_auth)
+
+        # See details here: https://esri.github.io/arcgis-python-api/apidoc/html/arcgis.features.toc.html#
+        featurecollection = json.loads(feature_layer.query(out_sr=4326).to_geojson)
+        rows = featurecollection['features']
+        # the 'properties' key contains the columns and their values(except geom, that is in the 'geometry' property)
+        new_arcgis_pcodes = [row['properties'][arcgis_table.pcode_col] for row in rows]
 
         remapped_pcode_pairs = []
-        if carto_table.remap_table_name:
-            remap_qry = 'select old_pcode::text, new_pcode::text from {}'.format(carto_table.remap_table_name)
-            remapped_pcode_pairs = sql_client.send(remap_qry)['rows']
+        if arcgis_table.remap_table_service_url:
+            # remap_feature_layer = FeatureLayer(arcgis_table.remap_table_service_url, gis=gis_auth)
+            # if the layer/table is public it does not have to receive auth obj
+            remap_feature_layer = FeatureLayer(arcgis_table.remap_table_service_url)
+            remap_rows = remap_feature_layer.query()
+            for row in remap_rows:
+                remapped_pcode_pairs.append({
+                    "old_pcode": row.get_value("old_pcode"),
+                    "new_pcode": row.get_value("new_pcode"),
+                })
 
     except RuntimeError as e:
         logger.exception("Cannot fetch location data from Arcgis")
         raise e
 
     remapped_old_pcodes = [remap_row['old_pcode'] for remap_row in remapped_pcode_pairs]
-    orphaned_pcodes = set(database_pcodes) - (set(new_carto_pcodes) | set(remapped_old_pcodes))
+    orphaned_pcodes = set(database_pcodes) - (set(new_arcgis_pcodes) | set(remapped_old_pcodes))
     orphaned_location_ids = Location.objects.all_locations().filter(p_code__in=list(orphaned_pcodes))
 
     # if location ids with no remap in use are found, do not continue the import
@@ -95,21 +107,21 @@ def import_arcgis_locations(arcgis_table_pk):
     arcgis_pcodes = [str(row['properties'][arcgis_table.pcode_col].strip()) for row in rows]
 
     remapped_old_pcodes = []
+    remap_table_pcode_pairs = []
     if arcgis_table.remap_table_service_url:
         try:
-            remapped_pcode_pairs = []
             remap_feature_layer = FeatureLayer(arcgis_table.remap_table_service_url)
             remap_rows = remap_feature_layer.query()
 
             for row in remap_rows:
-                remapped_pcode_pairs.append({
+                remap_table_pcode_pairs.append({
                     "old_pcode": row.get_value("old_pcode"),
                     "new_pcode": row.get_value("new_pcode"),
                 })
 
             # validate remap table contents
             remap_table_valid, remapped_old_pcodes, remap_new_pcodes = \
-                validate_remap_table(remapped_pcode_pairs, database_pcodes, arcgis_pcodes)
+                validate_remap_table(remap_table_pcode_pairs, database_pcodes, arcgis_pcodes)
 
             if not remap_table_valid:
                 return results
@@ -126,6 +138,37 @@ def import_arcgis_locations(arcgis_table_pk):
         Location.objects.all_locations().select_for_update().only('id')
 
         with Location.objects.disable_mptt_updates():
+            # REMAP locations
+            if arcgis_table.remap_table_service_url and len(remap_table_pcode_pairs) > 0:
+                # remapped_pcode_pairs ex.: {'old_pcode': 'ET0721', 'new_pcode': 'ET0714'}
+                remap_table_pcode_pairs = list(filter(
+                    filter_remapped_locations,
+                    remap_table_pcode_pairs
+                ))
+
+                aggregated_remapped_pcode_pairs = {}
+                for row in rows:
+                    arcgis_pcode = str(row['properties'][arcgis_table.pcode_col]).strip()
+                    for remap_row in remap_table_pcode_pairs:
+                        # create the location or update the existing based on type and code
+                        if arcgis_pcode == remap_row['new_pcode']:
+                            if arcgis_pcode not in aggregated_remapped_pcode_pairs:
+                                aggregated_remapped_pcode_pairs[arcgis_pcode] = []
+                            aggregated_remapped_pcode_pairs[arcgis_pcode].append(remap_row['old_pcode'])
+
+                # aggregated_remapped_pcode_pairs - {'new_pcode': ['old_pcode_1', old_pcode_2, ...], ...}
+                for remapped_new_pcode, remapped_old_pcodes in aggregated_remapped_pcode_pairs.items():
+                    remapped_location_id_pairs = remap_location(
+                        arcgis_table,
+                        remapped_new_pcode,
+                        remapped_old_pcodes
+                    )
+                    # crete remap history, and remap relevant models to the new location
+                    if remapped_location_id_pairs:
+                        save_location_remap_history(remapped_location_id_pairs)
+                        sites_remapped += 1
+
+            # UPDATE locations
             for row in rows:
                 arcgis_pcode = str(row['properties'][arcgis_table.pcode_col]).strip()
                 site_name = row['properties'][arcgis_table.name_col]
@@ -161,13 +204,6 @@ def import_arcgis_locations(arcgis_table_pk):
                         sites_not_added += 1
                         continue
 
-                # check if the new location should be remapped to an old location
-                remapped_old_pcodes = set()
-                if arcgis_table.remap_table_service_url and len(remapped_pcode_pairs) > 0:  # pragma: no-cover
-                    for remap_row in remapped_pcode_pairs:
-                        if arcgis_pcode == remap_row['new_pcode']:
-                            remapped_old_pcodes.add(remap_row['old_pcode'])
-
                 if row['geometry']['type'] == 'Polygon':
                     geom = MultiPolygon([Polygon(coord) for coord in row['geometry']['coordinates']])
                 elif row['geometry']['type'] == 'Point':
@@ -179,16 +215,12 @@ def import_arcgis_locations(arcgis_table_pk):
                     continue
 
                 # create the location or update the existing based on type and code
-                succ, sites_not_added, sites_created, sites_updated, sites_remapped, \
-                partial_results = create_location(
+                succ, sites_not_added, sites_created, sites_updated = create_location(
                     arcgis_pcode, arcgis_table.location_type,
-                    parent, parent_instance, remapped_old_pcodes,
+                    parent, parent_instance,
                     site_name, geom.json,
-                    sites_not_added, sites_created,
-                    sites_updated, sites_remapped
+                    sites_not_added, sites_created, sites_remapped
                 )
-
-                results += partial_results
 
             orphaned_old_pcodes = set(database_pcodes) - (set(arcgis_pcodes) | set(remapped_old_pcodes))
             if orphaned_old_pcodes:  # pragma: no-cover
@@ -200,45 +232,50 @@ def import_arcgis_locations(arcgis_table_pk):
     logger.warning("Table name {}: {} sites created, {} sites updated, {} sites remapped, {} sites skipped".format(
         arcgis_table.service_name, sites_created, sites_updated, sites_remapped, sites_not_added))
 
-    return results
-
 
 @celery.current_app.task
 def cleanup_arcgis_obsolete_locations(arcgis_table_pk):
     try:
-        carto_table = CartoDBTable.objects.get(pk=carto_table_pk)
-    except CartoDBTable.DoesNotExist as e:
-        logger.exception('Cannot retrieve CartoDBTable with pk: %s', carto_table_pk)
-        raise e
+        arcgis_table = ArcgisDBTable.objects.get(pk=arcgis_table_pk)
+    except ArcgisDBTable.DoesNotExist:
+        logger.exception('Cannot retrieve ArcgisDBTable with pk: %s', arcgis_table_pk)
+        return None
 
     database_pcodes = []
-    for row in Location.objects.all_locations().filter(gateway=carto_table.location_type).values('p_code'):
+    for row in Location.objects.all_locations().filter(gateway=arcgis_table.location_type).values('p_code'):
         database_pcodes.append(row['p_code'])
 
-    auth_client = LocationsCartoNoAuthClient(base_url="https://{}.carto.com/".format(carto_table.domain))
-    sql_client = SQLClient(auth_client)
-
+    # https://esri.github.io/arcgis-python-api/apidoc/html/arcgis.features.toc.html#
     try:
-        qry = sql_client.send('select array_agg({}) AS aggregated_pcodes from {}'.format(
-            carto_table.pcode_col,
-            carto_table.table_name,
-        ))
-        new_carto_pcodes = qry['rows'][0]['aggregated_pcodes'] \
-            if len(qry['rows']) > 0 and "aggregated_pcodes" in qry['rows'][0] else []
+        # if the layer/table is public it does not have to receive auth obj
+        feature_layer = FeatureLayer(arcgis_table.service_url)
+        # gis_auth = GIS('https://[user].maps.arcgis.com', '[user]', '[pwd]')
+        # feature_layer = FeatureLayer(arcgis_table.service_url, gis=gis_auth)
 
-        remapped_pcode_pairs = []
-        if carto_table.remap_table_name:
-            remap_qry = 'select old_pcode::text, new_pcode::text from {}'.format(carto_table.remap_table_name)
-            remapped_pcode_pairs = sql_client.send(remap_qry)['rows']
+        featurecollection = json.loads(feature_layer.query(out_sr=4326).to_geojson)
+        rows = featurecollection['features']
+    except RuntimeError:  # pragma: no-cover
+        logger.exception("Cannot fetch location data from Arcgis")
+        return None
 
-    except CartoException as e:
-        logger.exception("CartoDB exception occured during the data validation.")
-        raise e
+    new_arcgis_pcodes = [row['properties'][arcgis_table.pcode_col] for row in rows]
+
+    remapped_pcode_pairs = []
+    if arcgis_table.remap_table_service_url:
+        # remap_feature_layer = FeatureLayer(arcgis_table.remap_table_service_url, gis=gis_auth)
+        # if the layer/table is public it does not have to receive auth obj
+        remap_feature_layer = FeatureLayer(arcgis_table.remap_table_service_url)
+        remap_rows = remap_feature_layer.query()
+        for row in remap_rows:
+            remapped_pcode_pairs.append({
+                "old_pcode": row.get_value("old_pcode"),
+                "new_pcode": row.get_value("new_pcode"),
+            })
 
     remapped_pcodes = [remap_row['old_pcode'] for remap_row in remapped_pcode_pairs]
     remapped_pcodes += [remap_row['new_pcode'] for remap_row in remapped_pcode_pairs]
     # select for deletion those pcodes which are not present in the Carto datasets in any form
-    deleteable_pcodes = set(database_pcodes) - (set(new_carto_pcodes) | set(remapped_pcodes))
+    deleteable_pcodes = set(database_pcodes) - (set(new_arcgis_pcodes) | set(remapped_pcodes))
 
     # Do a few safety checks before we actually delete a location, like:
     # - ensure that the deleted locations doesn't have any children in the location tree

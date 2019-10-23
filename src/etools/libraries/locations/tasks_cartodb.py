@@ -1,6 +1,7 @@
 from django.db import transaction
 from django.db.models import Q
 from django.utils.encoding import force_text
+import time
 
 import celery
 from carto.exceptions import CartoException
@@ -12,7 +13,9 @@ from unicef_locations.models import CartoDBTable, Location, LocationRemapHistory
 from etools.libraries.locations.task_utils import (
     create_location,
     duplicate_pcodes_exist,
+    filter_remapped_locations,
     get_location_ids_in_use,
+    remap_location,
     save_location_remap_history,
     validate_remap_table,
 )
@@ -43,17 +46,17 @@ def validate_carto_locations_in_use(carto_table_pk):
         new_carto_pcodes = qry['rows'][0]['aggregated_pcodes'] \
             if len(qry['rows']) > 0 and "aggregated_pcodes" in qry['rows'][0] else []
 
-        remapped_pcode_pairs = []
+        remap_table_pcode_pairs = []
         if carto_table.remap_table_name:
             remap_qry = 'select old_pcode::text, new_pcode::text from {}'.format(carto_table.remap_table_name)
-            remapped_pcode_pairs = sql_client.send(remap_qry)['rows']
+            remap_table_pcode_pairs = sql_client.send(remap_qry)['rows']
 
     except CartoException as e:
         logger.exception("CartoDB exception occured during the data validation.")
         raise e
 
-    remapped_old_pcodes = [remap_row['old_pcode'] for remap_row in remapped_pcode_pairs]
-    orphaned_pcodes = set(database_pcodes) - (set(new_carto_pcodes) | set(remapped_old_pcodes))
+    remap_old_pcodes = [remap_row['old_pcode'] for remap_row in remap_table_pcode_pairs]
+    orphaned_pcodes = set(database_pcodes) - (set(new_carto_pcodes) | set(remap_old_pcodes))
     orphaned_location_ids = Location.objects.all_locations().filter(p_code__in=list(orphaned_pcodes))
 
     # if location ids with no remap in use are found, do not continue the import
@@ -123,9 +126,43 @@ def update_sites_from_cartodb(carto_table_pk):
             # should write lock the locations table until the tree is rebuilt
             Location.objects.all_locations().select_for_update().only('id')
 
-            # disable tree 'generation' during single row updates, rebuild the tree after.
-            # this should prevent errors happening (probably)due to invalid intermediary tree state
+            # disable tree 'generation' during single row updates, rebuild the tree after the rows are updated.
             with Location.objects.disable_mptt_updates():
+                # update locations in two steps: first remap, then update the data. The reason of this approach is that
+                # a remapped 'old' pcode can appear as a newly inserted pcode. Remapping before updating/inserting
+                # should prevent the problem of archiving locations when remapping and updating at the same time.
+
+                # REMAP locations
+                if carto_table.remap_table_name and len(remapped_pcode_pairs) > 0:
+                    # remapped_pcode_pairs ex.: {'old_pcode': 'ET0721', 'new_pcode': 'ET0714'}
+                    remapped_pcode_pairs = list(filter(
+                        filter_remapped_locations,
+                        remapped_pcode_pairs
+                    ))
+
+                    aggregated_remapped_pcode_pairs = {}
+                    for row in rows:
+                        carto_pcode = str(row[carto_table.pcode_col]).strip()
+                        for remap_row in remapped_pcode_pairs:
+                            # create the location or update the existing based on type and code
+                            if carto_pcode == remap_row['new_pcode']:
+                                if carto_pcode not in aggregated_remapped_pcode_pairs:
+                                    aggregated_remapped_pcode_pairs[carto_pcode] = []
+                                aggregated_remapped_pcode_pairs[carto_pcode].append(remap_row['old_pcode'])
+
+                    # aggregated_remapped_pcode_pairs - {'new_pcode': ['old_pcode_1', old_pcode_2, ...], ...}
+                    for remapped_new_pcode, remapped_old_pcodes in aggregated_remapped_pcode_pairs.items():
+                        remapped_location_id_pairs = remap_location(
+                            carto_table,
+                            remapped_new_pcode,
+                            remapped_old_pcodes
+                        )
+                        # crete remap history, and remap relevant models to the new location
+                        if remapped_location_id_pairs:
+                            save_location_remap_history(remapped_location_id_pairs)
+                            sites_remapped += 1
+
+                # UPDATE locations
                 for row in rows:
                     carto_pcode = str(row[carto_table.pcode_col]).strip()
                     site_name = row[carto_table.name_col]
@@ -162,28 +199,15 @@ def update_sites_from_cartodb(carto_table_pk):
                             sites_not_added += 1
                             continue
 
-                    # check if the Carto location should be remapped to an old location
-                    remapped_old_pcodes = set()
-                    if carto_table.remap_table_name and len(remapped_pcode_pairs) > 0:  # pragma: no-cover
-                        for remap_row in remapped_pcode_pairs:
-                            if carto_pcode == remap_row['new_pcode']:
-                                remapped_old_pcodes.add(remap_row['old_pcode'])
-
                     # create the location or update the existing based on type and code
-                    succ, sites_not_added, sites_created, sites_updated, sites_remapped, \
-                        partial_results = create_location(
-                            carto_pcode, carto_table,
-                            parent, parent_instance, remapped_old_pcodes,
-                            site_name, row,
-                            sites_not_added, sites_created,
-                            sites_updated, sites_remapped
-                        )
-
-                    # results += partial_results
-                    # crete remap history, and remap relevant etools enitites(interventions, travels, etc..)
-                    # from the remapped location, which is to be archived, to the new location
-                    if partial_results:
-                        save_location_remap_history(partial_results)
+                    success, sites_not_added, sites_created, sites_updated = create_location(
+                        carto_pcode, carto_table,
+                        parent, parent_instance,
+                        site_name, row,
+                        sites_not_added, sites_created, sites_updated
+                    )
+                    if success:
+                        logger.warning("Location level {} imported with success".format(carto_table.location_type))
 
                 orphaned_old_pcodes = set(database_pcodes) - (set(new_carto_pcodes) | set(remapped_old_pcodes))
                 if orphaned_old_pcodes:  # pragma: no-cover
@@ -226,17 +250,17 @@ def cleanup_carto_obsolete_locations(carto_table_pk):
         new_carto_pcodes = qry['rows'][0]['aggregated_pcodes'] \
             if len(qry['rows']) > 0 and "aggregated_pcodes" in qry['rows'][0] else []
 
-        remapped_pcode_pairs = []
+        remap_table_pcode_pairs = []
         if carto_table.remap_table_name:
             remap_qry = 'select old_pcode::text, new_pcode::text from {}'.format(carto_table.remap_table_name)
-            remapped_pcode_pairs = sql_client.send(remap_qry)['rows']
+            remap_table_pcode_pairs = sql_client.send(remap_qry)['rows']
 
     except CartoException as e:
         logger.exception("CartoDB exception occured during the data validation.")
         raise e
 
-    remapped_pcodes = [remap_row['old_pcode'] for remap_row in remapped_pcode_pairs]
-    remapped_pcodes += [remap_row['new_pcode'] for remap_row in remapped_pcode_pairs]
+    remapped_pcodes = [remap_row['old_pcode'] for remap_row in remap_table_pcode_pairs]
+    remapped_pcodes += [remap_row['new_pcode'] for remap_row in remap_table_pcode_pairs]
     # select for deletion those pcodes which are not present in the Carto datasets in any form
     deleteable_pcodes = set(database_pcodes) - (set(new_carto_pcodes) | set(remapped_pcodes))
 
