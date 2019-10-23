@@ -291,11 +291,10 @@ class OfficeViewSet(ExternalModuleFilterMixin,
     """
     serializer_class = OfficeSerializer
     permission_classes = (IsAuthenticatedOrReadOnly,)
-    queryset = Office.objects.all()
     module2filters = {'tpm': ['tpmactivity__tpm_visit__tpm_partner__staff_members__user', ]}
 
     def get_queryset(self):
-        qs = super().get_queryset()
+        qs = Office.objects.all()
         if "values" in self.request.query_params.keys():
             # Used for ghost data - filter in all(), and return straight away.
             try:
