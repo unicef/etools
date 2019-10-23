@@ -68,7 +68,7 @@ class BaseMonitoringActivityFactory(factory.DjangoModelFactory):
         if count:
             from etools.applications.field_monitoring.data_collection.tests.factories import ActivityQuestionFactory
 
-            ActivityQuestionFactory.create_batch(count, monitoring_activity=self)
+            ActivityQuestionFactory.create_batch(count, monitoring_activity=self, **kwargs)
 
 
 class DraftActivityFactory(BaseMonitoringActivityFactory):
