@@ -163,11 +163,11 @@ class ItineraryExportSerializer(ItinerarySerializer):
             "end_date",
             "traveller",
             "itinerary_items",
-            "activties",
+            "activities",
         ]
 
     def get_itinerary_items(self, obj):
-        return ", ".join([str(a) for a in obj.itinerary_items.all()])
+        return ", ".join([str(a) for a in obj.items.all()])
 
     def get_activities(self, obj):
         return ", ".join([str(a) for a in obj.activities.all()])

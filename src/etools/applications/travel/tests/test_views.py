@@ -6,6 +6,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from rest_framework import status
+from unicef_rest_export import renderers
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.travel.models import Itinerary, ItineraryStatusHistory
@@ -459,3 +460,35 @@ class TestItineraryViewSet(BaseTenantTestCase):
             )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(mock_send.call_count, 0)
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_export(self):
+        itinerary = ItineraryFactory()
+        export_urls = [
+            (
+                reverse("travel:itinerary-list-export-csv"),
+                renderers.ExportCSVRenderer,
+            ),
+            (
+                reverse(
+                    "travel:itinerary-single-export-csv",
+                    args=[itinerary.pk],
+                ),
+                renderers.ExportCSVRenderer,
+            ),
+            (
+                reverse("travel:itinerary-list-export-xlsx"),
+                renderers.ExportOpenXMLRenderer,
+            ),
+            (
+                reverse(
+                    "travel:itinerary-single-export-xlsx",
+                    args=[itinerary.pk],
+                ),
+                renderers.ExportOpenXMLRenderer,
+            ),
+        ]
+        for url, renderer in export_urls:
+            response = self.forced_auth_req("get", url, user=self.user)
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertTrue(isinstance(response.accepted_renderer, renderer))
