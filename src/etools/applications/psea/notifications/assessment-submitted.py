@@ -8,7 +8,7 @@ defaults = {
     'subject': 'PSEA Assessment for {{ partner.name }}',
 
     'content': strip_text("""
-    Dear assessor,
+    Dear Assessor,
 
     UNICEF is granting you access to the PSEA Module in eTools.
     Please refer below for additional information.
@@ -25,9 +25,9 @@ defaults = {
     {% extends "email-templates/base" %}
 
     {% block content %}
-    Dear {{ staff_member }},<br/><br/>
+    Dear Assessor,<br/><br/>
 
-    UNICEF is granting you access to the Financial Assurance Module in eTools.<br/>
+    UNICEF is granting you access to the PSEA Module in eTools.<br/>
     Please refer below for additional information.<br/><br/>
 
     Assessment Type: {{ assessment.assessment_type }}<br/>
