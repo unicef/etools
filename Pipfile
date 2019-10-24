@@ -71,13 +71,13 @@ tenant-schemas-celery = "==0.2.1"
 unicef_attachments = "==0.5.2"
 unicef-djangolib = "==0.5.3"
 # unicef-locations = "==1.7"
+unicef-locations = {git='https://github.com/unicef/unicef-locations', ref='feature/arcgis_import', editable = true}
 unicef_notification = "==0.2.1"
 unicef_restlib = "==0.4"
 unicef_snapshot = "==0.2.3"
 unicef-rest-export = "==0.5.3"
 xhtml2pdf = "==0.2.3"
 unicef-vision = "*"
-unicef-locations = {git='https://github.com/unicef/unicef-locations', ref='feature/arcgis_import', editable = true}
 
 [requires]
 python_version = "3.7"
