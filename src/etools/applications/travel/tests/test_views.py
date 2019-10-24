@@ -315,7 +315,7 @@ class TestItineraryViewSet(BaseTenantTestCase):
         itinerary = ItineraryFactory()
 
         mapping = [
-            #(init_status, request, expected_status)
+            # (init_status, request, expected_status)
             (
                 itinerary.STATUS_DRAFT,
                 "subreview",
