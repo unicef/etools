@@ -1,27 +1,24 @@
 import json
-import time
 
-import celery
-from celery.utils.log import get_task_logger
-from arcgis.gis import GIS
-from arcgis.features import FeatureCollection, Feature, FeatureLayer, FeatureSet
-from django.db import IntegrityError, transaction
+from django.contrib.gis.geos import MultiPolygon, Point, Polygon
+from django.db import transaction
 from django.db.models import Q
 from django.utils.encoding import force_text
-from django.contrib.gis.geos import Polygon, MultiPolygon, Point
 
+import celery
+from arcgis.features import FeatureLayer
+from celery.utils.log import get_task_logger
 from unicef_locations.models import ArcgisDBTable, Location, LocationRemapHistory
-from .task_utils import create_location, validate_remap_table, duplicate_pcodes_exist
+
 from etools.libraries.locations.task_utils import (
+    create_location,
+    duplicate_pcodes_exist,
+    filter_remapped_locations,
     get_location_ids_in_use,
     remap_location,
     save_location_remap_history,
     validate_remap_table,
-    duplicate_pcodes_exist,
-    filter_remapped_locations,
-    create_location
 )
-
 
 logger = get_task_logger(__name__)
 
@@ -41,6 +38,7 @@ def validate_arcgis_locations_in_use(arcgis_table_pk):
     try:
         # if the layer/table is public it does not have to receive auth obj
         feature_layer = FeatureLayer(arcgis_table.service_url)
+        # from arcgis.gis import GIS
         # gis_auth = GIS('https://[user].maps.arcgis.com', '[user]', '[pwd]')
         # feature_layer = FeatureLayer(arcgis_table.service_url, gis=gis_auth)
 

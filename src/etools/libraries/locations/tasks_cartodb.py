@@ -1,7 +1,8 @@
+import time
+
 from django.db import transaction
 from django.db.models import Q
 from django.utils.encoding import force_text
-import time
 
 import celery
 from carto.exceptions import CartoException

@@ -1,10 +1,8 @@
-import time
 from collections import defaultdict
 
 from django.db import IntegrityError
 from django.db.models import Count
 
-from carto.exceptions import CartoException
 from celery.utils.log import get_task_logger
 from unicef_locations.models import Location, LocationRemapHistory
 

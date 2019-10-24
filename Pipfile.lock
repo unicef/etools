@@ -1003,7 +1003,7 @@
         "unicef-locations": {
             "editable": true,
             "git": "https://github.com/unicef/unicef-locations",
-            "ref": "4c3221c754a9b0ac119c3523bb4fd1e0cdd3dea0"
+            "ref": "abea101e37a477cc8c3c1468c60c9dec0e07cc25"
         },
         "unicef-notification": {
             "hashes": [

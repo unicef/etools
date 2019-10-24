@@ -1,27 +1,20 @@
 from django.contrib.gis import admin
 from django.db import transaction
 
-from unicef_locations.admin import CartoDBTableAdmin, ArcgisDBTableAdmin
-from unicef_locations.models import (
-    CartoDBTable,
-    ArcgisDBTable,
-    Location,
-    LocationRemapHistory
-)
-
-from etools.libraries.locations.tasks_cartodb import (
-    validate_carto_locations_in_use,
-    update_sites_from_cartodb,
-    cleanup_carto_obsolete_locations,
-)
-from etools.libraries.locations.tasks_arcgis import (
-    validate_arcgis_locations_in_use,
-    import_arcgis_locations,
-    cleanup_arcgis_obsolete_locations,
-)
 from celery import chain
-from unicef_locations.admin import CartoDBTableAdmin
-from unicef_locations.models import CartoDBTable, Location, LocationRemapHistory
+from unicef_locations.admin import ArcgisDBTableAdmin, CartoDBTableAdmin
+from unicef_locations.models import ArcgisDBTable, CartoDBTable, Location, LocationRemapHistory
+
+from etools.libraries.locations.tasks_arcgis import (
+    cleanup_arcgis_obsolete_locations,
+    import_arcgis_locations,
+    validate_arcgis_locations_in_use,
+)
+from etools.libraries.locations.tasks_cartodb import (
+    cleanup_carto_obsolete_locations,
+    update_sites_from_cartodb,
+    validate_carto_locations_in_use,
+)
 
 
 class EtoolsCartoDBTableAdmin(CartoDBTableAdmin):
