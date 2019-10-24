@@ -98,6 +98,8 @@ def import_arcgis_locations(arcgis_table_pk):
     # https://esri.github.io/arcgis-python-api/apidoc/html/arcgis.features.toc.html#
     try:
         feature_layer = FeatureLayer(arcgis_table.service_url)
+        # gis_auth = GIS('https://[user].maps.arcgis.com', '[user]', '[pwd]')
+        # feature_layer = FeatureLayer(arcgis_table.service_url, gis=gis_auth)
         featurecollection = json.loads(feature_layer.query(out_sr=4326).to_geojson)
         rows = featurecollection['features']
     except RuntimeError:  # pragma: no-cover
@@ -205,9 +207,11 @@ def import_arcgis_locations(arcgis_table_pk):
                         continue
 
                 if row['geometry']['type'] == 'Polygon':
+                    # we need to manually cast/convert the geometry provided by the Arcgis API to MultiPolygon,
+                    # because it seems, at this point, they dont natively support the MultiPolygon type as we expect it
                     geom = MultiPolygon([Polygon(coord) for coord in row['geometry']['coordinates']])
                 elif row['geometry']['type'] == 'Point':
-                    # TODO test with real data
+                    # TODO: test with real data, we need a dataset that has Points on the 4th level
                     geom = Point(row['geometry']['coordinates'])
                 else:
                     logger.warning("Invalid Arcgis location type for: {}".format(arcgis_pcode))
@@ -216,10 +220,10 @@ def import_arcgis_locations(arcgis_table_pk):
 
                 # create the location or update the existing based on type and code
                 succ, sites_not_added, sites_created, sites_updated = create_location(
-                    arcgis_pcode, arcgis_table.location_type,
+                    arcgis_pcode, arcgis_table,
                     parent, parent_instance,
                     site_name, geom.json,
-                    sites_not_added, sites_created, sites_remapped
+                    sites_not_added, sites_created, sites_updated
                 )
 
             orphaned_old_pcodes = set(database_pcodes) - (set(arcgis_pcodes) | set(remapped_old_pcodes))

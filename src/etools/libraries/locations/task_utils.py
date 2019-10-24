@@ -127,11 +127,11 @@ def filter_remapped_locations(remap_row):
     return len(get_location_ids_in_use([old_location_id])) > 0
 
 
-def create_location(pcode, carto_table, parent, parent_instance, site_name, row,
+def create_location(pcode, datadef_table, parent, parent_instance, site_name, the_geom,
                     sites_not_added, sites_created, sites_updated):
     """
     :param pcode: pcode of the new/updated location
-    :param carto_table:
+    :param datadef_table: table that holds the imported datasets properties(CartoDBTable, , etc..)
     :param parent:
     :param parent_instance:
     :param site_name:
@@ -145,7 +145,7 @@ def create_location(pcode, carto_table, parent, parent_instance, site_name, row,
     logger.info('{}: {} ({})'.format(
         'Importing location',
         pcode,
-        carto_table.location_type.name
+        datadef_table.location_type.name
     ))
 
     location = None
@@ -156,7 +156,7 @@ def create_location(pcode, carto_table, parent, parent_instance, site_name, row,
 
     except Location.MultipleObjectsReturned:
         logger.warning("Multiple locations found for: {}, {} ({})".format(
-            carto_table.location_type, site_name, pcode
+            datadef_table.location_type, site_name, pcode
         ))
         sites_not_added += 1
         return False, sites_not_added, sites_created, sites_updated
@@ -168,20 +168,20 @@ def create_location(pcode, carto_table, parent, parent_instance, site_name, row,
         # try to create the location
         create_args = {
             'p_code': pcode,
-            'gateway': carto_table.location_type,
+            'gateway': datadef_table.location_type,
             'name': site_name
         }
         if parent and parent_instance:
             create_args['parent'] = parent_instance
 
-        if not row['the_geom']:
+        if not the_geom:
             sites_not_added += 1
             return False, sites_not_added, sites_created, sites_updated
 
-        if 'Point' in row['the_geom']:
-            create_args['point'] = row['the_geom']
+        if 'Point' in the_geom:
+            create_args['point'] = the_geom
         else:
-            create_args['geom'] = row['the_geom']
+            create_args['geom'] = the_geom
 
         try:
             location = Location.objects.create(**create_args)
@@ -194,13 +194,13 @@ def create_location(pcode, carto_table, parent, parent_instance, site_name, row,
         logger.info('{}: {} ({})'.format(
             'Added',
             location.name,
-            carto_table.location_type.name
+            datadef_table.location_type.name
         ))
 
         return True, sites_not_added, sites_created, sites_updated
 
     else:
-        if not row['the_geom']:
+        if not the_geom:
             return False, sites_not_added, sites_created, sites_updated
 
         # names can be updated for existing locations with the same code
@@ -208,10 +208,10 @@ def create_location(pcode, carto_table, parent, parent_instance, site_name, row,
         # TODO: re-confirm if this is not a problem. (assuming that every row in the new data is active)
         location.is_active = True
 
-        if 'Point' in row['the_geom']:
-            location.point = row['the_geom']
+        if 'Point' in the_geom:
+            location.point = the_geom
         else:
-            location.geom = row['the_geom']
+            location.geom = the_geom
 
         if parent and parent_instance:
             logger.info("Updating parent:{} for location {}".format(parent_instance, location))
@@ -229,7 +229,7 @@ def create_location(pcode, carto_table, parent, parent_instance, site_name, row,
         logger.info('{}: {} ({})'.format(
             'Updated',
             location.name,
-            carto_table.location_type.name
+            datadef_table.location_type.name
         ))
 
         return True, sites_not_added, sites_created, sites_updated

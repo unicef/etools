@@ -199,11 +199,15 @@ def update_sites_from_cartodb(carto_table_pk):
                             sites_not_added += 1
                             continue
 
+                    if not row['the_geom']:
+                        sites_not_added += 1
+                        continue
+
                     # create the location or update the existing based on type and code
                     success, sites_not_added, sites_created, sites_updated = create_location(
                         carto_pcode, carto_table,
                         parent, parent_instance,
-                        site_name, row,
+                        site_name, row['the_geom'],
                         sites_not_added, sites_created, sites_updated
                     )
                     if success:
