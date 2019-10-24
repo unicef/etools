@@ -1,6 +1,7 @@
 from etools_validator.exceptions import StateValidationError
 from etools_validator.utils import check_required_fields, check_rigid_fields
 from etools_validator.validation import CompleteValidation
+from unicef_notification.utils import send_notification_with_template
 
 from etools.applications.travel.permissions import ItineraryPermissions
 
@@ -92,3 +93,35 @@ class ItineraryValid(CompleteValidation):
 
 def itinerary_illegal_transition(itinerary):
     return False
+
+
+def itinerary_subreview(itinerary, old_instance=None, user=None):
+    send_notification_with_template(
+        recipients=[itinerary.supervisor.email],
+        template_name="travel/itinerary/subreview",
+        context=itinerary.get_mail_context(user)
+    )
+
+
+def itinerary_submitted(itinerary, old_instance=None, user=None):
+    send_notification_with_template(
+        recipients=[itinerary.supervisor.email],
+        template_name="travel/itinerary/submitted",
+        context=itinerary.get_mail_context(user)
+    )
+
+
+def itinerary_rejected(itinerary, old_instance=None, user=None):
+    send_notification_with_template(
+        recipients=[itinerary.traveller.email],
+        template_name="travel/itinerary/rejected",
+        context=itinerary.get_mail_context(user)
+    )
+
+
+def itinerary_approved(itinerary, old_instance=None, user=None):
+    send_notification_with_template(
+        recipients=[itinerary.traveller.email],
+        template_name="travel/itinerary/approved",
+        context=itinerary.get_mail_context(user)
+    )

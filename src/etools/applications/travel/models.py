@@ -15,7 +15,13 @@ from unicef_locations.models import Location
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.core.permissions import import_permissions
 from etools.applications.core.urlresolvers import build_frontend_url
-from etools.applications.travel.validation import itinerary_illegal_transition
+from etools.applications.travel.validation import (
+    itinerary_approved,
+    itinerary_illegal_transition,
+    itinerary_rejected,
+    itinerary_submitted,
+    itinerary_subreview,
+)
 from etools.applications.users.models import WorkspaceCounter
 
 
@@ -44,13 +50,18 @@ class Itinerary(TimeStampedModel):
         (STATUS_SUBMITTED, _('Submitted')),
         (STATUS_REJECTED, _('Rejected')),
         (STATUS_APPROVED, _('Approved')),
-        (STATUS_REVIEW, _('REVIEW')),
+        (STATUS_REVIEW, _('Review')),
         (STATUS_COMPLETED, _('Completed')),
         (STATUS_CANCELLED, _('Cancelled')),
     )
 
     AUTO_TRANSITIONS = {}
-    TRANSITION_SIDE_EFFECTS = {}
+    TRANSITION_SIDE_EFFECTS = {
+        STATUS_SUBMISSION_REVIEW: [itinerary_subreview],
+        STATUS_SUBMITTED: [itinerary_submitted],
+        STATUS_REJECTED: [itinerary_rejected],
+        STATUS_APPROVED: [itinerary_approved],
+    }
 
     reference_number = models.CharField(
         max_length=15,
