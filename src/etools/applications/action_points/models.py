@@ -78,6 +78,7 @@ class ActionPoint(TimeStampedModel):
         blank=True,
         null=True,
         on_delete=models.CASCADE,
+        related_name='action_points',
     )
     date_of_completion = MonitorField(verbose_name=_('Date Action Point Completed'), null=True, blank=True,
                                       default=None, monitor='status', when=[STATUSES.completed])
