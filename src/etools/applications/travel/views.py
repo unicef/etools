@@ -198,7 +198,7 @@ class ItineraryViewSet(
         return self._set_status(request, Itinerary.STATUS_REVIEW)
 
     @action(detail=True, methods=["patch"])
-    def completed(self, request, pk=None):
+    def complete(self, request, pk=None):
         return self._set_status(request, Itinerary.STATUS_COMPLETED)
 
     @action(detail=True, methods=["patch"])

@@ -315,24 +315,51 @@ class TestItineraryViewSet(BaseTenantTestCase):
         itinerary = ItineraryFactory()
 
         mapping = [
-            # (init_status, request, expected_status)
+            # (init_status, request, expected_status, email_sent)
             (
                 itinerary.STATUS_DRAFT,
                 "subreview",
                 itinerary.STATUS_SUBMISSION_REVIEW,
+                True,
             ),
             (
                 itinerary.STATUS_SUBMISSION_REVIEW,
                 "submit",
                 itinerary.STATUS_SUBMITTED,
+                True,
             ),
             (
                 itinerary.STATUS_SUBMITTED,
                 "approve",
                 itinerary.STATUS_APPROVED,
+                True,
+            ),
+            (
+                itinerary.STATUS_APPROVED,
+                "review",
+                itinerary.STATUS_REVIEW,
+                False,
+            ),
+            (
+                itinerary.STATUS_REVIEW,
+                "complete",
+                itinerary.STATUS_COMPLETED,
+                False
+            ),
+            (
+                itinerary.STATUS_SUBMISSION_REVIEW,
+                "cancel",
+                itinerary.STATUS_CANCELLED,
+                False,
+            ),
+            (
+                itinerary.STATUS_SUBMISSION_REVIEW,
+                "revise",
+                itinerary.STATUS_DRAFT,
+                False,
             ),
         ]
-        for init_status, request, expected_status in mapping:
+        for init_status, request, expected_status, email_sent in mapping:
             itinerary.status = init_status
             itinerary.save()
             self.assertEqual(itinerary.status, init_status)
@@ -351,7 +378,7 @@ class TestItineraryViewSet(BaseTenantTestCase):
             self.assertEqual(response.data.get("status"), expected_status)
             itinerary.refresh_from_db()
             self.assertEqual(itinerary.status, expected_status)
-            self.assertEqual(mock_send.call_count, 1)
+            self.assertEqual(mock_send.call_count, 1 if email_sent else 0)
 
             # no subsequent subreview requests allowed
             mock_send = Mock()
