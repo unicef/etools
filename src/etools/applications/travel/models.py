@@ -50,7 +50,7 @@ class Itinerary(TimeStampedModel):
         (STATUS_SUBMITTED, _('Submitted')),
         (STATUS_REJECTED, _('Rejected')),
         (STATUS_APPROVED, _('Approved')),
-        (STATUS_REVIEW, _('Review')),
+        (STATUS_REVIEW, _('REVIEW')),
         (STATUS_COMPLETED, _('Completed')),
         (STATUS_CANCELLED, _('Cancelled')),
     )
