@@ -1,17 +1,22 @@
 import datetime
 from unittest.mock import Mock, patch
 
+from django.core.management import call_command
 from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
 
+from factory import fuzzy
 from rest_framework import status
 from unicef_rest_export import renderers
 
+from etools.applications.action_points.tests.factories import ActionPointFactory
+from etools.applications.audit.models import UNICEFAuditFocalPoint
 from etools.applications.core.tests.cases import BaseTenantTestCase
-from etools.applications.travel.models import Itinerary, ItineraryStatusHistory
-from etools.applications.travel.tests.factories import ItineraryFactory
-from etools.applications.users.tests.factories import UserFactory
+from etools.applications.reports.tests.factories import SectionFactory
+from etools.applications.travel.models import Activity, Itinerary, ItineraryItem, ItineraryStatusHistory
+from etools.applications.travel.tests.factories import ActivityFactory, ItineraryFactory, ItineraryItemFactory
+from etools.applications.users.tests.factories import GroupFactory, UserFactory
 
 
 class TestItineraryViewSet(BaseTenantTestCase):
@@ -492,3 +497,209 @@ class TestItineraryViewSet(BaseTenantTestCase):
             response = self.forced_auth_req("get", url, user=self.user)
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             self.assertTrue(isinstance(response.accepted_renderer, renderer))
+
+
+class TestItineraryItemViewSet(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = UserFactory()
+        cls.itinerary = ItineraryFactory()
+
+    def test_list(self):
+        item = ItineraryItemFactory(itinerary=self.itinerary)
+        item_count = ItineraryItem.objects.filter(
+            itinerary=self.itinerary,
+        ).count()
+        response = self.forced_auth_req(
+            "get",
+            reverse("travel:item-list", args=[self.itinerary.pk]),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), item_count)
+        self.assertEqual(response.data[0]["id"], item.pk)
+
+    def test_post(self):
+        item_qs = ItineraryItem.objects.filter(
+            itinerary=self.itinerary,
+        )
+        self.assertFalse(item_qs.exists())
+        start_date = timezone.now().date()
+        end_date = (timezone.now() + datetime.timedelta(days=3)).date()
+        response = self.forced_auth_req(
+            "post",
+            reverse("travel:item-list", args=[self.itinerary.pk]),
+            user=self.user,
+            data={
+                "start_date": str(start_date),
+                "end_date": str(end_date),
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(item_qs.exists())
+        item = item_qs.first()
+        self.assertEqual(item.start_date, start_date)
+        self.assertEqual(item.end_date, end_date)
+
+    def test_get(self):
+        item = ItineraryItemFactory(itinerary=self.itinerary)
+        response = self.forced_auth_req(
+            "get",
+            reverse("travel:item-detail", args=[self.itinerary.pk, item.pk]),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["id"], item.pk)
+
+
+class TestActivityViewSet(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = UserFactory()
+        cls.itinerary = ItineraryFactory()
+
+    def test_list(self):
+        activity = ActivityFactory(itinerary=self.itinerary)
+        activity_count = Activity.objects.filter(
+            itinerary=self.itinerary,
+        ).count()
+        response = self.forced_auth_req(
+            "get",
+            reverse("travel:activity-list", args=[self.itinerary.pk]),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), activity_count)
+        self.assertEqual(response.data[0]["id"], activity.pk)
+
+    def test_post(self):
+        activity_qs = Activity.objects.filter(
+            itinerary=self.itinerary,
+        )
+        self.assertFalse(activity_qs.exists())
+        date = timezone.now().date()
+        response = self.forced_auth_req(
+            "post",
+            reverse("travel:activity-list", args=[self.itinerary.pk]),
+            user=self.user,
+            data={
+                "activity_date": str(date),
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(activity_qs.exists())
+        activity = activity_qs.first()
+        self.assertEqual(activity.activity_date, date)
+
+    def test_get(self):
+        activity = ActivityFactory(itinerary=self.itinerary)
+        response = self.forced_auth_req(
+            "get",
+            reverse(
+                "travel:activity-detail",
+                args=[self.itinerary.pk, activity.pk],
+            ),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["id"], activity.pk)
+
+
+class TestActivityActionPointViewSet(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        call_command('update_travel_permissions', verbosity=0)
+        cls.user = UserFactory()
+        cls.focal_user = UserFactory()
+        cls.focal_user.groups.add(
+            GroupFactory(name=UNICEFAuditFocalPoint.name),
+        )
+        cls.unicef_user = UserFactory()
+        cls.unicef_user.groups.add(
+            GroupFactory(name="UNICEF User"),
+        )
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_action_point_added(self):
+        itinerary = ItineraryFactory()
+        activity = ActivityFactory(itinerary=itinerary)
+        self.assertEqual(activity.action_points.count(), 0)
+
+        response = self.forced_auth_req(
+            'post',
+            reverse(
+                "travel:action-points-list",
+                args=[itinerary.pk, activity.pk],
+            ),
+            user=self.user,
+            data={
+                'description': fuzzy.FuzzyText(length=100).fuzz(),
+                'due_date': fuzzy.FuzzyDate(
+                    timezone.now().date(),
+                    timezone.now().date() + datetime.timedelta(days=5),
+                ).fuzz(),
+                'assigned_to': self.unicef_user.pk,
+                'office': self.focal_user.profile.office.pk,
+                'section': SectionFactory().pk,
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(activity.action_points.count(), 1)
+        self.assertIsNotNone(activity.action_points.first().office)
+
+    def _test_action_point_editable(self, action_point, user, editable=True):
+        activity = action_point.travel
+
+        response = self.forced_auth_req(
+            'options',
+            reverse(
+                "travel:action-points-detail",
+                args=[activity.itinerary.pk, activity.pk, action_point.pk],
+            ),
+            user=user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        if editable:
+            self.assertIn('PUT', response.data['actions'].keys())
+            self.assertCountEqual(
+                sorted([
+                    'assigned_to',
+                    'high_priority',
+                    'due_date',
+                    'description',
+                    'office',
+                    'section',
+                ]),
+                sorted(response.data['actions']['PUT'].keys())
+            )
+        else:
+            self.assertNotIn('PUT', response.data['actions'].keys())
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_action_point_editable_by_focal_user(self):
+        activity = ActivityFactory()
+        action_point = ActionPointFactory(
+            travel=activity,
+            status='pre_completed',
+        )
+
+        self._test_action_point_editable(
+            action_point,
+            self.focal_user,
+            editable=False,
+        )
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_action_point_readonly_by_unicef_user(self):
+        activity = ActivityFactory()
+        action_point = ActionPointFactory(
+            travel=activity,
+            status='pre_completed',
+        )
+
+        self._test_action_point_editable(
+            action_point,
+            self.unicef_user,
+            editable=False,
+        )

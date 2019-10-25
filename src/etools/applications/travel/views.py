@@ -1,4 +1,5 @@
 from django.db import transaction
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
 
 from django_filters.rest_framework import DjangoFilterBackend
@@ -22,14 +23,16 @@ from etools.applications.action_points.conditions import (
 from etools.applications.permissions2.conditions import ObjectStatusCondition
 from etools.applications.permissions2.drf_permissions import NestedPermission
 from etools.applications.permissions2.metadata import PermissionBasedMetadata
-from etools.applications.permissions2.views import PermittedSerializerMixin
+from etools.applications.permissions2.views import PermissionContextMixin, PermittedSerializerMixin
 from etools.applications.travel.conditions import TravelModuleCondition
-from etools.applications.travel.models import ActivityActionPoint, Itinerary
+from etools.applications.travel.models import Activity, ActivityActionPoint, Itinerary, ItineraryItem
 from etools.applications.travel.renderers import ActivityActionPointCSVRenderer
 from etools.applications.travel.serializers import (
     ActivityActionPointExportSerializer,
     ActivityActionPointSerializer,
+    ActivitySerializer,
     ItineraryExportSerializer,
+    ItineraryItemSerializer,
     ItinerarySerializer,
     ItineraryStatusHistorySerializer,
     ItineraryStatusSerializer,
@@ -270,6 +273,67 @@ class ItineraryViewSet(
                 self.get_object().reference_number, timezone.now().date()
             )
         })
+
+
+class ItineraryItemViewSet(
+        SafeTenantViewSetMixin,
+        mixins.ListModelMixin,
+        mixins.CreateModelMixin,
+        mixins.RetrieveModelMixin,
+        mixins.UpdateModelMixin,
+        mixins.DestroyModelMixin,
+        viewsets.GenericViewSet,
+):
+    permission_classes = [IsAuthenticated, ]
+    queryset = ItineraryItem.objects.all()
+    serializer_class = ItineraryItemSerializer
+
+    def get_parent_filter(self):
+        parent = self.get_parent_object()
+        if not parent:
+            return {}
+
+        return {
+            'itinerary': parent
+        }
+
+    def get_object(self):
+        queryset = self.get_queryset()
+        return get_object_or_404(
+            queryset,
+            itinerary__pk=self.kwargs.get("nested_1_pk"),
+        )
+
+
+class ActivityViewSet(
+        SafeTenantViewSetMixin,
+        mixins.ListModelMixin,
+        mixins.CreateModelMixin,
+        mixins.RetrieveModelMixin,
+        mixins.UpdateModelMixin,
+        mixins.DestroyModelMixin,
+        PermissionContextMixin,
+        viewsets.GenericViewSet,
+):
+    permission_classes = [IsAuthenticated, ]
+    queryset = Activity.objects.all()
+    serializer_class = ActivitySerializer
+
+    def get_parent_filter(self):
+        parent = self.get_parent_object()
+        if not parent:
+            return {}
+
+        return {
+            'itinerary': parent
+        }
+
+    def get_object(self):
+        queryset = self.get_queryset()
+        return get_object_or_404(
+            queryset,
+            itinerary__pk=self.kwargs.get("nested_1_pk"),
+        )
 
 
 class ActivityActionPointViewSet(

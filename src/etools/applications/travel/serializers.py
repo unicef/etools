@@ -11,7 +11,13 @@ from etools.applications.action_points.serializers import ActionPointBaseSeriali
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
 from etools.applications.reports.serializers.v1 import SectionSerializer
-from etools.applications.travel.models import ActivityActionPoint, Itinerary, ItineraryStatusHistory
+from etools.applications.travel.models import (
+    Activity,
+    ActivityActionPoint,
+    Itinerary,
+    ItineraryItem,
+    ItineraryStatusHistory,
+)
 from etools.applications.travel.permissions import ItineraryPermissions
 from etools.applications.users.serializers import OfficeSerializer
 
@@ -203,6 +209,32 @@ class ItineraryStatusHistorySerializer(serializers.ModelSerializer):
         return data
 
 
+class ItineraryItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ItineraryItem
+        fields = "__all__"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if hasattr(self, "initial_data"):
+            self.initial_data["itinerary"] = self._context.get(
+                "request"
+            ).parser_context["kwargs"].get("nested_1_pk")
+
+
+class ActivitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Activity
+        fields = "__all__"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if hasattr(self, "initial_data"):
+            self.initial_data["itinerary"] = self._context.get(
+                "request"
+            ).parser_context["kwargs"].get("nested_1_pk")
+
+
 class ActivityActionPointSerializer(
         PermissionsBasedSerializerMixin,
         ActionPointBaseSerializer,
@@ -250,12 +282,11 @@ class ActivityActionPointSerializer(
         return self.get_user() == obj.assigned_to
 
     def create(self, validated_data):
-        itinerary_pk = self.context[
+        activity_pk = self.context[
             "request"
         ].parser_context["kwargs"].get("travel_pk")
-        itinerary = Itinerary.objects.get(pk=itinerary_pk)
-        validated_data['travel'] = itinerary
-        validated_data.update({'partner_id': itinerary.partner_id})
+        activity = Activity.objects.get(pk=activity_pk)
+        validated_data['travel'] = activity
         return super().create(validated_data)
 
 
