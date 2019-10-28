@@ -1,6 +1,7 @@
 import datetime
 from unittest.mock import Mock, patch
 
+from django.contrib.contenttypes.models import ContentType
 from django.core.management import call_command
 from django.test import override_settings
 from django.urls import reverse
@@ -11,11 +12,17 @@ from rest_framework import status
 from unicef_rest_export import renderers
 
 from etools.applications.action_points.tests.factories import ActionPointFactory
+from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.audit.models import UNICEFAuditFocalPoint
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.reports.tests.factories import SectionFactory
-from etools.applications.travel.models import Activity, Itinerary, ItineraryItem, ItineraryStatusHistory
-from etools.applications.travel.tests.factories import ActivityFactory, ItineraryFactory, ItineraryItemFactory
+from etools.applications.travel.models import Activity, Itinerary, ItineraryItem, ItineraryStatusHistory, Report
+from etools.applications.travel.tests.factories import (
+    ActivityFactory,
+    ItineraryFactory,
+    ItineraryItemFactory,
+    ReportFactory,
+)
 from etools.applications.users.tests.factories import GroupFactory, UserFactory
 
 
@@ -703,3 +710,152 @@ class TestActivityActionPointViewSet(BaseTenantTestCase):
             self.unicef_user,
             editable=False,
         )
+
+
+class TestReportViewSet(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = UserFactory()
+        cls.itinerary = ItineraryFactory()
+        cls.file_type = AttachmentFileTypeFactory(code="travel_report_docs")
+        cls.content_type = ContentType.objects.get_for_model(Report)
+
+    def test_list(self):
+        report = ReportFactory(itinerary=self.itinerary)
+        report_count = Report.objects.filter(
+            itinerary=self.itinerary,
+        ).count()
+        response = self.forced_auth_req(
+            "get",
+            reverse("travel:report-list", args=[self.itinerary.pk]),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), report_count)
+        self.assertEqual(response.data[0]["id"], report.pk)
+
+    def test_post(self):
+        report_qs = Report.objects.filter(itinerary=self.itinerary)
+        self.assertFalse(report_qs.exists())
+        narrative = "A good trip"
+        response = self.forced_auth_req(
+            "post",
+            reverse("travel:report-list", args=[self.itinerary.pk]),
+            user=self.user,
+            data={
+                "narrative": narrative,
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(report_qs.exists())
+        report = report_qs.first()
+        self.assertEqual(report.narrative, narrative)
+
+    def test_post_attachments(self):
+        attachment_1 = AttachmentFactory(file="sample_1.pdf")
+        attachment_2 = AttachmentFactory(file="sample_2.pdf")
+        report_qs = Report.objects.filter(itinerary=self.itinerary)
+        self.assertFalse(report_qs.exists())
+        narrative = "A good trip"
+        response = self.forced_auth_req(
+            "post",
+            reverse("travel:report-list", args=[self.itinerary.pk]),
+            user=self.user,
+            data={
+                "narrative": narrative,
+                "attachments": [
+                    {"id": attachment_1.pk, "file_type": self.file_type.pk},
+                    {"id": attachment_2.pk, "file_type": self.file_type.pk},
+                ],
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(report_qs.exists())
+        report = report_qs.first()
+        self.assertEqual(report.narrative, narrative)
+        self.assertEqual(len(report.attachments.all()), 2)
+
+    def test_get(self):
+        report = ReportFactory(itinerary=self.itinerary)
+        response = self.forced_auth_req(
+            "get",
+            reverse(
+                "travel:report-detail",
+                args=[self.itinerary.pk, report.pk],
+            ),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["id"], report.pk)
+
+    def test_put(self):
+        report = ReportFactory(
+            itinerary=self.itinerary,
+            narrative="Initial narractive",
+        )
+        narrative = "A good trip"
+        response = self.forced_auth_req(
+            "put",
+            reverse(
+                "travel:report-detail",
+                args=[self.itinerary.pk, report.pk],
+            ),
+            user=self.user,
+            data={
+                "narrative": narrative,
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        report.refresh_from_db()
+        self.assertEqual(report.narrative, narrative)
+
+    def test_patch(self):
+        report = ReportFactory(itinerary=self.itinerary)
+        attachment_1 = AttachmentFactory(
+            file="sample_1.pdf",
+            file_type=self.file_type,
+            object_id=report.pk,
+            content_type=self.content_type,
+            code="travel_report_docs",
+        )
+        attachment_2 = AttachmentFactory(
+            file="sample_2.pdf",
+            file_type=self.file_type,
+        )
+        self.assertEqual(len(report.attachments.all()), 1)
+
+        response = self.forced_auth_req(
+            "patch",
+            reverse(
+                "travel:report-detail",
+                args=[self.itinerary.pk, report.pk],
+            ),
+            user=self.user,
+            data={
+                "attachments": [
+                    {"id": attachment_1.pk, "file_type": self.file_type.pk},
+                    {"id": attachment_2.pk, "file_type": self.file_type.pk},
+                ]
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        report.refresh_from_db()
+        attachments = list(report.attachments.all())
+        self.assertEqual(len(attachments), 2)
+        self.assertIn(attachment_1, attachments)
+        self.assertIn(attachment_2, attachments)
+
+    def test_delete(self):
+        report = ReportFactory(itinerary=self.itinerary)
+        report_qs = Report.objects.filter(pk=report.pk)
+        self.assertTrue(report_qs.exists())
+        response = self.forced_auth_req(
+            "delete",
+            reverse(
+                "travel:report-detail",
+                args=[self.itinerary.pk, report.pk],
+            ),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(report_qs.exists())

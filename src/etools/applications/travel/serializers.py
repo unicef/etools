@@ -1,5 +1,6 @@
 from copy import copy
 
+from django.contrib.contenttypes.models import ContentType
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
@@ -17,6 +18,7 @@ from etools.applications.travel.models import (
     Itinerary,
     ItineraryItem,
     ItineraryStatusHistory,
+    Report,
 )
 from etools.applications.travel.permissions import ItineraryPermissions
 from etools.applications.users.serializers import OfficeSerializer
@@ -332,5 +334,87 @@ class ReportSerializer(serializers.ModelSerializer):
     attachments = ReportAttachmentSerializer(many=True, required=False)
 
     class Meta:
+        model = Report
         fields = '__all__'
-        read_only_fields = ["itinerary"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if hasattr(self, "initial_data"):
+            self.initial_data["itinerary"] = self._context.get(
+                "request"
+            ).parser_context["kwargs"].get("nested_1_pk")
+
+    def _set_attachments(self, report, attachment_data):
+        content_type = ContentType.objects.get_for_model(Report)
+        current = list(Attachment.objects.filter(
+            object_id=report.pk,
+            content_type=content_type,
+        ).all())
+        used = []
+        for attachment in attachment_data:
+            for initial in self.initial_data.get("attachments"):
+                pk = initial["id"]
+                current = [a for a in current if a.pk != pk]
+                file_type = initial.get("file_type")
+                if pk not in used and file_type == attachment["file_type"].pk:
+                    attachment = Attachment.objects.filter(pk=pk).update(
+                        file_type=attachment["file_type"],
+                        code="travel_report_docs",
+                        object_id=report.pk,
+                        content_type=content_type,
+                    )
+                    used.append(pk)
+                    break
+        for attachment in current:
+            attachment.delete()
+
+    def create(self, validated_data):
+        attachment_data = None
+        if "attachments" in validated_data:
+            attachment_data = validated_data.pop("attachments")
+
+        report = Report.objects.create(**validated_data)
+
+        if attachment_data is not None:
+            self._set_attachments(report, attachment_data)
+        return report
+
+    def update(self, instance, validated_data):
+        attachment_data = None
+        if "attachments" in validated_data:
+            attachment_data = validated_data.pop("attachments")
+
+        instance.narrative = validated_data.get(
+            "narrative",
+            instance.narrative,
+        )
+        instance.save()
+
+        if attachment_data is not None:
+            self._set_attachments(instance, attachment_data)
+        return instance
+
+
+class ReportAttachmentSerializer(serializers.ModelSerializer):
+    url = serializers.SerializerMethodField()
+    file_type = FileTypeModelChoiceField(
+        label=_("Document Type"),
+        queryset=FileType.objects.filter(code="travel_report_docs"),
+    )
+
+    class Meta:
+        model = Attachment
+        fields = ("id", "url", "file_type", "created")
+
+    def update(self, instance, validated_data):
+        validated_data["code"] = "travel_report_docs"
+        return super().update(instance, validated_data)
+
+    def get_url(self, obj):
+        if obj.file:
+            url = obj.file.url
+            request = self.context.get("request", None)
+            if request is not None:
+                return request.build_absolute_uri(url)
+            return url
+        return ""

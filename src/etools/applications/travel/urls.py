@@ -38,10 +38,19 @@ action_points_api.register(
     base_name='action-points',
 )
 
+report_api = NestedComplexRouter(root_api, r'itinerary')
+report_api.register(
+    r'report',
+    views.ReportViewSet,
+    base_name='report',
+)
+
+
 app_name = 'travel'
 urlpatterns = [
     path('', include(root_api.urls)),
     path('', include(itinerary_item_api.urls)),
     path('', include(activity_api.urls)),
     path('', include(action_points_api.urls)),
+    path('', include(report_api.urls)),
 ]

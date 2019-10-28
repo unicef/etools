@@ -1,6 +1,8 @@
+from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django.utils.translation import ugettext_lazy as _
 
 from django_filters.rest_framework import DjangoFilterBackend
 from etools_validator.mixins import ValidatorViewMixin
@@ -10,6 +12,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from unicef_attachments.models import Attachment
 from unicef_rest_export.renderers import ExportCSVRenderer, ExportOpenXMLRenderer
 from unicef_rest_export.views import ExportMixin
 from unicef_restlib.pagination import DynamicPageNumberPagination
@@ -25,7 +28,7 @@ from etools.applications.permissions2.drf_permissions import NestedPermission
 from etools.applications.permissions2.metadata import PermissionBasedMetadata
 from etools.applications.permissions2.views import PermissionContextMixin, PermittedSerializerMixin
 from etools.applications.travel.conditions import TravelModuleCondition
-from etools.applications.travel.models import Activity, ActivityActionPoint, Itinerary, ItineraryItem
+from etools.applications.travel.models import Activity, ActivityActionPoint, Itinerary, ItineraryItem, Report
 from etools.applications.travel.renderers import ActivityActionPointCSVRenderer
 from etools.applications.travel.serializers import (
     ActivityActionPointExportSerializer,
@@ -36,6 +39,8 @@ from etools.applications.travel.serializers import (
     ItinerarySerializer,
     ItineraryStatusHistorySerializer,
     ItineraryStatusSerializer,
+    ReportAttachmentSerializer,
+    ReportSerializer,
 )
 from etools.applications.travel.validation import ItineraryValid
 
@@ -382,3 +387,66 @@ class ActivityActionPointViewSet(
                 self.get_root_object().reference_number, timezone.now().date()
             )
         })
+
+
+class ReportViewSet(
+        SafeTenantViewSetMixin,
+        mixins.ListModelMixin,
+        mixins.CreateModelMixin,
+        mixins.RetrieveModelMixin,
+        mixins.UpdateModelMixin,
+        mixins.DestroyModelMixin,
+        viewsets.GenericViewSet,
+):
+    permission_classes = [IsAuthenticated, ]
+    queryset = Report.objects.all()
+    serializer_class = ReportSerializer
+
+
+class ReportAttachmentsViewSet(
+        SafeTenantViewSetMixin,
+        mixins.ListModelMixin,
+        mixins.CreateModelMixin,
+        mixins.RetrieveModelMixin,
+        mixins.UpdateModelMixin,
+        mixins.DestroyModelMixin,
+        NestedViewSetMixin,
+        viewsets.GenericViewSet,
+):
+    serializer_class = ReportAttachmentSerializer
+    queryset = Attachment.objects.all()
+    permission_classes = [IsAuthenticated, ]
+
+    def get_view_name(self):
+        return _('Related Documents')
+
+    def get_parent_object(self):
+        return get_object_or_404(
+            Report,
+            assessment__pk=self.kwargs.get("nested_1_pk"),
+            indicator__pk=self.kwargs.get("nested_2_pk"),
+        )
+
+    def get_parent_filter(self):
+        parent = self.get_parent_object()
+        if not parent:
+            return {'code': 'travel_report_docs'}
+
+        return {
+            'content_type_id': ContentType.objects.get_for_model(Report).pk,
+            'object_id': parent.pk,
+        }
+
+    def get_object(self, pk=None):
+        if pk:
+            return self.queryset.get(pk=pk)
+        return super().get_object()
+
+    def perform_create(self, serializer):
+        serializer.instance = self.get_object(
+            pk=serializer.initial_data.get("id")
+        )
+        serializer.save(content_object=self.get_parent_object())
+
+    def perform_update(self, serializer):
+        serializer.save(content_object=self.get_parent_object())
