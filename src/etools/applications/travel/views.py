@@ -423,8 +423,7 @@ class ReportAttachmentsViewSet(
     def get_parent_object(self):
         return get_object_or_404(
             Report,
-            assessment__pk=self.kwargs.get("nested_1_pk"),
-            indicator__pk=self.kwargs.get("nested_2_pk"),
+            itinerary__pk=self.kwargs.get("nested_1_pk"),
         )
 
     def get_parent_filter(self):

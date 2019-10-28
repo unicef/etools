@@ -9,6 +9,7 @@ from django.utils import timezone
 
 from factory import fuzzy
 from rest_framework import status
+from unicef_attachments.models import Attachment
 from unicef_rest_export import renderers
 
 from etools.applications.action_points.tests.factories import ActionPointFactory
@@ -859,3 +860,105 @@ class TestReportViewSet(BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(report_qs.exists())
+
+
+class TestReportAttachmentViewSet(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.file_type = AttachmentFileTypeFactory(code="travel_report_docs")
+        cls.itinerary = ItineraryFactory()
+        cls.report = ReportFactory(itinerary=cls.itinerary)
+        cls.user = UserFactory()
+        cls.content_type = ContentType.objects.get_for_model(Report)
+
+    def test_list(self):
+        attachment = AttachmentFactory(
+            file="sample.pdf",
+            file_type=self.file_type,
+            content_type=self.content_type,
+            object_id=self.report.pk,
+            code="travel_report_docs",
+        )
+        self.report.attachments.add(attachment)
+        attachment_count = self.report.attachments.count()
+        response = self.forced_auth_req(
+            "get",
+            reverse(
+                "travel:report-attachments-list",
+                args=[self.itinerary.pk, self.report.pk],
+            ),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), attachment_count)
+        self.assertEqual(response.data[0]["id"], attachment.pk)
+
+    def test_post(self):
+        attachment = AttachmentFactory(file="sample.pdf")
+        self.assertIsNone(attachment.object_id)
+        self.assertNotEqual(attachment.code, "travel_report_docs")
+
+        response = self.forced_auth_req(
+            "post",
+            reverse(
+                "travel:report-attachments-list",
+                args=[self.itinerary.pk, self.report.pk],
+            ),
+            user=self.user,
+            data={
+                "id": attachment.pk,
+                "file_type": self.file_type.pk,
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        attachment.refresh_from_db()
+        self.assertEqual(attachment.object_id, self.report.pk)
+        self.assertEqual(attachment.code, "travel_report_docs")
+
+    def test_patch(self):
+        attachment = AttachmentFactory(
+            file="sample.pdf",
+            file_type=self.file_type,
+            code="travel_report_docs",
+            content_type=self.content_type,
+            object_id=self.report.pk,
+        )
+        file_type = AttachmentFileTypeFactory(code="travel_report_docs")
+
+        response = self.forced_auth_req(
+            "patch",
+            reverse(
+                "travel:report-attachments-detail",
+                args=[self.itinerary.pk, self.report.pk, attachment.pk],
+            ),
+            user=self.user,
+            data={
+                "id": attachment.pk,
+                "file_type": file_type.pk,
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        attachment.refresh_from_db()
+        self.assertEqual(attachment.file_type, file_type)
+
+    def test_delete(self):
+        attachment = AttachmentFactory(
+            file="sample.pdf",
+            file_type=self.file_type,
+            code="travel_report_docs",
+            content_type=self.content_type,
+            object_id=self.report.pk,
+        )
+        attachment_qs = Attachment.objects.filter(pk=attachment.pk)
+        self.assertTrue(attachment_qs.exists())
+
+        response = self.forced_auth_req(
+            "delete",
+            reverse(
+                "travel:report-attachments-detail",
+                args=[self.itinerary.pk, self.report.pk, attachment.pk],
+            ),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(attachment_qs.exists())

@@ -317,7 +317,7 @@ class ReportAttachmentSerializer(serializers.ModelSerializer):
         fields = ("id", "url", "file_type", "created")
 
     def update(self, instance, validated_data):
-        validated_data["code"] = "travel_docs"
+        validated_data["code"] = "travel_report_docs"
         return super().update(instance, validated_data)
 
     def get_url(self, obj):
@@ -393,28 +393,3 @@ class ReportSerializer(serializers.ModelSerializer):
         if attachment_data is not None:
             self._set_attachments(instance, attachment_data)
         return instance
-
-
-class ReportAttachmentSerializer(serializers.ModelSerializer):
-    url = serializers.SerializerMethodField()
-    file_type = FileTypeModelChoiceField(
-        label=_("Document Type"),
-        queryset=FileType.objects.filter(code="travel_report_docs"),
-    )
-
-    class Meta:
-        model = Attachment
-        fields = ("id", "url", "file_type", "created")
-
-    def update(self, instance, validated_data):
-        validated_data["code"] = "travel_report_docs"
-        return super().update(instance, validated_data)
-
-    def get_url(self, obj):
-        if obj.file:
-            url = obj.file.url
-            request = self.context.get("request", None)
-            if request is not None:
-                return request.build_absolute_uri(url)
-            return url
-        return ""

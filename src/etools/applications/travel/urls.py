@@ -45,6 +45,13 @@ report_api.register(
     base_name='report',
 )
 
+report_attachments_api = NestedComplexRouter(report_api, r'report')
+report_attachments_api.register(
+    r'attachments',
+    views.ReportAttachmentsViewSet,
+    base_name='report-attachments',
+)
+
 
 app_name = 'travel'
 urlpatterns = [
@@ -53,4 +60,5 @@ urlpatterns = [
     path('', include(activity_api.urls)),
     path('', include(action_points_api.urls)),
     path('', include(report_api.urls)),
+    path('', include(report_attachments_api.urls)),
 ]
