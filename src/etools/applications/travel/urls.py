@@ -20,6 +20,13 @@ itinerary_item_api.register(
     base_name='item',
 )
 
+itinerary_attachments_api = NestedComplexRouter(root_api, r'itinerary')
+itinerary_attachments_api.register(
+    r'attachments',
+    views.ItineraryAttachmentsViewSet,
+    base_name='itinerary-attachments',
+)
+
 activity_api = NestedComplexRouter(root_api, r'itinerary')
 activity_api.register(
     r'activity',
@@ -57,6 +64,7 @@ app_name = 'travel'
 urlpatterns = [
     path('', include(root_api.urls)),
     path('', include(itinerary_item_api.urls)),
+    path('', include(itinerary_attachments_api.urls)),
     path('', include(activity_api.urls)),
     path('', include(action_points_api.urls)),
     path('', include(report_api.urls)),

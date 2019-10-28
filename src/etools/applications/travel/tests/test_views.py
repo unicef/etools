@@ -560,6 +560,107 @@ class TestItineraryItemViewSet(BaseTenantTestCase):
         self.assertEqual(response.data["id"], item.pk)
 
 
+class TestItineraryAttachmentViewSet(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.file_type = AttachmentFileTypeFactory(code="travel_docs")
+        cls.itinerary = ItineraryFactory()
+        cls.user = UserFactory()
+        cls.content_type = ContentType.objects.get_for_model(Itinerary)
+
+    def test_list(self):
+        attachment = AttachmentFactory(
+            file="sample.pdf",
+            file_type=self.file_type,
+            content_type=self.content_type,
+            object_id=self.itinerary.pk,
+            code="travel_docs",
+        )
+        self.itinerary.attachments.add(attachment)
+        attachment_count = self.itinerary.attachments.count()
+        response = self.forced_auth_req(
+            "get",
+            reverse(
+                "travel:itinerary-attachments-list",
+                args=[self.itinerary.pk],
+            ),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), attachment_count)
+        self.assertEqual(response.data[0]["id"], attachment.pk)
+
+    def test_post(self):
+        attachment = AttachmentFactory(file="sample.pdf")
+        self.assertIsNone(attachment.object_id)
+        self.assertNotEqual(attachment.code, "travel_docs")
+
+        response = self.forced_auth_req(
+            "post",
+            reverse(
+                "travel:itinerary-attachments-list",
+                args=[self.itinerary.pk],
+            ),
+            user=self.user,
+            data={
+                "id": attachment.pk,
+                "file_type": self.file_type.pk,
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        attachment.refresh_from_db()
+        self.assertEqual(attachment.object_id, self.itinerary.pk)
+        self.assertEqual(attachment.code, "travel_docs")
+
+    def test_patch(self):
+        attachment = AttachmentFactory(
+            file="sample.pdf",
+            file_type=self.file_type,
+            code="travel_docs",
+            content_type=self.content_type,
+            object_id=self.itinerary.pk,
+        )
+        file_type = AttachmentFileTypeFactory(code="travel_docs")
+
+        response = self.forced_auth_req(
+            "patch",
+            reverse(
+                "travel:itinerary-attachments-detail",
+                args=[self.itinerary.pk, attachment.pk],
+            ),
+            user=self.user,
+            data={
+                "id": attachment.pk,
+                "file_type": file_type.pk,
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        attachment.refresh_from_db()
+        self.assertEqual(attachment.file_type, file_type)
+
+    def test_delete(self):
+        attachment = AttachmentFactory(
+            file="sample.pdf",
+            file_type=self.file_type,
+            code="travel_docs",
+            content_type=self.content_type,
+            object_id=self.itinerary.pk,
+        )
+        attachment_qs = Attachment.objects.filter(pk=attachment.pk)
+        self.assertTrue(attachment_qs.exists())
+
+        response = self.forced_auth_req(
+            "delete",
+            reverse(
+                "travel:itinerary-attachments-detail",
+                args=[self.itinerary.pk, attachment.pk],
+            ),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(attachment_qs.exists())
+
+
 class TestActivityViewSet(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):

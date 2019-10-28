@@ -34,6 +34,7 @@ from etools.applications.travel.serializers import (
     ActivityActionPointExportSerializer,
     ActivityActionPointSerializer,
     ActivitySerializer,
+    ItineraryAttachmentSerializer,
     ItineraryExportSerializer,
     ItineraryItemSerializer,
     ItinerarySerializer,
@@ -308,6 +309,54 @@ class ItineraryItemViewSet(
             queryset,
             itinerary__pk=self.kwargs.get("nested_1_pk"),
         )
+
+
+class ItineraryAttachmentsViewSet(
+        SafeTenantViewSetMixin,
+        mixins.ListModelMixin,
+        mixins.CreateModelMixin,
+        mixins.RetrieveModelMixin,
+        mixins.UpdateModelMixin,
+        mixins.DestroyModelMixin,
+        NestedViewSetMixin,
+        viewsets.GenericViewSet,
+):
+    serializer_class = ItineraryAttachmentSerializer
+    queryset = Attachment.objects.all()
+    permission_classes = [IsAuthenticated, ]
+
+    def get_view_name(self):
+        return _('Related Documents')
+
+    def get_parent_object(self):
+        return get_object_or_404(
+            Itinerary,
+            pk=self.kwargs.get("nested_1_pk"),
+        )
+
+    def get_parent_filter(self):
+        parent = self.get_parent_object()
+        if not parent:
+            return {'code': 'travel_docs'}
+
+        return {
+            'content_type_id': ContentType.objects.get_for_model(Itinerary).pk,
+            'object_id': parent.pk,
+        }
+
+    def get_object(self, pk=None):
+        if pk:
+            return self.queryset.get(pk=pk)
+        return super().get_object()
+
+    def perform_create(self, serializer):
+        serializer.instance = self.get_object(
+            pk=serializer.initial_data.get("id")
+        )
+        serializer.save(content_object=self.get_parent_object())
+
+    def perform_update(self, serializer):
+        serializer.save(content_object=self.get_parent_object())
 
 
 class ActivityViewSet(
