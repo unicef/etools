@@ -137,8 +137,7 @@ class Assessment(TimeStampedModel):
         ordering = ("-assessment_date",)
 
     def get_object_url(self, **kwargs):
-        # TODO double check this with frontend developers
-        return build_frontend_url('psea', 'assessment', 'detail', self.id, **kwargs)
+        return build_frontend_url('psea', 'assessments', self.id, 'details', **kwargs)
 
     def get_rejected_comment(self):
         rejected_qs = self.status_history.filter(
