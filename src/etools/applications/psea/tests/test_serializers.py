@@ -51,22 +51,22 @@ class TestAssessmentSerializer(BaseTenantTestCase):
     def test_get_overall_rating_moderate(self):
         assessment = AssessmentFactory()
         rating = RatingFactory(weight=5)
-        for _ in range(3):
+        for _ in range(2):
             AnswerFactory(assessment=assessment, rating=rating)
         overall_rating = self.serializer.get_overall_rating(assessment)
         self.assertEqual(overall_rating, {
-            "value": 15,
+            "value": 10,
             "display": "Moderate",
         })
 
     def test_get_overall_rating_low(self):
         assessment = AssessmentFactory()
         rating = RatingFactory(weight=5)
-        for _ in range(5):
+        for _ in range(3):
             AnswerFactory(assessment=assessment, rating=rating)
         overall_rating = self.serializer.get_overall_rating(assessment)
         self.assertEqual(overall_rating, {
-            "value": 25,
+            "value": 15,
             "display": "Low",
         })
 
