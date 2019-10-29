@@ -326,7 +326,13 @@ class TestItineraryViewSet(BaseTenantTestCase):
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_status_request(self):
-        itinerary = ItineraryFactory()
+        start_date = str(timezone.now().date())
+        end_date = str((timezone.now() + datetime.timedelta(days=3)).date())
+        itinerary = ItineraryFactory(
+            start_date=start_date,
+            end_date=end_date,
+        )
+        ActivityFactory(itinerary=itinerary)
 
         mapping = [
             # (init_status, request, expected_status, email_sent)
@@ -376,6 +382,8 @@ class TestItineraryViewSet(BaseTenantTestCase):
         for init_status, request, expected_status, email_sent in mapping:
             itinerary.status = init_status
             itinerary.save()
+            if expected_status == itinerary.STATUS_REVIEW:
+                ReportFactory(itinerary=itinerary)
             self.assertEqual(itinerary.status, init_status)
             mock_send = Mock()
             with patch(self.send_path, mock_send):
@@ -413,9 +421,15 @@ class TestItineraryViewSet(BaseTenantTestCase):
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_reject(self):
-        itinerary = ItineraryFactory()
+        start_date = str(timezone.now().date())
+        end_date = str((timezone.now() + datetime.timedelta(days=3)).date())
+        itinerary = ItineraryFactory(
+            start_date=start_date,
+            end_date=end_date,
+        )
         itinerary.status = itinerary.STATUS_SUBMITTED
         itinerary.save()
+        ActivityFactory(itinerary=itinerary)
         self.assertEqual(itinerary.status, itinerary.STATUS_SUBMITTED)
         history_qs = ItineraryStatusHistory.objects.filter(
             itinerary=itinerary,
