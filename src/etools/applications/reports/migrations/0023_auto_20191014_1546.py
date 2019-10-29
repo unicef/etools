@@ -10,7 +10,7 @@ def convert_profile_office_data(apps, schema):
     Use the connection to determine the current country
     """
     UserProfile = apps.get_model("users", "userprofile")
-    UserProfileOffice = apps.get_model("reports", "userprofileoffice")
+    UserTenantProfile = apps.get_model("reports", "usertenantprofile")
     Office = apps.get_model("reports", "office")
     country = connection.tenant
     country_name= getattr(country, "name", None)
@@ -18,7 +18,7 @@ def convert_profile_office_data(apps, schema):
         for profile in UserProfile.objects.all():
             if country in profile.countries_available.all():
                 office = Office.objects.get(pk=profile.office.pk)
-                UserProfileOffice.objects.create(
+                UserTenantProfile.objects.create(
                     profile=profile,
                     office=office,
                 )

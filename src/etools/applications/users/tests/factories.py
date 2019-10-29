@@ -7,7 +7,7 @@ from factory.fuzzy import FuzzyText
 
 from etools.applications.core.tests.cases import SCHEMA_NAME
 from etools.applications.publics.tests.factories import PublicsCurrencyFactory
-from etools.applications.reports.tests.factories import OfficeFactory, UserProfileOfficeFactory
+from etools.applications.reports.tests.factories import OfficeFactory, UserTenantProfileFactory
 from etools.applications.users import models
 
 
@@ -55,7 +55,7 @@ class ProfileFactory(factory.django.DjangoModelFactory):
             return
 
         office = extracted or factory.SubFactory(OfficeFactory)
-        return UserProfileOfficeFactory(profile=self, office=office)
+        return UserTenantProfileFactory(profile=self, office=office)
 
 
 @factory.django.mute_signals(signals.pre_save, signals.post_save)

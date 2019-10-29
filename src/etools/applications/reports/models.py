@@ -879,7 +879,7 @@ class Office(models.Model):
         ordering = ('name', )
 
 
-class UserProfileOffice(models.Model):
+class UserTenantProfile(models.Model):
     profile = models.OneToOneField(
         UserProfile,
         verbose_name=_('Profile'),
