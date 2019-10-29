@@ -386,7 +386,6 @@ class TPMActivity(Activity):
 
     offices = models.ManyToManyField(
         'reports.Office',
-        related_name='+',
         blank=True,
         verbose_name=_('Office(s) of UNICEF Focal Point(s)'),
     )

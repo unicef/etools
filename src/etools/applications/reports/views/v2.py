@@ -63,6 +63,7 @@ from etools.applications.reports.serializers.v2 import (
     ResultFrameworkSerializer,
     SpecialReportingRequirementSerializer,
 )
+from etools.libraries.djangolib.views import ExternalModuleFilterMixin
 
 
 class OutputListAPIView(ListAPIView):
@@ -498,6 +499,7 @@ class ResultFrameworkView(ExportView):
 
 
 class OfficeViewSet(
+        ExternalModuleFilterMixin,
         RetrieveModelMixin,
         ListModelMixin,
         CreateModelMixin,
@@ -508,9 +510,12 @@ class OfficeViewSet(
     """
     serializer_class = OfficeSerializer
     permission_classes = (IsAdminUser,)
+    module2filters = {
+        'tpm': ['tpmactivity__tpm_visit__tpm_partner__staff_members__user'],
+    }
 
     def get_queryset(self):
-        queryset = Office.objects.all()
+        qs = Office.objects.all()
         if "values" in self.request.query_params.keys():
             # Used for ghost data - filter in all(), and return straight away.
             try:
@@ -518,5 +523,5 @@ class OfficeViewSet(
             except ValueError:
                 raise ValidationError("ID values must be integers")
             else:
-                queryset = queryset.filter(id__in=ids)
-        return queryset
+                qs = qs.filter(id__in=ids)
+        return qs
