@@ -81,6 +81,11 @@ class Itinerary(TimeStampedModel):
         on_delete=models.CASCADE,
         related_name="supervised_itineraries",
     )
+    title = models.CharField(
+        max_length=120,
+        verbose_name=_("Title"),
+        blank=True,
+    )
     description = models.TextField(
         verbose_name=_("Description"),
         blank=True,
