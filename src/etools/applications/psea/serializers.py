@@ -28,7 +28,7 @@ from etools.applications.psea.models import (
     Rating,
 )
 from etools.applications.psea.permissions import AssessmentPermissions
-from etools.applications.psea.validators import EvidenceDescriptionValidator
+from etools.applications.psea.validators import EvidenceDescriptionValidator, PastDateValidator
 from etools.applications.reports.serializers.v1 import SectionSerializer
 from etools.applications.users.serializers import OfficeSerializer
 from etools.applications.users.serializers_v3 import MinimalUserSerializer
@@ -62,6 +62,7 @@ class AssessmentSerializer(BaseAssessmentSerializer):
     status_list = serializers.SerializerMethodField()
     rejected_comment = serializers.SerializerMethodField()
     available_actions = serializers.SerializerMethodField()
+    assessment_date = serializers.DateField(validators=[PastDateValidator()])
 
     class Meta(BaseAssessmentSerializer.Meta):
         fields = '__all__'

@@ -1,8 +1,12 @@
+import datetime
 from unittest.mock import Mock
+
+from django.utils import timezone
 
 from etools.applications.audit.models import UNICEFAuditFocalPoint
 from etools.applications.audit.tests.factories import AuditPartnerFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.psea import serializers
 from etools.applications.psea.models import Assessment, Assessor
 from etools.applications.psea.tests.factories import AnswerFactory, AssessmentFactory, AssessorFactory, RatingFactory
@@ -168,3 +172,23 @@ class TestAssessmentSerializer(BaseTenantTestCase):
             self.serializer.get_available_actions(assessment),
             ["submit"],
         )
+
+    def test_assessment_date_validation(self):
+        partner = PartnerFactory()
+        data = {"partner": partner.pk}
+        today = timezone.now().date()
+
+        # today
+        data["assessment_date"] = today
+        serializer = serializers.AssessmentSerializer(data=data)
+        self.assertTrue(serializer.is_valid())
+
+        # tomorrow
+        data["assessment_date"] = today + datetime.timedelta(days=1)
+        serializer = serializers.AssessmentSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+
+        # yesterday
+        data["assessment_date"] = today - datetime.timedelta(days=1)
+        serializer = serializers.AssessmentSerializer(data=data)
+        self.assertTrue(serializer.is_valid())
