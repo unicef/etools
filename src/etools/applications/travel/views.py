@@ -144,7 +144,7 @@ class ItineraryViewSet(
         related_fields = ["status_history"]
         nested_related_names = []
 
-        instance, old_instance, serializer = self.my_update(
+        instance, old_instance, __ = self.my_update(
             request,
             related_fields,
             nested_related_names=nested_related_names,
