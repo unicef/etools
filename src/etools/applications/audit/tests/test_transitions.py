@@ -66,6 +66,7 @@ class AuditTransitionsTestCaseMixin(EngagementTransitionsTestCaseMixin):
         self.engagement.financial_findings = random.randint(1, 22)
         self.engagement.audit_opinion = fuzzy.FuzzyText(length=20).fuzz()
         self.engagement.exchange_rate = fuzzy.FuzzyDecimal(0.5, 400).fuzz()
+        self.engagement.currency_of_report = 'USD'
         self.engagement.key_internal_controls.add(
             *[KeyInternalControlFactory(audit=self.engagement) for _ in range(3)])
         self.engagement.save()
@@ -103,6 +104,7 @@ class SCTransitionsTestCaseMixin(EngagementTransitionsTestCaseMixin):
         self.engagement.total_amount_of_ineligible_expenditure = random.randint(1, 22)
         self.engagement.internal_controls = fuzzy.FuzzyText(length=50).fuzz()
         self.engagement.exchange_rate = fuzzy.FuzzyDecimal(0.5, 400).fuzz()
+        self.engagement.currency_of_report = 'USD'
         self.engagement.save()
 
     def _init_filled_engagement(self):
