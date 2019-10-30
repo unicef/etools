@@ -1,7 +1,6 @@
 import time
 
 from django.db import transaction
-from django.db.models import Q
 from django.utils.encoding import force_text
 
 import celery
@@ -12,6 +11,7 @@ from unicef_locations.auth import LocationsCartoNoAuthClient
 from unicef_locations.models import CartoDBTable, Location, LocationRemapHistory
 
 from etools.libraries.locations.task_utils import (
+    cleanup_obsolete_locations,
     create_location,
     duplicate_pcodes_exist,
     filter_remapped_locations,
@@ -269,42 +269,7 @@ def cleanup_carto_obsolete_locations(carto_table_pk):
     # select for deletion those pcodes which are not present in the Carto datasets in any form
     deleteable_pcodes = set(database_pcodes) - (set(new_carto_pcodes) | set(remapped_pcodes))
 
-    # Do a few safety checks before we actually delete a location, like:
-    # - ensure that the deleted locations doesn't have any children in the location tree
-    # - check if the deleted location was remapped before, do not delete if yes.
-    # if the checks pass, add the deleteable location ID to the `revalidated_deleteable_pcodes` array so they can be
-    # deleted in one go later
-    revalidated_deleteable_pcodes = []
-
-    with transaction.atomic():
-        # prevent writing into locations until the cleanup is done
-        Location.objects.all_locations().select_for_update().only('id')
-
-        for deleteable_pcode in deleteable_pcodes:
-            try:
-                deleteable_location = Location.objects.all_locations().get(p_code=deleteable_pcode)
-            except Location.DoesNotExist:
-                logger.warning("Cannot find orphaned pcode {}.".format(deleteable_pcode))
-            else:
-                if deleteable_location.is_leaf_node():
-                    secondary_parent_check = Location.objects.all_locations().filter(
-                        parent=deleteable_location.id
-                    ).exists()
-                    remap_history_check = LocationRemapHistory.objects.filter(
-                        Q(old_location=deleteable_location) | Q(new_location=deleteable_location)
-                    ).exists()
-                    if not secondary_parent_check and not remap_history_check:
-                        logger.info("Selecting orphaned pcode {} for deletion".format(deleteable_location.p_code))
-                        revalidated_deleteable_pcodes.append(deleteable_location.id)
-
-        # delete the selected locations all at once, it seems it's faster like this compared to deleting them one by one.
-        if revalidated_deleteable_pcodes:
-            logger.info("Deleting selected orphaned pcodes")
-            Location.objects.all_locations().filter(id__in=revalidated_deleteable_pcodes).delete()
-
-        # rebuild location tree after the unneeded locations are cleaned up, because it seems deleting locations
-        # sometimes leaves the location tree in a `bugged` state
-        Location.objects.rebuild()
+    cleanup_obsolete_locations(deleteable_pcodes)
 
 
 def get_cartodb_locations(sql_client, carto_table):

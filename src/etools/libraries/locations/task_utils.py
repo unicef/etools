@@ -1,7 +1,7 @@
 from collections import defaultdict
 
-from django.db import IntegrityError
-from django.db.models import Count
+from django.db import IntegrityError, transaction
+from django.db.models import Count, Q
 
 from celery.utils.log import get_task_logger
 from unicef_locations.models import Location, LocationRemapHistory
@@ -356,3 +356,42 @@ def save_location_remap_history(remapped_location_pairs):
             new_location=Location.objects.all_locations().get(id=loc_tp[0]),
             comments="Remapped location id {} to id {}".format(loc_tp[1], loc_tp[0])
         )
+
+
+def cleanup_obsolete_locations(deleteable_pcodes):
+    # Do a few safety checks before we actually delete a location, like:
+    # - ensure that the deleted locations doesn't have any children in the location tree
+    # - check if the deleted location was remapped before, do not delete if yes.
+    # if the checks pass, add the deleteable location ID to the `revalidated_deleteable_pcodes` array so they can be
+    # deleted in one go later
+    revalidated_deleteable_pcodes = []
+
+    with transaction.atomic():
+        # prevent writing into locations until the cleanup is done
+        Location.objects.all_locations().select_for_update().only('id')
+
+        for deleteable_pcode in deleteable_pcodes:
+            try:
+                deleteable_location = Location.objects.all_locations().get(p_code=deleteable_pcode)
+            except Location.DoesNotExist:
+                logger.warning("Cannot find orphaned pcode {}.".format(deleteable_pcode))
+            else:
+                if deleteable_location.is_leaf_node():
+                    secondary_parent_check = Location.objects.all_locations().filter(
+                        parent=deleteable_location.id
+                    ).exists()
+                    remap_history_check = LocationRemapHistory.objects.filter(
+                        Q(old_location=deleteable_location) | Q(new_location=deleteable_location)
+                    ).exists()
+                    if not secondary_parent_check and not remap_history_check:
+                        logger.info("Selecting orphaned pcode {} for deletion".format(deleteable_location.p_code))
+                        revalidated_deleteable_pcodes.append(deleteable_location.id)
+
+        # delete the selected locations all at once, looks like its faster than deleting them in the foreach above
+        if revalidated_deleteable_pcodes:
+            logger.info("Deleting selected orphaned pcodes")
+            Location.objects.all_locations().filter(id__in=revalidated_deleteable_pcodes).delete()
+
+        # rebuild location tree after the unneeded locations are cleaned up, because it seems deleting locations
+        # sometimes leaves the location tree in a `bugged` state
+        Location.objects.rebuild()

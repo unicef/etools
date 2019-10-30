@@ -38,6 +38,7 @@ class EtoolsCartoDBTableAdmin(CartoDBTableAdmin):
             ]
 
         # clean up locations from bottom to top, it's easier to validate parents this way
+        # this does not address locations which don't have a valid location type
         for table in reversed(carto_tables):
             task_list += [cleanup_carto_obsolete_locations.si(table)]
 
@@ -67,6 +68,7 @@ class EtoolsArcgisDBTableAdmin(ArcgisDBTableAdmin):
             ]
 
         # clean up locations from bottom to top, it's easier to validate parents this way
+        # this does not address locations which don't have a valid location type
         for table in reversed(arcgis_tables):
             task_list += [cleanup_arcgis_obsolete_locations.si(table)]
 
