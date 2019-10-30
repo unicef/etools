@@ -1628,6 +1628,7 @@ class TestAnswerViewSet(BaseTenantTestCase):
         answer.refresh_from_db()
         self.assertEqual(answer.comments, "Initial comment")
 
+
 class TestAnswerAttachmentViewSet(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
