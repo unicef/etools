@@ -1392,6 +1392,8 @@ class TestAnswerViewSet(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.user = UserFactory()
         cls.assessment = AssessmentFactory()
+        cls.assessment.status = Assessment.STATUS_IN_PROGRESS
+        cls.assessment.save()
         cls.file_type = AttachmentFileTypeFactory(code="psea_answer")
         cls.indicator = IndicatorFactory()
         cls.rating = RatingFactory()
@@ -1403,8 +1405,6 @@ class TestAnswerViewSet(BaseTenantTestCase):
     def test_post(self):
         attachment_1 = AttachmentFactory(file="sample_1.pdf")
         attachment_2 = AttachmentFactory(file="sample_2.pdf")
-        self.assessment.status = Assessment.STATUS_IN_PROGRESS
-        self.assessment.save()
         AssessorFactory(assessment=self.assessment, user=self.user)
         self.assertTrue(self.assessment.user_belongs(self.user))
         answer_qs = Answer.objects.filter(assessment=self.assessment)
@@ -1441,8 +1441,6 @@ class TestAnswerViewSet(BaseTenantTestCase):
     def test_post_validation(self):
         evidence = EvidenceFactory(requires_description=True)
         self.indicator.evidences.add(evidence)
-        self.assessment.status = Assessment.STATUS_IN_PROGRESS
-        self.assessment.save()
         AssessorFactory(assessment=self.assessment, user=self.user)
         self.assertTrue(self.assessment.user_belongs(self.user))
         answer_qs = Answer.objects.filter(assessment=self.assessment)
@@ -1600,6 +1598,35 @@ class TestAnswerViewSet(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(answer_qs.exists())
 
+    def test_permission(self):
+        focal_user = UserFactory()
+        self.assessment.focal_points.add(focal_user)
+        answer = AnswerFactory(
+            assessment=self.assessment,
+            indicator=self.indicator,
+            rating=self.rating,
+            comments="Initial comment",
+        )
+        AnswerEvidenceFactory(answer=answer, evidence=self.evidence)
+        response = self.forced_auth_req(
+            "post",
+            reverse(
+                "psea:answer-detail",
+                args=[self.assessment.pk, self.indicator.pk],
+            ),
+            user=focal_user,
+            data={
+                "indicator": self.indicator.pk,
+                "evidences": [
+                    {"evidence": self.evidence.pk},
+                ],
+                "comments": "Changed comment",
+                "rating": self.rating.pk,
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        answer.refresh_from_db()
+        self.assertEqual(answer.comments, "Initial comment")
 
 class TestAnswerAttachmentViewSet(BaseTenantTestCase):
     @classmethod
