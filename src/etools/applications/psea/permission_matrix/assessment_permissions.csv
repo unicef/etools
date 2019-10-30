@@ -1,5 +1,6 @@
 Field no,Verbose Name,Field Name,Group,Condition,Status,Action,Allowed
 1.1.1,Partner Name,partner,UNICEF Audit Focal Point,,draft,Edit,TRUE
+1.2.0,Focal Points,focal_points,*,,submitted,Edit,FALSE
 1.2.0,Focal Points,focal_points,*,,final,Edit,FALSE
 1.2.1,Assessment Date,assessment_date,UNICEF Audit Focal Point,,draft,Edit,TRUE
 1.2.2,Assessment Date,assessment_date,UNICEF Audit Focal Point,,assigned,Edit,TRUE

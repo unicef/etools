@@ -915,6 +915,25 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         assessment.refresh_from_db()
         self.assertIn(self.user, assessment.focal_points.all())
 
+        # change assessment status to SUBMITTED and attempt to add/change
+        # focal points for assessment
+        assessment.status = Assessment.STATUS_SUBMITTED
+        assessment.save()
+        AnswerFactory(assessment=assessment)
+        self.assertEqual(assessment.status, Assessment.STATUS_SUBMITTED)
+        self.assertNotIn(self.focal_user, assessment.focal_points.all())
+        response = self.forced_auth_req(
+            "patch",
+            reverse('psea:assessment-detail', args=[assessment.pk]),
+            user=self.user,
+            data={
+                "focal_points": [self.focal_user.pk],
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        assessment.refresh_from_db()
+        self.assertNotIn(self.focal_user, assessment.focal_points.all())
+
         # change assessment status to FINAL and attempt to add/change
         # focal points for assessment
         assessment.status = Assessment.STATUS_FINAL
