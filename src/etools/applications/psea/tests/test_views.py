@@ -39,7 +39,7 @@ from etools.applications.users.tests.factories import GroupFactory, UserFactory
 class TestAssessmentViewSet(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.send_path = "etools.applications.psea.views.send_notification_with_template"
+        cls.send_path = "etools.applications.psea.validation.send_notification_with_template"
         cls.user = UserFactory()
         cls.focal_user = UserFactory()
         cls.focal_user.groups.add(
@@ -531,6 +531,27 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         self.assertEqual(list(assessment.focal_points.all()), [user])
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_patch_assessment_date(self):
+        assessment = AssessmentFactory(assessment_date=None)
+        assessment.status = Assessment.STATUS_IN_PROGRESS
+        assessment.save()
+        assessor = AssessorFactory(assessment=assessment)
+        date = timezone.now().date()
+        self.assertIsNone(assessment.assessment_date)
+
+        response = self.forced_auth_req(
+            "patch",
+            reverse('psea:assessment-detail', args=[assessment.pk]),
+            user=assessor.user,
+            data={
+                "assessment_date": date,
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        assessment.refresh_from_db()
+        self.assertEqual(assessment.assessment_date, date)
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_assign(self):
         assessment = AssessmentFactory(partner=self.partner)
         self.assertEqual(assessment.status, assessment.STATUS_DRAFT)
@@ -630,6 +651,7 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         )
         assessment.refresh_from_db()
         self.assertEqual(assessment.status, assessment.STATUS_SUBMITTED)
+        self.assertEqual(mock_send.call_count, 1)
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_finalize(self):
