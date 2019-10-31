@@ -1,8 +1,9 @@
 from datetime import timedelta
 
-import factory
 from django.urls import reverse
 from django.utils import timezone
+
+import factory
 from rest_framework import status
 from unicef_locations.tests.factories import LocationFactory
 
@@ -14,7 +15,7 @@ from etools.applications.field_monitoring.fm_settings.tests.factories import Log
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.field_monitoring.planning.tests.factories import MonitoringActivityFactory
 from etools.applications.field_monitoring.tests.factories import UserFactory
-from etools.applications.partners.tests.factories import PartnerFactory, InterventionFactory
+from etools.applications.partners.tests.factories import InterventionFactory, PartnerFactory
 from etools.applications.reports.models import ResultType
 from etools.applications.reports.tests.factories import ResultFactory, SectionFactory
 

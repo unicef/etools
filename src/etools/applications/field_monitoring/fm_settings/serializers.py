@@ -61,7 +61,7 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = ('id', 'name')
 
 
-class QuestionListSerializer(serializers.ModelSerializer):
+class QuestionLightSerializer(serializers.ModelSerializer):
     class Meta:
         model = Question
         fields = (
@@ -71,11 +71,11 @@ class QuestionListSerializer(serializers.ModelSerializer):
         )
 
 
-class QuestionSerializer(WritableNestedSerializerMixin, QuestionListSerializer):
+class QuestionSerializer(WritableNestedSerializerMixin, QuestionLightSerializer):
     options = OptionSerializer(many=True, required=False)
 
-    class Meta(WritableNestedSerializerMixin.Meta, QuestionListSerializer.Meta):
-        fields = QuestionListSerializer.Meta.fields + ('options',)
+    class Meta(WritableNestedSerializerMixin.Meta, QuestionLightSerializer.Meta):
+        fields = QuestionLightSerializer.Meta.fields + ('options',)
         read_only_fields = ('is_custom',)
 
     def create(self, validated_data):

@@ -1,4 +1,4 @@
-from django.db.models import Subquery, IntegerField
+from django.db.models import IntegerField, Subquery
 
 
 class SQCount(Subquery):

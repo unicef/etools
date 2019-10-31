@@ -1,19 +1,26 @@
-from django.db import models
-from django.db.models import Prefetch, Count, Q, Max, Min, Subquery, OuterRef
-from django_filters.rest_framework import DjangoFilterBackend
+from django.db.models import Count, Max, Min, OuterRef, Prefetch, Q
+
 from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from unicef_locations.models import Location
 
 from etools.applications.action_points.models import ActionPoint
-from etools.applications.field_monitoring.analyze.serializers import OverallSerializer, HACTSerializer, \
-    PartnersCoverageSerializer, InterventionCoverageSerializer, CPOutputCoverageSerializer, \
-    CoverageGeographicSerializer, PartnerIssuesSerializer, CPOutputIssuesSerializer, LocationIssuesSerializer
+from etools.applications.field_monitoring.analyze.serializers import (
+    CoverageGeographicSerializer,
+    CPOutputCoverageSerializer,
+    CPOutputIssuesSerializer,
+    HACTSerializer,
+    InterventionCoverageSerializer,
+    LocationIssuesSerializer,
+    OverallSerializer,
+    PartnerIssuesSerializer,
+    PartnersCoverageSerializer,
+)
 from etools.applications.field_monitoring.fm_settings.models import LogIssue
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.field_monitoring.utils.models import SQCount
-from etools.applications.partners.models import PartnerOrganization, Intervention
+from etools.applications.partners.models import Intervention, PartnerOrganization
 from etools.applications.reports.models import Result, ResultType
 
 

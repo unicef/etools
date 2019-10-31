@@ -1,16 +1,21 @@
+import itertools
+
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import connection
 from django.urls import reverse
 
 from rest_framework import status
 
-from etools.applications.attachments.tests.factories import AttachmentFileTypeFactory
+from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
-from etools.applications.field_monitoring.data_collection.tests.factories import ActivityQuestionFactory, \
-    StartedChecklistFactory
+from etools.applications.field_monitoring.data_collection.models import ActivityQuestionOverallFinding
+from etools.applications.field_monitoring.data_collection.tests.factories import (
+    ActivityQuestionFactory,
+    StartedChecklistFactory,
+)
 from etools.applications.field_monitoring.fm_settings.tests.factories import MethodFactory
 from etools.applications.field_monitoring.planning.tests.factories import MonitoringActivityFactory
-from etools.applications.field_monitoring.tests.base import FMBaseTestCaseMixin, APIViewSetTestCase
+from etools.applications.field_monitoring.tests.base import APIViewSetTestCase, FMBaseTestCaseMixin
 from etools.applications.field_monitoring.tests.factories import UserFactory
 from etools.applications.partners.tests.factories import InterventionFactory, PartnerFactory
 from etools.applications.reports.tests.factories import ResultFactory
@@ -79,11 +84,12 @@ class TestActivityQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
             ActivityQuestionFactory(monitoring_activity=self.activity, intervention=InterventionFactory()),
         ]
 
-        response = self.forced_auth_req(
-            'get',
-            reverse('field_monitoring_data_collection:activity-questions-list', args=(self.activity.pk,)),
-            user=self.unicef_user,
-        )
+        with self.assertNumQueries(6):
+            response = self.forced_auth_req(
+                'get',
+                reverse('field_monitoring_data_collection:activity-questions-list', args=(self.activity.pk,)),
+                user=self.unicef_user,
+            )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertListEqual(
@@ -205,7 +211,7 @@ class ChecklistDataCollectionTestMixin(DataCollectionTestMixin):
         cls.started_checklist = StartedChecklistFactory(monitoring_activity=cls.activity)
 
 
-class TestCheckListsView(DataCollectionTestMixin, APIViewSetTestCase):
+class TestChecklistsView(DataCollectionTestMixin, APIViewSetTestCase):
     base_view = 'field_monitoring_data_collection:checklists'
 
     def get_list_args(self):
@@ -215,7 +221,8 @@ class TestCheckListsView(DataCollectionTestMixin, APIViewSetTestCase):
         StartedChecklistFactory()  # wrong one
         started_checklist = StartedChecklistFactory(monitoring_activity=self.activity)
 
-        self._test_list(self.unicef_user, expected_objects=[started_checklist])
+        with self.assertNumQueries(3):
+            self._test_list(self.unicef_user, expected_objects=[started_checklist])
 
     def test_start_unicef(self):
         self._test_create(self.unicef_user, {}, expected_status=status.HTTP_403_FORBIDDEN)
@@ -239,7 +246,7 @@ class TestCheckListsView(DataCollectionTestMixin, APIViewSetTestCase):
         self._test_create(self.fm_user, {}, expected_status=status.HTTP_403_FORBIDDEN)
 
 
-class TestCheckListOverallFindingsView(ChecklistDataCollectionTestMixin, APIViewSetTestCase):
+class TestChecklistOverallFindingsView(ChecklistDataCollectionTestMixin, APIViewSetTestCase):
     base_view = 'field_monitoring_data_collection:checklist-overall-findings'
 
     def setUp(self):
@@ -249,7 +256,8 @@ class TestCheckListOverallFindingsView(ChecklistDataCollectionTestMixin, APIView
         return [self.activity.pk, self.started_checklist.id]
 
     def test_list(self):
-        self._test_list(self.unicef_user, self.started_checklist.overall_findings.all())
+        with self.assertNumQueries(8):
+            self._test_list(self.unicef_user, self.started_checklist.overall_findings.all())
 
     def test_update_unicef(self):
         self._test_update(self.unicef_user, self.overall_finding, {}, expected_status=status.HTTP_403_FORBIDDEN)
@@ -312,7 +320,7 @@ class TestOverallFindingAttachmentsView(ChecklistDataCollectionTestMixin, APIVie
         self.assertEqual(create_response.status_code, status.HTTP_403_FORBIDDEN)
 
 
-class TestCheckListFindingsView(ChecklistDataCollectionTestMixin, APIViewSetTestCase):
+class TestChecklistFindingsView(ChecklistDataCollectionTestMixin, APIViewSetTestCase):
     base_view = 'field_monitoring_data_collection:checklist-findings'
 
     def setUp(self):
@@ -322,7 +330,9 @@ class TestCheckListFindingsView(ChecklistDataCollectionTestMixin, APIViewSetTest
         return [self.activity.pk, self.started_checklist.id]
 
     def test_list(self):
-        self._test_list(self.unicef_user, self.started_checklist.findings.all())
+        findings = list(self.started_checklist.findings.all())
+        with self.assertNumQueries(5):
+            self._test_list(self.unicef_user, findings)
 
     def test_update_unicef(self):
         self._test_update(self.unicef_user, self.finding, {}, expected_status=status.HTTP_403_FORBIDDEN)
@@ -331,6 +341,87 @@ class TestCheckListFindingsView(ChecklistDataCollectionTestMixin, APIViewSetTest
         self._test_update(self.team_member, self.finding, {
             'value': 'text value'
         })
+
+    def test_update_person_responsible(self):
+        self._test_update(self.person_responsible, self.finding, {
+            'value': 'text value'
+        })
+
+    def test_update_fm_user(self):
+        self._test_update(self.fm_user, self.finding, {}, expected_status=status.HTTP_403_FORBIDDEN)
+
+
+class TestActivityOverallFindingsView(ChecklistDataCollectionTestMixin, APIViewSetTestCase):
+    base_view = 'field_monitoring_data_collection:activity-overall-findings'
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.activity.mark_data_collected()
+        cls.activity.save()
+
+    def setUp(self):
+        self.overall_finding = self.activity.overall_findings.first()
+
+    def get_list_args(self):
+        return [self.activity.pk]
+
+    def test_list(self):
+        checklist = self.activity.checklists.first()
+        self.assertTrue(checklist.overall_findings.exists())
+
+        AttachmentFactory(content_object=checklist.overall_findings.first())
+
+        with self.assertNumQueries(9):
+            response = self._test_list(self.unicef_user, [self.overall_finding])
+        self.assertIn('attachments', response.data['results'][0])
+        self.assertNotEqual(response.data['results'][0]['attachments'], [])
+
+    def test_update_unicef(self):
+        self._test_update(self.unicef_user, self.overall_finding, {}, expected_status=status.HTTP_403_FORBIDDEN)
+
+    def test_update_team_member(self):
+        self._test_update(self.team_member, self.overall_finding, {}, expected_status=status.HTTP_403_FORBIDDEN)
+
+    def test_update_person_responsible(self):
+        response = self._test_update(self.person_responsible, self.overall_finding, {
+            'narrative_finding': 'some test text',
+            'on_track': True
+        })
+        self.assertEqual(response.data['on_track'], True)
+
+    def test_update_fm_user(self):
+        self._test_update(self.fm_user, self.overall_finding, {}, expected_status=status.HTTP_403_FORBIDDEN)
+
+
+class TestActivityFindingsView(ChecklistDataCollectionTestMixin, APIViewSetTestCase):
+    base_view = 'field_monitoring_data_collection:activity-findings'
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.activity.mark_data_collected()
+        cls.activity.save()
+
+    def setUp(self):
+        self.finding = self.activity.questions.first().overall_finding
+
+    def get_list_args(self):
+        return [self.activity.pk]
+
+    def test_list(self):
+        activity_findings = list(
+            ActivityQuestionOverallFinding.objects.filter(activity_question__monitoring_activity=self.activity)
+        )
+
+        with self.assertNumQueries(8):
+            self._test_list(self.unicef_user, activity_findings)
+
+    def test_update_unicef(self):
+        self._test_update(self.unicef_user, self.finding, {}, expected_status=status.HTTP_403_FORBIDDEN)
+
+    def test_update_team_member(self):
+        self._test_update(self.team_member, self.finding, {}, expected_status=status.HTTP_403_FORBIDDEN)
 
     def test_update_person_responsible(self):
         self._test_update(self.person_responsible, self.finding, {

@@ -1,10 +1,11 @@
 from django.utils import timezone
+
 from rest_framework import serializers
 from rest_framework.fields import ReadOnlyField
 from unicef_locations.models import Location
 
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
-from etools.applications.partners.models import PartnerOrganization, Intervention
+from etools.applications.partners.models import Intervention, PartnerOrganization
 from etools.applications.partners.serializers.interventions_v2 import MinimalInterventionListSerializer
 from etools.applications.reports.models import Result
 from etools.applications.reports.serializers.v2 import MinimalOutputListSerializer

@@ -70,6 +70,12 @@ class BaseMonitoringActivityFactory(factory.DjangoModelFactory):
 
             ActivityQuestionFactory.create_batch(count, monitoring_activity=self, **kwargs)
 
+    @factory.post_generation
+    def overall_findings(self, created, extracted, generated=False, **kwargs):
+        if generated:
+            self.prepare_activity_overall_findings()
+            self.prepare_questions_overall_findings()
+
 
 class DraftActivityFactory(BaseMonitoringActivityFactory):
     status = MonitoringActivity.STATUSES.draft
@@ -82,6 +88,7 @@ class ChecklistActivityFactory(DraftActivityFactory):
 
 class ReviewActivityFactory(ChecklistActivityFactory):
     status = MonitoringActivity.STATUSES.review
+    overall_findings__generated = True
 
 
 class PreAssignedActivityFactory(ReviewActivityFactory):

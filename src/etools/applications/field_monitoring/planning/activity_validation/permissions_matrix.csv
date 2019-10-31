@@ -28,8 +28,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,cp_outputs,Field Monitor,,draft,edit,TRUE
 ,activity_question_set,Field Monitor,,checklist,edit,TRUE
 ,started_checklist_set,All Users,is_ma_related_user,data_collection,edit,TRUE
-,activity_overall_finding,All Users,is_ma_related_user,report_finalization,edit,TRUE
-,activity_question_overall_finding,All Users,is_ma_related_user,report_finalization,edit,TRUE
+,activity_overall_finding,All Users,is_person_responsible,report_finalization,edit,TRUE
 ,attachments,Field Monitor,,draft,edit,TRUE
 ,attachments,Field Monitor,,checklist,edit,TRUE
 ,attachments,Field Monitor,,review,edit,TRUE
@@ -57,11 +56,6 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,started_checklist_set,All Users,,completed,required,TRUE
 ,activity_overall_finding,All Users,,submitted,required,TRUE
 ,activity_overall_finding,All Users,,completed,required,TRUE
-,activity_question_overall_finding,All Users,,submitted,required,TRUE
-,activity_question_overall_finding,All Users,,completed,required,TRUE
-,completed_date,All Users,,completed,required,TRUE
-,submitted_date,All Users,,submitted,required,TRUE
-,submitted_date,All Users,,completed,required,TRUE
 
 
 
@@ -85,5 +79,4 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,activity_question_set,All Users,,*,view,TRUE
 ,started_checklist_set,All Users,,*,view,TRUE
 ,activity_overall_finding,All Users,,*,view,TRUE
-,activity_question_overall_finding,All Users,,*,view,TRUE
 ,report_attachments,All Users,,*,view,TRUE
