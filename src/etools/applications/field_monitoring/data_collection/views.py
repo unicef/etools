@@ -4,7 +4,6 @@ from django.utils.translation import ugettext_lazy as _
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, viewsets
 from rest_framework_bulk import BulkUpdateModelMixin
-from unicef_attachments.models import Attachment
 from unicef_attachments.serializers import BaseAttachmentSerializer
 from unicef_restlib.views import NestedViewSetMixin
 
@@ -26,7 +25,6 @@ from etools.applications.field_monitoring.data_collection.serializers import (
     ChecklistSerializer,
     FindingSerializer,
 )
-from etools.applications.field_monitoring.fm_settings.models import Option, Question
 from etools.applications.field_monitoring.permissions import (
     activity_field_is_editable_permission,
     IsEditAction,

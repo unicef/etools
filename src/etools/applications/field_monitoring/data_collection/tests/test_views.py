@@ -1,5 +1,3 @@
-import itertools
-
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import connection
 from django.urls import reverse

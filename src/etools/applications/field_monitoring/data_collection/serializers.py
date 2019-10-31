@@ -3,7 +3,6 @@ import itertools
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
-from rest_framework.fields import empty
 from rest_framework_bulk import BulkListSerializer, BulkSerializerMixin
 from unicef_attachments.fields import FileTypeModelChoiceField
 from unicef_attachments.models import FileType
@@ -18,11 +17,7 @@ from etools.applications.field_monitoring.data_collection.models import (
     Finding,
     StartedChecklist,
 )
-from etools.applications.field_monitoring.fm_settings.serializers import (
-    OptionSerializer,
-    QuestionLightSerializer,
-    QuestionSerializer,
-)
+from etools.applications.field_monitoring.fm_settings.serializers import QuestionSerializer
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.partners.serializers.interventions_v2 import MinimalInterventionListSerializer
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
@@ -123,9 +118,9 @@ class ActivityOverallFindingSerializer(serializers.ModelSerializer):
             finding.attachments.all() for finding in
             filter(
                 lambda finding:
-                    finding.partner_id == obj.partner_id
-                    and finding.cp_output_id == obj.cp_output_id
-                    and finding.intervention_id == obj.intervention_id,
+                    finding.partner_id == obj.partner_id and
+                    finding.cp_output_id == obj.cp_output_id and
+                    finding.intervention_id == obj.intervention_id,
                 itertools.chain(*(
                     c.overall_findings.all()
                     for c in obj.monitoring_activity.checklists.all()
