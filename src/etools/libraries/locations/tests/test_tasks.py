@@ -10,7 +10,7 @@ from etools.applications.users.tests.factories import UserFactory
 from etools.libraries.locations import tasks
 
 
-class TestLocationViews(BaseTenantTestCase):
+class TestLocationTasks(BaseTenantTestCase):
     def setUp(self):
         self.unicef_staff = UserFactory(is_staff=True)
         self.carto_table = CartoDBTableFactory(remap_table_name="test_rmp")
