@@ -7,7 +7,7 @@ from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import Intervention
 from etools.applications.partners.tests.factories import InterventionFactory
 from etools.applications.users.tests.factories import UserFactory
-from etools.libraries.locations import tasks, task_utils
+from etools.libraries.locations import task_utils, tasks
 
 
 class TestLocationTasks(BaseTenantTestCase):
