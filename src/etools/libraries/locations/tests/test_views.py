@@ -11,7 +11,9 @@ class TestLocationViews(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
-        cls.locations = [LocationFactory() for x in range(5)]
+        cls.parent = LocationFactory()
+        cls.locations = [LocationFactory(parent=cls.parent) for x in range(5)]
+        cls.locations.append(cls.parent)
         # heavy_detail_expected_keys are the keys that should be in response.data.keys()
         cls.heavy_detail_expected_keys = sorted(
             ('id', 'name', 'p_code', 'gateway', 'parent', 'geo_point')
@@ -27,8 +29,23 @@ class TestLocationViews(BaseTenantTestCase):
         self.assertEqual(sorted(response.data[0].keys()), ["gateway", "id", "name", "p_code"])
         # sort the expected locations by name, the same way the API results are sorted
         self.locations.sort(key=lambda location: location.name)
-        self.assertEqual(response.data[0]["name"], '{} [{} - {}]'.format(
-            self.locations[0].name, self.locations[0].gateway.name, self.locations[0].p_code))
+
+        for i in range(len(self.locations)):
+            location = self.locations[i]
+            data = response.data[i]
+            if location.parent:
+                self.assertEqual(data["name"], '{} [{} - {}] -- {}'.format(
+                    location.name,
+                    location.gateway.name,
+                    location.p_code,
+                    location.parent.name
+                ))
+            else:
+                self.assertEqual(data["name"], '{} [{} - {}]'.format(
+                    location.name,
+                    location.gateway.name,
+                    location.p_code,
+                ))
 
     def test_api_location_heavy_list(self):
         response = self.forced_auth_req('get', reverse('locations-list'), user=self.unicef_staff)
@@ -73,7 +90,7 @@ class TestLocationViews(BaseTenantTestCase):
     def test_api_location_list_cached(self):
         response = self.forced_auth_req('get', reverse('locations-list'), user=self.unicef_staff)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 5)
+        self.assertEqual(len(response.data), 6)
         etag = response["ETag"]
 
         response = self.forced_auth_req('get', reverse('locations-list'),
@@ -83,7 +100,7 @@ class TestLocationViews(BaseTenantTestCase):
     def test_api_location_list_modified(self):
         response = self.forced_auth_req('get', reverse('locations-list'), user=self.unicef_staff)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 5)
+        self.assertEqual(len(response.data), 6)
         etag = response["ETag"]
 
         LocationFactory()
@@ -91,7 +108,7 @@ class TestLocationViews(BaseTenantTestCase):
         response = self.forced_auth_req('get', reverse('locations-list'),
                                         user=self.unicef_staff, HTTP_IF_NONE_MATCH=etag)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 6)
+        self.assertEqual(len(response.data), 7)
         # self.assertEqual(response.status_code, status.HTTP_304_NOT_MODIFIED)
 
     def test_api_location_autocomplete(self):
@@ -99,6 +116,6 @@ class TestLocationViews(BaseTenantTestCase):
                                         user=self.unicef_staff, data={"q": "Loc"})
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 5)
+        self.assertEqual(len(response.data), 6)
         self.assertEqual(sorted(response.data[0].keys()), ["gateway", "id", "name", "p_code"])
         self.assertIn("Loc", response.data[0]["name"])
