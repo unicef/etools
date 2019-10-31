@@ -13,12 +13,7 @@ from etools.applications.attachments.tests.factories import AttachmentFactory, A
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.core.tests.mixins import URLAssertionMixin
 from etools.applications.partners.models import Agreement, AgreementAmendment, Intervention, PartnerType
-from etools.applications.partners.tests.factories import (
-    AgreementAmendmentFactory,
-    AgreementFactory,
-    InterventionFactory,
-    PartnerFactory,
-)
+from etools.applications.partners.tests.factories import AgreementFactory, InterventionFactory, PartnerFactory
 from etools.applications.reports.tests.factories import CountryProgrammeFactory
 from etools.applications.users.tests.factories import GroupFactory, UserFactory
 
@@ -286,11 +281,11 @@ class TestAgreementsAPI(BaseTenantTestCase):
 
     def test_patch_amendment_signed_date_exists(self):
         date = datetime.date.today().strftime("%Y-%m-%d")
-        agreement = AgreementFactory(
+        AgreementFactory(
             partner=self.partner1,
             status=Agreement.DRAFT
         )
-        attachment = AttachmentFactory(
+        AttachmentFactory(
             file="test_file.pdf",
             file_type=None,
             code="",
