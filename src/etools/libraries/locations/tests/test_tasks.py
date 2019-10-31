@@ -7,7 +7,7 @@ from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import Intervention
 from etools.applications.partners.tests.factories import InterventionFactory
 from etools.applications.users.tests.factories import UserFactory
-from etools.libraries.locations import tasks
+from etools.libraries.locations import tasks, task_utils
 
 
 class TestLocationTasks(BaseTenantTestCase):
@@ -106,3 +106,13 @@ class TestLocationTasks(BaseTenantTestCase):
         self.assertEqual(len(Location.objects.all_locations()), 5)
         self._run_cleanup(self.carto_table.pk)
         self.assertEqual(len(Location.objects.all_locations()), 2)
+
+    def test_remap_table_filter_callback(self):
+        remap_row = {"old_pcode": self.remapped_location.p_code, "new_pcode": self.new_location.p_code}
+        self.assertFalse(task_utils.filter_remapped_locations_cb(remap_row))
+
+        intervention = InterventionFactory(status=Intervention.SIGNED)
+        intervention.flat_locations.add(self.remapped_location)
+        intervention.save()
+
+        self.assertTrue(task_utils.filter_remapped_locations_cb(remap_row))

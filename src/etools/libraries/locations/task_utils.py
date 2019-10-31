@@ -234,8 +234,12 @@ def get_location_ids_in_use(location_ids):
     return list(set(location_ids_in_use))
 
 
-def filter_remapped_locations(remap_row):
-    old_location_id = Location.objects.all_locations().get(p_code=remap_row['old_pcode']).id
+def filter_remapped_locations_cb(remap_table_row):
+    """
+    :param remap_table_row contains old_pcode, new_pcode
+    :return: true|false
+    """
+    old_location_id = Location.objects.all_locations().get(p_code=remap_table_row['old_pcode']).id
     return len(get_location_ids_in_use([old_location_id])) > 0
 
 

@@ -12,7 +12,7 @@ from unicef_locations.models import CartoDBTable, Location, LocationRemapHistory
 from etools.libraries.locations.task_utils import (
     create_location,
     duplicate_pcodes_exist,
-    filter_remapped_locations,
+    filter_remapped_locations_cb,
     get_cartodb_locations,
     get_location_ids_in_use,
     remap_location,
@@ -127,7 +127,7 @@ def update_sites_from_cartodb(carto_table_pk):
                 if carto_table.remap_table_name and len(remap_table_pcode_pairs) > 0:
                     # remapped_pcode_pairs ex.: {'old_pcode': 'ET0721', 'new_pcode': 'ET0714'}
                     remap_table_pcode_pairs = list(filter(
-                        filter_remapped_locations,
+                        filter_remapped_locations_cb,
                         remap_table_pcode_pairs
                     ))
 
