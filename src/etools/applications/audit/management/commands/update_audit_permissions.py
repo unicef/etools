@@ -151,10 +151,13 @@ class Command(BaseCommand):
         'audit.audit.audit_opinion',
         'audit.audit.audited_expenditure',
         'audit.audit.financial_findings',
+        'audit.audit.audited_expenditure_local',
+        'audit.audit.financial_findings_local',
         'audit.audit.financial_finding_set',
         'audit.audit.key_internal_controls',
         'audit.audit.key_internal_weakness',
         'audit.audit.exchange_rate',
+        'audit.audit.currency_of_report',
     ]
 
     spot_check_report_block = [
@@ -163,6 +166,7 @@ class Command(BaseCommand):
         'audit.spotcheck.total_amount_of_ineligible_expenditure',
         'audit.spotcheck.total_amount_tested',
         'audit.spotcheck.exchange_rate',
+        'audit.spotcheck.currency_of_report',
     ]
 
     special_audit_report_block = [
