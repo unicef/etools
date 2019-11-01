@@ -204,7 +204,7 @@ class TestItineraryViewSet(BaseTenantTestCase):
         response = self.forced_auth_req(
             "get",
             reverse('travel:itinerary-list'),
-            data={"q": "trav"},
+            data={"q": "las"},
             user=self.user,
         )
         _validate_response(response)

@@ -41,7 +41,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('created', model_utils.fields.AutoCreatedField(default=django.utils.timezone.now, editable=False, verbose_name='created')),
                 ('modified', model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, editable=False, verbose_name='modified')),
-                ('reference_number', models.CharField(default=etools.applications.travel.models.generate_reference_number, max_length=15, unique=True, verbose_name='Reference Number')),
+                ('reference_number', models.CharField(max_length=100, unique=True, verbose_name='Reference Number')),
                 ('status', django_fsm.FSMField(choices=[('draft', 'Draft'), ('submission', 'Submission Review'), ('submitted', 'Submitted'), ('rejected', 'Rejected'), ('approved', 'Approved'), ('review', 'Review'), ('completed', 'Completed'), ('cancelled', 'Cancelled')], default='draft', max_length=30, verbose_name='Status')),
                 ('title', models.CharField(blank=True, max_length=120, verbose_name='Title')),
                 ('description', models.TextField(blank=True, verbose_name='Description')),

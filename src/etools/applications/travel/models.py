@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
-from django.db import connection, models, transaction
+from django.db import connection, models
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
@@ -22,16 +22,6 @@ from etools.applications.travel.validation import (
     itinerary_submitted,
     itinerary_subreview,
 )
-from etools.applications.users.models import WorkspaceCounter
-
-
-def generate_reference_number():
-    with transaction.atomic():
-        numeric_part = connection.tenant.counters.get_next_value(
-            WorkspaceCounter.TRAVEL_REFERENCE
-        )
-    year = timezone.now().year
-    return '{}/{}'.format(year, numeric_part)
 
 
 class Itinerary(TimeStampedModel):
@@ -64,10 +54,9 @@ class Itinerary(TimeStampedModel):
     }
 
     reference_number = models.CharField(
-        max_length=15,
+        max_length=100,
         verbose_name=_("Reference Number"),
         unique=True,
-        default=generate_reference_number,
     )
     status = FSMField(
         verbose_name=_('Status'),
@@ -126,6 +115,13 @@ class Itinerary(TimeStampedModel):
     def __str__(self):
         return f'{self.traveller} [{self.get_status_display()}] {self.reference_number}'
 
+    def get_reference_number(self):
+        return "{code}/{year}TRAVEL{num}".format(
+            code=connection.tenant.country_short_code,
+            year=timezone.now().year,
+            num=self.pk,
+        )
+
     def get_object_url(self, **kwargs):
         return build_frontend_url(
             'travel',
@@ -151,6 +147,12 @@ class Itinerary(TimeStampedModel):
         if self.status == self.STATUS_REJECTED:
             context["rejected_comment"] = self.get_rejected_comment()
         return context
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        if not self.reference_number:
+            self.reference_number = self.get_reference_number()
+            self.save()
 
     @transition(
         field=status,
