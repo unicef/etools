@@ -24,7 +24,7 @@ class LocationImportTestsBase(BaseTenantTestCase):
 class TestCartoDBTasks(LocationImportTestsBase):
     def setUp(self):
         self.carto_table = CartoDBTableFactory(remap_table_name="test_rmp")
-        super().setup(self.carto_table.location_type)
+        super().setUp(self.carto_table.location_type)
         self.mock_sql = Mock()
         self.mock_remap_data = Mock()
         self.mock_carto_data = Mock()
@@ -115,7 +115,7 @@ class TestCartoDBTasks(LocationImportTestsBase):
 class TestArcgisTasks(LocationImportTestsBase):
     def setUp(self):
         self.arcgis_table = ArcgisDBTableFactory()
-        super().setup(self.arcgis_table.location_type)
+        super().setUp(self.arcgis_table.location_type)
         self.mock_results = Mock()
         self.features = [{
             "properties": {
