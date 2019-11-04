@@ -141,12 +141,12 @@ class TestArcgisTasks(LocationImportTestsBase):
 
     def _run_update(self, arcgis_table_pk):
         with patch("unicef_locations.tasks_arcgis.FeatureLayer"), \
-             patch("unicef_locations.tasks_arcgis.FeatureSet.to_geojson", self.mock_results):
+                patch("unicef_locations.tasks_arcgis.FeatureSet.to_geojson", self.mock_results):
             return tasks_arcgis.import_arcgis_locations(arcgis_table_pk)
 
     def _run_cleanup(self, arcgis_table_pk):
         with patch("unicef_locations.tasks_arcgis.FeatureLayer"), \
-             patch("unicef_locations.tasks_arcgis.FeatureSet.to_geojson", self.mock_results):
+                patch("unicef_locations.tasks_arcgis.FeatureSet.to_geojson", self.mock_results):
             return tasks_arcgis.cleanup_arcgis_obsolete_locations(arcgis_table_pk)
 
     def _assert_response(self, response, expected_result):

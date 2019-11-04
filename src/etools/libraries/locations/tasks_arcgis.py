@@ -7,7 +7,7 @@ from django.utils.encoding import force_text
 import celery
 from arcgis.features import FeatureLayer
 from celery.utils.log import get_task_logger
-from unicef_locations.models import ArcgisDBTable, Location, LocationRemapHistory
+from unicef_locations.models import ArcgisDBTable, Location
 
 from etools.libraries.locations.task_utils import (
     cleanup_obsolete_locations,

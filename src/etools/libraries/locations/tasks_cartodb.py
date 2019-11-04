@@ -8,7 +8,7 @@ from carto.exceptions import CartoException
 from carto.sql import SQLClient
 from celery.utils.log import get_task_logger
 from unicef_locations.auth import LocationsCartoNoAuthClient
-from unicef_locations.models import CartoDBTable, Location, LocationRemapHistory
+from unicef_locations.models import CartoDBTable, Location
 
 from etools.libraries.locations.task_utils import (
     cleanup_obsolete_locations,
