@@ -2,6 +2,7 @@ from django.conf import settings
 from django.db import connection, models
 from django.db.models import Sum
 from django.utils import timezone
+from django.utils.encoding import force_text
 from django.utils.translation import ugettext_lazy as _
 
 from django_fsm import FSMField, transition
@@ -210,9 +211,9 @@ class Assessment(TimeStampedModel):
 
     def get_mail_context(self, user):
         context = {
-            "partner": self.partner,
+            "partner": force_text(self.partner),
             "url": self.get_object_url(user=user),
-            "assessment": self
+            "assessment": force_text(self),
         }
         if self.status == self.STATUS_REJECTED:
             context["rejected_comment"] = self.get_rejected_comment()

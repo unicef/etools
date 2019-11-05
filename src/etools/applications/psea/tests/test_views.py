@@ -939,6 +939,7 @@ class TestAssessmentActionPointViewSet(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         call_command('update_psea_permissions', verbosity=0)
+        cls.send_path = "etools.applications.action_points.models.Notification"
         cls.focal_user = UserFactory()
         cls.focal_user.groups.add(
             GroupFactory(name=UNICEFAuditFocalPoint.name),
@@ -956,25 +957,28 @@ class TestAssessmentActionPointViewSet(BaseTenantTestCase):
         assessment.focal_points.set([self.focal_user])
         self.assertEqual(assessment.action_points.count(), 0)
 
-        response = self.forced_auth_req(
-            'post',
-            reverse("psea:action-points-list", args=[assessment.pk]),
-            user=self.focal_user,
-            data={
-                'description': fuzzy.FuzzyText(length=100).fuzz(),
-                'due_date': fuzzy.FuzzyDate(
-                    timezone.now().date(),
-                    timezone.now().date() + datetime.timedelta(days=5),
-                ).fuzz(),
-                'assigned_to': self.unicef_user.pk,
-                'office': self.focal_user.profile.office.pk,
-                'section': SectionFactory().pk,
-            }
-        )
+        mock_send = Mock()
+        with patch(self.send_path, mock_send):
+            response = self.forced_auth_req(
+                'post',
+                reverse("psea:action-points-list", args=[assessment.pk]),
+                user=self.focal_user,
+                data={
+                    'description': fuzzy.FuzzyText(length=100).fuzz(),
+                    'due_date': fuzzy.FuzzyDate(
+                        timezone.now().date(),
+                        timezone.now().date() + datetime.timedelta(days=5),
+                    ).fuzz(),
+                    'assigned_to': self.unicef_user.pk,
+                    'office': self.focal_user.profile.office.pk,
+                    'section': SectionFactory().pk,
+                }
+            )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(assessment.action_points.count(), 1)
         self.assertIsNotNone(assessment.action_points.first().partner)
+        self.assertTrue(mock_send.objects.create.called)
 
     def _test_action_point_editable(self, action_point, user, editable=True):
         assessment = action_point.psea_assessment

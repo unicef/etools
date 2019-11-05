@@ -183,9 +183,9 @@ class TestAssessment(BaseTenantTestCase):
         user = UserFactory()
         assessment = AssessmentFactory()
         self.assertEqual(assessment.get_mail_context(user), {
-            "partner": assessment.partner,
+            "partner": assessment.partner.name,
             "url": assessment.get_object_url(user=user),
-            "assessment": assessment,
+            "assessment": str(assessment),
         })
 
     def test_get_reference_number(self):
@@ -223,9 +223,9 @@ class TestAssessmentActionPoint(BaseTenantTestCase):
         )
         context = ap.get_mail_context(user=user)
         self.assertEqual(context["psea_assessment"], {
-            "partner": assessment.partner,
+            "partner": assessment.partner.name,
             "url": assessment.get_object_url(user=user),
-            "assessment": assessment,
+            "assessment": str(assessment),
         })
 
 
