@@ -5,7 +5,7 @@ defaults = {
     'content': """
     Dear Colleagues,
 
-    Please note that a PSEA assessment was completed for the following Partner:
+    Please note that a PSEA assessment was assigned for the following Partner:
 
     Vendor Number: {{ partner.vendor_number }}
 

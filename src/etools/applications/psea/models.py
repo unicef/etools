@@ -165,11 +165,14 @@ class Assessment(TimeStampedModel):
             return True
         return False
 
-    def get_recipients(self):
+    def get_assessor_recipients(self):
         return self.assessor.get_recipients()
 
     def get_focal_recipients(self):
         return [u.email for u in self.focal_points.all()]
+
+    def get_all_recipients(self):
+        return self.get_assessor_recipients() + self.get_focal_recipients()
 
     def rating(self):
         if self.answers_complete():
