@@ -204,6 +204,15 @@ class Assessment(TimeStampedModel):
                 return True
         return False
 
+    def user_is_external(self, user):
+        assessor_qs = Assessor.objects.filter(
+            assessment=self,
+            assessor_type=Assessor.TYPE_EXTERNAL,
+        )
+        if assessor_qs.filter(user=user).exists():
+            return True
+        return False
+
     def user_belongs(self, user):
         if self.pk and user in self.focal_points.all():
             return True
