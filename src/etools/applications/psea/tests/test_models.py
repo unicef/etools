@@ -91,7 +91,7 @@ class TestAssessment(BaseTenantTestCase):
         )
         self.assertEqual(assessment.get_rejected_comment(), "Rejected comment")
 
-    def test_get_recipients(self):
+    def test_get_assessor_recipients(self):
         assessment = AssessmentFactory()
         firm = AuditPartnerFactory()
         staff = AuditorStaffMemberFactory(auditor_firm=firm)
@@ -101,7 +101,10 @@ class TestAssessment(BaseTenantTestCase):
             assessor_type=Assessor.TYPE_VENDOR,
         )
         assessor.auditor_firm_staff.set([staff])
-        self.assertEqual(assessment.get_recipients(), [staff.user.email])
+        self.assertEqual(
+            assessment.get_assessor_recipients(),
+            [staff.user.email],
+        )
 
     def test_get_focal_recipients(self):
         assessment = AssessmentFactory()
@@ -109,6 +112,23 @@ class TestAssessment(BaseTenantTestCase):
         user = UserFactory()
         assessment.focal_points.add(user)
         self.assertEqual(assessment.get_focal_recipients(), [user.email])
+
+    def test_get_all_recipients(self):
+        assessment = AssessmentFactory()
+        firm = AuditPartnerFactory()
+        staff = AuditorStaffMemberFactory(auditor_firm=firm)
+        assessor = AssessorFactory(
+            assessment=assessment,
+            user=None,
+            assessor_type=Assessor.TYPE_VENDOR,
+        )
+        assessor.auditor_firm_staff.set([staff])
+        user = UserFactory()
+        assessment.focal_points.add(user)
+        self.assertEqual(
+            assessment.get_all_recipients(),
+            [staff.user.email, user.email],
+        )
 
     def test_user_is_assessor_user(self):
         assessment = AssessmentFactory()
