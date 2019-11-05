@@ -36,13 +36,14 @@ from etools.applications.field_monitoring.fm_settings.serializers import (
     LogIssueSerializer,
     MethodSerializer,
     QuestionSerializer,
-)
+    ResultSerializer)
 from etools.applications.field_monitoring.permissions import IsEditAction, IsFieldMonitor, IsPME, IsReadAction
 from etools.applications.field_monitoring.views import (
     AttachmentFileTypesViewMixin,
     FMBaseAttachmentsViewSet,
     FMBaseViewSet,
 )
+from etools.applications.reports.views.v2 import OutputListAPIView
 
 
 class MethodsViewSet(
@@ -79,6 +80,13 @@ class InterventionLocationsView(FMBaseViewSet, generics.ListAPIView):
     def get_queryset(self):
         queryset = super().get_queryset()
         return queryset.filter(intervention_flat_locations=self.kwargs['intervention_pk'])
+
+
+class ResultsViewSet(OutputListAPIView):
+    """
+    Custom serializer to get rid of unnecessary part in name.
+    """
+    serializer_class = ResultSerializer
 
 
 class LocationSitesViewSet(FMBaseViewSet, viewsets.ModelViewSet):
