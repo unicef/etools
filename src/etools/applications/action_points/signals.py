@@ -2,7 +2,6 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 from etools.applications.action_points.models import ActionPoint
-from etools.applications.psea.models import Assessment
 from etools.applications.t2f.models import TravelActivity
 
 
