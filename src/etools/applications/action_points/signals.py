@@ -13,9 +13,6 @@ def action_point_updated_receiver(instance, created, **kwargs):
     if isinstance(instance.related_object, TravelActivity):
         email_template = 't2f/travel_activity/action_point_assigned'
         relevant_ap_instance = True
-    if isinstance(instance.related_object, Assessment):
-        email_template = 'psea/assessment/action_point_assigned'
-        relevant_ap_instance = True
     elif instance.related_object is None:
         email_template = 'action_points/action_point/assigned'
         relevant_ap_instance = True
