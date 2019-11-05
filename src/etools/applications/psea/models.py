@@ -2,6 +2,7 @@ from django.conf import settings
 from django.db import connection, models
 from django.db.models import Sum
 from django.utils import timezone
+from django.utils.encoding import force_text
 from django.utils.translation import ugettext_lazy as _
 
 from django_fsm import FSMField, transition
@@ -165,11 +166,14 @@ class Assessment(TimeStampedModel):
             return True
         return False
 
-    def get_recipients(self):
+    def get_assessor_recipients(self):
         return self.assessor.get_recipients()
 
     def get_focal_recipients(self):
         return [u.email for u in self.focal_points.all()]
+
+    def get_all_recipients(self):
+        return self.get_assessor_recipients() + self.get_focal_recipients()
 
     def rating(self):
         if self.answers_complete():
@@ -200,6 +204,15 @@ class Assessment(TimeStampedModel):
                 return True
         return False
 
+    def user_is_external(self, user):
+        assessor_qs = Assessor.objects.filter(
+            assessment=self,
+            assessor_type=Assessor.TYPE_EXTERNAL,
+        )
+        if assessor_qs.filter(user=user).exists():
+            return True
+        return False
+
     def user_belongs(self, user):
         if self.pk and user in self.focal_points.all():
             return True
@@ -207,9 +220,9 @@ class Assessment(TimeStampedModel):
 
     def get_mail_context(self, user):
         context = {
-            "partner": self.partner,
+            "partner": force_text(self.partner),
             "url": self.get_object_url(user=user),
-            "assessment": self
+            "assessment": force_text(self),
         }
         if self.status == self.STATUS_REJECTED:
             context["rejected_comment"] = self.get_rejected_comment()
