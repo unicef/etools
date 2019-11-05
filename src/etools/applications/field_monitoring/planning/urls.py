@@ -15,7 +15,7 @@ root_api.register(r'cp-outputs', views.CPOutputsViewSet, base_name='cp_outputs')
 root_api.register(r'interventions', views.InterventionsViewSet, base_name='interventions')
 
 activities_api = NestedComplexRouter(root_api, r'activities')
-activities_api.register(r'attachments', views.ActivityAttachmentsViewSet, base_name='activity-attachments')
+activities_api.register(r'attachments', views.ActivityAttachmentsViewSet, basename='activity-attachments')
 
 app_name = 'field_monitoring_planning'
 urlpatterns = [
