@@ -107,6 +107,7 @@ class Command(BaseCommand):
 
     staff_members_block = [
         'audit.engagement.staff_members',
+        'audit.engagement.users_notified'
     ]
 
     action_points_block = [
