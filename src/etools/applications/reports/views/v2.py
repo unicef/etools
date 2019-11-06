@@ -18,7 +18,7 @@ from rest_framework.generics import (
     RetrieveUpdateDestroyAPIView,
 )
 from rest_framework.mixins import CreateModelMixin, ListModelMixin, RetrieveModelMixin
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAdminUser, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 from rest_framework_csv.renderers import CSVRenderer, JSONRenderer
@@ -509,13 +509,14 @@ class OfficeViewSet(
     Returns a list of all Offices
     """
     serializer_class = OfficeSerializer
-    permission_classes = (IsAdminUser,)
+    permission_classes = (IsAuthenticatedOrReadOnly,)
+    queryset = Office.objects
     module2filters = {
         'tpm': ['tpmactivity__tpm_visit__tpm_partner__staff_members__user'],
     }
 
     def get_queryset(self):
-        qs = Office.objects.all()
+        qs = super().get_queryset()
         if "values" in self.request.query_params.keys():
             # Used for ghost data - filter in all(), and return straight away.
             try:

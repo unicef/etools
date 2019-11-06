@@ -20,7 +20,7 @@ class AssessmentPermissions(PMPPermissions):
         super().__init__(user, instance, permission_structure, **kwargs)
 
         self.condition_map = {
-            'user belongs': instance.user_belongs(
-                user,
-            )
+            'user belongs': instance.user_belongs(user),
+            'is assessor': instance.user_is_assessor(user),
+            'is external': instance.user_is_external(user),
         }
