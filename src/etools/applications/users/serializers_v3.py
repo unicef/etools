@@ -3,6 +3,7 @@ from django.db import connection
 
 from rest_framework import serializers
 
+from etools.applications.audit.models import Auditor
 from etools.applications.users.models import Country, UserProfile
 from etools.applications.users.serializers import GroupSerializer, SimpleCountrySerializer
 from etools.applications.users.validators import ExternalUserValidator
@@ -184,4 +185,5 @@ class ExternalUserSerializer(MinimalUserSerializer):
         else:
             instance = super().create(validated_data)
         self._add_to_country(instance)
+        instance.groups.add(Auditor.as_group())
         return instance

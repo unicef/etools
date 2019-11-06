@@ -15,6 +15,7 @@ from etools.applications.reports.serializers.v1 import (
     SectionCreateSerializer,
     UnitSerializer,
 )
+from etools.libraries.djangolib.views import ExternalModuleFilterMixin
 
 
 class ResultTypeViewSet(mixins.ListModelMixin,
@@ -26,7 +27,8 @@ class ResultTypeViewSet(mixins.ListModelMixin,
     serializer_class = ResultTypeSerializer
 
 
-class SectionViewSet(QueryStringFilterMixin,
+class SectionViewSet(ExternalModuleFilterMixin,
+                     QueryStringFilterMixin,
                      mixins.RetrieveModelMixin,
                      mixins.ListModelMixin,
                      mixins.CreateModelMixin,
@@ -39,6 +41,7 @@ class SectionViewSet(QueryStringFilterMixin,
     filters = (
         ('active', 'active'),
     )
+    module2filters = {'tpm': ['tpm_activities__tpm_visit__tpm_partner__staff_members__user', ]}
 
 
 class ResultViewSet(viewsets.ModelViewSet):

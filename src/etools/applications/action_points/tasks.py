@@ -19,7 +19,7 @@ def notify_overdue_action_points():
     """Send a notification to assignee of an action for each
     overdue action point (day after due date)
     """
-    for country in Country.objects.exclude(name=get_public_schema_name()).all():
+    for country in Country.objects.exclude(name__in=[get_public_schema_name(), 'Global']).all():
         connection.set_tenant(country)
         _notify_overdue_action_points(country.name)
 

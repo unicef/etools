@@ -1,0 +1,40 @@
+{
+    "status_code": 200,
+    "headers": {
+        "content-type": [
+            "Content-Type",
+            "application/json"
+        ],
+        "vary": [
+            "Vary",
+            "Accept, Origin, Cookie"
+        ],
+        "allow": [
+            "Allow",
+            "GET, HEAD, OPTIONS"
+        ],
+        "x-frame-options": [
+            "X-Frame-Options",
+            "SAMEORIGIN"
+        ],
+        "content-length": [
+            "Content-Length",
+            "212"
+        ]
+    },
+    "data": [
+        {
+            "id": "101",
+            "name": "Location 0 [GatewayType 1 - abc]",
+            "p_code": "abc",
+            "gateway": {
+                "id": 217,
+                "created": "2019-01-11T16:16:52.942000Z",
+                "modified": "2019-01-11T16:16:52.942000Z",
+                "name": "GatewayType 1",
+                "admin_level": 1
+            }
+        }
+    ],
+    "content_type": null
+}
