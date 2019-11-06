@@ -25,13 +25,15 @@ from etools.applications.field_monitoring.data_collection.serializers import (
     ChecklistSerializer,
     FindingSerializer,
 )
+from etools.applications.field_monitoring.fm_settings.serializers import FMCommonAttachmentLinkSerializer
 from etools.applications.field_monitoring.permissions import (
     activity_field_is_editable_permission,
     IsEditAction,
     IsReadAction,
 )
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
-from etools.applications.field_monitoring.views import FMBaseAttachmentsViewSet, FMBaseViewSet
+from etools.applications.field_monitoring.views import FMBaseAttachmentsViewSet, FMBaseViewSet, \
+    FMBaseAttachmentLinksViewSet
 
 
 class ActivityDataCollectionViewSet(
@@ -115,16 +117,12 @@ class ChecklistOverallFindingsViewSet(
     serializer_class = ChecklistOverallFindingSerializer
 
 
-class ChecklistOverallAttachmentsViewSet(FMBaseAttachmentsViewSet):
+class ChecklistOverallAttachmentsViewSet(FMBaseAttachmentLinksViewSet):
     permission_classes = FMBaseViewSet.permission_classes + [
         IsReadAction | (IsEditAction & activity_field_is_editable_permission('started_checklist_set'))
     ]
-    serializer_class = BaseAttachmentSerializer
     related_model = ChecklistOverallFinding
-
-    def _get_parent_filters(self):
-        # too deep inheritance is not supported in case of generic relations, so just use parent (content object)
-        return self.get_parent_filter()
+    serializer_class = FMCommonAttachmentLinkSerializer
 
 
 class ChecklistFindingsViewSet(
@@ -163,7 +161,8 @@ class ActivityOverallFindingsViewSet(
         IsReadAction | (IsEditAction & activity_field_is_editable_permission('activity_overall_finding'))
     ]
     queryset = ActivityOverallFinding.objects.prefetch_related(
-        'partner', 'cp_output', 'intervention', 'monitoring_activity__checklists__overall_findings__attachments',
+        'partner', 'cp_output', 'intervention',
+        'monitoring_activity__checklists__overall_findings__attachments',
     )
     serializer_class = ActivityOverallFindingSerializer
 
@@ -190,7 +189,6 @@ class ActivityFindingsViewSet(
             'activity_question__findings',
             Finding.objects.filter(value__isnull=False).prefetch_related(
                 'startedchecklist', 'startedchecklist__author',
-                ''
             ),
             to_attr='completed_findings'
         ),

@@ -10,6 +10,7 @@ class AttachmentFileTypeFactory(factory.django.DjangoModelFactory):
 
     code = fuzzy.FuzzyText()
     name = factory.Sequence(lambda n: 'file_type_%d' % n)
+    label = factory.Sequence(lambda n: 'File Type #%d' % n)
 
 
 class AttachmentFactory(factory.django.DjangoModelFactory):

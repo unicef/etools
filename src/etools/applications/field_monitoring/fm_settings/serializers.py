@@ -7,7 +7,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from unicef_attachments.fields import FileTypeModelChoiceField
 from unicef_attachments.models import FileType
-from unicef_attachments.serializers import BaseAttachmentSerializer
+from unicef_attachments.serializers import BaseAttachmentSerializer, AttachmentLinkSerializer
 from unicef_locations.serializers import LocationLightSerializer, LocationSerializer
 from unicef_restlib.fields import SeparatedReadWriteField
 from unicef_restlib.serializers import UserContextSerializerMixin, WritableNestedSerializerMixin
@@ -178,3 +178,32 @@ class LogIssueSerializer(UserContextSerializerMixin, SnapshotModelSerializer):
             return
 
         return MinimalUserSerializer(matched_events[-1].by_user).data
+
+
+class FMCommonAttachmentLinkSerializer(AttachmentLinkSerializer):
+    file_type = FileTypeModelChoiceField(queryset=FileType.objects.filter(code='fm_common'),
+                                         write_only=True, required=True)
+
+    class Meta(AttachmentLinkSerializer.Meta):
+        pass
+
+    def _set_file_type(self, instance, file_type=None):
+        if file_type:
+            instance.attachment.file_type = file_type
+            instance.attachment.save()
+
+    def create(self, validated_data):
+        file_type = validated_data.pop('file_type', None)
+
+        instance = super().create(validated_data)
+        self._set_file_type(instance, file_type)
+
+        return instance
+
+    def update(self, instance, validated_data):
+        file_type = validated_data.pop('file_type', None)
+
+        instance = super().create(validated_data)
+        self._set_file_type(instance, file_type)
+
+        return instance

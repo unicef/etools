@@ -6,13 +6,13 @@ from unicef_restlib.routers import NestedComplexRouter
 from etools.applications.field_monitoring.planning import views
 
 root_api = routers.SimpleRouter()
-root_api.register(r'year-plan', views.YearPlanViewSet, base_name='year-plan')
+root_api.register(r'year-plan', views.YearPlanViewSet, basename='year-plan')
 root_api.register(r'questions/templates/(?P<level>\w+)(?:/target/(?P<target_id>\d+))?', views.TemplatedQuestionsViewSet,
-                  base_name='question-templates')
-root_api.register(r'activities', views.MonitoringActivitiesViewSet, base_name='activities')
-root_api.register(r'users', views.FMUsersViewSet, base_name='users')
-root_api.register(r'cp-outputs', views.CPOutputsViewSet, base_name='cp_outputs')
-root_api.register(r'interventions', views.InterventionsViewSet, base_name='interventions')
+                  basename='question-templates')
+root_api.register(r'activities', views.MonitoringActivitiesViewSet, basename='activities')
+root_api.register(r'users', views.FMUsersViewSet, basename='users')
+root_api.register(r'cp-outputs', views.CPOutputsViewSet, basename='cp_outputs')
+root_api.register(r'interventions', views.InterventionsViewSet, basename='interventions')
 
 activities_api = NestedComplexRouter(root_api, r'activities')
 activities_api.register(r'attachments', views.ActivityAttachmentsViewSet, basename='activity-attachments')

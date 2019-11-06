@@ -281,30 +281,31 @@ class TestOverallFindingAttachmentsView(ChecklistDataCollectionTestMixin, APIVie
         cls.overall_finding = cls.started_checklist.overall_findings.first()
 
     def test_add(self):
-        attachments_num = self.overall_finding.attachments.count()
-        self.assertEqual(attachments_num, 0)
+        self.assertEqual(self.overall_finding.attachments.count(), 0)
 
-        create_response = self.forced_auth_req(
+        attachment = AttachmentFactory(content_object=None)
+        file_type = AttachmentFileTypeFactory(code='fm_common')
+
+        link_response = self.forced_auth_req(
             'post',
             reverse('field_monitoring_data_collection:checklist-overall-attachments-list',
                     args=[self.activity.pk, self.started_checklist.id, self.overall_finding.id]),
             user=self.team_member,
-            request_format='multipart',
-            data={
-                'file': SimpleUploadedFile('hello_world.txt', u'hello world!'.encode('utf-8')),
-                'file_type': AttachmentFileTypeFactory(code='fm_common').id,
-            }
+            data={'attachment': attachment.id, 'file_type': file_type.id}
         )
-        self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(link_response.status_code, status.HTTP_201_CREATED)
 
-        list_response = self.forced_auth_req(
+        finding_response = self.forced_auth_req(
             'get',
-            reverse('field_monitoring_data_collection:checklist-overall-attachments-list',
-                    args=[self.activity.pk, self.started_checklist.id, self.overall_finding.id]),
+            reverse('field_monitoring_data_collection:checklist-overall-findings-list',
+                    args=[self.activity.pk, self.started_checklist.id]),
             user=self.team_member
         )
-        self.assertEqual(list_response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(list_response.data['results']), attachments_num + 1)
+        self.assertEqual(finding_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(finding_response.data['results']), 1)
+        self.assertEqual(len(finding_response.data['results'][0]['attachments']), 1)
+        self.assertEqual(finding_response.data['results'][0]['attachments'][0]['id'], attachment.pk)
+        self.assertEqual(finding_response.data['results'][0]['attachments'][0]['file_type'], file_type.pk)
 
     def test_add_unicef(self):
         create_response = self.forced_auth_req(
