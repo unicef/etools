@@ -203,7 +203,7 @@ class FMCommonAttachmentLinkSerializer(AttachmentLinkSerializer):
     def update(self, instance, validated_data):
         file_type = validated_data.pop('file_type', None)
 
-        instance = super().create(validated_data)
+        instance = super().update(instance, validated_data)
         self._set_file_type(instance, file_type)
 
         return instance

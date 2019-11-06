@@ -3,8 +3,10 @@ from django.db import connection
 from django.urls import reverse
 
 from rest_framework import status
+from unicef_attachments.models import Attachment, AttachmentLink
 
-from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
+from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory, \
+    AttachmentLinkFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.field_monitoring.data_collection.models import ActivityQuestionOverallFinding
 from etools.applications.field_monitoring.data_collection.tests.factories import (
@@ -306,6 +308,56 @@ class TestOverallFindingAttachmentsView(ChecklistDataCollectionTestMixin, APIVie
         self.assertEqual(len(finding_response.data['results'][0]['attachments']), 1)
         self.assertEqual(finding_response.data['results'][0]['attachments'][0]['id'], attachment.pk)
         self.assertEqual(finding_response.data['results'][0]['attachments'][0]['file_type'], file_type.pk)
+
+    def test_bulk_create(self):
+        link_response = self.forced_auth_req(
+            'post',
+            reverse('field_monitoring_data_collection:checklist-overall-attachments-list',
+                    args=[self.activity.pk, self.started_checklist.id, self.overall_finding.id]),
+            user=self.team_member,
+            data=[
+                {
+                    'attachment': AttachmentFactory(content_object=None).id,
+                    'file_type': AttachmentFileTypeFactory(code='fm_common').id
+                }
+                for _i in range(2)
+            ]
+        )
+        self.assertEqual(link_response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(AttachmentLink.objects.filter(object_id=self.overall_finding.id).count(), 2)
+
+    def test_change(self):
+        attachment = AttachmentFactory(content_object=self.overall_finding, file_type__code='fm_common',
+                                       file_type__name='before')
+        AttachmentLinkFactory(attachment=attachment, content_object=self.overall_finding)
+
+        new_file_type = AttachmentFileTypeFactory(code='fm_common', name='after')
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse('field_monitoring_data_collection:checklist-overall-attachments-detail',
+                    args=[self.activity.pk, self.started_checklist.id, self.overall_finding.id, attachment.pk]),
+            user=self.team_member,
+            data={'file_type': new_file_type.id}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(Attachment.objects.get(pk=attachment.pk).file_type_id, new_file_type.id)
+
+    def test_remove(self):
+        attachment = AttachmentFactory(content_object=self.overall_finding, file_type__code='fm_common',
+                                       file_type__name='before')
+        link = AttachmentLinkFactory(attachment=attachment, content_object=self.overall_finding)
+
+        response = self.forced_auth_req(
+            'delete',
+            reverse('field_monitoring_data_collection:checklist-overall-attachments-detail',
+                    args=[self.activity.pk, self.started_checklist.id, self.overall_finding.id, attachment.pk]),
+            user=self.team_member,
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertTrue(Attachment.objects.filter(pk=attachment.pk).exists())
+        self.assertIsNone(Attachment.objects.get(pk=attachment.pk).content_object)
+        self.assertFalse(AttachmentLink.objects.filter(pk=link.pk).exists())
 
     def test_add_unicef(self):
         create_response = self.forced_auth_req(

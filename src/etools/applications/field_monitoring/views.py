@@ -1,12 +1,14 @@
 from django.contrib.contenttypes.models import ContentType
 from django.http import Http404
+from django_filters.rest_framework import DjangoFilterBackend
 
 from rest_framework.decorators import action
+from rest_framework.mixins import UpdateModelMixin, CreateModelMixin, DestroyModelMixin
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.serializers import ListSerializer
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
-from rest_framework_bulk import BulkCreateModelMixin, BulkDestroyModelMixin
+from rest_framework_bulk import BulkCreateModelMixin
 from unicef_attachments.models import Attachment, AttachmentLink
 from unicef_restlib.pagination import DynamicPageNumberPagination
 from unicef_restlib.views import MultiSerializerViewSetMixin, NestedViewSetMixin, SafeTenantViewSetMixin
@@ -65,7 +67,9 @@ class FMBaseAttachmentLinksViewSet(
     FMBaseViewSet,
     NestedViewSetMixin,
     BulkCreateModelMixin,
-    BulkDestroyModelMixin,
+    CreateModelMixin,
+    UpdateModelMixin,
+    DestroyModelMixin,
     GenericViewSet,
 ):
     attachment_code = None  # fill `code` field in attachment to deal with coded generics
@@ -73,6 +77,8 @@ class FMBaseAttachmentLinksViewSet(
     queryset = AttachmentLink.objects.prefetch_related('attachment')
     lookup_field = 'attachment_id'
     lookup_url_kwarg = 'pk'
+    filter_backends = (DjangoFilterBackend,)
+    filterset_fields = {'id': ['in']}
 
     def get_parent_filter(self):
         parent = self.get_parent_object()
