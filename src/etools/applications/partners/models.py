@@ -827,7 +827,7 @@ class PartnerStaffMember(TimeStampedModel):
     )
     title = models.CharField(
         verbose_name=_("Title"),
-        max_length=64,
+        max_length=100,
         null=True,
         blank=True,
     )
