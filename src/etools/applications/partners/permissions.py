@@ -164,13 +164,6 @@ class AgreementPermissions(PMPPermissions):
         }
 
 
-class AgreementAmendmentPermissions(PMPPermissions):
-    MODEL_NAME = 'partners.AgreementAmendment'
-
-    def condition_group_valid(self, condition_group):
-        return True
-
-
 class PartnershipManagerPermission(permissions.BasePermission):
     """Applies general and object-based permissions.
 

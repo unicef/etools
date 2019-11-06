@@ -1420,11 +1420,6 @@ class AgreementAmendment(TimeStampedModel):
             self.number
         )
 
-    @classmethod
-    def permission_structure(cls):
-        permissions = import_permissions(cls.__name__)
-        return permissions
-
     def get_object_url(self):
         return reverse("partners_api:partner-detail", args=[self.pk])
 

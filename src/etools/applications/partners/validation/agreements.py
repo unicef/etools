@@ -7,7 +7,7 @@ from etools_validator.exceptions import BasicValidationError, StateValidationErr
 from etools_validator.utils import check_required_fields, check_rigid_fields
 from etools_validator.validation import CompleteValidation
 
-from etools.applications.partners.permissions import AgreementAmendmentPermissions, AgreementPermissions
+from etools.applications.partners.permissions import AgreementPermissions
 
 
 def agreement_transition_to_signed_valid(agreement):
@@ -199,42 +199,3 @@ class AgreementValid(CompleteValidation):
         if not today > agreement.end:
             raise StateValidationError([_('Today is not after the end date')])
         return True
-
-
-def amendment_signed_date_unique(instance):
-    if not instance.signed_date:
-        return True
-    qs = instance.__class__.objects.filter(
-        agreement=instance.agreement,
-        signed_date=instance.signed_date,
-    ).exclude(pk=instance.pk)
-    if qs.exists():
-        raise BasicValidationError(_("Signed date needs to be unique"))
-    return True
-
-
-class AgreementAmendmentValid(CompleteValidation):
-    VALIDATION_CLASS = 'partners.AgreementAmendment'
-    BASIC_VALIDATIONS = [
-        amendment_signed_date_unique,
-    ]
-    VALID_ERRORS = {}
-    PERMISSIONS_CLASS = AgreementAmendmentPermissions
-
-    def __init__(
-            self,
-            new,
-            user=None,
-            old=None,
-            instance_class=None,
-            stateless=True,
-            disable_rigid_check=False
-    ):
-        super().__init__(
-            new,
-            user=user,
-            old=old,
-            instance_class=instance_class,
-            stateless=stateless,
-            disable_rigid_check=disable_rigid_check,
-        )
