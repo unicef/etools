@@ -16,7 +16,7 @@ def set_reference_number(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('tpm', '0007_auto_20180926_1310'),
+        ('tpm', '0008_auto_20191016_1312'),
     ]
 
     operations = [
