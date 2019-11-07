@@ -474,6 +474,29 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         self.assertIn(self.user, assessment.focal_points.all())
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_post_assessment_date(self):
+        partner = PartnerFactory()
+        assessment_qs = Assessment.objects.filter(partner=partner)
+        self.assertFalse(assessment_qs.exists())
+
+        response = self.forced_auth_req(
+            "post",
+            reverse('psea:assessment-list'),
+            user=self.focal_user,
+            data={
+                "partner": partner.pk,
+                "focal_points": [self.user.pk],
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(assessment_qs.exists())
+        assessment = assessment_qs.first()
+        self.assertIsNotNone(assessment.reference_number)
+        self.assertIsNone(assessment.assessment_date)
+        self.assertEqual(assessment.status, Assessment.STATUS_DRAFT)
+        self.assertIn(self.user, assessment.focal_points.all())
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_post_permission(self):
         partner = PartnerFactory()
         assessment_qs = Assessment.objects.filter(partner=partner)
@@ -629,13 +652,18 @@ class TestAssessmentViewSet(BaseTenantTestCase):
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_submit(self):
-        assessment = AssessmentFactory(partner=self.partner)
+        assessment = AssessmentFactory(
+            partner=self.partner,
+            assessment_date=None,
+        )
         assessment.status = assessment.STATUS_IN_PROGRESS
         assessment.save()
         assessment.focal_points.add(self.focal_user)
         AnswerFactory(assessment=assessment)
         self.assertEqual(assessment.status, assessment.STATUS_IN_PROGRESS)
+        self.assertIsNone(assessment.assessment_date)
 
+        # check that assessment date required
         mock_send = Mock()
         with patch(self.send_path, mock_send):
             response = self.forced_auth_req(
@@ -644,13 +672,29 @@ class TestAssessmentViewSet(BaseTenantTestCase):
                 user=self.focal_user,
                 data={},
             )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(mock_send.called)
+
+        assessment.assessment_date = timezone.now().date()
+        assessment.save()
+        self.assertIsNotNone(assessment.assessment_date)
+
+        with patch(self.send_path, mock_send):
+            response = self.forced_auth_req(
+                "patch",
+                reverse("psea:assessment-submit", args=[assessment.pk]),
+                user=self.focal_user,
+                data={},
+            )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
         self.assertEqual(
             response.data.get("status"),
             assessment.STATUS_SUBMITTED,
         )
         assessment.refresh_from_db()
         self.assertEqual(assessment.status, assessment.STATUS_SUBMITTED)
+        self.assertIsNotNone(assessment.assessment_date)
         self.assertEqual(mock_send.call_count, 1)
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
