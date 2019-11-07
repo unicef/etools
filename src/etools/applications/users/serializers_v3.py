@@ -178,7 +178,7 @@ class ExternalUserSerializer(MinimalUserSerializer):
         if instance.profile.countries_available.count() == 1:
             if (
                     not instance.profile.country_override and
-                    country.schema_name.lower() not in ["uat", "global"]
+                    country.schema_name.lower() not in ["uat", "public"]
             ):
                 instance.profile.country_override = country
                 instance.profile.save()
