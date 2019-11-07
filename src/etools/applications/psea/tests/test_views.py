@@ -595,7 +595,7 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         )
         assessment.refresh_from_db()
         self.assertEqual(assessment.status, assessment.STATUS_IN_PROGRESS)
-        self.assertEqual(mock_send.call_count, 1)
+        self.assertEqual(mock_send.call_count, 2)
 
         # no subsequent assign requests allowed
         mock_send = Mock()
@@ -649,7 +649,7 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         )
         assessment.refresh_from_db()
         self.assertEqual(assessment.status, assessment.STATUS_IN_PROGRESS)
-        self.assertEqual(mock_send.call_count, 1)
+        self.assertEqual(mock_send.call_count, 2)
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_submit(self):

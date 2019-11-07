@@ -14,7 +14,7 @@ defaults = {
 
     Assessor: {{ assessor }}
 
-    Please click {{ url }} to finalize the report.
+    Please click <a href="{{ url }}">this link</a> to finalize the report.
 
     Please note that this is an automated email and the mailbox is not monitored. Please do not reply to it.
 
