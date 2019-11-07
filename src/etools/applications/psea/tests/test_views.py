@@ -634,6 +634,7 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         assessment.save()
         assessment.focal_points.add(self.focal_user)
         AnswerFactory(assessment=assessment)
+        AssessorFactory(assessment=assessment)
         self.assertEqual(assessment.status, assessment.STATUS_IN_PROGRESS)
 
         mock_send = Mock()
@@ -659,6 +660,7 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         assessment.status = assessment.STATUS_SUBMITTED
         assessment.save()
         AnswerFactory(assessment=assessment)
+        AssessorFactory(assessment=assessment)
         self.assertEqual(assessment.status, assessment.STATUS_SUBMITTED)
         mock_send = Mock()
         with patch(self.send_path, mock_send):
@@ -979,6 +981,7 @@ class TestAssessmentActionPointViewSet(BaseTenantTestCase):
         assessment.status = Assessment.STATUS_FINAL
         assessment.save()
         assessment.focal_points.set([self.focal_user])
+        AssessorFactory(assessment=assessment)
         self.assertEqual(assessment.action_points.count(), 0)
 
         mock_send = Mock()
