@@ -365,11 +365,11 @@ class Command(BaseCommand):
             self.follow_up_page,
             condition=final_engagement_condition
         )
-        self.add_permissions(
-            self.focal_point, 'edit',
-            self.follow_up_editable_page,
-            condition=final_engagement_condition
-        )
+        # self.add_permissions(
+        #     self.focal_point, 'edit',
+        #     self.follow_up_editable_page,
+        #     condition=final_engagement_condition
+        # )
 
         # action points related permissions. editable by focal point, author, assignee and assigner
         opened_action_point_condition = self.action_point_status(EngagementActionPoint.STATUSES.open)
