@@ -486,6 +486,7 @@ class TestAssessmentViewSet(BaseTenantTestCase):
             data={
                 "partner": partner.pk,
                 "focal_points": [self.user.pk],
+                "assessment_date": "",
             },
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)

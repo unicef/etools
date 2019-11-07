@@ -64,6 +64,7 @@ class AssessmentSerializer(BaseAssessmentSerializer):
     available_actions = serializers.SerializerMethodField()
     assessment_date = serializers.DateField(
         validators=[PastDateValidator()],
+        allow_null=True,
         required=False,
     )
 
