@@ -1,19 +1,19 @@
 name = 'psea/assessment/assigned'
 defaults = {
     'description': 'PSEA Assessment Assigned.',
-    'subject': 'PSEA Assessment Assigned for {{ partner.name }}',
+    'subject': 'PSEA Assessment Assigned for {{ partner_name }}',
     'content': """
     Dear Colleagues,
 
     Please note that a PSEA assessment was assigned for the following Partner:
 
-    Vendor Number: {{ partner.vendor_number }}
+    Vendor Number: {{ partner_vendor_number }}
 
-    Vendor Name: {{ partner.name }}
+    Vendor Name: {{ partner_name }}
 
-    PSEA Risk Rating: {{ assessment.overall_rating }}
+    PSEA Risk Rating: {{ overall_rating }}
 
-    Date of Assessment: {{ assessment.assessment_date }}
+    Date of Assessment: {{ assessment_date }}
 
     Please update the Vendor Master Data in VISION accordingly
 
