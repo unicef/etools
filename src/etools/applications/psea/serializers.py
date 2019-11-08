@@ -62,7 +62,11 @@ class AssessmentSerializer(BaseAssessmentSerializer):
     status_list = serializers.SerializerMethodField()
     rejected_comment = serializers.SerializerMethodField()
     available_actions = serializers.SerializerMethodField()
-    assessment_date = serializers.DateField(validators=[PastDateValidator()])
+    assessment_date = serializers.DateField(
+        validators=[PastDateValidator()],
+        allow_null=True,
+        required=False,
+    )
 
     class Meta(BaseAssessmentSerializer.Meta):
         fields = '__all__'
