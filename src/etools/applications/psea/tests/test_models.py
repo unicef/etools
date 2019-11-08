@@ -1,12 +1,13 @@
 from django.db import connection
 from django.utils import timezone
 
-from etools.applications.audit.tests.factories import AuditPartnerFactory
+from etools.applications.audit.tests.factories import AuditorStaffMemberFactory, AuditPartnerFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.psea.models import Answer, Assessment, Assessor
 from etools.applications.psea.tests.factories import (
     AnswerEvidenceFactory,
     AnswerFactory,
+    AssessmentActionPointFactory,
     AssessmentFactory,
     AssessmentStatusHistoryFactory,
     AssessorFactory,
@@ -75,6 +76,122 @@ class TestAssessment(BaseTenantTestCase):
         assessment.save()
         self.assertEqual(assessment.overall_rating, 26)
 
+    def test_rejected_comment(self):
+        assessment = AssessmentFactory()
+        self.assertFalse(assessment.get_rejected_comment())
+        AssessmentStatusHistoryFactory(
+            assessment=assessment,
+            status=Assessment.STATUS_REJECTED,
+            comment="Rejected comment",
+        )
+        self.assertEqual(assessment.get_rejected_comment(), "Rejected comment")
+        AssessmentStatusHistoryFactory(
+            assessment=assessment,
+            status=Assessment.STATUS_SUBMITTED,
+        )
+        self.assertEqual(assessment.get_rejected_comment(), "Rejected comment")
+
+    def test_get_assessor_recipients(self):
+        assessment = AssessmentFactory()
+        firm = AuditPartnerFactory()
+        staff = AuditorStaffMemberFactory(auditor_firm=firm)
+        assessor = AssessorFactory(
+            assessment=assessment,
+            user=None,
+            assessor_type=Assessor.TYPE_VENDOR,
+        )
+        assessor.auditor_firm_staff.set([staff])
+        self.assertEqual(
+            assessment.get_assessor_recipients(),
+            [staff.user.email],
+        )
+
+    def test_get_focal_recipients(self):
+        assessment = AssessmentFactory()
+        self.assertEqual(assessment.get_focal_recipients(), [])
+        user = UserFactory()
+        assessment.focal_points.add(user)
+        self.assertEqual(assessment.get_focal_recipients(), [user.email])
+
+    def test_get_all_recipients(self):
+        assessment = AssessmentFactory()
+        firm = AuditPartnerFactory()
+        staff = AuditorStaffMemberFactory(auditor_firm=firm)
+        assessor = AssessorFactory(
+            assessment=assessment,
+            user=None,
+            assessor_type=Assessor.TYPE_VENDOR,
+        )
+        assessor.auditor_firm_staff.set([staff])
+        user = UserFactory()
+        assessment.focal_points.add(user)
+        self.assertEqual(
+            assessment.get_all_recipients(),
+            [staff.user.email, user.email],
+        )
+
+    def test_user_is_assessor_user(self):
+        assessment = AssessmentFactory()
+        user = UserFactory()
+        self.assertFalse(assessment.user_is_assessor(user))
+        AssessorFactory(
+            assessment=assessment,
+            user=user,
+            assessor_type=Assessor.TYPE_EXTERNAL,
+        )
+        self.assertTrue(assessment.user_is_assessor(user))
+
+    def test_user_is_assessor_staff(self):
+        assessment = AssessmentFactory()
+        user = UserFactory()
+        firm = AuditPartnerFactory()
+        staff = AuditorStaffMemberFactory(auditor_firm=firm, user=user)
+        self.assertFalse(assessment.user_is_assessor(user))
+        assessor = AssessorFactory(
+            assessment=assessment,
+            assessor_type=Assessor.TYPE_VENDOR,
+        )
+        assessor.auditor_firm_staff.set([staff])
+        self.assertTrue(assessment.user_is_assessor(user))
+
+    def test_user_belongs_user(self):
+        assessment = AssessmentFactory()
+        user = UserFactory()
+        self.assertFalse(assessment.user_belongs(user))
+        AssessorFactory(
+            assessment=assessment,
+            user=user,
+            assessor_type=Assessor.TYPE_EXTERNAL,
+        )
+        self.assertTrue(assessment.user_belongs(user))
+
+    def test_user_belongs_staff(self):
+        assessment = AssessmentFactory()
+        user = UserFactory()
+        self.assertFalse(assessment.user_belongs(user))
+        firm = AuditPartnerFactory()
+        staff = AuditorStaffMemberFactory(auditor_firm=firm, user=user)
+        assessor = AssessorFactory(
+            assessment=assessment,
+            user=None,
+            assessor_type=Assessor.TYPE_VENDOR,
+        )
+        assessor.auditor_firm_staff.set([staff])
+        self.assertTrue(assessment.user_belongs(user))
+
+    def test_get_mail_context(self):
+        user = UserFactory()
+        assessment = AssessmentFactory()
+        AssessorFactory(assessment=assessment)
+        self.assertEqual(assessment.get_mail_context(user), {
+            "partner_name": assessment.partner.name,
+            "partner_vendor_number": assessment.partner.vendor_number,
+            "url": assessment.get_object_url(user=user),
+            "overall_rating": assessment.overall_rating,
+            "assessment_date": str(assessment.assessment_date),
+            "assessor": str(assessment.assessor),
+        })
+
     def test_get_reference_number(self):
         assessment = AssessmentFactory()
         self.assertEqual(
@@ -99,6 +216,25 @@ class TestAssessmentStatusHistory(BaseTenantTestCase):
     def test_string(self):
         status = AssessmentStatusHistoryFactory(status=Assessment.STATUS_DRAFT)
         self.assertEqual(str(status), f"Draft [{status.created}]")
+
+
+class TestAssessmentActionPoint(BaseTenantTestCase):
+    def test_get_mail_context(self):
+        user = UserFactory()
+        assessment = AssessmentFactory()
+        AssessorFactory(assessment=assessment)
+        ap = AssessmentActionPointFactory(
+            psea_assessment=assessment,
+        )
+        context = ap.get_mail_context(user=user)
+        self.assertEqual(context["psea_assessment"], {
+            "partner_name": assessment.partner.name,
+            "partner_vendor_number": assessment.partner.vendor_number,
+            "url": assessment.get_object_url(user=user),
+            "overall_rating": assessment.overall_rating,
+            "assessment_date": str(assessment.assessment_date),
+            "assessor": str(assessment.assessor),
+        })
 
 
 class TestAnswer(BaseTenantTestCase):
@@ -145,3 +281,18 @@ class TestAssessor(BaseTenantTestCase):
             auditor_firm=auditor,
         )
         self.assertEqual(str(assessor), f"{auditor}")
+
+    def test_get_recipients_user(self):
+        user = UserFactory()
+        assessor = AssessorFactory(user=user)
+        self.assertEqual(assessor.get_recipients(), [user.email])
+
+    def test_get_recipients_staff(self):
+        firm = AuditPartnerFactory()
+        staff = AuditorStaffMemberFactory(auditor_firm=firm)
+        assessor = AssessorFactory(
+            user=None,
+            assessor_type=Assessor.TYPE_VENDOR,
+        )
+        assessor.auditor_firm_staff.set([staff])
+        self.assertEqual(assessor.get_recipients(), [staff.user.email])

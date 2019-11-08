@@ -39,7 +39,7 @@ from etools.applications.users.tests.factories import GroupFactory, UserFactory
 class TestAssessmentViewSet(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.send_path = "etools.applications.psea.views.send_notification_with_template"
+        cls.send_path = "etools.applications.psea.validation.send_notification_with_template"
         cls.user = UserFactory()
         cls.focal_user = UserFactory()
         cls.focal_user.groups.add(
@@ -474,6 +474,30 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         self.assertIn(self.user, assessment.focal_points.all())
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_post_assessment_date(self):
+        partner = PartnerFactory()
+        assessment_qs = Assessment.objects.filter(partner=partner)
+        self.assertFalse(assessment_qs.exists())
+
+        response = self.forced_auth_req(
+            "post",
+            reverse('psea:assessment-list'),
+            user=self.focal_user,
+            data={
+                "partner": partner.pk,
+                "focal_points": [self.user.pk],
+                "assessment_date": "",
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(assessment_qs.exists())
+        assessment = assessment_qs.first()
+        self.assertIsNotNone(assessment.reference_number)
+        self.assertIsNone(assessment.assessment_date)
+        self.assertEqual(assessment.status, Assessment.STATUS_DRAFT)
+        self.assertIn(self.user, assessment.focal_points.all())
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_post_permission(self):
         partner = PartnerFactory()
         assessment_qs = Assessment.objects.filter(partner=partner)
@@ -531,6 +555,27 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         self.assertEqual(list(assessment.focal_points.all()), [user])
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_patch_assessment_date(self):
+        assessment = AssessmentFactory(assessment_date=None)
+        assessment.status = Assessment.STATUS_IN_PROGRESS
+        assessment.save()
+        assessor = AssessorFactory(assessment=assessment)
+        date = timezone.now().date()
+        self.assertIsNone(assessment.assessment_date)
+
+        response = self.forced_auth_req(
+            "patch",
+            reverse('psea:assessment-detail', args=[assessment.pk]),
+            user=assessor.user,
+            data={
+                "assessment_date": date,
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        assessment.refresh_from_db()
+        self.assertEqual(assessment.assessment_date, date)
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_assign(self):
         assessment = AssessmentFactory(partner=self.partner)
         self.assertEqual(assessment.status, assessment.STATUS_DRAFT)
@@ -550,7 +595,7 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         )
         assessment.refresh_from_db()
         self.assertEqual(assessment.status, assessment.STATUS_IN_PROGRESS)
-        self.assertEqual(mock_send.call_count, 1)
+        self.assertEqual(mock_send.call_count, 2)
 
         # no subsequent assign requests allowed
         mock_send = Mock()
@@ -567,14 +612,60 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         self.assertEqual(mock_send.call_count, 0)
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
-    def test_submit(self):
+    def test_assign_staff_member_required(self):
         assessment = AssessmentFactory(partner=self.partner)
+        self.assertEqual(assessment.status, assessment.STATUS_DRAFT)
+        firm = AuditPartnerFactory()
+        staff = AuditorStaffMemberFactory(auditor_firm=firm)
+        assessor = AssessorFactory(
+            assessment=assessment,
+            assessor_type=Assessor.TYPE_VENDOR,
+            auditor_firm=firm,
+        )
+        mock_send = Mock()
+        with patch(self.send_path, mock_send):
+            response = self.forced_auth_req(
+                "patch",
+                reverse("psea:assessment-assign", args=[assessment.pk]),
+                user=self.focal_user,
+                data={},
+            )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(mock_send.call_count, 0)
+
+        assessor.auditor_firm_staff.add(staff)
+
+        with patch(self.send_path, mock_send):
+            response = self.forced_auth_req(
+                "patch",
+                reverse("psea:assessment-assign", args=[assessment.pk]),
+                user=self.focal_user,
+                data={},
+            )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.data.get("status"),
+            assessment.STATUS_IN_PROGRESS,
+        )
+        assessment.refresh_from_db()
+        self.assertEqual(assessment.status, assessment.STATUS_IN_PROGRESS)
+        self.assertEqual(mock_send.call_count, 2)
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_submit(self):
+        assessment = AssessmentFactory(
+            partner=self.partner,
+            assessment_date=None,
+        )
         assessment.status = assessment.STATUS_IN_PROGRESS
         assessment.save()
         assessment.focal_points.add(self.focal_user)
         AnswerFactory(assessment=assessment)
+        AssessorFactory(assessment=assessment)
         self.assertEqual(assessment.status, assessment.STATUS_IN_PROGRESS)
+        self.assertIsNone(assessment.assessment_date)
 
+        # check that assessment date required
         mock_send = Mock()
         with patch(self.send_path, mock_send):
             response = self.forced_auth_req(
@@ -583,13 +674,30 @@ class TestAssessmentViewSet(BaseTenantTestCase):
                 user=self.focal_user,
                 data={},
             )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(mock_send.called)
+
+        assessment.assessment_date = timezone.now().date()
+        assessment.save()
+        self.assertIsNotNone(assessment.assessment_date)
+
+        with patch(self.send_path, mock_send):
+            response = self.forced_auth_req(
+                "patch",
+                reverse("psea:assessment-submit", args=[assessment.pk]),
+                user=self.focal_user,
+                data={},
+            )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
         self.assertEqual(
             response.data.get("status"),
             assessment.STATUS_SUBMITTED,
         )
         assessment.refresh_from_db()
         self.assertEqual(assessment.status, assessment.STATUS_SUBMITTED)
+        self.assertIsNotNone(assessment.assessment_date)
+        self.assertEqual(mock_send.call_count, 1)
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_finalize(self):
@@ -597,6 +705,7 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         assessment.status = assessment.STATUS_SUBMITTED
         assessment.save()
         AnswerFactory(assessment=assessment)
+        AssessorFactory(assessment=assessment)
         self.assertEqual(assessment.status, assessment.STATUS_SUBMITTED)
         mock_send = Mock()
         with patch(self.send_path, mock_send):
@@ -853,6 +962,30 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         assessment.refresh_from_db()
         self.assertIn(self.user, assessment.focal_points.all())
 
+        # change user to external and attempt to add/change
+        # focal points for assessment
+        external_user = UserFactory()
+        AssessorFactory(
+            assessment=assessment,
+            assessor_type=Assessor.TYPE_EXTERNAL,
+            user=external_user,
+        )
+        assessment.status = Assessment.STATUS_IN_PROGRESS
+        assessment.save()
+        self.assertEqual(assessment.status, Assessment.STATUS_IN_PROGRESS)
+        self.assertNotIn(self.focal_user, assessment.focal_points.all())
+        response = self.forced_auth_req(
+            "patch",
+            reverse('psea:assessment-detail', args=[assessment.pk]),
+            user=external_user,
+            data={
+                "focal_points": [self.focal_user.pk],
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        assessment.refresh_from_db()
+        self.assertNotIn(self.focal_user, assessment.focal_points.all())
+
         # change assessment status to FINAL and attempt to add/change
         # focal points for assessment
         assessment.status = Assessment.STATUS_FINAL
@@ -877,6 +1010,7 @@ class TestAssessmentActionPointViewSet(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         call_command('update_psea_permissions', verbosity=0)
+        cls.send_path = "etools.applications.action_points.models.Notification"
         cls.focal_user = UserFactory()
         cls.focal_user.groups.add(
             GroupFactory(name=UNICEFAuditFocalPoint.name),
@@ -892,27 +1026,31 @@ class TestAssessmentActionPointViewSet(BaseTenantTestCase):
         assessment.status = Assessment.STATUS_FINAL
         assessment.save()
         assessment.focal_points.set([self.focal_user])
+        AssessorFactory(assessment=assessment)
         self.assertEqual(assessment.action_points.count(), 0)
 
-        response = self.forced_auth_req(
-            'post',
-            reverse("psea:action-points-list", args=[assessment.pk]),
-            user=self.focal_user,
-            data={
-                'description': fuzzy.FuzzyText(length=100).fuzz(),
-                'due_date': fuzzy.FuzzyDate(
-                    timezone.now().date(),
-                    timezone.now().date() + datetime.timedelta(days=5),
-                ).fuzz(),
-                'assigned_to': self.unicef_user.pk,
-                'office': self.focal_user.profile.office.pk,
-                'section': SectionFactory().pk,
-            }
-        )
+        mock_send = Mock()
+        with patch(self.send_path, mock_send):
+            response = self.forced_auth_req(
+                'post',
+                reverse("psea:action-points-list", args=[assessment.pk]),
+                user=self.focal_user,
+                data={
+                    'description': fuzzy.FuzzyText(length=100).fuzz(),
+                    'due_date': fuzzy.FuzzyDate(
+                        timezone.now().date(),
+                        timezone.now().date() + datetime.timedelta(days=5),
+                    ).fuzz(),
+                    'assigned_to': self.unicef_user.pk,
+                    'office': self.focal_user.profile.office.pk,
+                    'section': SectionFactory().pk,
+                }
+            )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(assessment.action_points.count(), 1)
         self.assertIsNotNone(assessment.action_points.first().partner)
+        self.assertTrue(mock_send.objects.create.called)
 
     def _test_action_point_editable(self, action_point, user, editable=True):
         assessment = action_point.psea_assessment
@@ -1330,6 +1468,8 @@ class TestAnswerViewSet(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.user = UserFactory()
         cls.assessment = AssessmentFactory()
+        cls.assessment.status = Assessment.STATUS_IN_PROGRESS
+        cls.assessment.save()
         cls.file_type = AttachmentFileTypeFactory(code="psea_answer")
         cls.indicator = IndicatorFactory()
         cls.rating = RatingFactory()
@@ -1341,8 +1481,6 @@ class TestAnswerViewSet(BaseTenantTestCase):
     def test_post(self):
         attachment_1 = AttachmentFactory(file="sample_1.pdf")
         attachment_2 = AttachmentFactory(file="sample_2.pdf")
-        self.assessment.status = Assessment.STATUS_IN_PROGRESS
-        self.assessment.save()
         AssessorFactory(assessment=self.assessment, user=self.user)
         self.assertTrue(self.assessment.user_belongs(self.user))
         answer_qs = Answer.objects.filter(assessment=self.assessment)
@@ -1379,8 +1517,6 @@ class TestAnswerViewSet(BaseTenantTestCase):
     def test_post_validation(self):
         evidence = EvidenceFactory(requires_description=True)
         self.indicator.evidences.add(evidence)
-        self.assessment.status = Assessment.STATUS_IN_PROGRESS
-        self.assessment.save()
         AssessorFactory(assessment=self.assessment, user=self.user)
         self.assertTrue(self.assessment.user_belongs(self.user))
         answer_qs = Answer.objects.filter(assessment=self.assessment)
@@ -1537,6 +1673,36 @@ class TestAnswerViewSet(BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(answer_qs.exists())
+
+    def test_permission(self):
+        focal_user = UserFactory()
+        self.assessment.focal_points.add(focal_user)
+        answer = AnswerFactory(
+            assessment=self.assessment,
+            indicator=self.indicator,
+            rating=self.rating,
+            comments="Initial comment",
+        )
+        AnswerEvidenceFactory(answer=answer, evidence=self.evidence)
+        response = self.forced_auth_req(
+            "post",
+            reverse(
+                "psea:answer-detail",
+                args=[self.assessment.pk, self.indicator.pk],
+            ),
+            user=focal_user,
+            data={
+                "indicator": self.indicator.pk,
+                "evidences": [
+                    {"evidence": self.evidence.pk},
+                ],
+                "comments": "Changed comment",
+                "rating": self.rating.pk,
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        answer.refresh_from_db()
+        self.assertEqual(answer.comments, "Initial comment")
 
 
 class TestAnswerAttachmentViewSet(BaseTenantTestCase):

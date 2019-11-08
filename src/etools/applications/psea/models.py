@@ -16,8 +16,12 @@ from etools.applications.audit.purchase_order.models import AuditorFirm, Auditor
 from etools.applications.core.permissions import import_permissions
 from etools.applications.core.urlresolvers import build_frontend_url
 from etools.applications.psea.validation import (
+    assessment_assigned,
+    assessment_final,
     assessment_focal_point_user,
     assessment_illegal_transition,
+    assessment_rejected,
+    assessment_submitted,
     assessment_user_belongs,
 )
 
@@ -60,6 +64,7 @@ class Indicator(OrderedModel, TimeStampedModel):
     active = models.BooleanField(default=True)
 
     class Meta:
+        ordering = ("order",)
         verbose_name = _('Indicator')
         verbose_name_plural = _('Indicators')
 
@@ -88,6 +93,12 @@ class Assessment(TimeStampedModel):
 
     AUTO_TRANSITIONS = {
         STATUS_ASSIGNED: [STATUS_IN_PROGRESS],
+    }
+    TRANSITION_SIDE_EFFECTS = {
+        STATUS_ASSIGNED: [assessment_assigned],
+        STATUS_SUBMITTED: [assessment_submitted],
+        STATUS_REJECTED: [assessment_rejected],
+        STATUS_FINAL: [assessment_final],
     }
 
     reference_number = models.CharField(
@@ -126,8 +137,7 @@ class Assessment(TimeStampedModel):
         ordering = ("-assessment_date",)
 
     def get_object_url(self, **kwargs):
-        # TODO double check this with frontend developers
-        return build_frontend_url('psea', 'assessment', 'detail', self.id, **kwargs)
+        return build_frontend_url('psea', 'assessments', self.id, 'details', **kwargs)
 
     def get_rejected_comment(self):
         rejected_qs = self.status_history.filter(
@@ -155,8 +165,14 @@ class Assessment(TimeStampedModel):
             return True
         return False
 
+    def get_assessor_recipients(self):
+        return self.assessor.get_recipients()
+
     def get_focal_recipients(self):
         return [u.email for u in self.focal_points.all()]
+
+    def get_all_recipients(self):
+        return self.get_assessor_recipients() + self.get_focal_recipients()
 
     def rating(self):
         if self.answers_complete():
@@ -187,10 +203,32 @@ class Assessment(TimeStampedModel):
                 return True
         return False
 
+    def user_is_external(self, user):
+        assessor_qs = Assessor.objects.filter(
+            assessment=self,
+            assessor_type=Assessor.TYPE_EXTERNAL,
+        )
+        if assessor_qs.filter(user=user).exists():
+            return True
+        return False
+
     def user_belongs(self, user):
         if self.pk and user in self.focal_points.all():
             return True
         return self.user_is_assessor(user)
+
+    def get_mail_context(self, user):
+        context = {
+            "partner_name": self.partner.name,
+            "partner_vendor_number": self.partner.vendor_number,
+            "url": self.get_object_url(user=user),
+            "overall_rating": self.overall_rating,
+            "assessment_date": str(self.assessment_date),
+            "assessor": str(self.assessor),
+        }
+        if self.status == self.STATUS_REJECTED:
+            context["rejected_comment"] = self.get_rejected_comment()
+        return context
 
     def save(self, *args, **kwargs):
         self.overall_rating = self.rating()

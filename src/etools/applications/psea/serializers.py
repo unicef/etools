@@ -28,7 +28,7 @@ from etools.applications.psea.models import (
     Rating,
 )
 from etools.applications.psea.permissions import AssessmentPermissions
-from etools.applications.psea.validators import EvidenceDescriptionValidator
+from etools.applications.psea.validators import EvidenceDescriptionValidator, PastDateValidator
 from etools.applications.reports.serializers.v1 import SectionSerializer
 from etools.applications.users.serializers import OfficeSerializer
 from etools.applications.users.serializers_v3 import MinimalUserSerializer
@@ -62,6 +62,11 @@ class AssessmentSerializer(BaseAssessmentSerializer):
     status_list = serializers.SerializerMethodField()
     rejected_comment = serializers.SerializerMethodField()
     available_actions = serializers.SerializerMethodField()
+    assessment_date = serializers.DateField(
+        validators=[PastDateValidator()],
+        allow_null=True,
+        required=False,
+    )
 
     class Meta(BaseAssessmentSerializer.Meta):
         fields = '__all__'
@@ -70,11 +75,11 @@ class AssessmentSerializer(BaseAssessmentSerializer):
     def get_overall_rating(self, obj):
         if not obj.overall_rating:
             display = ""
-        elif obj.overall_rating <= 11:
+        elif obj.overall_rating <= 8:
             display = "High"
-        elif 11 < obj.overall_rating <= 19:
+        elif 8 < obj.overall_rating <= 14:
             display = "Moderate"
-        elif obj.overall_rating >= 20:
+        elif obj.overall_rating >= 15:
             display = "Low"
         return {
             "value": obj.overall_rating,
@@ -141,7 +146,11 @@ class AssessmentSerializer(BaseAssessmentSerializer):
             if obj.status in [obj.STATUS_SUBMITTED]:
                 available_actions.append(ACTION_MAP.get(obj.STATUS_REJECTED))
                 available_actions.append(ACTION_MAP.get(obj.STATUS_FINAL))
-            if obj.status not in [obj.STATUS_FINAL]:
+            if obj.status not in [
+                    obj.STATUS_CANCELLED,
+                    obj.STATUS_SUBMITTED,
+                    obj.STATUS_FINAL,
+            ]:
                 available_actions.append(ACTION_MAP.get(obj.STATUS_CANCELLED))
         if obj.user_is_assessor(user):
             if obj.status in [obj.STATUS_IN_PROGRESS, obj.STATUS_REJECTED]:
@@ -275,14 +284,15 @@ class AssessmentActionPointExportSerializer(serializers.Serializer):
 class AssessorSerializer(serializers.ModelSerializer):
     auditor_firm_name = serializers.SerializerMethodField()
     assessor_details = serializers.SerializerMethodField()
-
-    def get_assessor_details(self, obj):
-        return obj.__str__()
+    user_details = MinimalUserSerializer(source="user", read_only=True)
 
     class Meta:
         model = Assessor
         fields = "__all__"
         read_only_fields = ["assessment", "assessor_details"]
+
+    def get_assessor_details(self, obj):
+        return obj.__str__()
 
     def get_auditor_firm_name(self, obj):
         if obj.auditor_firm:
@@ -362,7 +372,6 @@ class RatingSerializer(serializers.ModelSerializer):
 
 
 class IndicatorSerializer(serializers.ModelSerializer):
-    subject = serializers.SerializerMethodField()
     evidences = EvidenceSerializer(many=True, read_only=True)
     ratings = RatingSerializer(
         many=True,
@@ -381,9 +390,6 @@ class IndicatorSerializer(serializers.ModelSerializer):
             "evidences",
             "document_types",
         )
-
-    def get_subject(self, obj):
-        return f"{obj.order}. {obj.subject}"
 
     def get_document_types(self, obj):
         """Get document types limited to indicator"""
