@@ -121,7 +121,7 @@ def update_sites_from_cartodb(carto_table_pk):
             with Location.objects.disable_mptt_updates():
                 # update locations in two steps: first remap, then update the data. The reason of this approach is that
                 # a remapped 'old' pcode can appear as a newly inserted pcode. Remapping before updating/inserting
-                # should prevent the problem of archiving locations when remapping and updating at the same time.
+                # should prevent the problem of archiving locations when remapping and updating in the same step.
 
                 # REMAP locations
                 if carto_table.remap_table_name and len(remap_table_pcode_pairs) > 0:
@@ -148,7 +148,7 @@ def update_sites_from_cartodb(carto_table_pk):
                             remapped_new_pcode,
                             remapped_old_pcodes
                         )
-                        # crete remap history, and remap relevant models to the new location
+                        # create remap history, and remap relevant models to the new location
                         if remapped_location_id_pairs:
                             save_location_remap_history(remapped_location_id_pairs)
                             sites_remapped += 1

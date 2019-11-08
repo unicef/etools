@@ -3,9 +3,12 @@ from unittest.mock import Mock, patch
 from unicef_locations.models import Location
 from unicef_locations.tests.factories import CartoDBTableFactory, LocationFactory
 
+from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import Intervention
-from etools.applications.partners.tests.factories import InterventionFactory
+from etools.applications.partners.tests.factories import InterventionFactory, InterventionResultLinkFactory
+from etools.applications.reports.tests.factories import AppliedIndicatorFactory, LowerResultFactory
+from etools.applications.t2f.tests.factories import TravelActivityFactory
 from etools.applications.users.tests.factories import UserFactory
 from etools.libraries.locations import task_utils, tasks
 
@@ -116,3 +119,24 @@ class TestLocationTasks(BaseTenantTestCase):
         intervention.save()
 
         self.assertTrue(task_utils.filter_remapped_locations_cb(remap_row))
+
+    def test_get_location_ids_in_use(self):
+        location_ids = [location.id for location in self.locations]
+        self.assertListEqual(task_utils.get_location_ids_in_use(location_ids), [])
+
+        intervention = InterventionFactory(status=Intervention.SIGNED)
+        intervention.flat_locations.add(self.locations[0])
+        intervention.save()
+
+        lower_result = LowerResultFactory(result_link=InterventionResultLinkFactory())
+        ai = AppliedIndicatorFactory(lower_result=lower_result)
+        ai.locations.add(self.locations[1])
+        ai.save()
+        tva = TravelActivityFactory()
+        tva.locations.add(self.locations[2])
+        tva.save()
+        ap = ActionPointFactory()
+        ap.location = self.locations[3]
+        ap.save()
+
+        self.assertListEqual(task_utils.get_location_ids_in_use(location_ids), location_ids[0:4])

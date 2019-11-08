@@ -360,8 +360,8 @@ def remap_location(carto_table, new_pcode, remapped_pcodes):
     :return: [(new_location.id, remapped_location.id), ...]
     """
 
-    remapped_locations = Location.objects.all_locations().filter(p_code__in=list(remapped_pcodes))
-    if not remapped_locations:
+    remapped_locations_qs = Location.objects.all_locations().filter(p_code__in=list(remapped_pcodes))
+    if not remapped_locations_qs.exists():
         logger.info('Remapped pcodes: [{}] cannot be found in the database!'.format(",".join(remapped_pcodes)))
         return
 
@@ -387,7 +387,7 @@ def remap_location(carto_table, new_pcode, remapped_pcodes):
         new_location = Location.objects.create(**create_args)
 
     results = []
-    for remapped_location in remapped_locations:
+    for remapped_location in remapped_locations_qs:
         remapped_location.is_active = False
         remapped_location.save()
 
