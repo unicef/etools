@@ -291,7 +291,7 @@ class OfficeViewSet(ExternalModuleFilterMixin,
     """
     serializer_class = OfficeSerializer
     permission_classes = (IsAuthenticatedOrReadOnly,)
-    queryset = Office.objects.all()
+    queryset = Office.objects
     module2filters = {'tpm': ['tpmactivity__tpm_visit__tpm_partner__staff_members__user', ]}
 
     def get_queryset(self):

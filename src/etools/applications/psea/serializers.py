@@ -28,7 +28,7 @@ from etools.applications.psea.models import (
     Rating,
 )
 from etools.applications.psea.permissions import AssessmentPermissions
-from etools.applications.psea.validators import EvidenceDescriptionValidator
+from etools.applications.psea.validators import EvidenceDescriptionValidator, PastDateValidator
 from etools.applications.reports.serializers.v1 import SectionSerializer
 from etools.applications.users.serializers import OfficeSerializer
 from etools.applications.users.serializers_v3 import MinimalUserSerializer
@@ -62,6 +62,11 @@ class AssessmentSerializer(BaseAssessmentSerializer):
     status_list = serializers.SerializerMethodField()
     rejected_comment = serializers.SerializerMethodField()
     available_actions = serializers.SerializerMethodField()
+    assessment_date = serializers.DateField(
+        validators=[PastDateValidator()],
+        allow_null=True,
+        required=False,
+    )
 
     class Meta(BaseAssessmentSerializer.Meta):
         fields = '__all__'
@@ -70,11 +75,11 @@ class AssessmentSerializer(BaseAssessmentSerializer):
     def get_overall_rating(self, obj):
         if not obj.overall_rating:
             display = ""
-        elif obj.overall_rating <= 11:
+        elif obj.overall_rating <= 8:
             display = "High"
-        elif 11 < obj.overall_rating <= 19:
+        elif 8 < obj.overall_rating <= 14:
             display = "Moderate"
-        elif obj.overall_rating >= 20:
+        elif obj.overall_rating >= 15:
             display = "Low"
         return {
             "value": obj.overall_rating,

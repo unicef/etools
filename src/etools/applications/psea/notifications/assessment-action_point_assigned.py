@@ -25,7 +25,7 @@ defaults = {
 
     {{ action_point.assigned_by }} has assigned you an action point. <br/><br/>
 
-    PSEA Assessment Reference Number: {{ action_point.psea_assessment.reference_number }}
+    PSEA Assessment Reference Number: {{ action_point.psea_assessment.reference_number }}<br />
     Due Date: {{ action_point.due_date }}<br/>
     Link: <a href="{{ action_point.psea_assessment.object_url }}">click here</a><br/><br/>
 

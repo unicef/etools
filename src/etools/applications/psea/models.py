@@ -137,8 +137,7 @@ class Assessment(TimeStampedModel):
         ordering = ("-assessment_date",)
 
     def get_object_url(self, **kwargs):
-        # TODO double check this with frontend developers
-        return build_frontend_url('psea', 'assessment', 'detail', self.id, **kwargs)
+        return build_frontend_url('psea', 'assessments', self.id, 'details', **kwargs)
 
     def get_rejected_comment(self):
         rejected_qs = self.status_history.filter(
@@ -166,11 +165,14 @@ class Assessment(TimeStampedModel):
             return True
         return False
 
-    def get_recipients(self):
+    def get_assessor_recipients(self):
         return self.assessor.get_recipients()
 
     def get_focal_recipients(self):
         return [u.email for u in self.focal_points.all()]
+
+    def get_all_recipients(self):
+        return self.get_assessor_recipients() + self.get_focal_recipients()
 
     def rating(self):
         if self.answers_complete():
@@ -201,6 +203,15 @@ class Assessment(TimeStampedModel):
                 return True
         return False
 
+    def user_is_external(self, user):
+        assessor_qs = Assessor.objects.filter(
+            assessment=self,
+            assessor_type=Assessor.TYPE_EXTERNAL,
+        )
+        if assessor_qs.filter(user=user).exists():
+            return True
+        return False
+
     def user_belongs(self, user):
         if self.pk and user in self.focal_points.all():
             return True
@@ -208,9 +219,12 @@ class Assessment(TimeStampedModel):
 
     def get_mail_context(self, user):
         context = {
-            "partner": self.partner,
+            "partner_name": self.partner.name,
+            "partner_vendor_number": self.partner.vendor_number,
             "url": self.get_object_url(user=user),
-            "assessment": self
+            "overall_rating": self.overall_rating,
+            "assessment_date": str(self.assessment_date),
+            "assessor": str(self.assessor),
         }
         if self.status == self.STATUS_REJECTED:
             context["rejected_comment"] = self.get_rejected_comment()
