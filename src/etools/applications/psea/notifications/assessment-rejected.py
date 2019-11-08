@@ -1,17 +1,17 @@
 name = 'psea/assessment/rejected'
 defaults = {
     'description': 'PSEA Assessment Rejected.',
-    'subject': 'PSEA Assessment Rejected for {{ partner.name }}',
+    'subject': 'PSEA Assessment Rejected for {{ partner_name }}',
     'content': """
     Dear Colleagues,
 
     Please note that a PSEA assessment has been rejected for the following Partner:
 
-    Vendor Number: {{ partner.vendor_number }}
+    Vendor Number: {{ partner_vendor_number }}
 
-    Vendor Name: {{ partner.name }}
+    Vendor Name: {{ partner_name }}
 
-    Date of Assessment: {{ assessment.assessment_date }}
+    Date of Assessment: {{ assessment_date }}
 
     Comment: {{ rejected_comment }}
 
