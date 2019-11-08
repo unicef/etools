@@ -1,6 +1,6 @@
 name = 'partners/intervention/amendment/added'
 defaults = {
-    'description': 'The email that is sent when an itnervention amendment is added',
+    'description': 'The email that is sent when an intervention amendment is added',
     'subject': '[UNICEF Reporting] New Amendment Added',
     'content': """
     Dear Partner,

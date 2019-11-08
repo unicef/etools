@@ -1726,7 +1726,6 @@ class TestInterventionViews(BaseTenantTestCase):
             _send_req()
             self.assertEqual(mock_send.call_count, 0)
 
-        self.intervention_obj.refresh_from_db()
         self.intervention_obj.in_amendment = True
         self.intervention_obj.save()
 
