@@ -25,6 +25,8 @@ from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.core.tests.mixins import URLAssertionMixin
+from etools.applications.environment.helpers import tenant_switch_is_active
+from etools.applications.environment.tests.factories import TenantSwitchFactory
 from etools.applications.funds.models import FundsCommitmentHeader, FundsCommitmentItem
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
 from etools.applications.partners.models import (
@@ -40,9 +42,6 @@ from etools.applications.partners.models import (
     PartnerOrganization,
     PartnerType,
 )
-from etools.applications.environment.helpers import tenant_switch_is_active
-from etools.applications.environment.models import TenantSwitch
-from etools.applications.environment.tests.factories import TenantSwitchFactory
 from etools.applications.partners.permissions import READ_ONLY_API_GROUP_NAME
 from etools.applications.partners.serializers.exports.partner_organization import PartnerOrganizationExportSerializer
 from etools.applications.partners.tests.factories import (
@@ -66,7 +65,7 @@ from etools.applications.reports.tests.factories import (
 )
 from etools.applications.t2f.models import Travel, TravelType
 from etools.applications.t2f.tests.factories import TravelActivityFactory, TravelFactory
-from etools.applications.users.tests.factories import CountryFactory, GroupFactory, OfficeFactory, UserFactory
+from etools.applications.users.tests.factories import GroupFactory, OfficeFactory, UserFactory
 
 
 class URLsTestCase(URLAssertionMixin, SimpleTestCase):

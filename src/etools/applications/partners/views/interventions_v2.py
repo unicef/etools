@@ -300,6 +300,7 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
             nested_related_names=nested_related_names,
             **kwargs
         )
+
         validator = InterventionValid(instance, old=old_instance, user=request.user)
         if not validator.is_valid:
             logging.debug(validator.errors)
