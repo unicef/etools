@@ -299,6 +299,7 @@ class TestExternalUserAPIView(BaseTenantTestCase):
         self.assertTrue(user_qs.exists())
         user = user_qs.first()
         self.assertIn(self.tenant, user.profile.countries_available.all())
+        self.assertEqual(self.tenant, user.profile.country_override)
         self.assertIn(Auditor.as_group(), user.groups.all())
 
     def test_post_exists(self):
