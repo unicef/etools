@@ -40,6 +40,9 @@ from etools.applications.partners.models import (
     PartnerOrganization,
     PartnerType,
 )
+from etools.applications.environment.helpers import tenant_switch_is_active
+from etools.applications.environment.models import TenantSwitch
+from etools.applications.environment.tests.factories import TenantSwitchFactory
 from etools.applications.partners.permissions import READ_ONLY_API_GROUP_NAME
 from etools.applications.partners.serializers.exports.partner_organization import PartnerOrganizationExportSerializer
 from etools.applications.partners.tests.factories import (
@@ -63,7 +66,7 @@ from etools.applications.reports.tests.factories import (
 )
 from etools.applications.t2f.models import Travel, TravelType
 from etools.applications.t2f.tests.factories import TravelActivityFactory, TravelFactory
-from etools.applications.users.tests.factories import GroupFactory, OfficeFactory, UserFactory
+from etools.applications.users.tests.factories import CountryFactory, GroupFactory, OfficeFactory, UserFactory
 
 
 class URLsTestCase(URLAssertionMixin, SimpleTestCase):
@@ -1681,6 +1684,14 @@ class TestInterventionViews(BaseTenantTestCase):
         self.assertEqual(response.data[0]["id"], self.intervention["id"])
 
     def test_intervention_amendment_notificaton(self):
+        def _send_req():
+            self.forced_auth_req(
+                'patch',
+                reverse('partners_api:intervention-detail', args=[self.intervention_data.get("id")]),
+                user=self.partnership_manager_user,
+                data=data
+            )
+
         # make sure that the notification template is imported to the DB
         call_command("update_notifications")
 
@@ -1691,6 +1702,10 @@ class TestInterventionViews(BaseTenantTestCase):
         attachment = AttachmentFactory()
         office = OfficeFactory()
         section = SectionFactory()
+
+        ts = TenantSwitchFactory(name="intervention_amendment_notifications_on", countries=[connection.tenant])
+        ts.active = False
+        ts.save()
 
         self.intervention_obj.country_programme = self.intervention_obj.agreement.country_programme
         self.intervention_obj.status = Intervention.ACTIVE
@@ -1708,12 +1723,21 @@ class TestInterventionViews(BaseTenantTestCase):
         mock_send = mock.Mock()
         notifpath = "etools.applications.partners.views.interventions_v2.send_intervention_amendment_added_notification"
         with mock.patch(notifpath, mock_send):
-            self.forced_auth_req(
-                'patch',
-                reverse('partners_api:intervention-detail', args=[self.intervention_data.get("id")]),
-                user=self.partnership_manager_user,
-                data=data
-            )
+            self.assertFalse(tenant_switch_is_active('intervention_amendment_notifications_on'))
+            _send_req()
+            self.assertEqual(mock_send.call_count, 0)
+
+        self.intervention_obj.refresh_from_db()
+        self.intervention_obj.in_amendment = True
+        self.intervention_obj.save()
+
+        ts.flush()
+        ts.active = True
+        ts.save()
+
+        with mock.patch(notifpath, mock_send):
+            self.assertTrue(tenant_switch_is_active('intervention_amendment_notifications_on'))
+            _send_req()
             self.assertEqual(mock_send.call_count, 1)
             mock_send.assert_called_with(self.intervention_obj)
 

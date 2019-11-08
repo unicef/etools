@@ -23,6 +23,7 @@ from unicef_snapshot.models import Activity
 
 from etools.applications.core.mixins import ExportModelMixin
 from etools.applications.core.renderers import CSVFlatRenderer
+from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.partners.exports_v2 import InterventionCSVRenderer, InterventionLocationCSVRenderer
 from etools.applications.partners.filters import (
     AppliedIndicatorsFilter,
@@ -304,7 +305,8 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
             logging.debug(validator.errors)
             raise ValidationError(validator.errors)
 
-        if old_instance and not instance.in_amendment and old_instance.in_amendment:
+        if tenant_switch_is_active('intervention_amendment_notifications_on') and \
+                old_instance and not instance.in_amendment and old_instance.in_amendment:
             send_intervention_amendment_added_notification(instance)
 
         if getattr(instance, '_prefetched_objects_cache', None):
