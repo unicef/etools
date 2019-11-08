@@ -9,12 +9,12 @@ def action_point_updated_receiver(instance, created, **kwargs):
     if created:
         instance.send_email(
             instance.assigned_to,
-            'audit/engagement/action_point_assigned',
+            'psea/assessment/action_point_assigned',
             cc=[instance.assigned_by.email],
         )
     else:
         if instance.tracker.has_changed('assigned_to'):
             instance.send_email(
                 instance.assigned_to,
-                'audit/engagement/action_point_assigned',
+                'psea/assessment/action_point_assigned',
             )

@@ -175,6 +175,13 @@ class ExternalUserSerializer(MinimalUserSerializer):
         exists, country = self._in_country(instance)
         if not exists:
             instance.profile.countries_available.add(country)
+        if instance.profile.countries_available.count() == 1:
+            if (
+                    not instance.profile.country_override and
+                    country.schema_name.lower() not in ["uat", "public"]
+            ):
+                instance.profile.country_override = country
+                instance.profile.save()
 
     def create(self, validated_data):
         validated_data["username"] = validated_data.get("email")
