@@ -31,6 +31,7 @@ class Command(BaseCommand):
             call_command('init-partner-file-type', schema=schema_name)
             call_command('init-attachment-file-types', schema=schema_name)
             connection.set_schema(schema_name)
+            call_command('loaddata', 'psea_indicators')
             call_command('loaddata', 'attachments_file_types')
             call_command('loaddata', 'audit_risks_blueprints')
             for user in get_user_model().objects.filter(is_superuser=True):

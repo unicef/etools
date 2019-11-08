@@ -1,4 +1,3 @@
-
 import json
 
 from django.contrib.auth import get_user_model
@@ -6,10 +5,13 @@ from django.urls import reverse
 
 from rest_framework import status
 
+from etools.applications.audit.models import Auditor
+from etools.applications.audit.tests.factories import AuditorUserFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.tpm.tests.factories import SimpleTPMPartnerFactory, TPMPartnerStaffMemberFactory
 from etools.applications.users.models import UserProfile
 from etools.applications.users.serializers_v3 import AP_ALLOWED_COUNTRIES
-from etools.applications.users.tests.factories import GroupFactory, UserFactory
+from etools.applications.users.tests.factories import GroupFactory, ProfileFactory, UserFactory
 
 
 class TestCountryView(BaseTenantTestCase):
@@ -234,3 +236,115 @@ class TestMyProfileAPIView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["oic"], self.unicef_superuser.id)
         self.assertEqual(response.data["is_superuser"], "False")
+
+
+class TestExternalUserAPIView(BaseTenantTestCase):
+    def setUp(self):
+        self.user = UserFactory()
+        ProfileFactory(countries_available=[self.tenant], user=self.user)
+        self.unicef_staff = UserFactory(is_staff=True)
+        self.unicef_superuser = UserFactory(is_superuser=True)
+        self.auditor_user = AuditorUserFactory()
+        self.tpmpartner = SimpleTPMPartnerFactory()
+        self.tpmpartner_user = TPMPartnerStaffMemberFactory(
+            tpm_partner=self.tpmpartner,
+        )
+
+    def test_list(self):
+        response = self.forced_auth_req(
+            'get',
+            reverse("users_v3:external-list"),
+            user=self.unicef_staff,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+
+    def test_get(self):
+        response = self.forced_auth_req(
+            'get',
+            reverse("users_v3:external-detail", args=[self.user.pk]),
+            user=self.unicef_staff,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["id"], self.user.pk)
+
+    def test_get_not_in_schema(self):
+        user = UserFactory()
+        response = self.forced_auth_req(
+            'get',
+            reverse("users_v3:external-detail", args=[user.pk]),
+            user=self.unicef_staff,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_post(self):
+        email = "new@example.com"
+        user_qs = get_user_model().objects.filter(email=email)
+        self.assertFalse(user_qs.exists())
+        response = self.forced_auth_req(
+            'post',
+            reverse("users_v3:external-list"),
+            user=self.unicef_staff,
+            data={
+                "email": email,
+                "first_name": "Joe",
+                "last_name": "Soap",
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(user_qs.exists())
+        user = user_qs.first()
+        self.assertIn(self.tenant, user.profile.countries_available.all())
+        self.assertEqual(self.tenant, user.profile.country_override)
+        self.assertIn(Auditor.as_group(), user.groups.all())
+
+    def test_post_exists(self):
+        profile = ProfileFactory()
+        self.assertNotIn(self.tenant, profile.countries_available.all())
+        response = self.forced_auth_req(
+            'post',
+            reverse("users_v3:external-list"),
+            user=self.unicef_staff,
+            data={
+                "email": profile.user.email,
+                "first_name": "Joe",
+                "last_name": "Soap",
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertIn(self.tenant, profile.countries_available.all())
+
+    def test_post_staff(self):
+        response = self.forced_auth_req(
+            'post',
+            reverse("users_v3:external-list"),
+            user=self.unicef_staff,
+            data={
+                "email": self.auditor_user.email,
+                "first_name": "Joe",
+                "last_name": "Soap",
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("email", response.data)
+
+    def test_post_unicef(self):
+        response = self.forced_auth_req(
+            'post',
+            reverse("users_v3:external-list"),
+            user=self.unicef_staff,
+            data={
+                "email": "test@unicef.org",
+                "first_name": "Joe",
+                "last_name": "Soap",
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("email", response.data)

@@ -7,7 +7,7 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from etools.applications.management.handlers import SectionHandler
+from etools.applications.management.handlers.sections import MigrationException, SectionHandler
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ class SectionsManagementView(viewsets.ViewSet):
 
         try:
             section = SectionHandler.new(new_section_name)
-        except IntegrityError as e:
+        except (IntegrityError, MigrationException) as e:
             return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
 
         return Response({
@@ -42,7 +42,7 @@ class SectionsManagementView(viewsets.ViewSet):
             return Response(_('Unable to unpack'), status=status.HTTP_400_BAD_REQUEST)
         try:
             section = SectionHandler.merge(new_section_name, sections_to_merge)
-        except IntegrityError as e:
+        except (IntegrityError, MigrationException) as e:
             return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
 
         return Response({
@@ -57,7 +57,7 @@ class SectionsManagementView(viewsets.ViewSet):
             objects_dict = request.data['new_sections']
 
             logger.info('Section Migrate', objects_dict)
-        except KeyError:
+        except (KeyError, MigrationException):
             return Response(_('Unable to unpack'), status=status.HTTP_400_BAD_REQUEST)
 
         sections = SectionHandler.close(old_section, objects_dict)

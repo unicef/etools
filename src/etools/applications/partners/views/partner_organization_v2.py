@@ -42,7 +42,7 @@ from etools.applications.partners.models import (
     PlannedEngagement,
 )
 from etools.applications.partners.permissions import (
-    ListCreateAPIMixedPermission,
+    AllowSafeAuthenticated,
     PartnershipManagerPermission,
     PartnershipManagerRepPermission,
     PartnershipSeniorManagerPermission,
@@ -74,16 +74,18 @@ from etools.applications.partners.synchronizers import PartnerSynchronizer
 from etools.applications.partners.views.helpers import set_tenant_or_fail
 from etools.applications.t2f.models import Travel, TravelActivity, TravelType
 from etools.libraries.djangolib.models import StringConcat
+from etools.libraries.djangolib.views import ExternalModuleFilterMixin
 
 
-class PartnerOrganizationListAPIView(QueryStringFilterMixin, ExportModelMixin, ListCreateAPIView):
+class PartnerOrganizationListAPIView(ExternalModuleFilterMixin, QueryStringFilterMixin, ExportModelMixin,
+                                     ListCreateAPIView):
     """
     Create new Partners.
     Returns a list of Partners.
     """
     queryset = PartnerOrganization.objects.all()
     serializer_class = PartnerOrganizationListSerializer
-    permission_classes = (ListCreateAPIMixedPermission,)
+    permission_classes = (AllowSafeAuthenticated,)
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
         r.JSONRenderer,
@@ -96,6 +98,10 @@ class PartnerOrganizationListAPIView(QueryStringFilterMixin, ExportModelMixin, L
         ('rating', 'rating__in'),
     )
     search_terms = ('name__icontains', 'vendor_number__icontains', 'short_name__icontains')
+    module2filters = {
+        'tpm': ['activity__tpmactivity__tpm_visit__tpm_partner__staff_members__user', ],
+        'psea': ['psea_assessment__assessor__auditor_firm_staff__user', 'psea_assessment__assessor__user']
+    }
 
     def get_serializer_class(self, format=None):
         """
@@ -113,8 +119,9 @@ class PartnerOrganizationListAPIView(QueryStringFilterMixin, ExportModelMixin, L
         return super().get_serializer_class()
 
     def get_queryset(self, format=None):
-        q = PartnerOrganization.objects.all()
+        qs = super().get_queryset()
         query_params = self.request.query_params
+
         workspace = query_params.get('workspace', None)
         if workspace:
             set_tenant_or_fail(workspace)
@@ -146,8 +153,8 @@ class PartnerOrganizationListAPIView(QueryStringFilterMixin, ExportModelMixin, L
 
             if queries:
                 expression = functools.reduce(operator.and_, queries)
-                q = q.filter(expression)
-        return q
+                qs = qs.filter(expression)
+        return qs
 
     def list(self, request, format=None):
         """
@@ -378,19 +385,23 @@ class PlannedEngagementAPIView(ListAPIView):
     serializer_class = PlannedEngagementSerializer
 
 
-class PartnerStaffMemberListAPIVIew(ExportModelMixin, ListAPIView):
+class PartnerStaffMemberListAPIVIew(ExternalModuleFilterMixin, ExportModelMixin, ListAPIView):
     """
     Returns a list of all Partner staff members
     """
     queryset = PartnerStaffMember.objects.all()
     serializer_class = PartnerStaffMemberDetailSerializer
-    permission_classes = (IsAdminUser,)
+    permission_classes = (AllowSafeAuthenticated,)
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
         r.JSONRenderer,
         r.CSVRenderer,
         CSVFlatRenderer,
     )
+    module2filters = {
+        'psea': ['partner__psea_assessment__assessor__auditor_firm_staff__user',
+                 'partner__psea_assessment__assessor__user']
+    }
 
     def get_serializer_class(self, format=None):
         """

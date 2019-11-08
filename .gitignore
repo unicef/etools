@@ -23,15 +23,11 @@ build
 
 *idea*
 
-EquiTrack/static/*
-EquiTrack/migration_errors.txt
 static/*
 media
 
 *.dump
 dump.rdb
-.vagrant
-vagrant_ansible_inventory_default
 
 *.cpg
 *.dbf
@@ -42,7 +38,6 @@ packer_cache
 *.iso
 *.box
 
-Vagrantfile
 saml/FederationMetadata.xml
 
 *.tar

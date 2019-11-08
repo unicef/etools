@@ -53,7 +53,7 @@ from etools.applications.tpm.export.serializers import (
     TPMPartnerExportSerializer,
     TPMVisitExportSerializer,
 )
-from etools.applications.tpm.filters import ReferenceNumberOrderingFilter, TPMVisitFilter
+from etools.applications.tpm.filters import ReferenceNumberOrderingFilter, TPMActivityFilter, TPMVisitFilter
 from etools.applications.tpm.models import PME, ThirdPartyMonitor, TPMActionPoint, TPMActivity, TPMVisit, UNICEFUser
 from etools.applications.tpm.serializers.attachments import (
     ActivityAttachmentsSerializer,
@@ -72,6 +72,7 @@ from etools.applications.tpm.serializers.partner import (
 )
 from etools.applications.tpm.serializers.visit import (
     TPMActionPointSerializer,
+    TPMActivityLightSerializer,
     TPMVisitDraftSerializer,
     TPMVisitLightSerializer,
     TPMVisitSerializer,
@@ -326,7 +327,7 @@ class TPMVisitViewSet(
     ordering_fields = (
         'tpm_partner__name', 'status'
     )
-    filter_class = TPMVisitFilter
+    filterset_class = TPMVisitFilter
 
     def get_queryset(self):
         queryset = super().get_queryset().distinct()
@@ -456,6 +457,16 @@ class TPMVisitViewSet(
             },
             filename="visit_letter_{}.pdf".format(visit.reference_number)
         )
+
+
+class TPMActivityViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = TPMActivity.objects.all()
+    serializer_class = TPMActivityLightSerializer
+    filterset_class = TPMActivityFilter
+
+    filter_backends = (SearchFilter, OrderingFilter, DjangoFilterBackend)
+    search_fields = ('tpm_visit__tpm_partner__vendor_number', 'tpm_visit__tpm_partner__name',
+                     'partner__name', 'partner__vendor_number')
 
 
 class TPMActionPointViewSet(BaseTPMViewSet,
