@@ -1,9 +1,8 @@
 from django.contrib.contenttypes.models import ContentType
 from django.http import Http404
-from django_filters.rest_framework import DjangoFilterBackend
 
 from rest_framework.decorators import action
-from rest_framework.mixins import UpdateModelMixin, CreateModelMixin, DestroyModelMixin
+from rest_framework.mixins import CreateModelMixin, DestroyModelMixin, UpdateModelMixin
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.serializers import ListSerializer
@@ -77,8 +76,6 @@ class FMBaseAttachmentLinksViewSet(
     queryset = AttachmentLink.objects.prefetch_related('attachment')
     lookup_field = 'attachment_id'
     lookup_url_kwarg = 'pk'
-    filter_backends = (DjangoFilterBackend,)
-    filterset_fields = {'id': ['in']}
 
     def get_parent_filter(self):
         parent = self.get_parent_object()
@@ -121,11 +118,3 @@ class FMBaseAttachmentLinksViewSet(
         # also, unlink attachment from the target
         instance.attachment.content_object = None
         instance.attachment.save()
-
-    def allow_bulk_destroy(self, qs, filtered):
-        allow = super().allow_bulk_destroy(qs, filtered)
-        if not allow:
-            return False
-
-        # assure all instances are editable by user before removing
-        return all(self.check_object_permissions(self.request, instance) for instance in filtered)

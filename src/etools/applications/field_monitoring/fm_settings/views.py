@@ -36,7 +36,8 @@ from etools.applications.field_monitoring.fm_settings.serializers import (
     LogIssueSerializer,
     MethodSerializer,
     QuestionSerializer,
-    ResultSerializer)
+    ResultSerializer,
+)
 from etools.applications.field_monitoring.permissions import IsEditAction, IsFieldMonitor, IsPME, IsReadAction
 from etools.applications.field_monitoring.views import (
     AttachmentFileTypesViewMixin,

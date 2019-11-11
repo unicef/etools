@@ -4,7 +4,7 @@ from django.utils.translation import ugettext_lazy as _
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, viewsets
 from rest_framework_bulk import BulkUpdateModelMixin
-from unicef_attachments.serializers import BaseAttachmentSerializer
+from unicef_attachments.models import Attachment
 from unicef_restlib.views import NestedViewSetMixin
 
 from etools.applications.field_monitoring.data_collection.models import (
@@ -21,6 +21,7 @@ from etools.applications.field_monitoring.data_collection.serializers import (
     ActivityQuestionOverallFindingSerializer,
     ActivityQuestionSerializer,
     ActivityReportAttachmentSerializer,
+    ChecklistAttachmentSerializer,
     ChecklistOverallFindingSerializer,
     ChecklistSerializer,
     FindingSerializer,
@@ -32,8 +33,11 @@ from etools.applications.field_monitoring.permissions import (
     IsReadAction,
 )
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
-from etools.applications.field_monitoring.views import FMBaseAttachmentsViewSet, FMBaseViewSet, \
-    FMBaseAttachmentLinksViewSet
+from etools.applications.field_monitoring.views import (
+    FMBaseAttachmentLinksViewSet,
+    FMBaseAttachmentsViewSet,
+    FMBaseViewSet,
+)
 
 
 class ActivityDataCollectionViewSet(
@@ -198,3 +202,30 @@ class ActivityFindingsViewSet(
 
     def get_parent_filter(self):
         return {'activity_question__monitoring_activity_id': self.kwargs['monitoring_activity_pk']}
+
+
+class ActivityChecklistAttachmentsViewSet(
+    FMBaseViewSet,
+    NestedViewSetMixin,
+    viewsets.ReadOnlyModelViewSet
+):
+    serializer_class = ChecklistAttachmentSerializer
+    queryset = Attachment.objects.filter(
+        content_type__app_label=ChecklistOverallFinding._meta.app_label,
+        content_type__model=ChecklistOverallFinding._meta.model_name,
+    ).prefetch_related(
+        'content_object__intervention',
+        'content_object__cp_output',
+        'content_object__partner',
+    ).order_by('object_id')
+
+    def get_parent_filter(self):
+        parent = self.get_parent_object()
+        if not parent:
+            return {}
+
+        return {
+            'object_id__in': ChecklistOverallFinding.objects.filter(
+                started_checklist__monitoring_activity_id=parent.id
+            ).values_list('pk', flat=True)
+        }

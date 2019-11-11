@@ -136,3 +136,15 @@ class ActivityQuestionOverallFindingSerializer(serializers.ModelSerializer):
     class Meta:
         model = ActivityQuestionOverallFinding
         fields = ('id', 'activity_question', 'value',)
+
+
+class ChecklistAttachmentSerializer(BaseAttachmentSerializer):
+    checklist = ChecklistSerializer(read_only=True, source='content_object.started_checklist')
+    partner = MinimalPartnerOrganizationListSerializer(read_only=True, source='content_object.partner')
+    cp_output = MinimalOutputListSerializer(read_only=True, source='content_object.cp_output')
+    intervention = MinimalInterventionListSerializer(read_only=True, source='content_object.intervention')
+
+    class Meta(BaseAttachmentSerializer.Meta):
+        fields = BaseAttachmentSerializer.Meta.fields + [
+            'checklist', 'partner', 'cp_output', 'intervention',
+        ]

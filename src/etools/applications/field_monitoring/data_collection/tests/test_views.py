@@ -5,8 +5,11 @@ from django.urls import reverse
 from rest_framework import status
 from unicef_attachments.models import Attachment, AttachmentLink
 
-from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory, \
-    AttachmentLinkFactory
+from etools.applications.attachments.tests.factories import (
+    AttachmentFactory,
+    AttachmentFileTypeFactory,
+    AttachmentLinkFactory,
+)
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.field_monitoring.data_collection.models import ActivityQuestionOverallFinding
 from etools.applications.field_monitoring.data_collection.tests.factories import (
@@ -344,8 +347,7 @@ class TestOverallFindingAttachmentsView(ChecklistDataCollectionTestMixin, APIVie
         self.assertEqual(Attachment.objects.get(pk=attachment.pk).file_type_id, new_file_type.id)
 
     def test_remove(self):
-        attachment = AttachmentFactory(content_object=self.overall_finding, file_type__code='fm_common',
-                                       file_type__name='before')
+        attachment = AttachmentFactory(content_object=self.overall_finding, file_type__code='fm_common')
         link = AttachmentLinkFactory(attachment=attachment, content_object=self.overall_finding)
 
         response = self.forced_auth_req(
@@ -481,3 +483,27 @@ class TestActivityFindingsView(ChecklistDataCollectionTestMixin, APIViewSetTestC
 
     def test_update_fm_user(self):
         self._test_update(self.fm_user, self.finding, {}, expected_status=status.HTTP_403_FORBIDDEN)
+
+
+class TestActivityChecklistOverallAttachments(ChecklistDataCollectionTestMixin, APIViewSetTestCase):
+    base_view = 'field_monitoring_data_collection:activity-checklists-attachments'
+
+    def get_list_args(self):
+        return [self.activity.pk]
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.activity.mark_data_collected()
+        cls.activity.save()
+
+    def test_list(self):
+        self.assertTrue(self.activity.overall_findings.exists())
+        self.assertTrue(self.started_checklist.overall_findings.exists())
+
+        AttachmentFactory(content_object=self.activity, code='report_attachments')
+        AttachmentFactory(content_object=self.activity.overall_findings.first())
+        checklist_overall_attachment = AttachmentFactory(content_object=self.started_checklist.overall_findings.first())
+
+        with self.assertNumQueries(9):
+            self._test_list(self.unicef_user, expected_objects=[checklist_overall_attachment])
