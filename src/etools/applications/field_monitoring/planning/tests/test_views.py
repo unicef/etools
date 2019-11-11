@@ -5,7 +5,8 @@ from django.urls import reverse
 
 from rest_framework import status
 
-from etools.applications.attachments.tests.factories import AttachmentFileTypeFactory
+from etools.applications.attachments.tests.factories import AttachmentFileTypeFactory, AttachmentLinkFactory, \
+    AttachmentFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.field_monitoring.data_collection.tests.factories import StartedChecklistFactory
 from etools.applications.field_monitoring.fm_settings.models import Question
@@ -238,35 +239,40 @@ class TestActivityAttachmentsView(FMBaseTestCaseMixin, BaseTenantTestCase):
         cls.activity = MonitoringActivityFactory()
 
     def test_add(self):
-        attachments_num = self.activity.attachments.count()
-        self.assertEqual(attachments_num, 0)
+        self.assertEqual(self.activity.attachments.count(), 0)
 
-        create_response = self.forced_auth_req(
+        attachment = AttachmentFactory(content_object=None)
+        file_type = AttachmentFileTypeFactory(code='fm_common')
+
+        link_response = self.forced_auth_req(
             'post',
             reverse('field_monitoring_planning:activity-attachments-list', args=[self.activity.pk]),
             user=self.fm_user,
-            request_format='multipart',
-            data={
-                'file': SimpleUploadedFile('hello_world.txt', u'hello world!'.encode('utf-8')),
-                'file_type': AttachmentFileTypeFactory(code='fm_common').id,
-            }
+            data={'attachment': attachment.id, 'file_type': file_type.id}
         )
-        self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(link_response.status_code, status.HTTP_201_CREATED)
 
-        list_response = self.forced_auth_req(
-            'get',
-            reverse('field_monitoring_planning:activity-attachments-list', args=[self.activity.pk]),
-            user=self.fm_user
+        self.assertEqual(self.activity.attachments.count(), 1)
+
+    def test_remove(self):
+        attachment = AttachmentFactory(content_object=self.activity, code='attachments', file_type__code='fm_common')
+        AttachmentLinkFactory(attachment=attachment, content_object=self.activity)
+
+        self.assertEqual(self.activity.attachments.count(), 1)
+
+        response = self.forced_auth_req(
+            'delete',
+            reverse('field_monitoring_planning:activity-attachments-detail', args=[self.activity.pk, attachment.pk]),
+            user=self.fm_user,
         )
-        self.assertEqual(list_response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(list_response.data['results']), attachments_num + 1)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(self.activity.attachments.count(), 0)
 
     def test_add_unicef(self):
         create_response = self.forced_auth_req(
             'post',
             reverse('field_monitoring_planning:activity-attachments-list', args=[self.activity.pk]),
             user=self.unicef_user,
-            request_format='multipart',
             data={}
         )
         self.assertEqual(create_response.status_code, status.HTTP_403_FORBIDDEN)

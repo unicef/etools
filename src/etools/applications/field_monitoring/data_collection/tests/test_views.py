@@ -36,28 +36,38 @@ class TestActivityReportAttachmentsView(FMBaseTestCaseMixin, BaseTenantTestCase)
         cls.activity.team_members.add(cls.user)
 
     def test_add(self):
-        attachments_num = self.activity.attachments.count()
-        self.assertEqual(attachments_num, 0)
+        self.assertEqual(self.activity.report_attachments.count(), 0)
 
-        create_response = self.forced_auth_req(
+        attachment = AttachmentFactory(content_object=None)
+        file_type = AttachmentFileTypeFactory(code='fm_common')
+
+        link_response = self.forced_auth_req(
             'post',
             reverse('field_monitoring_data_collection:activity-report-attachments-list', args=[self.activity.pk]),
             user=self.user,
-            request_format='multipart',
-            data={
-                'file': SimpleUploadedFile('hello_world.txt', u'hello world!'.encode('utf-8')),
-                'file_type': AttachmentFileTypeFactory(code='fm_common').id,
-            }
+            data={'attachment': attachment.id, 'file_type': file_type.id}
         )
-        self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(link_response.status_code, status.HTTP_201_CREATED)
 
-        list_response = self.forced_auth_req(
-            'get',
-            reverse('field_monitoring_data_collection:activity-report-attachments-list', args=[self.activity.pk]),
-            user=self.user
+        self.assertEqual(self.activity.report_attachments.count(), 1)
+
+    def test_remove(self):
+        attachment = AttachmentFactory(content_object=self.activity, code='report_attachments',
+                                       file_type__code='fm_common')
+        AttachmentLinkFactory(attachment=attachment, content_object=self.activity)
+
+        self.assertEqual(self.activity.report_attachments.count(), 1)
+
+        response = self.forced_auth_req(
+            'delete',
+            reverse(
+                'field_monitoring_data_collection:activity-report-attachments-detail',
+                args=[self.activity.pk, attachment.pk],
+            ),
+            user=self.user,
         )
-        self.assertEqual(list_response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(list_response.data['results']), attachments_num + 1)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(self.activity.report_attachments.count(), 0)
 
     def test_add_unicef(self):
         create_response = self.forced_auth_req(

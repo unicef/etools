@@ -15,6 +15,7 @@ from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.response import Response
 
 from etools.applications.field_monitoring.fm_settings.models import Question
+from etools.applications.field_monitoring.fm_settings.serializers import FMCommonAttachmentLinkSerializer
 from etools.applications.field_monitoring.permissions import (
     activity_field_is_editable_permission,
     IsEditAction,
@@ -42,7 +43,7 @@ from etools.applications.field_monitoring.planning.serializers import (
     TemplatedQuestionSerializer,
     YearPlanSerializer,
 )
-from etools.applications.field_monitoring.views import FMBaseAttachmentsViewSet, FMBaseViewSet
+from etools.applications.field_monitoring.views import FMBaseViewSet, FMBaseAttachmentLinksViewSet
 from etools.applications.partners.models import Intervention
 from etools.applications.partners.serializers.interventions_v2 import MinimalInterventionListSerializer
 from etools.applications.permissions2.views import FSMTransitionActionMixin
@@ -214,17 +215,13 @@ class InterventionsViewSet(
     serializer_class = MinimalInterventionListSerializer
 
 
-class ActivityAttachmentsViewSet(FMBaseAttachmentsViewSet):
+class ActivityAttachmentsViewSet(FMBaseAttachmentLinksViewSet):
     permission_classes = FMBaseViewSet.permission_classes + [
         IsReadAction | (IsEditAction & activity_field_is_editable_permission('attachments'))
     ]
-    serializer_class = ActivityAttachmentSerializer
+    serializer_class = FMCommonAttachmentLinkSerializer
     related_model = MonitoringActivity
+    attachment_code = 'attachments'
 
     def get_view_name(self):
         return _('Attachments')
-
-    def get_parent_filter(self):
-        data = super().get_parent_filter()
-        data['code'] = 'attachments'
-        return data

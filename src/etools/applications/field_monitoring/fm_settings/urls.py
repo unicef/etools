@@ -21,7 +21,7 @@ app_name = 'field_monitoring_settings'
 urlpatterns = [
     url(r'^interventions/(?P<intervention_pk>[0-9]+)/locations/', views.InterventionLocationsView.as_view(),
         name='intervention-locations'),
-    url(r'^results/', views.ResultsViewSet.as_view(), name='results-list'),
+    url(r'^results/', views.ResultsView.as_view(), name='results-list'),
     url(r'^locations/country/', views.LocationsCountryView.as_view(), name='locations-country'),
     url(r'^', include(log_issues_api.urls)),
     url(r'^', include(root_api.urls)),

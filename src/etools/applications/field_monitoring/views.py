@@ -2,7 +2,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.http import Http404
 
 from rest_framework.decorators import action
-from rest_framework.mixins import CreateModelMixin, DestroyModelMixin, UpdateModelMixin
+from rest_framework.mixins import CreateModelMixin, DestroyModelMixin, UpdateModelMixin, RetrieveModelMixin
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.serializers import ListSerializer
@@ -35,38 +35,13 @@ class AttachmentFileTypesViewMixin:
         return Response(data=declared_fields['file_type'].choices)
 
 
-class FMBaseAttachmentsViewSet(
-    FMBaseViewSet,
-    NestedViewSetMixin,
-    AttachmentFileTypesViewMixin,
-    ModelViewSet
-):
-    queryset = Attachment.objects.all()
-    related_model = None
-
-    def __init__(self, *args, **kwargs):
-        print('This api is going to be deprecated. Please use FMBaseAttachmentLinksViewSet instead.')
-        super().__init__(*args, **kwargs)
-
-    def get_parent_filter(self):
-        parent = self.get_parent_object()
-        if not parent:
-            return {}
-
-        return {
-            'content_type_id': ContentType.objects.get_for_model(self.related_model).id,
-            'object_id': parent.pk,
-        }
-
-    def perform_create(self, serializer):
-        serializer.save(content_object=self.get_parent_object())
-
-
 class FMBaseAttachmentLinksViewSet(
     FMBaseViewSet,
+    AttachmentFileTypesViewMixin,
     NestedViewSetMixin,
     BulkCreateModelMixin,
     CreateModelMixin,
+    RetrieveModelMixin,
     UpdateModelMixin,
     DestroyModelMixin,
     GenericViewSet,
@@ -85,12 +60,15 @@ class FMBaseAttachmentLinksViewSet(
         content_type = ContentType.objects.get_for_model(self.related_model)
 
         # filter both for link and for attachment to be sure we'll use consistent object.
-        return {
+        filter_kwargs = {
             'content_type_id': content_type.id,
             'object_id': parent.pk,
             'attachment__content_type_id': content_type.id,
             'attachment__object_id': parent.pk,
         }
+        if self.attachment_code:
+            filter_kwargs['attachment__code'] = self.attachment_code
+        return filter_kwargs
 
     def _get_parent_filters(self):
         # too deep inheritance is not supported in case of generic relations, so just use parent (content object)

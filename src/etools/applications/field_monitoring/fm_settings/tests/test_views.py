@@ -8,7 +8,8 @@ from rest_framework import status
 from unicef_attachments.models import Attachment
 from unicef_locations.tests.factories import LocationFactory
 
-from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
+from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory, \
+    AttachmentLinkFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.field_monitoring.fm_settings.models import LogIssue, Question
 from etools.applications.field_monitoring.fm_settings.tests.factories import (
@@ -45,6 +46,7 @@ class MethodsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 class LocationsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
+        super().setUpTestData()
         boundary = GEOSGeometry(
             """
               {
@@ -517,14 +519,6 @@ class LogIssueViewTestCase(FMBaseTestCaseMixin, TestExportMixin, BaseTenantTestC
         self.assertEqual(response.data['results'][4]['id'], log_issue.id)
         self.assertEqual(len(response.data['results'][4]['attachments']), 2)
 
-        details_response = self.forced_auth_req(
-            'get', reverse('field_monitoring_settings:log-issue-attachments-list', args=[log_issue.id]),
-            user=self.unicef_user
-        )
-
-        self.assertEqual(details_response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(details_response.data['results']), 2)
-
     def _test_list_filter(self, list_filter, expected_items):
         response = self.forced_auth_req(
             'get', reverse('field_monitoring_settings:log-issues-list'),
@@ -566,34 +560,42 @@ class TestLogIssueAttachmentsView(FMBaseTestCaseMixin, BaseTenantTestCase):
         cls.log_issue = LogIssueFactory()
 
     def test_add(self):
-        attachments_num = self.log_issue.attachments.count()
-        self.assertEqual(attachments_num, 0)
+        self.assertEqual(self.log_issue.attachments.count(), 0)
 
-        create_response = self.forced_auth_req(
+        attachment = AttachmentFactory(content_object=None)
+        file_type = AttachmentFileTypeFactory(code='fm_common')
+
+        link_response = self.forced_auth_req(
             'post',
             reverse('field_monitoring_settings:log-issue-attachments-list', args=[self.log_issue.pk]),
             user=self.fm_user,
-            request_format='multipart',
-            data={
-                'file': SimpleUploadedFile('hello_world.txt', u'hello world!'.encode('utf-8')),
-            }
+            data={'attachment': attachment.id, 'file_type': file_type.id}
         )
-        self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(link_response.status_code, status.HTTP_201_CREATED)
 
-        list_response = self.forced_auth_req(
-            'get',
-            reverse('field_monitoring_settings:log-issue-attachments-list', args=[self.log_issue.pk]),
-            user=self.fm_user
+        self.assertEqual(self.log_issue.attachments.count(), 1)
+
+    def test_remove(self):
+        attachment = AttachmentFactory(content_object=self.log_issue, file_type__code='fm_common')
+        AttachmentLinkFactory(attachment=attachment, content_object=self.log_issue)
+
+        self.assertEqual(self.log_issue.attachments.count(), 1)
+
+        response = self.forced_auth_req(
+            'delete',
+            reverse(
+                'field_monitoring_settings:log-issue-attachments-detail', args=[self.log_issue.pk, attachment.pk],
+            ),
+            user=self.fm_user,
         )
-        self.assertEqual(list_response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(list_response.data['results']), attachments_num + 1)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(self.log_issue.attachments.count(), 0)
 
     def test_add_unicef(self):
         create_response = self.forced_auth_req(
             'post',
             reverse('field_monitoring_settings:log-issue-attachments-list', args=[self.log_issue.pk]),
             user=self.unicef_user,
-            request_format='multipart',
             data={}
         )
         self.assertEqual(create_response.status_code, status.HTTP_403_FORBIDDEN)
@@ -730,7 +732,7 @@ class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
                 'level': 'partner',
                 'methods': [MethodFactory().id, ],
                 'category': CategoryFactory().id,
-                'sections': [],
+                'sections': [SectionFactory().id],
                 'text': 'Test Question',
                 'is_hact': False
             }
@@ -748,7 +750,7 @@ class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
                 'level': 'partner',
                 'methods': [MethodFactory().id, ],
                 'category': CategoryFactory().id,
-                'sections': [],
+                'sections': [SectionFactory().id],
                 'options': [
                     {'label': 'Option #1', 'value': '1'},
                     {'label': 'Option #2', 'value': '2'},
@@ -776,7 +778,7 @@ class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
                 'level': 'partner',
                 'methods': [MethodFactory().id, ],
                 'category': CategoryFactory().id,
-                'sections': [],
+                'sections': [SectionFactory().id],
                 'options': [
                     {'label': 'Option #1', 'value': True},
                     {'label': 'Option #2', 'value': False},

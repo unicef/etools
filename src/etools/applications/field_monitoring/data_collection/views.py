@@ -35,7 +35,6 @@ from etools.applications.field_monitoring.permissions import (
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.field_monitoring.views import (
     FMBaseAttachmentLinksViewSet,
-    FMBaseAttachmentsViewSet,
     FMBaseViewSet,
 )
 
@@ -49,20 +48,16 @@ class ActivityDataCollectionViewSet(
     serializer_class = ActivityDataCollectionSerializer
 
 
-class ActivityReportAttachmentsViewSet(FMBaseAttachmentsViewSet):
-    serializer_class = ActivityReportAttachmentSerializer
+class ActivityReportAttachmentsViewSet(FMBaseAttachmentLinksViewSet):
+    serializer_class = FMCommonAttachmentLinkSerializer
     related_model = MonitoringActivity
     permission_classes = FMBaseViewSet.permission_classes + [
         IsReadAction | (IsEditAction & activity_field_is_editable_permission('report_attachments'))
     ]
+    attachment_code = 'report_attachments'
 
     def get_view_name(self):
         return _('Report Attachments')
-
-    def get_parent_filter(self):
-        data = super().get_parent_filter()
-        data['code'] = 'report_attachments'
-        return data
 
 
 class ActivityQuestionsViewSet(
