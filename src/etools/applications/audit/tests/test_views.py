@@ -586,7 +586,7 @@ class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenan
 class TestEngagementActionPointViewSet(EngagementTransitionsTestCaseMixin, BaseTenantTestCase):
     engagement_factory = MicroAssessmentFactory
 
-    def test_action_point_added(self):
+    def test_action_point_added_focal_point(self):
         self._init_finalized_engagement()
         self.assertEqual(self.engagement.action_points.count(), 0)
 
@@ -594,6 +594,28 @@ class TestEngagementActionPointViewSet(EngagementTransitionsTestCaseMixin, BaseT
             'post',
             '/api/audit/engagements/{}/action-points/'.format(self.engagement.id),
             user=self.unicef_focal_point,
+            data={
+                'category': ActionPointCategoryFactory(module='audit').id,
+                'description': fuzzy.FuzzyText(length=100).fuzz(),
+                'due_date': fuzzy.FuzzyDate(datetime.date(2001, 1, 1)).fuzz(),
+                'assigned_to': self.unicef_user.id,
+                'section': SectionFactory().id,
+                'office': self.unicef_focal_point.profile.office.id,
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(self.engagement.action_points.count(), 1)
+        self.assertIsNotNone(self.engagement.action_points.first().partner)
+
+    def test_action_point_added_unicef_user(self):
+        self._init_finalized_engagement()
+        self.assertEqual(self.engagement.action_points.count(), 0)
+
+        response = self.forced_auth_req(
+            'post',
+            '/api/audit/engagements/{}/action-points/'.format(self.engagement.id),
+            user=self.unicef_user,
             data={
                 'category': ActionPointCategoryFactory(module='audit').id,
                 'description': fuzzy.FuzzyText(length=100).fuzz(),

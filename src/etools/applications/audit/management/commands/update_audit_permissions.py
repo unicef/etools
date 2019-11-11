@@ -1,4 +1,3 @@
-
 from django.core.management import BaseCommand
 from django.db.models import Q
 
@@ -375,12 +374,14 @@ class Command(BaseCommand):
         opened_action_point_condition = self.action_point_status(EngagementActionPoint.STATUSES.open)
 
         self.add_permissions(
-            self.focal_point, 'edit',
+            self.all_unicef_users,
+            'edit',
             'audit.engagement.action_points',
             condition=final_engagement_condition
         )
         self.add_permissions(
-            self.focal_point, 'edit',
+            self.all_unicef_users,
+            'edit',
             'audit.engagementactionpoint.*',
             condition=final_engagement_condition + self.new_action_point(),
         )
