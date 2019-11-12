@@ -32,7 +32,6 @@ from etools.applications.audit.serializers.auditor import (
     AuditorStaffMemberSerializer,
     PurchaseOrderItemSerializer,
     PurchaseOrderSerializer,
-    UserSerializer,
 )
 from etools.applications.audit.serializers.mixins import EngagementDatesValidation, RiskCategoriesUpdateMixin
 from etools.applications.audit.serializers.risks import (
