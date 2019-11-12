@@ -6,14 +6,24 @@ from django.db import migrations, models
 def set_reference_number(apps, schema_editor):
     Engagement = apps.get_model("audit", "engagement")
     for engagement in Engagement.objects.all():
-        engagement.reference_number = engagement.get_reference_number()
+        if engagement.engagement_type == engagement.TYPES.audit:
+            engagement_code = 'a'
+        else:
+            engagement_code = engagement.engagement_type
+        engagement.reference_number = '{}/{}/{}/{}/{}'.format(
+            connection.tenant.country_short_code or '',
+            engagement.partner.name[:5],
+            engagement_code.upper(),
+            engagement.created.year,
+            engagement.pk
+        )
         engagement.save()
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('audit', '0018_auto_20191008_2235'),
+        ('audit', '0019_engagement_users_notified'),
     ]
 
     operations = [
