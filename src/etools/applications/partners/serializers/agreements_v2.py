@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from rest_framework.serializers import ValidationError
+from rest_framework.validators import UniqueTogetherValidator
 from unicef_attachments.fields import AttachmentSingleFileField
 from unicef_attachments.serializers import AttachmentSerializerMixin
 from unicef_snapshot.serializers import SnapshotModelSerializer
@@ -25,6 +26,12 @@ class AgreementAmendmentCreateUpdateSerializer(AttachmentSerializerMixin, serial
     class Meta:
         model = AgreementAmendment
         fields = "__all__"
+        validators = [
+            UniqueTogetherValidator(
+                queryset=AgreementAmendment.objects.all(),
+                fields=["agreement", "signed_date"],
+            )
+        ]
 
 
 class AgreementAmendmentListSerializer(serializers.ModelSerializer):

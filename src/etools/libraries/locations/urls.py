@@ -12,9 +12,9 @@ from .views import (
 
 api = routers.SimpleRouter()
 
-api.register(r'locations', LocationsViewSet, base_name='locations')
-api.register(r'locations-light', LocationsLightViewSet, base_name='locations-light')
-api.register(r'locations-types', LocationTypesViewSet, base_name='locationtypes')
+api.register(r'locations', LocationsViewSet, basename='locations')
+api.register(r'locations-light', LocationsLightViewSet, basename='locations-light')
+api.register(r'locations-types', LocationTypesViewSet, basename='locationtypes')
 
 urlpatterns = [
     url(r'^cartodbtables/$', CartoDBTablesView.as_view(), name='cartodbtables'),

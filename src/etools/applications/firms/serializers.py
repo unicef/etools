@@ -33,7 +33,7 @@ class UserSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer)
 
     class Meta(WritableNestedSerializerMixin.Meta):
         model = get_user_model()
-        fields = ['first_name', 'last_name', 'email', 'is_active', 'profile', 'full_name']
+        fields = ['pk', 'first_name', 'last_name', 'email', 'is_active', 'profile', 'full_name']
         extra_kwargs = {
             'first_name': {'required': True, 'allow_blank': False, 'label': _('First Name')},
             'last_name': {'required': True, 'allow_blank': False, 'label': _('Last Name')},

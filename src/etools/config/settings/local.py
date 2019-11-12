@@ -90,3 +90,5 @@ LOGGING['formatters'] = {
 }
 LOGGING['handlers']['console']['filters'] = ['tenant_context']
 LOGGING['handlers']['console']['formatter'] = 'tenant_context'
+
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 10240

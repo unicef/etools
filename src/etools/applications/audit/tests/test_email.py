@@ -1,12 +1,11 @@
 from django.core import mail
 from django.core.management import call_command
-from django.db import connection
 
 from unicef_notification.models import EmailTemplate
 
-from etools.applications.audit.tests.factories import AuditFocalPointUserFactory
 from etools.applications.audit.tests.test_transitions import MATransitionsTestCaseMixin
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.users.tests.factories import SimpleUserFactory
 
 
 class TestEmail(BaseTenantTestCase):
@@ -35,12 +34,9 @@ class TestEngagement(MATransitionsTestCaseMixin, BaseTenantTestCase):
         call_command('update_notifications')
 
     def test_submit_filled_report(self):
-        AuditFocalPointUserFactory(profile__countries_available=[connection.tenant])
-        AuditFocalPointUserFactory(profile__countries_available=[])  # user doesn't belong to this country
-
         self._init_filled_engagement()
         mail.outbox = []
-
+        self.engagement.users_notified.add(SimpleUserFactory(first_name='Unknown user'))
         self.engagement.submit()
 
-        self.assertEqual(len(mail.outbox), 2)  # self.audit_focal_point + first created focal point
+        self.assertEqual(len(mail.outbox), 2)

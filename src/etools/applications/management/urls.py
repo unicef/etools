@@ -18,7 +18,7 @@ from etools.applications.management.views.tasks_endpoints import (
 from etools.applications.management.views.v1 import ActiveUsers, AgreementsStatisticsView, PortalDashView
 
 router = routers.DefaultRouter()
-router.register(r'sections', SectionsManagementView, base_name='sections_management')
+router.register(r'sections', SectionsManagementView, basename='sections_management')
 
 app_name = 'management'
 
