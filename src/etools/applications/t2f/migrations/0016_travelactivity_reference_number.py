@@ -6,7 +6,12 @@ from django.db import migrations, models
 def set_reference_number(apps, schema_editor):
     TravelActivity = apps.get_model("t2f", "travelactivity")
     for activity in TravelActivity.objects.all():
-        activity.save()
+        travel = activity.travels.filter(
+            traveler=activity.primary_traveler
+        ).first()
+        if travel:
+            activity.reference_number = travel.reference_number
+            activity.save()
 
 
 class Migration(migrations.Migration):
