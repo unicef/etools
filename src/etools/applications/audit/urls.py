@@ -16,14 +16,14 @@ root_api.register(r'audits', views.AuditViewSet, basename='audits')
 root_api.register(r'special-audits', views.SpecialAuditViewSet, basename='special-audits')
 
 auditor_staffmember_api = NestedComplexRouter(root_api, r'audit-firms', lookup='auditor_firm')
-auditor_staffmember_api.register(r'staff-members', views.AuditorStaffMembersViewSet, base_name='auditorstaffmembers')
+auditor_staffmember_api.register(r'staff-members', views.AuditorStaffMembersViewSet, basename='auditorstaffmembers')
 
 engagement_action_points_api = NestedComplexRouter(root_api, r'engagements', lookup='engagement')
-engagement_action_points_api.register(r'action-points', views.EngagementActionPointViewSet, base_name='action-points')
+engagement_action_points_api.register(r'action-points', views.EngagementActionPointViewSet, basename='action-points')
 
 attachments_api = NestedComplexRouter(root_api, r'engagements')
-attachments_api.register(r'engagement-attachments', views.EngagementAttachmentsViewSet, base_name='engagement-attachments')
-attachments_api.register(r'report-attachments', views.ReportAttachmentsViewSet, base_name='report-attachments')
+attachments_api.register(r'engagement-attachments', views.EngagementAttachmentsViewSet, basename='engagement-attachments')
+attachments_api.register(r'report-attachments', views.ReportAttachmentsViewSet, basename='report-attachments')
 
 app_name = 'audit'
 urlpatterns = [
