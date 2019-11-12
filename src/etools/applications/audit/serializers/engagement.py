@@ -49,6 +49,7 @@ from etools.applications.partners.serializers.partner_organization_v2 import (
 from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
 from etools.applications.reports.serializers.v1 import SectionSerializer
 from etools.applications.users.serializers import OfficeSerializer
+from etools.applications.users.serializers_v3 import MinimalUserSerializer
 
 
 class PartnerOrganizationLightSerializer(PartnerOrganizationListSerializer):
@@ -265,7 +266,7 @@ class EngagementSerializer(
         read_field=PartnerStaffMemberNestedSerializer(many=True, read_only=True), label=_('Authorized Officers')
     )
     users_notified = SeparatedReadWriteField(
-        read_field=UserSerializer(many=True, read_only=True), required=False, label=_('Notified When Completed')
+        read_field=MinimalUserSerializer(many=True, read_only=True), required=False, label=_('Notified When Completed')
     )
 
     specific_procedures = SpecificProcedureSerializer(many=True, label=_('Specific Procedure To Be Performed'))
