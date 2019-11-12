@@ -163,6 +163,7 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
     ), blank=True, default=list, verbose_name=_('Shared Audit with'))
 
     staff_members = models.ManyToManyField(AuditorStaffMember, verbose_name=_('Staff Members'))
+    users_notified = models.ManyToManyField(get_user_model(), blank=True, verbose_name=_('Notified When Completed'))
 
     cancel_comment = models.TextField(blank=True, verbose_name=_('Cancel Comment'))
 
@@ -234,8 +235,7 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
         }
 
     def _notify_focal_points(self, template_name, context=None):
-        for focal_point in get_user_model().objects.filter(groups=UNICEFAuditFocalPoint.as_group(),
-                                                           profile__countries_available=connection.tenant):
+        for focal_point in self.users_notified.all():
             # Build the context in the same order the previous version of the code did,
             # just in case something relies on it (intentionally or not).
             ctx = {
