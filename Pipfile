@@ -79,6 +79,7 @@ unicef-rest-export = "==0.5.3"
 xhtml2pdf = "==0.2.3"
 unicef-vision = "*"
 azure-common = "==1.1.23"
+azure-storage-common = "==2.1.0"
 
 [requires]
 python_version = "3.7"
