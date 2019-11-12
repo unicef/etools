@@ -196,7 +196,7 @@ class PartnerOrganizationQuerySet(models.QuerySet):
             Q(total_ct_cp__gt=0), hidden=False, *args, **kwargs)
 
     def hact_active(self, *args, **kwargs):
-        return self.filter(Q(reported_cy__gt=0) | Q(total_ct_cy__gt=0), hidden=False, *args, **kwargs)
+        return self.filter(Q(reported_cy__gt=0) | Q(total_ct_cy__gt=0), *args, **kwargs)
 
     def not_programmatic_visit_compliant(self, *args, **kwargs):
         return self.hact_active(net_ct_cy__gt=PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL,
