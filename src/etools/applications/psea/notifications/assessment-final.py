@@ -3,22 +3,22 @@ defaults = {
     'description': 'PSEA Assessment Final.',
     'subject': 'PSEA Assessment for {{ partner_name }}',
     'content': """
-    Dear Colleagues, 
+    Dear Colleagues,
 
-    Please note that a PSEA assessment was completed for the following Partner:  
-    
+    Please note that a PSEA assessment was completed for the following Partner:
+
     Vendor Number: {{ partner_vendor_number }}
-    
+
     Vendor Name: {{ partner_name }}
-    
+
     SEA Risk Rating: {{ overall_rating }}
-    
+
     Date of Assessment: {{ assessment_date }}
-    
+
     UNICEF Focal Points: {{ focal_points }}
-    
-    Please update the Vendor Master Data in VISION accordingly  
-    
+
+    Please update the Vendor Master Data in VISION accordingly
+
     Please note that this is an automated email and the mailbox is not monitored. Please do not reply to it.
 
     """,
@@ -29,17 +29,17 @@ defaults = {
     Dear Colleagues,<br /><br />
 
     Please note that a PSEA assessment was completed for the following Partner:  <br /><br />
-    
+
     Vendor Number: {{ partner_vendor_number }} <br /><br />
-    
+
     Vendor Name: {{ partner_name }} <br /><br />
-    
+
     SEA Risk Rating: {{ sea_risk_rating }} <br /><br />
-    
+
     Date of Assessment: {{ assessment_date }}  <br /><br />
-    
+
     UNICEF Focal Points: {{ focal_points }} <br /><br />
-    
+
     Please update the Vendor Master Data in VISION accordingly  <br />
     Please note that this is an automated email and the mailbox is not monitored. Please do not reply to it.
     {% endblock %}
