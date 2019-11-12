@@ -396,6 +396,13 @@ class TestChecklistFindingsView(ChecklistDataCollectionTestMixin, APIViewSetTest
         with self.assertNumQueries(5):
             self._test_list(self.unicef_user, findings)
 
+    def test_bulk_update(self):
+        self.make_list_request(
+            self.team_member,
+            method='patch',
+            data=[{'id': self.finding.pk, 'value': 'text value'}]
+        )
+
     def test_update_unicef(self):
         self._test_update(self.unicef_user, self.finding, {}, expected_status=status.HTTP_403_FORBIDDEN)
 
@@ -489,6 +496,13 @@ class TestActivityFindingsView(ChecklistDataCollectionTestMixin, APIViewSetTestC
         self._test_update(self.person_responsible, self.finding, {
             'value': 'text value'
         })
+
+    def test_bulk_update(self):
+        self.make_list_request(
+            self.person_responsible,
+            method='patch',
+            data=[{'id': self.finding.pk, 'value': 'text value'}]
+        )
 
     def test_update_fm_user(self):
         self._test_update(self.fm_user, self.finding, {}, expected_status=status.HTTP_403_FORBIDDEN)

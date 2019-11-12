@@ -96,11 +96,12 @@ class ChecklistOverallFindingSerializer(serializers.ModelSerializer):
         read_only_fields = ('partner', 'cp_output', 'intervention')
 
 
-class FindingSerializer(serializers.ModelSerializer):
+class FindingSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     activity_question = ActivityQuestionSerializer(read_only=True)
 
     class Meta:
         model = Finding
+        list_serializer_class = BulkListSerializer
         fields = ('id', 'activity_question', 'value',)
 
 
@@ -130,11 +131,12 @@ class ActivityOverallFindingSerializer(serializers.ModelSerializer):
         return BaseAttachmentSerializer(instance=attachments, many=True).data
 
 
-class ActivityQuestionOverallFindingSerializer(serializers.ModelSerializer):
+class ActivityQuestionOverallFindingSerializer(BulkSerializerMixin, serializers.ModelSerializer):
     activity_question = CompletedActivityQuestionSerializer(read_only=True)
 
     class Meta:
         model = ActivityQuestionOverallFinding
+        list_serializer_class = BulkListSerializer
         fields = ('id', 'activity_question', 'value',)
 
 
