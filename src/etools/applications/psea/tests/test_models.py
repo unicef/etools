@@ -187,7 +187,7 @@ class TestAssessment(BaseTenantTestCase):
             "partner_name": assessment.partner.name,
             "partner_vendor_number": assessment.partner.vendor_number,
             "url": assessment.get_object_url(user=user),
-            "focal_points":  ", ".join(f"{fp.get_full_name()} ({fp.email})" for fp in assessment.focal_points.all()),
+            "focal_points": ", ".join(f"{fp.get_full_name()} ({fp.email})" for fp in assessment.focal_points.all()),
             "overall_rating": assessment.overall_rating_display,
             "assessment_date": str(assessment.assessment_date),
             "assessor": str(assessment.assessor),
