@@ -36,7 +36,6 @@ from etools.applications.field_monitoring.planning.filters import (
 )
 from etools.applications.field_monitoring.planning.models import MonitoringActivity, YearPlan
 from etools.applications.field_monitoring.planning.serializers import (
-    ActivityAttachmentSerializer,
     FMUserSerializer,
     MonitoringActivityLightSerializer,
     MonitoringActivitySerializer,

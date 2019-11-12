@@ -20,7 +20,6 @@ from etools.applications.field_monitoring.data_collection.serializers import (
     ActivityOverallFindingSerializer,
     ActivityQuestionOverallFindingSerializer,
     ActivityQuestionSerializer,
-    ActivityReportAttachmentSerializer,
     ChecklistAttachmentSerializer,
     ChecklistOverallFindingSerializer,
     ChecklistSerializer,
