@@ -4,8 +4,11 @@ from django.urls import reverse
 
 from rest_framework import status
 
-from etools.applications.attachments.tests.factories import AttachmentFileTypeFactory, AttachmentLinkFactory, \
-    AttachmentFactory
+from etools.applications.attachments.tests.factories import (
+    AttachmentFactory,
+    AttachmentFileTypeFactory,
+    AttachmentLinkFactory,
+)
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.field_monitoring.data_collection.tests.factories import StartedChecklistFactory
 from etools.applications.field_monitoring.fm_settings.models import Question

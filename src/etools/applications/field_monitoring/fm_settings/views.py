@@ -30,18 +30,20 @@ from etools.applications.field_monitoring.fm_settings.models import Category, Lo
 from etools.applications.field_monitoring.fm_settings.serializers import (
     CategorySerializer,
     FieldMonitoringGeneralAttachmentSerializer,
+    FMCommonAttachmentLinkSerializer,
     LocationFullSerializer,
     LocationSiteSerializer,
     LogIssueSerializer,
     MethodSerializer,
     QuestionSerializer,
     ResultSerializer,
-    FMCommonAttachmentLinkSerializer)
+)
 from etools.applications.field_monitoring.permissions import IsEditAction, IsFieldMonitor, IsPME, IsReadAction
 from etools.applications.field_monitoring.views import (
     AttachmentFileTypesViewMixin,
+    FMBaseAttachmentLinksViewSet,
     FMBaseViewSet,
-    FMBaseAttachmentLinksViewSet)
+)
 from etools.applications.reports.views.v2 import OutputListAPIView
 
 

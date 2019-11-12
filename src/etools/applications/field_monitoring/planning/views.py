@@ -42,7 +42,7 @@ from etools.applications.field_monitoring.planning.serializers import (
     TemplatedQuestionSerializer,
     YearPlanSerializer,
 )
-from etools.applications.field_monitoring.views import FMBaseViewSet, FMBaseAttachmentLinksViewSet
+from etools.applications.field_monitoring.views import FMBaseAttachmentLinksViewSet, FMBaseViewSet
 from etools.applications.partners.models import Intervention
 from etools.applications.partners.serializers.interventions_v2 import MinimalInterventionListSerializer
 from etools.applications.permissions2.views import FSMTransitionActionMixin

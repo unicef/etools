@@ -32,10 +32,7 @@ from etools.applications.field_monitoring.permissions import (
     IsReadAction,
 )
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
-from etools.applications.field_monitoring.views import (
-    FMBaseAttachmentLinksViewSet,
-    FMBaseViewSet,
-)
+from etools.applications.field_monitoring.views import FMBaseAttachmentLinksViewSet, FMBaseViewSet
 
 
 class ActivityDataCollectionViewSet(
