@@ -550,7 +550,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
 
     @skip('add test after permissions file is ready')
     def test_permissions_for_intervention_status_active(self):
-        # intervention is in Draft status
+        # intervention is in Active status
         self.assertEqual(self.active_intervention.status, Intervention.ACTIVE)
 
         # user is UNICEF User
