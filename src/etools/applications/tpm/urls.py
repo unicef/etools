@@ -22,10 +22,10 @@ tpm_partners_api = routers.SimpleRouter()
 tpm_partners_api.register(r'partners', TPMPartnerViewSet, basename='partners')
 
 tpm_staffmember_api = NestedComplexRouter(tpm_partners_api, r'partners', lookup='tpm_partner')
-tpm_staffmember_api.register(r'staff-members', TPMStaffMembersViewSet, base_name='tpmstaffmembers')
+tpm_staffmember_api.register(r'staff-members', TPMStaffMembersViewSet, basename='tpmstaffmembers')
 
 partner_attachments_api = NestedComplexRouter(tpm_partners_api, r'partners')
-partner_attachments_api.register(r'attachments', PartnerAttachmentsViewSet, base_name='partner-attachments')
+partner_attachments_api.register(r'attachments', PartnerAttachmentsViewSet, basename='partner-attachments')
 
 tpm_visits_api = routers.SimpleRouter()
 tpm_visits_api.register(r'visits', TPMVisitViewSet, basename='visits')
@@ -33,15 +33,15 @@ tpm_visits_api.register(r'activities', TPMActivityViewSet, basename='activities'
 
 visit_attachments_api = NestedComplexRouter(tpm_visits_api, r'visits')
 visit_attachments_api.register('report-attachments', VisitReportAttachmentsViewSet,
-                               base_name='visit-report-attachments')
+                               basename='visit-report-attachments')
 visit_attachments_api.register('attachments', VisitAttachmentsViewSet,
-                               base_name='visit-attachments')
+                               basename='visit-attachments')
 visit_attachments_api.register('activities/attachments', ActivityAttachmentsViewSet,
-                               base_name='activity-attachments')
+                               basename='activity-attachments')
 visit_attachments_api.register('activities/report-attachments', ActivityReportAttachmentsViewSet,
-                               base_name='activity-report-attachments')
+                               basename='activity-report-attachments')
 tpm_action_points_api = NestedComplexRouter(tpm_visits_api, r'visits', lookup='tpm_activity__tpm_visit')
-tpm_action_points_api.register(r'action-points', TPMActionPointViewSet, base_name='action-points')
+tpm_action_points_api.register(r'action-points', TPMActionPointViewSet, basename='action-points')
 
 
 app_name = 'tpm'

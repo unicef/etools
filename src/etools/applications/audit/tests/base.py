@@ -134,6 +134,7 @@ class EngagementTransitionsTestCaseMixin(AuditTestCaseMixin):
         super().setUp()
 
         self.engagement = self.engagement_factory(agreement__auditor_firm=self.auditor_firm)
+        self.engagement.users_notified.add(SimpleUserFactory(first_name='To be Notified'))
 
         self.non_engagement_auditor = AuditorStaffMemberFactory(
             user__first_name='Auditor 2',

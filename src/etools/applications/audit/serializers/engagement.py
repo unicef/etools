@@ -32,6 +32,7 @@ from etools.applications.audit.serializers.auditor import (
     AuditorStaffMemberSerializer,
     PurchaseOrderItemSerializer,
     PurchaseOrderSerializer,
+    UserSerializer,
 )
 from etools.applications.audit.serializers.mixins import EngagementDatesValidation, RiskCategoriesUpdateMixin
 from etools.applications.audit.serializers.risks import (
@@ -263,6 +264,9 @@ class EngagementSerializer(
     authorized_officers = SeparatedReadWriteField(
         read_field=PartnerStaffMemberNestedSerializer(many=True, read_only=True), label=_('Authorized Officers')
     )
+    users_notified = SeparatedReadWriteField(
+        read_field=UserSerializer(many=True, read_only=True), required=False, label=_('Notified When Completed')
+    )
 
     specific_procedures = SpecificProcedureSerializer(many=True, label=_('Specific Procedure To Be Performed'))
     engagement_attachments = AttachmentSingleFileField(required=False)
@@ -271,7 +275,7 @@ class EngagementSerializer(
 
     class Meta(EngagementListSerializer.Meta):
         fields = EngagementListSerializer.Meta.fields + [
-            'total_value', 'staff_members', 'active_pd', 'authorized_officers',
+            'total_value', 'staff_members', 'active_pd', 'authorized_officers', 'users_notified',
             'joint_audit', 'shared_ip_with', 'exchange_rate', 'currency_of_report',
             'start_date', 'end_date', 'partner_contacted_at', 'date_of_field_visit', 'date_of_draft_report_to_ip',
             'date_of_comments_by_ip', 'date_of_draft_report_to_unicef', 'date_of_comments_by_unicef',
@@ -374,7 +378,6 @@ class SpotCheckSerializer(ActivePDValidationMixin, EngagementSerializer):
         fields = EngagementSerializer.Meta.fields + [
             'total_amount_tested', 'total_amount_of_ineligible_expenditure',
             'internal_controls', 'findings', 'face_form_start_date', 'face_form_end_date',
-
             'amount_refunded', 'additional_supporting_documentation_provided',
             'justification_provided_and_accepted', 'write_off_required', 'pending_unsupported_amount',
             'explanation_for_additional_information',

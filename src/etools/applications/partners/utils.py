@@ -1,4 +1,5 @@
 import datetime
+import html
 import logging
 
 from django.conf import settings
@@ -560,3 +561,24 @@ def send_intervention_past_start_notification():
                 )
             }
         )
+
+
+def send_intervention_amendment_added_notification(intervention):
+    """Send an email to PD/SHPD/SSFA's focal point(s) if intervention amendment is added"""
+    recipients = [
+        fp.email for fp in intervention.partner_focal_points.all()
+        if fp.email
+    ]
+    amendment_choices = InterventionAmendment.AMENDMENT_TYPES + InterventionAmendment.AMENDMENT_TYPES_OLD
+    amendment_choice_values = [html.escape(amendment_choices[t])
+                               for t in intervention.amendments.order_by('id').last().types]
+
+    send_notification_with_template(
+        recipients=recipients,
+        template_name="partners/intervention/amendment/added",
+        context={
+            "title": intervention.title,
+            "reference_number": intervention.reference_number,
+            "amendment_type": ', '.join(amendment_choice_values),
+        }
+    )
