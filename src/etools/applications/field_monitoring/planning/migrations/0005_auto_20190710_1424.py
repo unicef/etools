@@ -6,7 +6,6 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('locations', '0008_auto_20190422_1537'),
         ('field_monitoring_planning', '0004_auto_20190710_1424'),
@@ -36,12 +35,14 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='monitoringactivity',
             name='location',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='monitoring_activities', to='locations.Location', verbose_name='Location'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='monitoring_activities', to='locations.Location',
+                                    verbose_name='Location'),
         ),
         migrations.AddField(
             model_name='monitoringactivity',
             name='location_site',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='monitoring_activities', to='field_monitoring_settings.LocationSite', verbose_name='Site'),
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='monitoring_activities',
+                                    to='field_monitoring_settings.LocationSite', verbose_name='Site'),
         ),
         migrations.AddField(
             model_name='monitoringactivity',
@@ -51,7 +52,8 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='monitoringactivity',
             name='person_responsible',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='+', to=settings.AUTH_USER_MODEL, verbose_name='Person Responsible'),
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='+', to=settings.AUTH_USER_MODEL,
+                                    verbose_name='Person Responsible'),
         ),
         migrations.AddField(
             model_name='monitoringactivity',
@@ -61,6 +63,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='monitoringactivity',
             name='tpm_partner',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='tpmpartners.TPMPartner', verbose_name='TPM Partner'),
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='tpmpartners.TPMPartner',
+                                    verbose_name='TPM Partner'),
         ),
     ]

@@ -5,7 +5,6 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('field_monitoring_planning', '0008_auto_20190730_1132'),
     ]
@@ -14,6 +13,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='questiontemplate',
             name='question',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='templates', to='field_monitoring_settings.Question', verbose_name='Question'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='templates', to='field_monitoring_settings.Question',
+                                    verbose_name='Question'),
         ),
     ]

@@ -22,7 +22,8 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('value', django.contrib.postgres.fields.jsonb.JSONField(blank=True, null=True, verbose_name='Value')),
-                ('activity_question', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='overall_finding', to='field_monitoring_data_collection.ActivityQuestion', verbose_name='Activity')),
+                ('activity_question', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='overall_finding',
+                                                           to='field_monitoring_data_collection.ActivityQuestion', verbose_name='Activity')),
             ],
             options={
                 'verbose_name': 'Overall Activity Question Finding',

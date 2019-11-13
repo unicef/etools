@@ -68,7 +68,8 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('information_source', models.CharField(max_length=100, verbose_name='Information Source')),
-                ('author', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='checklists', to=settings.AUTH_USER_MODEL, verbose_name='Author')),
+                ('author', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='checklists',
+                                             to=settings.AUTH_USER_MODEL, verbose_name='Author')),
             ],
             options={
                 'verbose_name': 'Started Checklist',

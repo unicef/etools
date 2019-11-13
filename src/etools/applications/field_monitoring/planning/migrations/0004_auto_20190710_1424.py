@@ -10,7 +10,6 @@ import model_utils.fields
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('reports', '0017_auto_20190424_1509'),
         ('field_monitoring_visits', '0006_auto_20190710_1424'),
@@ -45,9 +44,12 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('is_active', models.BooleanField(default=True, verbose_name='Is Active')),
                 ('specific_details', models.TextField(blank=True, verbose_name='Specific Details To Probe')),
-                ('cp_output', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='reports.Result', verbose_name='Partner')),
-                ('intervention', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='partners.Intervention', verbose_name='Partner')),
-                ('partner', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='partners.PartnerOrganization', verbose_name='Partner')),
+                ('cp_output',
+                 models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='reports.Result', verbose_name='Partner')),
+                ('intervention',
+                 models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='partners.Intervention', verbose_name='Partner')),
+                ('partner', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='partners.PartnerOrganization',
+                                              verbose_name='Partner')),
             ],
             options={
                 'verbose_name': 'Question Template',

@@ -13,6 +13,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='question',
             name='answer_type',
-            field=models.CharField(choices=[('text', 'Text'), ('number', 'Number'), ('bool', 'Boolean'), ('likert_scale', 'Likert Scale')], max_length=15, verbose_name='Answer Type'),
+            field=models.CharField(choices=[('text', 'Text'), ('number', 'Number'), ('bool', 'Boolean'), ('likert_scale', 'Likert Scale')],
+                                   max_length=15, verbose_name='Answer Type'),
         ),
     ]

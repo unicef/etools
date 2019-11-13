@@ -5,7 +5,6 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('field_monitoring_planning', '0007_auto_20190711_1152'),
     ]
@@ -14,16 +13,19 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='questiontemplate',
             name='cp_output',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='+', to='reports.Result', verbose_name='Partner'),
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='+', to='reports.Result',
+                                    verbose_name='Partner'),
         ),
         migrations.AlterField(
             model_name='questiontemplate',
             name='intervention',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='+', to='partners.Intervention', verbose_name='Partner'),
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='+', to='partners.Intervention',
+                                    verbose_name='Partner'),
         ),
         migrations.AlterField(
             model_name='questiontemplate',
             name='partner',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='+', to='partners.PartnerOrganization', verbose_name='Partner'),
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='+', to='partners.PartnerOrganization',
+                                    verbose_name='Partner'),
         ),
     ]

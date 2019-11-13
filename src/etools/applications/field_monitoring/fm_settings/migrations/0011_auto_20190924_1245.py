@@ -14,21 +14,25 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='logissue',
             name='cp_output',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='log_issues', to='reports.Result', verbose_name='CP Output'),
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='log_issues',
+                                    to='reports.Result', verbose_name='CP Output'),
         ),
         migrations.AlterField(
             model_name='logissue',
             name='location',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='log_issues', to='locations.Location', verbose_name='Location'),
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='log_issues',
+                                    to='locations.Location', verbose_name='Location'),
         ),
         migrations.AlterField(
             model_name='logissue',
             name='location_site',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='log_issues', to='field_monitoring_settings.LocationSite', verbose_name='Site'),
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='log_issues',
+                                    to='field_monitoring_settings.LocationSite', verbose_name='Site'),
         ),
         migrations.AlterField(
             model_name='logissue',
             name='partner',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='log_issues', to='partners.PartnerOrganization', verbose_name='Partner'),
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='log_issues',
+                                    to='partners.PartnerOrganization', verbose_name='Partner'),
         ),
     ]

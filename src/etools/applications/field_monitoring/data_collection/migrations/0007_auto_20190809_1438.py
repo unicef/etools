@@ -24,7 +24,8 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='finding',
             name='activity_question',
-            field=models.ForeignKey(default=None, on_delete=django.db.models.deletion.CASCADE, related_name='findings', to='field_monitoring_data_collection.ActivityQuestion', verbose_name='Activity Question'),
+            field=models.ForeignKey(default=None, on_delete=django.db.models.deletion.CASCADE, related_name='findings',
+                                    to='field_monitoring_data_collection.ActivityQuestion', verbose_name='Activity Question'),
             preserve_default=False,
         ),
     ]

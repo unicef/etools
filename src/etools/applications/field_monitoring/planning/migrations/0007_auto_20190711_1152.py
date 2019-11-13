@@ -5,7 +5,6 @@ import django_fsm
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('field_monitoring_planning', '0006_monitoringactivity_status'),
     ]
@@ -14,6 +13,9 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='monitoringactivity',
             name='status',
-            field=django_fsm.FSMField(choices=[('draft', 'Draft'), ('details_configured', 'Details Configured'), ('checklist_configured', 'Checklist Configured'), ('assigned', 'Assigned'), ('accepted', 'Accepted'), ('data_collected', 'Data Collected'), ('report_submitted', 'Report Submitted'), ('completed', 'Completed'), ('cancelled', 'Cancelled')], default='draft', max_length=20, verbose_name='Status'),
+            field=django_fsm.FSMField(
+                choices=[('draft', 'Draft'), ('details_configured', 'Details Configured'), ('checklist_configured', 'Checklist Configured'),
+                         ('assigned', 'Assigned'), ('accepted', 'Accepted'), ('data_collected', 'Data Collected'), ('report_submitted', 'Report Submitted'),
+                         ('completed', 'Completed'), ('cancelled', 'Cancelled')], default='draft', max_length=20, verbose_name='Status'),
         ),
     ]

@@ -57,11 +57,14 @@ class Migration(migrations.Migration):
             name='Question',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('answer_type', models.CharField(choices=[('text', 'Text'), ('number', 'Number'), ('bool', 'Boolean'), ('choices', 'Choices')], max_length=10, verbose_name='Answer Type')),
-                ('level', models.CharField(choices=[('partner', 'Partner'), ('output', 'Output'), ('intervention', 'PD/SSFA')], max_length=15, verbose_name='Level')),
+                ('answer_type', models.CharField(choices=[('text', 'Text'), ('number', 'Number'), ('bool', 'Boolean'), ('choices', 'Choices')],
+                                                 max_length=10, verbose_name='Answer Type')),
+                ('level', models.CharField(choices=[('partner', 'Partner'), ('output', 'Output'), ('intervention', 'PD/SSFA')],
+                                           max_length=15, verbose_name='Level')),
                 ('text', models.TextField(verbose_name='Question Text')),
                 ('is_hact', models.BooleanField(default=False, verbose_name='Count as HACT')),
-                ('category', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='field_monitoring_settings.Category', verbose_name='Category')),
+                ('category', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='field_monitoring_settings.Category',
+                                               verbose_name='Category')),
                 ('methods', models.ManyToManyField(blank=True, to='field_monitoring_settings.Method', verbose_name='Methods')),
                 ('sections', models.ManyToManyField(blank=True, to='reports.Section', verbose_name='Sections')),
             ],
@@ -144,6 +147,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='option',
             name='question',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='options', to='field_monitoring_settings.Question', verbose_name='Question'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='options',
+                                    to='field_monitoring_settings.Question', verbose_name='Question'),
         ),
     ]

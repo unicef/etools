@@ -43,7 +43,8 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('is_probed', models.BooleanField(default=True)),
-                ('started_method', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='tasks_data', to='field_monitoring_data_collection.StartedMethod')),
+                ('started_method', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='tasks_data',
+                                                     to='field_monitoring_data_collection.StartedMethod')),
             ],
             options={
                 'verbose_name': 'Task Data',

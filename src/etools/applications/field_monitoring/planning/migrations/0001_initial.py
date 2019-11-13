@@ -13,7 +13,6 @@ import model_utils.fields
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
@@ -30,12 +29,21 @@ class Migration(migrations.Migration):
                 ('deleted_at', models.DateTimeField(default=datetime.datetime(1970, 1, 1, 0, 0, tzinfo=utc), verbose_name='Deleted At')),
                 ('created', model_utils.fields.AutoCreatedField(default=django.utils.timezone.now, editable=False, verbose_name='created')),
                 ('modified', model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, editable=False, verbose_name='modified')),
-                ('plan_by_month', django.contrib.postgres.fields.ArrayField(base_field=models.PositiveSmallIntegerField(blank=True, default=0), blank=True, default=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], size=None, verbose_name='Plan By Month')),
-                ('cp_output_config', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='tasks', to='field_monitoring_settings.CPOutputConfig', verbose_name='CP Output Config')),
-                ('intervention', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='+', to='partners.Intervention', verbose_name='PD or SSFA')),
-                ('location', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='tasks', to='locations.Location', verbose_name='Location')),
-                ('location_site', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='tasks', to='field_monitoring_settings.LocationSite', verbose_name='Site')),
-                ('partner', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='tasks', to='partners.PartnerOrganization', verbose_name='Partner')),
+                ('plan_by_month', django.contrib.postgres.fields.ArrayField(base_field=models.PositiveSmallIntegerField(blank=True, default=0), blank=True,
+                                                                            default=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], size=None,
+                                                                            verbose_name='Plan By Month')),
+                ('cp_output_config',
+                 models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='tasks', to='field_monitoring_settings.CPOutputConfig',
+                                   verbose_name='CP Output Config')),
+                ('intervention',
+                 models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='+', to='partners.Intervention',
+                                   verbose_name='PD or SSFA')),
+                ('location',
+                 models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='tasks', to='locations.Location', verbose_name='Location')),
+                ('location_site', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='tasks',
+                                                    to='field_monitoring_settings.LocationSite', verbose_name='Site')),
+                ('partner', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='tasks', to='partners.PartnerOrganization',
+                                              verbose_name='Partner')),
             ],
             options={
                 'abstract': False,
@@ -63,7 +71,8 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='task',
             name='year_plan',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='tasks', to='field_monitoring_planning.YearPlan', verbose_name='Year Plan'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='tasks', to='field_monitoring_planning.YearPlan',
+                                    verbose_name='Year Plan'),
         ),
         migrations.AlterModelOptions(
             name='task',

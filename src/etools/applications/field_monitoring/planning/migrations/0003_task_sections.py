@@ -5,7 +5,6 @@ import django.contrib.postgres.fields
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('reports', '0013_auto_20180709_1348'),
         ('field_monitoring_planning', '0002_yearplan_other_aspects'),
@@ -15,7 +14,8 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='task',
             name='plan_by_month',
-            field=django.contrib.postgres.fields.ArrayField(base_field=models.PositiveSmallIntegerField(blank=True, default=0), blank=True, default=[], size=None, verbose_name='Plan By Month'),
+            field=django.contrib.postgres.fields.ArrayField(base_field=models.PositiveSmallIntegerField(blank=True, default=0), blank=True, default=[],
+                                                            size=None, verbose_name='Plan By Month'),
         ),
         migrations.AddField(
             model_name='task',

@@ -30,8 +30,10 @@ class Migration(migrations.Migration):
                 ('modified', model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, editable=False, verbose_name='modified')),
                 ('is_monitored', models.BooleanField(default=True, verbose_name='Monitored At Community Level?')),
                 ('is_priority', models.BooleanField(default=False, verbose_name='Priority?')),
-                ('cp_output', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='fm_config', to='reports.Result', verbose_name='CP Output To Be Monitored')),
-                ('government_partners', models.ManyToManyField(blank=True, to='partners.PartnerOrganization', verbose_name='Contributing Government Partners')),
+                ('cp_output', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='fm_config',
+                                                   to='reports.Result', verbose_name='CP Output To Be Monitored')),
+                ('government_partners', models.ManyToManyField(blank=True, to='partners.PartnerOrganization',
+                                                               verbose_name='Contributing Government Partners')),
             ],
             options={
                 'abstract': False,
@@ -43,7 +45,8 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=300, verbose_name='Name')),
                 ('slug', django_extensions.db.fields.AutoSlugField(blank=True, editable=False, populate_from='name', verbose_name='Slug')),
-                ('method', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='types', to='field_monitoring_shared.FMMethod', verbose_name='Method')),
+                ('method', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='types',
+                                             to='field_monitoring_shared.FMMethod', verbose_name='Method')),
             ],
         ),
         migrations.CreateModel(
@@ -57,7 +60,8 @@ class Migration(migrations.Migration):
                 ('point', django.contrib.gis.db.models.fields.PointField(blank=True, null=True, srid=4326, verbose_name='Point')),
                 ('is_active', models.BooleanField(blank=True, default=True, verbose_name='Active')),
                 ('security_detail', models.TextField(blank=True, verbose_name='Detail on Security')),
-                ('parent', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='sites', to='locations.Location', verbose_name='Parent Location')),
+                ('parent', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='sites',
+                                             to='locations.Location', verbose_name='Parent Location')),
             ],
             options={
                 'abstract': False,

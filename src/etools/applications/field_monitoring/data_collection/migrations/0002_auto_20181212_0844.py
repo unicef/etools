@@ -25,31 +25,37 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='startedmethod',
             name='author',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='started_methods', to=settings.AUTH_USER_MODEL, verbose_name='Author'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='started_methods', to=settings.AUTH_USER_MODEL,
+                                    verbose_name='Author'),
         ),
         migrations.AddField(
             model_name='startedmethod',
             name='method',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='started_methods', to='field_monitoring_shared.FMMethod', verbose_name='Method'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='started_methods', to='field_monitoring_shared.FMMethod',
+                                    verbose_name='Method'),
         ),
         migrations.AddField(
             model_name='startedmethod',
             name='method_type',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='started_methods', to='field_monitoring_visits.VisitMethodType', verbose_name='Method Type'),
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='started_methods',
+                                    to='field_monitoring_visits.VisitMethodType', verbose_name='Method Type'),
         ),
         migrations.AddField(
             model_name='startedmethod',
             name='visit',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='started_methods', to='field_monitoring_visits.Visit', verbose_name='Visit'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='started_methods', to='field_monitoring_visits.Visit',
+                                    verbose_name='Visit'),
         ),
         migrations.AddField(
             model_name='checklistitemvalue',
             name='checklist_item',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='checklist_values', to='field_monitoring_visits.TaskCheckListItem'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='checklist_values',
+                                    to='field_monitoring_visits.TaskCheckListItem'),
         ),
         migrations.AddField(
             model_name='checklistitemvalue',
             name='task_data',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='checklist_values', to='field_monitoring_data_collection.TaskData'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='checklist_values',
+                                    to='field_monitoring_data_collection.TaskData'),
         ),
     ]

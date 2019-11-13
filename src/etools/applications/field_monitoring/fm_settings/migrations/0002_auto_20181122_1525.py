@@ -43,7 +43,8 @@ class Migration(migrations.Migration):
                 ('question_text', models.CharField(max_length=255, verbose_name='Question Text')),
                 ('slug', django_extensions.db.fields.AutoSlugField(blank=True, editable=False, populate_from='question_text', verbose_name='Slug')),
                 ('is_required', models.BooleanField(default=False)),
-                ('category', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='questions', to='field_monitoring_settings.CheckListCategory', verbose_name='Category')),
+                ('category', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='questions',
+                                               to='field_monitoring_settings.CheckListCategory', verbose_name='Category')),
             ],
             options={
                 'ordering': ('category', 'order'),
@@ -57,11 +58,16 @@ class Migration(migrations.Migration):
                 ('modified', model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, editable=False, verbose_name='modified')),
                 ('issue', models.TextField(verbose_name='Issue For Attention/Probing')),
                 ('status', models.CharField(choices=[('new', 'New'), ('past', 'Past')], default='new', max_length=10)),
-                ('author', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='created_logissues', to=settings.AUTH_USER_MODEL, verbose_name='Issue Raised By')),
-                ('cp_output', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='reports.Result', verbose_name='CP Output')),
-                ('location', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='locations.Location', verbose_name='Location')),
-                ('location_site', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='field_monitoring_settings.LocationSite', verbose_name='Site')),
-                ('partner', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='partners.PartnerOrganization', verbose_name='Partner')),
+                ('author', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='created_logissues',
+                                             to=settings.AUTH_USER_MODEL, verbose_name='Issue Raised By')),
+                ('cp_output', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE,
+                                                to='reports.Result', verbose_name='CP Output')),
+                ('location', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE,
+                                               to='locations.Location', verbose_name='Location')),
+                ('location_site', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE,
+                                                    to='field_monitoring_settings.LocationSite', verbose_name='Site')),
+                ('partner', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE,
+                                              to='partners.PartnerOrganization', verbose_name='Partner')),
             ],
             options={
                 'abstract': False,
@@ -72,7 +78,8 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('order', models.PositiveIntegerField(db_index=True, editable=False)),
-                ('checklist_item', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='field_monitoring_settings.CheckListItem', verbose_name='Checklist Item')),
+                ('checklist_item', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE,
+                                                     to='field_monitoring_settings.CheckListItem', verbose_name='Checklist Item')),
             ],
         ),
         migrations.CreateModel(
@@ -81,8 +88,10 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('specific_details', models.TextField(blank=True, verbose_name='Specific Details To Probe')),
                 ('standard_url', models.CharField(blank=True, max_length=1000, verbose_name='URL To Standard')),
-                ('partner', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='partners.PartnerOrganization', verbose_name='Partner')),
-                ('planned_checklist_item', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='partners_info', to='field_monitoring_settings.PlannedCheckListItem', verbose_name='Planned Checklist Item')),
+                ('partner', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE,
+                                              to='partners.PartnerOrganization', verbose_name='Partner')),
+                ('planned_checklist_item', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='partners_info',
+                                                             to='field_monitoring_settings.PlannedCheckListItem', verbose_name='Planned Checklist Item')),
             ],
         ),
         migrations.AddField(
@@ -93,7 +102,8 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='plannedchecklistitem',
             name='cp_output_config',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='planned_checklist_items', to='field_monitoring_settings.CPOutputConfig', verbose_name='CP Output Config'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='planned_checklist_items',
+                                    to='field_monitoring_settings.CPOutputConfig', verbose_name='CP Output Config'),
         ),
         migrations.AddField(
             model_name='plannedchecklistitem',
@@ -126,6 +136,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterModelOptions(
             name='plannedchecklistitempartnerinfo',
-            options={'ordering': ('id',), 'verbose_name': 'Planned Checklist Item Partner Info', 'verbose_name_plural': 'Planned Checklist Items Partners Info'},
+            options={'ordering': ('id',), 'verbose_name': 'Planned Checklist Item Partner Info',
+                     'verbose_name_plural': 'Planned Checklist Items Partners Info'},
         ),
     ]
