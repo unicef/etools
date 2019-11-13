@@ -11,7 +11,7 @@ def set_reference_number(apps, schema_editor):
         ActionPoint = apps.get_model("action_points", "actionpoint")
         for action in ActionPoint.objects.all():
             action.reference_number = '{}/{}/{}/APD'.format(
-                connection.tenant.country_short_code or '',
+                getattr(connection.tenant, "country_short_code", ""),
                 action.created.year,
                 action.pk,
             )
