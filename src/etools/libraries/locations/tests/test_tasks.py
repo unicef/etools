@@ -139,4 +139,4 @@ class TestLocationTasks(BaseTenantTestCase):
         ap.location = self.locations[3]
         ap.save()
 
-        self.assertListEqual(task_utils.get_location_ids_in_use(location_ids), location_ids[0:4])
+        self.assertListEqual(sorted(task_utils.get_location_ids_in_use(location_ids)), sorted(location_ids[0:4]))
