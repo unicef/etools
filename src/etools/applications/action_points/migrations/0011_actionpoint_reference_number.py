@@ -10,7 +10,11 @@ def set_reference_number(apps, schema_editor):
     if connection.tenant.schema_name != SCHEMA_NAME:
         ActionPoint = apps.get_model("action_points", "actionpoint")
         for action in ActionPoint.objects.all():
-            action.reference_number = action.get_reference_number()
+            action.reference_number = '{}/{}/{}/APD'.format(
+                connection.tenant.country_short_code or '',
+                action.created.year,
+                action.pk,
+            )
             action.save()
 
 
@@ -26,5 +30,5 @@ class Migration(migrations.Migration):
             name='reference_number',
             field=models.CharField(max_length=100, null=True, verbose_name='Reference Number'),
         ),
-        migrations.RunPython(set_reference_number),
+        migrations.RunPython(set_reference_number, migrations.RunPython.noop),
     ]

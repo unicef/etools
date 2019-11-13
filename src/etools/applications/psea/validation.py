@@ -147,7 +147,7 @@ def assessment_rejected(assessment, old_instance=None, user=None):
 
 def assessment_final(assessment, old_instance=None, user=None):
     send_notification_with_template(
-        recipients=[settings.PSEA_ASSESSMENT_FINAL_RECIPIENTS],
+        recipients=settings.PSEA_ASSESSMENT_FINAL_RECIPIENTS,
         template_name="psea/assessment/final",
         context=assessment.get_mail_context(user)
     )
