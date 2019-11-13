@@ -16,7 +16,8 @@ RUN apk add \
     xmlsec-dev
 RUN apk add postgresql-dev \
     libffi-dev \
-    jpeg-dev
+    jpeg-dev \
+    libc-dev
 
 RUN apk add --update-cache --repository http://dl-3.alpinelinux.org/alpine/edge/testing/ \
     gdal \
