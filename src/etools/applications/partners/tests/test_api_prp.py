@@ -266,9 +266,15 @@ class TestAPIPRP(ApiCheckerMixin, AssertTimeStampedMixin, WorkspaceRequiredAPITe
             "lower_result": lower_result,
             "indicator_blueprint": indicator_blueprint,
             "applied_indicator": applied_indicator,
-            "file_type_attachment": AttachmentFileTypeFactory(code="partners_intervention_attachment"),
-            "file_type_prc": AttachmentFileTypeFactory(code="partners_intervention_prc_review"),
-            "file_type_pd": AttachmentFileTypeFactory(code="partners_intervention_signed_pd"),
+            "file_type_attachment": AttachmentFileTypeFactory(
+                group=["partners_intervention_attachment"],
+            ),
+            "file_type_prc": AttachmentFileTypeFactory(
+                group=["partners_intervention_prc_review"],
+            ),
+            "file_type_pd": AttachmentFileTypeFactory(
+                group=["partners_intervention_signed_pd"],
+            ),
             "disaggregation": disaggregation
         }
 
