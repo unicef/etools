@@ -33,7 +33,7 @@ class SimplePermission(BasePermission):
 
 
 class IsReadAction(SimplePermission):
-    def has_access(self, request, view, **kwargs):
+    def has_access(self, request, view, instance=None):
         return request.method in SAFE_METHODS
 
 
