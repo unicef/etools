@@ -1283,7 +1283,9 @@ class TestEngagementAttachmentsView(MATransitionsTestCaseMixin, BaseTenantTestCa
         self.assertEqual(attachment.code, "audit_engagement")
 
     def test_patch(self):
-        file_type_old = AttachmentFileTypeFactory(code="different_engagement")
+        file_type_old = AttachmentFileTypeFactory(
+            group=["different_engagement"],
+        )
         attachment = AttachmentFactory(
             file="sample.pdf",
             file_type=file_type_old,
@@ -1404,7 +1406,7 @@ class TestEngagementReportAttachmentsView(MATransitionsTestCaseMixin, BaseTenant
         self.assertEqual(attachment.code, "audit_report")
 
     def test_patch(self):
-        file_type_old = AttachmentFileTypeFactory(code="different_report")
+        file_type_old = AttachmentFileTypeFactory(group=["different_report"])
         attachment = AttachmentFactory(
             file="sample.pdf",
             file_type=file_type_old,
