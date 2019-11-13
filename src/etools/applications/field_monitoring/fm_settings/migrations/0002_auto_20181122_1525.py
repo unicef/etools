@@ -17,7 +17,6 @@ class Migration(migrations.Migration):
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         ('locations', '0004_pcode_remap_related'),
         ('reports', '0013_auto_20180709_1348'),
-        ('field_monitoring_shared', '0001_initial'),
         ('field_monitoring_settings', '0001_initial'),
     ]
 
@@ -104,11 +103,6 @@ class Migration(migrations.Migration):
             name='cp_output_config',
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='planned_checklist_items',
                                     to='field_monitoring_settings.CPOutputConfig', verbose_name='CP Output Config'),
-        ),
-        migrations.AddField(
-            model_name='plannedchecklistitem',
-            name='methods',
-            field=models.ManyToManyField(blank=True, to='field_monitoring_shared.FMMethod', verbose_name='Method(s)'),
         ),
         migrations.AlterUniqueTogether(
             name='plannedchecklistitempartnerinfo',

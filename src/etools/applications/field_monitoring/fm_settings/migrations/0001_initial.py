@@ -15,7 +15,6 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('field_monitoring_shared', '0001_initial'),
         ('locations', '0004_pcode_remap_related'),
         ('partners', '0028_auto_20181108_1503'),
         ('reports', '0013_auto_20180709_1348'),
@@ -45,8 +44,6 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=300, verbose_name='Name')),
                 ('slug', django_extensions.db.fields.AutoSlugField(blank=True, editable=False, populate_from='name', verbose_name='Slug')),
-                ('method', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='types',
-                                             to='field_monitoring_shared.FMMethod', verbose_name='Method')),
             ],
         ),
         migrations.CreateModel(
