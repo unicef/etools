@@ -11,7 +11,7 @@ def set_reference_number(apps, schema_editor):
         else:
             engagement_code = engagement.engagement_type
         engagement.reference_number = '{}/{}/{}/{}/{}'.format(
-            connection.tenant.country_short_code or '',
+            getattr(connection.tenant, "country_short_code", ""),
             engagement.partner.name[:5],
             engagement_code.upper(),
             engagement.created.year,
