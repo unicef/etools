@@ -192,7 +192,6 @@ SHARED_APPS = (
     'etools.applications.tpm.tpmpartners',
     'waffle',
     'etools.applications.permissions2',
-    'etools.applications.field_monitoring.shared',  # todo: remove
     'unicef_notification',
 )
 
@@ -218,7 +217,6 @@ TENANT_APPS = (
     'etools.applications.field_monitoring.planning',
     'etools.applications.field_monitoring.data_collection',
     'etools.applications.field_monitoring.analyze',
-    'etools.applications.field_monitoring.visits',  # todo: remove
     'unicef_snapshot',
     'unicef_attachments',
     'unicef_vision',
