@@ -37,6 +37,7 @@ from etools.applications.field_monitoring.planning.filters import (
 from etools.applications.field_monitoring.planning.models import MonitoringActivity, YearPlan
 from etools.applications.field_monitoring.planning.serializers import (
     FMUserSerializer,
+    InterventionWithLinkedInstancesSerializer,
     MonitoringActivityLightSerializer,
     MonitoringActivitySerializer,
     TemplatedQuestionSerializer,
@@ -44,7 +45,6 @@ from etools.applications.field_monitoring.planning.serializers import (
 )
 from etools.applications.field_monitoring.views import FMBaseAttachmentLinksViewSet, FMBaseViewSet
 from etools.applications.partners.models import Intervention
-from etools.applications.partners.serializers.interventions_v2 import MinimalInterventionListSerializer
 from etools.applications.permissions2.views import FSMTransitionActionMixin
 from etools.applications.reports.models import Result, ResultType
 from etools.applications.reports.serializers.v2 import MinimalOutputListSerializer
@@ -211,7 +211,7 @@ class InterventionsViewSet(
     filter_backends = (DjangoFilterBackend,)
     filter_class = InterventionsFilterSet
     queryset = Intervention.objects.all()
-    serializer_class = MinimalInterventionListSerializer
+    serializer_class = InterventionWithLinkedInstancesSerializer
 
 
 class ActivityAttachmentsViewSet(FMBaseAttachmentLinksViewSet):

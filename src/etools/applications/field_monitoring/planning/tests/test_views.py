@@ -19,7 +19,7 @@ from etools.applications.field_monitoring.planning.tests.factories import (
     QuestionTemplateFactory,
     YearPlanFactory,
 )
-from etools.applications.field_monitoring.tests.base import FMBaseTestCaseMixin
+from etools.applications.field_monitoring.tests.base import APIViewSetTestCase, FMBaseTestCaseMixin
 from etools.applications.field_monitoring.tests.factories import UserFactory
 from etools.applications.partners.tests.factories import (
     InterventionFactory,
@@ -509,55 +509,46 @@ class FMUsersViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.data['results'][0]['tpm_partner'], tpm_partner)
 
 
-class CPOutputsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
+class CPOutputsViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenantTestCase):
+    base_view = 'field_monitoring_planning:cp_outputs'
+
     def test_filter_by_partners(self):
         ResultFactory(result_type__name=ResultType.OUTPUT)
         result_link = InterventionResultLinkFactory(cp_output__result_type__name=ResultType.OUTPUT)
 
-        response = self.forced_auth_req(
-            'get',
-            reverse('field_monitoring_planning:cp_outputs-list'),
-            user=self.unicef_user,
+        self._test_list(
+            self.unicef_user, [result_link.cp_output],
             data={
                 'partners__in': str(result_link.intervention.agreement.partner.id)
             }
         )
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data['results']), 1)
-        self.assertEqual(response.data['results'][0]['id'], result_link.cp_output.id)
 
-
-class InterventionsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
-    def _test_filter(self, data, expected_results):
-        response = self.forced_auth_req(
-            'get',
-            reverse('field_monitoring_planning:interventions-list'),
-            user=self.unicef_user,
-            data=data
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data['results']), len(expected_results))
-        self.assertListEqual(
-            [r['id'] for r in response.data['results']],
-            [r.id for r in expected_results]
-        )
+class InterventionsViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenantTestCase):
+    base_view = 'field_monitoring_planning:interventions'
 
     def test_filter_by_outputs(self):
         InterventionFactory()
         result_link = InterventionResultLinkFactory(cp_output__result_type__name=ResultType.OUTPUT)
 
-        self._test_filter(
-            {'cp_outputs__in': str(result_link.cp_output.id)},
-            [result_link.intervention]
+        self._test_list(
+            self.unicef_user, [result_link.intervention],
+            data={'cp_outputs__in': str(result_link.cp_output.id)},
         )
 
     def test_filter_by_partners(self):
         InterventionFactory()
         result_link = InterventionResultLinkFactory()
 
-        self._test_filter(
-            {'partners__in': str(result_link.intervention.agreement.partner.id)},
-            [result_link.intervention]
+        self._test_list(
+            self.unicef_user, [result_link.intervention],
+            data={'partners__in': str(result_link.intervention.agreement.partner.id)}
         )
+
+    def test_linked_data(self):
+        result_link = InterventionResultLinkFactory()
+
+        response = self._test_list(self.unicef_user, [result_link.intervention])
+
+        self.assertEqual(response.data['results'][0]['partner'], result_link.intervention.agreement.partner_id)
+        self.assertListEqual(response.data['results'][0]['cp_outputs'], [result_link.cp_output_id])

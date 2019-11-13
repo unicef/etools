@@ -157,3 +157,16 @@ class FMUserSerializer(MinimalUserSerializer):
     def get_user_type(self, obj):
         # we check is_staff flag instead of more complex tpmpartners_tpmpartnerstaffmember to avoid unneeded db queries
         return 'staff' if obj.is_staff else 'tpm'
+
+
+class InterventionWithLinkedInstancesSerializer(MinimalInterventionListSerializer):
+    partner = serializers.ReadOnlyField(source='agreement.partner_id')
+    cp_outputs = serializers.SerializerMethodField()
+
+    class Meta(MinimalInterventionListSerializer.Meta):
+        fields = MinimalInterventionListSerializer.Meta.fields + (
+            'partner', 'cp_outputs'
+        )
+
+    def get_cp_outputs(self, obj):
+        return list(obj.result_links.values_list('cp_output_id', flat=True))
