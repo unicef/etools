@@ -34,7 +34,7 @@ defaults = {
 
     Vendor Name: {{ partner_name }} <br /><br />
 
-    SEA Risk Rating: {{ sea_risk_rating }} <br /><br />
+    SEA Risk Rating: {{ overall_rating }} <br /><br />
 
     Date of Assessment: {{ assessment_date }}  <br /><br />
 
