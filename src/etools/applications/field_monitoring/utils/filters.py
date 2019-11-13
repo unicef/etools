@@ -10,9 +10,11 @@ class M2MInFilter(BaseCSVFilter):
         if not value:
             return qs
 
-        assert hasattr(self.model, self.field_name), "wrong field_name passed. this can be caused by typo or trying " \
-                                                     "to use nested fields (only one level of relations is supported " \
-                                                     "for now)"
+        if not hasattr(self.model, self.field_name):
+            raise RuntimeError(
+                "wrong field_name passed. this can be caused by typo or trying to use nested fields "
+                "(only one level of relations is supported for now)"
+            )
 
         relation = getattr(self.model, self.field_name)
 

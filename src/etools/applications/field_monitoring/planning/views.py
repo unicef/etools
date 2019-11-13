@@ -162,7 +162,7 @@ class MonitoringActivitiesViewSet(
     def update(self, request, *args, **kwargs):
         related_fields = []
         nested_related_names = []
-        instance, old_instance, serializer = self.my_update(
+        instance, old_instance, _serializer = self.my_update(
             request,
             related_fields,
             nested_related_names=nested_related_names,

@@ -91,7 +91,7 @@ class PartnersCoverageViewTestCase(BaseTenantTestCase):
         MonitoringActivityFactory(
             partners=[partner], status=MonitoringActivity.STATUSES.completed,
             end_date=(timezone.now() - timedelta(days=15)).date()
-        ),
+        )
         MonitoringActivityFactory(partners=[partner])
 
         with self.assertNumQueries(1):
@@ -151,7 +151,7 @@ class CPOutputsCoverageViewTestCase(BaseTenantTestCase):
         MonitoringActivityFactory.create_batch(
             size=4, cp_outputs=[output], status=MonitoringActivity.STATUSES.completed,
             end_date=factory.Iterator((timezone.now() - timedelta(days=i)).date() for i in [30, 26, 21, 12])
-        ),
+        )
 
         with self.assertNumQueries(1):
             response = self.forced_auth_req(
