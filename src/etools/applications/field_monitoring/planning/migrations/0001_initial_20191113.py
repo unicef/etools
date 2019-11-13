@@ -15,7 +15,7 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('field_monitoring_settings', '0001_initial'),
+        ('field_monitoring_settings', '0001_initial_20191113'),
         ('tpmpartners', '0005_auto_20190625_1437'),
         ('users', '0012_auto_20190513_1804'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
