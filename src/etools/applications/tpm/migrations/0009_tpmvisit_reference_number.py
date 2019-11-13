@@ -10,7 +10,7 @@ def set_reference_number(apps, schema_editor):
         TPMVisit = apps.get_model("tpm", "tpmvisit")
         for visit in TPMVisit.objects.all():
             visit.reference_number = '{}/{}/{}/TPM'.format(
-                connection.tenant.country_short_code or '',
+                getattr(connection.tenant, "country_short_code", ""),
                 visit.created.year,
                 visit.pk,
             )
