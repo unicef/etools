@@ -165,6 +165,18 @@ class Assessment(TimeStampedModel):
             return True
         return False
 
+    @property
+    def overall_rating_display(self):
+        if not self.overall_rating:
+            display = ""
+        elif self.overall_rating <= 8:
+            display = "High"
+        elif 8 < self.overall_rating <= 14:
+            display = "Moderate"
+        elif self.overall_rating >= 15:
+            display = "Low"
+        return display
+
     def get_assessor_recipients(self):
         return self.assessor.get_recipients()
 
@@ -222,9 +234,10 @@ class Assessment(TimeStampedModel):
             "partner_name": self.partner.name,
             "partner_vendor_number": self.partner.vendor_number,
             "url": self.get_object_url(user=user),
-            "overall_rating": self.overall_rating,
+            "overall_rating": self.overall_rating_display,
             "assessment_date": str(self.assessment_date),
             "assessor": str(self.assessor),
+            "focal_points": ", ".join(f"{fp.get_full_name()} ({fp.email})" for fp in self.focal_points.all())
         }
         if self.status == self.STATUS_REJECTED:
             context["rejected_comment"] = self.get_rejected_comment()
