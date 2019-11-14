@@ -1,4 +1,3 @@
-
 import logging
 
 from etools.applications.users.tasks import AzureUserMapper
