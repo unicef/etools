@@ -1440,7 +1440,7 @@ class TestAnswerListViewSet(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.user = UserFactory()
         cls.assessment = AssessmentFactory()
-        cls.file_type = AttachmentFileTypeFactory(code="psea_answer")
+        cls.file_type = AttachmentFileTypeFactory(group=["psea_answer"])
         cls.indicator = IndicatorFactory()
         cls.rating = RatingFactory()
         cls.indicator.ratings.add(cls.rating)
@@ -1470,7 +1470,7 @@ class TestAnswerViewSet(BaseTenantTestCase):
         cls.assessment = AssessmentFactory()
         cls.assessment.status = Assessment.STATUS_IN_PROGRESS
         cls.assessment.save()
-        cls.file_type = AttachmentFileTypeFactory(code="psea_answer")
+        cls.file_type = AttachmentFileTypeFactory(group=["psea_answer"])
         cls.indicator = IndicatorFactory()
         cls.rating = RatingFactory()
         cls.indicator.ratings.add(cls.rating)
@@ -1708,7 +1708,7 @@ class TestAnswerViewSet(BaseTenantTestCase):
 class TestAnswerAttachmentViewSet(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.file_type = AttachmentFileTypeFactory(code="psea_answer")
+        cls.file_type = AttachmentFileTypeFactory(group=["psea_answer"])
         cls.assessment = AssessmentFactory()
         cls.indicator = IndicatorFactory()
         cls.answer = AnswerFactory(
@@ -1769,7 +1769,7 @@ class TestAnswerAttachmentViewSet(BaseTenantTestCase):
             content_type=ContentType.objects.get_for_model(Answer),
             object_id=self.answer.pk,
         )
-        file_type = AttachmentFileTypeFactory(code="psea_answer")
+        file_type = AttachmentFileTypeFactory(group=["psea_answer"])
 
         response = self.forced_auth_req(
             "patch",
