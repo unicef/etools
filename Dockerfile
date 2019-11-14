@@ -16,7 +16,8 @@ RUN apk add \
     xmlsec-dev
 RUN apk add postgresql-dev \
     libffi-dev \
-    jpeg-dev
+    jpeg-dev \
+    libc-dev
 
 RUN apk add --update-cache --repository http://dl-3.alpinelinux.org/alpine/edge/testing/ \
     gdal \
@@ -49,7 +50,8 @@ RUN apk add openssl \
     ca-certificates \
     libressl2.7-libcrypto \
     libmagic \
-    libxslt
+    libxslt \
+    libc-dev
 
 RUN apk add geos \
     gdal --update-cache --repository http://dl-3.alpinelinux.org/alpine/edge/testing/
