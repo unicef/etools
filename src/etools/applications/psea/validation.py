@@ -118,8 +118,13 @@ def assessment_user_belongs(assessment, user):
 
 def assessment_assigned(assessment, old_instance=None, user=None):
     send_notification_with_template(
-        recipients=assessment.get_all_recipients(),
+        recipients=assessment.get_assessor_recipients(),
         template_name="psea/assessment/assigned",
+        context=assessment.get_mail_context(user)
+    )
+    send_notification_with_template(
+        recipients=assessment.get_focal_recipients(),
+        template_name="psea/assessment/assigned_focal",
         context=assessment.get_mail_context(user)
     )
 
@@ -142,7 +147,7 @@ def assessment_rejected(assessment, old_instance=None, user=None):
 
 def assessment_final(assessment, old_instance=None, user=None):
     send_notification_with_template(
-        recipients=[settings.PSEA_ASSESSMENT_FINAL_RECIPIENTS],
+        recipients=settings.PSEA_ASSESSMENT_FINAL_RECIPIENTS,
         template_name="psea/assessment/final",
         context=assessment.get_mail_context(user)
     )

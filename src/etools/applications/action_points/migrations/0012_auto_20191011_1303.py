@@ -8,7 +8,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('reports', '0021_auto_20191011_1201'),
-        ('action_points', '0010_actionpoint_psea_assessment'),
+        ('action_points', '0011_actionpoint_reference_number'),
     ]
 
     operations = [

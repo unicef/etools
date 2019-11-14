@@ -62,24 +62,20 @@ class AssessmentSerializer(BaseAssessmentSerializer):
     status_list = serializers.SerializerMethodField()
     rejected_comment = serializers.SerializerMethodField()
     available_actions = serializers.SerializerMethodField()
-    assessment_date = serializers.DateField(validators=[PastDateValidator()])
+    assessment_date = serializers.DateField(
+        validators=[PastDateValidator()],
+        allow_null=True,
+        required=False,
+    )
 
     class Meta(BaseAssessmentSerializer.Meta):
         fields = '__all__'
         read_only_fields = ["reference_number", "overall_rating", "status"]
 
     def get_overall_rating(self, obj):
-        if not obj.overall_rating:
-            display = ""
-        elif obj.overall_rating <= 8:
-            display = "High"
-        elif 8 < obj.overall_rating <= 14:
-            display = "Moderate"
-        elif obj.overall_rating >= 15:
-            display = "Low"
         return {
             "value": obj.overall_rating,
-            "display": display,
+            "display": obj.overall_rating_display,
         }
 
     def get_assessor(self, obj):

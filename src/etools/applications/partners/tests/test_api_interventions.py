@@ -550,7 +550,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
 
     @skip('add test after permissions file is ready')
     def test_permissions_for_intervention_status_active(self):
-        # intervention is in Draft status
+        # intervention is in Active status
         self.assertEqual(self.active_intervention.status, Intervention.ACTIVE)
 
         # user is UNICEF User
@@ -2215,6 +2215,45 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
             }
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_post_contingency_pd_signed(self):
+        """Intervention is contingency PD and signed"""
+        intervention = InterventionFactory(
+            start=datetime.date(2001, 1, 1),
+            status=Intervention.SIGNED,
+            contingency_pd=True,
+        )
+        result_link = InterventionResultLinkFactory(
+            intervention=intervention
+        )
+        lower_result = LowerResultFactory(result_link=result_link)
+        AppliedIndicatorFactory(lower_result=lower_result)
+
+        report_type = ReportingRequirement.TYPE_QPR
+        requirement_qs = ReportingRequirement.objects.filter(
+            intervention=intervention,
+            report_type=report_type,
+        )
+        init_count = requirement_qs.count()
+        response = self.forced_auth_req(
+            "post",
+            self._get_url(report_type, intervention=intervention),
+            user=self.unicef_staff,
+            data={
+                "report_type": ReportingRequirement.TYPE_HR,
+                "reporting_requirements": [{
+                    "start_date": datetime.date(2001, 2, 1),
+                    "end_date": datetime.date(2001, 3, 31),
+                    "due_date": datetime.date(2001, 4, 15),
+                }]
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(requirement_qs.count(), init_count + 1)
+        self.assertEqual(
+            len(response.data["reporting_requirements"]),
+            init_count + 1
+        )
 
     def test_patch_invalid(self):
         for report_type, _ in ReportingRequirement.TYPE_CHOICES:

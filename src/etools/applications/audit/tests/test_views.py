@@ -449,6 +449,7 @@ class BaseTestEngagementsCreateViewSet(EngagementTransitionsTestCaseMixin):
             'partner': self.engagement.partner_id,
             'engagement_type': self.engagement.engagement_type,
             'authorized_officers': self.engagement.authorized_officers.values_list('id', flat=True),
+            'users_notified': self.engagement.users_notified.values_list('id', flat=True),
             'staff_members': self.engagement.staff_members.values_list('id', flat=True),
             'active_pd': self.engagement.active_pd.values_list('id', flat=True),
             'shared_ip_with': self.engagement.shared_ip_with,
@@ -586,7 +587,7 @@ class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenan
 class TestEngagementActionPointViewSet(EngagementTransitionsTestCaseMixin, BaseTenantTestCase):
     engagement_factory = MicroAssessmentFactory
 
-    def test_action_point_added(self):
+    def test_action_point_added_focal_point(self):
         self._init_finalized_engagement()
         self.assertEqual(self.engagement.action_points.count(), 0)
 
@@ -594,6 +595,28 @@ class TestEngagementActionPointViewSet(EngagementTransitionsTestCaseMixin, BaseT
             'post',
             '/api/audit/engagements/{}/action-points/'.format(self.engagement.id),
             user=self.unicef_focal_point,
+            data={
+                'category': ActionPointCategoryFactory(module='audit').id,
+                'description': fuzzy.FuzzyText(length=100).fuzz(),
+                'due_date': fuzzy.FuzzyDate(datetime.date(2001, 1, 1)).fuzz(),
+                'assigned_to': self.unicef_user.id,
+                'section': SectionFactory().id,
+                'office': self.unicef_focal_point.profile.profile_office.office.id,
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(self.engagement.action_points.count(), 1)
+        self.assertIsNotNone(self.engagement.action_points.first().partner)
+
+    def test_action_point_added_unicef_user(self):
+        self._init_finalized_engagement()
+        self.assertEqual(self.engagement.action_points.count(), 0)
+
+        response = self.forced_auth_req(
+            'post',
+            '/api/audit/engagements/{}/action-points/'.format(self.engagement.id),
+            user=self.unicef_user,
             data={
                 'category': ActionPointCategoryFactory(module='audit').id,
                 'description': fuzzy.FuzzyText(length=100).fuzz(),
@@ -681,6 +704,7 @@ class TestStaffSpotCheck(AuditTestCaseMixin, BaseTenantTestCase):
             'total_value': spot_check.total_value,
             'partner': spot_check.partner_id,
             'authorized_officers': spot_check.authorized_officers.values_list('id', flat=True),
+            'users_notified': spot_check.users_notified.values_list('id', flat=True),
             'staff_members': spot_check.staff_members.values_list('id', flat=True),
             'active_pd': spot_check.active_pd.values_list('id', flat=True),
             'shared_ip_with': spot_check.shared_ip_with,

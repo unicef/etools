@@ -6,6 +6,7 @@ from urllib.parse import urlparse
 
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.management import call_command
 from django.db import connection
 from django.test import override_settings, SimpleTestCase
 from django.urls import resolve, reverse
@@ -21,9 +22,11 @@ from unicef_snapshot.models import Activity
 
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.action_points.tests.factories import ActionPointFactory
-from etools.applications.attachments.tests.factories import AttachmentFileTypeFactory
+from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.core.tests.mixins import URLAssertionMixin
+from etools.applications.environment.helpers import tenant_switch_is_active
+from etools.applications.environment.tests.factories import TenantSwitchFactory
 from etools.applications.funds.models import FundsCommitmentHeader, FundsCommitmentItem
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
 from etools.applications.partners.models import (
@@ -688,18 +691,19 @@ class TestAgreementAPIView(BaseTenantTestCase):
         cls.agreement.authorized_officers.add(cls.partner_staff)
         cls.agreement.save()
 
+        date = datetime.date.today()
         cls.amendment1 = AgreementAmendment.objects.create(
             number="001",
             agreement=cls.agreement,
             signed_amendment="application/pdf",
-            signed_date=datetime.date.today(),
+            signed_date=date - datetime.timedelta(days=1),
             types=[AgreementAmendment.IP_NAME]
         )
         cls.amendment2 = AgreementAmendment.objects.create(
             number="002",
             agreement=cls.agreement,
             signed_amendment="application/pdf",
-            signed_date=datetime.date.today(),
+            signed_date=date - datetime.timedelta(days=2),
             types=[AgreementAmendment.BANKING_INFO]
         )
         cls.agreement2 = AgreementFactory(
@@ -1679,6 +1683,66 @@ class TestInterventionViews(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]["id"], self.intervention["id"])
+
+    def test_intervention_amendment_notificaton(self):
+        def _send_req():
+            self.forced_auth_req(
+                'patch',
+                reverse('partners_api:intervention-detail', args=[self.intervention_data.get("id")]),
+                user=self.partnership_manager_user,
+                data=data
+            )
+
+        # make sure that the notification template is imported to the DB
+        call_command("update_notifications")
+
+        fr = FundsReservationHeaderFactory()
+        fr.intervention = self.intervention_obj
+        fr.save()
+
+        attachment = AttachmentFactory()
+        office = OfficeFactory()
+        section = SectionFactory()
+
+        ts = TenantSwitchFactory(name="intervention_amendment_notifications_on", countries=[connection.tenant])
+        ts.active = False
+        ts.save()
+
+        self.intervention_obj.country_programme = self.intervention_obj.agreement.country_programme
+        self.intervention_obj.status = Intervention.ACTIVE
+        self.intervention_obj.unicef_focal_points.add(self.unicef_staff)
+        self.intervention_obj.partner_focal_points.add(PartnerStaffFactory())
+        self.intervention_obj.save()
+        self.assertEqual(self.intervention_obj.status, Intervention.ACTIVE)
+
+        self.assertEqual(self.intervention_obj.in_amendment, True)
+
+        data = {'in_amendment': False, 'frs': [fr.id], 'offices': [office.pk],
+                'sections': [section.pk], 'signed_pd_attachment': attachment.pk,
+                'country_programme': self.intervention_obj.country_programme.id}
+
+        mock_send = mock.Mock()
+        notifpath = "etools.applications.partners.views.interventions_v2.send_intervention_amendment_added_notification"
+        with mock.patch(notifpath, mock_send):
+            self.assertFalse(tenant_switch_is_active('intervention_amendment_notifications_on'))
+            _send_req()
+            self.assertEqual(mock_send.call_count, 0)
+
+        self.intervention_obj.in_amendment = True
+        self.intervention_obj.save()
+
+        ts.flush()
+        ts.active = True
+        ts.save()
+
+        with mock.patch(notifpath, mock_send):
+            self.assertTrue(tenant_switch_is_active('intervention_amendment_notifications_on'))
+            _send_req()
+            self.assertEqual(mock_send.call_count, 1)
+            mock_send.assert_called_with(self.intervention_obj)
+
+        self.intervention_obj.refresh_from_db()
+        self.assertEqual(self.intervention_obj.in_amendment, False)
 
 
 class TestInterventionReportingPeriodViews(BaseTenantTestCase):
