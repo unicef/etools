@@ -17,21 +17,21 @@ itinerary_item_api = NestedComplexRouter(root_api, r'itinerary')
 itinerary_item_api.register(
     r'item',
     views.ItineraryItemViewSet,
-    base_name='item',
+    basename='item',
 )
 
 itinerary_attachments_api = NestedComplexRouter(root_api, r'itinerary')
 itinerary_attachments_api.register(
     r'attachments',
     views.ItineraryAttachmentsViewSet,
-    base_name='itinerary-attachments',
+    basename='itinerary-attachments',
 )
 
 activity_api = NestedComplexRouter(root_api, r'itinerary')
 activity_api.register(
     r'activity',
     views.ActivityViewSet,
-    base_name='activity',
+    basename='activity',
 )
 
 action_points_api = NestedComplexRouter(
@@ -42,21 +42,21 @@ action_points_api = NestedComplexRouter(
 action_points_api.register(
     r'action-points',
     views.ActivityActionPointViewSet,
-    base_name='action-points',
+    basename='action-points',
 )
 
 report_api = NestedComplexRouter(root_api, r'itinerary')
 report_api.register(
     r'report',
     views.ReportViewSet,
-    base_name='report',
+    basename='report',
 )
 
 report_attachments_api = NestedComplexRouter(report_api, r'report')
 report_attachments_api.register(
     r'attachments',
     views.ReportAttachmentsViewSet,
-    base_name='report-attachments',
+    basename='report-attachments',
 )
 
 
