@@ -17,7 +17,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('office', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='reports.Office', verbose_name='Office')),
-                ('profile', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='profile_office', to='users.UserProfile', verbose_name='Profile')),
+                ('profile', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='tenant_profile', to='users.UserProfile', verbose_name='Profile')),
             ],
         ),
     ]

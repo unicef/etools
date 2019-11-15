@@ -4,7 +4,7 @@ from django.db import connection, migrations
 from django_tenants.utils import get_public_schema_name
 
 
-def convert_profile_office_data(apps, schema):
+def convert_tenant_profile_data(apps, schema):
     """For each UserProfile setup office relation in ProfileOffice
     for each country that UserProfile has available
     Use the connection to determine the current country
@@ -31,5 +31,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(convert_profile_office_data)
+        migrations.RunPython(convert_tenant_profile_data)
     ]

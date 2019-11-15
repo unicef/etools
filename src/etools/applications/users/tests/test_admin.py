@@ -112,7 +112,7 @@ class TestUserAdminPlus(BaseTenantTestCase):
     def test_office(self):
         self.assertEqual(
             self.admin.office(self.user),
-            self.user.profile.profile_office.office
+            self.user.profile.tenant_profile.office
         )
 
     def test_has_add_permission(self):

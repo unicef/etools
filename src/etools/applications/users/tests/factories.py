@@ -50,7 +50,7 @@ class ProfileFactory(factory.django.DjangoModelFactory):
                 self.countries_available.add(country)
 
     @factory.post_generation
-    def profile_office(self, create, extracted, **kwargs):
+    def tenant_profile(self, create, extracted, **kwargs):
         if not create:
             return
 
@@ -61,7 +61,7 @@ class ProfileFactory(factory.django.DjangoModelFactory):
 @factory.django.mute_signals(signals.pre_save, signals.post_save)
 class ProfileLightFactory(ProfileFactory):
     @factory.post_generation
-    def profile_office(self, create, extracted, **kwargs):
+    def tenant_profile(self, create, extracted, **kwargs):
         return
 
 

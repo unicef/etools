@@ -35,7 +35,7 @@ class ProfileInline(admin.StackedInline):
         'countries_available',
     )
     search_fields = (
-        'profile_office__office__name',
+        'tenant_profile__office__name',
         'country__name',
         'user__email'
     )
@@ -67,7 +67,7 @@ class ProfileInline(admin.StackedInline):
 
     def office(self, obj):
         try:
-            return obj.profile.profile_office.office
+            return obj.profile.tenant_profile.office
         except AttributeError:
             return None
 
@@ -107,7 +107,7 @@ class ProfileAdmin(admin.ModelAdmin):
         'countries_available',
     )
     search_fields = (
-        'profile_office__office__name',
+        'tenant_profile__office__name',
         'country__name',
         'user__email'
     )
@@ -157,7 +157,7 @@ class ProfileAdmin(admin.ModelAdmin):
 
     def office(self, obj):
         try:
-            return obj.profile.profile_office.office
+            return obj.profile.tenant_profile.office
         except AttributeError:
             return None
 
@@ -214,7 +214,7 @@ class UserAdminPlus(UserAdmin):
 
     def office(self, obj):
         try:
-            return obj.profile.profile_office.office
+            return obj.profile.tenant_profile.office
         except AttributeError:
             return None
 

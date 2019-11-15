@@ -876,7 +876,7 @@ class UserTenantProfile(models.Model):
         UserProfile,
         verbose_name=_('Profile'),
         on_delete=models.CASCADE,
-        related_name="profile_office",
+        related_name="tenant_profile",
     )
     office = models.ForeignKey(
         "reports.Office",

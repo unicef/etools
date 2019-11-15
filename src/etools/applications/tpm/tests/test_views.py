@@ -387,7 +387,7 @@ class TestTPMActionPointViewSet(TPMTestCaseMixin, BaseTenantTestCase):
                 'description': fuzzy.FuzzyText(length=100).fuzz(),
                 'due_date': fuzzy.FuzzyDate(timezone.now().date(), _FUZZY_END_DATE).fuzz(),
                 'assigned_to': self.unicef_user.id,
-                'office': self.pme_user.profile.profile_office.office.id,
+                'office': self.pme_user.profile.tenant_profile.office.id,
                 'section': SectionFactory().id,
             }
         )
