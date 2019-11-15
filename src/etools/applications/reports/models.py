@@ -1,6 +1,5 @@
 from datetime import date
 
-from django.conf import settings
 from django.contrib.postgres.fields import JSONField
 from django.db import models, transaction
 from django.utils.functional import cached_property
