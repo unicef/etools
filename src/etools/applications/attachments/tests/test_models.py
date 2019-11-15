@@ -35,7 +35,7 @@ class TestAttachmentFlat(BaseTenantTestCase):
         flat_count = flat_qs.count()
         attachment = AttachmentFactory(
             file="test_file.pdf",
-            file_type=AttachmentFileTypeFactory(code="t2f_travel_attachment"),
+            file_type=AttachmentFileTypeFactory(),
             code="t2f_travel_attachment",
             content_object=travel_attachment,
         )

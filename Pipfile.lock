@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "d9206f0f3a3f7a5e9eeef0ec34b65a35452e2a6e624d0a21fbd9905fd9d1532f"
+            "sha256": "0924ddee269d14e4ed6a2822699b7703ec96e29b3e7869f603c8e78130827119"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -1009,10 +1009,10 @@
         },
         "unicef-attachments": {
             "hashes": [
-                "sha256:80c60906bb9b5e86b8eff86f9b3a702166e7fcd5681dd864b1d651a98345cf62"
+                "sha256:8adaabfa7877a81d5772543e96d499a7f923baadb803acdfc6e72d306b877236"
             ],
             "index": "pypi",
-            "version": "==0.5.2"
+            "version": "==0.6.1"
         },
         "unicef-djangolib": {
             "hashes": [

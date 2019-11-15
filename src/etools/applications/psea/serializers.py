@@ -385,9 +385,6 @@ class IndicatorSerializer(serializers.ModelSerializer):
 
     def get_document_types(self, obj):
         """Get document types limited to indicator"""
-        # TODO can refactor this once attachment file type
-        # group field PR (#2462) is merged
-        # relying on the indicator_pk from psea_indicator fixture
         MAP_INDICATOR_DOC_TYPE = {
             1: [34, 35, 53, 54],
             2: [37, 38, 39, 53],
@@ -396,9 +393,8 @@ class IndicatorSerializer(serializers.ModelSerializer):
             5: [48, 56, 49, 53],
             6: [51, 52, 57, 53],
         }
-        return FileType.objects.filter(
+        return FileType.objects.group_by("psea_answer").filter(
             pk__in=MAP_INDICATOR_DOC_TYPE.get(obj.pk, []),
-            code="psea_answer",
         ).values(
             "id",
             "label",
@@ -410,7 +406,7 @@ class AnswerAttachmentSerializer(serializers.ModelSerializer):
     # attachment = serializers.IntegerField(source="pk")
     file_type = FileTypeModelChoiceField(
         label=_("Document Type"),
-        queryset=FileType.objects.filter(code="psea_answer"),
+        queryset=FileType.objects.group_by("psea_answer"),
     )
 
     class Meta:

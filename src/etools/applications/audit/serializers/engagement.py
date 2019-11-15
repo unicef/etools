@@ -90,7 +90,7 @@ class EngagementAttachmentSerializer(serializers.ModelSerializer):
     attachment = AttachmentField(source="pk")
     file_type = FileTypeModelChoiceField(
         label=_('Document Type'),
-        queryset=FileType.objects.filter(code='audit_engagement'),
+        queryset=FileType.objects.group_by('audit_engagement'),
     )
 
     class Meta:
@@ -107,7 +107,7 @@ class ReportAttachmentSerializer(serializers.ModelSerializer):
     attachment = AttachmentField(source="pk")
     file_type = FileTypeModelChoiceField(
         label=_('Document Type'),
-        queryset=FileType.objects.filter(code='audit_report'),
+        queryset=FileType.objects.group_by('audit_report')
     )
 
     class Meta:
