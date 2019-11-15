@@ -31,5 +31,8 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(convert_tenant_profile_data)
+        migrations.RunPython(
+            convert_tenant_profile_data,
+            reverse_code=migrations.RunPython.noop,
+        )
     ]
