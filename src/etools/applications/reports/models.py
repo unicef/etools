@@ -863,14 +863,6 @@ class Office(models.Model):
     """
 
     name = models.CharField(max_length=254, verbose_name=_('Name'))
-    zonal_chief = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        blank=True,
-        null=True,
-        related_name='offices',
-        verbose_name='Chief',
-        on_delete=models.CASCADE,
-    )
 
     def __str__(self):
         return self.name

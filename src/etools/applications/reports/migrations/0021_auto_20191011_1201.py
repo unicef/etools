@@ -10,7 +10,6 @@ def copy_offices_data(apps, schema):
         Office.objects.create(
             pk=old.pk,
             name=old.name,
-            zonal_chief=old.zonal_chief,
         )
 
 
