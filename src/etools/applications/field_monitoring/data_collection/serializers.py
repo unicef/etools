@@ -42,7 +42,7 @@ class ActivityQuestionSerializer(BulkSerializerMixin, serializers.ModelSerialize
         model = ActivityQuestion
         list_serializer_class = BulkListSerializer
         fields = (
-            'id', 'question', 'is_enabled',
+            'id', 'question', 'is_enabled', 'specific_details',
             'partner', 'intervention', 'cp_output',
         )
 
