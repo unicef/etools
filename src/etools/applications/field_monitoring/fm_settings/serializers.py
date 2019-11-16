@@ -31,7 +31,7 @@ from etools.applications.users.serializers_v3 import MinimalUserSerializer
 class MethodSerializer(serializers.ModelSerializer):
     class Meta:
         model = Method
-        fields = ('id', 'name')
+        fields = ('id', 'name', 'use_information_source')
 
 
 class FieldMonitoringGeneralAttachmentSerializer(BaseAttachmentSerializer):

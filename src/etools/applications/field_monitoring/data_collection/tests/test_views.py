@@ -248,6 +248,16 @@ class TestChecklistsView(DataCollectionTestMixin, APIViewSetTestCase):
         # check author is set correctly
         self.assertEqual(response.data['author']['id'], self.team_member.id)
 
+    def test_information_source_depends_from_method(self):
+        self._test_create(
+            self.team_member,
+            {'method': MethodFactory(use_information_source=True).pk},
+            expected_status=status.HTTP_400_BAD_REQUEST,
+            field_errors=['information_source']
+        )
+
+        self._test_create(self.team_member, {'method': MethodFactory(use_information_source=False).pk})
+
     def test_start_person_responsible(self):
         self._test_create(self.person_responsible, {
             'method': MethodFactory().pk,

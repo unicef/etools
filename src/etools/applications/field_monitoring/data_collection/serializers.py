@@ -3,6 +3,7 @@ import itertools
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 from rest_framework_bulk import BulkListSerializer, BulkSerializerMixin
 from unicef_attachments.fields import FileTypeModelChoiceField
 from unicef_attachments.models import FileType
@@ -81,6 +82,14 @@ class ChecklistSerializer(UserContextSerializerMixin, serializers.ModelSerialize
     class Meta:
         model = StartedChecklist
         fields = ('id', 'method', 'information_source', 'author',)
+
+    def validate(self, attrs):
+        validated_data = super().validate(attrs)
+
+        if validated_data['method'].use_information_source and not validated_data.get('information_source'):
+            raise ValidationError({'information_source': [_('Information source is required')]}, code='required')
+
+        return validated_data
 
     def create(self, validated_data):
         validated_data['author'] = self.get_user()

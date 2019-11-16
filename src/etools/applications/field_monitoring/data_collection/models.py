@@ -31,7 +31,7 @@ class StartedChecklist(models.Model):
     monitoring_activity = models.ForeignKey(MonitoringActivity, related_name='checklists', verbose_name=_('Activity'),
                                             on_delete=models.PROTECT)
     method = models.ForeignKey(Method, related_name='checklists', verbose_name=_('Methods'), on_delete=models.PROTECT)
-    information_source = models.CharField(max_length=100, verbose_name=_('Information Source'))
+    information_source = models.CharField(max_length=100, verbose_name=_('Information Source'), blank=True)
     author = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='checklists', verbose_name=_('Author'),
                                on_delete=models.CASCADE)
 

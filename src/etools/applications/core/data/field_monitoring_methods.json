@@ -3,35 +3,40 @@
         "model": "field_monitoring_settings.method",
         "pk": 1,
         "fields": {
-            "name": "Key Informant Interview"
+            "name": "Key Informant Interview",
+            "use_information_source": true
         }
     },
     {
         "model": "field_monitoring_settings.method",
         "pk": 2,
         "fields": {
-            "name": "Focus Group Discussion"
+            "name": "Focus Group Discussion",
+            "use_information_source": true
         }
     },
     {
         "model": "field_monitoring_settings.method",
         "pk": 3,
         "fields": {
-            "name": "Observation"
+            "name": "Observation",
+            "use_information_source": false
         }
     },
     {
         "model": "field_monitoring_settings.method",
         "pk": 4,
         "fields": {
-            "name": "Measurement"
+            "name": "Measurement",
+            "use_information_source": false
         }
     },
     {
         "model": "field_monitoring_settings.method",
         "pk": 5,
         "fields": {
-            "name": "Participatory appraisal"
+            "name": "Participatory appraisal",
+            "use_information_source": true
         }
     }
 ]
