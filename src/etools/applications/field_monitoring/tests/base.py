@@ -66,33 +66,37 @@ class APIViewSetTestCase(BaseTenantTestCase):
 
         return response
 
-    def _test_create(self, user, data, expected_status=status.HTTP_201_CREATED, errors=None, **kwargs):
+    def _test_create(self, user, data, expected_status=status.HTTP_201_CREATED, field_errors=None, **kwargs):
         response = self.make_list_request(user, method='post', data=data, **kwargs)
 
         self.assertEqual(response.status_code, expected_status)
 
-        if errors:
-            self.assertListEqual(list(response.data['errors'].keys()), errors)
+        if field_errors:
+            self.assertListEqual(list(response.data.keys()), field_errors)
 
         return response
 
-    def _test_retrieve(self, user, instance, expected_status=status.HTTP_200_OK, errors=None):
+    def _test_retrieve(self, user, instance, expected_status=status.HTTP_200_OK, field_errors=None):
         response = self.make_detail_request(user, instance)
 
         self.assertEqual(response.status_code, expected_status)
 
-        if errors:
-            self.assertListEqual(list(response.data['errors'].keys()), errors)
+        if field_errors:
+            self.assertListEqual(list(response.data.keys()), field_errors)
 
         return response
 
-    def _test_update(self, user, instance, data, expected_status=status.HTTP_200_OK, errors=None):
+    def _test_update(self, user, instance, data, expected_status=status.HTTP_200_OK,
+                     field_errors=None, basic_errors=None):
         response = self.make_detail_request(user, instance=instance, method='patch', data=data)
 
         self.assertEqual(response.status_code, expected_status)
 
-        if errors:
-            self.assertListEqual(list(response.data['errors'].keys()), errors)
+        if field_errors:
+            self.assertListEqual(list(response.data.keys()), field_errors)
+
+        if basic_errors:
+            self.assertListEqual(list(map(str, response.data)), basic_errors)
 
         return response
 

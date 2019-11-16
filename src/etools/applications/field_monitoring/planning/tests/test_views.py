@@ -74,13 +74,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
     base_view = 'field_monitoring_planning:activities'
 
     def test_create_empty_visit(self):
-        response = self.forced_auth_req(
-            'post', reverse('field_monitoring_planning:activities-list'),
-            user=self.fm_user,
-            data={}
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self._test_create(self.fm_user, {})
 
     def test_list(self):
         activities = [
@@ -88,23 +82,13 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             MonitoringActivityFactory(activity_type='staff'),
         ]
 
-        response = self.forced_auth_req(
-            'get', reverse('field_monitoring_planning:activities-list'),
-            user=self.unicef_user,
-            data={'page': 1, 'page_size': 10}
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertListEqual([r['id'] for r in response.data['results']], [a.id for a in activities])
+        self._test_list(self.unicef_user, activities, data={'page': 1, 'page_size': 10})
 
     def test_details(self):
         activity = MonitoringActivityFactory(activity_type='staff', team_members=[UserFactory(unicef_user=True)])
 
-        response = self.forced_auth_req(
-            'get', reverse('field_monitoring_planning:activities-detail', args=[activity.pk]),
-            user=self.unicef_user
-        )
+        response = self._test_retrieve(self.unicef_user, activity)
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('team_members', response.data['permissions']['view'])
         self.assertTrue(response.data['permissions']['view']['team_members'])
 
@@ -129,44 +113,26 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
     def test_update_draft_success(self):
         activity = MonitoringActivityFactory(activity_type='tpm', tpm_partner=None)
 
-        response = self.forced_auth_req(
-            'patch', reverse('field_monitoring_planning:activities-detail', args=[activity.pk]),
-            user=self.fm_user,
-            data={
-                'tpm_partner': TPMPartnerFactory().pk
-            }
-        )
+        response = self._test_update(self.fm_user, activity, data={'tpm_partner': TPMPartnerFactory().pk})
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIsNotNone(response.data['tpm_partner'])
         self.assertNotEqual(response.data['tpm_partner'], {})
 
     def test_update_tpm_partner_staff_activity(self):
         activity = MonitoringActivityFactory(activity_type='staff')
 
-        response = self.forced_auth_req(
-            'patch', reverse('field_monitoring_planning:activities-detail', args=[activity.pk]),
-            user=self.fm_user,
-            data={
-                'tpm_partner': TPMPartnerFactory().pk
-            }
+        self._test_update(
+            self.fm_user, activity,
+            data={'tpm_partner': TPMPartnerFactory().pk},
+            expected_status=status.HTTP_400_BAD_REQUEST,
+            basic_errors=['TPM Partner selected for staff activity'],
         )
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(len(response.data), 1)
-        self.assertIn('TPM Partner', response.data[0])
 
     def test_auto_accept_activity(self):
         activity = MonitoringActivityFactory(activity_type='staff',
                                              status='pre_' + MonitoringActivity.STATUSES.assigned)
 
-        response = self.forced_auth_req(
-            'patch', reverse('field_monitoring_planning:activities-detail', args=[activity.pk]),
-            user=self.fm_user,
-            data={
-                'status': 'assigned'
-            }
-        )
+        response = self._test_update(self.fm_user, activity, data={'status': 'assigned'})
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['status'], 'data_collection')
@@ -174,13 +140,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
     def test_cancel_activity(self):
         activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.review)
 
-        response = self.forced_auth_req(
-            'patch', reverse('field_monitoring_planning:activities-detail', args=[activity.pk]),
-            user=self.fm_user,
-            data={
-                'status': 'cancelled'
-            }
-        )
+        response = self._test_update(self.fm_user, activity, data={'status': 'cancelled'})
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['status'], 'cancelled')
@@ -188,17 +148,10 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
     def test_cancel_submitted_activity_fail(self):
         activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.submitted)
 
-        response = self.forced_auth_req(
-            'patch', reverse('field_monitoring_planning:activities-detail', args=[activity.pk]),
-            user=self.fm_user,
-            data={
-                'status': 'cancelled'
-            }
+        self._test_update(
+            self.fm_user, activity, data={'status': 'cancelled'},
+            expected_status=status.HTTP_400_BAD_REQUEST, basic_errors=['generic_transition_fail']
         )
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(len(response.data), 1)
-        self.assertIn('generic_transition_fail', response.data[0])
 
     def test_flow(self):
         activity = MonitoringActivityFactory(
@@ -216,20 +169,13 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             }
             if extra_data:
                 data.update(extra_data)
-            response = self.forced_auth_req(
-                'patch', reverse('field_monitoring_planning:activities-detail', args=[activity.pk]),
-                user=user,
-                data=data
-            )
 
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self._test_update(user, activity, data)
 
         goto('checklist', self.fm_user)
         goto('draft', self.fm_user)
         goto('checklist', self.fm_user)
-        goto('review', self.fm_user, {
-            'person_responsible': person_responsible.id
-        })
+        goto('review', self.fm_user, {'person_responsible': person_responsible.id})
         goto('checklist', self.fm_user)
         goto('review', self.fm_user)
         goto('assigned', self.fm_user)
@@ -244,12 +190,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
     def test_sections_are_displayed_correctly(self):
         activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.draft, sections=[SectionFactory()])
 
-        response = self.forced_auth_req(
-            'get', reverse('field_monitoring_planning:activities-detail', args=[activity.pk]),
-            user=self.unicef_user
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response = self._test_retrieve(self.unicef_user, activity)
         self.assertIsNotNone(response.data['sections'][0]['name'])
 
 
