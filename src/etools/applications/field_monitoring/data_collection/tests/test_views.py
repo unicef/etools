@@ -355,6 +355,26 @@ class TestOverallFindingAttachmentsView(ChecklistDataCollectionTestMixin, APIVie
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(Attachment.objects.get(pk=attachment.pk).file_type_id, new_file_type.id)
 
+    def test_bulk_update(self):
+        original_file_type = AttachmentFileTypeFactory(code='fm_common')
+        attachments = AttachmentFactory.create_batch(
+            size=2, content_object=self.overall_finding, file_type=original_file_type
+        )
+        for attachment in attachments:
+            AttachmentLinkFactory(attachment=attachment, content_object=self.overall_finding)
+
+        new_file_type = AttachmentFileTypeFactory(code='fm_common')
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse('field_monitoring_data_collection:checklist-overall-attachments-list',
+                    args=[self.activity.pk, self.started_checklist.id, self.overall_finding.id]),
+            user=self.team_member,
+            data=[{'attachment': attachments[0].id, 'file_type': new_file_type.id}]
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(Attachment.objects.get(pk=attachments[0].id).file_type_id, new_file_type.id)
+
     def test_remove(self):
         attachment = AttachmentFactory(content_object=self.overall_finding, file_type__code='fm_common')
         link = AttachmentLinkFactory(attachment=attachment, content_object=self.overall_finding)
@@ -369,6 +389,29 @@ class TestOverallFindingAttachmentsView(ChecklistDataCollectionTestMixin, APIVie
         self.assertTrue(Attachment.objects.filter(pk=attachment.pk).exists())
         self.assertIsNone(Attachment.objects.get(pk=attachment.pk).content_object)
         self.assertFalse(AttachmentLink.objects.filter(pk=link.pk).exists())
+
+    def test_bulk_remove(self):
+        attachments = AttachmentFactory.create_batch(
+            size=3, content_object=self.overall_finding, file_type__code='fm_common'
+        )
+        for attachment in attachments:
+            AttachmentLinkFactory(attachment=attachment, content_object=self.overall_finding)
+
+        self.assertEqual(self.overall_finding.attachments.count(), 3)
+        self.assertEqual(AttachmentLink.objects.filter(object_id=self.overall_finding.pk).count(), 3)
+
+        response = self.forced_auth_req(
+            'delete',
+            reverse('field_monitoring_data_collection:checklist-overall-attachments-list',
+                    args=[self.activity.pk, self.started_checklist.id, self.overall_finding.id]),
+            user=self.team_member,
+            QUERY_STRING='pk__in=' + ','.join(str(a.id) for a in attachments[:-1])
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        self.assertEqual(self.overall_finding.attachments.count(), 1)
+        self.assertEqual(AttachmentLink.objects.filter(object_id=self.overall_finding.pk).count(), 1)
 
     def test_add_unicef(self):
         create_response = self.forced_auth_req(

@@ -1,17 +1,19 @@
 from django.contrib.contenttypes.models import ContentType
 from django.http import Http404
 
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action
 from rest_framework.mixins import CreateModelMixin, DestroyModelMixin, RetrieveModelMixin, UpdateModelMixin
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.serializers import ListSerializer
 from rest_framework.viewsets import GenericViewSet
-from rest_framework_bulk import BulkCreateModelMixin
+from rest_framework_bulk import BulkCreateModelMixin, BulkDestroyModelMixin, BulkUpdateModelMixin
 from unicef_attachments.models import AttachmentLink
 from unicef_restlib.pagination import DynamicPageNumberPagination
 from unicef_restlib.views import MultiSerializerViewSetMixin, NestedViewSetMixin, SafeTenantViewSetMixin
 
+from etools.applications.field_monitoring.filters import FMAttachmentLinksFilterSet
 from etools.applications.permissions2.metadata import BaseMetadata
 
 
@@ -42,7 +44,9 @@ class FMBaseAttachmentLinksViewSet(
     BulkCreateModelMixin,
     CreateModelMixin,
     RetrieveModelMixin,
+    BulkUpdateModelMixin,
     UpdateModelMixin,
+    BulkDestroyModelMixin,
     DestroyModelMixin,
     GenericViewSet,
 ):
@@ -51,6 +55,8 @@ class FMBaseAttachmentLinksViewSet(
     queryset = AttachmentLink.objects.prefetch_related('attachment')
     lookup_field = 'attachment_id'
     lookup_url_kwarg = 'pk'
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = FMAttachmentLinksFilterSet
 
     def get_parent_filter(self):
         parent = self.get_parent_object()
@@ -96,3 +102,14 @@ class FMBaseAttachmentLinksViewSet(
         # also, unlink attachment from the target
         instance.attachment.content_object = None
         instance.attachment.save()
+
+    def allow_bulk_destroy(self, qs, filtered):
+        allow = super().allow_bulk_destroy(qs, filtered)
+        if not allow:
+            return False
+
+        # assure all instances are editable by user before removing
+        for instance in filtered:
+            self.check_object_permissions(self.request, instance)
+
+        return True
