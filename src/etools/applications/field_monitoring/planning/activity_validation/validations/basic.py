@@ -38,7 +38,7 @@ def interventions_connected_with_partners(i):
 
 
 def interventions_connected_with_cp_outputs(i):
-    cp_outputs = i.interventions.values_list('result_links__intervention__agreement__partner', flat=True)
+    cp_outputs = i.interventions.values_list('result_links__cp_output', flat=True)
 
     diff = set(cp_outputs) - set(i.cp_outputs.values_list('id', flat=True))
     if diff:

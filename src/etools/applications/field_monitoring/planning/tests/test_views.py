@@ -70,7 +70,9 @@ class YearPlanViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
             self.assertEqual(getattr(year_plan, field), response.data[field])
 
 
-class ActivitiesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
+class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenantTestCase):
+    base_view = 'field_monitoring_planning:activities'
+
     def test_create_empty_visit(self):
         response = self.forced_auth_req(
             'post', reverse('field_monitoring_planning:activities-list'),
@@ -105,6 +107,24 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('team_members', response.data['permissions']['view'])
         self.assertTrue(response.data['permissions']['view']['team_members'])
+
+    def test_unlinked_intervention(self):
+        intervention = InterventionFactory()
+        activity = MonitoringActivityFactory(activity_type='staff', interventions=[intervention],
+                                             partners=[intervention.agreement.partner])
+        self._test_update(self.fm_user, activity, data={'partners': []}, expected_status=status.HTTP_400_BAD_REQUEST)
+
+    def test_add_linked_intervention(self):
+        intervention = InterventionFactory()
+        link = InterventionResultLinkFactory(intervention=intervention)
+        activity = MonitoringActivityFactory(activity_type='staff')
+        data = {
+            'partners': [intervention.agreement.partner.id],
+            'interventions': [intervention.id],
+            'cp_outputs': [link.cp_output.id],
+        }
+        response = self._test_update(self.fm_user, activity, data=data, expected_status=status.HTTP_200_OK)
+        self.assertNotEqual(response.data['cp_outputs'], [])
 
     def test_update_draft_success(self):
         activity = MonitoringActivityFactory(activity_type='tpm', tpm_partner=None)
