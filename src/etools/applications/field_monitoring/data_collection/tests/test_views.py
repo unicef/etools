@@ -377,10 +377,11 @@ class TestOverallFindingAttachmentsView(ChecklistDataCollectionTestMixin, APIVie
         self.assertEqual(self.overall_finding.attachments.count(), 3)
         self.assertEqual(AttachmentLink.objects.filter(object_id=self.overall_finding.pk).count(), 3)
 
-        self.make_list_request(
+        response = self.make_list_request(
             self.team_member, method='delete', QUERY_STRING='id__in=' + ','.join(str(a.id) for a in attachments[:-1])
         )
 
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(self.overall_finding.attachments.count(), 1)
         self.assertEqual(AttachmentLink.objects.filter(object_id=self.overall_finding.pk).count(), 1)
 
@@ -410,11 +411,12 @@ class TestChecklistFindingsView(ChecklistDataCollectionTestMixin, APIViewSetTest
             self._test_list(self.unicef_user, findings)
 
     def test_bulk_update(self):
-        self.make_list_request(
+        response = self.make_list_request(
             self.team_member,
             method='patch',
             data=[{'id': self.finding.pk, 'value': 'text value'}]
         )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_update_unicef(self):
         self._test_update(self.unicef_user, self.finding, {}, expected_status=status.HTTP_403_FORBIDDEN)
@@ -511,11 +513,12 @@ class TestActivityFindingsView(ChecklistDataCollectionTestMixin, APIViewSetTestC
         })
 
     def test_bulk_update(self):
-        self.make_list_request(
+        response = self.make_list_request(
             self.person_responsible,
             method='patch',
             data=[{'id': self.finding.pk, 'value': 'text value'}]
         )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_update_fm_user(self):
         self._test_update(self.fm_user, self.finding, {}, expected_status=status.HTTP_403_FORBIDDEN)

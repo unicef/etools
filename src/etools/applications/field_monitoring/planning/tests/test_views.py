@@ -3,6 +3,7 @@ from datetime import date
 from django.urls import reverse
 
 from rest_framework import status
+from unicef_attachments.models import Attachment, AttachmentLink
 
 from etools.applications.attachments.tests.factories import (
     AttachmentFactory,
@@ -144,6 +145,15 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['status'], 'data_collection')
 
+    def test_dont_auto_accept_activity_if_tpm(self):
+        activity = MonitoringActivityFactory(activity_type='tpm', tpm_partner=SimpleTPMPartnerFactory(),
+                                             status='pre_' + MonitoringActivity.STATUSES.assigned)
+
+        response = self._test_update(self.fm_user, activity, data={'status': 'assigned'})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['status'], 'assigned')
+
     def test_cancel_activity(self):
         activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.review)
 
@@ -201,51 +211,102 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         self.assertIsNotNone(response.data['sections'][0]['name'])
 
 
-class TestActivityAttachmentsView(FMBaseTestCaseMixin, BaseTenantTestCase):
+class TestActivityAttachmentsView(FMBaseTestCaseMixin, APIViewSetTestCase):
+    base_view = 'field_monitoring_planning:activity-attachments'
+
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
 
         cls.activity = MonitoringActivityFactory()
 
-    def test_add(self):
-        self.assertEqual(self.activity.attachments.count(), 0)
+    def get_list_args(self):
+        return [self.activity.pk,]
 
-        attachment = AttachmentFactory(content_object=None)
-        file_type = AttachmentFileTypeFactory(code='fm_common')
+    def test_link(self):
+        self.assertEqual(self.activity.attachments.count(), 0)
 
         link_response = self.forced_auth_req(
             'post',
-            reverse('field_monitoring_planning:activity-attachments-list', args=[self.activity.pk]),
+            reverse('field_monitoring_planning:activity-attachments-link', args=self.get_list_args()),
             user=self.fm_user,
-            data={'attachment': attachment.id, 'file_type': file_type.id}
+            data=[{'id': AttachmentFactory().id} for _i in range(2)]
         )
         self.assertEqual(link_response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(self.activity.attachments.count(), 2)
+        self.assertEqual(AttachmentLink.objects.filter(object_id=self.activity.id).count(), 2)
 
-        self.assertEqual(self.activity.attachments.count(), 1)
+    def test_list(self):
+        attachments = AttachmentFactory.create_batch(size=2, content_object=self.activity, code='attachments')
+        for attachment in attachments:
+            AttachmentLinkFactory(attachment=attachment, content_object=self.activity)
 
-    def test_remove(self):
-        attachment = AttachmentFactory(content_object=self.activity, code='attachments', file_type__code='fm_common')
+        AttachmentLinkFactory()
+
+        self._test_list(self.unicef_user, attachments)
+
+    def test_change(self):
+        attachment = AttachmentFactory(content_object=self.activity, file_type__code='fm_common',
+                                       file_type__name='before', code='attachments')
         AttachmentLinkFactory(attachment=attachment, content_object=self.activity)
 
-        self.assertEqual(self.activity.attachments.count(), 1)
+        new_file_type = AttachmentFileTypeFactory(code='fm_common', name='after')
 
-        response = self.forced_auth_req(
-            'delete',
-            reverse('field_monitoring_planning:activity-attachments-detail', args=[self.activity.pk, attachment.pk]),
-            user=self.fm_user,
+        self._test_update(self.fm_user, attachment, {'file_type': new_file_type.id})
+        self.assertEqual(Attachment.objects.get(pk=attachment.pk).file_type_id, new_file_type.id)
+
+    def test_bulk_update(self):
+        original_file_type = AttachmentFileTypeFactory(code='fm_common')
+        attachments = AttachmentFactory.create_batch(
+            size=2, content_object=self.activity, file_type=original_file_type, code='attachments'
         )
+        for attachment in attachments:
+            AttachmentLinkFactory(attachment=attachment, content_object=self.activity)
+
+        new_file_type = AttachmentFileTypeFactory(code='fm_common')
+
+        response = self.make_list_request(
+            self.fm_user, method='patch', data=[{'id': attachments[0].id, 'file_type': new_file_type.id}]
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(Attachment.objects.get(pk=attachments[0].id).file_type_id, new_file_type.id)
+
+    def test_remove(self):
+        attachment = AttachmentFactory(content_object=self.activity, file_type__code='fm_common', code='attachments')
+        link = AttachmentLinkFactory(attachment=attachment, content_object=self.activity)
+
+        self._test_destroy(self.fm_user, attachment)
+
+        self.assertTrue(Attachment.objects.filter(pk=attachment.pk).exists())
+        self.assertIsNone(Attachment.objects.get(pk=attachment.pk).content_object)
+        self.assertFalse(AttachmentLink.objects.filter(pk=link.pk).exists())
+
+    def test_bulk_remove(self):
+        attachments = AttachmentFactory.create_batch(size=3, content_object=self.activity, file_type__code='fm_common',
+                                                     code='attachments')
+        for attachment in attachments:
+            AttachmentLinkFactory(attachment=attachment, content_object=self.activity)
+
+        self.assertEqual(self.activity.attachments.count(), 3)
+        self.assertEqual(AttachmentLink.objects.filter(object_id=self.activity.pk).count(), 3)
+
+        response = self.make_list_request(
+            self.fm_user, method='delete', QUERY_STRING='id__in=' + ','.join(str(a.id) for a in attachments[:-1])
+        )
+
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        self.assertEqual(self.activity.attachments.count(), 0)
+        self.assertEqual(self.activity.attachments.count(), 1)
+        self.assertEqual(AttachmentLink.objects.filter(object_id=self.activity.pk).count(), 1)
 
     def test_add_unicef(self):
-        create_response = self.forced_auth_req(
+        link_response = self.forced_auth_req(
             'post',
-            reverse('field_monitoring_planning:activity-attachments-list', args=[self.activity.pk]),
+            reverse('field_monitoring_planning:activity-attachments-link', args=self.get_list_args()),
             user=self.unicef_user,
-            data={}
+            data=[]
         )
-        self.assertEqual(create_response.status_code, status.HTTP_403_FORBIDDEN)
+
+        self.assertEqual(link_response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_file_types(self):
         wrong_file_type = AttachmentFileTypeFactory()

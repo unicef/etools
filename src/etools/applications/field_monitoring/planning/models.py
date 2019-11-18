@@ -128,11 +128,12 @@ class MonitoringActivity(
             lambda i, old_instance=None, user=None: i.prepare_activity_overall_findings(),
             lambda i, old_instance=None, user=None: i.prepare_questions_overall_findings(),
         ],
+        'assigned': [
+            lambda i, old_instance=None, user=None: i.auto_accept_staff_activity(),
+        ]
     }
 
-    AUTO_TRANSITIONS = {
-        'assigned': ['data_collection']
-    }
+    AUTO_TRANSITIONS = {}
 
     RELATIONS_MAPPING = (
         ('partners', 'partner'),
@@ -283,6 +284,11 @@ class MonitoringActivity(
                 permission=user_is_person_responsible_permission)
     def accept(self):
         pass
+
+    def auto_accept_staff_activity(self):
+        if self.activity_type == self.TYPES.staff:
+            self.accept()
+            self.save()
 
     @transition(field=status, source=STATUSES.data_collection, target=STATUSES.draft,
                 permission=user_is_person_responsible_permission)
