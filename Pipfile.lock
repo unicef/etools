@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "0924ddee269d14e4ed6a2822699b7703ec96e29b3e7869f603c8e78130827119"
+            "sha256": "e35cb37b5c91c021fa25cd301ef35be43fc07278cefcdb21192881c2409b95a3"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -654,10 +654,10 @@
         },
         "newrelic": {
             "hashes": [
-                "sha256:2f733338004ea2dc4d51cacc5165165b052404f8344ce0194699dc3ed1a7c6ea"
+                "sha256:185833654753b9b54a8314edb067294e184600a7ca0e45b0201402a12cbfdd5a"
             ],
             "index": "pypi",
-            "version": "==5.2.2.130"
+            "version": "==5.2.3.131"
         },
         "oauthlib": {
             "hashes": [
@@ -680,9 +680,9 @@
         },
         "openpyxl": {
             "hashes": [
-                "sha256:340a1ab2069764559b9d58027a43a24db18db0e25deb80f81ecb8ca7ee5253db"
+                "sha256:a3ee361d3ff04af6048d594775b3a54ffdf215d40fa5c6c78b2a41c0d0b020d3"
             ],
-            "version": "==3.0.0"
+            "version": "==3.0.1"
         },
         "pillow": {
             "hashes": [
@@ -1009,10 +1009,11 @@
         },
         "unicef-attachments": {
             "hashes": [
-                "sha256:8adaabfa7877a81d5772543e96d499a7f923baadb803acdfc6e72d306b877236"
+                "sha256:21d83f03980f1c16c6e5f5a74dd4079829fcb8e352cf215c292f8db6ea4dcf67",
+                "sha256:bb1d6aaa4805eda0516cc64c512eb8eb4fa9452aea4085af4ffb73371a76e440"
             ],
             "index": "pypi",
-            "version": "==0.6.1"
+            "version": "==0.7.0"
         },
         "unicef-djangolib": {
             "hashes": [
@@ -1251,10 +1252,10 @@
         },
         "faker": {
             "hashes": [
-                "sha256:5902379d8df308a204fc11c4f621590ee83975805a6c7b2228203b9defa45250",
-                "sha256:5e8c755c619f332d5ec28b7586389665f136bcf528e165eb925e87c06a63eda7"
+                "sha256:48c03580720e0b46538d528b1296e4e5b24a809dcaf33a7dddec719489a9edb8",
+                "sha256:6327c665c0d8721280b3036d9c9e851c60092bc1f30c8394cc433f8723e2bda5"
             ],
-            "version": "==2.0.3"
+            "version": "==2.0.4"
         },
         "fancycompleter": {
             "hashes": [
@@ -1653,11 +1654,11 @@
         },
         "tox": {
             "hashes": [
-                "sha256:0bc216b6a2e6afe764476b4a07edf2c1dab99ed82bb146a1130b2e828f5bff5e",
-                "sha256:c4f6b319c20ba4913dbfe71ebfd14ff95d1853c4231493608182f66e566ecfe1"
+                "sha256:1d1368ac86e8332f79e2bcef9fefe2b077469f08449eadf0183759b34f3b2070",
+                "sha256:bcfa3e40abc1e9b70607b56adfd976fe7dc8286ad56aab44e3151daca7d2d0d0"
             ],
             "index": "pypi",
-            "version": "==3.14.0"
+            "version": "==3.14.1"
         },
         "traitlets": {
             "hashes": [
