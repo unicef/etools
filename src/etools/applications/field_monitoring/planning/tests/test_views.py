@@ -221,7 +221,7 @@ class TestActivityAttachmentsView(FMBaseTestCaseMixin, APIViewSetTestCase):
         cls.activity = MonitoringActivityFactory()
 
     def get_list_args(self):
-        return [self.activity.pk,]
+        return [self.activity.pk]
 
     def test_link(self):
         self.assertEqual(self.activity.attachments.count(), 0)
@@ -230,7 +230,7 @@ class TestActivityAttachmentsView(FMBaseTestCaseMixin, APIViewSetTestCase):
             'post',
             reverse('field_monitoring_planning:activity-attachments-link', args=self.get_list_args()),
             user=self.fm_user,
-            data=[{'id': AttachmentFactory().id} for _i in range(2)]
+            data=[{'id': AttachmentFactory(code='attachments').id} for _i in range(2)]
         )
         self.assertEqual(link_response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(self.activity.attachments.count(), 2)
@@ -318,7 +318,7 @@ class TestActivityAttachmentsView(FMBaseTestCaseMixin, APIViewSetTestCase):
             user=self.unicef_user,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn(file_type.id, response.data)
+        self.assertIn(file_type.id, response.data.keys())
         self.assertNotIn(wrong_file_type.id, response.data)
 
 

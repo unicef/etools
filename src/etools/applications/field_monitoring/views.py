@@ -1,12 +1,10 @@
 from django.contrib.contenttypes.models import ContentType
-from django.db import transaction
 from django.http import Http404
 
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.mixins import (
-    CreateModelMixin,
     DestroyModelMixin,
     ListModelMixin,
     RetrieveModelMixin,
@@ -14,15 +12,12 @@ from rest_framework.mixins import (
 )
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.serializers import ListSerializer
 from rest_framework.viewsets import GenericViewSet
-from rest_framework_bulk import BulkCreateModelMixin, BulkDestroyModelMixin, BulkUpdateModelMixin
+from rest_framework_bulk import BulkDestroyModelMixin, BulkUpdateModelMixin
 from unicef_attachments.models import Attachment, AttachmentLink
-from unicef_attachments.serializers import BaseAttachmentSerializer
 from unicef_restlib.pagination import DynamicPageNumberPagination
 from unicef_restlib.views import MultiSerializerViewSetMixin, NestedViewSetMixin, SafeTenantViewSetMixin
 
-from etools.applications.field_monitoring.filters import FMAttachmentLinksFilterSet
 from etools.applications.field_monitoring.fm_settings.serializers import LinkedAttachmentBulkSerializer
 from etools.applications.permissions2.metadata import BaseMetadata
 
@@ -44,7 +39,7 @@ class AttachmentFileTypesViewMixin:
         if 'file_type' not in declared_fields:
             raise Http404
 
-        return Response(data=declared_fields['file_type'].choices)
+        return Response(data=dict(declared_fields['file_type'].queryset.values_list('id', 'label')))
 
 
 class LinkedAttachmentsViewSet(
@@ -64,6 +59,13 @@ class LinkedAttachmentsViewSet(
     filter_backends = (DjangoFilterBackend,)
     filter_fields = {'id': ['in']}
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if self.attachment_code:
+            queryset = queryset.filter(code=self.attachment_code)
+
+        return queryset
+
     def perform_linking(self, serializer):
         # set code for instance
         if self.attachment_code:
@@ -78,7 +80,7 @@ class LinkedAttachmentsViewSet(
     @action(detail=False, methods=['POST'], url_path='link', url_name='link')
     def link_attachments(self, request, *args, **kwargs):
         serializer = self.get_serializer(
-            self.get_queryset().filter(pk__in=[a['id'] for a in request.data if a.get('id')]),
+            Attachment.objects.filter(pk__in=[a['id'] for a in request.data if a.get('id')]),
             data=request.data,
             many=True,
             partial=True,

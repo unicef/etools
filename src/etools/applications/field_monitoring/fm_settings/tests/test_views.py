@@ -23,7 +23,7 @@ from etools.applications.field_monitoring.fm_settings.tests.factories import (
     QuestionFactory,
 )
 from etools.applications.field_monitoring.planning.tests.factories import MonitoringActivityFactory
-from etools.applications.field_monitoring.tests.base import FMBaseTestCaseMixin, APIViewSetTestCase
+from etools.applications.field_monitoring.tests.base import APIViewSetTestCase, FMBaseTestCaseMixin
 from etools.applications.partners.tests.factories import InterventionFactory, PartnerFactory
 from etools.applications.reports.models import ResultType
 from etools.applications.reports.tests.factories import ResultFactory, SectionFactory
@@ -325,15 +325,24 @@ class TestFieldMonitoringGeneralAttachmentsView(FMBaseTestCaseMixin, APIViewSetT
     def test_link(self):
         self.assertEqual(Attachment.objects.filter(code='fm_common').count(), 0)
 
-        link_response = self.forced_auth_req(
+        response = self.forced_auth_req(
             'post',
             reverse('field_monitoring_settings:general-attachments-link', args=self.get_list_args()),
             user=self.fm_user,
-            data=[{'id': AttachmentFactory().id} for _i in range(2)]
+            data=[{'id': AttachmentFactory(code='fm_common').id} for _i in range(2)]
         )
-        self.assertEqual(link_response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Attachment.objects.filter(code='fm_common').count(), 2)
         self.assertEqual(AttachmentLink.objects.filter(attachment__code='fm_common').count(), 2)
+
+    def test_list(self):
+        attachments = AttachmentFactory.create_batch(size=2, code='fm_common')
+        for attachment in attachments:
+            AttachmentLinkFactory(attachment=attachment)
+
+        AttachmentLinkFactory()
+
+        self._test_list(self.unicef_user, attachments)
 
     def test_add_unicef(self):
         create_response = self.forced_auth_req(
@@ -545,28 +554,39 @@ class LogIssueViewTestCase(FMBaseTestCaseMixin, TestExportMixin, BaseTenantTestC
         self._test_export(self.unicef_user, 'field_monitoring_settings:log-issues-export')
 
 
-class TestLogIssueAttachmentsView(FMBaseTestCaseMixin, BaseTenantTestCase):
+class TestLogIssueAttachmentsView(FMBaseTestCaseMixin, APIViewSetTestCase):
+    base_view = 'field_monitoring_settings:log-issue-attachments'
+
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
 
         cls.log_issue = LogIssueFactory()
 
-    def test_add(self):
-        self.assertEqual(self.log_issue.attachments.count(), 0)
+    def get_list_args(self):
+        return [self.log_issue.pk]
 
-        attachment = AttachmentFactory(content_object=None)
-        file_type = AttachmentFileTypeFactory(code='fm_common')
+    def test_link(self):
+        self.assertEqual(self.log_issue.attachments.count(), 0)
 
         link_response = self.forced_auth_req(
             'post',
-            reverse('field_monitoring_settings:log-issue-attachments-list', args=[self.log_issue.pk]),
+            reverse('field_monitoring_settings:log-issue-attachments-link', args=self.get_list_args()),
             user=self.fm_user,
-            data={'attachment': attachment.id, 'file_type': file_type.id}
+            data=[{'id': AttachmentFactory().id} for _i in range(2)]
         )
         self.assertEqual(link_response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(self.log_issue.attachments.count(), 2)
+        self.assertEqual(AttachmentLink.objects.filter(object_id=self.log_issue.id).count(), 2)
 
-        self.assertEqual(self.log_issue.attachments.count(), 1)
+    def test_list(self):
+        attachments = AttachmentFactory.create_batch(size=2, content_object=self.log_issue)
+        for attachment in attachments:
+            AttachmentLinkFactory(attachment=attachment, content_object=self.log_issue)
+
+        AttachmentLinkFactory()
+
+        self._test_list(self.fm_user, attachments)
 
     def test_remove(self):
         attachment = AttachmentFactory(content_object=self.log_issue, file_type__code='fm_common')
@@ -574,22 +594,15 @@ class TestLogIssueAttachmentsView(FMBaseTestCaseMixin, BaseTenantTestCase):
 
         self.assertEqual(self.log_issue.attachments.count(), 1)
 
-        response = self.forced_auth_req(
-            'delete',
-            reverse(
-                'field_monitoring_settings:log-issue-attachments-detail', args=[self.log_issue.pk, attachment.pk],
-            ),
-            user=self.fm_user,
-        )
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self._test_destroy(self.fm_user, attachment)
         self.assertEqual(self.log_issue.attachments.count(), 0)
 
     def test_add_unicef(self):
         create_response = self.forced_auth_req(
             'post',
-            reverse('field_monitoring_settings:log-issue-attachments-list', args=[self.log_issue.pk]),
+            reverse('field_monitoring_settings:log-issue-attachments-link', args=self.get_list_args()),
             user=self.unicef_user,
-            data={}
+            data=[]
         )
         self.assertEqual(create_response.status_code, status.HTTP_403_FORBIDDEN)
 

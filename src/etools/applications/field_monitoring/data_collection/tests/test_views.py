@@ -23,7 +23,9 @@ from etools.applications.partners.tests.factories import InterventionFactory, Pa
 from etools.applications.reports.tests.factories import ResultFactory
 
 
-class TestActivityReportAttachmentsView(FMBaseTestCaseMixin, BaseTenantTestCase):
+class TestActivityReportAttachmentsView(FMBaseTestCaseMixin, APIViewSetTestCase):
+    base_view = 'field_monitoring_data_collection:activity-report-attachments'
+
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
@@ -34,21 +36,30 @@ class TestActivityReportAttachmentsView(FMBaseTestCaseMixin, BaseTenantTestCase)
         cls.activity = MonitoringActivityFactory()
         cls.activity.team_members.add(cls.user)
 
-    def test_add(self):
-        self.assertEqual(self.activity.report_attachments.count(), 0)
+    def get_list_args(self):
+        return [self.activity.pk]
 
-        attachment = AttachmentFactory(content_object=None)
-        file_type = AttachmentFileTypeFactory(code='fm_common')
+    def test_link(self):
+        self.assertEqual(self.activity.report_attachments.count(), 0)
 
         link_response = self.forced_auth_req(
             'post',
-            reverse('field_monitoring_data_collection:activity-report-attachments-list', args=[self.activity.pk]),
+            reverse('field_monitoring_data_collection:activity-report-attachments-link', args=self.get_list_args()),
             user=self.user,
-            data={'attachment': attachment.id, 'file_type': file_type.id}
+            data=[{'id': AttachmentFactory(code='report_attachments').id} for _i in range(2)]
         )
         self.assertEqual(link_response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(self.activity.report_attachments.count(), 2)
+        self.assertEqual(AttachmentLink.objects.filter(object_id=self.activity.id).count(), 2)
 
-        self.assertEqual(self.activity.report_attachments.count(), 1)
+    def test_list(self):
+        attachments = AttachmentFactory.create_batch(size=2, content_object=self.activity, code='report_attachments')
+        for attachment in attachments:
+            AttachmentLinkFactory(attachment=attachment, content_object=self.activity)
+
+        AttachmentLinkFactory()
+
+        self._test_list(self.unicef_user, attachments)
 
     def test_remove(self):
         attachment = AttachmentFactory(content_object=self.activity, code='report_attachments',
@@ -57,24 +68,15 @@ class TestActivityReportAttachmentsView(FMBaseTestCaseMixin, BaseTenantTestCase)
 
         self.assertEqual(self.activity.report_attachments.count(), 1)
 
-        response = self.forced_auth_req(
-            'delete',
-            reverse(
-                'field_monitoring_data_collection:activity-report-attachments-detail',
-                args=[self.activity.pk, attachment.pk],
-            ),
-            user=self.user,
-        )
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self._test_destroy(self.user, attachment)
         self.assertEqual(self.activity.report_attachments.count(), 0)
 
     def test_add_unicef(self):
         create_response = self.forced_auth_req(
             'post',
-            reverse('field_monitoring_data_collection:activity-report-attachments-list', args=[self.activity.pk]),
+            reverse('field_monitoring_data_collection:activity-report-attachments-link', args=self.get_list_args()),
             user=self.unicef_user,
-            request_format='multipart',
-            data={}
+            data=[]
         )
         self.assertEqual(create_response.status_code, status.HTTP_403_FORBIDDEN)
 

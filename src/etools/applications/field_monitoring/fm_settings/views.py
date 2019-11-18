@@ -7,7 +7,6 @@ from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
-from unicef_attachments.models import Attachment
 from unicef_locations.cache import etag_cached
 from unicef_locations.models import Location
 from unicef_locations.serializers import LocationLightSerializer
