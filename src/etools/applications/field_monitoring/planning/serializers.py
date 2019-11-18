@@ -6,6 +6,7 @@ from unicef_attachments.models import FileType
 from unicef_attachments.serializers import BaseAttachmentSerializer
 from unicef_locations.serializers import LocationSerializer
 from unicef_restlib.fields import SeparatedReadWriteField
+from unicef_restlib.serializers import UserContextSerializerMixin
 from unicef_snapshot.serializers import SnapshotModelSerializer
 
 from etools.applications.action_points.serializers import HistorySerializer
@@ -13,6 +14,7 @@ from etools.applications.field_monitoring.fm_settings.models import Question
 from etools.applications.field_monitoring.fm_settings.serializers import LocationSiteSerializer, QuestionSerializer
 from etools.applications.field_monitoring.planning.activity_validation.permissions import ActivityPermissions
 from etools.applications.field_monitoring.planning.models import MonitoringActivity, QuestionTemplate, YearPlan
+from etools.applications.field_monitoring.utils.fsm import get_available_transitions
 from etools.applications.partners.serializers.interventions_v2 import MinimalInterventionListSerializer
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.reports.serializers.v1 import SectionSerializer
@@ -115,21 +117,27 @@ class MonitoringActivityLightSerializer(serializers.ModelSerializer):
         )
 
 
-class MonitoringActivitySerializer(MonitoringActivityLightSerializer):
+class MonitoringActivitySerializer(UserContextSerializerMixin, MonitoringActivityLightSerializer):
     permissions = serializers.SerializerMethodField(read_only=True)
+    transitions = serializers.SerializerMethodField(read_only=True)
     field_office = SeparatedReadWriteField(read_field=OfficeSerializer())
     sections = SeparatedReadWriteField(read_field=SectionSerializer(many=True))
 
     class Meta(MonitoringActivityLightSerializer.Meta):
         fields = MonitoringActivityLightSerializer.Meta.fields + (
-            'field_office', 'sections', 'permissions',
+            'field_office', 'sections', 'permissions', 'transitions',
         )
 
     def get_permissions(self, obj):
-        user = self.context['request'].user
         ps = MonitoringActivity.permission_structure()
-        permissions = ActivityPermissions(user=user, instance=self.instance, permission_structure=ps)
+        permissions = ActivityPermissions(user=self.get_user(), instance=self.instance, permission_structure=ps)
         return permissions.get_permissions()
+
+    def get_transitions(self, obj):
+        return [
+            {'transition': transition.method.__name__, 'target': transition.target}
+            for transition in get_available_transitions(obj, self.get_user())
+        ]
 
 
 class ActivityAttachmentSerializer(BaseAttachmentSerializer):

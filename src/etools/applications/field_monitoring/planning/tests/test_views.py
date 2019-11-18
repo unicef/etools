@@ -87,10 +87,17 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
     def test_details(self):
         activity = MonitoringActivityFactory(activity_type='staff', team_members=[UserFactory(unicef_user=True)])
 
-        response = self._test_retrieve(self.unicef_user, activity)
+        response = self._test_retrieve(self.fm_user, activity)
 
+        # check permissions are added correctly
         self.assertIn('team_members', response.data['permissions']['view'])
         self.assertTrue(response.data['permissions']['view']['team_members'])
+
+        # check transitions exists
+        self.assertListEqual(
+            [t['transition'] for t in response.data['transitions']],
+            ['cancel', 'mark_details_configured']
+        )
 
     def test_unlinked_intervention(self):
         intervention = InterventionFactory()
