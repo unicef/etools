@@ -5,7 +5,7 @@ from django.urls import reverse
 
 from factory import fuzzy
 from rest_framework import status
-from unicef_attachments.models import Attachment
+from unicef_attachments.models import Attachment, AttachmentLink
 from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.attachments.tests.factories import (
@@ -23,7 +23,7 @@ from etools.applications.field_monitoring.fm_settings.tests.factories import (
     QuestionFactory,
 )
 from etools.applications.field_monitoring.planning.tests.factories import MonitoringActivityFactory
-from etools.applications.field_monitoring.tests.base import FMBaseTestCaseMixin
+from etools.applications.field_monitoring.tests.base import FMBaseTestCaseMixin, APIViewSetTestCase
 from etools.applications.partners.tests.factories import InterventionFactory, PartnerFactory
 from etools.applications.reports.models import ResultType
 from etools.applications.reports.tests.factories import ResultFactory, SectionFactory
@@ -319,37 +319,27 @@ class LocationsCountryViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.data['point']['type'], 'Point')
 
 
-class TestFieldMonitoringGeneralAttachmentsView(FMBaseTestCaseMixin, BaseTenantTestCase):
-    def test_add(self):
-        attachments_num = Attachment.objects.filter(code='fm_common').count()
-        self.assertEqual(attachments_num, 0)
+class TestFieldMonitoringGeneralAttachmentsView(FMBaseTestCaseMixin, APIViewSetTestCase):
+    base_view = 'field_monitoring_settings:general-attachments'
 
-        create_response = self.forced_auth_req(
+    def test_link(self):
+        self.assertEqual(Attachment.objects.filter(code='fm_common').count(), 0)
+
+        link_response = self.forced_auth_req(
             'post',
-            reverse('field_monitoring_settings:general-attachments-list'),
+            reverse('field_monitoring_settings:general-attachments-link', args=self.get_list_args()),
             user=self.fm_user,
-            request_format='multipart',
-            data={
-                'file_type': AttachmentFileTypeFactory(code='fm_common').id,
-                'file': SimpleUploadedFile('hello_world.txt', u'hello world!'.encode('utf-8')),
-            }
+            data=[{'id': AttachmentFactory().id} for _i in range(2)]
         )
-        self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
-
-        list_response = self.forced_auth_req(
-            'get',
-            reverse('field_monitoring_settings:general-attachments-list'),
-            user=self.unicef_user
-        )
-        self.assertEqual(list_response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(list_response.data['results']), attachments_num + 1)
+        self.assertEqual(link_response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Attachment.objects.filter(code='fm_common').count(), 2)
+        self.assertEqual(AttachmentLink.objects.filter(attachment__code='fm_common').count(), 2)
 
     def test_add_unicef(self):
         create_response = self.forced_auth_req(
             'post',
-            reverse('field_monitoring_settings:general-attachments-list'),
+            reverse('field_monitoring_settings:general-attachments-link'),
             user=self.unicef_user,
-            request_format='multipart',
             data={}
         )
         self.assertEqual(create_response.status_code, status.HTTP_403_FORBIDDEN)

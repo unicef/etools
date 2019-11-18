@@ -299,54 +299,37 @@ class TestChecklistOverallFindingsView(ChecklistDataCollectionTestMixin, APIView
 
 
 class TestOverallFindingAttachmentsView(ChecklistDataCollectionTestMixin, APIViewSetTestCase):
+    base_view = 'field_monitoring_data_collection:checklist-overall-attachments'
+
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
         cls.overall_finding = cls.started_checklist.overall_findings.first()
 
-    def test_add(self):
+    def get_list_args(self):
+        return [self.activity.pk, self.started_checklist.id, self.overall_finding.id]
+
+    def test_link(self):
         self.assertEqual(self.overall_finding.attachments.count(), 0)
 
-        attachment = AttachmentFactory(content_object=None)
-        file_type = AttachmentFileTypeFactory(code='fm_common')
-
         link_response = self.forced_auth_req(
             'post',
-            reverse('field_monitoring_data_collection:checklist-overall-attachments-list',
-                    args=[self.activity.pk, self.started_checklist.id, self.overall_finding.id]),
+            reverse('field_monitoring_data_collection:checklist-overall-attachments-link', args=self.get_list_args()),
             user=self.team_member,
-            data={'attachment': attachment.id, 'file_type': file_type.id}
+            data=[{'id': AttachmentFactory().id} for _i in range(2)]
         )
         self.assertEqual(link_response.status_code, status.HTTP_201_CREATED)
-
-        finding_response = self.forced_auth_req(
-            'get',
-            reverse('field_monitoring_data_collection:checklist-overall-findings-list',
-                    args=[self.activity.pk, self.started_checklist.id]),
-            user=self.team_member
-        )
-        self.assertEqual(finding_response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(finding_response.data['results']), 1)
-        self.assertEqual(len(finding_response.data['results'][0]['attachments']), 1)
-        self.assertEqual(finding_response.data['results'][0]['attachments'][0]['id'], attachment.pk)
-        self.assertEqual(finding_response.data['results'][0]['attachments'][0]['file_type'], file_type.pk)
-
-    def test_bulk_create(self):
-        link_response = self.forced_auth_req(
-            'post',
-            reverse('field_monitoring_data_collection:checklist-overall-attachments-list',
-                    args=[self.activity.pk, self.started_checklist.id, self.overall_finding.id]),
-            user=self.team_member,
-            data=[
-                {
-                    'attachment': AttachmentFactory(content_object=None).id,
-                    'file_type': AttachmentFileTypeFactory(code='fm_common').id
-                }
-                for _i in range(2)
-            ]
-        )
-        self.assertEqual(link_response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(self.overall_finding.attachments.count(), 2)
         self.assertEqual(AttachmentLink.objects.filter(object_id=self.overall_finding.id).count(), 2)
+
+    def test_list(self):
+        attachments = AttachmentFactory.create_batch(size=2, content_object=self.overall_finding)
+        for attachment in attachments:
+            AttachmentLinkFactory(attachment=attachment, content_object=self.overall_finding)
+
+        AttachmentLinkFactory()
+
+        self._test_list(self.team_member, attachments)
 
     def test_change(self):
         attachment = AttachmentFactory(content_object=self.overall_finding, file_type__code='fm_common',
@@ -355,14 +338,7 @@ class TestOverallFindingAttachmentsView(ChecklistDataCollectionTestMixin, APIVie
 
         new_file_type = AttachmentFileTypeFactory(code='fm_common', name='after')
 
-        response = self.forced_auth_req(
-            'patch',
-            reverse('field_monitoring_data_collection:checklist-overall-attachments-detail',
-                    args=[self.activity.pk, self.started_checklist.id, self.overall_finding.id, attachment.pk]),
-            user=self.team_member,
-            data={'file_type': new_file_type.id}
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self._test_update(self.team_member, attachment, {'file_type': new_file_type.id})
         self.assertEqual(Attachment.objects.get(pk=attachment.pk).file_type_id, new_file_type.id)
 
     def test_bulk_update(self):
@@ -375,12 +351,8 @@ class TestOverallFindingAttachmentsView(ChecklistDataCollectionTestMixin, APIVie
 
         new_file_type = AttachmentFileTypeFactory(code='fm_common')
 
-        response = self.forced_auth_req(
-            'patch',
-            reverse('field_monitoring_data_collection:checklist-overall-attachments-list',
-                    args=[self.activity.pk, self.started_checklist.id, self.overall_finding.id]),
-            user=self.team_member,
-            data=[{'attachment': attachments[0].id, 'file_type': new_file_type.id}]
+        response = self.make_list_request(
+            self.team_member, method='patch', data=[{'id': attachments[0].id, 'file_type': new_file_type.id}]
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(Attachment.objects.get(pk=attachments[0].id).file_type_id, new_file_type.id)
@@ -389,13 +361,8 @@ class TestOverallFindingAttachmentsView(ChecklistDataCollectionTestMixin, APIVie
         attachment = AttachmentFactory(content_object=self.overall_finding, file_type__code='fm_common')
         link = AttachmentLinkFactory(attachment=attachment, content_object=self.overall_finding)
 
-        response = self.forced_auth_req(
-            'delete',
-            reverse('field_monitoring_data_collection:checklist-overall-attachments-detail',
-                    args=[self.activity.pk, self.started_checklist.id, self.overall_finding.id, attachment.pk]),
-            user=self.team_member,
-        )
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self._test_destroy(self.team_member, attachment)
+
         self.assertTrue(Attachment.objects.filter(pk=attachment.pk).exists())
         self.assertIsNone(Attachment.objects.get(pk=attachment.pk).content_object)
         self.assertFalse(AttachmentLink.objects.filter(pk=link.pk).exists())
@@ -410,29 +377,22 @@ class TestOverallFindingAttachmentsView(ChecklistDataCollectionTestMixin, APIVie
         self.assertEqual(self.overall_finding.attachments.count(), 3)
         self.assertEqual(AttachmentLink.objects.filter(object_id=self.overall_finding.pk).count(), 3)
 
-        response = self.forced_auth_req(
-            'delete',
-            reverse('field_monitoring_data_collection:checklist-overall-attachments-list',
-                    args=[self.activity.pk, self.started_checklist.id, self.overall_finding.id]),
-            user=self.team_member,
-            QUERY_STRING='pk__in=' + ','.join(str(a.id) for a in attachments[:-1])
+        self.make_list_request(
+            self.team_member, method='delete', QUERY_STRING='id__in=' + ','.join(str(a.id) for a in attachments[:-1])
         )
-
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
         self.assertEqual(self.overall_finding.attachments.count(), 1)
         self.assertEqual(AttachmentLink.objects.filter(object_id=self.overall_finding.pk).count(), 1)
 
     def test_add_unicef(self):
-        create_response = self.forced_auth_req(
+        link_response = self.forced_auth_req(
             'post',
-            reverse('field_monitoring_data_collection:checklist-overall-attachments-list',
-                    args=[self.activity.pk, self.started_checklist.id, self.overall_finding.id]),
+            reverse('field_monitoring_data_collection:checklist-overall-attachments-link', args=self.get_list_args()),
             user=self.unicef_user,
-            request_format='multipart',
-            data={}
+            data=[]
         )
-        self.assertEqual(create_response.status_code, status.HTTP_403_FORBIDDEN)
+
+        self.assertEqual(link_response.status_code, status.HTTP_403_FORBIDDEN)
 
 
 class TestChecklistFindingsView(ChecklistDataCollectionTestMixin, APIViewSetTestCase):

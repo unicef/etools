@@ -29,8 +29,7 @@ from etools.applications.field_monitoring.fm_settings.filters import (
 from etools.applications.field_monitoring.fm_settings.models import Category, LocationSite, LogIssue, Method, Question
 from etools.applications.field_monitoring.fm_settings.serializers import (
     CategorySerializer,
-    FieldMonitoringGeneralAttachmentSerializer,
-    FMCommonAttachmentLinkSerializer,
+    FMCommonAttachmentSerializer,
     LocationFullSerializer,
     LocationSiteSerializer,
     LogIssueSerializer,
@@ -40,9 +39,9 @@ from etools.applications.field_monitoring.fm_settings.serializers import (
 )
 from etools.applications.field_monitoring.permissions import IsEditAction, IsFieldMonitor, IsPME, IsReadAction
 from etools.applications.field_monitoring.views import (
-    AttachmentFileTypesViewMixin,
-    FMBaseAttachmentLinksViewSet,
     FMBaseViewSet,
+    LinkedAttachmentsViewSet,
+    NestedLinkedAttachmentsViewSet,
 )
 from etools.applications.reports.views.v2 import OutputListAPIView
 
@@ -56,22 +55,15 @@ class MethodsViewSet(
     serializer_class = MethodSerializer
 
 
-class FieldMonitoringGeneralAttachmentsViewSet(
-    FMBaseViewSet,
-    AttachmentFileTypesViewMixin,
-    viewsets.ModelViewSet
-):
+class FieldMonitoringGeneralAttachmentsViewSet(LinkedAttachmentsViewSet):
     permission_classes = FMBaseViewSet.permission_classes + [
         IsReadAction | (IsEditAction & IsFieldMonitor)
     ]
-    queryset = Attachment.objects.filter(code='fm_common')
-    serializer_class = FieldMonitoringGeneralAttachmentSerializer
+    attachment_code = 'fm_common'
+    serializer_class = FMCommonAttachmentSerializer
 
     def get_view_name(self):
         return _('Attachments')
-
-    def perform_create(self, serializer):
-        serializer.save(code='fm_common')
 
 
 class InterventionLocationsView(FMBaseViewSet, generics.ListAPIView):
@@ -184,11 +176,11 @@ class LogIssuesViewSet(FMBaseViewSet, viewsets.ModelViewSet):
         })
 
 
-class LogIssueAttachmentsViewSet(FMBaseAttachmentLinksViewSet):
+class LogIssueAttachmentsViewSet(NestedLinkedAttachmentsViewSet):
     permission_classes = FMBaseViewSet.permission_classes + [
         IsReadAction | (IsEditAction & IsFieldMonitor)
     ]
-    serializer_class = FMCommonAttachmentLinkSerializer
+    serializer_class = FMCommonAttachmentSerializer
     related_model = LogIssue
 
     def get_view_name(self):
