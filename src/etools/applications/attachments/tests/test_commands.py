@@ -13,7 +13,7 @@ class TestDenormalizeAttachmentCommand(BaseTenantTestCase):
         AttachmentFlat = get_attachment_flat_model()
         user = UserFactory()
         code = "test_code"
-        file_type = AttachmentFileTypeFactory(code=code)
+        file_type = AttachmentFileTypeFactory()
         attachment = AttachmentFactory(
             file_type=file_type,
             code=code,

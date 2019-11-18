@@ -53,10 +53,10 @@ class TestAgreementsAPI(BaseTenantTestCase):
                                                           signed_amendment="application/pdf",
                                                           signed_date=datetime.date.today())
         cls.file_type_agreement = AttachmentFileTypeFactory(
-            code="partners_agreement"
+            code="partners_agreement",
         )
         cls.file_type_agreement_amendment = AttachmentFileTypeFactory(
-            code="partners_agreement_amendment"
+            code="partners_agreement_amendment",
         )
 
     def run_request_list_ep(self, data={}, user=None, method='post'):
@@ -278,6 +278,53 @@ class TestAgreementsAPI(BaseTenantTestCase):
 
         self.assertEqual(status_code, status.HTTP_200_OK)
         self.assertEqual(len(response), 1)
+
+    def test_patch_amendment_signed_date_exists(self):
+        date = datetime.date.today().strftime("%Y-%m-%d")
+        AgreementFactory(
+            partner=self.partner1,
+            status=Agreement.DRAFT
+        )
+        AttachmentFactory(
+            file="test_file.pdf",
+            file_type=None,
+            code="",
+        )
+        attachment_amendment_1 = AttachmentFactory(
+            file="test_file_amendment.pdf",
+            file_type=None,
+            code="",
+        )
+        attachment_amendment_2 = AttachmentFactory(
+            file="test_file_amendment.pdf",
+            file_type=None,
+            code="",
+        )
+        data = {
+            "agreement_type": Agreement.PCA,
+            "reference_number_year": datetime.date.today().year,
+            "partner": self.partner1.pk,
+            "country_programme": self.country_programme.pk,
+            "amendments": [{
+                "types": [AgreementAmendment.CLAUSE, ],
+                "signed_date": date,
+                "signed_amendment_attachment": attachment_amendment_1.pk,
+            }, {
+                "types": [AgreementAmendment.CLAUSE, ],
+                "signed_date": date,
+                "signed_amendment_attachment": attachment_amendment_2.pk,
+            }]
+        }
+        status_code, response = self.run_request_list_ep(data)
+        self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response["amendments"],
+            {
+                "non_field_errors": [
+                    "The fields agreement, signed_date must make a unique set.",
+                ],
+            },
+        )
 
     def test_add_new_PCA_with_amendment(self):
         attachment = AttachmentFactory(

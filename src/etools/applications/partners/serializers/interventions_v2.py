@@ -878,6 +878,8 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
                     raise serializers.ValidationError(
                         _("Changes not allowed when PD is terminated.")
                     )
+            elif self.intervention.contingency_pd and self.intervention.status == Intervention.SIGNED:
+                pass
             else:
                 if not self.intervention.in_amendment and not self.intervention.termination_doc_attachment.exists():
                     raise serializers.ValidationError(

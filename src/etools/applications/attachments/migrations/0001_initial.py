@@ -6,6 +6,7 @@ from django.conf import settings
 from django.db import migrations, models
 
 import model_utils.fields
+from unicef_attachments.models import generate_file_path
 
 import etools.applications.attachments.models
 
@@ -29,7 +30,7 @@ class Migration(migrations.Migration):
                 ('modified', model_utils.fields.AutoLastModifiedField(
                     default=django.utils.timezone.now, editable=False, verbose_name='modified')),
                 ('file', models.FileField(blank=True, max_length=1024, null=True,
-                                          upload_to=etools.applications.attachments.models.generate_file_path, verbose_name='File Attachment')),
+                                          upload_to=generate_file_path, verbose_name='File Attachment')),
                 ('hyperlink', models.CharField(blank=True, max_length=255, null=True, verbose_name='Hyperlink')),
                 ('object_id', models.IntegerField(verbose_name='Object ID')),
                 ('code', models.CharField(blank=True, max_length=64, verbose_name='Code')),

@@ -9,9 +9,10 @@ from django.core.management import call_command
 from django.db import connection
 from django.utils import timezone
 
-from unicef_attachments.models import Attachment, FileType
+from unicef_attachments.models import Attachment
 from unicef_notification.models import EmailTemplate
 
+from etools.applications.attachments.tests.factories import AttachmentFileTypeFactory
 from etools.applications.audit.models import RiskBluePrint
 from etools.applications.audit.tests.factories import (
     AuditFocalPointUserFactory,
@@ -80,7 +81,11 @@ class EngagementTransitionsTestCaseMixin(AuditTestCaseMixin):
             try:
                 temporary_file.write(b'\x04\x02')
                 temporary_file.seek(0)
-                file_type, created = FileType.objects.get_or_create(name=name, label='audit', code='audit')
+                file_type = AttachmentFileTypeFactory(
+                    name=name,
+                    label='audit',
+                    group=['audit'],
+                )
 
                 attachment = Attachment(
                     content_object=self.engagement,
@@ -129,6 +134,7 @@ class EngagementTransitionsTestCaseMixin(AuditTestCaseMixin):
         super().setUp()
 
         self.engagement = self.engagement_factory(agreement__auditor_firm=self.auditor_firm)
+        self.engagement.users_notified.add(SimpleUserFactory(first_name='To be Notified'))
 
         self.non_engagement_auditor = AuditorStaffMemberFactory(
             user__first_name='Auditor 2',
