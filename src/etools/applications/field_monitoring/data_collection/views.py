@@ -25,14 +25,14 @@ from etools.applications.field_monitoring.data_collection.serializers import (
     ChecklistSerializer,
     FindingSerializer,
 )
-from etools.applications.field_monitoring.fm_settings.serializers import FMCommonAttachmentLinkSerializer
+from etools.applications.field_monitoring.fm_settings.serializers import FMCommonAttachmentSerializer
 from etools.applications.field_monitoring.permissions import (
     activity_field_is_editable_permission,
     IsEditAction,
     IsReadAction,
 )
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
-from etools.applications.field_monitoring.views import FMBaseAttachmentLinksViewSet, FMBaseViewSet
+from etools.applications.field_monitoring.views import FMBaseViewSet, NestedLinkedAttachmentsViewSet
 
 
 class ActivityDataCollectionViewSet(
@@ -44,8 +44,8 @@ class ActivityDataCollectionViewSet(
     serializer_class = ActivityDataCollectionSerializer
 
 
-class ActivityReportAttachmentsViewSet(FMBaseAttachmentLinksViewSet):
-    serializer_class = FMCommonAttachmentLinkSerializer
+class ActivityReportAttachmentsViewSet(NestedLinkedAttachmentsViewSet):
+    serializer_class = FMCommonAttachmentSerializer
     related_model = MonitoringActivity
     permission_classes = FMBaseViewSet.permission_classes + [
         IsReadAction | (IsEditAction & activity_field_is_editable_permission('report_attachments'))
@@ -112,12 +112,12 @@ class ChecklistOverallFindingsViewSet(
     serializer_class = ChecklistOverallFindingSerializer
 
 
-class ChecklistOverallAttachmentsViewSet(FMBaseAttachmentLinksViewSet):
+class ChecklistOverallAttachmentsViewSet(NestedLinkedAttachmentsViewSet):
     permission_classes = FMBaseViewSet.permission_classes + [
         IsReadAction | (IsEditAction & activity_field_is_editable_permission('started_checklist_set'))
     ]
     related_model = ChecklistOverallFinding
-    serializer_class = FMCommonAttachmentLinkSerializer
+    serializer_class = FMCommonAttachmentSerializer
 
 
 class ChecklistFindingsViewSet(

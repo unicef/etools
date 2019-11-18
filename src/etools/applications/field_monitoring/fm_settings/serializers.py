@@ -1,4 +1,5 @@
 import json
+from copy import copy
 
 from django.contrib.gis.db.models import Collect
 from django.utils.translation import ugettext_lazy as _
@@ -32,15 +33,6 @@ class MethodSerializer(serializers.ModelSerializer):
     class Meta:
         model = Method
         fields = ('id', 'name', 'use_information_source')
-
-
-class FieldMonitoringGeneralAttachmentSerializer(BaseAttachmentSerializer):
-    file_type = FileTypeModelChoiceField(
-        label=_('Document Type'), queryset=FileType.objects.filter(code='fm_common')
-    )
-
-    class Meta(BaseAttachmentSerializer.Meta):
-        pass
 
 
 class ResultSerializer(OutputListSerializer):
@@ -181,32 +173,23 @@ class LogIssueSerializer(UserContextSerializerMixin, SnapshotModelSerializer):
         return MinimalUserSerializer(matched_events[-1].by_user).data
 
 
-class FMCommonAttachmentLinkSerializer(BulkSerializerMixin, AttachmentLinkSerializer):
-    file_type = FileTypeModelChoiceField(queryset=FileType.objects.filter(code='fm_common'),
-                                         write_only=True, required=True)
-
-    class Meta(AttachmentLinkSerializer.Meta):
+class LinkedAttachmentBulkSerializer(BulkSerializerMixin, BaseAttachmentSerializer):
+    class Meta(BaseAttachmentSerializer.Meta):
         list_serializer_class = BulkListSerializer
-        update_lookup_field = 'attachment'
+        extra_kwargs = copy(BaseAttachmentSerializer.Meta.extra_kwargs)
+        extra_kwargs.update({
+            'id': {'read_only': False},
+            'file': {'read_only': True},
+            'hyperlink': {'read_only': True},
+        })
 
-    def _set_file_type(self, instance, file_type=None):
-        if file_type:
-            instance.attachment.file_type = file_type
-            instance.attachment.save()
+    def _validate_attachment(self, validated_data, instance=None):
+        """file shouldn't be editable"""
+        return
 
-    def create(self, validated_data):
-        file_type = validated_data.pop('file_type', None)
 
-        instance = super().create(validated_data)
-        self._set_file_type(instance, file_type)
+class FMCommonAttachmentSerializer(LinkedAttachmentBulkSerializer):
+    file_type = FileTypeModelChoiceField(queryset=FileType.objects.filter(code='fm_common'))
 
-        return instance
-
-    def update(self, instance, validated_data):
-        validated_data = validated_data or {}
-        file_type = validated_data.pop('file_type', None)
-
-        instance = super().update(instance, validated_data)
-        self._set_file_type(instance, file_type)
-
-        return instance
+    class Meta(LinkedAttachmentBulkSerializer.Meta):
+        pass

@@ -15,7 +15,7 @@ from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.response import Response
 
 from etools.applications.field_monitoring.fm_settings.models import Question
-from etools.applications.field_monitoring.fm_settings.serializers import FMCommonAttachmentLinkSerializer
+from etools.applications.field_monitoring.fm_settings.serializers import FMCommonAttachmentSerializer
 from etools.applications.field_monitoring.permissions import (
     activity_field_is_editable_permission,
     IsEditAction,
@@ -43,7 +43,7 @@ from etools.applications.field_monitoring.planning.serializers import (
     TemplatedQuestionSerializer,
     YearPlanSerializer,
 )
-from etools.applications.field_monitoring.views import FMBaseAttachmentLinksViewSet, FMBaseViewSet
+from etools.applications.field_monitoring.views import FMBaseViewSet, NestedLinkedAttachmentsViewSet
 from etools.applications.partners.models import Intervention
 from etools.applications.permissions2.views import FSMTransitionActionMixin
 from etools.applications.reports.models import Result, ResultType
@@ -214,11 +214,11 @@ class InterventionsViewSet(
     serializer_class = InterventionWithLinkedInstancesSerializer
 
 
-class ActivityAttachmentsViewSet(FMBaseAttachmentLinksViewSet):
+class ActivityAttachmentsViewSet(NestedLinkedAttachmentsViewSet):
     permission_classes = FMBaseViewSet.permission_classes + [
         IsReadAction | (IsEditAction & activity_field_is_editable_permission('attachments'))
     ]
-    serializer_class = FMCommonAttachmentLinkSerializer
+    serializer_class = FMCommonAttachmentSerializer
     related_model = MonitoringActivity
     attachment_code = 'attachments'
 
