@@ -732,7 +732,7 @@ class TestPartnerAttachmentsView(TPMTestCaseMixin, BaseTenantTestCase):
             user=self.pme_user,
             request_format='multipart',
             data={
-                'file_type': AttachmentFileTypeFactory(code='tpm_partner').id,
+                'file_type': AttachmentFileTypeFactory(group=['tpm_partner']).id,
                 'file': SimpleUploadedFile('hello_world.txt', 'hello world!'.encode('utf-8')),
             }
         )
@@ -747,7 +747,7 @@ class TestPartnerAttachmentsView(TPMTestCaseMixin, BaseTenantTestCase):
             user=TPMUserFactory(tpm_partner=partner),
             request_format='multipart',
             data={
-                'file_type': AttachmentFileTypeFactory(code='tpm_partner').id,
+                'file_type': AttachmentFileTypeFactory(group=['tpm_partner']).id,
                 'file': SimpleUploadedFile('hello_world.txt', 'hello world!'.encode('utf-8')),
             }
         )
@@ -772,7 +772,7 @@ class TestVisitAttachmentsView(TPMTestCaseMixin, BaseTenantTestCase):
             user=self.pme_user,
             request_format='multipart',
             data={
-                'file_type': AttachmentFileTypeFactory(code='tpm').id,
+                'file_type': AttachmentFileTypeFactory(group=['tpm']).id,
                 'file': SimpleUploadedFile('hello_world.txt', 'hello world!'.encode('utf-8')),
             }
         )
@@ -805,7 +805,7 @@ class TestVisitReportAttachmentsView(TPMTestCaseMixin, BaseTenantTestCase):
             user=self.tpm_user,
             request_format='multipart',
             data={
-                'file_type': AttachmentFileTypeFactory(code='tpm_report_attachments').id,
+                'file_type': AttachmentFileTypeFactory(group=['tpm_report_attachments']).id,
                 'file': SimpleUploadedFile('hello_world.txt', 'hello world!'.encode('utf-8')),
             }
         )
@@ -840,7 +840,7 @@ class TestActivityAttachmentsView(TPMTestCaseMixin, BaseTenantTestCase):
             request_format='multipart',
             data={
                 'object_id': self.activity.id,
-                'file_type': AttachmentFileTypeFactory(code='tpm').id,
+                'file_type': AttachmentFileTypeFactory(group=['tpm']).id,
                 'file': SimpleUploadedFile('hello_world.txt', 'hello world!'.encode('utf-8')),
             }
         )
@@ -875,7 +875,7 @@ class TestActivityReportAttachmentsView(TPMTestCaseMixin, BaseTenantTestCase):
             request_format='multipart',
             data={
                 'object_id': self.activity.id,
-                'file_type': AttachmentFileTypeFactory(code='tpm_report').id,
+                'file_type': AttachmentFileTypeFactory(group=['tpm_report']).id,
                 'file': SimpleUploadedFile('hello_world.txt', 'hello world!'.encode('utf-8')),
             }
         )

@@ -11,9 +11,7 @@ class TestGetFileType(BaseTenantTestCase):
             travel=travel,
             type="Travel Attachment PDF",
         )
-        file_type = AttachmentFileTypeFactory(
-            code="t2f_travel_attachment"
-        )
+        file_type = AttachmentFileTypeFactory()
         attachment = AttachmentFactory(
             file="test_file.pdf",
             file_type=file_type,
@@ -34,9 +32,7 @@ class TestGetSource(BaseTenantTestCase):
             travel=travel,
             type="Travel Attachment PDF",
         )
-        file_type = AttachmentFileTypeFactory(
-            code="t2f_travel_attachment"
-        )
+        file_type = AttachmentFileTypeFactory()
         attachment = AttachmentFactory(
             file="test_file.pdf",
             file_type=file_type,

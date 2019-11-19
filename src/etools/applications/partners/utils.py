@@ -27,17 +27,25 @@ from etools.libraries.tenant_support.utils import run_on_all_tenants
 logger = logging.getLogger(__name__)
 
 
-def update_or_create_attachment(file_type, content_type, object_id, filename):
-    logger.info("code: {}".format(file_type.code))
+def update_or_create_attachment(
+        code,
+        file_type,
+        content_type,
+        object_id,
+        filename,
+):
+    logger.info("code: {}".format(code))
     logger.info("content type: {}".format(content_type))
     logger.info("object_id: {}".format(object_id))
     try:
         Attachment.objects.update_or_create(
-            code=file_type.code,
+            code=code,
             content_type=content_type,
             object_id=object_id,
-            file_type=file_type,
-            defaults={"file": filename}
+            defaults={
+                "file": filename,
+                "file_type": file_type,
+            }
         )
     except Attachment.MultipleObjectsReturned:
         # If there are multiple objects already, this indicates
@@ -70,14 +78,19 @@ def get_from_datetime(**kwargs):
 def copy_attached_agreements(**kwargs):
     # Copy attached_agreement field content to
     # attachments model
+    code = "partners_agreement"
     file_type, _ = FileType.objects.get_or_create(
-        code="partners_agreement",
+        code=code,
         defaults={
             "label": "Signed Agreement",
             "name": "attached_agreement",
             "order": 0,
         }
     )
+    if not file_type.group:
+        file_type.group = []
+    file_type.group += code
+    file_type.save()
 
     content_type = ContentType.objects.get_for_model(Agreement)
 
@@ -86,6 +99,7 @@ def copy_attached_agreements(**kwargs):
             modified__gte=get_from_datetime(**kwargs)
     ).all():
         update_or_create_attachment(
+            code,
             file_type,
             content_type,
             agreement.pk,
@@ -96,14 +110,19 @@ def copy_attached_agreements(**kwargs):
 def copy_core_values_assessments(**kwargs):
     # Copy core_values_assessment field content to
     # attachments model
+    code = "partners_partner_assessment"
     file_type, _ = FileType.objects.get_or_create(
-        code="partners_partner_assessment",
+        code=code,
         defaults={
             "label": "Core Values Assessment",
             "name": "core_values_assessment",
             "order": 0,
         }
     )
+    if not file_type.group:
+        file_type.group = []
+    file_type.group += code
+    file_type.save()
 
     content_type = ContentType.objects.get_for_model(CoreValuesAssessment)
 
@@ -112,6 +131,7 @@ def copy_core_values_assessments(**kwargs):
             modified__gte=get_from_datetime(**kwargs)
     ).all():
         update_or_create_attachment(
+            code,
             file_type,
             content_type,
             core_values_assessment.pk,
@@ -121,14 +141,19 @@ def copy_core_values_assessments(**kwargs):
 
 def copy_reports(**kwargs):
     # Copy report field content to attachments model
+    code = "partners_assessment_report"
     file_type, _ = FileType.objects.get_or_create(
-        code="partners_assessment_report",
+        code=code,
         defaults={
             "label": "Assessment Report",
             "name": "assessment_report",
             "order": 0,
         }
     )
+    if not file_type.group:
+        file_type.group = []
+    file_type.group += code
+    file_type.save()
 
     content_type = ContentType.objects.get_for_model(Assessment)
 
@@ -137,6 +162,7 @@ def copy_reports(**kwargs):
             modified__gte=get_from_datetime(**kwargs)
     ).all():
         update_or_create_attachment(
+            code,
             file_type,
             content_type,
             assessment.pk,
@@ -146,14 +172,19 @@ def copy_reports(**kwargs):
 
 def copy_signed_amendments(**kwargs):
     # Copy signed amendment field content to attachments model
+    code = "partners_agreement_amendment"
     file_type, _ = FileType.objects.get_or_create(
-        code="partners_agreement_amendment",
+        code=code,
         defaults={
             "label": "Agreement Amendment",
             "name": "agreement_signed_amendment",
             "order": 0,
         }
     )
+    if not file_type.group:
+        file_type.group = []
+    file_type.group += code
+    file_type.save()
 
     content_type = ContentType.objects.get_for_model(AgreementAmendment)
 
@@ -162,6 +193,7 @@ def copy_signed_amendments(**kwargs):
             modified__gte=get_from_datetime(**kwargs)
     ).all():
         update_or_create_attachment(
+            code,
             file_type,
             content_type,
             amendment.pk,
@@ -171,39 +203,61 @@ def copy_signed_amendments(**kwargs):
 
 def copy_interventions(**kwargs):
     # Copy prc review and signed pd field content to attachments model
+    prc_code = "partners_intervention_prc_review"
     prc_file_type, _ = FileType.objects.get_or_create(
-        code="partners_intervention_prc_review",
+        code=prc_code,
         defaults={
             "label": "PRC Review",
             "name": "intervention_prc_review",
             "order": 0,
         }
     )
+    if not prc_file_type.group:
+        prc_file_type.group = []
+    prc_file_type.group += prc_code
+    prc_file_type.save()
+
+    pd_code = "partners_intervention_signed_pd"
     pd_file_type, _ = FileType.objects.get_or_create(
-        code="partners_intervention_signed_pd",
+        code=pd_code,
         defaults={
             "label": "Signed PD/SSFA",
             "name": "intervention_signed_pd",
             "order": 0,
         }
     )
+    if not pd_file_type.group:
+        pd_file_type.group = []
+    pd_file_type.group += pd_code
+    pd_file_type.save()
 
+    activation_letter_code = "partners_intervention_activation_letter"
     activation_letter, _ = FileType.objects.get_or_create(
-        code="partners_intervention_activation_letter",
+        code=activation_letter_code,
         defaults={
             "label": "PD Activation Letter",
             "name": "activation_letter",
             "order": 0,
         }
     )
+    if not activation_letter.group:
+        activation_letter.group = []
+    activation_letter.group += activation_letter_code
+    activation_letter.save()
+
+    termination_doc_code = "partners_intervention_termination_doc"
     termination_doc, _ = FileType.objects.get_or_create(
-        code="partners_intervention_termination_doc",
+        code=termination_doc_code,
         defaults={
             "label": "PD Termination Document",
             "name": "termination_doc",
             "order": 0,
         }
     )
+    if not termination_doc.group:
+        termination_doc.group = []
+    termination_doc.group += termination_doc_code
+    termination_doc.save()
 
     content_type = ContentType.objects.get_for_model(Intervention)
 
@@ -216,6 +270,7 @@ def copy_interventions(**kwargs):
     ).all():
         if intervention.prc_review_document:
             update_or_create_attachment(
+                prc_code,
                 prc_file_type,
                 content_type,
                 intervention.pk,
@@ -223,6 +278,7 @@ def copy_interventions(**kwargs):
             )
         if intervention.signed_pd_document:
             update_or_create_attachment(
+                pd_code,
                 pd_file_type,
                 content_type,
                 intervention.pk,
@@ -230,6 +286,7 @@ def copy_interventions(**kwargs):
             )
         if intervention.activation_letter:
             update_or_create_attachment(
+                activation_letter_code,
                 activation_letter,
                 content_type,
                 intervention.pk,
@@ -237,6 +294,7 @@ def copy_interventions(**kwargs):
             )
         if intervention.termination_doc:
             update_or_create_attachment(
+                termination_doc_code,
                 termination_doc,
                 content_type,
                 intervention.pk,
@@ -246,14 +304,19 @@ def copy_interventions(**kwargs):
 
 def copy_intervention_amendments(**kwargs):
     # Copy signed amendment field content to attachments model
+    code = "partners_intervention_amendment_signed"
     file_type, _ = FileType.objects.get_or_create(
-        code="partners_intervention_amendment_signed",
+        code=code,
         defaults={
             "label": "PD/SSFA Amendment",
             "name": "intervention_amendment_signed",
             "order": 0,
         }
     )
+    if not file_type.group:
+        file_type.group = []
+    file_type.group += code
+    file_type.save()
 
     content_type = ContentType.objects.get_for_model(InterventionAmendment)
 
@@ -263,6 +326,7 @@ def copy_intervention_amendments(**kwargs):
     ).all():
         if amendment.signed_amendment:
             update_or_create_attachment(
+                code,
                 file_type,
                 content_type,
                 amendment.pk,
@@ -272,14 +336,19 @@ def copy_intervention_amendments(**kwargs):
 
 def copy_intervention_attachments(**kwargs):
     # Copy attachment field content to attachments model
+    code = "partners_intervention_attachment"
     file_type, _ = FileType.objects.get_or_create(
-        code="partners_intervention_attachment",
+        code=code,
         defaults={
             "label": "Intervention Attachment",
             "name": "intervention_attachment",
             "order": 0,
         }
     )
+    if not file_type.group:
+        file_type.group = []
+    file_type.group += code
+    file_type.save()
 
     content_type = ContentType.objects.get_for_model(InterventionAttachment)
 
@@ -289,6 +358,7 @@ def copy_intervention_attachments(**kwargs):
     ).all():
         if attachment.attachment:
             update_or_create_attachment(
+                code,
                 file_type,
                 content_type,
                 attachment.pk,
@@ -299,14 +369,19 @@ def copy_intervention_attachments(**kwargs):
 def copy_t2f_travel_attachments(**kwargs):
     # Copy t2f_travel_attachment field content to
     # attachments model
+    code = "t2f_travel_attachment"
     file_type, _ = FileType.objects.get_or_create(
-        code="t2f_travel_attachment",
+        code=code,
         defaults={
             "label": "Travel Attachment",
             "name": "t2f_travel_attachment",
             "order": 0,
         }
     )
+    if not file_type.group:
+        file_type.group = []
+    file_type.group += code
+    file_type.save()
 
     content_type = ContentType.objects.get_for_model(TravelAttachment)
 
@@ -314,6 +389,7 @@ def copy_t2f_travel_attachments(**kwargs):
             file__isnull=False,
     ).all():
         update_or_create_attachment(
+            code,
             file_type,
             content_type,
             t2f_travel_attachment.pk,

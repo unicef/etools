@@ -2,16 +2,19 @@
 
 from django.db import connection, migrations, models
 
-from etools.applications.core.tests.cases import SCHEMA_NAME
-
 
 def set_reference_number(apps, schema_editor):
+
     # Only run this when NOT in test
-    if connection.tenant.schema_name != SCHEMA_NAME:
+    if connection.tenant.schema_name != "test":
+        Country = apps.get_model("users", "country")
         ActionPoint = apps.get_model("action_points", "actionpoint")
+        country = Country.objects.get(
+            schema_name=connection.tenant.schema_name,
+        )
         for action in ActionPoint.objects.all():
             action.reference_number = '{}/{}/{}/APD'.format(
-                getattr(connection.tenant, "country_short_code", ""),
+                country.country_short_code,
                 action.created.year,
                 action.pk,
             )

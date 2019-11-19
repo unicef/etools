@@ -9,8 +9,10 @@ from etools.applications.attachments.utils import get_file_type
 
 
 class TPMPartnerAttachmentsSerializer(BaseAttachmentSerializer):
-    file_type = FileTypeModelChoiceField(queryset=FileType.objects.filter(
-        code="tpm_partner"), label=_('Document Type'))
+    file_type = FileTypeModelChoiceField(
+        queryset=FileType.objects.group_by("tpm_partner"),
+        label=_('Document Type'),
+    )
     source = serializers.SerializerMethodField()
 
     class Meta(BaseAttachmentSerializer.Meta):
@@ -31,7 +33,10 @@ class TPMPartnerAttachmentsSerializer(BaseAttachmentSerializer):
 
 
 class ActivityAttachmentsSerializer(BaseAttachmentSerializer):
-    file_type = FileTypeModelChoiceField(queryset=FileType.objects.filter(code="tpm"), label=_('Document Type'))
+    file_type = FileTypeModelChoiceField(
+        queryset=FileType.objects.group_by("tpm"),
+        label=_('Document Type'),
+    )
 
     class Meta(BaseAttachmentSerializer.Meta):
         fields = BaseAttachmentSerializer.Meta.fields + ['object_id']
@@ -42,7 +47,10 @@ class ActivityAttachmentsSerializer(BaseAttachmentSerializer):
 
 
 class ActivityReportSerializer(BaseAttachmentSerializer):
-    file_type = FileTypeModelChoiceField(queryset=FileType.objects.filter(code="tpm_report"), label=_('Document Type'))
+    file_type = FileTypeModelChoiceField(
+        queryset=FileType.objects.group_by("tpm_report"),
+        label=_('Document Type'),
+    )
 
     class Meta(BaseAttachmentSerializer.Meta):
         fields = BaseAttachmentSerializer.Meta.fields + ['object_id']
@@ -53,8 +61,10 @@ class ActivityReportSerializer(BaseAttachmentSerializer):
 
 
 class TPMVisitReportAttachmentsSerializer(BaseAttachmentSerializer):
-    file_type = FileTypeModelChoiceField(queryset=FileType.objects.filter(code='tpm_report_attachments'),
-                                         label=_('Document Type'))
+    file_type = FileTypeModelChoiceField(
+        queryset=FileType.objects.group_by('tpm_report_attachments'),
+        label=_('Document Type'),
+    )
 
     class Meta(BaseAttachmentSerializer.Meta):
         pass
@@ -65,8 +75,10 @@ class TPMVisitReportAttachmentsSerializer(BaseAttachmentSerializer):
 
 
 class TPMVisitAttachmentsSerializer(BaseAttachmentSerializer):
-    file_type = FileTypeModelChoiceField(queryset=FileType.objects.filter(code='tpm'),
-                                         label=_('Document Type'))
+    file_type = FileTypeModelChoiceField(
+        queryset=FileType.objects.group_by('tpm'),
+        label=_('Document Type'),
+    )
 
     class Meta(BaseAttachmentSerializer.Meta):
         pass
