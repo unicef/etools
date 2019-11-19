@@ -4,14 +4,18 @@ from django.db import migrations, models
 
 
 def set_reference_number(apps, schema_editor):
+    Country = apps.get_model("users", "country")
     Engagement = apps.get_model("audit", "engagement")
+    country = Country.objects.get(
+        schema_name=connection.tenant.schema_name,
+    )
     for engagement in Engagement.objects.all():
         if engagement.engagement_type == engagement.TYPES.audit:
             engagement_code = 'a'
         else:
             engagement_code = engagement.engagement_type
         engagement.reference_number = '{}/{}/{}/{}/{}'.format(
-            getattr(connection.tenant, "country_short_code", ""),
+            country.country_short_code,
             engagement.partner.name[:5],
             engagement_code.upper(),
             engagement.created.year,
