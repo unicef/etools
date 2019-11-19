@@ -2,15 +2,18 @@
 
 from django.db import connection, migrations, models
 
-from etools.applications.core.tests.cases import SCHEMA_NAME
 
 def set_reference_number(apps, schema_editor):
     # Only run this when NOT in test
-    if connection.tenant.schema_name != SCHEMA_NAME:
+    if connection.tenant.schema_name != "test":
+        Country = apps.get_model("users", "country")
         TPMVisit = apps.get_model("tpm", "tpmvisit")
+        country = Country.objects.get(
+            schema_name=connection.tenant.schema_name,
+        )
         for visit in TPMVisit.objects.all():
             visit.reference_number = '{}/{}/{}/TPM'.format(
-                getattr(connection.tenant, "country_short_code", ""),
+                country.country_short_code,
                 visit.created.year,
                 visit.pk,
             )
