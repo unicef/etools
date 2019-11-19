@@ -74,7 +74,7 @@ class ActivityQuestionsViewSet(
         'question__sections',
         'question__options',
     )
-    queryset = queryset.order_by('partner_id', 'cp_output_id', 'intervention_id')
+    queryset = queryset.order_by('partner_id', 'cp_output_id', 'intervention_id', 'id')
     serializer_class = ActivityQuestionSerializer
     filter_backends = (DjangoFilterBackend,)
     filter_fields = ('is_enabled',)
