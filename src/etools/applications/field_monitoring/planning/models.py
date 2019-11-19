@@ -205,14 +205,16 @@ class MonitoringActivity(
 
         from etools.applications.field_monitoring.data_collection.models import ActivityQuestion
 
-        applicable_questions = Question.objects.filter(sections__in=self.sections.values_list('pk', flat=True),
-                                                       is_active=True)
+        applicable_questions = Question.objects.filter(
+            sections__in=self.sections.values_list('pk', flat=True), is_active=True
+        ).distinct()
         questions = []
 
         for relation, level in self.RELATIONS_MAPPING:
             for target in getattr(self, relation).all():
-                target_questions = applicable_questions.filter(level=level).prefetch_templates(level,
-                                                                                               target_id=target.id)
+                target_questions = applicable_questions.filter(level=level).prefetch_templates(
+                    level, target_id=target.id
+                )
                 for target_question in target_questions:
                     activity_question = ActivityQuestion(question=target_question, monitoring_activity=self)
 
