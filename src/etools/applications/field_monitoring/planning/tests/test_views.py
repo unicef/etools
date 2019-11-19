@@ -210,6 +210,21 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         response = self._test_retrieve(self.unicef_user, activity)
         self.assertIsNotNone(response.data['sections'][0]['name'])
 
+    def test_reject_reason_required(self):
+        activity = MonitoringActivityFactory(activity_type='staff', status='assigned',
+                                             person_responsible=self.unicef_user)
+
+        self._test_update(self.unicef_user, activity, {'status': 'draft'}, expected_status=status.HTTP_400_BAD_REQUEST)
+        self._test_update(self.unicef_user, activity, {'status': 'draft', 'reject_reason': 'just because'})
+
+    def test_cancel_reason_required(self):
+        activity = MonitoringActivityFactory(activity_type='staff', status='assigned',
+                                             person_responsible=self.unicef_user)
+
+        self._test_update(self.fm_user, activity, {'status': 'cancelled'},
+                          expected_status=status.HTTP_400_BAD_REQUEST)
+        self._test_update(self.fm_user, activity, {'status': 'cancelled', 'cancel_reason': 'just because'})
+
 
 class TestActivityAttachmentsView(FMBaseTestCaseMixin, APIViewSetTestCase):
     base_view = 'field_monitoring_planning:activity-attachments'

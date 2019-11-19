@@ -113,6 +113,7 @@ class MonitoringActivityLightSerializer(serializers.ModelSerializer):
             'partners', 'interventions', 'cp_outputs',
             'start_date', 'end_date',
             'checklists_count',
+            'reject_reason', 'cancel_reason',
             'status',
         )
 

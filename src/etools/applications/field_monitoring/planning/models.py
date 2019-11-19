@@ -178,6 +178,9 @@ class MonitoringActivity(
     report_attachments = CodedGenericRelation(Attachment, verbose_name=_('Activity Attachments'),
                                               code='report_attachments', blank=True)
 
+    reject_reason = models.TextField(verbose_name=_('Rejection reason'), blank=True)
+    cancel_reason = models.TextField(verbose_name=_('Cancellation reason'), blank=True)
+
     class Meta:
         verbose_name = _('Monitoring Activity')
         verbose_name_plural = _('Monitoring Activities')
@@ -295,7 +298,6 @@ class MonitoringActivity(
     @transition(field=status, source=STATUSES.data_collection, target=STATUSES.draft,
                 permission=user_is_person_responsible_permission)
     def reject(self):
-        # todo: add rejection comment
         pass
 
     @transition(field=status, source=STATUSES.data_collection, target=STATUSES.report_finalization,
@@ -325,7 +327,6 @@ class MonitoringActivity(
                 ],
                 permission=user_is_field_monitor_permission)
     def cancel(self):
-        # todo: add cancel comment
         pass
 
     @property

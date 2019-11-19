@@ -11,6 +11,8 @@ from etools.applications.field_monitoring.planning.activity_validation.validatio
 )
 from etools.applications.field_monitoring.planning.activity_validation.validations.state import (
     at_least_one_item_added,
+    cancel_reason_provided,
+    reject_reason_provided,
     tpm_partner_is_assigned_for_tpm_activity,
 )
 
@@ -47,6 +49,7 @@ class ActivityValid(CompleteValidation):
     def state_draft_valid(self, instance, user=None):
         self.check_required_fields(instance)
         self.check_rigid_fields(instance, related=True)
+        reject_reason_provided(instance, self.old_status)
         return True
 
     def state_checklist_valid(self, instance, user=None):
@@ -84,4 +87,10 @@ class ActivityValid(CompleteValidation):
     def state_completed_valid(self, instance, user=None):
         self.check_required_fields(instance)
         self.check_rigid_fields(instance, related=True)
+        return True
+
+    def state_cancelled_valid(self, instance, user=None):
+        self.check_required_fields(instance)
+        self.check_rigid_fields(instance, related=True)
+        cancel_reason_provided(instance)
         return True

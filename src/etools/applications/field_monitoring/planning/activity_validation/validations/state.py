@@ -15,3 +15,15 @@ def at_least_one_item_added(i):
     if not any([i.partners.exists(), i.interventions.exists(), i.cp_outputs.exists()]):
         raise StateValidationError([_('At least one partner/pdssfa/output should be added.')])
     return True
+
+
+def reject_reason_provided(i, old_status):
+    if old_status == MonitoringActivity.STATUSES.assigned and not i.reject_reason:
+        raise StateValidationError([_('Rejection reason should be provided.')])
+    return True
+
+
+def cancel_reason_provided(i):
+    if not i.cancel_reason:
+        raise StateValidationError([_('Cancellation reason should be provided.')])
+    return True
