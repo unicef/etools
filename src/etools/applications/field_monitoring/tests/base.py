@@ -90,7 +90,8 @@ class APIViewSetTestCase(BaseTenantTestCase):
                      field_errors=None, basic_errors=None):
         response = self.make_detail_request(user, instance=instance, method='patch', data=data)
 
-        self.assertEqual(response.status_code, expected_status)
+        self.assertEqual(response.status_code, expected_status,
+                         'Unexpected status: {}. Response: {}'.format(response.status_code, response.data))
 
         if field_errors:
             self.assertListEqual(list(response.data.keys()), field_errors)

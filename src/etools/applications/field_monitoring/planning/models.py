@@ -295,7 +295,7 @@ class MonitoringActivity(
             self.accept()
             self.save()
 
-    @transition(field=status, source=STATUSES.data_collection, target=STATUSES.draft,
+    @transition(field=status, source=STATUSES.assigned, target=STATUSES.draft,
                 permission=user_is_person_responsible_permission)
     def reject(self):
         pass

@@ -157,7 +157,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
     def test_cancel_activity(self):
         activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.review)
 
-        response = self._test_update(self.fm_user, activity, data={'status': 'cancelled'})
+        response = self._test_update(self.fm_user, activity, data={'status': 'cancelled', 'cancel_reason': 'test'})
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['status'], 'cancelled')
@@ -211,11 +211,13 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         self.assertIsNotNone(response.data['sections'][0]['name'])
 
     def test_reject_reason_required(self):
+        person_responsible = UserFactory(unicef_user=True)
         activity = MonitoringActivityFactory(activity_type='staff', status='assigned',
-                                             person_responsible=self.unicef_user)
+                                             person_responsible=person_responsible)
 
-        self._test_update(self.unicef_user, activity, {'status': 'draft'}, expected_status=status.HTTP_400_BAD_REQUEST)
-        self._test_update(self.unicef_user, activity, {'status': 'draft', 'reject_reason': 'just because'})
+        self._test_update(person_responsible, activity, {'status': 'draft'},
+                          expected_status=status.HTTP_400_BAD_REQUEST)
+        self._test_update(person_responsible, activity, {'status': 'draft', 'reject_reason': 'just because'})
 
     def test_cancel_reason_required(self):
         activity = MonitoringActivityFactory(activity_type='staff', status='assigned',

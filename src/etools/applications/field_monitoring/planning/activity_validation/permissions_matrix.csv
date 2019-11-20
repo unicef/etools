@@ -51,6 +51,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,person_responsible,All Users,,draft,required,FALSE
 ,person_responsible,All Users,,checklist,required,FALSE
 ,person_responsible,All Users,,review,required,FALSE
+,person_responsible,All Users,,cancelled,required,FALSE
 ,activity_question_set,All Users,,draft,required,FALSE
 ,activity_question_set,All Users,,checklist,required,FALSE
 ,started_checklist_set,All Users,,report_finalization,required,TRUE
