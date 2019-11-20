@@ -8,7 +8,7 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
+        ('users', '0013_auto_20191010_1621'),
         ('reports', '0019_auto_20190816_1609'),
     ]
 
