@@ -120,8 +120,12 @@ def get_location_ids_in_use(location_ids):
     return list(set(location_ids_in_use))
 
 
-def filter_remapped_locations(remap_row):
-    old_location_id = Location.objects.all_locations().get(p_code=remap_row['old_pcode']).id
+def filter_remapped_locations_cb(remap_table_row):
+    """
+    :param remap_table_row contains old_pcode, new_pcode
+    :return: true|false
+    """
+    old_location_id = Location.objects.all_locations().get(p_code=remap_table_row['old_pcode']).id
     return len(get_location_ids_in_use([old_location_id])) > 0
 
 
@@ -242,8 +246,8 @@ def remap_location(carto_table, new_pcode, remapped_pcodes):
     :return: [(new_location.id, remapped_location.id), ...]
     """
 
-    remapped_locations = Location.objects.all_locations().filter(p_code__in=list(remapped_pcodes))
-    if not remapped_locations:
+    remapped_locations_qs = Location.objects.all_locations().filter(p_code__in=list(remapped_pcodes))
+    if not remapped_locations_qs.exists():
         logger.info('Remapped pcodes: [{}] cannot be found in the database!'.format(",".join(remapped_pcodes)))
         return
 
@@ -269,7 +273,7 @@ def remap_location(carto_table, new_pcode, remapped_pcodes):
         new_location = Location.objects.create(**create_args)
 
     results = []
-    for remapped_location in remapped_locations:
+    for remapped_location in remapped_locations_qs:
         remapped_location.is_active = False
         remapped_location.save()
 
