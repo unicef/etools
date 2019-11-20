@@ -6,6 +6,7 @@ class ActivityPermissions(PMPPermissions):
     MODEL_NAME = 'field_monitoring_planning.MonitoringActivity'
     EXTRA_FIELDS = [
         'activity_question_set',
+        'activity_question_set_review',
         'started_checklist_set',
         'activity_overall_finding',
         'activity_question_overall_finding',

@@ -15,7 +15,6 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,person_responsible,Field Monitor,,checklist,edit,TRUE
 ,person_responsible,Field Monitor,,review,edit,TRUE
 ,sections,Field Monitor,,draft,edit,TRUE
-,sections,Field Monitor,,checklist,edit,TRUE
 ,tpm_partner,Field Monitor,,draft,edit,TRUE
 ,tpm_partner,Field Monitor,,checklist,edit,TRUE
 ,team_members,Field Monitor,,draft,edit,TRUE
@@ -82,5 +81,6 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,cancel_reason,All Users,,*,view,TRUE
 ,action_points,All Users,,*,view,TRUE
 ,activity_question_set,All Users,,*,view,TRUE
+,activity_question_set_review,All Users,,review,view,TRUE
 ,started_checklist_set,All Users,,*,view,TRUE
 ,activity_overall_finding,All Users,,*,view,TRUE
