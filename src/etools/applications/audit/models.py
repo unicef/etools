@@ -34,6 +34,7 @@ from etools.applications.audit.utils import generate_final_report
 from etools.applications.core.urlresolvers import build_frontend_url
 from etools.applications.partners.models import PartnerOrganization, PartnerStaffMember
 from etools.applications.reports.models import Section
+from etools.applications.users.models import Office
 from etools.libraries.djangolib.models import GroupWrapper, InheritedModelMixin
 from etools.libraries.djangolib.utils import get_environment
 from etools.libraries.fsm.views import has_action_permission
@@ -411,12 +412,11 @@ class SpotCheck(Engagement):
         blank=True,
         related_name='spot_checks',
     )
-    office = models.ForeignKey(
-        'users.Office',
-        verbose_name=_('Office'),
+    offices = models.ManyToManyField(
+        Office,
+        verbose_name=_('Offices'),
         blank=True,
-        null=True,
-        on_delete=models.CASCADE,
+        related_name='spot_checks',
     )
 
     objects = models.Manager()

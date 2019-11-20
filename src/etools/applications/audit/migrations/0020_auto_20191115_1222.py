@@ -15,8 +15,8 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddField(
             model_name='spotcheck',
-            name='office',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='users.Office', verbose_name='Office'),
+            name='offices',
+            field=models.ManyToManyField(blank=True, related_name='spot_checks', to='users.Office', verbose_name='Offices'),
         ),
         migrations.AddField(
             model_name='spotcheck',
