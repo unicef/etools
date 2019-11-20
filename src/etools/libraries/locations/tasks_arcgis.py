@@ -13,7 +13,7 @@ from etools.libraries.locations.task_utils import (
     cleanup_obsolete_locations,
     create_location,
     duplicate_pcodes_exist,
-    filter_remapped_locations,
+    filter_remapped_locations_cb,
     get_location_ids_in_use,
     remap_location,
     save_location_remap_history,
@@ -142,7 +142,7 @@ def import_arcgis_locations(arcgis_table_pk):
             if arcgis_table.remap_table_service_url and len(remap_table_pcode_pairs) > 0:
                 # remapped_pcode_pairs ex.: {'old_pcode': 'ET0721', 'new_pcode': 'ET0714'}
                 remap_table_pcode_pairs = list(filter(
-                    filter_remapped_locations,
+                    filter_remapped_locations_cb,
                     remap_table_pcode_pairs
                 ))
 

@@ -11,7 +11,7 @@ from etools.applications.partners.tests.factories import InterventionFactory, In
 from etools.applications.reports.tests.factories import AppliedIndicatorFactory, LowerResultFactory
 from etools.applications.t2f.tests.factories import TravelActivityFactory
 from etools.applications.users.tests.factories import UserFactory
-from etools.libraries.locations import tasks_arcgis, tasks_cartodb, task_utils
+from etools.libraries.locations import task_utils, tasks_arcgis, tasks_cartodb
 
 
 class LocationImportTestsBase(BaseTenantTestCase):
