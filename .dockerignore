@@ -1,1 +1,13 @@
 .git
+.benchmarks
+.circleci
+.pytest_cache
+.tox
+.venv
+.virtualenv_hooks
+db
+db_dumps
+dist
+docs
+screenshots
+src/etools/**/tests/**/*.py
