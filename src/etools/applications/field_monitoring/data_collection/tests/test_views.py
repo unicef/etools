@@ -269,6 +269,13 @@ class TestChecklistsView(DataCollectionTestMixin, APIViewSetTestCase):
     def test_start_fm_user(self):
         self._test_create(self.fm_user, {}, expected_status=status.HTTP_403_FORBIDDEN)
 
+    def test_update_information_source(self):
+        self._test_update(
+            self.team_member,
+            StartedChecklistFactory(monitoring_activity=self.activity, method__use_information_source=True),
+            {'information_source': 'teacher'}
+        )
+
 
 class TestChecklistOverallFindingsView(ChecklistDataCollectionTestMixin, APIViewSetTestCase):
     base_view = 'field_monitoring_data_collection:checklist-overall-findings'

@@ -86,7 +86,8 @@ class ChecklistSerializer(UserContextSerializerMixin, serializers.ModelSerialize
     def validate(self, attrs):
         validated_data = super().validate(attrs)
 
-        if validated_data['method'].use_information_source and not validated_data.get('information_source'):
+        method = validated_data.get('method', self.instance.method if self.instance else None)
+        if method and method.use_information_source and not validated_data.get('information_source'):
             raise ValidationError({'information_source': [_('Information source is required')]}, code='required')
 
         return validated_data
