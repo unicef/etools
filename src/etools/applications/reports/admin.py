@@ -17,6 +17,7 @@ from etools.applications.reports.models import (
     Result,
     Section,
     Unit,
+    UserTenantProfile,
 )
 
 
@@ -230,3 +231,4 @@ admin.site.register(AppliedIndicator, AppliedIndicatorAdmin)
 admin.site.register(Disaggregation)
 admin.site.register(DisaggregationValue, DisaggregationValueAdmin)
 admin.site.register(Office)
+admin.site.register(UserTenantProfile)
