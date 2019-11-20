@@ -21,9 +21,7 @@ from etools.applications.users.tests.factories import UserFactory
 class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.file_type = AttachmentFileTypeFactory(
-            code="t2f_travel_attachment"
-        )
+        cls.file_type = AttachmentFileTypeFactory()
         cls.traveler = UserFactory(is_staff=True)
         cls.unicef_staff = UserFactory(is_staff=True)
 

@@ -6,7 +6,8 @@
             "order": 0,
             "label": "FACE",
             "name": "programme_document",
-            "code": "tpm"
+            "code": "tpm",
+            "group": ["tpm"]
         }
     },
     {
@@ -16,7 +17,8 @@
             "order": 1,
             "label": "Progress report",
             "name": "supply_manual_list",
-            "code": "tpm"
+            "code": "tpm",
+            "group": ["tpm"]
         }
     },
     {
@@ -26,7 +28,8 @@
             "order": 2,
             "label": "Partnership review",
             "name": "unicef_trip_report_action_point_report",
-            "code": "tpm"
+            "code": "tpm",
+            "group": ["tpm"]
         }
     },
     {
@@ -36,7 +39,8 @@
             "order": 3,
             "label": "Final Partnership Review",
             "name": "partner_report",
-            "code": "tpm"
+            "code": "tpm",
+            "group": ["tpm"]
         }
     },
     {
@@ -46,7 +50,8 @@
             "order": 4,
             "label": "Correspondence",
             "name": "previous_trip_reports",
-            "code": "tpm"
+            "code": "tpm",
+            "group": ["tpm"]
         }
     },
     {
@@ -56,7 +61,8 @@
             "order": 5,
             "label": "Supply/Distribution Plan",
             "name": "training_materials",
-            "code": "tpm"
+            "code": "tpm",
+            "group": ["tpm"]
         }
     },
     {
@@ -66,7 +72,8 @@
             "order": 6,
             "label": "Workplan",
             "name": "tors",
-            "code": "tpm"
+            "code": "",
+            "group": ["tpm", "audit_engagement"]
         }
     },
     {
@@ -76,7 +83,8 @@
             "order": 4,
             "label": "ICE",
             "name": "ice_form",
-            "code": "audit_engagement"
+            "code": "audit_engagement",
+            "group": ["audit_engagement"]
         }
     },
     {
@@ -86,7 +94,8 @@
             "order": 3,
             "label": "FACE form",
             "name": "face_form",
-            "code": "audit_engagement"
+            "code": "audit_engagement",
+            "group": ["audit_engagement"]
         }
     },
     {
@@ -96,7 +105,15 @@
             "order": 5,
             "label": "Other",
             "name": "other",
-            "code": "audit_engagement"
+            "code": "",
+            "group": [
+                "audit_engagement",
+                "audit_report",
+                "tpm",
+                "tpm_report",
+                "tpm_partner",
+                "tpm_report_attachments"
+            ]
         }
     },
     {
@@ -106,47 +123,8 @@
             "order": 0,
             "label": "Report",
             "name": "report",
-            "code": "audit_report"
-        }
-    },
-    {
-        "model": "unicef_attachments.filetype",
-        "pk": 14,
-        "fields": {
-            "order": 1,
-            "label": "Other",
-            "name": "other",
-            "code": "audit_report"
-        }
-    },
-    {
-        "model": "unicef_attachments.filetype",
-        "pk": 17,
-        "fields": {
-            "order": 2,
-            "label": "Workplan",
-            "name": "workplan",
-            "code": "audit_engagement"
-        }
-    },
-    {
-        "model": "unicef_attachments.filetype",
-        "pk": 18,
-        "fields": {
-            "order": 7,
-            "label": "Other",
-            "name": "other",
-            "code": "tpm"
-        }
-    },
-    {
-        "model": "unicef_attachments.filetype",
-        "pk": 19,
-        "fields": {
-            "order": 0,
-            "label": "Report",
-            "name": "report",
-            "code": "tpm_report"
+            "code": "audit_report",
+            "group": ["audit_report", "tpm_report"]
         }
     },
     {
@@ -156,7 +134,8 @@
             "order": 9,
             "label": "Signed PD/SSFA",
             "name": "signed_pd/ssfa",
-            "code": "tpm"
+            "code": "tpm",
+            "group": ["tpm"]
         }
     },
     {
@@ -166,17 +145,8 @@
             "order": 10,
             "label": "PRC Submission",
             "name": "prc_submission",
-            "code": "tpm"
-        }
-    },
-    {
-        "model": "unicef_attachments.filetype",
-        "pk": 24,
-        "fields": {
-            "order": 11,
-            "label": "Other",
-            "name": "other",
-            "code": "tpm_report"
+            "code": "tpm",
+            "group": ["tpm"]
         }
     },
     {
@@ -186,7 +156,8 @@
             "order": 12,
             "label": "Terms of Reference",
             "name": "terms_of_reference",
-            "code": "tpm_partner"
+            "code": "tpm_partner",
+            "group": ["tpm_partner"]
         }
     },
     {
@@ -196,7 +167,8 @@
             "order": 13,
             "label": "Training Material",
             "name": "training_material",
-            "code": "tpm_partner"
+            "code": "tpm_partner",
+            "group": ["tpm_partner"]
         }
     },
     {
@@ -206,7 +178,8 @@
             "order": 14,
             "label": "Contract",
             "name": "contract",
-            "code": "tpm_partner"
+            "code": "tpm_partner",
+            "group": ["tpm_partner"]
         }
     },
     {
@@ -216,17 +189,8 @@
             "order": 15,
             "label": "Questionnaires",
             "name": "questionnaires",
-            "code": "tpm_partner"
-        }
-    },
-    {
-        "model": "unicef_attachments.filetype",
-        "pk": 29,
-        "fields": {
-            "order": 16,
-            "label": "Other",
-            "name": "other",
-            "code": "tpm_partner"
+            "code": "tpm_partner",
+            "group": ["tpm_partner"]
         }
     },
     {
@@ -236,7 +200,8 @@
             "order": 1,
             "label": "Picture Dataset",
             "name": "picture_dataset",
-            "code": "tpm_report_attachments"
+            "code": "tpm_report_attachments",
+            "group": ["tpm_report_attachments"]
         }
     },
     {
@@ -246,17 +211,8 @@
             "order": 2,
             "label": "Questionnaire",
             "name": "questionnaire",
-            "code": "tpm_report_attachments"
-        }
-    },
-    {
-        "model": "unicef_attachments.filetype",
-        "pk": 32,
-        "fields": {
-            "order": 3,
-            "label": "Other",
-            "name": "other",
-            "code": "tpm_report_attachments"
+            "code": "tpm_report_attachments",
+            "group": ["tpm_report_attachments"]
         }
     },
     {
@@ -266,7 +222,8 @@
             "order": 0,
             "label": "Overall Report",
             "name": "overall_report",
-            "code": "tpm_report_attachments"
+            "code": "tpm_report_attachments",
+            "group": ["tpm_report_attachments"]
         }
     },
     {
