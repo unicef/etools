@@ -90,7 +90,5 @@ class ActivityValid(CompleteValidation):
         return True
 
     def state_cancelled_valid(self, instance, user=None):
-        self.check_required_fields(instance)
-        self.check_rigid_fields(instance, related=True)
         cancel_reason_provided(instance)
         return True
