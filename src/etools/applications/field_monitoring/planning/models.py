@@ -119,6 +119,13 @@ class MonitoringActivity(
         ('completed', _('Completed')),
         ('cancelled', _('Cancelled')),
     )
+    TPM_AVAILABLE_STATUSES = [
+        STATUSES.assigned,
+        STATUSES.data_collection,
+        STATUSES.report_finalization,
+        STATUSES.submitted,
+        STATUSES.completed,
+    ]
 
     TRANSITION_SIDE_EFFECTS = {
         'checklist': [

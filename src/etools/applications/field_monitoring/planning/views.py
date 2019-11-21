@@ -3,7 +3,7 @@ from datetime import date
 
 from django.contrib.auth import get_user_model
 from django.db import transaction
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.http import Http404
 from django.utils.translation import ugettext_lazy as _
 
@@ -16,6 +16,7 @@ from rest_framework.response import Response
 
 from etools.applications.field_monitoring.fm_settings.models import Question
 from etools.applications.field_monitoring.fm_settings.serializers import FMCommonAttachmentSerializer
+from etools.applications.field_monitoring.groups import UNICEFUser
 from etools.applications.field_monitoring.permissions import (
     activity_field_is_editable_permission,
     IsEditAction,
@@ -149,6 +150,13 @@ class MonitoringActivitiesViewSet(
 
     def get_queryset(self):
         queryset = super().get_queryset()
+
+        # todo: change to the user.is_unicef
+        if UNICEFUser.name not in [g.name for g in self.request.user.groups.all()]:
+            queryset = queryset.filter(
+                Q(person_responsible=self.request.user) | Q(team_members=self.request.user),
+                status__in=MonitoringActivity.TPM_AVAILABLE_STATUSES,
+            )
 
         if hasattr(self, 'action') and self.action == 'list':
             queryset.prefetch_related(
