@@ -13,7 +13,7 @@ from django_tenants.utils import get_public_schema_name
 
 from etools.applications.funds.tasks import sync_all_delegated_frs, sync_country_delegated_fr
 from etools.applications.hact.tasks import update_hact_for_country, update_hact_values
-from etools.applications.users.models import Country, Office, UserProfile, WorkspaceCounter
+from etools.applications.users.models import Country, UserProfile, WorkspaceCounter
 from etools.applications.vision.tasks import sync_handler, vision_sync_task
 from etools.libraries.azure_graph_api.tasks import sync_user
 
@@ -35,7 +35,7 @@ class ProfileInline(admin.StackedInline):
         'countries_available',
     )
     search_fields = (
-        'office__name',
+        'tenant_profile__office__name',
         'country__name',
         'user__email'
     )
@@ -64,6 +64,12 @@ class ProfileInline(admin.StackedInline):
         return super().formfield_for_manytomany(
             db_field, request, **kwargs
         )
+
+    def office(self, obj):
+        try:
+            return obj.profile.tenant_profile.office
+        except AttributeError:
+            return None
 
 
 class ProfileAdmin(admin.ModelAdmin):
@@ -101,7 +107,7 @@ class ProfileAdmin(admin.ModelAdmin):
         'countries_available',
     )
     search_fields = (
-        'office__name',
+        'tenant_profile__office__name',
         'country__name',
         'user__email'
     )
@@ -148,6 +154,12 @@ class ProfileAdmin(admin.ModelAdmin):
         return super().formfield_for_manytomany(
             db_field, request, **kwargs
         )
+
+    def office(self, obj):
+        try:
+            return obj.profile.tenant_profile.office
+        except AttributeError:
+            return None
 
     def save_model(self, request, obj, form, change):
         if form.data.get('supervisor'):
@@ -201,7 +213,10 @@ class UserAdminPlus(UserAdmin):
     country.admin_order_field = 'profile__country'
 
     def office(self, obj):
-        return obj.profile.office
+        try:
+            return obj.profile.tenant_profile.office
+        except AttributeError:
+            return None
 
     def has_add_permission(self, request):
         return False
@@ -327,5 +342,4 @@ class CountryAdmin(TenantAdminMixin, admin.ModelAdmin):
 admin.site.register(get_user_model(), UserAdminPlus)
 admin.site.register(UserProfile, ProfileAdmin)
 admin.site.register(Country, CountryAdmin)
-admin.site.register(Office)
 admin.site.register(WorkspaceCounter)

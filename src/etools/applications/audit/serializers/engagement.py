@@ -47,7 +47,7 @@ from etools.applications.partners.serializers.partner_organization_v2 import (
 )
 from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
 from etools.applications.reports.serializers.v1 import SectionSerializer
-from etools.applications.users.serializers import OfficeSerializer
+from etools.applications.reports.serializers.v2 import OfficeSerializer
 from etools.applications.users.serializers_v3 import MinimalUserSerializer
 
 
