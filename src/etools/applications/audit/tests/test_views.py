@@ -33,6 +33,7 @@ from etools.applications.audit.tests.test_transitions import MATransitionsTestCa
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import PartnerType
 from etools.applications.reports.tests.factories import SectionFactory
+from etools.applications.users.tests.factories import OfficeFactory
 
 
 class BaseTestCategoryRisksViewSet(EngagementTransitionsTestCaseMixin):
@@ -534,6 +535,8 @@ class TestSpotCheckCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEn
         section = SectionFactory()
         spot_check = SpotCheckFactory()
         spot_check.sections.set([section.pk])
+        office = OfficeFactory()
+        spot_check.offices.set([office.pk])
         response = response = self.forced_auth_req(
             'get',
             self.engagements_url(),
@@ -548,6 +551,10 @@ class TestSpotCheckCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEn
                     data["sections"],
                     [{"id": section.pk, "name": section.name}],
                 )
+                self.assertEqual(
+                    [o["id"] for o in data["offices"]],
+                    [office.pk],
+                )
         self.assertTrue(found)
 
     def test_sections(self):
@@ -560,12 +567,33 @@ class TestSpotCheckCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEn
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(
             response.data['sections'],
-            [section_1.pk, section_2.pk],
+            [
+                {"id": section_1.pk, "name": section_1.name},
+                {"id": section_2.pk, "name": section_2.name},
+            ],
         )
         spot_check = SpotCheck.objects.get(pk=response.data["id"])
         self.assertEqual(
             list(spot_check.sections.all()),
             [section_1, section_2],
+        )
+
+    def test_offices(self):
+        self.endpoint = "spot-checks"
+        office_1 = OfficeFactory()
+        office_2 = OfficeFactory()
+        self.create_data["offices"] = [office_1.pk, office_2.pk]
+        response = self._do_create(self.unicef_focal_point, self.create_data)
+
+        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(
+            [o["id"] for o in response.data['offices']],
+            [office_1.pk, office_2.pk],
+        )
+        spot_check = SpotCheck.objects.get(pk=response.data["id"])
+        self.assertEqual(
+            list(spot_check.offices.all()),
+            [office_1, office_2],
         )
 
 

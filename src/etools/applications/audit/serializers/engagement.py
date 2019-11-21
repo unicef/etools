@@ -376,6 +376,10 @@ class SpotCheckSerializer(ActivePDValidationMixin, EngagementSerializer):
         read_field=SectionSerializer(many=True, required=False),
         label=_("Sections"),
     )
+    offices = SeparatedReadWriteField(
+        read_field=OfficeSerializer(many=True, required=False),
+        label=_("Offices"),
+    )
 
     class Meta(EngagementSerializer.Meta):
         model = SpotCheck
