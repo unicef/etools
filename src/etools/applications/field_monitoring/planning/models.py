@@ -280,11 +280,6 @@ class MonitoringActivity(
     def assign(self):
         pass
 
-    @transition(field=status, source=STATUSES.assigned, target=STATUSES.review,
-                permission=user_is_field_monitor_permission)
-    def revert_assign(self):
-        pass
-
     @transition(field=status, source=STATUSES.assigned, target=STATUSES.data_collection,
                 permission=user_is_person_responsible_permission)
     def accept(self):

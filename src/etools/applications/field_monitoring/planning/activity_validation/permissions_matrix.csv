@@ -84,3 +84,4 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,activity_question_set_review,All Users,,review,view,TRUE
 ,started_checklist_set,All Users,,*,view,TRUE
 ,activity_overall_finding,All Users,,*,view,TRUE
+,additional_info,All Users,,draft,view,FALSE

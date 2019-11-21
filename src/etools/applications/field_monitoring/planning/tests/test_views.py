@@ -227,6 +227,19 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
                           expected_status=status.HTTP_400_BAD_REQUEST)
         self._test_update(self.fm_user, activity, {'status': 'cancelled', 'cancel_reason': 'just because'})
 
+    def test_draft_status_permissions(self):
+        activity = MonitoringActivityFactory(activity_type='staff', status='draft')
+
+        response = self._test_retrieve(self.fm_user, activity)
+        permissions = response.data['permissions']
+
+        self.assertTrue(permissions['edit']['sections'])
+        self.assertTrue(permissions['edit']['team_members'])
+        self.assertTrue(permissions['edit']['person_responsible'])
+        self.assertTrue(permissions['edit']['interventions'])
+        self.assertFalse(permissions['edit']['activity_question_set'])
+        self.assertFalse(permissions['view']['additional_info'])
+
     def test_checklist_status_permissions(self):
         activity = MonitoringActivityFactory(activity_type='staff', status='checklist')
 
@@ -238,6 +251,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         self.assertTrue(permissions['edit']['person_responsible'])
         self.assertTrue(permissions['edit']['activity_question_set'])
         self.assertFalse(permissions['view']['activity_question_set_review'])
+        self.assertTrue(permissions['view']['additional_info'])
 
     def test_review_status_permissions(self):
         activity = MonitoringActivityFactory(activity_type='staff', status='review')
@@ -247,6 +261,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
 
         self.assertFalse(permissions['edit']['activity_question_set'])
         self.assertTrue(permissions['view']['activity_question_set_review'])
+        self.assertTrue(permissions['view']['additional_info'])
 
 
 class TestActivityAttachmentsView(FMBaseTestCaseMixin, APIViewSetTestCase):
