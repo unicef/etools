@@ -29,7 +29,12 @@ from etools.applications.partners.tests.factories import (
 )
 from etools.applications.reports.models import ResultType
 from etools.applications.reports.tests.factories import ResultFactory, SectionFactory
-from etools.applications.tpm.tests.factories import SimpleTPMPartnerFactory, TPMPartnerFactory, TPMUserFactory
+from etools.applications.tpm.tests.factories import (
+    SimpleTPMPartnerFactory,
+    TPMPartnerFactory,
+    TPMPartnerStaffMemberFactory,
+    TPMUserFactory,
+)
 
 
 class YearPlanViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
@@ -146,8 +151,14 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         self.assertEqual(response.data['status'], 'data_collection')
 
     def test_dont_auto_accept_activity_if_tpm(self):
-        activity = MonitoringActivityFactory(activity_type='tpm', tpm_partner=SimpleTPMPartnerFactory(),
-                                             status='pre_' + MonitoringActivity.STATUSES.assigned)
+        tpm_partner = SimpleTPMPartnerFactory()
+        team_members = [
+            staff.user for staff in TPMPartnerStaffMemberFactory.create_batch(size=2, tpm_partner=tpm_partner)
+        ]
+
+        activity = MonitoringActivityFactory(activity_type='tpm', tpm_partner=tpm_partner,
+                                             status='pre_' + MonitoringActivity.STATUSES.assigned,
+                                             team_members=team_members)
 
         response = self._test_update(self.fm_user, activity, data={'status': 'assigned'})
 
@@ -192,7 +203,8 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         goto('checklist', self.fm_user)
         goto('draft', self.fm_user)
         goto('checklist', self.fm_user)
-        goto('review', self.fm_user, {'person_responsible': person_responsible.id})
+        goto('review', self.fm_user,
+             {'person_responsible': person_responsible.id, 'team_members': [UserFactory(unicef_user=True).id]})
         goto('checklist', self.fm_user)
         goto('review', self.fm_user)
         goto('assigned', self.fm_user)

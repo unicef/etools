@@ -46,13 +46,19 @@ class StartedChecklist(models.Model):
     def prepare_findings(self):
         Finding.objects.bulk_create([
             Finding(started_checklist=self, activity_question=question)
-            for question in self.monitoring_activity.questions.filter(is_enabled=True)
+            for question in self.monitoring_activity.questions.filter(is_enabled=True, question__methods=self.method)
         ])
 
     def prepare_overall_findings(self):
         findings = []
         for relation, level in self.monitoring_activity.RELATIONS_MAPPING:
             for target in getattr(self.monitoring_activity, relation).all():
+                if not self.monitoring_activity.questions.filter(
+                    **{Question.get_target_relation_name(level): target},
+                    is_enabled=True, question__methods=self.method
+                ).exists():
+                    continue
+
                 finding = ChecklistOverallFinding(started_checklist=self)
                 setattr(finding, Question.get_target_relation_name(level), target)
 

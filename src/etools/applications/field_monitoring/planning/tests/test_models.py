@@ -93,6 +93,7 @@ class TestMonitoringActivityQuestionsFlow(BaseTenantTestCase):
     def test_questions_freezed(self):
         self.assertEqual(self.activity.questions.count(), 0)
 
+        self.activity.prepare_questions_structure()
         self.activity.mark_details_configured()
         self.activity.save()
 
@@ -117,6 +118,7 @@ class TestMonitoringActivityQuestionsFlow(BaseTenantTestCase):
         )
 
     def test_overall_findings_freezed(self):
+        self.activity.prepare_questions_structure()
         self.activity.mark_details_configured()
         self.activity.save()
 
@@ -126,6 +128,8 @@ class TestMonitoringActivityQuestionsFlow(BaseTenantTestCase):
 
         self.assertEqual(self.activity.overall_findings.count(), 0)
 
+        self.activity.prepare_activity_overall_findings()
+        self.activity.prepare_questions_overall_findings()
         self.activity.mark_checklist_configured()
         self.activity.save()
 

@@ -39,9 +39,11 @@ class BaseMonitoringActivityFactory(factory.DjangoModelFactory):
         model = MonitoringActivity
 
     @factory.post_generation
-    def team_members(self, created, extracted, **kwargs):
+    def team_members(self, created, extracted, count=0, **kwargs):
         if extracted:
             self.team_members.add(*extracted)
+        elif count:
+            self.team_members.add(*UserFactory.create_batch(size=count, unicef_user=True))
 
     @factory.post_generation
     def sections(self, created, extracted, **kwargs):
@@ -93,6 +95,7 @@ class ReviewActivityFactory(ChecklistActivityFactory):
 
 class PreAssignedActivityFactory(ReviewActivityFactory):
     person_responsible = factory.SubFactory(UserFactory, unicef_user=True)
+    team_members__count = 2
     field_office = factory.SubFactory(OfficeFactory)
 
 

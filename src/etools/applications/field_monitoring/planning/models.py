@@ -209,7 +209,7 @@ class MonitoringActivity(
         permissions = import_permissions(cls.__name__)
         return permissions
 
-    def prepare_questions_structure(self, old_status):
+    def prepare_questions_structure(self, old_status=STATUSES.draft):
         if old_status != self.STATUSES.draft:
             # do nothing if we just moved back from review
             return
@@ -232,7 +232,7 @@ class MonitoringActivity(
                 for target_question in target_questions:
                     activity_question = ActivityQuestion(
                         question=target_question, monitoring_activity=self,
-                        is_enabled=target_question.template.is_active
+                        is_enabled=target_question.template.is_active if target_question.template else True
                     )
 
                     if target_question.template:
@@ -252,6 +252,9 @@ class MonitoringActivity(
         findings = []
         for relation, level in self.RELATIONS_MAPPING:
             for target in getattr(self, relation).all():
+                if not self.questions.filter(**{Question.get_target_relation_name(level): target}).exists():
+                    continue
+
                 finding = ActivityOverallFinding(monitoring_activity=self)
 
                 setattr(finding, Question.get_target_relation_name(level), target)
@@ -274,7 +277,7 @@ class MonitoringActivity(
     @transition(field=status, source=STATUSES.draft, target=STATUSES.checklist,
                 permission=user_is_field_monitor_permission)
     def mark_details_configured(self):
-        self.prepare_questions_structure()
+        pass
 
     @transition(field=status, source=STATUSES.checklist, target=STATUSES.draft,
                 permission=user_is_field_monitor_permission)
@@ -284,8 +287,7 @@ class MonitoringActivity(
     @transition(field=status, source=STATUSES.checklist, target=STATUSES.review,
                 permission=user_is_field_monitor_permission)
     def mark_checklist_configured(self):
-        self.prepare_activity_overall_findings()
-        self.prepare_questions_overall_findings()
+        pass
 
     @transition(field=status, source=STATUSES.review, target=STATUSES.checklist,
                 permission=user_is_field_monitor_permission)
