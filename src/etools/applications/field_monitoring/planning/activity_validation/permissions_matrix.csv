@@ -92,6 +92,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,started_checklist_set,All Users,,draft,view,FALSE
 ,started_checklist_set,All Users,,checklist,view,FALSE
 ,started_checklist_set,All Users,,review,view,FALSE
+,started_checklist_set,All Users,,assigned,view,FALSE
 ,activity_overall_finding,All Users,,report_finalization,view,TRUE
 ,activity_overall_finding,All Users,,submitted,view,TRUE
 ,activity_overall_finding,All Users,,completed,view,TRUE
