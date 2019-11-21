@@ -46,7 +46,9 @@ class StartedChecklist(models.Model):
     def prepare_findings(self):
         Finding.objects.bulk_create([
             Finding(started_checklist=self, activity_question=question)
-            for question in self.monitoring_activity.questions.filter(is_enabled=True, question__methods=self.method)
+            for question in self.monitoring_activity.questions.filter(
+                is_enabled=True, question__methods=self.method
+            ).distinct()
         ])
 
     def prepare_overall_findings(self):
