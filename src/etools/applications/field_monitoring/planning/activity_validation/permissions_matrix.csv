@@ -84,7 +84,10 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,cancel_reason,All Users,,*,view,TRUE
 ,action_points,Field Monitor,,submitted,view,TRUE
 ,action_points,Field Monitor,,completed,view,TRUE
-,activity_question_set,All Users,,*,view,TRUE
+,activity_question_set,All Users,,data_collection,view,TRUE
+,activity_question_set,All Users,,report_finalization,view,TRUE
+,activity_question_set,All Users,,submitted,view,TRUE
+,activity_question_set,All Users,,completed,view,TRUE
 ,activity_question_set_review,All Users,,review,view,TRUE
 ,started_checklist_set,All Users,,draft,view,FALSE
 ,started_checklist_set,All Users,,checklist,view,FALSE
