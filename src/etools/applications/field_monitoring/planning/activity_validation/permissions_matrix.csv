@@ -38,7 +38,8 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,attachments,Field Monitor,,draft,edit,TRUE
 ,attachments,Field Monitor,,checklist,edit,TRUE
 ,attachments,Field Monitor,,review,edit,TRUE
-,report_attachments,All Users,is_ma_related_user,*,edit,TRUE
+,report_attachments,All Users,is_ma_related_user,data_collection,edit,TRUE
+,report_attachments,All Users,is_ma_related_user,report_finalization,edit,TRUE
 ,action_points,Field Monitor,,*,edit,TRUE
 ,action_points,Field Monitor,,submitted,edit,TRUE
 ,action_points,Field Monitor,,completed,edit,TRUE
