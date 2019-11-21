@@ -226,7 +226,10 @@ class MonitoringActivity(
                     level, target_id=target.id
                 )
                 for target_question in target_questions:
-                    activity_question = ActivityQuestion(question=target_question, monitoring_activity=self)
+                    activity_question = ActivityQuestion(
+                        question=target_question, monitoring_activity=self,
+                        is_enabled=target_question.template.is_active
+                    )
 
                     if target_question.template:
                         activity_question.specific_details = target_question.template.specific_details
