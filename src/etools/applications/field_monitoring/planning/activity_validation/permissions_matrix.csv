@@ -77,6 +77,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,attachments,All Users,,*,view,TRUE
 ,report_attachments,All Users,,draft,view,FALSE
 ,report_attachments,All Users,,checklist,view,FALSE
+,report_attachments,All Users,,review,view,FALSE
 ,report_attachments,All Users,,assigned,view,FALSE
 ,reject_reason,All Users,,draft,view,TRUE
 ,reject_reason,All Users,,checklist,view,TRUE
@@ -84,11 +85,9 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,cancel_reason,All Users,,*,view,TRUE
 ,action_points,Field Monitor,,submitted,view,TRUE
 ,action_points,Field Monitor,,completed,view,TRUE
-,activity_question_set,All Users,,data_collection,view,TRUE
-,activity_question_set,All Users,,report_finalization,view,TRUE
-,activity_question_set,All Users,,submitted,view,TRUE
-,activity_question_set,All Users,,completed,view,TRUE
+,activity_question_set,All Users,,checklist,view,TRUE
 ,activity_question_set_review,All Users,,review,view,TRUE
+,activity_question_set_review,All Users,,assigned,view,TRUE
 ,started_checklist_set,All Users,,draft,view,FALSE
 ,started_checklist_set,All Users,,checklist,view,FALSE
 ,started_checklist_set,All Users,,review,view,FALSE
