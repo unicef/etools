@@ -129,7 +129,7 @@ class MonitoringActivity(
 
     TRANSITION_SIDE_EFFECTS = {
         'checklist': [
-            lambda i, old_instance=None, user=None: i.prepare_questions_structure(),
+            lambda i, old_instance=None, user=None: i.prepare_questions_structure(old_instance.status),
         ],
         'review': [
             lambda i, old_instance=None, user=None: i.prepare_activity_overall_findings(),
@@ -209,7 +209,11 @@ class MonitoringActivity(
         permissions = import_permissions(cls.__name__)
         return permissions
 
-    def prepare_questions_structure(self):
+    def prepare_questions_structure(self, old_status):
+        if old_status != self.STATUSES.draft:
+            # do nothing if we just moved back from review
+            return
+
         # cleanup
         self.questions.all().delete()
 
@@ -258,6 +262,9 @@ class MonitoringActivity(
 
     def prepare_questions_overall_findings(self):
         from etools.applications.field_monitoring.data_collection.models import ActivityQuestionOverallFinding
+
+        # cleanup
+        ActivityQuestionOverallFinding.objects.filter(activity_question__monitoring_activity=self).delete()
 
         ActivityQuestionOverallFinding.objects.bulk_create([
             ActivityQuestionOverallFinding(activity_question=question)
