@@ -372,6 +372,10 @@ class SpotCheckSerializer(ActivePDValidationMixin, EngagementSerializer):
     face_form_end_date = serializers.DateField(label='FACE Form(s) End Date', read_only=True, source='end_date')
 
     pending_unsupported_amount = serializers.DecimalField(20, 2, label=_('Pending Unsupported Amount'), read_only=True)
+    sections = SeparatedReadWriteField(
+        read_field=SectionSerializer(many=True, required=False),
+        label=_("Sections"),
+    )
 
     class Meta(EngagementSerializer.Meta):
         model = SpotCheck
@@ -380,7 +384,7 @@ class SpotCheckSerializer(ActivePDValidationMixin, EngagementSerializer):
             'internal_controls', 'findings', 'face_form_start_date', 'face_form_end_date',
             'amount_refunded', 'additional_supporting_documentation_provided',
             'justification_provided_and_accepted', 'write_off_required', 'pending_unsupported_amount',
-            'explanation_for_additional_information',
+            'explanation_for_additional_information', 'sections', 'offices',
         ]
         fields.remove('joint_audit')
         fields.remove('shared_ip_with')
@@ -394,6 +398,15 @@ class SpotCheckSerializer(ActivePDValidationMixin, EngagementSerializer):
                 'total_amount_tested', 'total_amount_of_ineligible_expenditure', 'internal_controls',
             ]
         })
+
+    def create(self, validated_data):
+        sections = []
+        if "sections" in validated_data:
+            sections = validated_data.pop("sections")
+        instance = super().create(validated_data)
+        if sections:
+            instance.sections.set(sections)
+        return instance
 
 
 class StaffSpotCheckListSerializer(EngagementListSerializer):

@@ -13,7 +13,7 @@ from unicef_attachments.models import Attachment
 
 from etools.applications.action_points.tests.factories import ActionPointCategoryFactory, ActionPointFactory
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
-from etools.applications.audit.models import Auditor, Engagement, Risk
+from etools.applications.audit.models import Auditor, Engagement, Risk, SpotCheck
 from etools.applications.audit.tests.base import AuditTestCaseMixin, EngagementTransitionsTestCaseMixin
 from etools.applications.audit.tests.factories import (
     AuditFactory,
@@ -528,6 +528,45 @@ class TestAuditCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEngage
 class TestSpotCheckCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEngagementsCreateViewSet,
                                  BaseTenantTestCase):
     engagement_factory = SpotCheckFactory
+
+    def test_list(self):
+        self.endpoint = "spot-checks"
+        section = SectionFactory()
+        spot_check = SpotCheckFactory()
+        spot_check.sections.set([section.pk])
+        response = response = self.forced_auth_req(
+            'get',
+            self.engagements_url(),
+            user=self.unicef_focal_point,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        found = False
+        for data in response.data["results"]:
+            if data["id"] == spot_check.pk:
+                found = True
+                self.assertEqual(
+                    data["sections"],
+                    [{"id": section.pk, "name": section.name}],
+                )
+        self.assertTrue(found)
+
+    def test_sections(self):
+        self.endpoint = "spot-checks"
+        section_1 = SectionFactory()
+        section_2 = SectionFactory()
+        self.create_data["sections"] = [section_1.pk, section_2.pk]
+        response = self._do_create(self.unicef_focal_point, self.create_data)
+
+        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(
+            response.data['sections'],
+            [section_1.pk, section_2.pk],
+        )
+        spot_check = SpotCheck.objects.get(pk=response.data["id"])
+        self.assertEqual(
+            list(spot_check.sections.all()),
+            [section_1, section_2],
+        )
 
 
 class SpecialAuditCreateViewSet(BaseTestEngagementsCreateViewSet, BaseTenantTestCase):
