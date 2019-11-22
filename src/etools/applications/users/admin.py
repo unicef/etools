@@ -4,6 +4,7 @@ from django.conf.urls import url
 from django.contrib import admin, messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
+from django.db import connection
 from django.http.response import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
@@ -16,6 +17,15 @@ from etools.applications.hact.tasks import update_hact_for_country, update_hact_
 from etools.applications.users.models import Country, UserProfile, WorkspaceCounter
 from etools.applications.vision.tasks import sync_handler, vision_sync_task
 from etools.libraries.azure_graph_api.tasks import sync_user
+
+
+def get_office(obj):
+    if connection.tenant.schema_name == get_public_schema_name():
+        return None
+    try:
+        return obj.profile.tenant_profile.office
+    except AttributeError:
+        return None
 
 
 class ProfileInline(admin.StackedInline):
@@ -66,10 +76,7 @@ class ProfileInline(admin.StackedInline):
         )
 
     def office(self, obj):
-        try:
-            return obj.profile.tenant_profile.office
-        except AttributeError:
-            return None
+        return get_office(obj)
 
 
 class ProfileAdmin(admin.ModelAdmin):
@@ -156,10 +163,7 @@ class ProfileAdmin(admin.ModelAdmin):
         )
 
     def office(self, obj):
-        try:
-            return obj.profile.tenant_profile.office
-        except AttributeError:
-            return None
+        return get_office(obj)
 
     def save_model(self, request, obj, form, change):
         if form.data.get('supervisor'):
@@ -213,10 +217,7 @@ class UserAdminPlus(UserAdmin):
     country.admin_order_field = 'profile__country'
 
     def office(self, obj):
-        try:
-            return obj.profile.tenant_profile.office
-        except AttributeError:
-            return None
+        return get_office(obj)
 
     def has_add_permission(self, request):
         return False
