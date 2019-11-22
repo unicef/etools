@@ -5,13 +5,14 @@ from django.db.models import Max
 
 
 def reset_office_seq(apps, schema_editor):
-    Office = apps.get_model("reports", "office")
-    qs = Office.objects.all().aggregate(max_id=Max("id"))
-    with connection.cursor() as cursor:
-        cursor.execute(
-            "select setval('reports_office_id_seq', %s, true)",
-            [qs["max_id"]]
-        )
+    if connection.tenant.schema_name not in ["test", "public"]:
+        Office = apps.get_model("reports", "office")
+        qs = Office.objects.all().aggregate(max_id=Max("id"))
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "select setval('reports_office_id_seq', %s, true)",
+                [qs["max_id"]]
+            )
 
 
 class Migration(migrations.Migration):

@@ -8,7 +8,7 @@ def convert_tenant_profile_data(apps, schema):
     for each country that UserProfile has available
     Use the connection to determine the current country
     """
-    if connection.tenant.schema_name != "test":
+    if connection.tenant.schema_name not in ["test", "public"]:
         UserProfile = apps.get_model("users", "userprofile")
         UserTenantProfile = apps.get_model("reports", "usertenantprofile")
         Office = apps.get_model("reports", "office")
