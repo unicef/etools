@@ -218,6 +218,12 @@ class DisaggregationValueAdmin(admin.ModelAdmin):
     get_disaggregation_name.short_description = 'Disaggregation Name'
 
 
+class UserTenantProfileAdmin(admin.ModelAdmin):
+    model = UserTenantProfile
+    list_filter = ("office",)
+    list_display = ("id", "profile", "office")
+
+
 admin.site.register(Result, ResultAdmin)
 admin.site.register(CountryProgramme)
 admin.site.register(Section, SectionAdmin)
@@ -231,4 +237,4 @@ admin.site.register(AppliedIndicator, AppliedIndicatorAdmin)
 admin.site.register(Disaggregation)
 admin.site.register(DisaggregationValue, DisaggregationValueAdmin)
 admin.site.register(Office)
-admin.site.register(UserTenantProfile)
+admin.site.register(UserTenantProfile, UserTenantProfileAdmin)
