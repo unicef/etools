@@ -20,12 +20,12 @@ RUN apk add postgresql-dev \
 
 RUN apk add --update-cache --repository http://dl-3.alpinelinux.org/alpine/edge/community/ \
     geos \
-    geos-dev
-
-RUN apk add --update-cache --repository http://dl-3.alpinelinux.org/alpine/edge/testing/ \
+    geos-dev \
     gdal \
     gdal-dev \
-    py-gdal \
+    py-gdal
+
+RUN apk add --update-cache --repository http://dl-3.alpinelinux.org/alpine/edge/testing/ \
     gcc \
     g++
 
@@ -53,8 +53,9 @@ RUN apk add openssl \
     libmagic \
     libxslt
 
-RUN apk add geos \
-    gdal --update-cache --repository http://dl-3.alpinelinux.org/alpine/edge/testing/
+RUN apk add --update-cache --repository http://dl-3.alpinelinux.org/alpine/edge/community/ \
+    geos \
+    gdal
 
 ADD src /code/
 ADD manage.py /code/manage.py
