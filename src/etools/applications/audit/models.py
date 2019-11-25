@@ -173,6 +173,19 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
     authorized_officers = models.ManyToManyField(
         PartnerStaffMember, verbose_name=_('Authorized Officers'), blank=True, related_name="engagement_authorizations"
     )
+    sections = models.ManyToManyField(
+        Section,
+        verbose_name=_("Sections"),
+        blank=True,
+        related_name='engagements',
+    )
+    offices = models.ManyToManyField(
+        Office,
+        verbose_name=_('Offices'),
+        blank=True,
+        related_name='engagements',
+    )
+
 
     objects = InheritanceManager()
 
@@ -404,18 +417,6 @@ class SpotCheck(Engagement):
         verbose_name=_('Spot Check Final Report'),
         code='spot_check_final_report',
         blank=True,
-    )
-    sections = models.ManyToManyField(
-        Section,
-        verbose_name=_("Sections"),
-        blank=True,
-        related_name='spot_checks',
-    )
-    offices = models.ManyToManyField(
-        Office,
-        verbose_name=_('Offices'),
-        blank=True,
-        related_name='spot_checks',
     )
 
     objects = models.Manager()

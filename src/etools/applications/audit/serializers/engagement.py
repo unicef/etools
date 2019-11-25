@@ -272,6 +272,14 @@ class EngagementSerializer(
     engagement_attachments = AttachmentSingleFileField(required=False)
     report_attachments = AttachmentSingleFileField(required=False)
     final_report = AttachmentSingleFileField(required=False)
+    sections = SeparatedReadWriteField(
+        read_field=SectionSerializer(many=True, required=False),
+        label=_("Sections"),
+    )
+    offices = SeparatedReadWriteField(
+        read_field=OfficeSerializer(many=True, required=False),
+        label=_("Offices"),
+    )
 
     class Meta(EngagementListSerializer.Meta):
         fields = EngagementListSerializer.Meta.fields + [
@@ -284,6 +292,8 @@ class EngagementSerializer(
             'engagement_attachments',
             'report_attachments',
             'final_report',
+            'sections',
+            'offices',
         ]
         extra_kwargs = {
             field: {'required': True} for field in [
@@ -372,14 +382,6 @@ class SpotCheckSerializer(ActivePDValidationMixin, EngagementSerializer):
     face_form_end_date = serializers.DateField(label='FACE Form(s) End Date', read_only=True, source='end_date')
 
     pending_unsupported_amount = serializers.DecimalField(20, 2, label=_('Pending Unsupported Amount'), read_only=True)
-    sections = SeparatedReadWriteField(
-        read_field=SectionSerializer(many=True, required=False),
-        label=_("Sections"),
-    )
-    offices = SeparatedReadWriteField(
-        read_field=OfficeSerializer(many=True, required=False),
-        label=_("Offices"),
-    )
 
     class Meta(EngagementSerializer.Meta):
         model = SpotCheck
@@ -388,7 +390,7 @@ class SpotCheckSerializer(ActivePDValidationMixin, EngagementSerializer):
             'internal_controls', 'findings', 'face_form_start_date', 'face_form_end_date',
             'amount_refunded', 'additional_supporting_documentation_provided',
             'justification_provided_and_accepted', 'write_off_required', 'pending_unsupported_amount',
-            'explanation_for_additional_information', 'sections', 'offices',
+            'explanation_for_additional_information'
         ]
         fields.remove('joint_audit')
         fields.remove('shared_ip_with')
@@ -468,6 +470,8 @@ class MicroAssessmentSerializer(ActivePDValidationMixin, RiskCategoriesUpdateMix
         fields.remove('specific_procedures')
         fields.remove('exchange_rate')
         fields.remove('currency_of_report')
+        fields.remove('sections')
+        fields.remove('offices')
         extra_kwargs = EngagementSerializer.Meta.extra_kwargs.copy()
         extra_kwargs.update({
             'engagement_type': {'read_only': True},
