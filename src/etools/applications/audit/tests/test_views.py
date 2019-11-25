@@ -586,14 +586,14 @@ class TestSpotCheckCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEn
         response = self._do_create(self.unicef_focal_point, self.create_data)
 
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(
-            [o["id"] for o in response.data['offices']],
-            [office_1.pk, office_2.pk],
+        self.assertEquals(
+            sorted([o["id"] for o in response.data['offices']]),
+            sorted([office_1.pk, office_2.pk]),
         )
         spot_check = SpotCheck.objects.get(pk=response.data["id"])
-        self.assertEqual(
-            list(spot_check.offices.all()),
-            [office_1, office_2],
+        self.assertEquals(
+            sorted([o.pk for o in spot_check.offices.all()]),
+            sorted([office_1.pk, office_2.pk]),
         )
 
 

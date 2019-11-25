@@ -7,7 +7,6 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('users', '0012_auto_20190513_1804'),
         ('reports', '0019_auto_20190816_1609'),
         ('audit', '0019_engagement_users_notified'),
     ]
@@ -16,7 +15,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='spotcheck',
             name='offices',
-            field=models.ManyToManyField(blank=True, related_name='spot_checks', to='users.Office', verbose_name='Offices'),
+            field=models.ManyToManyField(blank=True, related_name='spot_checks', to='reports.Office', verbose_name='Offices'),
         ),
         migrations.AddField(
             model_name='spotcheck',
