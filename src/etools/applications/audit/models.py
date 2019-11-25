@@ -186,7 +186,6 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
         related_name='engagements',
     )
 
-
     objects = InheritanceManager()
 
     class Meta:
