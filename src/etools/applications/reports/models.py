@@ -10,6 +10,8 @@ from model_utils.models import TimeStampedModel
 from mptt.models import MPTTModel, TreeForeignKey
 from unicef_locations.models import Location
 
+from etools.applications.users.models import UserProfile
+
 
 class Quarter(models.Model):
 
@@ -850,3 +852,35 @@ class SpecialReportingRequirement(TimeStampedModel):
 
     def __str__(self):
         return str(self.due_date)
+
+
+class Office(models.Model):
+    """
+    Represents an office for the country
+
+    Relates to :model:`AUTH_USER_MODEL`
+    """
+
+    name = models.CharField(max_length=254, verbose_name=_('Name'))
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        ordering = ('name', )
+
+
+class UserTenantProfile(models.Model):
+    profile = models.OneToOneField(
+        UserProfile,
+        verbose_name=_('Profile'),
+        on_delete=models.CASCADE,
+        related_name="tenant_profile",
+    )
+    office = models.ForeignKey(
+        "reports.Office",
+        null=True,
+        blank=True,
+        verbose_name=_('Office'),
+        on_delete=models.CASCADE,
+    )

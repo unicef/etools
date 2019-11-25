@@ -15,7 +15,7 @@ from etools.applications.publics.tests.factories import (
     PublicsDSARateFactory,
     PublicsDSARegionFactory,
 )
-from etools.applications.reports.tests.factories import ResultFactory, SectionFactory
+from etools.applications.reports.tests.factories import OfficeFactory, ResultFactory, SectionFactory
 from etools.applications.t2f.models import ModeOfTravel, TravelActivity, TravelType
 from etools.applications.t2f.tests.factories import (
     ItineraryItemFactory,
@@ -23,7 +23,7 @@ from etools.applications.t2f.tests.factories import (
     TravelAttachmentFactory,
     TravelFactory,
 )
-from etools.applications.users.tests.factories import OfficeFactory, UserFactory
+from etools.applications.users.tests.factories import UserFactory
 
 log = logging.getLogger('__name__')
 
@@ -377,7 +377,7 @@ class TravelExports(BaseTenantTestCase):
         self.assertEqual(rows[1],
                          ['{}/1'.format(datetime.datetime.now().year),
                           'John Doe',
-                          'An Office',
+                          travel_1.office.name,
                           travel_1.section.name,
                           'planned',
                           'Origin1',
@@ -392,7 +392,7 @@ class TravelExports(BaseTenantTestCase):
         self.assertEqual(rows[2],
                          ['{}/1'.format(datetime.datetime.now().year),
                           'John Doe',
-                          'An Office',
+                          travel_1.office.name,
                           travel_1.section.name,
                           'planned',
                           'Origin2',
@@ -407,7 +407,7 @@ class TravelExports(BaseTenantTestCase):
         self.assertEqual(rows[3],
                          ['{}/1'.format(datetime.datetime.now().year),
                           'John Doe',
-                          'An Office',
+                          travel_1.office.name,
                           travel_1.section.name,
                           'planned',
                           'Origin3',
@@ -422,7 +422,7 @@ class TravelExports(BaseTenantTestCase):
         self.assertEqual(rows[4],
                          ['{}/2'.format(datetime.datetime.now().year),
                           'Max Mustermann',
-                          'An Office',
+                          travel_2.office.name,
                           travel_2.section.name,
                           'planned',
                           'Origin2',
@@ -437,7 +437,7 @@ class TravelExports(BaseTenantTestCase):
         self.assertEqual(rows[5],
                          ['{}/2'.format(datetime.datetime.now().year),
                           'Max Mustermann',
-                          'An Office',
+                          travel_2.office.name,
                           travel_2.section.name,
                           'planned',
                           'Origin3',
