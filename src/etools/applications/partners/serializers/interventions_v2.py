@@ -8,6 +8,7 @@ from django.utils.translation import ugettext as _
 
 from rest_framework import serializers
 from rest_framework.serializers import ValidationError
+from rest_framework.validators import UniqueTogetherValidator
 from unicef_attachments.fields import AttachmentSingleFileField
 from unicef_attachments.serializers import AttachmentSerializerMixin
 from unicef_locations.serializers import LocationSerializer
@@ -66,6 +67,12 @@ class InterventionAmendmentCUSerializer(AttachmentSerializerMixin, serializers.M
     class Meta:
         model = InterventionAmendment
         fields = "__all__"
+        validators = [
+            UniqueTogetherValidator(
+                queryset=InterventionAmendment.objects.all(),
+                fields=["intervention", "signed_date"],
+            )
+        ]
 
     def validate(self, data):
         data = super().validate(data)
