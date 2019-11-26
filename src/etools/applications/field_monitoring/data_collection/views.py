@@ -183,7 +183,7 @@ class ActivityFindingsViewSet(
         Prefetch(
             'activity_question__findings',
             Finding.objects.filter(value__isnull=False).prefetch_related(
-                'startedchecklist', 'startedchecklist__author',
+                'started_checklist', 'started_checklist__author',
             ),
             to_attr='completed_findings'
         ),

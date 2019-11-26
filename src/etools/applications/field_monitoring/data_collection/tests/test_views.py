@@ -13,6 +13,7 @@ from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.field_monitoring.data_collection.models import ActivityQuestionOverallFinding
 from etools.applications.field_monitoring.data_collection.tests.factories import (
     ActivityQuestionFactory,
+    FindingFactory,
     StartedChecklistFactory,
 )
 from etools.applications.field_monitoring.fm_settings.tests.factories import MethodFactory
@@ -498,6 +499,10 @@ class TestActivityFindingsView(ChecklistDataCollectionTestMixin, APIViewSetTestC
 
     def setUp(self):
         self.finding = self.activity.questions.first().overall_finding
+        FindingFactory(
+            started_checklist__monitoring_activity=self.activity,
+            activity_question=self.activity.questions.first()
+        )
 
     def get_list_args(self):
         return [self.activity.pk]
@@ -507,7 +512,7 @@ class TestActivityFindingsView(ChecklistDataCollectionTestMixin, APIViewSetTestC
             ActivityQuestionOverallFinding.objects.filter(activity_question__monitoring_activity=self.activity)
         )
 
-        with self.assertNumQueries(8):
+        with self.assertNumQueries(10):
             self._test_list(self.unicef_user, activity_findings)
 
     def test_update_unicef(self):
