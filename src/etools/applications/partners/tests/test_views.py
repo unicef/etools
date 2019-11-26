@@ -687,19 +687,18 @@ class TestAgreementAPIView(BaseTenantTestCase):
         cls.agreement.authorized_officers.add(cls.partner_staff)
         cls.agreement.save()
 
-        date = datetime.date.today()
         cls.amendment1 = AgreementAmendment.objects.create(
             number="001",
             agreement=cls.agreement,
             signed_amendment="application/pdf",
-            signed_date=date - datetime.timedelta(days=1),
+            signed_date=datetime.date.today(),
             types=[AgreementAmendment.IP_NAME]
         )
         cls.amendment2 = AgreementAmendment.objects.create(
             number="002",
             agreement=cls.agreement,
             signed_amendment="application/pdf",
-            signed_date=date - datetime.timedelta(days=2),
+            signed_date=datetime.date.today(),
             types=[AgreementAmendment.BANKING_INFO]
         )
         cls.agreement2 = AgreementFactory(
