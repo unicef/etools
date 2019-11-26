@@ -3,7 +3,7 @@ from datetime import date
 
 from django.contrib.auth import get_user_model
 from django.db import transaction
-from django.db.models import Count, Q
+from django.db.models import Count, Prefetch, Q
 from django.http import Http404
 from django.utils.translation import ugettext_lazy as _
 
@@ -13,6 +13,8 @@ from rest_framework import mixins, viewsets
 from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.response import Response
+from unicef_restlib.views import NestedViewSetMixin
+from unicef_snapshot.models import Activity as HistoryActivity
 
 from etools.applications.field_monitoring.fm_settings.models import Question
 from etools.applications.field_monitoring.fm_settings.serializers import FMCommonAttachmentSerializer
@@ -35,10 +37,15 @@ from etools.applications.field_monitoring.planning.filters import (
     UserTPMPartnerFilter,
     UserTypeFilter,
 )
-from etools.applications.field_monitoring.planning.models import MonitoringActivity, YearPlan
+from etools.applications.field_monitoring.planning.models import (
+    MonitoringActivity,
+    MonitoringActivityActionPoint,
+    YearPlan,
+)
 from etools.applications.field_monitoring.planning.serializers import (
     FMUserSerializer,
     InterventionWithLinkedInstancesSerializer,
+    MonitoringActivityActionPointSerializer,
     MonitoringActivityLightSerializer,
     MonitoringActivitySerializer,
     TemplatedQuestionSerializer,
@@ -232,3 +239,31 @@ class ActivityAttachmentsViewSet(NestedLinkedAttachmentsViewSet):
 
     def get_view_name(self):
         return _('Attachments')
+
+
+class MonitoringActivityActionPointViewSet(
+    FMBaseViewSet,
+    NestedViewSetMixin,
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet
+):
+    queryset = MonitoringActivityActionPoint.objects.prefetch_related(
+        'author', 'assigned_by', 'section', 'office',
+        'partner', 'cp_output__result_type', 'intervention', 'category',
+        Prefetch(
+            'history',
+            HistoryActivity.objects.filter(
+                Q(action=HistoryActivity.CREATE) | Q(Q(action=HistoryActivity.UPDATE), ~Q(change={}))
+            ).select_related('by_user')
+        )
+    ).select_related('assigned_to',)
+    serializer_class = MonitoringActivityActionPointSerializer
+    permission_classes = FMBaseViewSet.permission_classes + [
+        IsReadAction | (IsEditAction & activity_field_is_editable_permission('action_points'))
+    ]
+
+    def perform_create(self, serializer):
+        serializer.save(monitoring_activity=self.get_parent_object())

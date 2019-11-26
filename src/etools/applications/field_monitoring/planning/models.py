@@ -11,6 +11,7 @@ from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation
 from unicef_locations.models import Location
 
+from etools.applications.action_points.models import ActionPoint
 from etools.applications.core.permissions import import_permissions
 from etools.applications.field_monitoring.fm_settings.models import LocationSite, Question
 from etools.applications.field_monitoring.planning.mixins import ProtectUnknownTransitionsMeta
@@ -345,7 +346,7 @@ class MonitoringActivity(
 
     @property
     def activity_question_set(self):
-        return self.questions.filter(is_enabled=True)
+        return self.questions.filter(is_enabled=True).exists()
 
     @property
     def started_checklist_set(self):
@@ -353,14 +354,33 @@ class MonitoringActivity(
 
     @property
     def activity_overall_finding(self):
-        # todo: decide what to use as value here. all overall findings should be completed?
-        return True
+        # at least one overall finding completed
+        return self.overall_findings.exclude(narrative_finding='').exists()
 
-    @property
-    def activity_question_overall_finding(self):
-        # todo: see activity_overall_finding
-        return True
+    def get_mail_context(self, user=None):
+        # todo
+        return {}
 
-    @property
-    def action_points(self):
-        return True
+
+class MonitoringActivityActionPointManager(models.Manager):
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        return queryset.filter(monitoring_activity__isnull=False)
+
+
+class MonitoringActivityActionPoint(ActionPoint):
+    """
+    This proxy class is for more easy permissions assigning.
+    """
+    objects = MonitoringActivityActionPointManager()
+
+    class Meta(ActionPoint.Meta):
+        verbose_name = _('Monitoring Activity Action Point')
+        verbose_name_plural = _('Monitoring Activity Action Points')
+        proxy = True
+
+    def get_mail_context(self, user=None):
+        context = super().get_mail_context(user=user)
+        if self.monitoring_activity:
+            context['monitoring_activity'] = self.monitoring_activity.get_mail_context(user=user)
+        return context

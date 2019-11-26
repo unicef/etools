@@ -1,3 +1,5 @@
+from copy import copy
+
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
@@ -9,18 +11,25 @@ from unicef_restlib.fields import SeparatedReadWriteField
 from unicef_restlib.serializers import UserContextSerializerMixin
 from unicef_snapshot.serializers import SnapshotModelSerializer
 
-from etools.applications.action_points.serializers import HistorySerializer
+from etools.applications.action_points.categories.models import Category
+from etools.applications.action_points.categories.serializers import CategoryModelChoiceField
+from etools.applications.action_points.serializers import ActionPointBaseSerializer, HistorySerializer
 from etools.applications.field_monitoring.fm_settings.models import Question
 from etools.applications.field_monitoring.fm_settings.serializers import LocationSiteSerializer, QuestionSerializer
 from etools.applications.field_monitoring.planning.activity_validation.permissions import ActivityPermissions
-from etools.applications.field_monitoring.planning.models import MonitoringActivity, QuestionTemplate, YearPlan
+from etools.applications.field_monitoring.planning.models import (
+    MonitoringActivity,
+    MonitoringActivityActionPoint,
+    QuestionTemplate,
+    YearPlan,
+)
 from etools.applications.field_monitoring.utils.fsm import get_available_transitions
 from etools.applications.partners.serializers.interventions_v2 import MinimalInterventionListSerializer
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.reports.serializers.v1 import SectionSerializer
-from etools.applications.reports.serializers.v2 import MinimalOutputListSerializer
+from etools.applications.reports.serializers.v2 import MinimalOutputListSerializer, OfficeSerializer
 from etools.applications.tpm.tpmpartners.models import TPMPartner
-from etools.applications.users.serializers import MinimalUserSerializer, OfficeSerializer
+from etools.applications.users.serializers import MinimalUserSerializer
 
 
 class YearPlanSerializer(SnapshotModelSerializer):
@@ -89,6 +98,13 @@ class TPMPartnerSerializer(serializers.ModelSerializer):
         ]
 
 
+class FMInterventionListSerializer(MinimalInterventionListSerializer):
+    class Meta(MinimalInterventionListSerializer.Meta):
+        fields = MinimalInterventionListSerializer.Meta.fields + (
+            'number', 'title', 'document_type'
+        )
+
+
 class MonitoringActivityLightSerializer(serializers.ModelSerializer):
     tpm_partner = SeparatedReadWriteField(read_field=TPMPartnerSerializer())
     location = SeparatedReadWriteField(read_field=LocationSerializer())
@@ -98,7 +114,7 @@ class MonitoringActivityLightSerializer(serializers.ModelSerializer):
     team_members = SeparatedReadWriteField(read_field=MinimalUserSerializer(many=True))
 
     partners = SeparatedReadWriteField(read_field=MinimalPartnerOrganizationListSerializer(many=True))
-    interventions = SeparatedReadWriteField(read_field=MinimalInterventionListSerializer(many=True))
+    interventions = SeparatedReadWriteField(read_field=FMInterventionListSerializer(many=True))
     cp_outputs = SeparatedReadWriteField(read_field=MinimalOutputListSerializer(many=True))
 
     checklists_count = serializers.ReadOnlyField()
@@ -168,14 +184,55 @@ class FMUserSerializer(MinimalUserSerializer):
         return 'staff' if obj.is_staff else 'tpm'
 
 
-class InterventionWithLinkedInstancesSerializer(MinimalInterventionListSerializer):
+class InterventionWithLinkedInstancesSerializer(FMInterventionListSerializer):
     partner = serializers.ReadOnlyField(source='agreement.partner_id')
     cp_outputs = serializers.SerializerMethodField()
 
-    class Meta(MinimalInterventionListSerializer.Meta):
-        fields = MinimalInterventionListSerializer.Meta.fields + (
+    class Meta(FMInterventionListSerializer.Meta):
+        fields = FMInterventionListSerializer.Meta.fields + (
             'partner', 'cp_outputs'
         )
 
     def get_cp_outputs(self, obj):
         return list(obj.result_links.values_list('cp_output_id', flat=True))
+
+
+class MonitoringActivityActionPointSerializer(ActionPointBaseSerializer):
+    reference_number = serializers.ReadOnlyField(label=_('Reference No.'))
+
+    partner = SeparatedReadWriteField(
+        label=_('Related Partner'), read_field=MinimalPartnerOrganizationListSerializer(), required=False,
+    )
+    intervention = SeparatedReadWriteField(
+        label=_('Related PD/SSFA'), read_field=FMInterventionListSerializer(), required=False,
+    )
+    cp_output = SeparatedReadWriteField(
+        label=_('Related CP Output'), read_field=MinimalOutputListSerializer(), required=False,
+    )
+
+    section = SeparatedReadWriteField(
+        read_field=SectionSerializer(read_only=True),
+        required=True, label=_('Section of Assignee')
+    )
+    office = SeparatedReadWriteField(
+        read_field=OfficeSerializer(read_only=True),
+        required=True, label=_('Office of Assignee')
+    )
+    category = CategoryModelChoiceField(
+        label=_('Action Point Category'), required=True,
+        queryset=Category.objects.filter(module=Category.MODULE_CHOICES.fm)
+    )
+
+    history = HistorySerializer(many=True, label=_('History'), read_only=True)
+
+    url = serializers.ReadOnlyField(label=_('Link'), source='get_object_url')
+
+    class Meta(ActionPointBaseSerializer.Meta):
+        model = MonitoringActivityActionPoint
+        fields = ActionPointBaseSerializer.Meta.fields + [
+            'partner', 'intervention', 'cp_output', 'history', 'url',
+        ]
+        extra_kwargs = copy(ActionPointBaseSerializer.Meta.extra_kwargs)
+        extra_kwargs.update({
+            'high_priority': {'label': _('Priority')},
+        })

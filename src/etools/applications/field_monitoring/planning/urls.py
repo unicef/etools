@@ -14,8 +14,9 @@ root_api.register(r'users', views.FMUsersViewSet, basename='users')
 root_api.register(r'cp-outputs', views.CPOutputsViewSet, basename='cp_outputs')
 root_api.register(r'interventions', views.InterventionsViewSet, basename='interventions')
 
-activities_api = NestedBulkRouter(root_api, r'activities')
-activities_api.register(r'attachments', views.ActivityAttachmentsViewSet, basename='activity-attachments')
+activities_api = NestedBulkRouter(root_api, r'activities', lookup='monitoring_activity')
+activities_api.register(r'attachments', views.ActivityAttachmentsViewSet, basename='activity_attachments')
+activities_api.register(r'action-points', views.MonitoringActivityActionPointViewSet, basename='activity_action_points')
 
 app_name = 'field_monitoring_planning'
 urlpatterns = [

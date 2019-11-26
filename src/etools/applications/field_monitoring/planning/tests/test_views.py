@@ -5,6 +5,7 @@ from django.urls import reverse
 from rest_framework import status
 from unicef_attachments.models import Attachment, AttachmentLink
 
+from etools.applications.action_points.tests.factories import ActionPointCategoryFactory
 from etools.applications.attachments.tests.factories import (
     AttachmentFactory,
     AttachmentFileTypeFactory,
@@ -16,6 +17,7 @@ from etools.applications.field_monitoring.fm_settings.models import Question
 from etools.applications.field_monitoring.fm_settings.tests.factories import QuestionFactory
 from etools.applications.field_monitoring.planning.models import MonitoringActivity, QuestionTemplate, YearPlan
 from etools.applications.field_monitoring.planning.tests.factories import (
+    MonitoringActivityActionPointFactory,
     MonitoringActivityFactory,
     QuestionTemplateFactory,
     YearPlanFactory,
@@ -28,7 +30,7 @@ from etools.applications.partners.tests.factories import (
     PartnerFactory,
 )
 from etools.applications.reports.models import ResultType
-from etools.applications.reports.tests.factories import ResultFactory, SectionFactory
+from etools.applications.reports.tests.factories import OfficeFactory, ResultFactory, SectionFactory
 from etools.applications.tpm.tests.factories import (
     SimpleTPMPartnerFactory,
     TPMPartnerFactory,
@@ -277,7 +279,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
 
 
 class TestActivityAttachmentsView(FMBaseTestCaseMixin, APIViewSetTestCase):
-    base_view = 'field_monitoring_planning:activity-attachments'
+    base_view = 'field_monitoring_planning:activity_attachments'
 
     @classmethod
     def setUpTestData(cls):
@@ -293,7 +295,7 @@ class TestActivityAttachmentsView(FMBaseTestCaseMixin, APIViewSetTestCase):
 
         link_response = self.forced_auth_req(
             'post',
-            reverse('field_monitoring_planning:activity-attachments-link', args=self.get_list_args()),
+            reverse('field_monitoring_planning:activity_attachments-link', args=self.get_list_args()),
             user=self.fm_user,
             data=[{'id': AttachmentFactory(code='attachments').id} for _i in range(2)]
         )
@@ -366,7 +368,7 @@ class TestActivityAttachmentsView(FMBaseTestCaseMixin, APIViewSetTestCase):
     def test_add_unicef(self):
         link_response = self.forced_auth_req(
             'post',
-            reverse('field_monitoring_planning:activity-attachments-link', args=self.get_list_args()),
+            reverse('field_monitoring_planning:activity_attachments-link', args=self.get_list_args()),
             user=self.unicef_user,
             data=[]
         )
@@ -379,7 +381,7 @@ class TestActivityAttachmentsView(FMBaseTestCaseMixin, APIViewSetTestCase):
 
         response = self.forced_auth_req(
             'get',
-            reverse('field_monitoring_planning:activity-attachments-file-types', args=[self.activity.pk]),
+            reverse('field_monitoring_planning:activity_attachments-file-types', args=[self.activity.pk]),
             user=self.unicef_user,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -646,3 +648,46 @@ class InterventionsViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTen
 
         self.assertEqual(response.data['results'][0]['partner'], result_link.intervention.agreement.partner_id)
         self.assertListEqual(response.data['results'][0]['cp_outputs'], [result_link.cp_output_id])
+
+
+class MonitoringActivityActionPointsViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenantTestCase):
+    base_view = 'field_monitoring_planning:activity_action_points'
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.activity = MonitoringActivityFactory(status='completed')
+
+    def get_list_args(self):
+        return [self.activity.pk]
+
+    def test_list(self):
+        action_points = MonitoringActivityActionPointFactory.create_batch(size=10, monitoring_activity=self.activity)
+        MonitoringActivityActionPointFactory()
+
+        with self.assertNumQueries(12 + 10):  # prefetched 13 queries + 10 from build_frontend_url for the country
+            self._test_list(self.unicef_user, action_points)
+
+    def test_create(self):
+        response = self._test_create(
+            self.fm_user,
+            data={
+                'description': 'do something',
+                'due_date': date.today(),
+                'assigned_to': self.unicef_user.id,
+                'partner': PartnerFactory().id,
+                'intervention': InterventionFactory().id,
+                'cp_output': ResultFactory(result_type__name=ResultType.OUTPUT).id,
+                'category': ActionPointCategoryFactory(module='fm').id,
+                'section': SectionFactory().id,
+                'office': OfficeFactory().id,
+            }
+        )
+        self.assertEqual(len(response.data['history']), 1)
+
+    def test_create_unicef_user(self):
+        self._test_create(self.unicef_user, data={}, expected_status=status.HTTP_403_FORBIDDEN)
+
+    def test_create_wrong_activity_status(self):
+        self.activity = MonitoringActivityFactory(status='draft')
+        self._test_create(self.fm_user, data={}, expected_status=status.HTTP_403_FORBIDDEN)
