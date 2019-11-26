@@ -547,14 +547,8 @@ class TestSpotCheckCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEn
         for data in response.data["results"]:
             if data["id"] == spot_check.pk:
                 found = True
-                self.assertEqual(
-                    data["sections"],
-                    [{"id": section.pk, "name": section.name}],
-                )
-                self.assertEqual(
-                    [o["id"] for o in data["offices"]],
-                    [office.pk],
-                )
+                self.assertEqual(data["sections"], [section.pk])
+                self.assertEqual(data["offices"], [office.pk])
         self.assertTrue(found)
 
     def test_sections(self):
@@ -566,16 +560,13 @@ class TestSpotCheckCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEn
 
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(
-            response.data['sections'],
-            [
-                {"id": section_1.pk, "name": section_1.name},
-                {"id": section_2.pk, "name": section_2.name},
-            ],
+            sorted(response.data['sections']),
+            sorted([section_1.pk, section_2.pk]),
         )
         spot_check = SpotCheck.objects.get(pk=response.data["id"])
         self.assertEqual(
-            list(spot_check.sections.all()),
-            [section_1, section_2],
+            sorted([s.pk for s in spot_check.sections.all()]),
+            sorted([section_1.pk, section_2.pk]),
         )
 
     def test_offices(self):
@@ -587,7 +578,7 @@ class TestSpotCheckCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEn
 
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
         self.assertEquals(
-            sorted([o["id"] for o in response.data['offices']]),
+            sorted(response.data['offices']),
             sorted([office_1.pk, office_2.pk]),
         )
         spot_check = SpotCheck.objects.get(pk=response.data["id"])

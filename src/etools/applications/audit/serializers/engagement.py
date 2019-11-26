@@ -273,11 +273,11 @@ class EngagementSerializer(
     report_attachments = AttachmentSingleFileField(required=False)
     final_report = AttachmentSingleFileField(required=False)
     sections = SeparatedReadWriteField(
-        read_field=SectionSerializer(many=True, required=False),
+        read_field=serializers.SerializerMethodField(),
         label=_("Sections"),
     )
     offices = SeparatedReadWriteField(
-        read_field=OfficeSerializer(many=True, required=False),
+        read_field=serializers.SerializerMethodField(),
         label=_("Offices"),
     )
 
@@ -308,6 +308,12 @@ class EngagementSerializer(
             ]
         }
         extra_kwargs['engagement_type'] = {'label': _('Engagement Type')}
+
+    def get_sections(self, obj):
+        return [s.pk for s in obj.all()]
+
+    def get_offices(self, obj):
+        return [o.pk for o in obj.all()]
 
     def validate(self, data):
         validated_data = super().validate(data)
