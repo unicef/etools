@@ -29,6 +29,7 @@ from etools.applications.reports.tests.factories import (
     IndicatorBlueprintFactory,
     IndicatorFactory,
     LowerResultFactory,
+    OfficeFactory,
     ResultFactory,
     ResultTypeFactory,
     SpecialReportingRequirementFactory,
@@ -1123,3 +1124,30 @@ class TestResultFrameworkView(BaseTenantTestCase):
                 self.intervention.reference_number
             )
         )
+
+
+class TestOfficeViews(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.url = '/api/offices/'
+
+    def test_api_office_list_values(self):
+        o1 = OfficeFactory()
+        o2 = OfficeFactory()
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            user=self.unicef_staff,
+            data={"values": "{},{}".format(o1.id, o2.id)}
+        )
+        # Returns empty set - figure out public schema testing
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_api_offices_detail(self):
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)

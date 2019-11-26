@@ -1,4 +1,3 @@
-
 import datetime
 
 from django.utils import timezone
@@ -134,3 +133,18 @@ class SpecialReportingRequirementFactory(factory.django.DjangoModelFactory):
 
     due_date = fuzzy.FuzzyDate(datetime.date(2001, 1, 1))
     description = fuzzy.FuzzyText(length=50)
+
+
+class OfficeFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.Office
+
+    name = fuzzy.FuzzyText(length=50)
+
+
+class UserTenantProfileFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.UserTenantProfile
+        django_get_or_create = ('profile', )
+
+    office = factory.SubFactory(OfficeFactory)
