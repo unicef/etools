@@ -78,9 +78,8 @@ class Command(BaseCommand):
         'audit.engagement.joint_audit',
         'audit.engagement.shared_ip_with',
         'audit.engagement.related_agreement',
-
-        'audit.spotcheck.sections',
-        'audit.spotcheck.offices',
+        'audit.engagement.sections',
+        'audit.engagement.offices',
     ]
 
     engagement_status_editable_date_fields = [
@@ -170,8 +169,6 @@ class Command(BaseCommand):
         'audit.spotcheck.total_amount_tested',
         'audit.spotcheck.exchange_rate',
         'audit.spotcheck.currency_of_report',
-        'audit.spotcheck.sections',
-        'audit.spotcheck.offices',
     ]
 
     special_audit_report_block = [
