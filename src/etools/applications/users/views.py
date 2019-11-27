@@ -10,25 +10,23 @@ from django.views.generic.detail import DetailView
 from rest_framework import mixins, status, viewsets
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import ListAPIView, RetrieveAPIView, RetrieveUpdateAPIView
-from rest_framework.permissions import IsAdminUser, IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from etools.applications.audit.models import Auditor
 from etools.applications.tpm.models import ThirdPartyMonitor
-from etools.applications.users.models import Country, Office, UserProfile
+from etools.applications.users.models import Country, UserProfile
 from etools.applications.users.serializers import (
     CountrySerializer,
     GroupSerializer,
     MinimalUserSerializer,
-    OfficeSerializer,
     ProfileRetrieveUpdateSerializer,
     SimpleProfileSerializer,
     SimpleUserSerializer,
     UserCreationSerializer,
 )
 from etools.libraries.azure_graph_api.tasks import retrieve_user_info
-from etools.libraries.djangolib.views import ExternalModuleFilterMixin
 
 logger = logging.getLogger(__name__)
 
@@ -279,32 +277,6 @@ class UserViewSet(mixins.RetrieveModelMixin,
 
         serializer = get_serializer(queryset, many=True, context=self.get_serializer_context())
         return Response(serializer.data)
-
-
-class OfficeViewSet(ExternalModuleFilterMixin,
-                    mixins.RetrieveModelMixin,
-                    mixins.ListModelMixin,
-                    mixins.CreateModelMixin,
-                    viewsets.GenericViewSet):
-    """
-    Returns a list of all Offices
-    """
-    serializer_class = OfficeSerializer
-    permission_classes = (IsAuthenticatedOrReadOnly,)
-    queryset = Office.objects
-    module2filters = {'tpm': ['tpmactivity__tpm_visit__tpm_partner__staff_members__user', ]}
-
-    def get_queryset(self):
-        qs = super().get_queryset()
-        if "values" in self.request.query_params.keys():
-            # Used for ghost data - filter in all(), and return straight away.
-            try:
-                ids = [int(x) for x in self.request.query_params.get("values").split(",")]
-            except ValueError:
-                raise ValidationError("ID values must be integers")
-            else:
-                qs = qs.filter(id__in=ids)
-        return qs
 
 
 class CountriesViewSet(ListAPIView):

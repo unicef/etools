@@ -84,7 +84,7 @@ LOGGING['filters'] = {
 }
 LOGGING['formatters'] = {
     'tenant_context': {
-        'format': '[%(schema_name)s:%(domain_url)s] '
+        'format': '[%(schema_name)s:%(name)s] '
         '%(levelname)-7s %(asctime)s %(message)s',
     },
 }

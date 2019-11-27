@@ -51,10 +51,6 @@ class UserViewSet(v1.UserViewSet):
     """Stub for UserViewSet"""
 
 
-class OfficeViewSet(v1.OfficeViewSet):
-    """Stub for OfficeViewSet"""
-
-
 class ModuleRedirectView(v1.ModuleRedirectView):
     """Stub for ModuleRedirectView"""
 

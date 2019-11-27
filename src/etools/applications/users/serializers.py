@@ -3,7 +3,7 @@ from django.utils.encoding import force_text
 
 from rest_framework import serializers
 
-from etools.applications.users.models import Country, Group, Office, UserProfile
+from etools.applications.users.models import Country, Group, UserProfile
 
 
 class SimpleCountrySerializer(serializers.ModelSerializer):
@@ -14,7 +14,10 @@ class SimpleCountrySerializer(serializers.ModelSerializer):
 
 class UserProfileSerializer(serializers.ModelSerializer):
 
-    office = serializers.CharField(source='office.name', read_only=True)
+    office = serializers.CharField(
+        source='tenant_profile.office.name',
+        read_only=True,
+    )
     country_name = serializers.CharField(source='country.name', read_only=True)
     countries_available = SimpleCountrySerializer(many=True, read_only=True)
 
@@ -57,6 +60,7 @@ class ProfileRetrieveUpdateSerializer(serializers.ModelSerializer):
     groups = GroupSerializer(source="user.groups", read_only=True, many=True)
     supervisees = serializers.PrimaryKeyRelatedField(source='user.supervisee', many=True, read_only=True)
     name = serializers.CharField(source='user.get_full_name', read_only=True)
+    office = serializers.CharField(source="tenant_profile.office")
 
     class Meta:
         model = UserProfile
@@ -82,12 +86,6 @@ class UserProfileCreationSerializer(serializers.ModelSerializer):
             'id',
             'user',
         )
-
-
-class OfficeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Office
-        fields = "__all__"
 
 
 class GroupSerializer(serializers.ModelSerializer):
@@ -117,6 +115,8 @@ class GroupSerializer(serializers.ModelSerializer):
 
 
 class SimpleNestedProfileSerializer(serializers.ModelSerializer):
+    office = serializers.CharField(source="tenant_profile.office")
+
     class Meta:
         model = UserProfile
         fields = ('country', 'office')
@@ -176,7 +176,7 @@ class UserCreationSerializer(serializers.ModelSerializer):
         try:
             user = get_user_model().objects.create(**validated_data)
             user.profile.country = user_profile['country']
-            user.profile.office = user_profile['office']
+            user.profile.tenant_profile.office = user_profile['office']
             user.profile.partner_staff_member = 0
             user.profile.job_title = user_profile['job_title']
             user.profile.phone_number = user_profile['phone_number']

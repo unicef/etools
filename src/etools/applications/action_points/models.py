@@ -54,7 +54,7 @@ class ActionPoint(TimeStampedModel):
     high_priority = models.BooleanField(default=False, verbose_name=_('High Priority'))
     section = models.ForeignKey('reports.Section', verbose_name=_('Section'), blank=True, null=True,
                                 on_delete=models.CASCADE)
-    office = models.ForeignKey('users.Office', verbose_name=_('Office'), blank=True, null=True,
+    office = models.ForeignKey('reports.Office', verbose_name=_('Office'), blank=True, null=True,
                                on_delete=models.CASCADE)
     location = models.ForeignKey('locations.Location', verbose_name=_('Location'), blank=True, null=True,
                                  on_delete=models.CASCADE)

@@ -27,7 +27,7 @@ def set_reference_number(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('audit', '0019_engagement_users_notified'),
+        ('audit', '0020_auto_20191125_2045'),
     ]
 
     operations = [

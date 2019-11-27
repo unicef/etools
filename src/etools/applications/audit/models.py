@@ -33,6 +33,7 @@ from etools.applications.audit.transitions.serializers import EngagementCancelSe
 from etools.applications.audit.utils import generate_final_report
 from etools.applications.core.urlresolvers import build_frontend_url
 from etools.applications.partners.models import PartnerOrganization, PartnerStaffMember
+from etools.applications.reports.models import Office, Section
 from etools.libraries.djangolib.models import GroupWrapper, InheritedModelMixin
 from etools.libraries.djangolib.utils import get_environment
 from etools.libraries.fsm.views import has_action_permission
@@ -176,6 +177,18 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
         verbose_name=_("Reference Number"),
         max_length=100,
         null=True,
+    )
+    sections = models.ManyToManyField(
+        Section,
+        verbose_name=_("Sections"),
+        blank=True,
+        related_name='engagements',
+    )
+    offices = models.ManyToManyField(
+        Office,
+        verbose_name=_('Offices'),
+        blank=True,
+        related_name='engagements',
     )
 
     objects = InheritanceManager()
@@ -403,9 +416,7 @@ class SpotCheck(Engagement):
         verbose_name=_('Total Amount of Ineligible Expenditure'), default=0, blank=True,
         decimal_places=2, max_digits=20,
     )
-
     internal_controls = models.TextField(verbose_name=_('Internal Controls'), blank=True)
-
     final_report = CodedGenericRelation(
         Attachment,
         verbose_name=_('Spot Check Final Report'),

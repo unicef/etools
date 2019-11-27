@@ -133,7 +133,7 @@ class Travel(models.Model):
         on_delete=models.CASCADE,
     )
     office = models.ForeignKey(
-        'users.Office', null=True, blank=True, related_name='+', verbose_name=_('Office'),
+        'reports.Office', null=True, blank=True, related_name='+', verbose_name=_('Office'),
         on_delete=models.CASCADE,
     )
     section = models.ForeignKey(

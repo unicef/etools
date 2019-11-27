@@ -1,6 +1,5 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
-from django.db import connection
 from django.db.models import signals
 
 import factory
@@ -8,6 +7,7 @@ from factory.fuzzy import FuzzyText
 
 from etools.applications.core.tests.cases import SCHEMA_NAME
 from etools.applications.publics.tests.factories import PublicsCurrencyFactory
+from etools.applications.reports.tests.factories import OfficeFactory, UserTenantProfileFactory
 from etools.applications.users import models
 
 
@@ -17,22 +17,6 @@ class GroupFactory(factory.django.DjangoModelFactory):
         django_get_or_create = ('name',)
 
     name = "Partnership Manager"
-
-
-class OfficeFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = models.Office
-
-    name = 'An Office'
-
-    @classmethod
-    def _create(cls, model_class, *args, **kwargs):
-        obj = super()._create(model_class, *args, **kwargs)
-
-        if hasattr(connection.tenant, 'id') and connection.tenant.schema_name != 'public':
-            connection.tenant.offices.add(obj)
-
-        return obj
 
 
 class CountryFactory(factory.django.DjangoModelFactory):
@@ -52,7 +36,6 @@ class ProfileFactory(factory.django.DjangoModelFactory):
         django_get_or_create = ('user',)
 
     country = factory.SubFactory(CountryFactory)
-    office = factory.SubFactory(OfficeFactory)
     job_title = 'Chief Tester'
     phone_number = '0123456789'
     partner_staff_member = None
@@ -65,6 +48,21 @@ class ProfileFactory(factory.django.DjangoModelFactory):
         if extracted is not None:
             for country in extracted:
                 self.countries_available.add(country)
+
+    @factory.post_generation
+    def tenant_profile(self, create, extracted, **kwargs):
+        if not create:
+            return
+
+        office = extracted or factory.SubFactory(OfficeFactory)
+        return UserTenantProfileFactory(profile=self, office=office)
+
+
+@factory.django.mute_signals(signals.pre_save, signals.post_save)
+class ProfileLightFactory(ProfileFactory):
+    @factory.post_generation
+    def tenant_profile(self, create, extracted, **kwargs):
+        return
 
 
 @factory.django.mute_signals(signals.pre_save, signals.post_save)

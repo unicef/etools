@@ -11,9 +11,9 @@ from etools.applications.publics.tests.factories import (
     PublicsCurrencyFactory,
     PublicsDSARegionFactory,
 )
-from etools.applications.reports.tests.factories import ResultFactory, SectionFactory
+from etools.applications.reports.tests.factories import OfficeFactory, ResultFactory, SectionFactory
 from etools.applications.t2f import models
-from etools.applications.users.tests.factories import OfficeFactory, UserFactory
+from etools.applications.users.tests.factories import UserFactory
 
 _FUZZY_START_DATE = datetime.date(datetime.date.today().year, 1, 1)
 _FUZZY_END_DATE = datetime.date(datetime.date.today().year, 12, 31)

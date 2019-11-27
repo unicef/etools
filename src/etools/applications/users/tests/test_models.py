@@ -1,10 +1,10 @@
-
 from django.contrib.auth import get_user_model
 from django.test import SimpleTestCase
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.reports.tests.factories import OfficeFactory
 from etools.applications.users import models
-from etools.applications.users.tests.factories import CountryFactory, OfficeFactory, ProfileFactory, UserFactory
+from etools.applications.users.tests.factories import CountryFactory, ProfileFactory, UserFactory
 
 
 class TestWorkspaceCounter(BaseTenantTestCase):

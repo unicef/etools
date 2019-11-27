@@ -16,7 +16,7 @@ from etools.applications.partners.serializers.interventions_v2 import BaseInterv
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
 from etools.applications.reports.serializers.v1 import ResultSerializer, SectionSerializer
-from etools.applications.users.serializers import OfficeSerializer
+from etools.applications.reports.serializers.v2 import OfficeSerializer
 from etools.applications.users.serializers_v3 import MinimalUserSerializer
 from etools.libraries.djangolib.utils import get_current_site
 
