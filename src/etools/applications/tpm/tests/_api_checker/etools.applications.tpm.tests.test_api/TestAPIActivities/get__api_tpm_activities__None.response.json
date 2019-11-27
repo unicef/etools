@@ -50,8 +50,8 @@
                     "p_code": "PCODE1",
                     "gateway": {
                         "id": 6,
-                        "created": "2019-10-17T15:27:56.984034Z",
-                        "modified": "2019-10-17T15:27:56.984034Z",
+                        "created": "2019-10-17T15:27:56.984000Z",
+                        "modified": "2019-10-17T15:27:56.984000Z",
                         "name": "GatewayType 1",
                         "admin_level": 1
                     }

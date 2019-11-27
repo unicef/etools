@@ -394,7 +394,11 @@ class TPMActivity(Activity):
     unicef_focal_points = models.ManyToManyField(settings.AUTH_USER_MODEL, verbose_name=_('UNICEF Focal Points'),
                                                  related_name='+', blank=True)
 
-    offices = models.ManyToManyField('users.Office', blank=True, verbose_name=_('Office(s) of UNICEF Focal Point(s)'))
+    offices = models.ManyToManyField(
+        'reports.Office',
+        blank=True,
+        verbose_name=_('Office(s) of UNICEF Focal Point(s)'),
+    )
 
     section = models.ForeignKey(
         'reports.Section', related_name='tpm_activities', verbose_name=_('Section'),

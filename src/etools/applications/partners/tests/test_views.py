@@ -59,13 +59,14 @@ from etools.applications.partners.views import partner_organization_v2, v2
 from etools.applications.reports.models import ResultType
 from etools.applications.reports.tests.factories import (
     CountryProgrammeFactory,
+    OfficeFactory,
     ResultFactory,
     ResultTypeFactory,
     SectionFactory,
 )
 from etools.applications.t2f.models import Travel, TravelType
 from etools.applications.t2f.tests.factories import TravelActivityFactory, TravelFactory
-from etools.applications.users.tests.factories import GroupFactory, OfficeFactory, UserFactory
+from etools.applications.users.tests.factories import GroupFactory, UserFactory
 
 
 class URLsTestCase(URLAssertionMixin, SimpleTestCase):
@@ -686,19 +687,18 @@ class TestAgreementAPIView(BaseTenantTestCase):
         cls.agreement.authorized_officers.add(cls.partner_staff)
         cls.agreement.save()
 
-        date = datetime.date.today()
         cls.amendment1 = AgreementAmendment.objects.create(
             number="001",
             agreement=cls.agreement,
             signed_amendment="application/pdf",
-            signed_date=date - datetime.timedelta(days=1),
+            signed_date=datetime.date.today(),
             types=[AgreementAmendment.IP_NAME]
         )
         cls.amendment2 = AgreementAmendment.objects.create(
             number="002",
             agreement=cls.agreement,
             signed_amendment="application/pdf",
-            signed_date=date - datetime.timedelta(days=2),
+            signed_date=datetime.date.today(),
             types=[AgreementAmendment.BANKING_INFO]
         )
         cls.agreement2 = AgreementFactory(
