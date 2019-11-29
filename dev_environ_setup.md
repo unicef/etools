@@ -70,7 +70,7 @@ $ export WORKON_HOME=~/Envs
 $ export VIRTUALENVWRAPPER_PYTHON=/usr/local/bin/python2.7
 $ mkdir -p $WORKON_HOME
 $ source /usr/local/bin/virtualenvwrapper.sh
-$ mkvirtualenv -p `which python3.6` env1
+$ mkvirtualenv -p `which python3.8` env1
 $ pip install -r EquiTrack/requirements/local.txt
 ```
 

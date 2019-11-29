@@ -85,4 +85,4 @@ openpyxl = "==3.0.1"  # need to be freeze
 
 
 [requires]
-python_version = "3.7"
+python_version = "3.8"

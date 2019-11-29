@@ -22,7 +22,7 @@ your machine.
 
 ```bash
 $ sudo apt update
-$ sudo apt install python3.6-dev python3-pip virtualenv libgdal-dev \
+$ sudo apt install python3.8-dev python3-pip virtualenv libgdal-dev \
                    postgresql postgresql-9.5-postgis-2.2 libpq-dev \
                    libpgpool0 pgpool2 postgresql-9.5-pgpool2
 ```
@@ -69,7 +69,7 @@ Installing GDAL requires us to point to the proper location of the GDAL header f
 ```bash
 $ export CPLUS_INCLUDE_PATH=/usr/include/gdal
 $ export C_INCLUDE_PATH=/usr/include/gdal
-$ mkvirtualenv -p `which python3.6` etools
+$ mkvirtualenv -p `which python3.8` etools
 (etools)$ pip install -r requirements/local.txt
 ```
 

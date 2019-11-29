@@ -1,4 +1,4 @@
-FROM python:3.7.5-alpine
+FROM python:3.8.0-alpine
 
 RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/main" >> /etc/apk/repositories
 
