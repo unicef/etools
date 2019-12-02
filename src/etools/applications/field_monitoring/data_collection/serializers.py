@@ -56,8 +56,15 @@ class ActivityQuestionFindingSerializer(serializers.ModelSerializer):
         fields = ('id', 'value', 'author')
 
 
+class CompletedActivityQuestionFindingSerializer(ActivityQuestionFindingSerializer):
+    method = serializers.ReadOnlyField(source='started_checklist.method_id')
+
+    class Meta(ActivityQuestionFindingSerializer.Meta):
+        fields = ActivityQuestionFindingSerializer.Meta.fields + ('method',)
+
+
 class CompletedActivityQuestionSerializer(ActivityQuestionSerializer):
-    findings = ActivityQuestionFindingSerializer(many=True, read_only=True, source='completed_findings')
+    findings = CompletedActivityQuestionFindingSerializer(many=True, read_only=True, source='completed_findings')
 
     class Meta(ActivityQuestionSerializer.Meta):
         fields = ActivityQuestionSerializer.Meta.fields + ('findings',)
@@ -115,30 +122,53 @@ class FindingSerializer(BulkSerializerMixin, serializers.ModelSerializer):
         fields = ('id', 'activity_question', 'value',)
 
 
+class CompletedChecklistOverallFindingSerializer(serializers.ModelSerializer):
+    author = MinimalUserSerializer(read_only=True, source='started_checklist.author')
+    method = serializers.ReadOnlyField(source='started_checklist.method_id')
+    information_source = serializers.ReadOnlyField(source='started_checklist.information_source')
+
+    class Meta:
+        model = ChecklistOverallFinding
+        fields = ('author', 'method', 'information_source', 'narrative_finding')
+
+
 class ActivityOverallFindingSerializer(serializers.ModelSerializer):
     attachments = serializers.SerializerMethodField()
+    findings = serializers.SerializerMethodField()
 
     class Meta:
         model = ActivityOverallFinding
-        fields = ('id', 'partner', 'cp_output', 'intervention', 'narrative_finding', 'on_track', 'attachments')
+        fields = (
+            'id', 'partner', 'cp_output', 'intervention',
+            'narrative_finding', 'on_track',
+            'attachments', 'findings'
+        )
         read_only_fields = ('partner', 'cp_output', 'intervention')
+
+    def _get_checklist_overall_findings(self, obj):
+        return [
+            finding
+            for finding in itertools.chain(*(
+                c.overall_findings.all()
+                for c in obj.monitoring_activity.checklists.all()
+            ))
+            if (
+                finding.partner_id == obj.partner_id and
+                finding.cp_output_id == obj.cp_output_id and
+                finding.intervention_id == obj.intervention_id
+            )
+        ]
 
     def get_attachments(self, obj):
         # attachments are contained in checklists overall findings, so need to extract them through the relations
         attachments = itertools.chain(*(
-            finding.attachments.all() for finding in
-            filter(
-                lambda finding:
-                    finding.partner_id == obj.partner_id and
-                    finding.cp_output_id == obj.cp_output_id and
-                    finding.intervention_id == obj.intervention_id,
-                itertools.chain(*(
-                    c.overall_findings.all()
-                    for c in obj.monitoring_activity.checklists.all()
-                ))
-            )
+            finding.attachments.all() for finding in self._get_checklist_overall_findings(obj)
         ))
         return BaseAttachmentSerializer(instance=attachments, many=True).data
+
+    def get_findings(self, obj):
+        findings = self._get_checklist_overall_findings(obj)
+        return CompletedChecklistOverallFindingSerializer(instance=findings, many=True).data
 
 
 class ActivityQuestionOverallFindingSerializer(BulkSerializerMixin, serializers.ModelSerializer):

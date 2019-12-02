@@ -158,6 +158,7 @@ class ActivityOverallFindingsViewSet(
     queryset = ActivityOverallFinding.objects.prefetch_related(
         'partner', 'cp_output', 'intervention',
         'monitoring_activity__checklists__overall_findings__attachments',
+        'monitoring_activity__checklists__author',
     )
     serializer_class = ActivityOverallFindingSerializer
 

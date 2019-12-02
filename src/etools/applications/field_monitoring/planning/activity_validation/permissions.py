@@ -9,7 +9,6 @@ class ActivityPermissions(PMPPermissions):
         'activity_question_set_review',
         'started_checklist_set',
         'activity_overall_finding',
-        'activity_question_overall_finding',
         'additional_info',
         'report_attachments',
         'action_points',

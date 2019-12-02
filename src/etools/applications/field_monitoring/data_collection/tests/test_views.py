@@ -223,7 +223,11 @@ class ChecklistDataCollectionTestMixin(DataCollectionTestMixin):
         super().setUpTestData()
 
         cls.activity_question, cls.second_question = cls.activity.questions.all()
-        cls.started_checklist = StartedChecklistFactory(monitoring_activity=cls.activity)
+        cls.activity_question.question.methods.add(MethodFactory())
+        cls.started_checklist = StartedChecklistFactory(
+            monitoring_activity=cls.activity,
+            method=cls.activity_question.question.methods.first()
+        )
 
 
 class TestChecklistsView(DataCollectionTestMixin, APIViewSetTestCase):
@@ -466,10 +470,12 @@ class TestActivityOverallFindingsView(ChecklistDataCollectionTestMixin, APIViewS
 
         AttachmentFactory(content_object=checklist.overall_findings.first())
 
-        with self.assertNumQueries(9):
+        with self.assertNumQueries(10):
             response = self._test_list(self.unicef_user, [self.overall_finding])
         self.assertIn('attachments', response.data['results'][0])
         self.assertNotEqual(response.data['results'][0]['attachments'], [])
+        self.assertIn('findings', response.data['results'][0])
+        self.assertNotEqual(response.data['results'][0]['findings'], [])
 
     def test_update_unicef(self):
         self._test_update(self.unicef_user, self.overall_finding, {}, expected_status=status.HTTP_403_FORBIDDEN)
@@ -498,8 +504,8 @@ class TestActivityFindingsView(ChecklistDataCollectionTestMixin, APIViewSetTestC
         cls.activity.save()
 
     def setUp(self):
-        self.finding = self.activity.questions.first().overall_finding
-        FindingFactory(
+        self.overall_finding = self.activity.questions.first().overall_finding
+        self.checklist_finding = FindingFactory(
             started_checklist__monitoring_activity=self.activity,
             activity_question=self.activity.questions.first()
         )
@@ -513,16 +519,22 @@ class TestActivityFindingsView(ChecklistDataCollectionTestMixin, APIViewSetTestC
         )
 
         with self.assertNumQueries(10):
-            self._test_list(self.unicef_user, activity_findings)
+            response = self._test_list(self.unicef_user, activity_findings)
+
+        self.assertNotEqual(response.data['results'][0]['activity_question']['findings'], [])
+        self.assertEqual(
+            response.data['results'][0]['activity_question']['findings'][0]['method'],
+            self.checklist_finding.started_checklist.method.id
+        )
 
     def test_update_unicef(self):
-        self._test_update(self.unicef_user, self.finding, {}, expected_status=status.HTTP_403_FORBIDDEN)
+        self._test_update(self.unicef_user, self.overall_finding, {}, expected_status=status.HTTP_403_FORBIDDEN)
 
     def test_update_team_member(self):
-        self._test_update(self.team_member, self.finding, {}, expected_status=status.HTTP_403_FORBIDDEN)
+        self._test_update(self.team_member, self.overall_finding, {}, expected_status=status.HTTP_403_FORBIDDEN)
 
     def test_update_person_responsible(self):
-        self._test_update(self.person_responsible, self.finding, {
+        self._test_update(self.person_responsible, self.overall_finding, {
             'value': 'text value'
         })
 
@@ -530,12 +542,12 @@ class TestActivityFindingsView(ChecklistDataCollectionTestMixin, APIViewSetTestC
         response = self.make_list_request(
             self.person_responsible,
             method='patch',
-            data=[{'id': self.finding.pk, 'value': 'text value'}]
+            data=[{'id': self.overall_finding.pk, 'value': 'text value'}]
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_update_fm_user(self):
-        self._test_update(self.fm_user, self.finding, {}, expected_status=status.HTTP_403_FORBIDDEN)
+        self._test_update(self.fm_user, self.overall_finding, {}, expected_status=status.HTTP_403_FORBIDDEN)
 
 
 class TestActivityChecklistOverallAttachments(ChecklistDataCollectionTestMixin, APIViewSetTestCase):
