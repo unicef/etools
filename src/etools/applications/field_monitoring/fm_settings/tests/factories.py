@@ -19,6 +19,7 @@ from etools.applications.users.tests.factories import UserFactory
 
 class MethodFactory(factory.DjangoModelFactory):
     name = factory.Sequence(lambda n: 'Method {}'.format(n))
+    short_name = factory.Sequence(lambda n: 'M{}'.format(n))
 
     class Meta:
         model = Method

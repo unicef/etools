@@ -32,7 +32,7 @@ from etools.applications.users.serializers_v3 import MinimalUserSerializer
 class MethodSerializer(serializers.ModelSerializer):
     class Meta:
         model = Method
-        fields = ('id', 'name', 'use_information_source')
+        fields = ('id', 'name', 'short_name', 'use_information_source')
 
 
 class ResultSerializer(OutputListSerializer):

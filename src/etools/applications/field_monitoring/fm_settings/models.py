@@ -18,6 +18,7 @@ from etools.applications.reports.models import Result, Section
 
 class Method(models.Model):
     name = models.CharField(verbose_name=_('Name'), max_length=100)
+    short_name = models.CharField(verbose_name=_('Short Name'), max_length=10)
     use_information_source = models.BooleanField(verbose_name=_('Ask for information source in checklist?'),
                                                  default=False)
 

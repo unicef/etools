@@ -4,6 +4,7 @@
         "pk": 1,
         "fields": {
             "name": "Key Informant Interview",
+            "short_name": "KII",
             "use_information_source": true
         }
     },
@@ -12,6 +13,7 @@
         "pk": 2,
         "fields": {
             "name": "Focus Group Discussion",
+            "short_name": "FGD",
             "use_information_source": true
         }
     },
@@ -20,6 +22,7 @@
         "pk": 3,
         "fields": {
             "name": "Observation",
+            "short_name": "Obs.",
             "use_information_source": false
         }
     },
@@ -28,6 +31,7 @@
         "pk": 4,
         "fields": {
             "name": "Measurement",
+            "short_name": "Meas.",
             "use_information_source": false
         }
     },
@@ -35,7 +39,8 @@
         "model": "field_monitoring_settings.method",
         "pk": 5,
         "fields": {
-            "name": "Participatory appraisal",
+            "name": "Participatory Appraisal",
+            "short_name": "PA",
             "use_information_source": true
         }
     }
