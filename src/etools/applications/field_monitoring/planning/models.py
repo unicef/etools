@@ -159,7 +159,7 @@ class MonitoringActivity(
                                            verbose_name=_('Person Responsible'), related_name='+',
                                            on_delete=models.SET_NULL)
 
-    field_office = models.ForeignKey(Office, blank=True, null=True, verbose_name=_('Field Office'),
+    field_office = models.ForeignKey('reports.Office', blank=True, null=True, verbose_name=_('Field Office'),
                                      on_delete=models.CASCADE)
 
     sections = models.ManyToManyField(Section, blank=True, verbose_name=_('Sections'))

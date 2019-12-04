@@ -34,7 +34,7 @@ class TestActivityReportAttachmentsView(FMBaseTestCaseMixin, APIViewSetTestCase)
         cls.user = UserFactory(first_name='Team Member', unicef_user=True,
                                profile__countries_available=[connection.tenant])
 
-        cls.activity = MonitoringActivityFactory()
+        cls.activity = MonitoringActivityFactory(status='data_collection')
         cls.activity.team_members.add(cls.user)
 
     def get_list_args(self):
