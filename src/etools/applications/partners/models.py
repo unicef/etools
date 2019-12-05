@@ -27,10 +27,9 @@ from etools.applications.partners.validation.agreements import (
     agreement_transition_to_signed_valid,
     agreements_illegal_transition,
 )
-from etools.applications.reports.models import CountryProgramme, Indicator, Result, Section
+from etools.applications.reports.models import CountryProgramme, Indicator, Office, Result, Section
 from etools.applications.t2f.models import Travel, TravelActivity, TravelType
 from etools.applications.tpm.models import TPMActivity, TPMVisit
-from etools.applications.users.models import Office
 from etools.libraries.djangolib.models import MaxDistinct, StringConcat
 from etools.libraries.pythonlib.datetime import get_current_year, get_quarter
 from etools.libraries.pythonlib.encoders import CustomJSONEncoder
@@ -827,7 +826,7 @@ class PartnerStaffMember(TimeStampedModel):
     )
     title = models.CharField(
         verbose_name=_("Title"),
-        max_length=64,
+        max_length=100,
         null=True,
         blank=True,
     )
@@ -1533,7 +1532,7 @@ class Intervention(TimeStampedModel):
     Relates to :model:`reports.CountryProgramme`
     Relates to :model:`AUTH_USER_MODEL`
     Relates to :model:`partners.PartnerStaffMember`
-    Relates to :model:`users.Office`
+    Relates to :model:`reports.Office`
     """
 
     DRAFT = 'draft'

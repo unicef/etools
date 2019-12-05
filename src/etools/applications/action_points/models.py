@@ -54,7 +54,7 @@ class ActionPoint(TimeStampedModel):
     high_priority = models.BooleanField(default=False, verbose_name=_('High Priority'))
     section = models.ForeignKey('reports.Section', verbose_name=_('Section'), blank=True, null=True,
                                 on_delete=models.CASCADE)
-    office = models.ForeignKey('users.Office', verbose_name=_('Office'), blank=True, null=True,
+    office = models.ForeignKey('reports.Office', verbose_name=_('Office'), blank=True, null=True,
                                on_delete=models.CASCADE)
     location = models.ForeignKey('locations.Location', verbose_name=_('Location'), blank=True, null=True,
                                  on_delete=models.CASCADE)
@@ -77,8 +77,12 @@ class ActionPoint(TimeStampedModel):
     comments = GenericRelation('django_comments.Comment', object_id_field='object_pk')
     history = GenericRelation('unicef_snapshot.Activity', object_id_field='target_object_id',
                               content_type_field='target_content_type')
-
-    tracker = FieldTracker(fields=['assigned_to'])
+    reference_number = models.CharField(
+        verbose_name=_("Reference Number"),
+        max_length=100,
+        null=True,
+    )
+    tracker = FieldTracker(fields=['assigned_to', 'reference_number'])
 
     class Meta:
         ordering = ('id', )
@@ -130,13 +134,20 @@ class ActionPoint(TimeStampedModel):
             return self.MODULE_CHOICES.psea
         return self.MODULE_CHOICES.apd
 
-    @property
-    def reference_number(self):
+    def get_reference_number(self):
+        if self.reference_number:
+            return self.reference_number
         return '{}/{}/{}/APD'.format(
             connection.tenant.country_short_code or '',
             self.created.year,
             self.id,
         )
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        if not self.reference_number:
+            self.reference_number = self.get_reference_number()
+            self.save()
 
     def get_object_url(self, **kwargs):
         return build_frontend_url('apd', 'action-points', 'detail', self.id, **kwargs)
@@ -178,7 +189,7 @@ class ActionPoint(TimeStampedModel):
         return {
             'person_responsible': self.assigned_to.get_full_name(),
             'assigned_by': self.assigned_by.get_full_name(),
-            'reference_number': self.reference_number,
+            'reference_number': self.get_reference_number(),
             'partner': self.partner.name if self.partner else '',
             'description': self.description,
             'due_date': self.due_date.strftime('%d %b %Y') if self.due_date else '',

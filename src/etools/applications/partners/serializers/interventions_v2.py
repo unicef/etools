@@ -8,6 +8,7 @@ from django.utils.translation import ugettext as _
 
 from rest_framework import serializers
 from rest_framework.serializers import ValidationError
+from rest_framework.validators import UniqueTogetherValidator
 from unicef_attachments.fields import AttachmentSingleFileField
 from unicef_attachments.serializers import AttachmentSerializerMixin
 from unicef_locations.serializers import LocationSerializer
@@ -66,6 +67,13 @@ class InterventionAmendmentCUSerializer(AttachmentSerializerMixin, serializers.M
     class Meta:
         model = InterventionAmendment
         fields = "__all__"
+        validators = [
+            UniqueTogetherValidator(
+                queryset=InterventionAmendment.objects.all(),
+                fields=["intervention", "signed_date"],
+                message=_("There is already an amendment with this signed date."),
+            )
+        ]
 
     def validate(self, data):
         data = super().validate(data)
@@ -878,6 +886,8 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
                     raise serializers.ValidationError(
                         _("Changes not allowed when PD is terminated.")
                     )
+            elif self.intervention.contingency_pd and self.intervention.status == Intervention.SIGNED:
+                pass
             else:
                 if not self.intervention.in_amendment and not self.intervention.termination_doc_attachment.exists():
                     raise serializers.ValidationError(

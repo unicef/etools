@@ -950,9 +950,8 @@ class TestNotifyOfInterventionsEndingSoon(PartnersTestBaseClass):
 class TestCopyAttachments(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.file_type_partner = AttachmentFileTypeFactory(
-            code="partners_partner_assessment"
-        )
+        cls.code = "partners_partner_assessment"
+        cls.file_type_partner = AttachmentFileTypeFactory()
         cls.core_value_assessment = CoreValuesAssessmentFactory(
             assessment="sample.pdf"
         )
@@ -961,7 +960,7 @@ class TestCopyAttachments(BaseTenantTestCase):
         attachment = AttachmentFactory(
             content_object=self.core_value_assessment,
             file_type=self.file_type_partner,
-            code=self.file_type_partner.code,
+            code=self.code,
             file="random.pdf"
         )
         etools.applications.partners.tasks.copy_attachments()

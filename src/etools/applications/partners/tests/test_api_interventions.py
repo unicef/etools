@@ -550,7 +550,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
 
     @skip('add test after permissions file is ready')
     def test_permissions_for_intervention_status_active(self):
-        # intervention is in Draft status
+        # intervention is in Active status
         self.assertEqual(self.active_intervention.status, Intervention.ACTIVE)
 
         # user is UNICEF User
@@ -1630,6 +1630,7 @@ class TestInterventionAmendmentCreateAPIView(BaseTenantTestCase):
             data={
                 "types": [InterventionAmendment.OTHER],
                 "signed_amendment": self.uploaded_file,
+                "signed_date": datetime.date.today(),
             },
             request_format='multipart',
         )
@@ -1678,6 +1679,37 @@ class TestInterventionAmendmentCreateAPIView(BaseTenantTestCase):
 
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEquals(next(iter(response.data.values())), ['Date cannot be in the future!'])
+
+    def test_create_amendment_matching_date(self):
+        date = datetime.date.today() - datetime.timedelta(days=1)
+        InterventionAmendmentFactory(
+            intervention=self.intervention,
+            signed_date=date,
+        )
+        AttachmentFactory(
+            file="test_file.pdf",
+            file_type=None,
+            code="",
+        )
+        attachment_amendment = AttachmentFactory(
+            file="test_file_amendment.pdf",
+            file_type=None,
+            code="",
+        )
+        response = self._make_request(
+            user=self.partnership_manager_user,
+            data={
+                "signed_amendment_attachment": attachment_amendment.pk,
+                'signed_date': date,
+                'types': [InterventionAmendment.DATES, ]
+            },
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(
+            next(iter(response.data.values())),
+            ['There is already an amendment with this signed date.'],
+        )
 
     def test_create_amendment_success(self):
         response = self._make_request(
@@ -2215,6 +2247,45 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
             }
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_post_contingency_pd_signed(self):
+        """Intervention is contingency PD and signed"""
+        intervention = InterventionFactory(
+            start=datetime.date(2001, 1, 1),
+            status=Intervention.SIGNED,
+            contingency_pd=True,
+        )
+        result_link = InterventionResultLinkFactory(
+            intervention=intervention
+        )
+        lower_result = LowerResultFactory(result_link=result_link)
+        AppliedIndicatorFactory(lower_result=lower_result)
+
+        report_type = ReportingRequirement.TYPE_QPR
+        requirement_qs = ReportingRequirement.objects.filter(
+            intervention=intervention,
+            report_type=report_type,
+        )
+        init_count = requirement_qs.count()
+        response = self.forced_auth_req(
+            "post",
+            self._get_url(report_type, intervention=intervention),
+            user=self.unicef_staff,
+            data={
+                "report_type": ReportingRequirement.TYPE_HR,
+                "reporting_requirements": [{
+                    "start_date": datetime.date(2001, 2, 1),
+                    "end_date": datetime.date(2001, 3, 31),
+                    "due_date": datetime.date(2001, 4, 15),
+                }]
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(requirement_qs.count(), init_count + 1)
+        self.assertEqual(
+            len(response.data["reporting_requirements"]),
+            init_count + 1
+        )
 
     def test_patch_invalid(self):
         for report_type, _ in ReportingRequirement.TYPE_CHOICES:

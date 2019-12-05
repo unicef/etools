@@ -18,12 +18,14 @@ RUN apk add postgresql-dev \
     libffi-dev\
     jpeg-dev
 
-RUN apk add --update-cache --repository http://dl-3.alpinelinux.org/alpine/edge/testing/ \
-    gdal \
-    gdal-dev \
-    py-gdal \
+RUN apk add --update-cache --repository http://dl-3.alpinelinux.org/alpine/edge/community/ \
     geos \
     geos-dev \
+    gdal \
+    gdal-dev \
+    py-gdal
+
+RUN apk add --update-cache --repository http://dl-3.alpinelinux.org/alpine/edge/testing/ \
     gcc \
     g++
 

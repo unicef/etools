@@ -1,4 +1,3 @@
-
 from django.apps import apps
 from django.db import connection
 from django.test import TestCase
@@ -23,7 +22,7 @@ class TenantFlagTest(TestCase):
     def setUpTestData(cls):
         cls.tenant_flag = TenantFlagFactory(superusers=False)
         cls.country = CountryFactory()
-        cls.user = UserFactory()
+        cls.user = UserFactory(profile=None)
 
     def setUp(self):
         self.user.refresh_from_db()

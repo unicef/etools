@@ -444,6 +444,7 @@ class SpotCheckViewSet(EngagementManagementMixin, EngagementViewSet):
     queryset = SpotCheck.objects.all()
     serializer_class = SpotCheckSerializer
     csv_export_serializer = SpotCheckDetailCSVSerializer
+    serializer_action_classes = {}
 
     @action(detail=True, methods=['get'], url_path='csv', renderer_classes=[SpotCheckDetailCSVRenderer])
     def export_csv(self, request, *args, **kwargs):

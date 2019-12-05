@@ -84,9 +84,11 @@ LOGGING['filters'] = {
 }
 LOGGING['formatters'] = {
     'tenant_context': {
-        'format': '[%(schema_name)s:%(domain_url)s] '
+        'format': '[%(schema_name)s:%(name)s] '
         '%(levelname)-7s %(asctime)s %(message)s',
     },
 }
 LOGGING['handlers']['console']['filters'] = ['tenant_context']
 LOGGING['handlers']['console']['formatter'] = 'tenant_context'
+
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 10240

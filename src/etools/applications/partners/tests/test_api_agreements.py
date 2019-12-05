@@ -53,10 +53,10 @@ class TestAgreementsAPI(BaseTenantTestCase):
                                                           signed_amendment="application/pdf",
                                                           signed_date=datetime.date.today())
         cls.file_type_agreement = AttachmentFileTypeFactory(
-            code="partners_agreement"
+            code="partners_agreement",
         )
         cls.file_type_agreement_amendment = AttachmentFileTypeFactory(
-            code="partners_agreement_amendment"
+            code="partners_agreement_amendment",
         )
 
     def run_request_list_ep(self, data={}, user=None, method='post'):
