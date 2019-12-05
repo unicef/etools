@@ -16,7 +16,7 @@ from rest_framework.generics import (
     ListCreateAPIView,
     RetrieveUpdateDestroyAPIView,
 )
-from rest_framework.permissions import IsAdminUser, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_csv import renderers as r
 from unicef_restlib.views import QueryStringFilterMixin
@@ -218,7 +218,7 @@ class PartnerOrganizationDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroy
 class PartnerOrganizationDashboardAPIView(ExportModelMixin, QueryStringFilterMixin, ListAPIView):
     """Returns a list of Implementing partners for the dashboard."""
 
-    permission_classes = (IsAuthenticatedOrReadOnly,)
+    permission_classes = (IsAuthenticated,)
     serializer_class = PartnerOrganizationDashboardSerializer
     base_filename = 'IP_dashboard'
     renderer_classes = (r.JSONRenderer, PartnerOrganizationDashboardCsvRenderer)

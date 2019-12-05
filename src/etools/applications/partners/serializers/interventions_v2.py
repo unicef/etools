@@ -71,6 +71,7 @@ class InterventionAmendmentCUSerializer(AttachmentSerializerMixin, serializers.M
             UniqueTogetherValidator(
                 queryset=InterventionAmendment.objects.all(),
                 fields=["intervention", "signed_date"],
+                message=_("There is already an amendment with this signed date."),
             )
         ]
 

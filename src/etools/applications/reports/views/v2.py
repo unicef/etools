@@ -18,7 +18,7 @@ from rest_framework.generics import (
     RetrieveUpdateDestroyAPIView,
 )
 from rest_framework.mixins import CreateModelMixin, ListModelMixin, RetrieveModelMixin
-from rest_framework.permissions import IsAdminUser, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 from rest_framework_csv.renderers import CSVRenderer, JSONRenderer
@@ -509,7 +509,7 @@ class OfficeViewSet(
     Returns a list of all Offices
     """
     serializer_class = OfficeSerializer
-    permission_classes = (IsAuthenticatedOrReadOnly,)
+    permission_classes = (IsAuthenticated,)
     queryset = Office.objects
     module2filters = {
         'tpm': ['tpmactivity__tpm_visit__tpm_partner__staff_members__user'],

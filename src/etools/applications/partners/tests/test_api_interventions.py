@@ -1708,7 +1708,7 @@ class TestInterventionAmendmentCreateAPIView(BaseTenantTestCase):
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEquals(
             next(iter(response.data.values())),
-            ['The fields intervention, signed_date must make a unique set.'],
+            ['There is already an amendment with this signed date.'],
         )
 
     def test_create_amendment_success(self):
