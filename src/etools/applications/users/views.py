@@ -300,6 +300,9 @@ class ModuleRedirectView(RedirectView):
                 return '/tpm/'
 
             if Auditor.as_group() in self.request.user.groups.all():
-                return '/ap/'
+                if False:
+                    return '/psea/'
+                else:
+                    return '/ap/'
 
         return super().get_redirect_url(*args, **kwargs)
