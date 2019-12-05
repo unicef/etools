@@ -13,6 +13,8 @@ from django.utils.translation import ugettext_lazy as _
 from django_tenants.models import TenantMixin
 from model_utils.models import TimeStampedModel
 
+from etools.libraries.djangolib.fields import LowerCaseEmailField, LowerCaseField
+
 logger = logging.getLogger(__name__)
 
 
@@ -20,8 +22,8 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = "username"
     REQUIRED_FIELDS = ['email']
 
-    username = models.CharField(_("username"), max_length=256, unique=True)
-    email = models.EmailField(_('email address'), unique=True)
+    username = LowerCaseField(_("username"), max_length=256, unique=True)
+    email = LowerCaseEmailField(_('email address'), unique=True)
     password = models.CharField(_("password"), max_length=128)
     first_name = models.CharField(_('first name'), max_length=30, blank=True)
     middle_name = models.CharField(_('middle_name'), max_length=50, blank=True)

@@ -41,6 +41,8 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         username = options['username']
         password = options['password']
+        if isinstance(username, (list, tuple)):
+            username = username[0]
         if isinstance(password, (list, tuple)):
             password = password[0]
         user = self._get_or_create_admin_user(username, password)
