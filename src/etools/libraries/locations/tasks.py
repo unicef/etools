@@ -95,7 +95,7 @@ def update_sites_from_cartodb(carto_table_pk):
         # validations
         # get the list of the existing Pcodes and previous Pcodes from the database
         database_pcodes = []
-        for row in Location.objects.all_locations().filter(gateway=carto_table.location_type).values('p_code'):
+        for row in Location.objects.filter(gateway=carto_table.location_type).values('p_code'):
             database_pcodes.append(row['p_code'])
 
         # get the list of the new Pcodes from the Carto data
@@ -108,7 +108,7 @@ def update_sites_from_cartodb(carto_table_pk):
         if not remap_table_valid:
             return results
 
-        # check for  duplicate pcodes in both local and Carto data
+        # check for duplicate pcodes in both local and Carto data
         if duplicate_pcodes_exist(database_pcodes, new_carto_pcodes, remap_old_pcodes, remap_new_pcodes):
             return results
 
