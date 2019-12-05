@@ -17,8 +17,10 @@ from rest_framework.generics import (
     RetrieveUpdateAPIView,
     RetrieveUpdateDestroyAPIView,
 )
-from rest_framework.permissions import IsAdminUser
+from rest_framework.mixins import CreateModelMixin, ListModelMixin, RetrieveModelMixin
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.viewsets import GenericViewSet
 from rest_framework_csv.renderers import CSVRenderer, JSONRenderer
 from unicef_rest_export.views import ExportView
 from unicef_restlib.views import QueryStringFilterMixin
@@ -35,6 +37,7 @@ from etools.applications.reports.models import (
     Indicator,
     IndicatorBlueprint,
     LowerResult,
+    Office,
     Result,
     ResultType,
     SpecialReportingRequirement,
@@ -54,11 +57,13 @@ from etools.applications.reports.serializers.v2 import (
     DisaggregationSerializer,
     LowerResultSerializer,
     MinimalOutputListSerializer,
+    OfficeSerializer,
     OutputListSerializer,
     ResultFrameworkExportSerializer,
     ResultFrameworkSerializer,
     SpecialReportingRequirementSerializer,
 )
+from etools.libraries.djangolib.views import ExternalModuleFilterMixin
 
 
 class OutputListAPIView(ListAPIView):
@@ -491,3 +496,33 @@ class ResultFrameworkView(ExportView):
                 intervention.reference_number
             )
         return response
+
+
+class OfficeViewSet(
+        ExternalModuleFilterMixin,
+        RetrieveModelMixin,
+        ListModelMixin,
+        CreateModelMixin,
+        GenericViewSet,
+):
+    """
+    Returns a list of all Offices
+    """
+    serializer_class = OfficeSerializer
+    permission_classes = (IsAuthenticated,)
+    queryset = Office.objects
+    module2filters = {
+        'tpm': ['tpmactivity__tpm_visit__tpm_partner__staff_members__user'],
+    }
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        if "values" in self.request.query_params.keys():
+            # Used for ghost data - filter in all(), and return straight away.
+            try:
+                ids = [int(x) for x in self.request.query_params.get("values").split(",")]
+            except ValueError:
+                raise ValidationError("ID values must be integers")
+            else:
+                qs = qs.filter(id__in=ids)
+        return qs

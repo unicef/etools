@@ -13,7 +13,7 @@ from unicef_attachments.models import Attachment
 
 from etools.applications.action_points.tests.factories import ActionPointCategoryFactory, ActionPointFactory
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
-from etools.applications.audit.models import Auditor, Engagement, Risk
+from etools.applications.audit.models import Auditor, Engagement, Risk, SpotCheck
 from etools.applications.audit.tests.base import AuditTestCaseMixin, EngagementTransitionsTestCaseMixin
 from etools.applications.audit.tests.factories import (
     AuditFactory,
@@ -33,6 +33,7 @@ from etools.applications.audit.tests.test_transitions import MATransitionsTestCa
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import PartnerType
 from etools.applications.reports.tests.factories import SectionFactory
+from etools.applications.users.tests.factories import OfficeFactory
 
 
 class BaseTestCategoryRisksViewSet(EngagementTransitionsTestCaseMixin):
@@ -529,6 +530,63 @@ class TestSpotCheckCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEn
                                  BaseTenantTestCase):
     engagement_factory = SpotCheckFactory
 
+    def test_list(self):
+        self.endpoint = "spot-checks"
+        section = SectionFactory()
+        spot_check = SpotCheckFactory()
+        spot_check.sections.set([section.pk])
+        office = OfficeFactory()
+        spot_check.offices.set([office.pk])
+        response = response = self.forced_auth_req(
+            'get',
+            self.engagements_url(),
+            user=self.unicef_focal_point,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        found = False
+        for data in response.data["results"]:
+            if data["id"] == spot_check.pk:
+                found = True
+                self.assertEqual(data["sections"], [section.pk])
+                self.assertEqual(data["offices"], [office.pk])
+        self.assertTrue(found)
+
+    def test_sections(self):
+        self.endpoint = "spot-checks"
+        section_1 = SectionFactory()
+        section_2 = SectionFactory()
+        self.create_data["sections"] = [section_1.pk, section_2.pk]
+        response = self._do_create(self.unicef_focal_point, self.create_data)
+
+        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(
+            sorted(response.data['sections']),
+            sorted([section_1.pk, section_2.pk]),
+        )
+        spot_check = SpotCheck.objects.get(pk=response.data["id"])
+        self.assertEqual(
+            sorted([s.pk for s in spot_check.sections.all()]),
+            sorted([section_1.pk, section_2.pk]),
+        )
+
+    def test_offices(self):
+        self.endpoint = "spot-checks"
+        office_1 = OfficeFactory()
+        office_2 = OfficeFactory()
+        self.create_data["offices"] = [office_1.pk, office_2.pk]
+        response = self._do_create(self.unicef_focal_point, self.create_data)
+
+        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        self.assertEquals(
+            sorted(response.data['offices']),
+            sorted([office_1.pk, office_2.pk]),
+        )
+        spot_check = SpotCheck.objects.get(pk=response.data["id"])
+        self.assertEquals(
+            sorted([o.pk for o in spot_check.offices.all()]),
+            sorted([office_1.pk, office_2.pk]),
+        )
+
 
 class SpecialAuditCreateViewSet(BaseTestEngagementsCreateViewSet, BaseTenantTestCase):
     engagement_factory = SpecialAuditFactory
@@ -601,7 +659,7 @@ class TestEngagementActionPointViewSet(EngagementTransitionsTestCaseMixin, BaseT
                 'due_date': fuzzy.FuzzyDate(datetime.date(2001, 1, 1)).fuzz(),
                 'assigned_to': self.unicef_user.id,
                 'section': SectionFactory().id,
-                'office': self.unicef_focal_point.profile.office.id,
+                'office': self.unicef_focal_point.profile.tenant_profile.office.id,
             }
         )
 
@@ -623,7 +681,7 @@ class TestEngagementActionPointViewSet(EngagementTransitionsTestCaseMixin, BaseT
                 'due_date': fuzzy.FuzzyDate(datetime.date(2001, 1, 1)).fuzz(),
                 'assigned_to': self.unicef_user.id,
                 'section': SectionFactory().id,
-                'office': self.unicef_focal_point.profile.office.id,
+                'office': self.unicef_focal_point.profile.tenant_profile.office.id,
             }
         )
 

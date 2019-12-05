@@ -1,4 +1,3 @@
-
 from unittest import skip
 
 from django.conf import settings
@@ -7,7 +6,7 @@ from django.test import override_settings, RequestFactory, TestCase
 from django.urls import reverse
 
 from etools.applications.core.middleware import ANONYMOUS_ALLOWED_URL_FRAGMENTS, EToolsTenantMiddleware
-from etools.applications.users.tests.factories import CountryFactory, UserFactory
+from etools.applications.users.tests.factories import CountryFactory, ProfileLightFactory, UserFactory
 
 
 class EToolsTenantMiddlewareTest(TestCase):
@@ -15,7 +14,8 @@ class EToolsTenantMiddlewareTest(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        cls.user = UserFactory()
+        cls.profile = ProfileLightFactory()
+        cls.user = cls.profile.user
 
     def setUp(self):
         self.request = self.request_factory.get('/')
@@ -57,7 +57,8 @@ class EToolsTenantMiddlewareTest(TestCase):
 
     def test_superuser_without_country_return_none(self):
         "Superuser without country is allowed to pass."
-        superuser = UserFactory(is_superuser=True, profile__country=None)
+        superuser = UserFactory(is_superuser=True, profile=None)
+        ProfileLightFactory(country=None, user=superuser)
         self.request.user = superuser
         self.assertEquals(EToolsTenantMiddleware().process_request(self.request), None)
 
@@ -71,7 +72,8 @@ class EToolsTenantMiddlewareTest(TestCase):
     @override_settings(INACTIVE_BUSINESS_AREAS=['ZZZ'])
     def test_superuser_inactive_country_return_none(self):
         "Superuser in inactive workspace is allowed to pass."
-        superuser = UserFactory(is_superuser=True)
+        superuser = UserFactory(is_superuser=True, profile=None)
+        ProfileLightFactory(user=superuser)
         self.request.user = superuser
         self.assertEquals(EToolsTenantMiddleware().process_request(self.request), None)
 
@@ -81,8 +83,9 @@ class EToolsTenantMiddlewareTest(TestCase):
         This just tests a code path that was copied from the django-tenants middleware when we
         copy/pasted. eTools does not use it.
         """
+        superuser = UserFactory(is_superuser=True, profile=None)
         country = CountryFactory(schema_name='public')
-        superuser = UserFactory(is_superuser=True, profile__country=country)
+        ProfileLightFactory(country=country, user=superuser)
         self.request.user = superuser
         EToolsTenantMiddleware().process_request(self.request)
         self.assertEqual(self.request.urlconf, 'foo')

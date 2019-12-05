@@ -182,7 +182,7 @@ class Office(models.Model):
     zonal_chief = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         blank=True, null=True,
-        related_name='offices',
+        related_name='offices_old',
         verbose_name='Chief',
         on_delete=models.CASCADE,
     )
