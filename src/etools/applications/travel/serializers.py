@@ -21,7 +21,7 @@ from etools.applications.travel.models import (
     Report,
 )
 from etools.applications.travel.permissions import ItineraryPermissions
-from etools.applications.users.serializers import OfficeSerializer
+from etools.applications.reports.serializers.v2 import OfficeSerializer
 
 
 class BaseItinerarySerializer(serializers.ModelSerializer):

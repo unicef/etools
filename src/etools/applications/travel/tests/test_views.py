@@ -762,7 +762,7 @@ class TestActivityActionPointViewSet(BaseTenantTestCase):
                     timezone.now().date() + datetime.timedelta(days=5),
                 ).fuzz(),
                 'assigned_to': self.unicef_user.pk,
-                'office': self.focal_user.profile.office.pk,
+                'office': self.focal_user.profile.tenant_profile.office.pk,
                 'section': SectionFactory().pk,
             }
         )
