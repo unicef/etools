@@ -1,10 +1,10 @@
 from django.conf import settings
-from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
 from unicef_attachments.models import Attachment
+from unicef_djangolib.fields import CodedGenericRelation
 
 from etools.applications.field_monitoring.fm_settings.models import Method, Question
 from etools.applications.field_monitoring.planning.models import MonitoringActivity, QuestionTargetMixin
@@ -110,7 +110,7 @@ class ChecklistOverallFinding(QuestionTargetMixin, models.Model):
     started_checklist = models.ForeignKey(StartedChecklist, related_name='overall_findings',
                                           verbose_name=_('Checklist'), on_delete=models.CASCADE)
     narrative_finding = models.TextField(blank=True, verbose_name=_('Narrative Finding'))
-    attachments = GenericRelation(Attachment, verbose_name=_('Attachments'), blank=True)
+    attachments = CodedGenericRelation(Attachment, code='attachments', verbose_name=_('Attachments'), blank=True)
 
     class Meta:
         verbose_name = _('Checklist Overall Finding')

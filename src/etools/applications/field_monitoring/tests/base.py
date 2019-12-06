@@ -33,19 +33,23 @@ class APIViewSetTestCase(BaseTenantTestCase):
     def get_detail_args(self, instance):
         return self.get_list_args() + [instance.pk]
 
+    def get_action_url(self, action, instance=None):
+        url_args = self.get_detail_args(instance) if instance else self.get_list_args()
+        return reverse('{}-{}'.format(self.base_view, action), args=url_args)
+
     def get_list_url(self):
-        return reverse('{}-list'.format(self.base_view), args=self.get_list_args())
+        return self.get_action_url('list')
 
     def get_detail_url(self, instance):
-        return reverse('{}-detail'.format(self.base_view), args=self.get_detail_args(instance))
+        return self.get_action_url('detail', instance=instance)
 
-    def make_request_to_viewset(self, user, method='get', instance=None, data=None, **kwargs):
-        return self.forced_auth_req(
-            method, self.get_detail_url(instance) if instance else self.get_list_url(),
-            user=user,
-            data=data or {},
-            **kwargs
-        )
+    def make_request_to_viewset(self, user, method='get', instance=None, action=None, data=None, **kwargs):
+        if action:
+            url = self.get_action_url(action, instance=instance)
+        else:
+            url = self.get_detail_url(instance) if instance else self.get_list_url()
+
+        return self.forced_auth_req(method, url, user=user, data=data, **kwargs)
 
     def make_list_request(self, user, **kwargs):
         return self.make_request_to_viewset(user, **kwargs)

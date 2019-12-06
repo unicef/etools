@@ -22,7 +22,6 @@ from etools.applications.field_monitoring.planning.transitions.permissions impor
 from etools.applications.partners.models import Intervention, PartnerOrganization
 from etools.applications.reports.models import Result, Section
 from etools.applications.tpm.tpmpartners.models import TPMPartner
-from etools.applications.users.models import Office
 from etools.libraries.djangolib.models import SoftDeleteMixin
 
 

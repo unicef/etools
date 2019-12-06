@@ -51,7 +51,7 @@ from etools.applications.field_monitoring.planning.serializers import (
     TemplatedQuestionSerializer,
     YearPlanSerializer,
 )
-from etools.applications.field_monitoring.views import FMBaseViewSet, NestedLinkedAttachmentsViewSet
+from etools.applications.field_monitoring.views import FMBaseViewSet, LinkedAttachmentsViewSet
 from etools.applications.partners.models import Intervention
 from etools.applications.permissions2.views import FSMTransitionActionMixin
 from etools.applications.reports.models import Result, ResultType
@@ -229,7 +229,7 @@ class InterventionsViewSet(
     serializer_class = InterventionWithLinkedInstancesSerializer
 
 
-class ActivityAttachmentsViewSet(NestedLinkedAttachmentsViewSet):
+class ActivityAttachmentsViewSet(LinkedAttachmentsViewSet):
     permission_classes = FMBaseViewSet.permission_classes + [
         IsReadAction | (IsEditAction & activity_field_is_editable_permission('attachments'))
     ]

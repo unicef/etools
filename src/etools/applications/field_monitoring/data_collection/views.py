@@ -32,7 +32,7 @@ from etools.applications.field_monitoring.permissions import (
     IsReadAction,
 )
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
-from etools.applications.field_monitoring.views import FMBaseViewSet, NestedLinkedAttachmentsViewSet
+from etools.applications.field_monitoring.views import FMBaseViewSet, LinkedAttachmentsViewSet
 
 
 class ActivityDataCollectionViewSet(
@@ -44,7 +44,7 @@ class ActivityDataCollectionViewSet(
     serializer_class = ActivityDataCollectionSerializer
 
 
-class ActivityReportAttachmentsViewSet(NestedLinkedAttachmentsViewSet):
+class ActivityReportAttachmentsViewSet(LinkedAttachmentsViewSet):
     serializer_class = FMCommonAttachmentSerializer
     related_model = MonitoringActivity
     permission_classes = FMBaseViewSet.permission_classes + [
@@ -112,12 +112,13 @@ class ChecklistOverallFindingsViewSet(
     serializer_class = ChecklistOverallFindingSerializer
 
 
-class ChecklistOverallAttachmentsViewSet(NestedLinkedAttachmentsViewSet):
+class ChecklistOverallAttachmentsViewSet(LinkedAttachmentsViewSet):
     permission_classes = FMBaseViewSet.permission_classes + [
         IsReadAction | (IsEditAction & activity_field_is_editable_permission('started_checklist_set'))
     ]
     related_model = ChecklistOverallFinding
     serializer_class = FMCommonAttachmentSerializer
+    attachment_code = 'attachments'
 
 
 class ChecklistFindingsViewSet(

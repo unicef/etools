@@ -2,6 +2,8 @@ import factory.django
 from factory import fuzzy
 from unicef_attachments.models import Attachment, AttachmentLink, FileType
 
+from etools.applications.field_monitoring.tests.factories import UserFactory
+
 
 class AttachmentFileTypeFactory(factory.django.DjangoModelFactory):
     class Meta:
@@ -14,6 +16,7 @@ class AttachmentFileTypeFactory(factory.django.DjangoModelFactory):
 
 
 class AttachmentFactory(factory.django.DjangoModelFactory):
+    uploaded_by = factory.SubFactory(UserFactory)
     file_type = factory.SubFactory(AttachmentFileTypeFactory)
     code = fuzzy.FuzzyText(length=64)
 

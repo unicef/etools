@@ -1,19 +1,20 @@
+from copy import copy
+
 from django.contrib.contenttypes.models import ContentType
 from django.http import Http404
 
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.mixins import DestroyModelMixin, ListModelMixin, RetrieveModelMixin, UpdateModelMixin
+from rest_framework.mixins import ListModelMixin
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
-from rest_framework_bulk import BulkDestroyModelMixin, BulkUpdateModelMixin
 from unicef_attachments.models import Attachment, AttachmentLink
 from unicef_restlib.pagination import DynamicPageNumberPagination
 from unicef_restlib.views import MultiSerializerViewSetMixin, NestedViewSetMixin, SafeTenantViewSetMixin
 
-from etools.applications.field_monitoring.fm_settings.serializers import LinkedAttachmentBulkSerializer
+from etools.applications.field_monitoring.fm_settings.serializers import LinkedAttachmentBaseSerializer
 from etools.applications.permissions2.metadata import BaseMetadata
 
 
@@ -39,20 +40,16 @@ class AttachmentFileTypesViewMixin:
 
 class LinkedAttachmentsViewSet(
     FMBaseViewSet,
+    NestedViewSetMixin,
     AttachmentFileTypesViewMixin,
     ListModelMixin,
-    RetrieveModelMixin,
-    BulkUpdateModelMixin,
-    UpdateModelMixin,
-    BulkDestroyModelMixin,
-    DestroyModelMixin,
     GenericViewSet,
 ):
     queryset = Attachment.objects.all()
-    serializer_class = LinkedAttachmentBulkSerializer
+    serializer_class = LinkedAttachmentBaseSerializer
     attachment_code = ''  # fill `code` field in attachment to deal with coded generics
     filter_backends = (DjangoFilterBackend,)
-    filter_fields = {'id': ['in']}
+    related_model = None
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -60,52 +57,6 @@ class LinkedAttachmentsViewSet(
             queryset = queryset.filter(code=self.attachment_code)
 
         return queryset
-
-    def perform_linking(self, serializer):
-        # set code for instance
-        if self.attachment_code:
-            instances = serializer.save(code=self.attachment_code)
-        else:
-            instances = serializer.save()
-
-        # now link updated instances
-        for instance in instances:
-            AttachmentLink.objects.create(attachment=instance)
-
-    @action(detail=False, methods=['POST'], url_path='link', url_name='link')
-    def link_attachments(self, request, *args, **kwargs):
-        serializer = self.get_serializer(
-            Attachment.objects.filter(pk__in=[a['id'] for a in request.data if a.get('id')]),
-            data=request.data,
-            many=True,
-            partial=True,
-        )
-        serializer.is_valid(raise_exception=True)
-        self.perform_linking(serializer)
-
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-    def perform_destroy(self, instance):
-        instance.content_object = None
-        instance.save()
-
-        # unlink instance
-        instance.links.all().delete()
-
-    def allow_bulk_destroy(self, qs, filtered):
-        allow = super().allow_bulk_destroy(qs, filtered)
-        if not allow:
-            return False
-
-        # assure all instances are editable by user before removing
-        for instance in filtered:
-            self.check_object_permissions(self.request, instance)
-
-        return True
-
-
-class NestedLinkedAttachmentsViewSet(NestedViewSetMixin, LinkedAttachmentsViewSet):
-    related_model = None
 
     def get_parent_filter(self):
         parent = self.get_parent_object()
@@ -126,11 +77,40 @@ class NestedLinkedAttachmentsViewSet(NestedViewSetMixin, LinkedAttachmentsViewSe
         # too deep inheritance is not supported in case of generic relations, so just use parent (content object)
         return self.get_parent_filter()
 
-    def perform_linking(self, serializer):
-        parent = self.get_parent_object()
-        # set content_object and code for instance
-        instances = serializer.save(content_object=parent, code=self.attachment_code)
+    def update_attachment(self, pk, object_id, content_type, **kwargs):
+        generic_kwargs = {
+            'object_id': object_id,
+            'content_type': content_type,
+        }
+        attachment_kwargs = copy(generic_kwargs)
+        attachment_kwargs.update(kwargs)
+        Attachment.objects.filter(pk=pk).update(**attachment_kwargs)
+        # keep attachment link in sync
+        AttachmentLink.objects.get_or_create(attachment_id=pk, **generic_kwargs)
 
-        # now link updated instances
-        for instance in instances:
-            AttachmentLink.objects.create(attachment=instance, content_object=parent)
+    def set_attachments(self, data):
+        parent_instance = self.get_parent_object()
+
+        content_type = ContentType.objects.get_for_model(self.related_model)
+        current = list(self.get_queryset())
+        used = []
+        for attachment_data in data:
+            pk = attachment_data['id']
+            current = [a for a in current if a.pk != pk]
+            self.update_attachment(
+                pk, parent_instance.pk, content_type,
+                file_type=attachment_data.get("file_type", None),
+                code=self.attachment_code,
+            )
+            used.append(pk)
+
+        for attachment in current:
+            attachment.delete()
+
+        return Attachment.objects.filter(pk__in=used)
+
+    def put(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data, many=True, partial=False)
+        serializer.is_valid(raise_exception=True)
+        attachments = self.set_attachments(serializer.validated_data)
+        return Response(self.get_serializer(instance=attachments, many=True).data, status=status.HTTP_200_OK)

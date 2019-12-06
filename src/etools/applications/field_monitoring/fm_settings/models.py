@@ -10,10 +10,29 @@ from django.utils.translation import ugettext_lazy as _
 from model_utils import Choices, FieldTracker
 from model_utils.models import TimeStampedModel
 from ordered_model.models import OrderedModel
+from unicef_attachments.models import Attachment
+from unicef_djangolib.fields import CodedGenericRelation
 from unicef_locations.models import Location
 
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.reports.models import Result, Section
+
+
+class GlobalConfig(models.Model):
+    attachments = CodedGenericRelation(Attachment, verbose_name=_('Global Attachments'), code='fm_global', blank=True)
+
+    class Meta:
+        verbose_name = _('Global Config')
+        verbose_name_plural = _('Global Configs')
+        ordering = ('id',)
+
+    @classmethod
+    def get_current(cls):
+        # should be only one instance, so just create if missing
+        if not hasattr(cls, '_config'):
+            cls._config = cls.objects.get_or_create()[0]
+
+        return cls._config
 
 
 class Method(models.Model):
@@ -225,7 +244,8 @@ class LogIssue(TimeStampedModel):
 
     issue = models.TextField(verbose_name=_('Issue For Attention/Probing'))
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default=STATUS_CHOICES.new)
-    attachments = GenericRelation('unicef_attachments.Attachment', verbose_name=_('Attachments'), blank=True)
+    attachments = CodedGenericRelation('unicef_attachments.Attachment', code='attachments',
+                                       verbose_name=_('Attachments'), blank=True)
     history = GenericRelation('unicef_snapshot.Activity', object_id_field='target_object_id',
                               content_type_field='target_content_type')
 

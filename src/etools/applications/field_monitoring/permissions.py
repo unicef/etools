@@ -102,9 +102,16 @@ def activity_field_is_editable_permission(field):
             if not view.kwargs:
                 return True
 
+            # if view is nested or somehow provide root instance, use it. in another cases, use current;
+            # useful for special view actions
+            if hasattr(view, 'get_root_object'):
+                instance = view.get_root_object()
+            else:
+                instance = view.get_object()
+
             ps = MonitoringActivity.permission_structure()
             permissions = ActivityPermissions(
-                user=request.user, instance=view.get_root_object(), permission_structure=ps
+                user=request.user, instance=instance, permission_structure=ps
             )
             return permissions.get_permissions()['edit'].get(field)
 

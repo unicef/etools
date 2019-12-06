@@ -6,7 +6,6 @@ from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
-from rest_framework_bulk import BulkListSerializer, BulkSerializerMixin
 from unicef_attachments.fields import FileTypeModelChoiceField
 from unicef_attachments.models import FileType
 from unicef_attachments.serializers import BaseAttachmentSerializer
@@ -173,9 +172,8 @@ class LogIssueSerializer(UserContextSerializerMixin, SnapshotModelSerializer):
         return MinimalUserSerializer(matched_events[-1].by_user).data
 
 
-class LinkedAttachmentBulkSerializer(BulkSerializerMixin, BaseAttachmentSerializer):
+class LinkedAttachmentBaseSerializer(BaseAttachmentSerializer):
     class Meta(BaseAttachmentSerializer.Meta):
-        list_serializer_class = BulkListSerializer
         extra_kwargs = copy(BaseAttachmentSerializer.Meta.extra_kwargs)
         extra_kwargs.update({
             'id': {'read_only': False},
@@ -188,8 +186,8 @@ class LinkedAttachmentBulkSerializer(BulkSerializerMixin, BaseAttachmentSerializ
         return
 
 
-class FMCommonAttachmentSerializer(LinkedAttachmentBulkSerializer):
+class FMCommonAttachmentSerializer(LinkedAttachmentBaseSerializer):
     file_type = FileTypeModelChoiceField(queryset=FileType.objects.filter(code='fm_common'))
 
-    class Meta(LinkedAttachmentBulkSerializer.Meta):
+    class Meta(LinkedAttachmentBaseSerializer.Meta):
         pass
