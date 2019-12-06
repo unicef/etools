@@ -47,7 +47,7 @@ from etools.applications.partners.serializers.partner_organization_v2 import (
 )
 from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
 from etools.applications.reports.serializers.v1 import SectionSerializer
-from etools.applications.users.serializers import OfficeSerializer
+from etools.applications.reports.serializers.v2 import OfficeSerializer
 from etools.applications.users.serializers_v3 import MinimalUserSerializer
 
 
@@ -90,7 +90,7 @@ class EngagementAttachmentSerializer(serializers.ModelSerializer):
     attachment = AttachmentField(source="pk")
     file_type = FileTypeModelChoiceField(
         label=_('Document Type'),
-        queryset=FileType.objects.filter(code='audit_engagement'),
+        queryset=FileType.objects.group_by('audit_engagement'),
     )
 
     class Meta:
@@ -107,7 +107,7 @@ class ReportAttachmentSerializer(serializers.ModelSerializer):
     attachment = AttachmentField(source="pk")
     file_type = FileTypeModelChoiceField(
         label=_('Document Type'),
-        queryset=FileType.objects.filter(code='audit_report'),
+        queryset=FileType.objects.group_by('audit_report')
     )
 
     class Meta:
@@ -272,6 +272,14 @@ class EngagementSerializer(
     engagement_attachments = AttachmentSingleFileField(required=False)
     report_attachments = AttachmentSingleFileField(required=False)
     final_report = AttachmentSingleFileField(required=False)
+    sections = SeparatedReadWriteField(
+        read_field=serializers.SerializerMethodField(),
+        label=_("Sections"),
+    )
+    offices = SeparatedReadWriteField(
+        read_field=serializers.SerializerMethodField(),
+        label=_("Offices"),
+    )
 
     class Meta(EngagementListSerializer.Meta):
         fields = EngagementListSerializer.Meta.fields + [
@@ -284,6 +292,8 @@ class EngagementSerializer(
             'engagement_attachments',
             'report_attachments',
             'final_report',
+            'sections',
+            'offices',
         ]
         extra_kwargs = {
             field: {'required': True} for field in [
@@ -298,6 +308,12 @@ class EngagementSerializer(
             ]
         }
         extra_kwargs['engagement_type'] = {'label': _('Engagement Type')}
+
+    def get_sections(self, obj):
+        return [s.pk for s in obj.all()]
+
+    def get_offices(self, obj):
+        return [o.pk for o in obj.all()]
 
     def validate(self, data):
         validated_data = super().validate(data)
@@ -380,7 +396,7 @@ class SpotCheckSerializer(ActivePDValidationMixin, EngagementSerializer):
             'internal_controls', 'findings', 'face_form_start_date', 'face_form_end_date',
             'amount_refunded', 'additional_supporting_documentation_provided',
             'justification_provided_and_accepted', 'write_off_required', 'pending_unsupported_amount',
-            'explanation_for_additional_information',
+            'explanation_for_additional_information'
         ]
         fields.remove('joint_audit')
         fields.remove('shared_ip_with')
@@ -394,6 +410,15 @@ class SpotCheckSerializer(ActivePDValidationMixin, EngagementSerializer):
                 'total_amount_tested', 'total_amount_of_ineligible_expenditure', 'internal_controls',
             ]
         })
+
+    def create(self, validated_data):
+        sections = []
+        if "sections" in validated_data:
+            sections = validated_data.pop("sections")
+        instance = super().create(validated_data)
+        if sections:
+            instance.sections.set(sections)
+        return instance
 
 
 class StaffSpotCheckListSerializer(EngagementListSerializer):
@@ -451,6 +476,8 @@ class MicroAssessmentSerializer(ActivePDValidationMixin, RiskCategoriesUpdateMix
         fields.remove('specific_procedures')
         fields.remove('exchange_rate')
         fields.remove('currency_of_report')
+        fields.remove('sections')
+        fields.remove('offices')
         extra_kwargs = EngagementSerializer.Meta.extra_kwargs.copy()
         extra_kwargs.update({
             'engagement_type': {'read_only': True},

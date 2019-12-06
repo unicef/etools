@@ -18,12 +18,11 @@ from etools.applications.attachments.tests.factories import (
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import PartnerType
 from etools.applications.partners.tests.factories import InterventionAttachmentFactory
-from etools.applications.reports.tests.factories import SectionFactory
+from etools.applications.reports.tests.factories import OfficeFactory, SectionFactory
 from etools.applications.tpm.models import ThirdPartyMonitor, TPMVisit
 from etools.applications.tpm.tests.base import TPMTestCaseMixin
 from etools.applications.tpm.tests.factories import (
     _FUZZY_END_DATE,
-    OfficeFactory,
     TPMActivityFactory,
     TPMPartnerFactory,
     TPMUserFactory,
@@ -388,7 +387,7 @@ class TestTPMActionPointViewSet(TPMTestCaseMixin, BaseTenantTestCase):
                 'description': fuzzy.FuzzyText(length=100).fuzz(),
                 'due_date': fuzzy.FuzzyDate(timezone.now().date(), _FUZZY_END_DATE).fuzz(),
                 'assigned_to': self.unicef_user.id,
-                'office': self.pme_user.profile.office.id,
+                'office': self.pme_user.profile.tenant_profile.office.id,
                 'section': SectionFactory().id,
             }
         )
@@ -732,7 +731,7 @@ class TestPartnerAttachmentsView(TPMTestCaseMixin, BaseTenantTestCase):
             user=self.pme_user,
             request_format='multipart',
             data={
-                'file_type': AttachmentFileTypeFactory(code='tpm_partner').id,
+                'file_type': AttachmentFileTypeFactory(group=['tpm_partner']).id,
                 'file': SimpleUploadedFile('hello_world.txt', 'hello world!'.encode('utf-8')),
             }
         )
@@ -747,7 +746,7 @@ class TestPartnerAttachmentsView(TPMTestCaseMixin, BaseTenantTestCase):
             user=TPMUserFactory(tpm_partner=partner),
             request_format='multipart',
             data={
-                'file_type': AttachmentFileTypeFactory(code='tpm_partner').id,
+                'file_type': AttachmentFileTypeFactory(group=['tpm_partner']).id,
                 'file': SimpleUploadedFile('hello_world.txt', 'hello world!'.encode('utf-8')),
             }
         )
@@ -772,7 +771,7 @@ class TestVisitAttachmentsView(TPMTestCaseMixin, BaseTenantTestCase):
             user=self.pme_user,
             request_format='multipart',
             data={
-                'file_type': AttachmentFileTypeFactory(code='tpm').id,
+                'file_type': AttachmentFileTypeFactory(group=['tpm']).id,
                 'file': SimpleUploadedFile('hello_world.txt', 'hello world!'.encode('utf-8')),
             }
         )
@@ -805,7 +804,7 @@ class TestVisitReportAttachmentsView(TPMTestCaseMixin, BaseTenantTestCase):
             user=self.tpm_user,
             request_format='multipart',
             data={
-                'file_type': AttachmentFileTypeFactory(code='tpm_report_attachments').id,
+                'file_type': AttachmentFileTypeFactory(group=['tpm_report_attachments']).id,
                 'file': SimpleUploadedFile('hello_world.txt', 'hello world!'.encode('utf-8')),
             }
         )
@@ -840,7 +839,7 @@ class TestActivityAttachmentsView(TPMTestCaseMixin, BaseTenantTestCase):
             request_format='multipart',
             data={
                 'object_id': self.activity.id,
-                'file_type': AttachmentFileTypeFactory(code='tpm').id,
+                'file_type': AttachmentFileTypeFactory(group=['tpm']).id,
                 'file': SimpleUploadedFile('hello_world.txt', 'hello world!'.encode('utf-8')),
             }
         )
@@ -875,7 +874,7 @@ class TestActivityReportAttachmentsView(TPMTestCaseMixin, BaseTenantTestCase):
             request_format='multipart',
             data={
                 'object_id': self.activity.id,
-                'file_type': AttachmentFileTypeFactory(code='tpm_report').id,
+                'file_type': AttachmentFileTypeFactory(group=['tpm_report']).id,
                 'file': SimpleUploadedFile('hello_world.txt', 'hello world!'.encode('utf-8')),
             }
         )

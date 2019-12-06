@@ -20,14 +20,9 @@ from etools.applications.reports.views.v1 import (
     SectionViewSet,
     UnitViewSet,
 )
+from etools.applications.reports.views.v2 import OfficeViewSet
 from etools.applications.t2f.urls import urlpatterns as t2f_patterns
-from etools.applications.users.views import (
-    CountriesViewSet,
-    GroupViewSet,
-    ModuleRedirectView,
-    OfficeViewSet,
-    UserViewSet,
-)
+from etools.applications.users.views import CountriesViewSet, GroupViewSet, ModuleRedirectView, UserViewSet
 # these imports are used to autodiscover admin forms located outside of INSTALLED_APPS(the libraries folder for example)
 from etools.libraries.locations import admin as locations_admin  # noqa: ignore=F401
 from etools.libraries.locations.views import (
