@@ -87,8 +87,10 @@ class SectionHandler:
         """Merge two or more sections into a newly create section and migrating active objects"""
         from_instances = Section.objects.filter(pk__in=sections_to_merge)
         to_instance = Section.objects.create(name=new_section_name)
-        from_instances.update(active=False)
-
+        for instance in from_instances:
+            instance.active = False
+            instance.name = f'{instance.name} [Inactive]'
+            instance.save()
         # m2m relation need to be cleaned at the end
         m2m_to_clean = {
         }
@@ -129,6 +131,7 @@ class SectionHandler:
 
         from_instance = Section.objects.get(pk=from_instance_pk)
         from_instance.active = False
+        from_instance.name = f'{from_instance.name} [Inactive]'
         from_instance.save()
 
         new_sections = []
