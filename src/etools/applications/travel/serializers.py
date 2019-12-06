@@ -12,6 +12,7 @@ from etools.applications.action_points.serializers import ActionPointBaseSeriali
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
 from etools.applications.reports.serializers.v1 import SectionSerializer
+from etools.applications.reports.serializers.v2 import OfficeSerializer
 from etools.applications.travel.models import (
     Activity,
     ActivityActionPoint,
@@ -21,7 +22,6 @@ from etools.applications.travel.models import (
     Report,
 )
 from etools.applications.travel.permissions import ItineraryPermissions
-from etools.applications.reports.serializers.v2 import OfficeSerializer
 
 
 class BaseItinerarySerializer(serializers.ModelSerializer):
