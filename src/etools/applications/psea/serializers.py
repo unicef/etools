@@ -30,7 +30,7 @@ from etools.applications.psea.models import (
 from etools.applications.psea.permissions import AssessmentPermissions
 from etools.applications.psea.validators import EvidenceDescriptionValidator, PastDateValidator
 from etools.applications.reports.serializers.v1 import SectionSerializer
-from etools.applications.users.serializers import OfficeSerializer
+from etools.applications.reports.serializers.v2 import OfficeSerializer
 from etools.applications.users.serializers_v3 import MinimalUserSerializer
 from etools.applications.users.validators import ExternalUserValidator
 
