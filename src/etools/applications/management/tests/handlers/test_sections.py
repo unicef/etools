@@ -82,7 +82,7 @@ class TestSectionHandler(BaseTenantTestCase):
     def __check_history(self, sections, deactivated, history_count, history_type, from_count, to_count):
         """Checks the status before running the test"""
         self.assertEqual(Section.objects.count(), sections)
-        self.assertEqual(Section.objects.filter(active=False).count(), deactivated)
+        self.assertEqual(Section.objects.filter(active=False, name__endswith='[Inactive]').count(), deactivated)
         self.assertEqual(SectionHistory.objects.count(), history_count)
         if history_count:
             self.assertEqual(SectionHistory.objects.first().history_type, history_type)
