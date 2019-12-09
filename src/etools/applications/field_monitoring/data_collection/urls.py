@@ -13,6 +13,7 @@ activities_api.register(r'attachments', views.ActivityReportAttachmentsViewSet, 
 activities_api.register(r'checklists/attachments', views.ActivityChecklistAttachmentsViewSet,
                         basename='activity-checklists-attachments')
 activities_api.register(r'questions', views.ActivityQuestionsViewSet, basename='activity-questions')
+activities_api.register(r'methods', views.ActivityMethodsViewSet, basename='activity-methods')
 activities_api.register(r'checklists', views.ChecklistsViewSet, basename='checklists')
 activities_api.register(r'overall-findings', views.ActivityOverallFindingsViewSet,
                         basename='activity-overall-findings')

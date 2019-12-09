@@ -1,8 +1,11 @@
+import itertools
+
 from django.db.models import Prefetch
 from django.utils.translation import ugettext_lazy as _
 
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, viewsets
+from rest_framework.generics import get_object_or_404
 from rest_framework_bulk import BulkUpdateModelMixin
 from unicef_attachments.models import Attachment
 from unicef_restlib.views import NestedViewSetMixin
@@ -25,7 +28,8 @@ from etools.applications.field_monitoring.data_collection.serializers import (
     ChecklistSerializer,
     FindingSerializer,
 )
-from etools.applications.field_monitoring.fm_settings.serializers import FMCommonAttachmentSerializer
+from etools.applications.field_monitoring.fm_settings.models import Method
+from etools.applications.field_monitoring.fm_settings.serializers import FMCommonAttachmentSerializer, MethodSerializer
 from etools.applications.field_monitoring.permissions import (
     activity_field_is_editable_permission,
     IsEditAction,
@@ -78,6 +82,22 @@ class ActivityQuestionsViewSet(
     serializer_class = ActivityQuestionSerializer
     filter_backends = (DjangoFilterBackend,)
     filter_fields = ('is_enabled',)
+
+
+class ActivityMethodsViewSet(
+    FMBaseViewSet,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet,
+):
+    serializer_class = MethodSerializer
+
+    def get_queryset(self):
+        activity = get_object_or_404(MonitoringActivity.objects, pk=self.kwargs['monitoring_activity_pk'])
+        return Method.objects.filter(
+            pk__in=activity.questions.filter(
+                is_enabled=True
+            ).values_list('question__methods', flat=True)
+        )
 
 
 class ChecklistsViewSet(

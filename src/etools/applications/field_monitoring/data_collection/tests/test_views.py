@@ -579,3 +579,24 @@ class TestActivityChecklistOverallAttachments(ChecklistDataCollectionTestMixin, 
 
         with self.assertNumQueries(9):
             self._test_list(self.unicef_user, expected_objects=[checklist_overall_attachment])
+
+
+class TestActivityMethodsViewSet(FMBaseTestCaseMixin, APIViewSetTestCase):
+    base_view = 'field_monitoring_data_collection:activity-methods'
+
+    def get_list_args(self):
+        return [self.activity.pk]
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.activity = MonitoringActivityFactory()
+
+    def test_list(self):
+        method = MethodFactory()
+        ActivityQuestionFactory(monitoring_activity=self.activity, question__methods=[method], is_enabled=True)
+        ActivityQuestionFactory(monitoring_activity=self.activity, question__methods=[method, MethodFactory()],
+                                is_enabled=False)
+
+        with self.assertNumQueries(3):
+            self._test_list(self.unicef_user, [method])
