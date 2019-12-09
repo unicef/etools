@@ -618,10 +618,10 @@ class PartnerOrganization(TimeStampedModel):
         sc = hact['spot_checks']['completed']['total']
         au = hact['audits']['completed']
 
-        if pv + sc + au == 0:
-            return PartnerOrganization.ASSURANCE_VOID
-        elif (pv >= self.min_req_programme_visits) & (sc >= self.min_req_spot_checks) & (au >= self.min_req_audits):
+        if (pv >= self.min_req_programme_visits) & (sc >= self.min_req_spot_checks) & (au >= self.min_req_audits):
             return PartnerOrganization.ASSURANCE_COMPLETE
+        elif pv + sc + au == 0:
+            return PartnerOrganization.ASSURANCE_VOID
         else:
             return PartnerOrganization.ASSURANCE_PARTIAL
 
