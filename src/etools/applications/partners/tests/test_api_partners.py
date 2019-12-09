@@ -1211,7 +1211,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(BaseTenantTestCase):
         self.assertIn("vendor_number", response.data.keys())
         self.assertIn("address", response.data.keys())
         self.assertIn("Partner", response.data["name"])
-        self.assertEqual(['audits', 'programme_visits', 'spot_checks'],
+        self.assertEqual(['audits', 'programmatic_visits', 'spot_checks'],
                          sorted(response.data['hact_min_requirements'].keys()))
         self.assertEqual(['assurance_coverage', 'audits', 'outstanding_findings', 'programmatic_visits', 'spot_checks'],
                          sorted(response.data['hact_values'].keys()))

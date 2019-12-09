@@ -4,6 +4,7 @@ from datetime import datetime
 from django.db import connection, transaction
 
 from celery.utils.log import get_task_logger
+from unicef_notification.utils import send_notification_with_template
 from unicef_vision.exceptions import VisionException
 
 from etools.applications.hact.models import AggregateHact
@@ -11,6 +12,7 @@ from etools.applications.partners.models import PartnerOrganization
 from etools.applications.users.models import Country
 from etools.applications.vision.models import VisionSyncLog
 from etools.config.celery import app
+from etools.libraries.djangolib.utils import get_environment
 
 logger = get_task_logger(__name__)
 
@@ -24,6 +26,7 @@ def update_hact_for_country(business_area_code):
     )
     connection.set_tenant(country)
     logger.info('Set country {}'.format(business_area_code))
+    hact_updated_partner_list = []
     try:
         partners = PartnerOrganization.objects.hact_active()
         for partner in partners:
@@ -33,6 +36,9 @@ def update_hact_for_country(business_area_code):
             partner.spot_checks()
             partner.audits_completed()
             partner.hact_support()
+            updated = partner.update_min_requirements()
+            if updated:
+                hact_updated_partner_list.append(partner.name)
 
     except Exception as e:
         logger.info('HACT Sync', exc_info=True)
@@ -44,6 +50,8 @@ def update_hact_for_country(business_area_code):
         log.successful = True
     finally:
         log.save()
+    if hact_updated_partner_list:
+        notify_hact_update.delay(hact_updated_partner_list)
 
 
 @app.task
@@ -77,3 +85,17 @@ def update_aggregate_hact_values(*args, **kwargs):
                 logger.exception(country)
 
     logger.info('Hact Aggregator Task process finished')
+
+
+@app.task
+def notify_hact_update(partner_list):
+    email_context = {
+        'partners': partner_list,
+        'environment': get_environment(),
+    }
+    recipients = set(['ddinicola@unicef.org', ])  # WIP
+    send_notification_with_template(
+        recipients=list(recipients),
+        template_name='partners/hact_updated',
+        context=email_context
+    )
