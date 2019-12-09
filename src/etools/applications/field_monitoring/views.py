@@ -1,7 +1,8 @@
 from copy import copy
 
 from django.contrib.contenttypes.models import ContentType
-from django.http import Http404
+from django.db import transaction
+from django.http import Http404, HttpResponseBadRequest
 
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
@@ -114,3 +115,27 @@ class LinkedAttachmentsViewSet(
         serializer.is_valid(raise_exception=True)
         attachments = self.set_attachments(serializer.validated_data)
         return Response(self.get_serializer(instance=attachments, many=True).data, status=status.HTTP_200_OK)
+
+
+class BulkUpdateMixin:
+    @transaction.atomic
+    def patch(self, request, *args, **kwargs):
+        """
+        bulk update action. id's are required to correctly identify instances to update
+        """
+        if not isinstance(request.data, list):
+            raise HttpResponseBadRequest
+
+        objects_to_update = self.filter_queryset(self.get_queryset()).filter(**{
+            'id__in': [d['id'] for d in request.data],
+        })
+        data_by_id = {i.pop('id'): i for i in request.data}
+
+        updated_objects = []
+
+        for obj in objects_to_update:
+            serializer = self.get_serializer(instance=obj, data=data_by_id[obj.id], partial=True)
+            serializer.is_valid(raise_exception=True)
+            updated_objects.append(serializer.save())
+
+        return Response(self.get_serializer(instance=updated_objects, many=True).data, status=status.HTTP_200_OK)

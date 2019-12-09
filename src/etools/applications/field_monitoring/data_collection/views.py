@@ -1,12 +1,9 @@
-import itertools
-
 from django.db.models import Prefetch
 from django.utils.translation import ugettext_lazy as _
 
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, viewsets
 from rest_framework.generics import get_object_or_404
-from rest_framework_bulk import BulkUpdateModelMixin
 from unicef_attachments.models import Attachment
 from unicef_restlib.views import NestedViewSetMixin
 
@@ -36,7 +33,7 @@ from etools.applications.field_monitoring.permissions import (
     IsReadAction,
 )
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
-from etools.applications.field_monitoring.views import FMBaseViewSet, LinkedAttachmentsViewSet
+from etools.applications.field_monitoring.views import BulkUpdateMixin, FMBaseViewSet, LinkedAttachmentsViewSet
 
 
 class ActivityDataCollectionViewSet(
@@ -65,7 +62,7 @@ class ActivityQuestionsViewSet(
     NestedViewSetMixin,
     mixins.ListModelMixin,
     mixins.UpdateModelMixin,
-    BulkUpdateModelMixin,
+    BulkUpdateMixin,
     viewsets.GenericViewSet,
 ):
     permission_classes = FMBaseViewSet.permission_classes + [
@@ -146,7 +143,7 @@ class ChecklistFindingsViewSet(
     NestedViewSetMixin,
     mixins.ListModelMixin,
     mixins.UpdateModelMixin,
-    BulkUpdateModelMixin,
+    BulkUpdateMixin,
     viewsets.GenericViewSet,
 ):
     permission_classes = FMBaseViewSet.permission_classes + [
@@ -189,7 +186,7 @@ class ActivityFindingsViewSet(
     NestedViewSetMixin,
     mixins.ListModelMixin,
     mixins.UpdateModelMixin,
-    BulkUpdateModelMixin,
+    BulkUpdateMixin,
     viewsets.GenericViewSet,
 ):
     permission_classes = FMBaseViewSet.permission_classes + [

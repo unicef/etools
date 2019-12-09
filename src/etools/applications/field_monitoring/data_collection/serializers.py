@@ -4,7 +4,6 @@ from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
-from rest_framework_bulk import BulkListSerializer, BulkSerializerMixin
 from unicef_attachments.fields import FileTypeModelChoiceField
 from unicef_attachments.models import FileType
 from unicef_attachments.serializers import BaseAttachmentSerializer
@@ -32,7 +31,7 @@ class ActivityDataCollectionSerializer(serializers.ModelSerializer):
         fields = ('id',)
 
 
-class ActivityQuestionSerializer(BulkSerializerMixin, serializers.ModelSerializer):
+class ActivityQuestionSerializer(serializers.ModelSerializer):
     partner = MinimalPartnerOrganizationListSerializer(read_only=True)
     cp_output = MinimalOutputListSerializer(read_only=True)
     intervention = MinimalInterventionListSerializer(read_only=True)
@@ -41,7 +40,6 @@ class ActivityQuestionSerializer(BulkSerializerMixin, serializers.ModelSerialize
 
     class Meta:
         model = ActivityQuestion
-        list_serializer_class = BulkListSerializer
         fields = (
             'id', 'question', 'is_enabled', 'specific_details',
             'partner', 'intervention', 'cp_output',
@@ -113,12 +111,11 @@ class ChecklistOverallFindingSerializer(serializers.ModelSerializer):
         read_only_fields = ('partner', 'cp_output', 'intervention')
 
 
-class FindingSerializer(BulkSerializerMixin, serializers.ModelSerializer):
+class FindingSerializer(serializers.ModelSerializer):
     activity_question = ActivityQuestionSerializer(read_only=True)
 
     class Meta:
         model = Finding
-        list_serializer_class = BulkListSerializer
         fields = ('id', 'activity_question', 'value',)
 
 
@@ -171,12 +168,11 @@ class ActivityOverallFindingSerializer(serializers.ModelSerializer):
         return CompletedChecklistOverallFindingSerializer(instance=findings, many=True).data
 
 
-class ActivityQuestionOverallFindingSerializer(BulkSerializerMixin, serializers.ModelSerializer):
+class ActivityQuestionOverallFindingSerializer(serializers.ModelSerializer):
     activity_question = CompletedActivityQuestionSerializer(read_only=True)
 
     class Meta:
         model = ActivityQuestionOverallFinding
-        list_serializer_class = BulkListSerializer
         fields = ('id', 'activity_question', 'value',)
 
 
