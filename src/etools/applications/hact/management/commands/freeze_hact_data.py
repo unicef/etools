@@ -52,7 +52,7 @@ class Command(BaseCommand):
              self.get_or_empty(partner_hact, ['programmatic_visits', 'planned', 'q3'])),
             ('Programmatic Visits Planned Q4',
              self.get_or_empty(partner_hact, ['programmatic_visits', 'planned', 'q4'])),
-            ('Programmatic Visits M.R', partner.hact_min_requirements.get('programme_visits')),
+            ('Programmatic Visits M.R', partner.hact_min_requirements.get('programmatic_visits')),
             ('Programmatic Visits Completed Q1',
              self.get_or_empty(partner_hact, ['programmatic_visits', 'completed', 'q1'])),
             ('Programmatic Visits Completed Q2',

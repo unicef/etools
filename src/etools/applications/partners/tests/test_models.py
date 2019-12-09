@@ -255,7 +255,7 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
         hact_min_req = self.partner_organization.hact_min_requirements
         data = {
             "audits": 0,
-            "programme_visits": programmatic_visit,
+            "programmatic_visits": programmatic_visit,
             "spot_checks": spot_check,
         }
         self.assertEqual(hact_min_req, data)
@@ -291,7 +291,7 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
         hact_min_req = self.partner_organization.hact_min_requirements
         data = {
             "audits": 0,
-            "programme_visits": 0,
+            "programmatic_visits": 0,
             "spot_checks": 0,
         }
         self.assertEqual(hact_min_req, data)
