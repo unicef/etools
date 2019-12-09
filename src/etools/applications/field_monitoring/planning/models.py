@@ -219,9 +219,10 @@ class MonitoringActivity(
 
         from etools.applications.field_monitoring.data_collection.models import ActivityQuestion
 
-        applicable_questions = Question.objects.filter(
-            sections__in=self.sections.values_list('pk', flat=True), is_active=True
-        ).distinct()
+        applicable_questions = Question.objects.filter(is_active=True).distinct()
+        if self.sections.exists():
+            applicable_questions = applicable_questions.filter(sections__in=self.sections.values_list('pk', flat=True))
+
         questions = []
 
         for relation, level in self.RELATIONS_MAPPING:

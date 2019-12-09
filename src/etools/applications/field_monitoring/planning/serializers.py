@@ -138,7 +138,7 @@ class MonitoringActivitySerializer(UserContextSerializerMixin, MonitoringActivit
     permissions = serializers.SerializerMethodField(read_only=True)
     transitions = serializers.SerializerMethodField(read_only=True)
     field_office = SeparatedReadWriteField(read_field=OfficeSerializer())
-    sections = SeparatedReadWriteField(read_field=SectionSerializer(many=True))
+    sections = SeparatedReadWriteField(read_field=SectionSerializer(many=True), required=False)
 
     class Meta(MonitoringActivityLightSerializer.Meta):
         fields = MonitoringActivityLightSerializer.Meta.fields + (

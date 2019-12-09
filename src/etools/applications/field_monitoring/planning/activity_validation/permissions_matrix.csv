@@ -47,7 +47,6 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 
 
 ,location,All Users,,assigned,required,TRUE
-,sections,All Users,,checklist,required,TRUE
 ,location_site,All Users,,*,required,FALSE
 ,start_date,All Users,,assigned,required,TRUE
 ,end_date,All Users,,assigned,required,TRUE
