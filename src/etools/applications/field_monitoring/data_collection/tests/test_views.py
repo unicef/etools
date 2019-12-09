@@ -577,5 +577,5 @@ class TestActivityChecklistOverallAttachments(ChecklistDataCollectionTestMixin, 
         AttachmentFactory(content_object=self.activity.overall_findings.first())
         checklist_overall_attachment = AttachmentFactory(content_object=self.started_checklist.overall_findings.first())
 
-        with self.assertNumQueries(10):
+        with self.assertNumQueries(9):
             self._test_list(self.unicef_user, expected_objects=[checklist_overall_attachment])

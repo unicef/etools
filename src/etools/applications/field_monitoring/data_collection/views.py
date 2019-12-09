@@ -210,7 +210,7 @@ class ActivityChecklistAttachmentsViewSet(
         'content_object__intervention',
         'content_object__cp_output',
         'content_object__partner',
-    ).order_by('object_id')
+    ).select_related('uploaded_by').order_by('object_id')
 
     def get_parent_filter(self):
         parent = self.get_parent_object()

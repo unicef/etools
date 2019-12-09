@@ -45,7 +45,7 @@ class LinkedAttachmentsViewSet(
     ListModelMixin,
     GenericViewSet,
 ):
-    queryset = Attachment.objects.all()
+    queryset = Attachment.objects.select_related('uploaded_by')
     serializer_class = LinkedAttachmentBaseSerializer
     attachment_code = ''  # fill `code` field in attachment to deal with coded generics
     filter_backends = (DjangoFilterBackend,)
