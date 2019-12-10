@@ -103,7 +103,7 @@ class MonitoringActivity(
     models.Model,
     metaclass=MonitoringActivityMeta
 ):
-    TYPES = Choices(
+    MONITOR_TYPE_CHOICES = Choices(
         ('staff', _('Staff')),
         ('tpm', _('TPM')),
     )
@@ -148,7 +148,7 @@ class MonitoringActivity(
         ('interventions', 'intervention'),
     )
 
-    activity_type = models.CharField(max_length=10, choices=TYPES, default=TYPES.staff)
+    activity_type = models.CharField(max_length=10, choices=MONITOR_TYPE_CHOICES, default=MONITOR_TYPE_CHOICES.staff)
 
     tpm_partner = models.ForeignKey(TPMPartner, blank=True, null=True, verbose_name=_('TPM Partner'),
                                     on_delete=models.CASCADE)
@@ -306,7 +306,7 @@ class MonitoringActivity(
         pass
 
     def auto_accept_staff_activity(self):
-        if self.activity_type == self.TYPES.staff:
+        if self.activity_type == self.MONITOR_TYPE_CHOICES.staff:
             self.accept()
             self.save()
 
