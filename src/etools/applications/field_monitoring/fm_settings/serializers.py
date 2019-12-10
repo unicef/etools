@@ -125,7 +125,7 @@ class LocationFullSerializer(LocationLightSerializer):
             if boundary:
                 point = boundary.centroid
 
-        return json.loads(point.json)
+        return json.loads(point.json) if point else {}
 
 
 class LogIssueAttachmentSerializer(BaseAttachmentSerializer):
