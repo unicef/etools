@@ -109,7 +109,16 @@ class LocationFullSerializer(LocationLightSerializer):
         return json.loads(obj.geom.json) if obj.geom else {}
 
     def get_point(self, obj):
-        point = obj.point or self.Meta.model.objects.aggregate(boundary=Collect('point'))['boundary'].centroid
+        point = obj.point
+
+        if not point and obj.geom:
+            # get center point from geometry
+            point = obj.geom.centroid
+
+        if not point:
+            # get center point from nested locations boundary
+            point = self.Meta.model.objects.filter(parent=obj).aggregate(boundary=Collect('point'))['boundary'].centroid
+
         return json.loads(point.json)
 
 
