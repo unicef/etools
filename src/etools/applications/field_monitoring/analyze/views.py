@@ -19,7 +19,7 @@ from etools.applications.field_monitoring.analyze.serializers import (
 )
 from etools.applications.field_monitoring.fm_settings.models import LogIssue
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
-from etools.applications.field_monitoring.utils.models import SQCount
+from etools.applications.field_monitoring.utils.models import SubQueryCount
 from etools.applications.partners.models import Intervention, PartnerOrganization
 from etools.applications.reports.models import Result, ResultType
 
@@ -105,10 +105,10 @@ class IssuesPartnersView(ListAPIView):
     queryset = PartnerOrganization.objects.filter(
         Q(log_issues__isnull=False) | Q(actionpoint__isnull=False)
     ).annotate(
-        log_issues_count=SQCount(
+        log_issues_count=SubQueryCount(
             LogIssue.objects.filter(status=LogIssue.STATUS_CHOICES.new, partner_id=OuterRef('id'))
         ),
-        action_points_count=SQCount(
+        action_points_count=SubQueryCount(
             ActionPoint.objects.filter(status=ActionPoint.STATUS_OPEN, partner_id=OuterRef('id'))
         ),
     ).order_by('id').distinct()
@@ -120,10 +120,10 @@ class IssuesCPOutputsView(ListAPIView):
         Q(log_issues__isnull=False) | Q(actionpoint__isnull=False),
         result_type__name=ResultType.OUTPUT
     ).annotate(
-        log_issues_count=SQCount(
+        log_issues_count=SubQueryCount(
             LogIssue.objects.filter(status=LogIssue.STATUS_CHOICES.new, cp_output_id=OuterRef('id'))
         ),
-        action_points_count=SQCount(
+        action_points_count=SubQueryCount(
             ActionPoint.objects.filter(status=ActionPoint.STATUS_OPEN, cp_output_id=OuterRef('id'))
         ),
     ).order_by('id').distinct()
@@ -134,10 +134,10 @@ class IssuesLocationsView(ListAPIView):
     queryset = Location.objects.filter(
         Q(log_issues__isnull=False) | Q(actionpoint__isnull=False)
     ).annotate(
-        log_issues_count=SQCount(
+        log_issues_count=SubQueryCount(
             LogIssue.objects.filter(status=LogIssue.STATUS_CHOICES.new, location_id=OuterRef('id'))
         ),
-        action_points_count=SQCount(
+        action_points_count=SubQueryCount(
             ActionPoint.objects.filter(status=ActionPoint.STATUS_OPEN, location_id=OuterRef('id'))
         ),
     ).order_by('id').distinct()
