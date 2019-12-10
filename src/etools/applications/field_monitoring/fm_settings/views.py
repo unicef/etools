@@ -134,8 +134,9 @@ class LocationsCountryView(views.APIView):
 class FMLocationsViewSet(FMBaseViewSet, mixins.ListModelMixin, viewsets.GenericViewSet):
     queryset = Location.objects.all()
     serializer_class = LocationFullSerializer
-    filter_backends = (DjangoFilterBackend,)
+    filter_backends = (DjangoFilterBackend, SearchFilter)
     filter_fields = ('level', 'parent')
+    search_fields = ('name', 'gateway__name')
 
     @action(methods=['get'], detail=True)
     def path(self, request, *args, **kwargs):
