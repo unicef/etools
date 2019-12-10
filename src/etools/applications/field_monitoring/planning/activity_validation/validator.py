@@ -31,7 +31,7 @@ class ActivityValid(CompleteValidation):
     PERMISSIONS_CLASS = ActivityPermissions
 
     def check_required_fields(self, intervention):
-        required_fields = [f for f in self.permissions['required'] if self.permissions['required'][f] is True]
+        required_fields = [f for f in self.permissions['required'] if self.permissions['required'][f]]
         required_valid, fields = check_required_fields(intervention, required_fields)
         if not required_valid:
             raise StateValidationError(['Required fields not completed in {}: {}'.format(
@@ -41,7 +41,7 @@ class ActivityValid(CompleteValidation):
         # this can be set if running in a task and old_instance is not set
         if self.disable_rigid_check:
             return
-        rigid_fields = [f for f in self.permissions['edit'] if self.permissions['edit'][f] is False]
+        rigid_fields = [f for f in self.permissions['edit'] if not self.permissions['edit'][f]]
         rigid_valid, field = check_rigid_fields(intervention, rigid_fields, related=related)
         if not rigid_valid:
             raise StateValidationError(['Cannot change fields while in {}: {}'.format(intervention.status, field)])
