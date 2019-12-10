@@ -1,5 +1,6 @@
-from etools.applications.field_monitoring.groups import FMUser, PME
+from etools.applications.field_monitoring.groups import FMUser
 from etools.applications.partners.permissions import PMPPermissions
+from etools.applications.tpm.models import PME
 
 
 class ActivityPermissions(PMPPermissions):

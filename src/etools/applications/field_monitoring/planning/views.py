@@ -16,9 +16,9 @@ from rest_framework.response import Response
 from unicef_restlib.views import NestedViewSetMixin
 from unicef_snapshot.models import Activity as HistoryActivity
 
+from etools.applications.audit.models import UNICEFUser
 from etools.applications.field_monitoring.fm_settings.models import Question
 from etools.applications.field_monitoring.fm_settings.serializers import FMCommonAttachmentSerializer
-from etools.applications.field_monitoring.groups import UNICEFUser
 from etools.applications.field_monitoring.permissions import (
     activity_field_is_editable_permission,
     IsEditAction,

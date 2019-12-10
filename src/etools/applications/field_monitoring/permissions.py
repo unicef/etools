@@ -1,8 +1,9 @@
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 
-from etools.applications.field_monitoring.groups import FMUser, PME
+from etools.applications.field_monitoring.groups import FMUser
 from etools.applications.field_monitoring.planning.activity_validation.permissions import ActivityPermissions
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
+from etools.applications.tpm.models import PME
 
 
 class UserInGroup(BasePermission):

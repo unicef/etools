@@ -1,4 +1,5 @@
-from etools.applications.field_monitoring.groups import FMUser, PME
+from etools.applications.field_monitoring.groups import FMUser
+from etools.applications.tpm.models import PME
 
 
 def user_is_field_monitor_permission(activity, user):

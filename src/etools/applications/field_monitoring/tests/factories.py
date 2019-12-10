@@ -2,8 +2,10 @@ from django.contrib.auth.models import Group
 
 import factory
 
-from etools.applications.field_monitoring.groups import FMUser, PME, UNICEFUser
+from etools.applications.audit.models import UNICEFUser
+from etools.applications.field_monitoring.groups import FMUser
 from etools.applications.firms.tests.factories import BaseUserFactory
+from etools.applications.tpm.models import PME
 
 
 class UserFactory(BaseUserFactory):
