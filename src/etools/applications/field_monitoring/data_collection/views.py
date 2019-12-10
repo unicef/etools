@@ -68,14 +68,16 @@ class ActivityQuestionsViewSet(
     permission_classes = FMBaseViewSet.permission_classes + [
         IsReadAction | (IsEditAction & activity_field_is_editable_permission('activity_question_set'))
     ]
-    queryset = ActivityQuestion.objects.select_related('question', 'partner', 'cp_output', 'intervention')
-    queryset = queryset.prefetch_related(
+    queryset = ActivityQuestion.objects.select_related(
+        'question', 'partner', 'cp_output', 'intervention'
+    ).prefetch_related(
         'cp_output__result_type',
         'question__methods',
         'question__sections',
         'question__options',
+    ).order_by(
+        'partner_id', 'cp_output_id', 'intervention_id', 'id'
     )
-    queryset = queryset.order_by('partner_id', 'cp_output_id', 'intervention_id', 'id')
     serializer_class = ActivityQuestionSerializer
     filter_backends = (DjangoFilterBackend,)
     filter_fields = ('is_enabled',)
@@ -124,8 +126,9 @@ class ChecklistOverallFindingsViewSet(
     permission_classes = FMBaseViewSet.permission_classes + [
         IsReadAction | (IsEditAction & activity_field_is_editable_permission('started_checklist_set'))
     ]
-    queryset = ChecklistOverallFinding.objects.prefetch_related('partner', 'cp_output', 'intervention')
-    queryset = queryset.prefetch_related('attachments')
+    queryset = ChecklistOverallFinding.objects.prefetch_related(
+        'partner', 'cp_output', 'intervention', 'attachments'
+    )
     serializer_class = ChecklistOverallFindingSerializer
 
 
@@ -154,8 +157,7 @@ class ChecklistFindingsViewSet(
         'activity_question__partner',
         'activity_question__intervention',
         'activity_question__cp_output',
-    )
-    queryset = queryset.prefetch_related(
+    ).prefetch_related(
         'activity_question__question__options',
         'activity_question__question__methods',
         'activity_question__question__sections',
@@ -197,8 +199,7 @@ class ActivityFindingsViewSet(
         'activity_question__partner',
         'activity_question__intervention',
         'activity_question__cp_output',
-    )
-    queryset = queryset.prefetch_related(
+    ).prefetch_related(
         Prefetch(
             'activity_question__findings',
             Finding.objects.filter(value__isnull=False).prefetch_related(
