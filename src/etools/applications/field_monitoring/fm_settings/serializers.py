@@ -121,7 +121,9 @@ class LocationFullSerializer(LocationLightSerializer):
 
         if not point:
             # get center point from nested locations boundary
-            point = self.Meta.model.objects.filter(parent=obj).aggregate(boundary=Collect('point'))['boundary'].centroid
+            boundary = self.Meta.model.objects.filter(parent=obj).aggregate(boundary=Collect('point'))['boundary']
+            if boundary:
+                point = boundary.centroid
 
         return json.loads(point.json)
 
