@@ -106,7 +106,11 @@ class LocationFullSerializer(LocationLightSerializer):
         fields = LocationLightSerializer.Meta.fields + ('point', 'geom', 'is_leaf')
 
     def get_geom(self, obj):
-        return json.loads(obj.geom.json) if obj.geom else {}
+        if not obj.geom:
+            return {}
+
+        # simplify geometry to avoid huge polygons
+        return json.loads(obj.geom.simplify(0.001).json)
 
     def get_point(self, obj):
         point = obj.point
