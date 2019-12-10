@@ -1,9 +1,8 @@
-from django.utils import timezone
-
 from rest_framework import serializers
 from rest_framework.fields import ReadOnlyField
 from unicef_locations.models import Location
 
+from etools.applications.field_monitoring.analyze.utils import get_avg_days_between_visits, get_days_since_last_visit
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.partners.models import Intervention, PartnerOrganization
 from etools.applications.partners.serializers.interventions_v2 import MinimalInterventionListSerializer
@@ -40,10 +39,7 @@ class PartnersCoverageSerializer(serializers.ModelSerializer):
         return 0
 
     def get_days_since_visit(self, obj):
-        if not obj.last_visit:
-            return None
-
-        return (timezone.now().date() - obj.last_visit).days
+        return get_days_since_last_visit(obj)
 
 
 class InterventionCoverageSerializer(serializers.ModelSerializer):
@@ -58,19 +54,10 @@ class InterventionCoverageSerializer(serializers.ModelSerializer):
         ]
 
     def get_days_since_visit(self, obj):
-        if not obj.last_visit:
-            return None
-
-        return (timezone.now().date() - obj.last_visit).days
+        return get_days_since_last_visit(obj)
 
     def get_avg_days_between_visits(self, obj):
-        if obj.completed_visits in [0, 1]:  # nothing to calculate
-            return None
-
-        if not obj.last_visit or not obj.first_visit:  # possible only for corrupted data; dates are required
-            return None
-
-        return int((obj.last_visit - obj.first_visit).days / (obj.completed_visits - 1))
+        return get_avg_days_between_visits(obj)
 
 
 class CPOutputCoverageSerializer(serializers.ModelSerializer):
@@ -85,19 +72,10 @@ class CPOutputCoverageSerializer(serializers.ModelSerializer):
         ]
 
     def get_days_since_visit(self, obj):
-        if not obj.last_visit:
-            return None
-
-        return (timezone.now().date() - obj.last_visit).days
+        return get_days_since_last_visit(obj)
 
     def get_avg_days_between_visits(self, obj):
-        if obj.completed_visits in [0, 1]:  # nothing to calculate
-            return None
-
-        if not obj.last_visit or not obj.first_visit:  # possible only for corrupted data; dates are required
-            return None
-
-        return int((obj.last_visit - obj.first_visit).days / (obj.completed_visits - 1))
+        return get_avg_days_between_visits(obj)
 
 
 class CoverageGeographicSerializer(serializers.ModelSerializer):
