@@ -3,14 +3,14 @@ from copy import copy
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
 from django.http import Http404, HttpResponseBadRequest
+from django.shortcuts import get_object_or_404
 
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.mixins import ListModelMixin
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.viewsets import GenericViewSet
+from rest_framework.viewsets import ModelViewSet
 from unicef_attachments.models import Attachment, AttachmentLink
 from unicef_restlib.pagination import DynamicPageNumberPagination
 from unicef_restlib.views import MultiSerializerViewSetMixin, NestedViewSetMixin, SafeTenantViewSetMixin
@@ -41,8 +41,7 @@ class LinkedAttachmentsViewSet(
     FMBaseViewSet,
     NestedViewSetMixin,
     AttachmentFileTypesViewMixin,
-    ListModelMixin,
-    GenericViewSet,
+    ModelViewSet,
 ):
     queryset = Attachment.objects.select_related('uploaded_by')
     serializer_class = LinkedAttachmentBaseSerializer
@@ -108,11 +107,45 @@ class LinkedAttachmentsViewSet(
 
         return Attachment.objects.filter(pk__in=used)
 
-    def put(self, request, *args, **kwargs):
+    @action(detail=False, methods=['PUT'], url_name='bulk_update', url_path='bulk-update')
+    def bulk_update(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data, many=True, partial=False)
         serializer.is_valid(raise_exception=True)
         attachments = self.set_attachments(serializer.validated_data)
         return Response(self.get_serializer(instance=attachments, many=True).data, status=status.HTTP_200_OK)
+
+    def create(self, request, *args, **kwargs):
+        """
+        instead of standard create we have an instance, so we should link existing one.
+        the easiest way is to handle similar to update
+        """
+        instance = get_object_or_404(Attachment.objects, pk=request.data.get('id'))
+        serializer = self.get_serializer(data=request.data, instance=instance, partial=False)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def perform_create(self, serializer):
+        attachment_data = serializer.validated_data
+        pk = attachment_data['id']
+
+        self.update_attachment(
+            pk, self.get_parent_object().pk,
+            ContentType.objects.get_for_model(self.related_model),
+            file_type=attachment_data.get("file_type", None),
+            code=self.attachment_code,
+        )
+
+    def perform_update(self, serializer):
+        attachment_data = serializer.validated_data
+        pk = self.get_object().pk
+
+        self.update_attachment(
+            pk, self.get_parent_object().pk,
+            ContentType.objects.get_for_model(self.related_model),
+            file_type=attachment_data.get("file_type", None),
+            code=self.attachment_code,
+        )
 
 
 class BulkUpdateMixin:

@@ -291,9 +291,9 @@ class TestActivityAttachmentsView(FMBaseTestCaseMixin, APIViewSetTestCase):
         return [self.activity.pk]
 
     def set_attachments(self, user, data):
-        return self.make_list_request(user, method='put', data=data)
+        return self.make_request_to_viewset(user, action='bulk_update', method='put', data=data)
 
-    def test_add(self):
+    def test_bulk_add(self):
         self.assertEqual(self.activity.attachments.count(), 0)
 
         response = self.set_attachments(
@@ -317,7 +317,7 @@ class TestActivityAttachmentsView(FMBaseTestCaseMixin, APIViewSetTestCase):
 
         self._test_list(self.unicef_user, attachments)
 
-    def test_change_file_type(self):
+    def test_bulk_change_file_type(self):
         attachment = AttachmentFactory(content_object=self.activity, file_type__code='fm_common',
                                        file_type__name='before', code='attachments')
         AttachmentLinkFactory(attachment=attachment, content_object=self.activity)
@@ -332,7 +332,7 @@ class TestActivityAttachmentsView(FMBaseTestCaseMixin, APIViewSetTestCase):
         self.assertEqual(self.activity.attachments.count(), 1)
         self.assertEqual(Attachment.objects.get(pk=attachment.pk, object_id=self.activity.id).file_type.name, 'after')
 
-    def test_remove(self):
+    def test_bulk_remove(self):
         attachment = AttachmentFactory(content_object=self.activity, file_type__code='fm_common',
                                        file_type__name='before', code='attachments')
         AttachmentLinkFactory(attachment=attachment, content_object=self.activity)
@@ -342,6 +342,34 @@ class TestActivityAttachmentsView(FMBaseTestCaseMixin, APIViewSetTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(self.activity.attachments.count(), 0)
         self.assertEqual(AttachmentLink.objects.filter(object_id=self.activity.id).count(), 0)
+
+    def test_add(self):
+        self.assertFalse(self.activity.attachments.exists())
+
+        self._test_create(
+            self.fm_user,
+            data={
+                'file_type': AttachmentFileTypeFactory(code='fm_common').id,
+                'id': AttachmentFactory().id,
+            }
+        )
+        self.assertTrue(self.activity.attachments.exists())
+
+    def test_update(self):
+        attachment = AttachmentFactory(code='attachments', content_object=self.activity)
+
+        self._test_update(
+            self.fm_user, attachment,
+            {'file_type': FileType.objects.create(name='new', code='fm_common').id}
+        )
+        self.assertNotEqual(Attachment.objects.get(pk=attachment.pk).file_type_id, attachment.file_type_id)
+
+    def test_destroy(self):
+        attachment = AttachmentFactory(code='attachments', content_object=self.activity)
+        self.assertTrue(Attachment.objects.filter(pk=attachment.pk).exists())
+
+        self._test_destroy(self.fm_user, attachment)
+        self.assertFalse(Attachment.objects.filter(pk=attachment.pk).exists())
 
     def test_add_unicef(self):
         response = self.set_attachments(self.unicef_user, [])
