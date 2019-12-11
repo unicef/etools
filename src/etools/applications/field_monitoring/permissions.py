@@ -98,13 +98,17 @@ class IsActivityPersonResponsible(BasePermission):
 
 
 def activity_field_is_editable_permission(field):
+    """
+    Check the user is able to edit selected monitoring activity field.
+    View should either implement get_root_object to return instance of MonitoringActivity (if view is nested),
+    or return MonitoringActivity instance via get_object (can be used for detail actions).
+    """
+
     class FieldPermission(BasePermission):
         def has_permission(self, request, view):
             if not view.kwargs:
                 return True
 
-            # if view is nested or somehow provide root instance, use it. in another cases, use current;
-            # useful for special view actions
             if hasattr(view, 'get_root_object'):
                 instance = view.get_root_object()
             else:
