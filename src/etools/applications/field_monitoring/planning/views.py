@@ -53,7 +53,6 @@ from etools.applications.field_monitoring.planning.serializers import (
 )
 from etools.applications.field_monitoring.views import FMBaseViewSet, LinkedAttachmentsViewSet
 from etools.applications.partners.models import Intervention
-from etools.applications.permissions2.views import FSMTransitionActionMixin
 from etools.applications.reports.models import Result, ResultType
 from etools.applications.reports.serializers.v2 import MinimalOutputListSerializer
 
@@ -134,7 +133,6 @@ class MonitoringActivitiesViewSet(
     ValidatorViewMixin,
     FMBaseViewSet,
     viewsets.ModelViewSet,
-    FSMTransitionActionMixin,
 ):
     """
     Retrieve and Update Agreement.
