@@ -45,7 +45,7 @@ class ResultSerializer(OutputListSerializer):
 class OptionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Option
-        fields = ('id', 'label', 'value')
+        fields = ('label', 'value')
         extra_kwargs = {
             'label': {'required': True},
             'value': {'required': True},
@@ -95,7 +95,7 @@ class QuestionSerializer(QuestionLightSerializer):
         updated_pks = []
         for option in options:
             updated_pks.append(
-                Option.objects.get_or_create(
+                Option.objects.update_or_create(
                     question=instance, value=option['value'],
                     defaults={'label': option['label']}
                 )[0].id
