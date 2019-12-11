@@ -12,7 +12,7 @@ from unicef_attachments.models import FileType
 from unicef_attachments.serializers import BaseAttachmentSerializer
 from unicef_locations.serializers import LocationLightSerializer, LocationSerializer
 from unicef_restlib.fields import SeparatedReadWriteField
-from unicef_restlib.serializers import UserContextSerializerMixin, WritableNestedSerializerMixin
+from unicef_restlib.serializers import UserContextSerializerMixin
 from unicef_snapshot.serializers import SnapshotModelSerializer
 
 from etools.applications.action_points.serializers import HistorySerializer
@@ -42,10 +42,14 @@ class ResultSerializer(OutputListSerializer):
         pass
 
 
-class OptionSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
-    class Meta(WritableNestedSerializerMixin.Meta):
+class OptionSerializer(serializers.ModelSerializer):
+    class Meta:
         model = Option
         fields = ('id', 'label', 'value')
+        extra_kwargs = {
+            'label': {'required': True},
+            'value': {'required': True},
+        }
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -64,16 +68,41 @@ class QuestionLightSerializer(serializers.ModelSerializer):
         )
 
 
-class QuestionSerializer(WritableNestedSerializerMixin, QuestionLightSerializer):
+class QuestionSerializer(QuestionLightSerializer):
     options = OptionSerializer(many=True, required=False)
 
-    class Meta(WritableNestedSerializerMixin.Meta, QuestionLightSerializer.Meta):
+    class Meta(QuestionLightSerializer.Meta):
         fields = QuestionLightSerializer.Meta.fields + ('options',)
         read_only_fields = ('is_custom',)
 
     def create(self, validated_data):
         validated_data['is_custom'] = True
-        return super().create(validated_data)
+        options = validated_data.pop('options', None)
+        instance = super().create(validated_data)
+        self.set_options(instance, options)
+        return instance
+
+    def update(self, instance, validated_data):
+        options = validated_data.pop('options', None)
+        instance = super().update(instance, validated_data)
+        self.set_options(instance, options)
+        return instance
+
+    def set_options(self, instance, options):
+        if options is None:
+            return
+
+        updated_pks = []
+        for option in options:
+            updated_pks.append(
+                Option.objects.get_or_create(
+                    question=instance, value=option['value'],
+                    defaults={'label': option['label']}
+                )[0].id
+            )
+
+        # cleanup, remove unused options
+        instance.options.exclude(pk__in=updated_pks).delete()
 
 
 class LocationSiteLightSerializer(serializers.ModelSerializer):

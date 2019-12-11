@@ -816,7 +816,7 @@ class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
                 'options': [
                     {'label': 'Option #1', 'value': '1'},
                     {'label': 'Option #2', 'value': '2'},
-                    {'label': 'Option #3'},  # value should be generated automatically
+                    {'label': 'Option #3', 'value': '3'},
                 ],
                 'text': 'Test Question',
                 'is_hact': False
@@ -827,7 +827,7 @@ class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(len(response.data['options']), 3)
         self.assertListEqual(
             [o['value'] for o in response.data['options']],
-            ['1', '2', 'option-3']
+            ['1', '2', '3']
         )
 
     def test_create_bool(self):
@@ -859,6 +859,7 @@ class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
 
     def test_update(self):
         question = QuestionFactory(answer_type=Question.ANSWER_TYPES.likert_scale, options__count=2)
+        first_option, second_option = question.options.all()
 
         response = self.forced_auth_req(
             'patch',
@@ -867,7 +868,7 @@ class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
             data={
                 'title': 'New title',
                 'options': [
-                    {'id': question.options.first().id, '_delete': True},
+                    {'label': first_option.label, 'value': first_option.value},
                     {'label': '1', 'value': '1'},
                     {'label': '2', 'value': '2'},
                 ]
@@ -876,3 +877,5 @@ class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['options']), 3)
+        self.assertTrue(question.options.filter(pk=first_option.pk).exists())
+        self.assertFalse(question.options.filter(pk=second_option.pk).exists())

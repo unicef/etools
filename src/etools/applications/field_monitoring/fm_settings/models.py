@@ -157,6 +157,7 @@ class Option(models.Model):
         verbose_name = _('Option')
         verbose_name_plural = _('Option')
         ordering = ('id',)
+        unique_together = ('question', 'value')
 
     def __str__(self):
         return self.label
