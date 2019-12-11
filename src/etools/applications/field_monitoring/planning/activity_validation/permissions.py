@@ -36,5 +36,5 @@ class ActivityPermissions(PMPPermissions):
         self.condition_map = {
             'is_ma_related_user': is_ma_user(),
             'is_person_responsible': is_person_responsible(),
-            'tpm_visit+tpm_ma_related': self.instance.activity_type == 'tpm' and is_ma_user()
+            'tpm_visit+tpm_ma_related': self.instance.monitor_type == 'tpm' and is_ma_user()
         }

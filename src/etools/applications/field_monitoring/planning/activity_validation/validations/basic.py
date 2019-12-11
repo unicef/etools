@@ -8,7 +8,7 @@ from etools.applications.reports.models import Result
 
 
 def staff_activity_has_no_tpm_partner(i):
-    if i.activity_type == MonitoringActivity.MONITOR_TYPE_CHOICES.staff and i.tpm_partner:
+    if i.monitor_type == MonitoringActivity.MONITOR_TYPE_CHOICES.staff and i.tpm_partner:
         raise BasicValidationError(_('TPM Partner selected for staff activity'))
     return True
 
