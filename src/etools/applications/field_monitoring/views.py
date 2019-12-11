@@ -34,7 +34,7 @@ class AttachmentFileTypesViewMixin:
         if 'file_type' not in declared_fields:
             raise Http404
 
-        return Response(data=dict(declared_fields['file_type'].queryset.values_list('id', 'label')))
+        return Response(data=declared_fields['file_type'].queryset.values('id', 'label'))
 
 
 class LinkedAttachmentsViewSet(

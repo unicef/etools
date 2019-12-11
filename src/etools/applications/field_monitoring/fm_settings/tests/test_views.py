@@ -392,8 +392,8 @@ class TestActivityAttachmentsView(FMBaseTestCaseMixin, APIViewSetTestCase):
 
         response = self.make_request_to_viewset(self.unicef_user, action='file-types')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn(file_type.id, response.data.keys())
-        self.assertNotIn(wrong_file_type.id, response.data)
+        self.assertIn(file_type.id, [d['id'] for d in response.data])
+        self.assertNotIn(wrong_file_type.id, [d['id'] for d in response.data])
 
 
 class TestInterventionLocationsView(FMBaseTestCaseMixin, BaseTenantTestCase):
@@ -659,8 +659,8 @@ class TestLogIssueAttachmentsView(FMBaseTestCaseMixin, APIViewSetTestCase):
 
         response = self.make_request_to_viewset(self.unicef_user, action='file-types')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn(file_type.id, response.data.keys())
-        self.assertNotIn(wrong_file_type.id, response.data)
+        self.assertIn(file_type.id, [d['id'] for d in response.data])
+        self.assertNotIn(wrong_file_type.id, [d['id'] for d in response.data])
 
 
 class TestCategoriesView(FMBaseTestCaseMixin, BaseTenantTestCase):
