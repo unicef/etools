@@ -2,6 +2,7 @@ import json
 from copy import copy
 
 from django.contrib.gis.db.models import Collect
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
@@ -162,17 +163,14 @@ class LogIssueSerializer(UserContextSerializerMixin, SnapshotModelSerializer):
     def validate(self, attrs):
         validated_data = super().validate(attrs)
 
-        provided_values = [v for v in [
-            validated_data.get('cp_output', self.instance.cp_output if self.instance else None),
-            validated_data.get('partner', self.instance.partner if self.instance else None),
-            validated_data.get('location', self.instance.location if self.instance else None),
-        ] if v]
-
-        if not provided_values:
-            raise ValidationError(_('Related object not provided'))
-
-        if len(provided_values) != 1:
-            raise ValidationError(_('Maximum one related object should be provided'))
+        try:
+            LogIssue._validate_related_objects(
+                validated_data.get('cp_output', self.instance.cp_output if self.instance else None),
+                validated_data.get('partner', self.instance.partner if self.instance else None),
+                validated_data.get('location', self.instance.location if self.instance else None),
+            )
+        except DjangoValidationError as ex:
+            raise ValidationError(ex.messages)
 
         return validated_data
 

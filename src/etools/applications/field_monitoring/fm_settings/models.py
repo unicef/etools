@@ -2,6 +2,7 @@ from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.gis.db.models import PointField
 from django.contrib.postgres.fields import JSONField
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Prefetch, QuerySet
 from django.utils.text import slugify
@@ -256,6 +257,20 @@ class LogIssue(TimeStampedModel):
 
     def __str__(self):
         return '{}: {}'.format(self.related_to, self.issue)
+
+    @staticmethod
+    def _validate_related_objects(cp_output, partner, location):
+        provided_values = [v for v in [cp_output, partner, location] if v]
+
+        if not provided_values:
+            raise ValidationError(_('Related object not provided'))
+
+        if len(provided_values) != 1:
+            raise ValidationError(_('Maximum one related object should be provided'))
+
+    def save(self, **kwargs):
+        self._validate_related_objects(self.cp_output, self.partner, self.location)
+        super().save(**kwargs)
 
     @property
     def related_to(self):

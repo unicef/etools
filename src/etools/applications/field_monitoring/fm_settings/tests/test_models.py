@@ -1,9 +1,12 @@
 from django.contrib.gis.geos import GEOSGeometry
+from django.core.exceptions import ValidationError
 
 from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
-from etools.applications.field_monitoring.fm_settings.tests.factories import LocationSiteFactory
+from etools.applications.field_monitoring.fm_settings.tests.factories import LocationSiteFactory, LogIssueFactory
+from etools.applications.reports.models import ResultType
+from etools.applications.reports.tests.factories import ResultFactory
 
 
 class SitesTestCase(BaseTenantTestCase):
@@ -81,3 +84,19 @@ class SitesTestCase(BaseTenantTestCase):
         site.save()
 
         self.assertEqual(site.parent, self.boundary_location)
+
+
+class LogIssueTestCase(BaseTenantTestCase):
+    def test_multiple_related_objects(self):
+        with self.assertRaises(ValidationError):
+            LogIssueFactory(
+                cp_output=ResultFactory(result_type__name=ResultType.OUTPUT),
+                location=LocationFactory()
+            )
+
+    def test_related_object_missing(self):
+        with self.assertRaises(ValidationError):
+            LogIssueFactory()
+
+    def test_related_object_provided(self):
+        LogIssueFactory(location=LocationFactory())
