@@ -502,7 +502,7 @@ class LogIssueViewTestCase(FMBaseTestCaseMixin, TestExportMixin, BaseTenantTestC
 
     def test_filter_by_monitoring_activity(self):
         activity = MonitoringActivityFactory(location=LocationFactory())
-        LogIssueFactory()
+        LogIssueFactory(partner=PartnerFactory())
         log_issue = LogIssueFactory(location=activity.location)
 
         response = self.forced_auth_req(
@@ -590,7 +590,7 @@ class TestLogIssueAttachmentsView(FMBaseTestCaseMixin, APIViewSetTestCase):
     def setUpTestData(cls):
         super().setUpTestData()
 
-        cls.log_issue = LogIssueFactory()
+        cls.log_issue = LogIssueFactory(partner=PartnerFactory())
 
     def get_list_args(self):
         return [self.log_issue.pk]
