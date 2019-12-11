@@ -110,7 +110,7 @@ class LocationFullSerializer(LocationLightSerializer):
             return {}
 
         # simplify geometry to avoid huge polygons
-        return json.loads(obj.geom.simplify(0.001).json)
+        return json.loads(obj.geom.simplify(0.003).json)
 
     def get_point(self, obj):
         point = obj.point
