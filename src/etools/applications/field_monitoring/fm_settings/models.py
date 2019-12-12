@@ -103,7 +103,7 @@ class Question(models.Model):
     level = models.CharField(max_length=15, choices=LEVELS, verbose_name=_('Level'))
     methods = models.ManyToManyField(Method, blank=True, verbose_name=_('Methods'))
     category = models.ForeignKey(Category, on_delete=models.CASCADE, verbose_name=_('Category'))
-    sections = models.ManyToManyField(Section, verbose_name=_('Sections'))
+    sections = models.ManyToManyField(Section, verbose_name=_('Sections'), blank=True)
     text = models.TextField(verbose_name=_('Question Text'))
     is_hact = models.BooleanField(default=False, verbose_name=_('Count as HACT'))
     is_custom = models.BooleanField(default=False, verbose_name=_('Is Custom'))
