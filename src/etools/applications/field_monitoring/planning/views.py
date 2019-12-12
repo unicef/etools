@@ -158,9 +158,11 @@ class MonitoringActivitiesViewSet(
 
         # todo: change to the user.is_unicef
         if UNICEFUser.name not in [g.name for g in self.request.user.groups.all()]:
+            # we should hide activities before assignment
+            # if reject reason available activity should be visible (draft + reject_reason = rejected)
             queryset = queryset.filter(
                 Q(person_responsible=self.request.user) | Q(team_members=self.request.user),
-                status__in=MonitoringActivity.TPM_AVAILABLE_STATUSES,
+                Q(status__in=MonitoringActivity.TPM_AVAILABLE_STATUSES) | ~Q(reject_reason=''),
             )
 
         if hasattr(self, 'action') and self.action == 'list':

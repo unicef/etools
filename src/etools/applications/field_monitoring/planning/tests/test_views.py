@@ -241,6 +241,16 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
                           expected_status=status.HTTP_400_BAD_REQUEST)
         self._test_update(self.fm_user, activity, {'status': 'cancelled', 'cancel_reason': 'just because'})
 
+    def test_reject_as_tpm(self):
+        tpm_partner = SimpleTPMPartnerFactory()
+        person_responsible = TPMUserFactory(tpm_partner=tpm_partner)
+        activity = MonitoringActivityFactory(
+            activity_type='tpm', status='assigned',
+            tpm_partner=tpm_partner, person_responsible=person_responsible
+        )
+
+        self._test_update(person_responsible, activity, {'status': 'draft', 'reject_reason': 'just because'})
+
     def test_draft_status_permissions(self):
         activity = MonitoringActivityFactory(activity_type='staff', status='draft')
 
