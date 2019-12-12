@@ -1,12 +1,14 @@
 
 from datetime import datetime
 
+from django.contrib.auth import get_user_model
 from django.db import connection, transaction
 
 from celery.utils.log import get_task_logger
 from unicef_notification.utils import send_notification_with_template
 from unicef_vision.exceptions import VisionException
 
+from etools.applications.audit.models import UNICEFAuditFocalPoint
 from etools.applications.hact.models import AggregateHact
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.users.models import Country
@@ -19,6 +21,11 @@ logger = get_task_logger(__name__)
 
 @app.task
 def update_hact_for_country(business_area_code):
+    updated_dict = {
+        'programmatic_visits': 'PV',
+        'spot_checks': 'SC',
+        'audits': 'Audits',
+    }
     country = Country.objects.get(business_area_code=business_area_code)
     log = VisionSyncLog(
         country=country,
@@ -38,7 +45,8 @@ def update_hact_for_country(business_area_code):
             partner.hact_support()
             updated = partner.update_min_requirements()
             if updated:
-                hact_updated_partner_list.append(partner.name)
+                updated_string = ', '.join([updated_dict[item] for item in updated])
+                hact_updated_partner_list.append((partner.vendor_number, partner.name, updated_string))
 
     except Exception as e:
         logger.info('HACT Sync', exc_info=True)
@@ -93,7 +101,10 @@ def notify_hact_update(partner_list):
         'partners': partner_list,
         'environment': get_environment(),
     }
-    recipients = set(['ddinicola@unicef.org', ])  # WIP
+    recipients = get_user_model().objects.filter(
+        groups=UNICEFAuditFocalPoint.as_group(),
+        profile__countries_available=connection.tenant
+    ).values_list('email', flat=True)
     send_notification_with_template(
         recipients=list(recipients),
         template_name='partners/hact_updated',

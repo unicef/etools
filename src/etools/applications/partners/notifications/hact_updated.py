@@ -3,11 +3,14 @@ defaults = {
     'description': 'HACT values have changed from previous sync',
     'subject': 'eTools {{environment}} - UNICEF HACT MR values changed',
     'content': """
-    Dear Colleague,
+    Dear Audit Focal Point,
 
-    Please note that HACT MR has changed for following partners:
-    {% for partner in partners %}
-    {{partner}}
+    The implementing partner(s) listed below require a new assurance activity.
+    Please review the assurance plan and schedule the assurance activity accordingly for this year.
+    If the assurance activity has been already completed, no further action is required.
+
+    {% for vendor_number, partner, updated in partners %}
+    {{vendor_number}} {{partner}} New: {{updated}}
     {% endfor %}
 
     Please note that this is an automated message and replies to this address not monitored.
@@ -16,12 +19,14 @@ defaults = {
     {% extends "email-templates/base" %}
 
     {% block content %}
-    Dear Colleague,<br/><br/>
+    Dear Audit Focal Point,<br/><br/>
 
-    Please note that HACT MR has changed for following partners:<br/>
+    The implementing partner(s) listed below require a new assurance activity. <br/>
+    Please review the assurance plan and schedule the assurance activity accordingly for this year.<br/>
+    If the assurance activity has been already completed, no further action is required.<br/><br/>
     <ul>
-    {% for partner in partners %}
-    <li>{{partner}}</li>
+    {% for vendor_number, partner, updated in partners %}
+    <li>{{vendor_number}} {{partner}} New: {{updated}}</li>
     {% endfor %}
     </ul>
     <br/>

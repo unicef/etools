@@ -786,14 +786,15 @@ class PartnerOrganization(TimeStampedModel):
 
     def update_min_requirements(self):
         hact = self.get_hact_json()
-        if any([hact[hact_eng]['minimum_requirements'] != self.hact_min_requirements[hact_eng]
-                for hact_eng in ['audits', 'spot_checks', 'programmatic_visits']]):
-            hact['audits']['minimum_requirements'] = self.hact_min_requirements['audits']
-            hact['spot_checks']['minimum_requirements'] = self.hact_min_requirements['spot_checks']
-            hact['programmatic_visits']['minimum_requirements'] = self.hact_min_requirements['programmatic_visits']
+        updated = []
+        for hact_eng in ['programmatic_visits', 'spot_checks', 'audits']:
+            if hact[hact_eng]['minimum_requirements'] != self.hact_min_requirements[hact_eng]:
+                hact[hact_eng]['minimum_requirements'] = self.hact_min_requirements[hact_eng]
+                updated.append(hact_eng)
+        if updated:
             self.hact_values = json.dumps(hact, cls=CustomJSONEncoder)
             self.save()
-            return True
+            return updated
 
     def get_admin_url(self):
         admin_url_name = 'admin:partners_partnerorganization_change'
