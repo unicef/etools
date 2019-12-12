@@ -1,3 +1,5 @@
+import json
+
 from rest_framework import serializers
 from rest_framework.fields import ReadOnlyField
 from unicef_locations.models import Location
@@ -80,6 +82,7 @@ class CPOutputCoverageSerializer(serializers.ModelSerializer):
 
 class CoverageGeographicSerializer(serializers.ModelSerializer):
     completed_visits = serializers.ReadOnlyField()
+    geom = serializers.SerializerMethodField()
 
     class Meta:
         model = Location
@@ -87,6 +90,13 @@ class CoverageGeographicSerializer(serializers.ModelSerializer):
             'id', 'name',
             'completed_visits', 'geom'
         ]
+
+    def get_geom(self, obj):
+        if not obj.geom:
+            return {}
+
+        # simplify geometry to avoid huge polygons
+        return json.loads(obj.geom.simplify(0.003).json)
 
 
 class MonitoringActivityHACTSerializer(serializers.ModelSerializer):
