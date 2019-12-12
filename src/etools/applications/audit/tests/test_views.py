@@ -566,11 +566,14 @@ class TestSpotCheckCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEn
 
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(
-            response.data['sections'],
-            [
-                {"id": section_1.pk, "name": section_1.name},
-                {"id": section_2.pk, "name": section_2.name},
-            ],
+            sorted(response.data['sections'], key=lambda x: x["id"]),
+            sorted(
+                [
+                    {"id": section_1.pk, "name": section_1.name},
+                    {"id": section_2.pk, "name": section_2.name},
+                ],
+                key=lambda x: x["id"]
+            ),
         )
         spot_check = SpotCheck.objects.get(pk=response.data["id"])
         self.assertEqual(
@@ -587,11 +590,14 @@ class TestSpotCheckCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEn
 
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
         self.assertEquals(
-            response.data['offices'],
-            [
-                {"id": office_1.pk, "name": office_1.name},
-                {"id": office_2.pk, "name": office_2.name},
-            ]
+            sorted(response.data['offices'], key=lambda x: x["id"]),
+            sorted(
+                [
+                    {"id": office_1.pk, "name": office_1.name},
+                    {"id": office_2.pk, "name": office_2.name},
+                ],
+                key=lambda x: x["id"],
+            ),
         )
         spot_check = SpotCheck.objects.get(pk=response.data["id"])
         self.assertEquals(
