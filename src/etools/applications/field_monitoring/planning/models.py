@@ -233,7 +233,7 @@ class MonitoringActivity(
                 for target_question in target_questions:
                     activity_question = ActivityQuestion(
                         question=target_question, monitoring_activity=self,
-                        is_enabled=target_question.template.is_active if target_question.template else True
+                        is_enabled=target_question.template.is_active if target_question.template else False
                     )
 
                     if target_question.template:
