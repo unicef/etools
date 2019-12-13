@@ -33,7 +33,12 @@ from etools.applications.field_monitoring.permissions import (
     IsReadAction,
 )
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
-from etools.applications.field_monitoring.views import BulkUpdateMixin, FMBaseViewSet, LinkedAttachmentsViewSet
+from etools.applications.field_monitoring.views import (
+    AttachmentFileTypesViewMixin,
+    BulkUpdateMixin,
+    FMBaseViewSet,
+    LinkedAttachmentsViewSet,
+)
 
 
 class ActivityDataCollectionViewSet(
@@ -218,7 +223,8 @@ class ActivityFindingsViewSet(
 class ActivityChecklistAttachmentsViewSet(
     FMBaseViewSet,
     NestedViewSetMixin,
-    viewsets.ReadOnlyModelViewSet
+    AttachmentFileTypesViewMixin,
+    viewsets.ReadOnlyModelViewSet,
 ):
     serializer_class = ChecklistAttachmentSerializer
     queryset = Attachment.objects.filter(

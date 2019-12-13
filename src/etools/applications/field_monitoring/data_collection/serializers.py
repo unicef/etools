@@ -17,7 +17,10 @@ from etools.applications.field_monitoring.data_collection.models import (
     Finding,
     StartedChecklist,
 )
-from etools.applications.field_monitoring.fm_settings.serializers import QuestionSerializer
+from etools.applications.field_monitoring.fm_settings.serializers import (
+    FMCommonAttachmentSerializer,
+    QuestionSerializer,
+)
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.partners.serializers.interventions_v2 import MinimalInterventionListSerializer
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
@@ -176,7 +179,7 @@ class ActivityQuestionOverallFindingSerializer(serializers.ModelSerializer):
         fields = ('id', 'activity_question', 'value',)
 
 
-class ChecklistAttachmentSerializer(BaseAttachmentSerializer):
+class ChecklistAttachmentSerializer(FMCommonAttachmentSerializer):
     checklist = ChecklistSerializer(read_only=True, source='content_object.started_checklist')
     partner = MinimalPartnerOrganizationListSerializer(read_only=True, source='content_object.partner')
     cp_output = MinimalOutputListSerializer(read_only=True, source='content_object.cp_output')

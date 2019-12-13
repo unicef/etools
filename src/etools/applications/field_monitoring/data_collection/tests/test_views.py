@@ -636,6 +636,15 @@ class TestActivityChecklistOverallAttachments(ChecklistDataCollectionTestMixin, 
         with self.assertNumQueries(9):
             self._test_list(self.unicef_user, expected_objects=[checklist_overall_attachment])
 
+    def test_file_types(self):
+        wrong_file_type = AttachmentFileTypeFactory()
+        file_type = AttachmentFileTypeFactory(code='fm_common')
+
+        response = self.make_request_to_viewset(self.unicef_user, action='file-types')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn(file_type.id, [d['id'] for d in response.data])
+        self.assertNotIn(wrong_file_type.id, [d['id'] for d in response.data])
+
 
 class TestActivityMethodsViewSet(FMBaseTestCaseMixin, APIViewSetTestCase):
     base_view = 'field_monitoring_data_collection:activity-methods'
