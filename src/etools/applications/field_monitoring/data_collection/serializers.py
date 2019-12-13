@@ -185,7 +185,7 @@ class ChecklistAttachmentSerializer(FMCommonAttachmentSerializer):
     cp_output = MinimalOutputListSerializer(read_only=True, source='content_object.cp_output')
     intervention = MinimalInterventionListSerializer(read_only=True, source='content_object.intervention')
 
-    class Meta(BaseAttachmentSerializer.Meta):
-        fields = BaseAttachmentSerializer.Meta.fields + [
+    class Meta(FMCommonAttachmentSerializer.Meta):
+        fields = FMCommonAttachmentSerializer.Meta.fields + [
             'checklist', 'partner', 'cp_output', 'intervention',
         ]
