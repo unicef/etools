@@ -176,7 +176,7 @@ def denormalize_attachment(attachment):
             "filename": attachment.filename,
             "uploaded_by": uploaded_by,
             "source": source,
-            "created": attachment.created.strftime("%d %b %Y"),
+            "created": attachment.created,
         }
     )
 
