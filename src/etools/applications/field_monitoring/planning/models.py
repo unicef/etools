@@ -186,6 +186,7 @@ class MonitoringActivity(
                                               code='report_attachments', blank=True)
 
     reject_reason = models.TextField(verbose_name=_('Rejection reason'), blank=True)
+    report_reject_reason = models.TextField(verbose_name=_('Report rejection reason'), blank=True)
     cancel_reason = models.TextField(verbose_name=_('Cancellation reason'), blank=True)
 
     class Meta:
@@ -333,6 +334,11 @@ class MonitoringActivity(
     @transition(field=status, source=STATUSES.submitted, target=STATUSES.completed,
                 permission=user_is_field_monitor_permission)
     def complete(self):
+        pass
+
+    @transition(field=status, source=STATUSES.submitted, target=STATUSES.assigned,
+                permission=user_is_field_monitor_permission)
+    def reject_report(self):
         pass
 
     @transition(field=status, target=STATUSES.cancelled,

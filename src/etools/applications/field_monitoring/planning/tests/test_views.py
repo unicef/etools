@@ -12,6 +12,7 @@ from etools.applications.attachments.tests.factories import (
     AttachmentLinkFactory,
 )
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.field_monitoring.data_collection.models import ActivityOverallFinding
 from etools.applications.field_monitoring.data_collection.tests.factories import StartedChecklistFactory
 from etools.applications.field_monitoring.fm_settings.models import Question
 from etools.applications.field_monitoring.fm_settings.tests.factories import QuestionFactory
@@ -191,7 +192,8 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
 
         person_responsible = UserFactory(unicef_user=True)
 
-        QuestionFactory(level=Question.LEVELS.partner, sections=activity.sections.all())
+        question = QuestionFactory(level=Question.LEVELS.partner, sections=activity.sections.all(), is_active=True)
+        QuestionTemplateFactory(question=question)
 
         def goto(next_status, user, extra_data=None):
             data = {
@@ -213,6 +215,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
 
         StartedChecklistFactory(monitoring_activity=activity)
         goto('report_finalization', person_responsible)
+        ActivityOverallFinding.objects.create(monitoring_activity=activity, narrative_finding='test')
         goto('data_collection', person_responsible)
         goto('report_finalization', person_responsible)
         goto('submitted', person_responsible)
@@ -241,11 +244,20 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
                           expected_status=status.HTTP_400_BAD_REQUEST)
         self._test_update(self.fm_user, activity, {'status': 'cancelled', 'cancel_reason': 'just because'})
 
+    def test_report_reject_reason_required(self):
+        activity = MonitoringActivityFactory(monitor_type='staff', status='submitted',
+                                             person_responsible=UserFactory(unicef_user=True),
+                                             team_members=[UserFactory(unicef_user=True)])
+
+        self._test_update(self.fm_user, activity, {'status': 'assigned'},
+                          expected_status=status.HTTP_400_BAD_REQUEST)
+        self._test_update(self.fm_user, activity, {'status': 'assigned', 'report_reject_reason': 'just because'})
+
     def test_reject_as_tpm(self):
         tpm_partner = SimpleTPMPartnerFactory()
         person_responsible = TPMUserFactory(tpm_partner=tpm_partner)
         activity = MonitoringActivityFactory(
-            activity_type='tpm', status='assigned',
+            monitor_type='tpm', status='assigned',
             tpm_partner=tpm_partner, person_responsible=person_responsible
         )
 

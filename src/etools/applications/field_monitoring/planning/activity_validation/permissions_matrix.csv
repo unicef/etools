@@ -43,6 +43,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,action_points,Field Monitor,,submitted,edit,TRUE
 ,action_points,Field Monitor,,completed,edit,TRUE
 ,cancel_reason,Field Monitor,,*,edit,TRUE
+,report_reject_reason,Field Monitor,,*,edit,TRUE
 ,reject_reason,All Users,is_ma_related_user,*,edit,TRUE
 
 
@@ -78,6 +79,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,reject_reason,All Users,,checklist,view,TRUE
 ,reject_reason,All Users,,review,view,TRUE
 ,cancel_reason,All Users,,*,view,TRUE
+,report_reject_reason,All Users,,*,view,TRUE
 ,action_points,Field Monitor,,submitted,view,TRUE
 ,action_points,Field Monitor,,completed,view,TRUE
 ,activity_question_set,All Users,,checklist,view,TRUE

@@ -29,6 +29,12 @@ def cancel_reason_provided(i):
     return True
 
 
+def report_reject_reason_provided(i, old_status):
+    if old_status == MonitoringActivity.STATUSES.submitted and not i.report_reject_reason:
+        raise StateValidationError([_('Report reject reason should be provided.')])
+    return True
+
+
 def activity_questions_required(i):
     if not i.questions.filter(is_enabled=True).exists():
         raise StateValidationError([_('At least one question shoud be enabled.')])

@@ -149,6 +149,7 @@ class TestMonitoringActivityQuestionsFlow(BaseTenantTestCase):
             [f.partner for f in self.activity.overall_findings.all()],
             [self.first_partner, self.second_partner]
         )
+        # todo
         self.assertEqual(
             ActivityQuestionOverallFinding.objects.filter(activity_question__monitoring_activity=self.activity).count(),
             3
