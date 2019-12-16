@@ -89,6 +89,7 @@ class TestMonitoringActivityQuestionsFlow(BaseTenantTestCase):
 
         self.basic_question = QuestionFactory(level=Question.LEVELS.partner,
                                               sections=[self.first_section, self.third_section])
+        QuestionTemplateFactory(question=self.basic_question, specific_details='')
         self.specific_question = QuestionFactory(level=Question.LEVELS.partner, sections=[self.second_section])
         self.specific_question_base_template = QuestionTemplateFactory(question=self.specific_question)
         self.specific_question_specific_template = QuestionTemplateFactory(question=self.specific_question,
@@ -149,7 +150,6 @@ class TestMonitoringActivityQuestionsFlow(BaseTenantTestCase):
             [f.partner for f in self.activity.overall_findings.all()],
             [self.first_partner, self.second_partner]
         )
-        # todo
         self.assertEqual(
             ActivityQuestionOverallFinding.objects.filter(activity_question__monitoring_activity=self.activity).count(),
             3
