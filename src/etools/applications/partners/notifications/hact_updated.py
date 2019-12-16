@@ -1,7 +1,7 @@
 name = 'partners/hact_updated'
 defaults = {
     'description': 'HACT values have changed from previous sync',
-    'subject': 'eTools {{environment}} - UNICEF HACT MR values changed',
+    'subject': 'eTools {{environment}} - New minimum assurance activities required',
     'content': """
     Dear Audit Focal Point,
 
