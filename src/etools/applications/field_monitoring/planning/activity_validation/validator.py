@@ -10,9 +10,12 @@ from etools.applications.field_monitoring.planning.activity_validation.validatio
     tpm_staff_members_belongs_to_the_partner,
 )
 from etools.applications.field_monitoring.planning.activity_validation.validations.state import (
+    activity_overall_findings_required,
+    activity_questions_required,
     at_least_one_item_added,
     cancel_reason_provided,
     reject_reason_provided,
+    started_checklists_required,
     tpm_partner_is_assigned_for_tpm_activity,
 )
 
@@ -61,6 +64,7 @@ class ActivityValid(CompleteValidation):
     def state_review_valid(self, instance, user=None):
         self.check_required_fields(instance)
         self.check_rigid_fields(instance, related=True)
+        activity_questions_required(instance)
         return True
 
     def state_assigned_valid(self, instance, user=None):
@@ -77,11 +81,13 @@ class ActivityValid(CompleteValidation):
     def state_report_finalization_valid(self, instance, user=None):
         self.check_required_fields(instance)
         self.check_rigid_fields(instance, related=True)
+        started_checklists_required(instance)
         return True
 
     def state_submitted_valid(self, instance, user=None):
         self.check_required_fields(instance)
         self.check_rigid_fields(instance, related=True)
+        activity_overall_findings_required(instance)
         return True
 
     def state_completed_valid(self, instance, user=None):

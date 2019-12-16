@@ -27,3 +27,21 @@ def cancel_reason_provided(i):
     if not i.cancel_reason:
         raise StateValidationError([_('Cancellation reason should be provided.')])
     return True
+
+
+def activity_questions_required(i):
+    if not i.questions.filter(is_enabled=True).exists():
+        raise StateValidationError([_('At least one question shoud be enabled.')])
+    return True
+
+
+def started_checklists_required(i):
+    if not i.checklists.exists():
+        raise StateValidationError([_('At least one checklist should be completed.')])
+    return True
+
+
+def activity_overall_findings_required(i):
+    if not i.overall_findings.exclude(narrative_finding='').exists():
+        raise StateValidationError([_('At least one summary finding should be completed.')])
+    return True

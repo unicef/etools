@@ -54,10 +54,6 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,person_responsible,All Users,,data_collection,required,TRUE
 ,team_members,All Users,,assigned,required,TRUE
 ,team_members,All Users,,data_collection,required,TRUE
-,activity_question_set,All Users,,review,required,TRUE
-,started_checklist_set,All Users,,report_finalization,required,TRUE
-,activity_overall_finding,All Users,,submitted,required,TRUE
-
 
 
 ,location,All Users,,*,view,TRUE

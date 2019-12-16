@@ -1,5 +1,8 @@
 from etools.applications.core.tests.cases import BaseTenantTestCase
-from etools.applications.field_monitoring.data_collection.models import ActivityQuestionOverallFinding
+from etools.applications.field_monitoring.data_collection.models import (
+    ActivityOverallFinding,
+    ActivityQuestionOverallFinding,
+)
 from etools.applications.field_monitoring.fm_settings.models import Question
 from etools.applications.field_monitoring.fm_settings.tests.factories import QuestionFactory
 from etools.applications.field_monitoring.planning.activity_validation.validator import ActivityValid
@@ -22,47 +25,56 @@ class TestMonitoringActivityValidations(BaseTenantTestCase):
     def test_tpm_partner_for_staff_activity(self):
         activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.draft, activity_type='staff',
                                              tpm_partner=TPMPartnerFactory())
-        self.assertTrue(ActivityValid(activity, user=self.user).errors)
+        self.assertFalse(ActivityValid(activity, user=self.user).is_valid)
 
     def test_tpm_partner_for_tpm_activity(self):
         activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.draft, activity_type='tpm',
                                              tpm_partner=TPMPartnerFactory())
-        self.assertFalse(ActivityValid(activity, user=self.user).errors)
+        self.assertTrue(ActivityValid(activity, user=self.user).is_valid)
 
     def test_empty_partner_for_tpm_activity(self):
         activity = MonitoringActivityFactory(
             activity_type='tpm', tpm_partner=None, status=MonitoringActivity.STATUSES.checklist
         )
-        self.assertTrue(ActivityValid(activity, user=self.user).errors)
+        self.assertFalse(ActivityValid(activity, user=self.user).is_valid)
 
     def test_empty_partner_for_tpm_activity_in_draft(self):
         activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.draft, activity_type='tpm',
                                              tpm_partner=None)
-        self.assertFalse(ActivityValid(activity, user=self.user).errors)
+        self.assertTrue(ActivityValid(activity, user=self.user).is_valid)
 
     def test_staff_member_from_assigned_partner(self):
         tpm_partner = TPMPartnerFactory()
         activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.draft, activity_type='tpm',
                                              tpm_partner=tpm_partner)
         activity.team_members.add(TPMPartnerStaffMemberFactory(tpm_partner=tpm_partner).user)
-        self.assertFalse(ActivityValid(activity, user=self.user).errors)
+        self.assertTrue(ActivityValid(activity, user=self.user).is_valid)
 
     def test_staff_member_from_other_partner(self):
         activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.draft, activity_type='tpm',
                                              tpm_partner=TPMPartnerFactory())
         activity.team_members.add(TPMPartnerStaffMemberFactory(tpm_partner=TPMPartnerFactory()).user)
-        self.assertTrue(ActivityValid(activity, user=self.user).errors)
+        self.assertFalse(ActivityValid(activity, user=self.user).is_valid)
 
     def test_interventions_without_partner(self):
         activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.draft, activity_type='staff',
                                              interventions=[InterventionFactory()])
-        self.assertTrue(ActivityValid(activity, user=self.user).errors)
+        self.assertFalse(ActivityValid(activity, user=self.user).is_valid)
 
     def test_interventions_without_output(self):
         intervention = InterventionFactory()
         activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.draft, activity_type='staff',
                                              interventions=[intervention], partners=[intervention.agreement.partner])
-        self.assertTrue(ActivityValid(activity, user=self.user).errors)
+        self.assertFalse(ActivityValid(activity, user=self.user).is_valid)
+
+    def test_activity_overall_findings_required(self):
+        activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.submitted)
+        activity.overall_findings.all().delete()
+        self.assertFalse(ActivityValid(activity, user=self.user).is_valid)
+        ActivityOverallFinding.objects.create(monitoring_activity=activity, narrative_finding='')
+        self.assertFalse(ActivityValid(activity, user=self.user).is_valid)
+        ActivityOverallFinding.objects.create(monitoring_activity=activity, narrative_finding='test')
+        self.assertTrue(ActivityValid(activity, user=self.user).is_valid)
 
 
 class TestMonitoringActivityQuestionsFlow(BaseTenantTestCase):
