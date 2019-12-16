@@ -28,8 +28,7 @@ class YearPlanFactory(factory.DjangoModelFactory):
 
 
 class BaseMonitoringActivityFactory(factory.DjangoModelFactory):
-    # tpm_partner = factory.SubFactory(TPMPartnerFactory)
-    activity_type = 'staff'
+    monitor_type = 'staff'
     location = factory.SubFactory(LocationFactory)
 
     start_date = date.today()

@@ -86,14 +86,14 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
 
     def test_list(self):
         activities = [
-            MonitoringActivityFactory(activity_type='tpm', tpm_partner=None),
-            MonitoringActivityFactory(activity_type='staff'),
+            MonitoringActivityFactory(monitor_type='tpm', tpm_partner=None),
+            MonitoringActivityFactory(monitor_type='staff'),
         ]
 
         self._test_list(self.unicef_user, activities, data={'page': 1, 'page_size': 10})
 
     def test_details(self):
-        activity = MonitoringActivityFactory(activity_type='staff', team_members=[UserFactory(unicef_user=True)])
+        activity = MonitoringActivityFactory(monitor_type='staff', team_members=[UserFactory(unicef_user=True)])
 
         response = self._test_retrieve(self.fm_user, activity)
 
@@ -109,14 +109,14 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
 
     def test_unlinked_intervention(self):
         intervention = InterventionFactory()
-        activity = MonitoringActivityFactory(activity_type='staff', interventions=[intervention],
+        activity = MonitoringActivityFactory(monitor_type='staff', interventions=[intervention],
                                              partners=[intervention.agreement.partner])
         self._test_update(self.fm_user, activity, data={'partners': []}, expected_status=status.HTTP_400_BAD_REQUEST)
 
     def test_add_linked_intervention(self):
         intervention = InterventionFactory()
         link = InterventionResultLinkFactory(intervention=intervention)
-        activity = MonitoringActivityFactory(activity_type='staff')
+        activity = MonitoringActivityFactory(monitor_type='staff')
         data = {
             'partners': [intervention.agreement.partner.id],
             'interventions': [intervention.id],
@@ -126,7 +126,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         self.assertNotEqual(response.data['cp_outputs'], [])
 
     def test_update_draft_success(self):
-        activity = MonitoringActivityFactory(activity_type='tpm', tpm_partner=None)
+        activity = MonitoringActivityFactory(monitor_type='tpm', tpm_partner=None)
 
         response = self._test_update(self.fm_user, activity, data={'tpm_partner': TPMPartnerFactory().pk})
 
@@ -134,7 +134,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         self.assertNotEqual(response.data['tpm_partner'], {})
 
     def test_update_tpm_partner_staff_activity(self):
-        activity = MonitoringActivityFactory(activity_type='staff')
+        activity = MonitoringActivityFactory(monitor_type='staff')
 
         self._test_update(
             self.fm_user, activity,
@@ -144,7 +144,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         )
 
     def test_auto_accept_activity(self):
-        activity = MonitoringActivityFactory(activity_type='staff',
+        activity = MonitoringActivityFactory(monitor_type='staff',
                                              status='pre_' + MonitoringActivity.STATUSES.assigned)
 
         response = self._test_update(self.fm_user, activity, data={'status': 'assigned'})
@@ -158,7 +158,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             staff.user for staff in TPMPartnerStaffMemberFactory.create_batch(size=2, tpm_partner=tpm_partner)
         ]
 
-        activity = MonitoringActivityFactory(activity_type='tpm', tpm_partner=tpm_partner,
+        activity = MonitoringActivityFactory(monitor_type='tpm', tpm_partner=tpm_partner,
                                              status='pre_' + MonitoringActivity.STATUSES.assigned,
                                              team_members=team_members)
 
@@ -185,7 +185,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
 
     def test_flow(self):
         activity = MonitoringActivityFactory(
-            activity_type='staff', status='draft',
+            monitor_type='staff', status='draft',
             partners=[PartnerFactory()], sections=[SectionFactory()]
         )
 
@@ -226,7 +226,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
 
     def test_reject_reason_required(self):
         person_responsible = UserFactory(unicef_user=True)
-        activity = MonitoringActivityFactory(activity_type='staff', status='assigned',
+        activity = MonitoringActivityFactory(monitor_type='staff', status='assigned',
                                              person_responsible=person_responsible)
 
         self._test_update(person_responsible, activity, {'status': 'draft'},
@@ -234,7 +234,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         self._test_update(person_responsible, activity, {'status': 'draft', 'reject_reason': 'just because'})
 
     def test_cancel_reason_required(self):
-        activity = MonitoringActivityFactory(activity_type='staff', status='assigned',
+        activity = MonitoringActivityFactory(monitor_type='staff', status='assigned',
                                              person_responsible=self.unicef_user)
 
         self._test_update(self.fm_user, activity, {'status': 'cancelled'},
@@ -252,7 +252,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         self._test_update(person_responsible, activity, {'status': 'draft', 'reject_reason': 'just because'})
 
     def test_draft_status_permissions(self):
-        activity = MonitoringActivityFactory(activity_type='staff', status='draft')
+        activity = MonitoringActivityFactory(monitor_type='staff', status='draft')
 
         response = self._test_retrieve(self.fm_user, activity)
         permissions = response.data['permissions']
@@ -265,7 +265,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         self.assertFalse(permissions['view']['additional_info'])
 
     def test_checklist_status_permissions(self):
-        activity = MonitoringActivityFactory(activity_type='staff', status='checklist')
+        activity = MonitoringActivityFactory(monitor_type='staff', status='checklist')
 
         response = self._test_retrieve(self.fm_user, activity)
         permissions = response.data['permissions']
@@ -278,7 +278,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         self.assertTrue(permissions['view']['additional_info'])
 
     def test_review_status_permissions(self):
-        activity = MonitoringActivityFactory(activity_type='staff', status='review')
+        activity = MonitoringActivityFactory(monitor_type='staff', status='review')
 
         response = self._test_retrieve(self.fm_user, activity)
         permissions = response.data['permissions']

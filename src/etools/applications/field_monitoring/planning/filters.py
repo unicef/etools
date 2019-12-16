@@ -18,7 +18,7 @@ class MonitoringActivitiesFilterSet(filters.FilterSet):
     class Meta:
         model = MonitoringActivity
         fields = {
-            'activity_type': ['exact'],
+            'monitor_type': ['exact'],
             'tpm_partner': ['exact', 'in'],
             'team_members': ['in'],
             'person_responsible': ['exact', 'in'],

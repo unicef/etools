@@ -150,7 +150,7 @@ class MonitoringActivitiesViewSet(
     filter_backends = (DjangoFilterBackend, ReferenceNumberOrderingFilter, OrderingFilter)
     filter_class = MonitoringActivitiesFilterSet
     ordering_fields = (
-        'start_date', 'end_date', 'location', 'location_site', 'activity_type', 'checklists_count', 'status'
+        'start_date', 'end_date', 'location', 'location_site', 'monitor_type', 'checklists_count', 'status'
     )
 
     def get_queryset(self):

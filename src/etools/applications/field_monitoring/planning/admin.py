@@ -21,8 +21,8 @@ class QuestionTemplateAdmin(admin.ModelAdmin):
 @admin.register(MonitoringActivity)
 class MonitoringActivityAdmin(admin.ModelAdmin):
     list_display = (
-        'reference_number', 'activity_type', 'tpm_partner', 'person_responsible',
+        'reference_number', 'monitor_type', 'tpm_partner', 'person_responsible',
         'location', 'location_site', 'start_date', 'end_date', 'status'
     )
     list_select_related = ('tpm_partner', 'person_responsible', 'location', 'location_site')
-    list_filter = ('activity_type', 'status')
+    list_filter = ('monitor_type', 'status')
