@@ -1,5 +1,7 @@
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.action_points.tests.factories import ActionPointFactory
+from etools.applications.audit.models import Engagement
+from etools.applications.audit.tests.factories import AuditFactory, MicroAssessmentFactory, SpotCheckFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.management.handlers.sections import (
     IndicatorSectionInconsistentException,
@@ -52,22 +54,30 @@ class TestSectionHandler(BaseTenantTestCase):
         TravelFactory(status=Travel.COMPLETED, section=cls.nutrition)
         TravelFactory(status=Travel.COMPLETED, section=cls.health)
 
+        cls.engagement1 = AuditFactory(status=Engagement.PARTNER_CONTACTED)
+        cls.engagement2 = SpotCheckFactory(status=Engagement.REPORT_SUBMITTED)
+        cls.engagement3 = MicroAssessmentFactory(status=Engagement.FINAL)
+        cls.engagement1.sections.set([cls.health, cls.nutrition])
+        cls.engagement2.sections.set([cls.nutrition, cls.health])
+        cls.engagement3.sections.set([cls.health, cls.nutrition, cls.ict])
+
         cls.action_point = ActionPointFactory(status=ActionPoint.STATUS_OPEN, section=cls.health)
         ActionPointFactory(status=ActionPoint.STATUS_COMPLETED, section=cls.nutrition)
 
     def __check_section(self, section, counts):
         """Utility method to make more thin and readable tests"""
-        interventions, applied_indicators, travels, action_points = counts
+        interventions, applied_indicators, travels, engagements, action_points = counts
         self.assertEqual(Intervention.objects.filter(sections=section).count(), interventions)
         self.assertEqual(AppliedIndicator.objects.filter(section=section).count(), applied_indicators)
         self.assertEqual(Travel.objects.filter(section=section).count(), travels)
+        self.assertEqual(Engagement.objects.filter(sections=section).count(), engagements)
         self.assertEqual(ActionPoint.objects.filter(section=section).count(), action_points)
 
     def __check_before(self):
         """Checks the status before running the test"""
-        self.__check_section(self.health, (3, 3, 3, 1))
-        self.__check_section(self.nutrition, (3, 1, 1, 1))
-        self.__check_section(self.ict, (1, 1, 1, 0))
+        self.__check_section(self.health, (3, 3, 3, 3, 1))
+        self.__check_section(self.nutrition, (3, 1, 1, 3, 1))
+        self.__check_section(self.ict, (1, 1, 1, 1, 0))
 
     def __check_history(self, sections, deactivated, history_count, history_type, from_count, to_count):
         """Checks the status before running the test"""
@@ -93,10 +103,10 @@ class TestSectionHandler(BaseTenantTestCase):
 
         health_and_nutrition = Section.objects.get(name='Health and Nutrition')
         self.__check_history(4, 2, 1, SectionHistory.MERGE, 2, 1)
-        self.__check_section(self.health, (1, 1, 1, 0))
-        self.__check_section(self.nutrition, (1, 0, 1, 1))
-        self.__check_section(health_and_nutrition, (2, 3, 2, 1))
-        self.__check_section(self.ict, (1, 1, 1, 0))
+        self.__check_section(self.health, (1, 1, 1, 1, 0))
+        self.__check_section(self.nutrition, (1, 0, 1, 1, 1))
+        self.__check_section(health_and_nutrition, (2, 3, 2, 2, 1))
+        self.__check_section(self.ict, (1, 1, 1, 1, 0))
 
     def test_close_ok(self):
         self.__check_history(3, 0, 0, None, None, None)
@@ -106,6 +116,7 @@ class TestSectionHandler(BaseTenantTestCase):
                 'interventions': [self.intervention1.pk, self.intervention3.pk],
                 'applied_indicators': [self.applied_indicator5.pk],
                 'travels': [self.travel2.pk, ],
+                'engagements': [self.engagement1.pk, ],
                 'tpm_activities': [],
                 'action_points': [self.action_point.pk],
             },
@@ -113,6 +124,7 @@ class TestSectionHandler(BaseTenantTestCase):
                 'interventions': [self.intervention1.pk],
                 'applied_indicators': [self.applied_indicator1.pk],
                 'travels': [self.travel1.pk, self.travel2.pk],
+                'engagements': [self.engagement2.pk, ],
                 'tpm_activities': [],
                 'action_points': [],
             }
@@ -124,11 +136,11 @@ class TestSectionHandler(BaseTenantTestCase):
         lth = Section.objects.get(name='Health 2')
 
         self.__check_history(5, 1, 1, SectionHistory.CLOSE, 1, 2)
-        self.__check_section(self.health, (1, 1, 1, 0))
-        self.__check_section(self.nutrition, (3, 1, 1, 1))
-        self.__check_section(hea, (2, 1, 1, 1))
-        self.__check_section(lth, (1, 1, 1, 0))  # travel2 is updated twice last one stays
-        self.__check_section(self.ict, (1, 1, 1, 0))
+        self.__check_section(self.health, (1, 1, 1, 1, 0))
+        self.__check_section(self.nutrition, (3, 1, 1, 3, 1))
+        self.__check_section(hea, (2, 1, 1, 1, 1))
+        self.__check_section(lth, (1, 1, 1, 1, 0))  # travel2 is updated twice last one stays
+        self.__check_section(self.ict, (1, 1, 1, 1, 0))
 
     def test_close_fail_not_migrated(self):
         self.__check_history(3, 0, 0, None, None, None)
@@ -139,6 +151,7 @@ class TestSectionHandler(BaseTenantTestCase):
                 'applied_indicators': [self.applied_indicator5.pk],
                 'travels': [self.travel2.pk, ],
                 'tpm_activities': [],
+                'engagements': [self.engagement1.pk, ],
                 'action_points': [self.action_point.pk],
             },
             "Health 2": {
@@ -146,6 +159,7 @@ class TestSectionHandler(BaseTenantTestCase):
                 'applied_indicators': [self.applied_indicator1.pk],
                 'travels': [self.travel1.pk, self.travel2.pk],
                 'tpm_activities': [],
+                'engagements': [self.engagement1.pk, ],
                 'action_points': [],
             }
         }
@@ -162,6 +176,7 @@ class TestSectionHandler(BaseTenantTestCase):
                 'applied_indicators': [self.applied_indicator1.pk],
                 'travels': [self.travel2.pk, ],
                 'tpm_activities': [],
+                'engagements': [self.engagement1.pk, ],
                 'action_points': [self.action_point.pk],
             },
             "Health 2": {
@@ -169,6 +184,7 @@ class TestSectionHandler(BaseTenantTestCase):
                 'applied_indicators': [self.applied_indicator5.pk],
                 'travels': [self.travel1.pk, self.travel2.pk],
                 'tpm_activities': [],
+                'engagements': [self.engagement2.pk, ],
                 'action_points': [],
             }
         }
