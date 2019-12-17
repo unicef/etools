@@ -59,7 +59,7 @@ def update_hact_for_country(business_area_code):
     finally:
         log.save()
     if hact_updated_partner_list:
-        notify_hact_update.delay(hact_updated_partner_list)
+        notify_hact_update.delay(hact_updated_partner_list, country.id)
 
 
 @app.task
@@ -96,14 +96,14 @@ def update_aggregate_hact_values(*args, **kwargs):
 
 
 @app.task
-def notify_hact_update(partner_list):
+def notify_hact_update(partner_list, country_id):
     email_context = {
         'partners': partner_list,
         'environment': get_environment(),
     }
     recipients = get_user_model().objects.filter(
         groups=UNICEFAuditFocalPoint.as_group(),
-        profile__countries_available=connection.tenant
+        profile__countries_available__id=country_id
     ).values_list('email', flat=True)
     send_notification_with_template(
         recipients=list(recipients),
