@@ -144,7 +144,7 @@ class AzureUserMapper:
                     allowed_values = [allowed_values, ]
 
                 if record.get(field[0], False) not in allowed_values:
-                    logger.debug("User is not in Unicef organization {}".format(field[1]))
+                    logger.debug("User is not in UNICEF organization {}".format(field[1]))
                     return False
         return True
 

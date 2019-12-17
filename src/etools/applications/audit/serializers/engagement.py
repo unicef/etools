@@ -310,10 +310,10 @@ class EngagementSerializer(
         extra_kwargs['engagement_type'] = {'label': _('Engagement Type')}
 
     def get_sections(self, obj):
-        return [s.pk for s in obj.all()]
+        return [{"id": s.pk, "name": s.name} for s in obj.all()]
 
     def get_offices(self, obj):
-        return [o.pk for o in obj.all()]
+        return [{"id": o.pk, "name": o.name} for o in obj.all()]
 
     def validate(self, data):
         validated_data = super().validate(data)
