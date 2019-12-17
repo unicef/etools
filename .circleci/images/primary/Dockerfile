@@ -1,6 +1,7 @@
-FROM python:3.7.3-alpine
-# test-base-p3-v2
-RUN echo "http://dl-3.alpinelinux.org/alpine/edge/main" >> /etc/apk/repositories
+FROM python:3.7.5-alpine
+
+RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/main" >> /etc/apk/repositories
+
 RUN apk update
 RUN apk add --upgrade apk-tools
 
@@ -16,14 +17,16 @@ RUN apk add \
     xmlsec-dev
 RUN apk add postgresql-dev \
     libffi-dev\
-    jpeg-dev
+    jpeg-dev \
+    python-dev
 
-RUN apk add --update-cache --repository http://dl-3.alpinelinux.org/alpine/edge/testing/ \
+RUN apk add --update-cache --repository http://dl-cdn.alpinelinux.org/alpine/edge/community/ \
     gdal \
     gdal-dev \
-    py-gdal \
     geos \
-    geos-dev \
+    geos-dev
+
+RUN apk add --update-cache --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing/ \
     gcc \
     g++
 
