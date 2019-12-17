@@ -147,7 +147,7 @@ LOGGING = {
         'level': 'INFO'
     },
 }
-GDAL_LIBRARY_PATH = '/usr/lib/libgdal.so.20'
+
 # DJANGO: MODELS
 FIXTURE_DIRS = (
     os.path.join(os.path.dirname(etools.__file__), 'applications', 'core', 'data'),
@@ -544,7 +544,7 @@ ATTACHMENT_FLAT_MODEL = "etools.applications.attachments.models.AttachmentFlat"
 ATTACHMENT_DENORMALIZE_FUNC = "etools.applications.attachments.utils.denormalize_attachment"
 
 GEOS_LIBRARY_PATH = os.getenv('GEOS_LIBRARY_PATH', '/usr/lib/libgeos_c.so.1')  # default path
-GDAL_LIBRARY_PATH = os.getenv('GDAL_LIBRARY_PATH', '/usr/lib/libgdal.so.20')  # default path
+GDAL_LIBRARY_PATH = os.getenv('GDAL_LIBRARY_PATH', '/usr/lib/libgdal.so.26')  # default path
 
 SHELL_PLUS_PRE_IMPORTS = (
     ('etools.applications.core.util_scripts', '*'),

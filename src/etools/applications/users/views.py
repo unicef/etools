@@ -3,6 +3,7 @@ import logging
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError as DjangoValidationError
+from django.db.models import Q
 from django.http import HttpResponseForbidden, HttpResponseRedirect
 from django.views.generic import RedirectView
 from django.views.generic.detail import DetailView
@@ -14,7 +15,8 @@ from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from etools.applications.audit.models import Auditor
+from etools.applications.audit.models import Auditor, Engagement
+from etools.applications.psea.models import Assessment
 from etools.applications.tpm.models import ThirdPartyMonitor
 from etools.applications.users.models import Country, UserProfile
 from etools.applications.users.serializers import (
@@ -299,7 +301,18 @@ class ModuleRedirectView(RedirectView):
             if ThirdPartyMonitor.as_group() in self.request.user.groups.all():
                 return '/tpm/'
 
-            if Auditor.as_group() in self.request.user.groups.all():
-                return '/ap/'
+            elif Auditor.as_group() in self.request.user.groups.all():
+
+                if Engagement.objects.filter(status__in=[Engagement.PARTNER_CONTACTED, Engagement.REPORT_SUBMITTED],
+                                             agreement__auditor_firm__staff_members=self.request.user):
+                    return '/ap/'
+                elif Assessment.objects.filter(
+                        Q(partner__psea_assessment__assessor__user=self.request.user) |
+                        Q(partner__psea_assessment__assessor__auditor_firm_staff__user=self.request.user)):
+                    return '/psea/'
+                elif Engagement.objects.filter(agreement__auditor_firm__staff_members=self.request.user):
+                    return '/ap/'
+                else:
+                    return '/psea/'
 
         return super().get_redirect_url(*args, **kwargs)
