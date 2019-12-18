@@ -63,6 +63,9 @@ class UniqueIDOrderingFilter(BaseFilterBackend):
 
 
 class EngagementFilter(filters.FilterSet):
+    sections__in = filters.BaseInFilter(field_name="sections")
+    offices__in = filters.BaseInFilter(field_name="offices")
+
     class Meta:
         model = Engagement
         fields = {
@@ -74,4 +77,6 @@ class EngagementFilter(filters.FilterSet):
             'agreement__auditor_firm__unicef_users_allowed': ['exact'],
             'staff_members__user': ['exact', 'in'],
             'partner_contacted_at': ['lte', 'gte', 'gt', 'lt'],
+            'offices': ['exact', 'in'],
+            'sections': ['exact', 'in'],
         }
