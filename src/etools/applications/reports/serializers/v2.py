@@ -423,6 +423,12 @@ class ResultFrameworkExportSerializer(ExportSerializer):
     pass
 
 
+class OfficeLightSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Office
+        fields = ('id', 'name')
+
+
 class OfficeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Office
