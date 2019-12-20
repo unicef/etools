@@ -303,14 +303,21 @@ class ModuleRedirectView(RedirectView):
 
             elif Auditor.as_group() in self.request.user.groups.all():
 
-                if Engagement.objects.filter(status__in=[Engagement.PARTNER_CONTACTED, Engagement.REPORT_SUBMITTED],
-                                             agreement__auditor_firm__staff_members=self.request.user):
+                if Engagement.objects.filter(
+                        status__in=[
+                            Engagement.PARTNER_CONTACTED,
+                            Engagement.REPORT_SUBMITTED,
+                        ],
+                        agreement__auditor_firm__staff_members__user=self.request.user,
+                ):
                     return '/ap/'
                 elif Assessment.objects.filter(
                         Q(partner__psea_assessment__assessor__user=self.request.user) |
                         Q(partner__psea_assessment__assessor__auditor_firm_staff__user=self.request.user)):
                     return '/psea/'
-                elif Engagement.objects.filter(agreement__auditor_firm__staff_members=self.request.user):
+                elif Engagement.objects.filter(
+                        agreement__auditor_firm__staff_members__user=self.request.user,
+                ):
                     return '/ap/'
                 else:
                     return '/psea/'
