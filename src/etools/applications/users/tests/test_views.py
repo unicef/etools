@@ -8,7 +8,6 @@ from django.urls import reverse
 
 from rest_framework import status
 
-from etools.applications.audit.models import Auditor
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.publics.tests.factories import PublicsBusinessAreaFactory
 from etools.applications.users.models import Group, UserProfile
