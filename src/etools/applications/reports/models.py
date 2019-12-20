@@ -136,7 +136,7 @@ class Section(TimeStampedModel):
     Represents a section
     """
 
-    name = models.CharField(max_length=45, unique=True, verbose_name=_('Name'))
+    name = models.CharField(max_length=128, unique=True, verbose_name=_('Name'))
     description = models.CharField(max_length=256, blank=True, null=True, verbose_name=_('Description'))
     alternate_id = models.IntegerField(blank=True, null=True, verbose_name=_('Alternate ID'))
     alternate_name = models.CharField(max_length=255, null=True, default='', verbose_name=_('Alternate Name'))
