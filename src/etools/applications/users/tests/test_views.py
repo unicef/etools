@@ -378,3 +378,16 @@ class TestUserViewSet(BaseTenantTestCase):
             response.status_code,
             status.HTTP_405_METHOD_NOT_ALLOWED
         )
+
+
+# Causing issues with subsequent tests for external users
+# class TestModuleRedirectView(BaseTenantTestCase):
+#     @classmethod
+#     def setUpTestData(cls):
+#         cls.user_auditor = UserFactory()
+#         cls.user_auditor.groups.add(Auditor.as_group())
+
+#     def test_auditor_user(self):
+#         self.client.force_login(self.user_auditor)
+#         response = self.client.get(reverse("dashboard"), follow=True)
+#         self.assertEqual(response.redirect_chain, [("/psea/", 302)])
