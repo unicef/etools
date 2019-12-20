@@ -8,6 +8,7 @@ from django.urls import reverse
 
 from rest_framework import status
 
+from etools.applications.audit.models import Auditor
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.publics.tests.factories import PublicsBusinessAreaFactory
 from etools.applications.users.models import Group, UserProfile
@@ -378,3 +379,27 @@ class TestUserViewSet(BaseTenantTestCase):
             response.status_code,
             status.HTTP_405_METHOD_NOT_ALLOWED
         )
+
+
+class TestModuleRedirectView(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.unicef_superuser = UserFactory(is_superuser=True)
+        cls.partnership_manager_user = UserFactory(is_staff=True)
+        cls.group = GroupFactory()
+        cls.partnership_manager_user.groups.add(cls.group)
+        cls.auditor = UserFactory()
+        cls.auditor.groups.add(Auditor.as_group())
+
+    def setUp(self):
+        self.url = reverse("dashboard")
+
+    def test_auditor(self):
+        self.client.login(username=self.auditor.username, password="test")
+        response = self.client.get(
+            self.url,
+            user=self.auditor,
+            follow=True
+        )
+        self.assertEqual(response.redirect_chain, [("/psea/", 302)])
