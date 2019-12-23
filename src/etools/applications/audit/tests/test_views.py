@@ -547,8 +547,14 @@ class TestSpotCheckCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEn
         for data in response.data["results"]:
             if data["id"] == spot_check.pk:
                 found = True
-                self.assertEqual(data["sections"], [section.pk])
-                self.assertEqual(data["offices"], [office.pk])
+                self.assertEqual(
+                    data["sections"],
+                    [{"id": section.pk, "name": section.name}],
+                )
+                self.assertEqual(
+                    data["offices"],
+                    [{"id": office.pk, "name": office.name}],
+                )
         self.assertTrue(found)
 
     def test_sections(self):
@@ -560,8 +566,14 @@ class TestSpotCheckCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEn
 
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(
-            sorted(response.data['sections']),
-            sorted([section_1.pk, section_2.pk]),
+            sorted(response.data['sections'], key=lambda x: x["id"]),
+            sorted(
+                [
+                    {"id": section_1.pk, "name": section_1.name},
+                    {"id": section_2.pk, "name": section_2.name},
+                ],
+                key=lambda x: x["id"]
+            ),
         )
         spot_check = SpotCheck.objects.get(pk=response.data["id"])
         self.assertEqual(
@@ -578,8 +590,14 @@ class TestSpotCheckCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEn
 
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
         self.assertEquals(
-            sorted(response.data['offices']),
-            sorted([office_1.pk, office_2.pk]),
+            sorted(response.data['offices'], key=lambda x: x["id"]),
+            sorted(
+                [
+                    {"id": office_1.pk, "name": office_1.name},
+                    {"id": office_2.pk, "name": office_2.name},
+                ],
+                key=lambda x: x["id"],
+            ),
         )
         spot_check = SpotCheck.objects.get(pk=response.data["id"])
         self.assertEquals(

@@ -156,6 +156,7 @@ def hact_default():
             'completed': 0,
         },
         'spot_checks': {
+            'minimum_requirements': 0,
             'completed': {
                 'q1': 0,
                 'q2': 0,
@@ -166,6 +167,7 @@ def hact_default():
             'follow_up_required': 0,
         },
         'programmatic_visits': {
+            'minimum_requirements': 0,
             'planned': {
                 'q1': 0,
                 'q2': 0,
@@ -603,7 +605,7 @@ class PartnerOrganization(TimeStampedModel):
     def hact_min_requirements(self):
 
         return {
-            'programme_visits': self.min_req_programme_visits,
+            'programmatic_visits': self.min_req_programme_visits,
             'spot_checks': self.min_req_spot_checks,
             'audits': self.min_req_audits,
         }
@@ -616,10 +618,10 @@ class PartnerOrganization(TimeStampedModel):
         sc = hact['spot_checks']['completed']['total']
         au = hact['audits']['completed']
 
-        if pv + sc + au == 0:
-            return PartnerOrganization.ASSURANCE_VOID
-        elif (pv >= self.min_req_programme_visits) & (sc >= self.min_req_spot_checks) & (au >= self.min_req_audits):
+        if (pv >= self.min_req_programme_visits) & (sc >= self.min_req_spot_checks) & (au >= self.min_req_audits):
             return PartnerOrganization.ASSURANCE_COMPLETE
+        elif pv + sc + au == 0:
+            return PartnerOrganization.ASSURANCE_VOID
         else:
             return PartnerOrganization.ASSURANCE_PARTIAL
 
@@ -781,6 +783,18 @@ class PartnerOrganization(TimeStampedModel):
         hact['assurance_coverage'] = self.assurance_coverage
         self.hact_values = json.dumps(hact, cls=CustomJSONEncoder)
         self.save()
+
+    def update_min_requirements(self):
+        hact = self.get_hact_json()
+        updated = []
+        for hact_eng in ['programmatic_visits', 'spot_checks', 'audits']:
+            if hact[hact_eng]['minimum_requirements'] != self.hact_min_requirements[hact_eng]:
+                hact[hact_eng]['minimum_requirements'] = self.hact_min_requirements[hact_eng]
+                updated.append(hact_eng)
+        if updated:
+            self.hact_values = json.dumps(hact, cls=CustomJSONEncoder)
+            self.save()
+            return updated
 
     def get_admin_url(self):
         admin_url_name = 'admin:partners_partnerorganization_change'

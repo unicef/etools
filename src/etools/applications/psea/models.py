@@ -17,6 +17,7 @@ from etools.applications.core.permissions import import_permissions
 from etools.applications.core.urlresolvers import build_frontend_url
 from etools.applications.psea.validation import (
     assessment_assigned,
+    assessment_assigned_reassessment,
     assessment_final,
     assessment_focal_point_user,
     assessment_illegal_transition,
@@ -95,7 +96,7 @@ class Assessment(TimeStampedModel):
         STATUS_ASSIGNED: [STATUS_IN_PROGRESS],
     }
     TRANSITION_SIDE_EFFECTS = {
-        STATUS_ASSIGNED: [assessment_assigned],
+        STATUS_ASSIGNED: [assessment_assigned, assessment_assigned_reassessment],
         STATUS_SUBMITTED: [assessment_submitted],
         STATUS_REJECTED: [assessment_rejected],
         STATUS_FINAL: [assessment_final],
