@@ -90,7 +90,7 @@ class LinkedAttachmentsViewSet(
         parent_instance = self.get_parent_object()
 
         content_type = ContentType.objects.get_for_model(self.related_model)
-        current = list(self.get_queryset())
+        current = list(self.filter_queryset(self.get_queryset()))
         used = []
         for attachment_data in data:
             pk = attachment_data['id']

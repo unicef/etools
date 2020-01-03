@@ -719,6 +719,18 @@ class TestLogIssueAttachmentsView(FMBaseTestCaseMixin, APIViewSetTestCase):
         self.assertIn(file_type.id, [d['id'] for d in response.data])
         self.assertNotIn(wrong_file_type.id, [d['id'] for d in response.data])
 
+    def test_overwrite_previous_attachments(self):
+        attachment = AttachmentFactory(code='attachments', content_object=self.log_issue)
+        new_log_issue = LogIssueFactory(partner=PartnerFactory())
+
+        self.forced_auth_req(
+            'put',
+            reverse('field_monitoring_settings:log-issue-attachments-bulk_update', args=[new_log_issue.pk]),
+            user=self.fm_user,
+            data=[{'id': AttachmentFactory().id}]
+        )
+        self.assertTrue(Attachment.objects.filter(pk=attachment.pk).exists())
+
 
 class TestCategoriesView(FMBaseTestCaseMixin, BaseTenantTestCase):
     def test_list(self):
