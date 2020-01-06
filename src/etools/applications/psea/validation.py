@@ -1,3 +1,5 @@
+import datetime
+
 from django.conf import settings
 
 from etools_validator.exceptions import StateValidationError, TransitionError
@@ -114,6 +116,34 @@ def assessment_focal_point_user(assessment, user):
 
 def assessment_user_belongs(assessment, user):
     return assessment.user_belongs(user)
+
+
+def assessment_assigned_reassessment(assessment, old_instance=None, user=None):
+    one_year_ago = datetime.date.today() - datetime.timedelta(days=365)
+    # avoid circular import
+    Assessment = assessment.__class__
+    partner = assessment.partner
+    previous_assessment = Assessment.objects.exclude(pk=assessment.pk).\
+        filter(partner=partner, assessment_date__gt=one_year_ago,
+               status=assessment.STATUS_FINAL).order_by("-assessment_date").first()
+    if previous_assessment is not None and previous_assessment.overall_rating_display == "High":
+        for answer in previous_assessment.answers.filter(indicator__active=True):
+            attachment_qs = answer.attachments.all()
+            evidences_qs = answer.evidences.all()
+
+            answer.pk = None
+            answer.assessment = assessment
+            answer.save()
+
+            for evidence in evidences_qs:
+                evidence.pk = None
+                evidence.answer = answer
+                evidence.save()
+
+            for attachment in attachment_qs:
+                attachment.pk = None
+                attachment.object_id = answer.pk
+                attachment.save()
 
 
 def assessment_assigned(assessment, old_instance=None, user=None):

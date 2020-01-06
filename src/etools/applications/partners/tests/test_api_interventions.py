@@ -1630,6 +1630,7 @@ class TestInterventionAmendmentCreateAPIView(BaseTenantTestCase):
             data={
                 "types": [InterventionAmendment.OTHER],
                 "signed_amendment": self.uploaded_file,
+                "signed_date": datetime.date.today(),
             },
             request_format='multipart',
         )
@@ -1678,6 +1679,37 @@ class TestInterventionAmendmentCreateAPIView(BaseTenantTestCase):
 
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEquals(next(iter(response.data.values())), ['Date cannot be in the future!'])
+
+    def test_create_amendment_matching_date(self):
+        date = datetime.date.today() - datetime.timedelta(days=1)
+        InterventionAmendmentFactory(
+            intervention=self.intervention,
+            signed_date=date,
+        )
+        AttachmentFactory(
+            file="test_file.pdf",
+            file_type=None,
+            code="",
+        )
+        attachment_amendment = AttachmentFactory(
+            file="test_file_amendment.pdf",
+            file_type=None,
+            code="",
+        )
+        response = self._make_request(
+            user=self.partnership_manager_user,
+            data={
+                "signed_amendment_attachment": attachment_amendment.pk,
+                'signed_date': date,
+                'types': [InterventionAmendment.DATES, ]
+            },
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(
+            next(iter(response.data.values())),
+            ['There is already an amendment with this signed date.'],
+        )
 
     def test_create_amendment_success(self):
         response = self._make_request(

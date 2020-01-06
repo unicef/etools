@@ -1,6 +1,6 @@
-FROM python:3.7.3-alpine as builder
+FROM python:3.7.5-alpine as builder
 
-RUN echo "http://dl-3.alpinelinux.org/alpine/edge/main" >> /etc/apk/repositories
+RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/main" >> /etc/apk/repositories
 RUN apk update
 RUN apk add --upgrade apk-tools
 
@@ -16,14 +16,16 @@ RUN apk add \
     xmlsec-dev
 RUN apk add postgresql-dev \
     libffi-dev \
-    jpeg-dev
+    jpeg-dev \
+    python-dev
 
-RUN apk add --update-cache --repository http://dl-3.alpinelinux.org/alpine/edge/testing/ \
-    gdal \
-    gdal-dev \
-    py-gdal \
+RUN apk add --update-cache --repository http://dl-cdn.alpinelinux.org/alpine/edge/community/ \
     geos \
     geos-dev \
+    gdal \
+    gdal-dev
+
+RUN apk add --update-cache --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing/ \
     gcc \
     g++
 
@@ -41,9 +43,9 @@ ADD Pipfile.lock .
 RUN pipenv install --system  --ignore-pipfile --deploy
 
 
-FROM python:3.7.3-alpine
+FROM python:3.7.5-alpine
 
-RUN echo "http://dl-3.alpinelinux.org/alpine/edge/main" >> /etc/apk/repositories
+RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/main" >> /etc/apk/repositories
 RUN apk update
 RUN apk add --upgrade apk-tools
 RUN apk add postgresql-client
@@ -53,8 +55,9 @@ RUN apk add openssl \
     libmagic \
     libxslt
 
-RUN apk add geos \
-    gdal --update-cache --repository http://dl-3.alpinelinux.org/alpine/edge/testing/
+RUN apk add --update-cache --repository http://dl-cdn.alpinelinux.org/alpine/edge/community/ \
+    geos \
+    gdal
 
 ADD src /code/
 ADD manage.py /code/manage.py

@@ -154,7 +154,7 @@ def create_location(pcode, datadef_table, parent, parent_instance, site_name, th
     try:
         # TODO: revisit this, maybe include (location name?) carto_table in the check
         # see below at update branch - names can be updated for existing locations with the same code
-        location = Location.objects.all_locations().get(p_code=pcode)
+        location = Location.objects.get(p_code=pcode)
 
     except Location.MultipleObjectsReturned:
         logger.warning("Multiple locations found for: {}, {} ({})".format(

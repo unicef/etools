@@ -78,6 +78,8 @@ class Command(BaseCommand):
         'audit.engagement.joint_audit',
         'audit.engagement.shared_ip_with',
         'audit.engagement.related_agreement',
+        'audit.engagement.sections',
+        'audit.engagement.offices',
     ]
 
     engagement_status_editable_date_fields = [

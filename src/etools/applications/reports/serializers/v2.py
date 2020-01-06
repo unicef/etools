@@ -13,6 +13,7 @@ from etools.applications.reports.models import (
     Indicator,
     IndicatorBlueprint,
     LowerResult,
+    Office,
     ReportingRequirement,
     Result,
     ResultType,
@@ -420,3 +421,15 @@ class ResultFrameworkSerializer(serializers.Serializer):
 
 class ResultFrameworkExportSerializer(ExportSerializer):
     pass
+
+
+class OfficeLightSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Office
+        fields = ('id', 'name')
+
+
+class OfficeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Office
+        fields = "__all__"

@@ -3,6 +3,7 @@ import logging
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError as DjangoValidationError
+from django.db.models import Q
 from django.http import HttpResponseForbidden, HttpResponseRedirect
 from django.views.generic import RedirectView
 from django.views.generic.detail import DetailView
@@ -10,25 +11,24 @@ from django.views.generic.detail import DetailView
 from rest_framework import mixins, status, viewsets
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import ListAPIView, RetrieveAPIView, RetrieveUpdateAPIView
-from rest_framework.permissions import IsAdminUser, IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from etools.applications.audit.models import Auditor
+from etools.applications.audit.models import Auditor, Engagement
+from etools.applications.psea.models import Assessment
 from etools.applications.tpm.models import ThirdPartyMonitor
-from etools.applications.users.models import Country, Office, UserProfile
+from etools.applications.users.models import Country, UserProfile
 from etools.applications.users.serializers import (
     CountrySerializer,
     GroupSerializer,
     MinimalUserSerializer,
-    OfficeSerializer,
     ProfileRetrieveUpdateSerializer,
     SimpleProfileSerializer,
     SimpleUserSerializer,
     UserCreationSerializer,
 )
 from etools.libraries.azure_graph_api.tasks import retrieve_user_info
-from etools.libraries.djangolib.views import ExternalModuleFilterMixin
 
 logger = logging.getLogger(__name__)
 
@@ -281,32 +281,6 @@ class UserViewSet(mixins.RetrieveModelMixin,
         return Response(serializer.data)
 
 
-class OfficeViewSet(ExternalModuleFilterMixin,
-                    mixins.RetrieveModelMixin,
-                    mixins.ListModelMixin,
-                    mixins.CreateModelMixin,
-                    viewsets.GenericViewSet):
-    """
-    Returns a list of all Offices
-    """
-    serializer_class = OfficeSerializer
-    permission_classes = (IsAuthenticatedOrReadOnly,)
-    queryset = Office.objects
-    module2filters = {'tpm': ['tpmactivity__tpm_visit__tpm_partner__staff_members__user', ]}
-
-    def get_queryset(self):
-        qs = super().get_queryset()
-        if "values" in self.request.query_params.keys():
-            # Used for ghost data - filter in all(), and return straight away.
-            try:
-                ids = [int(x) for x in self.request.query_params.get("values").split(",")]
-            except ValueError:
-                raise ValidationError("ID values must be integers")
-            else:
-                qs = qs.filter(id__in=ids)
-        return qs
-
-
 class CountriesViewSet(ListAPIView):
     """
     Gets the list of countries
@@ -327,7 +301,30 @@ class ModuleRedirectView(RedirectView):
             if ThirdPartyMonitor.as_group() in self.request.user.groups.all():
                 return '/tpm/'
 
-            if Auditor.as_group() in self.request.user.groups.all():
-                return '/ap/'
+            elif Auditor.as_group() in self.request.user.groups.all():
+
+                if Engagement.objects.filter(
+                        status__in=[Engagement.PARTNER_CONTACTED, Engagement.REPORT_SUBMITTED],
+                        staff_members__user=self.request.user,
+                ):
+                    return '/ap/'
+                elif Assessment.objects.filter(
+                        Q(partner__psea_assessment__assessor__user=self.request.user) |
+                        Q(partner__psea_assessment__assessor__auditor_firm_staff__user=self.request.user),
+                        status__in=[
+                            Assessment.STATUS_DRAFT,
+                            Assessment.STATUS_ASSIGNED,
+                            Assessment.STATUS_IN_PROGRESS,
+                            Assessment.STATUS_SUBMITTED,
+                            Assessment.STATUS_REJECTED,
+                        ],
+                ):
+                    return '/psea/'
+                elif Engagement.objects.filter(
+                        agreement__auditor_firm__staff_members__user=self.request.user,
+                ):
+                    return '/ap/'
+                else:
+                    return '/psea/'
 
         return super().get_redirect_url(*args, **kwargs)

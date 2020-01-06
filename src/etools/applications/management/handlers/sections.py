@@ -2,6 +2,7 @@ from django.db.models.fields.related_descriptors import ForwardManyToOneDescript
 from django.db.transaction import atomic
 
 from etools.applications.action_points.models import ActionPoint
+from etools.applications.audit.models import Engagement
 from etools.applications.management.models import SectionHistory
 from etools.applications.partners.models import Intervention
 from etools.applications.reports.models import AppliedIndicator, Section
@@ -44,6 +45,12 @@ class SectionHandler:
         TPMVisit.REPORTED,
         TPMVisit.REPORT_REJECTED
     ]
+    engagement_updatable_status = [
+        Engagement.PARTNER_CONTACTED,
+        Engagement.REPORT_SUBMITTED,
+        # Engagement.FINAL,
+        # Engagement.CANCELLED,
+    ]
 
     # dictionary to mark instances, for each model that has a m2m relationship to Sections,
     # in order to follow up later and clean (remove references to old sections) them.
@@ -59,6 +66,10 @@ class SectionHandler:
         'travels': (
             Travel.objects.filter(status__in=travel_updatable_status),
             'section',
+        ),
+        'engagements': (
+            Engagement.objects.filter(status__in=engagement_updatable_status),
+            'sections',
         ),
         'tpm_activities': (
             TPMActivity.objects.filter(tpm_visit__status__in=tpm_visit_updatable_status),
@@ -87,8 +98,10 @@ class SectionHandler:
         """Merge two or more sections into a newly create section and migrating active objects"""
         from_instances = Section.objects.filter(pk__in=sections_to_merge)
         to_instance = Section.objects.create(name=new_section_name)
-        from_instances.update(active=False)
-
+        for instance in from_instances:
+            instance.active = False
+            instance.name = f'{instance.name} [Inactive]'
+            instance.save()
         # m2m relation need to be cleaned at the end
         m2m_to_clean = {
         }
@@ -129,16 +142,19 @@ class SectionHandler:
 
         from_instance = Section.objects.get(pk=from_instance_pk)
         from_instance.active = False
+        from_instance.name = f'{from_instance.name} [Inactive]'
         from_instance.save()
 
         new_sections = []
         # m2m relation need to be cleaned at the end.
-        # It's a dictionary to mark instances for each model in a Many to Many Relationshipm that we follow up for cleaning at the end of
+        # It's a dictionary to mark instances for each model in a Many to Many Relationship
+        # that we follow up for cleaning at the end of
         m2m_to_clean = {}
         for new_section_name, queryset_mapping_dict in new_section_2_new_querysets.items():
             to_instance, _ = Section.objects.get_or_create(name=new_section_name)
             new_sections.append(to_instance)
-            m2m_to_clean = SectionHandler.__update_objects(from_instance, to_instance, m2m_to_clean, queryset_mapping_dict)
+            m2m_to_clean = SectionHandler.__update_objects(from_instance, to_instance,
+                                                           m2m_to_clean, queryset_mapping_dict)
 
         SectionHandler.__clean_m2m([from_instance], m2m_to_clean)
 
@@ -237,4 +253,5 @@ class SectionHandler:
                 lower_result__result_link__intervention=intervention).values_list('section', flat=True).distinct())
             intervention_sections = set(intervention.sections.values_list('pk', flat=True))
             if not applied_indicator_sections.issubset(intervention_sections):
-                raise IndicatorSectionInconsistentException(f'Intervention {intervention.pk} has inconsistent indicators')
+                raise IndicatorSectionInconsistentException(
+                    f'Intervention {intervention.pk} has inconsistent indicators')

@@ -1,7 +1,7 @@
 name = 'partners/blocked_partner'
 defaults = {
-    'description': 'Unicef Partner Blocked',
-    'subject': 'eTools {{environment}} - Unicef Partner Blocked: {{partner_name}}',
+    'description': 'UNICEF Partner Blocked',
+    'subject': 'eTools {{environment}} - UNICEF Partner Blocked: {{partner_name}}',
     'content': """
     Dear Colleague,
 

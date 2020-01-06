@@ -74,7 +74,10 @@ class AttachmentFlat(models.Model):
         blank=True,
         verbose_name=_('Uploaded by')
     )
-    created = models.CharField(max_length=50, verbose_name=_('Created'))
+    created = models.DateTimeField(
+        verbose_name=_('Created'),
+        null=True,
+    )
 
     objects = AttachmentFlatManager()
 
