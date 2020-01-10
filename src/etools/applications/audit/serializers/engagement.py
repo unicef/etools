@@ -47,7 +47,7 @@ from etools.applications.partners.serializers.partner_organization_v2 import (
 )
 from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
 from etools.applications.reports.serializers.v1 import SectionSerializer
-from etools.applications.reports.serializers.v2 import OfficeSerializer
+from etools.applications.reports.serializers.v2 import OfficeLightSerializer, OfficeSerializer
 from etools.applications.users.serializers_v3 import MinimalUserSerializer
 
 
@@ -211,13 +211,14 @@ class EngagementLightSerializer(serializers.ModelSerializer):
     status_date = serializers.ReadOnlyField(source='displayed_status_date', label=_('Date of Status'))
     unique_id = serializers.ReadOnlyField(label=_('Unique ID'))
 
+    offices = OfficeLightSerializer(many=True)
+    sections = SectionSerializer(many=True)
+
     class Meta:
         model = Engagement
         fields = [
-            'id', 'unique_id', 'agreement', 'po_item',
-            'related_agreement', 'partner', 'engagement_type',
-            'status', 'status_date', 'total_value',
-
+            'id', 'unique_id', 'agreement', 'po_item', 'related_agreement', 'partner', 'engagement_type',
+            'status', 'status_date', 'total_value', 'offices', 'sections'
         ]
 
     def validate(self, attrs):
@@ -310,10 +311,10 @@ class EngagementSerializer(
         extra_kwargs['engagement_type'] = {'label': _('Engagement Type')}
 
     def get_sections(self, obj):
-        return [s.pk for s in obj.all()]
+        return [{"id": s.pk, "name": s.name} for s in obj.all()]
 
     def get_offices(self, obj):
-        return [o.pk for o in obj.all()]
+        return [{"id": o.pk, "name": o.name} for o in obj.all()]
 
     def validate(self, data):
         validated_data = super().validate(data)
