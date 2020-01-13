@@ -2,6 +2,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from etools_validator.exceptions import StateValidationError
 
+from etools.applications.field_monitoring.data_collection.models import ActivityQuestionOverallFinding
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
 
 
@@ -48,6 +49,12 @@ def started_checklists_required(i):
 
 
 def activity_overall_findings_required(i):
-    if not i.overall_findings.exclude(narrative_finding='').exists():
+    has_narrative_completed = i.overall_findings.exclude(narrative_finding='').exists()
+    has_value_completed = ActivityQuestionOverallFinding.objects.filter(
+        activity_question__monitoring_activity=i,
+        value__isnull=False
+    ).exists()
+
+    if not (has_narrative_completed or has_value_completed):
         raise StateValidationError([_('At least one summary finding should be completed.')])
     return True

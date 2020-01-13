@@ -3,6 +3,7 @@ from etools.applications.field_monitoring.data_collection.models import (
     ActivityOverallFinding,
     ActivityQuestionOverallFinding,
 )
+from etools.applications.field_monitoring.data_collection.tests.factories import ActivityQuestionFactory
 from etools.applications.field_monitoring.fm_settings.models import Question
 from etools.applications.field_monitoring.fm_settings.tests.factories import QuestionFactory
 from etools.applications.field_monitoring.planning.activity_validation.validator import ActivityValid
@@ -67,13 +68,27 @@ class TestMonitoringActivityValidations(BaseTenantTestCase):
                                              interventions=[intervention], partners=[intervention.agreement.partner])
         self.assertFalse(ActivityValid(activity, user=self.user).is_valid)
 
-    def test_activity_overall_findings_required(self):
+    def test_activity_overall_findings_required_narrative_finding(self):
         activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.submitted)
         activity.overall_findings.all().delete()
         self.assertFalse(ActivityValid(activity, user=self.user).is_valid)
+
         ActivityOverallFinding.objects.create(monitoring_activity=activity, narrative_finding='')
         self.assertFalse(ActivityValid(activity, user=self.user).is_valid)
+
         ActivityOverallFinding.objects.create(monitoring_activity=activity, narrative_finding='test')
+        self.assertTrue(ActivityValid(activity, user=self.user).is_valid)
+
+    def test_activity_overall_findings_required_question_finding(self):
+        activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.submitted)
+        question = ActivityQuestionFactory(monitoring_activity=activity)
+        activity.overall_findings.all().delete()
+        overall_finding = ActivityQuestionOverallFinding.objects.create(activity_question=question)
+
+        self.assertFalse(ActivityValid(activity, user=self.user).is_valid)
+
+        overall_finding.value = 'answer'
+        overall_finding.save()
         self.assertTrue(ActivityValid(activity, user=self.user).is_valid)
 
 
