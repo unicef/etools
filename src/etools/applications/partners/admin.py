@@ -262,15 +262,22 @@ class InterventionAdmin(
         'total_budget',
         'attachments_link',
     )
+    raw_id_fields = [
+        'agreement',
+        'flat_locations',
+        'partner_authorized_officer_signatory',
+        'unicef_signatory',
+        'unicef_focal_points',
+        'partner_focal_points',
+    ]
     list_filter = (
-        'number',
-        'agreement__partner',
         'document_type',
         'status',
     )
     search_fields = (
         'number',
         'title',
+        'agreement__partner__name'
     )
     readonly_fields = (
         'total_budget',
