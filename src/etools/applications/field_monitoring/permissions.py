@@ -107,6 +107,8 @@ def activity_field_is_editable_permission(field):
     class FieldPermission(BasePermission):
         def has_permission(self, request, view):
             if not view.kwargs:
+                # This is needed for swagger to be able to build the correct structure
+                # https://github.com/unicef/etools/pull/2540/files#r356446025
                 return True
 
             if hasattr(view, 'get_root_object'):
