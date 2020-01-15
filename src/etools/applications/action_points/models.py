@@ -72,6 +72,9 @@ class ActionPoint(TimeStampedModel):
                                      related_name='action_points', on_delete=models.CASCADE)
     travel_activity = models.ForeignKey('t2f.TravelActivity', verbose_name=_('Travel Activity'), blank=True, null=True,
                                         on_delete=models.CASCADE)
+    monitoring_activity = models.ForeignKey('field_monitoring_planning.MonitoringActivity',
+                                            verbose_name=_('Monitoring Activity'), blank=True, null=True,
+                                            on_delete=models.CASCADE)
     date_of_completion = MonitorField(verbose_name=_('Date Action Point Completed'), null=True, blank=True,
                                       default=None, monitor='status', when=[STATUSES.completed])
     comments = GenericRelation('django_comments.Comment', object_id_field='object_pk')
@@ -95,7 +98,9 @@ class ActionPoint(TimeStampedModel):
 
     @property
     def related_object(self):
-        return self.engagement_subclass or self.tpm_activity or self.travel_activity or self.psea_assessment
+        related_object = self.engagement_subclass or self.tpm_activity or self.travel_activity
+        related_object = related_object or self.psea_assessment or self.monitoring_activity
+        return related_object
 
     @property
     def related_object_str(self):
@@ -132,6 +137,8 @@ class ActionPoint(TimeStampedModel):
             return self.MODULE_CHOICES.t2f
         elif self.psea_assessment:
             return self.MODULE_CHOICES.psea
+        elif self.monitoring_activity:
+            return self.MODULE_CHOICES.fm
         return self.MODULE_CHOICES.apd
 
     def get_reference_number(self):

@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
 from io import BytesIO
+from unittest import skip
 from unittest.mock import Mock
 from urllib.parse import urlparse
 
@@ -16,6 +17,7 @@ TEST_FILECONTENT = b'a'
 TEST_FILESIZE = len('a')
 
 
+@skip('todo: enable on unicef environment')
 @override_settings(
     AZURE_ACCOUNT_NAME='123',
     AZURE_ACCOUNT_KEY=os.environ.get('AZURE_ACCOUNT_KEY', ''),
