@@ -49,6 +49,7 @@ class QueryCountDebugMiddleware(MiddlewareMixin):
         return response
     pass
 
+
 class EToolsTenantMiddleware(TenantMainMiddleware):
     """
     Sets request.tenant based on the users's country (Tenant) and sets the DB connection to use that tenant.
