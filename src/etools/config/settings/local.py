@@ -95,4 +95,4 @@ LOGGING['handlers']['console']['formatter'] = 'tenant_context'
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 10240
 
 # Optional for debugging db queries
-MIDDLEWARE += ('etools.applications.core.middleware.QueryCountDebugMiddleware',)
+# MIDDLEWARE += ('etools.applications.core.middleware.QueryCountDebugMiddleware',)
