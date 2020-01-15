@@ -203,8 +203,16 @@ class FMUsersViewSet(
 
     filter_backends = (SearchFilter, UserTypeFilter, UserTPMPartnerFilter)
     search_fields = ('email',)
-    queryset = get_user_model().objects.all()  # it's safe to use .all() here, UserTypeFilter filter unicef by default
+    queryset = get_user_model().objects.all()
     serializer_class = FMUserSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        qs = super().get_queryset().filter(
+            Q(profile__country=user.profile.country) | Q(monitoring_activities__isnull=False)
+        ).order_by('first_name')
+
+        return qs
 
 
 class CPOutputsViewSet(
