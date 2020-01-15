@@ -112,7 +112,9 @@ class BaseTenantTestCase(TenantTestCase):
         """
         factory = APIRequestFactory()
 
-        data = data or {}
+        if data is None:
+            data = {}
+
         req_to_call = getattr(factory, method)
         request = req_to_call(url, data, format=request_format, **kwargs)
 

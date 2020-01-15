@@ -489,5 +489,25 @@
             "code": "psea_answer",
             "group": ["psea_answer"]
         }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 58,
+        "fields": {
+            "order": 0,
+            "label": "SOP",
+            "name": "sop",
+            "code": "fm_common"
+        }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 59,
+        "fields": {
+            "order": 1,
+            "label": "Other",
+            "name": "other",
+            "code": "fm_common"
+        }
     }
 ]
