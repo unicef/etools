@@ -1,3 +1,4 @@
+from django.db.models import Prefetch
 from django.utils import timezone
 
 from django_filters.rest_framework import DjangoFilterBackend
@@ -35,6 +36,7 @@ from etools.applications.action_points.serializers import (
 from etools.applications.permissions2.conditions import ObjectStatusCondition
 from etools.applications.permissions2.metadata import PermissionBasedMetadata
 from etools.applications.permissions2.views import PermittedFSMActionMixin, PermittedSerializerMixin
+from etools.applications.t2f.models import TravelActivity
 
 
 class CategoryViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
@@ -109,9 +111,17 @@ class ActionPointViewSet(
         ])
         return context
 
+    def get_list_export_qs(self):
+        return self.filter_queryset(
+            self.get_queryset().prefetch_related(
+                'comments__user',
+                Prefetch('travel_activity', queryset=TravelActivity.objects.annotated_objects())))
+
     @action(detail=False, methods=['get'], url_path='export/csv', renderer_classes=(ActionPointCSVRenderer,))
     def list_csv_export(self, request, *args, **kwargs):
-        action_points = self.filter_queryset(self.get_queryset().prefetch_related('comments'))
+
+        action_points = self.get_list_export_qs()
+
         serializer = ActionPointExportSerializer(
             action_points.prefetch_related('comments'),
             context={"request": request},
@@ -125,7 +135,9 @@ class ActionPointViewSet(
     @action(detail=False, methods=['get'], url_path='export/xlsx', renderer_classes=(ExportOpenXMLRenderer,))
     def list_xlsx_export(self, request, *args, **kwargs):
         self.serializer_class = ActionPointExportSerializer
-        action_points = self.filter_queryset(self.get_queryset().prefetch_related('comments'))
+
+        action_points = self.get_list_export_qs()
+
         serializer = self.get_serializer(action_points, many=True)
         return Response(serializer.data, headers={
             'Content-Disposition': 'attachment;filename=action_points_{}.xlsx'.format(timezone.now().date())

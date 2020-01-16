@@ -1,5 +1,7 @@
 from rest_framework import serializers
 
+from etools.applications.core.urlresolvers import build_frontend_url
+
 
 class ActionPointExportSerializer(serializers.Serializer):
 
@@ -21,9 +23,8 @@ class ActionPointExportSerializer(serializers.Serializer):
     related_module = serializers.CharField()
     assigned_by = serializers.CharField(source='assigned_by.get_full_name', allow_null=True)
     date_of_completion = serializers.DateTimeField(format='%d/%m/%Y')
-    related_ref = serializers.CharField(source='related_object.reference_number', read_only=True, allow_null=True)
-    related_object_str = serializers.CharField()
-    related_object_url = serializers.CharField()
+    related_ref = serializers.SerializerMethodField()
+    related_object_url = serializers.SerializerMethodField()
     action_taken = serializers.SerializerMethodField()
 
     def get_action_taken(self, obj):
@@ -32,3 +33,20 @@ class ActionPointExportSerializer(serializers.Serializer):
 
     def get_ref_link(self, obj):
         return obj.get_object_url()
+
+    def get_related_ref(self, obj):
+        if obj.travel_activity:
+            return obj.travel_activity.primary_ref_number
+        if obj.related_object:
+            return obj.related_object.reference_number
+        return None
+
+    def get_related_object_str(self, obj):
+        if obj.travel_activity:
+            return f'Task No {obj.travel_activity.task_number} for Visit {obj.travel_activity.travel_id}'
+        return obj.related_object_str
+
+    def get_related_object_url(self, obj):
+        if obj.travel_activity:
+            return build_frontend_url('t2f', 'edit-travel', obj.travel_activity.travel_id)
+        return obj.related_object_url

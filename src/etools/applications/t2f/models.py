@@ -5,7 +5,8 @@ from decimal import Decimal
 from django.conf import settings
 from django.contrib.postgres.fields.array import ArrayField
 from django.db import connection, models, transaction
-from django.db.models import Q
+from django.db.models import Case, F, Q, When
+from django.db.models.functions import Concat
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.timezone import now as timezone_now
@@ -321,6 +322,22 @@ class Travel(models.Model):
         return build_frontend_url('t2f', 'edit-travel', self.id)
 
 
+class TravelActivityManager(models.Manager):
+    # def get_queryset(self):
+    #     return super().get_queryset()
+    def annotated_objects(self):
+        qs = self.get_queryset()
+        qs = qs.annotate(
+            primary_ref_number=Case(When(
+                travels__traveler=F('primary_traveler'),
+                then=F('travels__reference_number')), output_field=models.CharField()),
+            travel_id=Case(When(
+                travels__traveler=F('primary_traveler'),
+                then=F('travels__id')), output_field=models.CharField())
+        )
+        return qs
+
+
 class TravelActivity(models.Model):
     travels = models.ManyToManyField('Travel', related_name='activities', verbose_name=_('Travels'))
     travel_type = models.CharField(max_length=64, choices=TravelType.CHOICES, blank=True,
@@ -346,6 +363,8 @@ class TravelActivity(models.Model):
     primary_traveler = models.ForeignKey(
         settings.AUTH_USER_MODEL, verbose_name=_('Primary Traveler'), on_delete=models.CASCADE)
     date = models.DateField(null=True, blank=True, verbose_name=_('Date'))
+
+    objects = TravelActivityManager()
 
     class Meta:
         verbose_name_plural = _("Travel Activities")
