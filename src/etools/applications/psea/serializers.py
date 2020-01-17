@@ -386,10 +386,10 @@ class IndicatorSerializer(serializers.ModelSerializer):
     def get_document_types(self, obj):
         """Get document types limited to indicator"""
         MAP_INDICATOR_DOC_TYPE = {
-            1: [34, 35, 53, 54],
+            1: [34, 35, 54, 53],
             2: [37, 38, 39, 53],
             3: [55, 40, 41, 53],
-            4: [46, 47, 53],
+            4: [46, 47, 53, 42, 60],
             5: [48, 56, 49, 53],
             6: [51, 52, 57, 53],
         }
