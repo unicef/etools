@@ -43,8 +43,8 @@ jobs:
             docker login -u $DOCKER_USER -p $DOCKER_PASS
             BASE_TAG=$(md5sum Pipfile.lock | cut -c1-10)
             TAG=${CIRCLE_BRANCH}
-            {docker pull unicef/etools-base:$BASE_TAG} ||
-            {docker build -t unicef/etools-base:$BASE_TAG -f Dockerfile-base . && docker push unicef/etools-base:$BASE_TAG}
+            (docker pull unicef/etools-base:$BASE_TAG) ||
+            (docker build -t unicef/etools-base:$BASE_TAG -f Dockerfile-base . && docker push unicef/etools-base:$BASE_TAG)
             docker build -t unicef/etools:$TAG .
       - run:
           name: Pushing to Docker Hub
