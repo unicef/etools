@@ -60,4 +60,4 @@ RUN apk del .build-deps
 RUN apk del .build-deps1
 RUN apk del .build-deps2
 RUN apk del .build-deps3
-RUN pip uninstall -y pipenv setuptools pip
+RUN pip uninstall -y pipenv setuptools
