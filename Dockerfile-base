@@ -41,14 +41,14 @@ RUN apk add --no-cache --virtual .build-deps3 --repository http://dl-cdn.alpinel
 
 
 # PYTHON
-RUN pip install --upgrade \
+RUN pip install --no-cache-dir --upgrade \
     setuptools \
     pip \
-    wheel \
     pipenv
 
 
 WORKDIR /etools/
+ENV PIP_NO_CACHE_DIR false
 ADD Pipfile .
 ADD Pipfile.lock .
 RUN pipenv install --system  --ignore-pipfile --deploy
@@ -60,3 +60,4 @@ RUN apk del .build-deps
 RUN apk del .build-deps1
 RUN apk del .build-deps2
 RUN apk del .build-deps3
+RUN pip uninstall -y pipenv setuptools pip
