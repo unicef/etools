@@ -1,4 +1,5 @@
-FROM unicef/etools-base:dev
+ARG  BASE_TAG=dev
+FROM unicef/etools-base:$BASE_TAG
 
 ADD src /code/
 ADD manage.py /code/manage.py

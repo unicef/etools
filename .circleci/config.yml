@@ -49,12 +49,7 @@ jobs:
       - run:
           name: Run Tests
           command: |
-            pip install --upgrade \
-            setuptools \
-            pip \
-            wheel \
-            pipenv \
-            tox
+            pip install --upgrade tox
             tox -e d22,report
 
       - store_artifacts:
@@ -85,7 +80,7 @@ jobs:
             TAG=${CIRCLE_BRANCH}
             (docker pull unicef/etools-base:$BASE_TAG) ||
             (docker build -t unicef/etools-base:$BASE_TAG -f Dockerfile-base . && docker push unicef/etools-base:$BASE_TAG)
-            docker build -t unicef/etools:$TAG .
+            docker build -build-arg BASE_TAG=$BASE_TAG -t unicef/etools:$TAG .
       - run:
           name: Pushing to Docker Hub
           command: |
