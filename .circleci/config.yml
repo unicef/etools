@@ -49,7 +49,12 @@ jobs:
       - run:
           name: Run Tests
           command: |
-            pip install tox pipenv
+            pip install --upgrade \
+            setuptools \
+            pip \
+            wheel \
+            pipenv \
+            tox
             tox -e d22,report
 
       - store_artifacts:
@@ -57,7 +62,7 @@ jobs:
           destination: coverage
 
       - run:
-          name: Triggering test workflow
+          name: Triggering build_and_deploy job
           command: |
             if [[ $CIRCLE_BRANCH == $DEPLOY_BRANCHES ]]; then
               curl --user ${CIRCLE_TOKEN}: \
