@@ -164,3 +164,8 @@ class PermittedSerializerMixin(PermissionContextMixin):
         self.check_serializer_permissions(serializer, edit=True)
 
         super().perform_update(serializer)
+
+    def perform_destroy(self, instance):
+        self.check_serializer_permissions(self.get_serializer(instance=instance), edit=True)
+
+        super().perform_destroy(instance)

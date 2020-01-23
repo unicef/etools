@@ -121,7 +121,7 @@
             var my_data = {'country': ev.target.value};
             $.post('/api/v3/users/changecountry/', my_data, function() {
                 // success here
-                location.href = "/";
+                location.reload();
             }).fail(function(){window.alert('Country change failed')})
         });
         var host = {
