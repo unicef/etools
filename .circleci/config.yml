@@ -22,10 +22,12 @@ jobs:
             else
               docker build -t unicef/etools-base:$BASE_TAG -f Dockerfile-base .
               docker push unicef/etools-base:$BASE_TAG
-              if (echo "circle-ci2" | grep -q "$CIRCLE_BRANCH"); then
-                docker tag unicef/etools-base:$BASE_TAG unicef/etools-base:latest && docker push unicef/etools-base:latest
-              elif (echo "develop" | grep -q "$CIRCLE_BRANCH"); then
-                docker tag unicef/etools-base:$BASE_TAG unicef/etools-base:latest_prod && docker push unicef/etools-base:latest_prod
+              if (echo "develop" | grep -q "$CIRCLE_BRANCH"); then
+                docker tag unicef/etools-base:$BASE_TAG unicef/etools-base:latest
+                docker push unicef/etools-base:latest
+              elif (echo "master" | grep -q "$CIRCLE_BRANCH"); then
+                docker tag unicef/etools-base:$BASE_TAG unicef/etools-base:latest_prod
+                docker push unicef/etools-base:latest_prod
               else
                 echo "Not a followed branch not pushing latest"
               fi
@@ -96,7 +98,7 @@ jobs:
             TAG=${CIRCLE_BRANCH}
             (docker pull unicef/etools-base:$BASE_TAG) ||
             (docker build -t unicef/etools-base:$BASE_TAG -f Dockerfile-base . && docker push unicef/etools-base:$BASE_TAG)
-            docker build -build-arg BASE_TAG=$BASE_TAG -t unicef/etools:$TAG .
+            docker build --build-arg BASE_TAG=$BASE_TAG -t unicef/etools:$TAG .
       - run:
           name: Pushing to Docker Hub
           command: |
