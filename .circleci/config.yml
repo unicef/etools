@@ -44,6 +44,7 @@ jobs:
           POSTGRES_DB: circle_test
           POSTGRES_PASSWORD: postgres
       - image: redis
+    parallelism: 3
     steps:
       - checkout
       - restore_cache:
@@ -52,7 +53,7 @@ jobs:
           name: Run Tests
           command: |
             pip install --upgrade tox
-            circleci tests split < split_tests
+            circleci tests split < ./split_tests
       - save_cache:
           key: deps2-{{ .Branch }}--{{ checksum "Pipfile.lock" }}-{{ checksum ".circleci/config.yml" }}
           paths:
