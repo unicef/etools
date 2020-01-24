@@ -81,7 +81,7 @@ jobs:
           name: Building the image
           command: |
             docker login -u $DOCKER_USER -p $DOCKER_PASS
-            BASE_TAG=(md5sum Pipfile.lock | cut -c1-5)(md5sum Dockerfile-base | cut -c1-5)
+            BASE_TAG="$(md5sum Pipfile.lock | cut -c1-6)$(md5sum Dockerfile-base | cut -c1-6)"
             TAG=${CIRCLE_BRANCH}
             (docker pull unicef/etools-base:$BASE_TAG) ||
             (docker build -t unicef/etools-base:$BASE_TAG -f Dockerfile-base . && docker push unicef/etools-base:$BASE_TAG)
