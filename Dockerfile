@@ -1,4 +1,4 @@
-ARG  BASE_TAG=dev
+ARG  BASE_TAG=latest_prod
 FROM unicef/etools-base:$BASE_TAG
 
 #### CLEANUP

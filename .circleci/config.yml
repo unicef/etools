@@ -17,8 +17,19 @@ jobs:
             docker login -u $DOCKER_USER -p $DOCKER_PASS
             BASE_TAG="$(md5sum Pipfile.lock | cut -c1-6)$(md5sum Dockerfile-base | cut -c1-6)"
             TAG=${CIRCLE_BRANCH}
-            (curl --silent -f -lSL https://index.docker.io/v1/repositories/unicef/etools-base/tags/$BASE_TAG > /dev/null && echo "Up to date!") ||
-            (docker build -t unicef/etools-base:$BASE_TAG -f Dockerfile-base . && docker push unicef/etools-base:$BASE_TAG)
+            if (curl --silent -f -lSL https://index.docker.io/v1/repositories/unicef/etools-base/tags/$BASE_TAG > /dev/null"); then
+              echo "Up to date!
+            else
+              docker build -t unicef/etools-base:$BASE_TAG -f Dockerfile-base .
+              docker push unicef/etools-base:$BASE_TAG
+              if (echo "circle-ci2" | grep -q "$CIRCLE_BRANCH"); then
+                docker tag unicef/etools-base:$BASE_TAG unicef/etools-base:latest && docker push unicef/etools-base:latest
+              elif (echo "develop" | grep -q "$CIRCLE_BRANCH"); then
+                docker tag unicef/etools-base:$BASE_TAG unicef/etools-base:latest_prod && docker push unicef/etools-base:latest_prod
+              else
+                echo "Not a followed branch not pushing latest"
+              fi
+            fi
       - run:
           name: Triggering test workflow
           command: |
@@ -96,24 +107,6 @@ jobs:
 
 workflows:
   version: 2
-  commit:
+  tests_start:
     jobs:
       - setup
-#
-#  build_and_test:
-#    jobs:
-#      - test
-#      - build_and_deploy:
-#          requires:
-#            - test
-#          filters:
-#            branches:
-#              only:
-#                - master
-#                - staging
-#                - develop
-#                - test
-#                - demo
-#                - ci-updates
-#                - hotfix
-#  setup:

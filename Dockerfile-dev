@@ -1,4 +1,4 @@
-FROM unicef/etools-base:dev
+FROM unicef/etools-base:latest
 
 WORKDIR /etools/
 ADD Pipfile .
