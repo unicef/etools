@@ -36,7 +36,7 @@ jobs:
         environment:
           PGHOST: 127.0.0.1
           DATABASE_URL: "postgis://postgres:postgres@localhost:5432/circle_test"
-          DEPLOY_BRANCHES: "develop|staging|master|ci-updates"
+          DEPLOY_BRANCHES: "develop|staging|master|ci-updates2"
       - image: circleci/postgres:9.5-alpine-postgis
         environment:
           POSTGRES_USER: postgres
@@ -64,7 +64,7 @@ jobs:
       - run:
           name: Triggering build_and_deploy job
           command: |
-            if [[ $CIRCLE_BRANCH == $DEPLOY_BRANCHES ]]; then
+            if [[ $CIRCLE_BRANCH =~ $DEPLOY_BRANCHES ]]; then
               curl --user ${CIRCLE_TOKEN}: \
                 --data build_parameters[CIRCLE_JOB]=build_and_deploy \
                 --data revision=$CIRCLE_SHA1 \
