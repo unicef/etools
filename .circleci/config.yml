@@ -64,9 +64,7 @@ jobs:
       - run:
           name: Triggering build_and_deploy job
           command: |
-            echo "$CIRCLE_BRANCH"
-            echo "$DEPLOY_BRANCHES"
-            if [[ $CIRCLE_BRANCH =~ $DEPLOY_BRANCHES ]]; then
+            if (echo "$DEPLOY_BRANCHES" | grep -q "$CIRCLE_BRANCH"); then
               curl --user ${CIRCLE_TOKEN}: \
                 --data build_parameters[CIRCLE_JOB]=build_and_deploy \
                 --data revision=$CIRCLE_SHA1 \
