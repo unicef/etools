@@ -18,7 +18,7 @@ jobs:
             BASE_TAG="$(md5sum Pipfile.lock | cut -c1-6)$(md5sum Dockerfile-base | cut -c1-6)"
             TAG=${CIRCLE_BRANCH}
             if (curl --silent -f -lSL https://index.docker.io/v1/repositories/unicef/etools-base/tags/$BASE_TAG > /dev/null"); then
-              echo "Up to date!
+              echo "Up to date!"
             else
               docker build -t unicef/etools-base:$BASE_TAG -f Dockerfile-base .
               docker push unicef/etools-base:$BASE_TAG
