@@ -48,19 +48,19 @@ jobs:
       - checkout
       - restore_cache:
           key: deps2-{{ .Branch }}--{{ checksum "Pipfile.lock" }}-{{ checksum ".circleci/config.yml" }}
-#      - run:
-#          name: Run Tests
-#          command: |
-#            pip install --upgrade tox
-#            tox -e d22,report
+      - run:
+          name: Run Tests
+          command: |
+            pip install --upgrade tox
+            tox -e d22,report
       - save_cache:
           key: deps2-{{ .Branch }}--{{ checksum "Pipfile.lock" }}-{{ checksum ".circleci/config.yml" }}
           paths:
             - "env1"
             - /root/.cache/pips
-#      - store_artifacts:
-#          path: build/coverage
-#          destination: coverage
+      - store_artifacts:
+          path: build/coverage
+          destination: coverage
       - run:
           name: Triggering build_and_deploy job
           command: |
