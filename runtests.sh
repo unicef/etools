@@ -18,8 +18,23 @@ if [[ $RUNNING_UNDER_TOX != 1 ]] ; then
     time isort -rc src/ --check-only
 fi
 
+first_tests=(etools.applications.action_points.tests etools.applications.activities.tests etools.applications.attachments.tests etools.applications.audit.tests etools.applications.core.tests etools.applications.environment.tests etools.applications.field_monitoring.tests)
+second_tests=(etools.applications.firms.tests etools.applications.funds.tests etools.applications.hact.tests etools.applications.management.tests etools.applications.partners.tests etools.applications.permissions2.tests etools.applications.psea.tests)
+third_tests=(etools.applications.publics.tests etools.applications.reports.tests etools.applications.t2f.tests etools.applications.tpm.tests etools.applications.users.tests etools.applications.vision.tests)
 # Run unittests and coverage report
 coverage erase
-time coverage run manage.py test --noinput --keepdb "$@"
+if [ $1 == "first_tests" ] ; then
+    echo "running for partners"
+    time coverage run manage.py test $first_tests --noinput --keepdb "$@"
+elif [ $1 == "second_tests" ] ; then
+    echo "running for monkeys"
+    time coverage run manage.py test $second_tests --noinput --keepdb "$@"
+elif [ $1 == "third_tests" ] ; then
+    echo "running for others"
+    time coverage run manage.py test $third_tests --noinput --keepdb "$@"
+else
+    echo "running for all"
+    time coverage run manage.py test --noinput --keepdb "$@"
+fi
 coverage report -m
 coverage html
