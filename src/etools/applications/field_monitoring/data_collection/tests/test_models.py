@@ -59,11 +59,11 @@ class ContactBookExampleTestCase(TestCase):
                 Field('full_name', 'text', required=True),
                 Card(
                     'phones', 'Phones',
-                    Field('number', 'text', required=True, validations=[RegexTextValidation(r'\d{7}')]),
+                    Field('number', 'text', required=True, validations=['phone_regex']),
                     Field('type', 'text', required=False),
                     repeatable=True,
                 ),
-                Field('groups', 'dropdown', required=False, repeatable=True, options=['groups']),
+                Field('groups', 'dropdown', required=False, repeatable=True, options_key='groups'),
                 required=True, repeatable=True,
             ),
         )
@@ -71,7 +71,13 @@ class ContactBookExampleTestCase(TestCase):
             'options_type': 'local_flat',
             'values': ['family', 'friends', 'work', 'other']
         }
-        cls.form_values = {
+        cls.contact_book.metadata.validations['phone_regex'] = RegexTextValidation(r'\d{7}')
+
+    def test_structure_json(self):
+        print(json.dumps(self.contact_book.to_dict(), indent=2))
+
+    def test_form_validation(self):
+        self.contact_book.validate({
             "name": "test book",
             "users": [
                 {
@@ -85,13 +91,7 @@ class ContactBookExampleTestCase(TestCase):
                 },
                 {"full_name": "Mr. Smith"},
             ]
-        }
-
-    def test_structure_json(self):
-        print(json.dumps(self.contact_book.to_dict(), indent=2))
-
-    def test_form_validation(self):
-        self.contact_book.validate(self.form_values)
+        })
 
     def test_card_required(self):
         with self.assertRaises(ValidationError):
@@ -100,3 +100,13 @@ class ContactBookExampleTestCase(TestCase):
     def test_field_required(self):
         with self.assertRaises(ValidationError):
             self.contact_book.validate({"users": []})
+
+    def test_regex(self):
+        with self.assertRaises(ValidationError):
+            self.contact_book.validate({
+                "name": "test book",
+                "users": [{
+                    "full_name": "John Doe",
+                    "phones": [{"number": "123456"}],
+                }]
+            })

@@ -65,7 +65,7 @@ def get_monitoring_activity_blueprints(activity: MonitoringActivity):
                             'question_{}'.format(question.id),
                             answer_type_to_field_types_mapping[question.question.answer_type],
                             label=question.question.text,
-                            options=options_key,
+                            options_key=options_key,
                             help_text=question.specific_details
                         )
                     )

@@ -1,4 +1,5 @@
 from etools.applications.field_monitoring.data_collection.offline.errors import ValidationError, ValueTypeMismatch
+from etools.applications.field_monitoring.data_collection.offline.metadata import Metadata
 
 
 class EmptyValue:
@@ -35,7 +36,7 @@ class Field(Structure):
         placeholder='',
         default_value=None,
         # default_value=EmptyValue,  # todo; specific logic may be required for different fields
-        options=None,
+        options_key=None,
         **kwargs
     ):
         self.repeatable = repeatable
@@ -47,7 +48,7 @@ class Field(Structure):
         self.help_text = help_text
         self.placeholder = placeholder
         self.default_value = default_value
-        self.options = options
+        self.options_key = options_key
         super().__init__(**kwargs)
 
     def to_dict(self, **kwargs):
@@ -57,19 +58,20 @@ class Field(Structure):
             input_type=self.input_type,
             required=self.required,
             label=str(self.label),  # todo: make universal solution for translated strings
-            validations=[v.to_dict() for v in self.validations],
+            validations=self.validations,
             help_text=self.help_text,
             placeholder=self.placeholder,
             default_value=self.default_value,
-            options=self.options,
+            options_key=self.options_key,
             **kwargs
         )
 
-    def validate_single_value(self, value):
-        if not all(validator.is_valid(value) for validator in self.validations):
+    def validate_single_value(self, value: any, metadata: Metadata):
+        validators = [metadata.validations[v] for v in self.validations]
+        if not all(validator.is_valid(value) for validator in validators):
             raise ValidationError(value)  # todo: we need to collect errors here
 
-    def validate(self, value: any):
+    def validate(self, value: any, metadata:Metadata):
         # todo: move required validation to mixin?
         if not value:
             if self.required:
@@ -81,9 +83,9 @@ class Field(Structure):
             if not isinstance(value, list):
                 raise ValueTypeMismatch(value)
             for v in value:
-                self.validate_single_value(v)
+                self.validate_single_value(v, metadata)
         else:
-            self.validate_single_value(value)
+            self.validate_single_value(value, metadata)
 
 
 class Container(Structure):
@@ -102,7 +104,7 @@ class Container(Structure):
             **kwargs
         )
 
-    def validate(self, value: any):
+    def validate(self, value: any, metadata: Metadata):
         if not isinstance(value, dict):
             raise ValueTypeMismatch(value)
 
@@ -112,7 +114,7 @@ class Container(Structure):
                 continue
 
             if hasattr(child, 'validate'):
-                child.validate(value.get(child_name))
+                child.validate(value.get(child_name), metadata)
 
 
 class Card(Container):
@@ -134,7 +136,7 @@ class Card(Container):
             **kwargs
         )
 
-    def validate(self, value: any):
+    def validate(self, value: any, metadata: Metadata):
         if not value:
             if self.required:
                 raise ValidationError(value)
@@ -145,9 +147,9 @@ class Card(Container):
             if not isinstance(value, list):
                 raise ValueTypeMismatch(value)
             for v in value:
-                super().validate(v)
+                super().validate(v, metadata)
         else:
-            super().validate(value)
+            super().validate(value, metadata)
 
 
 class Information(Structure):

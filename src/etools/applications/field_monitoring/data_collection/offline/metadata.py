@@ -8,7 +8,7 @@ class Metadata:
     def to_dict(self):
         return {
             'options': self.options,
-            'validations': self.validations,
+            'validations': {k: v.to_dict() for k, v in self.validations.items()},
             'offline_enabled': self.offline_enabled,
             'allow_multiple_responses': self.allow_multiple_responses,
         }

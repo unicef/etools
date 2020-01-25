@@ -28,4 +28,4 @@ class Blueprint:
         }
 
     def validate(self, value: any):
-        return self.root.validate(value)
+        return self.root.validate(value, self.metadata)
