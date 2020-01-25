@@ -71,7 +71,7 @@ class Field(Structure):
         if not all(validator.is_valid(value) for validator in validators):
             raise ValidationError(value)  # todo: we need to collect errors here
 
-    def validate(self, value: any, metadata:Metadata):
+    def validate(self, value: any, metadata: Metadata):
         # todo: move required validation to mixin?
         if not value:
             if self.required:

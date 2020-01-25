@@ -61,10 +61,10 @@ class ContactBookExampleTestCase(TestCase):
                     'phones', 'Phones',
                     Field('number', 'text', required=True, validations=['phone_regex']),
                     Field('type', 'text', required=False),
-                    repeatable=True,
+                    required=True, repeatable=True,
                 ),
                 Field('groups', 'dropdown', required=False, repeatable=True, options_key='groups'),
-                required=True, repeatable=True,
+                required=False, repeatable=True,
             ),
         )
         cls.contact_book.metadata.options['groups'] = {
@@ -78,35 +78,40 @@ class ContactBookExampleTestCase(TestCase):
 
     def test_form_validation(self):
         self.contact_book.validate({
-            "name": "test book",
-            "users": [
+            'name': 'test book',
+            'users': [
                 {
-                    "full_name": "John Doe",
-                    "phones": [
-                        {"number": "1234567", "type": "mobile"},
-                        {"number": "2222222", "type": "work"},
-                        {"number": "2222242"},
+                    'full_name': 'John Doe',
+                    'phones': [
+                        {'number': '1234567', 'type': 'mobile'},
+                        {'number': '2222222', 'type': 'work'},
+                        {'number': '2222242'},
                     ],
-                    "groups": ["test"]  # todo: how resolve options? metadata? if remote choices? hidden validator?
+                    'groups': ['test']  # todo: how resolve options? metadata? if remote choices? hidden validator?
                 },
-                {"full_name": "Mr. Smith"},
             ]
         })
 
-    def test_card_required(self):
-        with self.assertRaises(ValidationError):
-            self.contact_book.validate({"name": "test", "users": []})
+    def test_users_not_required(self):
+        self.contact_book.validate({'name': 'test'})
 
-    def test_field_required(self):
+    def test_phones_required(self):
+        value = {'name': 'test', 'users': [{'full_name': 'John Doe'}]}
         with self.assertRaises(ValidationError):
-            self.contact_book.validate({"users": []})
+            self.contact_book.validate(value)
+        value['users'][0]['phones'] = [{'number': '1234567'}]
+        self.contact_book.validate(value)
 
-    def test_regex(self):
+    def test_name_required(self):
+        value = {}
         with self.assertRaises(ValidationError):
-            self.contact_book.validate({
-                "name": "test book",
-                "users": [{
-                    "full_name": "John Doe",
-                    "phones": [{"number": "123456"}],
-                }]
-            })
+            self.contact_book.validate(value)
+        value['name'] = 'test'
+        self.contact_book.validate(value)
+
+    def test_number_regex(self):
+        value = {'name': 'test', 'users': [{'full_name': 'John Doe', 'phones': [{'number': '123456'}]}]}
+        with self.assertRaises(ValidationError):
+            self.contact_book.validate(value)
+        value['users'][0]['phones'][0]['number'] = '1234567'
+        self.contact_book.validate(value)
