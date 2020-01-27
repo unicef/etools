@@ -2,6 +2,7 @@
 set -ex
 
 # This script expects the following env vars to bbe present:
+# CIRCLE_BRANCH
 # DEV_RANCHER_ENDPOINT
 # DEV_RANCHER_BEARER_TOKEN
 # DEV_RANCHER_CLUSTER_PROJECT_ID
