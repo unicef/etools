@@ -108,6 +108,7 @@ jobs:
       - run:
           name: trigger redeploy?
           command: |
+            pip install requests
             python utils/trigger_redeploy.py --loglevel=INFO
 
 
