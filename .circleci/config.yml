@@ -61,11 +61,11 @@ jobs:
       - checkout
       - restore_cache:
           key: deps2-{{ .Branch }}--{{ checksum "Pipfile.lock" }}-{{ checksum ".circleci/config.yml" }}
-      - run:
-          name: Run Tests
-          command: |
-            pip install --upgrade tox
-            tox -e d22,report
+#      - run:
+#          name: Run Tests
+#          command: |
+#            pip install --upgrade tox
+#            tox -e d22,report
       - save_cache:
           key: deps2-{{ .Branch }}--{{ checksum "Pipfile.lock" }}-{{ checksum ".circleci/config.yml" }}
           paths:
@@ -79,14 +79,14 @@ jobs:
           command: |
             if (echo "$DEPLOY_BRANCHES" | grep -q "$CIRCLE_BRANCH"); then
               curl --user ${CIRCLE_TOKEN}: \
-                --data build_parameters[CIRCLE_JOB]=build_and_deploy \
+                --data build_parameters[CIRCLE_JOB]=build_and_upload \
                 --data revision=$CIRCLE_SHA1 \
                 https://circleci.com/api/v1.1/project/github/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/tree/$CIRCLE_BRANCH
             else
               echo "not triggered - '$CIRCLE_BRANCH' is not a deployable branch: '$DEPLOY_BRANCHES'"
             fi
 
-  build_and_deploy:
+  build_and_upload:
     machine: true
     steps:
       - checkout
@@ -105,6 +105,10 @@ jobs:
             TAG=${CIRCLE_BRANCH}
             docker login -u $DOCKER_USER -p $DOCKER_PASS
             docker push unicef/etools:$TAG
+      - run:
+          name: trigger redeploy?
+          command: |
+            python utils/trigger_redeploy.py --loglevel=INFO
 
 
 workflows:
@@ -112,3 +116,9 @@ workflows:
   tests_start:
     jobs:
       - setup
+#  tagged_builds:
+#    jobs:
+#      - setup:
+#        filters:
+#          tags:
+#            only: /.*/
