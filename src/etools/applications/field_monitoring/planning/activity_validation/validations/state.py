@@ -1,3 +1,4 @@
+from django.db.models import Q
 from django.utils.translation import ugettext_lazy as _
 
 from etools_validator.exceptions import StateValidationError
@@ -51,8 +52,8 @@ def started_checklists_required(i):
 def activity_overall_findings_required(i):
     has_narrative_completed = i.overall_findings.exclude(narrative_finding='').exists()
     has_value_completed = ActivityQuestionOverallFinding.objects.filter(
+        Q(text_value__isnull=False) | Q(number_value__isnull=False),
         activity_question__monitoring_activity=i,
-        value__isnull=False
     ).exists()
 
     if not (has_narrative_completed or has_value_completed):

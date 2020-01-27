@@ -1,4 +1,4 @@
-from django.db.models import Prefetch
+from django.db.models import Prefetch, Q
 from django.utils.translation import ugettext_lazy as _
 
 from django_filters.rest_framework import DjangoFilterBackend
@@ -207,7 +207,7 @@ class ActivityFindingsViewSet(
     ).prefetch_related(
         Prefetch(
             'activity_question__findings',
-            Finding.objects.filter(value__isnull=False).prefetch_related(
+            Finding.objects.filter(Q(text_value__isnull=False) | Q(number_value__isnull=False)).prefetch_related(
                 'started_checklist', 'started_checklist__author',
             ),
             to_attr='completed_findings'

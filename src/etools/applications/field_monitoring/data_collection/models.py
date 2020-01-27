@@ -1,5 +1,4 @@
 from django.conf import settings
-from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
@@ -76,12 +75,44 @@ class StartedChecklist(models.Model):
             self.prepare_overall_findings()
 
 
-class Finding(models.Model):
+class AnswerValueMixin(models.Model):
+    question_types_mapping = {
+        Question.ANSWER_TYPES.text: 'text_value',
+        Question.ANSWER_TYPES.number: 'number_value',
+        Question.ANSWER_TYPES.bool: 'text_value',
+        Question.ANSWER_TYPES.likert_scale: 'text_value',
+    }
+
+    text_value = models.TextField(null=True, blank=True)
+    number_value = models.FloatField(null=True, blank=True)
+
+    class Meta:
+        abstract = True
+
+    def get_question(self) -> Question:
+        raise NotImplementedError
+
+    @property
+    def value(self):
+        question = self.get_question()
+        field_name = self.question_types_mapping[question.answer_type]
+        return getattr(self, field_name)
+
+    @value.setter
+    def value(self, _value: object):
+        question = self.get_question()
+        field_name = self.question_types_mapping[question.answer_type]
+        field = self._meta.get_field(field_name)
+        setattr(self, field_name, field.get_prep_value(_value))
+        for other_field in set(self.question_types_mapping.values()) - {field_name}:
+            setattr(self, other_field, None)
+
+
+class Finding(AnswerValueMixin, models.Model):
     started_checklist = models.ForeignKey(StartedChecklist, related_name='findings', verbose_name=_('Checklist'),
                                           on_delete=models.CASCADE)
     activity_question = models.ForeignKey(ActivityQuestion, related_name='findings',
                                           verbose_name=_('Activity Question'), on_delete=models.CASCADE)
-    value = JSONField(null=True, blank=True, verbose_name=_('Value'))
 
     class Meta:
         verbose_name = _('Checklist Finding')
@@ -91,11 +122,13 @@ class Finding(models.Model):
     def __str__(self):
         return '{}: {} - {}'.format(self.started_checklist, self.activity_question, self.value)
 
+    def get_question(self) -> Question:
+        return self.activity_question.question
 
-class ActivityQuestionOverallFinding(models.Model):
+
+class ActivityQuestionOverallFinding(AnswerValueMixin, models.Model):
     activity_question = models.OneToOneField(ActivityQuestion, related_name='overall_finding',
                                              verbose_name=_('Activity'), on_delete=models.CASCADE)
-    value = JSONField(null=True, blank=True, verbose_name=_('Value'))
 
     class Meta:
         verbose_name = _('Overall Activity Question Finding')
@@ -104,6 +137,9 @@ class ActivityQuestionOverallFinding(models.Model):
 
     def __str__(self):
         return '{} - {}'.format(self.activity_question, self.value)
+
+    def get_question(self) -> Question:
+        return self.activity_question.question
 
 
 class ChecklistOverallFinding(QuestionTargetMixin, models.Model):

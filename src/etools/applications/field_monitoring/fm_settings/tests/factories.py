@@ -44,7 +44,8 @@ class CategoryFactory(factory.DjangoModelFactory):
 
 
 class OptionFactory(factory.DjangoModelFactory):
-    label = factory.Sequence(lambda n: 'Question {}'.format(n))
+    label = factory.Sequence(lambda n: 'Option {}'.format(n))
+    value = factory.Sequence(lambda n: 'option_{}'.format(n))
 
     class Meta:
         model = Option
@@ -52,7 +53,7 @@ class OptionFactory(factory.DjangoModelFactory):
 
 class QuestionFactory(factory.DjangoModelFactory):
     category = factory.SubFactory(CategoryFactory)
-    answer_type = fuzzy.FuzzyChoice(dict(Question.ANSWER_TYPES).keys())
+    answer_type = Question.ANSWER_TYPES.text
     choices_size = factory.Maybe(LazyAttribute(lambda self: self.answer_type == Question.ANSWER_TYPES.likert_scale), 3)
     level = fuzzy.FuzzyChoice(dict(Question.LEVELS).keys())
     text = fuzzy.FuzzyText()

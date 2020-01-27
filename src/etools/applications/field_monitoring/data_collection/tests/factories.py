@@ -29,7 +29,7 @@ class StartedChecklistFactory(factory.DjangoModelFactory):
 class FindingFactory(factory.DjangoModelFactory):
     started_checklist = factory.SubFactory(StartedChecklistFactory)
     activity_question = factory.SubFactory(ActivityQuestionFactory)
-    value = factory.fuzzy.FuzzyText()
+    text_value = factory.fuzzy.FuzzyText()
 
     class Meta:
         model = Finding

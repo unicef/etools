@@ -911,8 +911,8 @@ class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
                 'category': CategoryFactory().id,
                 'sections': [SectionFactory().id],
                 'options': [
-                    {'label': 'Option #1', 'value': True},
-                    {'label': 'Option #2', 'value': False},
+                    {'label': 'Option #1', 'value': 'true'},
+                    {'label': 'Option #2', 'value': 'false'},
                 ],
                 'text': 'Test Question',
                 'is_hact': False
@@ -923,7 +923,7 @@ class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(len(response.data['options']), 2)
         self.assertListEqual(
             [o['value'] for o in response.data['options']],
-            [True, False]
+            ['true', 'false']
         )
 
     def test_update(self):
