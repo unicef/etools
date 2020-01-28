@@ -70,7 +70,7 @@ jobs:
           key: deps2-{{ .Branch }}--{{ checksum "Pipfile.lock" }}-{{ checksum ".circleci/config.yml" }}
           paths:
             - "env1"
-            - /root/.cache/pips
+            - /root/.cache/pip
       - store_artifacts:
           path: build/coverage
           destination: coverage
@@ -117,9 +117,3 @@ workflows:
   tests_start:
     jobs:
       - setup
-#  tagged_builds:
-#    jobs:
-#      - setup:
-#        filters:
-#          tags:
-#            only: /.*/
