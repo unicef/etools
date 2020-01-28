@@ -38,12 +38,15 @@ def get_env_vars():
 
     # script expects CIRCLE_BRANCH to be in the enviornment variables
     my_vars = {"environment": os.environ["CIRCLE_BRANCH"]}
+    if my_vars["environment"] not in prefix_map.keys():
+        logger.info("Current branch has no mapping for continuous deployment 1")
+        sys.exit(0)
 
     try:
         for v in vars:
             my_vars[v] = os.environ[prefix_map[my_vars["environment"]] + v]
     except KeyError as e:
-        logging.error("Please set the needed environment variables", e)
+        raise_error("Please set the needed environment variables: {}".format(str(e)))
         sys.exit(1)
     return my_vars
 
