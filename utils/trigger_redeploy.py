@@ -37,9 +37,7 @@ def get_env_vars():
                   "staging": "STG_"}
 
     # script expects CIRCLE_BRANCH to be in the enviornment variables
-    # my_vars = {"environment": os.environ["CIRCLE_BRANCH"]}
-    # hardcode branch for testing
-    my_vars = {"environment": "develop"}
+    my_vars = {"environment": os.environ["CIRCLE_BRANCH"]}
 
     try:
         for v in vars:
@@ -114,7 +112,7 @@ def main():
     logger.debug(in_arg)
 
     redeploy()
-    logger.info("Done!")
+    logger.info("Done! - Redeployment started - don't forget to run migrations!")
 
 
 if __name__ == "__main__":
