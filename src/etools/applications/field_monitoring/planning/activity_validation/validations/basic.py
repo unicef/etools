@@ -4,7 +4,7 @@ from etools_validator.exceptions import BasicValidationError
 
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.partners.models import PartnerOrganization
-from etools.applications.reports.models import Result
+from etools.applications.reports.models import CountryProgramme, Result
 
 
 def staff_activity_has_no_tpm_partner(i):
@@ -38,7 +38,10 @@ def interventions_connected_with_partners(i):
 
 
 def interventions_connected_with_cp_outputs(i):
-    cp_outputs = i.interventions.values_list('result_links__cp_output', flat=True)
+    current_cp = CountryProgramme.main_active()
+    cp_outputs = i.interventions.filter(
+        result_links__cp_output__country_programme=current_cp
+    ).values_list('result_links__cp_output', flat=True)
 
     diff = set(cp_outputs) - set(i.cp_outputs.values_list('id', flat=True))
     if diff:
