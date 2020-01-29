@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 set -ex
 
 # If set, use DJANGO_SETTINGS_MODULE from environment, except that we never want to use production settings

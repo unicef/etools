@@ -1,0 +1,54 @@
+FROM python:3.7.5-alpine
+
+RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/main" >> /etc/apk/repositories
+RUN apk update
+RUN apk add --upgrade apk-tools
+
+RUN apk add openssl \
+    ca-certificates \
+    libressl2.7-libcrypto
+
+RUN apk add libmagic \
+    libxslt
+
+RUN apk add --update-cache --repository http://dl-cdn.alpinelinux.org/alpine/edge/community/ \
+    geos \
+    gdal
+
+RUN apk add postgresql-client
+
+
+#### Build-deps
+RUN apk add --no-cache --virtual .build-deps \
+    --update alpine-sdk
+
+RUN apk add --no-cache --virtual .build-deps1 \
+    libxml2-dev \
+    libxslt-dev \
+    xmlsec-dev \
+    postgresql-dev \
+    libffi-dev \
+    jpeg-dev \
+    python-dev
+
+RUN apk add --no-cache --virtual .build-deps2 --repository http://dl-cdn.alpinelinux.org/alpine/edge/community/ \
+    geos-dev \
+    gdal-dev
+
+RUN apk add --no-cache --virtual .build-deps3 --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing/ \
+    gcc \
+    g++
+
+
+# PYTHON
+RUN pip install --no-cache-dir --upgrade \
+    setuptools \
+    pip \
+    pipenv
+
+
+WORKDIR /etools/
+ENV PIP_NO_CACHE_DIR false
+ADD Pipfile .
+ADD Pipfile.lock .
+RUN pipenv install --system  --ignore-pipfile --deploy
