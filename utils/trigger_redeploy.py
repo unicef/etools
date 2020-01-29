@@ -29,10 +29,10 @@ def get_input_args():
 
 
 def get_env_vars():
-    vars = ["RANCHER_PROJECT",
-            "RANCHER_CLUSTER_PROJECT_ID",
-            "RANCHER_BEARER_TOKEN",
-            "RANCHER_ENDPOINT"]
+    rancher_vars = ["RANCHER_PROJECT",
+                    "RANCHER_CLUSTER_PROJECT_ID",
+                    "RANCHER_BEARER_TOKEN",
+                    "RANCHER_ENDPOINT"]
     prefix_map = {"develop": "DEV_",
                   "staging": "STG_"}
 
@@ -43,7 +43,7 @@ def get_env_vars():
         sys.exit(0)
 
     try:
-        for v in vars:
+        for v in rancher_vars:
             my_vars[v] = os.environ[prefix_map[my_vars["environment"]] + v]
     except KeyError as e:
         raise_error("Please set the needed environment variables: {}".format(str(e)))
