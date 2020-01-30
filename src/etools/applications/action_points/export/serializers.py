@@ -17,7 +17,7 @@ class ActionPointExportSerializer(serializers.Serializer):
     status = serializers.CharField(source='get_status_display')
     description = serializers.CharField()
     high_priority = serializers.BooleanField()
-    intervention = serializers.CharField(source='intervention.reference_number', read_only=True, allow_null=True)
+    intervention = serializers.CharField(source='intervention.number', read_only=True, allow_null=True)
     pd_ssfa = serializers.CharField(source='intervention.title', allow_null=True)
     location = serializers.CharField(allow_null=True)
     related_module = serializers.CharField()
@@ -44,7 +44,9 @@ class ActionPointExportSerializer(serializers.Serializer):
 
     def get_related_object_str(self, obj):
         if obj.travel_activity:
-            return f'Task No {obj.travel_activity.task_number} for Visit {obj.travel_activity.travel_id}'
+            # It would be a performance nightmare to keep the current implementation of task numbers
+            # For now, in this export we will manually set to NA until resources can be assigned to travel related work
+            return f'Task No NA for Visit {obj.travel_activity.travel_id}'
         return obj.related_object_str
 
     def get_related_object_url(self, obj):

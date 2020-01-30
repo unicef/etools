@@ -24,8 +24,8 @@ class ActionPointManager(models.Manager):
     def get_queryset(self):
         return super().get_queryset().prefetch_related('author',
                                                        'section', 'office', 'location', 'partner',
-                                                       'cp_output', 'engagement', 'intervention')\
-            .select_related('assigned_to', "assigned_by")
+                                                       'cp_output__result_type', 'engagement', 'intervention')\
+            .select_related('assigned_to', "assigned_by", "category")
 
 
 class ActionPoint(TimeStampedModel):

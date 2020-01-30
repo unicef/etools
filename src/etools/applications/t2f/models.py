@@ -5,7 +5,7 @@ from decimal import Decimal
 from django.conf import settings
 from django.contrib.postgres.fields.array import ArrayField
 from django.db import connection, models, transaction
-from django.db.models import Case, F, Q, When
+from django.db.models import Case, F, Q, When, Count
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.timezone import now as timezone_now
@@ -329,12 +329,27 @@ class TravelActivityManager(models.Manager):
         qs = qs.annotate(
             primary_ref_number=Case(When(
                 travels__traveler=F('primary_traveler'),
-                then=F('travels__reference_number')), output_field=models.CharField()),
+                then=F('travels__reference_number')),
+                output_field=models.CharField()),
+            other_travel_ref_number=F('travels__reference_number'),
             travel_id=Case(When(
                 travels__traveler=F('primary_traveler'),
-                then=F('travels__id')), output_field=models.CharField())
+                then=F('travels__pk')),
+                output_field=models.CharField()),
         )
-        return qs
+        # get all ids of TravelActivity that have at least one matching travel where travels_traveler==primary_traveler
+        sub = qs.exclude(travel_id__isnull=True).values_list("id", flat=True)
+
+        # There are the following scenarios:
+        # 1. Travel Activity has no travels associated with it, but action points exist related. weird case
+        # 2. Travel Activity has one or more travels but none of the travels have TA primary = Trip Traveller
+        # 3. Travel Activity has one or more travels and one of them have TA primary = Trip Traveller (traveler match)
+        # to cover everything we want to:
+        # 1. create a table of TA-Travel (one to one) where we show which TA-Travel combination has a traveler match
+        # 2. create a lst of TA ids where we know for a fact that there is one TA-Travel record with traveler match
+        # 3. exclude from the table all records without a traveler match that are not in our list
+        # The result should be a list of TAs with distinct ids with annotated travel_id when we have traveler match
+        return qs.exclude(travel_id__isnull=True, id__in=sub)
 
 
 class TravelActivity(models.Model):
