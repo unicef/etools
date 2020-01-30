@@ -46,7 +46,7 @@ class ActionPointExportSerializer(serializers.Serializer):
         if obj.travel_activity:
             # It would be a performance nightmare to keep the current implementation of task numbers
             # For now, in this export we will manually set to NA until resources can be assigned to travel related work
-            return f'Task No NA for Visit {obj.travel_activity.travel_id}'
+            return f"Task No NA for Visit {obj.travel_activity.travel_id}"
         return obj.related_object_str
 
     def get_related_object_url(self, obj):
