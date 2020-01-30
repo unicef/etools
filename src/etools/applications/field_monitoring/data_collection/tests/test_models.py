@@ -4,9 +4,9 @@ from django.test import TestCase
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.field_monitoring.data_collection.offline.blueprint.base import Blueprint
-from etools.applications.field_monitoring.data_collection.offline.errors import ValidationError
 from etools.applications.field_monitoring.data_collection.offline.fm_utils import get_monitoring_activity_blueprints
 from etools.applications.field_monitoring.data_collection.offline.structure.base import Field, Group
+from etools.applications.field_monitoring.data_collection.offline.validations.errors import ValidationError
 from etools.applications.field_monitoring.data_collection.offline.validations.text import RegexTextValidation
 from etools.applications.field_monitoring.data_collection.tests.factories import ActivityQuestionFactory
 from etools.applications.field_monitoring.fm_settings.models import Question
@@ -97,21 +97,27 @@ class ContactBookExampleTestCase(TestCase):
 
     def test_phones_required(self):
         value = {'name': 'test', 'users': [{'full_name': 'John Doe'}]}
-        with self.assertRaises(ValidationError):
+        with self.assertRaises(ValidationError) as err:
             self.contact_book.validate(value)
+        self.assertDictEqual({'users': [{'phones': ['This field is required']}]}, err.exception.detail)
+
         value['users'][0]['phones'] = [{'number': '1234567'}]
         self.contact_book.validate(value)
 
     def test_name_required(self):
-        value = {}
-        with self.assertRaises(ValidationError):
+        value = {'name': None}
+        with self.assertRaises(ValidationError) as err:
             self.contact_book.validate(value)
+        self.assertDictEqual({'name': ['This field is required']}, err.exception.detail)
+
         value['name'] = 'test'
         self.contact_book.validate(value)
 
     def test_number_regex(self):
         value = {'name': 'test', 'users': [{'full_name': 'John Doe', 'phones': [{'number': '123456'}]}]}
-        with self.assertRaises(ValidationError):
+        with self.assertRaises(ValidationError) as err:
             self.contact_book.validate(value)
+        self.assertDictEqual({'users': [{'phones': [{'number': [{'Invalid value: 123456'}]}]}]}, err.exception.detail)
+
         value['users'][0]['phones'][0]['number'] = '1234567'
         self.contact_book.validate(value)

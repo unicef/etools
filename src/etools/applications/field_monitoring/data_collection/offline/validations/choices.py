@@ -1,4 +1,5 @@
 from etools.applications.field_monitoring.data_collection.offline.validations.base import BaseValidation
+from etools.applications.field_monitoring.data_collection.offline.validations.errors import BadValueError
 
 
 class Choice:
@@ -21,8 +22,9 @@ class ChoicesValidation(BaseValidation):
     def get_choices(self):
         return self.choices
 
-    def is_valid(self, value):
-        return value in self.get_choices()
+    def validate(self, value):
+        if value not in self.get_choices():
+            raise BadValueError(value)
 
     def to_dict(self, **kwargs):
         return super().to_dict(choices=[Choice(*c).to_dict() for c in self.get_choices()])

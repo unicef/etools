@@ -1,5 +1,9 @@
-from etools.applications.field_monitoring.data_collection.offline.errors import ValidationError, ValueTypeMismatch
 from etools.applications.field_monitoring.data_collection.offline.metadata import Metadata
+from etools.applications.field_monitoring.data_collection.offline.validations.errors import (
+    MissingRequiredValueError,
+    ValidationError,
+    ValueTypeMismatch,
+)
 
 
 class EmptyValue:
@@ -22,13 +26,14 @@ class Structure:
 
 
 class ValidatedStructure(Structure):
-    def __init__(self, required=False, repeatable=False, **kwargs):
+    def __init__(self, name: str, required=False, repeatable=False, **kwargs):
+        self.name = name
         self.repeatable = repeatable
         self.required = required
         super().__init__(**kwargs)
 
     def to_dict(self, **kwargs):
-        return super().to_dict(repeatable=self.repeatable, required=self.required, **kwargs)
+        return super().to_dict(name=self.name, repeatable=self.repeatable, required=self.required, **kwargs)
 
     def validate_single_value(self, value: any, metadata: Metadata):
         raise NotImplementedError
@@ -36,15 +41,25 @@ class ValidatedStructure(Structure):
     def validate(self, value: any, metadata: Metadata):
         if not value:
             if self.required:
-                raise ValidationError(value)
+                raise MissingRequiredValueError()
             else:
                 return
 
         if self.repeatable:
             if not isinstance(value, list):
                 raise ValueTypeMismatch(value)
-            for v in value:
-                self.validate_single_value(v, metadata)
+
+            errors = [[] for i in range(len(value))]
+            has_errors = False
+            for i, v in enumerate(value):
+                try:
+                    self.validate_single_value(v, metadata)
+                except ValidationError as ex:
+                    has_errors = True
+                    errors[i] = ex.detail
+
+            if has_errors:
+                raise ValidationError(errors)
         else:
             self.validate_single_value(value, metadata)
 
@@ -65,19 +80,17 @@ class Field(ValidatedStructure):
         options_key=None,
         **kwargs
     ):
-        self.name = name
+        super().__init__(name, **kwargs)
         self.input_type = input_type
-        self.label = label or name
+        self.label = label or self.name
         self.validations = validations or []
         self.help_text = help_text
         self.placeholder = placeholder
         self.default_value = default_value
         self.options_key = options_key
-        super().__init__(**kwargs)
 
     def to_dict(self, **kwargs):
         return super().to_dict(
-            name=self.name,
             input_type=self.input_type,
             label=str(self.label),  # todo: make universal solution for translated strings
             validations=self.validations,
@@ -89,19 +102,24 @@ class Field(ValidatedStructure):
         )
 
     def validate_single_value(self, value: any, metadata: Metadata):
-        validators = [metadata.validations[v] for v in self.validations]
-        if not all(validator.is_valid(value) for validator in validators):
-            raise ValidationError(value)  # todo: we need to collect errors here
+        errors = []
+        for validation in self.validations:
+            validator = metadata.validations[validation]
+            try:
+                validator.validate(value)
+            except ValidationError as ex:
+                errors.extend(ex.detail)
+        if errors:
+            raise ValidationError(set(errors))
 
 
 class Group(ValidatedStructure):
     object_type = 'group'
 
     def __init__(self, name: str, *children: Structure, title=None, **kwargs):
-        self.name = name
+        super().__init__(name, **kwargs)
         self.title = title
         self.children = list(children)
-        super().__init__(**kwargs)
 
     def add(self, *children: Structure):
         self.children.extend(children)
@@ -109,7 +127,6 @@ class Group(ValidatedStructure):
     def to_dict(self, **kwargs):
         return super().to_dict(
             title=self.title,
-            name=self.name,
             children=[c.to_dict() for c in self.children],
             **kwargs
         )
@@ -118,13 +135,18 @@ class Group(ValidatedStructure):
         if not isinstance(value, dict):
             raise ValueTypeMismatch(value)
 
+        errors = {}
         for child in self.children:
-            child_name = getattr(child, 'name', None)  # todo: name should be in structure
-            if not child_name:
+            if not isinstance(child, ValidatedStructure):
                 continue
 
-            if hasattr(child, 'validate'):
-                child.validate(value.get(child_name), metadata)
+            try:
+                child.validate(value.get(child.name), metadata)
+            except ValidationError as ex:
+                errors[child.name] = ex.detail
+
+        if errors:
+            raise ValidationError(errors)
 
 
 class Information(Structure):

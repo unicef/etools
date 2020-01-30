@@ -1,26 +1,29 @@
 from decimal import Decimal
 
 from etools.applications.field_monitoring.data_collection.offline.validations.base import BaseValidation
+from etools.applications.field_monitoring.data_collection.offline.validations.errors import (
+    BadValueError,
+    ValueTypeMismatch,
+)
 
 
 class NumberValidation(BaseValidation):
-    validation_type = 'number'
     name = 'number'
 
-    def is_valid(self, value):
-        return isinstance(value, (int, float, Decimal))
+    def validate(self, value):
+        if not isinstance(value, (int, float, Decimal)):
+            raise ValueTypeMismatch(value)
 
 
-class IntValidation(BaseValidation):  # todo: inherit from number validation
-    validation_type = 'number'
-    name = 'int'
+class IntegerValidation(NumberValidation):
+    name = 'integer'
 
-    def is_valid(self, value):
-        return isinstance(value, int)
+    def validate(self, value):
+        if not isinstance(value, int):
+            raise BadValueError(value)
 
 
-class LessThanValidation(BaseValidation):
-    validation_type = 'number'
+class LessThanValidation(NumberValidation):
     name = 'lt'
 
     def __init__(self, threshold=None, allow_equality=True, **kwargs):
@@ -28,11 +31,15 @@ class LessThanValidation(BaseValidation):
         self.allow_equality = allow_equality
         super().__init__(**kwargs)
 
-    def is_valid(self, value):
+    def validate(self, value):
         if self.allow_equality:
-            return value <= self.threshold
+            if value <= self.threshold:
+                return
         else:
-            return value < self.threshold
+            if value < self.threshold:
+                return
+
+        raise BadValueError(value)
 
     def to_dict(self, **kwargs):
         return super().to_dict(threshold=self.threshold, allow_equality=self.allow_equality, **kwargs)
@@ -47,11 +54,15 @@ class GreaterThanValidation(BaseValidation):
         self.allow_equality = allow_equality
         super().__init__(**kwargs)
 
-    def is_valid(self, value):
+    def validate(self, value):
         if self.allow_equality:
-            return value >= self.threshold
+            if value >= self.threshold:
+                return
         else:
-            return value > self.threshold
+            if value > self.threshold:
+                return
+
+        raise BadValueError(value)
 
     def to_dict(self, **kwargs):
         return super().to_dict(threshold=self.threshold, allow_equality=self.allow_equality, **kwargs)
