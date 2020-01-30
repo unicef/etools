@@ -5,7 +5,7 @@ from decimal import Decimal
 from django.conf import settings
 from django.contrib.postgres.fields.array import ArrayField
 from django.db import connection, models, transaction
-from django.db.models import Case, F, Q, When, Count
+from django.db.models import Case, F, Q, When
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.timezone import now as timezone_now
