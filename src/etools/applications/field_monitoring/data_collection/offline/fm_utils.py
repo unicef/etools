@@ -2,7 +2,7 @@ from django.db import connection
 from django.utils.translation import ugettext_lazy as _
 
 from etools.applications.field_monitoring.data_collection.offline.blueprint.base import Blueprint
-from etools.applications.field_monitoring.data_collection.offline.structure.base import Card, Field
+from etools.applications.field_monitoring.data_collection.offline.structure.base import Field, Group
 from etools.applications.field_monitoring.fm_settings.models import Method, Question
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
 
@@ -33,6 +33,8 @@ def get_monitoring_activity_blueprints(activity: MonitoringActivity):
         blueprint.add(Field('information_source', 'text', label=_('Source of Information'), extra={'type': ['wide']}))
 
         for relation, level in activity.RELATIONS_MAPPING:
+            level_block = Group(level, repeatable=True)
+
             for target in getattr(activity, relation).all():
                 target_questions = activity.questions.filter(
                     **{Question.get_target_relation_name(level): target},
@@ -41,12 +43,14 @@ def get_monitoring_activity_blueprints(activity: MonitoringActivity):
                 if not target_questions.exists():
                     continue
 
-                block = Card(
-                    '{}_{}'.format(level, target.id),
-                    str(target),
+                target_block = Group(
+                    str(target.id),
                     Field('overall', 'text', label=_('Overall Finding'), extra={'type': ['wide', 'additional']}),
                     Field('attachments', 'file', repeatable=True),
+                    title=str(target)
                 )
+                questions_block = Group('questions', repeatable=True)
+                target_block.add(questions_block)
                 for question in target_questions.distinct():
                     if question.question.answer_type in [
                         Question.ANSWER_TYPES.bool,
@@ -60,16 +64,17 @@ def get_monitoring_activity_blueprints(activity: MonitoringActivity):
                     else:
                         options_key = None
 
-                    block.add(
+                    questions_block.add(
                         Field(
-                            'question_{}'.format(question.id),
+                            str(question.id),
                             answer_type_to_field_types_mapping[question.question.answer_type],
                             label=question.question.text,
                             options_key=options_key,
                             help_text=question.specific_details
                         )
                     )
-                blueprint.add(block)
+                level_block.add(target_block)
+            blueprint.add(level_block)
 
         country_code = connection.tenant.country_short_code or ''
         blueprints[f'fm_{country_code}_{activity.id}_{method.id}'] = blueprint

@@ -1,5 +1,5 @@
 from etools.applications.field_monitoring.data_collection.offline.metadata import Metadata
-from etools.applications.field_monitoring.data_collection.offline.structure.base import Container, Structure
+from etools.applications.field_monitoring.data_collection.offline.structure.base import Group, Structure
 
 
 class Blueprint:
@@ -10,7 +10,7 @@ class Blueprint:
     ):
         self.blueprint_type = blueprint_type
         self.title = title
-        self.root = Container(**kwargs)
+        self.root = Group('root', **kwargs, required=True)
         self.metadata = Metadata(
             offline_enabled=offline_enabled,
             allow_multiple_responses=allow_multiple_responses

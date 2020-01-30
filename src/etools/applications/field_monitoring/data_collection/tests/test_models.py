@@ -6,7 +6,7 @@ from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.field_monitoring.data_collection.offline.blueprint.base import Blueprint
 from etools.applications.field_monitoring.data_collection.offline.errors import ValidationError
 from etools.applications.field_monitoring.data_collection.offline.fm_utils import get_monitoring_activity_blueprints
-from etools.applications.field_monitoring.data_collection.offline.structure.base import Card, Field
+from etools.applications.field_monitoring.data_collection.offline.structure.base import Field, Group
 from etools.applications.field_monitoring.data_collection.offline.validations.text import RegexTextValidation
 from etools.applications.field_monitoring.data_collection.tests.factories import ActivityQuestionFactory
 from etools.applications.field_monitoring.fm_settings.models import Question
@@ -54,17 +54,17 @@ class ContactBookExampleTestCase(TestCase):
         cls.contact_book = Blueprint('example_contact_book', 'Contact Book example')
         cls.contact_book.add(
             Field('name', 'text', label='Name', required=True),
-            Card(
-                'users', 'Users',
+            Group(
+                'users',
                 Field('full_name', 'text', required=True),
-                Card(
-                    'phones', 'Phones',
+                Group(
+                    'phones',
                     Field('number', 'text', required=True, validations=['phone_regex']),
                     Field('type', 'text', required=False),
-                    required=True, repeatable=True,
+                    required=True, repeatable=True, title='Phones',
                 ),
                 Field('groups', 'dropdown', required=False, repeatable=True, options_key='groups'),
-                required=False, repeatable=True,
+                required=False, repeatable=True, title='Users',
             ),
         )
         cls.contact_book.metadata.options['groups'] = {
