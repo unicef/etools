@@ -112,6 +112,7 @@ class ActionPointViewSet(
         return context
 
     def get_list_export_qs(self):
+        # TODO: fix all TPM related queries.. currently the queries increase linearly with the number of records
         return self.filter_queryset(
             self.get_queryset().prefetch_related(
                 'comments__user',
