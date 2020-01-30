@@ -4,16 +4,14 @@ from django.utils.translation import ugettext_lazy as _
 from etools.applications.field_monitoring.fm_settings.models import Method, Question
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.offline.blueprint import Blueprint
-from etools.applications.offline.structure import Field, Group
+from etools.applications.offline.fields import BooleanField, FloatField, TextField, UploadedFileField
+from etools.applications.offline.structure import Group
 
-# todo: move this file and all fm mentions out of offline app module
-
-
-answer_type_to_field_types_mapping = {
-    Question.ANSWER_TYPES.text: 'text',
-    Question.ANSWER_TYPES.number: 'number',
-    Question.ANSWER_TYPES.bool: 'dropdown',
-    Question.ANSWER_TYPES.likert_scale: 'dropdown',
+answer_type_to_field_mapping = {
+    Question.ANSWER_TYPES.text: TextField,
+    Question.ANSWER_TYPES.number: FloatField,
+    Question.ANSWER_TYPES.bool: BooleanField,  # todo: we need to check if frontend use booleans instead of text
+    Question.ANSWER_TYPES.likert_scale: TextField,
 }
 
 
@@ -30,7 +28,7 @@ def get_monitoring_activity_blueprints(activity: MonitoringActivity):
             '{} for {}'.format(method.name, activity.reference_number),
         )
         # todo: how configure layout? or leave it for frontend?
-        blueprint.add(Field('information_source', 'text', label=_('Source of Information'), extra={'type': ['wide']}))
+        blueprint.add(TextField('information_source', label=_('Source of Information'), extra={'type': ['wide']}))
 
         for relation, level in activity.RELATIONS_MAPPING:
             level_block = Group(level, repeatable=True)
@@ -45,8 +43,8 @@ def get_monitoring_activity_blueprints(activity: MonitoringActivity):
 
                 target_block = Group(
                     str(target.id),
-                    Field('overall', 'text', label=_('Overall Finding'), extra={'type': ['wide', 'additional']}),
-                    Field('attachments', 'file', repeatable=True),
+                    TextField('overall', label=_('Overall Finding'), extra={'type': ['wide', 'additional']}),
+                    UploadedFileField('attachments', repeatable=True),  # todo: switch for offline/online
                     title=str(target)
                 )
                 questions_block = Group('questions', repeatable=True)
@@ -65,9 +63,8 @@ def get_monitoring_activity_blueprints(activity: MonitoringActivity):
                         options_key = None
 
                     questions_block.add(
-                        Field(
+                        answer_type_to_field_mapping[question.question.answer_type](
                             str(question.id),
-                            answer_type_to_field_types_mapping[question.question.answer_type],
                             label=question.question.text,
                             options_key=options_key,
                             help_text=question.specific_details

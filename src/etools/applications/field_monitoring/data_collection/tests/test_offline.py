@@ -1,21 +1,12 @@
 import json
 
-from django.test import TestCase
-
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.field_monitoring.data_collection.offline.blueprint import get_monitoring_activity_blueprints
 from etools.applications.field_monitoring.data_collection.tests.factories import ActivityQuestionFactory
 from etools.applications.field_monitoring.fm_settings.models import Question
 from etools.applications.field_monitoring.fm_settings.tests.factories import MethodFactory
 from etools.applications.field_monitoring.planning.tests.factories import MonitoringActivityFactory
 from etools.applications.field_monitoring.tests.factories import UserFactory
-from etools.applications.offline import (
-    Blueprint,
-    Field,
-    get_monitoring_activity_blueprints,
-    Group,
-    RegexTextValidation,
-    ValidationError,
-)
 from etools.applications.partners.tests.factories import PartnerFactory
 
 

@@ -1,6 +1,6 @@
 class Metadata:
     def __init__(self, offline_enabled=True, allow_multiple_responses=True):
-        self.options = {}
+        self.options = {}  # Todo: make them structured
         self.validations = {}
         self.offline_enabled = offline_enabled
         self.allow_multiple_responses = allow_multiple_responses  # todo: how to validate them?

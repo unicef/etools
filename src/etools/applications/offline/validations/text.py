@@ -5,8 +5,6 @@ from etools.applications.offline.validations.base import BaseValidation
 
 
 class TextValidation(BaseValidation):
-    name = 'text'
-
     def validate(self, value):
         if not isinstance(value, str):
             raise ValueTypeMismatch(value)
@@ -19,7 +17,8 @@ class MaxLengthTextValidation(TextValidation):
         self.max_length = max_length
         super().__init__(**kwargs)
 
-    def is_valid(self, value):
+    def validate(self, value):
+        super().validate(value)
         if not len(value) < self.max_length:
             raise BadValueError(value)
 
@@ -35,6 +34,7 @@ class RegexTextValidation(TextValidation):
         super().__init__(**kwargs)
 
     def validate(self, value):
+        super().validate(value)
         if not bool(re.match(self.regex, value)):
             raise BadValueError(value)
 

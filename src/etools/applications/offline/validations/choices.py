@@ -8,7 +8,7 @@ class Choice:
         self.label = label or self.code
 
     def to_dict(self):
-        return {'code': self.code, 'label': self.label}
+        return {'code': self.code, 'label': str(self.label)}
 
 
 class ChoicesValidation(BaseValidation):

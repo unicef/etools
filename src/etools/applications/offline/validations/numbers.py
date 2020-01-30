@@ -1,23 +1,11 @@
-from decimal import Decimal
-
 from etools.applications.offline.errors import BadValueError, ValueTypeMismatch
 from etools.applications.offline.validations.base import BaseValidation
 
 
 class NumberValidation(BaseValidation):
-    name = 'number'
-
     def validate(self, value):
-        if not isinstance(value, (int, float, Decimal)):
+        if not isinstance(value, (int, float)):
             raise ValueTypeMismatch(value)
-
-
-class IntegerValidation(NumberValidation):
-    name = 'integer'
-
-    def validate(self, value):
-        if not isinstance(value, int):
-            raise BadValueError(value)
 
 
 class LessThanValidation(NumberValidation):
@@ -29,6 +17,7 @@ class LessThanValidation(NumberValidation):
         super().__init__(**kwargs)
 
     def validate(self, value):
+        super().validate(value)
         if self.allow_equality:
             if value <= self.threshold:
                 return
@@ -42,8 +31,7 @@ class LessThanValidation(NumberValidation):
         return super().to_dict(threshold=self.threshold, allow_equality=self.allow_equality, **kwargs)
 
 
-class GreaterThanValidation(BaseValidation):
-    validation_type = 'number'
+class GreaterThanValidation(NumberValidation):
     name = 'gt'
 
     def __init__(self, threshold=None, allow_equality=True, **kwargs):
@@ -52,6 +40,7 @@ class GreaterThanValidation(BaseValidation):
         super().__init__(**kwargs)
 
     def validate(self, value):
+        super().validate(value)
         if self.allow_equality:
             if value >= self.threshold:
                 return

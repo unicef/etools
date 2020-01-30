@@ -91,7 +91,7 @@
             "name": "groups",
             "repeatable": true,
             "required": false,
-            "input_type": "dropdown",
+            "input_type": "likert_scale",
             "label": "groups",
             "validations": [],
             "help_text": "",

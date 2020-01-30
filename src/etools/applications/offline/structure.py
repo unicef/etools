@@ -1,9 +1,5 @@
-from etools.applications.offline.errors import MissingRequiredValueError, ValueTypeMismatch, ValidationError
+from etools.applications.offline.errors import MissingRequiredValueError, ValidationError, ValueTypeMismatch
 from etools.applications.offline.metadata import Metadata
-
-
-class EmptyValue:
-    pass
 
 
 class Structure:
@@ -58,55 +54,6 @@ class ValidatedStructure(Structure):
                 raise ValidationError(errors)
         else:
             self.validate_single_value(value, metadata)
-
-
-class Field(ValidatedStructure):
-    object_type = 'field'
-
-    def __init__(
-        self,
-        name,
-        input_type,
-        label=None,
-        validations=None,
-        help_text='',
-        placeholder='',
-        default_value=None,
-        # default_value=EmptyValue,  # todo; specific logic may be required for different fields
-        options_key=None,
-        **kwargs
-    ):
-        super().__init__(name, **kwargs)
-        self.input_type = input_type
-        self.label = label or self.name
-        self.validations = validations or []
-        self.help_text = help_text
-        self.placeholder = placeholder
-        self.default_value = default_value
-        self.options_key = options_key
-
-    def to_dict(self, **kwargs):
-        return super().to_dict(
-            input_type=self.input_type,
-            label=str(self.label),  # todo: make universal solution for translated strings
-            validations=self.validations,
-            help_text=self.help_text,
-            placeholder=self.placeholder,
-            default_value=self.default_value,
-            options_key=self.options_key,
-            **kwargs
-        )
-
-    def validate_single_value(self, value: any, metadata: Metadata):
-        errors = []
-        for validation in self.validations:
-            validator = metadata.validations[validation]
-            try:
-                validator.validate(value)
-            except ValidationError as ex:
-                errors.extend(ex.detail)
-        if errors:
-            raise ValidationError(set(errors))
 
 
 class Group(ValidatedStructure):

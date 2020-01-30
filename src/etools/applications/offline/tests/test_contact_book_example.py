@@ -14,6 +14,7 @@ class ContactBookExampleTestCase(TestCase):
 
     def test_serialized_structure(self):
         with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'contact_book.json'), 'r') as example:
+            self.maxDiff = None
             self.assertDictEqual(json.load(example), contact_book.to_dict())
 
     def test_form_validation(self):
@@ -27,7 +28,7 @@ class ContactBookExampleTestCase(TestCase):
                         {'number': '2222222', 'type': 'work'},
                         {'number': '2222242'},
                     ],
-                    'groups': ['test']  # todo: how resolve options? metadata? if remote choices? hidden validator?
+                    'groups': ['friends']
                 },
             ]
         })
@@ -60,4 +61,17 @@ class ContactBookExampleTestCase(TestCase):
         self.assertDictEqual({'users': [{'phones': [{'number': [{'Invalid value: 123456'}]}]}]}, err.exception.detail)
 
         value['users'][0]['phones'][0]['number'] = '1234567'
+        contact_book.validate(value)
+
+    def test_invalid_group_choice(self):
+        value = {
+            'name': 'test',
+            'users': [{'full_name': 'John Doe', 'phones': [{'number': '1234567'}], 'groups': ['test']}]
+        }
+
+        with self.assertRaises(ValidationError) as err:
+            contact_book.validate(value)
+        self.assertDictEqual({'users': [{'groups': [['Invalid value: test']]}]}, err.exception.detail)
+
+        value['users'][0]['groups'] = ['work']
         contact_book.validate(value)

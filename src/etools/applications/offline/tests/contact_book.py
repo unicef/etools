@@ -1,20 +1,21 @@
 from etools.applications.offline.blueprint import Blueprint
-from etools.applications.offline.structure import Field, Group
+from etools.applications.offline.fields import ChoiceField, TextField
+from etools.applications.offline.structure import Group
 from etools.applications.offline.validations.text import RegexTextValidation
 
 contact_book = Blueprint('example_contact_book', 'Contact Book example')
 contact_book.add(
-    Field('name', 'text', label='Name', required=True),
+    TextField('name', label='Name', required=True),
     Group(
         'users',
-        Field('full_name', 'text', required=True),
+        TextField('full_name', required=True),
         Group(
             'phones',
-            Field('number', 'text', required=True, validations=['phone_regex']),
-            Field('type', 'text', required=False),
+            TextField('number', required=True, validations=['phone_regex']),
+            TextField('type', required=False),
             required=True, repeatable=True, title='Phones',
         ),
-        Field('groups', 'dropdown', required=False, repeatable=True, options_key='groups'),
+        ChoiceField('groups', str, required=False, repeatable=True, options_key='groups'),
         required=False, repeatable=True, title='Users',
     ),
 )

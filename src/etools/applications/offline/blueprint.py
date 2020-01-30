@@ -28,4 +28,5 @@ class Blueprint:
         }
 
     def validate(self, value: any):
+        # todo: return validated data from blueprint
         self.root.validate(value, self.metadata)
