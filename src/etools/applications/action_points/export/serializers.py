@@ -25,6 +25,7 @@ class ActionPointExportSerializer(serializers.Serializer):
     date_of_completion = serializers.DateTimeField(format='%d/%m/%Y')
     related_ref = serializers.SerializerMethodField()
     related_object_url = serializers.SerializerMethodField()
+    related_object_str = serializers.SerializerMethodField()
     action_taken = serializers.SerializerMethodField()
 
     def get_action_taken(self, obj):
