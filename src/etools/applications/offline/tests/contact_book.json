@@ -1,0 +1,127 @@
+{
+  "blueprint_type": "example_contact_book",
+  "title": "Contact Book example",
+  "structure": {
+    "type": "group",
+    "extra": {},
+    "name": "root",
+    "repeatable": false,
+    "required": true,
+    "title": null,
+    "children": [
+      {
+        "type": "field",
+        "extra": {},
+        "name": "name",
+        "repeatable": false,
+        "required": true,
+        "input_type": "text",
+        "label": "Name",
+        "validations": [],
+        "help_text": "",
+        "placeholder": "",
+        "default_value": null,
+        "options_key": null
+      },
+      {
+        "type": "group",
+        "extra": {},
+        "name": "users",
+        "repeatable": true,
+        "required": false,
+        "title": "Users",
+        "children": [
+          {
+            "type": "field",
+            "extra": {},
+            "name": "full_name",
+            "repeatable": false,
+            "required": true,
+            "input_type": "text",
+            "label": "full_name",
+            "validations": [],
+            "help_text": "",
+            "placeholder": "",
+            "default_value": null,
+            "options_key": null
+          },
+          {
+            "type": "group",
+            "extra": {},
+            "name": "phones",
+            "repeatable": true,
+            "required": true,
+            "title": "Phones",
+            "children": [
+              {
+                "type": "field",
+                "extra": {},
+                "name": "number",
+                "repeatable": false,
+                "required": true,
+                "input_type": "text",
+                "label": "number",
+                "validations": [
+                  "phone_regex"
+                ],
+                "help_text": "",
+                "placeholder": "",
+                "default_value": null,
+                "options_key": null
+              },
+              {
+                "type": "field",
+                "extra": {},
+                "name": "type",
+                "repeatable": false,
+                "required": false,
+                "input_type": "text",
+                "label": "type",
+                "validations": [],
+                "help_text": "",
+                "placeholder": "",
+                "default_value": null,
+                "options_key": null
+              }
+            ]
+          },
+          {
+            "type": "field",
+            "extra": {},
+            "name": "groups",
+            "repeatable": true,
+            "required": false,
+            "input_type": "dropdown",
+            "label": "groups",
+            "validations": [],
+            "help_text": "",
+            "placeholder": "",
+            "default_value": null,
+            "options_key": "groups"
+          }
+        ]
+      }
+    ]
+  },
+  "metadata": {
+    "options": {
+      "groups": {
+        "options_type": "local_flat",
+        "values": [
+          "family",
+          "friends",
+          "work",
+          "other"
+        ]
+      }
+    },
+    "validations": {
+      "phone_regex": {
+        "name": "regex",
+        "regex": "\\d{7}"
+      }
+    },
+    "offline_enabled": true,
+    "allow_multiple_responses": true
+  }
+}

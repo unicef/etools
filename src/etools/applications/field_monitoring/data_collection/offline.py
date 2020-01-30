@@ -1,10 +1,10 @@
 from django.db import connection
 from django.utils.translation import ugettext_lazy as _
 
-from etools.applications.field_monitoring.data_collection.offline.blueprint.base import Blueprint
-from etools.applications.field_monitoring.data_collection.offline.structure.base import Field, Group
 from etools.applications.field_monitoring.fm_settings.models import Method, Question
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
+from etools.applications.offline.blueprint import Blueprint
+from etools.applications.offline.structure import Field, Group
 
 # todo: move this file and all fm mentions out of offline app module
 

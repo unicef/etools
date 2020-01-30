@@ -1,9 +1,5 @@
-from etools.applications.field_monitoring.data_collection.offline.metadata import Metadata
-from etools.applications.field_monitoring.data_collection.offline.validations.errors import (
-    MissingRequiredValueError,
-    ValidationError,
-    ValueTypeMismatch,
-)
+from etools.applications.offline.errors import MissingRequiredValueError, ValueTypeMismatch, ValidationError
+from etools.applications.offline.metadata import Metadata
 
 
 class EmptyValue:

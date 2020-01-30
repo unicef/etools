@@ -1,10 +1,7 @@
 from decimal import Decimal
 
-from etools.applications.field_monitoring.data_collection.offline.validations.base import BaseValidation
-from etools.applications.field_monitoring.data_collection.offline.validations.errors import (
-    BadValueError,
-    ValueTypeMismatch,
-)
+from etools.applications.offline.errors import BadValueError, ValueTypeMismatch
+from etools.applications.offline.validations.base import BaseValidation
 
 
 class NumberValidation(BaseValidation):

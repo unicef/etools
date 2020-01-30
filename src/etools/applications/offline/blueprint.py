@@ -1,5 +1,5 @@
-from etools.applications.field_monitoring.data_collection.offline.metadata import Metadata
-from etools.applications.field_monitoring.data_collection.offline.structure.base import Group, Structure
+from etools.applications.offline.metadata import Metadata
+from etools.applications.offline.structure import Group, Structure
 
 
 class Blueprint:
