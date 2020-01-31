@@ -11,7 +11,6 @@ from etools.libraries.djangolib.admin import AdminListMixin
 class TravelAdmin(admin.ModelAdmin):
     list_filter = (
         'status',
-        'traveler',
         'section'
     )
     search_fields = (
@@ -38,13 +37,12 @@ class TravelAdmin(admin.ModelAdmin):
 class TravelActivityAdmin(admin.ModelAdmin):
     list_filter = (
         'travel_type',
-        'partner',
-        'date',
         'travels'
     )
     search_fields = (
         'primary_traveler__first_name',
         'primary_traveler__last_name',
+        'parnter__name'
     )
     list_display = (
         'primary_traveler',
@@ -53,6 +51,11 @@ class TravelActivityAdmin(admin.ModelAdmin):
     )
     raw_id_fields = (
         'primary_traveler',
+        'partnership',
+        'result',
+        'travels',
+        'locations',
+        'partner'
     )
     filter_horizontal = (
         'locations',
