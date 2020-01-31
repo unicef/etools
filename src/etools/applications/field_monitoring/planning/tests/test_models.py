@@ -23,7 +23,7 @@ from etools.applications.partners.tests.factories import (
     InterventionResultLinkFactory,
     PartnerFactory,
 )
-from etools.applications.reports.models import ResultType, CountryProgramme
+from etools.applications.reports.models import CountryProgramme, ResultType
 from etools.applications.reports.tests.factories import CountryProgrammeFactory, ResultFactory, SectionFactory
 from etools.applications.tpm.tests.factories import TPMPartnerFactory, TPMPartnerStaffMemberFactory
 
