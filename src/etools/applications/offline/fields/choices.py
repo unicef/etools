@@ -32,7 +32,7 @@ class ChoiceField(BaseField):
         if options_type == 'local_flat':
             values = choices['values']
         elif options_type == 'local_pairs':
-            values = choices['values'].values()
+            values = choices['values'].keys()
         elif options_type == 'remote':
             raise NotImplementedError
         else:

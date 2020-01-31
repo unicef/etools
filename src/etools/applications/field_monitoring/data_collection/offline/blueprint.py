@@ -1,10 +1,19 @@
 from django.db import connection
 from django.utils.translation import ugettext_lazy as _
 
+from unicef_attachments.models import FileType
+
 from etools.applications.field_monitoring.fm_settings.models import Method, Question
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.offline.blueprint import Blueprint
-from etools.applications.offline.fields import BooleanField, FloatField, Group, TextField, UploadedFileField
+from etools.applications.offline.fields import (
+    BooleanField,
+    ChoiceField,
+    FloatField,
+    Group,
+    TextField,
+    UploadedFileField,
+)
 
 answer_type_to_field_mapping = {
     Question.ANSWER_TYPES.text: TextField,
@@ -40,7 +49,12 @@ def get_blueprint_for_activity_and_method(activity: MonitoringActivity, method: 
                 TextField(
                     'overall', label=_('Overall Finding'), extra={'type': ['wide', 'additional']}, required=False
                 ),
-                UploadedFileField('attachments', repeatable=True, required=False),  # todo: switch for offline/online
+                Group(
+                    'attachments',
+                    UploadedFileField('attachment'),
+                    ChoiceField('file_type', options_key='target_attachments_file_types'),
+                    required=False, repeatable=True
+                ),
                 title=str(target)
             )
             questions_block = Group('questions')
@@ -53,7 +67,7 @@ def get_blueprint_for_activity_and_method(activity: MonitoringActivity, method: 
                     options_key = 'question_{}'.format(question.question.id)
                     blueprint.metadata.options[options_key] = {
                         'options_type': 'local_pairs',
-                        'values': list(question.question.options.values('value', 'label'))
+                        'values': dict(question.question.options.values_list('value', 'label'))
                     }
                 else:
                     options_key = None
@@ -70,6 +84,11 @@ def get_blueprint_for_activity_and_method(activity: MonitoringActivity, method: 
 
         if level_block.children:
             blueprint.add(level_block)
+
+    blueprint.metadata.options['target_attachments_file_types'] = {
+        'options_type': 'local_pairs',
+        'values': dict(FileType.objects.filter(code='fm_common').values_list('id', 'label'))
+    }
 
     return blueprint
 

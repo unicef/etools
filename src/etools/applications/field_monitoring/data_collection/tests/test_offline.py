@@ -1,5 +1,6 @@
 import json
 
+from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.field_monitoring.data_collection.offline.blueprint import get_monitoring_activity_blueprints
 from etools.applications.field_monitoring.data_collection.offline.helpers import create_checklist
@@ -45,7 +46,10 @@ class OfflineStructureTestCase(BaseTenantTestCase):
             'partner': {
                 str(partner.id): {
                     'overall': 'overall',
-                    'attachments': [],
+                    'attachments': [
+                        {'attachment': a.id, 'file_type': a.file_type.id}
+                        for a in AttachmentFactory.create_batch(size=2, file_type__code='fm_common')
+                    ],
                     'questions': {
                         str(self.text_question.id): 'Question answer'
                     }
