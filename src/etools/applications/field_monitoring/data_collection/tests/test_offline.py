@@ -2,6 +2,7 @@ import json
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.field_monitoring.data_collection.offline.blueprint import get_monitoring_activity_blueprints
+from etools.applications.field_monitoring.data_collection.offline.helpers import create_checklist
 from etools.applications.field_monitoring.data_collection.tests.factories import ActivityQuestionFactory
 from etools.applications.field_monitoring.fm_settings.models import Question
 from etools.applications.field_monitoring.fm_settings.tests.factories import MethodFactory
@@ -35,7 +36,19 @@ class OfflineStructureTestCase(BaseTenantTestCase):
         )
 
     def test_structure_json(self):
-        print(json.dumps({
-            key: bp.to_dict()
-            for key, bp in get_monitoring_activity_blueprints(self.activity).items()
-        }, indent=2))
+        print(json.dumps([bp.to_dict() for bp in get_monitoring_activity_blueprints(self.activity)], indent=2))
+
+    def test_save_checklist(self):
+        partner = self.text_question.partner
+        create_checklist(self.activity, self.text_question.question.methods.first(), UserFactory(), {
+            'information_source': 'Doctors',
+            'partner': {
+                str(partner.id): {
+                    'overall': 'overall',
+                    'attachments': [],
+                    'questions': {
+                        str(self.text_question.id): 'Question answer'
+                    }
+                }
+            }
+        })

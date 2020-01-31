@@ -24,7 +24,7 @@ class SkipField(Exception):
 
 
 class ValidatedStructure(Structure):
-    def __init__(self, name: str, required=False, repeatable=False, **kwargs):
+    def __init__(self, name: str, required=True, repeatable=False, **kwargs):
         self.name = name
         self.repeatable = repeatable
         self.required = required

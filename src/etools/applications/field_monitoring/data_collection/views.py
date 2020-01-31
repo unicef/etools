@@ -3,7 +3,9 @@ from django.utils.translation import ugettext_lazy as _
 
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, viewsets
+from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
+from rest_framework.response import Response
 from unicef_attachments.models import Attachment
 from unicef_restlib.views import NestedViewSetMixin
 
@@ -15,6 +17,8 @@ from etools.applications.field_monitoring.data_collection.models import (
     Finding,
     StartedChecklist,
 )
+from etools.applications.field_monitoring.data_collection.offline.blueprint import get_blueprint_for_activity_and_method
+from etools.applications.field_monitoring.data_collection.offline.helpers import update_checklist
 from etools.applications.field_monitoring.data_collection.serializers import (
     ActivityDataCollectionSerializer,
     ActivityOverallFindingSerializer,
@@ -119,6 +123,18 @@ class ChecklistsViewSet(
 
     def perform_create(self, serializer):
         serializer.save(monitoring_activity=self.get_parent_object())
+
+    @action(detail=True, methods=['GET', 'POST'])
+    def blueprint(self, request, *args, **kwargs):
+        checklist = self.get_object()
+        if request.method.upper() == 'GET':
+            return Response(
+                data=get_blueprint_for_activity_and_method(checklist.monitoring_activity, checklist.method).to_dict()
+            )
+        else:
+            update_checklist(checklist, request.data)
+            checklist.refresh_from_db()
+            return Response(data=self.get_serializer(checklist).data)
 
 
 class ChecklistOverallFindingsViewSet(
