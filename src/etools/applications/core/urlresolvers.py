@@ -14,9 +14,15 @@ def build_frontend_url(*parts, user=None):
     else:
         frontend_url = '{}{}'.format(settings.HOST, reverse('social:begin', kwargs={'backend': 'azuread-b2c-oauth2'}))
 
+    if hasattr(connection, "tenant"):
+        country_id = connection.tenant.id
+    else:
+        # Not sure why this was done this way.. keeping it because I might have missed something
+        country_id = get_tenant_model().objects.get(schema_name=connection.schema_name).id,
+
     change_country_view = update_url_with_kwargs(
         reverse('users:country-change'),
-        country=get_tenant_model().objects.get(schema_name=connection.schema_name).id,
+        country=country_id,
         next='/'.join(map(str, ('',) + parts))
     )
 

@@ -28,24 +28,19 @@ INACTIVE_WORKSPACE_URL = reverse('workspace-inactive')
 
 class QueryCountDebugMiddleware(MiddlewareMixin):
     """ Debug db connections"""
+    # inspired from https://gist.github.com/j4mie/956843
     def process_response(self, request, response):
         if response.status_code == 200:
             total_time = 0
-
             for query in connection.queries:
                 query_time = query.get('time')
                 if query_time is None:
-                    # django-debug-toolbar monkeypatches the connection
-                    # cursor wrapper and adds extra information in each
-                    # item in connection.queries. The query time is stored
-                    # under the key "duration" rather than "time" and is
-                    # in milliseconds, not seconds.
                     query_time = query.get('duration', 0) / 1000
                 total_time += float(query_time)
 
-            print('%s queries run, total %s seconds' % (len(connection.queries), total_time))
+            logger.debug('%s queries run, total %s seconds' % (len(connection.queries), total_time))
             for q in connection.queries:
-                print(q['time'])
+                logger.debug(q['time'])
         return response
     pass
 
