@@ -1,5 +1,5 @@
+from etools.applications.offline.fields import Group, Structure
 from etools.applications.offline.metadata import Metadata
-from etools.applications.offline.structure import Group, Structure
 
 
 class Blueprint:
@@ -19,7 +19,7 @@ class Blueprint:
     def add(self, *args: Structure):
         self.root.add(*args)
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         return {
             'blueprint_type': self.blueprint_type,
             'title': self.title,
@@ -27,6 +27,5 @@ class Blueprint:
             'metadata': self.metadata.to_dict(),
         }
 
-    def validate(self, value: any):
-        # todo: return validated data from blueprint
-        self.root.validate(value, self.metadata)
+    def validate(self, value: dict) -> dict:
+        return self.root.validate(value, self.metadata)

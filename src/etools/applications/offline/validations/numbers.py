@@ -1,11 +1,14 @@
+from typing import Any
+
 from etools.applications.offline.errors import BadValueError, ValueTypeMismatch
 from etools.applications.offline.validations.base import BaseValidation
 
 
 class NumberValidation(BaseValidation):
-    def validate(self, value):
+    def validate(self, value: Any) -> [int, float]:
         if not isinstance(value, (int, float)):
             raise ValueTypeMismatch(value)
+        return value
 
 
 class LessThanValidation(NumberValidation):
@@ -16,18 +19,18 @@ class LessThanValidation(NumberValidation):
         self.allow_equality = allow_equality
         super().__init__(**kwargs)
 
-    def validate(self, value):
-        super().validate(value)
+    def validate(self, value: Any) -> [int, float]:
+        value = super().validate(value)
         if self.allow_equality:
             if value <= self.threshold:
-                return
+                return value
         else:
             if value < self.threshold:
-                return
+                return value
 
         raise BadValueError(value)
 
-    def to_dict(self, **kwargs):
+    def to_dict(self, **kwargs) -> dict:
         return super().to_dict(threshold=self.threshold, allow_equality=self.allow_equality, **kwargs)
 
 
@@ -39,16 +42,16 @@ class GreaterThanValidation(NumberValidation):
         self.allow_equality = allow_equality
         super().__init__(**kwargs)
 
-    def validate(self, value):
-        super().validate(value)
+    def validate(self, value: Any) -> [int, float]:
+        value = super().validate(value)
         if self.allow_equality:
             if value >= self.threshold:
-                return
+                return value
         else:
             if value > self.threshold:
-                return
+                return value
 
         raise BadValueError(value)
 
-    def to_dict(self, **kwargs):
+    def to_dict(self, **kwargs) -> dict:
         return super().to_dict(threshold=self.threshold, allow_equality=self.allow_equality, **kwargs)

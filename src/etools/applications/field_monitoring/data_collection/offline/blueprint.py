@@ -4,8 +4,7 @@ from django.utils.translation import ugettext_lazy as _
 from etools.applications.field_monitoring.fm_settings.models import Method, Question
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.offline.blueprint import Blueprint
-from etools.applications.offline.fields import BooleanField, FloatField, TextField, UploadedFileField
-from etools.applications.offline.structure import Group
+from etools.applications.offline.fields import BooleanField, FloatField, Group, TextField, UploadedFileField
 
 answer_type_to_field_mapping = {
     Question.ANSWER_TYPES.text: TextField,
@@ -76,8 +75,3 @@ def get_monitoring_activity_blueprints(activity: MonitoringActivity):
         country_code = connection.tenant.country_short_code or ''
         blueprints[f'fm_{country_code}_{activity.id}_{method.id}'] = blueprint
     return blueprints
-
-
-def parse_answers(values):
-    # todo: go through completed form values and save them into checklist
-    pass

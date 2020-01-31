@@ -24,7 +24,7 @@ class ContactBookExampleTestCase(TestCase):
                 {
                     'full_name': 'John Doe',
                     'phones': [
-                        {'number': '1234567', 'type': 'mobile'},
+                        {'number': 1234567, 'type': 'mobile'},
                         {'number': '2222222', 'type': 'work'},
                         {'number': '2222242'},
                     ],

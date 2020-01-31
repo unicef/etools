@@ -1,18 +1,13 @@
 from typing import Any
 
 from django.core.exceptions import ImproperlyConfigured
-from django.utils.encoding import force_text
-from django.utils.translation import ugettext_lazy as _
 
-from unicef_attachments.models import Attachment
-
-from etools.applications.offline.errors import BadValueError, ValidationError, ValueTypeMismatch
+from etools.applications.offline.errors import BadValueError
+from etools.applications.offline.fields.base import BaseField
 from etools.applications.offline.metadata import Metadata
-from etools.applications.offline.structure import ValidatedStructure
-from etools.applications.offline.tasks import download_remote_attachment
 
 
-class ChoiceField(BaseTypedField):
+class ChoiceField(BaseField):
     input_type = 'likert_scale'
 
     """
@@ -28,7 +23,7 @@ class ChoiceField(BaseTypedField):
     def __init__(self, name: str, **kwargs):
         if not kwargs.get('options_key'):
             raise ImproperlyConfigured('options key is required for choice field')
-        super().__init__(name, **kwargs)
+        super().__init__(name, self.input_type, **kwargs)
 
     def validate_single_value(self, value: Any, metadata: Metadata) -> Any:
         value = super().validate_single_value(value, metadata)

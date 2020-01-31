@@ -1,6 +1,5 @@
 from etools.applications.offline.blueprint import Blueprint
-from etools.applications.offline.fields import ChoiceField, TextField
-from etools.applications.offline.structure import Group
+from etools.applications.offline.fields import ChoiceField, Group, TextField
 from etools.applications.offline.validations.text import RegexTextValidation
 
 contact_book = Blueprint('example_contact_book', 'Contact Book example')
@@ -15,7 +14,7 @@ contact_book.add(
             TextField('type', required=False),
             required=True, repeatable=True, title='Phones',
         ),
-        ChoiceField('groups', str, required=False, repeatable=True, options_key='groups'),
+        ChoiceField('groups', required=False, repeatable=True, options_key='groups'),
         required=False, repeatable=True, title='Users',
     ),
 )
