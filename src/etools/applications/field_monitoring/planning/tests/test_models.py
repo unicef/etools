@@ -23,7 +23,7 @@ from etools.applications.partners.tests.factories import (
     InterventionResultLinkFactory,
     PartnerFactory,
 )
-from etools.applications.reports.models import ResultType
+from etools.applications.reports.models import ResultType, CountryProgramme
 from etools.applications.reports.tests.factories import CountryProgrammeFactory, ResultFactory, SectionFactory
 from etools.applications.tpm.tests.factories import TPMPartnerFactory, TPMPartnerStaffMemberFactory
 
@@ -74,6 +74,8 @@ class TestMonitoringActivityValidations(BaseTenantTestCase):
 
     def test_interventions_without_output(self):
         intervention = InterventionFactory()
+        InterventionResultLinkFactory(intervention=intervention,
+                                      cp_output__country_programme=CountryProgramme.main_active())
         activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.draft, monitor_type='staff',
                                              interventions=[intervention], partners=[intervention.agreement.partner])
         self.assertFalse(ActivityValid(activity, user=self.user).is_valid)
@@ -85,6 +87,13 @@ class TestMonitoringActivityValidations(BaseTenantTestCase):
                                                              to_date=today() - timedelta(days=2))
         output = ResultFactory(result_type__name=ResultType.OUTPUT, country_programme=previous_country_programme)
         InterventionResultLinkFactory(cp_output=output, intervention=intervention)
+        activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.draft, monitor_type='staff',
+                                             interventions=[intervention], partners=[intervention.agreement.partner])
+        self.assertTrue(ActivityValid(activity, user=self.user).is_valid)
+
+    def test_interventions_not_linked_to_outputs(self):
+        intervention = InterventionFactory()
+        self.assertFalse(intervention.result_links.exists())
         activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.draft, monitor_type='staff',
                                              interventions=[intervention], partners=[intervention.agreement.partner])
         self.assertTrue(ActivityValid(activity, user=self.user).is_valid)
