@@ -1,5 +1,5 @@
 {
-  "blueprint_type": "example_contact_book",
+  "code": "example_contact_book",
   "title": "Contact Book example",
   "structure": {
     "type": "group",
