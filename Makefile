@@ -7,6 +7,7 @@ help:
 	@echo '   make fullclean                   clean + remove tox, cache  '
 	@echo '   make test                        run tests                  '
 	@echo '   make link                        run lint checks            '
+	@echo '   make build_docker                build docker image         '
 	@echo '                                                               '
 
 
@@ -30,3 +31,7 @@ lint:
 
 test:
 	coverage run manage.py test --keepdb
+
+build_docker:
+	docker build -t unicef/etools-base:local -f Dockerfile-base .
+	docker build -t unicef/etools:local --build-arg BASE_TAG=local .
