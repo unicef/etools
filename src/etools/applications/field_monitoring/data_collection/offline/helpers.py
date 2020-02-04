@@ -1,6 +1,7 @@
 from typing import Dict, List
 
 from django.contrib.contenttypes.models import ContentType
+from django.urls import reverse
 
 from unicef_attachments.models import AttachmentLink
 
@@ -38,9 +39,11 @@ def save_values_to_checklist(value: dict, checklist: StartedChecklist) -> None:
         if not level_values:
             continue
 
+        relation_name = Question.get_target_relation_name(level)
+
         for target_id, target_value in level_values.items():
             overall_finding = checklist.overall_findings.filter(
-                **{Question.get_target_relation_name(level): target_id}
+                **{relation_name: target_id}
             ).prefetch_related('attachments').get()
 
             overall_finding.narrative_finding = target_value.get('overall', '')
@@ -52,7 +55,10 @@ def save_values_to_checklist(value: dict, checklist: StartedChecklist) -> None:
 
             questions = target_value.get('questions', {})
             for question_id, question_value in questions.items():
-                finding = Finding.objects.get(activity_question__question=question_id)
+                finding = checklist.findings.get(
+                    **{f'activity_question__{relation_name}': target_id},
+                    activity_question__question=question_id
+                )
                 finding.value = question_value
                 finding.save()
 
@@ -103,14 +109,22 @@ def get_checklist_form_value(checklist: StartedChecklist) -> dict:
             target_id = getattr(overall_finding, f'{relation_name}_id')
             target_value = {
                 'overall': overall_finding.narrative_finding,
-                'attachments': [],
+                'attachments': [
+                    {
+                        'attachment': str(attachment.pk),
+                        'file_type': str(attachment.file_type_id),
+                        'url': reverse('attachments:file', args=[attachment.pk]),
+                        'filename': attachment.filename,
+                    }
+                    for attachment in overall_finding.attachments.all()
+                ],
                 'questions': {},
             }
 
-            for finding in Finding.objects.filter(
+            for finding in checklist.findings.filter(
                 **{f'activity_question__{relation_name}': target_id}
             ).values('value', 'activity_question__question_id'):
-                target_value['questions'][finding['activity_question__question_id']] = finding['value']
+                target_value['questions'][str(finding['activity_question__question_id'])] = finding['value']
 
             level_value[str(target_id)] = target_value
 

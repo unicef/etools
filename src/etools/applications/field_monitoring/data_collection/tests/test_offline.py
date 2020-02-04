@@ -44,10 +44,10 @@ class ChecklistBlueprintViewTestCase(APIViewSetTestCase, BaseTenantTestCase):
         return [self.activity.id]
 
     def test_get_blueprint(self):
-        with self.assertNumQueries(17):  # todo: optimize queries
+        AttachmentFactory(content_object=self.started_checklist.overall_findings.first(), code='attachments')
+        with self.assertNumQueries(16):  # todo: optimize queries
             response = self.make_detail_request(self.team_member, self.started_checklist, action='blueprint',
                                                 method='get')
-
         data = response.data
         self.assertIn('blueprint', data)
         self.assertIn('structure', data['blueprint'])
