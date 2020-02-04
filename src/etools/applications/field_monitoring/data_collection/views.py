@@ -18,7 +18,10 @@ from etools.applications.field_monitoring.data_collection.models import (
     StartedChecklist,
 )
 from etools.applications.field_monitoring.data_collection.offline.blueprint import get_blueprint_for_activity_and_method
-from etools.applications.field_monitoring.data_collection.offline.helpers import update_checklist
+from etools.applications.field_monitoring.data_collection.offline.helpers import (
+    get_checklist_form_value,
+    update_checklist,
+)
 from etools.applications.field_monitoring.data_collection.serializers import (
     ActivityDataCollectionSerializer,
     ActivityOverallFindingSerializer,
@@ -124,17 +127,22 @@ class ChecklistsViewSet(
     def perform_create(self, serializer):
         serializer.save(monitoring_activity=self.get_parent_object())
 
-    @action(detail=True, methods=['GET', 'POST'])
+    @action(detail=True, methods=['GET', 'POST'], url_name='blueprint')
     def blueprint(self, request, *args, **kwargs):
         checklist = self.get_object()
-        if request.method.upper() == 'GET':
-            return Response(
-                data=get_blueprint_for_activity_and_method(checklist.monitoring_activity, checklist.method).to_dict()
-            )
-        else:
+        if request.method.upper() != 'GET':
             update_checklist(checklist, request.data)
             checklist.refresh_from_db()
-            return Response(data=self.get_serializer(checklist).data)
+
+        return Response(
+            data={
+                'blueprint': get_blueprint_for_activity_and_method(
+                    checklist.monitoring_activity,
+                    checklist.method,
+                ).to_dict(),
+                'value': get_checklist_form_value(checklist)
+            }
+        )
 
 
 class ChecklistOverallFindingsViewSet(

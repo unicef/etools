@@ -5,7 +5,7 @@ from etools.applications.field_monitoring.planning.models import MonitoringActiv
 from etools.applications.users.models import User
 
 
-def save_values_to_checklist(value: dict, checklist: StartedChecklist):
+def save_values_to_checklist(value: dict, checklist: StartedChecklist) -> None:
     for level in dict(MonitoringActivity.RELATIONS_MAPPING).values():
         level_values = value.get(level)
         if not level_values:
@@ -31,7 +31,7 @@ def save_values_to_checklist(value: dict, checklist: StartedChecklist):
                 finding.save()
 
 
-def update_checklist(checklist: StartedChecklist, value: dict):
+def update_checklist(checklist: StartedChecklist, value: dict) -> StartedChecklist:
     # validate value with actual blueprint to be sure everything is ok
     blueprint = get_blueprint_for_activity_and_method(checklist.monitoring_activity, checklist.method)
     validated_value = blueprint.validate(value)
@@ -44,7 +44,7 @@ def update_checklist(checklist: StartedChecklist, value: dict):
     return checklist
 
 
-def create_checklist(activity: MonitoringActivity, method: Method, user: User, value: dict):
+def create_checklist(activity: MonitoringActivity, method: Method, user: User, value: dict) -> StartedChecklist:
     # validate value with actual blueprint to be sure everything is ok
     blueprint = get_blueprint_for_activity_and_method(activity, method)
     validated_value = blueprint.validate(value)
@@ -60,7 +60,6 @@ def create_checklist(activity: MonitoringActivity, method: Method, user: User, v
 
 
 def get_checklist_form_value(checklist: StartedChecklist) -> dict:
-    # todo
     method = checklist.method
 
     value = {}
@@ -68,31 +67,28 @@ def get_checklist_form_value(checklist: StartedChecklist) -> dict:
     if method.use_information_source:
         value['information_source'] = checklist.information_source
 
-    for overall_finding in checklist.overall_findings.prefetch_related('attachments'):
-        block_value = {
-            'overall': overall_finding.narrative_finding,
-            'attachments': [
-                {
-                    'url': attachment.url,
-                    'id': attachment.id,
-                    'file_type': attachment.file_type,
-                }
-                for attachment in overall_finding.attachments.all()
-            ]
-        }
-        questions_value = []
-        for finding in Finding.objects.filter(
-            started_checklist=checklist,
-            **{'activity_question__{}'.format(overall_finding.related_to_name): overall_finding.related_to}
-        ).prefetch_related('activity_question__question'):
-            questions_value.append({
-                # 'name':
-            })
-            block_value['question_{}'.format(finding.activity_question.question.id)] = finding.value
+    for level in dict(MonitoringActivity.RELATIONS_MAPPING).values():
+        relation_name = Question.get_target_relation_name(level)
 
-        value['{}_{}'.format(
-            dict(MonitoringActivity.RELATIONS_MAPPING[overall_finding.related_to_name]),
-            overall_finding.related_to.id
-        )] = block_value
+        level_value = {}
+        for overall_finding in checklist.overall_findings.filter(
+            **{f'{relation_name}__isnull': False}
+        ).select_related(relation_name).prefetch_related('attachments'):
+            target_id = getattr(overall_finding, f'{relation_name}_id')
+            target_value = {
+                'overall': overall_finding.narrative_finding,
+                'attachments': [],
+                'questions': {},
+            }
+
+            for finding in Finding.objects.filter(
+                **{f'activity_question__{relation_name}': target_id}
+            ).values('value', 'activity_question__question_id'):
+                target_value['questions'][finding['activity_question__question_id']] = finding['value']
+
+            level_value[str(target_id)] = target_value
+
+        if level_value:
+            value[level] = level_value
 
     return value
