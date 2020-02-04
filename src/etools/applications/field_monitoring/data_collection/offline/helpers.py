@@ -5,10 +5,7 @@ from django.urls import reverse
 
 from unicef_attachments.models import AttachmentLink
 
-from etools.applications.field_monitoring.data_collection.models import (
-    ChecklistOverallFinding,
-    StartedChecklist,
-)
+from etools.applications.field_monitoring.data_collection.models import ChecklistOverallFinding, StartedChecklist
 from etools.applications.field_monitoring.data_collection.offline.blueprint import get_blueprint_for_activity_and_method
 from etools.applications.field_monitoring.fm_settings.models import Method, Question
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
