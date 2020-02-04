@@ -30,8 +30,8 @@ def get_blueprint_for_activity_and_method(activity: MonitoringActivity, method: 
         f'fm_{country_code}_{activity.id}_{method.id}',
         '{} for {}'.format(method.name, activity.reference_number),
     )
-    # todo: how configure layout? or leave it for frontend?
-    blueprint.add(TextField('information_source', label=_('Source of Information'), extra={'type': ['wide']}))
+    if method.use_information_source:
+        blueprint.add(TextField('information_source', label=_('Source of Information'), extra={'type': ['wide']}))
 
     for relation, level in activity.RELATIONS_MAPPING:
         level_block = Group(level)

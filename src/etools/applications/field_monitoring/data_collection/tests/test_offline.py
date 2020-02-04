@@ -32,7 +32,7 @@ class ChecklistBlueprintViewTestCase(APIViewSetTestCase, BaseTenantTestCase):
         cls.text_question = ActivityQuestionFactory(
             question__answer_type=Question.ANSWER_TYPES.text,
             monitoring_activity=cls.activity, partner=partner,
-            question__methods=[MethodFactory()]
+            question__methods=[MethodFactory(use_information_source=True)]
         )
         cls.started_checklist = StartedChecklistFactory(
             monitoring_activity=cls.activity,
