@@ -19,7 +19,7 @@ class MaxLengthTextValidation(TextValidation):
 
     def validate(self, value):
         super().validate(value)
-        if not len(value) < self.max_length:
+        if not len(value) <= self.max_length:
             raise BadValueError(value)
 
     def to_dict(self, **kwargs):

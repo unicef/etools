@@ -14,7 +14,7 @@ class NumberValidation(BaseValidation):
 class LessThanValidation(NumberValidation):
     name = 'lt'
 
-    def __init__(self, threshold=None, allow_equality=True, **kwargs):
+    def __init__(self, threshold, allow_equality=True, **kwargs):
         self.threshold = threshold
         self.allow_equality = allow_equality
         super().__init__(**kwargs)
@@ -37,7 +37,7 @@ class LessThanValidation(NumberValidation):
 class GreaterThanValidation(NumberValidation):
     name = 'gt'
 
-    def __init__(self, threshold=None, allow_equality=True, **kwargs):
+    def __init__(self, threshold, allow_equality=True, **kwargs):
         self.threshold = threshold
         self.allow_equality = allow_equality
         super().__init__(**kwargs)
