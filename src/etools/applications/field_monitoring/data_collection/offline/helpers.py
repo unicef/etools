@@ -7,7 +7,6 @@ from unicef_attachments.models import AttachmentLink
 
 from etools.applications.field_monitoring.data_collection.models import (
     ChecklistOverallFinding,
-    Finding,
     StartedChecklist,
 )
 from etools.applications.field_monitoring.data_collection.offline.blueprint import get_blueprint_for_activity_and_method
