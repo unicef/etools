@@ -1,8 +1,35 @@
-from etools.applications.field_monitoring.data_collection.models import Finding, StartedChecklist
+from typing import Dict, List
+
+from django.contrib.contenttypes.models import ContentType
+
+from unicef_attachments.models import AttachmentLink
+
+from etools.applications.field_monitoring.data_collection.models import (
+    ChecklistOverallFinding,
+    Finding,
+    StartedChecklist,
+)
 from etools.applications.field_monitoring.data_collection.offline.blueprint import get_blueprint_for_activity_and_method
 from etools.applications.field_monitoring.fm_settings.models import Method, Question
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.users.models import User
+
+
+def _link_attachments(attachments_data: List[Dict], overall_finding: ChecklistOverallFinding):
+    for attachment_data in attachments_data:
+        attachment = attachment_data['attachment']
+        attachment.file_type_id = attachment_data['file_type']
+        attachment.content_object = overall_finding
+        attachment.code = 'attachments'
+        attachment.save()
+        AttachmentLink.objects.get_or_create(
+            attachment=attachment,
+            content_type=ContentType.objects.get_for_model(ChecklistOverallFinding),
+            object_id=overall_finding.id
+        )
+
+    for attachment in overall_finding.attachments.exclude(pk__in=[a['attachment'].id for a in attachments_data]):
+        attachment.delete()
 
 
 def save_values_to_checklist(value: dict, checklist: StartedChecklist) -> None:
@@ -21,8 +48,7 @@ def save_values_to_checklist(value: dict, checklist: StartedChecklist) -> None:
 
             attachments = target_value.get('attachments', [])
 
-            for attachment in attachments:
-                print('attachment ', attachment, ' received')
+            _link_attachments(attachments, overall_finding)
 
             questions = target_value.get('questions', {})
             for question_id, question_value in questions.items():

@@ -1,6 +1,6 @@
 from rest_framework import status
 
-from etools.applications.attachments.tests.factories import AttachmentFactory
+from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.field_monitoring.data_collection.tests.factories import (
     ActivityQuestionFactory,
@@ -65,25 +65,26 @@ class ChecklistBlueprintViewTestCase(APIViewSetTestCase, BaseTenantTestCase):
 
     def test_save_blueprint_values(self):
         partner = self.text_question.partner
-        attachments = AttachmentFactory.create_batch(size=2, file_type__code='fm_common')
-        with self.assertNumQueries(38):  # todo: optimize
-            response = self.make_detail_request(
-                self.team_member, self.started_checklist, action='blueprint', method='post',
-                data={
-                    'information_source': 'Doctors',
-                    'partner': {
-                        str(partner.id): {
-                            'overall': 'overall',
-                            'attachments': [
-                                {'attachment': a.id, 'file_type': a.file_type.id}
-                                for a in attachments
-                            ],
-                            'questions': {
-                                str(self.text_question.id): 'Question answer'
-                            }
+        attachments = AttachmentFactory.create_batch(size=2)
+        file_type = AttachmentFileTypeFactory(code='fm_common')
+        # with self.assertNumQueries(38):  # todo: optimize
+        response = self.make_detail_request(
+            self.team_member, self.started_checklist, action='blueprint', method='post',
+            data={
+                'information_source': 'Doctors',
+                'partner': {
+                    str(partner.id): {
+                        'overall': 'overall',
+                        'attachments': [
+                            {'attachment': a.id, 'file_type': file_type.id}
+                            for a in attachments
+                        ],
+                        'questions': {
+                            str(self.text_question.id): 'Question answer'
                         }
                     }
                 }
-            )
+            }
+        )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
