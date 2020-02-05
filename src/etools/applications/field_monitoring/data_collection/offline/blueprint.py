@@ -14,6 +14,7 @@ from etools.applications.offline.fields import (
     TextField,
     UploadedFileField,
 )
+from etools.applications.offline.fields.choices import LocalPairsOptions
 
 answer_type_to_field_mapping = {
     Question.ANSWER_TYPES.text: TextField,
@@ -65,10 +66,9 @@ def get_blueprint_for_activity_and_method(activity: MonitoringActivity, method: 
                     Question.ANSWER_TYPES.likert_scale
                 ]:
                     options_key = 'question_{}'.format(question.question.id)
-                    blueprint.metadata.options[options_key] = {
-                        'options_type': 'local_pairs',
-                        'values': dict(question.question.options.values_list('value', 'label'))
-                    }
+                    blueprint.metadata.options[options_key] = LocalPairsOptions(
+                        question.question.options.values_list('value', 'label')
+                    )
                 else:
                     options_key = None
 
@@ -85,10 +85,9 @@ def get_blueprint_for_activity_and_method(activity: MonitoringActivity, method: 
         if level_block.children:
             blueprint.add(level_block)
 
-    blueprint.metadata.options['target_attachments_file_types'] = {
-        'options_type': 'local_pairs',
-        'values': dict(FileType.objects.filter(code='fm_common').values_list('id', 'label'))
-    }
+    blueprint.metadata.options['target_attachments_file_types'] = LocalPairsOptions(
+        FileType.objects.filter(code='fm_common').values_list('id', 'label')
+    )
 
     return blueprint
 

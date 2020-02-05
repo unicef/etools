@@ -1,10 +1,81 @@
-from typing import Any
+from typing import Any, List
 
 from django.core.exceptions import ImproperlyConfigured
 
 from etools.applications.offline.errors import BadValueError
 from etools.applications.offline.fields.base import BaseField
 from etools.applications.offline.metadata import Metadata
+
+
+class Options:
+    options_type = None
+
+    def get_options(self):
+        raise NotImplementedError
+
+    def get_keys(self):
+        raise NotImplementedError
+
+    def to_dict(self) -> dict:
+        return {
+            'options_type': self.options_type,
+            'values': self.get_options()
+        }
+
+
+class LocalOptions(Options):
+    """
+    Flat static or almost static options
+    """
+
+    def __init__(self, options: Any):
+        self.options = options
+
+    def get_options(self) -> Any:
+        return self.options
+
+
+class LocalFlatOptions(LocalOptions):
+    """
+    option = 1
+    """
+
+    options_type = 'local_flat'
+
+    def get_keys(self) -> List:
+        return self.get_options()
+
+
+class LocalPairsOptions(LocalOptions):
+    """
+    option = {'value': 1, 'label': 'One"}
+    """
+
+    options_type = 'local_pairs'
+
+    def __init__(self, options: List):
+        if options and isinstance(options[0], list):
+            options = [
+                {'value': option[0], 'label': option[1]}
+                for option in options
+            ]
+        super().__init__(options)
+
+    def get_keys(self) -> List:
+        return [c['value'] for c in self.get_options()]
+
+
+class RemoteOptions(Options):
+    """
+    options are dynamic and should be fetched in time. frontend can fetch them by url with optional auth
+    """
+
+    options_type = 'remote'
+
+    def __init__(self, url: str, auth_required=False):
+        self.url = url
+        self.auth_required = auth_required
+        super().__init__()
 
 
 class ChoiceField(BaseField):
@@ -27,18 +98,8 @@ class ChoiceField(BaseField):
 
     def validate_single_value(self, value: Any, metadata: Metadata) -> Any:
         value = super().validate_single_value(value, metadata)
-        choices = metadata.options[self.options_key]
-        options_type = choices['options_type']
-        if options_type == 'local_flat':
-            values = choices['values']
-        elif options_type == 'local_pairs':
-            values = choices['values'].keys()
-        elif options_type == 'remote':
-            raise NotImplementedError
-        else:
-            raise ImproperlyConfigured(f'Unknown options type: {options_type}')
-
-        if value not in values:
+        keys = metadata.options[self.options_key].get_keys()
+        if value not in keys:
             raise BadValueError(value)
 
         return value

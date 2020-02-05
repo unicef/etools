@@ -1,5 +1,6 @@
 from etools.applications.offline.blueprint import Blueprint
 from etools.applications.offline.fields import ChoiceField, Group, TextField
+from etools.applications.offline.fields.choices import LocalFlatOptions
 from etools.applications.offline.validations.text import RegexTextValidation
 
 contact_book = Blueprint('example_contact_book', 'Contact Book example')
@@ -18,8 +19,5 @@ contact_book.add(
         required=False, repeatable=True, title='Users',
     ),
 )
-contact_book.metadata.options['groups'] = {
-    'options_type': 'local_flat',
-    'values': ['family', 'friends', 'work', 'other']
-}
+contact_book.metadata.options['groups'] = LocalFlatOptions(['family', 'friends', 'work', 'other'])
 contact_book.metadata.validations['phone_regex'] = RegexTextValidation(r'\d{7}')
