@@ -34,7 +34,7 @@ def get_blueprint_for_activity_and_method(activity: MonitoringActivity, method: 
         blueprint.add(TextField('information_source', label=_('Source of Information'), extra={'type': ['wide']}))
 
     for relation, level in activity.RELATIONS_MAPPING:
-        level_block = Group(level)
+        level_block = Group(level, extra={'type': ['abstract']})
 
         for target in getattr(activity, relation).all():
             target_questions = activity.questions.filter(
@@ -57,7 +57,7 @@ def get_blueprint_for_activity_and_method(activity: MonitoringActivity, method: 
                 ),
                 title=str(target)
             )
-            questions_block = Group('questions')
+            questions_block = Group('questions', extra={'type': ['abstract']})
             target_block.add(questions_block)
             for question in target_questions.distinct():
                 if question.question.answer_type in [
