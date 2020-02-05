@@ -1,8 +1,30 @@
+from typing import Dict, List, Set
+
+from django.core.exceptions import ImproperlyConfigured
 from django.test import TestCase
 
-from etools.applications.offline.errors import MissingRequiredValueError, ValueTypeMismatch
-from etools.applications.offline.fields import BooleanField, FloatField, IntegerField, TextField
+from mock import patch
+from unicef_attachments.models import Attachment
+
+from etools.applications.attachments.tests.factories import AttachmentFactory
+from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.offline.errors import (
+    BadValueError,
+    MissingRequiredValueError,
+    ValidationError,
+    ValueTypeMismatch,
+)
+from etools.applications.offline.fields import (
+    BooleanField,
+    ChoiceField,
+    FloatField,
+    IntegerField,
+    RemoteFileField,
+    TextField,
+    UploadedFileField,
+)
 from etools.applications.offline.fields.base import SkipField, ValidatedStructure
+from etools.applications.offline.fields.choices import LocalFlatOptions, LocalPairsOptions, RemoteOptions
 from etools.applications.offline.metadata import Metadata
 
 
@@ -86,3 +108,59 @@ class TestBooleanField(TestCase):
     def test_boolean(self):
         self.assertEqual(BooleanField('test').validate(True, Metadata()), True)
         self.assertEqual(BooleanField('test').validate(False, Metadata()), False)
+
+
+class TestChoiceField(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.meta = Metadata()
+        cls.meta.options['local_flat'] = LocalFlatOptions([0, 1])
+        cls.meta.options['local_pairs'] = LocalPairsOptions(((0, 'Zero'), (1, 'One')))
+
+        class ExampleRemoteOptions(RemoteOptions):
+            def get_options(self) -> List[Dict]:
+                return [{'value': 0, 'label': 'Zero'}, {'value': 1, 'label': 'One'}]
+
+            def get_keys(self) -> Set:
+                return set(c['value'] for c in self.get_options())
+
+        cls.meta.options['remote'] = ExampleRemoteOptions('https://example.com')
+
+    def test_options_key_required(self):
+        with self.assertRaises(ImproperlyConfigured):
+            ChoiceField('test')
+
+    def test_choices_validation(self):
+        for field in [
+            ChoiceField('local_flat', options_key='local_flat'),
+            ChoiceField('local_pairs', options_key='local_pairs'),
+            ChoiceField('remote', options_key='remote'),
+        ]:
+            field.validate(0, self.meta)
+            field.validate(1, self.meta)
+
+            with self.assertRaises(BadValueError):
+                field.validate(2, self.meta)
+
+            # string representation is not the same, so we shouldn't allow those values
+            with self.assertRaises(BadValueError):
+                field.validate('1', self.meta)
+
+
+class TestUploadedFileField(BaseTenantTestCase):
+    def test_existing_attachment(self):
+        attachment = AttachmentFactory()
+        self.assertEqual(attachment, UploadedFileField('test').validate(attachment.id, Metadata()))
+
+    def test_not_existing_attachment(self):
+        with self.assertRaises(ValidationError):
+            UploadedFileField('test').validate(-1, Metadata())
+
+
+class TestRemoteFileField(BaseTenantTestCase):
+    @patch('etools.applications.offline.fields.files.download_remote_attachment.delay')
+    def test_process(self, download_mock):
+        attachment = RemoteFileField('test').validate('some-url', Metadata())
+        self.assertIsInstance(attachment, Attachment)
+        download_mock.assert_called()

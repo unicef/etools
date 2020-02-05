@@ -1,4 +1,4 @@
-from typing import Any, List
+from typing import Any, List, Set, Tuple
 
 from django.core.exceptions import ImproperlyConfigured
 
@@ -42,8 +42,8 @@ class LocalFlatOptions(LocalOptions):
 
     options_type = 'local_flat'
 
-    def get_keys(self) -> List:
-        return self.get_options()
+    def get_keys(self) -> Set:
+        return set(self.get_options())
 
 
 class LocalPairsOptions(LocalOptions):
@@ -53,16 +53,16 @@ class LocalPairsOptions(LocalOptions):
 
     options_type = 'local_pairs'
 
-    def __init__(self, options: List):
-        if options and isinstance(options[0], list):
+    def __init__(self, options: [List, Tuple]):
+        if options and isinstance(options[0], (list, tuple)):
             options = [
                 {'value': option[0], 'label': option[1]}
                 for option in options
             ]
         super().__init__(options)
 
-    def get_keys(self) -> List:
-        return [c['value'] for c in self.get_options()]
+    def get_keys(self) -> Set:
+        return set(c['value'] for c in self.get_options())
 
 
 class RemoteOptions(Options):
