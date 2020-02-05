@@ -1,3 +1,8 @@
+from datetime import timedelta
+
+from dateutil.utils import today
+from factory import fuzzy
+
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.field_monitoring.data_collection.models import (
     ActivityOverallFinding,
@@ -13,8 +18,13 @@ from etools.applications.field_monitoring.planning.tests.factories import (
     QuestionTemplateFactory,
 )
 from etools.applications.field_monitoring.tests.factories import UserFactory
-from etools.applications.partners.tests.factories import InterventionFactory, PartnerFactory
-from etools.applications.reports.tests.factories import SectionFactory
+from etools.applications.partners.tests.factories import (
+    InterventionFactory,
+    InterventionResultLinkFactory,
+    PartnerFactory,
+)
+from etools.applications.reports.models import CountryProgramme, ResultType
+from etools.applications.reports.tests.factories import CountryProgrammeFactory, ResultFactory, SectionFactory
 from etools.applications.tpm.tests.factories import TPMPartnerFactory, TPMPartnerStaffMemberFactory
 
 
@@ -64,9 +74,29 @@ class TestMonitoringActivityValidations(BaseTenantTestCase):
 
     def test_interventions_without_output(self):
         intervention = InterventionFactory()
+        InterventionResultLinkFactory(intervention=intervention,
+                                      cp_output__country_programme=CountryProgramme.main_active())
         activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.draft, monitor_type='staff',
                                              interventions=[intervention], partners=[intervention.agreement.partner])
         self.assertFalse(ActivityValid(activity, user=self.user).is_valid)
+
+    def test_interventions_output_expiring(self):
+        intervention = InterventionFactory()
+        previous_country_programme = CountryProgrammeFactory(wbs='/A0/' + fuzzy.FuzzyText().fuzz(),
+                                                             from_date=today() - timedelta(days=365),
+                                                             to_date=today() - timedelta(days=2))
+        output = ResultFactory(result_type__name=ResultType.OUTPUT, country_programme=previous_country_programme)
+        InterventionResultLinkFactory(cp_output=output, intervention=intervention)
+        activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.draft, monitor_type='staff',
+                                             interventions=[intervention], partners=[intervention.agreement.partner])
+        self.assertTrue(ActivityValid(activity, user=self.user).is_valid)
+
+    def test_interventions_not_linked_to_outputs(self):
+        intervention = InterventionFactory()
+        self.assertFalse(intervention.result_links.exists())
+        activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.draft, monitor_type='staff',
+                                             interventions=[intervention], partners=[intervention.agreement.partner])
+        self.assertTrue(ActivityValid(activity, user=self.user).is_valid)
 
     def test_activity_overall_findings_required_narrative_finding(self):
         activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.submitted)
