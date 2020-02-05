@@ -34,10 +34,10 @@ class ValidatedStructure(Structure):
         return super().to_dict(name=self.name, repeatable=self.repeatable, required=self.required, **kwargs)
 
     def validate_single_value(self, value: any, metadata: Metadata) -> Any:
-        raise NotImplementedError
+        return value
 
     def validate(self, value: any, metadata: Metadata) -> Any:
-        if not value:
+        if value is None:  # todo: default should be checked here; None is the value too
             if self.required:
                 raise MissingRequiredValueError()
             else:
