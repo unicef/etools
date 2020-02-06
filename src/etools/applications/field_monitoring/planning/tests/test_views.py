@@ -93,6 +93,12 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
 
         self._test_list(self.unicef_user, activities, data={'page': 1, 'page_size': 10})
 
+    def test_search_by_ref_number(self):
+        activity = MonitoringActivityFactory(monitor_type='staff')
+        MonitoringActivityFactory(monitor_type='staff')
+
+        self._test_list(self.unicef_user, [activity], data={'search': activity.reference_number})
+
     def test_details(self):
         activity = MonitoringActivityFactory(monitor_type='staff', team_members=[UserFactory(unicef_user=True)])
 
