@@ -210,7 +210,7 @@ class FMUsersViewSet(
         user = self.request.user
         qs = super().get_queryset().filter(
             Q(profile__country=user.profile.country) | Q(monitoring_activities__isnull=False)
-        ).order_by('first_name')
+        ).order_by('first_name').distinct()
 
         return qs
 
