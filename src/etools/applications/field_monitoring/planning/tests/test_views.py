@@ -25,6 +25,7 @@ from etools.applications.field_monitoring.planning.tests.factories import (
 )
 from etools.applications.field_monitoring.tests.base import APIViewSetTestCase, FMBaseTestCaseMixin
 from etools.applications.field_monitoring.tests.factories import UserFactory
+from etools.applications.partners.models import Intervention
 from etools.applications.partners.tests.factories import (
     InterventionFactory,
     InterventionResultLinkFactory,
@@ -634,9 +635,27 @@ class CPOutputsViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenantT
 class InterventionsViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenantTestCase):
     base_view = 'field_monitoring_planning:interventions'
 
+    def test_list(self):
+        InterventionFactory(status=Intervention.DRAFT)
+        valid_interventions = [
+            InterventionFactory(status=Intervention.SIGNED),
+            InterventionFactory(status=Intervention.ACTIVE),
+            InterventionFactory(status=Intervention.ENDED),
+            InterventionFactory(status=Intervention.IMPLEMENTED),
+            InterventionFactory(status=Intervention.CLOSED),
+        ]
+        InterventionFactory(status=Intervention.SUSPENDED)
+        InterventionFactory(status=Intervention.TERMINATED)
+
+        with self.assertNumQueries(9):  # 3 basic + 6 prefetches from InterventionManager
+            self._test_list(self.unicef_user, valid_interventions)
+
     def test_filter_by_outputs(self):
-        InterventionFactory()
-        result_link = InterventionResultLinkFactory(cp_output__result_type__name=ResultType.OUTPUT)
+        InterventionFactory(status=Intervention.SIGNED)
+        result_link = InterventionResultLinkFactory(
+            intervention__status=Intervention.SIGNED,
+            cp_output__result_type__name=ResultType.OUTPUT
+        )
 
         self._test_list(
             self.unicef_user, [result_link.intervention],
@@ -644,8 +663,8 @@ class InterventionsViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTen
         )
 
     def test_filter_by_partners(self):
-        InterventionFactory()
-        result_link = InterventionResultLinkFactory()
+        InterventionFactory(status=Intervention.SIGNED)
+        result_link = InterventionResultLinkFactory(intervention__status=Intervention.SIGNED)
 
         self._test_list(
             self.unicef_user, [result_link.intervention],
@@ -653,7 +672,7 @@ class InterventionsViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTen
         )
 
     def test_linked_data(self):
-        result_link = InterventionResultLinkFactory()
+        result_link = InterventionResultLinkFactory(intervention__status=Intervention.SIGNED)
 
         response = self._test_list(self.unicef_user, [result_link.intervention])
 
