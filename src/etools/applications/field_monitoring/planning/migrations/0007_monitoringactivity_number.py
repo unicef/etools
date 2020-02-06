@@ -4,21 +4,28 @@ from django.db import connection, migrations, models
 
 
 def assign_reference_number(apps, schema_editor):
-    MonitoringActivity = apps.get_model('field_monitoring_planning', 'MonitoringActivity')
+    # Only run this when NOT in test
+    if connection.tenant.schema_name != "test":
+        MonitoringActivity = apps.get_model('field_monitoring_planning', 'MonitoringActivity')
+        Country = apps.get_model("users", "country")
 
-    for activity in MonitoringActivity.admin_objects.all():
-        activity.number = '{}/{}/{}/FMA'.format(
-            connection.tenant.country_short_code or '',
-            activity.created.year,
-            activity.id,
+        country = Country.objects.get(
+            schema_name=connection.tenant.schema_name,
         )
-        activity.save(update_fields=['number'])
+        for activity in MonitoringActivity.admin_objects.all():
+            activity.number = '{}/{}/{}/FMA'.format(
+                country.country_short_code,
+                activity.created.year,
+                activity.id,
+            )
+            activity.save(update_fields=['number'])
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
         ('field_monitoring_planning', '0006_monitoringactivity_report_reject_reason'),
+        ('users', '0013_auto_20191010_1621'),
     ]
 
     operations = [
