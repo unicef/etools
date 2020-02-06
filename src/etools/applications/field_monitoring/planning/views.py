@@ -137,7 +137,11 @@ class MonitoringActivitiesViewSet(
     """
     Retrieve and Update Agreement.
     """
-    queryset = MonitoringActivity.objects.annotate(checklists_count=Count('checklists'))
+    queryset = MonitoringActivity.objects.annotate(checklists_count=Count('checklists')).select_related(
+        'tpm_partner', 'person_responsible', 'location__gateway', 'location_site',
+    ).prefetch_related(
+        'team_members', 'partners', 'interventions', 'cp_outputs'
+    )
     serializer_class = MonitoringActivitySerializer
     serializer_action_classes = {
         'list': MonitoringActivityLightSerializer
@@ -163,12 +167,6 @@ class MonitoringActivitiesViewSet(
             queryset = queryset.filter(
                 Q(person_responsible=self.request.user) | Q(team_members=self.request.user),
                 Q(status__in=MonitoringActivity.TPM_AVAILABLE_STATUSES) | ~Q(reject_reason=''),
-            )
-
-        if hasattr(self, 'action') and self.action == 'list':
-            queryset.prefetch_related(
-                'tpm_partner', 'person_responsible', 'location', 'location_site',
-                'team_members', 'partners', 'interventions', 'cp_outputs'
             )
 
         return queryset
@@ -203,7 +201,7 @@ class FMUsersViewSet(
 
     filter_backends = (SearchFilter, UserTypeFilter, UserTPMPartnerFilter)
     search_fields = ('email',)
-    queryset = get_user_model().objects.all()
+    queryset = get_user_model().objects.select_related('tpmpartners_tpmpartnerstaffmember__tpm_partner')
     serializer_class = FMUserSerializer
 
     def get_queryset(self):
@@ -222,7 +220,7 @@ class CPOutputsViewSet(
 ):
     filter_backends = (DjangoFilterBackend,)
     filter_class = CPOutputsFilterSet
-    queryset = Result.objects.filter(result_type__name=ResultType.OUTPUT)
+    queryset = Result.objects.filter(result_type__name=ResultType.OUTPUT).select_related('result_type')
     serializer_class = MinimalOutputListSerializer
 
 
