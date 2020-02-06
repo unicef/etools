@@ -194,7 +194,7 @@ class InterventionWithLinkedInstancesSerializer(FMInterventionListSerializer):
         )
 
     def get_cp_outputs(self, obj):
-        return list(obj.result_links.values_list('cp_output_id', flat=True))
+        return [link.cp_output_id for link in obj.result_links.all()]
 
 
 class MonitoringActivityActionPointSerializer(ActionPointBaseSerializer):
