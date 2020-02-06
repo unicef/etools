@@ -93,10 +93,12 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
     def test_list(self):
         activities = [
             MonitoringActivityFactory(monitor_type='tpm', tpm_partner=None),
+            MonitoringActivityFactory(monitor_type='tpm', tpm_partner=TPMPartnerFactory()),
             MonitoringActivityFactory(monitor_type='staff'),
         ]
 
-        self._test_list(self.unicef_user, activities, data={'page': 1, 'page_size': 10})
+        with self.assertNumQueries(7):
+            self._test_list(self.unicef_user, activities, data={'page': 1, 'page_size': 10})
 
     def test_search_by_ref_number(self):
         activity = MonitoringActivityFactory(monitor_type='staff')
@@ -539,51 +541,37 @@ class TestQuestionTemplatesView(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.data['template']['specific_details'], base_template.specific_details)
 
 
-class FMUsersViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
+class FMUsersViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase):
+    base_view = 'field_monitoring_planning:users'
+
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
         cls.tpm_user = TPMUserFactory(tpm_partner=SimpleTPMPartnerFactory())
         cls.another_tpm_user = TPMUserFactory(tpm_partner=SimpleTPMPartnerFactory())
 
-    def _test_filter(self, filter_data, expected_users):
-        response = self.forced_auth_req(
-            'get',
-            reverse('field_monitoring_planning:users-list'),
-            data=filter_data,
-            user=self.unicef_user
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(expected_users), len(response.data['results']))
-        self.assertListEqual(
-            sorted([u.id for u in expected_users]),
-            sorted([u['id'] for u in response.data['results']])
-        )
-
-        return response
-
     def test_filter_unicef(self):
-        response = self._test_filter({'user_type': 'unicef'}, [self.unicef_user, self.fm_user, self.pme])
+        response = self._test_list(self.unicef_user, [self.unicef_user, self.fm_user, self.pme],
+                                   data={'user_type': 'unicef'})
         self.assertEqual(response.data['results'][0]['user_type'], 'staff')
 
     def test_filter_default(self):
-        self._test_filter({}, [
-            self.unicef_user, self.fm_user, self.pme, self.usual_user, self.tpm_user, self.another_tpm_user
-        ])
+        with self.assertNumQueries(2):
+            self._test_list(self.unicef_user, [
+                self.unicef_user, self.fm_user, self.pme, self.usual_user, self.tpm_user, self.another_tpm_user
+            ])
 
     def test_filter_tpm(self):
-        response = self._test_filter({'user_type': 'tpm'}, [self.tpm_user, self.another_tpm_user])
+        response = self._test_list(self.unicef_user, [self.tpm_user, self.another_tpm_user], data={'user_type': 'tpm'})
         self.assertEqual(response.data['results'][0]['user_type'], 'tpm')
         self.assertEqual(response.data['results'][1]['user_type'], 'tpm')
 
     def test_filter_tpm_partner(self):
         tpm_partner = self.tpm_user.tpmpartners_tpmpartnerstaffmember.tpm_partner.id
 
-        response = self._test_filter(
-            {'user_type': 'tpm', 'tpm_partner': tpm_partner},
-            [self.tpm_user]
-        )
+        response = self._test_list(self.unicef_user, [self.tpm_user],
+                                   data={'user_type': 'tpm', 'tpm_partner': tpm_partner})
+
         self.assertEqual(response.data['results'][0]['user_type'], 'tpm')
         self.assertEqual(response.data['results'][0]['tpm_partner'], tpm_partner)
 
