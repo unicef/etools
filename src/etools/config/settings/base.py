@@ -193,6 +193,7 @@ SHARED_APPS = (
     'waffle',
     'etools.applications.permissions2',
     'unicef_notification',
+    'etools.applications.offline',
 )
 
 TENANT_APPS = (
