@@ -4,12 +4,9 @@ from django.db import connection, migrations, models
 
 
 def assign_reference_number(apps, schema_editor):
-    if connection.tenant.schema_name == "test":
-        return
-
     MonitoringActivity = apps.get_model('field_monitoring_planning', 'MonitoringActivity')
 
-    for activity in MonitoringActivity.objects.all():
+    for activity in MonitoringActivity.admin_objects.all():
         activity.number = '{}/{}/{}/FMA'.format(
             connection.tenant.country_short_code or '',
             activity.created.year,
@@ -28,7 +25,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='monitoringactivity',
             name='number',
-            field=models.CharField(blank=True, max_length=64, null=True, unique=True, verbose_name='Reference Number'),
+            field=models.CharField(blank=True, editable=False, max_length=64, null=True, unique=True, verbose_name='Reference Number'),
         ),
         migrations.RunPython(assign_reference_number, migrations.RunPython.noop),
     ]
