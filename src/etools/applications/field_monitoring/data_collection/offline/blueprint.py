@@ -20,7 +20,7 @@ answer_type_to_field_mapping = {
     Question.ANSWER_TYPES.text: TextField,
     Question.ANSWER_TYPES.number: FloatField,
     Question.ANSWER_TYPES.bool: BooleanField,  # todo: we need to check if frontend use booleans instead of text
-    Question.ANSWER_TYPES.likert_scale: TextField,
+    Question.ANSWER_TYPES.likert_scale: ChoiceField,
 }
 
 
