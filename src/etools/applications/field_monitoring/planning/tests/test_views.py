@@ -16,7 +16,7 @@ from etools.applications.field_monitoring.data_collection.models import Activity
 from etools.applications.field_monitoring.data_collection.tests.factories import StartedChecklistFactory
 from etools.applications.field_monitoring.fm_settings.models import Question
 from etools.applications.field_monitoring.fm_settings.tests.factories import QuestionFactory
-from etools.applications.field_monitoring.planning.models import MonitoringActivity, QuestionTemplate, YearPlan
+from etools.applications.field_monitoring.planning.models import MonitoringActivity, YearPlan
 from etools.applications.field_monitoring.planning.tests.factories import (
     MonitoringActivityActionPointFactory,
     MonitoringActivityFactory,
