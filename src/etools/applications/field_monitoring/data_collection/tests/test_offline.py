@@ -82,7 +82,7 @@ class ChecklistBlueprintViewTestCase(APIViewSetTestCase, BaseTenantTestCase):
                             for a in attachments
                         ],
                         'questions': {
-                            str(self.text_question.id): 'Question answer'
+                            str(self.text_question.question_id): 'Question answer'
                         }
                     }
                 }

@@ -82,7 +82,7 @@ def get_blueprint_for_activity_and_method(activity: MonitoringActivity, method: 
 
                 questions_block.add(
                     answer_type_to_field_mapping[question.question.answer_type](
-                        str(question.id),
+                        str(question.question.id),
                         label=question.question.text,
                         options_key=options_key,
                         help_text=question.specific_details
