@@ -64,7 +64,7 @@ def update_checklist(checklist: StartedChecklist, value: dict) -> StartedCheckli
     blueprint = get_blueprint_for_activity_and_method(checklist.monitoring_activity, checklist.method)
     validated_value = blueprint.validate(value)
 
-    checklist.information_source = validated_value.get('information_source', '')
+    checklist.information_source = validated_value.get('information_source', {}).get('name', '')
     checklist.save()
 
     save_values_to_checklist(validated_value, checklist)
@@ -79,7 +79,7 @@ def create_checklist(activity: MonitoringActivity, method: Method, user: User, v
 
     checklist = StartedChecklist.objects.create(
         author=user, monitoring_activity=activity, method=method,
-        information_source=validated_value.get('information_source', '')
+        information_source=validated_value.get('information_source', {}).get('name', '')
     )
 
     save_values_to_checklist(validated_value, checklist)
@@ -93,7 +93,7 @@ def get_checklist_form_value(checklist: StartedChecklist) -> dict:
     value = {}
 
     if method.use_information_source:
-        value['information_source'] = checklist.information_source
+        value['information_source'] = {'name': checklist.information_source}
 
     for level in dict(MonitoringActivity.RELATIONS_MAPPING).values():
         relation_name = Question.get_target_relation_name(level)

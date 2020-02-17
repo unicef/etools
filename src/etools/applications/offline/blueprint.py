@@ -13,7 +13,7 @@ class Blueprint:
     ):
         self.code = code
         self.title = title
-        self.root = Group('root', **kwargs, required=True)
+        self.root = Group('root', **kwargs, required=True, extra={'type': ['abstract']})
         self.metadata = Metadata(
             offline_enabled=offline_enabled,
             allow_multiple_responses=allow_multiple_responses

@@ -32,7 +32,13 @@ def get_blueprint_for_activity_and_method(activity: MonitoringActivity, method: 
         '{} for {}'.format(method.name, activity.reference_number),
     )
     if method.use_information_source:
-        blueprint.add(TextField('information_source', label=_('Source of Information'), extra={'type': ['wide']}))
+        blueprint.add(
+            Group(
+                'information_source',
+                TextField('name', label=_('Source of Information'), extra={'type': ['wide']}),
+                extra={'type': ['card']},
+            )
+        )
 
     for relation, level in activity.RELATIONS_MAPPING:
         level_block = Group(level, extra={'type': ['abstract']})
@@ -54,9 +60,11 @@ def get_blueprint_for_activity_and_method(activity: MonitoringActivity, method: 
                     'attachments',
                     UploadedFileField('attachment'),
                     ChoiceField('file_type', options_key='target_attachments_file_types'),
-                    required=False, repeatable=True
+                    required=False, repeatable=True,
+                    extra={'type': ['floating_attachments']},
                 ),
-                title=str(target)
+                title=str(target),
+                extra={'type': ['card', 'collapse']},
             )
             questions_block = Group('questions', extra={'type': ['abstract']})
             target_block.add(questions_block)
