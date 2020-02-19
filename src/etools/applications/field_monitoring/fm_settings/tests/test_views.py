@@ -43,7 +43,7 @@ class MethodsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data['results']), 3)
+        self.assertEqual(len(response.data['results']), 5)
 
 
 class LocationsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
