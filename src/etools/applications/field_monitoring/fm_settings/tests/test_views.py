@@ -394,6 +394,14 @@ class TestGeneralAttachmentsView(FMBaseTestCaseMixin, APIViewSetTestCase):
         )
         self.assertTrue(self.config.attachments.exists())
 
+    def test_add_without_file_type(self):
+        self._test_create(
+            self.fm_user,
+            data={'id': AttachmentFactory().id},
+            expected_status=status.HTTP_400_BAD_REQUEST,
+            field_errors=['file_type']
+        )
+
     def test_update(self):
         attachment = AttachmentFactory(code='fm_global', content_object=self.config)
 
