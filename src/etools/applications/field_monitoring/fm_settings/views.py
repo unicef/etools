@@ -36,6 +36,7 @@ from etools.applications.field_monitoring.fm_settings.models import (
 from etools.applications.field_monitoring.fm_settings.serializers import (
     CategorySerializer,
     FMCommonAttachmentSerializer,
+    LinkedAttachmentBaseSerializer,
     LocationFullSerializer,
     LocationSiteSerializer,
     LogIssueSerializer,
@@ -187,7 +188,7 @@ class LogIssueAttachmentsViewSet(LinkedAttachmentsViewSet):
     permission_classes = FMBaseViewSet.permission_classes + [
         IsReadAction | (IsEditAction & IsFieldMonitor)
     ]
-    serializer_class = FMCommonAttachmentSerializer
+    serializer_class = LinkedAttachmentBaseSerializer
     related_model = LogIssue
     attachment_code = 'attachments'
 
