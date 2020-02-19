@@ -25,5 +25,23 @@
             "short_name": "Obs.",
             "use_information_source": false
         }
+    },
+    {
+        "model": "field_monitoring_settings.method",
+        "pk": 4,
+        "fields": {
+            "name": "Measurement",
+            "short_name": "M",
+            "use_information_source": false
+        }
+    },
+    {
+        "model": "field_monitoring_settings.method",
+        "pk": 5,
+        "fields": {
+            "name": "Participatory appraisal",
+            "short_name": "PA",
+            "use_information_source": true
+        }
     }
 ]
