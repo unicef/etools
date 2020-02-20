@@ -560,3 +560,5 @@ PSEA_ASSESSMENT_FINAL_RECIPIENTS = get_from_secrets_or_env(
     'PSEA_ASSESSMENT_FINAL_RECIPIENTS',
     '',
 ).split(',')
+
+VISION_REQUESTS_TIMEOUT = get_from_secrets_or_env('VISION_REQUESTS_TIMEOUT', 400)  # in seconds
