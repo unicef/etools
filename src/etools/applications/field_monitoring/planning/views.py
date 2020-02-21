@@ -147,11 +147,12 @@ class MonitoringActivitiesViewSet(
         (IsEditAction & IsListAction & IsFieldMonitor) |
         (IsEditAction & (IsObjectAction & (IsFieldMonitor | IsPersonResponsible)))
     ]
-    filter_backends = (DjangoFilterBackend, ReferenceNumberOrderingFilter, OrderingFilter)
+    filter_backends = (DjangoFilterBackend, ReferenceNumberOrderingFilter, OrderingFilter, SearchFilter)
     filter_class = MonitoringActivitiesFilterSet
     ordering_fields = (
         'start_date', 'end_date', 'location', 'location_site', 'monitor_type', 'checklists_count', 'status'
     )
+    search_fields = ('number',)
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -210,7 +211,7 @@ class FMUsersViewSet(
         user = self.request.user
         qs = super().get_queryset().filter(
             Q(profile__country=user.profile.country) | Q(monitoring_activities__isnull=False)
-        ).order_by('first_name')
+        ).order_by('first_name').distinct()
 
         return qs
 

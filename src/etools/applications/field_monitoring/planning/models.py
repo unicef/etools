@@ -148,6 +148,15 @@ class MonitoringActivity(
         ('interventions', 'intervention'),
     )
 
+    number = models.CharField(
+        verbose_name=_('Reference Number'),
+        max_length=64,
+        blank=True,
+        null=True,
+        unique=True,
+        editable=False,
+    )
+
     monitor_type = models.CharField(max_length=10, choices=MONITOR_TYPE_CHOICES, default=MONITOR_TYPE_CHOICES.staff)
 
     tpm_partner = models.ForeignKey(TPMPartner, blank=True, null=True, verbose_name=_('TPM Partner'),
@@ -197,13 +206,20 @@ class MonitoringActivity(
     def __str__(self):
         return self.reference_number
 
+    def save(self, **kwargs):
+        super().save(**kwargs)
+
+        if not self.number:
+            self.number = '{}/{}/{}/FMA'.format(
+                connection.tenant.country_short_code or '',
+                self.created.year,
+                self.id,
+            )
+            super().save(update_fields=['number'])
+
     @property
     def reference_number(self):
-        return '{}/{}/{}/FMA'.format(
-            connection.tenant.country_short_code or '',
-            self.created.year,
-            self.id,
-        )
+        return self.number
 
     @classmethod
     def permission_structure(cls):
