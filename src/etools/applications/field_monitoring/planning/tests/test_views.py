@@ -16,7 +16,7 @@ from etools.applications.field_monitoring.data_collection.models import Activity
 from etools.applications.field_monitoring.data_collection.tests.factories import StartedChecklistFactory
 from etools.applications.field_monitoring.fm_settings.models import Question
 from etools.applications.field_monitoring.fm_settings.tests.factories import QuestionFactory
-from etools.applications.field_monitoring.planning.models import MonitoringActivity, QuestionTemplate, YearPlan
+from etools.applications.field_monitoring.planning.models import MonitoringActivity, YearPlan
 from etools.applications.field_monitoring.planning.tests.factories import (
     MonitoringActivityActionPointFactory,
     MonitoringActivityFactory,
@@ -95,6 +95,12 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
 
         with self.assertNumQueries(7):
             self._test_list(self.unicef_user, activities, data={'page': 1, 'page_size': 10})
+
+    def test_search_by_ref_number(self):
+        activity = MonitoringActivityFactory(monitor_type='staff')
+        MonitoringActivityFactory(monitor_type='staff')
+
+        self._test_list(self.unicef_user, [activity], data={'search': activity.reference_number})
 
     def test_details(self):
         activity = MonitoringActivityFactory(monitor_type='staff', team_members=[UserFactory(unicef_user=True)])
@@ -417,9 +423,8 @@ class TestActivityAttachmentsView(FMBaseTestCaseMixin, APIViewSetTestCase):
 
 class TestQuestionTemplatesView(FMBaseTestCaseMixin, BaseTenantTestCase):
     def test_level_questions_list(self):
-        empty_one = QuestionFactory(level=Question.LEVELS.partner)
-        templated = QuestionFactory(level=Question.LEVELS.partner)
-        QuestionTemplateFactory(question=templated)
+        question = QuestionFactory(level=Question.LEVELS.partner)
+        self.assertEqual(question.templates.count(), 1)
 
         QuestionFactory(level=Question.LEVELS.output)
 
@@ -429,33 +434,11 @@ class TestQuestionTemplatesView(FMBaseTestCaseMixin, BaseTenantTestCase):
             user=self.fm_user
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertListEqual([r['id'] for r in response.data['results']], [empty_one.id, templated.id])
-        self.assertIsNotNone(response.data['results'][1]['template'])
-
-    def test_create_base_template(self):
-        question = QuestionFactory(level=Question.LEVELS.partner)
-        self.assertEqual(question.templates.count(), 0)
-
-        response = self.forced_auth_req(
-            'patch',
-            reverse('field_monitoring_planning:question-templates-detail',
-                    kwargs={'level': 'partner', 'pk': question.id}),
-            user=self.fm_user,
-            data={
-                'template': {
-                    'specific_details': 'new_details'
-                }
-            }
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIsNotNone(response.data['template'])
-        self.assertEqual(response.data['template']['specific_details'], 'new_details')
-        self.assertEqual(question.templates.count(), 1)
-        self.assertEqual(question.templates.first().specific_details, 'new_details')
+        self.assertListEqual([r['id'] for r in response.data['results']], [question.id])
+        self.assertIsNotNone(response.data['results'][0]['template'])
 
     def test_update_base_template(self):
         question = QuestionFactory(level=Question.LEVELS.partner)
-        QuestionTemplateFactory(question=question)
         self.assertEqual(question.templates.count(), 1)
 
         response = self.forced_auth_req(
@@ -475,34 +458,8 @@ class TestQuestionTemplatesView(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(question.templates.count(), 1)
         self.assertEqual(question.templates.first().specific_details, 'new_details')
 
-    def test_create_specific_and_base_template(self):
-        question = QuestionFactory(level=Question.LEVELS.partner)
-        self.assertEqual(question.templates.count(), 0)
-
-        partner = PartnerFactory()
-
-        response = self.forced_auth_req(
-            'patch',
-            reverse('field_monitoring_planning:question-templates-detail',
-                    kwargs={'level': 'partner', 'target_id': partner.id, 'pk': question.id}),
-            user=self.fm_user,
-            data={
-                'template': {
-                    'specific_details': 'new_details'
-                }
-            }
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIsNotNone(response.data['template'])
-        self.assertNotEqual(
-            QuestionTemplate.objects.get(question=question, partner__isnull=True).specific_details, 'new_details'
-        )
-        self.assertEqual(response.data['template']['specific_details'], 'new_details')
-        self.assertEqual(question.templates.count(), 2)
-
     def test_create_specific_template(self):
         question = QuestionFactory(level=Question.LEVELS.partner)
-        QuestionTemplateFactory(question=question)
         self.assertEqual(question.templates.count(), 1)
 
         partner = PartnerFactory()
@@ -525,7 +482,6 @@ class TestQuestionTemplatesView(FMBaseTestCaseMixin, BaseTenantTestCase):
 
     def test_update_specific_template(self):
         question = QuestionFactory(level=Question.LEVELS.partner)
-        QuestionTemplateFactory(question=question)
         self.assertEqual(question.templates.count(), 1)
 
         partner = PartnerFactory()
@@ -548,7 +504,6 @@ class TestQuestionTemplatesView(FMBaseTestCaseMixin, BaseTenantTestCase):
 
     def test_specific_template_returned(self):
         question = QuestionFactory(level=Question.LEVELS.partner)
-        QuestionTemplateFactory(question=question)
         self.assertEqual(question.templates.count(), 1)
 
         partner = PartnerFactory()
@@ -566,7 +521,7 @@ class TestQuestionTemplatesView(FMBaseTestCaseMixin, BaseTenantTestCase):
 
     def test_base_template_returned_if_specific_not_exists(self):
         question = QuestionFactory(level=Question.LEVELS.partner)
-        base_template = QuestionTemplateFactory(question=question)
+        base_template = question.templates.first()
         self.assertEqual(question.templates.count(), 1)
 
         partner = PartnerFactory()
