@@ -842,6 +842,23 @@ class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
+    def test_methods_required(self):
+        response = self.forced_auth_req(
+            'post',
+            reverse('field_monitoring_settings:questions-list'),
+            user=self.fm_user,
+            data={
+                'answer_type': 'text',
+                'level': 'partner',
+                'category': CategoryFactory().id,
+                'sections': [SectionFactory().id],
+                'text': 'Test Question',
+                'is_hact': False
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('methods', response.data)
+
     def test_create_likert_scale(self):
         response = self.forced_auth_req(
             'post',
