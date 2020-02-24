@@ -11,8 +11,8 @@ from etools.applications.offline.fields import (
     ChoiceField,
     FloatField,
     Group,
+    MixedUploadedRemoteFileField,
     TextField,
-    UploadedFileField,
 )
 from etools.applications.offline.fields.choices import LocalPairsOptions
 
@@ -24,11 +24,14 @@ answer_type_to_field_mapping = {
 }
 
 
-def get_blueprint_for_activity_and_method(activity: MonitoringActivity, method: Method) -> Blueprint:
+def get_blueprint_code(activity: MonitoringActivity, method: Method) -> str:
     country_code = connection.tenant.country_short_code or ''
+    return f'fm_{country_code}_{activity.id}_{method.id}'
 
+
+def get_blueprint_for_activity_and_method(activity: MonitoringActivity, method: Method) -> Blueprint:
     blueprint = Blueprint(
-        f'fm_{country_code}_{activity.id}_{method.id}',
+        get_blueprint_code(activity, method),
         '{} for {}'.format(method.name, activity.reference_number),
     )
     if method.use_information_source:
@@ -58,7 +61,7 @@ def get_blueprint_for_activity_and_method(activity: MonitoringActivity, method: 
                 ),
                 Group(
                     'attachments',
-                    UploadedFileField('attachment'),
+                    MixedUploadedRemoteFileField('attachment'),
                     ChoiceField('file_type', options_key='target_attachments_file_types'),
                     required=False, repeatable=True,
                     extra={'type': ['floating_attachments']},
@@ -98,12 +101,3 @@ def get_blueprint_for_activity_and_method(activity: MonitoringActivity, method: 
     )
 
     return blueprint
-
-
-def get_monitoring_activity_blueprints(activity: MonitoringActivity):
-    for method in Method.objects.filter(
-        pk__in=activity.questions.filter(
-            is_enabled=True
-        ).values_list('question__methods', flat=True)
-    ):
-        yield get_blueprint_for_activity_and_method(activity, method)

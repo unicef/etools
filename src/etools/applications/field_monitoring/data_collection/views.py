@@ -2,7 +2,7 @@ from django.db.models import Prefetch
 from django.utils.translation import ugettext_lazy as _
 
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import mixins, viewsets
+from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
@@ -19,6 +19,7 @@ from etools.applications.field_monitoring.data_collection.models import (
 )
 from etools.applications.field_monitoring.data_collection.offline.blueprint import get_blueprint_for_activity_and_method
 from etools.applications.field_monitoring.data_collection.offline.helpers import (
+    create_checklist,
     get_checklist_form_value,
     update_checklist,
 )
@@ -46,6 +47,7 @@ from etools.applications.field_monitoring.views import (
     FMBaseViewSet,
     LinkedAttachmentsViewSet,
 )
+from etools.applications.partners.views.helpers import set_tenant_or_fail
 
 
 class ActivityDataCollectionViewSet(
@@ -55,6 +57,20 @@ class ActivityDataCollectionViewSet(
 ):
     queryset = MonitoringActivity.objects.all()
     serializer_class = ActivityDataCollectionSerializer
+
+    def get_queryset(self, format=None):
+        workspace = self.request.query_params.get('workspace', None)
+        if workspace:
+            set_tenant_or_fail(workspace)
+
+        return super().get_queryset()
+
+    @action(detail=True, url_path=r'offline/(?P<method_pk>\d+)', url_name='offline')
+    def offline(self, request, *args, method_pk=None, **kwargs):
+        method = get_object_or_404(Method.objects, pk=method_pk)
+        user = request.user  # todo: how we get user from offline backend????
+        create_checklist(self.get_object(), method, user, request.data)  # todo: handle errors
+        return Response(status=status.HTTP_201_CREATED)
 
 
 class ActivityReportAttachmentsViewSet(LinkedAttachmentsViewSet):

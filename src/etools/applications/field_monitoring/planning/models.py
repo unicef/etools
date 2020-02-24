@@ -5,7 +5,7 @@ from django.db.models.base import ModelBase
 from django.utils.translation import ugettext_lazy as _
 
 from django_fsm import FSMField, transition
-from model_utils import Choices
+from model_utils import Choices, FieldTracker
 from model_utils.models import TimeStampedModel
 from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation
@@ -13,7 +13,7 @@ from unicef_locations.models import Location
 
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.core.permissions import import_permissions
-from etools.applications.field_monitoring.fm_settings.models import LocationSite, Question
+from etools.applications.field_monitoring.fm_settings.models import LocationSite, Method, Question
 from etools.applications.field_monitoring.planning.mixins import ProtectUnknownTransitionsMeta
 from etools.applications.field_monitoring.planning.transitions.permissions import (
     user_is_field_monitor_permission,
@@ -128,16 +128,25 @@ class MonitoringActivity(
     ]
 
     TRANSITION_SIDE_EFFECTS = {
-        'checklist': [
+        STATUSES.checklist: [
             lambda i, old_instance=None, user=None: i.prepare_questions_structure(old_instance.status),
         ],
-        'review': [
+        STATUSES.review: [
             lambda i, old_instance=None, user=None: i.prepare_activity_overall_findings(),
             lambda i, old_instance=None, user=None: i.prepare_questions_overall_findings(),
         ],
-        'assigned': [
+        STATUSES.assigned: [
             lambda i, old_instance=None, user=None: i.auto_accept_staff_activity(),
-        ]
+        ],
+        STATUSES.data_collection: [
+            lambda i, old_instance=None, user=None: i.init_offline_blueprints(),
+        ],
+        STATUSES.submitted: [
+            lambda i, old_instance=None, user=None: i.close_offline_blueprints(),
+        ],
+        STATUSES.cancelled: [
+            lambda i, old_instance=None, user=None: i.close_offline_blueprints(),
+        ],
     }
 
     AUTO_TRANSITIONS = {}
@@ -197,6 +206,8 @@ class MonitoringActivity(
     reject_reason = models.TextField(verbose_name=_('Rejection reason'), blank=True)
     report_reject_reason = models.TextField(verbose_name=_('Report rejection reason'), blank=True)
     cancel_reason = models.TextField(verbose_name=_('Cancellation reason'), blank=True)
+
+    person_responsible_tracker = FieldTracker(fields=['person_responsible'])
 
     class Meta:
         verbose_name = _('Monitoring Activity')
@@ -326,6 +337,8 @@ class MonitoringActivity(
         if self.monitor_type == self.MONITOR_TYPE_CHOICES.staff:
             self.accept()
             self.save()
+            # todo: direct transitions doesn't trigger side effects. trigger effects manually? or rewrite this effect?
+            self.init_offline_blueprints()
 
     @transition(field=status, source=STATUSES.assigned, target=STATUSES.draft,
                 permission=user_is_person_responsible_permission)
@@ -382,6 +395,26 @@ class MonitoringActivity(
     def get_mail_context(self, user=None):
         # todo
         return {}
+
+    @property
+    def methods(self):
+        return Method.objects.filter(
+            pk__in=self.questions.filter(
+                is_enabled=True
+            ).values_list('question__methods', flat=True)
+        )
+
+    def init_offline_blueprints(self):
+        from etools.applications.field_monitoring.data_collection.offline.synchronizer import \
+            MonitoringActivityOfflineSynchronizer
+
+        MonitoringActivityOfflineSynchronizer(self).initialize_blueprints()
+
+    def close_offline_blueprints(self):
+        from etools.applications.field_monitoring.data_collection.offline.synchronizer import \
+            MonitoringActivityOfflineSynchronizer
+
+        MonitoringActivityOfflineSynchronizer(self).close_blueprints()
 
 
 class MonitoringActivityActionPointManager(models.Manager):

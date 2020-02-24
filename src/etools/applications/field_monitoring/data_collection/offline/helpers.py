@@ -29,7 +29,7 @@ def _link_attachments(attachments_data: List[Dict], overall_finding: ChecklistOv
         attachment.delete()
 
 
-def save_values_to_checklist(value: dict, checklist: StartedChecklist) -> None:
+def _save_values_to_checklist(value: dict, checklist: StartedChecklist) -> None:
     for level in dict(MonitoringActivity.RELATIONS_MAPPING).values():
         level_values = value.get(level)
         if not level_values:
@@ -67,7 +67,7 @@ def update_checklist(checklist: StartedChecklist, value: dict) -> StartedCheckli
     checklist.information_source = validated_value.get('information_source', {}).get('name', '')
     checklist.save()
 
-    save_values_to_checklist(validated_value, checklist)
+    _save_values_to_checklist(validated_value, checklist)
 
     return checklist
 
@@ -82,7 +82,7 @@ def create_checklist(activity: MonitoringActivity, method: Method, user: User, v
         information_source=validated_value.get('information_source', {}).get('name', '')
     )
 
-    save_values_to_checklist(validated_value, checklist)
+    _save_values_to_checklist(validated_value, checklist)
 
     return checklist
 
