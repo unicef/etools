@@ -3,7 +3,7 @@
   "title": "Contact Book example",
   "structure": {
     "type": "group",
-    "extra": {},
+    "extra": {"type":  ["abstract"]},
     "name": "root",
     "repeatable": false,
     "required": true,

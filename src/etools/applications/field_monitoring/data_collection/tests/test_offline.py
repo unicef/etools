@@ -71,7 +71,9 @@ class ChecklistBlueprintViewTestCase(APIViewSetTestCase, BaseTenantTestCase):
         response = self.make_detail_request(
             self.team_member, self.started_checklist, action='blueprint', method='post',
             data={
-                'information_source': 'Doctors',
+                'information_source': {
+                    'name': 'Doctors',
+                },
                 'partner': {
                     str(partner.id): {
                         'overall': 'overall',
