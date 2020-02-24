@@ -568,5 +568,5 @@ VISION_REQUESTS_TIMEOUT = get_from_secrets_or_env('VISION_REQUESTS_TIMEOUT', 400
 # Etools offline collect
 # https://github.com/unicef/etools-offline-collect/blob/develop/client/README.md
 ETOOLS_OFFLINE_ENABLED = get_from_secrets_or_env('ETOOLS_OFFLINE_ENABLED', False) in [True, 'true', 1]
-ETOOLS_OFFLINE_API = get_from_secrets_or_env('ETOOLS_OFFLINE_API', '')
+ETOOLS_OFFLINE_API = get_from_secrets_or_env('ETOOLS_OFFLINE_API', 'http://example.com/b/api/remote/blueprint/')
 ETOOLS_OFFLINE_TOKEN = get_from_secrets_or_env('ETOOLS_OFFLINE_TOKEN', '')
