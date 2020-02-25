@@ -156,8 +156,10 @@ class ChecklistsViewSet(
     def blueprint(self, request, *args, **kwargs):
         checklist = self.get_object()
         if request.method.upper() != 'GET':
-            update_checklist(checklist, request.data)
-            checklist.refresh_from_db()
+            try:
+                checklist = update_checklist(checklist, request.data)
+            except ValidationError as ex:
+                return Response(status=status.HTTP_400_BAD_REQUEST, data=ex.detail)
 
         return Response(
             data={
