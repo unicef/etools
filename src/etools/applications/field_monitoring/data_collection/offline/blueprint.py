@@ -85,7 +85,8 @@ def get_blueprint_for_activity_and_method(activity: MonitoringActivity, method: 
                         str(question.question.id),
                         label=question.question.text,
                         options_key=options_key,
-                        help_text=question.specific_details
+                        help_text=question.specific_details,
+                        required=False,
                     )
                 )
             level_block.add(target_block)
