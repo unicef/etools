@@ -62,7 +62,7 @@ class ActivityDataCollectionViewSet(
     queryset = MonitoringActivity.objects.all()
     serializer_class = ActivityDataCollectionSerializer
 
-    def get_queryset(self, format=None):
+    def get_queryset(self):
         workspace = self.request.query_params.get('workspace', None)
         if workspace:
             set_tenant_or_fail(workspace)
