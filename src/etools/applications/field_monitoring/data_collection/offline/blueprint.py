@@ -25,7 +25,7 @@ answer_type_to_field_mapping = {
 
 
 def get_blueprint_code(activity: MonitoringActivity, method: Method) -> str:
-    country_code = connection.tenant.country_short_code or ''
+    country_code = connection.tenant.schema_name or ''
     return f'fm_{country_code}_{activity.id}_{method.id}'
 
 

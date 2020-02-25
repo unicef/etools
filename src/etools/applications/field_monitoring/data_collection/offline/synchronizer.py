@@ -42,7 +42,7 @@ class MonitoringActivityOfflineSynchronizer:
                 "api_response_url": '{}{}?workspace={}'.format(
                     settings.HOST,
                     reverse('field_monitoring_data_collection:activities-offline', args=[self.activity.id, method.id]),
-                    connection.tenant.country_short_code or ''
+                    connection.tenant.schema_name or ''
                 )
             })
 
