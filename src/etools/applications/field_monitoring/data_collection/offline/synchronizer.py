@@ -16,6 +16,9 @@ from etools.applications.field_monitoring.planning.models import MonitoringActiv
 
 
 class MonitoringActivityOfflineSynchronizer:
+    """
+    Interface to synchronize MonitoringActivity blueprints with etools offline collect backend.
+    """
     # todo: move external api calls into celery tasks for better stability & speed improvement
 
     def __init__(self, activity: MonitoringActivity):
