@@ -394,6 +394,14 @@ class TestGeneralAttachmentsView(FMBaseTestCaseMixin, APIViewSetTestCase):
         )
         self.assertTrue(self.config.attachments.exists())
 
+    def test_add_without_file_type(self):
+        self._test_create(
+            self.fm_user,
+            data={'id': AttachmentFactory().id},
+            expected_status=status.HTTP_400_BAD_REQUEST,
+            field_errors=['file_type']
+        )
+
     def test_update(self):
         attachment = AttachmentFactory(code='fm_global', content_object=self.config)
 
@@ -633,7 +641,7 @@ class TestLogIssueAttachmentsView(FMBaseTestCaseMixin, APIViewSetTestCase):
         response = self.set_attachments(
             self.fm_user,
             [
-                {'id': AttachmentFactory().id, 'file_type': AttachmentFileTypeFactory(code='fm_common').id}
+                {'id': AttachmentFactory().id}
                 for _i in range(2)
             ],
         )
@@ -651,24 +659,8 @@ class TestLogIssueAttachmentsView(FMBaseTestCaseMixin, APIViewSetTestCase):
 
         self._test_list(self.unicef_user, attachments)
 
-    def test_bulk_change_file_type(self):
-        attachment = AttachmentFactory(content_object=self.log_issue, file_type__code='fm_common',
-                                       file_type__name='before', code='attachments')
-        AttachmentLinkFactory(attachment=attachment, content_object=self.log_issue)
-        self.assertEqual(self.log_issue.attachments.count(), 1)
-
-        response = self.set_attachments(
-            self.fm_user,
-            [{'id': attachment.id, 'file_type': FileType.objects.create(name='after', code='fm_common').id}],
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        self.assertEqual(self.log_issue.attachments.count(), 1)
-        self.assertEqual(Attachment.objects.get(pk=attachment.pk, object_id=self.log_issue.id).file_type.name, 'after')
-
     def test_bulk_remove(self):
-        attachment = AttachmentFactory(content_object=self.log_issue, file_type__code='fm_common',
-                                       file_type__name='before', code='attachments')
+        attachment = AttachmentFactory(content_object=self.log_issue, code='attachments')
         AttachmentLinkFactory(attachment=attachment, content_object=self.log_issue)
 
         response = self.set_attachments(self.fm_user, [])
@@ -682,21 +674,9 @@ class TestLogIssueAttachmentsView(FMBaseTestCaseMixin, APIViewSetTestCase):
 
         self._test_create(
             self.fm_user,
-            data={
-                'file_type': AttachmentFileTypeFactory(code='fm_common').id,
-                'id': AttachmentFactory().id,
-            }
+            data={'id': AttachmentFactory().id}
         )
         self.assertTrue(self.log_issue.attachments.exists())
-
-    def test_update(self):
-        attachment = AttachmentFactory(code='attachments', content_object=self.log_issue)
-
-        self._test_update(
-            self.fm_user, attachment,
-            {'file_type': FileType.objects.create(name='new', code='fm_common').id}
-        )
-        self.assertNotEqual(Attachment.objects.get(pk=attachment.pk).file_type_id, attachment.file_type_id)
 
     def test_destroy(self):
         attachment = AttachmentFactory(code='attachments', content_object=self.log_issue)
@@ -709,15 +689,6 @@ class TestLogIssueAttachmentsView(FMBaseTestCaseMixin, APIViewSetTestCase):
         response = self.set_attachments(self.unicef_user, [])
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
-    def test_file_types(self):
-        wrong_file_type = AttachmentFileTypeFactory()
-        file_type = AttachmentFileTypeFactory(code='fm_common')
-
-        response = self.make_request_to_viewset(self.unicef_user, action='file-types')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn(file_type.id, [d['id'] for d in response.data])
-        self.assertNotIn(wrong_file_type.id, [d['id'] for d in response.data])
 
     def test_overwrite_previous_attachments(self):
         attachment = AttachmentFactory(code='attachments', content_object=self.log_issue)
@@ -870,6 +841,23 @@ class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_methods_required(self):
+        response = self.forced_auth_req(
+            'post',
+            reverse('field_monitoring_settings:questions-list'),
+            user=self.fm_user,
+            data={
+                'answer_type': 'text',
+                'level': 'partner',
+                'category': CategoryFactory().id,
+                'sections': [SectionFactory().id],
+                'text': 'Test Question',
+                'is_hact': False
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('methods', response.data)
 
     def test_create_likert_scale(self):
         response = self.forced_auth_req(
