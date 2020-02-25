@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from django.db.models import Prefetch
 from django.utils.translation import ugettext_lazy as _
 
@@ -47,7 +48,10 @@ from etools.applications.field_monitoring.views import (
     FMBaseViewSet,
     LinkedAttachmentsViewSet,
 )
+from etools.applications.offline.errors import ValidationError
 from etools.applications.partners.views.helpers import set_tenant_or_fail
+
+User = get_user_model()
 
 
 class ActivityDataCollectionViewSet(
@@ -68,8 +72,13 @@ class ActivityDataCollectionViewSet(
     @action(detail=True, url_path=r'offline/(?P<method_pk>\d+)', url_name='offline')
     def offline(self, request, *args, method_pk=None, **kwargs):
         method = get_object_or_404(Method.objects, pk=method_pk)
-        user = request.user  # todo: how we get user from offline backend????
-        create_checklist(self.get_object(), method, user, request.data)  # todo: handle errors
+        user_email = self.request.query_params.get('user', '')
+        user = get_object_or_404(User.objects, email=user_email)
+        try:
+            create_checklist(self.get_object(), method, user, request.data)
+        except ValidationError as ex:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data=ex.detail)
+
         return Response(status=status.HTTP_201_CREATED)
 
 
