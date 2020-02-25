@@ -2,7 +2,7 @@ from django.db.models import Prefetch
 from django.utils.translation import ugettext_lazy as _
 
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import mixins, viewsets
+from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
@@ -46,6 +46,7 @@ from etools.applications.field_monitoring.views import (
     FMBaseViewSet,
     LinkedAttachmentsViewSet,
 )
+from etools.applications.offline.errors import ValidationError
 
 
 class ActivityDataCollectionViewSet(
@@ -131,8 +132,10 @@ class ChecklistsViewSet(
     def blueprint(self, request, *args, **kwargs):
         checklist = self.get_object()
         if request.method.upper() != 'GET':
-            update_checklist(checklist, request.data)
-            checklist.refresh_from_db()
+            try:
+                checklist = update_checklist(checklist, request.data)
+            except ValidationError as ex:
+                return Response(status=status.HTTP_400_BAD_REQUEST, data=ex.detail)
 
         return Response(
             data={
