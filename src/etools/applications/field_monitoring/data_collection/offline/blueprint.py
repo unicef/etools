@@ -35,13 +35,13 @@ def get_blueprint_for_activity_and_method(activity: MonitoringActivity, method: 
         blueprint.add(
             Group(
                 'information_source',
-                TextField('name', label=_('Source of Information'), extra={'type': ['wide']}),
-                extra={'type': ['card']},
+                TextField('name', label=_('Source of Information'), styling=['wide']),
+                styling=['card'],
             )
         )
 
     for relation, level in activity.RELATIONS_MAPPING:
-        level_block = Group(level, extra={'type': ['abstract']})
+        level_block = Group(level, styling=['abstract'])
 
         for target in getattr(activity, relation).all():
             target_questions = activity.questions.filter(
@@ -54,19 +54,19 @@ def get_blueprint_for_activity_and_method(activity: MonitoringActivity, method: 
             target_block = Group(
                 str(target.id),
                 TextField(
-                    'overall', label=_('Overall Finding'), extra={'type': ['wide', 'additional']}, required=False
+                    'overall', label=_('Overall Finding'), styling=['wide', 'additional'], required=False
                 ),
                 Group(
                     'attachments',
                     UploadedFileField('attachment'),
                     ChoiceField('file_type', options_key='target_attachments_file_types'),
                     required=False, repeatable=True,
-                    extra={'type': ['floating_attachments']},
+                    styling=['floating_attachments'],
                 ),
                 title=str(target),
-                extra={'type': ['card', 'collapse']},
+                styling=['card', 'collapse'],
             )
-            questions_block = Group('questions', extra={'type': ['abstract']})
+            questions_block = Group('questions', styling=['abstract'])
             target_block.add(questions_block)
             for question in target_questions.distinct():
                 if question.question.answer_type in [
