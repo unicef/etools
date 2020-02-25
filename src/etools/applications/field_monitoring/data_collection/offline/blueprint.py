@@ -4,7 +4,6 @@ from django.utils.translation import ugettext_lazy as _
 from unicef_attachments.models import FileType
 
 from etools.applications.field_monitoring.fm_settings.models import Method, Question
-from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.offline.blueprint import Blueprint
 from etools.applications.offline.fields import (
     BooleanField,
@@ -24,12 +23,12 @@ answer_type_to_field_mapping = {
 }
 
 
-def get_blueprint_code(activity: MonitoringActivity, method: Method) -> str:
+def get_blueprint_code(activity: 'MonitoringActivity', method: 'Method') -> str:
     country_code = connection.tenant.schema_name or ''
     return f'fm_{country_code}_{activity.id}_{method.id}'
 
 
-def get_blueprint_for_activity_and_method(activity: MonitoringActivity, method: Method) -> Blueprint:
+def get_blueprint_for_activity_and_method(activity: 'MonitoringActivity', method: 'Method') -> Blueprint:
     blueprint = Blueprint(
         get_blueprint_code(activity, method),
         '{} for {}'.format(method.name, activity.reference_number),

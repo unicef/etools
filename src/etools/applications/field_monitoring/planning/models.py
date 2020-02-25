@@ -13,6 +13,9 @@ from unicef_locations.models import Location
 
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.core.permissions import import_permissions
+from etools.applications.field_monitoring.data_collection.offline.synchronizer import (
+    MonitoringActivityOfflineSynchronizer,
+)
 from etools.applications.field_monitoring.fm_settings.models import LocationSite, Method, Question
 from etools.applications.field_monitoring.planning.mixins import ProtectUnknownTransitionsMeta
 from etools.applications.field_monitoring.planning.transitions.permissions import (
@@ -405,15 +408,9 @@ class MonitoringActivity(
         )
 
     def init_offline_blueprints(self):
-        from etools.applications.field_monitoring.data_collection.offline.synchronizer import \
-            MonitoringActivityOfflineSynchronizer
-
         MonitoringActivityOfflineSynchronizer(self).initialize_blueprints()
 
     def close_offline_blueprints(self):
-        from etools.applications.field_monitoring.data_collection.offline.synchronizer import \
-            MonitoringActivityOfflineSynchronizer
-
         MonitoringActivityOfflineSynchronizer(self).close_blueprints()
 
 

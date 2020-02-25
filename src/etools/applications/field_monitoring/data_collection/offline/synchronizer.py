@@ -12,7 +12,6 @@ from etools.applications.field_monitoring.data_collection.offline.blueprint impo
     get_blueprint_code,
     get_blueprint_for_activity_and_method,
 )
-from etools.applications.field_monitoring.planning.models import MonitoringActivity
 
 
 class MonitoringActivityOfflineSynchronizer:
@@ -21,7 +20,7 @@ class MonitoringActivityOfflineSynchronizer:
     """
     # todo: move external api calls into celery tasks for better stability & speed improvement
 
-    def __init__(self, activity: MonitoringActivity):
+    def __init__(self, activity: 'MonitoringActivity'):
         self.activity = activity
         self.enabled = settings.ETOOLS_OFFLINE_ENABLED
 
