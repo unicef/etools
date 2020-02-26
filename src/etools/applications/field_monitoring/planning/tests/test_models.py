@@ -134,9 +134,11 @@ class TestMonitoringActivityQuestionsFlow(BaseTenantTestCase):
 
         self.basic_question = QuestionFactory(level=Question.LEVELS.partner,
                                               sections=[self.first_section, self.third_section])
-        QuestionTemplateFactory(question=self.basic_question, specific_details='')
+        basic_template = self.basic_question.templates.first()
+        basic_template.specific_details = ''
+        basic_template.save()
         self.specific_question = QuestionFactory(level=Question.LEVELS.partner, sections=[self.second_section])
-        self.specific_question_base_template = QuestionTemplateFactory(question=self.specific_question)
+        self.specific_question_base_template = self.basic_question.templates.first()
         self.specific_question_specific_template = QuestionTemplateFactory(question=self.specific_question,
                                                                            partner=self.second_partner)
 
