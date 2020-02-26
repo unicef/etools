@@ -319,7 +319,8 @@ CELERY_ACCEPT_CONTENT = ['pickle', 'json', 'application/text']
 CELERY_BROKER_URL = get_from_secrets_or_env('REDIS_URL', 'redis://localhost:6379/0')
 CELERY_BROKER_VISIBILITY_VAR = get_from_secrets_or_env('CELERY_VISIBILITY_TIMEOUT', 1800)  # in seconds
 CELERY_BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': int(CELERY_BROKER_VISIBILITY_VAR)}
-CELERY_RESULT_BACKEND = 'django-db'
+# CELERY_RESULT_BACKEND = 'django-db'
+CELERY_CACHE_BACKEND = 'default'
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers.DatabaseScheduler'
 # Sensible settings for celery
 CELERY_TASK_ALWAYS_EAGER = False
