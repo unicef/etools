@@ -13,6 +13,7 @@ ALLOWED_HOSTS = [
     'etools-dev.unicef.org',
     'etools-staging.unicef.org',
     'etools-test.unicef.org',
+    'etools-test.unicef.io',
     '0.0.0.0'
 ]
 

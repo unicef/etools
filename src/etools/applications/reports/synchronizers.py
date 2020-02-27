@@ -181,7 +181,7 @@ class ResultStructureSynchronizer:
 
 
 class ProgrammeSynchronizer(VisionDataTenantSynchronizer):
-    ENDPOINT = 'GetProgrammeStructureList_JSON'
+    ENDPOINT = 'wbsstructures'
     REQUIRED_KEYS = (
         "COUNTRY_PROGRAMME_NAME",
         "COUNTRY_PROGRAMME_WBS",
@@ -303,10 +303,10 @@ class ProgrammeSynchronizer(VisionDataTenantSynchronizer):
         return {'cps': cps, 'outcomes': outcomes, 'outputs': outputs, 'activities': activities}
 
     def _convert_records(self, records):
-        records = json.loads(records.get('GetProgrammeStructureList_JSONResult', []))
+        records = records['ROWSET']['ROW']
         for r in records:
             for k in self.DATES:
-                r[k] = wcf_json_date_as_date(r[k])
+                r[k] = datetime.datetime.strptime(r[k], "%d-%b-%y").date() if r[k] else None
             r['HUMANITARIAN_TAG'] = r['HUMANITARIAN_TAG'] not in ['No', 'None', '0']
 
         return self._clean_records(records)

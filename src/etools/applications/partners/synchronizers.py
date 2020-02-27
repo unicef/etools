@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 class PartnerSynchronizer(VisionDataTenantSynchronizer):
 
-    ENDPOINT = 'GetPartnerDetailsInfo_json'
+    ENDPOINT = 'partners'
     REQUIRED_KEYS = (
         'PARTNER_TYPE_DESC',
         'VENDOR_NAME',
@@ -77,7 +77,7 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
     }
 
     def _convert_records(self, records):
-        return json.loads(records)['ROWSET']['ROW']
+        return records['ROWSET']['ROW']
 
     def _filter_records(self, records):
         records = super()._filter_records(records)
@@ -117,7 +117,8 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
             if mapped_key in self.DATE_FIELDS:
                 apiobj_field = None
                 if mapped_key in api_obj:
-                    datetime.strptime(api_obj[mapped_key], '%d-%b-%y')
+                    if api_obj[mapped_key]:
+                        datetime.strptime(api_obj[mapped_key], '%d-%b-%y')
 
             if field == 'partner_type':
                 apiobj_field = self.get_partner_type(api_obj)
@@ -145,9 +146,10 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
                 logger.info('Partner {} skipped, because PartnerType is {}'.format(
                     partner['VENDOR_NAME'], partner['PARTNER_TYPE_DESC']
                 ))
+                pass
                 if partner_org.id:
-                    partner_org.deleted_flag = True if partner.get('MARKED_FOR_DELETION', None) else False
-                    partner_org.blocked = True if partner.get('POSTING_BLOCK', None) else False
+                    partner_org.deleted_flag = True if partner['MARKED_FOR_DELETION'] else False
+                    partner_org.blocked = True if partner['POSTING_BLOCK'] else False
                     partner_org.hidden = True
                     partner_org.save()
                 return processed
@@ -165,12 +167,12 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
                 partner_org.email = partner.get('EMAIL', '')
                 partner_org.core_values_assessment_date = datetime.strptime(
                     partner['CORE_VALUE_ASSESSMENT_DT'],
-                    '%d-%b-%y') if 'CORE_VALUE_ASSESSMENT_DT' in partner else None
+                    '%d-%b-%y') if partner['CORE_VALUE_ASSESSMENT_DT'] else None
                 partner_org.last_assessment_date = datetime.strptime(
-                    partner['DATE_OF_ASSESSMENT'], '%d-%b-%y') if 'DATE_OF_ASSESSMENT' in partner else None
+                    partner['DATE_OF_ASSESSMENT'], '%d-%b-%y') if partner["DATE_OF_ASSESSMENT"] else None
                 partner_org.partner_type = self.get_partner_type(partner)
-                partner_org.deleted_flag = True if 'MARKED_FOR_DELETION' in partner else False
-                posting_block = True if 'POSTING_BLOCK' in partner else False
+                partner_org.deleted_flag = True if partner['MARKED_FOR_DELETION'] else False
+                posting_block = True if partner['POSTING_BLOCK'] else False
 
                 if posting_block and not partner_org.blocked:  # i'm blocking the partner now
                     notify_block = True
@@ -249,7 +251,7 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
             'COMMUNITY BASED ORGANIZATION': 'Community Based Organization',
             'ACADEMIC INSTITUTION': 'Academic Institution'
         }
-        if 'CSO_TYPE' in partner and partner['CSO_TYPE'].upper() in cso_type_mapping:
+        if partner['CSO_TYPE'] and partner['CSO_TYPE'].upper() in cso_type_mapping:
             return cso_type_mapping[partner['CSO_TYPE'].upper()]
 
     @staticmethod
@@ -260,7 +262,8 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
             'GOVERNMENT': 'Government',
             'UN AGENCY': 'UN Agency',
         }
-        return type_mapping.get(partner['PARTNER_TYPE_DESC'].upper(), None)
+        if partner['PARTNER_TYPE_DESC']:
+            return type_mapping.get(partner['PARTNER_TYPE_DESC'].upper(), None)
 
     @staticmethod
     def get_partner_rating(partner):
@@ -270,7 +273,7 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
     @staticmethod
     def get_type_of_assessment(partner):
         type_of_assessments = dict(PartnerOrganization.TYPE_OF_ASSESSMENT)
-        if 'TYPE_OF_ASSESSMENT' in partner:
+        if partner['TYPE_OF_ASSESSMENT']:
             return type_of_assessments.get(partner['TYPE_OF_ASSESSMENT'].upper(), partner['TYPE_OF_ASSESSMENT'])
         return ''
 
