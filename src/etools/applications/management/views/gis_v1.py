@@ -6,15 +6,12 @@ from rest_framework.response import Response
 from unicef_locations.models import Location
 from unicef_restlib.permissions import IsSuperUser
 
-from etools.applications.action_points.models import ActionPoint
 from etools.applications.activities.models import Activity
 from etools.applications.management.serializers import (
     GisLocationGeojsonSerializer,
     GisLocationListSerializer,
     GisLocationWktSerializer,
 )
-from etools.applications.partners.models import Intervention
-from etools.applications.reports.models import AppliedIndicator
 from etools.applications.t2f.models import TravelActivity
 from etools.applications.users.models import Country
 
@@ -41,9 +38,8 @@ class GisLocationsInUseViewset(ListAPIView):
             return Response(status=400, data={'error': 'Country not found'})
         else:
             locs = Location.objects.filter(Q(intervention_flat_locations__isnull=False) |
-                                               Q(applied_indicators__isnull=False) |
-                                               Q(actionpoint__isnull=False)).values_list(
-                "id", flat=True).distinct()
+                                           Q(applied_indicators__isnull=False) |
+                                           Q(actionpoint__isnull=False)).values_list("id", flat=True).distinct()
 
             t2f_locs = TravelActivity.objects.exclude(locations__isnull=True).values_list(
                 "locations", flat=True).distinct()
