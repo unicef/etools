@@ -1,4 +1,5 @@
 from django.db import connection
+from django.db.models import Q
 
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.response import Response
@@ -39,43 +40,21 @@ class GisLocationsInUseViewset(ListAPIView):
         except Country.DoesNotExist:
             return Response(status=400, data={'error': 'Country not found'})
         else:
-            location_ids = set()
+            locs = Location.objects.filter(Q(intervention_flat_locations__isnull=False) |
+                                               Q(applied_indicators__isnull=False) |
+                                               Q(actionpoint__isnull=False)).values_list(
+                "id", flat=True).distinct()
 
-            # interventions
-            interventions = Intervention.objects.all()
+            t2f_locs = TravelActivity.objects.exclude(locations__isnull=True).values_list(
+                "locations", flat=True).distinct()
 
-            for intervention in interventions:
-                for loc in intervention.flat_locations.all():
-                    location_ids.add(loc.id)
+            tpm_activity_locs = Activity.objects.exclude(locations__isnull=True).values_list(
+                "locations", flat=True).distinct()
 
-            indicators = AppliedIndicator.objects.prefetch_related(
-                'locations'
-            ).all()
-
-            for indicator in indicators:
-                for iloc in indicator.locations.all():
-                    location_ids.add(iloc.id)
-
-            # travels
-            travel_activities = TravelActivity.objects.prefetch_related(
-                'locations'
-            ).all()
-
-            for travel_activity in travel_activities:
-                for t2f_loc in travel_activity.locations.all():
-                    location_ids.add(t2f_loc.id)
-
-            # activities
-            for activity in Activity.objects.all():
-                for act_loc in activity.locations.all():
-                    location_ids.add(act_loc.id)
-
-            # action points
-            for acp in ActionPoint.objects.filter(location__isnull=False):
-                location_ids.add(acp.location.id)
+            all_locs = set(locs) | set(t2f_locs) | set(tpm_activity_locs)
 
             locations = Location.objects.filter(
-                pk__in=list(location_ids),
+                pk__in=list(all_locs),
             )
 
             serializer = GisLocationListSerializer(locations, many=True, context={'request': request})
