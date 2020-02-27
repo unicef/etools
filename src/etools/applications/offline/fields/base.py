@@ -7,13 +7,15 @@ from etools.applications.offline.metadata import Metadata
 class Structure:
     object_type = None
 
-    def __init__(self, extra=None):
+    def __init__(self, styling=None, extra=None):
+        self.styling = styling or []
         self.extra = extra or {}
 
     def to_dict(self, **kwargs) -> dict:
         data = {
             'type': self.object_type,
-            'extra': self.extra
+            'extra': self.extra,
+            'styling': self.styling,
         }
         data.update(kwargs)
         return data
