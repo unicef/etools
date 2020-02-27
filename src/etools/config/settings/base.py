@@ -475,10 +475,9 @@ SLACK_URL = get_from_secrets_or_env('SLACK_URL')
 
 TASK_ADMIN_USER = get_from_secrets_or_env('TASK_ADMIN_USER', 'etools_task_admin@unicef.org')
 
-VISION_LOGGER_MODEL = "vision.VisionSyncLog"
-VISION_URL = get_from_secrets_or_env('VISION_URL', 'http://invalid_vision_url')
-VISION_USER = get_from_secrets_or_env('VISION_USER', 'invalid_vision_user')
-VISION_PASSWORD = get_from_secrets_or_env('VISION_PASSWORD', 'invalid_vision_password')
+INSIGHT_LOGGER_MODEL = "vision.VisionSyncLog"
+INSIGHT_SUB_KEY = get_from_secrets_or_env('INSIGHT_SUB_KEY', 'invalid_key')
+INSIGHT_URL = get_from_secrets_or_env('INSIGHT_URL', 'invalid_url')
 
 
 # ALLOW BASIC AUTH FOR DEMO SITE
@@ -568,7 +567,7 @@ PSEA_ASSESSMENT_FINAL_RECIPIENTS = get_from_secrets_or_env(
     '',
 ).split(',')
 
-VISION_REQUESTS_TIMEOUT = get_from_secrets_or_env('VISION_REQUESTS_TIMEOUT', 400)  # in seconds
+INSIGHT_REQUESTS_TIMEOUT = get_from_secrets_or_env('INSIGHT_REQUESTS_TIMEOUT', 400)  # in seconds
 
 # Etools offline collect
 # https://github.com/unicef/etools-offline-collect/blob/develop/client/README.md

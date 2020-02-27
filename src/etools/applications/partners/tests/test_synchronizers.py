@@ -1,7 +1,7 @@
 import datetime
 import json
 
-from unicef_vision.loaders import VISION_NO_DATA_MESSAGE
+from unicef_vision.loaders import INSIGHT_NO_DATA_MESSAGE
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners import synchronizers
@@ -52,7 +52,7 @@ class TestPartnerSynchronizer(BaseTenantTestCase):
         self.assertEqual(response, self.data)
 
     def test_get_json_no_data(self):
-        response = self.adapter._get_json(VISION_NO_DATA_MESSAGE)
+        response = self.adapter._get_json(INSIGHT_NO_DATA_MESSAGE)
         self.assertEqual(response, [])
 
     def test_get_cso_type_none(self):

@@ -10,8 +10,8 @@ from etools.config.celery import app
 
 def sync_single_delegated_fr(business_area_code, fr_number):
     handler = DelegatedFundReservationsSynchronizer(
-        business_area_code=business_area_code,
-        object_number=fr_number
+        fr_number,
+        business_area_code=business_area_code
     )
     handler.sync()
 

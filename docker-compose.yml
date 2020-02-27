@@ -48,6 +48,8 @@ db:
     - POSTGRES_PASSWORD=password
   volumes:
     - ./db_dumps:/tmp/db_dumps
+  ports:
+    - 25432:5432
 
 redis:
   image: redis

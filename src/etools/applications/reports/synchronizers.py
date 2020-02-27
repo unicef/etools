@@ -1,12 +1,9 @@
-
 import datetime
-import json
 import logging
 
 from django.db import transaction
 
-from unicef_vision.loaders import VISION_NO_DATA_MESSAGE
-from unicef_vision.utils import wcf_json_date_as_date
+from unicef_vision.loaders import INSIGHT_NO_DATA_MESSAGE
 
 from etools.applications.reports.models import CountryProgramme, Indicator, Result, ResultType
 from etools.applications.vision.synchronizers import VisionDataTenantSynchronizer
@@ -181,7 +178,7 @@ class ResultStructureSynchronizer:
 
 
 class ProgrammeSynchronizer(VisionDataTenantSynchronizer):
-    ENDPOINT = 'GetProgrammeStructureList_JSON'
+    ENDPOINT = 'wbsstructures'
     REQUIRED_KEYS = (
         "COUNTRY_PROGRAMME_NAME",
         "COUNTRY_PROGRAMME_WBS",
@@ -263,7 +260,7 @@ class ProgrammeSynchronizer(VisionDataTenantSynchronizer):
 
     @staticmethod
     def _get_json(data):
-        return [] if data == VISION_NO_DATA_MESSAGE else data
+        return [] if data == INSIGHT_NO_DATA_MESSAGE else data
 
     def _filter_by_time_range(self, records):
         records = super()._filter_records(records)
@@ -303,10 +300,10 @@ class ProgrammeSynchronizer(VisionDataTenantSynchronizer):
         return {'cps': cps, 'outcomes': outcomes, 'outputs': outputs, 'activities': activities}
 
     def _convert_records(self, records):
-        records = json.loads(records.get('GetProgrammeStructureList_JSONResult', []))
+        records = records['ROWSET']['ROW']
         for r in records:
             for k in self.DATES:
-                r[k] = wcf_json_date_as_date(r[k])
+                r[k] = datetime.datetime.strptime(r[k], "%d-%b-%y").date() if r[k] else None
             r['HUMANITARIAN_TAG'] = r['HUMANITARIAN_TAG'] not in ['No', 'None', '0']
 
         return self._clean_records(records)
@@ -320,17 +317,17 @@ class ProgrammeSynchronizer(VisionDataTenantSynchronizer):
 
 
 class RAMSynchronizer(VisionDataTenantSynchronizer):
-    ENDPOINT = 'GetRAMInfo_JSON'
+    ENDPOINT = 'ramindicators'
     REQUIRED_KEYS = (
         "INDICATOR_DESCRIPTION",
         "INDICATOR_CODE",
         "WBS_ELEMENT_CODE",
-        "BASELINE",
-        "TARGET",
+        "INDICATOR_BASELINE",
+        "INDICATOR_TARGET",
     )
 
     def _convert_records(self, records):
-        return json.loads(records)
+        return records['ROWSET']['ROW']
 
     def _save_records(self, records):
         processed = self.process_indicators(records)
@@ -355,9 +352,9 @@ class RAMSynchronizer(VisionDataTenantSynchronizer):
             code = str(r['INDICATOR_CODE'])
             mapped_records[code] = {
                 'name': r['INDICATOR_DESCRIPTION'][:1024],
-                'baseline': r['BASELINE'][:255],
+                'baseline': r['INDICATOR_BASELINE'][:255],
                 'code': code,
-                'target': r['TARGET'][:255],
+                'target': r['INDICATOR_TARGET'][:255],
                 'ram_indicator': True,
                 'result__wbs': '/'.join([a[0:4], a[4:6], a[6:8], a[8:11], a[11:14]])
             }
