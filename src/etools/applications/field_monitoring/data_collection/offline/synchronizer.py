@@ -1,5 +1,5 @@
 import json
-from typing import List
+from typing import List, TYPE_CHECKING
 
 from django.conf import settings
 from django.db import connection
@@ -8,10 +8,14 @@ from django.urls import reverse
 from etools_offline import OfflineCollect
 from simplejson import JSONDecodeError
 
+from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.field_monitoring.data_collection.offline.blueprint import (
     get_blueprint_code,
     get_blueprint_for_activity_and_method,
 )
+
+if TYPE_CHECKING:
+    from etools.applications.field_monitoring.planning.models import MonitoringActivity
 
 
 class MonitoringActivityOfflineSynchronizer:
@@ -20,9 +24,9 @@ class MonitoringActivityOfflineSynchronizer:
     """
     # todo: move external api calls into celery tasks for better stability & speed improvement
 
-    def __init__(self, activity: 'MonitoringActivity'):
+    def __init__(self, activity: MonitoringActivity):
         self.activity = activity
-        self.enabled = settings.ETOOLS_OFFLINE_ENABLED
+        self.enabled = not tenant_switch_is_active('fm_offline_sync_disabled')
 
     def _get_data_collectors(self) -> List[str]:
         data_collectors = [self.activity.person_responsible.email]
