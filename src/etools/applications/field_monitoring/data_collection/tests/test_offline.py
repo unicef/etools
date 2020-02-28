@@ -221,6 +221,15 @@ class MonitoringActivityOfflineBlueprintsSyncTestCase(APIViewSetTestCase, BaseTe
         activity.team_members.remove(activity.team_members.first())
         update_mock.assert_called()
 
+    @patch('etools.applications.field_monitoring.data_collection.offline.synchronizer.OfflineCollect.delete')
+    def test_blueprints_deleted_on_activity_cancel(self, delete_mock):
+        activity = MonitoringActivityFactory(status='data_collection', partners=[PartnerFactory()])
+        ActivityQuestionFactory(monitoring_activity=activity, is_enabled=True, question__methods=[MethodFactory()])
+
+        delete_mock.reset_mock()
+        self._test_update(self.fm_user, activity, {'status': 'cancelled', 'cancel_reason': 'For testing purposes'})
+        delete_mock.assert_called()
+
 
 class MonitoringActivityOfflineValuesTestCase(APIViewSetTestCase, BaseTenantTestCase):
     base_view = 'field_monitoring_data_collection:activities'
