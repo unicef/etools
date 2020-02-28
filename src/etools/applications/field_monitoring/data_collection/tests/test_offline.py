@@ -1,4 +1,5 @@
 from django.db import connection
+
 from mock import patch
 from rest_framework import status
 
