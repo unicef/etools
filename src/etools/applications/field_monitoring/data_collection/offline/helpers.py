@@ -108,7 +108,7 @@ def get_checklist_form_value(checklist: StartedChecklist) -> dict:
                 'attachments': [
                     {
                         'attachment': str(attachment.pk),
-                        'file_type': str(attachment.file_type_id),
+                        'file_type': attachment.file_type_id,
                         'url': reverse('attachments:file', args=[attachment.pk]),
                         'filename': attachment.filename,
                     }
