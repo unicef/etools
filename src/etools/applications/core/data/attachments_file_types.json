@@ -509,5 +509,16 @@
             "name": "other",
             "code": "fm_common"
         }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 60,
+        "fields": {
+            "order": 0,
+            "label": "PSEA awareness-raising plan",
+            "name": "psea_awareness_raising_plan",
+            "code": "psea_answer",
+            "group": ["psea_answer"]
+        }
     }
 ]

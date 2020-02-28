@@ -20,6 +20,14 @@ from etools.libraries.djangolib.utils import get_environment
 from etools.libraries.fsm.views import has_action_permission
 
 
+class ActionPointManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().prefetch_related('author',
+                                                       'section', 'office', 'location', 'partner',
+                                                       'cp_output__result_type', 'engagement', 'intervention')\
+            .select_related('assigned_to', "assigned_by", "category")
+
+
 class ActionPoint(TimeStampedModel):
     MODULE_CHOICES = Category.MODULE_CHOICES
 
@@ -86,6 +94,8 @@ class ActionPoint(TimeStampedModel):
         null=True,
     )
     tracker = FieldTracker(fields=['assigned_to', 'reference_number'])
+
+    objects = ActionPointManager()
 
     class Meta:
         ordering = ('id', )
