@@ -6,6 +6,7 @@ from etools.applications.attachments.tests.factories import AttachmentFactory, A
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.environment.models import TenantSwitch
 from etools.applications.environment.tests.factories import TenantSwitchFactory
+from etools.applications.field_monitoring.data_collection.models import StartedChecklist
 from etools.applications.field_monitoring.data_collection.tests.factories import (
     ActivityQuestionFactory,
     StartedChecklistFactory,
@@ -219,3 +220,74 @@ class MonitoringActivityOfflineBlueprintsSyncTestCase(APIViewSetTestCase, BaseTe
         update_mock.reset_mock()
         activity.team_members.remove(activity.team_members.first())
         update_mock.assert_called()
+
+
+class MonitoringActivityOfflineValuesTestCase(APIViewSetTestCase, BaseTenantTestCase):
+    base_view = 'field_monitoring_data_collection:activities'
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.fm_user = UserFactory(first_name='Field Monitoring User', fm_user=True, is_staff=True,
+                                  profile__countries_available=[connection.tenant])
+
+        cls.user = None
+        cls.partner = PartnerFactory()
+        cls.activity = MonitoringActivityFactory(status='data_collection', partners=[cls.partner])
+        cls.method = MethodFactory(use_information_source=True)
+        cls.activity_question = ActivityQuestionFactory(
+            monitoring_activity=cls.activity, is_enabled=True, partner=cls.partner,
+            question__methods=[cls.method], question__answer_type='text'
+        )
+
+    def get_detail_args(self, instance):
+        return [instance.pk, self.method.pk]
+
+    @patch('etools.applications.offline.fields.files.download_remote_attachment.delay')
+    def test_checklist_saving(self, download_mock):
+        response = self.make_detail_request(
+            None, self.activity, method='post', action='offline',
+            QUERY_STRING='user={}'.format(self.fm_user.email),
+            data={
+                'information_source': {'name': 'Doctors'},
+                'partner': {
+                    str(self.partner.id): {
+                        'overall': 'overall',
+                        'attachments': [
+                            {
+                                'attachment': 'http://example.com',
+                                'file_type': AttachmentFileTypeFactory(code='fm_common').id
+                            }
+                        ],
+                        'questions': {
+                            str(self.activity_question.question_id): 'Question answer'
+                        }
+                    }
+                }
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(
+            StartedChecklist.objects.filter(
+                author=self.fm_user, monitoring_activity=self.activity, method=self.method
+            ).exists()
+        )
+        download_mock.assert_called()
+        self.assertIn('http://example.com', download_mock.call_args_list[0][0])
+
+    def test_checklist_form_error(self):
+        response = self.make_detail_request(
+            None, self.activity, method='post', action='offline',
+            QUERY_STRING='user={}'.format(self.fm_user.email),
+            data={'information_source': {}, 'partner': {}}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertDictEqual(
+            response.data,
+            {
+                'information_source': {'name': ['This field is required']},
+                'partner': {str(self.partner.pk): ['This field is required']}
+            }
+        )

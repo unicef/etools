@@ -6,6 +6,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from unicef_attachments.models import Attachment
 from unicef_restlib.views import NestedViewSetMixin
@@ -69,7 +70,11 @@ class ActivityDataCollectionViewSet(
 
         return super().get_queryset()
 
-    @action(detail=True, url_path=r'offline/(?P<method_pk>\d+)', url_name='offline')
+    # todo: change permission_classes to something else to filter out non-offline backend calls
+    @action(
+        detail=True, methods=['POST'], url_path=r'offline/(?P<method_pk>\d+)', url_name='offline',
+        permission_classes=[AllowAny],
+    )
     def offline(self, request, *args, method_pk=None, **kwargs):
         method = get_object_or_404(Method.objects, pk=method_pk)
         user_email = self.request.query_params.get('user', '')
