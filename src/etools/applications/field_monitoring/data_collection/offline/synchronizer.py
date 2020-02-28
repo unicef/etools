@@ -24,7 +24,7 @@ class MonitoringActivityOfflineSynchronizer:
     """
     # todo: move external api calls into celery tasks for better stability & speed improvement
 
-    def __init__(self, activity: MonitoringActivity):
+    def __init__(self, activity: 'MonitoringActivity'):
         self.activity = activity
         self.enabled = not tenant_switch_is_active('fm_offline_sync_disabled')
 

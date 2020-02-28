@@ -1,7 +1,11 @@
+from django.db import connection
+from mock import patch
 from rest_framework import status
 
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.environment.models import TenantSwitch
+from etools.applications.environment.tests.factories import TenantSwitchFactory
 from etools.applications.field_monitoring.data_collection.tests.factories import (
     ActivityQuestionFactory,
     StartedChecklistFactory,
@@ -12,6 +16,7 @@ from etools.applications.field_monitoring.planning.tests.factories import Monito
 from etools.applications.field_monitoring.tests.base import APIViewSetTestCase
 from etools.applications.field_monitoring.tests.factories import UserFactory
 from etools.applications.partners.tests.factories import PartnerFactory
+from etools.applications.tpm.tests.factories import TPMPartnerFactory, TPMPartnerStaffMemberFactory
 
 
 class ChecklistBlueprintViewTestCase(APIViewSetTestCase, BaseTenantTestCase):
@@ -117,3 +122,100 @@ class ChecklistBlueprintViewTestCase(APIViewSetTestCase, BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertDictEqual(response.data, {'partner': ['This field is required']})
+
+
+class MonitoringActivityOfflineBlueprintsSyncTestCase(APIViewSetTestCase, BaseTenantTestCase):
+    base_view = 'field_monitoring_planning:activities'
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.fm_user = UserFactory(first_name='Field Monitoring User', fm_user=True, is_staff=True,
+                                  profile__countries_available=[connection.tenant])
+
+    def setUp(self):
+        super().setUp()
+        TenantSwitch.get("fm_offline_sync_disabled").flush()
+
+    @patch('etools.applications.field_monitoring.data_collection.offline.synchronizer.OfflineCollect.add')
+    def test_blueprints_sent_on_tpm_data_collection(self, add_mock):
+        tpm_partner = TPMPartnerFactory()
+        person_responsible = TPMPartnerStaffMemberFactory(tpm_partner=tpm_partner).user
+        activity = MonitoringActivityFactory(
+            status='assigned', partners=[PartnerFactory()], monitor_type='tpm', tpm_partner=tpm_partner,
+            person_responsible=person_responsible, team_members=[person_responsible]
+        )
+        ActivityQuestionFactory(monitoring_activity=activity, is_enabled=True, question__methods=[MethodFactory()])
+
+        add_mock.reset_mock()
+        self._test_update(
+            activity.person_responsible, activity,
+            {'status': 'data_collection'}
+        )
+        add_mock.assert_called()
+
+    @patch('etools.applications.field_monitoring.data_collection.offline.synchronizer.OfflineCollect.add')
+    def test_blueprints_sent_on_staff_assignment(self, add_mock):
+        activity = MonitoringActivityFactory(status='pre_assigned', partners=[PartnerFactory()])
+        ActivityQuestionFactory(monitoring_activity=activity, is_enabled=True, question__methods=[MethodFactory()])
+
+        add_mock.reset_mock()
+        self._test_update(self.fm_user, activity, {'status': 'assigned'})
+        add_mock.assert_called()
+
+    @patch('etools.applications.field_monitoring.data_collection.offline.synchronizer.OfflineCollect.add')
+    def test_tenant_switch_missing(self, add_mock):
+        activity = MonitoringActivityFactory(status='pre_assigned', partners=[PartnerFactory()])
+        ActivityQuestionFactory(monitoring_activity=activity, is_enabled=True, question__methods=[MethodFactory()])
+
+        add_mock.reset_mock()
+        self._test_update(self.fm_user, activity, {'status': 'assigned'})
+        add_mock.assert_called()
+
+    @patch('etools.applications.field_monitoring.data_collection.offline.synchronizer.OfflineCollect.add')
+    def test_tenant_switch_enabled(self, add_mock):
+        TenantSwitchFactory(name="fm_offline_sync_disabled", countries=[connection.tenant], active=True)
+        activity = MonitoringActivityFactory(status='pre_assigned', partners=[PartnerFactory()])
+        ActivityQuestionFactory(monitoring_activity=activity, is_enabled=True, question__methods=[MethodFactory()])
+
+        add_mock.reset_mock()
+        self._test_update(self.fm_user, activity, {'status': 'assigned'})
+        add_mock.assert_not_called()
+
+    @patch('etools.applications.field_monitoring.data_collection.offline.synchronizer.OfflineCollect.add')
+    def test_tenant_switch_disabled(self, add_mock):
+        TenantSwitchFactory(name="fm_offline_sync_disabled", countries=[connection.tenant], active=False)
+        activity = MonitoringActivityFactory(status='pre_assigned', partners=[PartnerFactory()])
+        ActivityQuestionFactory(monitoring_activity=activity, is_enabled=True, question__methods=[MethodFactory()])
+
+        add_mock.reset_mock()
+        self._test_update(self.fm_user, activity, {'status': 'assigned'})
+        add_mock.assert_called()
+
+    @patch('etools.applications.field_monitoring.data_collection.offline.synchronizer.OfflineCollect.update')
+    def test_blueprint_updated_on_person_responsible_change(self, update_mock):
+        activity = MonitoringActivityFactory(status='data_collection', partners=[PartnerFactory()])
+        ActivityQuestionFactory(monitoring_activity=activity, is_enabled=True, question__methods=[MethodFactory()])
+
+        update_mock.reset_mock()
+        activity.person_responsible = UserFactory()
+        activity.save()
+        update_mock.assert_called()
+
+    @patch('etools.applications.field_monitoring.data_collection.offline.synchronizer.OfflineCollect.update')
+    def test_blueprint_updated_on_team_member_add(self, update_mock):
+        activity = MonitoringActivityFactory(status='data_collection', partners=[PartnerFactory()])
+        ActivityQuestionFactory(monitoring_activity=activity, is_enabled=True, question__methods=[MethodFactory()])
+
+        update_mock.reset_mock()
+        activity.team_members.add(UserFactory())
+        update_mock.assert_called()
+
+    @patch('etools.applications.field_monitoring.data_collection.offline.synchronizer.OfflineCollect.update')
+    def test_blueprint_updated_on_team_member_remove(self, update_mock):
+        activity = MonitoringActivityFactory(status='data_collection', partners=[PartnerFactory()])
+        ActivityQuestionFactory(monitoring_activity=activity, is_enabled=True, question__methods=[MethodFactory()])
+
+        update_mock.reset_mock()
+        activity.team_members.remove(activity.team_members.first())
+        update_mock.assert_called()

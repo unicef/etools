@@ -17,7 +17,7 @@ def create_base_question_template(instance, created, **kwargs):
 @receiver(m2m_changed, sender=MonitoringActivity.team_members.through)
 def update_blueprints_visibility_on_team_members_change(sender, instance, action, reverse, pk_set, *args, **kwargs):
     if instance.status == MonitoringActivity.STATUSES.data_collection \
-            and action in ['post_add', 'post_delete']:
+            and action in ['post_add', 'post_remove']:
         MonitoringActivityOfflineSynchronizer(instance).update_data_collectors_list()
 
 

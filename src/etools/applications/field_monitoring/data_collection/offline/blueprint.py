@@ -29,12 +29,12 @@ answer_type_to_field_mapping = {
 }
 
 
-def get_blueprint_code(activity: MonitoringActivity, method: Method) -> str:
+def get_blueprint_code(activity: 'MonitoringActivity', method: 'Method') -> str:
     country_code = connection.tenant.schema_name or ''
     return f'fm_{country_code}_{activity.id}_{method.id}'
 
 
-def get_blueprint_for_activity_and_method(activity: MonitoringActivity, method: Method) -> Blueprint:
+def get_blueprint_for_activity_and_method(activity: 'MonitoringActivity', method: 'Method') -> Blueprint:
     blueprint = Blueprint(
         get_blueprint_code(activity, method),
         '{} for {}'.format(method.name, activity.reference_number),
@@ -83,7 +83,7 @@ def get_blueprint_for_activity_and_method(activity: MonitoringActivity, method: 
                 ]:
                     options_key = 'question_{}'.format(question.question.id)
                     blueprint.metadata.options[options_key] = LocalPairsOptions(
-                        question.question.options.values_list('value', 'label')
+                        list(question.question.options.values_list('value', 'label'))
                     )
                 else:
                     options_key = None
@@ -103,7 +103,7 @@ def get_blueprint_for_activity_and_method(activity: MonitoringActivity, method: 
             blueprint.add(level_block)
 
     blueprint.metadata.options['target_attachments_file_types'] = LocalPairsOptions(
-        FileType.objects.filter(code='fm_common').values_list('id', 'label')
+        list(FileType.objects.filter(code='fm_common').values_list('id', 'label'))
     )
 
     return blueprint
