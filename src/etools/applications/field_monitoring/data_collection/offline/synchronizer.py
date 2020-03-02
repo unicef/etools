@@ -26,7 +26,7 @@ class MonitoringActivityOfflineSynchronizer:
 
     def __init__(self, activity: 'MonitoringActivity'):
         self.activity = activity
-        self.enabled = not tenant_switch_is_active('fm_offline_sync_disabled')
+        self.enabled = not tenant_switch_is_active('fm_offline_sync_disabled') and settings.ETOOLS_OFFLINE_API
 
     def _get_data_collectors(self) -> List[str]:
         data_collectors = [self.activity.person_responsible.email]
