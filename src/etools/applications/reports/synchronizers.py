@@ -160,18 +160,22 @@ class ResultStructureSynchronizer:
         # update / add new cps
         total_cps = self.update_cps()
         cps = 'CPs updated: Total {}, Updated {}, New {}'.format(*total_cps)
+        print(cps)
 
         # update / add new Outcomes
         total_outcomes = self.update_outcomes()
         outcomes = 'Outcomes updated: Total {}, Updated {}, New {}'.format(*total_outcomes)
+        print(outcomes)
 
         # update / add new Outputs
         total_outputs = self.update_outputs()
         outputs = 'Outputs updated: Total {}, Updated {}, New {}'.format(*total_outputs)
+        print(outputs)
 
         # update / add new Activities
         total_activities = self.update_activities()
         activities = 'Activities updated: Total {}, Updated {}, New {}'.format(*total_activities)
+        print(activities)
 
         return {
             'details': '\n'.join([cps, outcomes, outputs, activities]),
@@ -320,17 +324,17 @@ class ProgrammeSynchronizer(VisionDataTenantSynchronizer):
 
 
 class RAMSynchronizer(VisionDataTenantSynchronizer):
-    ENDPOINT = 'GetRAMInfo_JSON'
+    ENDPOINT = 'ramindicators'
     REQUIRED_KEYS = (
         "INDICATOR_DESCRIPTION",
         "INDICATOR_CODE",
         "WBS_ELEMENT_CODE",
         "BASELINE",
-        "TARGET",
+        "INDICATOR_TARGET",
     )
 
     def _convert_records(self, records):
-        return json.loads(records)
+        return records['ROWSET']['ROW']
 
     def _save_records(self, records):
         processed = self.process_indicators(records)

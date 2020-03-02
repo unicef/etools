@@ -292,7 +292,7 @@ class DirectCashTransferSynchronizer(VisionDataTenantSynchronizer):
 
     model = PartnerOrganization
 
-    ENDPOINT = 'GetDCTInfo_json'
+    ENDPOINT = 'dcts'
     UNIQUE_KEY = 'VENDOR_CODE'
 
     REQUIRED_KEYS = (
@@ -335,7 +335,7 @@ class DirectCashTransferSynchronizer(VisionDataTenantSynchronizer):
             if vendor_code not in dcts:
                 dcts[vendor_code] = {key: 0 for key, value in self.MAPPING.items()}
             for key, value in self.MAPPING.items():
-                dcts[vendor_code][key] += record[value]
+                dcts[vendor_code][key] += float(record[value])
         return dcts
 
     @transaction.atomic
@@ -356,7 +356,7 @@ class DirectCashTransferSynchronizer(VisionDataTenantSynchronizer):
         return processed
 
     def _convert_records(self, records):
-        return json.loads(records)
+        return records["ROWSET"]["ROW"]
 
     def _save_records(self, records):
         filtered_records = self._filter_records(records)

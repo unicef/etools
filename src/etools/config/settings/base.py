@@ -471,12 +471,12 @@ SLACK_URL = get_from_secrets_or_env('SLACK_URL')
 TASK_ADMIN_USER = get_from_secrets_or_env('TASK_ADMIN_USER', 'etools_task_admin@unicef.org')
 
 VISION_LOGGER_MODEL = "vision.VisionSyncLog"
-VISION_URL = get_from_secrets_or_env('VISION_URL', 'https://unibiapitest.azure-api.net/biapi/v1/')
+VISION_URL = get_from_secrets_or_env('VISION_URL', 'no_url')
 VISION_USER = get_from_secrets_or_env('VISION_USER', 'invalid_vision_user')
 VISION_PASSWORD = get_from_secrets_or_env('VISION_PASSWORD', 'invalid_vision_password')
 
-INSIGHT_SUB_KEY = get_from_secrets_or_env('INSIGHT_SUB_KEY', '974e13d4b7564595b1fbd44d7851cba2')
-INSIGHT_URL = get_from_secrets_or_env('INSIGHT_URL', 'https://unibiapitest.azure-api.net/biapi/v1/')
+INSIGHT_SUB_KEY = get_from_secrets_or_env('INSIGHT_SUB_KEY', 'invalid_key')
+INSIGHT_URL = get_from_secrets_or_env('INSIGHT_URL', 'invalid_url')
 
 
 # ALLOW BASIC AUTH FOR DEMO SITE

@@ -23,7 +23,7 @@ class FundReservationsSynchronizer(VisionDataTenantSynchronizer):
     # synchronizer
     DELEGATED = False
 
-    ENDPOINT = 'GetFundsReservationInfo_JSON'
+    ENDPOINT = 'fundsreservations'
     REQUIRED_NON_NULL_VALUE_KEYS = (
         "VENDOR_CODE",
         "FR_NUMBER",
@@ -36,7 +36,7 @@ class FundReservationsSynchronizer(VisionDataTenantSynchronizer):
         "WBS_ELEMENT",
         "DUE_DATE",
         "FUND",
-        "GRANT_NBR",
+        "GRANT_REF",
     )
     REQUIRED_KEYS = (
         "VENDOR_CODE",
@@ -49,7 +49,7 @@ class FundReservationsSynchronizer(VisionDataTenantSynchronizer):
         "FR_END_DATE",
         "LINE_ITEM",
         "WBS_ELEMENT",
-        "GRANT_NBR",
+        "GRANT_REF",
         "FUND",
         "OVERALL_AMOUNT",
         "OVERALL_AMOUNT_DC",
@@ -75,7 +75,7 @@ class FundReservationsSynchronizer(VisionDataTenantSynchronizer):
         "end_date": "FR_END_DATE",
         "line_item": "LINE_ITEM",
         "wbs": "WBS_ELEMENT",
-        "grant_number": "GRANT_NBR",
+        "grant_number": "GRANT_REF",
         "donor": "DONOR_NAME",
         "donor_code": "DONOR_CODE",
         "fund": "FUND",
@@ -97,7 +97,7 @@ class FundReservationsSynchronizer(VisionDataTenantSynchronizer):
                      "CURRENT_FR_AMOUNT", "ACTUAL_CASH_TRANSFER", "OUTSTANDING_DCT",
                      'ACTUAL_CASH_TRANSFER_DC', 'OUTSTANDING_DCT_DC', 'MULTI_CURR_FLAG', "COMPLETED_FLAG"]
 
-    LINE_ITEM_FIELDS = ['LINE_ITEM', 'FR_NUMBER', 'WBS_ELEMENT', 'GRANT_NBR',
+    LINE_ITEM_FIELDS = ['LINE_ITEM', 'FR_NUMBER', 'WBS_ELEMENT', 'GRANT_REF',
                         'FUND', 'OVERALL_AMOUNT', 'OVERALL_AMOUNT_DC',
                         'DUE_DATE', 'FR_LINE_ITEM_TEXT', 'DONOR_NAME', 'DONOR_CODE']
 
@@ -121,7 +121,7 @@ class FundReservationsSynchronizer(VisionDataTenantSynchronizer):
         # Since our counterparts are unable to return json for the json endpoints in case of 400+ or 500+ we should
         # catch known errors
         try:
-            json_records = json.loads(records)["ROWSET"]["ROW"]
+            json_records = records["ROWSET"]["ROW"]
         except json.decoder.JSONDecodeError:
             if "No data exists" in records:
                 raise VisionException("Vision error 400: No data could be found")
@@ -141,11 +141,6 @@ class FundReservationsSynchronizer(VisionDataTenantSynchronizer):
             self.fr_headers[item.fr_number] = item
 
     def _filter_records(self, records):
-        if "ROWSET" in records:
-            records = records["ROWSET"]
-        if "ROW" in records:
-            records = records["ROW"]
-
         def bad_record(record):
             # We don't care about FRs without expenditure
             if not record['OVERALL_AMOUNT']:
@@ -309,7 +304,7 @@ class DelegatedFundReservationsSynchronizer(FundReservationsSynchronizer, Manual
 
 class FundCommitmentSynchronizer(VisionDataTenantSynchronizer):
 
-    ENDPOINT = 'GetFundsCommitmentInfo_JSON'
+    ENDPOINT = 'fundscommitments'
     REQUIRED_KEYS = (
         "VENDOR_CODE",
         "FC_NUMBER",
@@ -321,7 +316,7 @@ class FundCommitmentSynchronizer(VisionDataTenantSynchronizer):
         "RESP_PERSON",
         "LINE_ITEM",
         "WBS_ELEMENT",
-        "GRANT_NBR",
+        "GRANT_REF",
         "FUND",
         "GL_ACCOUNT",
         "DUE_DATE",
@@ -342,7 +337,7 @@ class FundCommitmentSynchronizer(VisionDataTenantSynchronizer):
         "responsible_person": "RESP_PERSON",
         "line_item": "LINE_ITEM",
         "wbs": "WBS_ELEMENT",
-        "grant_number": "GRANT_NBR",
+        "grant_number": "GRANT_REF",
         "fund": "FUND",
         "gl_account": "GL_ACCOUNT",
         "due_date": "DUE_DATE",
@@ -357,7 +352,7 @@ class FundCommitmentSynchronizer(VisionDataTenantSynchronizer):
                      'FR_TYPE', 'CURRENCY', 'FC_DOCUMENT_TEXT',
                      'EXCHANGE_RATE', 'RESP_PERSON']
 
-    LINE_ITEM_FIELDS = ['LINE_ITEM', 'WBS_ELEMENT', 'GRANT_NBR', 'FC_NUMBER', 'FR_NUMBER',
+    LINE_ITEM_FIELDS = ['LINE_ITEM', 'WBS_ELEMENT', 'GRANT_REF', 'FC_NUMBER', 'FR_NUMBER',
                         'FUND', 'DUE_DATE', 'COMMITMENT_AMOUNT_USD', 'COMMITMENT_AMOUNT_DC', 'AMOUNT_CHANGED',
                         'FC_LINE_ITEM_TEXT']
 
@@ -371,14 +366,13 @@ class FundCommitmentSynchronizer(VisionDataTenantSynchronizer):
         super().__init__(*args, **kwargs)
 
     def _convert_records(self, records):
-        return json.loads(records)
+        return records["ROWSET"]["ROW"]
 
     def map_header_objects(self, qs):
         for item in qs:
             self.fc_headers[item.fc_number] = item
 
     def _filter_records(self, records):
-        records = records["ROWSET"]["ROW"]
         records = super()._filter_records(records)
 
         def bad_record(record):
@@ -387,6 +381,8 @@ class FundCommitmentSynchronizer(VisionDataTenantSynchronizer):
                 return False
             if not record['FC_NUMBER']:
                 return False
+            if not record['FR_NUMBER']:
+                return False
             return True
 
         return [rec for rec in records if bad_record(rec)]
@@ -394,7 +390,7 @@ class FundCommitmentSynchronizer(VisionDataTenantSynchronizer):
     @staticmethod
     def get_value_for_field(field, value):
         if field in ['document_date', 'due_date']:
-            return datetime.datetime.strptime(value, '%d-%b-%y').date()
+            return datetime.datetime.strptime(value, '%d-%b-%y').date() if value else None
 
         if field in ['commitment_amount', 'commitment_amount_dc', 'amount_changed']:
             return Decimal(value.replace(",", ""))
