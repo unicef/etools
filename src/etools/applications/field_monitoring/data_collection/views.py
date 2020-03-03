@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.db import connection
 from django.db.models import Prefetch
 from django.utils.translation import ugettext_lazy as _
 
@@ -51,6 +52,7 @@ from etools.applications.field_monitoring.views import (
 )
 from etools.applications.offline.errors import ValidationError
 from etools.applications.partners.views.helpers import set_tenant_or_fail
+from etools.applications.users.models import Country
 
 User = get_user_model()
 
@@ -71,9 +73,24 @@ class ActivityDataCollectionViewSet(
     def offline(self, request, *args, method_pk=None, **kwargs):
         workspace = self.request.query_params.get('workspace', None)
         if workspace:
-            set_tenant_or_fail(workspace)
+            try:
+                # similar to set_tenant_or_fail but use schema_name to find country
+                ws = Country.objects.exclude(name__in=['Global']).get(schema_name=workspace)
+            except Country.DoesNotExist:
+                raise Response(
+                    status=status.HTTP_400_BAD_REQUEST,
+                    data={
+                        'non_field_errors': 'Workspace code provided is not '
+                                            'a valid business_area_code: {}'.format(workspace)
+                    }
+                )
+            else:
+                connection.set_tenant(ws)
         else:
-            return Response(status=status.HTTP_400_BAD_REQUEST, data={'non_field_errors': 'workspace not provided'})
+            return Response(
+                status=status.HTTP_400_BAD_REQUEST,
+                data={'non_field_errors': 'Workspace is required as a queryparam'}
+            )
 
         method = get_object_or_404(Method.objects, pk=method_pk)
         user_email = self.request.query_params.get('user', '')

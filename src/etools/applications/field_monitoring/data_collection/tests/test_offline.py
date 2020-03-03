@@ -277,7 +277,7 @@ class MonitoringActivityOfflineValuesTestCase(APIViewSetTestCase, BaseTenantTest
     @patch('etools.applications.offline.fields.files.download_remote_attachment.delay')
     def test_checklist_saving(self, download_mock):
         file_type = AttachmentFileTypeFactory(code='fm_common').id
-        schema_name = connection.tenant.business_area_code
+        schema_name = connection.tenant.schema_name
 
         connection.set_schema_to_public()
 
