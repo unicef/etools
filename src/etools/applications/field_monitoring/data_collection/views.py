@@ -51,7 +51,6 @@ from etools.applications.field_monitoring.views import (
     LinkedAttachmentsViewSet,
 )
 from etools.applications.offline.errors import ValidationError
-from etools.applications.partners.views.helpers import set_tenant_or_fail
 from etools.applications.users.models import Country
 
 User = get_user_model()
