@@ -474,6 +474,7 @@ class PartnerOrganizationAddView(CreateAPIView):
             return Response({"error": response}, status=status.HTTP_400_BAD_REQUEST)
 
         partner_resp = response["ROWSET"]["ROW"]
+        print(partner_resp)
 
         if PartnerOrganization.objects.filter(
                 vendor_number=partner_resp[PartnerSynchronizer.MAPPING['vendor_number']]).exists():
