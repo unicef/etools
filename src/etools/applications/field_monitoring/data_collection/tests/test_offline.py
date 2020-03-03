@@ -276,9 +276,14 @@ class MonitoringActivityOfflineValuesTestCase(APIViewSetTestCase, BaseTenantTest
     @override_settings(ETOOLS_OFFLINE_API='http://example.com/b/api/remote/blueprint/')
     @patch('etools.applications.offline.fields.files.download_remote_attachment.delay')
     def test_checklist_saving(self, download_mock):
+        file_type = AttachmentFileTypeFactory(code='fm_common').id
+        schema_name = connection.tenant.business_area_code
+
+        connection.set_schema_to_public()
+
         response = self.make_detail_request(
             None, self.activity, method='post', action='offline',
-            QUERY_STRING='user={}'.format(self.fm_user.email),
+            QUERY_STRING='user={}&workspace={}'.format(self.fm_user.email, schema_name),
             data={
                 'information_source': {'name': 'Doctors'},
                 'partner': {
@@ -287,7 +292,7 @@ class MonitoringActivityOfflineValuesTestCase(APIViewSetTestCase, BaseTenantTest
                         'attachments': [
                             {
                                 'attachment': 'http://example.com',
-                                'file_type': AttachmentFileTypeFactory(code='fm_common').id
+                                'file_type': file_type
                             }
                         ],
                         'questions': {

@@ -63,19 +63,18 @@ class ActivityDataCollectionViewSet(
     queryset = MonitoringActivity.objects.all()
     serializer_class = ActivityDataCollectionSerializer
 
-    def get_queryset(self):
-        workspace = self.request.query_params.get('workspace', None)
-        if workspace:
-            set_tenant_or_fail(workspace)
-
-        return super().get_queryset()
-
     # todo: change permission_classes to something else to filter out non-offline backend calls
     @action(
         detail=True, methods=['POST'], url_path=r'offline/(?P<method_pk>\d+)', url_name='offline',
         permission_classes=[AllowAny],
     )
     def offline(self, request, *args, method_pk=None, **kwargs):
+        workspace = self.request.query_params.get('workspace', None)
+        if workspace:
+            set_tenant_or_fail(workspace)
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data={'non_field_errors': 'workspace not provided'})
+
         method = get_object_or_404(Method.objects, pk=method_pk)
         user_email = self.request.query_params.get('user', '')
         user = get_object_or_404(User.objects, email=user_email)
