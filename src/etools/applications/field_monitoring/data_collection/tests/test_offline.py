@@ -315,7 +315,7 @@ class MonitoringActivityOfflineValuesTestCase(APIViewSetTestCase, BaseTenantTest
     def test_checklist_form_error(self):
         response = self.make_detail_request(
             None, self.activity, method='post', action='offline',
-            QUERY_STRING='user={}'.format(self.fm_user.email),
+            QUERY_STRING='user={}&workspace={}'.format(self.fm_user.email, connection.tenant.schema_name),
             data={'information_source': {}, 'partner': {}}
         )
 
