@@ -42,7 +42,7 @@ class TravelActivityAdmin(admin.ModelAdmin):
     search_fields = (
         'primary_traveler__first_name',
         'primary_traveler__last_name',
-        'parnter__name'
+        'partner__name'
     )
     list_display = (
         'primary_traveler',
