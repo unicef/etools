@@ -71,7 +71,9 @@ class ChecklistBlueprintViewTestCase(APIViewSetTestCase, BaseTenantTestCase):
         response = self.make_detail_request(
             self.team_member, self.started_checklist, action='blueprint', method='post',
             data={
-                'information_source': 'Doctors',
+                'information_source': {
+                    'name': 'Doctors',
+                },
                 'partner': {
                     str(partner.id): {
                         'overall': 'overall',
@@ -88,3 +90,30 @@ class ChecklistBlueprintViewTestCase(APIViewSetTestCase, BaseTenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_generated_blueprint_value_accepted_for_saving(self):
+        AttachmentFactory(
+            content_object=self.started_checklist.overall_findings.first(),
+            file_type=AttachmentFileTypeFactory(code='fm_common'),
+            code='attachments'
+        )
+
+        blueprint_response = self.make_detail_request(
+            self.team_member, self.started_checklist, action='blueprint'
+        )
+
+        response = self.make_detail_request(
+            self.team_member, self.started_checklist, action='blueprint', method='post',
+            data=blueprint_response.data['value']
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_save_blueprint_values_error(self):
+        response = self.make_detail_request(
+            self.team_member, self.started_checklist, action='blueprint', method='post',
+            data={'information_source': {'name': 'Doctors'}}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertDictEqual(response.data, {'partner': ['This field is required']})

@@ -19,7 +19,7 @@ from etools.applications.offline.fields.choices import LocalPairsOptions
 answer_type_to_field_mapping = {
     Question.ANSWER_TYPES.text: TextField,
     Question.ANSWER_TYPES.number: FloatField,
-    Question.ANSWER_TYPES.bool: BooleanField,  # todo: we need to check if frontend use booleans instead of text
+    Question.ANSWER_TYPES.bool: BooleanField,
     Question.ANSWER_TYPES.likert_scale: TextField,
 }
 
@@ -32,10 +32,16 @@ def get_blueprint_for_activity_and_method(activity: MonitoringActivity, method: 
         '{} for {}'.format(method.name, activity.reference_number),
     )
     if method.use_information_source:
-        blueprint.add(TextField('information_source', label=_('Source of Information'), extra={'type': ['wide']}))
+        blueprint.add(
+            Group(
+                'information_source',
+                TextField('name', label=_('Source of Information'), styling=['wide']),
+                styling=['card'],
+            )
+        )
 
     for relation, level in activity.RELATIONS_MAPPING:
-        level_block = Group(level, extra={'type': ['abstract']})
+        level_block = Group(level, styling=['abstract'])
 
         for target in getattr(activity, relation).all():
             target_questions = activity.questions.filter(
@@ -48,17 +54,19 @@ def get_blueprint_for_activity_and_method(activity: MonitoringActivity, method: 
             target_block = Group(
                 str(target.id),
                 TextField(
-                    'overall', label=_('Overall Finding'), extra={'type': ['wide', 'additional']}, required=False
+                    'overall', label=_('Overall Finding'), styling=['wide', 'additional'], required=False
                 ),
                 Group(
                     'attachments',
                     UploadedFileField('attachment'),
                     ChoiceField('file_type', options_key='target_attachments_file_types'),
-                    required=False, repeatable=True
+                    required=False, repeatable=True,
+                    styling=['floating_attachments'],
                 ),
-                title=str(target)
+                title=str(target),
+                styling=['card', 'collapse'],
             )
-            questions_block = Group('questions', extra={'type': ['abstract']})
+            questions_block = Group('questions', styling=['abstract'])
             target_block.add(questions_block)
             for question in target_questions.distinct():
                 if question.question.answer_type in [
@@ -77,7 +85,8 @@ def get_blueprint_for_activity_and_method(activity: MonitoringActivity, method: 
                         str(question.question.id),
                         label=question.question.text,
                         options_key=options_key,
-                        help_text=question.specific_details
+                        help_text=question.specific_details,
+                        required=False,
                     )
                 )
             level_block.add(target_block)
