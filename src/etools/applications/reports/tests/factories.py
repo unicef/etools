@@ -37,6 +37,7 @@ class CountryProgrammeFactory(factory.DjangoModelFactory):
 class ResultTypeFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.ResultType
+        django_get_or_create = ('name', )
 
     name = factory.Sequence(lambda n: 'ResultType {}'.format(n))
 

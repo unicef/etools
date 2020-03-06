@@ -20,6 +20,14 @@ from etools.libraries.djangolib.utils import get_environment
 from etools.libraries.fsm.views import has_action_permission
 
 
+class ActionPointManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().prefetch_related('author',
+                                                       'section', 'office', 'location', 'partner',
+                                                       'cp_output__result_type', 'engagement', 'intervention')\
+            .select_related('assigned_to', "assigned_by", "category")
+
+
 class ActionPoint(TimeStampedModel):
     MODULE_CHOICES = Category.MODULE_CHOICES
 
@@ -72,6 +80,9 @@ class ActionPoint(TimeStampedModel):
                                      related_name='action_points', on_delete=models.CASCADE)
     travel_activity = models.ForeignKey('t2f.TravelActivity', verbose_name=_('Travel Activity'), blank=True, null=True,
                                         on_delete=models.CASCADE)
+    monitoring_activity = models.ForeignKey('field_monitoring_planning.MonitoringActivity',
+                                            verbose_name=_('Monitoring Activity'), blank=True, null=True,
+                                            on_delete=models.CASCADE)
     date_of_completion = MonitorField(verbose_name=_('Date Action Point Completed'), null=True, blank=True,
                                       default=None, monitor='status', when=[STATUSES.completed])
     comments = GenericRelation('django_comments.Comment', object_id_field='object_pk')
@@ -84,6 +95,8 @@ class ActionPoint(TimeStampedModel):
     )
     tracker = FieldTracker(fields=['assigned_to', 'reference_number'])
 
+    objects = ActionPointManager()
+
     class Meta:
         ordering = ('id', )
         verbose_name = _('Action Point')
@@ -95,7 +108,9 @@ class ActionPoint(TimeStampedModel):
 
     @property
     def related_object(self):
-        return self.engagement_subclass or self.tpm_activity or self.travel_activity or self.psea_assessment
+        related_object = self.engagement_subclass or self.tpm_activity or self.travel_activity
+        related_object = related_object or self.psea_assessment or self.monitoring_activity
+        return related_object
 
     @property
     def related_object_str(self):
@@ -132,6 +147,8 @@ class ActionPoint(TimeStampedModel):
             return self.MODULE_CHOICES.t2f
         elif self.psea_assessment:
             return self.MODULE_CHOICES.psea
+        elif self.monitoring_activity:
+            return self.MODULE_CHOICES.fm
         return self.MODULE_CHOICES.apd
 
     def get_reference_number(self):

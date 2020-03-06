@@ -133,5 +133,14 @@
       "module": "audit",
       "description": "Other"
     }
+  },
+  {
+    "model": "categories.category",
+    "pk": 16,
+    "fields": {
+      "order": 16,
+      "module": "fm",
+      "description": "Other"
+    }
   }
 ]
