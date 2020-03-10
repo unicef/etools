@@ -23,6 +23,7 @@ class MonitoringActivityOfflineSynchronizer:
     """
     Interface to synchronize MonitoringActivity blueprints with etools offline collect backend.
     """
+
     # todo: move external api calls into celery tasks for better stability & speed improvement
 
     def __init__(self, activity: 'MonitoringActivity'):
@@ -51,17 +52,16 @@ class MonitoringActivityOfflineSynchronizer:
                 "form_title": blueprint.title,
                 "form_instructions": json.dumps(blueprint.to_dict(), indent=2),
                 "accessible_by": self._get_data_collectors(),
-                "api_response_url":
-                    urljoin(
-                        host,
-                        '{}?workspace={}'.format(
-                            reverse(
-                                'field_monitoring_data_collection:activities-offline',
-                                args=[self.activity.id, method.id]
-                            ),
-                            connection.tenant.schema_name or ''
-                        )
+                "api_response_url": urljoin(
+                    host,
+                    '{}?workspace={}'.format(
+                        reverse(
+                            'field_monitoring_data_collection:activities-offline',
+                            args=[self.activity.id, method.id]
+                        ),
+                        connection.tenant.schema_name or ''
                     )
+                )
             })
 
     def update_data_collectors_list(self) -> None:
