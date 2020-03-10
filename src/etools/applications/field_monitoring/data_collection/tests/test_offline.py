@@ -120,11 +120,11 @@ class ChecklistBlueprintViewTestCase(APIViewSetTestCase, BaseTenantTestCase):
     def test_save_blueprint_values_error(self):
         response = self.make_detail_request(
             self.team_member, self.started_checklist, action='blueprint', method='post',
-            data={'information_source': {'name': 'Doctors'}}
+            data={'test': 'value'}
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertDictEqual(response.data, {'partner': ['This field is required']})
+        self.assertDictEqual(response.data, {'information_source': ['This field is required']})
 
 
 class MonitoringActivityOfflineBlueprintsSyncTestCase(APIViewSetTestCase, BaseTenantTestCase):
