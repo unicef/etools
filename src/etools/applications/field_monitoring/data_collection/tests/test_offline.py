@@ -316,7 +316,7 @@ class MonitoringActivityOfflineValuesTestCase(APIViewSetTestCase, BaseTenantTest
         response = self.make_detail_request(
             None, self.activity, method='post', action='offline',
             QUERY_STRING='user={}&workspace={}'.format(self.fm_user.email, connection.tenant.schema_name),
-            data={'information_source': {}, 'partner': {}}
+            data={'information_source': {}}
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -324,6 +324,5 @@ class MonitoringActivityOfflineValuesTestCase(APIViewSetTestCase, BaseTenantTest
             response.data,
             {
                 'information_source': {'name': ['This field is required']},
-                'partner': {str(self.partner.pk): ['This field is required']}
             }
         )

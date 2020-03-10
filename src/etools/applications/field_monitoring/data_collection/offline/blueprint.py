@@ -49,7 +49,7 @@ def get_blueprint_for_activity_and_method(activity: 'MonitoringActivity', method
         )
 
     for relation, level in activity.RELATIONS_MAPPING:
-        level_block = Group(level, styling=['abstract'])
+        level_block = Group(level, styling=['abstract'], required=False)
 
         for target in getattr(activity, relation).all():
             target_questions = activity.questions.filter(
@@ -73,6 +73,7 @@ def get_blueprint_for_activity_and_method(activity: 'MonitoringActivity', method
                 ),
                 title=str(target),
                 styling=['card', 'collapse'],
+                required=False,
             )
             questions_block = Group('questions', styling=['abstract'])
             target_block.add(questions_block)
