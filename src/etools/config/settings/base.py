@@ -193,6 +193,7 @@ SHARED_APPS = (
     'waffle',
     'etools.applications.permissions2',
     'unicef_notification',
+    'etools_offline',
     'etools.applications.offline',
 )
 
@@ -563,3 +564,8 @@ PSEA_ASSESSMENT_FINAL_RECIPIENTS = get_from_secrets_or_env(
 ).split(',')
 
 VISION_REQUESTS_TIMEOUT = get_from_secrets_or_env('VISION_REQUESTS_TIMEOUT', 400)  # in seconds
+
+# Etools offline collect
+# https://github.com/unicef/etools-offline-collect/blob/develop/client/README.md
+ETOOLS_OFFLINE_API = get_from_secrets_or_env('ETOOLS_OFFLINE_API', '')
+ETOOLS_OFFLINE_TOKEN = get_from_secrets_or_env('ETOOLS_OFFLINE_TOKEN', '')

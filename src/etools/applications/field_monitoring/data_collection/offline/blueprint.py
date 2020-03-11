@@ -1,20 +1,25 @@
+from typing import TYPE_CHECKING
+
 from django.db import connection
 from django.utils.translation import ugettext_lazy as _
 
 from unicef_attachments.models import FileType
 
 from etools.applications.field_monitoring.fm_settings.models import Method, Question
-from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.offline.blueprint import Blueprint
 from etools.applications.offline.fields import (
     BooleanField,
     ChoiceField,
     FloatField,
     Group,
+    MixedUploadedRemoteFileField,
     TextField,
-    UploadedFileField,
 )
 from etools.applications.offline.fields.choices import LocalPairsOptions
+
+if TYPE_CHECKING:
+    from etools.applications.field_monitoring.planning.models import MonitoringActivity
+
 
 answer_type_to_field_mapping = {
     Question.ANSWER_TYPES.text: TextField,
@@ -24,11 +29,14 @@ answer_type_to_field_mapping = {
 }
 
 
-def get_blueprint_for_activity_and_method(activity: MonitoringActivity, method: Method) -> Blueprint:
-    country_code = connection.tenant.country_short_code or ''
+def get_blueprint_code(activity: 'MonitoringActivity', method: 'Method') -> str:
+    country_code = connection.tenant.schema_name or ''
+    return f'fm_{country_code}_{activity.id}_{method.id}'
 
+
+def get_blueprint_for_activity_and_method(activity: 'MonitoringActivity', method: 'Method') -> Blueprint:
     blueprint = Blueprint(
-        f'fm_{country_code}_{activity.id}_{method.id}',
+        get_blueprint_code(activity, method),
         '{} for {}'.format(method.name, activity.reference_number),
     )
     if method.use_information_source:
@@ -41,7 +49,7 @@ def get_blueprint_for_activity_and_method(activity: MonitoringActivity, method: 
         )
 
     for relation, level in activity.RELATIONS_MAPPING:
-        level_block = Group(level, styling=['abstract'])
+        level_block = Group(level, styling=['abstract'], required=False)
 
         for target in getattr(activity, relation).all():
             target_questions = activity.questions.filter(
@@ -58,13 +66,14 @@ def get_blueprint_for_activity_and_method(activity: MonitoringActivity, method: 
                 ),
                 Group(
                     'attachments',
-                    UploadedFileField('attachment'),
+                    MixedUploadedRemoteFileField('attachment'),
                     ChoiceField('file_type', options_key='target_attachments_file_types'),
                     required=False, repeatable=True,
                     styling=['floating_attachments'],
                 ),
                 title=str(target),
                 styling=['card', 'collapse'],
+                required=False,
             )
             questions_block = Group('questions', styling=['abstract'])
             target_block.add(questions_block)
@@ -75,7 +84,7 @@ def get_blueprint_for_activity_and_method(activity: MonitoringActivity, method: 
                 ]:
                     options_key = 'question_{}'.format(question.question.id)
                     blueprint.metadata.options[options_key] = LocalPairsOptions(
-                        question.question.options.values_list('value', 'label')
+                        list(question.question.options.values_list('value', 'label'))
                     )
                 else:
                     options_key = None
@@ -95,16 +104,7 @@ def get_blueprint_for_activity_and_method(activity: MonitoringActivity, method: 
             blueprint.add(level_block)
 
     blueprint.metadata.options['target_attachments_file_types'] = LocalPairsOptions(
-        FileType.objects.filter(code='fm_common').values_list('id', 'label')
+        list(FileType.objects.filter(code='fm_common').values_list('id', 'label'))
     )
 
     return blueprint
-
-
-def get_monitoring_activity_blueprints(activity: MonitoringActivity):
-    for method in Method.objects.filter(
-        pk__in=activity.questions.filter(
-            is_enabled=True
-        ).values_list('question__methods', flat=True)
-    ):
-        yield get_blueprint_for_activity_and_method(activity, method)
