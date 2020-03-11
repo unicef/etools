@@ -366,6 +366,7 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.SessionAuthentication',
         'etools.applications.core.auth.EToolsTenantJWTAuthentication',
+        'etools.applications.core.auth.eToolsOLCTokenAuth',
         'etools.applications.core.auth.EtoolsTokenAuthentication',
     ),
     'TEST_REQUEST_RENDERER_CLASSES': (

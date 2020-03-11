@@ -62,7 +62,6 @@ class ActivityDataCollectionViewSet(
     mixins.RetrieveModelMixin,
     viewsets.GenericViewSet,
 ):
-    permission_classes = FMBaseViewSet.permission_classes + [OfflineCollectPermission]
     queryset = MonitoringActivity.objects.all()
     serializer_class = ActivityDataCollectionSerializer
 
