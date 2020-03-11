@@ -6,7 +6,6 @@ from django.contrib.auth.models import Group
 from django.http import HttpResponseRedirect
 
 import jwt
-from rest_framework import exceptions
 from rest_framework.authentication import (
     BasicAuthentication,
     get_authorization_header,
