@@ -4,6 +4,7 @@ from django.db.models import Prefetch
 from django.utils.translation import ugettext_lazy as _
 
 from django_filters.rest_framework import DjangoFilterBackend
+from etools_offline.permissions import OfflineCollectPermission
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
@@ -61,6 +62,7 @@ class ActivityDataCollectionViewSet(
     mixins.RetrieveModelMixin,
     viewsets.GenericViewSet,
 ):
+    permission_classes = FMBaseViewSet.permission_classes + [OfflineCollectPermission]
     queryset = MonitoringActivity.objects.all()
     serializer_class = ActivityDataCollectionSerializer
 
