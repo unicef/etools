@@ -43,6 +43,7 @@ from etools.applications.field_monitoring.planning.models import (
     YearPlan,
 )
 from etools.applications.field_monitoring.planning.serializers import (
+    CPOutputListSerializer,
     FMUserSerializer,
     InterventionWithLinkedInstancesSerializer,
     MonitoringActivityActionPointSerializer,
@@ -54,7 +55,6 @@ from etools.applications.field_monitoring.planning.serializers import (
 from etools.applications.field_monitoring.views import FMBaseViewSet, LinkedAttachmentsViewSet
 from etools.applications.partners.models import Intervention
 from etools.applications.reports.models import Result, ResultType
-from etools.applications.reports.serializers.v2 import MinimalOutputListSerializer
 
 
 class YearPlanViewSet(
@@ -247,7 +247,7 @@ class CPOutputsViewSet(
     filter_backends = (DjangoFilterBackend,)
     filter_class = CPOutputsFilterSet
     queryset = Result.objects.filter(result_type__name=ResultType.OUTPUT).select_related('result_type')
-    serializer_class = MinimalOutputListSerializer
+    serializer_class = CPOutputListSerializer
 
 
 class InterventionsViewSet(
