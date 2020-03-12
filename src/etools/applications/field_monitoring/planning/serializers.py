@@ -184,6 +184,11 @@ class FMUserSerializer(MinimalUserSerializer):
         return 'staff' if obj.is_staff else 'tpm'
 
 
+class CPOutputListSerializer(MinimalOutputListSerializer):
+    class Meta(MinimalOutputListSerializer.Meta):
+        fields = MinimalOutputListSerializer.Meta.fields + ('parent',)
+
+
 class InterventionWithLinkedInstancesSerializer(FMInterventionListSerializer):
     partner = serializers.ReadOnlyField(source='agreement.partner_id')
     cp_outputs = serializers.SerializerMethodField()
