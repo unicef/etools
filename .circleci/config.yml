@@ -103,8 +103,18 @@ jobs:
           name: Pushing to Docker Hub
           command: |
             TAG=${CIRCLE_BRANCH}
+            BASE_TAG="$(md5sum Pipfile.lock | cut -c1-6)$(md5sum Dockerfile-base | cut -c1-6)"
             docker login -u $DOCKER_USER -p $DOCKER_PASS
             docker push unicef/etools:$TAG
+            if (echo "develop" | grep -q "$CIRCLE_BRANCH"); then
+              docker tag unicef/etools-base:$BASE_TAG unicef/etools-base:latest
+              docker push unicef/etools-base:latest
+            elif (echo "master" | grep -q "$CIRCLE_BRANCH"); then
+              docker tag unicef/etools-base:$BASE_TAG unicef/etools-base:latest_prod
+              docker push unicef/etools-base:latest_prod
+            else
+              echo "Not a followed branch not pushing latest"
+            fi
       - run:
           name: trigger redeploy?
           command: |

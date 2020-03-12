@@ -14,7 +14,7 @@ def tpm_partner_is_assigned_for_tpm_activity(i):
 
 def at_least_one_item_added(i):
     if not any([i.partners.exists(), i.interventions.exists(), i.cp_outputs.exists()]):
-        raise StateValidationError([_('At least one partner/pdssfa/output should be added.')])
+        raise StateValidationError([_('At least one Partner, CP Output, or PD/SSFA should be added')])
     return True
 
 
@@ -38,7 +38,7 @@ def report_reject_reason_provided(i, old_status):
 
 def activity_questions_required(i):
     if not i.questions.filter(is_enabled=True).exists():
-        raise StateValidationError([_('At least one question shoud be enabled.')])
+        raise StateValidationError([_('At least one question should be enabled.')])
     return True
 
 

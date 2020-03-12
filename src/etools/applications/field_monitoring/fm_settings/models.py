@@ -101,7 +101,7 @@ class Question(models.Model):
     answer_type = models.CharField(max_length=15, choices=ANSWER_TYPES, verbose_name=_('Answer Type'))
     choices_size = models.PositiveSmallIntegerField(verbose_name=_('Choices Size'), null=True, blank=True)
     level = models.CharField(max_length=15, choices=LEVELS, verbose_name=_('Level'))
-    methods = models.ManyToManyField(Method, blank=True, verbose_name=_('Methods'))
+    methods = models.ManyToManyField(Method, verbose_name=_('Methods'))
     category = models.ForeignKey(Category, on_delete=models.CASCADE, verbose_name=_('Category'))
     sections = models.ManyToManyField(Section, verbose_name=_('Sections'), blank=True)
     text = models.TextField(verbose_name=_('Question Text'))
