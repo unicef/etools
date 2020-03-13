@@ -70,7 +70,7 @@ class ActivityDataCollectionViewSet(
         permission_classes=[AllowAny],
     )
     def offline(self, request, *args, method_pk=None, **kwargs):
-        workspace = self.request.query_params.get('workspace', None)
+        workspace = request.query_params.get('workspace', None)
         if workspace:
             try:
                 # similar to set_tenant_or_fail but use schema_name to find country
