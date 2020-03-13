@@ -287,7 +287,7 @@ class MonitoringActivityOfflineValuesTestCase(APIViewSetTestCase, BaseTenantTest
             data={
                 'information_source': {'name': 'Doctors'},
                 'partner': {
-                    str(self.partner.id): {
+                    self.partner.id: {
                         'overall': 'overall',
                         'attachments': [
                             {
