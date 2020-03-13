@@ -1,5 +1,6 @@
 from typing import Any
 
+from django.db import connection
 from django.utils.translation import ugettext_lazy as _
 
 from unicef_attachments.models import Attachment
@@ -34,7 +35,7 @@ class UploadedFileField(FileField):
 
 def _get_remote_attachment(value: str) -> Attachment:
     attachment = Attachment.objects.create(hyperlink=value)
-    download_remote_attachment.delay(attachment.id, value)
+    download_remote_attachment.delay(connection.tenant.schema_name, attachment.id, value)
     return attachment
 
 

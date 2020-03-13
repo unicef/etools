@@ -79,8 +79,7 @@ class ActivityDataCollectionViewSet(
                 raise Response(
                     status=status.HTTP_400_BAD_REQUEST,
                     data={
-                        'non_field_errors': 'Workspace code provided is not '
-                                            'a valid business_area_code: {}'.format(workspace)
+                        'non_field_errors': [f'Workspace code provided is not a valid business_area_code: {workspace}']
                     }
                 )
             else:
@@ -88,12 +87,23 @@ class ActivityDataCollectionViewSet(
         else:
             return Response(
                 status=status.HTTP_400_BAD_REQUEST,
-                data={'non_field_errors': 'Workspace is required as a queryparam'}
+                data={'non_field_errors': ['Workspace is required']}
             )
 
-        method = get_object_or_404(Method.objects, pk=method_pk)
-        user_email = self.request.query_params.get('user', '')
+        user_email = request.query_params.get('user', '')
+        if not user_email:
+            user_email = request.data.get('user', '')
+
+        if not user_email:
+            return Response(
+                status=status.HTTP_400_BAD_REQUEST,
+                data={'non_field_errors': ['User is required']}
+            )
+
         user = get_object_or_404(User.objects, email=user_email)
+
+        method = get_object_or_404(Method.objects, pk=method_pk)
+
         try:
             create_checklist(self.get_object(), method, user, request.data)
         except ValidationError as ex:
