@@ -19,6 +19,7 @@ from etools.applications.offline.fields import (
     ChoiceField,
     FloatField,
     IntegerField,
+    MixedUploadedRemoteFileField,
     RemoteFileField,
     TextField,
     UploadedFileField,
@@ -162,5 +163,21 @@ class TestRemoteFileField(BaseTenantTestCase):
     @patch('etools.applications.offline.fields.files.download_remote_attachment.delay')
     def test_process(self, download_mock):
         attachment = RemoteFileField('test').validate('some-url', Metadata())
+        self.assertIsInstance(attachment, Attachment)
+        download_mock.assert_called()
+
+
+class TestMixedUploadedRemoteFileField(BaseTenantTestCase):
+    def test_existing_attachment(self):
+        attachment = AttachmentFactory()
+        self.assertEqual(attachment, MixedUploadedRemoteFileField('test').validate(attachment.id, Metadata()))
+
+    def test_not_existing_attachment(self):
+        with self.assertRaises(ValidationError):
+            MixedUploadedRemoteFileField('test').validate(-1, Metadata())
+
+    @patch('etools.applications.offline.fields.files.download_remote_attachment.delay')
+    def test_process(self, download_mock):
+        attachment = MixedUploadedRemoteFileField('test').validate('http://some-url', Metadata())
         self.assertIsInstance(attachment, Attachment)
         download_mock.assert_called()

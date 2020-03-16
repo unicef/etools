@@ -6,7 +6,7 @@ from unicef_restlib.routers import NestedComplexRouter
 from etools.applications.field_monitoring.data_collection import views
 
 root_api = routers.SimpleRouter()
-root_api.register(r'activities', views.ActivityDataCollectionViewSet, basename='methods')
+root_api.register(r'activities', views.ActivityDataCollectionViewSet, basename='activities')
 
 activities_api = NestedComplexRouter(root_api, r'activities', lookup='monitoring_activity')
 activities_api.register(r'attachments', views.ActivityReportAttachmentsViewSet, basename='activity-report-attachments')

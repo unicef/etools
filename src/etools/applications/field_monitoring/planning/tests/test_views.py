@@ -264,7 +264,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         person_responsible = TPMUserFactory(tpm_partner=tpm_partner)
         activity = MonitoringActivityFactory(
             monitor_type='tpm', status='assigned',
-            tpm_partner=tpm_partner, person_responsible=person_responsible
+            tpm_partner=tpm_partner, person_responsible=person_responsible, team_members=[person_responsible],
         )
 
         self._test_update(person_responsible, activity, {'status': 'draft', 'reject_reason': 'just because'})

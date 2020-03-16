@@ -100,7 +100,7 @@ class PreAssignedActivityFactory(ReviewActivityFactory):
     field_office = factory.SubFactory(OfficeFactory)
 
 
-class AssignedActivityFactory(ReviewActivityFactory):
+class AssignedActivityFactory(PreAssignedActivityFactory):
     status = MonitoringActivity.STATUSES.assigned
 
 
