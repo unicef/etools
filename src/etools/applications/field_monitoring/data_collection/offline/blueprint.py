@@ -75,7 +75,7 @@ def get_blueprint_for_activity_and_method(activity: 'MonitoringActivity', method
                 styling=['card', 'collapse'],
                 required=False,
             )
-            questions_block = Group('questions', styling=['abstract'])
+            questions_block = Group('questions', styling=['abstract'], required=False)
             target_block.add(questions_block)
             for question in target_questions.distinct():
                 if question.question.answer_type in [

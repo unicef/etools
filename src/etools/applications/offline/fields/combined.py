@@ -25,6 +25,11 @@ class Group(ValidatedStructure):
         if not isinstance(value, dict):
             raise ValueTypeMismatch(value)
 
+        # preprocess value, because keys can be used as numbers, so we we'll be unable to find child value by str name
+        value = {
+            str(key): value for key, value in value.items()
+        }
+
         errors = {}
         for child in self.children:
             if not isinstance(child, ValidatedStructure):

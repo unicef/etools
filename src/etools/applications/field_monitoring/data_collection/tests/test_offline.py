@@ -287,7 +287,7 @@ class MonitoringActivityOfflineValuesTestCase(APIViewSetTestCase, BaseTenantTest
             data={
                 'information_source': {'name': 'Doctors'},
                 'partner': {
-                    str(self.partner.id): {
+                    self.partner.id: {
                         'overall': 'overall',
                         'attachments': [
                             {
@@ -304,12 +304,20 @@ class MonitoringActivityOfflineValuesTestCase(APIViewSetTestCase, BaseTenantTest
         )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertTrue(
-            StartedChecklist.objects.filter(
-                author=self.fm_user, monitoring_activity=self.activity, method=self.method
-            ).exists()
-        )
+
+        checklist = StartedChecklist.objects.filter(
+            author=self.fm_user, monitoring_activity=self.activity, method=self.method
+        ).first()
+        self.assertTrue(bool(checklist))
+
+        # check attachment mapped
+        attachment = checklist.overall_findings.first().attachments.first()
+        self.assertTrue(bool(attachment))
+        self.assertEqual(attachment.uploaded_by, self.fm_user)
+
+        # check correct url called
         download_mock.assert_called()
+        self.assertIn(attachment.id, download_mock.call_args_list[0][0])
         self.assertIn('http://example.com', download_mock.call_args_list[0][0])
 
     def test_checklist_form_error(self):
@@ -326,3 +334,36 @@ class MonitoringActivityOfflineValuesTestCase(APIViewSetTestCase, BaseTenantTest
                 'information_source': {'name': ['This field is required']},
             }
         )
+
+    def test_transaction(self):
+        response = self.make_detail_request(
+            None, self.activity, method='post', action='offline',
+            QUERY_STRING='user={}&workspace={}'.format(self.fm_user.email, connection.tenant.schema_name),
+            data={'information_source': {'name': 'test'}, 'partner': {'-1': {}}}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        self.assertFalse(
+            StartedChecklist.objects.filter(
+                author=self.fm_user, monitoring_activity=self.activity, method=self.method
+            ).exists()
+        )
+
+    def test_workspace_required(self):
+        response = self.make_detail_request(
+            None, self.activity, method='post', action='offline',
+            QUERY_STRING='user={}'.format(self.fm_user.email),
+            data={}
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('non_field_errors', response.data)
+
+    def test_user_required(self):
+        response = self.make_detail_request(
+            None, self.activity, method='post', action='offline',
+            QUERY_STRING='workspace={}'.format(connection.tenant.schema_name),
+            data={}
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('non_field_errors', response.data)
