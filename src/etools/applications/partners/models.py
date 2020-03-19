@@ -1163,6 +1163,13 @@ class Agreement(TimeStampedModel):
         code='partners_agreement',
         blank=True
     )
+    termination_doc = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Termination document for PCAs'),
+        code='partners_agreement_termination_doc',
+        blank=True,
+        null=True
+    )
     start = models.DateField(
         verbose_name=_("Start Date"),
         null=True,
@@ -1320,10 +1327,17 @@ class Agreement(TimeStampedModel):
         pass
 
     @transition(field=status,
+                source=[SIGNED],
+                target=[TERMINATED, SUSPENDED],
+                conditions=[])
+    def transition_to_terminated(self):
+        pass
+
+    @transition(field=status,
                 source=[DRAFT],
                 target=[TERMINATED, SUSPENDED],
                 conditions=[agreements_illegal_transition])
-    def transition_to_terminated(self):
+    def transition_to_terminated_illegal(self):
         pass
 
     @transaction.atomic
