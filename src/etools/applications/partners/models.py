@@ -21,7 +21,10 @@ from unicef_locations.models import Location
 
 from etools.applications.core.permissions import import_permissions
 from etools.applications.funds.models import FundsReservationHeader
-from etools.applications.partners.validation import interventions as intervention_validation
+from etools.applications.partners.validation import (
+    agreements as agreement_validation,
+    interventions as intervention_validation,
+)
 from etools.applications.partners.validation.agreements import (
     agreement_transition_to_ended_valid,
     agreement_transition_to_signed_valid,
@@ -1329,7 +1332,7 @@ class Agreement(TimeStampedModel):
     @transition(field=status,
                 source=[SIGNED],
                 target=[TERMINATED, SUSPENDED],
-                conditions=[])
+                conditions=[agreement_validation.transition_to_terminated])
     def transition_to_terminated(self):
         pass
 
