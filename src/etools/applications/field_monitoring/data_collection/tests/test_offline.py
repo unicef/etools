@@ -270,9 +270,6 @@ class MonitoringActivityOfflineValuesTestCase(APIViewSetTestCase, BaseTenantTest
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
-        cls.fm_user = UserFactory(first_name='Field Monitoring User', fm_user=True, is_staff=True,
-                                  profile__countries_available=[connection.tenant])
-
         cls.user = None
         cls.partner = PartnerFactory()
         cls.activity = MonitoringActivityFactory(status='data_collection', partners=[cls.partner])
@@ -281,6 +278,8 @@ class MonitoringActivityOfflineValuesTestCase(APIViewSetTestCase, BaseTenantTest
             monitoring_activity=cls.activity, is_enabled=True, partner=cls.partner,
             question__methods=[cls.method], question__answer_type='text'
         )
+
+        cls.user = cls.activity.person_responsible
 
     def get_detail_args(self, instance):
         return [instance.pk, self.method.pk]
@@ -295,7 +294,7 @@ class MonitoringActivityOfflineValuesTestCase(APIViewSetTestCase, BaseTenantTest
 
         response = self.make_detail_request(
             None, self.activity, method='post', action='offline',
-            QUERY_STRING='user={}&workspace={}'.format(self.fm_user.email, schema_name),
+            QUERY_STRING='user={}&workspace={}'.format(self.user.email, schema_name),
             data={
                 'information_source': {'name': 'Doctors'},
                 'partner': {
@@ -318,14 +317,14 @@ class MonitoringActivityOfflineValuesTestCase(APIViewSetTestCase, BaseTenantTest
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         checklist = StartedChecklist.objects.filter(
-            author=self.fm_user, monitoring_activity=self.activity, method=self.method
+            author=self.user, monitoring_activity=self.activity, method=self.method
         ).first()
         self.assertTrue(bool(checklist))
 
         # check attachment mapped
         attachment = checklist.overall_findings.first().attachments.first()
         self.assertTrue(bool(attachment))
-        self.assertEqual(attachment.uploaded_by, self.fm_user)
+        self.assertEqual(attachment.uploaded_by, self.user)
 
         # check correct url called
         download_mock.assert_called()
@@ -335,7 +334,7 @@ class MonitoringActivityOfflineValuesTestCase(APIViewSetTestCase, BaseTenantTest
     def test_checklist_form_error(self):
         response = self.make_detail_request(
             None, self.activity, method='post', action='offline',
-            QUERY_STRING='user={}&workspace={}'.format(self.fm_user.email, connection.tenant.schema_name),
+            QUERY_STRING='user={}&workspace={}'.format(self.user.email, connection.tenant.schema_name),
             data={'information_source': {}}
         )
 
@@ -350,7 +349,7 @@ class MonitoringActivityOfflineValuesTestCase(APIViewSetTestCase, BaseTenantTest
     def test_transaction(self):
         response = self.make_detail_request(
             None, self.activity, method='post', action='offline',
-            QUERY_STRING='user={}&workspace={}'.format(self.fm_user.email, connection.tenant.schema_name),
+            QUERY_STRING='user={}&workspace={}'.format(self.user.email, connection.tenant.schema_name),
             data={'information_source': {'name': 'test'}, 'partner': {'-1': {}}}
         )
 
@@ -358,14 +357,14 @@ class MonitoringActivityOfflineValuesTestCase(APIViewSetTestCase, BaseTenantTest
 
         self.assertFalse(
             StartedChecklist.objects.filter(
-                author=self.fm_user, monitoring_activity=self.activity, method=self.method
+                author=self.user, monitoring_activity=self.activity, method=self.method
             ).exists()
         )
 
     def test_workspace_required(self):
         response = self.make_detail_request(
             None, self.activity, method='post', action='offline',
-            QUERY_STRING='user={}'.format(self.fm_user.email),
+            QUERY_STRING='user={}'.format(self.user.email),
             data={}
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -389,7 +388,7 @@ class MonitoringActivityOfflineValuesTestCase(APIViewSetTestCase, BaseTenantTest
         )
         response = self.make_detail_request(
             None, activity, method='post', action='offline',
-            QUERY_STRING='user={}&workspace={}'.format(self.fm_user.email, connection.tenant.schema_name),
+            QUERY_STRING='user={}&workspace={}'.format(self.user.email, connection.tenant.schema_name),
             data={}
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
