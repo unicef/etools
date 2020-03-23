@@ -22,7 +22,7 @@ from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.core.tests.mixins import URLAssertionMixin
 from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.environment.tests.factories import TenantSwitchFactory
-from etools.applications.partners.models import Intervention, InterventionAmendment, InterventionResultLink
+from etools.applications.partners.models import Agreement, Intervention, InterventionAmendment, InterventionResultLink
 from etools.applications.partners.permissions import InterventionPermissions
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
@@ -629,6 +629,60 @@ class TestInterventionsAPI(BaseTenantTestCase):
 
         self.assertEqual(status_code, status.HTTP_200_OK)
         self.assertEqual(len(response), 4 + EXTRA_INTERVENTIONS)
+
+    def test_transition_to_active(self):
+        today = datetime.date.today()
+        officer = self.partner1.staff_members.all().first()
+        agreement = AgreementFactory(
+            partner=self.partner1,
+            status=Agreement.SIGNED,
+            signed_by_unicef_date=today - datetime.timedelta(days=1),
+            signed_by_partner_date=today - datetime.timedelta(days=1)
+        )
+        intervention = InterventionFactory(
+            agreement=agreement,
+            status=Intervention.SIGNED,
+            title='Transition To Active Intervention',
+            document_type=Intervention.PD,
+            start=today - datetime.timedelta(days=1),
+            end=today + datetime.timedelta(days=90),
+            signed_by_unicef_date=today - datetime.timedelta(days=1),
+            signed_by_partner_date=today - datetime.timedelta(days=1),
+            unicef_signatory=self.unicef_staff,
+            partner_authorized_officer_signatory=officer,
+        )
+        validation_msg = ("PD cannot be activated without results framework "
+                          "and reporting requirements.")
+
+        self.assertNotEqual(intervention.status, Intervention.ACTIVE)
+        data = {"status": Intervention.ACTIVE}
+        status_code, response = self.run_request(
+            intervention.pk,
+            data,
+            method="patch",
+        )
+        self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn(validation_msg, response)
+
+        # add reporting requirements
+        ReportingRequirementFactory(intervention=intervention)
+        status_code, response = self.run_request(
+            intervention.pk,
+            data,
+            method="patch",
+        )
+        self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn(validation_msg, response)
+
+        # add results framework
+        InterventionResultLinkFactory(intervention=intervention)
+        status_code, response = self.run_request(
+            intervention.pk,
+            data,
+            method="patch",
+        )
+        self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertNotIn(validation_msg, response)
 
 
 class TestAPIInterventionResultLinkListView(BaseTenantTestCase):
