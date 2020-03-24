@@ -169,17 +169,16 @@ def transition_to_active(i):
             _('PD cannot be activated if the Partner is Blocked in Vision')
         ])
 
-    # PD/SHPD/SSFA require results framework and reporting requirements
-    if i.document_type in [i.PD, i.SSFA, i.SHPD]:
-        if not i.reporting_requirements.exists() or not i.result_links.exists():
-            raise TransitionError([
-                _(
-                    "{} cannot be activated without results framework and "
-                    "reporting requirements.".format(
-                        i.document_type,
-                    )
-                ),
-            ])
+    # require results framework and reporting requirements
+    if not i.reporting_requirements.exists() or not i.result_links.exists():
+        raise TransitionError([
+            _(
+                "{} cannot be activated without results framework and "
+                "reporting requirements.".format(
+                    i.document_type,
+                )
+            ),
+        ])
     return True
 
 
