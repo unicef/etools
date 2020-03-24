@@ -314,51 +314,39 @@ class TestTransitionToSigned(BaseTenantTestCase):
 
 class TestTransitionToActive(BaseTenantTestCase):
     def test_type_status_invalid(self):
-        """Certain document types with agreement not in signed status
-        cannot be made active
-        """
-        document_type_list = [Intervention.PD, Intervention.SHPD]
-        agreement = AgreementFactory(status=Agreement.DRAFT)
-        for d in document_type_list:
-            intervention = InterventionFactory(
-                document_type=d,
-                agreement=agreement,
-            )
-            with self.assertRaisesRegexp(
-                    TransitionError,
-                    "PD cannot be activated if"
-            ):
-                transition_to_active(intervention)
+        agreement = AgreementFactory(status=Agreement.SIGNED)
+        intervention = InterventionFactory(
+            agreement=agreement,
+            document_type=Intervention.SSFA,
+        )
+        with self.assertRaisesRegexp(
+                TransitionError,
+                "cannot be activated without results"
+        ):
+            transition_to_active(intervention)
 
     def test_report_result_requirements(self):
-        document_types = [Intervention.PD, Intervention.SSFA]
-        for d in document_types:
-            intervention = InterventionFactory(document_type=d)
-            self.assertFalse(intervention.result_links.exists())
-            self.assertFalse(intervention.reporting_requirements.exists())
-            with self.assertRaisesRegexp(
-                    TransitionError,
-                    "cannot be activated without results",
-            ):
-                transition_to_active(intervention)
-            # add result framework
-            InterventionResultLinkFactory(intervention=intervention)
-            self.assertTrue(intervention.result_links.exists())
-            self.assertFalse(intervention.reporting_requirements.exists())
-            with self.assertRaisesRegexp(
-                    TransitionError,
-                    "cannot be activated without results",
-            ):
-                transition_to_active(intervention)
-            # add reporting requirements
-            ReportingRequirementFactory(intervention=intervention)
-            self.assertTrue(intervention.result_links.exists())
-            self.assertTrue(intervention.reporting_requirements.exists())
-            self.assertTrue(transition_to_active(intervention))
-
-    def test_valid(self):
-        agreement = AgreementFactory(status=Agreement.SIGNED)
-        intervention = InterventionFactory(agreement=agreement)
+        intervention = InterventionFactory(status=Intervention.SSFA)
+        self.assertFalse(intervention.result_links.exists())
+        self.assertFalse(intervention.reporting_requirements.exists())
+        with self.assertRaisesRegexp(
+                TransitionError,
+                "cannot be activated without results",
+        ):
+            transition_to_active(intervention)
+        # add result framework
+        InterventionResultLinkFactory(intervention=intervention)
+        self.assertTrue(intervention.result_links.exists())
+        self.assertFalse(intervention.reporting_requirements.exists())
+        with self.assertRaisesRegexp(
+                TransitionError,
+                "cannot be activated without results",
+        ):
+            transition_to_active(intervention)
+        # add reporting requirements
+        ReportingRequirementFactory(intervention=intervention)
+        self.assertTrue(intervention.result_links.exists())
+        self.assertTrue(intervention.reporting_requirements.exists())
         self.assertTrue(transition_to_active(intervention))
 
 
