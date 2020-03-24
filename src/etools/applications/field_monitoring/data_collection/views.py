@@ -43,6 +43,7 @@ from etools.applications.field_monitoring.permissions import (
     IsEditAction,
     IsReadAction,
 )
+from etools.applications.field_monitoring.planning.activity_validation.permissions import ActivityPermissions
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.field_monitoring.views import (
     AttachmentFileTypesViewMixin,
@@ -101,11 +102,21 @@ class ActivityDataCollectionViewSet(
             )
 
         user = get_object_or_404(User.objects, email=user_email)
+        activity = self.get_object()
+
+        ps = MonitoringActivity.permission_structure()
+        permissions = ActivityPermissions(user=user, instance=activity, permission_structure=ps)
+        has_edit_permission = permissions.get_permissions()['edit'].get('started_checklist_set')
+        if not has_edit_permission:
+            return Response(
+                status=status.HTTP_400_BAD_REQUEST,
+                data={'non_field_errors': ['Unable to fill checklists for current activity']}
+            )
 
         method = get_object_or_404(Method.objects, pk=method_pk)
 
         try:
-            create_checklist(self.get_object(), method, user, request.data)
+            create_checklist(activity, method, user, request.data)
         except ValidationError as ex:
             return Response(status=status.HTTP_400_BAD_REQUEST, data=ex.detail)
 
