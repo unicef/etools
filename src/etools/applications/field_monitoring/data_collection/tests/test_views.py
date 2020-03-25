@@ -589,6 +589,10 @@ class TestActivityFindingsView(ChecklistDataCollectionTestMixin, APIViewSetTestC
             response.data['results'][0]['activity_question']['findings'][0]['method'],
             self.checklist_finding.started_checklist.method.id
         )
+        self.assertEqual(
+            response.data['results'][0]['activity_question']['findings'][0]['checklist'],
+            self.checklist_finding.started_checklist.id
+        )
 
     def test_update_unicef(self):
         self._test_update(self.unicef_user, self.overall_finding, {}, expected_status=status.HTTP_403_FORBIDDEN)

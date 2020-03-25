@@ -58,10 +58,11 @@ class ActivityQuestionFindingSerializer(serializers.ModelSerializer):
 
 
 class CompletedActivityQuestionFindingSerializer(ActivityQuestionFindingSerializer):
+    checklist = serializers.ReadOnlyField(source='started_checklist.id')
     method = serializers.ReadOnlyField(source='started_checklist.method_id')
 
     class Meta(ActivityQuestionFindingSerializer.Meta):
-        fields = ActivityQuestionFindingSerializer.Meta.fields + ('method',)
+        fields = ActivityQuestionFindingSerializer.Meta.fields + ('checklist', 'method',)
 
 
 class CompletedActivityQuestionSerializer(ActivityQuestionSerializer):
