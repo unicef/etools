@@ -539,6 +539,7 @@ class TestActivityOverallFindingsView(ChecklistDataCollectionTestMixin, APIViewS
         self.assertNotEqual(response.data['results'][0]['attachments'], [])
         self.assertIn('findings', response.data['results'][0])
         self.assertNotEqual(response.data['results'][0]['findings'], [])
+        self.assertEqual(response.data['results'][0]['findings'][0]['checklist'], checklist.id)
 
     def test_update_unicef(self):
         self._test_update(self.unicef_user, self.overall_finding, {}, expected_status=status.HTTP_403_FORBIDDEN)

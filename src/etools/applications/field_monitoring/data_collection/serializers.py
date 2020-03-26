@@ -125,12 +125,13 @@ class FindingSerializer(serializers.ModelSerializer):
 
 class CompletedChecklistOverallFindingSerializer(serializers.ModelSerializer):
     author = MinimalUserSerializer(read_only=True, source='started_checklist.author')
+    checklist = serializers.ReadOnlyField(source='started_checklist.id')
     method = serializers.ReadOnlyField(source='started_checklist.method_id')
     information_source = serializers.ReadOnlyField(source='started_checklist.information_source')
 
     class Meta:
         model = ChecklistOverallFinding
-        fields = ('author', 'method', 'information_source', 'narrative_finding')
+        fields = ('author', 'method', 'checklist', 'information_source', 'narrative_finding')
 
 
 class ActivityOverallFindingSerializer(serializers.ModelSerializer):
