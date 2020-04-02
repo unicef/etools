@@ -33,6 +33,10 @@ class TestMonitoringActivityValidations(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.user = UserFactory(fm_user=True)
 
+    def test_activity_location_required_in_draft(self):
+        activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.draft, location=None)
+        self.assertFalse(ActivityValid(activity, user=self.user).is_valid)
+
     def test_tpm_partner_for_staff_activity(self):
         activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.draft, monitor_type='staff',
                                              tpm_partner=TPMPartnerFactory())

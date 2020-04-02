@@ -47,7 +47,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,reject_reason,All Users,is_ma_related_user,*,edit,TRUE
 
 
-,location,All Users,,assigned,required,TRUE
+,location,All Users,,draft,required,TRUE
 ,location_site,All Users,,*,required,FALSE
 ,start_date,All Users,,assigned,required,TRUE
 ,end_date,All Users,,assigned,required,TRUE
