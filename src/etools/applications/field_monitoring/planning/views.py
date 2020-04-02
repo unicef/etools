@@ -9,7 +9,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from django_filters.rest_framework import DjangoFilterBackend
 from etools_validator.mixins import ValidatorViewMixin
-from rest_framework import mixins, viewsets
+from rest_framework import mixins, status, viewsets
 from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.response import Response
@@ -173,6 +173,31 @@ class MonitoringActivitiesViewSet(
             )
 
         return queryset
+
+    @transaction.atomic
+    def create(self, request, *args, **kwargs):
+        related_fields = []
+        nested_related_names = []
+        serializer = self.my_create(
+            request,
+            related_fields,
+            nested_related_names=nested_related_names,
+            **kwargs
+        )
+        instance = serializer.instance
+
+        validator = ActivityValid(instance, user=request.user)
+        if not validator.is_valid:
+            logging.debug(validator.errors)
+            raise ValidationError(validator.errors)
+
+        headers = self.get_success_headers(serializer.data)
+
+        return Response(
+            self.get_serializer_class()(instance, context=self.get_serializer_context()).data,
+            status=status.HTTP_201_CREATED,
+            headers=headers
+        )
 
     @transaction.atomic
     def update(self, request, *args, **kwargs):
