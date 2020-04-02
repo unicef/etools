@@ -1,5 +1,6 @@
 from typing import Any
 
+from django.db import connection
 from django.utils.translation import ugettext_lazy as _
 
 from unicef_attachments.models import Attachment
@@ -20,16 +21,37 @@ class FileField(TextField):
         return self.get_attachment(super().validate_single_value(value, metadata))
 
 
+def _get_uploaded_attachment(value: str) -> Attachment:
+    try:
+        return Attachment.objects.get(id=value)
+    except Attachment.DoesNotExist:
+        raise ValidationError(_(f'Unable to find attachment by id {value}'))
+
+
 class UploadedFileField(FileField):
     def get_attachment(self, value: str) -> Attachment:
-        try:
-            return Attachment.objects.get(id=value)
-        except Attachment.DoesNotExist:
-            raise ValidationError(_(f'Unable to find attachment by id {value}'))
+        return _get_uploaded_attachment(value)
+
+
+def _get_remote_attachment(value: str) -> Attachment:
+    attachment = Attachment.objects.create(hyperlink=value)
+    download_remote_attachment.delay(connection.tenant.schema_name, attachment.id, value)
+    return attachment
 
 
 class RemoteFileField(FileField):
     def get_attachment(self, value: str) -> Attachment:
-        attachment = Attachment.objects.create(hyperlink=value)
-        download_remote_attachment.delay(attachment.id, value)
-        return attachment
+        return _get_remote_attachment(value)
+
+
+class MixedUploadedRemoteFileField(FileField):
+    """
+    Mixed file field for 100% reuse blueprint for offline/online data collection.
+    If value contains `http`, download file and make new attachment. Else search attachment by id
+    """
+
+    def get_attachment(self, value: str) -> Attachment:
+        if 'http' in value:
+            return _get_remote_attachment(value)
+        else:
+            return _get_uploaded_attachment(value)

@@ -114,13 +114,13 @@ class TemplatedQuestionsViewSet(
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        queryset = queryset.filter(level=self.kwargs['level'])
-        queryset = queryset.prefetch_templates(self.kwargs['level'], self.kwargs.get('target_id'))
+        queryset = queryset.filter(level=self.kwargs.get('level'))
+        queryset = queryset.prefetch_templates(self.kwargs.get('level'), self.kwargs.get('target_id'))
         return queryset
 
     def get_serializer(self, *args, **kwargs):
         kwargs.update({
-            'level': self.kwargs['level'],
+            'level': self.kwargs.get('level'),
             'target_id': self.kwargs.get('target_id'),
         })
         return super().get_serializer(*args, **kwargs)

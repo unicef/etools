@@ -4,6 +4,7 @@
   "structure": {
     "type": "group",
     "extra": {},
+    "styling": ["abstract"],
     "name": "root",
     "repeatable": false,
     "required": true,
@@ -12,6 +13,7 @@
       {
         "type": "field",
         "extra": {},
+        "styling": [],
         "name": "name",
         "repeatable": false,
         "required": true,
@@ -26,6 +28,7 @@
       {
         "type": "group",
         "extra": {},
+        "styling": [],
         "name": "users",
         "repeatable": true,
         "required": false,
@@ -34,6 +37,7 @@
           {
             "type": "field",
             "extra": {},
+            "styling": [],
             "name": "full_name",
             "repeatable": false,
             "required": true,
@@ -48,6 +52,7 @@
           {
             "type": "group",
             "extra": {},
+            "styling": [],
             "name": "phones",
             "repeatable": true,
             "required": true,
@@ -56,6 +61,7 @@
               {
                 "type": "field",
                 "extra": {},
+                "styling": [],
                 "name": "number",
                 "repeatable": false,
                 "required": true,
@@ -72,6 +78,7 @@
               {
                 "type": "field",
                 "extra": {},
+                "styling": [],
                 "name": "type",
                 "repeatable": false,
                 "required": false,
@@ -88,6 +95,7 @@
           {
             "type": "field",
             "extra": {},
+            "styling": [],
             "name": "groups",
             "repeatable": true,
             "required": false,

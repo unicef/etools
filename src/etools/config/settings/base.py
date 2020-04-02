@@ -90,6 +90,9 @@ DATABASE_ROUTERS = (
 # DJANGO: DEBUGGING
 DEBUG = str2bool(get_from_secrets_or_env('DJANGO_DEBUG'))
 
+# user that can update other user credentials via api
+SERVICE_NOW_USER = get_from_secrets_or_env('SERVICE_NOW_USER', 'api_servicenow_etools@unicef.org')
+
 # DJANGO: EMAIL
 DEFAULT_FROM_EMAIL = "no-reply@unicef.org"
 EMAIL_BACKEND = 'unicef_notification.backends.EmailBackend'
@@ -193,6 +196,7 @@ SHARED_APPS = (
     'waffle',
     'etools.applications.permissions2',
     'unicef_notification',
+    'etools_offline',
     'etools.applications.offline',
 )
 
@@ -365,6 +369,7 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.SessionAuthentication',
         'etools.applications.core.auth.EToolsTenantJWTAuthentication',
+        'etools.applications.core.auth.eToolsOLCTokenAuth',
         'etools.applications.core.auth.EtoolsTokenAuthentication',
     ),
     'TEST_REQUEST_RENDERER_CLASSES': (
@@ -563,3 +568,9 @@ PSEA_ASSESSMENT_FINAL_RECIPIENTS = get_from_secrets_or_env(
 ).split(',')
 
 VISION_REQUESTS_TIMEOUT = get_from_secrets_or_env('VISION_REQUESTS_TIMEOUT', 400)  # in seconds
+
+# Etools offline collect
+# https://github.com/unicef/etools-offline-collect/blob/develop/client/README.md
+ETOOLS_OFFLINE_API = get_from_secrets_or_env('ETOOLS_OFFLINE_API', '')
+ETOOLS_OFFLINE_TOKEN = get_from_secrets_or_env('ETOOLS_OFFLINE_TOKEN', '')
+ETOOLS_OFFLINE_TASK_APP = "etools.config.celery.get_task_app"
