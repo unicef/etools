@@ -43,6 +43,7 @@ from etools.applications.field_monitoring.planning.models import (
     YearPlan,
 )
 from etools.applications.field_monitoring.planning.serializers import (
+    CPOutputListSerializer,
     FMUserSerializer,
     InterventionWithLinkedInstancesSerializer,
     MonitoringActivityActionPointSerializer,
@@ -54,7 +55,6 @@ from etools.applications.field_monitoring.planning.serializers import (
 from etools.applications.field_monitoring.views import FMBaseViewSet, LinkedAttachmentsViewSet
 from etools.applications.partners.models import Intervention
 from etools.applications.reports.models import Result, ResultType
-from etools.applications.reports.serializers.v2 import MinimalOutputListSerializer
 
 
 class YearPlanViewSet(
@@ -137,7 +137,11 @@ class MonitoringActivitiesViewSet(
     """
     Retrieve and Update Agreement.
     """
-    queryset = MonitoringActivity.objects.annotate(checklists_count=Count('checklists'))
+    queryset = MonitoringActivity.objects.annotate(checklists_count=Count('checklists')).select_related(
+        'tpm_partner', 'person_responsible', 'location__gateway', 'location_site',
+    ).prefetch_related(
+        'team_members', 'partners', 'interventions', 'cp_outputs'
+    )
     serializer_class = MonitoringActivitySerializer
     serializer_action_classes = {
         'list': MonitoringActivityLightSerializer
@@ -164,12 +168,6 @@ class MonitoringActivitiesViewSet(
             queryset = queryset.filter(
                 Q(person_responsible=self.request.user) | Q(team_members=self.request.user),
                 Q(status__in=MonitoringActivity.TPM_AVAILABLE_STATUSES) | ~Q(reject_reason=''),
-            )
-
-        if hasattr(self, 'action') and self.action == 'list':
-            queryset.prefetch_related(
-                'tpm_partner', 'person_responsible', 'location', 'location_site',
-                'team_members', 'partners', 'interventions', 'cp_outputs'
             )
 
         return queryset
@@ -204,7 +202,7 @@ class FMUsersViewSet(
 
     filter_backends = (SearchFilter, UserTypeFilter, UserTPMPartnerFilter)
     search_fields = ('email',)
-    queryset = get_user_model().objects.all()
+    queryset = get_user_model().objects.select_related('tpmpartners_tpmpartnerstaffmember__tpm_partner')
     serializer_class = FMUserSerializer
 
     def get_queryset(self):
@@ -223,8 +221,8 @@ class CPOutputsViewSet(
 ):
     filter_backends = (DjangoFilterBackend,)
     filter_class = CPOutputsFilterSet
-    queryset = Result.objects.filter(result_type__name=ResultType.OUTPUT)
-    serializer_class = MinimalOutputListSerializer
+    queryset = Result.objects.filter(result_type__name=ResultType.OUTPUT).select_related('result_type')
+    serializer_class = CPOutputListSerializer
 
 
 class InterventionsViewSet(
@@ -234,7 +232,12 @@ class InterventionsViewSet(
 ):
     filter_backends = (DjangoFilterBackend,)
     filter_class = InterventionsFilterSet
-    queryset = Intervention.objects.all()
+    queryset = Intervention.objects.filter(
+        status__in=[
+            Intervention.SIGNED, Intervention.ACTIVE, Intervention.ENDED,
+            Intervention.IMPLEMENTED, Intervention.CLOSED,
+        ]
+    ).select_related('agreement').prefetch_related('result_links')
     serializer_class = InterventionWithLinkedInstancesSerializer
 
 
