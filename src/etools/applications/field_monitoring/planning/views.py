@@ -203,6 +203,7 @@ class FMUsersViewSet(
     filter_backends = (SearchFilter, UserTypeFilter, UserTPMPartnerFilter)
     search_fields = ('email',)
     queryset = get_user_model().objects.select_related('tpmpartners_tpmpartnerstaffmember__tpm_partner')
+    queryset = queryset.order_by('first_name', 'middle_name', 'last_name')
     serializer_class = FMUserSerializer
 
     def get_queryset(self):
@@ -221,7 +222,7 @@ class CPOutputsViewSet(
 ):
     filter_backends = (DjangoFilterBackend,)
     filter_class = CPOutputsFilterSet
-    queryset = Result.objects.filter(result_type__name=ResultType.OUTPUT).select_related('result_type')
+    queryset = Result.objects.filter(result_type__name=ResultType.OUTPUT).select_related('result_type').order_by('name')
     serializer_class = CPOutputListSerializer
 
 
@@ -237,7 +238,7 @@ class InterventionsViewSet(
             Intervention.SIGNED, Intervention.ACTIVE, Intervention.ENDED,
             Intervention.IMPLEMENTED, Intervention.CLOSED,
         ]
-    ).select_related('agreement').prefetch_related('result_links')
+    ).select_related('agreement').prefetch_related('result_links').order_by('title')
     serializer_class = InterventionWithLinkedInstancesSerializer
 
 
