@@ -335,6 +335,28 @@ class TestChecklistsView(DataCollectionTestMixin, APIViewSetTestCase):
             {'information_source': 'teacher'}
         )
 
+    def test_remove_unicef_user(self):
+        checklist = StartedChecklistFactory(monitoring_activity=self.activity)
+        self._test_destroy(self.unicef_user, checklist, expected_status=status.HTTP_403_FORBIDDEN)
+
+    def test_remove_person_responsible(self):
+        checklist = StartedChecklistFactory(monitoring_activity=self.activity)
+        self._test_destroy(self.person_responsible, checklist)
+
+    def test_remove_team_member(self):
+        checklist = StartedChecklistFactory(monitoring_activity=self.activity)
+        self._test_destroy(self.team_member, checklist)
+
+    def test_remove_protected_in_finalize_report(self):
+        person_responsible = UserFactory(unicef_user=True)
+        activity = MonitoringActivityFactory(status='report_finalization', person_responsible=person_responsible)
+        original_activity, self.activity = self.activity, activity
+
+        checklist = StartedChecklistFactory(monitoring_activity=activity)
+        self._test_destroy(person_responsible, checklist, expected_status=status.HTTP_403_FORBIDDEN)
+
+        self.activity = original_activity
+
 
 class TestChecklistOverallFindingsView(ChecklistDataCollectionTestMixin, APIViewSetTestCase):
     base_view = 'field_monitoring_data_collection:checklist-overall-findings'

@@ -4,6 +4,7 @@ from django.urls import reverse
 
 from rest_framework import status
 from unicef_attachments.models import Attachment, AttachmentLink, FileType
+from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.action_points.tests.factories import ActionPointCategoryFactory
 from etools.applications.attachments.tests.factories import (
@@ -84,7 +85,11 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
     base_view = 'field_monitoring_planning:activities'
 
     def test_create_empty_visit(self):
-        self._test_create(self.fm_user, {})
+        response = self._test_create(self.fm_user, {}, expected_status=status.HTTP_400_BAD_REQUEST)
+        self.assertIn('location', response.data[0])
+
+    def test_create_minimum_visit(self):
+        self._test_create(self.fm_user, {'location': LocationFactory().id})
 
     def test_list(self):
         activities = [
