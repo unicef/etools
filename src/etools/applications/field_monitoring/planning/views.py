@@ -53,7 +53,8 @@ from etools.applications.field_monitoring.planning.serializers import (
     YearPlanSerializer,
 )
 from etools.applications.field_monitoring.views import FMBaseViewSet, LinkedAttachmentsViewSet
-from etools.applications.partners.models import Intervention
+from etools.applications.partners.models import Intervention, PartnerOrganization
+from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.reports.models import Result, ResultType
 
 
@@ -265,6 +266,17 @@ class InterventionsViewSet(
         ]
     ).select_related('agreement').prefetch_related('result_links').order_by('title')
     serializer_class = InterventionWithLinkedInstancesSerializer
+
+
+class PartnersViewSet(
+    FMBaseViewSet,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet,
+):
+    queryset = PartnerOrganization.objects.filter(
+        blocked=False, deleted_flag=False, manually_blocked=False, hidden=False,
+    ).order_by('name')
+    serializer_class = MinimalPartnerOrganizationListSerializer
 
 
 class ActivityAttachmentsViewSet(LinkedAttachmentsViewSet):

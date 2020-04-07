@@ -681,3 +681,17 @@ class MonitoringActivityActionPointsViewTestCase(FMBaseTestCaseMixin, APIViewSet
     def test_create_wrong_activity_status(self):
         self.activity = MonitoringActivityFactory(status='draft')
         self._test_create(self.fm_user, data={}, expected_status=status.HTTP_403_FORBIDDEN)
+
+
+class PartnersViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenantTestCase):
+    base_view = 'field_monitoring_planning:partners'
+
+    def test_list(self):
+        PartnerFactory(blocked=True)
+        PartnerFactory(deleted_flag=True)
+        PartnerFactory(manually_blocked=True)
+        PartnerFactory(hidden=True)
+        valid_partners = [PartnerFactory(name='b'), PartnerFactory(name='a')]
+        valid_partners.reverse()
+
+        self._test_list(self.unicef_user, valid_partners)
