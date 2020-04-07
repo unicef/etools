@@ -229,7 +229,7 @@ class LinkedAttachmentBaseSerializer(BaseAttachmentSerializer):
 
 
 class FMCommonAttachmentSerializer(LinkedAttachmentBaseSerializer):
-    file_type = FileTypeModelChoiceField(queryset=FileType.objects.filter(code='fm_common'), required=False)
+    file_type = FileTypeModelChoiceField(queryset=FileType.objects.filter(code='fm_common'), required=True)
 
     class Meta(LinkedAttachmentBaseSerializer.Meta):
         pass

@@ -44,6 +44,12 @@ def agreement_transition_to_ended_valid(agreement):
     raise TransitionError(['agreement_transition_to_ended_invalid'])
 
 
+def transition_to_terminated(agreement):
+    if agreement.agreement_type == agreement.PCA and not agreement.termination_doc.exists():
+        raise TransitionError([_('Cannot Transition without termination doc attached')])
+    return True
+
+
 def agreements_illegal_transition(agreement):
     return False
 

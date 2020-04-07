@@ -1,23 +1,30 @@
 from typing import Dict, List
 
 from django.contrib.contenttypes.models import ContentType
+from django.db import transaction
 from django.urls import reverse
 
 from unicef_attachments.models import AttachmentLink
 
-from etools.applications.field_monitoring.data_collection.models import ChecklistOverallFinding, StartedChecklist
+from etools.applications.field_monitoring.data_collection.models import (
+    ChecklistOverallFinding,
+    Finding,
+    StartedChecklist,
+)
 from etools.applications.field_monitoring.data_collection.offline.blueprint import get_blueprint_for_activity_and_method
 from etools.applications.field_monitoring.fm_settings.models import Method, Question
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
+from etools.applications.offline.errors import BadValueError
 from etools.applications.users.models import User
 
 
-def _link_attachments(attachments_data: List[Dict], overall_finding: ChecklistOverallFinding):
+def _link_attachments(attachments_data: List[Dict], overall_finding: ChecklistOverallFinding, user: User):
     for attachment_data in attachments_data:
         attachment = attachment_data['attachment']
         attachment.file_type_id = attachment_data['file_type']
         attachment.content_object = overall_finding
         attachment.code = 'attachments'
+        attachment.uploaded_by = user
         attachment.save()
         AttachmentLink.objects.get_or_create(
             attachment=attachment,
@@ -29,7 +36,7 @@ def _link_attachments(attachments_data: List[Dict], overall_finding: ChecklistOv
         attachment.delete()
 
 
-def save_values_to_checklist(value: dict, checklist: StartedChecklist) -> None:
+def _save_values_to_checklist(value: dict, checklist: StartedChecklist) -> None:
     for level in dict(MonitoringActivity.RELATIONS_MAPPING).values():
         level_values = value.get(level)
         if not level_values:
@@ -38,40 +45,49 @@ def save_values_to_checklist(value: dict, checklist: StartedChecklist) -> None:
         relation_name = Question.get_target_relation_name(level)
 
         for target_id, target_value in level_values.items():
-            overall_finding = checklist.overall_findings.filter(
-                **{relation_name: target_id}
-            ).prefetch_related('attachments').get()
+            try:
+                overall_finding = checklist.overall_findings.filter(
+                    **{relation_name: target_id}
+                ).prefetch_related('attachments').get()
+            except ChecklistOverallFinding.DoesNotExist:
+                raise BadValueError(f'Unable to find {level} with id {target_id}')
 
             overall_finding.narrative_finding = target_value.get('overall', '')
             overall_finding.save()
 
             attachments = target_value.get('attachments', [])
 
-            _link_attachments(attachments, overall_finding)
+            _link_attachments(attachments, overall_finding, checklist.author)
 
             questions = target_value.get('questions', {})
             for question_id, question_value in questions.items():
-                finding = checklist.findings.get(
-                    **{f'activity_question__{relation_name}': target_id},
-                    activity_question__question=question_id
-                )
+                try:
+                    finding = checklist.findings.get(
+                        **{f'activity_question__{relation_name}': target_id},
+                        activity_question__question=question_id
+                    )
+                except Finding.DoesNotExists:
+                    raise BadValueError(f'Unable to find finding for question {question_id} for {level} {target_id}')
+
                 finding.value = question_value
                 finding.save()
 
 
+@transaction.atomic
 def update_checklist(checklist: StartedChecklist, value: dict) -> StartedChecklist:
     # validate value with actual blueprint to be sure everything is ok
     blueprint = get_blueprint_for_activity_and_method(checklist.monitoring_activity, checklist.method)
     validated_value = blueprint.validate(value)
 
-    checklist.information_source = validated_value.get('information_source', '')
+    checklist.information_source = validated_value.get('information_source', {}).get('name', '')
     checklist.save()
 
-    save_values_to_checklist(validated_value, checklist)
+    _save_values_to_checklist(validated_value, checklist)
 
     return checklist
 
 
+@transaction.atomic
 def create_checklist(activity: MonitoringActivity, method: Method, user: User, value: dict) -> StartedChecklist:
     # validate value with actual blueprint to be sure everything is ok
     blueprint = get_blueprint_for_activity_and_method(activity, method)
@@ -79,10 +95,10 @@ def create_checklist(activity: MonitoringActivity, method: Method, user: User, v
 
     checklist = StartedChecklist.objects.create(
         author=user, monitoring_activity=activity, method=method,
-        information_source=validated_value.get('information_source', '')
+        information_source=validated_value.get('information_source', {}).get('name', '')
     )
 
-    save_values_to_checklist(validated_value, checklist)
+    _save_values_to_checklist(validated_value, checklist)
 
     return checklist
 
@@ -93,7 +109,7 @@ def get_checklist_form_value(checklist: StartedChecklist) -> dict:
     value = {}
 
     if method.use_information_source:
-        value['information_source'] = checklist.information_source
+        value['information_source'] = {'name': checklist.information_source}
 
     for level in dict(MonitoringActivity.RELATIONS_MAPPING).values():
         relation_name = Question.get_target_relation_name(level)
@@ -108,7 +124,7 @@ def get_checklist_form_value(checklist: StartedChecklist) -> dict:
                 'attachments': [
                     {
                         'attachment': str(attachment.pk),
-                        'file_type': str(attachment.file_type_id),
+                        'file_type': attachment.file_type_id,
                         'url': reverse('attachments:file', args=[attachment.pk]),
                         'filename': attachment.filename,
                     }

@@ -6,7 +6,12 @@ from django.contrib.auth.models import Group
 from django.http import HttpResponseRedirect
 
 import jwt
-from rest_framework.authentication import BasicAuthentication, SessionAuthentication, TokenAuthentication
+from rest_framework.authentication import (
+    BasicAuthentication,
+    get_authorization_header,
+    SessionAuthentication,
+    TokenAuthentication,
+)
 from rest_framework.exceptions import AuthenticationFailed, PermissionDenied
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from rest_framework_jwt.settings import api_settings
@@ -145,6 +150,27 @@ class DRFBasicAuthMixin(BasicAuthentication):
         user, token = super_return
         set_country(user, request)
         return user, token
+
+
+class eToolsOLCTokenAuth(TokenAuthentication):
+    def authenticate(self, request):
+        key = get_authorization_header(request)
+        try:
+            token = key.decode()
+        except UnicodeError:
+            # 'Invalid token header. '
+            # 'Token string should not contain invalid characters.'
+            return None
+        if bool(token == f"Token {settings.ETOOLS_OFFLINE_TOKEN}"):
+            try:
+                email = request.data.get("user")
+                user = get_user_model().objects.get(email=email)
+            except get_user_model().DoesNotExist:
+                return None
+            else:
+                set_country(user, request)
+                return user, token
+        return None
 
 
 class EtoolsTokenAuthentication(TokenAuthentication):

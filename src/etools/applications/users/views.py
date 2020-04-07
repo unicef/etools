@@ -4,21 +4,25 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db.models import Q
-from django.http import HttpResponseForbidden, HttpResponseRedirect
+from django.db.transaction import atomic
+from django.http import Http404, HttpResponseForbidden, HttpResponseRedirect, JsonResponse
+from django.shortcuts import get_object_or_404
 from django.views.generic import RedirectView
 from django.views.generic.detail import DetailView
 
 from rest_framework import mixins, status, viewsets
 from rest_framework.exceptions import ValidationError
-from rest_framework.generics import ListAPIView, RetrieveAPIView, RetrieveUpdateAPIView
+from rest_framework.generics import CreateAPIView, GenericAPIView, ListAPIView, RetrieveAPIView, RetrieveUpdateAPIView
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from unicef_restlib.permissions import IsSuperUser
 
 from etools.applications.audit.models import Auditor, Engagement
 from etools.applications.psea.models import Assessment
 from etools.applications.tpm.models import ThirdPartyMonitor
 from etools.applications.users.models import Country, UserProfile
+from etools.applications.users.permissions import IsServiceNowUser
 from etools.applications.users.serializers import (
     CountrySerializer,
     GroupSerializer,
@@ -27,6 +31,7 @@ from etools.applications.users.serializers import (
     SimpleProfileSerializer,
     SimpleUserSerializer,
     UserCreationSerializer,
+    UserManagementSerializer,
 )
 from etools.libraries.azure_graph_api.tasks import retrieve_user_info
 
@@ -43,6 +48,69 @@ class ADUserAPIView(DetailView):
         if self.request.user and self.request.user.is_superuser:
             context['ad_dict'] = retrieve_user_info(self.object.username)
         return context
+
+
+class ChangeUserRoleView(CreateAPIView, GenericAPIView):
+    """
+    Allows api user to change roles and workspaces for a specific user.
+    """
+
+    serializer_class = UserManagementSerializer
+    permission_classes = [IsSuperUser | IsServiceNowUser]
+
+    @atomic
+    def create(self, request, *args, **kwargs):
+        """
+        Add a User Group
+        :return: JSON
+        """
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.data
+        details = {}
+
+        try:
+            user = get_object_or_404(get_user_model(), email=data['user_email'])
+            try:
+                workspace = get_object_or_404(Country, business_area_code=data['workspace'])
+            except Country.MultipleObjectsReturned:
+                return ValidationError("users in this business area need to be addressed via ticket due to multiple "
+                                       "workspaces having the same business_area")
+            roles = []
+            for desired_role_name in data["roles"]:
+                roles.append(get_object_or_404(Group, name=desired_role_name))
+        except Http404 as e:
+            raise ValidationError({"error": e})
+
+        if not user.is_unicef_user():
+            raise ValidationError({"error": "only users with UNICEF email addresses can be updated"})
+
+        details["previous_roles"] = list(user.groups.all().values_list("name", flat=True))
+
+        if data["access_type"] == "grant":
+            # add unicef user role to roles list by default
+            roles.append(Group.objects.get(name="UNICEF User"))
+            user.groups.add(*roles)
+        elif data["access_type"] == "set":
+            # add unicef user role to roles list by default
+            roles.append(Group.objects.get(name="UNICEF User"))
+            user.groups.set(roles)
+        else:
+            user.groups.remove(*roles)
+
+        if user.profile.country_override and user.profile.country_override != workspace:
+            user.profile.country_override = None
+            details["country_override"] = "The user's country override has been removed"
+        if user.profile.country != workspace:
+            details["country"] = "The user has been moved from {} to {}".format(user.profile.country.name,
+                                                                                workspace.name)
+        user.profile.country = workspace
+        user.profile.countries_available.set([workspace])
+        user.profile.save()
+        details["current_roles"] = list(user.groups.filter().values_list("name", flat=True))
+        return JsonResponse({'email': user.email, "status": "success", "details": details},
+                            content_type="application/json",
+                            status=status.HTTP_200_OK)
 
 
 class ChangeUserCountryView(APIView):
