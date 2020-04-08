@@ -21,7 +21,10 @@ from unicef_locations.models import Location
 
 from etools.applications.core.permissions import import_permissions
 from etools.applications.funds.models import FundsReservationHeader
-from etools.applications.partners.validation import interventions as intervention_validation
+from etools.applications.partners.validation import (
+    agreements as agreement_validation,
+    interventions as intervention_validation,
+)
 from etools.applications.partners.validation.agreements import (
     agreement_transition_to_ended_valid,
     agreement_transition_to_signed_valid,
@@ -1163,6 +1166,13 @@ class Agreement(TimeStampedModel):
         code='partners_agreement',
         blank=True
     )
+    termination_doc = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Termination document for PCAs'),
+        code='partners_agreement_termination_doc',
+        blank=True,
+        null=True
+    )
     start = models.DateField(
         verbose_name=_("Start Date"),
         null=True,
@@ -1320,10 +1330,17 @@ class Agreement(TimeStampedModel):
         pass
 
     @transition(field=status,
+                source=[SIGNED],
+                target=[TERMINATED, SUSPENDED],
+                conditions=[agreement_validation.transition_to_terminated])
+    def transition_to_terminated(self):
+        pass
+
+    @transition(field=status,
                 source=[DRAFT],
                 target=[TERMINATED, SUSPENDED],
                 conditions=[agreements_illegal_transition])
-    def transition_to_terminated(self):
+    def transition_to_terminated_illegal(self):
         pass
 
     @transaction.atomic

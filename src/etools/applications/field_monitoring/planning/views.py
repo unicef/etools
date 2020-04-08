@@ -9,7 +9,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from django_filters.rest_framework import DjangoFilterBackend
 from etools_validator.mixins import ValidatorViewMixin
-from rest_framework import mixins, viewsets
+from rest_framework import mixins, status, viewsets
 from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.response import Response
@@ -43,6 +43,7 @@ from etools.applications.field_monitoring.planning.models import (
     YearPlan,
 )
 from etools.applications.field_monitoring.planning.serializers import (
+    CPOutputListSerializer,
     FMUserSerializer,
     InterventionWithLinkedInstancesSerializer,
     MonitoringActivityActionPointSerializer,
@@ -54,7 +55,6 @@ from etools.applications.field_monitoring.planning.serializers import (
 from etools.applications.field_monitoring.views import FMBaseViewSet, LinkedAttachmentsViewSet
 from etools.applications.partners.models import Intervention
 from etools.applications.reports.models import Result, ResultType
-from etools.applications.reports.serializers.v2 import MinimalOutputListSerializer
 
 
 class YearPlanViewSet(
@@ -114,13 +114,13 @@ class TemplatedQuestionsViewSet(
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        queryset = queryset.filter(level=self.kwargs['level'])
-        queryset = queryset.prefetch_templates(self.kwargs['level'], self.kwargs.get('target_id'))
+        queryset = queryset.filter(level=self.kwargs.get('level'))
+        queryset = queryset.prefetch_templates(self.kwargs.get('level'), self.kwargs.get('target_id'))
         return queryset
 
     def get_serializer(self, *args, **kwargs):
         kwargs.update({
-            'level': self.kwargs['level'],
+            'level': self.kwargs.get('level'),
             'target_id': self.kwargs.get('target_id'),
         })
         return super().get_serializer(*args, **kwargs)
@@ -137,7 +137,11 @@ class MonitoringActivitiesViewSet(
     """
     Retrieve and Update Agreement.
     """
-    queryset = MonitoringActivity.objects.annotate(checklists_count=Count('checklists'))
+    queryset = MonitoringActivity.objects.annotate(checklists_count=Count('checklists')).select_related(
+        'tpm_partner', 'person_responsible', 'location__gateway', 'location_site',
+    ).prefetch_related(
+        'team_members', 'partners', 'interventions', 'cp_outputs'
+    )
     serializer_class = MonitoringActivitySerializer
     serializer_action_classes = {
         'list': MonitoringActivityLightSerializer
@@ -166,13 +170,32 @@ class MonitoringActivitiesViewSet(
                 Q(status__in=MonitoringActivity.TPM_AVAILABLE_STATUSES) | ~Q(reject_reason=''),
             )
 
-        if hasattr(self, 'action') and self.action == 'list':
-            queryset.prefetch_related(
-                'tpm_partner', 'person_responsible', 'location', 'location_site',
-                'team_members', 'partners', 'interventions', 'cp_outputs'
-            )
-
         return queryset
+
+    @transaction.atomic
+    def create(self, request, *args, **kwargs):
+        related_fields = []
+        nested_related_names = []
+        serializer = self.my_create(
+            request,
+            related_fields,
+            nested_related_names=nested_related_names,
+            **kwargs
+        )
+        instance = serializer.instance
+
+        validator = ActivityValid(instance, user=request.user)
+        if not validator.is_valid:
+            logging.debug(validator.errors)
+            raise ValidationError(validator.errors)
+
+        headers = self.get_success_headers(serializer.data)
+
+        return Response(
+            self.get_serializer_class()(instance, context=self.get_serializer_context()).data,
+            status=status.HTTP_201_CREATED,
+            headers=headers
+        )
 
     @transaction.atomic
     def update(self, request, *args, **kwargs):
@@ -204,7 +227,8 @@ class FMUsersViewSet(
 
     filter_backends = (SearchFilter, UserTypeFilter, UserTPMPartnerFilter)
     search_fields = ('email',)
-    queryset = get_user_model().objects.all()
+    queryset = get_user_model().objects.select_related('tpmpartners_tpmpartnerstaffmember__tpm_partner')
+    queryset = queryset.order_by('first_name', 'middle_name', 'last_name')
     serializer_class = FMUserSerializer
 
     def get_queryset(self):
@@ -223,8 +247,8 @@ class CPOutputsViewSet(
 ):
     filter_backends = (DjangoFilterBackend,)
     filter_class = CPOutputsFilterSet
-    queryset = Result.objects.filter(result_type__name=ResultType.OUTPUT)
-    serializer_class = MinimalOutputListSerializer
+    queryset = Result.objects.filter(result_type__name=ResultType.OUTPUT).select_related('result_type').order_by('name')
+    serializer_class = CPOutputListSerializer
 
 
 class InterventionsViewSet(
@@ -234,7 +258,12 @@ class InterventionsViewSet(
 ):
     filter_backends = (DjangoFilterBackend,)
     filter_class = InterventionsFilterSet
-    queryset = Intervention.objects.all()
+    queryset = Intervention.objects.filter(
+        status__in=[
+            Intervention.SIGNED, Intervention.ACTIVE, Intervention.ENDED,
+            Intervention.IMPLEMENTED, Intervention.CLOSED,
+        ]
+    ).select_related('agreement').prefetch_related('result_links').order_by('title')
     serializer_class = InterventionWithLinkedInstancesSerializer
 
 
