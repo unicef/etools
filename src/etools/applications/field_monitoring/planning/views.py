@@ -273,9 +273,7 @@ class PartnersViewSet(
     mixins.ListModelMixin,
     viewsets.GenericViewSet,
 ):
-    queryset = PartnerOrganization.objects.filter(
-        blocked=False, deleted_flag=False, manually_blocked=False, hidden=False,
-    ).order_by('name')
+    queryset = PartnerOrganization.objects.filter(deleted_flag=False).exclude(name='').order_by('name')
     serializer_class = MinimalPartnerOrganizationListSerializer
 
 

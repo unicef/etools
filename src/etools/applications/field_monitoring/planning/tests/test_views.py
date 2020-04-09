@@ -687,10 +687,8 @@ class PartnersViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenantTe
     base_view = 'field_monitoring_planning:partners'
 
     def test_list(self):
-        PartnerFactory(blocked=True)
         PartnerFactory(deleted_flag=True)
-        PartnerFactory(manually_blocked=True)
-        PartnerFactory(hidden=True)
+        PartnerFactory(name='')
         valid_partners = [PartnerFactory(name='b'), PartnerFactory(name='a')]
         valid_partners.reverse()
 
