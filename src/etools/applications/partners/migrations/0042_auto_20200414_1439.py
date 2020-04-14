@@ -13,21 +13,21 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='partnerorganization',
             name='highest_risk_rating_name',
-            field=models.CharField(blank=True, default='', max_length=150),
+            field=models.CharField(verbose_name="HACT Risk Rating Name", blank=True, default='', max_length=150),
         ),
         migrations.AddField(
             model_name='partnerorganization',
             name='highest_risk_rating_type',
-            field=models.CharField(blank=True, default='', max_length=150),
+            field=models.CharField(verbose_name="HACT Risk Rating Type", blank=True, default='', max_length=150),
         ),
         migrations.AddField(
             model_name='partnerorganization',
             name='psea_assessment_date',
-            field=models.DateTimeField(null=True, blank=True),
+            field=models.DateTimeField(verbose_name="Last PSEA Assess. Date", null=True, blank=True),
         ),
         migrations.AddField(
             model_name='partnerorganization',
             name='sea_risk_rating_name',
-            field=models.CharField(blank=True, default='', max_length=150),
+            field=models.CharField(verbose_name="PSEA Risk Rating", blank=True, default='', max_length=150),
         ),
     ]
