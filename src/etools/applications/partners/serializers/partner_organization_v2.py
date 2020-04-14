@@ -329,10 +329,9 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
     core_values_assessments = CoreValuesAssessmentSerializer(many=True, read_only=True, required=False)
     partner_type_slug = serializers.ReadOnlyField()
     flags = serializers.ReadOnlyField()
-    psea_risk_rating = serializers.SerializerMethodField()
-    psea_assessment_date = serializers.SerializerMethodField()
-    highest_risk_type = serializers.SerializerMethodField()
-    highest_risk_rating = serializers.SerializerMethodField()
+    sea_risk_rating_name = serializers.CharField(label="psea_risk_rating")
+    highest_risk_rating_type = serializers.CharField(label="highest_risk_type")
+    highest_risk_rating_name = serializers.CharField(label="highest_risk_rating")
 
     def get_hact_values(self, obj):
         return json.loads(obj.hact_values) if isinstance(obj.hact_values, str) else obj.hact_values
@@ -346,37 +345,6 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
             .filter(agreement__partner=partner)\
             .exclude(status='draft')
         return qs
-
-    def _get_psea(self, obj):
-        psea = obj.psea_assessment.first()
-        if psea and psea.answers_complete():
-            return psea
-        return None
-
-    def _get_psea_highest(self, obj):
-        psea = self._get_psea(obj)
-        highest = None
-        if psea:
-            for answer in psea.answers.all():
-                if not highest or answer.rating.weight < highest.rating.weight:
-                    highest = answer
-        return highest
-
-    def get_psea_risk_rating(self, obj):
-        psea = self._get_psea(obj)
-        return psea.overall_rating_display if psea else None
-
-    def get_psea_assessment_date(self, obj):
-        psea = self._get_psea(obj)
-        return psea.modified if psea else None
-
-    def get_highest_risk_type(self, obj):
-        psea_highest = self._get_psea_highest(obj)
-        return psea_highest.rating.label if psea_highest else None
-
-    def get_highest_risk_rating(self, obj):
-        psea_highest = self._get_psea_highest(obj)
-        return psea_highest.rating.weight if psea_highest else None
 
     class Meta:
         model = PartnerOrganization

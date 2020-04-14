@@ -33,12 +33,6 @@ from etools.applications.partners.tests.factories import (
     PartnerStaffFactory,
 )
 from etools.applications.partners.views.partner_organization_v2 import PartnerOrganizationAddView
-from etools.applications.psea.tests.factories import (
-    AnswerFactory,
-    AssessmentFactory as PSEAAssessmentFactory,
-    IndicatorFactory,
-    RatingFactory,
-)
 from etools.applications.reports.models import ResultType
 from etools.applications.reports.tests.factories import CountryProgrammeFactory, ResultFactory, ResultTypeFactory
 from etools.applications.t2f.tests.factories import TravelActivityFactory
@@ -93,44 +87,6 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
         )
         data = json.loads(response.rendered_content)
         self.assertEqual(self.intervention.pk, data["interventions"][0]["id"])
-
-    def test_get_partner_details_psea(self):
-        rating_high = RatingFactory(label="High", weight=10)
-        rating_medium = RatingFactory(label="Medium", weight=20)
-        indicator_1 = IndicatorFactory()
-        indicator_1.ratings.set([rating_high, rating_medium])
-        indicator_2 = IndicatorFactory()
-        indicator_2.ratings.set([rating_high, rating_medium])
-        response = self.forced_auth_req(
-            'get',
-            self.url,
-            user=self.unicef_staff
-        )
-        data = json.loads(response.rendered_content)
-        self.assertIsNone(data["psea_risk_rating"])
-        self.assertIsNone(data["psea_assessment_date"])
-        self.assertIsNone(data["highest_risk_type"])
-        self.assertIsNone(data["highest_risk_rating"])
-
-        # assessement complete
-        psea = PSEAAssessmentFactory(partner=self.partner)
-        AnswerFactory(assessment=psea, rating=rating_high, indicator=indicator_1)
-        AnswerFactory(assessment=psea, rating=rating_medium, indicator=indicator_2)
-        psea.status = psea.STATUS_FINAL
-        psea.save()
-        self.assertTrue(psea.answers_complete())
-        response = self.forced_auth_req(
-            'get',
-            self.url,
-            user=self.unicef_staff
-        )
-        data = json.loads(response.rendered_content)
-        self.assertEqual(data["psea_risk_rating"], psea.overall_rating_display)
-        self.assertEqual(
-            data["psea_assessment_date"][:26],
-            psea.modified.isoformat()[:26],)
-        self.assertEqual(data["highest_risk_type"], rating_high.label)
-        self.assertEqual(data["highest_risk_rating"], rating_high.weight)
 
     def test_patch_with_core_values_assessment_attachment(self):
         attachment = AttachmentFactory(
