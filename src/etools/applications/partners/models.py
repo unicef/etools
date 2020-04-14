@@ -490,19 +490,26 @@ class PartnerOrganization(TimeStampedModel):
     hact_values = JSONField(blank=True, null=True, default=hact_default, verbose_name='HACT')
     basis_for_risk_rating = models.CharField(
         verbose_name=_("Basis for Risk Rating"), max_length=50, default='', blank=True)
-    psea_assessment_date = models.DateTimeField(null=True, blank=True)
+    psea_assessment_date = models.DateTimeField(
+        verbose_name=_("Last PSEA Assess. Date"),
+        null=True,
+        blank=True,
+    )
     sea_risk_rating_name = models.CharField(
         max_length=150,
+        verbose_name=_("PSEA Risk Rating"),
         blank=True,
         default='',
     )
     highest_risk_rating_type = models.CharField(
         max_length=150,
+        verbose_name=_("HACT Risk Rating Type"),
         blank=True,
         default='',
     )
     highest_risk_rating_name = models.CharField(
         max_length=150,
+        verbose_name=_("HACT Risk Rating Name"),
         blank=True,
         default='',
     )
