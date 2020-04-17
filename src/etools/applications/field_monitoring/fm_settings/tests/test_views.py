@@ -278,8 +278,8 @@ class LocationSitesViewTestCase(TestExportMixin, FMBaseTestCaseMixin, BaseTenant
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_csv_export(self):
-        gateway_0, created = GatewayType.objects.get_or_create(admin_level=0, defaults={'name': 'Gateway level 0'})
-        gateway_1, created = GatewayType.objects.get_or_create(admin_level=1, defaults={'name': 'Gateway level 1'})
+        gateway_0, _created = GatewayType.objects.get_or_create(admin_level=0, defaults={'name': 'Gateway level 0'})
+        gateway_1, _created = GatewayType.objects.get_or_create(admin_level=1, defaults={'name': 'Gateway level 1'})
         LocationSiteFactory(point=GEOSGeometry("POINT(1 2)"), parent__gateway=gateway_0)
         LocationSiteFactory(parent__gateway=gateway_1, parent__parent__gateway=gateway_0)
 
