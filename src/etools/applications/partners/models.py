@@ -503,13 +503,13 @@ class PartnerOrganization(TimeStampedModel):
     )
     highest_risk_rating_type = models.CharField(
         max_length=150,
-        verbose_name=_("HACT Risk Rating Type"),
+        verbose_name=_("Highest Risk Rating Type"),
         blank=True,
         default='',
     )
     highest_risk_rating_name = models.CharField(
         max_length=150,
-        verbose_name=_("HACT Risk Rating Name"),
+        verbose_name=_("Highest Risk Rating Name"),
         blank=True,
         default='',
     )
