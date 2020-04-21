@@ -13,12 +13,12 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='partnerorganization',
             name='highest_risk_rating_name',
-            field=models.CharField(verbose_name="HACT Risk Rating Name", blank=True, default='', max_length=150),
+            field=models.CharField(verbose_name="Highest Risk Rating Name", blank=True, default='', max_length=150),
         ),
         migrations.AddField(
             model_name='partnerorganization',
             name='highest_risk_rating_type',
-            field=models.CharField(verbose_name="HACT Risk Rating Type", blank=True, default='', max_length=150),
+            field=models.CharField(verbose_name="Highest Risk Rating Type", blank=True, default='', max_length=150),
         ),
         migrations.AddField(
             model_name='partnerorganization',

@@ -36,13 +36,13 @@ class LocationSiteExportSerializer(serializers.Serializer):
         if not obj.point:
             return ''
 
-        return obj.point.coords[0]
+        return obj.point.coords[1]
 
     def get_long(self, obj):
         if not obj.point:
             return ''
 
-        return obj.point.coords[1]
+        return obj.point.coords[0]
 
     def get_active(self, obj):
         return "Yes" if obj.is_active else "No"

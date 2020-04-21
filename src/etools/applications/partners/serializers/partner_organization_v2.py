@@ -201,6 +201,8 @@ class PartnerOrganizationListSerializer(serializers.ModelSerializer):
             "total_ct_ytd",
             "hidden",
             "basis_for_risk_rating",
+            "psea_assessment_date",
+            "sea_risk_rating_name",
         )
 
 

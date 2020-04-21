@@ -19,7 +19,7 @@
         ],
         "content-length": [
             "Content-Length",
-            "463"
+            "517"
         ]
     },
     "data": [
@@ -48,7 +48,9 @@
             "reported_cy": "10000.00",
             "total_ct_ytd": null,
             "hidden": false,
-            "basis_for_risk_rating": ""
+            "basis_for_risk_rating": "",
+            "psea_assessment_date": null,
+            "sea_risk_rating_name": ""
         }
     ],
     "content_type": null
