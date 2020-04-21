@@ -45,11 +45,16 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
         'MARKED_FOR_DELETION',
         'POSTING_BLOCK',
         'PARTNER_TYPE_DESC',
+        'PSEA_ASSESSMENT_DATE',
+        'SEA_RISK_RATING_NAME',
+        'HIGEST_RISK_RATING_TYPE',
+        'HIGEST_RISK_RATING',
     )
 
     DATE_FIELDS = (
         'DATE_OF_ASSESSMENT',
         'CORE_VALUE_ASSESSMENT_DT',
+        'PSEA_ASSESSMENT_DATE',
     )
 
     MAPPING = {
@@ -73,7 +78,11 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
         'total_ct_cy': "TOTAL_CASH_TRANSFERRED_CY",
         'net_ct_cy': 'NET_CASH_TRANSFERRED_CY',
         'reported_cy': 'REPORTED_CY',
-        'total_ct_ytd': 'TOTAL_CASH_TRANSFERRED_YTD'
+        'total_ct_ytd': 'TOTAL_CASH_TRANSFERRED_YTD',
+        'psea_assessment_date': 'PSEA_ASSESSMENT_DATE',
+        'sea_risk_rating_name': 'SEA_RISK_RATING_NAME',
+        'highest_risk_rating_type': 'HIGEST_RISK_RATING_TYPE',
+        'highest_risk_rating_name': 'HIGEST_RISK_RATING',
     }
 
     def _convert_records(self, records):

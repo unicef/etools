@@ -168,7 +168,7 @@ class TestAPIPartnerOrganizationListView(BaseTenantTestCase):
             'address', 'blocked', 'basis_for_risk_rating', 'city', 'country', 'cso_type', 'deleted_flag', 'email',
             'hidden', 'id', 'last_assessment_date', 'name', 'net_ct_cy', 'partner_type', 'phone_number', 'postal_code',
             'rating', 'reported_cy', 'shared_with', 'short_name', 'street_address', 'total_ct_cp', 'total_ct_cy',
-            'total_ct_ytd', 'vendor_number',
+            'total_ct_ytd', 'vendor_number', 'psea_assessment_date', 'sea_risk_rating_name',
         ))
 
     def assertResponseFundamentals(self, response, expected_keys=None):
