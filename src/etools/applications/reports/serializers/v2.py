@@ -3,6 +3,7 @@ from django.utils.translation import ugettext as _
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
+from rest_framework.validators import UniqueTogetherValidator
 from unicef_rest_export.serializers import ExportSerializer
 
 from etools.applications.partners.models import Intervention
@@ -365,6 +366,15 @@ class SpecialReportingRequirementSerializer(serializers.ModelSerializer):
     class Meta:
         model = SpecialReportingRequirement
         fields = "__all__"
+        validators = [
+            UniqueTogetherValidator(
+                queryset=SpecialReportingRequirement.objects.all(),
+                fields=["intervention", "due_date"],
+                message=_(
+                    "There is already a special report with this due date.",
+                ),
+            )
+        ]
 
 
 class ResultFrameworkSerializer(serializers.Serializer):
