@@ -187,6 +187,13 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
 
                 partner_org.hidden = partner_org.deleted_flag or partner_org.blocked or partner_org.manually_blocked
                 partner_org.vision_synced = True
+                partner_org.highest_risk_rating_name = partner.get("HIGEST_RISK_RATING", "")
+                partner_org.highest_risk_rating_type = partner.get("HIGEST_RISK_RATING_TYPE", "")
+                partner_org.psea_assessment_date = datetime.strptime(
+                    partner["PSEA_ASSESSMENT_DATE"],
+                    '%d-%b-%y',
+                ) if 'PSEA_ASSESSMENT_DATE' in partner else None
+                partner_org.sea_risk_rating_name = partner.get("SEA_RISK_RATING_NAME", "")
                 saving = True
 
             if full_sync and (
