@@ -1,4 +1,3 @@
-
 import datetime
 import json
 
@@ -27,6 +26,7 @@ class TestPartnerSynchronizer(BaseTenantTestCase):
             "NET_CASH_TRANSFERRED_CY": "90.00",
             "REPORTED_CY": "80.00",
             "TOTAL_CASH_TRANSFERRED_YTD": "70.00",
+            "SHORT_NAME": "ACME",
         }
         self.records = {"ROWSET": {"ROW": [self.data]}}
         self.adapter = synchronizers.PartnerSynchronizer(self.country.business_area_code)

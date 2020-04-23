@@ -546,6 +546,7 @@ class TestPartnerOrganizationAddView(BaseTenantTestCase):
                     'TOTAL_CASH_TRANSFERRED_YTD': "2,000",
                     'REPORTED_CY': "2,000",
                     "COUNTRY": "239",
+                    "SHORT_NAME": "NP",
                 }
             }
         }))
