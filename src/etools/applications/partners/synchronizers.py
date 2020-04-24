@@ -49,6 +49,7 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
         'SEA_RISK_RATING_NAME',
         'HIGEST_RISK_RATING_TYPE',
         'HIGEST_RISK_RATING',
+        'SHORT_NAME',
     )
 
     DATE_FIELDS = (
@@ -83,6 +84,7 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
         'sea_risk_rating_name': 'SEA_RISK_RATING_NAME',
         'highest_risk_rating_type': 'HIGEST_RISK_RATING_TYPE',
         'highest_risk_rating_name': 'HIGEST_RISK_RATING',
+        'short_name': 'SHORT_NAME',
     }
 
     def _convert_records(self, records):
@@ -187,6 +189,14 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
 
                 partner_org.hidden = partner_org.deleted_flag or partner_org.blocked or partner_org.manually_blocked
                 partner_org.vision_synced = True
+                partner_org.short_name = partner.get('SHORT_NAME', '')
+                partner_org.highest_risk_rating_name = partner.get("HIGEST_RISK_RATING", "")
+                partner_org.highest_risk_rating_type = partner.get("HIGEST_RISK_RATING_TYPE", "")
+                partner_org.psea_assessment_date = datetime.strptime(
+                    partner["PSEA_ASSESSMENT_DATE"],
+                    '%d-%b-%y',
+                ) if 'PSEA_ASSESSMENT_DATE' in partner else None
+                partner_org.sea_risk_rating_name = partner.get("SEA_RISK_RATING_NAME", "")
                 saving = True
 
             if full_sync and (
