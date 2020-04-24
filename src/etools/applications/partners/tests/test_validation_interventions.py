@@ -145,6 +145,34 @@ class TestTransitionToClosed(BaseTenantTestCase):
         self.expected["latest_end_date"] = frs.end_date
         self.assertFundamentals(self.intervention.total_frs)
 
+    def test_completed_total_amounts_not_zero(self):
+        """Total outstanding must be zero for completed"""
+        frs = FundsReservationHeaderFactory(
+            intervention=self.intervention,
+            total_amt=0.00,
+            total_amt_local=10.00,
+            intervention_amt=10.00,
+            actual_amt_local=20.00,
+            actual_amt=0.00,
+            outstanding_amt_local=20.00,
+            outstanding_amt=20.00,
+            completed_flag=True,
+        )
+        with self.assertRaisesRegexp(
+                TransitionError,
+                'Total Outstanding DCTs need to equal to 0'
+        ):
+            transition_to_closed(self.intervention)
+        self.expected["total_frs_amt"] = 10.00
+        self.expected["total_intervention_amt"] = 10.00
+        self.expected["total_actual_amt"] = 20.00
+        self.expected["total_outstanding_amt"] = 20.00
+        self.expected["total_outstanding_amt_usd"] = 20.00
+        self.expected["earliest_start_date"] = frs.start_date
+        self.expected["latest_end_date"] = frs.end_date
+        self.expected["total_completed_flag"] = True
+        self.assertFundamentals(self.intervention.total_frs)
+
     def test_total_amounts_valid(self):
         """Total amounts must equal and total outstanding must be zero"""
         frs = FundsReservationHeaderFactory(
