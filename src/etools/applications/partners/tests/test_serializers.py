@@ -714,6 +714,7 @@ class TestPartnerOrganizationDetailSerializer(BaseTenantTestCase):
             'spot_check_planned_q3', 'spot_check_planned_q4', 'spot_check_follow_up', 'spot_check_required',
             'total_spot_check_planned', 'required_audit'
         ])
+        self.assertNotEqual(data['planned_engagement']['spot_check_planned_q1'], '')
 
         self.assertEquals(len(data['staff_members']), 1)
         self.assertCountEqual(data['staff_members'][0].keys(), [
