@@ -20,7 +20,11 @@ from etools.applications.reports.models import (
     ResultType,
     SpecialReportingRequirement,
 )
-from etools.applications.reports.validators import value_none_or_numbers, value_numbers
+from etools.applications.reports.validators import (
+    SpecialReportingRequirementUniqueValidator,
+    value_none_or_numbers,
+    value_numbers,
+)
 
 
 class MinimalOutputListSerializer(serializers.ModelSerializer):
@@ -367,12 +371,8 @@ class SpecialReportingRequirementSerializer(serializers.ModelSerializer):
         model = SpecialReportingRequirement
         fields = "__all__"
         validators = [
-            UniqueTogetherValidator(
+            SpecialReportingRequirementUniqueValidator(
                 queryset=SpecialReportingRequirement.objects.all(),
-                fields=["intervention", "due_date"],
-                message=_(
-                    "There is already a special report with this due date.",
-                ),
             )
         ]
 

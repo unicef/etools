@@ -999,10 +999,11 @@ class TestSpecialReportingRequirementListCreateView(BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(requirement_qs.count(), init_count)
-        self.assertEqual(
-            str(response.data["non_field_errors"][0]),
-            "There is already a special report with this due date.",
-        )
+        self.assertEqual(response.data, {
+            "due_date": [
+                "There is already a special report with this due date.",
+            ]
+        })
 
         due_date += datetime.timedelta(days=2)
         response = self.forced_auth_req(

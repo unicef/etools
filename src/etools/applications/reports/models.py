@@ -849,7 +849,6 @@ class SpecialReportingRequirement(TimeStampedModel):
 
     class Meta:
         ordering = ("-due_date", )
-        unique_together = (("intervention", "due_date"),)
 
     def __str__(self):
         return str(self.due_date)
