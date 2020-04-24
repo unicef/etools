@@ -1,4 +1,3 @@
-
 from datetime import datetime
 
 from django.contrib.auth import get_user_model
@@ -103,7 +102,8 @@ def notify_hact_update(partner_list, country_id):
     }
     recipients = get_user_model().objects.filter(
         groups=UNICEFAuditFocalPoint.as_group(),
-        profile__countries_available__id=country_id
+        profile__countries_available__id=country_id,
+        is_superuser=False,
     ).values_list('email', flat=True)
     send_notification_with_template(
         recipients=list(recipients),
