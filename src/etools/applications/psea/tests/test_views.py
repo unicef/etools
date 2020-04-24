@@ -167,17 +167,44 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         self.assertEqual(data[0]["id"], assessment.pk)
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
-    def test_filter_assessment_date(self):
-        for _ in range(10):
-            AssessmentFactory()
-
+    def test_filter_assessment_date_before(self):
         date = datetime.date(2001, 1, 1)
         assessment = AssessmentFactory(assessment_date=date)
+        date_after = date + datetime.timedelta(days=20)
+        for _ in range(10):
+            AssessmentFactory(assessment_date=date_after)
 
         response = self.forced_auth_req(
             "get",
             reverse('psea:assessment-list'),
-            data={"assessment_date": date.strftime("%Y-%m-%d")},
+            data={
+                "assessment_date__lt": (
+                    date + datetime.timedelta(days=1)
+                ).strftime("%Y-%m-%d"),
+            },
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data["results"]
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["id"], assessment.pk)
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_filter_assessment_date_after(self):
+        date = datetime.date(2001, 1, 1)
+        assessment = AssessmentFactory(assessment_date=date)
+        date_after = date - datetime.timedelta(days=20)
+        for _ in range(10):
+            AssessmentFactory(assessment_date=date_after)
+
+        response = self.forced_auth_req(
+            "get",
+            reverse('psea:assessment-list'),
+            data={
+                "assessment_date__gt": (
+                    date - datetime.timedelta(days=1)
+                ).strftime("%Y-%m-%d"),
+            },
             user=self.user,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
