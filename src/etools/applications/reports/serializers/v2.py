@@ -3,7 +3,6 @@ from django.utils.translation import ugettext as _
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
-from rest_framework.validators import UniqueTogetherValidator
 from unicef_rest_export.serializers import ExportSerializer
 
 from etools.applications.partners.models import Intervention
