@@ -145,8 +145,8 @@ class TestPartnerOrganizationModelExport(PartnerModelExportTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 49)
-        self.assertEqual(len(dataset[0]), 49)
+        self.assertEqual(len(dataset._get_headers()), 53)
+        self.assertEqual(len(dataset[0]), 53)
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_csv_flat_export_api_hact_value_string(self):
@@ -165,8 +165,8 @@ class TestPartnerOrganizationModelExport(PartnerModelExportTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 2)
-        self.assertEqual(len(dataset._get_headers()), 49)
-        self.assertEqual(len(dataset[0]), 49)
+        self.assertEqual(len(dataset._get_headers()), 53)
+        self.assertEqual(len(dataset[0]), 53)
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_csv_flat_export_api_hidden(self):
@@ -180,8 +180,8 @@ class TestPartnerOrganizationModelExport(PartnerModelExportTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 49)
-        self.assertEqual(len(dataset[0]), 49)
+        self.assertEqual(len(dataset._get_headers()), 53)
+        self.assertEqual(len(dataset[0]), 53)
 
 
 class TestPartnerStaffMemberModelExport(PartnerModelExportTestCase):

@@ -6,6 +6,7 @@ from django.urls import reverse
 from factory import fuzzy
 from rest_framework import status
 from unicef_attachments.models import Attachment, AttachmentLink, FileType
+from unicef_locations.models import GatewayType
 from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.attachments.tests.factories import (
@@ -277,12 +278,16 @@ class LocationSitesViewTestCase(TestExportMixin, FMBaseTestCaseMixin, BaseTenant
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_csv_export(self):
-        LocationSiteFactory()
-        site2 = LocationSiteFactory()
-        site2.parent = LocationFactory(parent=LocationFactory())
-        site2.save()
+        gateway_0, _created = GatewayType.objects.get_or_create(admin_level=0, defaults={'name': 'Gateway level 0'})
+        gateway_1, _created = GatewayType.objects.get_or_create(admin_level=1, defaults={'name': 'Gateway level 1'})
+        LocationSiteFactory(point=GEOSGeometry("POINT(1 2)"), parent__gateway=gateway_0)
+        LocationSiteFactory(parent__gateway=gateway_1, parent__parent__gateway=gateway_0)
 
-        self._test_export(self.unicef_user, 'field_monitoring_settings:sites-export')
+        response = self._test_export(self.unicef_user, 'field_monitoring_settings:sites-export')
+
+        self.assertEqual(len(response.data), 2)
+        self.assertEqual(response.data[0]['lat'], 2)
+        self.assertEqual(response.data[0]['long'], 1)
 
     def test_csv_export_no_sites(self):
         self._test_export(self.unicef_user, 'field_monitoring_settings:sites-export')

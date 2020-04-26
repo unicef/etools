@@ -201,6 +201,8 @@ class PartnerOrganizationListSerializer(serializers.ModelSerializer):
             "total_ct_ytd",
             "hidden",
             "basis_for_risk_rating",
+            "psea_assessment_date",
+            "sea_risk_rating_name",
         )
 
 
@@ -329,6 +331,9 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
     core_values_assessments = CoreValuesAssessmentSerializer(many=True, read_only=True, required=False)
     partner_type_slug = serializers.ReadOnlyField()
     flags = serializers.ReadOnlyField()
+    sea_risk_rating_name = serializers.CharField(label="psea_risk_rating")
+    highest_risk_rating_type = serializers.CharField(label="highest_risk_type")
+    highest_risk_rating_name = serializers.CharField(label="highest_risk_rating")
 
     def get_hact_values(self, obj):
         return json.loads(obj.hact_values) if isinstance(obj.hact_values, str) else obj.hact_values

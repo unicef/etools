@@ -704,7 +704,9 @@ class TestPartnerOrganizationDetailSerializer(BaseTenantTestCase):
             'phone_number', 'planned_engagement', 'postal_code', 'rating', 'reported_cy', 'shared_with', 'short_name',
             'staff_members', 'street_address', 'total_ct_cp', 'total_ct_cy', 'total_ct_ytd', 'type_of_assessment',
             'vendor_number', 'vision_synced', 'planned_visits', 'manually_blocked', 'flags', 'partner_type_slug',
-            'outstanding_dct_amount_6_to_9_months_usd', 'outstanding_dct_amount_more_than_9_months_usd'
+            'outstanding_dct_amount_6_to_9_months_usd', 'outstanding_dct_amount_more_than_9_months_usd',
+            'psea_assessment_date', 'sea_risk_rating_name', 'highest_risk_rating_name',
+            'highest_risk_rating_type',
         ])
 
         self.assertCountEqual(data['planned_engagement'].keys(), [
@@ -712,6 +714,7 @@ class TestPartnerOrganizationDetailSerializer(BaseTenantTestCase):
             'spot_check_planned_q3', 'spot_check_planned_q4', 'spot_check_follow_up', 'spot_check_required',
             'total_spot_check_planned', 'required_audit'
         ])
+        self.assertNotEqual(data['planned_engagement']['spot_check_planned_q1'], '')
 
         self.assertEquals(len(data['staff_members']), 1)
         self.assertCountEqual(data['staff_members'][0].keys(), [
