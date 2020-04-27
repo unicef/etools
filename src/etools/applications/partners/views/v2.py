@@ -101,12 +101,7 @@ class PMPStaticDropdownsListAPIView(APIView):
         )
         attachment_types_active = AttachmentFlat.get_file_types()
         partner_file_types = FileType.objects.values_list("name", flat=True)
-        sea_risk_ratings = PartnerOrganization.objects.values_list(
-            'sea_risk_rating_name',
-            flat=True,
-        ).exclude(
-            sea_risk_rating_name='',
-        ).order_by('sea_risk_rating_name').distinct('sea_risk_rating_name')
+        sea_risk_ratings = choices_to_json_ready(PartnerOrganization.RISK_RATINGS)
 
         local_currency = local_workspace.local_currency.id if local_workspace.local_currency else None
 
