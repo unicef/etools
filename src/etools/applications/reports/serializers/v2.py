@@ -19,7 +19,11 @@ from etools.applications.reports.models import (
     ResultType,
     SpecialReportingRequirement,
 )
-from etools.applications.reports.validators import value_none_or_numbers, value_numbers
+from etools.applications.reports.validators import (
+    SpecialReportingRequirementUniqueValidator,
+    value_none_or_numbers,
+    value_numbers,
+)
 
 
 class MinimalOutputListSerializer(serializers.ModelSerializer):
@@ -365,6 +369,11 @@ class SpecialReportingRequirementSerializer(serializers.ModelSerializer):
     class Meta:
         model = SpecialReportingRequirement
         fields = "__all__"
+        validators = [
+            SpecialReportingRequirementUniqueValidator(
+                queryset=SpecialReportingRequirement.objects.all(),
+            )
+        ]
 
 
 class ResultFrameworkSerializer(serializers.Serializer):
