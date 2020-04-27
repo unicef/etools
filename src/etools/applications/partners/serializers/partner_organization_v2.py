@@ -12,6 +12,7 @@ from unicef_attachments.serializers import AttachmentSerializerMixin
 from unicef_snapshot.serializers import SnapshotModelSerializer
 
 from etools.applications.partners.models import (
+    Agreement,
     Assessment,
     CoreValuesAssessment,
     Intervention,
@@ -145,6 +146,23 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
                 )
 
         return data
+
+    def update(self, instance, validated_data):
+        instance = super().update(instance, validated_data)
+        # if inactive, remove from DRAFT Agreements and PDs
+        if not instance.active:
+            agreement_qs = instance.agreement_authorizations.filter(
+                status=Agreement.DRAFT,
+            )
+            for agreement in agreement_qs.all():
+                agreement.authorized_officers.remove(instance)
+            pd_qs = Intervention.objects.filter(
+                status=Intervention.DRAFT,
+                partner_focal_points=instance,
+            )
+            for pd in pd_qs.all():
+                pd.partner_focal_points.remove(instance)
+        return instance
 
 
 class PartnerStaffMemberDetailSerializer(serializers.ModelSerializer):
