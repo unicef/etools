@@ -276,6 +276,56 @@ class TestAPIPartnerOrganizationListView(BaseTenantTestCase):
         self.assertEqual(len(response_json), 0)
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_filter_sea_risk_rating(self):
+        """Ensure filtering by the sea_risk_rating works as expected"""
+        sea_risk_rating = "High"
+        self.partner = PartnerFactory(sea_risk_rating_name=sea_risk_rating)
+        for _ in range(10):
+            PartnerFactory()
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            data={"sea_risk_rating": sea_risk_rating},
+        )
+        self.assertResponseFundamentals(response)
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_filter_psea_assessment_date_before(self):
+        """Ensure filtering by the psea_assessment_date_before works
+        as expected"""
+        date = datetime.date(2001, 1, 1)
+        self.partner = PartnerFactory(psea_assessment_date=date)
+        date_after = date + datetime.timedelta(days=20)
+        for _ in range(10):
+            PartnerFactory(psea_assessment_date=date_after)
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            data={
+                "psea_assessment_date_before": date + datetime.timedelta(days=1),
+            },
+        )
+        self.assertResponseFundamentals(response)
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_filter_psea_assessment_date_after(self):
+        """Ensure filtering by the psea_assessment_date_after works
+        as expected"""
+        date = datetime.date(2001, 1, 1)
+        self.partner = PartnerFactory(psea_assessment_date=date)
+        date_before = date - datetime.timedelta(days=20)
+        for _ in range(10):
+            PartnerFactory(psea_assessment_date=date_before)
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            data={
+                "psea_assessment_date_after": date - datetime.timedelta(days=1),
+            },
+        )
+        self.assertResponseFundamentals(response)
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_search_name(self):
         """Test that name search matches substrings and is case-independent"""
         # Make another partner that should be excluded from the search results.
