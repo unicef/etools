@@ -104,7 +104,7 @@ class PMPStaticDropdownsListAPIView(APIView):
         sea_risk_ratings = PartnerOrganization.objects.values_list(
             'sea_risk_rating_name',
             flat=True,
-        ).distinct('sea_risk_rating_name')
+        ).order_by('sea_risk_rating_name').distinct('sea_risk_rating_name')
 
         local_currency = local_workspace.local_currency.id if local_workspace.local_currency else None
 
