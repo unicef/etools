@@ -659,7 +659,7 @@ class AppliedIndicator(TimeStampedModel):
 
     @cached_property
     def target_display(self):
-        ind_type = self.indicator.display_type
+        ind_type = self.indicator.display_type if self.indicator else None
         numerator = self.target.get('v', self.target)
         denominator = '-'
         if ind_type == IndicatorBlueprint.RATIO:
