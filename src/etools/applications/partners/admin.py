@@ -501,6 +501,10 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
         'total_ct_ytd',
         'outstanding_dct_amount_6_to_9_months_usd',
         'outstanding_dct_amount_more_than_9_months_usd',
+        'psea_assessment_date',
+        'sea_risk_rating_name',
+        'highest_risk_rating_name',
+        'highest_risk_rating_type',
     )
     fieldsets = (
         (_('Partner Details'), {
@@ -520,6 +524,10 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
                  'phone_number',
                  'email',
                  'core_values_assessment_date',
+                 'psea_assessment_date',
+                 'sea_risk_rating_name',
+                 'highest_risk_rating_name',
+                 'highest_risk_rating_type',
                  'manually_blocked',
                  'deleted_flag',
                  'blocked',
