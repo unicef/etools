@@ -148,6 +148,13 @@ class AgreementPermissions(PMPPermissions):
         super().__init__(**kwargs)
         inbound_check = kwargs.get('inbound_check', False)
 
+        def termination_doc_attached():
+            if self.instance.agreement_type != self.instance.PCA:
+                return True
+            if self.instance.termination_doc.exists():
+                return True
+            return False
+
         def user_added_amendment(instance):
             assert inbound_check, 'this function cannot be called unless instantiated with inbound_check=True'
             # check_rigid_related checks if there were any changes from the previous
@@ -160,7 +167,8 @@ class AgreementPermissions(PMPPermissions):
             'is type SSFA': self.instance.agreement_type == self.instance.SSFA,
             'is type MOU': self.instance.agreement_type == self.instance.MOU,
             # this condition can only be checked on data save
-            'user adds amendment': False if not inbound_check else user_added_amendment(self.instance)
+            'user adds amendment': False if not inbound_check else user_added_amendment(self.instance),
+            'termination_doc_attached': termination_doc_attached(),
         }
 
 

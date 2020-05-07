@@ -93,7 +93,7 @@ class LocationSitesViewSet(FMBaseViewSet, viewsets.ModelViewSet):
     permission_classes = FMBaseViewSet.permission_classes + [
         IsReadAction | (IsEditAction & IsPME)
     ]
-    queryset = LocationSite.objects.prefetch_related('parent').order_by('parent__name', 'name')
+    queryset = LocationSite.objects.prefetch_related('parent').order_by('name')
     serializer_class = LocationSiteSerializer
     filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
     filter_fields = ('is_active',)

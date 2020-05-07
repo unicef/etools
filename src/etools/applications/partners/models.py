@@ -21,7 +21,10 @@ from unicef_locations.models import Location
 
 from etools.applications.core.permissions import import_permissions
 from etools.applications.funds.models import FundsReservationHeader
-from etools.applications.partners.validation import interventions as intervention_validation
+from etools.applications.partners.validation import (
+    agreements as agreement_validation,
+    interventions as intervention_validation,
+)
 from etools.applications.partners.validation.agreements import (
     agreement_transition_to_ended_valid,
     agreement_transition_to_signed_valid,
@@ -487,6 +490,29 @@ class PartnerOrganization(TimeStampedModel):
     hact_values = JSONField(blank=True, null=True, default=hact_default, verbose_name='HACT')
     basis_for_risk_rating = models.CharField(
         verbose_name=_("Basis for Risk Rating"), max_length=50, default='', blank=True)
+    psea_assessment_date = models.DateTimeField(
+        verbose_name=_("Last PSEA Assess. Date"),
+        null=True,
+        blank=True,
+    )
+    sea_risk_rating_name = models.CharField(
+        max_length=150,
+        verbose_name=_("PSEA Risk Rating"),
+        blank=True,
+        default='',
+    )
+    highest_risk_rating_type = models.CharField(
+        max_length=150,
+        verbose_name=_("Highest Risk Rating Type"),
+        blank=True,
+        default='',
+    )
+    highest_risk_rating_name = models.CharField(
+        max_length=150,
+        verbose_name=_("Highest Risk Rating Name"),
+        blank=True,
+        default='',
+    )
 
     tracker = FieldTracker()
     objects = PartnerOrganizationQuerySet.as_manager()
@@ -1163,6 +1189,13 @@ class Agreement(TimeStampedModel):
         code='partners_agreement',
         blank=True
     )
+    termination_doc = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Termination document for PCAs'),
+        code='partners_agreement_termination_doc',
+        blank=True,
+        null=True
+    )
     start = models.DateField(
         verbose_name=_("Start Date"),
         null=True,
@@ -1320,10 +1353,17 @@ class Agreement(TimeStampedModel):
         pass
 
     @transition(field=status,
+                source=[SIGNED],
+                target=[TERMINATED, SUSPENDED],
+                conditions=[agreement_validation.transition_to_terminated])
+    def transition_to_terminated(self):
+        pass
+
+    @transition(field=status,
                 source=[DRAFT],
                 target=[TERMINATED, SUSPENDED],
                 conditions=[agreements_illegal_transition])
-    def transition_to_terminated(self):
+    def transition_to_terminated_illegal(self):
         pass
 
     @transaction.atomic

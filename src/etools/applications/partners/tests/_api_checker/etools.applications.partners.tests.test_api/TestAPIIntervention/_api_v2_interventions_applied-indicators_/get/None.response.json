@@ -1,0 +1,55 @@
+{
+    "status_code": 200,
+    "headers": {
+        "content-type": [
+            "Content-Type",
+            "application/json"
+        ],
+        "vary": [
+            "Vary",
+            "Accept, Origin, Cookie"
+        ],
+        "allow": [
+            "Allow",
+            "GET"
+        ],
+        "x-frame-options": [
+            "X-Frame-Options",
+            "SAMEORIGIN"
+        ],
+        "content-length": [
+            "Content-Length",
+            "458"
+        ]
+    },
+    "data": [
+        {
+            "id": 1456,
+            "title": "Intervention Title 2",
+            "number": "TST/PCA20191574/20191456",
+            "partner_name": "Partner 2",
+            "status": "draft",
+            "indicators": [],
+            "sections": []
+        },
+        {
+            "id": 1455,
+            "title": "Intervention Title 1",
+            "number": "TST/PCA20191573/20191455",
+            "partner_name": "Partner 1",
+            "status": "draft",
+            "indicators": [],
+            "sections": []
+        },
+        {
+            "id": 101,
+            "title": "Intervention Title 0",
+            "number": "TST/PCA20191572/2019101",
+            "partner_name": "Partner 0",
+            "status": "draft",
+            "indicators": [],
+            "sections": []
+        }
+    ],
+    "content_type": null
+}

@@ -12,6 +12,7 @@ from unicef_attachments.serializers import AttachmentSerializerMixin
 from unicef_snapshot.serializers import SnapshotModelSerializer
 
 from etools.applications.partners.models import (
+    Agreement,
     Assessment,
     CoreValuesAssessment,
     Intervention,
@@ -146,6 +147,23 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
 
         return data
 
+    def update(self, instance, validated_data):
+        instance = super().update(instance, validated_data)
+        # if inactive, remove from DRAFT Agreements and PDs
+        if not instance.active:
+            agreement_qs = instance.agreement_authorizations.filter(
+                status=Agreement.DRAFT,
+            )
+            for agreement in agreement_qs.all():
+                agreement.authorized_officers.remove(instance)
+            pd_qs = Intervention.objects.filter(
+                status=Intervention.DRAFT,
+                partner_focal_points=instance,
+            )
+            for pd in pd_qs.all():
+                pd.partner_focal_points.remove(instance)
+        return instance
+
 
 class PartnerStaffMemberDetailSerializer(serializers.ModelSerializer):
     class Meta:
@@ -201,6 +219,8 @@ class PartnerOrganizationListSerializer(serializers.ModelSerializer):
             "total_ct_ytd",
             "hidden",
             "basis_for_risk_rating",
+            "psea_assessment_date",
+            "sea_risk_rating_name",
         )
 
 
@@ -329,6 +349,9 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
     core_values_assessments = CoreValuesAssessmentSerializer(many=True, read_only=True, required=False)
     partner_type_slug = serializers.ReadOnlyField()
     flags = serializers.ReadOnlyField()
+    sea_risk_rating_name = serializers.CharField(label="psea_risk_rating")
+    highest_risk_rating_type = serializers.CharField(label="highest_risk_type")
+    highest_risk_rating_name = serializers.CharField(label="highest_risk_rating")
 
     def get_hact_values(self, obj):
         return json.loads(obj.hact_values) if isinstance(obj.hact_values, str) else obj.hact_values

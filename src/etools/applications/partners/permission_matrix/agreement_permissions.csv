@@ -33,3 +33,5 @@ Field no,Verbose Name,Field Name,Group,Condition,Status,Action,Allowed
 3.11,r s,special_conditions_pca,UNICEF User,,*,View,TRUE
 3.11,r s,special_conditions_pca,UNICEF User,,Draft,Edit,TRUE
 3.11,r s,special_conditions_pca,UNICEF User,,*,Required,False
+3.3.3,,termination_doc,Partnership Manager,termination_doc_attached,Active,Edit,TRUE
+3.9.11,,termination_doc,UNICEF User,,Terminated,Required,True

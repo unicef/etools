@@ -168,7 +168,7 @@ class TestAPIPartnerOrganizationListView(BaseTenantTestCase):
             'address', 'blocked', 'basis_for_risk_rating', 'city', 'country', 'cso_type', 'deleted_flag', 'email',
             'hidden', 'id', 'last_assessment_date', 'name', 'net_ct_cy', 'partner_type', 'phone_number', 'postal_code',
             'rating', 'reported_cy', 'shared_with', 'short_name', 'street_address', 'total_ct_cp', 'total_ct_cy',
-            'total_ct_ytd', 'vendor_number',
+            'total_ct_ytd', 'vendor_number', 'psea_assessment_date', 'sea_risk_rating_name',
         ))
 
     def assertResponseFundamentals(self, response, expected_keys=None):
@@ -274,6 +274,56 @@ class TestAPIPartnerOrganizationListView(BaseTenantTestCase):
         response_json = json.loads(response.rendered_content)
         self.assertIsInstance(response_json, list)
         self.assertEqual(len(response_json), 0)
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_filter_sea_risk_rating(self):
+        """Ensure filtering by the sea_risk_rating works as expected"""
+        sea_risk_rating = "High"
+        self.partner = PartnerFactory(sea_risk_rating_name=sea_risk_rating)
+        for _ in range(10):
+            PartnerFactory()
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            data={"sea_risk_rating": sea_risk_rating},
+        )
+        self.assertResponseFundamentals(response)
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_filter_psea_assessment_date_before(self):
+        """Ensure filtering by the psea_assessment_date_before works
+        as expected"""
+        date = datetime.date(2001, 1, 1)
+        self.partner = PartnerFactory(psea_assessment_date=date)
+        date_after = date + datetime.timedelta(days=20)
+        for _ in range(10):
+            PartnerFactory(psea_assessment_date=date_after)
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            data={
+                "psea_assessment_date_before": date + datetime.timedelta(days=1),
+            },
+        )
+        self.assertResponseFundamentals(response)
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_filter_psea_assessment_date_after(self):
+        """Ensure filtering by the psea_assessment_date_after works
+        as expected"""
+        date = datetime.date(2001, 1, 1)
+        self.partner = PartnerFactory(psea_assessment_date=date)
+        date_before = date - datetime.timedelta(days=20)
+        for _ in range(10):
+            PartnerFactory(psea_assessment_date=date_before)
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            data={
+                "psea_assessment_date_after": date - datetime.timedelta(days=1),
+            },
+        )
+        self.assertResponseFundamentals(response)
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_search_name(self):

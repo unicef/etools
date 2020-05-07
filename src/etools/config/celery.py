@@ -17,6 +17,10 @@ app.config_from_object('django.conf:settings', namespace='CELERY')
 app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
 
 
+def get_task_app():
+    return app
+
+
 @app.task
 def send_to_slack(message):
     if settings.SLACK_URL:

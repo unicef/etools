@@ -1,3 +1,5 @@
+from django.contrib.auth import get_user_model
+from django.db import connection
 from django.db.models import Prefetch
 from django.utils.translation import ugettext_lazy as _
 
@@ -5,6 +7,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from unicef_attachments.models import Attachment
 from unicef_restlib.views import NestedViewSetMixin
@@ -19,6 +22,7 @@ from etools.applications.field_monitoring.data_collection.models import (
 )
 from etools.applications.field_monitoring.data_collection.offline.blueprint import get_blueprint_for_activity_and_method
 from etools.applications.field_monitoring.data_collection.offline.helpers import (
+    create_checklist,
     get_checklist_form_value,
     update_checklist,
 )
@@ -39,6 +43,7 @@ from etools.applications.field_monitoring.permissions import (
     IsEditAction,
     IsReadAction,
 )
+from etools.applications.field_monitoring.planning.activity_validation.permissions import ActivityPermissions
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.field_monitoring.views import (
     AttachmentFileTypesViewMixin,
@@ -47,6 +52,9 @@ from etools.applications.field_monitoring.views import (
     LinkedAttachmentsViewSet,
 )
 from etools.applications.offline.errors import ValidationError
+from etools.applications.users.models import Country
+
+User = get_user_model()
 
 
 class ActivityDataCollectionViewSet(
@@ -56,6 +64,63 @@ class ActivityDataCollectionViewSet(
 ):
     queryset = MonitoringActivity.objects.all()
     serializer_class = ActivityDataCollectionSerializer
+
+    # todo: change permission_classes to something else to filter out non-offline backend calls
+    @action(
+        detail=True, methods=['POST'], url_path=r'offline/(?P<method_pk>\d+)', url_name='offline',
+        permission_classes=[AllowAny],
+    )
+    def offline(self, request, *args, method_pk=None, **kwargs):
+        workspace = request.query_params.get('workspace', None)
+        if workspace:
+            try:
+                # similar to set_tenant_or_fail but use schema_name to find country
+                ws = Country.objects.exclude(name__in=['Global']).get(schema_name=workspace)
+            except Country.DoesNotExist:
+                raise Response(
+                    status=status.HTTP_400_BAD_REQUEST,
+                    data={
+                        'non_field_errors': [f'Workspace code provided is not a valid business_area_code: {workspace}']
+                    }
+                )
+            else:
+                connection.set_tenant(ws)
+        else:
+            return Response(
+                status=status.HTTP_400_BAD_REQUEST,
+                data={'non_field_errors': ['Workspace is required']}
+            )
+
+        user_email = request.query_params.get('user', '')
+        if not user_email:
+            user_email = request.data.get('user', '')
+
+        if not user_email:
+            return Response(
+                status=status.HTTP_400_BAD_REQUEST,
+                data={'non_field_errors': ['User is required']}
+            )
+
+        user = get_object_or_404(User.objects, email=user_email)
+        activity = self.get_object()
+
+        ps = MonitoringActivity.permission_structure()
+        permissions = ActivityPermissions(user=user, instance=activity, permission_structure=ps)
+        has_edit_permission = permissions.get_permissions()['edit'].get('started_checklist_set')
+        if not has_edit_permission:
+            return Response(
+                status=status.HTTP_400_BAD_REQUEST,
+                data={'non_field_errors': ['Unable to fill checklists for current activity']}
+            )
+
+        method = get_object_or_404(Method.objects, pk=method_pk)
+
+        try:
+            create_checklist(activity, method, user, request.data)
+        except ValidationError as ex:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data=ex.detail)
+
+        return Response(status=status.HTTP_201_CREATED)
 
 
 class ActivityReportAttachmentsViewSet(LinkedAttachmentsViewSet):

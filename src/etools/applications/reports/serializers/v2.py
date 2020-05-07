@@ -19,7 +19,11 @@ from etools.applications.reports.models import (
     ResultType,
     SpecialReportingRequirement,
 )
-from etools.applications.reports.validators import value_none_or_numbers, value_numbers
+from etools.applications.reports.validators import (
+    SpecialReportingRequirementUniqueValidator,
+    value_none_or_numbers,
+    value_numbers,
+)
 
 
 class MinimalOutputListSerializer(serializers.ModelSerializer):
@@ -167,11 +171,15 @@ class AppliedIndicatorSerializer(serializers.ModelSerializer):
                     'You cannot change the Indicator Target Denominator if PD/SSFA is '
                     'not in status Draft or Signed'
                 ))
-            if attrs['target']['d'] != self.instance.target_display[1] \
-               and not (
-                   status in [Intervention.DRAFT, Intervention.SIGNED] or (
-                    status == Intervention.ACTIVE and in_amendment and
-                    self.instance.indicator.display_type != IndicatorBlueprint.RATIO)):
+            if attrs['target']['d'] != self.instance.target_display[1] and not (
+                    status in [Intervention.DRAFT, Intervention.SIGNED] or (
+                        status == Intervention.ACTIVE and in_amendment and
+                        (
+                            self.instance.indicator and
+                            self.instance.indicator.display_type != IndicatorBlueprint.RATIO
+                        )
+                    )
+            ):
                 raise ValidationError(_(
                     'You cannot change the Indicator Target Denominator if PD/SSFA is '
                     'not in status Draft or Signed'
@@ -365,6 +373,11 @@ class SpecialReportingRequirementSerializer(serializers.ModelSerializer):
     class Meta:
         model = SpecialReportingRequirement
         fields = "__all__"
+        validators = [
+            SpecialReportingRequirementUniqueValidator(
+                queryset=SpecialReportingRequirement.objects.all(),
+            )
+        ]
 
 
 class ResultFrameworkSerializer(serializers.Serializer):
