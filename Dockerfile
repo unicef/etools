@@ -1,6 +1,12 @@
 ARG BASE_TAG=latest_prod
 FROM unicef/etools-base:$BASE_TAG
 
+WORKDIR /etools/
+ENV PIP_NO_CACHE_DIR false
+ADD Pipfile .
+ADD Pipfile.lock .
+RUN pipenv install --system  --ignore-pipfile --deploy
+
 # CLEANUP
 RUN apk del .build-deps
 
