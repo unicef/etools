@@ -1,4 +1,5 @@
-FROM unicef/etools-base:latest
+ARG BASE_TAG=latest
+FROM unicef/etools:$BASE_TAG
 
 WORKDIR /etools/
 ADD Pipfile .
