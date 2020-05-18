@@ -1,13 +1,8 @@
-ARG  BASE_TAG=latest_prod
+ARG BASE_TAG=latest_prod
 FROM unicef/etools-base:$BASE_TAG
 
-#### CLEANUP
-
+# CLEANUP
 RUN apk del .build-deps
-RUN apk del .build-deps1
-RUN apk del .build-deps2
-RUN apk del .build-deps3
-
 
 ADD src /code/
 ADD manage.py /code/manage.py
