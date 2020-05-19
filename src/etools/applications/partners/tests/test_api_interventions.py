@@ -630,6 +630,32 @@ class TestInterventionsAPI(BaseTenantTestCase):
         self.assertEqual(status_code, status.HTTP_200_OK)
         self.assertEqual(len(response), 4 + EXTRA_INTERVENTIONS)
 
+    def test_filtering_contingency_pd(self):
+        response = self.forced_auth_req(
+            "get",
+            reverse('partners_api:intervention-list'),
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 3)
+
+        # set contingency pd value
+        self.intervention.contingency_pd = True
+        self.intervention.save()
+        self.assertEqual(
+            Intervention.objects.filter(contingency_pd=True).count(),
+            1,
+        )
+
+        response = self.forced_auth_req(
+            "get",
+            reverse('partners_api:intervention-list'),
+            user=self.unicef_staff,
+            data={"contingency_pd": True}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+
 
 class TestAPIInterventionResultLinkListView(BaseTenantTestCase):
     """Exercise the list view for InterventionResultLinkListCreateView"""
