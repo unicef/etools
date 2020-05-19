@@ -115,6 +115,7 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
         ('end_after', 'end__gte'),
         ('office', 'offices__in'),
         ('location', 'result_links__ll_results__applied_indicators__locations__name__icontains'),
+        ('contingency_pd', 'contingency_pd'),
     )
 
     SERIALIZER_MAP = {
