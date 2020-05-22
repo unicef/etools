@@ -167,7 +167,7 @@ class PRPIndicatorSerializer(serializers.ModelSerializer):
             l["pcode"] = l.pop("p_code")
             l["location_type"] = l.pop("gateway__name")
             l["admin_level"] = l.pop("gateway__admin_level")
-        return location_qs
+        return list(location_qs)
 
     class Meta:
         model = AppliedIndicator
