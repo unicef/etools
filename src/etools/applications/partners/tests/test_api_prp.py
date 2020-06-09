@@ -169,13 +169,12 @@ class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, BaseTenantTestCase):
         AgreementFactory(partner=partner)
         engagement = EngagementFactory(partner=partner)
         blueprint = RiskBluePrintFactory(category=category)
-        value = 12
-        RiskFactory(engagement=engagement, value=value, blueprint=blueprint)
+        risk = RiskFactory(engagement=engagement, value=2, blueprint=blueprint)
         status_code, response = self.run_prp_partners_v1()
         self.assertEqual(status_code, status.HTTP_200_OK)
         exists = False
         for res in response["results"]:
-            if res["overall_risk_rating"] == value:
+            if res["overall_risk_rating"] == risk.get_value_display():
                 exists = True
         self.assertTrue(exists)
 
