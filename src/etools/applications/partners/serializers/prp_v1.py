@@ -76,7 +76,7 @@ class PRPPartnerOrganizationListSerializer(serializers.ModelSerializer):
         except Risk.DoesNotExist:
             return None
         else:
-            return risk.value
+            return risk.get_value_display()
 
 
 class AuthOfficerSerializer(serializers.ModelSerializer):
