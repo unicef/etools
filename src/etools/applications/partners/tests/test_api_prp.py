@@ -10,6 +10,12 @@ from rest_framework.test import APIRequestFactory
 from unicef_locations.tests.factories import GatewayTypeFactory, LocationFactory
 
 from etools.applications.attachments.tests.factories import AttachmentFileTypeFactory
+from etools.applications.audit.tests.factories import (
+    EngagementFactory,
+    RiskBluePrintFactory,
+    RiskCategoryFactory,
+    RiskFactory,
+)
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.core.tests.mixins import WorkspaceRequiredAPITestMixIn
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
@@ -130,7 +136,7 @@ class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, BaseTenantTestCase):
             self.assertEqual(expected_results, len(response['results']))
 
     def test_prp_api_performance(self):
-        EXPECTED_QUERIES = 25
+        EXPECTED_QUERIES = 26
         with self.assertNumQueries(EXPECTED_QUERIES):
             self.run_prp_v1(
                 user=self.unicef_staff, method='get'
@@ -156,6 +162,22 @@ class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, BaseTenantTestCase):
             self.run_prp_v1(
                 user=self.unicef_staff, method='get'
             )
+
+    def test_prp_api_overall_risk_rating(self):
+        category = RiskCategoryFactory(header="Overall Risk Assessment")
+        partner = PartnerFactory()
+        AgreementFactory(partner=partner)
+        engagement = EngagementFactory(partner=partner)
+        blueprint = RiskBluePrintFactory(category=category)
+        value = 12
+        RiskFactory(engagement=engagement, value=value, blueprint=blueprint)
+        status_code, response = self.run_prp_partners_v1()
+        self.assertEqual(status_code, status.HTTP_200_OK)
+        exists = False
+        for res in response["results"]:
+            if res["overall_risk_rating"] == value:
+                exists = True
+        self.assertTrue(exists)
 
 
 class TestInterventionsAPIListPermissions(BaseTenantTestCase):

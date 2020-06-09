@@ -6,6 +6,7 @@ from rest_framework import serializers
 from unicef_attachments.fields import AttachmentSingleFileField
 from unicef_locations.models import Location
 
+from etools.applications.audit.models import Risk
 from etools.applications.partners.models import (
     Intervention,
     InterventionAmendment,
@@ -35,6 +36,7 @@ class InterventionPDFileSerializer(serializers.ModelSerializer):
 class PRPPartnerOrganizationListSerializer(serializers.ModelSerializer):
     rating = serializers.CharField(source='get_rating_display')
     unicef_vendor_number = serializers.CharField(source='vendor_number', read_only=True)
+    overall_risk_rating = serializers.SerializerMethodField()
 
     class Meta:
         model = PartnerOrganization
@@ -59,8 +61,22 @@ class PRPPartnerOrganizationListSerializer(serializers.ModelSerializer):
             "phone_number",
             "basis_for_risk_rating",
             "core_values_assessment_date",
-            "type_of_assessment"
+            "type_of_assessment",
+            "sea_risk_rating_name",
+            "psea_assessment_date",
+            "overall_risk_rating",
         )
+
+    def get_overall_risk_rating(self, obj):
+        try:
+            risk = Risk.objects.get(
+                engagement__partner=obj,
+                blueprint__category__header="Overall Risk Assessment",
+            )
+        except Risk.DoesNotExist:
+            return None
+        else:
+            return risk.value
 
 
 class AuthOfficerSerializer(serializers.ModelSerializer):
