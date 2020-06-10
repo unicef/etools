@@ -85,7 +85,9 @@ class Country(TenantMixin):
     name = models.CharField(max_length=100, verbose_name=_('Name'))
     country_short_code = models.CharField(
         max_length=10,
-        default='', blank=True, verbose_name=_('Short Code')
+        default='',
+        blank=True,
+        verbose_name=_('UNICEF Country Reference Code')
     )
     long_name = models.CharField(max_length=255, default='', blank=True, verbose_name=_('Long Name'))
     business_area_code = models.CharField(max_length=10, default='', blank=True, verbose_name=_('Business Area Code'))
