@@ -124,3 +124,4 @@ class TestCountriesViewSet(BaseTenantTestCase):
         result = response_json[0]
         self.assertEqual(result['id'], self.tenant.id)
         self.assertEqual(result['business_area_code'], self.tenant.business_area_code)
+        self.assertEqual(result['iso3_code'], self.tenant.iso3_code)
