@@ -89,6 +89,12 @@ class Country(TenantMixin):
         blank=True,
         verbose_name=_('UNICEF Country Reference Code')
     )
+    iso3_code = models.CharField(
+        max_length=10,
+        blank=True,
+        default='',
+        verbose_name=_("ISO3 Code"),
+    )
     long_name = models.CharField(max_length=255, default='', blank=True, verbose_name=_('Long Name'))
     business_area_code = models.CharField(max_length=10, default='', blank=True, verbose_name=_('Business Area Code'))
     latitude = models.DecimalField(
