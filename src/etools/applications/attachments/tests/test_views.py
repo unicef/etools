@@ -1,6 +1,7 @@
-from django.urls import reverse
+from django.urls import resolve, reverse
 
 from rest_framework import status
+from rest_framework.test import APIRequestFactory
 
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.audit.tests.factories import EngagementFactory
@@ -17,7 +18,7 @@ from etools.applications.partners.tests.factories import (
     PartnerFactory,
 )
 from etools.applications.tpm.tests.factories import SimpleTPMPartnerFactory, TPMActivityFactory, TPMVisitFactory
-from etools.applications.users.tests.factories import UserFactory
+from etools.applications.users.tests.factories import ProfileFactory, UserFactory
 
 
 class TestAttachmentListView(BaseTenantTestCase):
@@ -28,6 +29,7 @@ class TestAttachmentListView(BaseTenantTestCase):
         cls.code_2 = "test_code_2"
         cls.file_type_2 = AttachmentFileTypeFactory()
         cls.unicef_staff = UserFactory(is_staff=True)
+        ProfileFactory(user=cls.unicef_staff)
         cls.user = UserFactory()
         cls.url = reverse("attachments:list")
         cls.attachment_1 = AttachmentFactory(
@@ -114,6 +116,18 @@ class TestAttachmentListView(BaseTenantTestCase):
             "source": x["source"],
         } for x in response.data]
         self.assertCountEqual(received, expected)
+
+    def test_unauthenticated_user_forbidden(self):
+        factory = APIRequestFactory()
+        view_info = resolve(self.url)
+        request = factory.get(self.url)
+        response = view_info.func(request)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_non_schema_user(self):
+        user = UserFactory(profile=None)
+        response = self.forced_auth_req("get", self.url, user=user)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_get_no_file(self):
         attachment = AttachmentFactory(

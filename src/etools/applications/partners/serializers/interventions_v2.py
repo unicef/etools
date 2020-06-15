@@ -212,7 +212,8 @@ class BaseInterventionListSerializer(serializers.ModelSerializer):
             'total_budget',
             'metadata',
             'flagged_sections',
-            'budget_currency'
+            'budget_currency',
+            'contingency_pd',
         )
 
 
