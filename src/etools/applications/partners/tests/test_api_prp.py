@@ -136,7 +136,7 @@ class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, BaseTenantTestCase):
             self.assertEqual(expected_results, len(response['results']))
 
     def test_prp_api_performance(self):
-        EXPECTED_QUERIES = 26
+        EXPECTED_QUERIES = 25
         with self.assertNumQueries(EXPECTED_QUERIES):
             self.run_prp_v1(
                 user=self.unicef_staff, method='get'
@@ -162,21 +162,6 @@ class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, BaseTenantTestCase):
             self.run_prp_v1(
                 user=self.unicef_staff, method='get'
             )
-
-    def test_prp_api_overall_risk_rating(self):
-        category = RiskCategoryFactory(header="Overall Risk Assessment")
-        partner = PartnerFactory()
-        AgreementFactory(partner=partner)
-        engagement = EngagementFactory(partner=partner)
-        blueprint = RiskBluePrintFactory(category=category)
-        risk = RiskFactory(engagement=engagement, value=2, blueprint=blueprint)
-        status_code, response = self.run_prp_partners_v1()
-        self.assertEqual(status_code, status.HTTP_200_OK)
-        exists = False
-        for res in response["results"]:
-            if res["overall_risk_rating"] == risk.get_value_display():
-                exists = True
-        self.assertTrue(exists)
 
 
 class TestInterventionsAPIListPermissions(BaseTenantTestCase):

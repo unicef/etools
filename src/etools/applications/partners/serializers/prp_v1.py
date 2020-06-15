@@ -36,7 +36,6 @@ class InterventionPDFileSerializer(serializers.ModelSerializer):
 class PRPPartnerOrganizationListSerializer(serializers.ModelSerializer):
     rating = serializers.CharField(source='get_rating_display')
     unicef_vendor_number = serializers.CharField(source='vendor_number', read_only=True)
-    overall_risk_rating = serializers.SerializerMethodField()
 
     class Meta:
         model = PartnerOrganization
@@ -64,19 +63,9 @@ class PRPPartnerOrganizationListSerializer(serializers.ModelSerializer):
             "type_of_assessment",
             "sea_risk_rating_name",
             "psea_assessment_date",
-            "overall_risk_rating",
+            "highest_risk_rating_name",
+            "highest_risk_rating_type",
         )
-
-    def get_overall_risk_rating(self, obj):
-        try:
-            risk = Risk.objects.get(
-                engagement__partner=obj,
-                blueprint__category__header="Overall Risk Assessment",
-            )
-        except Risk.DoesNotExist:
-            return None
-        else:
-            return risk.get_value_display()
 
 
 class AuthOfficerSerializer(serializers.ModelSerializer):
