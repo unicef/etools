@@ -157,7 +157,7 @@ class PRPIndicatorSerializer(serializers.ModelSerializer):
     unit = serializers.SerializerMethodField()
     display_type = serializers.SerializerMethodField()
     blueprint_id = serializers.PrimaryKeyRelatedField(source='indicator', read_only=True)
-    locations = PRPLocationSerializer(read_only=True, many=True)
+    locations = serializers.SerializerMethodField()
     disaggregation = DisaggregationSerializer(read_only=True, many=True)
     target = serializers.JSONField(required=False)
     baseline = serializers.JSONField(required=False)
@@ -170,6 +170,20 @@ class PRPIndicatorSerializer(serializers.ModelSerializer):
 
     def get_display_type(self, ai):
         return ai.indicator.display_type if ai.indicator else ''
+
+    def get_locations(self, obj):
+        location_qs = obj.locations.values(
+            "id",
+            "name",
+            "p_code",
+            "gateway__name",
+            "gateway__admin_level",
+        )
+        for l in location_qs:
+            l["pcode"] = l.pop("p_code")
+            l["location_type"] = l.pop("gateway__name")
+            l["admin_level"] = l.pop("gateway__admin_level")
+        return list(location_qs)
 
     class Meta:
         model = AppliedIndicator

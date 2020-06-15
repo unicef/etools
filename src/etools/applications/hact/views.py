@@ -5,7 +5,7 @@ from django.http import HttpResponse
 from django.views.generic import DetailView
 
 from rest_framework.generics import ListAPIView, RetrieveAPIView
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework_csv.renderers import JSONRenderer
 from unicef_restlib.views import QueryStringFilterMixin
 
@@ -62,7 +62,7 @@ class HactHistoryAPIView(QueryStringFilterMixin, ListAPIView):
 
 
 class GraphHactView(RetrieveAPIView):
-    permission_classes = []
+    permission_classes = [IsAuthenticated]
 
     lookup_field = 'year'
     queryset = AggregateHact.objects.all()

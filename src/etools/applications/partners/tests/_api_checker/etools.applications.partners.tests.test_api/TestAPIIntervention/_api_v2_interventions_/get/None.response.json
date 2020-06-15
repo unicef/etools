@@ -19,7 +19,7 @@
         ],
         "content-length": [
             "Content-Length",
-            "2411"
+            "2480"
         ]
     },
     "data": [
@@ -54,6 +54,7 @@
             "metadata": {},
             "flagged_sections": [],
             "budget_currency": null,
+            "contingency_pd": false,
             "fr_currencies_are_consistent": null,
             "all_currencies_are_consistent": false,
             "fr_currency": "",
@@ -92,6 +93,7 @@
             "metadata": {},
             "flagged_sections": [],
             "budget_currency": null,
+            "contingency_pd": false,
             "fr_currencies_are_consistent": null,
             "all_currencies_are_consistent": false,
             "fr_currency": "",
@@ -130,6 +132,7 @@
             "metadata": {},
             "flagged_sections": [],
             "budget_currency": null,
+            "contingency_pd": false,
             "fr_currencies_are_consistent": null,
             "all_currencies_are_consistent": false,
             "fr_currency": "",
