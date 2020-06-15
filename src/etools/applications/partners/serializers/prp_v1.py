@@ -6,7 +6,6 @@ from rest_framework import serializers
 from unicef_attachments.fields import AttachmentSingleFileField
 from unicef_locations.models import Location
 
-from etools.applications.audit.models import Risk
 from etools.applications.partners.models import (
     Intervention,
     InterventionAmendment,

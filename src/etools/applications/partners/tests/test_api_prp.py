@@ -10,12 +10,6 @@ from rest_framework.test import APIRequestFactory
 from unicef_locations.tests.factories import GatewayTypeFactory, LocationFactory
 
 from etools.applications.attachments.tests.factories import AttachmentFileTypeFactory
-from etools.applications.audit.tests.factories import (
-    EngagementFactory,
-    RiskBluePrintFactory,
-    RiskCategoryFactory,
-    RiskFactory,
-)
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.core.tests.mixins import WorkspaceRequiredAPITestMixIn
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
