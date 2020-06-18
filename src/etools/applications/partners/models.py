@@ -730,7 +730,7 @@ class PartnerOrganization(TimeStampedModel):
 
             # field monitoring activities qualify as programmatic visits if during a monitoring activity the hact
             # question was answered with an overall rating and the visit is completed
-            fmvqs = ActivityQuestion.objects.filter(question__is_hact=True, partner=self, 
+            fmvqs = ActivityQuestion.objects.filter(question__is_hact=True, partner=self,
                         overall_finding__value__isnull=False, monitoring_activity__status="completed")
             fmvq1 = fmvqs.filter(monitoring_activity__end_date__quarter=1).count()
             fmvq2 = fmvqs.filter(monitoring_activity__end_date__quarter=2).count()
