@@ -412,10 +412,10 @@ class MonitoringActivity(
 
     def update_one_hact_value(self):
         """
-            Every time an activity transitions to completed, all Partners associated with that activity 
+            Every time an activity transitions to completed, all Partners associated with that activity
             will increase the completed PV count if applicable
         """
-        
+
         aq_qs = self.questions.filter(question__is_hact=True).filter(overall_finding__value__isnull=False)
         partner_orgs = [aq.partner for aq in aq_qs.all() if aq.partner]
         

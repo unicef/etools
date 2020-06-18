@@ -16,7 +16,6 @@ from etools.applications.field_monitoring.analyze.serializers import (
     PartnerIssuesSerializer,
     PartnersCoverageSerializer,
 )
-from etools.applications.field_monitoring.data_collection.models import ActivityQuestion
 from etools.applications.field_monitoring.fm_settings.models import LogIssue
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.field_monitoring.utils.models import SubQueryCount
