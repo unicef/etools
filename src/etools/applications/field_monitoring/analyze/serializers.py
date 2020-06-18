@@ -114,7 +114,13 @@ class MonitoringActivityHACTSerializer(serializers.ModelSerializer):
 
 class HACTSerializer(serializers.ModelSerializer):
     visits = MonitoringActivityHACTSerializer(many=True)
-    visits_count = ReadOnlyField(source='completed_visits')
+    visits_count = serializers.SerializerMethodField()
+
+    def get_visits_count(self, obj):
+        try:
+            return obj.hact_values["programmatic_visits"]["completed"]["total"]
+        except KeyError:
+            return 0
 
     class Meta:
         model = PartnerOrganization
