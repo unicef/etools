@@ -1,5 +1,4 @@
 from django.db.models import Count, Max, Min, OuterRef, Prefetch, Q
-
 from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -17,6 +16,7 @@ from etools.applications.field_monitoring.analyze.serializers import (
     PartnerIssuesSerializer,
     PartnersCoverageSerializer,
 )
+from etools.applications.field_monitoring.data_collection.models import ActivityQuestion
 from etools.applications.field_monitoring.fm_settings.models import LogIssue
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.field_monitoring.utils.models import SubQueryCount
@@ -31,9 +31,9 @@ class OverallView(APIView):
 
 _completed_activities_filter = Q(monitoring_activities__status=MonitoringActivity.STATUSES.completed)
 
-
 class HACTView(ListAPIView):
     serializer_class = HACTSerializer
+
     queryset = PartnerOrganization.objects.filter(
         monitoring_activities__isnull=False
     ).prefetch_related(
@@ -41,12 +41,13 @@ class HACTView(ListAPIView):
             'monitoring_activities',
             MonitoringActivity.objects.filter(
                 status=MonitoringActivity.STATUSES.completed
+
             ).prefetch_related('cp_outputs', 'interventions'),
             to_attr='visits'
         ),
-    ).annotate(
-        completed_visits=Count('monitoring_activities', filter=_completed_activities_filter),
     ).order_by('id').distinct()
+
+
 
 
 class CoveragePartnersView(ListAPIView):
