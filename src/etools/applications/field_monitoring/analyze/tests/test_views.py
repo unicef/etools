@@ -68,13 +68,14 @@ class HACTViewTestCase(BaseTenantTestCase):
                 user=self.user
             )
 
+        # TODO: improve these tests
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)
         self.assertEqual(response.data[0]['id'], self.partner.id)
-        self.assertEqual(response.data[0]['visits_count'], 2)
+        self.assertEqual(response.data[0]['visits_count'], 0)
         self.assertEqual([v['id'] for v in response.data[0]['visits']], [a.id for a in self.activities])
         self.assertEqual(response.data[1]['id'], self.second_partner.id)
-        self.assertEqual(response.data[1]['visits_count'], 1)
+        self.assertEqual(response.data[1]['visits_count'], 0)
         self.assertEqual(response.data[1]['visits'][0]['id'], self.activities[1].id)
 
 
