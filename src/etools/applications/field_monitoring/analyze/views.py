@@ -1,4 +1,5 @@
 from django.db.models import Count, Max, Min, OuterRef, Prefetch, Q
+
 from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -30,6 +31,7 @@ class OverallView(APIView):
 
 _completed_activities_filter = Q(monitoring_activities__status=MonitoringActivity.STATUSES.completed)
 
+
 class HACTView(ListAPIView):
     serializer_class = HACTSerializer
 
@@ -45,8 +47,6 @@ class HACTView(ListAPIView):
             to_attr='visits'
         ),
     ).order_by('id').distinct()
-
-
 
 
 class CoveragePartnersView(ListAPIView):
