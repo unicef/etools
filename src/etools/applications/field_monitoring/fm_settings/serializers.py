@@ -83,6 +83,8 @@ class QuestionSerializer(QuestionLightSerializer):
         return instance
 
     def update(self, instance, validated_data):
+        if not instance.is_custom:
+            raise ValidationError("The system provided questions cannot be edited.")
         options = validated_data.pop('options', None)
         instance = super().update(instance, validated_data)
         self.set_options(instance, options)
