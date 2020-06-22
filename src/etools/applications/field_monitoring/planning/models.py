@@ -418,7 +418,7 @@ class MonitoringActivity(
 
         aq_qs = self.questions.filter(question__is_hact=True).filter(overall_finding__value__isnull=False)
         partner_orgs = [aq.partner for aq in aq_qs.all() if aq.partner]
-        
+
         for partner_org in partner_orgs:
             partner_org.programmatic_visits(event_date=self.end_date, update_one=True)
 

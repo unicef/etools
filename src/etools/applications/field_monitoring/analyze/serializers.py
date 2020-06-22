@@ -1,7 +1,6 @@
 import json
 
 from rest_framework import serializers
-from rest_framework.fields import ReadOnlyField
 from unicef_locations.models import Location
 
 from etools.applications.field_monitoring.analyze.utils import get_avg_days_between_visits, get_days_since_last_visit
