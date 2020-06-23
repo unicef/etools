@@ -96,7 +96,8 @@ class QuestionSerializer(QuestionLightSerializer):
 
     def update(self, instance, validated_data):
         # For non-custom questions the only option we have is to modify is_active
-        if not instance.is_custom and list(validated_data.keys()) != ["is_active"]:
+        custom_changes_allowed = not validated_data or validated_data.keys() == ["is_active"]
+        if not instance.is_custom and not custom_changes_allowed:
             raise ValidationError("The system provided questions cannot be edited.")
 
         self.check_hact_questions(validated_data, instance)
