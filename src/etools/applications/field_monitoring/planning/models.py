@@ -147,6 +147,9 @@ class MonitoringActivity(
         STATUSES.report_finalization: [
             lambda i, old_instance=None, user=None: i.close_offline_blueprints(),
         ],
+        STATUSES.completed: [
+            lambda i, old_instance=None, user=None: i.update_one_hact_value(),
+        ],
         STATUSES.cancelled: [
             lambda i, old_instance=None, user=None: i.close_offline_blueprints(),
         ],
@@ -406,6 +409,18 @@ class MonitoringActivity(
                 is_enabled=True
             ).values_list('question__methods', flat=True)
         )
+
+    def update_one_hact_value(self):
+        """
+            Every time an activity transitions to completed, all Partners associated with that activity
+            will increase the completed PV count if applicable
+        """
+
+        aq_qs = self.questions.filter(question__is_hact=True).filter(overall_finding__value__isnull=False)
+        partner_orgs = [aq.partner for aq in aq_qs.all() if aq.partner]
+
+        for partner_org in partner_orgs:
+            partner_org.programmatic_visits(event_date=self.end_date, update_one=True)
 
     def init_offline_blueprints(self):
         MonitoringActivityOfflineSynchronizer(self).initialize_blueprints()

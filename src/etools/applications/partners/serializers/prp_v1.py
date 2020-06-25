@@ -59,7 +59,11 @@ class PRPPartnerOrganizationListSerializer(serializers.ModelSerializer):
             "phone_number",
             "basis_for_risk_rating",
             "core_values_assessment_date",
-            "type_of_assessment"
+            "type_of_assessment",
+            "sea_risk_rating_name",
+            "psea_assessment_date",
+            "highest_risk_rating_name",
+            "highest_risk_rating_type",
         )
 
 
