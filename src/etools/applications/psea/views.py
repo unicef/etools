@@ -556,6 +556,7 @@ class AnswerAttachmentsViewSet(
         )
         serializer.save(content_object=self.get_parent_object())
         serializer.instance.refresh_from_db()
+        serializer._data = serializer.to_representation(serializer.instance)
 
     def perform_update(self, serializer):
         serializer.save(content_object=self.get_parent_object())
