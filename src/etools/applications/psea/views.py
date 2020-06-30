@@ -503,6 +503,7 @@ class AnswerViewSet(
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
+        serializer.instance = self.get_object()
         headers = self.get_success_headers(serializer.data)
         return Response(
             serializer.data,
@@ -555,8 +556,6 @@ class AnswerAttachmentsViewSet(
             pk=serializer.initial_data.get("id")
         )
         serializer.save(content_object=self.get_parent_object())
-        serializer.instance.refresh_from_db()
-        serializer._data = serializer.to_representation(serializer.instance)
 
     def perform_update(self, serializer):
         serializer.save(content_object=self.get_parent_object())
