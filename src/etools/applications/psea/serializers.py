@@ -1,6 +1,7 @@
 from copy import copy
 
 from django.contrib.contenttypes.models import ContentType
+from django.db import models, transaction
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
@@ -476,13 +477,14 @@ class AnswerSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         evidence_data = validated_data.pop("evidences")
         attachment_data = validated_data.pop("attachments")
-        answer = Answer.objects.create(**validated_data)
-        for evidence in evidence_data:
-            AnswerEvidence.objects.create(
-                answer=answer,
-                **evidence,
-            )
-        self._set_attachments(answer, attachment_data)
+        with transaction.atomic():
+            answer = Answer.objects.create(**validated_data)
+            for evidence in evidence_data:
+                AnswerEvidence.objects.create(
+                    answer=answer,
+                    **evidence,
+                )
+            self._set_attachments(answer, attachment_data)
         return answer
 
     def update(self, instance, validated_data):
