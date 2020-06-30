@@ -8,4 +8,5 @@ from etools.applications.partners.tasks import sync_partner_to_prp
 
 @receiver(post_save, sender=Intervention)
 def sync_pd_partner_to_prp(instance: Intervention, created: bool, **kwargs):
-    sync_partner_to_prp.delay(connection.tenant.name, instance.agreement.partner_id)
+    if created:  # todo: instance.first_sent_to_partner_at and instance.tracker.has_changed('first_sent_to_partner_at')
+        sync_partner_to_prp.delay(connection.tenant.name, instance.agreement.partner_id)

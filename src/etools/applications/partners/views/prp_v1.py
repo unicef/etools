@@ -54,6 +54,7 @@ class PRPInterventionListAPIView(QueryStringFilterMixin, ListAPIView):
         intervention=OuterRef("pk")
     ).order_by().values("intervention")
 
+    # todo: replace .exclude(draft) with .filter(first_sent_to_partner_at__isnull=False) when new field will be ready
     queryset = Intervention.objects.filter(
         result_links__ll_results__applied_indicators__isnull=False,
         reporting_requirements__isnull=False,
