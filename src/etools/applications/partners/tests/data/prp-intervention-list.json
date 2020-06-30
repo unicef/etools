@@ -81,7 +81,11 @@
       "postal_code": null,
       "rating": null,
       "street_address": null,
-      "type_of_assessment": null
+      "type_of_assessment": null,
+      "psea_assessment_date": null,
+      "highest_risk_rating_name": "",
+      "highest_risk_rating_type": "",
+      "sea_risk_rating_name": ""
     },
     "special_reports": [],
     "status": "active",

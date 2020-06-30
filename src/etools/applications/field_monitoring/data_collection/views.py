@@ -43,6 +43,7 @@ from etools.applications.field_monitoring.permissions import (
     IsEditAction,
     IsReadAction,
 )
+from etools.applications.field_monitoring.planning.activity_validation.permissions import ActivityPermissions
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.field_monitoring.views import (
     AttachmentFileTypesViewMixin,
@@ -70,7 +71,7 @@ class ActivityDataCollectionViewSet(
         permission_classes=[AllowAny],
     )
     def offline(self, request, *args, method_pk=None, **kwargs):
-        workspace = self.request.query_params.get('workspace', None)
+        workspace = request.query_params.get('workspace', None)
         if workspace:
             try:
                 # similar to set_tenant_or_fail but use schema_name to find country
@@ -79,8 +80,7 @@ class ActivityDataCollectionViewSet(
                 raise Response(
                     status=status.HTTP_400_BAD_REQUEST,
                     data={
-                        'non_field_errors': 'Workspace code provided is not '
-                                            'a valid business_area_code: {}'.format(workspace)
+                        'non_field_errors': [f'Workspace code provided is not a valid business_area_code: {workspace}']
                     }
                 )
             else:
@@ -88,14 +88,35 @@ class ActivityDataCollectionViewSet(
         else:
             return Response(
                 status=status.HTTP_400_BAD_REQUEST,
-                data={'non_field_errors': 'Workspace is required as a queryparam'}
+                data={'non_field_errors': ['Workspace is required']}
+            )
+
+        user_email = request.query_params.get('user', '')
+        if not user_email:
+            user_email = request.data.get('user', '')
+
+        if not user_email:
+            return Response(
+                status=status.HTTP_400_BAD_REQUEST,
+                data={'non_field_errors': ['User is required']}
+            )
+
+        user = get_object_or_404(User.objects, email=user_email)
+        activity = self.get_object()
+
+        ps = MonitoringActivity.permission_structure()
+        permissions = ActivityPermissions(user=user, instance=activity, permission_structure=ps)
+        has_edit_permission = permissions.get_permissions()['edit'].get('started_checklist_set')
+        if not has_edit_permission:
+            return Response(
+                status=status.HTTP_400_BAD_REQUEST,
+                data={'non_field_errors': ['Unable to fill checklists for current activity']}
             )
 
         method = get_object_or_404(Method.objects, pk=method_pk)
-        user_email = self.request.query_params.get('user', '')
-        user = get_object_or_404(User.objects, email=user_email)
+
         try:
-            create_checklist(self.get_object(), method, user, request.data)
+            create_checklist(activity, method, user, request.data)
         except ValidationError as ex:
             return Response(status=status.HTTP_400_BAD_REQUEST, data=ex.detail)
 

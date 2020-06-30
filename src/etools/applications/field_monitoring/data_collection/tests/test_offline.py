@@ -241,6 +241,18 @@ class MonitoringActivityOfflineBlueprintsSyncTestCase(APIViewSetTestCase, BaseTe
         self._test_update(self.fm_user, activity, {'status': 'cancelled', 'cancel_reason': 'For testing purposes'})
         delete_mock.assert_called()
 
+    @override_settings(ETOOLS_OFFLINE_API='http://example.com/b/api/remote/blueprint/')
+    @patch('etools.applications.field_monitoring.data_collection.offline.synchronizer.OfflineCollect.delete')
+    def test_blueprints_deleted_on_activity_report_finalization(self, delete_mock):
+        activity = MonitoringActivityFactory(status='data_collection', partners=[PartnerFactory()])
+        method = MethodFactory()
+        ActivityQuestionFactory(monitoring_activity=activity, is_enabled=True, question__methods=[method])
+        StartedChecklistFactory(monitoring_activity=activity, method=method)
+
+        delete_mock.reset_mock()
+        self._test_update(activity.person_responsible, activity, {'status': 'report_finalization'})
+        delete_mock.assert_called()
+
     @override_settings(ETOOLS_OFFLINE_API='')
     @patch('etools.applications.field_monitoring.data_collection.offline.synchronizer.OfflineCollect.add')
     def test_tenant_switch_missing_but_api_not_configured(self, add_mock):
@@ -258,9 +270,6 @@ class MonitoringActivityOfflineValuesTestCase(APIViewSetTestCase, BaseTenantTest
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
-        cls.fm_user = UserFactory(first_name='Field Monitoring User', fm_user=True, is_staff=True,
-                                  profile__countries_available=[connection.tenant])
-
         cls.user = None
         cls.partner = PartnerFactory()
         cls.activity = MonitoringActivityFactory(status='data_collection', partners=[cls.partner])
@@ -269,6 +278,8 @@ class MonitoringActivityOfflineValuesTestCase(APIViewSetTestCase, BaseTenantTest
             monitoring_activity=cls.activity, is_enabled=True, partner=cls.partner,
             question__methods=[cls.method], question__answer_type='text'
         )
+
+        cls.user = cls.activity.person_responsible
 
     def get_detail_args(self, instance):
         return [instance.pk, self.method.pk]
@@ -283,11 +294,11 @@ class MonitoringActivityOfflineValuesTestCase(APIViewSetTestCase, BaseTenantTest
 
         response = self.make_detail_request(
             None, self.activity, method='post', action='offline',
-            QUERY_STRING='user={}&workspace={}'.format(self.fm_user.email, schema_name),
+            QUERY_STRING='user={}&workspace={}'.format(self.user.email, schema_name),
             data={
                 'information_source': {'name': 'Doctors'},
                 'partner': {
-                    str(self.partner.id): {
+                    self.partner.id: {
                         'overall': 'overall',
                         'attachments': [
                             {
@@ -304,18 +315,26 @@ class MonitoringActivityOfflineValuesTestCase(APIViewSetTestCase, BaseTenantTest
         )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertTrue(
-            StartedChecklist.objects.filter(
-                author=self.fm_user, monitoring_activity=self.activity, method=self.method
-            ).exists()
-        )
+
+        checklist = StartedChecklist.objects.filter(
+            author=self.user, monitoring_activity=self.activity, method=self.method
+        ).first()
+        self.assertTrue(bool(checklist))
+
+        # check attachment mapped
+        attachment = checklist.overall_findings.first().attachments.first()
+        self.assertTrue(bool(attachment))
+        self.assertEqual(attachment.uploaded_by, self.user)
+
+        # check correct url called
         download_mock.assert_called()
+        self.assertIn(attachment.id, download_mock.call_args_list[0][0])
         self.assertIn('http://example.com', download_mock.call_args_list[0][0])
 
     def test_checklist_form_error(self):
         response = self.make_detail_request(
             None, self.activity, method='post', action='offline',
-            QUERY_STRING='user={}&workspace={}'.format(self.fm_user.email, connection.tenant.schema_name),
+            QUERY_STRING='user={}&workspace={}'.format(self.user.email, connection.tenant.schema_name),
             data={'information_source': {}}
         )
 
@@ -326,3 +345,51 @@ class MonitoringActivityOfflineValuesTestCase(APIViewSetTestCase, BaseTenantTest
                 'information_source': {'name': ['This field is required']},
             }
         )
+
+    def test_transaction(self):
+        response = self.make_detail_request(
+            None, self.activity, method='post', action='offline',
+            QUERY_STRING='user={}&workspace={}'.format(self.user.email, connection.tenant.schema_name),
+            data={'information_source': {'name': 'test'}, 'partner': {'-1': {}}}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        self.assertFalse(
+            StartedChecklist.objects.filter(
+                author=self.user, monitoring_activity=self.activity, method=self.method
+            ).exists()
+        )
+
+    def test_workspace_required(self):
+        response = self.make_detail_request(
+            None, self.activity, method='post', action='offline',
+            QUERY_STRING='user={}'.format(self.user.email),
+            data={}
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('non_field_errors', response.data)
+
+    def test_user_required(self):
+        response = self.make_detail_request(
+            None, self.activity, method='post', action='offline',
+            QUERY_STRING='workspace={}'.format(connection.tenant.schema_name),
+            data={}
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('non_field_errors', response.data)
+
+    def test_offline_locked_for_report_finalization_status(self):
+        partner = PartnerFactory()
+        activity = MonitoringActivityFactory(status='report_finalization', partners=[partner])
+        ActivityQuestionFactory(
+            monitoring_activity=activity, is_enabled=True, partner=partner,
+            question__methods=[self.method], question__answer_type='text'
+        )
+        response = self.make_detail_request(
+            None, activity, method='post', action='offline',
+            QUERY_STRING='user={}&workspace={}'.format(self.user.email, connection.tenant.schema_name),
+            data={}
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('non_field_errors', response.data)

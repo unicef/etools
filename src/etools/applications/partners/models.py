@@ -21,7 +21,10 @@ from unicef_locations.models import Location
 
 from etools.applications.core.permissions import import_permissions
 from etools.applications.funds.models import FundsReservationHeader
-from etools.applications.partners.validation import interventions as intervention_validation
+from etools.applications.partners.validation import (
+    agreements as agreement_validation,
+    interventions as intervention_validation,
+)
 from etools.applications.partners.validation.agreements import (
     agreement_transition_to_ended_valid,
     agreement_transition_to_signed_valid,
@@ -487,6 +490,29 @@ class PartnerOrganization(TimeStampedModel):
     hact_values = JSONField(blank=True, null=True, default=hact_default, verbose_name='HACT')
     basis_for_risk_rating = models.CharField(
         verbose_name=_("Basis for Risk Rating"), max_length=50, default='', blank=True)
+    psea_assessment_date = models.DateTimeField(
+        verbose_name=_("Last PSEA Assess. Date"),
+        null=True,
+        blank=True,
+    )
+    sea_risk_rating_name = models.CharField(
+        max_length=150,
+        verbose_name=_("PSEA Risk Rating"),
+        blank=True,
+        default='',
+    )
+    highest_risk_rating_type = models.CharField(
+        max_length=150,
+        verbose_name=_("Highest Risk Rating Type"),
+        blank=True,
+        default='',
+    )
+    highest_risk_rating_name = models.CharField(
+        max_length=150,
+        verbose_name=_("Highest Risk Rating Name"),
+        blank=True,
+        default='',
+    )
 
     tracker = FieldTracker()
     objects = PartnerOrganizationQuerySet.as_manager()
@@ -663,6 +689,9 @@ class PartnerOrganization(TimeStampedModel):
         """
         :return: all completed programmatic visits
         """
+        # Avoid circular imports
+        from etools.applications.field_monitoring.data_collection.models import ActivityQuestion
+
         hact = self.get_hact_json()
 
         pv = hact['programmatic_visits']['completed']['total']
@@ -699,11 +728,22 @@ class PartnerOrganization(TimeStampedModel):
 
             tpm_total = tpmv1 + tpmv2 + tpmv3 + tpmv4
 
-            hact['programmatic_visits']['completed']['q1'] = pvq1 + tpmv1
-            hact['programmatic_visits']['completed']['q2'] = pvq2 + tpmv2
-            hact['programmatic_visits']['completed']['q3'] = pvq3 + tpmv3
-            hact['programmatic_visits']['completed']['q4'] = pvq4 + tpmv4
-            hact['programmatic_visits']['completed']['total'] = pv + tpm_total
+            # field monitoring activities qualify as programmatic visits if during a monitoring activity the hact
+            # question was answered with an overall rating and the visit is completed
+            fmvqs = ActivityQuestion.objects.filter(question__is_hact=True, partner=self,
+                                                    overall_finding__value__isnull=False,
+                                                    monitoring_activity__status="completed")
+            fmvq1 = fmvqs.filter(monitoring_activity__end_date__quarter=1).count()
+            fmvq2 = fmvqs.filter(monitoring_activity__end_date__quarter=2).count()
+            fmvq3 = fmvqs.filter(monitoring_activity__end_date__quarter=3).count()
+            fmvq4 = fmvqs.filter(monitoring_activity__end_date__quarter=4).count()
+            fmv_total = fmvq1 + fmvq2 + fmvq3 + fmvq4
+
+            hact['programmatic_visits']['completed']['q1'] = pvq1 + tpmv1 + fmvq1
+            hact['programmatic_visits']['completed']['q2'] = pvq2 + tpmv2 + fmvq2
+            hact['programmatic_visits']['completed']['q3'] = pvq3 + tpmv3 + fmvq3
+            hact['programmatic_visits']['completed']['q4'] = pvq4 + tpmv4 + fmvq4
+            hact['programmatic_visits']['completed']['total'] = pv + tpm_total + fmv_total
 
         self.hact_values = hact
         self.save()
@@ -1163,6 +1203,13 @@ class Agreement(TimeStampedModel):
         code='partners_agreement',
         blank=True
     )
+    termination_doc = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Termination document for PCAs'),
+        code='partners_agreement_termination_doc',
+        blank=True,
+        null=True
+    )
     start = models.DateField(
         verbose_name=_("Start Date"),
         null=True,
@@ -1320,10 +1367,17 @@ class Agreement(TimeStampedModel):
         pass
 
     @transition(field=status,
+                source=[SIGNED],
+                target=[TERMINATED, SUSPENDED],
+                conditions=[agreement_validation.transition_to_terminated])
+    def transition_to_terminated(self):
+        pass
+
+    @transition(field=status,
                 source=[DRAFT],
                 target=[TERMINATED, SUSPENDED],
                 conditions=[agreements_illegal_transition])
-    def transition_to_terminated(self):
+    def transition_to_terminated_illegal(self):
         pass
 
     @transaction.atomic

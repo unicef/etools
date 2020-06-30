@@ -117,6 +117,8 @@ class BaseTenantTestCase(TenantTestCase):
 
         req_to_call = getattr(factory, method)
         request = req_to_call(url, data, format=request_format, **kwargs)
+        if hasattr(user, "profile") and user.profile.country:
+            request.tenant = user.profile.country
 
         user = user or self.user
         force_authenticate(request, user=user)

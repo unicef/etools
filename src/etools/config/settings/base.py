@@ -90,6 +90,9 @@ DATABASE_ROUTERS = (
 # DJANGO: DEBUGGING
 DEBUG = str2bool(get_from_secrets_or_env('DJANGO_DEBUG'))
 
+# user that can update other user credentials via api
+SERVICE_NOW_USER = get_from_secrets_or_env('SERVICE_NOW_USER', 'api_servicenow_etools@unicef.org')
+
 # DJANGO: EMAIL
 DEFAULT_FROM_EMAIL = "no-reply@unicef.org"
 EMAIL_BACKEND = 'unicef_notification.backends.EmailBackend'
@@ -553,6 +556,7 @@ UNICEF_LOCATIONS_GET_CACHE_KEY = 'etools.libraries.locations.views.cache_key'
 ATTACHMENT_FILEPATH_PREFIX_FUNC = "etools.applications.attachments.utils.get_filepath_prefix"
 ATTACHMENT_FLAT_MODEL = "etools.applications.attachments.models.AttachmentFlat"
 ATTACHMENT_DENORMALIZE_FUNC = "etools.applications.attachments.utils.denormalize_attachment"
+ATTACHMENT_PERMISSIONS = "etools.applications.attachments.permissions.IsInSchema"
 
 GEOS_LIBRARY_PATH = os.getenv('GEOS_LIBRARY_PATH', '/usr/lib/libgeos_c.so.1')  # default path
 GDAL_LIBRARY_PATH = os.getenv('GDAL_LIBRARY_PATH', '/usr/lib/libgdal.so.26')  # default path

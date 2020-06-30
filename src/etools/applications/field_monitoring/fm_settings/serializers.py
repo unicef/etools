@@ -75,14 +75,32 @@ class QuestionSerializer(QuestionLightSerializer):
         fields = QuestionLightSerializer.Meta.fields + ('options',)
         read_only_fields = ('is_custom',)
 
+    def check_hact_questions(self, validated_data, instance=None):
+        question_is_active = validated_data.get("is_active", None) or getattr(instance, "is_active", None)
+        question_is_hact = validated_data.get("is_hact", None) or getattr(instance, "is_hact", None)
+        if question_is_active and question_is_hact:
+            question_target = validated_data.get("level", None) or getattr(instance, "level", None)
+            if question_target != Question.LEVELS.partner:
+                raise ValidationError("HACT questions can only be related at the Partner Organization Level")
+            question_id = getattr(instance, "id", None)
+            if Question.objects.filter(is_hact=True, is_active=True).exclude(id=question_id).exists():
+                raise ValidationError("Only one hact question can be active at any time.")
+
     def create(self, validated_data):
         validated_data['is_custom'] = True
+        self.check_hact_questions(validated_data)
         options = validated_data.pop('options', None)
         instance = super().create(validated_data)
         self.set_options(instance, options)
         return instance
 
     def update(self, instance, validated_data):
+        # For non-custom questions the only option we have is to modify is_active
+        custom_changes_allowed = not validated_data or validated_data.keys() == ["is_active"]
+        if not instance.is_custom and not custom_changes_allowed:
+            raise ValidationError("The system provided questions cannot be edited.")
+
+        self.check_hact_questions(validated_data, instance)
         options = validated_data.pop('options', None)
         instance = super().update(instance, validated_data)
         self.set_options(instance, options)

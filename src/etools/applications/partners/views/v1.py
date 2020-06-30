@@ -81,7 +81,7 @@ class PCAPDFView(LoginRequiredMixin, PDFTemplateView):
                 bank_objects.append(Bank(*[b[i[1]] for i in bank_key_values]))
 
         officers_list = []
-        for officer in self.agreement.authorized_officers.all():
+        for officer in self.agreement.authorized_officers.filter(active=True):
             officers_list.append(
                 {'first_name': officer.first_name,
                  'last_name': officer.last_name,

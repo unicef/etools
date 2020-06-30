@@ -271,7 +271,14 @@ class EngagementViewSet(
         SearchFilter, DisplayStatusFilter, DjangoFilterBackend,
         UniqueIDOrderingFilter, OrderingFilter,
     )
-    search_fields = ('partner__name', 'agreement__auditor_firm__name', '=id')
+    search_fields = (
+        'partner__name',
+        'partner__vendor_number',
+        'partner__short_name',
+        'agreement__auditor_firm__name',
+        'offices__name',
+        '=id',
+    )
     ordering_fields = ('agreement__order_number', 'agreement__auditor_firm__name',
                        'partner__name', 'engagement_type', 'status')
     filterset_class = EngagementFilter

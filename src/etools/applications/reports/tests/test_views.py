@@ -978,6 +978,46 @@ class TestSpecialReportingRequirementListCreateView(BaseTenantTestCase):
         self.assertEqual(response.data["intervention"], self.intervention.pk)
         self.assertEqual(response.data["description"], "Randomness")
 
+    def test_post_invalid_due_dates(self):
+        due_date = datetime.date(2001, 4, 15)
+        SpecialReportingRequirementFactory(
+            intervention=self.intervention,
+            due_date=due_date,
+        )
+        requirement_qs = SpecialReportingRequirement.objects.filter(
+            intervention=self.intervention,
+        )
+        init_count = requirement_qs.count()
+        response = self.forced_auth_req(
+            "post",
+            self.url,
+            user=self.unicef_staff,
+            data={
+                "due_date": due_date,
+                "description": "Randomness"
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(requirement_qs.count(), init_count)
+        self.assertEqual(response.data, {
+            "due_date": [
+                "There is already a special report with this due date.",
+            ]
+        })
+
+        due_date += datetime.timedelta(days=2)
+        response = self.forced_auth_req(
+            "post",
+            self.url,
+            user=self.unicef_staff,
+            data={
+                "due_date": due_date,
+                "description": "Randomness"
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(requirement_qs.count(), init_count + 1)
+
 
 class TestSpecialReportingRequirementRetrieveUpdateDestroyView(BaseTenantTestCase):
     @classmethod

@@ -96,6 +96,9 @@ class PartnerOrganizationListAPIView(ExternalModuleFilterMixin, QueryStringFilte
         ('partner_type', 'partner_type__in'),
         ('cso_type', 'cso_type__in'),
         ('rating', 'rating__in'),
+        ('sea_risk_rating', 'sea_risk_rating_name__in'),
+        ('psea_assessment_date_before', 'psea_assessment_date__lt'),
+        ('psea_assessment_date_after', 'psea_assessment_date__gt'),
     )
     search_terms = ('name__icontains', 'vendor_number__icontains', 'short_name__icontains')
     module2filters = {

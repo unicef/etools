@@ -29,6 +29,21 @@ class UserProfileSerializer(serializers.ModelSerializer):
         )
 
 
+class UserManagementSerializer(serializers.Serializer):
+    user_email = serializers.EmailField(required=True)
+    roles = serializers.ListSerializer(child=serializers.ChoiceField(choices=["Partnership Manager",
+                                                                              "PME",
+                                                                              "Travel Administrator",
+                                                                              "UNICEF Audit Focal Point",
+                                                                              "FM User",
+                                                                              "Driver"]), required=True)
+    workspace = serializers.CharField(required=True)
+    access_type = serializers.ChoiceField(choices=["grant", "revoke", "set"], required=True)
+
+    class Meta:
+        fields = "__all__"
+
+
 class SimpleProfileSerializer(serializers.ModelSerializer):
 
     user_id = serializers.CharField(source="user.id")
@@ -225,4 +240,5 @@ class CountrySerializer(SimpleUserSerializer):
             'local_currency_code',
             'business_area_code',
             'country_short_code',
+            'iso3_code',
         )

@@ -79,7 +79,8 @@ class AssessmentViewSet(
         ('partner', 'partner_id__in'),
         ('status', 'status__in'),
         ('unicef_focal_point', 'focal_points__pk__in'),
-        ('assessment_date', 'assessment_date'),
+        ('assessment_date__lt', 'assessment_date__lt'),
+        ('assessment_date__gt', 'assessment_date__gt'),
         ('assessor_staff', 'assessor__user__pk__in'),
         ('assessor_external', 'assessor__user__pk__in'),
         ('assessor_firm', 'assessor__auditor_firm__pk__in'),
@@ -554,6 +555,8 @@ class AnswerAttachmentsViewSet(
             pk=serializer.initial_data.get("id")
         )
         serializer.save(content_object=self.get_parent_object())
+        serializer.instance.refresh_from_db()
+        serializer._data = serializer.to_representation(serializer.instance)
 
     def perform_update(self, serializer):
         serializer.save(content_object=self.get_parent_object())

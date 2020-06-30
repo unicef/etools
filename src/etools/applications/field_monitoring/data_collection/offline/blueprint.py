@@ -25,7 +25,7 @@ answer_type_to_field_mapping = {
     Question.ANSWER_TYPES.text: TextField,
     Question.ANSWER_TYPES.number: FloatField,
     Question.ANSWER_TYPES.bool: BooleanField,
-    Question.ANSWER_TYPES.likert_scale: TextField,
+    Question.ANSWER_TYPES.likert_scale: ChoiceField,
 }
 
 
@@ -75,7 +75,7 @@ def get_blueprint_for_activity_and_method(activity: 'MonitoringActivity', method
                 styling=['card', 'collapse'],
                 required=False,
             )
-            questions_block = Group('questions', styling=['abstract'])
+            questions_block = Group('questions', styling=['abstract'], required=False)
             target_block.add(questions_block)
             for question in target_questions.distinct():
                 if question.question.answer_type in [
