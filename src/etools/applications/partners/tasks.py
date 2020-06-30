@@ -7,7 +7,7 @@ from django.db import connection, transaction
 from django.db.models import F, Sum
 
 from celery.utils.log import get_task_logger
-from django_tenants.utils import schema_context
+from django_tenants.utils import schema_context, get_tenant_model
 from unicef_notification.utils import send_notification_with_template
 
 from etools.applications.partners.models import Agreement, Intervention, PartnerOrganization
@@ -301,3 +301,12 @@ def check_intervention_draft_status():
 @app.task
 def check_intervention_past_start():
     run_on_all_tenants(send_intervention_past_start_notification)
+
+
+@app.task
+def sync_partner_to_prp(tenant: str, partner_id: int):
+    tenant = get_tenant_model().objects.get(name=tenant)
+    connection.set_tenant(tenant)
+
+    partner = PartnerOrganization.objects.get(id=partner_id)
+    # todo: push PRPPartnerOrganizationWithStaffMembersSerializer(instance=partner).data to PRP
