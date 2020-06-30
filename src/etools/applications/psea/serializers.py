@@ -1,7 +1,7 @@
 from copy import copy
 
 from django.contrib.contenttypes.models import ContentType
-from django.db import models, transaction
+from django.db import transaction
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
