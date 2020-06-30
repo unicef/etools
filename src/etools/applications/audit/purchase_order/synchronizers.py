@@ -7,7 +7,7 @@ from etools.applications.vision.synchronizers import VisionDataTenantSynchronize
 
 
 class POSynchronizer(VisionDataTenantSynchronizer, ManualVisionSynchronizer):
-    ENDPOINT = 'GetPurchaseOrderInfo_JSON'
+    ENDPOINT = 'purchaseorders'
     REQUIRED_KEYS = (
         "PO_NUMBER",
         "PO_DATE",
@@ -49,6 +49,7 @@ class POSynchronizer(VisionDataTenantSynchronizer, ManualVisionSynchronizer):
 
     def _filter_records(self, records):
         records = super()._filter_records(records)
+        print (records)
 
         def bad_record(record):
             if not record['VENDOR_NAME']:

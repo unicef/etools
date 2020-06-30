@@ -329,7 +329,7 @@ class RAMSynchronizer(VisionDataTenantSynchronizer):
         "INDICATOR_DESCRIPTION",
         "INDICATOR_CODE",
         "WBS_ELEMENT_CODE",
-        "BASELINE",
+        "INDICATOR_BASELINE",
         "INDICATOR_TARGET",
     )
 
@@ -359,7 +359,7 @@ class RAMSynchronizer(VisionDataTenantSynchronizer):
             code = str(r['INDICATOR_CODE'])
             mapped_records[code] = {
                 'name': r['INDICATOR_DESCRIPTION'][:1024],
-                'baseline': r['BASELINE'][:255],
+                'baseline': r['INDICATOR_BASELINE'][:255],
                 'code': code,
                 'target': r['TARGET'][:255],
                 'ram_indicator': True,
