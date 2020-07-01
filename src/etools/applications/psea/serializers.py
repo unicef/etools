@@ -1,7 +1,6 @@
 from copy import copy
 
 from django.contrib.contenttypes.models import ContentType
-from django.db import transaction
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
@@ -477,14 +476,36 @@ class AnswerSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         evidence_data = validated_data.pop("evidences")
         attachment_data = validated_data.pop("attachments")
-        with transaction.atomic():
-            answer = Answer.objects.create(**validated_data)
-            for evidence in evidence_data:
-                AnswerEvidence.objects.create(
-                    answer=answer,
-                    **evidence,
-                )
-            self._set_attachments(answer, attachment_data)
+        answer = Answer.objects.create(**validated_data)
+        for evidence in evidence_data:
+            AnswerEvidence.objects.create(
+                answer=answer,
+                **evidence,
+            )
+
+        content_type = ContentType.objects.get_for_model(Answer)
+        current = list(Attachment.objects.filter(
+            object_id=answer.pk,
+            content_type=content_type,
+        ).all())
+        used = []
+        for attachment in attachment_data:
+            for initial in self.initial_data.get("attachments"):
+                pk = initial["id"]
+                current = [a for a in current if a.pk != pk]
+                file_type = initial.get("file_type")
+                if pk not in used and file_type == attachment["file_type"].pk:
+                    attachment = Attachment.objects.filter(pk=pk).update(
+                        file_type=attachment["file_type"],
+                        code="psea_answer",
+                        object_id=answer.pk,
+                        content_type=content_type,
+                    )
+                    used.append(pk)
+                    break
+        for attachment in current:
+            attachment.delete()
+
         return answer
 
     def update(self, instance, validated_data):
