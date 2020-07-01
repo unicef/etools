@@ -1646,6 +1646,35 @@ class Intervention(TimeStampedModel):
         (SSFA, 'SSFA'),
     )
 
+    RATING_NONE = "none"
+    RATING_MARGINAL = "marginal"
+    RATING_SIGNIFICANT = "significant"
+    RATING_PRINCIPAL = "principal"
+    RATING_CHOICES = (
+        (RATING_NONE, "None"),
+        (RATING_MARGINAL, "Marginal"),
+        (RATING_SIGNIFICANT, "Significant"),
+        (RATING_PRINCIPAL, "Principal"),
+    )
+
+    CASH_TRANSFER_PAYMENT = "payment"
+    CASH_TRANSFER_REIMBURSE = "reimburse"
+    CASH_TRANSFER_DIRECT = "direct"
+    CASH_TRANSFER_CHOICES = (
+        (CASH_TRANSFER_PAYMENT, "Direct Payment"),
+        (CASH_TRANSFER_REIMBURSE, "Reimbursement"),
+        (CASH_TRANSFER_DIRECT, "Direct Cash Transfer"),
+    )
+
+    REVIEW_TYPE_NONE = "none"
+    REVIEW_TYPE_PRC = "prc"
+    REVIEW_TYPE_NON_PRC = "non-prc"
+    REVIEW_TYPE_CHOICES = (
+        (REVIEW_TYPE_NONE, "None"),
+        (REVIEW_TYPE_PRC, "PRC"),
+        (REVIEW_TYPE_NON_PRC, "Non-PRC"),
+    )
+
     tracker = FieldTracker()
     objects = InterventionManager()
 
@@ -1844,6 +1873,98 @@ class Intervention(TimeStampedModel):
     in_amendment = models.BooleanField(
         verbose_name=_("Amendment Open"),
         default=False,
+    )
+
+    unicef_court = models.BooleanField(
+        verbose_name=("UNICEF Editing"),
+        default=True,
+    )
+    date_sent_to_partner = models.DateField(
+        verbose_name=_("Date first sent to Partner"),
+        null=True,
+        blank=True,
+    )
+    unicef_accepted = models.BooleanField(
+        verbose_name=("UNICEF Accepted"),
+        default=False,
+    )
+    partner_accepted = models.BooleanField(
+        verbose_name=("Partner Accepted"),
+        default=False,
+    )
+    cfei_number = models.CharField(
+        verbose_name=_("UNPP Number"),
+        max_length=150,
+        blank=True,
+        default="",
+    )
+    context = models.TextField(
+        verbose_name=_("Context"),
+        blank=True,
+    )
+    implementation_strategy = models.TextField(
+        verbose_name=_("Implementation Strategy"),
+        blank=True,
+    )
+    gender_rating = models.CharField(
+        verbose_name=_("Gender Rating"),
+        max_length=50,
+        choices=RATING_CHOICES,
+        default=RATING_NONE,
+    )
+    gender_narrative = models.TextField(
+        verbose_name=_("Gender Narrative"),
+        blank=True,
+    )
+    equity_rating = models.CharField(
+        verbose_name=_("Equity Rating"),
+        max_length=50,
+        choices=RATING_CHOICES,
+        default=RATING_NONE,
+    )
+    equity_narrative = models.TextField(
+        verbose_name=_("Equity Narrative"),
+        blank=True,
+    )
+    sustainability_rating = models.CharField(
+        verbose_name=_("Sustainability Rating"),
+        max_length=50,
+        choices=RATING_CHOICES,
+        default=RATING_NONE,
+    )
+    sustainability_narrative = models.TextField(
+        verbose_name=_("Sustainability Narrative"),
+        blank=True,
+    )
+    ip_program_conbtribution = models.TextField(
+        verbose_name=_("Partner Non-Financial Contribution to Programme"),
+        blank=True,
+    )
+    budget_owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name=_("Budget Owner"),
+        related_name='budget_owner+',
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+    )
+    hq_support_cost = models.DecimalField(
+        verbose_name=_("HQ Support Cost"),
+        max_digits=2,
+        decimal_places=1,
+        default=0.0,
+    )
+    cash_transfer_modalities = models.CharField(
+        verbose_name=_("Cash Transfer Modalities"),
+        max_length=50,
+        choices=CASH_TRANSFER_CHOICES,
+        default=CASH_TRANSFER_DIRECT,
+    )
+    unicef_review_type = models.CharField(
+        verbose_name=_("UNICEF Review Type"),
+        max_length=50,
+        choices=REVIEW_TYPE_CHOICES,
+        default=REVIEW_TYPE_NONE,
     )
 
     # Flag if this has been migrated to a status that is not correct
