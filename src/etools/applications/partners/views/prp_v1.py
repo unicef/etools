@@ -54,11 +54,11 @@ class PRPInterventionListAPIView(QueryStringFilterMixin, ListAPIView):
         intervention=OuterRef("pk")
     ).order_by().values("intervention")
 
-    # todo: replace .exclude(draft) with .filter(first_sent_to_partner_at__isnull=False) when new field will be ready
     queryset = Intervention.objects.filter(
         result_links__ll_results__applied_indicators__isnull=False,
         reporting_requirements__isnull=False,
-        in_amendment=False
+        in_amendment=False,
+        date_sent_to_partner__isnull=False,
     ).prefetch_related(
         'result_links__cp_output',
         'result_links__ll_results',
@@ -74,7 +74,7 @@ class PRPInterventionListAPIView(QueryStringFilterMixin, ListAPIView):
         'amendments',
         'flat_locations',
         'sections'
-    ).exclude(status=Intervention.DRAFT).annotate(
+    ).annotate(
         frs__actual_amt_local__sum=Subquery(
             frs_query.annotate(total=Sum("actual_amt_local")).values("total")[:1]
         ),
