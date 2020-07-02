@@ -69,12 +69,21 @@ def transition_to_closed(i):
     # In case FRs are marked as completed validation needs to move forward regardless of value discrepancy
     # In case it's a supply only PD, the total FRs will be $0.01 and validation needs to move forward
     # to be safe given decimal field here compare to a float we're saying smaller than $0.1 & continue with validation
-    if not i.total_frs['total_completed_flag'] and \
-            not float(i.total_frs['total_frs_amt']) < 0.1 and \
-            (i.total_frs['total_frs_amt'] != i.total_frs['total_actual_amt'] or
-             i.total_frs['total_outstanding_amt'] != 0):
-        raise TransitionError([_('Total FR amount needs to equal total actual amount, and '
-                                 'Total Outstanding DCTs need to equal to 0')])
+    if i.total_frs['total_completed_flag']:
+        if i.total_frs['total_outstanding_amt'] != 0:
+            raise TransitionError(
+                [_('Total Outstanding DCTs need to equal to 0')],
+            )
+    else:
+        if not float(i.total_frs['total_frs_amt']) < 0.1:
+            if (
+                    i.total_frs['total_frs_amt'] != i.total_frs['total_actual_amt'] or
+                    i.total_frs['total_outstanding_amt'] != 0
+            ):
+                raise TransitionError(
+                    [_('Total FR amount needs to equal total actual amount'
+                       ', and Total Outstanding DCTs need to equal to 0')]
+                )
 
     # If total_actual_amt_usd >100,000 then attachments has to include
     # at least 1 record with type: "Final Partnership Review"
@@ -167,17 +176,6 @@ def transition_to_active(i):
     if i.agreement.partner.blocked:
         raise TransitionError([
             _('PD cannot be activated if the Partner is Blocked in Vision')
-        ])
-
-    # require results framework and reporting requirements
-    if not i.reporting_requirements.exists() or not i.result_links.exists():
-        raise TransitionError([
-            _(
-                "{} cannot be activated without results framework and "
-                "reporting requirements.".format(
-                    i.document_type,
-                )
-            ),
         ])
     return True
 

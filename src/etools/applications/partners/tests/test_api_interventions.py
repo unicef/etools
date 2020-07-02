@@ -22,7 +22,7 @@ from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.core.tests.mixins import URLAssertionMixin
 from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.environment.tests.factories import TenantSwitchFactory
-from etools.applications.partners.models import Agreement, Intervention, InterventionAmendment, InterventionResultLink
+from etools.applications.partners.models import Intervention, InterventionAmendment, InterventionResultLink
 from etools.applications.partners.permissions import InterventionPermissions
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
@@ -90,19 +90,78 @@ class TestInterventionsSwagger(BaseTenantTestCase):
 
 class TestInterventionsAPI(BaseTenantTestCase):
     EDITABLE_FIELDS = {
-        'draft': ["status", "attachments", "prc_review_document", 'travel_activities',
-                  "partner_authorized_officer_signatory", "partner_focal_points", "id",
-                  "country_programme", "amendments", "unicef_focal_points", "end", "title",
-                  "signed_by_partner_date", "review_date_prc", "frs", "start",
-                  "metadata", "submission_date", "agreement", "unicef_signatory_id",
-                  "result_links", "contingency_pd", "unicef_signatory", "agreement_id", "signed_by_unicef_date",
-                  "partner_authorized_officer_signatory_id", "created", "planned_visits",
-                  "planned_budget", "modified", "signed_pd_document", "submission_date_prc", "document_type",
-                  "offices", "population_focus", "country_programme_id", "engagement", "sections",
-                  "sections_present", "flat_locations", "reporting_periods", "activity",
-                  "prc_review_attachment", "signed_pd_attachment", "actionpoint",
-                  "reporting_requirements", "special_reporting_requirements", "reference_number_year", "number",
-                  "termination_doc_attachment", "monitoring_activities"],
+        'draft': [
+            "actionpoint",
+            "activity",
+            "agreement",
+            "agreement_id",
+            "amendments",
+            "attachments",
+            "contingency_pd",
+            "country_programme",
+            "country_programme_id",
+            "created",
+            "document_type",
+            "end",
+            "engagement",
+            "flat_locations",
+            "frs",
+            "id",
+            "metadata",
+            "modified",
+            "monitoring_activities",
+            "number",
+            "offices",
+            "partner_authorized_officer_signatory",
+            "partner_authorized_officer_signatory_id",
+            "partner_focal_points",
+            "planned_budget",
+            "planned_visits",
+            "population_focus",
+            "prc_review_attachment",
+            "prc_review_document",
+            "reference_number_year",
+            "reporting_periods",
+            "reporting_requirements",
+            "result_links",
+            "review_date_prc",
+            "sections",
+            "sections_present",
+            "signed_by_partner_date",
+            "signed_by_unicef_date",
+            "signed_pd_attachment",
+            "signed_pd_document",
+            "special_reporting_requirements",
+            "start",
+            "status",
+            "submission_date",
+            "submission_date_prc",
+            "termination_doc_attachment",
+            "title",
+            "unicef_focal_points",
+            "unicef_signatory",
+            "unicef_signatory_id",
+            'budget_owner',
+            'budget_owner_id',
+            'cash_transfer_modalities',
+            'cfei_number',
+            'context',
+            'date_sent_to_partner',
+            'equity_narrative',
+            'equity_rating',
+            'gender_narrative',
+            'gender_rating',
+            'hq_support_cost',
+            'implementation_strategy',
+            'ip_program_conbtribution',
+            'partner_accepted',
+            'sustainability_narrative',
+            'sustainability_rating',
+            'travel_activities',
+            'unicef_accepted',
+            'unicef_court',
+            'unicef_review_type',
+        ],
         'signed': [],
         'active': ['']
     }
@@ -630,59 +689,31 @@ class TestInterventionsAPI(BaseTenantTestCase):
         self.assertEqual(status_code, status.HTTP_200_OK)
         self.assertEqual(len(response), 4 + EXTRA_INTERVENTIONS)
 
-    def test_transition_to_active(self):
-        today = datetime.date.today()
-        officer = self.partner1.staff_members.all().first()
-        agreement = AgreementFactory(
-            partner=self.partner1,
-            status=Agreement.SIGNED,
-            signed_by_unicef_date=today - datetime.timedelta(days=1),
-            signed_by_partner_date=today - datetime.timedelta(days=1)
+    def test_filtering_contingency_pd(self):
+        response = self.forced_auth_req(
+            "get",
+            reverse('partners_api:intervention-list'),
+            user=self.unicef_staff,
         )
-        intervention = InterventionFactory(
-            agreement=agreement,
-            status=Intervention.SIGNED,
-            title='Transition To Active Intervention',
-            document_type=Intervention.PD,
-            start=today - datetime.timedelta(days=1),
-            end=today + datetime.timedelta(days=90),
-            signed_by_unicef_date=today - datetime.timedelta(days=1),
-            signed_by_partner_date=today - datetime.timedelta(days=1),
-            unicef_signatory=self.unicef_staff,
-            partner_authorized_officer_signatory=officer,
-        )
-        validation_msg = ("PD cannot be activated without results framework "
-                          "and reporting requirements.")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 3)
 
-        self.assertNotEqual(intervention.status, Intervention.ACTIVE)
-        data = {"status": Intervention.ACTIVE}
-        status_code, response = self.run_request(
-            intervention.pk,
-            data,
-            method="patch",
+        # set contingency pd value
+        self.intervention.contingency_pd = True
+        self.intervention.save()
+        self.assertEqual(
+            Intervention.objects.filter(contingency_pd=True).count(),
+            1,
         )
-        self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn(validation_msg, response)
 
-        # add reporting requirements
-        ReportingRequirementFactory(intervention=intervention)
-        status_code, response = self.run_request(
-            intervention.pk,
-            data,
-            method="patch",
+        response = self.forced_auth_req(
+            "get",
+            reverse('partners_api:intervention-list'),
+            user=self.unicef_staff,
+            data={"contingency_pd": True}
         )
-        self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn(validation_msg, response)
-
-        # add results framework
-        InterventionResultLinkFactory(intervention=intervention)
-        status_code, response = self.run_request(
-            intervention.pk,
-            data,
-            method="patch",
-        )
-        self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertNotIn(validation_msg, response)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
 
 
 class TestAPIInterventionResultLinkListView(BaseTenantTestCase):

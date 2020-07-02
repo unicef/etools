@@ -115,3 +115,4 @@ src/etools/config/settings/custom.py
 .pytest_cache
 coverage.xml
 .venv/
+**/{'workspace': 'ZZZ'}*

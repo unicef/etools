@@ -15,6 +15,7 @@ from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.core.tests.mixins import URLAssertionMixin
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
 from etools.applications.partners.models import (
+    Agreement,
     Assessment,
     CoreValuesAssessment,
     Intervention,
@@ -389,6 +390,45 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data["planned_visits"]["partner"],
                          ErrorDetail(string='Planned Visit can be set only for Government partners', code='invalid'))
+
+    def test_update_staffmember_inactive(self):
+        partner_staff = PartnerStaffFactory(partner=self.partner)
+        partner_staff_user = UserFactory(is_staff=True)
+        partner_staff_user.groups.add(GroupFactory())
+        partner_staff_user.profile.partner_staff_member = partner_staff.pk
+        partner_staff_user.profile.save()
+        agreement = AgreementFactory(
+            status=Agreement.DRAFT,
+            partner=self.partner,
+        )
+        agreement.authorized_officers.add(partner_staff)
+        intervention = InterventionFactory(
+            status=Intervention.DRAFT,
+            agreement=agreement,
+        )
+        intervention.partner_focal_points.add(partner_staff)
+        self.assertIn(partner_staff, intervention.partner_focal_points.all())
+        self.assertIn(partner_staff, agreement.authorized_officers.all())
+        response = self.forced_auth_req(
+            "patch",
+            self.url,
+            data={
+                "staff_members": [{
+                    "id": partner_staff.pk,
+                    "email": partner_staff.email,
+                    "active": False,
+                }],
+            },
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        intervention.refresh_from_db()
+        self.assertNotIn(
+            partner_staff,
+            intervention.partner_focal_points.all(),
+        )
+        agreement.refresh_from_db()
+        self.assertNotIn(partner_staff, agreement.authorized_officers.all())
 
 
 class TestPartnerOrganizationHactAPIView(BaseTenantTestCase):

@@ -490,6 +490,29 @@ class PartnerOrganization(TimeStampedModel):
     hact_values = JSONField(blank=True, null=True, default=hact_default, verbose_name='HACT')
     basis_for_risk_rating = models.CharField(
         verbose_name=_("Basis for Risk Rating"), max_length=50, default='', blank=True)
+    psea_assessment_date = models.DateTimeField(
+        verbose_name=_("Last PSEA Assess. Date"),
+        null=True,
+        blank=True,
+    )
+    sea_risk_rating_name = models.CharField(
+        max_length=150,
+        verbose_name=_("PSEA Risk Rating"),
+        blank=True,
+        default='',
+    )
+    highest_risk_rating_type = models.CharField(
+        max_length=150,
+        verbose_name=_("Highest Risk Rating Type"),
+        blank=True,
+        default='',
+    )
+    highest_risk_rating_name = models.CharField(
+        max_length=150,
+        verbose_name=_("Highest Risk Rating Name"),
+        blank=True,
+        default='',
+    )
 
     tracker = FieldTracker()
     objects = PartnerOrganizationQuerySet.as_manager()
@@ -666,6 +689,9 @@ class PartnerOrganization(TimeStampedModel):
         """
         :return: all completed programmatic visits
         """
+        # Avoid circular imports
+        from etools.applications.field_monitoring.data_collection.models import ActivityQuestion
+
         hact = self.get_hact_json()
 
         pv = hact['programmatic_visits']['completed']['total']
@@ -702,11 +728,22 @@ class PartnerOrganization(TimeStampedModel):
 
             tpm_total = tpmv1 + tpmv2 + tpmv3 + tpmv4
 
-            hact['programmatic_visits']['completed']['q1'] = pvq1 + tpmv1
-            hact['programmatic_visits']['completed']['q2'] = pvq2 + tpmv2
-            hact['programmatic_visits']['completed']['q3'] = pvq3 + tpmv3
-            hact['programmatic_visits']['completed']['q4'] = pvq4 + tpmv4
-            hact['programmatic_visits']['completed']['total'] = pv + tpm_total
+            # field monitoring activities qualify as programmatic visits if during a monitoring activity the hact
+            # question was answered with an overall rating and the visit is completed
+            fmvqs = ActivityQuestion.objects.filter(question__is_hact=True, partner=self,
+                                                    overall_finding__value__isnull=False,
+                                                    monitoring_activity__status="completed")
+            fmvq1 = fmvqs.filter(monitoring_activity__end_date__quarter=1).count()
+            fmvq2 = fmvqs.filter(monitoring_activity__end_date__quarter=2).count()
+            fmvq3 = fmvqs.filter(monitoring_activity__end_date__quarter=3).count()
+            fmvq4 = fmvqs.filter(monitoring_activity__end_date__quarter=4).count()
+            fmv_total = fmvq1 + fmvq2 + fmvq3 + fmvq4
+
+            hact['programmatic_visits']['completed']['q1'] = pvq1 + tpmv1 + fmvq1
+            hact['programmatic_visits']['completed']['q2'] = pvq2 + tpmv2 + fmvq2
+            hact['programmatic_visits']['completed']['q3'] = pvq3 + tpmv3 + fmvq3
+            hact['programmatic_visits']['completed']['q4'] = pvq4 + tpmv4 + fmvq4
+            hact['programmatic_visits']['completed']['total'] = pv + tpm_total + fmv_total
 
         self.hact_values = hact
         self.save()
@@ -1609,6 +1646,35 @@ class Intervention(TimeStampedModel):
         (SSFA, 'SSFA'),
     )
 
+    RATING_NONE = "none"
+    RATING_MARGINAL = "marginal"
+    RATING_SIGNIFICANT = "significant"
+    RATING_PRINCIPAL = "principal"
+    RATING_CHOICES = (
+        (RATING_NONE, "None"),
+        (RATING_MARGINAL, "Marginal"),
+        (RATING_SIGNIFICANT, "Significant"),
+        (RATING_PRINCIPAL, "Principal"),
+    )
+
+    CASH_TRANSFER_PAYMENT = "payment"
+    CASH_TRANSFER_REIMBURSE = "reimburse"
+    CASH_TRANSFER_DIRECT = "direct"
+    CASH_TRANSFER_CHOICES = (
+        (CASH_TRANSFER_PAYMENT, "Direct Payment"),
+        (CASH_TRANSFER_REIMBURSE, "Reimbursement"),
+        (CASH_TRANSFER_DIRECT, "Direct Cash Transfer"),
+    )
+
+    REVIEW_TYPE_NONE = "none"
+    REVIEW_TYPE_PRC = "prc"
+    REVIEW_TYPE_NON_PRC = "non-prc"
+    REVIEW_TYPE_CHOICES = (
+        (REVIEW_TYPE_NONE, "None"),
+        (REVIEW_TYPE_PRC, "PRC"),
+        (REVIEW_TYPE_NON_PRC, "Non-PRC"),
+    )
+
     tracker = FieldTracker()
     objects = InterventionManager()
 
@@ -1807,6 +1873,98 @@ class Intervention(TimeStampedModel):
     in_amendment = models.BooleanField(
         verbose_name=_("Amendment Open"),
         default=False,
+    )
+
+    unicef_court = models.BooleanField(
+        verbose_name=("UNICEF Editing"),
+        default=True,
+    )
+    date_sent_to_partner = models.DateField(
+        verbose_name=_("Date first sent to Partner"),
+        null=True,
+        blank=True,
+    )
+    unicef_accepted = models.BooleanField(
+        verbose_name=("UNICEF Accepted"),
+        default=False,
+    )
+    partner_accepted = models.BooleanField(
+        verbose_name=("Partner Accepted"),
+        default=False,
+    )
+    cfei_number = models.CharField(
+        verbose_name=_("UNPP Number"),
+        max_length=150,
+        blank=True,
+        default="",
+    )
+    context = models.TextField(
+        verbose_name=_("Context"),
+        blank=True,
+    )
+    implementation_strategy = models.TextField(
+        verbose_name=_("Implementation Strategy"),
+        blank=True,
+    )
+    gender_rating = models.CharField(
+        verbose_name=_("Gender Rating"),
+        max_length=50,
+        choices=RATING_CHOICES,
+        default=RATING_NONE,
+    )
+    gender_narrative = models.TextField(
+        verbose_name=_("Gender Narrative"),
+        blank=True,
+    )
+    equity_rating = models.CharField(
+        verbose_name=_("Equity Rating"),
+        max_length=50,
+        choices=RATING_CHOICES,
+        default=RATING_NONE,
+    )
+    equity_narrative = models.TextField(
+        verbose_name=_("Equity Narrative"),
+        blank=True,
+    )
+    sustainability_rating = models.CharField(
+        verbose_name=_("Sustainability Rating"),
+        max_length=50,
+        choices=RATING_CHOICES,
+        default=RATING_NONE,
+    )
+    sustainability_narrative = models.TextField(
+        verbose_name=_("Sustainability Narrative"),
+        blank=True,
+    )
+    ip_program_conbtribution = models.TextField(
+        verbose_name=_("Partner Non-Financial Contribution to Programme"),
+        blank=True,
+    )
+    budget_owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name=_("Budget Owner"),
+        related_name='budget_owner+',
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+    )
+    hq_support_cost = models.DecimalField(
+        verbose_name=_("HQ Support Cost"),
+        max_digits=2,
+        decimal_places=1,
+        default=0.0,
+    )
+    cash_transfer_modalities = models.CharField(
+        verbose_name=_("Cash Transfer Modalities"),
+        max_length=50,
+        choices=CASH_TRANSFER_CHOICES,
+        default=CASH_TRANSFER_DIRECT,
+    )
+    unicef_review_type = models.CharField(
+        verbose_name=_("UNICEF Review Type"),
+        max_length=50,
+        choices=REVIEW_TYPE_CHOICES,
+        default=REVIEW_TYPE_NONE,
     )
 
     # Flag if this has been migrated to a status that is not correct
