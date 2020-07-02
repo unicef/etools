@@ -33,25 +33,17 @@ class PRPAPI(object):
 
         # Any status code answer below 400 is OK
         if r.status_code >= 400:
-            if r.status_code == 400:
-                print(r.text)  # todo: cleanup
             r.raise_for_status()
 
         data = json.loads(r.text)
         return data
 
     def _simple_get_request(self, timeout=None):
-        self._gen_auth_headers()
-        r = self.http.get(
-            url=self.url,
-            headers=self.headers,
-            verify=True,
-            timeout=timeout
-        )
-        if r.status_code < 400:
-            return json.loads(r.text)
-        else:
+        r = requests.get(url=self.url, headers=self._get_headers(), verify=True, timeout=timeout)
+        if r.status_code >= 400:
             r.raise_for_status()
+
+        return json.loads(r.text)
 
     def send_partner_data(self, business_area_code: str, partner_data: Dict):
         self.url = self.url_prototype + '/unicef/pmp/import/{0}/partner/'.format(business_area_code)
