@@ -224,7 +224,7 @@ class TestAPIPRP(ApiCheckerMixin, AssertTimeStampedMixin, WorkspaceRequiredAPITe
             document_type=Intervention.PD, start=today - datetime.timedelta(days=1),
             end=today + datetime.timedelta(days=90),
             status='active',
-            date_sent_to_partner=timezone.now(),
+            date_sent_to_partner=today - datetime.timedelta(days=1),
             signed_by_unicef_date=today - datetime.timedelta(days=1),
             signed_by_partner_date=today - datetime.timedelta(days=1),
             unicef_signatory=unicef_staff,
