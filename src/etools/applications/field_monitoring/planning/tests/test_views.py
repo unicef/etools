@@ -1,5 +1,7 @@
 from datetime import date
 
+from django.core import mail
+from django.core.management import call_command
 from django.urls import reverse
 
 from rest_framework import status
@@ -84,6 +86,9 @@ class YearPlanViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenantTestCase):
     base_view = 'field_monitoring_planning:activities'
 
+    def setUp(self):
+        call_command("update_notifications")
+
     def test_create_empty_visit(self):
         response = self._test_create(self.fm_user, {}, expected_status=status.HTTP_400_BAD_REQUEST)
         self.assertIn('location', response.data[0])
@@ -166,6 +171,10 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['status'], 'data_collection')
+        self.assertEqual(
+            len(mail.outbox),
+            len(activity.team_members.all()) + 1,
+        )
 
     def test_dont_auto_accept_activity_if_tpm(self):
         tpm_partner = SimpleTPMPartnerFactory()
@@ -173,14 +182,19 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             staff.user for staff in TPMPartnerStaffMemberFactory.create_batch(size=2, tpm_partner=tpm_partner)
         ]
 
-        activity = MonitoringActivityFactory(monitor_type='tpm', tpm_partner=tpm_partner,
-                                             status='pre_' + MonitoringActivity.STATUSES.assigned,
-                                             team_members=team_members)
+        activity = MonitoringActivityFactory(
+            monitor_type='tpm',
+            tpm_partner=tpm_partner,
+            status=MonitoringActivity.STATUSES.review,
+            team_members=team_members,
+            person_responsible=UserFactory(unicef_user=True),
+        )
 
         response = self._test_update(self.fm_user, activity, data={'status': 'assigned'})
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['status'], 'assigned')
+        self.assertEqual(len(mail.outbox), len(team_members) + 1)
 
     def test_cancel_activity(self):
         activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.review)
