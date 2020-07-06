@@ -87,6 +87,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
     base_view = 'field_monitoring_planning:activities'
 
     def setUp(self):
+        super().setUp()
         call_command("update_notifications")
 
     def test_create_empty_visit(self):

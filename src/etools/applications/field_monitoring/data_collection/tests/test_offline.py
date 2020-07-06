@@ -1,3 +1,4 @@
+from django.core.management import call_command
 from django.db import connection
 from django.test import override_settings
 
@@ -138,6 +139,7 @@ class MonitoringActivityOfflineBlueprintsSyncTestCase(APIViewSetTestCase, BaseTe
 
     def setUp(self):
         super().setUp()
+        call_command("update_notifications")
         TenantSwitch.get("fm_offline_sync_disabled").flush()
 
     @override_settings(ETOOLS_OFFLINE_API='http://example.com/b/api/remote/blueprint/')
