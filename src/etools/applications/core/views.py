@@ -5,6 +5,7 @@ from django.shortcuts import redirect
 from django.urls import reverse
 from django.views.generic import RedirectView
 
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_jwt.serializers import jwt_encode_handler, jwt_payload_handler
@@ -22,7 +23,7 @@ class MainView(RedirectView):
 
 
 class IssueJWTRedirectView(APIView):
-    permission_classes = ()
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
         user = self.request.user
