@@ -392,7 +392,9 @@ class MonitoringActivity(
             self.init_offline_blueprints()
 
         # send email to users assigned to fm activity
-        recipients = list(self.team_members.all()) + [self.person_responsible]
+        recipients = set(
+            list(self.team_members.all()) + [self.person_responsible]
+        )
         for recipient in recipients:
             self._send_email(
                 recipient.email,
