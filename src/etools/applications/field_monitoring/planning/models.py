@@ -14,6 +14,7 @@ from unicef_notification.utils import send_notification_with_template
 
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.core.permissions import import_permissions
+from etools.applications.core.urlresolvers import build_frontend_url
 from etools.applications.field_monitoring.data_collection.offline.synchronizer import (
     MonitoringActivityOfflineSynchronizer,
 )
@@ -310,6 +311,15 @@ class MonitoringActivity(
             ActivityQuestionOverallFinding(activity_question=question)
             for question in self.questions.filter(is_enabled=True)
         ])
+
+    def get_object_url(self, **kwargs):
+        return build_frontend_url(
+            'fm',
+            'activities',
+            self.pk,
+            'details',
+            **kwargs,
+        )
 
     def get_mail_context(self, user=None):
         object_url = self.get_object_url(user=user)
