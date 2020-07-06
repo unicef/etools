@@ -1,4 +1,4 @@
-from django.db.models import CharField, Count, OuterRef, Subquery, Sum
+from django.db.models import CharField, Count, OuterRef, Q, Subquery, Sum
 
 from rest_framework.generics import get_object_or_404, ListAPIView
 from rest_framework.pagination import LimitOffsetPagination
@@ -55,10 +55,10 @@ class PRPInterventionListAPIView(QueryStringFilterMixin, ListAPIView):
     ).order_by().values("intervention")
 
     queryset = Intervention.objects.filter(
+        Q(status=Intervention.DRAFT, date_sent_to_partner__isnull=False) | ~Q(status=Intervention.DRAFT),
         result_links__ll_results__applied_indicators__isnull=False,
         reporting_requirements__isnull=False,
         in_amendment=False,
-        date_sent_to_partner__isnull=False,
     ).prefetch_related(
         'result_links__cp_output',
         'result_links__ll_results',
