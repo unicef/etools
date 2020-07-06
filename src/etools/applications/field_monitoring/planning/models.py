@@ -443,10 +443,6 @@ class MonitoringActivity(
         # at least one overall finding completed
         return self.overall_findings.exclude(narrative_finding='').exists()
 
-    def get_mail_context(self, user=None):
-        # todo
-        return {}
-
     @property
     def methods(self):
         return Method.objects.filter(
