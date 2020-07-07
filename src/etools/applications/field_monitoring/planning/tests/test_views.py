@@ -280,7 +280,9 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
 
         self._test_update(self.fm_user, activity, {'status': 'assigned'},
                           expected_status=status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(len(mail.outbox), 0)
         self._test_update(self.fm_user, activity, {'status': 'assigned', 'report_reject_reason': 'just because'})
+        self.assertEqual(len(mail.outbox), 1)
 
     def test_reject_as_tpm(self):
         tpm_partner = SimpleTPMPartnerFactory()

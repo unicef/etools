@@ -326,6 +326,8 @@ class MonitoringActivity(
 
         context = {
             'object_url': object_url,
+            'reference_number': self.number,
+            'location_name': self.location.name,
         }
 
         return context

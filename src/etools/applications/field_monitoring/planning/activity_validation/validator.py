@@ -54,6 +54,17 @@ class ActivityValid(CompleteValidation):
         self.check_required_fields(instance)
         self.check_rigid_fields(instance, related=True)
         reject_reason_provided(instance, self.old_status)
+
+        # if rejected send notice to person responsible
+        if self.old_status == instance.STATUSES.assigned:
+            recipient = instance.person_responsible
+            instance._send_email(
+                recipient.email,
+                "fm/activity/rejected-responsible",
+                context={'recipient': recipient.get_full_name()},
+                user=recipient
+            )
+
         return True
 
     def state_checklist_valid(self, instance, user=None):
