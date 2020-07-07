@@ -227,13 +227,13 @@ class LowerResultsDeleteView(DestroyAPIView):
 class DisaggregationListCreateView(ListCreateAPIView):
     serializer_class = DisaggregationSerializer
     queryset = Disaggregation.objects.all()
-    permission_classes = (PMEPermission, )
+    permission_classes = (IsAuthenticated, PMEPermission, )
 
 
 class DisaggregationRetrieveUpdateView(RetrieveUpdateAPIView):
     serializer_class = DisaggregationSerializer
     queryset = Disaggregation.objects.all()
-    permission_classes = (PMEPermission, )
+    permission_classes = (IsAuthenticated, PMEPermission, )
 
 
 class AppliedIndicatorListAPIView(ExportModelMixin, ListAPIView):
