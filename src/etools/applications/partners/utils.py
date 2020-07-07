@@ -4,6 +4,7 @@ import logging
 
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
+from django.db import connection
 from django.db.models import F, Q
 from django.urls import reverse
 from django.utils.timezone import make_aware, now
@@ -19,9 +20,13 @@ from etools.applications.partners.models import (
     Intervention,
     InterventionAmendment,
     InterventionAttachment,
+    PartnerOrganization,
+    PartnerStaffMember,
 )
+from etools.applications.partners.prp_api import PRPPartnerUserResponse
 from etools.applications.reports.models import CountryProgramme
 from etools.applications.t2f.models import TravelAttachment
+from etools.applications.users.models import User, UserProfile
 from etools.libraries.tenant_support.utils import run_on_all_tenants
 
 logger = logging.getLogger(__name__)
@@ -582,3 +587,28 @@ def send_intervention_amendment_added_notification(intervention):
             "amendment_type": ', '.join(amendment_choice_values),
         }
     )
+
+
+def sync_partner_staff_member(partner: PartnerOrganization, staff_member_data: PRPPartnerUserResponse):
+    # todo: review fields usage again cause there are lot of fields duplication
+    staff_member, staff_member_created = PartnerStaffMember.objects.update_or_create(
+        partner=partner, email__iexact=staff_member_data.email,
+        defaults={
+            'title': staff_member_data.title, 'active': staff_member_data.is_active,
+            'first_name': staff_member_data.first_name, 'last_name': staff_member_data.last_name,
+            'phone': staff_member_data.phone_number,
+        }
+    )
+
+    user, user_created = User.objects.update_or_create(email__iexact=staff_member_data.email, defaults={
+        'job_title': staff_member_data.title, 'is_active': staff_member_data.is_active,
+        'first_name': staff_member_data.first_name, 'last_name': staff_member_data.last_name,
+    })
+
+    profile = user.profile
+    profile.job_title = staff_member_data.title
+    profile.phone_number = staff_member_data.phone_number
+    profile.partner_staff_member = staff_member.id
+    profile.country = profile.country or connection.tenant
+    profile.save()
+    profile.countries_available.add(connection.tenant)

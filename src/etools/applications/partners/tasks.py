@@ -19,13 +19,14 @@ from etools.applications.partners.utils import (
     send_intervention_past_start_notification,
     send_pca_missing_notifications,
     send_pca_required_notifications,
+    sync_partner_staff_member,
 )
 from etools.applications.partners.validation.agreements import AgreementValid
 from etools.applications.partners.validation.interventions import InterventionValid
 from etools.applications.users.models import Country
 from etools.config.celery import app
 from etools.libraries.djangolib.utils import get_environment
-from etools.libraries.tenant_support.utils import run_on_all_tenants
+from etools.libraries.tenant_support.utils import every_country, run_on_all_tenants
 
 logger = get_task_logger(__name__)
 
@@ -303,6 +304,34 @@ def check_intervention_draft_status():
 @app.task
 def check_intervention_past_start():
     run_on_all_tenants(send_intervention_past_start_notification)
+
+
+@app.task
+def sync_partners_staff_members_from_prp():
+    api = PRPAPI()
+
+    # remember where every particular partner is located for easier search
+    partners_tenants_mapping = {}
+    with every_country() as c:
+        for country in c:
+            connection.set_tenant(country)
+            for partner in PartnerOrganization.objects.all():
+                partners_tenants_mapping[(str(partner.id), partner.vendor_number)] = country
+
+    for partner_data in PRPAPI().get_partners_list():
+        key = (partner_data.external_id, partner_data.unicef_vendor_number)
+        partner_tenant = partners_tenants_mapping.get(key)
+        if not partner_tenant:
+            continue
+
+        connection.set_tenant(partner_tenant)
+        partner = PartnerOrganization.objects.get(
+            id=partner_data.external_id,
+            vendor_number=partner_data.unicef_vendor_number
+        )
+
+        for staff_member_data in api.get_partner_staff_members(partner_data.id):
+            sync_partner_staff_member(partner, staff_member_data)
 
 
 @app.task
