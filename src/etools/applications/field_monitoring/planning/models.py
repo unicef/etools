@@ -391,18 +391,6 @@ class MonitoringActivity(
             # trigger effects manually? or rewrite this effect?
             self.init_offline_blueprints()
 
-        # send email to users assigned to fm activity
-        recipients = set(
-            list(self.team_members.all()) + [self.person_responsible]
-        )
-        for recipient in recipients:
-            self._send_email(
-                recipient.email,
-                'fm/activity/assign',
-                context={'recipient': recipient.get_full_name()},
-                user=recipient
-            )
-
     @transition(field=status, source=STATUSES.assigned, target=STATUSES.draft,
                 permission=user_is_person_responsible_permission)
     def reject(self):

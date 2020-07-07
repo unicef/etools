@@ -73,6 +73,23 @@ class ActivityValid(CompleteValidation):
         self.check_rigid_fields(instance, related=True)
         tpm_partner_is_assigned_for_tpm_activity(instance)
         report_reject_reason_provided(instance, self.old_status)
+
+        # send email to users assigned to fm activity
+        recipients = set(
+            list(instance.team_members.all()) + [instance.person_responsible]
+        )
+        if instance.monitor_type == instance.MONITOR_TYPE_CHOICES.staff:
+            email_template = 'fm/activity/assign'
+        else:
+            email_template = 'fm/activity/staff-assign'
+        for recipient in recipients:
+            instance._send_email(
+                recipient.email,
+                email_template,
+                context={'recipient': recipient.get_full_name()},
+                user=recipient
+            )
+
         return True
 
     def state_data_collection_valid(self, instance, user=None):
