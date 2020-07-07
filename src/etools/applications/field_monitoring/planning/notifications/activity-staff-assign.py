@@ -10,7 +10,7 @@ defaults = {
 
     A Field Monitoring activity has been assigned to you in eTools.
 
-    Please click {{ object_url }} to access your assigned activity:
+    Please click {{ object_url }} to access your assigned activity.
 
     Thank you.
     """),

@@ -10,7 +10,7 @@ defaults = {
 
     UNICEF is granting you access to the Field Monitoring Module in eTools.
 
-    Please click {{ object_url }} to access your assigned activity:
+    Please click {{ object_url }} to access your assigned activity.
 
     Thank you.
     """),

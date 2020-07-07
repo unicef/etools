@@ -2,6 +2,7 @@ from datetime import date
 
 from django.core import mail
 from django.core.management import call_command
+from django.db import connection
 from django.urls import reverse
 
 from rest_framework import status
@@ -36,6 +37,7 @@ from etools.applications.partners.tests.factories import (
 )
 from etools.applications.reports.models import ResultType
 from etools.applications.reports.tests.factories import OfficeFactory, ResultFactory, SectionFactory
+from etools.applications.tpm.models import PME
 from etools.applications.tpm.tests.factories import (
     SimpleTPMPartnerFactory,
     TPMPartnerFactory,
@@ -224,7 +226,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         question = QuestionFactory(level=Question.LEVELS.partner, sections=activity.sections.all(), is_active=True)
         QuestionTemplateFactory(question=question)
 
-        def goto(next_status, user, extra_data=None):
+        def goto(next_status, user, extra_data=None, mail_count=None):
             data = {
                 'status': next_status
             }
@@ -232,6 +234,9 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
                 data.update(extra_data)
 
             self._test_update(user, activity, data)
+            if mail_count is not None:
+                self.assertEqual(len(mail.outbox), mail_count)
+            mail.outbox = []
 
         goto('checklist', self.fm_user)
         goto('draft', self.fm_user)
@@ -247,7 +252,9 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         ActivityOverallFinding.objects.create(monitoring_activity=activity, narrative_finding='test')
         goto('data_collection', person_responsible)
         goto('report_finalization', person_responsible)
-        goto('submitted', person_responsible)
+        goto('submitted', person_responsible, mail_count=len(PME.as_group().user_set.filter(
+            profile__country=connection.tenant,
+        )))
         goto('completed', self.fm_user)
 
     def test_sections_are_displayed_correctly(self):
@@ -280,9 +287,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
 
         self._test_update(self.fm_user, activity, {'status': 'assigned'},
                           expected_status=status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(len(mail.outbox), 0)
         self._test_update(self.fm_user, activity, {'status': 'assigned', 'report_reject_reason': 'just because'})
-        self.assertEqual(len(mail.outbox), 1)
 
     def test_reject_as_tpm(self):
         tpm_partner = SimpleTPMPartnerFactory()

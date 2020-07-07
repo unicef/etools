@@ -326,6 +326,7 @@ class MonitoringActivity(
 
         context = {
             'object_url': object_url,
+            'person_responsible': self.person_responsible.get_full_name(),
             'reference_number': self.number,
             'location_name': self.location.name,
         }

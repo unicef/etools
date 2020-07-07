@@ -1,3 +1,5 @@
+from django.db import connection
+
 from etools_validator.exceptions import StateValidationError
 from etools_validator.utils import check_required_fields, check_rigid_fields
 from etools_validator.validation import CompleteValidation
@@ -19,6 +21,7 @@ from etools.applications.field_monitoring.planning.activity_validation.validatio
     started_checklists_required,
     tpm_partner_is_assigned_for_tpm_activity,
 )
+from etools.applications.tpm.models import PME
 
 
 class ActivityValid(CompleteValidation):
@@ -90,9 +93,9 @@ class ActivityValid(CompleteValidation):
             list(instance.team_members.all()) + [instance.person_responsible]
         )
         if instance.monitor_type == instance.MONITOR_TYPE_CHOICES.staff:
-            email_template = 'fm/activity/assign'
-        else:
             email_template = 'fm/activity/staff-assign'
+        else:
+            email_template = 'fm/activity/assign'
         for recipient in recipients:
             instance._send_email(
                 recipient.email,
@@ -118,6 +121,23 @@ class ActivityValid(CompleteValidation):
         self.check_required_fields(instance)
         self.check_rigid_fields(instance, related=True)
         activity_overall_findings_required(instance)
+
+        # send email to PME group
+        recipients = PME.as_group().user_set.filter(
+            profile__country=connection.tenant,
+        )
+        if instance.monitor_type == instance.MONITOR_TYPE_CHOICES.staff:
+            email_template = 'fm/activity/staff-submit'
+        else:
+            email_template = 'fm/activity/submit'
+        for recipient in recipients:
+            instance._send_email(
+                recipient.email,
+                email_template,
+                context={'recipient': recipient.get_full_name()},
+                user=recipient
+            )
+
         return True
 
     def state_completed_valid(self, instance, user=None):
