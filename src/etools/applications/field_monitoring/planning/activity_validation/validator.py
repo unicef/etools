@@ -58,15 +58,23 @@ class ActivityValid(CompleteValidation):
         self.check_rigid_fields(instance, related=True)
         reject_reason_provided(instance, self.old_status)
 
-        # if rejected send notice to person responsible
+        # if rejected send notice
         if self.old_status == instance.STATUSES.assigned:
-            recipient = instance.person_responsible
-            instance._send_email(
-                recipient.email,
-                "fm/activity/rejected-responsible",
-                context={'recipient': recipient.get_full_name()},
-                user=recipient
-            )
+            if instance.monitor_type == instance.MONITOR_TYPE_CHOICES.staff:
+                email_template = "fm/activity/staff-reject"
+                recipients = PME.as_group().user_set.filter(
+                    profile__country=connection.tenant,
+                )
+            else:
+                email_template = "fm/activity/reject"
+                recipients = [instance.person_responsible]
+            for recipient in recipients:
+                instance._send_email(
+                    recipient.email,
+                    email_template,
+                    context={'recipient': recipient.get_full_name()},
+                    user=recipient
+                )
 
         return True
 

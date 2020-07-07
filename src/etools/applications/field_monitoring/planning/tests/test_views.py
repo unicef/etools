@@ -298,6 +298,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         )
 
         self._test_update(person_responsible, activity, {'status': 'draft', 'reject_reason': 'just because'})
+        self.assertEqual(len(mail.outbox), 1)
 
     def test_draft_status_permissions(self):
         activity = MonitoringActivityFactory(monitor_type='staff', status='draft')

@@ -1,12 +1,12 @@
 from unicef_notification.utils import strip_text
 
-name = 'fm/activity/rejected-responsible'
+name = 'fm/activity/staff-reject'
 defaults = {
-    'description': 'FM Activity assigned. Staff should be notified.',
+    'description': 'FM Activity rejected by Staff. Person responsible should be notified.',
     'subject': '[FM Portal] Request for more information on the Final report for the Monitoring/Verification activity {{ reference_number }}',
 
     'content': strip_text("""
-    Dear colleague,
+    Dear {{ recipient }},
 
     UNICEF has requested additional information on the final report submited for the Monitoring/Verification visit to {{ location name }}, {{ reference_number }}.
 
@@ -19,11 +19,11 @@ defaults = {
     {% extends "email-templates/base" %}
 
     {% block content %}
-    Dear colleague,<br/>
+    Dear {{ recipient }},<br/>
     <br/>
-    A Field Monitoring activity has been assigned to you in eTools.<br/>
+    UNICEF has requested additional information on the final report submited for the Monitoring/Verification visit to {{ location name }}, {{ reference_number }}.<br/>
     <br/>
-    Please click <a href="{{ object_url }}">{{ object_url }}</a> to access your assigned activity.<br/>
+    Please click <a href="{{ object_url }}">{{ object_url }}</a> to view the additional information/clarifications requested.<br/>
     <br/>
     Thank you.
     {% endblock %}
