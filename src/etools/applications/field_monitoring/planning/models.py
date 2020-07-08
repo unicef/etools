@@ -371,6 +371,7 @@ class MonitoringActivity(
             'person_responsible': self.person_responsible.get_full_name(),
             'reference_number': self.number,
             'location_name': self.location.name,
+            'vendor_name': self.tpm_partner.name,
         }
 
         return context
