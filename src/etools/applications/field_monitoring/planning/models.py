@@ -10,9 +10,11 @@ from model_utils.models import TimeStampedModel
 from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation
 from unicef_locations.models import Location
+from unicef_notification.utils import send_notification_with_template
 
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.core.permissions import import_permissions
+from etools.applications.core.urlresolvers import build_frontend_url
 from etools.applications.field_monitoring.data_collection.offline.synchronizer import (
     MonitoringActivityOfflineSynchronizer,
 )
@@ -26,6 +28,7 @@ from etools.applications.partners.models import Intervention, PartnerOrganizatio
 from etools.applications.reports.models import Result, Section
 from etools.applications.tpm.tpmpartners.models import TPMPartner
 from etools.libraries.djangolib.models import SoftDeleteMixin
+from etools.libraries.djangolib.utils import get_environment
 
 
 class YearPlan(TimeStampedModel):
@@ -309,6 +312,50 @@ class MonitoringActivity(
             for question in self.questions.filter(is_enabled=True)
         ])
 
+    def get_object_url(self, **kwargs):
+        return build_frontend_url(
+            'fm',
+            'activities',
+            self.pk,
+            'details',
+            **kwargs,
+        )
+
+    def get_mail_context(self, user=None):
+        object_url = self.get_object_url(user=user)
+
+        context = {
+            'object_url': object_url,
+            'person_responsible': self.person_responsible.get_full_name(),
+            'reference_number': self.number,
+            'location_name': self.location.name,
+        }
+
+        return context
+
+    def _send_email(self, recipients, template_name, context=None, user=None, **kwargs):
+        context = context or {}
+
+        base_context = {
+            'activity': self.get_mail_context(user=user),
+            'environment': get_environment(),
+        }
+        base_context.update(context)
+        context = base_context
+
+        if isinstance(recipients, str):
+            recipients = [recipients, ]
+        else:
+            recipients = list(recipients)
+
+        # assert recipients
+        if recipients:
+            send_notification_with_template(
+                recipients=recipients,
+                template_name=template_name,
+                context=context,
+            )
+
     @transition(field=status, source=STATUSES.draft, target=STATUSES.checklist,
                 permission=user_is_field_monitor_permission)
     def mark_details_configured(self):
@@ -343,7 +390,8 @@ class MonitoringActivity(
         if self.monitor_type == self.MONITOR_TYPE_CHOICES.staff:
             self.accept()
             self.save()
-            # todo: direct transitions doesn't trigger side effects. trigger effects manually? or rewrite this effect?
+            # todo: direct transitions doesn't trigger side effects.
+            # trigger effects manually? or rewrite this effect?
             self.init_offline_blueprints()
 
     @transition(field=status, source=STATUSES.assigned, target=STATUSES.draft,
@@ -397,10 +445,6 @@ class MonitoringActivity(
     def activity_overall_finding(self):
         # at least one overall finding completed
         return self.overall_findings.exclude(narrative_finding='').exists()
-
-    def get_mail_context(self, user=None):
-        # todo
-        return {}
 
     @property
     def methods(self):
