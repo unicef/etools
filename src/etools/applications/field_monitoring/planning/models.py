@@ -26,6 +26,7 @@ from etools.applications.field_monitoring.planning.transitions.permissions impor
 )
 from etools.applications.partners.models import Intervention, PartnerOrganization
 from etools.applications.reports.models import Result, Section
+from etools.applications.tpm.models import PME
 from etools.applications.tpm.tpmpartners.models import TPMPartner
 from etools.libraries.djangolib.models import SoftDeleteMixin
 from etools.libraries.djangolib.utils import get_environment
@@ -134,6 +135,9 @@ class MonitoringActivity(
     ]
 
     TRANSITION_SIDE_EFFECTS = {
+        STATUSES.draft: [
+            lambda i, old_instance=None, user=None: i.check_if_rejected(old_instance),
+        ],
         STATUSES.checklist: [
             lambda i, old_instance=None, user=None: i.prepare_questions_structure(old_instance.status),
         ],
@@ -149,6 +153,9 @@ class MonitoringActivity(
         ],
         STATUSES.report_finalization: [
             lambda i, old_instance=None, user=None: i.close_offline_blueprints(),
+        ],
+        STATUSES.submitted: [
+            lambda i, old_instance=None, user=None: i.send_submit_notice(),
         ],
         STATUSES.completed: [
             lambda i, old_instance=None, user=None: i.update_one_hact_value(),
@@ -245,6 +252,41 @@ class MonitoringActivity(
     def permission_structure(cls):
         permissions = import_permissions(cls.__name__)
         return permissions
+
+    def check_if_rejected(self, old_instance):
+        # if rejected send notice
+        if old_instance and old_instance.status == self.STATUSES.assigned:
+            if self.monitor_type == self.MONITOR_TYPE_CHOICES.staff:
+                email_template = "fm/activity/staff-reject"
+                recipients = PME.as_group().user_set.filter(
+                    profile__country=connection.tenant,
+                )
+            else:
+                email_template = "fm/activity/reject"
+                recipients = [self.person_responsible]
+            for recipient in recipients:
+                self._send_email(
+                    recipient.email,
+                    email_template,
+                    context={'recipient': recipient.get_full_name()},
+                    user=recipient
+                )
+
+    def send_submit_notice(self):
+        recipients = PME.as_group().user_set.filter(
+            profile__country=connection.tenant,
+        )
+        if self.monitor_type == self.MONITOR_TYPE_CHOICES.staff:
+            email_template = 'fm/activity/staff-submit'
+        else:
+            email_template = 'fm/activity/submit'
+        for recipient in recipients:
+            self._send_email(
+                recipient.email,
+                email_template,
+                context={'recipient': recipient.get_full_name()},
+                user=recipient
+            )
 
     def prepare_questions_structure(self, old_status=STATUSES.draft):
         if old_status != self.STATUSES.draft:
@@ -393,6 +435,22 @@ class MonitoringActivity(
             # todo: direct transitions doesn't trigger side effects.
             # trigger effects manually? or rewrite this effect?
             self.init_offline_blueprints()
+
+        # send email to users assigned to fm activity
+        recipients = set(
+            list(self.team_members.all()) + [self.person_responsible]
+        )
+        if self.monitor_type == self.MONITOR_TYPE_CHOICES.staff:
+            email_template = 'fm/activity/staff-assign'
+        else:
+            email_template = 'fm/activity/assign'
+        for recipient in recipients:
+            self._send_email(
+                recipient.email,
+                email_template,
+                context={'recipient': recipient.get_full_name()},
+                user=recipient
+            )
 
     @transition(field=status, source=STATUSES.assigned, target=STATUSES.draft,
                 permission=user_is_person_responsible_permission)
