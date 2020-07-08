@@ -1,5 +1,8 @@
 from datetime import date
 
+from django.core import mail
+from django.core.management import call_command
+from django.db import connection
 from django.urls import reverse
 
 from rest_framework import status
@@ -34,6 +37,7 @@ from etools.applications.partners.tests.factories import (
 )
 from etools.applications.reports.models import ResultType
 from etools.applications.reports.tests.factories import OfficeFactory, ResultFactory, SectionFactory
+from etools.applications.tpm.models import PME
 from etools.applications.tpm.tests.factories import (
     SimpleTPMPartnerFactory,
     TPMPartnerFactory,
@@ -83,6 +87,10 @@ class YearPlanViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
 class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenantTestCase):
     base_view = 'field_monitoring_planning:activities'
+
+    def setUp(self):
+        super().setUp()
+        call_command("update_notifications")
 
     def test_create_empty_visit(self):
         response = self._test_create(self.fm_user, {}, expected_status=status.HTTP_400_BAD_REQUEST)
@@ -166,6 +174,10 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['status'], 'data_collection')
+        self.assertEqual(
+            len(mail.outbox),
+            len(activity.team_members.all()) + 1,
+        )
 
     def test_dont_auto_accept_activity_if_tpm(self):
         tpm_partner = SimpleTPMPartnerFactory()
@@ -173,14 +185,19 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             staff.user for staff in TPMPartnerStaffMemberFactory.create_batch(size=2, tpm_partner=tpm_partner)
         ]
 
-        activity = MonitoringActivityFactory(monitor_type='tpm', tpm_partner=tpm_partner,
-                                             status='pre_' + MonitoringActivity.STATUSES.assigned,
-                                             team_members=team_members)
+        activity = MonitoringActivityFactory(
+            monitor_type='tpm',
+            tpm_partner=tpm_partner,
+            status=MonitoringActivity.STATUSES.review,
+            team_members=team_members,
+            person_responsible=UserFactory(unicef_user=True),
+        )
 
         response = self._test_update(self.fm_user, activity, data={'status': 'assigned'})
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['status'], 'assigned')
+        self.assertEqual(len(mail.outbox), len(team_members) + 1)
 
     def test_cancel_activity(self):
         activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.review)
@@ -209,7 +226,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         question = QuestionFactory(level=Question.LEVELS.partner, sections=activity.sections.all(), is_active=True)
         QuestionTemplateFactory(question=question)
 
-        def goto(next_status, user, extra_data=None):
+        def goto(next_status, user, extra_data=None, mail_count=None):
             data = {
                 'status': next_status
             }
@@ -217,6 +234,9 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
                 data.update(extra_data)
 
             self._test_update(user, activity, data)
+            if mail_count is not None:
+                self.assertEqual(len(mail.outbox), mail_count)
+            mail.outbox = []
 
         goto('checklist', self.fm_user)
         goto('draft', self.fm_user)
@@ -232,7 +252,9 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         ActivityOverallFinding.objects.create(monitoring_activity=activity, narrative_finding='test')
         goto('data_collection', person_responsible)
         goto('report_finalization', person_responsible)
-        goto('submitted', person_responsible)
+        goto('submitted', person_responsible, mail_count=len(PME.as_group().user_set.filter(
+            profile__country=connection.tenant,
+        )))
         goto('completed', self.fm_user)
 
     def test_sections_are_displayed_correctly(self):
@@ -276,6 +298,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         )
 
         self._test_update(person_responsible, activity, {'status': 'draft', 'reject_reason': 'just because'})
+        self.assertEqual(len(mail.outbox), 1)
 
     def test_draft_status_permissions(self):
         activity = MonitoringActivityFactory(monitor_type='staff', status='draft')
