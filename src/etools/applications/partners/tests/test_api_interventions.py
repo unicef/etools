@@ -173,6 +173,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
     ALL_FIELDS = get_all_field_names(Intervention) + InterventionPermissions.EXTRA_FIELDS
 
     def setUp(self):
+        super().setUp()
         setup_intervention_test_data(self)
 
     def tearDown(self):
