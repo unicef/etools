@@ -361,7 +361,7 @@ class RAMSynchronizer(VisionDataTenantSynchronizer):
                 'name': r['INDICATOR_DESCRIPTION'][:1024],
                 'baseline': r['INDICATOR_BASELINE'][:255],
                 'code': code,
-                'target': r['TARGET'][:255],
+                'target': r['INDICATOR_TARGET'][:255],
                 'ram_indicator': True,
                 'result__wbs': '/'.join([a[0:4], a[4:6], a[6:8], a[8:11], a[11:14]])
             }
