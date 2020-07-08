@@ -152,7 +152,7 @@ class MonitoringActivity(
             lambda i, old_instance=None, user=None: i.init_offline_blueprints(),
         ],
         STATUSES.report_finalization: [
-            lambda i, old_instance=None, user=None: i.close_offline_blueprints(old_instance),
+            lambda i, old_instance=None, user=None: i.close_offline_blueprints(),
         ],
         STATUSES.submitted: [
             lambda i, old_instance=None, user=None: i.send_submit_notice(),
