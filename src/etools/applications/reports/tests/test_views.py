@@ -2,9 +2,10 @@ import datetime
 from operator import itemgetter
 
 from django.test import SimpleTestCase
-from django.urls import reverse
+from django.urls import resolve, reverse
 
 from rest_framework import status
+from rest_framework.test import APIRequestFactory
 from tablib.core import Dataset
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
@@ -281,6 +282,11 @@ class TestDisaggregationListCreateViews(BaseTenantTestCase):
         cls.group = GroupFactory(name="PME")
         cls.pme_user.groups.add(cls.group)
         cls.url = reverse('reports:disaggregation-list-create')
+
+    def test_unauthed(self):
+        request = APIRequestFactory().get(self.url, format="json")
+        response = resolve(self.url).func(request)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_get(self):
         """
