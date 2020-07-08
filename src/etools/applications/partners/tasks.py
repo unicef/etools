@@ -307,6 +307,16 @@ def check_intervention_past_start():
 
 
 @app.task
+def sync_partner_to_prp(tenant: str, partner_id: int):
+    tenant = get_tenant_model().objects.get(name=tenant)
+    connection.set_tenant(tenant)
+
+    partner = PartnerOrganization.objects.get(id=partner_id)
+    partner_data = PRPPartnerOrganizationWithStaffMembersSerializer(instance=partner).data
+    PRPAPI().send_partner_data(tenant.business_area_code, partner_data)
+
+
+@app.task
 def sync_partners_staff_members_from_prp():
     api = PRPAPI()
 
@@ -332,13 +342,3 @@ def sync_partners_staff_members_from_prp():
 
         for staff_member_data in api.get_partner_staff_members(partner_data.id):
             sync_partner_staff_member(partner, staff_member_data)
-
-
-@app.task
-def sync_partner_to_prp(tenant: str, partner_id: int):
-    tenant = get_tenant_model().objects.get(name=tenant)
-    connection.set_tenant(tenant)
-
-    partner = PartnerOrganization.objects.get(id=partner_id)
-    partner_data = PRPPartnerOrganizationWithStaffMembersSerializer(instance=partner).data
-    PRPAPI().send_partner_data(tenant.business_area_code, partner_data)

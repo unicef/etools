@@ -26,7 +26,7 @@ from etools.applications.partners.models import (
 from etools.applications.partners.prp_api import PRPPartnerUserResponse
 from etools.applications.reports.models import CountryProgramme
 from etools.applications.t2f.models import TravelAttachment
-from etools.applications.users.models import User, UserProfile
+from etools.applications.users.models import User
 from etools.libraries.tenant_support.utils import run_on_all_tenants
 
 logger = logging.getLogger(__name__)
@@ -590,20 +590,35 @@ def send_intervention_amendment_added_notification(intervention):
 
 
 def sync_partner_staff_member(partner: PartnerOrganization, staff_member_data: PRPPartnerUserResponse):
-    # todo: review fields usage again cause there are lot of fields duplication
-    staff_member, staff_member_created = PartnerStaffMember.objects.update_or_create(
+    staff_member_update_fields = {
+        'title': staff_member_data.title, 'active': staff_member_data.is_active,
+        'first_name': staff_member_data.first_name, 'last_name': staff_member_data.last_name,
+        'phone': staff_member_data.phone_number,
+    }
+    staff_member, staff_member_created = PartnerStaffMember.objects.get_or_create(
         partner=partner, email__iexact=staff_member_data.email,
         defaults={
-            'title': staff_member_data.title, 'active': staff_member_data.is_active,
-            'first_name': staff_member_data.first_name, 'last_name': staff_member_data.last_name,
-            'phone': staff_member_data.phone_number,
+            'email': staff_member_data.email, 'partner': partner,
+            **staff_member_update_fields
         }
     )
+    if not staff_member_created:
+        for key, value in staff_member_update_fields.items():
+            setattr(staff_member, key, value)
+        staff_member.save()
 
-    user, user_created = User.objects.update_or_create(email__iexact=staff_member_data.email, defaults={
-        'job_title': staff_member_data.title, 'is_active': staff_member_data.is_active,
+    user_update_fields = {
+        'is_active': staff_member_data.is_active,
         'first_name': staff_member_data.first_name, 'last_name': staff_member_data.last_name,
+    }
+    user, user_created = User.objects.get_or_create(email__iexact=staff_member_data.email, defaults={
+        'email': staff_member_data.email, 'username': staff_member_data.email,
+        **user_update_fields
     })
+    if not user_created:
+        for key, value in user_update_fields.items():
+            setattr(user, key, value)
+        user.save()
 
     profile = user.profile
     profile.job_title = staff_member_data.title
