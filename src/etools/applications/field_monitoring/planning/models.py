@@ -453,8 +453,6 @@ class MonitoringActivity(
             # trigger effects manually? or rewrite this effect?
             self.init_offline_blueprints()
 
-
-
     @transition(field=status, source=STATUSES.assigned, target=STATUSES.draft,
                 permission=user_is_person_responsible_permission)
     def reject(self):
