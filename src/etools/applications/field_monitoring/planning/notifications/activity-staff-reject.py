@@ -8,7 +8,7 @@ defaults = {
     'content': strip_text("""
     Dear {{ recipient }},
 
-    UNICEF has requested additional information on the final report submited for the Monitoring/Verification visit to {{ activity.location name }}, {{ activity.reference_number }}.
+    UNICEF has requested additional information on the final report submitted for the Monitoring/Verification visit to {{ activity.location_name }}, {{ activity.reference_number }}.
 
     Please click {{ activity.object_url }} to view the additional information/clarifications requested.
 
@@ -21,7 +21,7 @@ defaults = {
     {% block content %}
     Dear {{ recipient }},<br/>
     <br/>
-    UNICEF has requested additional information on the final report submited for the Monitoring/Verification visit to {{ activity.location name }}, {{ activity.reference_number }}.<br/>
+    UNICEF has requested additional information on the final report submitted for the Monitoring/Verification visit to {{ activity.location_name }}, {{ activity.reference_number }}.<br/>
     <br/>
     Please click <a href="{{ activity.object_url }}">{{ activity.object_url }}</a> to view the additional information/clarifications requested.<br/>
     <br/>
