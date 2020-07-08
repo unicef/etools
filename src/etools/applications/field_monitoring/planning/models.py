@@ -146,13 +146,13 @@ class MonitoringActivity(
             lambda i, old_instance=None, user=None: i.prepare_questions_overall_findings(),
         ],
         STATUSES.assigned: [
-            lambda i, old_instance=None, user=None: i.auto_accept_staff_activity(),
+            lambda i, old_instance=None, user=None: i.auto_accept_staff_activity(old_instance),
         ],
         STATUSES.data_collection: [
             lambda i, old_instance=None, user=None: i.init_offline_blueprints(),
         ],
         STATUSES.report_finalization: [
-            lambda i, old_instance=None, user=None: i.close_offline_blueprints(),
+            lambda i, old_instance=None, user=None: i.close_offline_blueprints(old_instance),
         ],
         STATUSES.submitted: [
             lambda i, old_instance=None, user=None: i.send_submit_notice(),
@@ -256,14 +256,10 @@ class MonitoringActivity(
     def check_if_rejected(self, old_instance):
         # if rejected send notice
         if old_instance and old_instance.status == self.STATUSES.assigned:
-            if self.monitor_type == self.MONITOR_TYPE_CHOICES.staff:
-                email_template = "fm/activity/staff-reject"
-                recipients = PME.as_group().user_set.filter(
-                    profile__country=connection.tenant,
-                )
-            else:
-                email_template = "fm/activity/reject"
-                recipients = [self.person_responsible]
+            email_template = "fm/activity/reject"
+            recipients = PME.as_group().user_set.filter(
+                profile__country=connection.tenant,
+            )
             for recipient in recipients:
                 self._send_email(
                     recipient.email,
@@ -429,7 +425,7 @@ class MonitoringActivity(
     def accept(self):
         pass
 
-    def auto_accept_staff_activity(self):
+    def auto_accept_staff_activity(self, old_instance):
         if self.monitor_type == self.MONITOR_TYPE_CHOICES.staff:
             self.accept()
             self.save()
@@ -441,7 +437,10 @@ class MonitoringActivity(
         recipients = set(
             list(self.team_members.all()) + [self.person_responsible]
         )
-        if self.monitor_type == self.MONITOR_TYPE_CHOICES.staff:
+        if old_instance and old_instance.status == self.STATUSES.submitted:
+            email_template = "fm/activity/staff-reject"
+            recipients = [self.person_responsible]
+        elif self.monitor_type == self.MONITOR_TYPE_CHOICES.staff:
             email_template = 'fm/activity/staff-assign'
         else:
             email_template = 'fm/activity/assign'
