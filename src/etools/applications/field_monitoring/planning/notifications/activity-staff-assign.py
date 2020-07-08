@@ -10,7 +10,7 @@ defaults = {
 
     A Field Monitoring activity has been assigned to you in eTools.
 
-    Please click {{ object_url }} to access your assigned activity.
+    Please click {{ activity.object_url }} to access your assigned activity.
 
     Thank you.
     """),
@@ -23,7 +23,7 @@ defaults = {
     <br/>
     A Field Monitoring activity has been assigned to you in eTools.<br/>
     <br/>
-    Please click <a href="{{ object_url }}">{{ object_url }}</a> to access your assigned activity.<br/>
+    Please click <a href="{{ activity.object_url }}">{{ activity.object_url }}</a> to access your assigned activity.<br/>
     <br/>
     Thank you.
     {% endblock %}
