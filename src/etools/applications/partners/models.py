@@ -1875,6 +1875,10 @@ class Intervention(TimeStampedModel):
         default=False,
     )
 
+    humanitarian_flag = models.BooleanField(
+        verbose_name=_("Humanitarian"),
+        default=False,
+    )
     unicef_court = models.BooleanField(
         verbose_name=("UNICEF Editing"),
         default=True,
