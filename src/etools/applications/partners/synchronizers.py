@@ -144,7 +144,6 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
                 logger.debug('field changed', field)
                 return True
         return False
-        return False
 
     def _partner_save(self, partner, full_sync=True):
         processed = 0
