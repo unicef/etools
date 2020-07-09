@@ -106,6 +106,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
             "engagement",
             "flat_locations",
             "frs",
+            "humanitarian_flag",
             "id",
             "metadata",
             "modified",
