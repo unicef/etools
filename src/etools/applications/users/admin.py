@@ -260,6 +260,7 @@ class CountryAdmin(TenantAdminMixin, admin.ModelAdmin):
 
     list_display = (
         'name',
+        'iso3_code',
         'country_short_code',
         'business_area_code',
         'vision_sync_enabled',

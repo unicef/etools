@@ -34,6 +34,7 @@ _completed_activities_filter = Q(monitoring_activities__status=MonitoringActivit
 
 class HACTView(ListAPIView):
     serializer_class = HACTSerializer
+
     queryset = PartnerOrganization.objects.filter(
         monitoring_activities__isnull=False
     ).prefetch_related(
@@ -41,11 +42,10 @@ class HACTView(ListAPIView):
             'monitoring_activities',
             MonitoringActivity.objects.filter(
                 status=MonitoringActivity.STATUSES.completed
+
             ).prefetch_related('cp_outputs', 'interventions'),
             to_attr='visits'
         ),
-    ).annotate(
-        completed_visits=Count('monitoring_activities', filter=_completed_activities_filter),
     ).order_by('id').distinct()
 
 
