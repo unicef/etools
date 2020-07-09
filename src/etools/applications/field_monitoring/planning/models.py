@@ -146,7 +146,7 @@ class MonitoringActivity(
             lambda i, old_instance=None, user=None: i.prepare_questions_overall_findings(),
         ],
         STATUSES.assigned: [
-            lambda i, old_instance=None, user=None: i.auto_accept_staff_activity(),
+            lambda i, old_instance=None, user=None: i.auto_accept_staff_activity(old_instance),
         ],
         STATUSES.data_collection: [
             lambda i, old_instance=None, user=None: i.init_offline_blueprints(),
@@ -256,14 +256,10 @@ class MonitoringActivity(
     def check_if_rejected(self, old_instance):
         # if rejected send notice
         if old_instance and old_instance.status == self.STATUSES.assigned:
-            if self.monitor_type == self.MONITOR_TYPE_CHOICES.staff:
-                email_template = "fm/activity/staff-reject"
-                recipients = PME.as_group().user_set.filter(
-                    profile__country=connection.tenant,
-                )
-            else:
-                email_template = "fm/activity/reject"
-                recipients = [self.person_responsible]
+            email_template = "fm/activity/reject"
+            recipients = PME.as_group().user_set.filter(
+                profile__country=connection.tenant,
+            )
             for recipient in recipients:
                 self._send_email(
                     recipient.email,
@@ -429,19 +425,16 @@ class MonitoringActivity(
     def accept(self):
         pass
 
-    def auto_accept_staff_activity(self):
-        if self.monitor_type == self.MONITOR_TYPE_CHOICES.staff:
-            self.accept()
-            self.save()
-            # todo: direct transitions doesn't trigger side effects.
-            # trigger effects manually? or rewrite this effect?
-            self.init_offline_blueprints()
-
+    def auto_accept_staff_activity(self, old_instance):
         # send email to users assigned to fm activity
         recipients = set(
             list(self.team_members.all()) + [self.person_responsible]
         )
-        if self.monitor_type == self.MONITOR_TYPE_CHOICES.staff:
+        # check if it was rejected otherwise send assign message
+        if old_instance and old_instance.status == self.STATUSES.submitted:
+            email_template = "fm/activity/staff-reject"
+            recipients = [self.person_responsible]
+        elif self.monitor_type == self.MONITOR_TYPE_CHOICES.staff:
             email_template = 'fm/activity/staff-assign'
         else:
             email_template = 'fm/activity/assign'
@@ -452,6 +445,13 @@ class MonitoringActivity(
                 context={'recipient': recipient.get_full_name()},
                 user=recipient
             )
+
+        if self.monitor_type == self.MONITOR_TYPE_CHOICES.staff:
+            self.accept()
+            self.save()
+            # todo: direct transitions doesn't trigger side effects.
+            # trigger effects manually? or rewrite this effect?
+            self.init_offline_blueprints()
 
     @transition(field=status, source=STATUSES.assigned, target=STATUSES.draft,
                 permission=user_is_person_responsible_permission)
