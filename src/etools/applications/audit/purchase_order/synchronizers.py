@@ -45,7 +45,7 @@ class POSynchronizer(VisionDataTenantSynchronizer, ManualVisionSynchronizer):
             'vision_synced': True
         }
     }
-    DATE_FIELDS = []
+    DATE_FIELDS = ["PO_DATE", "EXPIRY_DATE"]
 
     def _filter_records(self, records):
         records = super()._filter_records(records)
