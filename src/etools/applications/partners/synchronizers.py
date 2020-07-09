@@ -157,7 +157,7 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
                 logger.info('Partner {} skipped, because PartnerType is {}'.format(
                     partner['VENDOR_NAME'], partner['PARTNER_TYPE_DESC']
                 ))
-                pass
+
                 if partner_org.id:
                     partner_org.deleted_flag = True if partner['MARKED_FOR_DELETION'] else False
                     partner_org.blocked = True if partner['POSTING_BLOCK'] else False
