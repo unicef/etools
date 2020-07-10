@@ -60,6 +60,7 @@ class TestCreate(BaseTenantTestCase):
         data = response.data
         data.pop("permissions")
         i = Intervention.objects.get(pk=data.get("id"))
+        self.assertTrue(i.humanitarian_flag)
         self.assertTrue(data.get("humanitarian_flag"))
         self.assertEqual(data.get("cfei_number"), "321")
         self.assertEqual(data.get("budget_owner"), self.user.pk)
