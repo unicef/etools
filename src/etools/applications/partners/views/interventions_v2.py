@@ -168,22 +168,22 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
                                     nested_related_names=nested_related_names,
                                     **kwargs)
 
-        instance = serializer.instance
+        self.instance = serializer.instance
 
-        validator = InterventionValid(instance, user=request.user)
+        validator = InterventionValid(self.instance, user=request.user)
         if not validator.is_valid:
             logging.debug(validator.errors)
             raise ValidationError(validator.errors)
 
-        headers = self.get_success_headers(serializer.data)
-        if getattr(instance, '_prefetched_objects_cache', None):
+        self.headers = self.get_success_headers(serializer.data)
+        if getattr(self.instance, '_prefetched_objects_cache', None):
             # If 'prefetch_related' has been applied to a queryset, we need to
             # refresh the instance from the database.
-            instance = self.get_object()
+            self.instance = self.get_object()
         return Response(
-            InterventionDetailSerializer(instance, context=self.get_serializer_context()).data,
+            InterventionDetailSerializer(self.instance, context=self.get_serializer_context()).data,
             status=status.HTTP_201_CREATED,
-            headers=headers
+            headers=self.headers
         )
 
     def get_queryset(self, format=None):
