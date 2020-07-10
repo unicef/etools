@@ -18,7 +18,7 @@ from etools.applications.partners.views.interventions_v2 import InterventionList
 from etools.applications.partners.views.v3 import PMPBaseViewMixin
 
 
-class PMPInterventionListAPIView(PMPBaseViewMixin, InterventionListAPIView):
+class PMPInterventionAPIView(PMPBaseViewMixin, InterventionListAPIView):
     permission_classes = (PartnershipManagerPermission,)
 
     SERIALIZER_MAP = {
