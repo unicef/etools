@@ -70,7 +70,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='intervention',
-            name='ip_program_conbtribution',
+            name='ip_program_contribution',
             field=models.TextField(blank=True, verbose_name='Partner Non-Financial Contribution to Programme'),
         ),
         migrations.AddField(

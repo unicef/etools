@@ -1940,7 +1940,7 @@ class Intervention(TimeStampedModel):
         verbose_name=_("Sustainability Narrative"),
         blank=True,
     )
-    ip_program_conbtribution = models.TextField(
+    ip_program_contribution = models.TextField(
         verbose_name=_("Partner Non-Financial Contribution to Programme"),
         blank=True,
     )
