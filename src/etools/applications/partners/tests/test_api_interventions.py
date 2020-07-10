@@ -154,7 +154,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
             'gender_rating',
             'hq_support_cost',
             'implementation_strategy',
-            'ip_program_conbtribution',
+            'ip_program_contribution',
             'partner_accepted',
             'sustainability_narrative',
             'sustainability_rating',
