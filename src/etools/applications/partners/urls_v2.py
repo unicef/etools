@@ -56,7 +56,11 @@ from etools.applications.partners.views.partner_organization_v2 import (
     PlannedEngagementAPIView,
 )
 from etools.applications.partners.views.v1 import PCAPDFView
-from etools.applications.partners.views.v2 import PMPDropdownsListApiView, PMPStaticDropdownsListAPIView
+from etools.applications.partners.views.v2 import (
+    PMPAttachmentFileTypeView,
+    PMPDropdownsListApiView,
+    PMPStaticDropdownsListAPIView,
+)
 
 # http://www.django-rest-framework.org/api-guide/format-suffixes/
 
@@ -238,5 +242,9 @@ urlpatterns = (
         name='dropdown-static-list'),
     url(r'^dropdowns/pmp/$',
         view=PMPDropdownsListApiView.as_view(http_method_names=['get']), name='dropdown-pmp-list'),
+    url(r'^attachment-types/$',
+        view=PMPAttachmentFileTypeView.as_view(http_method_names=['get']),
+        name='attachment-types',
+    ),
 )
 urlpatterns = format_suffix_patterns(urlpatterns, allowed=['json', 'csv'])

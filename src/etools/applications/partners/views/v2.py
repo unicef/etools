@@ -7,7 +7,7 @@ from django.db.models.functions import Concat
 
 from model_utils import Choices
 from rest_framework import status
-from rest_framework.generics import RetrieveUpdateDestroyAPIView
+from rest_framework.generics import ListAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -30,6 +30,7 @@ from etools.applications.partners.models import (
     PartnerType,
 )
 from etools.applications.partners.permissions import PartnershipManagerPermission
+from etools.applications.partners.serializers.attachments import PMPAttachmentFileTypeSerializer
 from etools.applications.partners.serializers.partner_organization_v2 import (
     PartnerStaffMemberCreateUpdateSerializer,
     PartnerStaffMemberDetailSerializer,
@@ -262,3 +263,9 @@ class PartnershipDashboardAPIView(APIView):
             if result['active_count'] and result['expire_in_two_months_count'] else "0%"
 
         return Response(result, status=status.HTTP_200_OK)
+
+
+class PMPAttachmentFileTypeView(ListAPIView):
+    permission_classes = (IsAdminUser,)
+    serializer_class = PMPAttachmentFileTypeSerializer
+    queryset = AttachmentFileType.objects.group_by("pmp")
