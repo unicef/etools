@@ -5,7 +5,7 @@ from decimal import Decimal
 from django.core.exceptions import ValidationError
 from django.db import connection, transaction
 
-from unicef_vision.loaders import VISION_NO_DATA_MESSAGE
+from unicef_vision.loaders import INSIGHT_NO_DATA_MESSAGE
 from unicef_vision.synchronizers import FileDataSynchronizer
 from unicef_vision.utils import comp_decimals
 
@@ -101,7 +101,7 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
 
     @staticmethod
     def _get_json(data):
-        return [] if data == VISION_NO_DATA_MESSAGE else data
+        return [] if data == INSIGHT_NO_DATA_MESSAGE else data
 
     def _changed_fields(self, local_obj, api_obj):
         fields = [

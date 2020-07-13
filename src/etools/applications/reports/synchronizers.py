@@ -3,7 +3,7 @@ import logging
 
 from django.db import transaction
 
-from unicef_vision.loaders import VISION_NO_DATA_MESSAGE
+from unicef_vision.loaders import INSIGHT_NO_DATA_MESSAGE
 
 from etools.applications.reports.models import CountryProgramme, Indicator, Result, ResultType
 from etools.applications.vision.synchronizers import VisionDataTenantSynchronizer
@@ -264,7 +264,7 @@ class ProgrammeSynchronizer(VisionDataTenantSynchronizer):
 
     @staticmethod
     def _get_json(data):
-        return [] if data == VISION_NO_DATA_MESSAGE else data
+        return [] if data == INSIGHT_NO_DATA_MESSAGE else data
 
     def _filter_by_time_range(self, records):
         records = super()._filter_records(records)

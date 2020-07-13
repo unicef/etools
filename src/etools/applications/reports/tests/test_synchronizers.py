@@ -1,7 +1,7 @@
 import datetime
 import json
 
-from unicef_vision.loaders import VISION_NO_DATA_MESSAGE
+from unicef_vision.loaders import INSIGHT_NO_DATA_MESSAGE
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.reports.models import CountryProgramme, Indicator, Result, ResultType
@@ -395,7 +395,7 @@ class TestProgrammeSynchronizer(BaseTenantTestCase):
         data = {"test": "123"}
         self.assertEqual(self.adapter._get_json(data), data)
         self.assertEqual(
-            self.adapter._get_json(VISION_NO_DATA_MESSAGE),
+            self.adapter._get_json(INSIGHT_NO_DATA_MESSAGE),
             []
         )
 
