@@ -242,7 +242,8 @@ urlpatterns = (
         name='dropdown-static-list'),
     url(r'^dropdowns/pmp/$',
         view=PMPDropdownsListApiView.as_view(http_method_names=['get']), name='dropdown-pmp-list'),
-    url(r'^attachment-types/$',
+    url(
+        r'^attachment-types/$',
         view=PMPAttachmentFileTypeView.as_view(http_method_names=['get']),
         name='attachment-types',
     ),
