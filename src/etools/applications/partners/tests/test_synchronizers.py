@@ -32,7 +32,7 @@ class TestPartnerSynchronizer(BaseTenantTestCase):
 
     def test_convert_records(self):
         self.assertEqual(
-            self.adapter._convert_records(json.dumps(self.records)),
+            self.adapter._convert_records(self.records),
             [self.data]
         )
 

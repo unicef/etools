@@ -158,8 +158,8 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
                 ))
 
                 if partner_org.id:
-                    partner_org.deleted_flag = True if partner['MARKED_FOR_DELETION'] else False
-                    partner_org.blocked = True if partner['POSTING_BLOCK'] else False
+                    partner_org.deleted_flag = 'MARKED_FOR_DELETION' in partner
+                    partner_org.blocked = 'POSTING_BLOCK' in partner
                     partner_org.hidden = True
                     partner_org.save()
                 return processed
@@ -177,12 +177,12 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
                 partner_org.email = partner.get('EMAIL', '')
                 partner_org.core_values_assessment_date = datetime.strptime(
                     partner['CORE_VALUE_ASSESSMENT_DT'],
-                    '%d-%b-%y') if partner['CORE_VALUE_ASSESSMENT_DT'] else None
+                    '%d-%b-%y') if 'CORE_VALUE_ASSESSMENT_DT' in partner else None
                 partner_org.last_assessment_date = datetime.strptime(
-                    partner['DATE_OF_ASSESSMENT'], '%d-%b-%y') if partner["DATE_OF_ASSESSMENT"] else None
+                    partner['DATE_OF_ASSESSMENT'], '%d-%b-%y') if "DATE_OF_ASSESSMENT" in partner else None
                 partner_org.partner_type = self.get_partner_type(partner)
-                partner_org.deleted_flag = True if partner['MARKED_FOR_DELETION'] else False
-                posting_block = True if partner['POSTING_BLOCK'] else False
+                partner_org.deleted_flag = 'MARKED_FOR_DELETION' in partner
+                posting_block = 'POSTING_BLOCK' in partner
 
                 if posting_block and not partner_org.blocked:  # i'm blocking the partner now
                     notify_block = True
@@ -196,9 +196,8 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
                     if partner.get("HIGEST_RISK_RATING", "") is not None else ''
                 partner_org.highest_risk_rating_type = partner.get("HIGEST_RISK_RATING_TYPE", "")
                 partner_org.psea_assessment_date = datetime.strptime(
-                    partner['PSEA_ASSESSMENT_DATE'], '%d-%b-%y') if partner['PSEA_ASSESSMENT_DATE'] else None
-                partner_org.sea_risk_rating_name = partner["SEA_RISK_RATING_NAME"] \
-                    if partner["SEA_RISK_RATING_NAME"] else ''
+                    partner['PSEA_ASSESSMENT_DATE'], '%d-%b-%y') if partner.get('PSEA_ASSESSMENT_DATE') else None
+                partner_org.sea_risk_rating_name = partner.get("SEA_RISK_RATING_NAME", "")
                 saving = True
 
             if full_sync and (
@@ -270,7 +269,7 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
             'COMMUNITY BASED ORGANIZATION': 'Community Based Organization',
             'ACADEMIC INSTITUTION': 'Academic Institution'
         }
-        if partner['CSO_TYPE'] and partner['CSO_TYPE'].upper() in cso_type_mapping:
+        if 'CSO_TYPE' in partner and partner['CSO_TYPE'].upper() in cso_type_mapping:
             return cso_type_mapping[partner['CSO_TYPE'].upper()]
 
     @staticmethod
@@ -292,7 +291,7 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
     @staticmethod
     def get_type_of_assessment(partner):
         type_of_assessments = dict(PartnerOrganization.TYPE_OF_ASSESSMENT)
-        if partner['TYPE_OF_ASSESSMENT']:
+        if 'TYPE_OF_ASSESSMENT' in partner:
             return type_of_assessments.get(partner['TYPE_OF_ASSESSMENT'].upper(), partner['TYPE_OF_ASSESSMENT'])
         return ''
 
