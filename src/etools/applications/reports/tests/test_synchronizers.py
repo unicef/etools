@@ -1,5 +1,4 @@
 import datetime
-import json
 
 from unicef_vision.loaders import VISION_NO_DATA_MESSAGE
 
