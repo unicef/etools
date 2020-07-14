@@ -66,3 +66,20 @@ class TestCommentsViewSet(APIViewSetTestCase, BaseTenantTestCase):
             self.unicef_user, CommentFactory(instance_related=self.example_intervention), {},
             expected_status=status.HTTP_403_FORBIDDEN
         )
+
+    def test_resolve(self):
+        comment = CommentFactory(user=self.unicef_user, instance_related=self.example_intervention)
+
+        response = self.make_request_to_viewset(self.unicef_user, method='post', data={},
+                                                instance=comment, action='resolve')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        comment.refresh_from_db()
+        self.assertEqual(comment.state, Comment.STATES.resolved)
+
+    def test_resolve_not_owned(self):
+        comment = CommentFactory(instance_related=self.example_intervention)
+
+        response = self.make_request_to_viewset(self.unicef_user, method='post', data={},
+                                                instance=comment, action='resolve')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

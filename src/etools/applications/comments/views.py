@@ -1,9 +1,11 @@
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import Http404
+from rest_framework.decorators import action
 
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, mixins
 from unicef_restlib.pagination import DynamicPageNumberPagination
 
@@ -48,4 +50,14 @@ class CommentsViewSet(
     def perform_create(self, serializer):
         return serializer.save(instance_related=self.get_related_instance())
 
-    # todo: add action to mark as resolved
+    @action(detail=True, methods=['post'])
+    def resolve(self, request, *args, **kwargs):
+        comment = self.get_object()
+        self.check_object_permissions(self.request, comment)
+
+        comment.state = Comment.STATES.resolved
+        comment.save()
+
+        serializer = self.get_serializer(comment)
+
+        return Response(serializer.data)
