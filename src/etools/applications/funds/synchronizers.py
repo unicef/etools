@@ -298,7 +298,7 @@ class FundReservationsSynchronizer(VisionDataTenantSynchronizer):
         return processed
 
 
-class DelegatedFundReservationsSynchronizer(FundReservationsSynchronizer, ManualVisionSynchronizer):
+class DelegatedFundReservationsSynchronizer(FundReservationsSynchronizer):
     DELEGATED = True
 
 
