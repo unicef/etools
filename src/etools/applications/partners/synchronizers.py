@@ -126,9 +126,8 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
 
             if mapped_key in self.DATE_FIELDS:
                 apiobj_field = None
-                if mapped_key in api_obj:
-                    if api_obj[mapped_key]:
-                        datetime.strptime(api_obj[mapped_key], '%d-%b-%y')
+                if mapped_key in api_obj and api_obj[mapped_key]:
+                    datetime.strptime(api_obj[mapped_key], '%d-%b-%y')
 
             if field == 'partner_type':
                 apiobj_field = self.get_partner_type(api_obj)

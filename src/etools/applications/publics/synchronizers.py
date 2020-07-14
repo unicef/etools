@@ -57,6 +57,7 @@ class CurrencySynchronizer(VisionDataTenantSynchronizer):
 
 class TravelAgenciesSynchronizer(VisionDataTenantSynchronizer):
     ENDPOINT = 'GetTravelAgenciesInfo_JSON'
+    GLOBAL_CALL = True
 
     REQUIRED_KEYS = (
         'VENDOR_NAME',

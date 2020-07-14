@@ -6,7 +6,7 @@ from decimal import Decimal
 from django.db.models import Sum
 
 from unicef_vision.exceptions import VisionException
-from unicef_vision.synchronizers import FileDataSynchronizer, ManualVisionSynchronizer
+from unicef_vision.synchronizers import FileDataSynchronizer
 from unicef_vision.utils import comp_decimals
 
 from etools.applications.funds.models import (
@@ -389,8 +389,8 @@ class FundCommitmentSynchronizer(VisionDataTenantSynchronizer):
 
     @staticmethod
     def get_value_for_field(field, value):
-        if field in ['document_date', 'due_date']:
-            return datetime.datetime.strptime(value, '%d-%b-%y').date() if value else None
+        if field in ['document_date', 'due_date'] and value:
+            return datetime.datetime.strptime(value, '%d-%b-%y').date()
 
         if field in ['commitment_amount', 'commitment_amount_dc', 'amount_changed']:
             return Decimal(value.replace(",", ""))
