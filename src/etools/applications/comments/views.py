@@ -27,7 +27,6 @@ class CommentsViewSet(
     permission_classes = [
         IsAuthenticated,
         IsReadAction | (IsEditAction & IsCommentAuthor)
-        # todo: refine permissions
     ]
 
     def get_related_content_type(self):
