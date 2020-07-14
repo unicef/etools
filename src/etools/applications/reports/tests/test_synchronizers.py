@@ -546,21 +546,21 @@ class TestProgrammeSynchronizer(BaseTenantTestCase):
         })
 
     def test_convert_records(self):
-        self.data["CP_START_DATE"] = "/Date(1361336400000)/"
-        self.data["CP_END_DATE"] = "/Date(1361336400000)/"
+        self.data["CP_START_DATE"] = "20-Feb-13"
+        self.data["CP_END_DATE"] = "20-Feb-13"
         self.data["OUTCOME_WBS"] = "OC_WBS"
         self.data["OUTCOME_AREA_CODE"] = "OC_CODE"
         self.data["OUTCOME_DESCRIPTION"] = "OC_NAME"
-        self.data["OUTCOME_START_DATE"] = "/Date(2361336400000)/"
-        self.data["OUTCOME_END_DATE"] = "/Date(2361336400000)/"
-        self.data["OUTPUT_START_DATE"] = "/Date(2361336400000)/"
-        self.data["OUTPUT_END_DATE"] = "/Date(2361336400000)/"
-        self.data["ACTIVITY_START_DATE"] = "/Date(2361336400000)/"
-        self.data["ACTIVITY_END_DATE"] = "/Date(2361336400000)/"
+        self.data["OUTCOME_START_DATE"] = "29-Oct-44"
+        self.data["OUTCOME_END_DATE"] = "29-Oct-44"
+        self.data["OUTPUT_START_DATE"] = "29-Oct-44"
+        self.data["OUTPUT_END_DATE"] = "29-Oct-44"
+        self.data["ACTIVITY_START_DATE"] = "29-Oct-44"
+        self.data["ACTIVITY_END_DATE"] = "29-Oct-44"
         self.data["HUMANITARIAN_MARKER_CODE"] = "HUMANITARIAN_MARKER_CODE"
         self.data["HUMANITARIAN_MARKER_NAME"] = "HUMANITARIAN_MARKER_NAME"
         records = {
-            "GetProgrammeStructureList_JSONResult": json.dumps([self.data])
+            "ROWSET": {"ROW": [self.data]},
         }
         result = self.adapter._convert_records(records)
         self.assertEqual(result, {
@@ -593,13 +593,13 @@ class TestRAMSynchronizer(BaseTenantTestCase):
             "INDICATOR_DESCRIPTION": "NAME",
             "INDICATOR_CODE": "WBS",
             "WBS_ELEMENT_CODE": "1234567890ABCDE",
-            "BASELINE": "BLINE",
-            "TARGET": "Target",
+            "INDICATOR_BASELINE": "BLINE",
+            "INDICATOR_TARGET": "Target",
         }
         self.adapter = RAMSynchronizer(self.country.business_area_code)
 
     def test_convert_records(self):
-        records = json.dumps([self.data])
+        records = {"ROWSET": {"ROW": [self.data]}}
         self.assertEqual(self.adapter._convert_records(records), [self.data])
 
     def test_clean_records(self):
