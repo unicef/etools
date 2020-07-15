@@ -83,3 +83,20 @@ class TestCommentsViewSet(APIViewSetTestCase, BaseTenantTestCase):
         response = self.make_request_to_viewset(self.unicef_user, method='post', data={},
                                                 instance=comment, action='resolve')
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_delete(self):
+        comment = CommentFactory(user=self.unicef_user, instance_related=self.example_intervention)
+
+        response = self.make_request_to_viewset(self.unicef_user, method='post', data={},
+                                                instance=comment, action='delete')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        comment.refresh_from_db()
+        self.assertEqual(comment.state, Comment.STATES.deleted)
+
+    def test_delete_not_owned(self):
+        comment = CommentFactory(instance_related=self.example_intervention)
+
+        response = self.make_request_to_viewset(self.unicef_user, method='post', data={},
+                                                instance=comment, action='delete')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

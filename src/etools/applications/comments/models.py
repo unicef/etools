@@ -11,7 +11,8 @@ from model_utils.models import TimeStampedModel
 class Comment(TimeStampedModel, models.Model):
     STATES = Choices(
         ('active', _('Active')),
-        ('resolved', _('resolved')),
+        ('resolved', _('Resolved')),
+        ('deleted', _('Deleted')),
     )
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('User'),

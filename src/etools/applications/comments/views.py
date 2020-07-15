@@ -60,3 +60,15 @@ class CommentsViewSet(
         serializer = self.get_serializer(comment)
 
         return Response(serializer.data)
+
+    @action(detail=True, methods=['post'])
+    def delete(self, request, *args, **kwargs):
+        comment = self.get_object()
+        self.check_object_permissions(self.request, comment)
+
+        comment.state = Comment.STATES.deleted
+        comment.save()
+
+        serializer = self.get_serializer(comment)
+
+        return Response(serializer.data)
