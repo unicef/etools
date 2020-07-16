@@ -15,7 +15,7 @@ def _get_country_name(value):
 
 class TPMPartnerSynchronizer(VisionDataTenantSynchronizer, ManualVisionSynchronizer):
     GLOBAL_CALL = True
-    ENDPOINT = 'GetPartnerDetailsInfo_JSON'
+    ENDPOINT = 'partners'
     REQUIRED_KEYS = (
         "VENDOR_CODE",
         "VENDOR_NAME",

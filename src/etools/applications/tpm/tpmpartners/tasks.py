@@ -22,7 +22,7 @@ def update_tpm_partners(country_name=None):
                 country.name
             ))
             for partner in TPMPartner.objects.all():
-                TPMPartnerSynchronizer(partner.vendor_number).sync()
+                TPMPartnerSynchronizer(vendor=partner.vendor_number).sync()
             processed.append(country.name)
             logger.info("Update finished successfully for {}".format(country.name))
         except VisionException:
