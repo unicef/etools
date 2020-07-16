@@ -477,7 +477,6 @@ class PartnerOrganizationAddView(CreateAPIView):
             return Response({"error": response}, status=status.HTTP_400_BAD_REQUEST)
 
         partner_resp = response["ROWSET"]["ROW"]
-        print(partner_resp)
 
         if PartnerOrganization.objects.filter(
                 vendor_number=partner_resp[PartnerSynchronizer.MAPPING['vendor_number']]).exists():
@@ -494,7 +493,7 @@ class PartnerOrganizationAddView(CreateAPIView):
         partner_sync._partner_save(partner_resp, full_sync=False)
 
         partner = PartnerOrganization.objects.get(
-            vendor_number=partner_resp[PartnerSynchronizer.MAPPING['vendor_number']])
+            vendor=partner_resp[PartnerSynchronizer.MAPPING['vendor_number']])
         po_serializer = PartnerOrganizationDetailSerializer(partner)
         return Response(po_serializer.data, status=status.HTTP_201_CREATED)
 
