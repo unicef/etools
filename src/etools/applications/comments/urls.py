@@ -1,4 +1,4 @@
-from django.conf.urls import include, url
+from django.urls import include, path
 
 from rest_framework_nested import routers
 
@@ -12,5 +12,5 @@ root_api.register(r'(?P<related_app>[^/]+)/(?P<related_model>[^/]+)/(?P<related_
 
 
 urlpatterns = [
-    url(r'^', include(root_api.urls)),
+    path('', include(root_api.urls)),
 ]
