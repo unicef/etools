@@ -214,9 +214,7 @@ class PurchaseOrderViewSet(
         instance = queryset.filter(order_number=kwargs.get('order_number')).first()
 
         if not instance:
-            handler = POSynchronizer(kwargs.get('order_number'),
-                business_area_code=request.user.profile.country.business_area_code,
-            )
+            handler = POSynchronizer(kwargs.get('order_number'))
             handler.sync()
             instance = queryset.filter(order_number=kwargs.get('order_number')).first()
 

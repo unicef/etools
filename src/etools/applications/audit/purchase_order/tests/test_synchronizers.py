@@ -33,7 +33,7 @@ class TestPSynchronizer(BaseTenantTestCase):
         self.assertEqual(a.business_area_code, self.country.business_area_code)
 
     def test_init(self):
-        a = synchronizers.POSynchronizer("123", self.country.business_area_code)
+        a = synchronizers.POSynchronizer("123")
         self.assertEqual(a.business_area_code, self.country.business_area_code)
 
     def test_convert_records_list(self):
