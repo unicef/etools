@@ -52,7 +52,7 @@ class TestList(BaseAgreementTestCase):
         self.assertEqual(len(response.data), agreement_qs.count())
 
     def test_get_filter_partner_id(self):
-        agreement = AgreementFactory(partner=self.partner)
+        AgreementFactory(partner=self.partner)
         agreement_qs = Agreement.objects.filter(partner=self.partner)
         response = self.forced_auth_req(
             "get",
