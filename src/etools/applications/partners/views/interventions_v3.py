@@ -3,7 +3,6 @@ from django.db import transaction
 from rest_framework import status
 from rest_framework.response import Response
 
-from etools.applications.partners.models import Intervention
 from etools.applications.partners.views.interventions_v2 import InterventionDetailAPIView, InterventionListAPIView
 from etools.applications.partners.views.v3 import PMPBaseViewMixin
 
