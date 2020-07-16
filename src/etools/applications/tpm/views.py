@@ -167,7 +167,7 @@ class TPMPartnerViewSet(
         instance = queryset.filter(vendor_number=kwargs.get('vendor_number')).first()
 
         if not instance:
-            handler = TPMPartnerManualSynchronizer(kwargs.get('vendor_number'))
+            handler = TPMPartnerManualSynchronizer(vendor=kwargs.get('vendor_number'))
             handler.sync()
             instance = queryset.filter(vendor_number=kwargs.get('vendor_number')).first()
 
