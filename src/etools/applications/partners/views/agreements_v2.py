@@ -50,7 +50,7 @@ class AgreementListAPIView(QueryStringFilterMixin, ExportModelMixin, ValidatorVi
         CSVFlatRenderer,
     )
 
-    filters = (
+    filters = [
         ('agreement_type', 'agreement_type__in'),
         ('cpStructures', 'country_programme__in'),
         ('status', 'status__in'),
@@ -58,7 +58,7 @@ class AgreementListAPIView(QueryStringFilterMixin, ExportModelMixin, ValidatorVi
         ('start', 'start__gt'),
         ('end', 'end__lte'),
         ('special_conditions_pca', 'special_conditions_pca'),
-    )
+    ]
     search_terms = ('partner__name__icontains', 'agreement_number__icontains')
 
     SERIALIZER_MAP = {

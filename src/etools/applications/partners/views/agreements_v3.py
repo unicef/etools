@@ -24,6 +24,9 @@ class PMPAgreementListCreateAPIView(PMPBaseViewMixin, AgreementListAPIView):
         "csv_flat": (AgreementExportFlatSerializer, None),
         "detail": (AgreementDetailSerializer, None),
     }
+    filters = AgreementListAPIView.filters + [
+        ('partner_id', 'partner__pk'),
+    ]
 
     def get_serializer_class(self, format=None):
         if self.request.method == "GET":
@@ -32,8 +35,8 @@ class PMPAgreementListCreateAPIView(PMPBaseViewMixin, AgreementListAPIView):
                 if query_params.get("format") in ['csv', 'csv_flat']:
                     return self.get_serializer(query_params.get("format"))
         elif self.request.method == "POST":
-            return self.get_serializer("create")
-        return self.get_serializer("default")
+            return self.map_serializer("create")
+        return self.map_serializer("default")
 
     def get_queryset(self, format=None):
         qs = super().get_queryset()
@@ -46,7 +49,7 @@ class PMPAgreementListCreateAPIView(PMPBaseViewMixin, AgreementListAPIView):
     def create(self, request, *args, **kwargs):
         super().create(request, *args, **kwargs)
         return Response(
-            self.get_serializer("detail")(
+            self.map_serializer("detail")(
                 self.instance,
                 context=self.get_serializer_context(),
             ).data,
@@ -62,14 +65,14 @@ class PMPAgreementDetailUpdateAPIView(PMPBaseViewMixin, AgreementDetailAPIView):
 
     def get_serializer_class(self, format=None):
         if self.request.method in ["PATCH"]:
-            return self.get_serializer("update")
-        return self.get_serializer("detail")
+            return self.map_serializer("update")
+        return self.map_serializer("detail")
 
     @transaction.atomic
     def update(self, request, *args, **kwargs):
         super().update(self, request, *args, **kwargs)
         return Response(
-            self.get_serializer("detail")(
+            self.map_serializer("detail")(
                 self.instance,
                 context=self.get_serializer_context(),
             ).data,
