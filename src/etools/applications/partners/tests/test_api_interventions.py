@@ -162,6 +162,10 @@ class TestInterventionsAPI(BaseTenantTestCase):
             'unicef_accepted',
             'unicef_court',
             'unicef_review_type',
+            'risks',
+            'supply_items',
+            'activities',
+            'management_budgets',
         ],
         'signed': [],
         'active': ['']
