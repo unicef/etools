@@ -78,7 +78,7 @@ from etools.applications.tpm.serializers.visit import (
     TPMVisitSerializer,
 )
 from etools.applications.tpm.tpmpartners.models import TPMPartner, TPMPartnerStaffMember
-from etools.applications.tpm.tpmpartners.synchronizers import TPMPartnerManualSynchronizer
+from etools.applications.tpm.tpmpartners.synchronizers import TPMPartnerSynchronizer
 
 
 class BaseTPMViewSet(
@@ -167,7 +167,7 @@ class TPMPartnerViewSet(
         instance = queryset.filter(vendor_number=kwargs.get('vendor_number')).first()
 
         if not instance:
-            handler = TPMPartnerManualSynchronizer(vendor=kwargs.get('vendor_number'))
+            handler = TPMPartnerSynchronizer(vendor=kwargs.get('vendor_number'))
             handler.sync()
             instance = queryset.filter(vendor_number=kwargs.get('vendor_number')).first()
 
