@@ -2,7 +2,7 @@ import logging
 
 from django.db import connection
 
-from django_tenants.utils import get_tenant_model
+from django_tenants.utils import get_tenant_model, get_public_schema_name
 from unicef_vision.synchronizers import VisionDataSynchronizer
 
 from etools.applications.vision.models import VisionSyncLog
@@ -18,6 +18,8 @@ class VisionDataTenantSynchronizer(VisionDataSynchronizer):
         if business_area_code:
             self.country = get_tenant_model().objects.get(business_area_code=self.business_area_code)
             connection.set_tenant(self.country)
+        else:
+            self.country = get_tenant_model().objects.get(schema_name=get_public_schema_name())
 
     def logger_parameters(self):
         kwargs = super().logger_parameters()
