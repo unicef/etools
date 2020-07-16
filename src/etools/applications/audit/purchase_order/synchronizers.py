@@ -7,6 +7,7 @@ from etools.applications.vision.synchronizers import VisionDataTenantSynchronize
 
 class POSynchronizer(VisionDataTenantSynchronizer):
     ENDPOINT = 'purchaseorders'
+    GLOBAL_CALL = True
     REQUIRED_KEYS = (
         "PO_NUMBER",
         "PO_DATE",
