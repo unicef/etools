@@ -1,7 +1,7 @@
 from collections import OrderedDict
 from copy import deepcopy
 
-from unicef_vision.synchronizers import ManualVisionSynchronizer
+from unicef_vision.synchronizers import MultiModelDataSynchronizer
 
 from etools.applications.publics.models import Country
 from etools.applications.tpm.tpmpartners.models import TPMPartner
@@ -13,7 +13,7 @@ def _get_country_name(value):
     return country_obj.name if country_obj else value
 
 
-class TPMPartnerSynchronizer(VisionDataTenantSynchronizer, ManualVisionSynchronizer):
+class TPMPartnerSynchronizer(VisionDataTenantSynchronizer, MultiModelDataSynchronizer):
     GLOBAL_CALL = True
     ENDPOINT = 'partners'
     REQUIRED_KEYS = (
@@ -49,13 +49,13 @@ class TPMPartnerSynchronizer(VisionDataTenantSynchronizer, ManualVisionSynchroni
         TPMPartner: {'vision_synced': True},
     }
 
-    def _convert_records(self, records):
-        records = super()._convert_records(records)
-        if isinstance(records, dict):
-            records = records.get('ROWSET', {}).get('ROW', [])
-            if not isinstance(records, list):
-                records = [records, ]
-        return records
+    # def _convert_records(self, records):
+    #     records = super()._convert_records(records)
+    #     if isinstance(records, dict):
+    #         records = records.get('ROWSET', {}).get('ROW', [])
+    #         if not isinstance(records, list):
+    #             records = [records, ]
+    #     return records
 
     def _filter_records(self, records):
         records = super()._filter_records(records)
