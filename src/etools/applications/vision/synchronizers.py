@@ -15,8 +15,9 @@ class VisionDataTenantSynchronizer(VisionDataSynchronizer):
 
     def __init__(self, detail=None, business_area_code=None, *args, **kwargs):
         super().__init__(detail, business_area_code, *args, **kwargs)
-        self.country = get_tenant_model().objects.get(business_area_code=self.business_area_code)
-        connection.set_tenant(self.country)
+        if business_area_code:
+            self.country = get_tenant_model().objects.get(business_area_code=self.business_area_code)
+            connection.set_tenant(self.country)
 
     def logger_parameters(self):
         kwargs = super().logger_parameters()
