@@ -33,19 +33,18 @@ class TPMPartnerSynchronizer(VisionDataTenantSynchronizer):
         try:
             defaults = {
                 'name': partner['VENDOR_NAME'],
-                'street_address': partner.get('STREET', ''),
-                'city': partner.get('CITY', ''),
-                'postal_code': partner.get('POSTAL_CODE', ''),
-                'country': partner['COUNTRY'],
-                'email': partner.get('EMAIL', ''),
-                'phone_number': partner.get('PHONE_NUMBER', ''),
+                'street_address': partner['STREET'] if partner['STREET'] else '',
+                'city': partner['CITY'] if partner['CITY'] else '',
+                'postal_code': partner['POSTAL_CODE'] if partner["POSTAL_CODE"] else '',
+                'country': partner['COUNTRY'] if partner['COUNTRY'] else '',
+                'email': partner['EMAIL'] if partner['EMAIL'] else '',
+                'phone_number': partner['PHONE_NUMBER'] if partner['PHONE_NUMBER'] else '',
                 'vision_synced': True,
-                'blocked': partner['POSTING_BLOCK'],
-                'hidden': partner['POSTING_BLOCK'] or partner['MARKED_FOR_DELETION'],
-                'deleted_flag': partner['MARKED_FOR_DELETION'],
+                'blocked': True if partner['POSTING_BLOCK'] else False,
+                'deleted_flag': True if partner['MARKED_FOR_DELETION'] else False,
+                'hidden': True if partner['POSTING_BLOCK'] or partner['MARKED_FOR_DELETION'] else False,
             }
             TPMPartner.objects.update_or_create(vendor_number=partner['VENDOR_CODE'], defaults=defaults)
-
             processed = 1
 
         except Exception:
@@ -54,7 +53,7 @@ class TPMPartnerSynchronizer(VisionDataTenantSynchronizer):
         return processed
 
     def _convert_records(self, records):
-        return records['ROWSET']['ROW']
+        return [records['ROWSET']['ROW']]
 
     def _filter_records(self, records):
         records = super()._filter_records(records)
