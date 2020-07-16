@@ -6,7 +6,7 @@ from decimal import Decimal
 from django.db.models import Sum
 
 from unicef_vision.exceptions import VisionException
-from unicef_vision.synchronizers import FileDataSynchronizer
+from unicef_vision.synchronizers import FileDataSynchronizer, ManualVisionSynchronizer
 from unicef_vision.utils import comp_decimals
 
 from etools.applications.funds.models import (
@@ -298,7 +298,7 @@ class FundReservationsSynchronizer(VisionDataTenantSynchronizer):
         return processed
 
 
-class DelegatedFundReservationsSynchronizer(FundReservationsSynchronizer):
+class DelegatedFundReservationsSynchronizer(FundReservationsSynchronizer, ManualVisionSynchronizer):
     DELEGATED = True
 
 

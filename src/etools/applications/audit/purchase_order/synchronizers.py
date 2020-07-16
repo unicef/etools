@@ -1,11 +1,12 @@
 from collections import OrderedDict
 
+from unicef_vision.synchronizers import MultiModelDataSynchronizer
 
 from etools.applications.audit.purchase_order.models import AuditorFirm, PurchaseOrder, PurchaseOrderItem
 from etools.applications.vision.synchronizers import VisionDataTenantSynchronizer
 
 
-class POSynchronizer(VisionDataTenantSynchronizer):
+class POSynchronizer(VisionDataTenantSynchronizer, MultiModelDataSynchronizer):
     ENDPOINT = 'purchaseorders'
     GLOBAL_CALL = True
     REQUIRED_KEYS = (
