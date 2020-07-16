@@ -13,7 +13,7 @@ def _get_country_name(value):
     return country_obj.name if country_obj else value
 
 
-class TPMPartnerSynchronizer(VisionDataTenantSynchronizer, MultiModelDataSynchronizer):
+class TPMPartnerSynchronizer(VisionDataTenantSynchronizer):
     GLOBAL_CALL = True
     ENDPOINT = 'partners'
     REQUIRED_KEYS = (
