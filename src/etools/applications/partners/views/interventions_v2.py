@@ -295,28 +295,33 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
                           'planned_visits',
                           'result_links']
         nested_related_names = ['ll_results']
-        instance, old_instance, serializer = self.my_update(
+        self.instance, old_instance, serializer = self.my_update(
             request,
             related_fields,
             nested_related_names=nested_related_names,
             **kwargs
         )
 
-        validator = InterventionValid(instance, old=old_instance, user=request.user)
+        validator = InterventionValid(self.instance, old=old_instance, user=request.user)
         if not validator.is_valid:
             logging.debug(validator.errors)
             raise ValidationError(validator.errors)
 
         if tenant_switch_is_active('intervention_amendment_notifications_on') and \
-                old_instance and not instance.in_amendment and old_instance.in_amendment:
-            send_intervention_amendment_added_notification(instance)
+                old_instance and not self.instance.in_amendment and old_instance.in_amendment:
+            send_intervention_amendment_added_notification(self.instance)
 
-        if getattr(instance, '_prefetched_objects_cache', None):
+        if getattr(self.instance, '_prefetched_objects_cache', None):
             # If 'prefetch_related' has been applied to a queryset, we need to
             # refresh the instance from the database.
-            instance = self.get_object()
+            self.instance = self.get_object()
 
-        return Response(InterventionDetailSerializer(instance, context=self.get_serializer_context()).data)
+        return Response(
+            InterventionDetailSerializer(
+                self.instance,
+                context=self.get_serializer_context(),
+            ).data,
+        )
 
 
 class InterventionAttachmentListCreateView(ListCreateAPIView):

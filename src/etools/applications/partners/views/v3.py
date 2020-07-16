@@ -1,8 +1,28 @@
 from etools.applications.partners.models import PartnerOrganization
+from etools.applications.partners.permissions import PartnershipManagerPermission
+from etools.applications.partners.serializers.exports.interventions import (
+    InterventionExportFlatSerializer,
+    InterventionExportSerializer,
+)
+from etools.applications.partners.serializers.interventions_v2 import (
+    InterventionCreateUpdateSerializer,
+    InterventionDetailSerializer,
+    InterventionListSerializer,
+    MinimalInterventionListSerializer,
+)
 
 
 class PMPBaseViewMixin:
-    SERIALIZER_MAP = {}
+    permission_classes = (PartnershipManagerPermission,)
+
+    SERIALIZER_OPTIONS = {
+        "list": (InterventionListSerializer, None),
+        "create": (InterventionCreateUpdateSerializer, None),
+        "detail": (InterventionDetailSerializer, None),
+        "list_min": (MinimalInterventionListSerializer, None),
+        "csv": (InterventionExportSerializer, None),
+        "csv_flat": (InterventionExportFlatSerializer, None),
+    }
 
     def is_partner_staff(self):
         """Flag indicator whether user is a partner"""
@@ -17,10 +37,10 @@ class PMPBaseViewMixin:
         )
 
     def map_serializer(self, serializer):
-        default_serializer, partner_staff_serializer = self.SERIALIZER_MAP.get(
+        default_serializer, partner_serializer = self.SERIALIZER_OPTIONS.get(
             serializer,
             (None, None),
         )
         if self.is_partner_staff():
-            return partner_staff_serializer
+            return partner_serializer
         return default_serializer

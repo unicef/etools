@@ -7,8 +7,9 @@ from rest_framework import status
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.core.tests.mixins import URLAssertionMixin
+from etools.applications.funds.tests.factories import FundsReservationHeaderFactory, FundsReservationItemFactory
 from etools.applications.partners.models import Intervention
-from etools.applications.partners.tests.factories import AgreementFactory, PartnerFactory
+from etools.applications.partners.tests.factories import AgreementFactory, InterventionFactory, PartnerFactory
 from etools.applications.users.tests.factories import GroupFactory, UserFactory
 
 
@@ -28,7 +29,7 @@ class URLsTestCase(URLAssertionMixin, SimpleTestCase):
         self.assertIntParamRegexes(names_and_paths, 'pmp_v3:')
 
 
-class TestCreate(BaseTenantTestCase):
+class BaseInterventionTestCase(BaseTenantTestCase):
     def setUp(self):
         super().setUp()
         self.user = UserFactory(is_staff=True)
@@ -39,6 +40,26 @@ class TestCreate(BaseTenantTestCase):
             signed_by_unicef_date=datetime.date.today(),
         )
 
+
+class TestList(BaseInterventionTestCase):
+    def test_get(self):
+        intervention = InterventionFactory()
+        frs = FundsReservationHeaderFactory(
+            intervention=intervention,
+            currency='USD',
+        )
+        FundsReservationItemFactory(fund_reservation=frs)
+        response = self.forced_auth_req(
+            "get",
+            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data
+        self.assertEqual(data["id"], intervention.pk)
+
+
+class TestCreate(BaseInterventionTestCase):
     def test_post(self):
         data = {
             "document_type": Intervention.PD,
@@ -58,7 +79,6 @@ class TestCreate(BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         data = response.data
-        data.pop("permissions")
         i = Intervention.objects.get(pk=data.get("id"))
         self.assertTrue(i.humanitarian_flag)
         self.assertTrue(data.get("humanitarian_flag"))
