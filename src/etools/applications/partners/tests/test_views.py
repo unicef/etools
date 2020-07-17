@@ -1431,7 +1431,7 @@ class TestInterventionViews(BaseTenantTestCase):
                           "title": ["This field is required."]})
 
     def test_intervention_delete(self):
-        new_intervention = InterventionFactory()
+        new_intervention = InterventionFactory(status=Intervention.DRAFT)
         response = self.forced_auth_req(
             'delete',
             reverse('partners_api:intervention-delete', args=[new_intervention.pk]),

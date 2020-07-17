@@ -1373,7 +1373,7 @@ class TestAPInterventionIndicatorsUpdateView(BaseTenantTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.intervention = InterventionFactory()
+        cls.intervention = InterventionFactory(status=Intervention.DRAFT)
         cls.result_link = InterventionResultLinkFactory(intervention=cls.intervention)
         cls.lower_result = LowerResultFactory(result_link=cls.result_link)
         # Create another result link/lower result pair that will break this
@@ -1450,7 +1450,7 @@ class TestInterventionAttachmentDeleteView(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.partnership_manager = UserFactory(is_staff=True)
         cls.partnership_manager.groups.add(GroupFactory())
-        cls.intervention = InterventionFactory()
+        cls.intervention = InterventionFactory(status=Intervention.DRAFT)
         cls.attachment = InterventionAttachmentFactory(
             intervention=cls.intervention,
             attachment="random_attachment.pdf",
@@ -1919,7 +1919,7 @@ class TestInterventionAmendmentDeleteView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
-        cls.intervention = InterventionFactory()
+        cls.intervention = InterventionFactory(status=Intervention.DRAFT)
         cls.amendment = InterventionAmendmentFactory(
             intervention=cls.intervention,
             types=[InterventionAmendment.RESULTS],

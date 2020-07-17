@@ -67,7 +67,7 @@ class BaseInterventionModelExportTestCase(BaseTenantTestCase):
         cls.intervention = InterventionFactory(
             agreement=agreement,
             document_type=Intervention.SHPD,
-            status='draft',
+            status=Intervention.DRAFT,
             start=datetime.date.today(),
             end=datetime.date.today(),
             submission_date=datetime.date.today(),
@@ -407,7 +407,11 @@ class TestInterventionLocationExport(BaseInterventionModelExportTestCase):
 
         # Another intervention, with no locations
         self.intervention2 = InterventionFactory(
-            agreement=AgreementFactory(partner=PartnerFactory(name='Partner 2', vendor_number='123')))
+            agreement=AgreementFactory(
+                partner=PartnerFactory(name='Partner 2', vendor_number='123'),
+            ),
+            status=Intervention.DRAFT,
+        )
         # Sections
         sec2 = SectionFactory(name='Section 2')
         sec3 = SectionFactory(name='Section 3')
@@ -420,7 +424,11 @@ class TestInterventionLocationExport(BaseInterventionModelExportTestCase):
 
         # Intervention with no sectors
         self.intervention3 = InterventionFactory(
-            agreement=AgreementFactory(partner=PartnerFactory(name='Partner 3', vendor_number='456')))
+            agreement=AgreementFactory(
+                partner=PartnerFactory(name='Partner 3', vendor_number='456'),
+            ),
+            status=Intervention.DRAFT,
+        )
         self.intervention3.flat_locations.add(LocationFactory(name='Location 2'))
         InterventionResultLinkFactory(intervention=self.intervention3, cp_output=ResultFactory(name='Result Fred'))
 

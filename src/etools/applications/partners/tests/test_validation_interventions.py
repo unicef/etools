@@ -778,7 +778,7 @@ class TestInterventionValid(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
-        cls.intervention = InterventionFactory()
+        cls.intervention = InterventionFactory(status=Intervention.DRAFT)
         cls.intervention.old_instance = cls.intervention
         cls.validator = InterventionValid(
             cls.intervention,

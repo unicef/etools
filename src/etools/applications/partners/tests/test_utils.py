@@ -38,11 +38,16 @@ def setup_intervention_test_data(test_case, include_results_and_indicators=False
         signed_by_partner_date=datetime.date.today()
     )
 
-    test_case.intervention = InterventionFactory(agreement=test_case.agreement, title='Intervention 1')
+    test_case.intervention = InterventionFactory(
+        agreement=test_case.agreement,
+        title='Intervention 1',
+        status=Intervention.DRAFT,
+    )
     test_case.intervention_2 = InterventionFactory(
         agreement=test_case.agreement,
         title='Intervention 2',
         document_type=Intervention.PD,
+        status=Intervention.DRAFT,
     )
     test_case.active_intervention = InterventionFactory(
         agreement=test_case.active_agreement,
@@ -50,7 +55,7 @@ def setup_intervention_test_data(test_case, include_results_and_indicators=False
         document_type=Intervention.PD,
         start=today - datetime.timedelta(days=1),
         end=today + datetime.timedelta(days=90),
-        status='active',
+        status=Intervention.ACTIVE,
         date_sent_to_partner=today - datetime.timedelta(days=1),
         signed_by_unicef_date=today - datetime.timedelta(days=1),
         signed_by_partner_date=today - datetime.timedelta(days=1),

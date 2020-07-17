@@ -960,7 +960,10 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(BaseTenantTestCase):
             partner=cls.partner,
             signed_by_unicef_date=datetime.date.today())
 
-        cls.intervention = InterventionFactory(agreement=agreement)
+        cls.intervention = InterventionFactory(
+            agreement=agreement,
+            status=Intervention.DRAFT,
+        )
         cls.output_res_type = ResultTypeFactory(name=ResultType.OUTPUT)
 
         cls.result = ResultFactory(
