@@ -43,6 +43,17 @@ class TestCommentsViewSet(APIViewSetTestCase, BaseTenantTestCase):
         self.assertEqual(comment.user, self.unicef_user)
         self.assertListEqual(list(comment.users_related.values_list('id', flat=True)), [self.unicef_user.id])
         self.assertEqual(comment.instance_related, self.example_intervention)
+        self.assertEqual(comment.related_to, 'root')
+
+    def test_create_reply(self):
+        parent = CommentFactory(instance_related=self.example_intervention)
+        response = self._test_create(self.unicef_user, {'parent': parent.id, 'text': 'test'})
+
+        comment = Comment.objects.get(id=response.data['id'])
+        self.assertEqual(comment.user, self.unicef_user)
+        self.assertEqual(comment.parent, parent)
+        self.assertEqual(comment.related_to, parent.related_to)
+        self.assertEqual(comment.related_to_description, parent.related_to_description)
 
     def test_update(self):
         comment = CommentFactory(
@@ -60,6 +71,23 @@ class TestCommentsViewSet(APIViewSetTestCase, BaseTenantTestCase):
         comment.refresh_from_db()
         self.assertEqual(list(comment.users_related.values_list('id', flat=True)), [second_user.id])
         self.assertEqual(comment.text, 'new_text')
+
+    def test_change_protected_structure_fields(self):
+        comment = CommentFactory(user=self.unicef_user, instance_related=self.example_intervention)
+        new_parent = CommentFactory(instance_related=self.example_intervention)
+        self._test_update(
+            self.unicef_user, comment,
+            {
+                'parent': new_parent.id,
+                'related_to': 'new_related_to',
+                'related_to_description': 'new_related_to_description',
+            }
+        )
+
+        comment.refresh_from_db()
+        self.assertNotEqual(comment.parent, new_parent)
+        self.assertNotEqual(comment.related_to, 'new_related_to')
+        self.assertNotEqual(comment.related_to_description, 'new_related_to_description')
 
     def test_update_not_owned_comment(self):
         self._test_update(
@@ -84,6 +112,15 @@ class TestCommentsViewSet(APIViewSetTestCase, BaseTenantTestCase):
                                                 instance=comment, action='resolve')
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    def test_resolve_deleted(self):
+        comment = CommentFactory(user=self.unicef_user, instance_related=self.example_intervention,
+                                 state=Comment.STATES.deleted)
+
+        response = self.make_request_to_viewset(self.unicef_user, method='post', data={},
+                                                instance=comment, action='resolve')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('deleted comment', response.data['non_field_errors'][0])
+
     def test_delete(self):
         comment = CommentFactory(user=self.unicef_user, instance_related=self.example_intervention)
 
@@ -100,3 +137,12 @@ class TestCommentsViewSet(APIViewSetTestCase, BaseTenantTestCase):
         response = self.make_request_to_viewset(self.unicef_user, method='post', data={},
                                                 instance=comment, action='delete')
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_delete_answered(self):
+        comment = CommentFactory(user=self.unicef_user, instance_related=self.example_intervention)
+        CommentFactory(parent=comment, instance_related=self.example_intervention)
+
+        response = self.make_request_to_viewset(self.unicef_user, method='post', data={},
+                                                instance=comment, action='delete')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('has answers', response.data['non_field_errors'][0])

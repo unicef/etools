@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
@@ -17,6 +18,7 @@ class Comment(TimeStampedModel, models.Model):
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name=_('User'),
                              on_delete=models.PROTECT, related_name='comments')
+    parent = models.ForeignKey('self', null=True, blank=True, on_delete=models.CASCADE, related_name='replies')
     state = models.CharField(verbose_name=_('State'), max_length=10, choices=STATES, default=STATES.active)
     instance_related_ct = models.ForeignKey(ContentType, verbose_name=_('Content Type'), on_delete=models.CASCADE)
     instance_related_id = models.IntegerField(verbose_name=_('Object ID'))
@@ -31,5 +33,19 @@ class Comment(TimeStampedModel, models.Model):
         verbose_name_plural = _('Comments')
         ordering = ('created',)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f'{self.user}: {self.text}'
+
+    def resolve(self):
+        if self.state == self.STATES.deleted:
+            raise ValidationError(_('Unable to resolve deleted comment'))
+
+        self.state = self.STATES.resolved
+        self.save()
+
+    def remove(self):
+        if self.replies.exists():
+            raise ValidationError(_('This comment has answers. Unable to delete.'))
+
+        self.state = self.STATES.deleted
+        self.save()
