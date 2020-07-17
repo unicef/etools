@@ -567,7 +567,6 @@ class PartnerOrganization(TimeStampedModel):
             signed_by_unicef_date__isnull=True,
             signed_by_partner_date__isnull=True,
             status__in=[
-                Agreement.DEVELOPMENT,
                 Agreement.DRAFT,
                 Agreement.TERMINATED,
             ]
