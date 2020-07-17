@@ -75,6 +75,7 @@ urlpatterns = [
     url(r'^locations/cartodbtables/$', CartoDBTablesView.as_view(), name='cartodbtables'),
     url(r'^locations/autocomplete/$', LocationQuerySetView.as_view(), name='locations_autocomplete'),
     url(r'^api/v1/field-monitoring/', include('etools.applications.field_monitoring.urls')),
+    url(r'^api/comments/v1/', include('etools.applications.comments.urls')),
 
     # GIS API urls
     url(r'^api/management/gis/', include('etools.applications.management.urls_gis')),
