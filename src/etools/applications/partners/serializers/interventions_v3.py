@@ -167,6 +167,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "agreement",
             "amendments",
             "attachments",
+            "available_actions",
             "cluster_names",
             "created",
             "days_from_review_to_signed",
