@@ -356,7 +356,13 @@ class LowerResult(TimeStampedModel):
         'partners.InterventionResultLink',
         related_name='ll_results',
         verbose_name=_('Result Link'),
+        blank=True, null=True,
         on_delete=models.CASCADE,
+    )
+    # on ll result initialization cp output is unknown; result_link is source of truth for intervention
+    intervention = models.ForeignKey(
+        'partners.Intervention', related_name=_('draft_ll_results'),
+        blank=True, null=True, on_delete=models.CASCADE
     )
 
     name = models.CharField(verbose_name=_("Name"), max_length=500)

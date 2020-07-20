@@ -6,7 +6,7 @@ from etools.applications.partners.views.agreements_v3 import (
 )
 from etools.applications.partners.views.interventions_v3 import (
     PMPInterventionListCreateView,
-    PMPInterventionRetrieveUpdateView,
+    PMPInterventionRetrieveUpdateView, InterventionPDOutputsListCreateView,
 )
 
 app_name = 'partners'
@@ -24,6 +24,11 @@ urlpatterns = [
             http_method_names=['get', 'patch'],
         ),
         name='intervention-detail',
+    ),
+    path(
+        'interventions/<int:intervention_pk>/pd-outputs/',
+        view=InterventionPDOutputsListCreateView.as_view(),
+        name='intervention-pd-outputs',
     ),
     path(
         'agreements/',

@@ -1,10 +1,15 @@
 from django.db import transaction
+from django.utils.functional import cached_property
 
-from rest_framework import status
+from rest_framework import status, mixins
+from rest_framework.generics import GenericAPIView, get_object_or_404, ListCreateAPIView
 from rest_framework.response import Response
 
+from etools.applications.partners.models import Intervention
+from etools.applications.partners.serializers.v3 import InterventionLowerResultSerializer
 from etools.applications.partners.views.interventions_v2 import InterventionDetailAPIView, InterventionListAPIView
 from etools.applications.partners.views.v3 import PMPBaseViewMixin
+from etools.applications.reports.models import LowerResult
 
 
 class PMPInterventionMixin(PMPBaseViewMixin):
@@ -58,3 +63,20 @@ class PMPInterventionRetrieveUpdateView(PMPInterventionMixin, InterventionDetail
                 context=self.get_serializer_context(),
             ).data,
         )
+
+
+class InterventionPDOutputsListCreateView(ListCreateAPIView):
+    queryset = LowerResult.objects.select_related('result_link').order_by('id')
+    serializer_class = InterventionLowerResultSerializer
+
+    @cached_property
+    def intervention(self):
+        return get_object_or_404(Intervention.objects, pk=self.kwargs['intervention_pk'])
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['intervention'] = self.intervention
+        return context
+
+    def perform_create(self, serializer):
+        serializer.save(intervention=self.intervention)
