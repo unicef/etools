@@ -6,10 +6,10 @@ from etools.applications.partners.serializers.exports.interventions import (
 )
 from etools.applications.partners.serializers.interventions_v2 import (
     InterventionCreateUpdateSerializer,
-    InterventionDetailSerializer,
     InterventionListSerializer,
     MinimalInterventionListSerializer,
 )
+from etools.applications.partners.serializers.interventions_v3 import InterventionDetailSerializer
 
 
 class PMPBaseViewMixin:
