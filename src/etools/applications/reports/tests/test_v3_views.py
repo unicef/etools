@@ -27,7 +27,7 @@ class TestPMPSectionViews(BaseTenantTestCase):
         pd.sections.add(section)
         pd.partner_focal_points.add(self.partner_staff)
 
-        url = reverse('pmp-sections-list')
+        url = reverse('sections-pmp-list')
         section_qs = Section.objects
         self.assertTrue(section_qs.count() > 10)
 
@@ -46,7 +46,7 @@ class TestPMPSectionViews(BaseTenantTestCase):
         section = SectionFactory()
 
         # unicef staff
-        url = reverse('pmp-sections-detail', args=[section.pk])
+        url = reverse('sections-pmp-detail', args=[section.pk])
         response = self.forced_auth_req('get', url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
