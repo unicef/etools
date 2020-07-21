@@ -44,6 +44,14 @@ class PMPBaseViewMixin:
             partner_focal_points__email=self.request.user.email,
         )
 
+    def offices(self):
+        """List of Offices user associated with"""
+        if not self.is_partner_staff():
+            return []
+        return Intervention.objects.filter(
+            partner_focal_points__email=self.request.user.email,
+        )
+
     def map_serializer(self, serializer):
         default_serializer, partner_serializer = self.SERIALIZER_OPTIONS.get(
             serializer,
