@@ -21,6 +21,7 @@ from etools.applications.reports.views.v1 import (
     UnitViewSet,
 )
 from etools.applications.reports.views.v2 import OfficeViewSet
+from etools.applications.reports.views.v3 import PMPSectionViewSet
 from etools.applications.t2f.urls import urlpatterns as t2f_patterns
 from etools.applications.users.views import CountriesViewSet, GroupViewSet, ModuleRedirectView, UserViewSet
 # these imports are used to autodiscover admin forms located outside of INSTALLED_APPS(the libraries folder for example)
@@ -50,7 +51,8 @@ api.register(r'users', UserViewSet, basename='users')
 api.register(r'groups', GroupViewSet, basename='groups')
 api.register(r'offices', OfficeViewSet, basename='offices')
 
-api.register(r'sections', SectionViewSet, basename='sections')
+api.register(r'sections/', SectionViewSet, basename='sections')
+api.register(r'sections/v3', PMPSectionViewSet, basename='pmp-sections')
 
 api.register(r'reports/result-types', ResultTypeViewSet, basename='resulttypes')
 api.register(r'reports/indicators', IndicatorViewSet, basename='indicators')
