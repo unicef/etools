@@ -1,4 +1,5 @@
 from rest_framework import mixins, viewsets
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from unicef_restlib.views import QueryStringFilterMixin
 
@@ -15,7 +16,7 @@ class PMPOfficeViewSet(
         viewsets.GenericViewSet,
 ):
     serializer_class = OfficeSerializer
-    permission_classes = [IsAuthenticated,]
+    permission_classes = [IsAuthenticated]
     queryset = Office.objects
 
     def get_queryset(self):
