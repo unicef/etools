@@ -79,11 +79,9 @@ unicef_restlib = "==0.5"
 unicef_snapshot = "==0.2.3"
 unicef-rest-export = "==0.5.3"
 xhtml2pdf = "==0.2.3"
-unicef-vision = "==0.3"
+unicef-vision = "==0.5"
 etools-offline = "==0.1.0"
-
 openpyxl = "==3.0.1"  # need to be freeze
-
 
 [requires]
 python_version = "3.7"
