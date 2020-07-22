@@ -9,7 +9,10 @@ from rest_framework.response import Response
 from etools.applications.field_monitoring.permissions import IsEditAction, IsReadAction
 from etools.applications.partners.models import Intervention
 from etools.applications.partners.permissions import intervention_field_is_editable_permission
-from etools.applications.partners.serializers.v3 import InterventionLowerResultSerializer
+from etools.applications.partners.serializers.v3 import (
+    PartnerInterventionLowerResultSerializer,
+    UNICEFInterventionLowerResultSerializer,
+)
 from etools.applications.partners.views.interventions_v2 import InterventionDetailAPIView, InterventionListAPIView
 from etools.applications.partners.views.v3 import PMPBaseViewMixin
 from etools.applications.reports.models import LowerResult
@@ -70,11 +73,15 @@ class PMPInterventionRetrieveUpdateView(PMPInterventionMixin, InterventionDetail
 
 class InterventionPDOutputsViewMixin:
     queryset = LowerResult.objects.select_related('result_link').order_by('id')
-    serializer_class = InterventionLowerResultSerializer
     permission_classes = [
         IsAuthenticated,
         IsReadAction | (IsEditAction & intervention_field_is_editable_permission('pd_outputs'))
     ]
+
+    def get_serializer_class(self):
+        if 'UNICEF User' in self.request.user.groups.values_list('name', flat=True):
+            return UNICEFInterventionLowerResultSerializer
+        return PartnerInterventionLowerResultSerializer
 
     def get_root_object(self):
         if not hasattr(self, '_intervention'):

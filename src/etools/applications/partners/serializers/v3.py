@@ -5,9 +5,30 @@ from etools.applications.partners.models import InterventionResultLink
 from etools.applications.reports.models import LowerResult, Result, ResultType
 
 
-class InterventionLowerResultSerializer(serializers.ModelSerializer):
+class InterventionLowerResultBaseSerializer(serializers.ModelSerializer):
+    class Meta:
+        abstract = True
+        model = LowerResult
+        fields = ('id', 'name', 'code')
+
+
+class PartnerInterventionLowerResultSerializer(InterventionLowerResultBaseSerializer):
+    cp_output = serializers.ReadOnlyField(source='result_link.cp_output_id')
+
+    class Meta(InterventionLowerResultBaseSerializer.Meta):
+        fields = InterventionLowerResultBaseSerializer.Meta.fields + ('cp_output',)
+
+    def create(self, validated_data):
+        result_link = InterventionResultLink.objects.create(intervention=self.context['intervention'], cp_output=None)
+        validated_data['result_link'] = result_link
+
+        instance = super().create(validated_data)
+        return instance
+
+
+class UNICEFInterventionLowerResultSerializer(InterventionLowerResultBaseSerializer):
     cp_output = SeparatedReadWriteField(
-        read_field=serializers.IntegerField(),
+        read_field=serializers.ReadOnlyField(),
         write_field=serializers.PrimaryKeyRelatedField(
             queryset=Result.objects.filter(result_type__name=ResultType.OUTPUT),
             allow_null=True, required=False,
@@ -16,9 +37,8 @@ class InterventionLowerResultSerializer(serializers.ModelSerializer):
         allow_null=True,
     )
 
-    class Meta:
-        model = LowerResult
-        fields = ('id', 'name', 'code', 'cp_output')
+    class Meta(InterventionLowerResultBaseSerializer.Meta):
+        fields = InterventionLowerResultBaseSerializer.Meta.fields + ('cp_output',)
 
     def create(self, validated_data):
         cp_output = validated_data.pop('result_link', {}).get('cp_output_id', None)

@@ -14,7 +14,7 @@ from etools.applications.reports.tests.factories import LowerResultFactory, Resu
 from etools.applications.users.tests.factories import UserFactory
 
 
-class TestInterventionLowerResultsListView(BaseTenantTestCase):
+class TestInterventionLowerResultsViewBase(BaseTenantTestCase):
     def setUp(self):
         super().setUp()
         self.user = UserFactory()
@@ -26,6 +26,11 @@ class TestInterventionLowerResultsListView(BaseTenantTestCase):
 
         self.cp_output = ResultFactory(result_type__name=ResultType.OUTPUT)
         self.result_link = InterventionResultLinkFactory(intervention=self.intervention, cp_output=self.cp_output)
+
+
+class TestInterventionLowerResultsListView(TestInterventionLowerResultsViewBase):
+    def setUp(self):
+        super().setUp()
         self.list_url = reverse('partners:intervention-pd-output-list', args=[self.intervention.pk])
 
     # check global functionality
@@ -89,6 +94,8 @@ class TestInterventionLowerResultsListView(BaseTenantTestCase):
             data={'name': 'test', 'code': 'test', 'cp_output': self.cp_output.id}
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
+        pd_result = LowerResult.objects.get(id=response.data['id'])
+        self.assertEqual(pd_result.result_link.cp_output, None)
 
     def test_create_assigned_partner_user_signed_intervention(self):
         self.intervention.unicef_court = False
@@ -113,15 +120,7 @@ class TestInterventionLowerResultsListView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
 
 
-class TestInterventionLowerResultsDetailView(BaseTenantTestCase):
-    @classmethod
-    def setUpTestData(cls):
-        super().setUpTestData()
-        cls.user = UserFactory()
-        cls.intervention = InterventionFactory()
-        cls.cp_output = ResultFactory(result_type__name=ResultType.OUTPUT)
-        cls.result_link = InterventionResultLinkFactory(intervention=cls.intervention, cp_output=cls.cp_output)
-
+class TestInterventionLowerResultsDetailView(TestInterventionLowerResultsViewBase):
     # check global functionality
     def test_associate_output(self):
         old_result_link = InterventionResultLinkFactory(intervention=self.intervention, cp_output=None)
@@ -170,3 +169,20 @@ class TestInterventionLowerResultsDetailView(BaseTenantTestCase):
         self.assertEqual(result.result_link.cp_output, None)
 
     # permissions are common with list view and were explicitly checked in corresponding api test case
+
+    def test_associate_output_as_partner(self):
+        self.intervention.unicef_court = False
+        self.intervention.save()
+
+        result = LowerResultFactory(
+            result_link=InterventionResultLinkFactory(intervention=self.intervention, cp_output=None)
+        )
+        response = self.forced_auth_req(
+            'patch',
+            reverse('partners:intervention-pd-output-detail', args=[self.intervention.pk, result.pk]),
+            self.partner_focal_point,
+            data={'cp_output': self.result_link.cp_output.id}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        result.refresh_from_db()
+        self.assertEqual(result.result_link.cp_output, None)
