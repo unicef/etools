@@ -3,11 +3,30 @@ from django.db import transaction
 from rest_framework import status
 from rest_framework.response import Response
 
+from etools.applications.partners.serializers.exports.interventions import (
+    InterventionExportFlatSerializer,
+    InterventionExportSerializer,
+)
+from etools.applications.partners.serializers.interventions_v2 import (
+    InterventionCreateUpdateSerializer,
+    InterventionListSerializer,
+    MinimalInterventionListSerializer,
+)
+from etools.applications.partners.serializers.interventions_v3 import InterventionDetailSerializer
 from etools.applications.partners.views.interventions_v2 import InterventionDetailAPIView, InterventionListAPIView
 from etools.applications.partners.views.v3 import PMPBaseViewMixin
 
 
 class PMPInterventionMixin(PMPBaseViewMixin):
+    SERIALIZER_OPTIONS = {
+        "list": (InterventionListSerializer, None),
+        "create": (InterventionCreateUpdateSerializer, None),
+        "detail": (InterventionDetailSerializer, None),
+        "list_min": (MinimalInterventionListSerializer, None),
+        "csv": (InterventionExportSerializer, None),
+        "csv_flat": (InterventionExportFlatSerializer, None),
+    }
+
     def get_queryset(self, format=None):
         qs = super().get_queryset()
         # if partner, limit to interventions that they are associated with

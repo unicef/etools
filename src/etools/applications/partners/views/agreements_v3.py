@@ -16,14 +16,28 @@ from etools.applications.partners.views.agreements_v2 import AgreementDetailAPIV
 from etools.applications.partners.views.v3 import PMPBaseViewMixin
 
 
-class PMPAgreementListCreateAPIView(PMPBaseViewMixin, AgreementListAPIView):
+class PMPAgreementViewMixin(PMPBaseViewMixin):
     SERIALIZER_OPTIONS = {
-        "default": (AgreementListSerializer, None),
+        "list": (AgreementListSerializer, None),
         "create": (AgreementCreateUpdateSerializer, None),
         "csv": (AgreementExportSerializer, None),
         "csv_flat": (AgreementExportFlatSerializer, None),
+        "update": (AgreementCreateUpdateSerializer, None),
         "detail": (AgreementDetailSerializer, None),
     }
+
+    def get_queryset(self, format=None):
+        qs = super().get_queryset()
+        # if partner, limit to agreements that they are associated with
+        if self.is_partner_staff():
+            qs = qs.filter(partner__in=self.partners())
+        return qs
+
+
+class PMPAgreementListCreateAPIView(
+        PMPAgreementViewMixin,
+        AgreementListAPIView,
+):
     filters = AgreementListAPIView.filters + [
         ('partner_id', 'partner__pk'),
     ]
@@ -36,14 +50,7 @@ class PMPAgreementListCreateAPIView(PMPBaseViewMixin, AgreementListAPIView):
                     return self.get_serializer(query_params.get("format"))
         elif self.request.method == "POST":
             return self.map_serializer("create")
-        return self.map_serializer("default")
-
-    def get_queryset(self, format=None):
-        qs = super().get_queryset()
-        # if partner, limit to agreements that they are associated with
-        if self.is_partner_staff():
-            qs = qs.filter(partner__in=self.partners())
-        return qs
+        return self.map_serializer("list")
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
@@ -57,12 +64,10 @@ class PMPAgreementListCreateAPIView(PMPBaseViewMixin, AgreementListAPIView):
             headers=self.headers)
 
 
-class PMPAgreementDetailUpdateAPIView(PMPBaseViewMixin, AgreementDetailAPIView):
-    SERIALIZER_OPTIONS = {
-        "update": (AgreementCreateUpdateSerializer, None),
-        "detail": (AgreementDetailSerializer, None),
-    }
-
+class PMPAgreementDetailUpdateAPIView(
+        PMPAgreementViewMixin,
+        AgreementDetailAPIView,
+):
     def get_serializer_class(self, format=None):
         if self.request.method in ["PATCH"]:
             return self.map_serializer("update")
