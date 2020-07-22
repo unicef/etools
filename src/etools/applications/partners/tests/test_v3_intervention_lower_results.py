@@ -3,23 +3,32 @@ from django.urls import reverse
 from rest_framework import status
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
-from etools.applications.partners.models import InterventionResultLink
-from etools.applications.partners.tests.factories import InterventionFactory, InterventionResultLinkFactory
+from etools.applications.partners.models import Intervention, InterventionResultLink
+from etools.applications.partners.tests.factories import (
+    InterventionFactory,
+    InterventionResultLinkFactory,
+    PartnerStaffFactory,
+)
 from etools.applications.reports.models import LowerResult, ResultType
 from etools.applications.reports.tests.factories import LowerResultFactory, ResultFactory
 from etools.applications.users.tests.factories import UserFactory
 
 
 class TestInterventionLowerResultsListView(BaseTenantTestCase):
-    @classmethod
-    def setUpTestData(cls):
-        super().setUpTestData()
-        cls.user = UserFactory()
-        cls.intervention = InterventionFactory()
-        cls.cp_output = ResultFactory(result_type__name=ResultType.OUTPUT)
-        cls.result_link = InterventionResultLinkFactory(intervention=cls.intervention, cp_output=cls.cp_output)
-        cls.list_url = reverse('partners:intervention-pd-output-list', args=[cls.intervention.pk])
+    def setUp(self):
+        super().setUp()
+        self.user = UserFactory()
+        self.intervention = InterventionFactory(status=Intervention.DEVELOPMENT, unicef_court=True)
 
+        self.staff_member = PartnerStaffFactory(partner=self.intervention.agreement.partner)
+        self.partner_focal_point = UserFactory(groups__data=[], profile__partner_staff_member=self.staff_member.id)
+        self.intervention.partner_focal_points.add(self.staff_member)
+
+        self.cp_output = ResultFactory(result_type__name=ResultType.OUTPUT)
+        self.result_link = InterventionResultLinkFactory(intervention=self.intervention, cp_output=self.cp_output)
+        self.list_url = reverse('partners:intervention-pd-output-list', args=[self.intervention.pk])
+
+    # check global functionality
     def test_list(self):
         LowerResultFactory(result_link=InterventionResultLinkFactory(intervention=self.intervention, cp_output=None))
         LowerResultFactory(result_link=self.result_link)
@@ -46,6 +55,63 @@ class TestInterventionLowerResultsListView(BaseTenantTestCase):
         self.assertEqual(pd_result.result_link.intervention, self.intervention)
         self.assertEqual(pd_result.result_link.cp_output, self.cp_output)
 
+    # check permissions
+    def test_create_for_unknown_user(self):
+        response = self.forced_auth_req(
+            'post', self.list_url, UserFactory(groups__data=[]),
+            data={'name': 'test', 'code': 'test', 'cp_output': self.cp_output.id}
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
+
+    def test_create_for_signed_intervention(self):
+        self.intervention.status = Intervention.SIGNED
+        self.intervention.save()
+
+        response = self.forced_auth_req(
+            'post', self.list_url, self.user,
+            data={'name': 'test', 'code': 'test', 'cp_output': self.cp_output.id}
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
+
+    def test_create_assigned_partner_user_unicef_court(self):
+        response = self.forced_auth_req(
+            'post', self.list_url, self.partner_focal_point,
+            data={'name': 'test', 'code': 'test', 'cp_output': self.cp_output.id}
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
+
+    def test_create_assigned_partner_user_partner_court(self):
+        self.intervention.unicef_court = False
+        self.intervention.save()
+
+        response = self.forced_auth_req(
+            'post', self.list_url, self.partner_focal_point,
+            data={'name': 'test', 'code': 'test', 'cp_output': self.cp_output.id}
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
+
+    def test_create_assigned_partner_user_signed_intervention(self):
+        self.intervention.unicef_court = False
+        self.intervention.status = Intervention.SIGNED
+        self.intervention.save()
+
+        response = self.forced_auth_req(
+            'post', self.list_url, self.partner_focal_point,
+            data={'name': 'test', 'code': 'test', 'cp_output': self.cp_output.id}
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
+
+    def test_create_unassigned_partner_user(self):
+        self.intervention.unicef_court = False
+        self.intervention.partner_focal_points.clear()
+        self.intervention.save()
+
+        response = self.forced_auth_req(
+            'post', self.list_url, self.partner_focal_point,
+            data={'name': 'test', 'code': 'test', 'cp_output': self.cp_output.id}
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
+
 
 class TestInterventionLowerResultsDetailView(BaseTenantTestCase):
     @classmethod
@@ -56,6 +122,7 @@ class TestInterventionLowerResultsDetailView(BaseTenantTestCase):
         cls.cp_output = ResultFactory(result_type__name=ResultType.OUTPUT)
         cls.result_link = InterventionResultLinkFactory(intervention=cls.intervention, cp_output=cls.cp_output)
 
+    # check global functionality
     def test_associate_output(self):
         old_result_link = InterventionResultLinkFactory(intervention=self.intervention, cp_output=None)
         result = LowerResultFactory(result_link=old_result_link)
@@ -101,3 +168,5 @@ class TestInterventionLowerResultsDetailView(BaseTenantTestCase):
         result.refresh_from_db()
         self.assertNotEqual(result.result_link, self.result_link)
         self.assertEqual(result.result_link.cp_output, None)
+
+    # permissions are common with list view and were explicitly checked in corresponding api test case

@@ -1,12 +1,14 @@
 from django.db import transaction
 from django.http import Http404
-from django.utils.functional import cached_property
 
 from rest_framework import status
 from rest_framework.generics import get_object_or_404, ListCreateAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from etools.applications.field_monitoring.permissions import IsEditAction, IsReadAction
 from etools.applications.partners.models import Intervention
+from etools.applications.partners.permissions import intervention_field_is_editable_permission
 from etools.applications.partners.serializers.v3 import InterventionLowerResultSerializer
 from etools.applications.partners.views.interventions_v2 import InterventionDetailAPIView, InterventionListAPIView
 from etools.applications.partners.views.v3 import PMPBaseViewMixin
@@ -69,31 +71,28 @@ class PMPInterventionRetrieveUpdateView(PMPInterventionMixin, InterventionDetail
 class InterventionPDOutputsViewMixin:
     queryset = LowerResult.objects.select_related('result_link').order_by('id')
     serializer_class = InterventionLowerResultSerializer
+    permission_classes = [
+        IsAuthenticated,
+        IsReadAction | (IsEditAction & intervention_field_is_editable_permission('pd_outputs'))
+    ]
 
-    @cached_property
-    def intervention(self):
-        intervention_pk = self.kwargs.get('intervention_pk')
-        if intervention_pk is None:
-            raise Http404
-        return get_object_or_404(Intervention.objects, pk=intervention_pk)
+    def get_root_object(self):
+        if not hasattr(self, '_intervention'):
+            intervention_pk = self.kwargs.get('intervention_pk')
+            if intervention_pk is None:
+                raise Http404
+            self._intervention = get_object_or_404(Intervention.objects, pk=intervention_pk)
+        return self._intervention
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
-        context['intervention'] = self.intervention
+        context['intervention'] = self.get_root_object()
         return context
 
 
-class InterventionPDOutputsListCreateView(
-    InterventionPDOutputsViewMixin,
-    ListCreateAPIView,
-):
-    # todo: permissions
+class InterventionPDOutputsListCreateView(InterventionPDOutputsViewMixin, ListCreateAPIView):
     pass
 
 
-class InterventionPDOutputsDetailUpdateView(
-    InterventionPDOutputsViewMixin,
-    RetrieveUpdateDestroyAPIView,
-):
-    # todo: permissions
+class InterventionPDOutputsDetailUpdateView(InterventionPDOutputsViewMixin, RetrieveUpdateDestroyAPIView):
     pass
