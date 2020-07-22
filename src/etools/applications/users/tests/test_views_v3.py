@@ -8,6 +8,7 @@ from rest_framework import status
 from etools.applications.audit.models import Auditor
 from etools.applications.audit.tests.factories import AuditorUserFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.tpm.tests.factories import SimpleTPMPartnerFactory, TPMPartnerStaffMemberFactory
 from etools.applications.users.models import UserProfile
 from etools.applications.users.serializers_v3 import AP_ALLOWED_COUNTRIES
@@ -79,6 +80,15 @@ class TestUsersListAPIView(BaseTenantTestCase):
         self.group = GroupFactory()
         self.partnership_manager_user.groups.add(self.group)
         self.url = reverse("users_v3:users-list")
+
+    def test_not_admin(self):
+        user = UserFactory()
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            user=user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_api_users_list(self):
         response = self.forced_auth_req('get', self.url, user=self.unicef_staff)
@@ -161,6 +171,22 @@ class TestUsersListAPIView(BaseTenantTestCase):
         )
         response_json = json.loads(response.rendered_content)
         self.assertEqual(len(response_json), 1)
+
+    def test_partner_user(self):
+        partner = PartnerFactory()
+        partner_staff = partner.staff_members.all().first()
+        partner_user = UserFactory(email=partner_staff.email)
+        partner_user.profile.partner_staff_member = True
+        partner_user.profile.save()
+        self.assertTrue(get_user_model().objects.count() > 1)
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            user=partner_user
+        )
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(len(response_json), 1)
+        self.assertEqual(response_json[0]["id"], partner_user.pk)
 
 
 class TestMyProfileAPIView(BaseTenantTestCase):
