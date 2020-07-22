@@ -1982,6 +1982,22 @@ class Intervention(TimeStampedModel):
         choices=REVIEW_TYPE_CHOICES,
         default=REVIEW_TYPE_NONE,
     )
+    capacity_development = models.TextField(
+        verbose_name=_("Capacity Development"),
+        blank=True,
+    )
+    other_info = models.TextField(
+        verbose_name=_("Other Info"),
+        blank=True,
+    )
+    other_partners_involved = models.TextField(
+        verbose_name=_("Other Partners Involved"),
+        blank=True,
+    )
+    technical_guidance = models.TextField(
+        verbose_name=_("Technical Guidance"),
+        blank=True,
+    )
 
     # Flag if this has been migrated to a status that is not correct
     # previous status
