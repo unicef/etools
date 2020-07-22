@@ -2421,7 +2421,7 @@ class InterventionResultLink(TimeStampedModel):
     )
     cp_output = models.ForeignKey(
         Result, related_name='intervention_links', verbose_name=_('CP Output'),
-        on_delete=models.CASCADE,
+        on_delete=models.CASCADE, blank=True, null=True,
     )
     ram_indicators = models.ManyToManyField(Indicator, blank=True, verbose_name=_('RAM Indicators'))
 

@@ -1,8 +1,9 @@
 from django.db import transaction
+from django.http import Http404
 from django.utils.functional import cached_property
 
-from rest_framework import status, mixins
-from rest_framework.generics import GenericAPIView, get_object_or_404, ListCreateAPIView
+from rest_framework import status
+from rest_framework.generics import get_object_or_404, ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.response import Response
 
 from etools.applications.partners.models import Intervention
@@ -65,18 +66,34 @@ class PMPInterventionRetrieveUpdateView(PMPInterventionMixin, InterventionDetail
         )
 
 
-class InterventionPDOutputsListCreateView(ListCreateAPIView):
+class InterventionPDOutputsViewMixin:
     queryset = LowerResult.objects.select_related('result_link').order_by('id')
     serializer_class = InterventionLowerResultSerializer
 
     @cached_property
     def intervention(self):
-        return get_object_or_404(Intervention.objects, pk=self.kwargs['intervention_pk'])
+        intervention_pk = self.kwargs.get('intervention_pk')
+        if intervention_pk is None:
+            raise Http404
+        return get_object_or_404(Intervention.objects, pk=intervention_pk)
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
         context['intervention'] = self.intervention
         return context
 
-    def perform_create(self, serializer):
-        serializer.save(intervention=self.intervention)
+
+class InterventionPDOutputsListCreateView(
+    InterventionPDOutputsViewMixin,
+    ListCreateAPIView,
+):
+    # todo: permissions
+    pass
+
+
+class InterventionPDOutputsDetailUpdateView(
+    InterventionPDOutputsViewMixin,
+    RetrieveUpdateDestroyAPIView,
+):
+    # todo: permissions
+    pass
