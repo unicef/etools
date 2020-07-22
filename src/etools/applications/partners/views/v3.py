@@ -1,4 +1,4 @@
-from etools.applications.partners.models import PartnerOrganization
+from etools.applications.partners.models import Intervention, PartnerOrganization
 from etools.applications.partners.permissions import PartnershipManagerPermission
 from etools.applications.partners.serializers.exports.interventions import (
     InterventionExportFlatSerializer,
@@ -34,6 +34,22 @@ class PMPBaseViewMixin:
             return []
         return PartnerOrganization.objects.filter(
             staff_members__email=self.request.user.email,
+        )
+
+    def pds(self):
+        """List of PDs user associated with"""
+        if not self.is_partner_staff():
+            return []
+        return Intervention.objects.filter(
+            partner_focal_points__email=self.request.user.email,
+        )
+
+    def offices(self):
+        """List of Offices user associated with"""
+        if not self.is_partner_staff():
+            return []
+        return Intervention.objects.filter(
+            partner_focal_points__email=self.request.user.email,
         )
 
     def map_serializer(self, serializer):
