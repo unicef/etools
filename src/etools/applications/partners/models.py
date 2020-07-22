@@ -1871,7 +1871,7 @@ class Intervention(TimeStampedModel):
         Office,
         verbose_name=_("Office"),
         blank=True,
-        related_name='office_interventions+',
+        related_name='office_interventions',
     )
     flat_locations = models.ManyToManyField(Location, related_name="intervention_flat_locations", blank=True,
                                             verbose_name=_('Locations'))
