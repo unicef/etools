@@ -166,6 +166,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
             'supply_items',
             'activities',
             'management_budgets',
+            'pd_outputs',
         ],
         'signed': [],
         'active': ['']

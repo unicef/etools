@@ -19,7 +19,7 @@
         ],
         "content-length": [
             "Content-Length",
-            "7415"
+            "7470"
         ]
     },
     "data": {
@@ -176,7 +176,8 @@
                 "reporting_requirements": false,
                 "engagement": true,
                 "signed_pd_attachment": false,
-                "sections_present": true
+                "sections_present": true,
+                "pd_outputs": true
             },
             "required": {
                 "status": false,
@@ -257,7 +258,8 @@
                 "reporting_requirements": false,
                 "engagement": false,
                 "signed_pd_attachment": false,
-                "sections_present": false
+                "sections_present": false,
+                "pd_outputs": false
             },
             "view": {
                 "status": true,
@@ -338,7 +340,8 @@
                 "reporting_requirements": false,
                 "engagement": true,
                 "signed_pd_attachment": false,
-                "sections_present": false
+                "sections_present": false,
+                "pd_outputs": true
             }
         }
     },

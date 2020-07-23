@@ -1,4 +1,7 @@
+from django.utils.translation import ugettext_lazy as _
+
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 from unicef_restlib.fields import SeparatedReadWriteField
 
 from etools.applications.partners.models import InterventionResultLink
@@ -18,8 +21,14 @@ class PartnerInterventionLowerResultSerializer(InterventionLowerResultBaseSerial
     class Meta(InterventionLowerResultBaseSerializer.Meta):
         fields = InterventionLowerResultBaseSerializer.Meta.fields + ('cp_output',)
 
+    def save(self, **kwargs):
+        self.intervention = kwargs.pop('intervention', None)
+        if not self.intervention:
+            raise ValidationError(_('Unknown intervention.'))
+        return super().save(**kwargs)
+
     def create(self, validated_data):
-        result_link = InterventionResultLink.objects.create(intervention=self.context['intervention'], cp_output=None)
+        result_link = InterventionResultLink.objects.create(intervention=self.intervention, cp_output=None)
         validated_data['result_link'] = result_link
 
         instance = super().create(validated_data)
@@ -40,10 +49,16 @@ class UNICEFInterventionLowerResultSerializer(InterventionLowerResultBaseSeriali
     class Meta(InterventionLowerResultBaseSerializer.Meta):
         fields = InterventionLowerResultBaseSerializer.Meta.fields + ('cp_output',)
 
+    def save(self, **kwargs):
+        self.intervention = kwargs.pop('intervention', None)
+        if not self.intervention:
+            raise ValidationError(_('Unknown intervention.'))
+        return super().save(**kwargs)
+
     def create(self, validated_data):
         cp_output = validated_data.pop('result_link', {}).get('cp_output_id', None)
         result_link = InterventionResultLink.objects.get_or_create(
-            intervention=self.context['intervention'], cp_output=cp_output
+            intervention=self.intervention, cp_output=cp_output
         )[0]
         validated_data['result_link'] = result_link
 
@@ -57,7 +72,7 @@ class UNICEFInterventionLowerResultSerializer(InterventionLowerResultBaseSeriali
         if cp_output:
             # recreate result link from one with empty cp output if data is sufficient
             result_link = InterventionResultLink.objects.filter(
-                intervention=self.context['intervention'],
+                intervention=self.intervention,
                 cp_output=cp_output
             ).first()
             if result_link and result_link != instance.result_link:
@@ -69,7 +84,7 @@ class UNICEFInterventionLowerResultSerializer(InterventionLowerResultBaseSeriali
         elif cp_output is None and 'cp_output_id' in result_link_data:
             if instance.result_link.cp_output is not None:
                 instance.result_link = InterventionResultLink.objects.create(
-                    intervention=self.context['intervention'], cp_output=None
+                    intervention=self.intervention, cp_output=None
                 )
                 instance.save()
 

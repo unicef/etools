@@ -1,8 +1,7 @@
 from django.db import transaction
-from django.http import Http404
 
 from rest_framework import status
-from rest_framework.generics import get_object_or_404, ListCreateAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -85,21 +84,18 @@ class InterventionPDOutputsViewMixin:
 
     def get_root_object(self):
         if not hasattr(self, '_intervention'):
-            intervention_pk = self.kwargs.get('intervention_pk')
-            if intervention_pk is None:
-                raise Http404
-            self._intervention = get_object_or_404(Intervention.objects, pk=intervention_pk)
+            self._intervention = Intervention.objects.filter(pk=self.kwargs.get('intervention_pk')).first()
         return self._intervention
 
-    def get_serializer_context(self):
-        context = super().get_serializer_context()
-        context['intervention'] = self.get_root_object()
-        return context
+    def get_queryset(self):
+        return super().get_queryset().filter(result_link__intervention=self.get_root_object())
 
 
 class InterventionPDOutputsListCreateView(InterventionPDOutputsViewMixin, ListCreateAPIView):
-    pass
+    def perform_create(self, serializer):
+        serializer.save(intervention=self.get_root_object())
 
 
 class InterventionPDOutputsDetailUpdateView(InterventionPDOutputsViewMixin, RetrieveUpdateDestroyAPIView):
-    pass
+    def perform_update(self, serializer):
+        serializer.save(intervention=self.get_root_object())
