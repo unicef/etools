@@ -12,6 +12,7 @@ from etools.applications.reports.models import (
     DisaggregationValue,
     Indicator,
     IndicatorBlueprint,
+    InterventionActivity,
     LowerResult,
     Office,
     ReportingRequirement,
@@ -446,3 +447,20 @@ class OfficeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Office
         fields = "__all__"
+
+
+class InterventionActivitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InterventionActivity
+        fields = (
+            'id', 'name', 'context_details',
+            'unicef_cash', 'cso_cash',
+            'unicef_supplies', 'cso_supplies',
+        )
+
+
+class LowerResultWithActivitiesSerializer(LowerResultSerializer):
+    activities = InterventionActivitySerializer(read_only=True, many=True)
+
+    class Meta(LowerResultSerializer.Meta):
+        pass

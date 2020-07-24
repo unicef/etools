@@ -33,6 +33,7 @@ from etools.applications.reports.serializers.v2 import (
     IndicatorSerializer,
     LowerResultCUSerializer,
     LowerResultSerializer,
+    LowerResultWithActivitiesSerializer,
     RAMIndicatorSerializer,
     ReportingRequirementSerializer,
 )
@@ -348,7 +349,7 @@ class InterventionAttachmentSerializer(AttachmentSerializerMixin, serializers.Mo
 class InterventionResultNestedSerializer(serializers.ModelSerializer):
     cp_output_name = serializers.CharField(source="cp_output.output_name", read_only=True)
     ram_indicator_names = serializers.SerializerMethodField(read_only=True)
-    ll_results = LowerResultSerializer(many=True, read_only=True)
+    ll_results = LowerResultWithActivitiesSerializer(many=True, read_only=True)
 
     def get_ram_indicator_names(self, obj):
         return [i.name for i in obj.ram_indicators.all()]
