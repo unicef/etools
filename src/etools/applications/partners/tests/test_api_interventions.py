@@ -92,7 +92,6 @@ class TestInterventionsAPI(BaseTenantTestCase):
     EDITABLE_FIELDS = {
         'draft': [
             "actionpoint",
-            "activities",
             "activity",
             "agreement",
             "agreement_id",
