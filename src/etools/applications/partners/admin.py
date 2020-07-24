@@ -324,6 +324,23 @@ class InterventionAdmin(
                  'activation_letter',
                  ),
         }),
+        (_('ePD'), {
+            'fields': (
+                'unicef_court',
+                'date_sent_to_partner',
+                ('unicef_accepted', 'partner_accepted'),
+                'cfei_number',
+                'context',
+                'implementation_strategy',
+                ('gender_rating', 'gender_narrative'),
+                ('equity_rating', 'equity_narrative'),
+                ('sustainability_rating', 'sustainability_narrative'),
+                'budget_owner',
+                'hq_support_cost',
+                'cash_transfer_modalities',
+                'unicef_review_type',
+            )
+        }),
     )
 
     inlines = (
