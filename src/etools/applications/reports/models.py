@@ -884,3 +884,127 @@ class UserTenantProfile(models.Model):
         verbose_name=_('Office'),
         on_delete=models.CASCADE,
     )
+
+
+class InterventionActivity(TimeStampedModel):
+    result = models.ForeignKey(
+        'reports.LowerResult',
+        verbose_name=_("Result"),
+        related_name="activities",
+        on_delete=models.CASCADE,
+    )
+    name = models.CharField(
+        verbose_name=_("Name"),
+        max_length=150,
+    )
+    context_details = models.TextField(
+        verbose_name=_("Context Details"),
+    )
+    unicef_cash = models.DecimalField(
+        verbose_name=_("UNICEF Cash"),
+        decimal_places=2,
+        max_digits=20,
+        blank=True,
+        null=True,
+    )
+    cso_cash = models.DecimalField(
+        verbose_name=_("CSO Cash"),
+        decimal_places=2,
+        max_digits=20,
+        blank=True,
+        null=True,
+    )
+    unicef_supplies = models.DecimalField(
+        verbose_name=_("UNICEF Supplies"),
+        decimal_places=2,
+        max_digits=20,
+        blank=True,
+        null=True,
+    )
+    cso_supplies = models.DecimalField(
+        verbose_name=_("CSO Supplies"),
+        decimal_places=2,
+        max_digits=20,
+        blank=True,
+        null=True,
+    )
+    # time_periods
+
+    class Meta:
+        verbose_name = _('Intervention Activity')
+        verbose_name_plural = _('Intervention Activities')
+
+    def __str__(self):
+        return "{} {}".format(self.result, self.name)
+
+    # total
+    # partner percentage
+
+
+class InterventionActivityItem(TimeStampedModel):
+    activity = models.ForeignKey(
+        InterventionActivity,
+        verbose_name=_("Activity"),
+        related_name="items",
+        on_delete=models.CASCADE,
+    )
+    name = models.CharField(
+        verbose_name=_("Name"),
+        max_length=150,
+    )
+    other_details = models.TextField(
+        verbose_name=_("Context Details"),
+    )
+    unicef_cash = models.DecimalField(
+        verbose_name=_("UNICEF Cash"),
+        decimal_places=2,
+        max_digits=20,
+        blank=True,
+        null=True,
+    )
+    cso_cash = models.DecimalField(
+        verbose_name=_("CSO Cash"),
+        decimal_places=2,
+        max_digits=20,
+        blank=True,
+        null=True,
+    )
+    unicef_suppies = models.DecimalField(
+        verbose_name=_("UNICEF Supplies"),
+        decimal_places=2,
+        max_digits=20,
+        blank=True,
+        null=True,
+    )
+    cso_supplies = models.DecimalField(
+        verbose_name=_("CSO Supplies"),
+        decimal_places=2,
+        max_digits=20,
+        blank=True,
+        null=True,
+    )
+
+    def __str__(self):
+        return "{} {}".format(self.activity, self.name)
+
+
+class InterventionActivityTimeFrame(TimeStampedModel):
+    activity = models.ForeignKey(
+        InterventionActivity,
+        verbose_name=_("Activity"),
+        related_name="time_frames",
+        on_delete=models.CASCADE,
+    )
+    start_date = models.DateField(
+        verbose_name=_("Start Date"),
+    )
+    end_date = models.DateField(
+        verbose_name=_("End Date"),
+    )
+
+    def __str__(self):
+        return "{} {} - {}".format(
+            self.activity,
+            self.start_date,
+            self.end_date,
+        )

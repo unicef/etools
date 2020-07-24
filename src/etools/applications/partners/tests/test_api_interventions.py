@@ -92,7 +92,6 @@ class TestInterventionsAPI(BaseTenantTestCase):
     EDITABLE_FIELDS = {
         'draft': [
             "actionpoint",
-            "activities",
             "activity",
             "agreement",
             "agreement_id",
@@ -135,6 +134,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
             "partner_authorized_officer_signatory",
             "partner_authorized_officer_signatory_id",
             "partner_focal_points",
+            "pd_outputs",
             "planned_budget",
             "planned_visits",
             "population_focus",
