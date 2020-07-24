@@ -49,10 +49,10 @@ api.register(r'partners/file-types', FileTypeViewSet, basename='filetypes')
 
 api.register(r'users', UserViewSet, basename='users')
 api.register(r'groups', GroupViewSet, basename='groups')
-api.register(r'offices/', OfficeViewSet, basename='offices')
+api.register(r'offices', OfficeViewSet, basename='offices')
 api.register(r'offices/v3', PMPOfficeViewSet, basename='offices-pmp')
 
-api.register(r'sections/', SectionViewSet, basename='sections')
+api.register(r'sections', SectionViewSet, basename='sections')
 api.register(r'sections/v3', PMPSectionViewSet, basename='sections-pmp')
 
 api.register(r'reports/result-types', ResultTypeViewSet, basename='resulttypes')
