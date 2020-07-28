@@ -1,8 +1,13 @@
 from django.db import transaction
 
 from rest_framework import status
+from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from etools.applications.field_monitoring.permissions import IsEditAction, IsReadAction
+from etools.applications.partners.models import Intervention
+from etools.applications.partners.permissions import intervention_field_is_editable_permission
 from etools.applications.partners.serializers.exports.interventions import (
     InterventionExportFlatSerializer,
     InterventionExportSerializer,
@@ -13,8 +18,13 @@ from etools.applications.partners.serializers.interventions_v2 import (
     MinimalInterventionListSerializer,
 )
 from etools.applications.partners.serializers.interventions_v3 import InterventionDetailSerializer
+from etools.applications.partners.serializers.v3 import (
+    PartnerInterventionLowerResultSerializer,
+    UNICEFInterventionLowerResultSerializer,
+)
 from etools.applications.partners.views.interventions_v2 import InterventionDetailAPIView, InterventionListAPIView
 from etools.applications.partners.views.v3 import PMPBaseViewMixin
+from etools.applications.reports.models import LowerResult
 
 
 class PMPInterventionMixin(PMPBaseViewMixin):
@@ -77,3 +87,34 @@ class PMPInterventionRetrieveUpdateView(PMPInterventionMixin, InterventionDetail
                 context=self.get_serializer_context(),
             ).data,
         )
+
+
+class InterventionPDOutputsViewMixin:
+    queryset = LowerResult.objects.select_related('result_link').order_by('id')
+    permission_classes = [
+        IsAuthenticated,
+        IsReadAction | (IsEditAction & intervention_field_is_editable_permission('pd_outputs'))
+    ]
+
+    def get_serializer_class(self):
+        if 'UNICEF User' in self.request.user.groups.values_list('name', flat=True):
+            return UNICEFInterventionLowerResultSerializer
+        return PartnerInterventionLowerResultSerializer
+
+    def get_root_object(self):
+        if not hasattr(self, '_intervention'):
+            self._intervention = Intervention.objects.filter(pk=self.kwargs.get('intervention_pk')).first()
+        return self._intervention
+
+    def get_queryset(self):
+        return super().get_queryset().filter(result_link__intervention=self.get_root_object())
+
+
+class InterventionPDOutputsListCreateView(InterventionPDOutputsViewMixin, ListCreateAPIView):
+    def perform_create(self, serializer):
+        serializer.save(intervention=self.get_root_object())
+
+
+class InterventionPDOutputsDetailUpdateView(InterventionPDOutputsViewMixin, RetrieveUpdateDestroyAPIView):
+    def perform_update(self, serializer):
+        serializer.save(intervention=self.get_root_object())

@@ -1542,6 +1542,7 @@ class InterventionManager(models.Manager):
             'frs__fr_items',
             'result_links__cp_output',
             'result_links__ll_results',
+            'result_links__ll_results__activities',
             'result_links__ll_results__applied_indicators__indicator',
             'result_links__ll_results__applied_indicators__disaggregation',
             'result_links__ll_results__applied_indicators__locations',
@@ -2437,7 +2438,7 @@ class InterventionResultLink(TimeStampedModel):
     )
     cp_output = models.ForeignKey(
         Result, related_name='intervention_links', verbose_name=_('CP Output'),
-        on_delete=models.CASCADE,
+        on_delete=models.CASCADE, blank=True, null=True,
     )
     ram_indicators = models.ManyToManyField(Indicator, blank=True, verbose_name=_('RAM Indicators'))
 
@@ -2691,126 +2692,6 @@ class InterventionRisk(TimeStampedModel):
 
     def __str__(self):
         return "{} {}".format(self.intervention, self.get_risk_display())
-
-
-class InterventionActivity(TimeStampedModel):
-    intervention = models.ForeignKey(
-        Intervention,
-        verbose_name=_("Intervention"),
-        related_name="activities",
-        on_delete=models.CASCADE,
-    )
-    name = models.CharField(
-        verbose_name=_("Name"),
-        max_length=150,
-    )
-    context_details = models.TextField(
-        verbose_name=_("Context Details"),
-    )
-    unicef_cash = models.DecimalField(
-        verbose_name=_("UNICEF Cash"),
-        decimal_places=2,
-        max_digits=20,
-        blank=True,
-        null=True,
-    )
-    cso_cash = models.DecimalField(
-        verbose_name=_("CSO Cash"),
-        decimal_places=2,
-        max_digits=20,
-        blank=True,
-        null=True,
-    )
-    unicef_supplies = models.DecimalField(
-        verbose_name=_("UNICEF Supplies"),
-        decimal_places=2,
-        max_digits=20,
-        blank=True,
-        null=True,
-    )
-    cso_supplies = models.DecimalField(
-        verbose_name=_("CSO Supplies"),
-        decimal_places=2,
-        max_digits=20,
-        blank=True,
-        null=True,
-    )
-    # time_periods
-
-    def __str__(self):
-        return "{} {}".format(self.intervention, self.name)
-
-    # total
-    # partner percentage
-
-
-class InterventionActivityItem(TimeStampedModel):
-    activity = models.ForeignKey(
-        InterventionActivity,
-        verbose_name=_("Activity"),
-        related_name="items",
-        on_delete=models.CASCADE,
-    )
-    name = models.CharField(
-        verbose_name=_("Name"),
-        max_length=150,
-    )
-    other_details = models.TextField(
-        verbose_name=_("Context Details"),
-    )
-    unicef_cash = models.DecimalField(
-        verbose_name=_("UNICEF Cash"),
-        decimal_places=2,
-        max_digits=20,
-        blank=True,
-        null=True,
-    )
-    cso_cash = models.DecimalField(
-        verbose_name=_("CSO Cash"),
-        decimal_places=2,
-        max_digits=20,
-        blank=True,
-        null=True,
-    )
-    unicef_suppies = models.DecimalField(
-        verbose_name=_("UNICEF Supplies"),
-        decimal_places=2,
-        max_digits=20,
-        blank=True,
-        null=True,
-    )
-    cso_supplies = models.DecimalField(
-        verbose_name=_("CSO Supplies"),
-        decimal_places=2,
-        max_digits=20,
-        blank=True,
-        null=True,
-    )
-
-    def __str__(self):
-        return "{} {}".format(self.activity, self.name)
-
-
-class InterventionActivityTimeFrame(TimeStampedModel):
-    activity = models.ForeignKey(
-        InterventionActivity,
-        verbose_name=_("Activity"),
-        related_name="time_frames",
-        on_delete=models.CASCADE,
-    )
-    start_date = models.DateField(
-        verbose_name=_("Start Date"),
-    )
-    end_date = models.DateField(
-        verbose_name=_("End Date"),
-    )
-
-    def __str__(self):
-        return "{} {} - {}".format(
-            self.activity,
-            self.start_date,
-            self.end_date,
-        )
 
 
 class InterventionManagementBudget(TimeStampedModel):

@@ -161,7 +161,6 @@
                 "planned_visits": false,
                 "partner_authorized_officer_signatory_id": true,
                 "reporting_periods": true,
-                "activities": true,
                 "signed_by_partner_date": false,
                 "unicef_accepted": true,
                 "sustainability_rating": true,
@@ -180,7 +179,8 @@
                 "review_date_prc": false,
                 "submission_date_prc": false,
                 "reporting_requirements": false,
-                "sections_present": true
+                "sections_present": true,
+                "pd_outputs": true
             },
             "required": {
                 "termination_doc": false,
@@ -246,7 +246,6 @@
                 "planned_visits": false,
                 "partner_authorized_officer_signatory_id": false,
                 "reporting_periods": false,
-                "activities": false,
                 "signed_by_partner_date": false,
                 "unicef_accepted": false,
                 "sustainability_rating": false,
@@ -265,7 +264,8 @@
                 "review_date_prc": false,
                 "submission_date_prc": false,
                 "reporting_requirements": false,
-                "sections_present": false
+                "sections_present": false,
+                "pd_outputs": false
             },
             "view": {
                 "termination_doc": false,
@@ -331,7 +331,6 @@
                 "planned_visits": false,
                 "partner_authorized_officer_signatory_id": true,
                 "reporting_periods": true,
-                "activities": true,
                 "signed_by_partner_date": false,
                 "unicef_accepted": true,
                 "sustainability_rating": true,
@@ -350,7 +349,8 @@
                 "review_date_prc": false,
                 "submission_date_prc": false,
                 "reporting_requirements": false,
-                "sections_present": false
+                "sections_present": false,
+                "pd_outputs": true
             }
         }
     },

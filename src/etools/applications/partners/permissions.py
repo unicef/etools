@@ -6,6 +6,7 @@ from django.utils.translation import ugettext as _
 
 from etools_validator.utils import check_rigid_related
 from rest_framework import permissions
+from rest_framework.permissions import BasePermission
 
 from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.libraries.djangolib.utils import get_all_field_names, is_user_in_groups
@@ -32,7 +33,7 @@ class PMPPermissions:
     def __init__(self, user, instance, permission_structure, **kwargs):
         self.MODEL = apps.get_model(self.MODEL_NAME)
         self.user = user
-        self.user_groups = self.user.groups.values_list('name', flat=True)
+        self.user_groups = list(self.user.groups.values_list('name', flat=True))
         self.instance = instance
         self.condition_group_valid = lru_cache(maxsize=16)(self.condition_group_valid)
         self.permission_structure = permission_structure
@@ -89,7 +90,7 @@ class PMPPermissions:
 class InterventionPermissions(PMPPermissions):
 
     MODEL_NAME = 'partners.Intervention'
-    EXTRA_FIELDS = ['sections_present']
+    EXTRA_FIELDS = ['sections_present', 'pd_outputs']
 
     def __init__(self, **kwargs):
         """
@@ -115,6 +116,19 @@ class InterventionPermissions(PMPPermissions):
         def prp_server_on():
             return tenant_switch_is_active("prp_server_on")
 
+        user_profile = self.user.profile
+        partner_staff_member_id = user_profile.partner_staff_member
+        # focal points are prefetched, so just cast to array to collect ids
+        partner_focal_points = [fp.id for fp in self.instance.partner_focal_points.all()]
+
+        if partner_staff_member_id == self.instance.partner_authorized_officer_signatory_id:
+            self.user_groups.extend(['Partner User', 'Partner Signer'])
+
+        if partner_staff_member_id in partner_focal_points:
+            self.user_groups.extend(['Partner User', 'Partner Focal Point'])
+
+        self.user_groups = list(set(self.user_groups))
+
         self.condition_map = {
             'condition1': self.user in self.instance.unicef_focal_points.all(),
             'condition2': self.user in self.instance.partner_focal_points.all(),
@@ -128,7 +142,9 @@ class InterventionPermissions(PMPPermissions):
             'prp_server_on': prp_server_on(),
             'user_adds_amendment+prp_mode_on': user_added_amendment(self.instance) and not prp_mode_off(),
             'termination_doc_attached': self.instance.termination_doc_attachment.exists(),
-            'not_ended': self.instance.end >= datetime.datetime.now().date() if self.instance.end else False
+            'not_ended': self.instance.end >= datetime.datetime.now().date() if self.instance.end else False,
+            'unicef_court': self.instance.unicef_court,
+            'partner_court': not self.instance.unicef_court,
         }
 
 
@@ -316,3 +332,36 @@ class ReadOnlyAPIUser(permissions.BasePermission):
         else:
             # This class shouldn't see methods other than GET, but regardless the answer is 'no you may not'.
             return False
+
+
+def intervention_field_is_editable_permission(field):
+    """
+    Check the user is able to edit selected monitoring activity field.
+    View should either implement get_root_object to return instance of Intervention (if view is nested),
+    or return Intervention instance via get_object (can be used for detail actions).
+    """
+
+    from etools.applications.partners.models import Intervention
+
+    class FieldPermission(BasePermission):
+        def has_permission(self, request, view):
+            if not view.kwargs:
+                # This is needed for swagger to be able to build the correct structure
+                # https://github.com/unicef/etools/pull/2540/files#r356446025
+                return True
+
+            if hasattr(view, 'get_root_object'):
+                instance = view.get_root_object()
+            else:
+                instance = view.get_object()
+
+            ps = Intervention.permission_structure()
+            permissions = InterventionPermissions(
+                user=request.user, instance=instance, permission_structure=ps
+            )
+            return permissions.get_permissions()['edit'].get(field)
+
+        def has_object_permission(self, request, view, obj):
+            return True
+
+    return FieldPermission
