@@ -184,9 +184,8 @@ class TestUsersListAPIView(BaseTenantTestCase):
             self.url,
             user=partner_user
         )
-        response_json = json.loads(response.rendered_content)
-        self.assertEqual(len(response_json), 1)
-        self.assertEqual(response_json[0]["id"], partner_user.pk)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["id"], partner_user.pk)
 
 
 class TestMyProfileAPIView(BaseTenantTestCase):
