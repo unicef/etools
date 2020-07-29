@@ -13,6 +13,8 @@ from etools.applications.reports.models import (
     Indicator,
     IndicatorBlueprint,
     InterventionActivity,
+    InterventionActivityItem,
+    InterventionActivityTimeFrame,
     LowerResult,
     Office,
     ReportingRequirement,
@@ -464,3 +466,128 @@ class LowerResultWithActivitiesSerializer(LowerResultSerializer):
 
     class Meta(LowerResultSerializer.Meta):
         pass
+
+
+class InterventionActivityItemSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(required=False)
+
+    class Meta:
+        model = InterventionActivityItem
+        fields = (
+            'id',
+            'name',
+            'other_details',
+            'unicef_cash',
+            'cso_cash',
+            'unicef_supplies',
+            'cso_supplies',
+        )
+
+
+class InterventionActivityTimeFrameSerializer(serializers.ModelSerializer):
+    enabled = serializers.BooleanField(write_only=True)
+
+    class Meta:
+        model = InterventionActivityTimeFrame
+        fields = (
+            'start_date',
+            'end_date',
+            'enabled',
+        )
+        read_only_fields = ('start_date', 'end_date')
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['enabled'] = bool(instance.pk)
+        return data
+
+
+class InterventionActivityTimeFrameListSerializer(serializers.ListSerializer):
+    child = InterventionActivityTimeFrameSerializer()
+
+    def to_representation(self, data):
+        quarters = self.root.intervention.get_quarters_range()
+        existing_quarters = {(t.start_date, t.end_date): t for t in data.all()}
+        return [
+            self.child.to_representation(
+                existing_quarters[q] if q in existing_quarters.keys()
+                else InterventionActivityTimeFrame(start_date=q[0], end_date=q[1])
+            )
+            for q in quarters
+        ]
+
+
+class InterventionActivityDetailSerializer(serializers.ModelSerializer):
+    items = InterventionActivityItemSerializer(many=True, required=False)
+    time_frames = InterventionActivityTimeFrameListSerializer(required=False)
+
+    class Meta:
+        model = InterventionActivity
+        fields = (
+            'id',
+            'name',
+            'context_details',
+            'unicef_cash',
+            'cso_cash',
+            'unicef_supplies',
+            'cso_supplies',
+            'items',
+            'time_frames',
+        )
+
+    def __init__(self, *args, **kwargs):
+        self.intervention = kwargs.pop('intervention')
+        super().__init__(*args, **kwargs)
+
+    @transaction.atomic
+    def create(self, validated_data):
+        options = validated_data.pop('items', None)
+        time_frames = validated_data.pop('time_frames', None)
+        instance = super().create(validated_data)
+        self.set_items(instance, options)
+        self.set_time_frames(instance, time_frames)
+        return instance
+
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        options = validated_data.pop('items', None)
+        time_frames = validated_data.pop('time_frames', None)
+        instance = super().update(instance, validated_data)
+        self.set_items(instance, options)
+        self.set_time_frames(instance, time_frames)
+        return instance
+
+    def set_items(self, instance, items):
+        if items is None:
+            return
+
+        updated_pks = []
+        for i, item in enumerate(items):
+            item_instance = InterventionActivityItem.objects.filter(pk=item.get('id')).first()
+            if item_instance:
+                serializer = InterventionActivityItemSerializer(data=item, instance=item_instance, partial=self.partial)
+            else:
+                serializer = InterventionActivityItemSerializer(data=item)
+            if not serializer.is_valid():
+                raise ValidationError({'items': {i: serializer.errors}})
+
+            updated_pks.append(serializer.save(activity=instance).pk)
+
+        # cleanup, remove unused options
+        instance.items.exclude(pk__in=updated_pks).delete()
+
+    def set_time_frames(self, instance, time_frames):
+        if time_frames is None:
+            return
+
+        intervention_quarters = self.intervention.get_quarters_range()
+        if len(time_frames) != len(intervention_quarters):
+            raise ValidationError({'time_frames': [_("Provided periods count doesn't match the original.")]})
+
+        for time_frame, quarter in zip(time_frames, intervention_quarters):
+            if time_frame['enabled']:
+                InterventionActivityTimeFrame.objects.get_or_create(
+                    activity=instance, start_date=quarter[0], end_date=quarter[1]
+                )
+            else:
+                instance.time_frames.filter(start_date=quarter[0], end_date=quarter[1]).delete()

@@ -1,6 +1,7 @@
 import datetime
 import decimal
 import json
+from typing import List, Tuple
 
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField, JSONField
@@ -12,6 +13,7 @@ from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.translation import ugettext as _
 
+from dateutil.relativedelta import relativedelta
 from django_fsm import FSMField, transition
 from model_utils import Choices, FieldTracker
 from model_utils.models import TimeStampedModel
@@ -2297,6 +2299,17 @@ class Intervention(TimeStampedModel):
             self.update_ssfa_properties()
 
         super().save()
+
+    def get_quarters_range(self) -> List[Tuple[datetime.date, datetime.date]]:
+        """[)"""
+        quarters = []
+        start = self.start
+        while start < self.end:
+            end = min(start + relativedelta(months=3), self.end)
+            quarters.append((start, end))
+            start = end
+
+        return quarters
 
 
 class InterventionAmendment(TimeStampedModel):
