@@ -506,7 +506,9 @@ class InterventionActivityTimeFrameListSerializer(serializers.ListSerializer):
     child = InterventionActivityTimeFrameSerializer()
 
     def to_representation(self, data):
-        quarters = self.root.intervention.get_quarters_range()
+        quarters = InterventionActivityTimeFrame.get_quarters_range(
+            self.root.intervention.start, self.root.intervention.end
+        )
         existing_quarters = {(t.start_date, t.end_date): t for t in data.all()}
         return [
             self.child.to_representation(
@@ -580,7 +582,9 @@ class InterventionActivityDetailSerializer(serializers.ModelSerializer):
         if time_frames is None:
             return
 
-        intervention_quarters = self.intervention.get_quarters_range()
+        intervention_quarters = InterventionActivityTimeFrame.get_quarters_range(
+            self.intervention.start, self.intervention.end
+        )
         if len(time_frames) != len(intervention_quarters):
             raise ValidationError({'time_frames': [_("Provided periods count doesn't match the original.")]})
 

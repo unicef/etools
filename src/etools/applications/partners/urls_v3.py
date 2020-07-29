@@ -9,7 +9,7 @@ from etools.applications.partners.views.interventions_v3 import (
     InterventionPDOutputsDetailUpdateView,
     InterventionPDOutputsListCreateView,
     PMPInterventionListCreateView,
-    PMPInterventionRetrieveUpdateView,
+    PMPInterventionRetrieveUpdateView, InterventionActivityCreateView,
 )
 
 app_name = 'partners'
@@ -37,6 +37,11 @@ urlpatterns = [
         'interventions/<int:intervention_pk>/pd-outputs/<int:pk>/',
         view=InterventionPDOutputsDetailUpdateView.as_view(),
         name='intervention-pd-output-detail',
+    ),
+    path(
+        'interventions/<int:intervention_pk>/pd-outputs/<int:output_pk>/activities/',
+        view=InterventionActivityCreateView.as_view(),
+        name='intervention-activity-list',
     ),
     path(
         'interventions/<int:intervention_pk>/pd-outputs/<int:output_pk>/activities/<int:pk>/',

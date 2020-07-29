@@ -2300,17 +2300,6 @@ class Intervention(TimeStampedModel):
 
         super().save()
 
-    def get_quarters_range(self) -> List[Tuple[datetime.date, datetime.date]]:
-        """[)"""
-        quarters = []
-        start = self.start
-        while start < self.end:
-            end = min(start + relativedelta(months=3), self.end)
-            quarters.append((start, end))
-            start = end
-
-        return quarters
-
 
 class InterventionAmendment(TimeStampedModel):
     """

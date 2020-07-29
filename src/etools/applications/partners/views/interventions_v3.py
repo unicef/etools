@@ -1,7 +1,7 @@
 from django.db import transaction
 
 from rest_framework import status
-from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView, CreateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -102,7 +102,7 @@ class InterventionPDOutputsDetailUpdateView(InterventionPDOutputsViewMixin, Retr
         serializer.save(intervention=self.get_root_object())
 
 
-class InterventionActivityDetailUpdateView(RetrieveUpdateDestroyAPIView):
+class InterventionActivityViewMixin():
     queryset = InterventionActivity.objects.prefetch_related('items', 'time_frames').order_by('id')
     permission_classes = [
         IsAuthenticated,
@@ -130,5 +130,12 @@ class InterventionActivityDetailUpdateView(RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         return super().get_queryset().filter(result=self.get_parent_object())
 
+
+class InterventionActivityCreateView(InterventionActivityViewMixin, CreateAPIView):
+    def perform_create(self, serializer):
+        serializer.save(result=self.get_parent_object())
+
+
+class InterventionActivityDetailUpdateView(InterventionActivityViewMixin, RetrieveUpdateDestroyAPIView):
     def perform_update(self, serializer):
         serializer.save(result=self.get_parent_object())

@@ -285,3 +285,13 @@ class TestInterventionActivityDetailView(BaseTenantTestCase):
         self.assertEqual(InterventionActivityTimeFrame.objects.filter(id=item_to_remove.id).exists(), False)
         self.assertEqual(self.activity.time_frames.filter(id=item_to_keep.id).exists(), True)
         self.assertEqual([t['enabled'] for t in response.data['time_frames']], [False, True, True, False])
+
+    def test_minimal_create(self):
+        response = self.forced_auth_req(
+            'post',
+            reverse('partners:intervention-activity-list', args=[self.intervention.pk, self.pd_output.pk]),
+            user=self.user,
+            data={'name': 'test', 'context_details': 'test'}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
