@@ -22,4 +22,4 @@ class BadValueError(ValidationError):
 
 class MissingRequiredValueError(ValidationError):
     def __init__(self):
-        super().__init__(f'This field is required')
+        super().__init__('This field is required')
