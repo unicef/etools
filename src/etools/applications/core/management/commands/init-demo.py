@@ -61,14 +61,14 @@ class Command(BaseCommand):
 
         ModelUser = get_user_model()
         if migrate or _all:
-            self.stdout.write(f"Run migrations")
+            self.stdout.write("Run migrations")
             call_command('migrate_schemas', verbosity=verbosity - 1)
 
-        logger.info(f'Be sure USD is present')
+        logger.info('Be sure USD is present')
         Currency.objects.get_or_create(code='USD')
 
         if options['users'] or _all:
-            logger.info(f'Create Admin and Groups')
+            logger.info('Create Admin and Groups')
             if settings.DEBUG:
                 pwd = '123'
                 admin = os.environ.get('USER', 'admin')
@@ -87,7 +87,7 @@ class Command(BaseCommand):
                            'Country Office Administrator']
             groups = []
 
-            logger.info(f'Setup Groups')
+            logger.info('Setup Groups')
             for group_name in groups_name:
                 logger.info(f'Setup {group_name}')
                 gr, _ = Group.objects.get_or_create(name=group_name)
@@ -104,16 +104,16 @@ class Command(BaseCommand):
                 self.stdout.write(f"Superuser `{admin}` already exists`.")
 
         if options['notifications'] or _all:
-            logger.info(f'Update Notifications')
+            logger.info('Update Notifications')
             call_command('update_notifications')
 
         if options['fixtures'] or _all:
-            logger.info(f'Update Fixtures')
+            logger.info('Update Fixtures')
             call_command('loaddata', 'action_points_categories')
             call_command('loaddata', 'audit_staff_organization')
 
         if options['permissions'] or _all:
-            logger.info(f'Update Permissions')
+            logger.info('Update Permissions')
             call_command('update_audit_permissions')
             call_command('update_tpm_permissions')
             call_command('update_action_points_permissions')
