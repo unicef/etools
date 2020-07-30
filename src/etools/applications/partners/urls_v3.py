@@ -5,11 +5,12 @@ from etools.applications.partners.views.agreements_v3 import (
     PMPAgreementListCreateAPIView,
 )
 from etools.applications.partners.views.interventions_v3 import (
+    InterventionActivityCreateView,
     InterventionActivityDetailUpdateView,
     InterventionPDOutputsDetailUpdateView,
     InterventionPDOutputsListCreateView,
     PMPInterventionListCreateView,
-    PMPInterventionRetrieveUpdateView, InterventionActivityCreateView,
+    PMPInterventionRetrieveUpdateView,
 )
 
 app_name = 'partners'

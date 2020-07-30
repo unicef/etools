@@ -1,7 +1,6 @@
 import datetime
 import decimal
 import json
-from typing import List, Tuple
 
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField, JSONField
@@ -13,7 +12,6 @@ from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.translation import ugettext as _
 
-from dateutil.relativedelta import relativedelta
 from django_fsm import FSMField, transition
 from model_utils import Choices, FieldTracker
 from model_utils.models import TimeStampedModel

@@ -684,8 +684,8 @@ class TestInterventionsAPI(BaseTenantTestCase):
         for i in range(0, EXTRA_INTERVENTIONS + 1):
             intervention = InterventionFactory(
                 document_type=Intervention.PD,
-                start=(timezone.now().date()).isoformat(),
-                end=(timezone.now().date() + datetime.timedelta(days=31)).isoformat(),
+                start=timezone.now().date(),
+                end=timezone.now().date() + datetime.timedelta(days=31),
                 agreement=self.agreement,
             )
             intervention.sections.add(section1.pk)

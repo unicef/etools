@@ -6,6 +6,7 @@ from rest_framework.exceptions import ValidationError
 from unicef_rest_export.serializers import ExportSerializer
 
 from etools.applications.partners.models import Intervention
+from etools.applications.partners.utils import get_quarter_index, get_quarters_range
 from etools.applications.reports.models import (
     AppliedIndicator,
     Disaggregation,
@@ -451,23 +452,6 @@ class OfficeSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class InterventionActivitySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = InterventionActivity
-        fields = (
-            'id', 'name', 'context_details',
-            'unicef_cash', 'cso_cash',
-            'unicef_supplies', 'cso_supplies',
-        )
-
-
-class LowerResultWithActivitiesSerializer(LowerResultSerializer):
-    activities = InterventionActivitySerializer(read_only=True, many=True)
-
-    class Meta(LowerResultSerializer.Meta):
-        pass
-
-
 class InterventionActivityItemSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(required=False)
 
@@ -485,11 +469,13 @@ class InterventionActivityItemSerializer(serializers.ModelSerializer):
 
 
 class InterventionActivityTimeFrameSerializer(serializers.ModelSerializer):
+    name = serializers.SerializerMethodField()
     enabled = serializers.BooleanField(write_only=True)
 
     class Meta:
         model = InterventionActivityTimeFrame
         fields = (
+            'name',
             'start_date',
             'end_date',
             'enabled',
@@ -501,14 +487,19 @@ class InterventionActivityTimeFrameSerializer(serializers.ModelSerializer):
         data['enabled'] = bool(instance.pk)
         return data
 
+    def get_name(self, obj: InterventionActivityTimeFrame):
+        index = get_quarter_index(
+            self.root.intervention.start, self.root.intervention.end,
+            obj.start_date, obj.end_date
+        )
+        return 'Q{}'.format(index + 1)
+
 
 class InterventionActivityTimeFrameListSerializer(serializers.ListSerializer):
     child = InterventionActivityTimeFrameSerializer()
 
     def to_representation(self, data):
-        quarters = InterventionActivityTimeFrame.get_quarters_range(
-            self.root.intervention.start, self.root.intervention.end
-        )
+        quarters = get_quarters_range(self.root.intervention.start, self.root.intervention.end)
         existing_quarters = {(t.start_date, t.end_date): t for t in data.all()}
         return [
             self.child.to_representation(
@@ -582,9 +573,7 @@ class InterventionActivityDetailSerializer(serializers.ModelSerializer):
         if time_frames is None:
             return
 
-        intervention_quarters = InterventionActivityTimeFrame.get_quarters_range(
-            self.intervention.start, self.intervention.end
-        )
+        intervention_quarters = get_quarters_range(self.intervention.start, self.intervention.end)
         if len(time_frames) != len(intervention_quarters):
             raise ValidationError({'time_frames': [_("Provided periods count doesn't match the original.")]})
 
@@ -595,3 +584,22 @@ class InterventionActivityDetailSerializer(serializers.ModelSerializer):
                 )
             else:
                 instance.time_frames.filter(start_date=quarter[0], end_date=quarter[1]).delete()
+
+
+class InterventionActivitySerializer(serializers.ModelSerializer):
+    time_frames = InterventionActivityTimeFrameSerializer(many=True)
+
+    class Meta:
+        model = InterventionActivity
+        fields = (
+            'id', 'name', 'context_details',
+            'unicef_cash', 'cso_cash',
+            'unicef_supplies', 'cso_supplies',
+        )
+
+
+class LowerResultWithActivitiesSerializer(LowerResultSerializer):
+    activities = InterventionActivitySerializer(read_only=True, many=True)
+
+    class Meta(LowerResultSerializer.Meta):
+        pass

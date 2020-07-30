@@ -1,7 +1,5 @@
 from datetime import date
-from typing import List, Tuple
 
-from dateutil.relativedelta import relativedelta
 from django.contrib.postgres.fields import JSONField
 from django.db import models, transaction
 from django.utils.functional import cached_property
@@ -1011,14 +1009,3 @@ class InterventionActivityTimeFrame(TimeStampedModel):
             self.start_date,
             self.end_date,
         )
-
-    @staticmethod
-    def get_quarters_range(start: date, end: date) -> List[Tuple[date, date]]:
-        """[)"""
-        quarters = []
-        while start < end:
-            period_end = min(start + relativedelta(months=3), end)
-            quarters.append((start, period_end))
-            start = period_end
-
-        return quarters
