@@ -420,11 +420,11 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, BaseTenantT
         self.assertIn('text/csv', response['Content-Type'])
 
     def test_staff_spot_checks_csv_view(self):
-        engagement = StaffSpotCheckFactory()
+        StaffSpotCheckFactory()
 
         response = self.forced_auth_req(
             'get',
-            '/api/audit/staff-spot-checks/csv/'.format(engagement.id),
+            '/api/audit/staff-spot-checks/csv/',
             user=self.unicef_user,
         )
 

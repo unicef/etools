@@ -50,7 +50,7 @@ class TravelActivityExportSerializer(serializers.Serializer):
         )
 
     def get_locations(self, obj):
-        return ', '.join([l.name for l in obj.activity.locations.all()])
+        return ', '.join([loc.name for loc in obj.activity.locations.all()])
 
     def get_is_secondary_traveler(self, obj):
         if self._is_secondary_traveler(obj):
