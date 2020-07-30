@@ -9,7 +9,7 @@ import model_utils.fields
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('partners', '0044_intervention_humanitarian_flag'),
+        ('partners', '0045_intervention_humanitarian_flag'),
     ]
 
     operations = [

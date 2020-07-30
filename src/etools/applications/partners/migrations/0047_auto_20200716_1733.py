@@ -7,7 +7,7 @@ import django_fsm
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('partners', '0045_interventionactivity_interventionactivityitem_interventionactivitytimeframe_interventionmanagementbu'),
+        ('partners', '0046_interventionactivity_interventionactivityitem_interventionactivitytimeframe_interventionmanagementbu'),
     ]
 
     operations = [
