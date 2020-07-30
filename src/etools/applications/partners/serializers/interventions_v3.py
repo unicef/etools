@@ -1,7 +1,6 @@
 from django.contrib.auth import get_user_model
 
 from rest_framework import serializers
-from rest_framework.settings import api_settings
 from unicef_attachments.fields import AttachmentSingleFileField
 
 from etools.applications.partners.models import Intervention
@@ -166,8 +165,8 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
         return [
             {
                 'name': 'Q{}'.format(i + 1),
-                'start': quarter[0].strftime(api_settings.DATE_FORMAT),
-                'end': quarter[0].strftime(api_settings.DATE_FORMAT)
+                'start': quarter[0].strftime('%Y-%m-%d'),
+                'end': quarter[1].strftime('%Y-%m-%d')
             }
             for i, quarter in enumerate(get_quarters_range(obj.start, obj.end))
         ]

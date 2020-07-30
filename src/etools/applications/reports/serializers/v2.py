@@ -595,6 +595,7 @@ class InterventionActivitySerializer(serializers.ModelSerializer):
             'id', 'name', 'context_details',
             'unicef_cash', 'cso_cash',
             'unicef_supplies', 'cso_supplies',
+            'time_frames',
         )
 
 

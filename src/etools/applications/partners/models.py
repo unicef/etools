@@ -1543,6 +1543,7 @@ class InterventionManager(models.Manager):
             'result_links__cp_output',
             'result_links__ll_results',
             'result_links__ll_results__activities',
+            'result_links__ll_results__activities__time_frames',
             'result_links__ll_results__applied_indicators__indicator',
             'result_links__ll_results__applied_indicators__disaggregation',
             'result_links__ll_results__applied_indicators__locations',
