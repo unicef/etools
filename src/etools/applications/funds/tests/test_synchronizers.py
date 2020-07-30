@@ -376,7 +376,7 @@ class TestFundCommitmentSynchronizer(BaseTenantTestCase):
             exchange_rate=self.data["EXCHANGE_RATE"],
             responsible_person=self.data["RESP_PERSON"],
         )
-        self.adapter = synchronizers.FundCommitmentSynchronizer(self.country.business_area_code)
+        self.adapter = synchronizers.FundCommitmentSynchronizer(business_area_code=self.country.business_area_code)
 
     def test_init(self):
         a = synchronizers.FundCommitmentSynchronizer(self.country.business_area_code)
