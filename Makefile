@@ -25,7 +25,7 @@ fullclean:
 
 
 lint:
-	flake8 src/ tests/; exit 0;
+	flake8 src/; exit 0;
 	isort src/ --check-only -rc; exit 0;
 
 
