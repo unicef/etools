@@ -471,16 +471,12 @@ class InterventionActivityItemSerializer(serializers.ModelSerializer):
 class InterventionActivityTimeFrameSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField()
     enabled = serializers.BooleanField(write_only=True)
+    start = serializers.DateField(source='start_date', read_only=True)
+    end = serializers.DateField(source='end_date', read_only=True)
 
     class Meta:
         model = InterventionActivityTimeFrame
-        fields = (
-            'name',
-            'start_date',
-            'end_date',
-            'enabled',
-        )
-        read_only_fields = ('start_date', 'end_date')
+        fields = ('name', 'start', 'end', 'enabled',)
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
