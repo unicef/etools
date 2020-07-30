@@ -1285,8 +1285,6 @@ class Agreement(TimeStampedModel):
             self.partner.name,
             self.start.strftime('%d-%m-%Y') if self.start else '',
             self.end.strftime('%d-%m-%Y') if self.end else '',
-            self.signed_by_partner_date,
-            self.signed_by_unicef_date
         )
 
     def get_object_url(self):

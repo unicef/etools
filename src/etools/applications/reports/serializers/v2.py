@@ -187,8 +187,10 @@ class AppliedIndicatorSerializer(serializers.ModelSerializer):
                 ))
 
         # make sure locations are in the intervention
-        locations = set(l.id for l in attrs.get('locations', []))
-        if not locations.issubset(l.id for l in lower_result.result_link.intervention.flat_locations.all()):
+        locations = set(loc.id for loc in attrs.get('locations', []))
+        if not locations.issubset(
+                l_result.id for l_result in lower_result.result_link.intervention.flat_locations.all()
+        ):
             raise ValidationError(_('This indicator can only have locations that were '
                                     'previously saved on the intervention'))
 
@@ -429,7 +431,7 @@ class ResultFrameworkSerializer(serializers.Serializer):
 
     def get_locations(self, obj):
         if hasattr(obj, "locations"):
-            return "\n".join(set([l.name for l in obj.locations.all()]))
+            return "\n".join(set([loc.name for loc in obj.locations.all()]))
         return ""
 
 

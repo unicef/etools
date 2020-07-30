@@ -479,8 +479,8 @@ class ResultFrameworkView(ExportView):
         data = []
         for result_link in qs:
             data.append(result_link)
-            for l in result_link.ll_results.all():
-                data += l.applied_indicators.all()
+            for ll_result in result_link.ll_results.all():
+                data += ll_result.applied_indicators.all()
         return data
 
     def finalize_response(self, request, response, *args, **kwargs):
