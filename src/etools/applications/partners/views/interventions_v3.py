@@ -8,6 +8,16 @@ from rest_framework.response import Response
 from etools.applications.field_monitoring.permissions import IsEditAction, IsReadAction
 from etools.applications.partners.models import Intervention
 from etools.applications.partners.permissions import intervention_field_is_editable_permission
+from etools.applications.partners.serializers.exports.interventions import (
+    InterventionExportFlatSerializer,
+    InterventionExportSerializer,
+)
+from etools.applications.partners.serializers.interventions_v2 import (
+    InterventionCreateUpdateSerializer,
+    InterventionListSerializer,
+    MinimalInterventionListSerializer,
+)
+from etools.applications.partners.serializers.interventions_v3 import InterventionDetailSerializer
 from etools.applications.partners.serializers.v3 import (
     PartnerInterventionLowerResultSerializer,
     UNICEFInterventionLowerResultSerializer,
@@ -18,6 +28,15 @@ from etools.applications.reports.models import LowerResult
 
 
 class PMPInterventionMixin(PMPBaseViewMixin):
+    SERIALIZER_OPTIONS = {
+        "list": (InterventionListSerializer, None),
+        "create": (InterventionCreateUpdateSerializer, None),
+        "detail": (InterventionDetailSerializer, None),
+        "list_min": (MinimalInterventionListSerializer, None),
+        "csv": (InterventionExportSerializer, None),
+        "csv_flat": (InterventionExportFlatSerializer, None),
+    }
+
     def get_queryset(self, format=None):
         qs = super().get_queryset()
         # if partner, limit to interventions that they are associated with

@@ -1,6 +1,5 @@
 from rest_framework import mixins, viewsets
 from rest_framework.exceptions import ValidationError
-from rest_framework.permissions import IsAuthenticated
 from unicef_restlib.views import QueryStringFilterMixin
 
 from etools.applications.partners.views.v3 import PMPBaseViewMixin
@@ -16,7 +15,6 @@ class PMPOfficeViewSet(
         viewsets.GenericViewSet,
 ):
     serializer_class = OfficeSerializer
-    permission_classes = [IsAuthenticated]
     queryset = Office.objects
 
     def get_queryset(self):
@@ -47,7 +45,6 @@ class PMPSectionViewSet(
         viewsets.GenericViewSet,
 ):
     queryset = Section.objects
-    permission_classes = [IsAuthenticated]  # TODO open for development
     serializer_class = SectionCreateSerializer
     filters = (
         ('active', 'active'),

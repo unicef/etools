@@ -1,28 +1,12 @@
+from rest_framework.permissions import IsAuthenticated
+
 from etools.applications.partners.models import Intervention, PartnerOrganization
-from etools.applications.partners.permissions import PartnershipManagerPermission
-from etools.applications.partners.serializers.exports.interventions import (
-    InterventionExportFlatSerializer,
-    InterventionExportSerializer,
-)
-from etools.applications.partners.serializers.interventions_v2 import (
-    InterventionCreateUpdateSerializer,
-    InterventionListSerializer,
-    MinimalInterventionListSerializer,
-)
-from etools.applications.partners.serializers.interventions_v3 import InterventionDetailSerializer
 
 
 class PMPBaseViewMixin:
-    permission_classes = (PartnershipManagerPermission,)
-
-    SERIALIZER_OPTIONS = {
-        "list": (InterventionListSerializer, None),
-        "create": (InterventionCreateUpdateSerializer, None),
-        "detail": (InterventionDetailSerializer, None),
-        "list_min": (MinimalInterventionListSerializer, None),
-        "csv": (InterventionExportSerializer, None),
-        "csv_flat": (InterventionExportFlatSerializer, None),
-    }
+    # TODO need to set correct permissions
+    # see ch21937
+    permission_classes = [IsAuthenticated]
 
     def is_partner_staff(self):
         """Flag indicator whether user is a partner"""
