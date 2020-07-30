@@ -488,10 +488,12 @@ class InterventionActivityTimeFrameSerializer(serializers.ModelSerializer):
         return data
 
     def get_name(self, obj: InterventionActivityTimeFrame):
-        index = get_quarter_index(
-            self.root.intervention.start, self.root.intervention.end,
-            obj.start_date, obj.end_date
-        )
+        if isinstance(self.root.instance, Intervention):
+            intervention = self.root.instance
+        else:
+            intervention = self.root.intervention
+
+        index = get_quarter_index(intervention.start, intervention.end, obj.start_date, obj.end_date)
         return 'Q{}'.format(index + 1)
 
 
@@ -499,7 +501,12 @@ class InterventionActivityTimeFrameListSerializer(serializers.ListSerializer):
     child = InterventionActivityTimeFrameSerializer()
 
     def to_representation(self, data):
-        quarters = get_quarters_range(self.root.intervention.start, self.root.intervention.end)
+        if isinstance(self.root.instance, Intervention):
+            intervention = self.root.instance
+        else:
+            intervention = self.root.intervention
+
+        quarters = get_quarters_range(intervention.start, intervention.end)
         existing_quarters = {(t.start_date, t.end_date): t for t in data.all()}
         return [
             self.child.to_representation(
