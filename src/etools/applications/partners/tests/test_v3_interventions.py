@@ -9,7 +9,18 @@ from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.core.tests.mixins import URLAssertionMixin
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory, FundsReservationItemFactory
 from etools.applications.partners.models import Intervention
-from etools.applications.partners.tests.factories import AgreementFactory, InterventionFactory, PartnerFactory
+from etools.applications.partners.tests.factories import (
+    AgreementFactory,
+    InterventionFactory,
+    InterventionResultLinkFactory,
+    PartnerFactory,
+)
+from etools.applications.reports.models import ResultType
+from etools.applications.reports.tests.factories import (
+    InterventionActivityFactory,
+    InterventionActivityTimeFrameFactory,
+    LowerResultFactory,
+)
 from etools.applications.users.tests.factories import GroupFactory, UserFactory
 
 
@@ -84,3 +95,75 @@ class TestCreate(BaseInterventionTestCase):
         self.assertTrue(data.get("humanitarian_flag"))
         self.assertEqual(data.get("cfei_number"), "321")
         self.assertEqual(data.get("budget_owner"), self.user.pk)
+
+
+class TestUpdate(BaseInterventionTestCase):
+    def test_patch(self):
+        intervention = InterventionFactory()
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+            user=self.user,
+            data={}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
+class TestTimeframesValidation(BaseInterventionTestCase):
+    def setUp(self):
+        super().setUp()
+        self.intervention = InterventionFactory(
+            start=datetime.date(year=1970, month=1, day=1),
+            end=datetime.date(year=1970, month=12, day=31),
+        )
+        self.result_link = InterventionResultLinkFactory(
+            cp_output__result_type__name=ResultType.OUTPUT,
+            intervention=self.intervention
+        )
+        self.pd_output = LowerResultFactory(result_link=self.result_link)
+
+        self.activity = InterventionActivityFactory(result=self.pd_output)
+
+    def test_update_start(self):
+        InterventionActivityTimeFrameFactory(
+            activity=self.activity,
+            start_date=datetime.date(year=1970, month=4, day=1),
+            end_date=datetime.date(year=1970, month=7, day=1)
+        )
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-detail', args=[self.intervention.pk]),
+            user=self.user,
+            data={'start': datetime.date(year=1970, month=5, day=1)}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+
+    def test_update_start_with_active_timeframe(self):
+        InterventionActivityTimeFrameFactory(
+            activity=self.activity,
+            start_date=datetime.date(year=1970, month=10, day=1),
+            end_date=datetime.date(year=1970, month=12, day=31)
+        )
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-detail', args=[self.intervention.pk]),
+            user=self.user,
+            data={'start': datetime.date(year=1970, month=5, day=1)}
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
+        self.assertIn('start', response.data)
+
+    def test_update_end_with_active_timeframe(self):
+        InterventionActivityTimeFrameFactory(
+            activity=self.activity,
+            start_date=datetime.date(year=1970, month=10, day=1),
+            end_date=datetime.date(year=1970, month=12, day=31)
+        )
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-detail', args=[self.intervention.pk]),
+            user=self.user,
+            data={'end': datetime.date(year=1970, month=10, day=1)}
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
+        self.assertIn('end', response.data)

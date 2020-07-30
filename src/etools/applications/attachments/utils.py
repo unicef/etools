@@ -28,11 +28,11 @@ def get_partner_obj(obj):
         Agreement,
         AgreementAmendment,
         Assessment,
+        CoreValuesAssessment,
         Intervention,
         InterventionAmendment,
         InterventionAttachment,
         PartnerOrganization,
-        CoreValuesAssessment,
     )
     from etools.applications.tpm.models import TPMActivity
 
@@ -75,11 +75,7 @@ def get_pd_ssfa(obj):
     InterventionAttachment
     InterventionAmendment
     """
-    from etools.applications.partners.models import (
-        Intervention,
-        InterventionAmendment,
-        InterventionAttachment,
-    )
+    from etools.applications.partners.models import Intervention, InterventionAmendment, InterventionAttachment
     from etools.applications.tpm.models import TPMActivity
 
     if isinstance(obj.content_object, Intervention):
