@@ -13,9 +13,9 @@ def recalculate_time_frames(instance: Intervention, created: bool, **kwargs):
         new_quarters = get_quarters_range(instance.start, instance.end)
 
         # remove out of boundary frames
-        for quarter in old_quarters[len(new_quarters):]:
+        if len(old_quarters) > len(new_quarters):
             InterventionActivityTimeFrame.objects.filter(
-                activity__result__result_link__intervention=instance, start_date=quarter[0], end_date=quarter[1]
+                activity__result__result_link__intervention=instance, start_date__gte=old_quarters[len(new_quarters)][0]
             ).delete()
 
         # move existing ones

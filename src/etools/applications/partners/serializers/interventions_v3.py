@@ -1,6 +1,8 @@
 from django.contrib.auth import get_user_model
+from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 from unicef_attachments.fields import AttachmentSingleFileField
 
 from etools.applications.partners.models import Intervention
@@ -14,6 +16,7 @@ from etools.applications.partners.serializers.interventions_v2 import (
     PlannedVisitsNestedSerializer,
 )
 from etools.applications.partners.utils import get_quarters_range
+from etools.applications.reports.models import InterventionActivityTimeFrame
 
 
 class InterventionDetailSerializer(serializers.ModelSerializer):
@@ -170,6 +173,31 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             }
             for i, quarter in enumerate(get_quarters_range(obj.start, obj.end))
         ]
+
+    def validate(self, attrs):
+        validated_data = super().validate(attrs)
+        if self.instance and ('start' in validated_data or 'end' in validated_data):
+            start = validated_data.get('start', self.instance.start)
+            end = validated_data.get('end', self.instance.end)
+            old_quarters = get_quarters_range(self.instance.start, self.instance.end)
+            new_quarters = get_quarters_range(start, end)
+
+            if len(old_quarters) > len(new_quarters):
+                if InterventionActivityTimeFrame.objects.filter(
+                    activity__result__result_link__intervention=self.instance,
+                    start_date__gte=old_quarters[len(new_quarters)][0]
+                ).exists():
+                    names_to_be_removed = ', '.join([
+                        'Q{}'.format(i + 1)
+                        for i in range(len(old_quarters), len(new_quarters))
+                    ])
+                    error_text = _('Please adjust activities to not use the quarters to be removed ({}).').format(
+                        names_to_be_removed
+                    )
+                    bad_keys = set(validated_data.keys()).union({'start', 'end'})
+                    raise ValidationError({key: [error_text] for key in bad_keys})
+
+        return validated_data
 
     class Meta:
         model = Intervention
