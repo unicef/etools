@@ -4,7 +4,7 @@ RUN apk update
 RUN apk add --upgrade apk-tools \
     openssl \
     ca-certificates \
-    libressl2.7-libcrypto \
+    libressl3.0-libcrypto \
     libmagic \
     libxslt \
     geos \
