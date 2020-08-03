@@ -97,8 +97,7 @@ class InterventionPDOutputsViewMixin:
 
 
 class InterventionPDOutputsListCreateView(InterventionPDOutputsViewMixin, ListCreateAPIView):
-    def perform_create(self, serializer):
-        serializer.save(intervention=self.get_root_object())
+    pass
 
 
 class InterventionPDOutputsDetailUpdateView(InterventionPDOutputsViewMixin, RetrieveUpdateDestroyAPIView):
