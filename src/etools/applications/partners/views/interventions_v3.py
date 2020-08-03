@@ -98,8 +98,7 @@ class InterventionPDOutputsListCreateView(InterventionPDOutputsViewMixin, ListCr
 
 
 class InterventionPDOutputsDetailUpdateView(InterventionPDOutputsViewMixin, RetrieveUpdateDestroyAPIView):
-    def perform_update(self, serializer):
-        serializer.save(intervention=self.get_root_object())
+    pass
 
 
 class InterventionActivityViewMixin():
@@ -137,5 +136,4 @@ class InterventionActivityCreateView(InterventionActivityViewMixin, CreateAPIVie
 
 
 class InterventionActivityDetailUpdateView(InterventionActivityViewMixin, RetrieveUpdateDestroyAPIView):
-    def perform_update(self, serializer):
-        serializer.save(result=self.get_parent_object())
+    pass
