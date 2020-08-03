@@ -954,6 +954,7 @@ class InterventionActivityItem(TimeStampedModel):
     )
     other_details = models.TextField(
         verbose_name=_("Context Details"),
+        blank=True
     )
     unicef_cash = models.DecimalField(
         verbose_name=_("UNICEF Cash"),
@@ -969,7 +970,7 @@ class InterventionActivityItem(TimeStampedModel):
         blank=True,
         null=True,
     )
-    unicef_suppies = models.DecimalField(
+    unicef_supplies = models.DecimalField(
         verbose_name=_("UNICEF Supplies"),
         decimal_places=2,
         max_digits=20,
