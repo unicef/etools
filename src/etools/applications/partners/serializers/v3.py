@@ -21,8 +21,11 @@ class PartnerInterventionLowerResultSerializer(InterventionLowerResultBaseSerial
     class Meta(InterventionLowerResultBaseSerializer.Meta):
         fields = InterventionLowerResultBaseSerializer.Meta.fields + ('cp_output',)
 
-    def save(self, **kwargs):
+    def __init__(self, *args, **kwargs):
         self.intervention = kwargs.pop('intervention', None)
+        super().__init__(*args, **kwargs)
+
+    def save(self, **kwargs):
         if not self.intervention:
             raise ValidationError(_('Unknown intervention.'))
         return super().save(**kwargs)
@@ -49,8 +52,11 @@ class UNICEFInterventionLowerResultSerializer(InterventionLowerResultBaseSeriali
     class Meta(InterventionLowerResultBaseSerializer.Meta):
         fields = InterventionLowerResultBaseSerializer.Meta.fields + ('cp_output',)
 
-    def save(self, **kwargs):
+    def __init__(self, *args, **kwargs):
         self.intervention = kwargs.pop('intervention', None)
+        super().__init__(*args, **kwargs)
+
+    def save(self, **kwargs):
         if not self.intervention:
             raise ValidationError(_('Unknown intervention.'))
         return super().save(**kwargs)

@@ -1,6 +1,7 @@
 import datetime
 import html
 import logging
+from typing import List, Tuple
 
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
@@ -9,6 +10,7 @@ from django.db.models import F, Q
 from django.urls import reverse
 from django.utils.timezone import make_aware, now
 
+from dateutil.relativedelta import relativedelta
 from unicef_attachments.models import Attachment, FileType
 from unicef_notification.utils import send_notification_with_template
 
@@ -627,3 +629,27 @@ def sync_partner_staff_member(partner: PartnerOrganization, staff_member_data: P
     profile.country = profile.country or connection.tenant
     profile.save()
     profile.countries_available.add(connection.tenant)
+
+
+def get_quarters_range(start: datetime.date, end: datetime.date) -> List[Tuple[datetime.date, datetime.date]]:
+    """first date included, last excluded for every period in range"""
+    if not start or not end:
+        return []
+
+    quarters = []
+    while start < end:
+        period_end = min(start + relativedelta(months=3), end)
+        quarters.append((start, period_end))
+        start = period_end
+
+    return quarters
+
+
+def get_quarter_index(
+    start: datetime.date, end: datetime.date,
+    quarter_start: datetime.date, quarter_end: datetime.date
+) -> int:
+    for i, quarter in enumerate(get_quarters_range(start, end)):
+        if quarter[0] <= quarter_start <= quarter[1] and quarter[0] <= quarter_end <= quarter[1]:
+            return i
+    return -1

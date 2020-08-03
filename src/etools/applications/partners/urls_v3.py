@@ -5,6 +5,8 @@ from etools.applications.partners.views.agreements_v3 import (
     PMPAgreementListCreateAPIView,
 )
 from etools.applications.partners.views.interventions_v3 import (
+    InterventionActivityCreateView,
+    InterventionActivityDetailUpdateView,
     InterventionPDOutputsDetailUpdateView,
     InterventionPDOutputsListCreateView,
     PMPInterventionListCreateView,
@@ -36,6 +38,16 @@ urlpatterns = [
         'interventions/<int:intervention_pk>/pd-outputs/<int:pk>/',
         view=InterventionPDOutputsDetailUpdateView.as_view(),
         name='intervention-pd-output-detail',
+    ),
+    path(
+        'interventions/<int:intervention_pk>/pd-outputs/<int:output_pk>/activities/',
+        view=InterventionActivityCreateView.as_view(),
+        name='intervention-activity-list',
+    ),
+    path(
+        'interventions/<int:intervention_pk>/pd-outputs/<int:output_pk>/activities/<int:pk>/',
+        view=InterventionActivityDetailUpdateView.as_view(),
+        name='intervention-activity-detail',
     ),
     path(
         'agreements/',

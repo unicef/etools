@@ -148,3 +148,38 @@ class UserTenantProfileFactory(factory.django.DjangoModelFactory):
         django_get_or_create = ('profile', )
 
     office = factory.SubFactory(OfficeFactory)
+
+
+class InterventionActivityFactory(factory.django.DjangoModelFactory):
+    result = factory.SubFactory(LowerResultFactory)
+    name = fuzzy.FuzzyText()
+    context_details = fuzzy.FuzzyText()
+    unicef_cash = fuzzy.FuzzyDecimal(1000)
+    cso_cash = fuzzy.FuzzyDecimal(1000)
+    unicef_supplies = fuzzy.FuzzyDecimal(1000)
+    cso_supplies = fuzzy.FuzzyDecimal(1000)
+
+    class Meta:
+        model = models.InterventionActivity
+
+
+class InterventionActivityItemFactory(factory.django.DjangoModelFactory):
+    activity = factory.SubFactory(InterventionActivityFactory)
+    name = fuzzy.FuzzyText()
+    other_details = fuzzy.FuzzyText()
+    unicef_cash = fuzzy.FuzzyDecimal(1000)
+    cso_cash = fuzzy.FuzzyDecimal(1000)
+    unicef_supplies = fuzzy.FuzzyDecimal(1000)
+    cso_supplies = fuzzy.FuzzyDecimal(1000)
+
+    class Meta:
+        model = models.InterventionActivityItem
+
+
+class InterventionActivityTimeFrameFactory(factory.DjangoModelFactory):
+    activity = factory.SubFactory(InterventionActivityFactory)
+    start_date = fuzzy.FuzzyDate(datetime.date(year=1970, month=1, day=1))
+    end_date = factory.LazyAttribute(lambda s: fuzzy.FuzzyDate(s.start_date).fuzz())
+
+    class Meta:
+        model = models.InterventionActivityTimeFrame
