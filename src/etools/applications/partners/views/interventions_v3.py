@@ -88,6 +88,10 @@ class InterventionPDOutputsViewMixin:
             self._intervention = Intervention.objects.filter(pk=self.kwargs.get('intervention_pk')).first()
         return self._intervention
 
+    def get_serializer(self, *args, **kwargs):
+        kwargs['intervention'] = self.get_root_object()
+        return super().get_serializer(*args, **kwargs)
+
     def get_queryset(self):
         return super().get_queryset().filter(result_link__intervention=self.get_root_object())
 
