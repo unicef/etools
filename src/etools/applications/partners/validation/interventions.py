@@ -259,14 +259,14 @@ def locations_valid(i):
     ainds = AppliedIndicator.objects.filter(lower_result__result_link__intervention__pk=i.pk).all()
     ind_locations = set()
     for ind in ainds:
-        for l in ind.locations.all():
-            ind_locations.add(l)
+        for loc in ind.locations.all():
+            ind_locations.add(loc)
     intervention_locations = set(i.flat_locations.all())
     if not ind_locations.issubset(intervention_locations):
         raise BasicValidationError(_('The following locations have been selected on '
                                      'the PD/SSFA indicators and cannot be removed'
                                      ' without removing them from the indicators first: ') +
-                                   ', '.join([str(l) for l in ind_locations - intervention_locations]))
+                                   ', '.join([str(loc) for loc in ind_locations - intervention_locations]))
     return True
 
 

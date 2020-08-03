@@ -5,8 +5,8 @@ from rest_framework.exceptions import ValidationError
 
 class ExternalUserValidator:
     def __call__(self, value):
-        from etools.applications.tpm.tpmpartners.models import TPMPartnerStaffMember
         from etools.applications.audit.purchase_order.models import AuditorStaffMember
+        from etools.applications.tpm.tpmpartners.models import TPMPartnerStaffMember
 
         # email cannot end with UNICEF domain
         if value.endswith("@unicef.org"):

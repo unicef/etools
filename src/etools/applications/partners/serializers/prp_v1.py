@@ -167,10 +167,10 @@ class PRPIndicatorSerializer(serializers.ModelSerializer):
             "gateway__name",
             "gateway__admin_level",
         )
-        for l in location_qs:
-            l["pcode"] = l.pop("p_code")
-            l["location_type"] = l.pop("gateway__name")
-            l["admin_level"] = l.pop("gateway__admin_level")
+        for loc in location_qs:
+            loc["pcode"] = loc.pop("p_code")
+            loc["location_type"] = loc.pop("gateway__name")
+            loc["admin_level"] = loc.pop("gateway__admin_level")
         return list(location_qs)
 
     class Meta:
