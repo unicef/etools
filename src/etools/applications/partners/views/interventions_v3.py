@@ -1,12 +1,13 @@
 from django.db import transaction
+from django.shortcuts import get_object_or_404
 
 from rest_framework import status
-from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.generics import ListCreateAPIView, RetrieveUpdateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from etools.applications.field_monitoring.permissions import IsEditAction, IsReadAction
-from etools.applications.partners.models import Intervention
+from etools.applications.partners.models import Intervention, InterventionManagementBudget
 from etools.applications.partners.permissions import intervention_field_is_editable_permission
 from etools.applications.partners.serializers.exports.interventions import (
     InterventionExportFlatSerializer,
@@ -17,7 +18,10 @@ from etools.applications.partners.serializers.interventions_v2 import (
     InterventionListSerializer,
     MinimalInterventionListSerializer,
 )
-from etools.applications.partners.serializers.interventions_v3 import InterventionDetailSerializer
+from etools.applications.partners.serializers.interventions_v3 import (
+    InterventionDetailSerializer,
+    InterventionManagementBudgetSerializer,
+)
 from etools.applications.partners.serializers.v3 import (
     PartnerInterventionLowerResultSerializer,
     UNICEFInterventionLowerResultSerializer,
@@ -118,3 +122,23 @@ class InterventionPDOutputsListCreateView(InterventionPDOutputsViewMixin, ListCr
 class InterventionPDOutputsDetailUpdateView(InterventionPDOutputsViewMixin, RetrieveUpdateDestroyAPIView):
     def perform_update(self, serializer):
         serializer.save(intervention=self.get_root_object())
+
+
+class PMPInterventionManagementBudgetRetrieveUpdateView(PMPInterventionMixin, RetrieveUpdateAPIView):
+    queryset = InterventionManagementBudget.objects
+    serializer_class = InterventionManagementBudgetSerializer
+
+    def get_object(self):
+        intervention = get_object_or_404(
+            Intervention,
+            pk=self.kwargs.get("intervention_pk"),
+        )
+        obj, __ = InterventionManagementBudget.objects.get_or_create(
+            intervention=intervention,
+        )
+        return obj
+
+    def get_serializer(self, *args, **kwargs):
+        if kwargs.get("data"):
+            kwargs["data"]["intervention"] = self.kwargs.get("intervention_pk")
+        return super().get_serializer(*args, **kwargs)

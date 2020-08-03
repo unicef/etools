@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from unicef_attachments.fields import AttachmentSingleFileField
 
-from etools.applications.partners.models import Intervention
+from etools.applications.partners.models import Intervention, InterventionManagementBudget
 from etools.applications.partners.permissions import InterventionPermissions
 from etools.applications.partners.serializers.interventions_v2 import (
     FRsSerializer,
@@ -241,3 +241,9 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "unicef_focal_points",
             "unicef_signatory",
         )
+
+
+class InterventionManagementBudgetSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InterventionManagementBudget
+        fields = "__all__"
