@@ -632,7 +632,7 @@ def sync_partner_staff_member(partner: PartnerOrganization, staff_member_data: P
 
 
 def get_quarters_range(start: datetime.date, end: datetime.date) -> List[Tuple[datetime.date, datetime.date]]:
-    """[)"""
+    """first date included, last excluded for every period in range"""
     if not start or not end:
         return []
 
