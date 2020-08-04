@@ -62,5 +62,5 @@ urlpatterns = [
         ),
         name='agreement-detail',
     ),
-    path('dropdowns/pmp/', view=PMPDropdownsListApiView.as_view(), name='dropdown-pmp-list'),
+    path('dropdowns/dynamic/', view=PMPDropdownsListApiView.as_view(), name='dropdown-dynamic-list'),
 ]
