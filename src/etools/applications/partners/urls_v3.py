@@ -12,6 +12,7 @@ from etools.applications.partners.views.interventions_v3 import (
     PMPInterventionListCreateView,
     PMPInterventionRetrieveUpdateView,
 )
+from etools.applications.partners.views.v3 import PMPDropdownsListApiView
 
 app_name = 'partners'
 urlpatterns = [
@@ -61,4 +62,5 @@ urlpatterns = [
         ),
         name='agreement-detail',
     ),
+    path('dropdowns/pmp/', view=PMPDropdownsListApiView.as_view(), name='dropdown-pmp-list'),
 ]

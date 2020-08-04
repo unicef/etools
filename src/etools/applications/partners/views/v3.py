@@ -1,6 +1,18 @@
-from rest_framework.permissions import IsAuthenticated
+from django.contrib.auth import get_user_model
+from django.db.models import Value
+from django.db.models.functions import Concat
+from django.utils.functional import cached_property
 
-from etools.applications.partners.models import Intervention, PartnerOrganization
+from rest_framework import status
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from etools.applications.funds.models import FundsReservationItem
+from etools.applications.partners.models import FileType, Intervention, PartnerOrganization
+from etools.applications.partners.permissions import IsPartnerUser
+from etools.applications.partners.views.v2 import choices_to_json_ready
+from etools.applications.reports.models import CountryProgramme, Result, ResultType
 
 
 class PMPBaseViewMixin:
@@ -44,3 +56,69 @@ class PMPBaseViewMixin:
         if self.is_partner_staff():
             return partner_serializer
         return default_serializer
+
+
+class PMPDropdownsListApiView(APIView):
+    permission_classes = (IsAuthenticated, IsAdminUser | IsPartnerUser)
+
+    @cached_property
+    def partner(self):
+        return PartnerOrganization.objects.filter(staff_members__email=self.request.user.email).first()
+
+    def get_signed_by_unicef_users(self, request) -> list:
+        return list(get_user_model().objects.filter(
+            groups__name__in=['Senior Management Team'],
+            profile__country=request.user.profile.country
+        ).annotate(
+            name=Concat('first_name', Value(' '), 'last_name')
+        ).values('id', 'name', 'username', 'email'))
+
+    def get_country_programmes(self, request) -> list:
+        return list(CountryProgramme.objects.all_active_and_future.values('id', 'wbs', 'name', 'from_date', 'to_date'))
+
+    def get_cp_outputs(self, request) -> list:
+        results = Result.objects.filter(result_type__name=ResultType.OUTPUT, wbs__isnull=False)
+        if not request.user.is_staff:
+            results = results.filter(intervention_links__intervention__agreement__partner=self.partner)
+
+        return [
+            {"id": r.id, "name": r.output_name, "wbs": r.wbs, "country_programme": r.country_programme.id}
+            for r in results
+        ]
+
+    def get_file_types(self, request) -> list:
+        return list(FileType.objects.filter(name__in=[i[0] for i in FileType.NAME_CHOICES]).all().values())
+
+    def get_donors(self, request) -> list:
+        return choices_to_json_ready(
+            list(FundsReservationItem.objects.filter(
+                donor__isnull=False
+            ).order_by('donor').values_list('donor', flat=True).distinct('donor')),
+            sort_choices=False
+        )
+
+    def get_grants(self, request) -> list:
+        return choices_to_json_ready(
+            list(FundsReservationItem.objects.filter(
+                donor__isnull=False
+            ).order_by('grant_number').values_list('grant_number', flat=True).distinct('grant_number')),
+            sort_choices=False
+        )
+
+    def get(self, request):
+        """
+        Return All dropdown values used for Agreements form
+        """
+        response_data = {
+            'cp_outputs': self.get_cp_outputs(request),
+            'file_types': self.get_file_types(request),
+        }
+        if request.user.is_staff:
+            response_data.update({
+                'signed_by_unicef_users': self.get_signed_by_unicef_users(request),
+                'country_programmes': self.get_country_programmes(request),
+                'donors': self.get_donors(request),
+                'grants': self.get_grants(request),
+            })
+
+        return Response(response_data, status=status.HTTP_200_OK)
