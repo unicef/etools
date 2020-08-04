@@ -2,6 +2,7 @@ import datetime
 import json
 from unittest import skip
 
+from django.contrib.auth.models import AnonymousUser
 from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import connection
@@ -31,7 +32,7 @@ from etools.applications.partners.tests.factories import (
     InterventionAttachmentFactory,
     InterventionFactory,
     InterventionResultLinkFactory,
-    PartnerFactory,
+    PartnerFactory, PartnerStaffFactory,
 )
 from etools.applications.partners.tests.test_utils import setup_intervention_test_data
 from etools.applications.reports.models import AppliedIndicator, ReportingRequirement
@@ -724,6 +725,16 @@ class TestInterventionsAPI(BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
+
+    def test_add_intervention_by_partner_member(self):
+        partner_user = UserFactory(is_staff=False, groups__data=[])
+        PartnerStaffFactory(email=partner_user.email)
+        status_code, response = self.run_request_list_ep(user=partner_user, method='post', data={})
+        self.assertEqual(status_code, status.HTTP_403_FORBIDDEN, response)
+
+    def test_add_intervention_by_anonymous(self):
+        status_code, response = self.run_request_list_ep(user=AnonymousUser(), method='post', data={})
+        self.assertEqual(status_code, status.HTTP_403_FORBIDDEN, response)
 
 
 class TestAPIInterventionResultLinkListView(BaseTenantTestCase):
