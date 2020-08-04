@@ -259,4 +259,11 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
 class InterventionManagementBudgetSerializer(serializers.ModelSerializer):
     class Meta:
         model = InterventionManagementBudget
-        fields = "__all__"
+        fields = (
+            "act1_unicef",
+            "act1_partner",
+            "act2_unicef",
+            "act2_partner",
+            "act3_unicef",
+            "act3_partner",
+        )
