@@ -371,7 +371,7 @@ class IsPartnerUser(BasePermission):
     def has_permission(self, request, view):
         # unable to import correctly due to circular import caused by permissions usage in models
         from etools.applications.partners.models import PartnerStaffMember
-        return bool(PartnerStaffMember.objects.filter(email=request.user.email))
+        return PartnerStaffMember.objects.filter(email=request.user.email).exists()
 
     def has_object_permission(self, request, view, obj):
         return True

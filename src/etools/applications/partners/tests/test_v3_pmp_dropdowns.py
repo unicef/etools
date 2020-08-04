@@ -17,7 +17,8 @@ class TestPMPDropdownsListApiView(BaseTenantTestCase):
         cls.url = reverse('pmp_v3:dropdown-pmp-list')
 
     def test_unicef_data(self):
-        response = self.forced_auth_req('get', self.url, self.unicef_staff)
+        with self.assertNumQueries(6):
+            response = self.forced_auth_req('get', self.url, self.unicef_staff)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertListEqual(
             sorted(list(response.data.keys())),
@@ -25,7 +26,8 @@ class TestPMPDropdownsListApiView(BaseTenantTestCase):
         )
 
     def test_partner_data(self):
-        response = self.forced_auth_req('get', self.url, self.partner_user)
+        with self.assertNumQueries(4):
+            response = self.forced_auth_req('get', self.url, self.partner_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertListEqual(list(response.data.keys()), ['cp_outputs', 'file_types'])
 
