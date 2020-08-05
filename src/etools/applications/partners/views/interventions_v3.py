@@ -7,7 +7,10 @@ from rest_framework.response import Response
 
 from etools.applications.field_monitoring.permissions import IsEditAction, IsReadAction
 from etools.applications.partners.models import Intervention
-from etools.applications.partners.permissions import intervention_field_is_editable_permission
+from etools.applications.partners.permissions import (
+    intervention_field_is_editable_permission,
+    PartnershipManagerPermission,
+)
 from etools.applications.partners.serializers.exports.interventions import (
     InterventionExportFlatSerializer,
     InterventionExportSerializer,
@@ -47,6 +50,8 @@ class PMPInterventionMixin(PMPBaseViewMixin):
 
 
 class PMPInterventionListCreateView(PMPInterventionMixin, InterventionListAPIView):
+    permission_classes = (IsAuthenticated, PartnershipManagerPermission,)
+
     def get_serializer_class(self):
         if self.request.method == "GET":
             query_params = self.request.query_params
