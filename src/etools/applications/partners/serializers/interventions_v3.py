@@ -254,3 +254,9 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "unicef_focal_points",
             "unicef_signatory",
         )
+
+
+class InterventionDummySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Intervention
+        fields = ()

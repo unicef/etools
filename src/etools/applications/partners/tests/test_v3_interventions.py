@@ -100,7 +100,9 @@ class TestCreate(BaseInterventionTestCase):
 
     def test_add_intervention_by_partner_member(self):
         partner_user = UserFactory(is_staff=False, groups__data=[])
-        PartnerStaffFactory(email=partner_user.email)
+        staff_member = PartnerStaffFactory(email=partner_user.email)
+        partner_user.profile.partner_staff_member = staff_member.id
+        partner_user.profile.save()
         response = self.forced_auth_req(
             "post",
             reverse('pmp_v3:intervention-list'),

@@ -2,7 +2,6 @@ import datetime
 import json
 from unittest import skip
 
-from django.contrib.auth.models import AnonymousUser
 from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import connection

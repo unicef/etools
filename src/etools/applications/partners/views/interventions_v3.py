@@ -20,7 +20,10 @@ from etools.applications.partners.serializers.interventions_v2 import (
     InterventionListSerializer,
     MinimalInterventionListSerializer,
 )
-from etools.applications.partners.serializers.interventions_v3 import InterventionDetailSerializer
+from etools.applications.partners.serializers.interventions_v3 import (
+    InterventionDetailSerializer,
+    InterventionDummySerializer,
+)
 from etools.applications.partners.serializers.v3 import (
     PartnerInterventionLowerResultSerializer,
     UNICEFInterventionLowerResultSerializer,
@@ -33,12 +36,12 @@ from etools.applications.reports.serializers.v2 import InterventionActivityDetai
 
 class PMPInterventionMixin(PMPBaseViewMixin):
     SERIALIZER_OPTIONS = {
-        "list": (InterventionListSerializer, None),
-        "create": (InterventionCreateUpdateSerializer, None),
-        "detail": (InterventionDetailSerializer, None),
-        "list_min": (MinimalInterventionListSerializer, None),
-        "csv": (InterventionExportSerializer, None),
-        "csv_flat": (InterventionExportFlatSerializer, None),
+        "list": (InterventionListSerializer, InterventionDummySerializer),
+        "create": (InterventionCreateUpdateSerializer, InterventionDummySerializer),
+        "detail": (InterventionDetailSerializer, InterventionDummySerializer),
+        "list_min": (MinimalInterventionListSerializer, InterventionDummySerializer),
+        "csv": (InterventionExportSerializer, InterventionDummySerializer),
+        "csv_flat": (InterventionExportFlatSerializer, InterventionDummySerializer),
     }
 
     def get_queryset(self, format=None):
