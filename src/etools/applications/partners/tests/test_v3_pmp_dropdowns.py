@@ -13,7 +13,9 @@ class TestPMPDropdownsListApiView(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
         cls.partner_user = UserFactory(is_staff=False)
-        PartnerStaffFactory(email=cls.partner_user.email)
+        staff_member = PartnerStaffFactory(email=cls.partner_user.email)
+        cls.partner_user.profile.partner_staff_member = staff_member.id
+        cls.partner_user.profile.save()
         cls.url = reverse('pmp_v3:dropdown-dynamic-list')
 
     def test_unicef_data(self):
@@ -26,7 +28,7 @@ class TestPMPDropdownsListApiView(BaseTenantTestCase):
         )
 
     def test_partner_data(self):
-        with self.assertNumQueries(4):
+        with self.assertNumQueries(3):
             response = self.forced_auth_req('get', self.url, self.partner_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertListEqual(list(response.data.keys()), ['cp_outputs', 'file_types'])

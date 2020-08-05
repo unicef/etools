@@ -369,9 +369,7 @@ def intervention_field_is_editable_permission(field):
 
 class IsPartnerUser(BasePermission):
     def has_permission(self, request, view):
-        # unable to import correctly due to circular import caused by permissions usage in models
-        from etools.applications.partners.models import PartnerStaffMember
-        return PartnerStaffMember.objects.filter(email=request.user.email).exists()
+        return request.user.is_authenticated and request.user.profile.partner_staff_member
 
     def has_object_permission(self, request, view, obj):
         return True
