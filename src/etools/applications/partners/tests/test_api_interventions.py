@@ -32,7 +32,8 @@ from etools.applications.partners.tests.factories import (
     InterventionAttachmentFactory,
     InterventionFactory,
     InterventionResultLinkFactory,
-    PartnerFactory, PartnerStaffFactory,
+    PartnerFactory,
+    PartnerStaffFactory,
 )
 from etools.applications.partners.tests.test_utils import setup_intervention_test_data
 from etools.applications.reports.models import AppliedIndicator, ReportingRequirement
@@ -735,6 +736,17 @@ class TestInterventionsAPI(BaseTenantTestCase):
     def test_add_intervention_by_anonymous(self):
         status_code, response = self.run_request_list_ep(user=AnonymousUser(), method='post', data={})
         self.assertEqual(status_code, status.HTTP_403_FORBIDDEN, response)
+
+    def test_add_minimal_intervention(self):
+        status_code, response = self.run_request_list_ep(
+            user=self.partnership_manager_user, method='post',
+            data={
+                'document_type': Intervention.PD,
+                'title': 'My test intervention',
+                'agreement': self.agreement.id,
+            }
+        )
+        self.assertEqual(status_code, status.HTTP_201_CREATED, response)
 
 
 class TestAPIInterventionResultLinkListView(BaseTenantTestCase):
