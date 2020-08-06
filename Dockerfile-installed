@@ -1,4 +1,4 @@
-FROM unicef/etools-base:latest
+FROM unicef/etools-base:$BASE_TAG
 
 WORKDIR /etools/
 ENV PIP_NO_CACHE_DIR false
