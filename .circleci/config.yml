@@ -39,7 +39,7 @@ jobs:
             if (curl --silent -f -lSL https://index.docker.io/v1/repositories/unicef/etools/tags/$INSTALLED_TAG > /dev/null); then
               echo "Up to date!"
             else
-              docker build -t unicef/etools:$INSTALLED_TAG -f Dockerfile-installed .
+              docker build -t unicef/etools:$INSTALLED_TAG -f Dockerfile-installed . --build-arg BASE_TAG=$BASE_TAG
               docker push unicef/etools:$INSTALLED_TAG
               if (echo "develop" | grep -q "$CIRCLE_BRANCH"); then
                 docker tag unicef/etools:$INSTALLED_TAG unicef/etools:latest
