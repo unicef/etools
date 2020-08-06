@@ -339,6 +339,10 @@ class InterventionAdmin(
                 'hq_support_cost',
                 'cash_transfer_modalities',
                 'unicef_review_type',
+                'capacity_development',
+                'other_info',
+                'other_partners_involved',
+                'technical_guidance',
             )
         }),
     )
