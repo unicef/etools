@@ -13,6 +13,7 @@ from etools.applications.partners.views.interventions_v3 import (
     PMPInterventionManagementBudgetRetrieveUpdateView,
     PMPInterventionRetrieveUpdateView,
     PMPInterventionSupplyItemListCreateView,
+    PMPInterventionSupplyItemRetrieveUpdateView,
 )
 
 app_name = 'partners'
@@ -50,6 +51,11 @@ urlpatterns = [
         'interventions/<int:intervention_pk>/supply/',
         view=PMPInterventionSupplyItemListCreateView.as_view(),
         name='intervention-supply-item',
+    ),
+    path(
+        'interventions/<int:intervention_pk>/supply/<int:pk>/',
+        view=PMPInterventionSupplyItemRetrieveUpdateView.as_view(),
+        name='intervention-supply-item-detail',
     ),
     path(
         'interventions/<int:intervention_pk>/pd-outputs/<int:output_pk>/activities/',

@@ -173,6 +173,11 @@ class PMPInterventionSupplyItemListCreateView(PMPInterventionMixin, ListCreateAP
         return super().get_serializer(*args, **kwargs)
 
 
+class PMPInterventionSupplyItemRetrieveUpdateView(PMPInterventionMixin, RetrieveUpdateAPIView):
+    queryset = InterventionSupplyItem.objects
+    serializer_class = InterventionSupplyItemSerializer
+
+
 class InterventionActivityViewMixin():
     queryset = InterventionActivity.objects.prefetch_related('items', 'time_frames').order_by('id')
     permission_classes = [

@@ -38,6 +38,11 @@ class URLsTestCase(URLAssertionMixin, SimpleTestCase):
             ('intervention-detail', '1/', {'pk': 1}),
             ('intervention-budget', '1/budget/', {'intervention_pk': 1}),
             ('intervention-supply-item', '1/supply/', {'intervention_pk': 1}),
+            (
+                'intervention-supply-item-detail',
+                '1/supply/2/',
+                {'intervention_pk': 1, 'pk': 2},
+            ),
         )
         self.assertReversal(
             names_and_paths,
@@ -247,10 +252,10 @@ class TestSupplyItem(BaseInterventionTestCase):
         self.assertEqual(len(response.data), count)
 
     def test_post(self):
-        supply_qs = InterventionSupplyItem.objects.filter(
+        item_qs = InterventionSupplyItem.objects.filter(
             intervention=self.intervention,
         )
-        self.assertFalse(supply_qs.exists())
+        self.assertFalse(item_qs.exists())
         response = self.forced_auth_req(
             "post",
             reverse(
@@ -267,9 +272,70 @@ class TestSupplyItem(BaseInterventionTestCase):
         self.assertEqual(response.data["unit_number"], "10.00")
         self.assertEqual(response.data["unit_price"], "2.00")
         self.assertEqual(response.data["total_price"], "20.00")
-        self.assertTrue(supply_qs.exists())
-        supply = supply_qs.first()
-        self.assertEqual(supply.intervention, self.intervention)
+        self.assertTrue(item_qs.exists())
+        item = item_qs.first()
+        self.assertEqual(item.intervention, self.intervention)
+
+    def test_get(self):
+        item = InterventionSupplyItemFactory(
+            intervention=self.intervention,
+            unit_number=10,
+            unit_price=2,
+        )
+        response = self.forced_auth_req(
+            "get",
+            reverse(
+                "pmp_v3:intervention-supply-item-detail",
+                args=[self.intervention.pk, item.pk],
+            ),
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["unit_number"], "10.00")
+        self.assertEqual(response.data["unit_price"], "2.00")
+        self.assertEqual(response.data["total_price"], "20.00")
+
+    def test_put(self):
+        item = InterventionSupplyItemFactory(
+            intervention=self.intervention,
+            unit_number=10,
+            unit_price=2,
+        )
+        response = self.forced_auth_req(
+            "put",
+            reverse(
+                "pmp_v3:intervention-supply-item-detail",
+                args=[self.intervention.pk, item.pk],
+            ),
+            data={
+                "title": "Change Supply Item",
+                "unit_number": 20,
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["unit_number"], "20.00")
+        self.assertEqual(response.data["unit_price"], "2.00")
+        self.assertEqual(response.data["total_price"], "40.00")
+
+    def test_patch(self):
+        item = InterventionSupplyItemFactory(
+            intervention=self.intervention,
+            unit_number=10,
+            unit_price=2,
+        )
+        response = self.forced_auth_req(
+            "patch",
+            reverse(
+                "pmp_v3:intervention-supply-item-detail",
+                args=[self.intervention.pk, item.pk],
+            ),
+            data={
+                "unit_price": 3,
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["unit_number"], "10.00")
+        self.assertEqual(response.data["unit_price"], "3.00")
+        self.assertEqual(response.data["total_price"], "30.00")
 
 
 class TestTimeframesValidation(BaseInterventionTestCase):
