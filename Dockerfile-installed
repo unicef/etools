@@ -1,3 +1,4 @@
+ARG BASE_TAG
 FROM unicef/etools-base:$BASE_TAG
 
 WORKDIR /etools/
