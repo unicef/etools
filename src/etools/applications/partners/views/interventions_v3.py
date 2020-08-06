@@ -13,7 +13,10 @@ from rest_framework.response import Response
 
 from etools.applications.field_monitoring.permissions import IsEditAction, IsReadAction
 from etools.applications.partners.models import Intervention, InterventionManagementBudget
-from etools.applications.partners.permissions import intervention_field_is_editable_permission
+from etools.applications.partners.permissions import (
+    intervention_field_is_editable_permission,
+    PartnershipManagerPermission,
+)
 from etools.applications.partners.serializers.exports.interventions import (
     InterventionExportFlatSerializer,
     InterventionExportSerializer,
@@ -25,6 +28,7 @@ from etools.applications.partners.serializers.interventions_v2 import (
 )
 from etools.applications.partners.serializers.interventions_v3 import (
     InterventionDetailSerializer,
+    InterventionDummySerializer,
     InterventionManagementBudgetSerializer,
 )
 from etools.applications.partners.serializers.v3 import (
@@ -39,12 +43,12 @@ from etools.applications.reports.serializers.v2 import InterventionActivityDetai
 
 class PMPInterventionMixin(PMPBaseViewMixin):
     SERIALIZER_OPTIONS = {
-        "list": (InterventionListSerializer, None),
-        "create": (InterventionCreateUpdateSerializer, None),
-        "detail": (InterventionDetailSerializer, None),
-        "list_min": (MinimalInterventionListSerializer, None),
-        "csv": (InterventionExportSerializer, None),
-        "csv_flat": (InterventionExportFlatSerializer, None),
+        "list": (InterventionListSerializer, InterventionDummySerializer),
+        "create": (InterventionCreateUpdateSerializer, InterventionDummySerializer),
+        "detail": (InterventionDetailSerializer, InterventionDummySerializer),
+        "list_min": (MinimalInterventionListSerializer, InterventionDummySerializer),
+        "csv": (InterventionExportSerializer, InterventionDummySerializer),
+        "csv_flat": (InterventionExportFlatSerializer, InterventionDummySerializer),
     }
 
     def get_queryset(self, format=None):
@@ -56,6 +60,8 @@ class PMPInterventionMixin(PMPBaseViewMixin):
 
 
 class PMPInterventionListCreateView(PMPInterventionMixin, InterventionListAPIView):
+    permission_classes = (IsAuthenticated, PartnershipManagerPermission,)
+
     def get_serializer_class(self):
         if self.request.method == "GET":
             query_params = self.request.query_params

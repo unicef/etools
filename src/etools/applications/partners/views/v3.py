@@ -10,7 +10,7 @@ class PMPBaseViewMixin:
 
     def is_partner_staff(self):
         """Flag indicator whether user is a partner"""
-        return self.request.user.profile.partner_staff_member
+        return self.request.user.is_authenticated and self.request.user.profile.partner_staff_member
 
     def partners(self):
         """List of partners user associated with"""

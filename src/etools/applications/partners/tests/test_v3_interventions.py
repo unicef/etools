@@ -1,5 +1,6 @@
 import datetime
 
+from django.contrib.auth.models import AnonymousUser
 from django.test import SimpleTestCase
 from django.urls import reverse
 
@@ -15,6 +16,7 @@ from etools.applications.partners.tests.factories import (
     InterventionManagementBudgetFactory,
     InterventionResultLinkFactory,
     PartnerFactory,
+    PartnerStaffFactory,
 )
 from etools.applications.reports.models import ResultType
 from etools.applications.reports.tests.factories import (
@@ -97,6 +99,41 @@ class TestCreate(BaseInterventionTestCase):
         self.assertTrue(data.get("humanitarian_flag"))
         self.assertEqual(data.get("cfei_number"), "321")
         self.assertEqual(data.get("budget_owner"), self.user.pk)
+
+    def test_add_intervention_by_partner_member(self):
+        partner_user = UserFactory(is_staff=False, groups__data=[])
+        staff_member = PartnerStaffFactory(email=partner_user.email)
+        partner_user.profile.partner_staff_member = staff_member.id
+        partner_user.profile.save()
+        response = self.forced_auth_req(
+            "post",
+            reverse('pmp_v3:intervention-list'),
+            user=partner_user,
+            data={}
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
+
+    def test_add_intervention_by_anonymous(self):
+        response = self.forced_auth_req(
+            "post",
+            reverse('pmp_v3:intervention-list'),
+            user=AnonymousUser(),
+            data={}
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
+
+    def test_add_minimal_intervention(self):
+        response = self.forced_auth_req(
+            "post",
+            reverse('pmp_v3:intervention-list'),
+            user=self.user,
+            data={
+                'document_type': Intervention.PD,
+                'title': 'My test intervention',
+                'agreement': self.agreement.pk,
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
 
 
 class TestManagementBudgetGet(BaseInterventionTestCase):

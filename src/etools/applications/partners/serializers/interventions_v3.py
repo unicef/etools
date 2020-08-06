@@ -267,3 +267,9 @@ class InterventionManagementBudgetSerializer(serializers.ModelSerializer):
             "act3_unicef",
             "act3_partner",
         )
+
+
+class InterventionDummySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Intervention
+        fields = ()
