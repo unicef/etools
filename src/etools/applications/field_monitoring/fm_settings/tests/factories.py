@@ -53,6 +53,7 @@ class OptionFactory(factory.DjangoModelFactory):
 class QuestionFactory(factory.DjangoModelFactory):
     category = factory.SubFactory(CategoryFactory)
     answer_type = fuzzy.FuzzyChoice(dict(Question.ANSWER_TYPES).keys())
+    is_custom = True
     choices_size = factory.Maybe(LazyAttribute(lambda self: self.answer_type == Question.ANSWER_TYPES.likert_scale), 3)
     level = fuzzy.FuzzyChoice(dict(Question.LEVELS).keys())
     text = fuzzy.FuzzyText()

@@ -28,11 +28,13 @@ def handle_record(record):
     status = user_sync.create_or_update_user(record)
 
     record_dict = {
+        'Username*': record.get('userPrincipalName', '-'),
+        'Email*': record.get('mail', '-'),
+        'Name*': record.get('givenName', '-'),
+        'Surname*': record.get('surname', '-'),
+        'Type*': record.get('userType', '-'),
+        'Company Name*': record.get('companyName', '-'),
         'ID': record.get('id', '-'),
-        'Username': record.get('userPrincipalName', '-'),
-        'Email': record.get('mail', '-'),
-        'Name': record.get('givenName', '-'),
-        'Surname': record.get('surname', '-'),
         'Phone': record.get('businessPhones', '-'),
         'Mobile': record.get('mobilePhone', '-'),
         'Department': record.get('department', '-'),
@@ -60,7 +62,6 @@ def handle_record(record):
 
         'office Location': record.get('officeLocation', '-'),
         'usage Location': record.get('usageLocation', '-'),
-        'Type': record.get('userType', '-'),
     }
 
     for label, value in record_dict.items():

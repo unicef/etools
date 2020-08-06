@@ -10,9 +10,11 @@ from model_utils.models import TimeStampedModel
 from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation
 from unicef_locations.models import Location
+from unicef_notification.utils import send_notification_with_template
 
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.core.permissions import import_permissions
+from etools.applications.core.urlresolvers import build_frontend_url
 from etools.applications.field_monitoring.data_collection.offline.synchronizer import (
     MonitoringActivityOfflineSynchronizer,
 )
@@ -24,8 +26,10 @@ from etools.applications.field_monitoring.planning.transitions.permissions impor
 )
 from etools.applications.partners.models import Intervention, PartnerOrganization
 from etools.applications.reports.models import Result, Section
+from etools.applications.tpm.models import PME
 from etools.applications.tpm.tpmpartners.models import TPMPartner
 from etools.libraries.djangolib.models import SoftDeleteMixin
+from etools.libraries.djangolib.utils import get_environment
 
 
 class YearPlan(TimeStampedModel):
@@ -131,6 +135,9 @@ class MonitoringActivity(
     ]
 
     TRANSITION_SIDE_EFFECTS = {
+        STATUSES.draft: [
+            lambda i, old_instance=None, user=None: i.check_if_rejected(old_instance),
+        ],
         STATUSES.checklist: [
             lambda i, old_instance=None, user=None: i.prepare_questions_structure(old_instance.status),
         ],
@@ -139,13 +146,19 @@ class MonitoringActivity(
             lambda i, old_instance=None, user=None: i.prepare_questions_overall_findings(),
         ],
         STATUSES.assigned: [
-            lambda i, old_instance=None, user=None: i.auto_accept_staff_activity(),
+            lambda i, old_instance=None, user=None: i.auto_accept_staff_activity(old_instance),
         ],
         STATUSES.data_collection: [
             lambda i, old_instance=None, user=None: i.init_offline_blueprints(),
         ],
         STATUSES.report_finalization: [
             lambda i, old_instance=None, user=None: i.close_offline_blueprints(),
+        ],
+        STATUSES.submitted: [
+            lambda i, old_instance=None, user=None: i.send_submit_notice(),
+        ],
+        STATUSES.completed: [
+            lambda i, old_instance=None, user=None: i.update_one_hact_value(),
         ],
         STATUSES.cancelled: [
             lambda i, old_instance=None, user=None: i.close_offline_blueprints(),
@@ -240,6 +253,37 @@ class MonitoringActivity(
         permissions = import_permissions(cls.__name__)
         return permissions
 
+    def check_if_rejected(self, old_instance):
+        # if rejected send notice
+        if old_instance and old_instance.status == self.STATUSES.assigned:
+            email_template = "fm/activity/reject"
+            recipients = PME.as_group().user_set.filter(
+                profile__country=connection.tenant,
+            )
+            for recipient in recipients:
+                self._send_email(
+                    recipient.email,
+                    email_template,
+                    context={'recipient': recipient.get_full_name()},
+                    user=recipient
+                )
+
+    def send_submit_notice(self):
+        recipients = PME.as_group().user_set.filter(
+            profile__country=connection.tenant,
+        )
+        if self.monitor_type == self.MONITOR_TYPE_CHOICES.staff:
+            email_template = 'fm/activity/staff-submit'
+        else:
+            email_template = 'fm/activity/submit'
+        for recipient in recipients:
+            self._send_email(
+                recipient.email,
+                email_template,
+                context={'recipient': recipient.get_full_name()},
+                user=recipient
+            )
+
     def prepare_questions_structure(self, old_status=STATUSES.draft):
         if old_status != self.STATUSES.draft:
             # do nothing if we just moved back from review
@@ -306,6 +350,51 @@ class MonitoringActivity(
             for question in self.questions.filter(is_enabled=True)
         ])
 
+    def get_object_url(self, **kwargs):
+        return build_frontend_url(
+            'fm',
+            'activities',
+            self.pk,
+            'details',
+            **kwargs,
+        )
+
+    def get_mail_context(self, user=None):
+        object_url = self.get_object_url(user=user)
+
+        context = {
+            'object_url': object_url,
+            'person_responsible': self.person_responsible.get_full_name(),
+            'reference_number': self.number,
+            'location_name': self.location.name,
+            'vendor_name': self.tpm_partner.name if self.tpm_partner else None,
+        }
+
+        return context
+
+    def _send_email(self, recipients, template_name, context=None, user=None, **kwargs):
+        context = context or {}
+
+        base_context = {
+            'activity': self.get_mail_context(user=user),
+            'environment': get_environment(),
+        }
+        base_context.update(context)
+        context = base_context
+
+        if isinstance(recipients, str):
+            recipients = [recipients, ]
+        else:
+            recipients = list(recipients)
+
+        # assert recipients
+        if recipients:
+            send_notification_with_template(
+                recipients=recipients,
+                template_name=template_name,
+                context=context,
+            )
+
     @transition(field=status, source=STATUSES.draft, target=STATUSES.checklist,
                 permission=user_is_field_monitor_permission)
     def mark_details_configured(self):
@@ -336,11 +425,32 @@ class MonitoringActivity(
     def accept(self):
         pass
 
-    def auto_accept_staff_activity(self):
+    def auto_accept_staff_activity(self, old_instance):
+        # send email to users assigned to fm activity
+        recipients = set(
+            list(self.team_members.all()) + [self.person_responsible]
+        )
+        # check if it was rejected otherwise send assign message
+        if old_instance and old_instance.status == self.STATUSES.submitted:
+            email_template = "fm/activity/staff-reject"
+            recipients = [self.person_responsible]
+        elif self.monitor_type == self.MONITOR_TYPE_CHOICES.staff:
+            email_template = 'fm/activity/staff-assign'
+        else:
+            email_template = 'fm/activity/assign'
+        for recipient in recipients:
+            self._send_email(
+                recipient.email,
+                email_template,
+                context={'recipient': recipient.get_full_name()},
+                user=recipient
+            )
+
         if self.monitor_type == self.MONITOR_TYPE_CHOICES.staff:
             self.accept()
             self.save()
-            # todo: direct transitions doesn't trigger side effects. trigger effects manually? or rewrite this effect?
+            # todo: direct transitions doesn't trigger side effects.
+            # trigger effects manually? or rewrite this effect?
             self.init_offline_blueprints()
 
     @transition(field=status, source=STATUSES.assigned, target=STATUSES.draft,
@@ -395,10 +505,6 @@ class MonitoringActivity(
         # at least one overall finding completed
         return self.overall_findings.exclude(narrative_finding='').exists()
 
-    def get_mail_context(self, user=None):
-        # todo
-        return {}
-
     @property
     def methods(self):
         return Method.objects.filter(
@@ -406,6 +512,18 @@ class MonitoringActivity(
                 is_enabled=True
             ).values_list('question__methods', flat=True)
         )
+
+    def update_one_hact_value(self):
+        """
+            Every time an activity transitions to completed, all Partners associated with that activity
+            will increase the completed PV count if applicable
+        """
+
+        aq_qs = self.questions.filter(question__is_hact=True).filter(overall_finding__value__isnull=False)
+        partner_orgs = [aq.partner for aq in aq_qs.all() if aq.partner]
+
+        for partner_org in partner_orgs:
+            partner_org.programmatic_visits(event_date=self.end_date, update_one=True)
 
     def init_offline_blueprints(self):
         MonitoringActivityOfflineSynchronizer(self).initialize_blueprints()

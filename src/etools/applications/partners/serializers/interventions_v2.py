@@ -177,10 +177,10 @@ class BaseInterventionListSerializer(serializers.ModelSerializer):
         return [rl.cp_output.id for rl in obj.result_links.all()]
 
     def get_section_names(self, obj):
-        return [l.name for l in obj.sections.all()]
+        return [section.name for section in obj.sections.all()]
 
     def get_flagged_sections(self, obj):
-        return [l.pk for l in obj.sections.all()]
+        return [section.pk for section in obj.sections.all()]
 
     class Meta:
         model = Intervention
@@ -212,7 +212,8 @@ class BaseInterventionListSerializer(serializers.ModelSerializer):
             'total_budget',
             'metadata',
             'flagged_sections',
-            'budget_currency'
+            'budget_currency',
+            'contingency_pd',
         )
 
 
@@ -650,16 +651,20 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
         return permissions.get_permissions()
 
     def get_locations(self, obj):
-        return [l.id for l in obj.flat_locations.all()]
+        return [loc.id for loc in obj.flat_locations.all()]
 
     def get_location_names(self, obj):
-        return ['{} [{} - {}]'.format(l.name, l.gateway.name, l.p_code) for l in obj.flat_locations.all()]
+        return ['{} [{} - {}]'.format(
+            loc.name,
+            loc.gateway.name,
+            loc.p_code
+        ) for loc in obj.flat_locations.all()]
 
     def get_section_names(self, obj):
-        return [l.name for l in obj.sections.all()]
+        return [loc.name for loc in obj.sections.all()]
 
     def get_flagged_sections(self, obj):
-        return [l.id for l in obj.sections.all()]
+        return [loc.id for loc in obj.sections.all()]
 
     def get_cluster_names(self, obj):
         return [c for c in obj.intervention_clusters()]

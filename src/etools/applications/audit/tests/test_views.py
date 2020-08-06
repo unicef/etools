@@ -21,6 +21,7 @@ from etools.applications.audit.tests.factories import (
     AuditPartnerFactory,
     EngagementFactory,
     MicroAssessmentFactory,
+    PartnerWithAgreementsFactory,
     PurchaseOrderFactory,
     RiskBluePrintFactory,
     RiskCategoryFactory,
@@ -419,11 +420,11 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, BaseTenantT
         self.assertIn('text/csv', response['Content-Type'])
 
     def test_staff_spot_checks_csv_view(self):
-        engagement = StaffSpotCheckFactory()
+        StaffSpotCheckFactory()
 
         response = self.forced_auth_req(
             'get',
-            '/api/audit/staff-spot-checks/csv/'.format(engagement.id),
+            '/api/audit/staff-spot-checks/csv/',
             user=self.unicef_user,
         )
 
@@ -433,6 +434,32 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, BaseTenantT
     def test_search_by_id(self):
         self._test_list(self.auditor, [self.engagement], filter_params={'search': self.engagement.pk})
         self._test_list(self.auditor, filter_params={'search': -1})
+
+    def test_search_by_vendor_number(self):
+        partner = PartnerWithAgreementsFactory(vendor_number="321")
+        engagement = self.engagement_factory(
+            agreement__auditor_firm=self.auditor_firm,
+            partner=partner,
+        )
+        self.assertTrue(partner.vendor_number)
+        self._test_list(
+            self.auditor,
+            [engagement],
+            filter_params={'search': engagement.partner.vendor_number},
+        )
+
+    def test_search_by_short_name(self):
+        partner = PartnerWithAgreementsFactory(short_name="shorty")
+        engagement = self.engagement_factory(
+            agreement__auditor_firm=self.auditor_firm,
+            partner=partner,
+        )
+        self.assertTrue(partner.short_name)
+        self._test_list(
+            self.auditor,
+            [engagement],
+            filter_params={'search': engagement.partner.short_name},
+        )
 
 
 class BaseTestEngagementsCreateViewSet(EngagementTransitionsTestCaseMixin):

@@ -240,4 +240,5 @@ class CountrySerializer(SimpleUserSerializer):
             'local_currency_code',
             'business_area_code',
             'country_short_code',
+            'iso3_code',
         )

@@ -1,4 +1,3 @@
-
 from django.apps import AppConfig as BaseAppConfig
 
 
@@ -7,5 +6,5 @@ class AppConfig(BaseAppConfig):
     verbose_name = 'eTools'
 
     def ready(self):
-        from . import checks  # noqa
+        from . import checks  # noqa isort: skip
         from etools.config.celery import app  # noqa

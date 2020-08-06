@@ -115,8 +115,8 @@ class ExternalUserViewSet(
     permission_classes = (IsAdminUser, )
 
     def get_queryset(self):
-        from etools.applications.tpm.tpmpartners.models import TPMPartnerStaffMember
         from etools.applications.audit.purchase_order.models import AuditorStaffMember
+        from etools.applications.tpm.tpmpartners.models import TPMPartnerStaffMember
 
         qs = self.queryset.filter(
             profile__countries_available__schema_name=connection.schema_name,

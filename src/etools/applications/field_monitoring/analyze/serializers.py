@@ -1,7 +1,6 @@
 import json
 
 from rest_framework import serializers
-from rest_framework.fields import ReadOnlyField
 from unicef_locations.models import Location
 
 from etools.applications.field_monitoring.analyze.utils import get_avg_days_between_visits, get_days_since_last_visit
@@ -114,7 +113,13 @@ class MonitoringActivityHACTSerializer(serializers.ModelSerializer):
 
 class HACTSerializer(serializers.ModelSerializer):
     visits = MonitoringActivityHACTSerializer(many=True)
-    visits_count = ReadOnlyField(source='completed_visits')
+    visits_count = serializers.SerializerMethodField()
+
+    def get_visits_count(self, obj):
+        try:
+            return obj.hact_values["programmatic_visits"]["completed"]["total"]
+        except KeyError:
+            return 0
 
     class Meta:
         model = PartnerOrganization
