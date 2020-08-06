@@ -2792,5 +2792,6 @@ class InterventionSupplyItem(TimeStampedModel):
         return "{} {}".format(self.intervention, self.title)
 
     def save(self, *args, **kwargs):
-        self.total_price = self.unit_number * self.unit_price
+        if self.unit_number and self.unit_price:
+            self.total_price = self.unit_number * self.unit_price
         super().save()

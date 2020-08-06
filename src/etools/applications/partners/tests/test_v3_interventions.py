@@ -9,12 +9,13 @@ from rest_framework import status
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.core.tests.mixins import URLAssertionMixin
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory, FundsReservationItemFactory
-from etools.applications.partners.models import Intervention, InterventionManagementBudget
+from etools.applications.partners.models import Intervention, InterventionManagementBudget, InterventionSupplyItem
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
     InterventionFactory,
     InterventionManagementBudgetFactory,
     InterventionResultLinkFactory,
+    InterventionSupplyItemFactory,
     PartnerFactory,
     PartnerStaffFactory,
 )
@@ -35,6 +36,8 @@ class URLsTestCase(URLAssertionMixin, SimpleTestCase):
         names_and_paths = (
             ('intervention-list', '', {}),
             ('intervention-detail', '1/', {'pk': 1}),
+            ('intervention-budget', '1/budget/', {'intervention_pk': 1}),
+            ('intervention-supply-item', '1/supply/', {'intervention_pk': 1}),
         )
         self.assertReversal(
             names_and_paths,
@@ -136,7 +139,19 @@ class TestCreate(BaseInterventionTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
 
 
-class TestManagementBudgetGet(BaseInterventionTestCase):
+class TestUpdate(BaseInterventionTestCase):
+    def test_patch(self):
+        intervention = InterventionFactory()
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+            user=self.user,
+            data={}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
+class TestManagementBudget(BaseInterventionTestCase):
     def test_get(self):
         intervention = InterventionFactory()
         budget_qs = InterventionManagementBudget.objects.filter(
@@ -210,16 +225,51 @@ class TestManagementBudgetGet(BaseInterventionTestCase):
         assert data["act1_unicef"] == "1000.00"
 
 
-class TestUpdate(BaseInterventionTestCase):
-    def test_patch(self):
-        intervention = InterventionFactory()
+class TestSupplyItem(BaseInterventionTestCase):
+    def setUp(self):
+        super().setUp()
+        self.intervention = InterventionFactory()
+
+    def test_list(self):
+        count = 10
+        for __ in range(count):
+            InterventionSupplyItemFactory(intervention=self.intervention)
+        for __ in range(10):
+            InterventionSupplyItemFactory()
         response = self.forced_auth_req(
-            "patch",
-            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
-            user=self.user,
-            data={}
+            "get",
+            reverse(
+                "pmp_v3:intervention-supply-item",
+                args=[self.intervention.pk],
+            ),
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), count)
+
+    def test_post(self):
+        supply_qs = InterventionSupplyItem.objects.filter(
+            intervention=self.intervention,
+        )
+        self.assertFalse(supply_qs.exists())
+        response = self.forced_auth_req(
+            "post",
+            reverse(
+                "pmp_v3:intervention-supply-item",
+                args=[self.intervention.pk],
+            ),
+            data={
+                "title": "New Supply Item",
+                "unit_number": 10,
+                "unit_price": 2,
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data["unit_number"], "10.00")
+        self.assertEqual(response.data["unit_price"], "2.00")
+        self.assertEqual(response.data["total_price"], "20.00")
+        self.assertTrue(supply_qs.exists())
+        supply = supply_qs.first()
+        self.assertEqual(supply.intervention, self.intervention)
 
 
 class TestTimeframesValidation(BaseInterventionTestCase):
