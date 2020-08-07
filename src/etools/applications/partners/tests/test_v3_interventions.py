@@ -21,7 +21,7 @@ from etools.applications.partners.tests.factories import (
 from etools.applications.reports.models import ResultType
 from etools.applications.reports.tests.factories import (
     InterventionActivityFactory,
-    InterventionActivityTimeFrameFactory,
+    InterventionTimeFrameFactory,
     LowerResultFactory,
 )
 from etools.applications.users.tests.factories import GroupFactory, UserFactory
@@ -238,8 +238,8 @@ class TestTimeframesValidation(BaseInterventionTestCase):
         self.activity = InterventionActivityFactory(result=self.pd_output)
 
     def test_update_start(self):
-        InterventionActivityTimeFrameFactory(
-            activity=self.activity,
+        InterventionTimeFrameFactory(
+            intervention=self.intervention,
             start_date=datetime.date(year=1970, month=4, day=1),
             end_date=datetime.date(year=1970, month=7, day=1)
         )
@@ -252,8 +252,8 @@ class TestTimeframesValidation(BaseInterventionTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
 
     def test_update_start_with_active_timeframe(self):
-        InterventionActivityTimeFrameFactory(
-            activity=self.activity,
+        InterventionTimeFrameFactory(
+            intervention=self.intervention,
             start_date=datetime.date(year=1970, month=10, day=1),
             end_date=datetime.date(year=1970, month=12, day=31)
         )
@@ -267,8 +267,8 @@ class TestTimeframesValidation(BaseInterventionTestCase):
         self.assertIn('start', response.data)
 
     def test_update_end_with_active_timeframe(self):
-        InterventionActivityTimeFrameFactory(
-            activity=self.activity,
+        InterventionTimeFrameFactory(
+            intervention=self.intervention,
             start_date=datetime.date(year=1970, month=10, day=1),
             end_date=datetime.date(year=1970, month=12, day=31)
         )

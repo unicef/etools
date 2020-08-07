@@ -15,7 +15,7 @@ from etools.applications.reports.models import (
     IndicatorBlueprint,
     InterventionActivity,
     InterventionActivityItem,
-    InterventionActivityTimeFrame,
+    InterventionTimeFrame,
     LowerResult,
     Office,
     ReportingRequirement,
@@ -470,54 +470,55 @@ class InterventionActivityItemSerializer(serializers.ModelSerializer):
         )
 
 
-class InterventionActivityTimeFrameSerializer(serializers.ModelSerializer):
-    name = serializers.SerializerMethodField()
-    enabled = serializers.BooleanField(write_only=True)
-    start = serializers.DateField(source='start_date', read_only=True)
-    end = serializers.DateField(source='end_date', read_only=True)
+# todo
+# class InterventionActivityTimeFrameSerializer(serializers.ModelSerializer):
+#     name = serializers.SerializerMethodField()
+#     enabled = serializers.BooleanField(write_only=True)
+#     start = serializers.DateField(source='start_date', read_only=True)
+#     end = serializers.DateField(source='end_date', read_only=True)
+#
+#     class Meta:
+#         model = InterventionActivity.time_frames.through
+#         fields = ('name', 'start', 'end', 'enabled',)
+#
+#     def to_representation(self, instance):
+#         data = super().to_representation(instance)
+#         data['enabled'] = bool(instance.pk)
+#         return data
+#
+#     def get_name(self, obj: InterventionActivityTimeFrame):
+#         if isinstance(self.root.instance, Intervention):
+#             intervention = self.root.instance
+#         else:
+#             intervention = self.root.intervention
+#
+#         index = get_quarter_index(intervention.start, intervention.end, obj.start_date, obj.end_date)
+#         return 'Q{}'.format(index + 1)
 
-    class Meta:
-        model = InterventionActivityTimeFrame
-        fields = ('name', 'start', 'end', 'enabled',)
 
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        data['enabled'] = bool(instance.pk)
-        return data
-
-    def get_name(self, obj: InterventionActivityTimeFrame):
-        if isinstance(self.root.instance, Intervention):
-            intervention = self.root.instance
-        else:
-            intervention = self.root.intervention
-
-        index = get_quarter_index(intervention.start, intervention.end, obj.start_date, obj.end_date)
-        return 'Q{}'.format(index + 1)
-
-
-class InterventionActivityTimeFrameListSerializer(serializers.ListSerializer):
-    child = InterventionActivityTimeFrameSerializer()
-
-    def to_representation(self, data):
-        if isinstance(self.root.instance, Intervention):
-            intervention = self.root.instance
-        else:
-            intervention = self.root.intervention
-
-        quarters = get_quarters_range(intervention.start, intervention.end)
-        existing_quarters = {(t.start_date, t.end_date): t for t in data.all()}
-        return [
-            self.child.to_representation(
-                existing_quarters[q] if q in existing_quarters.keys()
-                else InterventionActivityTimeFrame(start_date=q[0], end_date=q[1])
-            )
-            for q in quarters
-        ]
+# class InterventionActivityTimeFrameListSerializer(serializers.ListSerializer):
+#     child = InterventionActivityTimeFrameSerializer()
+#
+#     def to_representation(self, data):
+#         if isinstance(self.root.instance, Intervention):
+#             intervention = self.root.instance
+#         else:
+#             intervention = self.root.intervention
+#
+#         quarters = get_quarters_range(intervention.start, intervention.end)
+#         existing_quarters = {(t.start_date, t.end_date): t for t in data.all()}
+#         return [
+#             self.child.to_representation(
+#                 existing_quarters[q] if q in existing_quarters.keys()
+#                 else InterventionActivityTimeFrame(start_date=q[0], end_date=q[1])
+#             )
+#             for q in quarters
+#         ]
 
 
 class InterventionActivityDetailSerializer(serializers.ModelSerializer):
     items = InterventionActivityItemSerializer(many=True, required=False)
-    time_frames = InterventionActivityTimeFrameListSerializer(required=False)
+    # time_frames = InterventionActivityTimeFrameListSerializer(required=False)
 
     class Meta:
         model = InterventionActivity
@@ -575,24 +576,27 @@ class InterventionActivityDetailSerializer(serializers.ModelSerializer):
         instance.items.exclude(pk__in=updated_pks).delete()
 
     def set_time_frames(self, instance, time_frames):
-        if time_frames is None:
-            return
-
-        intervention_quarters = get_quarters_range(self.intervention.start, self.intervention.end)
-        if len(time_frames) != len(intervention_quarters):
-            raise ValidationError({'time_frames': [_("Provided periods count doesn't match the original.")]})
-
-        for time_frame, quarter in zip(time_frames, intervention_quarters):
-            if time_frame['enabled']:
-                InterventionActivityTimeFrame.objects.get_or_create(
-                    activity=instance, start_date=quarter[0], end_date=quarter[1]
-                )
-            else:
-                instance.time_frames.filter(start_date=quarter[0], end_date=quarter[1]).delete()
+        pass
+        # todo
+        # if time_frames is None:
+        #     return
+        #
+        # intervention_quarters = get_quarters_range(self.intervention.start, self.intervention.end)
+        # if len(time_frames) != len(intervention_quarters):
+        #     raise ValidationError({'time_frames': [_("Provided periods count doesn't match the original.")]})
+        #
+        # for time_frame, quarter in zip(time_frames, intervention_quarters):
+        #     if time_frame['enabled']:
+        #         InterventionActivityTimeFrame.objects.get_or_create(
+        #             activity=instance, start_date=quarter[0], end_date=quarter[1]
+        #         )
+        #     else:
+        #         instance.time_frames.filter(start_date=quarter[0], end_date=quarter[1]).delete()
 
 
 class InterventionActivitySerializer(serializers.ModelSerializer):
-    time_frames = InterventionActivityTimeFrameSerializer(many=True)
+    # todo
+    # time_frames = InterventionActivityTimeFrameSerializer(many=True)
 
     class Meta:
         model = InterventionActivity
@@ -600,7 +604,7 @@ class InterventionActivitySerializer(serializers.ModelSerializer):
             'id', 'name', 'context_details',
             'unicef_cash', 'cso_cash',
             'unicef_supplies', 'cso_supplies',
-            'time_frames',
+            # 'time_frames',
         )
 
 

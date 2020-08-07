@@ -30,7 +30,7 @@ from etools.applications.partners.permissions import InterventionPermissions
 from etools.applications.partners.utils import get_quarters_range
 from etools.applications.reports.models import (
     AppliedIndicator,
-    InterventionActivityTimeFrame,
+    InterventionTimeFrame,
     LowerResult,
     ReportingRequirement,
 )
@@ -591,6 +591,7 @@ class InterventionCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotMode
         return frs
 
     def validate(self, attrs):
+        # todo
         validated_data = super().validate(attrs)
         if self.instance and ('start' in validated_data or 'end' in validated_data):
             start = validated_data.get('start', self.instance.start)
@@ -599,8 +600,8 @@ class InterventionCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotMode
             new_quarters = get_quarters_range(start, end)
 
             if len(old_quarters) > len(new_quarters):
-                if InterventionActivityTimeFrame.objects.filter(
-                    activity__result__result_link__intervention=self.instance,
+                if InterventionTimeFrame.intervention.through.objects.filter(
+                    intervention=self.instance,
                     start_date__gte=old_quarters[len(new_quarters)][0]
                 ).exists():
                     names_to_be_removed = ', '.join([
