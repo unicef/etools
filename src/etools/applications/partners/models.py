@@ -666,10 +666,7 @@ class PartnerOrganization(TimeStampedModel):
                 intervention__agreement__partner=self,
                 year=year,
             ).exclude(
-                intervention__status__in=[
-                    Intervention.DEVELOPMENT,
-                    Intervention.DRAFT,
-                ],
+                intervention__status__in=[Intervention.DRAFT],
             )
             pvq1 = pv.aggregate(models.Sum('programmatic_q1'))['programmatic_q1__sum'] or 0
             pvq2 = pv.aggregate(models.Sum('programmatic_q2'))['programmatic_q2__sum'] or 0
@@ -1613,8 +1610,7 @@ class Intervention(TimeStampedModel):
     Relates to :model:`reports.Office`
     """
 
-    DRAFT = 'draft'
-    DEVELOPMENT = 'development'
+    DRAFT = 'development'
     SIGNED = 'signed'
     ACTIVE = 'active'
     ENDED = 'ended'
@@ -1640,8 +1636,7 @@ class Intervention(TimeStampedModel):
 
     CANCELLED = 'cancelled'
     INTERVENTION_STATUS = (
-        (DRAFT, "Draft"),
-        (DEVELOPMENT, "Development"),
+        (DRAFT, "Development"),
         (SIGNED, 'Signed'),
         (ACTIVE, "Active"),
         (ENDED, "Ended"),
@@ -1723,7 +1718,7 @@ class Intervention(TimeStampedModel):
         max_length=32,
         blank=True,
         choices=INTERVENTION_STATUS,
-        default=DEVELOPMENT,
+        default=DRAFT,
     )
     # dates
     start = models.DateField(

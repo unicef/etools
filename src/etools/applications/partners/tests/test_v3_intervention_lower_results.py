@@ -18,7 +18,7 @@ class TestInterventionLowerResultsViewBase(BaseTenantTestCase):
     def setUp(self):
         super().setUp()
         self.user = UserFactory()
-        self.intervention = InterventionFactory(status=Intervention.DEVELOPMENT, unicef_court=True)
+        self.intervention = InterventionFactory(status=Intervention.DRAFT, unicef_court=True)
 
         self.staff_member = PartnerStaffFactory(partner=self.intervention.agreement.partner)
         self.partner_focal_point = UserFactory(groups__data=[], profile__partner_staff_member=self.staff_member.id)
