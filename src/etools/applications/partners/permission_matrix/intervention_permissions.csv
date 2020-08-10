@@ -58,7 +58,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.4.2,result_links,UNICEF User,prp_mode_on,*,View,TRUE
 3.7,reference_number_year,UNICEF User,,*,View,TRUE
 3.7,reference_number_year,UNICEF User,not_ssfa,Draft,Edit,TRUE
-3.7,reference_number_year,UNICEF User,not_ssfa,*,Required,TRUE
+3.7,reference_number_year,UNICEF User,not_ssfa,Draft,Required,FALSE
 3.5,planned_budget,Partnership Manager,user_adds_amendment,*,Edit,TRUE
 3.6,planned_visits,Partnership Manager,,*,Edit,TRUE
 3.2.2,agreement,UNICEF User,,*,Required,TRUE
@@ -100,5 +100,5 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.13.1,reporting_requirements,UNICEF User,,*,Required,FALSE
 ,pd_outputs,*,,*,View,TRUE
 ,pd_outputs,UNICEF User,,Draft,Edit,TRUE
-,pd_outputs,UNICEF User,unicef_court,Development,Edit,TRUE
-,pd_outputs,Partner User,partner_court,Development,Edit,TRUE
+,pd_outputs,UNICEF User,unicef_court,Draft,Edit,TRUE
+,pd_outputs,Partner User,partner_court,Draft,Edit,TRUE
