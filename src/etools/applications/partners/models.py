@@ -666,10 +666,7 @@ class PartnerOrganization(TimeStampedModel):
                 intervention__agreement__partner=self,
                 year=year,
             ).exclude(
-                intervention__status__in=[
-                    Intervention.DEVELOPMENT,
-                    Intervention.DRAFT,
-                ],
+                intervention__status__in=[Intervention.DRAFT],
             )
             pvq1 = pv.aggregate(models.Sum('programmatic_q1'))['programmatic_q1__sum'] or 0
             pvq2 = pv.aggregate(models.Sum('programmatic_q2'))['programmatic_q2__sum'] or 0
@@ -1613,8 +1610,7 @@ class Intervention(TimeStampedModel):
     Relates to :model:`reports.Office`
     """
 
-    DRAFT = 'draft'
-    DEVELOPMENT = 'development'
+    DRAFT = 'development'
     SIGNED = 'signed'
     ACTIVE = 'active'
     ENDED = 'ended'
@@ -1640,8 +1636,7 @@ class Intervention(TimeStampedModel):
 
     CANCELLED = 'cancelled'
     INTERVENTION_STATUS = (
-        (DRAFT, "Draft"),
-        (DEVELOPMENT, "Development"),
+        (DRAFT, "Development"),
         (SIGNED, 'Signed'),
         (ACTIVE, "Active"),
         (ENDED, "Ended"),
@@ -1670,11 +1665,11 @@ class Intervention(TimeStampedModel):
     )
 
     CASH_TRANSFER_PAYMENT = "payment"
-    CASH_TRANSFER_REIMBURSE = "reimburse"
-    CASH_TRANSFER_DIRECT = "direct"
+    CASH_TRANSFER_REIMBURSEMENT = "reimbursement"
+    CASH_TRANSFER_DIRECT = "dct"
     CASH_TRANSFER_CHOICES = (
         (CASH_TRANSFER_PAYMENT, "Direct Payment"),
-        (CASH_TRANSFER_REIMBURSE, "Reimbursement"),
+        (CASH_TRANSFER_REIMBURSEMENT, "Reimbursement"),
         (CASH_TRANSFER_DIRECT, "Direct Cash Transfer"),
     )
 
@@ -1723,7 +1718,7 @@ class Intervention(TimeStampedModel):
         max_length=32,
         blank=True,
         choices=INTERVENTION_STATUS,
-        default=DEVELOPMENT,
+        default=DRAFT,
     )
     # dates
     start = models.DateField(
@@ -2665,14 +2660,18 @@ class PartnerPlannedVisits(TimeStampedModel):
 class InterventionRisk(TimeStampedModel):
     RISK_TYPE_ENVIRONMENTAL = "environment"
     RISK_TYPE_FINANCIAL = "financial"
+    RISK_TYPE_OPERATIONAL = "operational"
     RISK_TYPE_ORGANIZATIONAL = "organizational"
     RISK_TYPE_POLITICAL = "political"
+    RISK_TYPE_STRATEGIC = "strategic"
     RISK_TYPE_SECURITY = "security"
     RISK_TYPE_CHOICES = (
         (RISK_TYPE_ENVIRONMENTAL, "Social & Environmental"),
-        (RISK_TYPE_FINANCIAL, "Financial Operational"),
+        (RISK_TYPE_FINANCIAL, "Financial"),
+        (RISK_TYPE_OPERATIONAL, "Operational"),
         (RISK_TYPE_ORGANIZATIONAL, "Organizational"),
-        (RISK_TYPE_POLITICAL, "Political Strategic"),
+        (RISK_TYPE_POLITICAL, "Political"),
+        (RISK_TYPE_STRATEGIC, "Strategic"),
         (RISK_TYPE_SECURITY, "Safety & security"),
     )
 
@@ -2701,42 +2700,42 @@ class InterventionManagementBudget(TimeStampedModel):
         on_delete=models.CASCADE,
     )
     act1_unicef = models.DecimalField(
-        verbose_name=_("Account 1 UNICEF"),
+        verbose_name=_("UNICEF contribution for In-country management and support staff prorated to their contribution to the programme (representation, planning, coordination, logistics, administration, finance)"),
         decimal_places=2,
         max_digits=20,
         blank=True,
         null=True,
     )
     act1_partner = models.DecimalField(
-        verbose_name=_("Account 1 Partner"),
+        verbose_name=_("Partner contribution for In-country management and support staff prorated to their contribution to the programme (representation, planning, coordination, logistics, administration, finance)"),
         decimal_places=2,
         max_digits=20,
         blank=True,
         null=True,
     )
     act2_unicef = models.DecimalField(
-        verbose_name=_("Account 2 UNICEF"),
+        verbose_name=_("UNICEF contribution for Operational costs prorated to their contribution to the programme (office space, equipment, office supplies, maintenance)"),
         decimal_places=2,
         max_digits=20,
         blank=True,
         null=True,
     )
     act2_partner = models.DecimalField(
-        verbose_name=_("Account 2 Partner"),
+        verbose_name=_("Partner contribution for Operational costs prorated to their contribution to the programme (office space, equipment, office supplies, maintenance)"),
         decimal_places=2,
         max_digits=20,
         blank=True,
         null=True,
     )
     act3_unicef = models.DecimalField(
-        verbose_name=_("Account 3 UNICEF"),
+        verbose_name=_("UNICEF contribution for Planning, monitoring, evaluation and communication, prorated to their contribution to the programme (venue, travels, etc.)"),
         decimal_places=2,
         max_digits=20,
         blank=True,
         null=True,
     )
     act3_partner = models.DecimalField(
-        verbose_name=_("Account 3 Partner"),
+        verbose_name=_("Partner contribution for Planning, monitoring, evaluation and communication, prorated to their contribution to the programme (venue, travels, etc.)"),
         decimal_places=2,
         max_digits=20,
         blank=True,
@@ -2759,22 +2758,19 @@ class InterventionSupplyItem(TimeStampedModel):
         verbose_name=_("Unit Number"),
         decimal_places=2,
         max_digits=20,
-        blank=True,
-        null=True,
+        default=1,
     )
     unit_price = models.DecimalField(
         verbose_name=_("Unit Price"),
         decimal_places=2,
         max_digits=20,
-        blank=True,
-        null=True,
+        default=0,
     )
     result = models.ForeignKey(
         InterventionResultLink,
         verbose_name=_("Result"),
-        blank=True,
-        null=True,
         on_delete=models.CASCADE,
+        default=0,
     )
     total_price = models.DecimalField(
         verbose_name=_("Total Price"),

@@ -31,7 +31,7 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
             "generate_pdf",
         ])
 
-    def test_available_actions_not_development(self):
+    def test_available_actions_not_draft(self):
         pd = InterventionFactory(status=Intervention.SIGNED)
         pd.unicef_focal_points.add(self.unicef_user)
         pd.partner_focal_points.add(self.partner_staff)
@@ -48,7 +48,7 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
     def test_available_actions_partner_accept(self):
         pd = InterventionFactory(unicef_court=False)
         pd.partner_focal_points.add(self.partner_staff)
-        self.assertEqual(pd.status, pd.DEVELOPMENT)
+        self.assertEqual(pd.status, pd.DRAFT)
         self.assertFalse(pd.partner_accepted)
         available_actions = self.partner_serializer.get_available_actions(pd)
         expected_actions = self.default_actions + ["accept"]
@@ -62,7 +62,7 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
     def test_available_actions_partner_unlock(self):
         pd = InterventionFactory(unicef_court=False, unicef_accepted=True)
         pd.partner_focal_points.add(self.partner_staff)
-        self.assertEqual(pd.status, pd.DEVELOPMENT)
+        self.assertEqual(pd.status, pd.DRAFT)
         self.assertTrue(pd.unicef_accepted)
         available_actions = self.partner_serializer.get_available_actions(pd)
         expected_actions = self.default_actions + ["accept", "unlock"]
@@ -70,7 +70,7 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
 
     def test_available_actions_budget_owner(self):
         pd = InterventionFactory(budget_owner=self.unicef_user)
-        self.assertEqual(pd.status, pd.DEVELOPMENT)
+        self.assertEqual(pd.status, pd.DRAFT)
         available_actions = self.unicef_serializer.get_available_actions(pd)
         expected_actions = self.default_actions + [
             "accept",
@@ -84,7 +84,7 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
         self.unicef_user.groups.add(
             GroupFactory(name='Senior Management Team'),
         )
-        self.assertEqual(pd.status, pd.DEVELOPMENT)
+        self.assertEqual(pd.status, pd.DRAFT)
         available_actions = self.unicef_serializer.get_available_actions(pd)
         expected_actions = self.default_actions + ["cancel"]
         self.assertEqual(sorted(available_actions), sorted(expected_actions))
@@ -92,7 +92,7 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
     def test_available_actions_unicef(self):
         pd = InterventionFactory()
         pd.unicef_focal_points.add(self.unicef_user)
-        self.assertEqual(pd.status, pd.DEVELOPMENT)
+        self.assertEqual(pd.status, pd.DRAFT)
         available_actions = self.unicef_serializer.get_available_actions(pd)
         expected_actions = self.default_actions + [
             "accept",
