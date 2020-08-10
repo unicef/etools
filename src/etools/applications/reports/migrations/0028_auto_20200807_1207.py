@@ -22,7 +22,8 @@ class Migration(migrations.Migration):
                 ('modified', model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, editable=False, verbose_name='modified')),
                 ('start_date', models.DateField(verbose_name='Start Date')),
                 ('end_date', models.DateField(verbose_name='End Date')),
-                ('intervention', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='time_frames', to='partners.Intervention', verbose_name='Intervention')),
+                ('intervention', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='quarters', to='partners.Intervention', verbose_name='Intervention')),
+                ('quarter', models.PositiveSmallIntegerField()),
             ],
             options={
                 'abstract': False,
@@ -35,5 +36,9 @@ class Migration(migrations.Migration):
             model_name='interventionactivity',
             name='time_frames',
             field=models.ManyToManyField(blank=True, to='reports.InterventionTimeFrame', verbose_name='Time Frames Enabled'),
+        ),
+        migrations.AlterModelOptions(
+            name='interventiontimeframe',
+            options={'ordering': ('intervention', 'start_date')},
         ),
     ]

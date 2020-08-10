@@ -14,22 +14,19 @@ def recalculate_time_frames(instance: Intervention, created: bool, **kwargs):
 
         # remove out of boundary frames
         if len(old_quarters) > len(new_quarters):
-            InterventionTimeFrame.objects.filter(
-                intervention=instance, start_date__gte=old_quarters[len(new_quarters)][0]
-            ).delete()
+            InterventionTimeFrame.objects.filter(intervention=instance, quarter__gt=new_quarters[-1].quarter).delete()
 
         # move existing ones
         for old_quarter, new_quarter in zip(old_quarters, new_quarters):
             InterventionTimeFrame.objects.filter(
-                intervention=instance,
-                start_date=old_quarter[0], end_date=old_quarter[1]
+                intervention=instance, quarter=old_quarter.quarter
             ).update(
-                start_date=new_quarter[0], end_date=new_quarter[1]
+                start_date=new_quarter.start, end_date=new_quarter.start
             )
 
         # create missing if any
         for new_quarter in new_quarters[len(old_quarters):]:
             InterventionTimeFrame.objects.get_or_create(
-                intervention=instance,
-                start_date=new_quarter[0], end_date=new_quarter[1]
+                intervention=instance, quarter=new_quarter.quarter,
+                defaults={'start_date': new_quarter.start, 'end_date': new_quarter.end},
             )

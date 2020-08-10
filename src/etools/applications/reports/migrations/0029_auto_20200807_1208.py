@@ -22,14 +22,13 @@ def create_time_frames(apps, schema_editor):
     InterventionTimeFrame = apps.get_model('reports', 'InterventionTimeFrame')
 
     for intervention in Intervention.objects.filter(start__isnull=False, end__isnull=False):
-        for quarter in get_quarters_range(intervention.start, intervention.end):
+        for i, quarter in enumerate(get_quarters_range(intervention.start, intervention.end)):
             InterventionTimeFrame.objects.get_or_create(
-                intervention=intervention, start_date=quarter[0], end_date=quarter[1]
+                intervention=intervention, quarter=i + 1, start_date=quarter[0], end_date=quarter[1]
             )
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('reports', '0028_auto_20200807_1207'),
         ('partners', '0052_auto_20200807_1207'),

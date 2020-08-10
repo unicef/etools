@@ -238,10 +238,11 @@ class TestTimeframesValidation(BaseInterventionTestCase):
         self.activity = InterventionActivityFactory(result=self.pd_output)
 
     def test_update_start(self):
-        InterventionTimeFrameFactory(
-            intervention=self.intervention,
-            start_date=datetime.date(year=1970, month=4, day=1),
-            end_date=datetime.date(year=1970, month=7, day=1)
+        self.activity.time_frames.add(
+            self.intervention.quarters.get(
+                start_date=datetime.date(year=1970, month=4, day=1),
+                end_date=datetime.date(year=1970, month=7, day=1)
+            )
         )
         response = self.forced_auth_req(
             "patch",
@@ -252,10 +253,11 @@ class TestTimeframesValidation(BaseInterventionTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
 
     def test_update_start_with_active_timeframe(self):
-        InterventionTimeFrameFactory(
-            intervention=self.intervention,
-            start_date=datetime.date(year=1970, month=10, day=1),
-            end_date=datetime.date(year=1970, month=12, day=31)
+        self.activity.time_frames.add(
+            self.intervention.quarters.get(
+                start_date=datetime.date(year=1970, month=10, day=1),
+                end_date=datetime.date(year=1970, month=12, day=31)
+            )
         )
         response = self.forced_auth_req(
             "patch",
@@ -267,10 +269,11 @@ class TestTimeframesValidation(BaseInterventionTestCase):
         self.assertIn('start', response.data)
 
     def test_update_end_with_active_timeframe(self):
-        InterventionTimeFrameFactory(
-            intervention=self.intervention,
-            start_date=datetime.date(year=1970, month=10, day=1),
-            end_date=datetime.date(year=1970, month=12, day=31)
+        self.activity.time_frames.add(
+            self.intervention.quarters.get(
+                start_date=datetime.date(year=1970, month=10, day=1),
+                end_date=datetime.date(year=1970, month=12, day=31)
+            )
         )
         response = self.forced_auth_req(
             "patch",

@@ -32,7 +32,7 @@ from etools.applications.reports.models import (
     AppliedIndicator,
     InterventionTimeFrame,
     LowerResult,
-    ReportingRequirement,
+    ReportingRequirement, InterventionActivity,
 )
 from etools.applications.reports.serializers.v2 import (
     AppliedIndicatorBasicSerializer,
@@ -591,7 +591,6 @@ class InterventionCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotMode
         return frs
 
     def validate(self, attrs):
-        # todo
         validated_data = super().validate(attrs)
         if self.instance and ('start' in validated_data or 'end' in validated_data):
             start = validated_data.get('start', self.instance.start)
@@ -600,13 +599,13 @@ class InterventionCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotMode
             new_quarters = get_quarters_range(start, end)
 
             if len(old_quarters) > len(new_quarters):
-                if InterventionTimeFrame.intervention.through.objects.filter(
-                    intervention=self.instance,
-                    start_date__gte=old_quarters[len(new_quarters)][0]
+                if InterventionActivity.time_frames.through.objects.filter(
+                    interventionactivity__result__result_link__intervention=self.instance,
+                    interventiontimeframe__quarter__gt=new_quarters[-1].quarter
                 ).exists():
                     names_to_be_removed = ', '.join([
-                        'Q{}'.format(i + 1)
-                        for i in range(len(old_quarters), len(new_quarters))
+                        'Q{}'.format(q.quarter)
+                        for q in old_quarters[len(new_quarters):]
                     ])
                     error_text = _('Please adjust activities to not use the quarters to be removed ({}).').format(
                         names_to_be_removed

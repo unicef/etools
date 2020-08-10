@@ -998,9 +998,10 @@ class InterventionTimeFrame(TimeStampedModel):
     intervention = models.ForeignKey(
         'partners.Intervention',
         verbose_name=_("Intervention"),
-        related_name="time_frames",
+        related_name="quarters",
         on_delete=models.CASCADE,
     )
+    quarter = models.PositiveSmallIntegerField()
     start_date = models.DateField(
         verbose_name=_("Start Date"),
     )
@@ -1014,3 +1015,6 @@ class InterventionTimeFrame(TimeStampedModel):
             self.start_date,
             self.end_date,
         )
+
+    class Meta:
+        ordering = ('intervention', 'start_date',)
