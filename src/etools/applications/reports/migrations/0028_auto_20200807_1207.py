@@ -35,7 +35,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='interventionactivity',
             name='time_frames',
-            field=models.ManyToManyField(blank=True, to='reports.InterventionTimeFrame', verbose_name='Time Frames Enabled'),
+            field=models.ManyToManyField(blank=True, to='reports.InterventionTimeFrame', verbose_name='Time Frames Enabled', related_name='activities',),
         ),
         migrations.AlterModelOptions(
             name='interventiontimeframe',

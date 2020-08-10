@@ -1,9 +1,9 @@
 import datetime
 import html
 import logging
+import typing
 from typing import List, Tuple
 
-import typing
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.db import connection

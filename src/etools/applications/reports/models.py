@@ -932,7 +932,8 @@ class InterventionActivity(TimeStampedModel):
     time_frames = models.ManyToManyField(
         'InterventionTimeFrame',
         verbose_name=_('Time Frames Enabled'),
-        blank=True
+        blank=True,
+        related_name='activities',
     )
 
     class Meta:

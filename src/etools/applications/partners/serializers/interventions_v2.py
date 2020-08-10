@@ -30,9 +30,10 @@ from etools.applications.partners.permissions import InterventionPermissions
 from etools.applications.partners.utils import get_quarters_range
 from etools.applications.reports.models import (
     AppliedIndicator,
+    InterventionActivity,
     InterventionTimeFrame,
     LowerResult,
-    ReportingRequirement, InterventionActivity,
+    ReportingRequirement,
 )
 from etools.applications.reports.serializers.v2 import (
     AppliedIndicatorBasicSerializer,
@@ -599,9 +600,9 @@ class InterventionCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotMode
             new_quarters = get_quarters_range(start, end)
 
             if len(old_quarters) > len(new_quarters):
-                if InterventionActivity.time_frames.through.objects.filter(
-                    interventionactivity__result__result_link__intervention=self.instance,
-                    interventiontimeframe__quarter__gt=new_quarters[-1].quarter
+                if self.instance.quarters.filter(
+                    quarter__gt=new_quarters[-1].quarter,
+                    activities__isnull=False,
                 ).exists():
                     names_to_be_removed = ', '.join([
                         'Q{}'.format(q.quarter)
