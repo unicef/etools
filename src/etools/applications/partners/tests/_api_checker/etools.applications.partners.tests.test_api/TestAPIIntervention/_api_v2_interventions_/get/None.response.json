@@ -19,7 +19,7 @@
         ],
         "content-length": [
             "Content-Length",
-            "3890"
+            "3881"
         ]
     },
     "data": [
@@ -80,7 +80,7 @@
             "ip_program_contribution": "",
             "budget_owner": null,
             "hq_support_cost": "0.0",
-            "cash_transfer_modalities": "direct",
+            "cash_transfer_modalities": "dct",
             "unicef_review_type": "none"
         },
         {
@@ -138,7 +138,7 @@
             "ip_program_contribution": "",
             "budget_owner": null,
             "hq_support_cost": "0.0",
-            "cash_transfer_modalities": "direct",
+            "cash_transfer_modalities": "dct",
             "unicef_review_type": "none"
         },
         {
@@ -196,7 +196,7 @@
             "ip_program_contribution": "",
             "budget_owner": null,
             "hq_support_cost": "0.0",
-            "cash_transfer_modalities": "direct",
+            "cash_transfer_modalities": "dct",
             "unicef_review_type": "none"
         }
     ],
