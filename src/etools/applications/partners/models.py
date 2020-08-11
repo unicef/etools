@@ -2447,6 +2447,7 @@ class InterventionBudget(TimeStampedModel):
     intervention = models.OneToOneField(Intervention, related_name='planned_budget', null=True, blank=True,
                                         verbose_name=_('Intervention'), on_delete=models.CASCADE)
 
+    # legacy values
     partner_contribution = models.DecimalField(max_digits=20, decimal_places=2, default=0,
                                                verbose_name=_('Partner Contribution'))
     unicef_cash = models.DecimalField(max_digits=20, decimal_places=2, default=0, verbose_name=_('Unicef Cash'))
@@ -2458,10 +2459,13 @@ class InterventionBudget(TimeStampedModel):
     )
     total = models.DecimalField(max_digits=20, decimal_places=2, verbose_name=_('Total'))
 
+    # sum of all activity/management budget cso/partner values
     partner_contribution_local = models.DecimalField(max_digits=20, decimal_places=2, default=0,
                                                      verbose_name=_('Partner Contribution Local'))
+    # sum of all activity/management budget unicef values
     unicef_cash_local = models.DecimalField(max_digits=20, decimal_places=2, default=0,
                                             verbose_name=_('Unicef Cash Local'))
+    # sum of all supply items (InterventionSupplyItem)
     in_kind_amount_local = models.DecimalField(
         max_digits=20, decimal_places=2, default=0,
         verbose_name=_('UNICEF Supplies Local')
@@ -2686,7 +2690,7 @@ class InterventionRisk(TimeStampedModel):
 
 
 class InterventionManagementBudget(TimeStampedModel):
-    intervention = models.ForeignKey(
+    intervention = models.OneToOneField(
         Intervention,
         verbose_name=_("Intervention"),
         related_name="management_budgets",
