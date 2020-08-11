@@ -2489,8 +2489,7 @@ class InterventionBudget(TimeStampedModel):
         """
         Calculate total budget on save
         """
-        self.total = self.total_unicef_contribution() + self.partner_contribution
-        self.total_local = self.total_unicef_contribution_local() + self.partner_contribution_local
+        self.calc_totals(save=False)
         super().save(**kwargs)
 
     def __str__(self):
@@ -2500,6 +2499,44 @@ class InterventionBudget(TimeStampedModel):
             self.intervention,
             total_local
         )
+
+    def calc_totals(self, save=True):
+        # partner and unicef totals
+        init = False
+        for link in self.intervention.result_links.all():
+            for result in link.ll_results.all():
+                for activity in result.activities.all():
+                    if not init:
+                        self.partner_contribution_local = 0
+                        self.unicef_cash_local = 0
+                        init = True
+                    self.partner_contribution_local += cso_cash
+                    self.unicef_cash_local += unicef_cash
+        try:
+            for i in range(1, 4):
+                self.partner_contribution_local += getattr(
+                    self.intervention.management_budgets,
+                    f"act{i}_partner",
+                    0,
+                )
+                self.unicef_cash_local += getattr(
+                    self.intervention.management_budgets,
+                    f"act{i}_unicef",
+                    0,
+                )
+        except InterventionManagementBudget.DoesNotExist:
+            pass
+        # in kind totals
+        if self.intervention.supply_items.exists():
+            self.in_kind_amount_local = 0
+            for item in self.intervention.supply_items.all():
+                self.in_kind_amount_local += item.total_price
+
+        self.total = self.total_unicef_contribution() + self.partner_contribution
+        self.total_local = self.total_unicef_contribution_local() + self.partner_contribution_local
+
+        if save:
+            self.save()
 
 
 class FileType(models.Model):
@@ -2739,6 +2776,10 @@ class InterventionManagementBudget(TimeStampedModel):
         null=True,
     )
 
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self.intervention.calc_totals()
+
 
 class InterventionSupplyItem(TimeStampedModel):
     intervention = models.ForeignKey(
@@ -2785,6 +2826,6 @@ class InterventionSupplyItem(TimeStampedModel):
         return "{} {}".format(self.intervention, self.title)
 
     def save(self, *args, **kwargs):
-        if self.unit_number and self.unit_price:
-            self.total_price = self.unit_number * self.unit_price
+        self.total_price = self.unit_number * self.unit_price
         super().save()
+        self.intervention.calc_totals()
