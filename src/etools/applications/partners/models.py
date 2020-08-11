@@ -566,10 +566,7 @@ class PartnerOrganization(TimeStampedModel):
         ).exclude(
             signed_by_unicef_date__isnull=True,
             signed_by_partner_date__isnull=True,
-            status__in=[
-                Agreement.DRAFT,
-                Agreement.TERMINATED,
-            ]
+            status__in=[Agreement.DRAFT, Agreement.TERMINATED]
         ).order_by('signed_by_unicef_date').last()
 
     @cached_property
@@ -663,11 +660,7 @@ class PartnerOrganization(TimeStampedModel):
         year = datetime.date.today().year
         if self.partner_type != 'Government':
             pv = InterventionPlannedVisits.objects.filter(
-                intervention__agreement__partner=self,
-                year=year,
-            ).exclude(
-                intervention__status__in=[Intervention.DRAFT],
-            )
+                intervention__agreement__partner=self, year=year).exclude(intervention__status=Intervention.DRAFT)
             pvq1 = pv.aggregate(models.Sum('programmatic_q1'))['programmatic_q1__sum'] or 0
             pvq2 = pv.aggregate(models.Sum('programmatic_q2'))['programmatic_q2__sum'] or 0
             pvq3 = pv.aggregate(models.Sum('programmatic_q3'))['programmatic_q3__sum'] or 0
@@ -1610,7 +1603,7 @@ class Intervention(TimeStampedModel):
     Relates to :model:`reports.Office`
     """
 
-    DRAFT = 'development'
+    DRAFT = 'draft'
     SIGNED = 'signed'
     ACTIVE = 'active'
     ENDED = 'ended'
