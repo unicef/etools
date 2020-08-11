@@ -2502,17 +2502,26 @@ class InterventionBudget(TimeStampedModel):
 
     def calc_totals(self, save=True):
         # partner and unicef totals
+
+        def init_totals():
+            self.partner_contribution_local = 0
+            self.unicef_cash_local = 0
+
         init = False
         for link in self.intervention.result_links.all():
             for result in link.ll_results.all():
                 for activity in result.activities.all():
                     if not init:
-                        self.partner_contribution_local = 0
-                        self.unicef_cash_local = 0
+                        init_totals()
                         init = True
-                    self.partner_contribution_local += cso_cash
-                    self.unicef_cash_local += unicef_cash
+                    self.partner_contribution_local += activity.cso_cash
+                    self.unicef_cash_local += activity.unicef_cash
         try:
+            partner_contribution_local = self.partner_contribution_local
+            unicef_cash_local = self.unicef_cash_local
+            if not init:
+                init_totals()
+                init = True
             for i in range(1, 4):
                 self.partner_contribution_local += getattr(
                     self.intervention.management_budgets,
@@ -2525,7 +2534,9 @@ class InterventionBudget(TimeStampedModel):
                     0,
                 )
         except InterventionManagementBudget.DoesNotExist:
-            pass
+            self.partner_contribution_local = partner_contribution_local
+            self.unicef_cash_local = unicef_cash_local
+
         # in kind totals
         if self.intervention.supply_items.exists():
             self.in_kind_amount_local = 0
@@ -2778,7 +2789,7 @@ class InterventionManagementBudget(TimeStampedModel):
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-        self.intervention.calc_totals()
+        self.intervention.planned_budget.calc_totals()
 
 
 class InterventionSupplyItem(TimeStampedModel):
@@ -2828,4 +2839,4 @@ class InterventionSupplyItem(TimeStampedModel):
     def save(self, *args, **kwargs):
         self.total_price = self.unit_number * self.unit_price
         super().save()
-        self.intervention.calc_totals()
+        self.intervention.planned_budget.calc_totals()
