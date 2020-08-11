@@ -593,9 +593,14 @@ class InterventionCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotMode
             old_quarters = get_quarters_range(self.instance.start, self.instance.end)
             new_quarters = get_quarters_range(start, end)
 
-            if len(old_quarters) > len(new_quarters):
+            if old_quarters and len(old_quarters) > len(new_quarters):
+                if new_quarters:
+                    last_quarter = new_quarters[-1].quarter
+                else:
+                    last_quarter = 0
+
                 if self.instance.quarters.filter(
-                    quarter__gt=new_quarters[-1].quarter,
+                    quarter__gt=last_quarter,
                     activities__isnull=False,
                 ).exists():
                     names_to_be_removed = ', '.join([

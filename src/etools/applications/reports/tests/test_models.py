@@ -263,9 +263,9 @@ class TestInterventionTimeFrame(BaseTenantTestCase):
             start=datetime.date(year=1980, month=1, day=1),
             end=datetime.date(year=1980, month=12, day=31),
         )
-        self.assertEqual(intervention.time_frames.count(), 4)
+        self.assertEqual(intervention.quarters.count(), 4)
         intervention.save()
-        self.assertEqual(intervention.time_frames.count(), 4)
+        self.assertEqual(intervention.quarters.count(), 4)
 
     def test_time_frame_removed_on_dates_change(self):
         intervention = InterventionFactory(
@@ -288,14 +288,14 @@ class TestInterventionTimeFrame(BaseTenantTestCase):
         item_to_keep.refresh_from_db()
         self.assertEqual(item_to_keep.start_date, datetime.date(year=1979, month=9, day=1))
         self.assertEqual(item_to_keep.end_date, datetime.date(year=1979, month=12, day=1))
-        self.assertEqual(intervention.time_frames.filter(id=item_to_remove.id).exists(), False)
+        self.assertEqual(intervention.quarters.filter(id=item_to_remove.id).exists(), False)
 
     def test_time_frame_created_on_dates_change(self):
         intervention = InterventionFactory(
             start=datetime.date(year=1980, month=1, day=1),
             end=datetime.date(year=1980, month=12, day=31),
         )
-        self.assertEqual(intervention.time_frames.count(), 4)
+        self.assertEqual(intervention.quarters.count(), 4)
         intervention.end = datetime.date(year=1981, month=3, day=31)
         intervention.save()
-        self.assertEqual(intervention.time_frames.count(), 5)
+        self.assertEqual(intervention.quarters.count(), 5)
