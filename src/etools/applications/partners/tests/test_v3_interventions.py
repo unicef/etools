@@ -19,11 +19,7 @@ from etools.applications.partners.tests.factories import (
     PartnerStaffFactory,
 )
 from etools.applications.reports.models import ResultType
-from etools.applications.reports.tests.factories import (
-    InterventionActivityFactory,
-    InterventionTimeFrameFactory,
-    LowerResultFactory,
-)
+from etools.applications.reports.tests.factories import InterventionActivityFactory, LowerResultFactory
 from etools.applications.users.tests.factories import GroupFactory, UserFactory
 
 

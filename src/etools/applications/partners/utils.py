@@ -2,7 +2,6 @@ import datetime
 import html
 import logging
 import typing
-from typing import List, Tuple
 
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
@@ -638,7 +637,7 @@ class Quarter(typing.NamedTuple):
     end: datetime.date
 
 
-def get_quarters_range(start: datetime.date, end: datetime.date) -> List[Quarter]:
+def get_quarters_range(start: datetime.date, end: datetime.date) -> typing.List[Quarter]:
     """first date included, last excluded for every period in range"""
     if not start or not end:
         return []

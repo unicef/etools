@@ -506,12 +506,14 @@ class InterventionActivityTimeFrameListSerializer(serializers.ListSerializer):
         else:
             intervention = self.root.intervention
 
-        quarters = {i+1: q for i, q in enumerate(get_quarters_range(intervention.start, intervention.end))}
+        quarters = {i + 1: q for i, q in enumerate(get_quarters_range(intervention.start, intervention.end))}
         existing_quarters = {q.quarter: q for q in data.all()}
         return [
             self.child.to_representation(
                 existing_quarters[i] if i in existing_quarters.keys()
-                else InterventionTimeFrame(intervention=intervention, start_date=q[0], end_date=q[1])
+                else InterventionTimeFrame(
+                    intervention=intervention, quarter=q.quarter, start_date=q.start, end_date=q.end
+                )
             )
             for i, q in quarters.items()
         ]
@@ -577,22 +579,18 @@ class InterventionActivityDetailSerializer(serializers.ModelSerializer):
         instance.items.exclude(pk__in=updated_pks).delete()
 
     def set_time_frames(self, instance, time_frames):
-        pass
-        # todo
-        # if time_frames is None:
-        #     return
-        #
-        # intervention_quarters = get_quarters_range(self.intervention.start, self.intervention.end)
-        # if len(time_frames) != len(intervention_quarters):
-        #     raise ValidationError({'time_frames': [_("Provided periods count doesn't match the original.")]})
-        #
-        # for time_frame, quarter in zip(time_frames, intervention_quarters):
-        #     if time_frame['enabled']:
-        #         InterventionActivityTimeFrame.objects.get_or_create(
-        #             activity=instance, start_date=quarter[0], end_date=quarter[1]
-        #         )
-        #     else:
-        #         instance.time_frames.filter(start_date=quarter[0], end_date=quarter[1]).delete()
+        if time_frames is None:
+            return
+
+        intervention_quarters = self.intervention.quarters.all()
+        if len(time_frames) != len(intervention_quarters):
+            raise ValidationError({'time_frames': [_("Provided periods count doesn't match the original.")]})
+
+        for time_frame_data, quarter in zip(time_frames, intervention_quarters):
+            if time_frame_data['enabled']:
+                instance.time_frames.add(quarter)
+            else:
+                instance.time_frames.remove(quarter)
 
 
 class InterventionActivitySerializer(serializers.ModelSerializer):

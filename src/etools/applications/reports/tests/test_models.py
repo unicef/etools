@@ -5,11 +5,7 @@ from django.test import SimpleTestCase
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import Agreement
-from etools.applications.partners.tests.factories import (
-    AgreementFactory,
-    InterventionFactory,
-    InterventionResultLinkFactory,
-)
+from etools.applications.partners.tests.factories import AgreementFactory, InterventionFactory
 from etools.applications.reports.models import (
     CountryProgramme,
     Indicator,
@@ -21,8 +17,6 @@ from etools.applications.reports.tests.factories import (
     CountryProgrammeFactory,
     IndicatorBlueprintFactory,
     IndicatorFactory,
-    InterventionActivityFactory,
-    InterventionTimeFrameFactory,
     LowerResultFactory,
     QuarterFactory,
     ResultFactory,

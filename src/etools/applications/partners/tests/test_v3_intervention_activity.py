@@ -15,7 +15,6 @@ from etools.applications.reports.models import InterventionActivityItem, Interve
 from etools.applications.reports.tests.factories import (
     InterventionActivityFactory,
     InterventionActivityItemFactory,
-    InterventionTimeFrameFactory,
     LowerResultFactory,
 )
 from etools.applications.users.tests.factories import UserFactory
@@ -76,17 +75,17 @@ class TestFunctionality(BaseTestCase):
         self.assertEqual(InterventionActivityItem.objects.filter(id=item_to_remove.id).exists(), False)
 
     def test_set_time_frames(self):
-        item_to_remove = InterventionTimeFrameFactory(
-            activity=self.intervention,
+        item_to_remove = InterventionTimeFrame.objects.get(
+            intervention=self.intervention,
             start_date=date(year=1970, month=10, day=1),
             end_date=date(year=1970, month=12, day=31)
         )
-        item_to_keep = InterventionTimeFrameFactory(
-            activity=self.intervention,
+        item_to_keep = InterventionTimeFrame.objects.get(
+            intervention=self.intervention,
             start_date=date(year=1970, month=4, day=1),
             end_date=date(year=1970, month=7, day=1)
         )
-        self.assertEqual(self.activity.time_frames.count(), 2)
+        self.activity.time_frames.add(item_to_keep, item_to_remove)
 
         response = self.forced_auth_req(
             'patch', self.detail_url,
@@ -104,8 +103,8 @@ class TestFunctionality(BaseTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertEqual(len(response.data['time_frames']), 4)
         self.assertEqual(self.activity.time_frames.count(), 2)
-        self.assertEqual(InterventionTimeFrame.objects.filter(id=item_to_remove.id).exists(), False)
-        self.assertEqual(self.intervention.time_frames.filter(id=item_to_keep.id).exists(), True)
+        self.assertEqual(self.activity.time_frames.filter(pk=item_to_remove.pk).exists(), False)
+        self.assertEqual(self.activity.time_frames.filter(pk=item_to_keep.pk).exists(), True)
         self.assertEqual([t['enabled'] for t in response.data['time_frames']], [False, True, True, False])
 
     def test_minimal_create(self):

@@ -14,7 +14,6 @@ from etools.applications.reports.models import (
     IndicatorBlueprint,
     InterventionActivity,
     InterventionActivityItem,
-    InterventionTimeFrame,
     LowerResult,
     Office,
     Result,
