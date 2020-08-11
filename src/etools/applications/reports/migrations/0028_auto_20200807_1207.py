@@ -9,7 +9,7 @@ import model_utils.fields
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('partners', '0052_auto_20200807_1207'),
+        ('partners', '0053_auto_20200810_1322'),
         ('reports', '0027_auto_20200728_1339'),
     ]
 
