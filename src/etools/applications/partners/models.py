@@ -2789,7 +2789,10 @@ class InterventionManagementBudget(TimeStampedModel):
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-        self.intervention.planned_budget.calc_totals()
+        try:
+            self.intervention.planned_budget.calc_totals()
+        except InterventionBudget.DoesNotExist:
+            pass
 
 
 class InterventionSupplyItem(TimeStampedModel):
@@ -2839,4 +2842,7 @@ class InterventionSupplyItem(TimeStampedModel):
     def save(self, *args, **kwargs):
         self.total_price = self.unit_number * self.unit_price
         super().save()
-        self.intervention.planned_budget.calc_totals()
+        try:
+            self.intervention.planned_budget.calc_totals()
+        except InterventionBudget.DoesNotExist:
+            pass
