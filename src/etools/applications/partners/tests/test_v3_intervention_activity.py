@@ -25,7 +25,7 @@ class BaseTestCase(BaseTenantTestCase):
         super().setUp()
         self.user = UserFactory()
         self.intervention = InterventionFactory(
-            status=Intervention.DEVELOPMENT, unicef_court=True,
+            status=Intervention.DRAFT, unicef_court=True,
             start=date(year=1970, month=1, day=1),
             end=date(year=1970, month=12, day=31),
         )

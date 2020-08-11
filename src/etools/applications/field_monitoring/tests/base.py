@@ -73,7 +73,7 @@ class APIViewSetTestCase(BaseTenantTestCase):
     def _test_create(self, user, data, expected_status=status.HTTP_201_CREATED, field_errors=None, **kwargs):
         response = self.make_list_request(user, method='post', data=data, **kwargs)
 
-        self.assertEqual(response.status_code, expected_status, response.data)
+        self.assertEqual(response.status_code, expected_status)
 
         if field_errors:
             self.assertListEqual(list(response.data.keys()), field_errors)
@@ -83,7 +83,7 @@ class APIViewSetTestCase(BaseTenantTestCase):
     def _test_retrieve(self, user, instance, expected_status=status.HTTP_200_OK, field_errors=None):
         response = self.make_detail_request(user, instance)
 
-        self.assertEqual(response.status_code, expected_status, response.data)
+        self.assertEqual(response.status_code, expected_status)
 
         if field_errors:
             self.assertListEqual(list(response.data.keys()), field_errors)

@@ -127,7 +127,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
         user = self.context['request'].user
 
         # available actions only provided in Development status
-        if obj.status != obj.DEVELOPMENT:
+        if obj.status != obj.DRAFT:
             return available_actions
 
         # PD is assigned to UNICEF
