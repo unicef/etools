@@ -170,6 +170,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
             "unicef_review_type",
             "unicef_signatory",
             "unicef_signatory_id",
+            "quarters",
         ],
         'signed': [],
         'active': ['']

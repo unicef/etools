@@ -26,7 +26,7 @@ def recalculate_time_frames(instance: Intervention, created: bool, **kwargs):
             InterventionTimeFrame.objects.filter(
                 intervention=instance, quarter=old_quarter.quarter
             ).update(
-                start_date=new_quarter.start, end_date=new_quarter.start
+                start_date=new_quarter.start, end_date=new_quarter.end
             )
 
         # create missing if any
