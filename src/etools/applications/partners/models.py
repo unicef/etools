@@ -2472,11 +2472,23 @@ class InterventionBudget(TimeStampedModel):
     )
     currency = CurrencyField(verbose_name=_('Currency'), null=False, default='')
     total_local = models.DecimalField(max_digits=20, decimal_places=2, verbose_name=_('Total Local'))
+    programme_effectiveness = models.DecimalField(
+        max_digits=20,
+        decimal_places=2,
+        verbose_name=_("Programme Effectiveness (%)"),
+        default=0,
+    )
 
     tracker = FieldTracker()
 
     class Meta:
         verbose_name_plural = _('Intervention budget')
+
+    @property
+    def partner_contribution_percent(self):
+        if self.total_local == 0:
+            return 0
+        return self.partner_contribution_local / self.total_local * 100
 
     def total_unicef_contribution(self):
         return self.unicef_cash + self.in_kind_amount
@@ -2517,22 +2529,27 @@ class InterventionBudget(TimeStampedModel):
                     self.partner_contribution_local += activity.cso_cash
                     self.unicef_cash_local += activity.unicef_cash
         try:
+            programme_effectiveness = 0
             partner_contribution_local = self.partner_contribution_local
             unicef_cash_local = self.unicef_cash_local
             if not init:
                 init_totals()
                 init = True
             for i in range(1, 4):
-                self.partner_contribution_local += getattr(
+                partner_value = getattr(
                     self.intervention.management_budgets,
                     f"act{i}_partner",
                     0,
                 )
-                self.unicef_cash_local += getattr(
+                self.partner_contribution_local += partner_value
+                programme_effectiveness += partner_value
+                unicef_value = getattr(
                     self.intervention.management_budgets,
                     f"act{i}_unicef",
                     0,
                 )
+                self.unicef_cash_local += unicef_value
+                programme_effectiveness += unicef_value
         except InterventionManagementBudget.DoesNotExist:
             self.partner_contribution_local = partner_contribution_local
             self.unicef_cash_local = unicef_cash_local
@@ -2545,6 +2562,7 @@ class InterventionBudget(TimeStampedModel):
 
         self.total = self.total_unicef_contribution() + self.partner_contribution
         self.total_local = self.total_unicef_contribution_local() + self.partner_contribution_local
+        self.programme_effectiveness = programme_effectiveness / self.total_local * 100
 
         if save:
             self.save()
