@@ -49,10 +49,6 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     termination_doc_attachment = AttachmentSingleFileField(read_only=True)
     termination_doc_file = serializers.FileField(source='termination_doc', read_only=True)
     quarters = InterventionTimeFrameSerializer(many=True, read_only=True)
-    # quarters = serializers.SerializerMethodField()
-
-    def get_quarters(self, obj):
-        return []
 
     def get_location_p_codes(self, obj):
         return [location.p_code for location in obj.flat_locations.all()]
