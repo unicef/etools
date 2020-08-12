@@ -2,6 +2,7 @@ from django.db import transaction
 from django.shortcuts import get_object_or_404
 
 from rest_framework import status
+from rest_framework.exceptions import ValidationError
 from rest_framework.generics import (
     CreateAPIView,
     ListCreateAPIView,
@@ -100,6 +101,27 @@ class PMPInterventionRetrieveUpdateView(PMPInterventionMixin, InterventionDetail
         return Response(
             self.map_serializer("detail")(
                 self.instance,
+                context=self.get_serializer_context(),
+            ).data,
+        )
+
+
+class PMPInterventionSendView(PMPInterventionMixin, InterventionDetailAPIView):
+    def get(self, request, *args, **kwargs):
+        if self.is_partner_staff():
+            # TODO change this to pd_or_404 call once PR-2761 merged
+            pd = self.pds().get(pk=self.kwargs.get("pk"))
+            if pd.unicef_court:
+                raise ValidationError("PD is currently with UNICEF")
+        else:
+            pd = self.get_object()
+            if not pd.unicef_court:
+                raise ValidationError("PD is currently with Partner")
+        pd.unicef_court = False if pd.unicef_court else True
+        pd.save()
+        return Response(
+            self.map_serializer("detail")(
+                pd,
                 context=self.get_serializer_context(),
             ).data,
         )

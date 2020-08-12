@@ -1,4 +1,5 @@
 import datetime
+from unittest import skip
 
 from django.contrib.auth.models import AnonymousUser
 from django.test import SimpleTestCase
@@ -35,6 +36,7 @@ class URLsTestCase(URLAssertionMixin, SimpleTestCase):
         names_and_paths = (
             ('intervention-list', '', {}),
             ('intervention-detail', '1/', {'pk': 1}),
+            ('intervention-send', '1/send/', {'pk': 1}),
         )
         self.assertReversal(
             names_and_paths,
@@ -220,6 +222,62 @@ class TestUpdate(BaseInterventionTestCase):
             data={}
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
+class TestInterventionSend(BaseInterventionTestCase):
+    def setUp(self):
+        super().setUp()
+        self.partner_user = UserFactory(is_staff=False, groups__data=[])
+        staff_member = PartnerStaffFactory(email=self.partner_user.email)
+        self.partner_user.profile.partner_staff_member = staff_member.pk
+        self.partner_user.profile.save()
+
+        self.intervention = InterventionFactory()
+        self.intervention.partner_focal_points.add(staff_member)
+
+        self.url = reverse(
+            'pmp_v3:intervention-send',
+            args=[self.intervention.pk],
+        )
+
+    def test_not_found(self):
+        response = self.forced_auth_req(
+            "get",
+            reverse('pmp_v3:intervention-send', args=[404]),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    @skip("disabled till pd_or_404 call available, once PR-2761 merged")
+    def test_partner_no_access(self):
+        intervention = InterventionFactory()
+        response = self.forced_auth_req(
+            "get",
+            reverse('pmp_v3:intervention-send', args=[intervention.pk]),
+            user=self.partner_user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_get(self):
+        self.assertTrue(self.intervention.unicef_court)
+
+        # partner request when PD in unicef court
+        response = self.forced_auth_req(
+            "get",
+            reverse('pmp_v3:intervention-send', args=[self.intervention.pk]),
+            user=self.partner_user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("PD is currently with UNICEF", response.data)
+
+        # unicef sends PD to partner
+        response = self.forced_auth_req("get", self.url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # unicef request when PD in partner court
+        response = self.forced_auth_req("get", self.url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("PD is currently with Partner", response.data)
 
 
 class TestTimeframesValidation(BaseInterventionTestCase):
