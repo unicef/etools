@@ -5,6 +5,7 @@ from django.test import SimpleTestCase
 from django.urls import reverse
 
 from rest_framework import status
+from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.core.tests.mixins import URLAssertionMixin
@@ -211,15 +212,71 @@ class TestManagementBudgetGet(BaseInterventionTestCase):
 
 
 class TestUpdate(BaseInterventionTestCase):
-    def test_patch(self):
+    def _test_patch(self, mapping):
         intervention = InterventionFactory()
+        data = {}
+        for field, value in mapping:
+            self.assertNotEqual(getattr(intervention, field), value)
+            data[field] = value
         response = self.forced_auth_req(
             "patch",
             reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
             user=self.user,
-            data={}
+            data=data,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        intervention.refresh_from_db()
+        for field, value in mapping:
+            self.assertEqual(getattr(intervention, field), value)
+
+    def test_document(self):
+        mapping = (
+            ("title", "Document title"),
+            ("context", "Context"),
+            ("implementation_strategy", "Implementation strategy"),
+            ("ip_program_contribution", "Non-Contribution from partner"),
+        )
+        self._test_patch(mapping)
+
+    def test_location(self):
+        intervention = InterventionFactory()
+        self.assertEqual(list(intervention.flat_locations.all()), [])
+        loc1 = LocationFactory()
+        loc2 = LocationFactory()
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+            user=self.user,
+            data={
+                "flat_locations": [loc1.pk, loc2.pk]
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        intervention.refresh_from_db()
+        self.assertListEqual(
+            list(intervention.flat_locations.all()),
+            [loc1, loc2],
+        )
+
+    def test_gender(self):
+        mapping = (
+            ("gender_rating", Intervention.RATING_PRINCIPAL),
+            ("gender_narrative", "Gender narrative"),
+            ("sustainability_rating", Intervention.RATING_PRINCIPAL),
+            ("sustainability_narrative", "Sustainability narrative"),
+            ("equity_rating", Intervention.RATING_PRINCIPAL),
+            ("equity_narrative", "Equity narrative"),
+        )
+        self._test_patch(mapping)
+
+    def test_miscellaneous(self):
+        mapping = (
+            ("technical_guidance", "Tech guidance"),
+            ("capacity_development", "Capacity dev"),
+            ("other_partners_involved", "Other partners"),
+            ("other_info", "Other info"),
+        )
+        self._test_patch(mapping)
 
 
 class TestTimeframesValidation(BaseInterventionTestCase):
