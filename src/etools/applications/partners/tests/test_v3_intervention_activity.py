@@ -11,7 +11,7 @@ from etools.applications.partners.tests.factories import (
     InterventionResultLinkFactory,
     PartnerStaffFactory,
 )
-from etools.applications.reports.models import InterventionActivityItem, InterventionActivityTimeFrame
+from etools.applications.reports.models import InterventionActivityItem, InterventionActivityTimeFrame, ResultType
 from etools.applications.reports.tests.factories import (
     InterventionActivityFactory,
     InterventionActivityItemFactory,
@@ -35,7 +35,9 @@ class BaseTestCase(BaseTenantTestCase):
         self.partner_focal_point = UserFactory(groups__data=[], profile__partner_staff_member=self.staff_member.id)
         self.intervention.partner_focal_points.add(self.staff_member)
 
-        self.result_link = InterventionResultLinkFactory(intervention=self.intervention)
+        self.result_link = InterventionResultLinkFactory(
+            intervention=self.intervention, cp_output__result_type__name=ResultType.OUTPUT
+        )
         self.pd_output = LowerResultFactory(result_link=self.result_link)
 
         self.activity = InterventionActivityFactory(result=self.pd_output)
@@ -121,7 +123,6 @@ class TestFunctionality(BaseTestCase):
     def test_destroy(self):
         response = self.forced_auth_req('delete', self.detail_url, user=self.user, data={})
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT, response.data)
-        self.assertNotIn('intervention', response.data)
 
     def test_update(self):
         response = self.forced_auth_req('patch', self.detail_url, user=self.user, data={'name': 'new'})
