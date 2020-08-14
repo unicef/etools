@@ -60,6 +60,19 @@ class TestInterventionLowerResultsListView(TestInterventionLowerResultsViewBase)
         self.assertEqual(pd_result.result_link.intervention, self.intervention)
         self.assertEqual(pd_result.result_link.cp_output, self.cp_output)
 
+    def test_intervention_provided_on_create(self):
+        response = self.forced_auth_req(
+            'post', self.list_url, self.user,
+            data={'name': 'test', 'code': 'test', 'cp_output': self.cp_output.id}
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
+        self.assertIn('intervention', response.data)
+
+    def test_intervention_missing_on_list(self):
+        response = self.forced_auth_req('get', self.list_url, self.user,)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertNotIn('intervention', response.data)
+
     # check permissions
     def test_create_for_unknown_user(self):
         response = self.forced_auth_req(
@@ -186,3 +199,23 @@ class TestInterventionLowerResultsDetailView(TestInterventionLowerResultsViewBas
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         result.refresh_from_db()
         self.assertEqual(result.result_link.cp_output, None)
+
+    def test_intervention_provided_on_update(self):
+        result = LowerResultFactory(result_link=self.result_link)
+        response = self.forced_auth_req(
+            'patch',
+            reverse('partners:intervention-pd-output-detail', args=[self.intervention.pk, result.pk]),
+            self.user, data={}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertIn('intervention', response.data)
+
+    def test_intervention_missing_on_retrieve(self):
+        result = LowerResultFactory(result_link=self.result_link)
+        response = self.forced_auth_req(
+            'get',
+            reverse('partners:intervention-pd-output-detail', args=[self.intervention.pk, result.pk]),
+            self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertNotIn('intervention', response.data)

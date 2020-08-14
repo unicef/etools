@@ -10,6 +10,7 @@ from rest_framework.generics import (
 )
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.status import is_success
 
 from etools.applications.field_monitoring.permissions import IsEditAction, IsReadAction
 from etools.applications.partners.models import Intervention, InterventionManagementBudget
@@ -59,6 +60,23 @@ class PMPInterventionMixin(PMPBaseViewMixin):
         return qs
 
 
+class DetailedInterventionResponseMixin:
+    detailed_intervention_methods = ['post', 'put', 'patch']
+    detailed_intervention_serializer = InterventionDetailSerializer
+
+    def get_intervention(self) -> Intervention:
+        raise NotImplementedError
+
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+        if request.method.lower() in self.detailed_intervention_methods and is_success(response.status_code):
+            response.data['intervention'] = self.detailed_intervention_serializer(
+                instance=self.get_intervention(),
+                context=self.get_serializer_context(),
+            ).data
+        return response
+
+
 class PMPInterventionListCreateView(PMPInterventionMixin, InterventionListAPIView):
     permission_classes = (IsAuthenticated, PartnershipManagerPermission,)
 
@@ -105,7 +123,7 @@ class PMPInterventionRetrieveUpdateView(PMPInterventionMixin, InterventionDetail
         )
 
 
-class InterventionPDOutputsViewMixin:
+class InterventionPDOutputsViewMixin(DetailedInterventionResponseMixin):
     queryset = LowerResult.objects.select_related('result_link').order_by('id')
     permission_classes = [
         IsAuthenticated,
@@ -121,6 +139,9 @@ class InterventionPDOutputsViewMixin:
         if not hasattr(self, '_intervention'):
             self._intervention = Intervention.objects.filter(pk=self.kwargs.get('intervention_pk')).first()
         return self._intervention
+
+    def get_intervention(self):
+        return self.get_root_object()
 
     def get_serializer(self, *args, **kwargs):
         kwargs['intervention'] = self.get_root_object()
@@ -138,17 +159,23 @@ class InterventionPDOutputsDetailUpdateView(InterventionPDOutputsViewMixin, Retr
     pass
 
 
-class PMPInterventionManagementBudgetRetrieveUpdateView(PMPInterventionMixin, RetrieveUpdateAPIView):
+class PMPInterventionManagementBudgetRetrieveUpdateView(
+    DetailedInterventionResponseMixin, PMPInterventionMixin, RetrieveUpdateAPIView
+):
     queryset = InterventionManagementBudget.objects
     serializer_class = InterventionManagementBudgetSerializer
 
+    def get_intervention(self):
+        if not hasattr(self, '_intervention'):
+            self._intervention = get_object_or_404(
+                Intervention,
+                pk=self.kwargs.get("intervention_pk"),
+            )
+        return self._intervention
+
     def get_object(self):
-        intervention = get_object_or_404(
-            Intervention,
-            pk=self.kwargs.get("intervention_pk"),
-        )
         obj, __ = InterventionManagementBudget.objects.get_or_create(
-            intervention=intervention,
+            intervention=self.get_intervention(),
         )
         return obj
 
@@ -158,7 +185,7 @@ class PMPInterventionManagementBudgetRetrieveUpdateView(PMPInterventionMixin, Re
         return super().get_serializer(*args, **kwargs)
 
 
-class InterventionActivityViewMixin():
+class InterventionActivityViewMixin(DetailedInterventionResponseMixin):
     queryset = InterventionActivity.objects.prefetch_related('items', 'time_frames').order_by('id')
     permission_classes = [
         IsAuthenticated,
@@ -170,6 +197,9 @@ class InterventionActivityViewMixin():
         if not hasattr(self, '_intervention'):
             self._intervention = Intervention.objects.filter(pk=self.kwargs.get('intervention_pk')).first()
         return self._intervention
+
+    def get_intervention(self) -> Intervention:
+        return self.get_root_object()
 
     def get_parent_object(self):
         if not hasattr(self, '_result'):

@@ -160,6 +160,7 @@ class TestManagementBudgetGet(BaseInterventionTestCase):
         assert data["act2_partner"] is None
         assert data["act3_unicef"] is None
         assert data["act3_partner"] is None
+        self.assertNotIn('intervention', response.data)
 
     def test_put(self):
         intervention = InterventionFactory()
@@ -192,6 +193,7 @@ class TestManagementBudgetGet(BaseInterventionTestCase):
         assert data["act2_partner"] == "4000.00"
         assert data["act3_unicef"] == "5000.00"
         assert data["act3_partner"] == "6000.00"
+        self.assertIn('intervention', response.data)
 
     def test_patch(self):
         intervention = InterventionFactory()
@@ -208,6 +210,7 @@ class TestManagementBudgetGet(BaseInterventionTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.data
         assert data["act1_unicef"] == "1000.00"
+        self.assertIn('intervention', response.data)
 
 
 class TestUpdate(BaseInterventionTestCase):

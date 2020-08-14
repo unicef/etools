@@ -116,15 +116,18 @@ class TestFunctionality(BaseTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
+        self.assertIn('intervention', response.data)
 
     def test_destroy(self):
         response = self.forced_auth_req('delete', self.detail_url, user=self.user, data={})
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT, response.data)
+        self.assertNotIn('intervention', response.data)
 
     def test_update(self):
         response = self.forced_auth_req('patch', self.detail_url, user=self.user, data={'name': 'new'})
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertEqual(response.data['name'], 'new')
+        self.assertIn('intervention', response.data)
 
     def test_list(self):
         response = self.forced_auth_req('get', self.list_url, user=self.user)
@@ -133,6 +136,7 @@ class TestFunctionality(BaseTestCase):
     def test_retrieve(self):
         response = self.forced_auth_req('get', self.detail_url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertNotIn('intervention', response.data)
 
 
 class TestPermissions(BaseTestCase):
