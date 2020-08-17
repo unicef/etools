@@ -24,6 +24,8 @@ from etools.applications.reports.tests.factories import (
     InterventionActivityFactory,
     InterventionActivityTimeFrameFactory,
     LowerResultFactory,
+    OfficeFactory,
+    SectionFactory,
 )
 from etools.applications.users.tests.factories import GroupFactory, UserFactory
 
@@ -228,6 +230,61 @@ class TestUpdate(BaseInterventionTestCase):
         intervention.refresh_from_db()
         for field, value in mapping:
             self.assertEqual(getattr(intervention, field), value)
+
+    def test_partner_details(self):
+        intervention = InterventionFactory()
+        agreement = AgreementFactory()
+        focal_1 = PartnerStaffFactory()
+        focal_2 = PartnerStaffFactory()
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+            user=self.user,
+            data={
+                "agreement": agreement.pk,
+                "partner_focal_points": [focal_1.pk, focal_2.pk],
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        intervention.refresh_from_db()
+        self.assertEqual(intervention.agreement, agreement)
+        self.assertListEqual(
+            list(intervention.partner_focal_points.all()),
+            [focal_1, focal_2],
+        )
+
+    def test_unicef_details(self):
+        intervention = InterventionFactory()
+        agreement = AgreementFactory()
+        focal_1 = UserFactory(is_staff=True)
+        focal_2 = UserFactory(is_staff=True)
+        budget_owner = UserFactory(is_staff=True)
+        office = OfficeFactory()
+        section = SectionFactory()
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+            user=self.user,
+            data={
+                "agreement": agreement.pk,
+                "document_type": Intervention.PD,
+                "unicef_focal_points": [focal_1.pk, focal_2.pk],
+                "budget_owner": budget_owner.pk,
+                "offices": [office.pk],
+                "sections": [section.pk],
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        intervention.refresh_from_db()
+        self.assertEqual(intervention.agreement, agreement)
+        self.assertEqual(intervention.document_type, Intervention.PD)
+        self.assertListEqual(list(intervention.offices.all()), [office])
+        self.assertListEqual(list(intervention.sections.all()), [section])
+        self.assertEqual(intervention.budget_owner, budget_owner)
+        self.assertListEqual(
+            list(intervention.unicef_focal_points.all()),
+            [focal_1, focal_2],
+        )
 
     def test_document(self):
         mapping = (
