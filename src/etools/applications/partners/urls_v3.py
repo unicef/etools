@@ -12,6 +12,8 @@ from etools.applications.partners.views.interventions_v3 import (
     PMPInterventionListCreateView,
     PMPInterventionManagementBudgetRetrieveUpdateView,
     PMPInterventionRetrieveUpdateView,
+)
+from etools.applications.partners.views.interventions_v3_actions import (
     PMPInterventionSendToPartnerView,
     PMPInterventionSendToUNICEFView,
 )
