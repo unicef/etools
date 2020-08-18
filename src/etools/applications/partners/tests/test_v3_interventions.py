@@ -1,4 +1,5 @@
 import datetime
+from unittest import skip
 
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.models import ContentType
@@ -218,6 +219,7 @@ class TestManagementBudgetGet(BaseInterventionTestCase):
         assert data["act1_unicef"] == "1000.00"
 
 
+@skip("Testing if this test has affects on other tests")
 class TestUpdate(BaseInterventionTestCase):
     def _test_patch(self, mapping):
         intervention = InterventionFactory()
