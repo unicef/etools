@@ -5,6 +5,7 @@ from django.test import SimpleTestCase
 from django.urls import reverse
 
 from rest_framework import status
+from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.core.tests.mixins import URLAssertionMixin
@@ -24,6 +25,8 @@ from etools.applications.reports.tests.factories import (
     InterventionActivityFactory,
     InterventionActivityTimeFrameFactory,
     LowerResultFactory,
+    OfficeFactory,
+    SectionFactory,
 )
 from etools.applications.users.tests.factories import GroupFactory, UserFactory
 
@@ -336,6 +339,129 @@ class TestSupplyItem(BaseInterventionTestCase):
         self.assertEqual(response.data["unit_number"], "10.00")
         self.assertEqual(response.data["unit_price"], "3.00")
         self.assertEqual(response.data["total_price"], "30.00")
+
+
+class TestUpdate(BaseInterventionTestCase):
+    def _test_patch(self, mapping):
+        intervention = InterventionFactory()
+        data = {}
+        for field, value in mapping:
+            self.assertNotEqual(getattr(intervention, field), value)
+            data[field] = value
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+            user=self.user,
+            data=data,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        intervention.refresh_from_db()
+        for field, value in mapping:
+            self.assertEqual(getattr(intervention, field), value)
+
+    def test_partner_details(self):
+        intervention = InterventionFactory()
+        agreement = AgreementFactory()
+        focal_1 = PartnerStaffFactory()
+        focal_2 = PartnerStaffFactory()
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+            user=self.user,
+            data={
+                "agreement": agreement.pk,
+                "partner_focal_points": [focal_1.pk, focal_2.pk],
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        intervention.refresh_from_db()
+        self.assertEqual(intervention.agreement, agreement)
+        self.assertListEqual(
+            list(intervention.partner_focal_points.all()),
+            [focal_1, focal_2],
+        )
+
+    def test_unicef_details(self):
+        intervention = InterventionFactory()
+        agreement = AgreementFactory()
+        focal_1 = UserFactory(is_staff=True)
+        focal_2 = UserFactory(is_staff=True)
+        budget_owner = UserFactory(is_staff=True)
+        office = OfficeFactory()
+        section = SectionFactory()
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+            user=self.user,
+            data={
+                "agreement": agreement.pk,
+                "document_type": Intervention.PD,
+                "unicef_focal_points": [focal_1.pk, focal_2.pk],
+                "budget_owner": budget_owner.pk,
+                "offices": [office.pk],
+                "sections": [section.pk],
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        intervention.refresh_from_db()
+        self.assertEqual(intervention.agreement, agreement)
+        self.assertEqual(intervention.document_type, Intervention.PD)
+        self.assertListEqual(list(intervention.offices.all()), [office])
+        self.assertListEqual(list(intervention.sections.all()), [section])
+        self.assertEqual(intervention.budget_owner, budget_owner)
+        self.assertListEqual(
+            list(intervention.unicef_focal_points.all()),
+            [focal_1, focal_2],
+        )
+
+    def test_document(self):
+        mapping = (
+            ("title", "Document title"),
+            ("context", "Context"),
+            ("implementation_strategy", "Implementation strategy"),
+            ("ip_program_contribution", "Non-Contribution from partner"),
+        )
+        self._test_patch(mapping)
+
+    def test_location(self):
+        intervention = InterventionFactory()
+        self.assertEqual(list(intervention.flat_locations.all()), [])
+        loc1 = LocationFactory()
+        loc2 = LocationFactory()
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+            user=self.user,
+            data={
+                "flat_locations": [loc1.pk, loc2.pk]
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        intervention.refresh_from_db()
+        self.assertListEqual(
+            list(intervention.flat_locations.all()),
+            [loc1, loc2],
+        )
+
+    def test_gender(self):
+        mapping = (
+            ("gender_rating", Intervention.RATING_PRINCIPAL),
+            ("gender_narrative", "Gender narrative"),
+            ("sustainability_rating", Intervention.RATING_PRINCIPAL),
+            ("sustainability_narrative", "Sustainability narrative"),
+            ("equity_rating", Intervention.RATING_PRINCIPAL),
+            ("equity_narrative", "Equity narrative"),
+        )
+        self._test_patch(mapping)
+
+    def test_miscellaneous(self):
+        mapping = (
+            ("technical_guidance", "Tech guidance"),
+            ("capacity_development", "Capacity dev"),
+            ("other_partners_involved", "Other partners"),
+            ("other_info", "Other info"),
+        )
+        self._test_patch(mapping)
 
 
 class TestTimeframesValidation(BaseInterventionTestCase):
