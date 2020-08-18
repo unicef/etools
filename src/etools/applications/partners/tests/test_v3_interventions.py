@@ -47,7 +47,7 @@ class URLsTestCase(URLAssertionMixin, SimpleTestCase):
 class BaseInterventionTestCase(BaseTenantTestCase):
     def setUp(self):
         super().setUp()
-        self.user = UserFactory(is_staff=True)
+        self.user = UserFactory(is_staff=True, groups__data=['UNICEF User', 'Partnership Manager'])
         self.user.groups.add(GroupFactory())
         self.partner = PartnerFactory(name='Partner 1', vendor_number="VP1")
         self.agreement = AgreementFactory(
@@ -92,7 +92,7 @@ class TestCreate(BaseInterventionTestCase):
             user=self.user,
             data=data
         )
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
         data = response.data
         i = Intervention.objects.get(pk=data.get("id"))
         self.assertTrue(i.humanitarian_flag)
@@ -219,7 +219,7 @@ class TestUpdate(BaseInterventionTestCase):
             user=self.user,
             data={}
         )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
 
 
 class TestTimeframesValidation(BaseInterventionTestCase):
@@ -250,6 +250,7 @@ class TestTimeframesValidation(BaseInterventionTestCase):
             data={'start': datetime.date(year=1970, month=5, day=1)}
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['start'], '1970-05-01')
 
     def test_update_start_with_active_timeframe(self):
         InterventionActivityTimeFrameFactory(

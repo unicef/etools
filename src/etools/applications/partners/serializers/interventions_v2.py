@@ -613,6 +613,9 @@ class InterventionCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotMode
                     bad_keys = set(validated_data.keys()).union({'start', 'end'})
                     raise ValidationError({key: [error_text] for key in bad_keys})
 
+        if 'prc_review_attachment' in validated_data:
+            validated_data['submission_date_prc'] = validated_data['prc_review_attachment'].created
+
         return validated_data
 
     @transaction.atomic

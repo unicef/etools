@@ -39,7 +39,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     permissions = serializers.SerializerMethodField(read_only=True)
     planned_budget = InterventionBudgetCUSerializer(read_only=True)
     planned_visits = PlannedVisitsNestedSerializer(many=True, read_only=True, required=False)
-    prc_review_attachment = AttachmentSingleFileField(read_only=True)
+    prc_review_attachment = AttachmentSingleFileField(required=False)
     prc_review_document_file = serializers.FileField(source='prc_review_document', read_only=True)
     result_links = InterventionResultNestedSerializer(many=True, read_only=True, required=False)
     section_names = serializers.SerializerMethodField(read_only=True)

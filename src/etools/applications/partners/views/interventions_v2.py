@@ -295,10 +295,12 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
                           'planned_visits',
                           'result_links']
         nested_related_names = ['ll_results']
+        related_non_serialized_fields = ['prc_review_attachment']
         self.instance, old_instance, serializer = self.my_update(
             request,
             related_fields,
             nested_related_names=nested_related_names,
+            related_non_serialized_fields=related_non_serialized_fields,
             **kwargs
         )
 
