@@ -1536,6 +1536,20 @@ class TestInterventionBudget(BaseTenantTestCase):
         )
 
 
+class TestInterventionManagementBudget(BaseTenantTestCase):
+    def test_totals(self):
+        budget = InterventionManagementBudgetFactory(
+            act1_unicef=100,
+            act1_partner=200,
+            act2_unicef=300,
+            act2_partner=400,
+            act3_unicef=500,
+            act3_partner=600,
+        )
+        self.assertEqual(budget.partner_total, 1200)
+        self.assertEqual(budget.unicef_total, 900)
+
+
 class TestFileType(BaseTenantTestCase):
     def test_str(self):
         f = models.FileType(name="FileType")

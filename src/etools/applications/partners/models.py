@@ -2535,21 +2535,12 @@ class InterventionBudget(TimeStampedModel):
             if not init:
                 init_totals()
                 init = True
-            for i in range(1, 4):
-                partner_value = getattr(
-                    self.intervention.management_budgets,
-                    f"act{i}_partner",
-                    0,
-                )
-                self.partner_contribution_local += partner_value
-                programme_effectiveness += partner_value
-                unicef_value = getattr(
-                    self.intervention.management_budgets,
-                    f"act{i}_unicef",
-                    0,
-                )
-                self.unicef_cash_local += unicef_value
-                programme_effectiveness += unicef_value
+            programme_effectiveness += (
+                self.intervention.management_budgets.partner_total +
+                self.intervention.management_budgets.unicef_total
+            )
+            self.partner_contribution_local += self.intervention.management_budgets.partner_total
+            self.unicef_cash_local += self.intervention.management_budgets.unicef_total
         except InterventionManagementBudget.DoesNotExist:
             self.partner_contribution_local = partner_contribution_local
             self.unicef_cash_local = unicef_cash_local
@@ -2804,6 +2795,14 @@ class InterventionManagementBudget(TimeStampedModel):
         blank=True,
         null=True,
     )
+
+    @property
+    def partner_total(self):
+        return self.act1_partner + self.act2_partner + self.act3_partner
+
+    @property
+    def unicef_total(self):
+        return self.act1_unicef + self.act2_unicef + self.act3_unicef
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
