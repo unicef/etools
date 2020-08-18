@@ -219,7 +219,7 @@ class TestManagementBudgetGet(BaseInterventionTestCase):
         assert data["act1_unicef"] == "1000.00"
 
 
-class TestUpdate(BaseInterventionTestCase):
+class TestInterventionUpdate(BaseInterventionTestCase):
     def _test_patch(self, mapping):
         intervention = InterventionFactory()
         data = {}
@@ -237,7 +237,6 @@ class TestUpdate(BaseInterventionTestCase):
         for field, value in mapping:
             self.assertEqual(getattr(intervention, field), value)
 
-    @skip("Check if causing issues in circleci")
     def test_partner_details(self):
         intervention = InterventionFactory()
         agreement = AgreementFactory()
@@ -260,7 +259,6 @@ class TestUpdate(BaseInterventionTestCase):
             [focal_1, focal_2],
         )
 
-    @skip("Maybe office/section causing issues")
     def test_unicef_details(self):
         intervention = InterventionFactory()
         agreement = AgreementFactory()
