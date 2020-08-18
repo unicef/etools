@@ -148,18 +148,6 @@ class TestCreate(BaseInterventionTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
 
 
-class TestUpdate(BaseInterventionTestCase):
-    def test_patch(self):
-        intervention = InterventionFactory()
-        response = self.forced_auth_req(
-            "patch",
-            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
-            user=self.user,
-            data={}
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-
 class TestManagementBudget(BaseInterventionTestCase):
     def test_get(self):
         intervention = InterventionFactory()
