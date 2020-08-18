@@ -1,5 +1,5 @@
 import datetime
-from unittest import skip
+from unittest import mock, skip
 
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.models import ContentType
@@ -358,6 +358,7 @@ class TestInterventionSendToPartner(BaseInterventionTestCase):
             'pmp_v3:intervention-send-partner',
             args=[self.intervention.pk],
         )
+        self.notify_path = "etools.applications.partners.views.interventions_v3_actions.send_notification_with_template"
 
     def test_not_found(self):
         response = self.forced_auth_req(
@@ -380,13 +381,19 @@ class TestInterventionSendToPartner(BaseInterventionTestCase):
         self.assertTrue(self.intervention.unicef_court)
 
         # unicef sends PD to partner
-        response = self.forced_auth_req("patch", self.url, user=self.user)
+        mock_send = mock.Mock()
+        with mock.patch(self.notify_path, mock_send):
+            response = self.forced_auth_req("patch", self.url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mock_send.assert_called()
 
         # unicef request when PD in partner court
-        response = self.forced_auth_req("patch", self.url, user=self.user)
+        mock_send = mock.Mock()
+        with mock.patch(self.notify_path, mock_send):
+            response = self.forced_auth_req("patch", self.url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("PD is currently with Partner", response.data)
+        mock_send.assert_not_called()
 
 
 class TestInterventionSendToUNICEF(BaseInterventionTestCase):
@@ -434,6 +441,7 @@ class TestInterventionSendToUNICEF(BaseInterventionTestCase):
             'pmp_v3:intervention-send-unicef',
             args=[self.intervention.pk],
         )
+        self.notify_path = "etools.applications.partners.views.interventions_v3_actions.send_notification_with_template"
 
     def test_not_found(self):
         response = self.forced_auth_req(
@@ -447,21 +455,27 @@ class TestInterventionSendToUNICEF(BaseInterventionTestCase):
         self.assertFalse(self.intervention.unicef_court)
 
         # partner sends PD to unicef
-        response = self.forced_auth_req(
-            "patch",
-            self.url,
-            user=self.partner_user,
-        )
+        mock_send = mock.Mock()
+        with mock.patch(self.notify_path, mock_send):
+            response = self.forced_auth_req(
+                "patch",
+                self.url,
+                user=self.partner_user,
+            )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mock_send.assert_called()
 
         # partner request when PD in partner court
-        response = self.forced_auth_req(
-            "patch",
-            self.url,
-            user=self.partner_user,
-        )
+        mock_send = mock.Mock()
+        with mock.patch(self.notify_path, mock_send):
+            response = self.forced_auth_req(
+                "patch",
+                self.url,
+                user=self.partner_user,
+            )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("PD is currently with UNICEF", response.data)
+        mock_send.assert_not_called()
 
 
 class TestTimeframesValidation(BaseInterventionTestCase):
