@@ -1548,6 +1548,7 @@ class TestInterventionManagementBudget(BaseTenantTestCase):
         )
         self.assertEqual(budget.partner_total, 1200)
         self.assertEqual(budget.unicef_total, 900)
+        self.assertEqual(budget.total, 2100)
 
 
 class TestFileType(BaseTenantTestCase):

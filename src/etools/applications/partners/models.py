@@ -2535,10 +2535,7 @@ class InterventionBudget(TimeStampedModel):
             if not init:
                 init_totals()
                 init = True
-            programme_effectiveness += (
-                self.intervention.management_budgets.partner_total +
-                self.intervention.management_budgets.unicef_total
-            )
+            programme_effectiveness += self.intervention.management_budgets.total
             self.partner_contribution_local += self.intervention.management_budgets.partner_total
             self.unicef_cash_local += self.intervention.management_budgets.unicef_total
         except InterventionManagementBudget.DoesNotExist:
@@ -2803,6 +2800,10 @@ class InterventionManagementBudget(TimeStampedModel):
     @property
     def unicef_total(self):
         return self.act1_unicef + self.act2_unicef + self.act3_unicef
+
+    @property
+    def total(self):
+        return self.partner_total + self.unicef_total
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
