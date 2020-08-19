@@ -41,6 +41,41 @@ class PMPInterventionAcceptView(PMPInterventionMixin, InterventionDetailAPIView)
         return super().update(request, *args, **kwargs)
 
 
+class PMPInterventionUnlockView(PMPInterventionMixin, InterventionDetailAPIView):
+    def update(self, request, *args, **kwargs):
+        pd = self.get_object()
+        request.data.clear()
+        if self.is_partner_staff():
+            if not pd.partner_accepted:
+                raise ValidationError("PD is already unlocked.")
+            request.data.update({"partner_accepted": False})
+            recipients = [u.email for u in pd.unicef_focal_points.all()]
+            template_name = 'partners/intervention/partner_unlocked'
+        else:
+            if not pd.unicef_accepted:
+                raise ValidationError("PD is already unlocked.")
+            request.data.update({"unicef_accepted": False})
+            recipients = [u.email for u in pd.partner_focal_points.all()]
+            template_name = 'partners/intervention/unicef_unlocked'
+
+        # send notification
+        context = {
+            "reference_number": pd.reference_number,
+            "partner_name": str(pd.agreement.partner),
+            "pd_link": reverse(
+                "pmp_v3:intervention-detail",
+                args=[pd.pk]
+            ),
+        }
+        send_notification_with_template(
+            recipients=recipients,
+            template_name=template_name,
+            context=context
+        )
+
+        return super().update(request, *args, **kwargs)
+
+
 class PMPInterventionSendToPartnerView(PMPInterventionMixin, InterventionDetailAPIView):
     def update(self, request, *args, **kwargs):
         pd = self.get_object()

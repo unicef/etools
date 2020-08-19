@@ -19,6 +19,7 @@ from etools.applications.partners.views.interventions_v3_actions import (
     PMPInterventionAcceptView,
     PMPInterventionSendToPartnerView,
     PMPInterventionSendToUNICEFView,
+    PMPInterventionUnlockView,
 )
 
 app_name = 'partners'
@@ -41,6 +42,11 @@ urlpatterns = [
         'interventions/<int:pk>/accept/',
         view=PMPInterventionAcceptView.as_view(),
         name='intervention-accept',
+    ),
+    path(
+        'interventions/<int:pk>/unlock/',
+        view=PMPInterventionUnlockView.as_view(),
+        name='intervention-unlock',
     ),
     path(
         'interventions/<int:intervention_pk>/pd-outputs/',
