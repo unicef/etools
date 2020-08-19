@@ -57,7 +57,10 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
         pd.partner_accepted = True
         pd.save()
         available_actions = self.partner_serializer.get_available_actions(pd)
-        self.assertEqual(sorted(available_actions), self.default_actions)
+        self.assertEqual(
+            sorted(available_actions),
+            sorted(self.default_actions + ["unlock"])
+        )
 
     def test_available_actions_partner_unlock(self):
         pd = InterventionFactory(unicef_court=False, unicef_accepted=True)
@@ -65,7 +68,7 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
         self.assertEqual(pd.status, pd.DRAFT)
         self.assertTrue(pd.unicef_accepted)
         available_actions = self.partner_serializer.get_available_actions(pd)
-        expected_actions = self.default_actions + ["accept", "unlock"]
+        expected_actions = self.default_actions + ["accept"]
         self.assertEqual(sorted(available_actions), sorted(expected_actions))
 
     def test_available_actions_budget_owner(self):
@@ -96,6 +99,7 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
         available_actions = self.unicef_serializer.get_available_actions(pd)
         expected_actions = self.default_actions + [
             "accept",
+            "accept_and_review",
             "cancel",
             "send_to_partner",
             "signature",
@@ -104,6 +108,14 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
 
         pd.partner_accepted = True
         pd.save()
-        expected_actions += ["unlock", "accept_and_review"]
         available_actions = self.unicef_serializer.get_available_actions(pd)
-        self.assertEqual(sorted(available_actions), sorted(expected_actions))
+        expected_actions = self.default_actions + [
+            "cancel",
+            "send_to_partner",
+            "signature",
+            "unlock",
+        ]
+        self.assertEqual(
+            sorted(available_actions),
+            sorted(expected_actions),
+        )

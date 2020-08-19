@@ -134,18 +134,20 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
 
             # budget owner
             if obj.budget_owner == user:
-                available_actions.append("accept")
+                if not obj.unicef_accepted:
+                    available_actions.append("accept")
                 available_actions.append("review")
                 available_actions.append("signature")
 
             # any unicef focal point user
             if user in obj.unicef_focal_points.all():
-                available_actions.append("accept")
                 available_actions.append("cancel")
                 available_actions.append("send_to_partner")
                 available_actions.append("signature")
                 if obj.partner_accepted:
                     available_actions.append("unlock")
+                else:
+                    available_actions.append("accept")
                     # TODO confirm that this is focal point
                     # and not just any UNICEF user
                     available_actions.append("accept_and_review")
@@ -154,10 +156,10 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
         else:
             # any partner focal point user
             if self._is_partner_user(obj, user):
-                if not obj.partner_accepted:
-                    available_actions.append("accept")
-                if obj.unicef_accepted:
+                if obj.partner_accepted:
                     available_actions.append("unlock")
+                else:
+                    available_actions.append("accept")
 
         return list(set(available_actions))
 
