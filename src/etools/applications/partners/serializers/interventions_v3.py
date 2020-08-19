@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from unicef_attachments.fields import AttachmentSingleFileField
 
-from etools.applications.partners.models import Intervention, InterventionManagementBudget
+from etools.applications.partners.models import Intervention, InterventionManagementBudget, InterventionSupplyItem
 from etools.applications.partners.permissions import InterventionPermissions
 from etools.applications.partners.serializers.interventions_v2 import (
     FRsSerializer,
@@ -276,3 +276,20 @@ class InterventionDummySerializer(serializers.ModelSerializer):
     class Meta:
         model = Intervention
         fields = ()
+
+
+class InterventionSupplyItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InterventionSupplyItem
+        fields = (
+            "title",
+            "unit_number",
+            "unit_price",
+            "result",
+            "total_price",
+            "other_mentions",
+        )
+
+    def create(self, validated_data):
+        validated_data["intervention"] = self.initial_data.get("intervention")
+        return super().create(validated_data)

@@ -222,3 +222,10 @@ class InterventionManagementBudgetFactory(factory.django.DjangoModelFactory):
         django_get_or_create = ("intervention",)
 
     intervention = factory.SubFactory(InterventionFactory)
+
+
+class InterventionSupplyItemFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.InterventionSupplyItem
+
+    intervention = factory.SubFactory(InterventionFactory)
