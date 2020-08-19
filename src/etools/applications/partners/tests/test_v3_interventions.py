@@ -45,6 +45,8 @@ class URLsTestCase(URLAssertionMixin, SimpleTestCase):
             ('intervention-list', '', {}),
             ('intervention-detail', '1/', {'pk': 1}),
             ('intervention-accept', '1/accept/', {'pk': 1}),
+            ('intervention-send-partner', '1/send_to_partner/', {'pk': 1}),
+            ('intervention-send-unicef', '1/send_to_unicef/', {'pk': 1}),
             ('intervention-budget', '1/budget/', {'intervention_pk': 1}),
             ('intervention-supply-item', '1/supply/', {'intervention_pk': 1}),
             (
@@ -335,7 +337,7 @@ class TestSupplyItem(BaseInterventionTestCase):
         self.assertEqual(response.data["total_price"], "30.00")
 
 
-class TestUpdate(BaseInterventionTestCase):
+class TestInterventionUpdate(BaseInterventionTestCase):
     def _test_patch(self, mapping):
         intervention = InterventionFactory()
         data = {}
@@ -553,10 +555,7 @@ class TestInterventionAccept(BaseInterventionTestCase):
             )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         mock_send.assert_called()
-        self.intervention.refresh_from_db()
-        self.assertTrue(self.intervention.partner_accepted)
 
-        # partner attempt to accept again
         mock_send = mock.Mock()
         with mock.patch(self.notify_path, mock_send):
             response = self.forced_auth_req(
@@ -566,6 +565,149 @@ class TestInterventionAccept(BaseInterventionTestCase):
             )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("Partner has already accepted this PD.", response.data)
+
+
+class TestInterventionSendToPartner(BaseInterventionTestCase):
+    def setUp(self):
+        super().setUp()
+        self.partner_user = UserFactory(is_staff=False, groups__data=[])
+        staff_member = PartnerStaffFactory(email=self.partner_user.email)
+        self.partner_user.profile.partner_staff_member = staff_member.pk
+        self.partner_user.profile.save()
+
+        self.intervention = InterventionFactory()
+        self.intervention.partner_focal_points.add(staff_member)
+
+        self.url = reverse(
+            'pmp_v3:intervention-send-partner',
+            args=[self.intervention.pk],
+        )
+        self.notify_path = "etools.applications.partners.views.interventions_v3_actions.send_notification_with_template"
+
+    def test_not_found(self):
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-send-partner', args=[404]),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_partner_no_access(self):
+        InterventionFactory()
+        response = self.forced_auth_req(
+            "patch",
+            self.url,
+            user=self.partner_user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_get(self):
+        self.assertTrue(self.intervention.unicef_court)
+
+        # unicef sends PD to partner
+        mock_send = mock.Mock()
+        with mock.patch(self.notify_path, mock_send):
+            response = self.forced_auth_req("patch", self.url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mock_send.assert_called()
+
+        # unicef request when PD in partner court
+        mock_send = mock.Mock()
+        with mock.patch(self.notify_path, mock_send):
+            response = self.forced_auth_req("patch", self.url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("PD is currently with Partner", response.data)
+        mock_send.assert_not_called()
+
+
+class TestInterventionSendToUNICEF(BaseInterventionTestCase):
+    def setUp(self):
+        super().setUp()
+        self.partner_user = UserFactory(is_staff=False, groups__data=[])
+        staff_member = PartnerStaffFactory(email=self.partner_user.email)
+        self.partner_user.profile.partner_staff_member = staff_member.pk
+        self.partner_user.profile.save()
+        office = OfficeFactory()
+        section = SectionFactory()
+
+        agreement = AgreementFactory(
+            partner=staff_member.partner,
+            signed_by_unicef_date=datetime.date.today(),
+        )
+        self.intervention = InterventionFactory(
+            agreement=agreement,
+            unicef_court=False,
+            country_programme=agreement.country_programme,
+            start=datetime.date.today(),
+            end=datetime.date.today() + datetime.timedelta(days=3),
+            signed_by_unicef_date=datetime.date.today(),
+            signed_by_partner_date=datetime.date.today(),
+            unicef_signatory=self.user,
+            partner_authorized_officer_signatory=staff_member,
+        )
+        self.intervention.partner_focal_points.add(staff_member)
+        self.intervention.unicef_focal_points.add(self.user)
+        self.intervention.offices.add(office)
+        self.intervention.sections.add(section)
+        AttachmentFactory(
+            file="sample.pdf",
+            object_id=self.intervention.pk,
+            content_type=ContentType.objects.get_for_model(self.intervention),
+            code="partners_intervention_signed_pd",
+        )
+        ReportingRequirementFactory(intervention=self.intervention)
+        FundsReservationHeaderFactory(
+            intervention=self.intervention,
+            currency='USD',
+        )
+
+        self.url = reverse(
+            'pmp_v3:intervention-send-unicef',
+            args=[self.intervention.pk],
+        )
+        self.notify_path = "etools.applications.partners.views.interventions_v3_actions.send_notification_with_template"
+
+    def test_not_found(self):
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-send-unicef', args=[404]),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_partner_no_access(self):
+        intervention = InterventionFactory()
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-accept', args=[intervention.pk]),
+            user=self.partner_user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_get(self):
+        self.assertFalse(self.intervention.unicef_court)
+
+        # partner sends PD to unicef
+        mock_send = mock.Mock()
+        with mock.patch(self.notify_path, mock_send):
+            response = self.forced_auth_req(
+                "patch",
+                self.url,
+                user=self.partner_user,
+            )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mock_send.assert_called()
+
+        # partner request when PD in partner court
+        mock_send = mock.Mock()
+        with mock.patch(self.notify_path, mock_send):
+            response = self.forced_auth_req(
+                "patch",
+                self.url,
+                user=self.partner_user,
+            )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("PD is currently with UNICEF", response.data)
         mock_send.assert_not_called()
 
 

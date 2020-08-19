@@ -51,7 +51,7 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
         self.assertEqual(pd.status, pd.DRAFT)
         self.assertFalse(pd.partner_accepted)
         available_actions = self.partner_serializer.get_available_actions(pd)
-        expected_actions = self.default_actions + ["accept"]
+        expected_actions = self.default_actions + ["accept", "send_to_unicef"]
         self.assertEqual(sorted(available_actions), sorted(expected_actions))
 
         pd.partner_accepted = True
@@ -59,16 +59,28 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
         available_actions = self.partner_serializer.get_available_actions(pd)
         self.assertEqual(
             sorted(available_actions),
-            sorted(self.default_actions + ["unlock"])
+            sorted(self.default_actions + ["send_to_unicef", "unlock"])
         )
 
     def test_available_actions_partner_unlock(self):
-        pd = InterventionFactory(unicef_court=False, unicef_accepted=True)
+        pd = InterventionFactory(unicef_court=False, partner_accepted=True)
         pd.partner_focal_points.add(self.partner_staff)
         self.assertEqual(pd.status, pd.DRAFT)
-        self.assertTrue(pd.unicef_accepted)
+        self.assertTrue(pd.partner_accepted)
         available_actions = self.partner_serializer.get_available_actions(pd)
-        expected_actions = self.default_actions + ["accept"]
+        expected_actions = self.default_actions + [
+            "unlock",
+            "send_to_unicef",
+        ]
+        self.assertEqual(sorted(available_actions), sorted(expected_actions))
+
+    def test_available_actions_partner_with_unicef(self):
+        pd = InterventionFactory(unicef_court=True)
+        pd.partner_focal_points.add(self.partner_staff)
+        self.assertEqual(pd.status, pd.DRAFT)
+        self.assertTrue(pd.unicef_court)
+        available_actions = self.partner_serializer.get_available_actions(pd)
+        expected_actions = self.default_actions
         self.assertEqual(sorted(available_actions), sorted(expected_actions))
 
     def test_available_actions_budget_owner(self):
