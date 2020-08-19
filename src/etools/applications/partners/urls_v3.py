@@ -13,6 +13,7 @@ from etools.applications.partners.views.interventions_v3 import (
     PMPInterventionManagementBudgetRetrieveUpdateView,
     PMPInterventionRetrieveUpdateView,
 )
+from etools.applications.partners.views.interventions_v3_actions import PMPInterventionAcceptView
 
 app_name = 'partners'
 urlpatterns = [
@@ -29,6 +30,11 @@ urlpatterns = [
             http_method_names=['get', 'patch'],
         ),
         name='intervention-detail',
+    ),
+    path(
+        'interventions/<int:pk>/accept/',
+        view=PMPInterventionAcceptView.as_view(),
+        name='intervention-accept',
     ),
     path(
         'interventions/<int:intervention_pk>/pd-outputs/',
