@@ -15,6 +15,10 @@ from etools.applications.partners.views.interventions_v3 import (
     PMPInterventionSupplyItemListCreateView,
     PMPInterventionSupplyItemRetrieveUpdateView,
 )
+from etools.applications.partners.views.interventions_v3_actions import (
+    PMPInterventionSendToPartnerView,
+    PMPInterventionSendToUNICEFView,
+)
 
 app_name = 'partners'
 urlpatterns = [
@@ -46,6 +50,20 @@ urlpatterns = [
         'interventions/<int:intervention_pk>/budget/',
         view=PMPInterventionManagementBudgetRetrieveUpdateView.as_view(),
         name='intervention-budget',
+    ),
+    path(
+        'interventions/<int:pk>/send_to_partner/',
+        view=PMPInterventionSendToPartnerView.as_view(
+            http_method_names=['patch'],
+        ),
+        name='intervention-send-partner',
+    ),
+    path(
+        'interventions/<int:pk>/send_to_unicef/',
+        view=PMPInterventionSendToUNICEFView.as_view(
+            http_method_names=['patch'],
+        ),
+        name='intervention-send-unicef',
     ),
     path(
         'interventions/<int:intervention_pk>/supply/',
