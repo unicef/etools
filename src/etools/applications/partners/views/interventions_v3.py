@@ -1,5 +1,4 @@
 from django.db import transaction
-from django.shortcuts import get_object_or_404
 
 from rest_framework import status
 from rest_framework.generics import (
@@ -12,7 +11,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from etools.applications.field_monitoring.permissions import IsEditAction, IsReadAction
-from etools.applications.partners.models import Intervention, InterventionManagementBudget
+from etools.applications.partners.models import Intervention, InterventionManagementBudget, InterventionSupplyItem
 from etools.applications.partners.permissions import (
     intervention_field_is_editable_permission,
     PartnershipManagerPermission,
@@ -30,6 +29,7 @@ from etools.applications.partners.serializers.interventions_v3 import (
     InterventionDetailSerializer,
     InterventionDummySerializer,
     InterventionManagementBudgetSerializer,
+    InterventionSupplyItemSerializer,
 )
 from etools.applications.partners.serializers.v3 import (
     PartnerInterventionLowerResultSerializer,
@@ -143,10 +143,7 @@ class PMPInterventionManagementBudgetRetrieveUpdateView(PMPInterventionMixin, Re
     serializer_class = InterventionManagementBudgetSerializer
 
     def get_object(self):
-        intervention = get_object_or_404(
-            Intervention,
-            pk=self.kwargs.get("intervention_pk"),
-        )
+        intervention = self.get_pd_or_404(self.kwargs.get("intervention_pk"))
         obj, __ = InterventionManagementBudget.objects.get_or_create(
             intervention=intervention,
         )
@@ -156,6 +153,29 @@ class PMPInterventionManagementBudgetRetrieveUpdateView(PMPInterventionMixin, Re
         if kwargs.get("data"):
             kwargs["data"]["intervention"] = self.kwargs.get("intervention_pk")
         return super().get_serializer(*args, **kwargs)
+
+
+class PMPInterventionSupplyItemListCreateView(PMPInterventionMixin, ListCreateAPIView):
+    queryset = InterventionSupplyItem.objects
+    serializer_class = InterventionSupplyItemSerializer
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        return qs.filter(
+            intervention=self.get_pd(self.kwargs.get("intervention_pk")),
+        )
+
+    def get_serializer(self, *args, **kwargs):
+        if kwargs.get("data"):
+            kwargs["data"]["intervention"] = self.get_pd(
+                self.kwargs.get("intervention_pk"),
+            )
+        return super().get_serializer(*args, **kwargs)
+
+
+class PMPInterventionSupplyItemRetrieveUpdateView(PMPInterventionMixin, RetrieveUpdateAPIView):
+    queryset = InterventionSupplyItem.objects
+    serializer_class = InterventionSupplyItemSerializer
 
 
 class InterventionActivityViewMixin():
