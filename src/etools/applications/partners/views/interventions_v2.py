@@ -512,10 +512,8 @@ class InterventionAmendmentDeleteView(DestroyAPIView):
             return Response(status=status.HTTP_404_NOT_FOUND)
         if intervention_amendment.intervention.status in [Intervention.DRAFT] or \
             request.user in intervention_amendment.intervention.unicef_focal_points.all() or \
-            request.user.groups.filter(name__in=[
-                'Partnership Manager',
-                SENIOR_MANAGEMENT_GROUP,
-            ]).exists():
+            request.user.groups.filter(name__in=['Partnership Manager',
+                                                 SENIOR_MANAGEMENT_GROUP]).exists():
             intervention_amendment.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         else:
