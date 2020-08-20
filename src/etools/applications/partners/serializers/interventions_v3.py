@@ -4,7 +4,7 @@ from rest_framework import serializers
 from unicef_attachments.fields import AttachmentSingleFileField
 
 from etools.applications.partners.models import Intervention, InterventionManagementBudget, InterventionSupplyItem
-from etools.applications.partners.permissions import InterventionPermissions
+from etools.applications.partners.permissions import InterventionPermissions, SENIOR_MANAGEMENT_GROUP
 from etools.applications.partners.serializers.interventions_v2 import (
     FRsSerializer,
     InterventionAmendmentCUSerializer,
@@ -108,7 +108,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     def _is_management(self):
         return get_user_model().objects.filter(
             pk=self.context['request'].user.pk,
-            groups__name__in=['Senior Management Team'],
+            groups__name__in=[SENIOR_MANAGEMENT_GROUP],
             profile__country=self.context['request'].user.profile.country
         ).exists()
 

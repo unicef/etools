@@ -2,6 +2,7 @@ from unittest.mock import Mock
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import Intervention
+from etools.applications.partners.permissions import SENIOR_MANAGEMENT_GROUP
 from etools.applications.partners.serializers import interventions_v3 as serializers
 from etools.applications.partners.tests.factories import InterventionFactory, PartnerFactory
 from etools.applications.users.tests.factories import GroupFactory, UserFactory
@@ -97,7 +98,7 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
     def test_available_actions_management(self):
         pd = InterventionFactory()
         self.unicef_user.groups.add(
-            GroupFactory(name='Senior Management Team'),
+            GroupFactory(name=SENIOR_MANAGEMENT_GROUP),
         )
         self.assertEqual(pd.status, pd.DRAFT)
         available_actions = self.unicef_serializer.get_available_actions(pd)
