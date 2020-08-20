@@ -1604,6 +1604,8 @@ class Intervention(TimeStampedModel):
     """
 
     DRAFT = 'draft'
+    REVIEW = 'review'
+    SIGNATURE = 'signature'
     SIGNED = 'signed'
     ACTIVE = 'active'
     ENDED = 'ended'
@@ -1619,6 +1621,8 @@ class Intervention(TimeStampedModel):
         ENDED: [CLOSED]
     }
     TRANSITION_SIDE_EFFECTS = {
+        REVIEW: [],
+        SIGNATURE: [],
         SIGNED: [side_effect_one, side_effect_two],
         ACTIVE: [],
         SUSPENDED: [],
@@ -1630,6 +1634,8 @@ class Intervention(TimeStampedModel):
     CANCELLED = 'cancelled'
     INTERVENTION_STATUS = (
         (DRAFT, "Development"),
+        (REVIEW, "Review"),
+        (SIGNATURE, "Signature"),
         (SIGNED, 'Signed'),
         (ACTIVE, "Active"),
         (ENDED, "Ended"),
@@ -2165,7 +2171,21 @@ class Intervention(TimeStampedModel):
         pass
 
     @transition(field=status,
-                source=[DRAFT, SUSPENDED, SIGNED],
+                source=[DRAFT],
+                target=[REVIEW],
+                conditions=[intervention_validation.transition_to_review])
+    def transtion_to_review(self):
+        pass
+
+    @transition(field=status,
+                source=[REVIEW],
+                target=[SIGNATURE],
+                conditions=[intervention_validation.transition_to_signature])
+    def transition_to_signature(self):
+        pass
+
+    @transition(field=status,
+                source=[SUSPENDED, SIGNED],
                 target=[ACTIVE],
                 conditions=[intervention_validation.transition_to_active],
                 permission=intervention_validation.partnership_manager_only)
@@ -2173,7 +2193,7 @@ class Intervention(TimeStampedModel):
         pass
 
     @transition(field=status,
-                source=[DRAFT, SUSPENDED],
+                source=[DRAFT, REVIEW, SIGNATURE, SUSPENDED],
                 target=[SIGNED],
                 conditions=[intervention_validation.transition_to_signed])
     def transition_to_signed(self):
