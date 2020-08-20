@@ -56,7 +56,11 @@ class PMPInterventionAcceptReviewView(PMPInterventionMixin, InterventionDetailAP
         request.data.update({"status": Intervention.REVIEW})
 
         # send notification
-        recipients = [u.email for u in pd.partner_focal_points.all()]
+        recipients = [
+            u.email for u in pd.partner_focal_points.all()
+        ] + [
+            u.email for u in pd.unicef_focal_points.all()
+        ]
         context = {
             "reference_number": pd.reference_number,
             "partner_name": str(pd.agreement.partner),
