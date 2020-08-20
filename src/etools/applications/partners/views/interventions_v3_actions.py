@@ -1,8 +1,10 @@
+from django.http import HttpResponseForbidden
 from django.urls import reverse
 
 from rest_framework.exceptions import ValidationError
 from unicef_notification.utils import send_notification_with_template
 
+from etools.applications.partners.models import Intervention
 from etools.applications.partners.views.interventions_v3 import InterventionDetailAPIView, PMPInterventionMixin
 
 
@@ -35,6 +37,37 @@ class PMPInterventionAcceptView(PMPInterventionMixin, InterventionDetailAPIView)
         send_notification_with_template(
             recipients=recipients,
             template_name=template_name,
+            context=context
+        )
+
+        return super().update(request, *args, **kwargs)
+
+
+class PMPInterventionAcceptReviewView(PMPInterventionMixin, InterventionDetailAPIView):
+    def update(self, request, *args, **kwargs):
+        if self.is_partner_staff():
+            return HttpResponseForbidden()
+        pd = self.get_object()
+        if pd.status == Intervention.REVIEW:
+            raise ValidationError("PD is already in Review status.")
+        request.data.clear()
+        if not pd.unicef_accepted:
+            request.data.update({"unicef_accepted": True})
+        request.data.update({"status": Intervention.REVIEW})
+
+        # send notification
+        recipients = [u.email for u in pd.partner_focal_points.all()]
+        context = {
+            "reference_number": pd.reference_number,
+            "partner_name": str(pd.agreement.partner),
+            "pd_link": reverse(
+                "pmp_v3:intervention-detail",
+                args=[pd.pk]
+            ),
+        }
+        send_notification_with_template(
+            recipients=recipients,
+            template_name='partners/intervention/unicef_accepted_review',
             context=context
         )
 

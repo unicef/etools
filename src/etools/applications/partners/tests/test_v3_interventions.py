@@ -45,6 +45,7 @@ class URLsTestCase(URLAssertionMixin, SimpleTestCase):
             ('intervention-list', '', {}),
             ('intervention-detail', '1/', {'pk': 1}),
             ('intervention-accept', '1/accept/', {'pk': 1}),
+            ('intervention-accept-review', '1/accept_review/', {'pk': 1}),
             ('intervention-send-partner', '1/send_to_partner/', {'pk': 1}),
             ('intervention-send-unicef', '1/send_to_unicef/', {'pk': 1}),
             ('intervention-budget', '1/budget/', {'intervention_pk': 1}),
@@ -460,7 +461,7 @@ class TestInterventionUpdate(BaseInterventionTestCase):
         self._test_patch(mapping)
 
 
-class TestInterventionAccept(BaseInterventionTestCase):
+class BaseInterventionActionTestCase(BaseInterventionTestCase):
     def setUp(self):
         super().setUp()
         call_command("update_notifications")
@@ -502,11 +503,16 @@ class TestInterventionAccept(BaseInterventionTestCase):
             currency='USD',
         )
 
+        self.notify_path = "etools.applications.partners.views.interventions_v3_actions.send_notification_with_template"
+
+
+class TestInterventionAccept(BaseInterventionActionTestCase):
+    def setUp(self):
+        super().setUp()
         self.url = reverse(
             'pmp_v3:intervention-accept',
             args=[self.intervention.pk],
         )
-        self.notify_path = "etools.applications.partners.views.interventions_v3_actions.send_notification_with_template"
 
     def test_not_found(self):
         response = self.forced_auth_req(
@@ -569,55 +575,61 @@ class TestInterventionAccept(BaseInterventionTestCase):
         self.assertIn("Partner has already accepted this PD.", response.data)
 
 
-class TestInterventionUnlock(BaseInterventionTestCase):
+class TestInterventionAcceptReview(BaseInterventionActionTestCase):
     def setUp(self):
         super().setUp()
-        call_command("update_notifications")
-
-        self.partner_user = UserFactory(is_staff=False, groups__data=[])
-        staff_member = PartnerStaffFactory(email=self.partner_user.email)
-        self.partner_user.profile.partner_staff_member = staff_member.pk
-        self.partner_user.profile.save()
-        office = OfficeFactory()
-        section = SectionFactory()
-
-        agreement = AgreementFactory(
-            partner=staff_member.partner,
-            signed_by_unicef_date=datetime.date.today(),
-        )
-        self.intervention = InterventionFactory(
-            agreement=agreement,
-            country_programme=agreement.country_programme,
-            start=datetime.date.today(),
-            end=datetime.date.today() + datetime.timedelta(days=3),
-            signed_by_unicef_date=datetime.date.today(),
-            signed_by_partner_date=datetime.date.today(),
-            unicef_signatory=self.user,
-            partner_authorized_officer_signatory=staff_member,
-            unicef_accepted=True,
-            partner_accepted=True,
-        )
-        self.intervention.partner_focal_points.add(staff_member)
-        self.intervention.unicef_focal_points.add(self.user)
-        self.intervention.offices.add(office)
-        self.intervention.sections.add(section)
-        AttachmentFactory(
-            file="sample.pdf",
-            object_id=self.intervention.pk,
-            content_type=ContentType.objects.get_for_model(self.intervention),
-            code="partners_intervention_signed_pd",
-        )
-        ReportingRequirementFactory(intervention=self.intervention)
-        FundsReservationHeaderFactory(
-            intervention=self.intervention,
-            currency='USD',
+        self.url = reverse(
+            'pmp_v3:intervention-accept-review',
+            args=[self.intervention.pk],
         )
 
+    def test_not_found(self):
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-accept-review', args=[404]),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_partner_no_access(self):
+        intervention = InterventionFactory()
+        response = self.forced_auth_req(
+            "patch",
+            reverse(
+                'pmp_v3:intervention-accept-review',
+                args=[intervention.pk],
+            ),
+            user=self.partner_user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_get(self):
+        # unicef accepts
+        self.assertFalse(self.intervention.unicef_accepted)
+        mock_send = mock.Mock()
+        with mock.patch(self.notify_path, mock_send):
+            response = self.forced_auth_req("patch", self.url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mock_send.assert_called()
+        self.intervention.refresh_from_db()
+        self.assertTrue(self.intervention.unicef_accepted)
+
+        # unicef attempt to accept and review again
+        mock_send = mock.Mock()
+        with mock.patch(self.notify_path, mock_send):
+            response = self.forced_auth_req("patch", self.url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("PD is already in Review status.", response.data)
+        mock_send.assert_not_called()
+
+
+class TestInterventionUnlock(BaseInterventionActionTestCase):
+    def setUp(self):
+        super().setUp()
         self.url = reverse(
             'pmp_v3:intervention-unlock',
             args=[self.intervention.pk],
         )
-        self.notify_path = "etools.applications.partners.views.interventions_v3_actions.send_notification_with_template"
 
     def test_not_found(self):
         response = self.forced_auth_req(
@@ -637,6 +649,10 @@ class TestInterventionUnlock(BaseInterventionTestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_get(self):
+        self.intervention.unicef_accepted = True
+        self.intervention.partner_accepted = True
+        self.intervention.save()
+
         # unicef unlocks
         self.assertTrue(self.intervention.unicef_accepted)
         mock_send = mock.Mock()
@@ -680,22 +696,13 @@ class TestInterventionUnlock(BaseInterventionTestCase):
         self.assertIn("PD is already unlocked.", response.data)
 
 
-class TestInterventionSendToPartner(BaseInterventionTestCase):
+class TestInterventionSendToPartner(BaseInterventionActionTestCase):
     def setUp(self):
         super().setUp()
-        self.partner_user = UserFactory(is_staff=False, groups__data=[])
-        staff_member = PartnerStaffFactory(email=self.partner_user.email)
-        self.partner_user.profile.partner_staff_member = staff_member.pk
-        self.partner_user.profile.save()
-
-        self.intervention = InterventionFactory()
-        self.intervention.partner_focal_points.add(staff_member)
-
         self.url = reverse(
             'pmp_v3:intervention-send-partner',
             args=[self.intervention.pk],
         )
-        self.notify_path = "etools.applications.partners.views.interventions_v3_actions.send_notification_with_template"
 
     def test_not_found(self):
         response = self.forced_auth_req(
@@ -706,10 +713,13 @@ class TestInterventionSendToPartner(BaseInterventionTestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_partner_no_access(self):
-        InterventionFactory()
+        intervention = InterventionFactory()
         response = self.forced_auth_req(
             "patch",
-            self.url,
+            reverse(
+                'pmp_v3:intervention-send-partner',
+                args=[intervention.pk],
+            ),
             user=self.partner_user,
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -733,52 +743,13 @@ class TestInterventionSendToPartner(BaseInterventionTestCase):
         mock_send.assert_not_called()
 
 
-class TestInterventionSendToUNICEF(BaseInterventionTestCase):
+class TestInterventionSendToUNICEF(BaseInterventionActionTestCase):
     def setUp(self):
         super().setUp()
-        self.partner_user = UserFactory(is_staff=False, groups__data=[])
-        staff_member = PartnerStaffFactory(email=self.partner_user.email)
-        self.partner_user.profile.partner_staff_member = staff_member.pk
-        self.partner_user.profile.save()
-        office = OfficeFactory()
-        section = SectionFactory()
-
-        agreement = AgreementFactory(
-            partner=staff_member.partner,
-            signed_by_unicef_date=datetime.date.today(),
-        )
-        self.intervention = InterventionFactory(
-            agreement=agreement,
-            unicef_court=False,
-            country_programme=agreement.country_programme,
-            start=datetime.date.today(),
-            end=datetime.date.today() + datetime.timedelta(days=3),
-            signed_by_unicef_date=datetime.date.today(),
-            signed_by_partner_date=datetime.date.today(),
-            unicef_signatory=self.user,
-            partner_authorized_officer_signatory=staff_member,
-        )
-        self.intervention.partner_focal_points.add(staff_member)
-        self.intervention.unicef_focal_points.add(self.user)
-        self.intervention.offices.add(office)
-        self.intervention.sections.add(section)
-        AttachmentFactory(
-            file="sample.pdf",
-            object_id=self.intervention.pk,
-            content_type=ContentType.objects.get_for_model(self.intervention),
-            code="partners_intervention_signed_pd",
-        )
-        ReportingRequirementFactory(intervention=self.intervention)
-        FundsReservationHeaderFactory(
-            intervention=self.intervention,
-            currency='USD',
-        )
-
         self.url = reverse(
             'pmp_v3:intervention-send-unicef',
             args=[self.intervention.pk],
         )
-        self.notify_path = "etools.applications.partners.views.interventions_v3_actions.send_notification_with_template"
 
     def test_not_found(self):
         response = self.forced_auth_req(
@@ -798,6 +769,9 @@ class TestInterventionSendToUNICEF(BaseInterventionTestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_get(self):
+        self.intervention.unicef_court = False
+        self.intervention.save()
+
         self.assertFalse(self.intervention.unicef_court)
 
         # partner sends PD to unicef
