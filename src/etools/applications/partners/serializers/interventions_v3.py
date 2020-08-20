@@ -107,6 +107,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
 
     def _is_management(self):
         return get_user_model().objects.filter(
+            pk=self.context['request'].user.pk,
             groups__name__in=['Senior Management Team'],
             profile__country=self.context['request'].user.profile.country
         ).exists()
