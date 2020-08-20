@@ -100,5 +100,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.13.1,reporting_requirements,UNICEF User,,*,Required,FALSE
 ,pd_outputs,*,,*,View,TRUE
 ,pd_outputs,UNICEF User,,Draft,Edit,TRUE
+,final_partnership_review,UNICEF User,,Draft,Edit,TRUE
+,cash_transfer_modalities,UNICEF User,,Draft,Edit,TRUE
 ,pd_outputs,UNICEF User,unicef_court,Draft,Edit,TRUE
 ,pd_outputs,Partner User,partner_court,Draft,Edit,TRUE

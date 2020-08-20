@@ -2154,6 +2154,11 @@ class Intervention(TimeStampedModel):
         else:
             return datetime.date.today().year
 
+    @property
+    def final_partnership_review(self):
+        # to be used only to track changes in validator mixin
+        return self.attachments.filter(type__name=FileType.FINAL_PARTNERSHIP_REVIEW)
+
     def illegal_transitions(self):
         return False
 

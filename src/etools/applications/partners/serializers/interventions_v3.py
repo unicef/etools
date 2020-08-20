@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from unicef_attachments.fields import AttachmentSingleFileField
 
-from etools.applications.partners.models import Intervention, InterventionManagementBudget
+from etools.applications.partners.models import FileType, Intervention, InterventionManagementBudget
 from etools.applications.partners.permissions import InterventionPermissions
 from etools.applications.partners.serializers.interventions_v2 import (
     FRsSerializer,
@@ -12,6 +12,7 @@ from etools.applications.partners.serializers.interventions_v2 import (
     InterventionBudgetCUSerializer,
     InterventionResultNestedSerializer,
     PlannedVisitsNestedSerializer,
+    SingleInterventionAttachmentField,
 )
 from etools.applications.partners.utils import get_quarters_range
 
@@ -49,6 +50,10 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     termination_doc_attachment = AttachmentSingleFileField(read_only=True)
     termination_doc_file = serializers.FileField(source='termination_doc', read_only=True)
     quarters = serializers.SerializerMethodField()
+    final_partnership_review = SingleInterventionAttachmentField(
+        type_name=FileType.FINAL_PARTNERSHIP_REVIEW,
+        read_field=InterventionAttachmentSerializer()
+    )
 
     def get_location_p_codes(self, obj):
         return [location.p_code for location in obj.flat_locations.all()]
@@ -182,6 +187,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "available_actions",
             "budget_owner",
             "capacity_development",
+            "cash_transfer_modalities",
             "cfei_number",
             "cluster_names",
             "context",
@@ -196,6 +202,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "end",
             "equity_narrative",
             "equity_rating",
+            "final_partnership_review",
             "flagged_sections",
             "flat_locations",
             "frs",

@@ -2,7 +2,7 @@ from datetime import date, datetime
 from operator import itemgetter
 
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, QuerySet
 from django.utils.functional import cached_property
 from django.utils.translation import ugettext as _
 
@@ -10,6 +10,7 @@ from rest_framework import serializers
 from rest_framework.serializers import ValidationError
 from rest_framework.validators import UniqueTogetherValidator
 from unicef_attachments.fields import AttachmentSingleFileField
+from unicef_attachments.models import Attachment
 from unicef_attachments.serializers import AttachmentSerializerMixin
 from unicef_locations.serializers import LocationSerializer
 from unicef_snapshot.serializers import SnapshotModelSerializer
@@ -17,6 +18,7 @@ from unicef_snapshot.serializers import SnapshotModelSerializer
 from etools.applications.funds.models import FundsCommitmentItem, FundsReservationHeader
 from etools.applications.funds.serializers import FRHeaderSerializer, FRsSerializer
 from etools.applications.partners.models import (
+    FileType,
     Intervention,
     InterventionAmendment,
     InterventionAttachment,
@@ -352,6 +354,46 @@ class InterventionAttachmentSerializer(AttachmentSerializerMixin, serializers.Mo
         )
 
 
+class SingleInterventionAttachmentField(serializers.Field):
+    def __init__(self, *args, type_name: str = None, read_field: serializers.ModelSerializer = None, **kwargs):
+        self.type_name = type_name
+        self.read_field = read_field
+        super().__init__(*args, **kwargs)
+
+    def get_file_type(self) -> FileType:
+        return FileType.objects.get(name=self.type_name)
+
+    def get_intervention_attachment(self, intervention: Intervention) -> InterventionAttachment:
+        return intervention.attachments.filter(type=self.get_file_type()).first()
+
+    def to_internal_value(self, data: int) -> Attachment:
+        return Attachment.objects.filter(pk=data).first()
+
+    def to_representation(self, value: QuerySet) -> [dict]:
+        value = value.first()
+        if not value:
+            return None
+
+        return self.read_field.to_representation(instance=value)
+
+    def set_attachment(self, intervention: Intervention, attachment: Attachment) -> InterventionAttachment:
+        existing_attachment = self.get_intervention_attachment(intervention)
+        if existing_attachment:
+            existing_attachment.delete()
+
+        intervention_attachment = InterventionAttachment.objects.create(
+            intervention=intervention,
+            type=self.get_file_type(),
+            attachment=attachment.file,
+        )
+
+        attachment.code = 'partners_intervention_attachment'
+        attachment.content_object = intervention_attachment
+        attachment.save()
+
+        return intervention_attachment
+
+
 class InterventionResultNestedSerializer(serializers.ModelSerializer):
     cp_output_name = serializers.CharField(source="cp_output.output_name", read_only=True)
     ram_indicator_names = serializers.SerializerMethodField(read_only=True)
@@ -563,6 +605,10 @@ class InterventionCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotMode
         queryset=FundsReservationHeader.objects.prefetch_related('intervention').all(),
         required=False,
     )
+    final_partnership_review = SingleInterventionAttachmentField(
+        type_name=FileType.FINAL_PARTNERSHIP_REVIEW,
+        read_field=InterventionAttachmentSerializer()
+    )
 
     class Meta:
         model = Intervention
@@ -613,14 +659,18 @@ class InterventionCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotMode
                     bad_keys = set(validated_data.keys()).union({'start', 'end'})
                     raise ValidationError({key: [error_text] for key in bad_keys})
 
-        if 'prc_review_attachment' in validated_data:
-            validated_data['submission_date_prc'] = validated_data['prc_review_attachment'].created
-
         return validated_data
 
     @transaction.atomic
     def update(self, instance, validated_data):
+        # todo: not cleaner way to work with. how it can be improved?
+        final_partnership_review = validated_data.pop('final_partnership_review', None)
+
         updated = super().update(instance, validated_data)
+
+        if final_partnership_review:
+            self.get_fields()['final_partnership_review'].set_attachment(instance, final_partnership_review)
+
         return updated
 
 
