@@ -1,19 +1,19 @@
-from datetime import timedelta
+from datetime import date
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
-from django.utils import timezone
 
 from rest_framework import status
 
 from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
 from etools.applications.partners.models import FileType, Intervention
 from etools.applications.partners.tests.factories import (
     FileTypeFactory,
     InterventionBudgetFactory,
     InterventionFactory,
-    PartnerStaffFactory,
+    PartnerStaffFactory, PartnerFactory,
 )
 from etools.applications.reports.tests.factories import CountryProgrammeFactory, OfficeFactory, SectionFactory
 from etools.applications.users.tests.factories import UserFactory
@@ -26,29 +26,37 @@ class BaseTestCase(BaseTenantTestCase):
 
         cls.partnership_manager = UserFactory(is_staff=True, groups__data=['UNICEF User', 'Partnership Manager'])
 
-        cls.draft_intervention = InterventionFactory()
+        cls.partner = PartnerFactory()
+        cls.draft_intervention = InterventionFactory(agreement__partner=cls.partner)
 
         country_programme = CountryProgrammeFactory()
-        cls.signed_intervention = InterventionFactory(
-            status=Intervention.SIGNED,
-            signed_by_partner_date=timezone.now(),
-            partner_authorized_officer_signatory=PartnerStaffFactory(),
-            signed_by_unicef_date=timezone.now(),
+        cls.ended_intervention = InterventionFactory(
+            agreement__partner=cls.partner,
+            status=Intervention.ENDED,
+            signed_by_partner_date=date(year=1970, month=1, day=1),
+            partner_authorized_officer_signatory=PartnerStaffFactory(partner=cls.partner),
+            signed_by_unicef_date=date(year=1970, month=1, day=1),
             country_programme=country_programme,
-            start=timezone.now(),
-            end=timezone.now() + timedelta(days=1),
+            start=date(year=1970, month=2, day=1),
+            end=date(year=1970, month=3, day=1),
             agreement__country_programme=country_programme,
         )
-        InterventionBudgetFactory(intervention=cls.signed_intervention, unicef_cash_local=1)
+        FundsReservationHeaderFactory(intervention=cls.ended_intervention)
+        InterventionBudgetFactory(intervention=cls.ended_intervention, unicef_cash_local=1)
         AttachmentFactory(
-            file=SimpleUploadedFile('hello_world.txt', 'hello world!'.encode('utf-8')),
-            code='partners_intervention_signed_pd',
-            content_object=cls.signed_intervention,
+            file=SimpleUploadedFile('test.txt', b'test'),
+            code='partners_intervention_ended_pd',
+            content_object=cls.ended_intervention,
         )
-        cls.signed_intervention.unicef_focal_points.add(UserFactory())
-        cls.signed_intervention.sections.add(SectionFactory())
-        cls.signed_intervention.offices.add(OfficeFactory())
-        cls.signed_intervention.partner_focal_points.add(PartnerStaffFactory())
+        AttachmentFactory(
+            file=SimpleUploadedFile('test.txt', b'test'),
+            code='partners_intervention_signed_pd',
+            content_object=cls.ended_intervention,
+        )
+        cls.ended_intervention.unicef_focal_points.add(UserFactory())
+        cls.ended_intervention.sections.add(SectionFactory())
+        cls.ended_intervention.offices.add(OfficeFactory())
+        cls.ended_intervention.partner_focal_points.add(PartnerStaffFactory())
 
 
 class TestRisksManagement(BaseTestCase):
@@ -74,17 +82,17 @@ class TestFinancialManagement(BaseTestCase):
         self.assertEqual(response.data['permissions']['edit']['cash_transfer_modalities'], True)
         self.assertEqual(response.data['cash_transfer_modalities'], Intervention.CASH_TRANSFER_PAYMENT)
 
-    def test_update_signed(self):
+    def test_update_ended(self):
         response = self.forced_auth_req(
             'patch',
-            reverse('pmp_v3:intervention-detail', args=[self.signed_intervention.pk]),
+            reverse('pmp_v3:intervention-detail', args=[self.ended_intervention.pk]),
             user=self.partnership_manager,
             data={
                 'cash_transfer_modalities': Intervention.CASH_TRANSFER_PAYMENT,
             }
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('Cannot change fields while in signed: cash_transfer_modalities', response.data[0])
+        self.assertIn('Cannot change fields while in ended: cash_transfer_modalities', response.data[0])
 
 
 class TestFundsReservationManagement(BaseTestCase):
@@ -92,7 +100,44 @@ class TestFundsReservationManagement(BaseTestCase):
 
 
 class TestSignedDocumentsManagement(BaseTestCase):
-    pass
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.data = {
+            'submission_date': '1970-01-01',
+            'submission_date_prc': '1970-01-01',
+            'review_date_prc': '1970-01-01',
+            'prc_review_attachment': AttachmentFactory(file=SimpleUploadedFile('hello_world.txt', b'hello world!')).pk,
+            'signed_by_unicef_date': '1970-01-02',
+            'signed_by_partner_date': '1970-01-02',
+            'unicef_signatory': UserFactory().id,
+            'partner_authorized_officer_signatory': PartnerStaffFactory(partner=cls.partner).pk,
+            'signed_pd_attachment': AttachmentFactory(file=SimpleUploadedFile('hello_world.txt', b'hello world!')).pk,
+        }
+
+    def test_update(self):
+        response = self.forced_auth_req(
+            'patch',
+            reverse('pmp_v3:intervention-detail', args=[self.draft_intervention.pk]),
+            user=self.partnership_manager,
+            data=self.data
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        for field in self.data.keys():
+            self.assertEqual(response.data['permissions']['edit'][field], True)
+            self.assertIsNotNone(response.data[field], f'{field} is unexpectedly None')
+
+    def test_update_ended(self):
+        # check in loop because there are only one error will be raised at a moment
+        for field, value in self.data.items():
+            response = self.forced_auth_req(
+                'patch',
+                reverse('pmp_v3:intervention-detail', args=[self.ended_intervention.pk]),
+                user=self.partnership_manager,
+                data={field: value}
+            )
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, f'wrong response for {field}')
+            self.assertEqual(f'Cannot change fields while in ended: {field}', response.data[0])
 
 
 class TestAmendmentsManagement(BaseTestCase):
@@ -103,11 +148,10 @@ class TestFinalPartnershipReviewManagement(BaseTestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
-
-        cls.example_attachment = AttachmentFactory(
-            file=SimpleUploadedFile('hello_world.txt', 'hello world!'.encode('utf-8')),
-        )
         FileTypeFactory(name=FileType.FINAL_PARTNERSHIP_REVIEW)
+        cls.example_attachment = AttachmentFactory(
+            file=SimpleUploadedFile('hello_world.txt', b'hello world!'),
+        )
 
     def test_update(self):
         response = self.forced_auth_req(
@@ -131,11 +175,11 @@ class TestFinalPartnershipReviewManagement(BaseTestCase):
     def test_update_permissions_restricted(self):
         response = self.forced_auth_req(
             'patch',
-            reverse('pmp_v3:intervention-detail', args=[self.signed_intervention.pk]),
+            reverse('pmp_v3:intervention-detail', args=[self.ended_intervention.pk]),
             user=self.partnership_manager,
             data={
                 'final_partnership_review': self.example_attachment.pk,
             }
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data[0], 'Cannot change fields while in signed: final_partnership_review')
+        self.assertEqual(response.data[0], 'Cannot change fields while in ended: final_partnership_review')

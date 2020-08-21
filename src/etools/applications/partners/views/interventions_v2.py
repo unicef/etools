@@ -299,6 +299,7 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
             # todo: add other CodedGenericRelation fields. at this moment they're not managed by permissions matrix
             'prc_review_attachment',
             'final_partnership_review',
+            'signed_pd_attachment',
         ]
         self.instance, old_instance, serializer = self.my_update(
             request,
