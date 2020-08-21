@@ -22,6 +22,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     amendments = InterventionAmendmentCUSerializer(many=True, read_only=True, required=False)
     attachments = InterventionAttachmentSerializer(many=True, read_only=True, required=False)
     available_actions = serializers.SerializerMethodField()
+    status_list = serializers.SerializerMethodField()
     cluster_names = serializers.SerializerMethodField()
     days_from_review_to_signed = serializers.CharField(read_only=True)
     days_from_submission_to_signed = serializers.CharField(read_only=True)
@@ -167,6 +168,37 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
 
         return list(set(available_actions))
 
+    def get_status_list(self, obj):
+        # TODO uncomment status when PR 2770 merged
+        if obj.status == obj.SUSPENDED:
+            status_list = [
+                obj.DRAFT,
+                # obj.REVIEW,
+                # obj.SIGNED,
+                obj.SIGNED,
+                obj.SUSPENDED,
+                obj.ACTIVE,
+                obj.ENDED,
+            ]
+        elif obj.status == obj.TERMINATED:
+            status_list = [
+                obj.DRAFT,
+                # obj.REVIEW,
+                # obj.SIGNATURE,
+                obj.SIGNED,
+                obj.TERMINATED,
+            ]
+        else:
+            status_list = [
+                obj.DRAFT,
+                # obj.REVIEW,
+                # obj.SIGNATURE,
+                obj.SIGNED,
+                obj.ACTIVE,
+                obj.ENDED,
+            ]
+        return [s for s in obj.INTERVENTION_STATUS if s[0] in status_list]
+
     def get_quarters(self, obj: Intervention):
         return [
             {
@@ -248,6 +280,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "signed_pd_document_file",
             "start",
             "status",
+            "status_list",
             "submission_date",
             "submission_date_prc",
             "submitted_to_prc",
