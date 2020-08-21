@@ -2452,6 +2452,7 @@ class InterventionBudget(TimeStampedModel):
     intervention = models.OneToOneField(Intervention, related_name='planned_budget', null=True, blank=True,
                                         verbose_name=_('Intervention'), on_delete=models.CASCADE)
 
+    # legacy values
     partner_contribution = models.DecimalField(max_digits=20, decimal_places=2, default=0,
                                                verbose_name=_('Partner Contribution'))
     unicef_cash = models.DecimalField(max_digits=20, decimal_places=2, default=0, verbose_name=_('Unicef Cash'))
@@ -2463,21 +2464,36 @@ class InterventionBudget(TimeStampedModel):
     )
     total = models.DecimalField(max_digits=20, decimal_places=2, verbose_name=_('Total'))
 
+    # sum of all activity/management budget cso/partner values
     partner_contribution_local = models.DecimalField(max_digits=20, decimal_places=2, default=0,
                                                      verbose_name=_('Partner Contribution Local'))
+    # sum of all activity/management budget unicef values
     unicef_cash_local = models.DecimalField(max_digits=20, decimal_places=2, default=0,
                                             verbose_name=_('Unicef Cash Local'))
+    # sum of all supply items (InterventionSupplyItem)
     in_kind_amount_local = models.DecimalField(
         max_digits=20, decimal_places=2, default=0,
         verbose_name=_('UNICEF Supplies Local')
     )
     currency = CurrencyField(verbose_name=_('Currency'), null=False, default='')
     total_local = models.DecimalField(max_digits=20, decimal_places=2, verbose_name=_('Total Local'))
+    programme_effectiveness = models.DecimalField(
+        max_digits=20,
+        decimal_places=2,
+        verbose_name=_("Programme Effectiveness (%)"),
+        default=0,
+    )
 
     tracker = FieldTracker()
 
     class Meta:
         verbose_name_plural = _('Intervention budget')
+
+    @property
+    def partner_contribution_percent(self):
+        if self.total_local == 0:
+            return 0
+        return self.partner_contribution_local / self.total_local * 100
 
     def total_unicef_contribution(self):
         return self.unicef_cash + self.in_kind_amount
@@ -2490,8 +2506,7 @@ class InterventionBudget(TimeStampedModel):
         """
         Calculate total budget on save
         """
-        self.total = self.total_unicef_contribution() + self.partner_contribution
-        self.total_local = self.total_unicef_contribution_local() + self.partner_contribution_local
+        self.calc_totals(save=False)
         super().save(**kwargs)
 
     def __str__(self):
@@ -2501,6 +2516,49 @@ class InterventionBudget(TimeStampedModel):
             self.intervention,
             total_local
         )
+
+    def calc_totals(self, save=True):
+        # partner and unicef totals
+
+        def init_totals():
+            self.partner_contribution_local = 0
+            self.unicef_cash_local = 0
+
+        init = False
+        for link in self.intervention.result_links.all():
+            for result in link.ll_results.all():
+                for activity in result.activities.all():
+                    if not init:
+                        init_totals()
+                        init = True
+                    self.partner_contribution_local += activity.cso_cash
+                    self.unicef_cash_local += activity.unicef_cash
+        try:
+            programme_effectiveness = 0
+            partner_contribution_local = self.partner_contribution_local
+            unicef_cash_local = self.unicef_cash_local
+            if not init:
+                init_totals()
+                init = True
+            programme_effectiveness += self.intervention.management_budgets.total
+            self.partner_contribution_local += self.intervention.management_budgets.partner_total
+            self.unicef_cash_local += self.intervention.management_budgets.unicef_total
+        except InterventionManagementBudget.DoesNotExist:
+            self.partner_contribution_local = partner_contribution_local
+            self.unicef_cash_local = unicef_cash_local
+
+        # in kind totals
+        if self.intervention.supply_items.exists():
+            self.in_kind_amount_local = 0
+            for item in self.intervention.supply_items.all():
+                self.in_kind_amount_local += item.total_price
+
+        self.total = self.total_unicef_contribution() + self.partner_contribution
+        self.total_local = self.total_unicef_contribution_local() + self.partner_contribution_local
+        self.programme_effectiveness = programme_effectiveness / self.total_local * 100
+
+        if save:
+            self.save()
 
 
 class FileType(models.Model):
@@ -2691,7 +2749,7 @@ class InterventionRisk(TimeStampedModel):
 
 
 class InterventionManagementBudget(TimeStampedModel):
-    intervention = models.ForeignKey(
+    intervention = models.OneToOneField(
         Intervention,
         verbose_name=_("Intervention"),
         related_name="management_budgets",
@@ -2739,6 +2797,25 @@ class InterventionManagementBudget(TimeStampedModel):
         blank=True,
         null=True,
     )
+
+    @property
+    def partner_total(self):
+        return self.act1_partner + self.act2_partner + self.act3_partner
+
+    @property
+    def unicef_total(self):
+        return self.act1_unicef + self.act2_unicef + self.act3_unicef
+
+    @property
+    def total(self):
+        return self.partner_total + self.unicef_total
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        try:
+            self.intervention.planned_budget.calc_totals()
+        except InterventionBudget.DoesNotExist:
+            pass
 
 
 class InterventionSupplyItem(TimeStampedModel):
@@ -2788,3 +2865,7 @@ class InterventionSupplyItem(TimeStampedModel):
     def save(self, *args, **kwargs):
         self.total_price = self.unit_number * self.unit_price
         super().save()
+        try:
+            self.intervention.planned_budget.calc_totals()
+        except InterventionBudget.DoesNotExist:
+            pass

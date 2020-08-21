@@ -17,6 +17,7 @@ from etools.libraries.pythonlib.collections import HashableDict
 
 
 READ_ONLY_API_GROUP_NAME = 'Read-Only API'
+SENIOR_MANAGEMENT_GROUP = "Senior Management Team"
 
 
 class PMPPermissions:
@@ -260,7 +261,7 @@ class PartnershipManagerRepPermission(permissions.BasePermission):
                 request.user,
                 [
                     'Partnership Manager',
-                    'Senior Management Team',
+                    SENIOR_MANAGEMENT_GROUP,
                     'Representative Office'
                 ]
             )
@@ -283,7 +284,7 @@ class PartnershipSeniorManagerPermission(permissions.BasePermission):
             # Check permissions for write request
             return self._has_access_permissions(request.user, obj) and is_user_in_groups(
                 request.user,
-                ['Partnership Manager', 'Senior Management Team']
+                ['Partnership Manager', SENIOR_MANAGEMENT_GROUP]
             )
 
 

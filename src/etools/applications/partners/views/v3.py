@@ -1,3 +1,5 @@
+from django.http import Http404
+
 from rest_framework.permissions import IsAuthenticated
 
 from etools.applications.partners.models import Intervention, PartnerOrganization
@@ -19,6 +21,20 @@ class PMPBaseViewMixin:
         return PartnerOrganization.objects.filter(
             staff_members__email=self.request.user.email,
         )
+
+    def get_pd(self, pd_pk):
+        try:
+            if not self.is_partner_staff():
+                return Intervention.objects.get(pk=pd_pk)
+            return self.pds().get(pk=pd_pk)
+        except Intervention.DoesNotExist:
+            return None
+
+    def get_pd_or_404(self, pd_pk):
+        pd = self.get_pd(pd_pk)
+        if pd is None:
+            raise Http404
+        return pd
 
     def pds(self):
         """List of PDs user associated with"""
