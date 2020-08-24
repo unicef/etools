@@ -1,4 +1,5 @@
 from datetime import date
+from unittest import skip
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
@@ -15,7 +16,7 @@ from etools.applications.partners.tests.factories import (
     InterventionFactory,
     InterventionRiskFactory,
     PartnerFactory,
-    PartnerStaffFactory,
+    PartnerStaffFactory, InterventionPlannedVisitsFactory,
 )
 from etools.applications.reports.tests.factories import CountryProgrammeFactory, OfficeFactory, SectionFactory
 from etools.applications.users.tests.factories import UserFactory
@@ -128,7 +129,7 @@ class TestRisksManagement(BaseTestCase):
         )
         response = self.forced_auth_req(
             'delete',
-            reverse('pmp_v3:intervention-risk-detail', args=[self.ended_intervention.pk, risk.id]),
+            reverse('pmp_v3:intervention-risk-delete', args=[self.ended_intervention.pk, risk.id]),
             user=self.partnership_manager,
             data={}
         )
@@ -136,7 +137,91 @@ class TestRisksManagement(BaseTestCase):
 
 
 class TestProgrammaticVisitsManagement(BaseTestCase):
-    pass
+    def test_add(self):
+        self.assertEqual(self.draft_intervention.planned_visits.count(), 0)
+        response = self.forced_auth_req(
+            'patch',
+            reverse('pmp_v3:intervention-detail', args=[self.draft_intervention.pk]),
+            user=self.partnership_manager,
+            data={
+                'planned_visits': [{
+                    'year': date.today().year,
+                    'programmatic_q1': 1,
+                    'programmatic_q2': 2,
+                    'programmatic_q3': 3,
+                    'programmatic_q4': 4,
+                }],
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['permissions']['edit']['planned_visits'], True)
+        self.assertEqual(self.draft_intervention.planned_visits.count(), 1)
+
+    def test_update(self):
+        visit = InterventionPlannedVisitsFactory(
+            intervention=self.draft_intervention,
+        )
+        response = self.forced_auth_req(
+            'patch',
+            reverse('pmp_v3:intervention-detail', args=[self.draft_intervention.pk]),
+            user=self.partnership_manager,
+            data={
+                'planned_visits': [{
+                    'id': visit.id,
+                    'year': date.today().year,
+                    'programmatic_q1': 1,
+                    'programmatic_q2': 2,
+                    'programmatic_q3': 3,
+                    'programmatic_q4': 4,
+                }],
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+
+    def test_destroy(self):
+        visit = InterventionPlannedVisitsFactory(
+            intervention=self.draft_intervention,
+        )
+        response = self.forced_auth_req(
+            'delete',
+            reverse('partners_api:interventions-planned-visits-delete', args=[self.draft_intervention.pk, visit.id]),
+            user=self.partnership_manager,
+            data={}
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT, response.data)
+        self.assertEqual(self.draft_intervention.planned_visits.count(), 0)
+
+    @skip("planned visits are editable for all intervention statuses at this moment")
+    def test_add_for_ended_intervention(self):
+        response = self.forced_auth_req(
+            'patch',
+            reverse('pmp_v3:intervention-detail', args=[self.ended_intervention.pk]),
+            user=self.partnership_manager,
+            data={
+                'planned_visits': [{
+                    'year': date.today().year,
+                    'programmatic_q1': 1,
+                    'programmatic_q2': 2,
+                    'programmatic_q3': 3,
+                    'programmatic_q4': 4,
+                }],
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('Cannot change fields while in ended: planned_visits', response.data[0])
+
+    @skip("planned visits are editable for all intervention statuses at this moment")
+    def test_destroy_for_ended_intervention(self):
+        visit = InterventionPlannedVisitsFactory(
+            intervention=self.draft_intervention,
+        )
+        response = self.forced_auth_req(
+            'delete',
+            reverse('partners_api:interventions-planned-visits-delete', args=[self.ended_intervention.pk, visit.id]),
+            user=self.partnership_manager,
+            data={}
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
 class TestFinancialManagement(BaseTestCase):

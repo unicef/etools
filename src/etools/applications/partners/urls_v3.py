@@ -101,7 +101,7 @@ urlpatterns = [
     path(
         'interventions/<int:intervention_pk>/risks/<int:pk>/',
         view=InterventionRiskDeleteView.as_view(http_method_names=['delete']),
-        name='intervention-risk-detail',
+        name='intervention-risk-delete',
     ),
     path(
         'agreements/',
