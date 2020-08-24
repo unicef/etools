@@ -2744,6 +2744,9 @@ class InterventionRisk(TimeStampedModel):
     )
     mitigation_measures = models.TextField()
 
+    class Meta:
+        ordering = ('id',)
+
     def __str__(self):
         return "{} {}".format(self.intervention, self.get_risk_display())
 

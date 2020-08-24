@@ -3,7 +3,13 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from unicef_attachments.fields import AttachmentSingleFileField
 
-from etools.applications.partners.models import FileType, Intervention, InterventionManagementBudget, InterventionSupplyItem
+from etools.applications.partners.models import (
+    FileType,
+    Intervention,
+    InterventionManagementBudget,
+    InterventionRisk,
+    InterventionSupplyItem,
+)
 from etools.applications.partners.permissions import InterventionPermissions, SENIOR_MANAGEMENT_GROUP
 from etools.applications.partners.serializers.interventions_v2 import (
     FRsSerializer,
@@ -15,6 +21,13 @@ from etools.applications.partners.serializers.interventions_v2 import (
     SingleInterventionAttachmentField,
 )
 from etools.applications.partners.utils import get_quarters_range
+
+
+class InterventionRiskSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InterventionRisk
+        fields = ('id', 'risk_type', 'mitigation_measures', 'intervention')
+        kwargs = {'intervention': {'write_only': True}}
 
 
 class InterventionDetailSerializer(serializers.ModelSerializer):
@@ -54,6 +67,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
         type_name=FileType.FINAL_PARTNERSHIP_REVIEW,
         read_field=InterventionAttachmentSerializer()
     )
+    risks = InterventionRiskSerializer(many=True, read_only=True)
 
     def get_location_p_codes(self, obj):
         return [location.p_code for location in obj.flat_locations.all()]
@@ -246,6 +260,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "reference_number_year",
             "result_links",
             "review_date_prc",
+            "risks",
             "section_names",
             "sections",
             "signed_by_partner_date",

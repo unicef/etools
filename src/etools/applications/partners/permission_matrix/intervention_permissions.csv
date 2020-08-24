@@ -104,3 +104,4 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,cash_transfer_modalities,UNICEF User,,Draft,Edit,TRUE
 ,pd_outputs,UNICEF User,unicef_court,Draft,Edit,TRUE
 ,pd_outputs,Partner User,partner_court,Draft,Edit,TRUE
+,risks,UNICEF User,,Draft,Edit,TRUE

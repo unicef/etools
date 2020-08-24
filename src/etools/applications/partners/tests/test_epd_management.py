@@ -8,12 +8,14 @@ from rest_framework import status
 from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
-from etools.applications.partners.models import FileType, Intervention
+from etools.applications.partners.models import FileType, Intervention, InterventionRisk
 from etools.applications.partners.tests.factories import (
     FileTypeFactory,
     InterventionBudgetFactory,
     InterventionFactory,
-    PartnerStaffFactory, PartnerFactory,
+    InterventionRiskFactory,
+    PartnerFactory,
+    PartnerStaffFactory,
 )
 from etools.applications.reports.tests.factories import CountryProgrammeFactory, OfficeFactory, SectionFactory
 from etools.applications.users.tests.factories import UserFactory
@@ -60,7 +62,77 @@ class BaseTestCase(BaseTenantTestCase):
 
 
 class TestRisksManagement(BaseTestCase):
-    pass
+    def test_add(self):
+        self.assertEqual(self.draft_intervention.risks.count(), 0)
+        response = self.forced_auth_req(
+            'patch',
+            reverse('pmp_v3:intervention-detail', args=[self.draft_intervention.pk]),
+            user=self.partnership_manager,
+            data={
+                'risks': [{'risk_type': InterventionRisk.RISK_TYPE_FINANCIAL, 'mitigation_measures': 'test'}],
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['permissions']['edit']['risks'], True)
+        self.assertEqual(response.data['risks'][0]['risk_type'], InterventionRisk.RISK_TYPE_FINANCIAL)
+        self.assertEqual(self.draft_intervention.risks.count(), 1)
+
+    def test_update(self):
+        risk = InterventionRiskFactory(
+            intervention=self.draft_intervention,
+            risk_type=InterventionRisk.RISK_TYPE_FINANCIAL
+        )
+        response = self.forced_auth_req(
+            'patch',
+            reverse('pmp_v3:intervention-detail', args=[self.draft_intervention.pk]),
+            user=self.partnership_manager,
+            data={
+                'risks': [{
+                    'id': risk.id, 'risk_type': InterventionRisk.RISK_TYPE_OPERATIONAL
+                }],
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['risks'][0]['risk_type'], InterventionRisk.RISK_TYPE_OPERATIONAL)
+
+    def test_destroy(self):
+        risk = InterventionRiskFactory(
+            intervention=self.draft_intervention,
+            risk_type=InterventionRisk.RISK_TYPE_FINANCIAL
+        )
+        response = self.forced_auth_req(
+            'delete',
+            reverse('pmp_v3:intervention-risk-detail', args=[self.draft_intervention.pk, risk.id]),
+            user=self.partnership_manager,
+            data={}
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT, response.data)
+        self.assertEqual(self.draft_intervention.risks.count(), 0)
+
+    def test_add_for_ended_intervention(self):
+        response = self.forced_auth_req(
+            'patch',
+            reverse('pmp_v3:intervention-detail', args=[self.ended_intervention.pk]),
+            user=self.partnership_manager,
+            data={
+                'risks': [{'risk_type': InterventionRisk.RISK_TYPE_FINANCIAL, 'mitigation_measures': 'test'}],
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('Cannot change fields while in ended: risks', response.data[0])
+
+    def test_destroy_for_ended_intervention(self):
+        risk = InterventionRiskFactory(
+            intervention=self.ended_intervention,
+            risk_type=InterventionRisk.RISK_TYPE_FINANCIAL
+        )
+        response = self.forced_auth_req(
+            'delete',
+            reverse('pmp_v3:intervention-risk-detail', args=[self.ended_intervention.pk, risk.id]),
+            user=self.partnership_manager,
+            data={}
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
 class TestProgrammaticVisitsManagement(BaseTestCase):

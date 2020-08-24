@@ -284,6 +284,20 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
         'planned_visits': PlannedVisitsCUSerializer,
         'result_links': InterventionResultCUSerializer
     }
+    related_fields = [
+        'planned_budget',
+        'planned_visits',
+        'result_links'
+    ]
+    nested_related_names = [
+        'll_results'
+    ]
+    related_non_serialized_fields = [
+        # todo: add other CodedGenericRelation fields. at this moment they're not managed by permissions matrix
+        'prc_review_attachment',
+        'final_partnership_review',
+        'signed_pd_attachment',
+    ]
 
     def get_serializer_class(self):
         """
@@ -295,21 +309,11 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
 
     @transaction.atomic
     def update(self, request, *args, **kwargs):
-        related_fields = ['planned_budget',
-                          'planned_visits',
-                          'result_links']
-        nested_related_names = ['ll_results']
-        related_non_serialized_fields = [
-            # todo: add other CodedGenericRelation fields. at this moment they're not managed by permissions matrix
-            'prc_review_attachment',
-            'final_partnership_review',
-            'signed_pd_attachment',
-        ]
         self.instance, old_instance, serializer = self.my_update(
             request,
-            related_fields,
-            nested_related_names=nested_related_names,
-            related_non_serialized_fields=related_non_serialized_fields,
+            self.related_fields,
+            nested_related_names=self.nested_related_names,
+            related_non_serialized_fields=self.related_non_serialized_fields,
             **kwargs
         )
 
