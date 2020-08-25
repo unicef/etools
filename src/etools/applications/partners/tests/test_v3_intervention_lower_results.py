@@ -133,10 +133,26 @@ class TestInterventionLowerResultsDetailView(TestInterventionLowerResultsViewBas
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertEqual(response.data['cp_output'], self.result_link.cp_output.id)
-        self.assertFalse(InterventionResultLink.objects.filter(pk=old_result_link.pk))
+        self.assertFalse(InterventionResultLink.objects.filter(pk=old_result_link.pk).exists())
 
         result.refresh_from_db()
         self.assertEqual(result.result_link, self.result_link)
+
+    def test_associate_output_if_other_exists(self):
+        old_result_link = InterventionResultLinkFactory(intervention=self.intervention, cp_output=None)
+        result = LowerResultFactory(result_link=old_result_link)
+        LowerResultFactory(result_link=old_result_link)
+        self.assertEqual(old_result_link.ll_results.count(), 2)
+        response = self.forced_auth_req(
+            'patch',
+            reverse('partners:intervention-pd-output-detail', args=[self.intervention.pk, result.pk]),
+            self.user,
+            data={'cp_output': self.result_link.cp_output.id}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['cp_output'], self.result_link.cp_output.id)
+        self.assertTrue(InterventionResultLink.objects.filter(pk=old_result_link.pk).exists())
+        self.assertEqual(old_result_link.ll_results.count(), 1)
 
     def test_deassociate_temp_output(self):
         old_result_link = InterventionResultLinkFactory(intervention=self.intervention, cp_output=None)

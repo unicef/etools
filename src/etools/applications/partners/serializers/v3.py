@@ -84,7 +84,7 @@ class UNICEFInterventionLowerResultSerializer(InterventionLowerResultBaseSeriali
             if result_link and result_link != instance.result_link:
                 old_link, instance.result_link = instance.result_link, result_link
                 instance.save()
-                if old_link.cp_output is None:
+                if old_link.cp_output is None and not old_link.ll_results.exclude(pk=instance.pk).exists():
                     # just temp link, can be safely removed
                     old_link.delete()
         elif cp_output is None and 'cp_output_id' in result_link_data:
