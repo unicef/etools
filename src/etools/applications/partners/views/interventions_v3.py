@@ -54,7 +54,8 @@ class PMPInterventionMixin(PMPBaseViewMixin):
     SERIALIZER_OPTIONS = {
         "list": (InterventionListSerializer, InterventionDummySerializer),
         "create": (InterventionCreateUpdateSerializer, InterventionDummySerializer),
-        "detail": (InterventionDetailSerializer, InterventionDummySerializer),
+        # todo: create separate partner serializer
+        "detail": (InterventionDetailSerializer, InterventionDetailSerializer),
         "list_min": (MinimalInterventionListSerializer, InterventionDummySerializer),
         "csv": (InterventionExportSerializer, InterventionDummySerializer),
         "csv_flat": (InterventionExportFlatSerializer, InterventionDummySerializer),

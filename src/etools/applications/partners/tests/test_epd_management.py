@@ -1,8 +1,10 @@
 from datetime import date
 from unittest import skip
+from unittest.mock import patch
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
+from factory import fuzzy
 
 from rest_framework import status
 
@@ -27,9 +29,30 @@ class BaseTestCase(BaseTenantTestCase):
     def setUpTestData(cls):
         super().setUpTestData()
 
+        cls.unicef_user = UserFactory(is_staff=True, groups__data=['UNICEF User'])
         cls.partnership_manager = UserFactory(is_staff=True, groups__data=['UNICEF User', 'Partnership Manager'])
 
-        cls.partner = PartnerFactory()
+        cls.partner = PartnerFactory(vendor_number=fuzzy.FuzzyText(length=20).fuzz())
+        cls.partner_staff_member = UserFactory(is_staff=False, groups__data=[])
+        cls.partner_staff_member.profile.partner_staff_member = PartnerStaffFactory(
+            partner=cls.partner, email=cls.partner_staff_member.email
+        ).id
+        cls.partner_staff_member.profile.save()
+
+        cls.partner_authorized_officer = UserFactory(is_staff=False, groups__data=[])
+        partner_authorized_officer_staff = PartnerStaffFactory(
+            partner=cls.partner, email=cls.partner_authorized_officer.email
+        )
+        cls.partner_authorized_officer.profile.partner_staff_member_user = partner_authorized_officer_staff.id
+        cls.partner_authorized_officer.profile.save()
+
+        cls.partner_focal_point = UserFactory(is_staff=False, groups__data=[])
+        partner_focal_point_staff = PartnerStaffFactory(
+            partner=cls.partner, email=cls.partner_focal_point.email
+        )
+        cls.partner_focal_point.profile.partner_staff_member = partner_focal_point_staff.id
+        cls.partner_focal_point.profile.save()
+
         cls.draft_intervention = InterventionFactory(agreement__partner=cls.partner)
 
         country_programme = CountryProgrammeFactory()
@@ -37,7 +60,7 @@ class BaseTestCase(BaseTenantTestCase):
             agreement__partner=cls.partner,
             status=Intervention.ENDED,
             signed_by_partner_date=date(year=1970, month=1, day=1),
-            partner_authorized_officer_signatory=PartnerStaffFactory(partner=cls.partner),
+            partner_authorized_officer_signatory=partner_authorized_officer_staff,
             signed_by_unicef_date=date(year=1970, month=1, day=1),
             country_programme=country_programme,
             start=date(year=1970, month=2, day=1),
@@ -59,10 +82,52 @@ class BaseTestCase(BaseTenantTestCase):
         cls.ended_intervention.unicef_focal_points.add(UserFactory())
         cls.ended_intervention.sections.add(SectionFactory())
         cls.ended_intervention.offices.add(OfficeFactory())
-        cls.ended_intervention.partner_focal_points.add(PartnerStaffFactory())
+        cls.ended_intervention.partner_focal_points.add(partner_focal_point_staff)
 
 
 class TestRisksManagement(BaseTestCase):
+    # test permissions
+    def test_unicef_permissions(self):
+        response = self.forced_auth_req(
+            'get',
+            reverse('pmp_v3:intervention-detail', args=[self.draft_intervention.pk]),
+            user=self.unicef_user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['permissions']['view']['risks'], True)
+        self.assertEqual(response.data['permissions']['edit']['risks'], False)
+
+    def test_partnership_manager_permissions(self):
+        response = self.forced_auth_req(
+            'get',
+            reverse('pmp_v3:intervention-detail', args=[self.draft_intervention.pk]),
+            user=self.partnership_manager,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['permissions']['view']['risks'], True)
+        self.assertEqual(response.data['permissions']['edit']['risks'], True)
+
+    def test_partnership_manager_ended_permissions(self):
+        response = self.forced_auth_req(
+            'get',
+            reverse('pmp_v3:intervention-detail', args=[self.ended_intervention.pk]),
+            user=self.partnership_manager,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['permissions']['view']['risks'], True)
+        self.assertEqual(response.data['permissions']['edit']['risks'], False)
+
+    def test_partner_permissions(self):
+        response = self.forced_auth_req(
+            'get',
+            reverse('pmp_v3:intervention-detail', args=[self.draft_intervention.pk]),
+            user=self.partner_focal_point,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['permissions']['view']['risks'], True)
+        self.assertEqual(response.data['permissions']['edit']['risks'], False)
+
+    # check functionality
     def test_add(self):
         self.assertEqual(self.draft_intervention.risks.count(), 0)
         response = self.forced_auth_req(
@@ -74,7 +139,6 @@ class TestRisksManagement(BaseTestCase):
             }
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
-        self.assertEqual(response.data['permissions']['edit']['risks'], True)
         self.assertEqual(response.data['risks'][0]['risk_type'], InterventionRisk.RISK_TYPE_FINANCIAL)
         self.assertEqual(self.draft_intervention.risks.count(), 1)
 
@@ -103,13 +167,14 @@ class TestRisksManagement(BaseTestCase):
         )
         response = self.forced_auth_req(
             'delete',
-            reverse('pmp_v3:intervention-risk-detail', args=[self.draft_intervention.pk, risk.id]),
+            reverse('pmp_v3:intervention-risk-delete', args=[self.draft_intervention.pk, risk.id]),
             user=self.partnership_manager,
             data={}
         )
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT, response.data)
         self.assertEqual(self.draft_intervention.risks.count(), 0)
 
+    # check permissions matrix is honored; editable only in draft
     def test_add_for_ended_intervention(self):
         response = self.forced_auth_req(
             'patch',
@@ -135,8 +200,53 @@ class TestRisksManagement(BaseTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    # check partner has no access
+    def test_add_as_partner_user(self):
+        response = self.forced_auth_req(
+            'patch',
+            reverse('pmp_v3:intervention-detail', args=[self.draft_intervention.pk]),
+            user=self.partner_focal_point,
+            data={
+                'risks': [{'risk_type': InterventionRisk.RISK_TYPE_FINANCIAL, 'mitigation_measures': 'test'}],
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
+        self.assertEqual(response.data[0], 'Cannot change fields while in draft: risks')
+
 
 class TestProgrammaticVisitsManagement(BaseTestCase):
+    # test permissions
+    def test_unicef_permissions(self):
+        response = self.forced_auth_req(
+            'get',
+            reverse('pmp_v3:intervention-detail', args=[self.draft_intervention.pk]),
+            user=self.unicef_user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['permissions']['view']['planned_visits'], True)
+        self.assertEqual(response.data['permissions']['edit']['planned_visits'], False)
+
+    def test_partnership_manager_permissions(self):
+        response = self.forced_auth_req(
+            'get',
+            reverse('pmp_v3:intervention-detail', args=[self.draft_intervention.pk]),
+            user=self.partnership_manager,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['permissions']['view']['planned_visits'], True)
+        self.assertEqual(response.data['permissions']['edit']['planned_visits'], True)
+
+    def test_partner_permissions(self):
+        response = self.forced_auth_req(
+            'get',
+            reverse('pmp_v3:intervention-detail', args=[self.draft_intervention.pk]),
+            user=self.partner_focal_point,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['permissions']['view']['planned_visits'], True)
+        self.assertEqual(response.data['permissions']['edit']['planned_visits'], False)
+
+    # test functionality
     def test_add(self):
         self.assertEqual(self.draft_intervention.planned_visits.count(), 0)
         response = self.forced_auth_req(
@@ -253,7 +363,121 @@ class TestFinancialManagement(BaseTestCase):
 
 
 class TestFundsReservationManagement(BaseTestCase):
-    pass
+    # test permissions
+    def test_unicef_permissions(self):
+        response = self.forced_auth_req(
+            'get',
+            reverse('pmp_v3:intervention-detail', args=[self.draft_intervention.pk]),
+            user=self.unicef_user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['permissions']['view']['frs'], True)
+        self.assertEqual(response.data['permissions']['edit']['frs'], False)
+
+    def test_partnership_manager_permissions(self):
+        response = self.forced_auth_req(
+            'get',
+            reverse('pmp_v3:intervention-detail', args=[self.draft_intervention.pk]),
+            user=self.partnership_manager,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['permissions']['view']['frs'], True)
+        self.assertEqual(response.data['permissions']['edit']['frs'], True)
+
+    def test_partner_permissions(self):
+        response = self.forced_auth_req(
+            'get',
+            reverse('pmp_v3:intervention-detail', args=[self.draft_intervention.pk]),
+            user=self.partner_focal_point,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['permissions']['view']['frs'], False)
+        self.assertEqual(response.data['permissions']['edit']['frs'], False)
+
+    # test functionality
+    @patch('etools.applications.funds.views.sync_single_delegated_fr')
+    def test_sync(self, sync_mock):
+        def generate_frs(business_area_code, fr_number):
+            FundsReservationHeaderFactory(
+                fr_number=fr_number,
+                intervention=self.draft_intervention,
+                vendor_code=self.partner.vendor_number,
+            )
+
+        sync_mock.side_effect = generate_frs
+
+        response = self.forced_auth_req(
+            'get',
+            reverse('funds:frs'),
+            user=self.partnership_manager,
+            data={
+                'intervention': self.draft_intervention.id,
+                'values': 'test',
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+
+    def test_sync_existing(self):
+        frs = FundsReservationHeaderFactory(
+            intervention=self.draft_intervention,
+            vendor_code=self.partner.vendor_number,
+        )
+        response = self.forced_auth_req(
+            'get',
+            reverse('funds:frs'),
+            user=self.partnership_manager,
+            data={
+                'intervention': self.draft_intervention.id,
+                'values': frs.fr_number,
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+
+    def test_sync_for_partner(self):
+        response = self.forced_auth_req(
+            'get',
+            reverse('funds:frs'),
+            user=self.partner_focal_point,
+            data={
+                'intervention': self.draft_intervention.id,
+                'values': 'test',
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
+
+    # def test_update(self):
+    #     visit = InterventionPlannedVisitsFactory(
+    #         intervention=self.draft_intervention,
+    #     )
+    #     response = self.forced_auth_req(
+    #         'patch',
+    #         reverse('pmp_v3:intervention-detail', args=[self.draft_intervention.pk]),
+    #         user=self.partnership_manager,
+    #         data={
+    #             'planned_visits': [{
+    #                 'id': visit.id,
+    #                 'year': date.today().year,
+    #                 'programmatic_q1': 1,
+    #                 'programmatic_q2': 2,
+    #                 'programmatic_q3': 3,
+    #                 'programmatic_q4': 4,
+    #             }],
+    #         },
+    #     )
+    #     self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+
+    # def test_destroy(self):
+    #     visit = InterventionPlannedVisitsFactory(
+    #         intervention=self.draft_intervention,
+    #     )
+    #     response = self.forced_auth_req(
+    #         'delete',
+    #         reverse('partners_api:interventions-planned-visits-delete', args=[self.draft_intervention.pk, visit.id]),
+    #         user=self.partnership_manager,
+    #         data={}
+    #     )
+    #     self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT, response.data)
+    #     self.assertEqual(self.draft_intervention.planned_visits.count(), 0)
 
 
 class TestSignedDocumentsManagement(BaseTestCase):
