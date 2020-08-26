@@ -198,7 +198,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Intervention
-        fields = (
+        common_fields = (
             "activation_letter_attachment",
             "activation_letter_file",
             "agreement",
@@ -225,8 +225,6 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "final_partnership_review",
             "flagged_sections",
             "flat_locations",
-            "frs",
-            "frs_details",
             "gender_narrative",
             "gender_rating",
             "grants",
@@ -251,7 +249,6 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "partner_vendor",
             "permissions",
             "planned_budget",
-            "planned_visits",
             "population_focus",
             "prc_review_attachment",
             "prc_review_document",
@@ -282,6 +279,16 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "unicef_focal_points",
             "unicef_signatory",
         )
+        fields = common_fields + (
+            "frs",
+            "frs_details",
+            "planned_visits",
+        )
+
+
+class PartnerInterventionDetailSerializer(InterventionDetailSerializer):
+    class Meta(InterventionDetailSerializer.Meta):
+        fields = InterventionDetailSerializer.Meta.common_fields
 
 
 class InterventionManagementBudgetSerializer(serializers.ModelSerializer):

@@ -38,7 +38,7 @@ from etools.applications.partners.serializers.interventions_v3 import (
     InterventionDummySerializer,
     InterventionManagementBudgetSerializer,
     InterventionRiskSerializer,
-    InterventionSupplyItemSerializer,
+    InterventionSupplyItemSerializer, PartnerInterventionDetailSerializer,
 )
 from etools.applications.partners.serializers.v3 import (
     PartnerInterventionLowerResultSerializer,
@@ -54,8 +54,7 @@ class PMPInterventionMixin(PMPBaseViewMixin):
     SERIALIZER_OPTIONS = {
         "list": (InterventionListSerializer, InterventionDummySerializer),
         "create": (InterventionCreateUpdateSerializer, InterventionDummySerializer),
-        # todo: create separate partner serializer
-        "detail": (InterventionDetailSerializer, InterventionDetailSerializer),
+        "detail": (InterventionDetailSerializer, PartnerInterventionDetailSerializer),
         "list_min": (MinimalInterventionListSerializer, InterventionDummySerializer),
         "csv": (InterventionExportSerializer, InterventionDummySerializer),
         "csv_flat": (InterventionExportFlatSerializer, InterventionDummySerializer),

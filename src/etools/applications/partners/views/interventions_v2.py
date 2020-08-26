@@ -43,7 +43,7 @@ from etools.applications.partners.models import (
 from etools.applications.partners.permissions import (
     PartnershipManagerPermission,
     PartnershipManagerRepPermission,
-    SENIOR_MANAGEMENT_GROUP,
+    SENIOR_MANAGEMENT_GROUP, intervention_field_is_editable_permission,
 )
 from etools.applications.partners.serializers.exports.interventions import (
     InterventionAmendmentExportFlatSerializer,
@@ -467,13 +467,18 @@ class InterventionAmendmentListAPIView(ExportModelMixin, ValidatorViewMixin, Lis
     Returns a list of InterventionAmendments.
     """
     serializer_class = InterventionAmendmentCUSerializer
-    permission_classes = (PartnershipManagerPermission,)
+    permission_classes = (PartnershipManagerPermission, intervention_field_is_editable_permission('amendments'))
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
         JSONRenderer,
         r.CSVRenderer,
         CSVFlatRenderer,
     )
+
+    def get_root_object(self):
+        if not hasattr(self, '_intervention'):
+            self._intervention = Intervention.objects.filter(pk=self.kwargs.get('intervention_pk')).first()
+        return self._intervention
 
     def get_serializer_class(self):
         """
@@ -514,13 +519,26 @@ class InterventionAmendmentListAPIView(ExportModelMixin, ValidatorViewMixin, Lis
 
 
 class InterventionAmendmentDeleteView(DestroyAPIView):
-    permission_classes = (PartnershipManagerRepPermission,)
+    queryset = InterventionAmendment.objects.all()
+    permission_classes = (
+        PartnershipManagerRepPermission,
+        # intervention_field_is_editable_permission('amendments')
+    )
+
+    def get_root_object(self):
+        return self.get_object().intervention
 
     def delete(self, request, *args, **kwargs):
         try:
             intervention_amendment = InterventionAmendment.objects.get(id=int(kwargs['pk']))
         except InterventionAmendment.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
+
+        # todo: there are 3 checks for permissions: code below + permission_classes + permissions matrix. should be refined and moved to permissions matrix
+        # todo: amendment mode is not checked here, only in permission matrix, but permissions matrix ignored
+        # todo: PartnershipManagerRepPermission.check_object_permissions never executed (the whole permission class absolutely ignored in fact).
+        #   normally view.check_object_permissions is being called inside GenericAPIView.get_object method which is not used
+
         if intervention_amendment.intervention.status in [Intervention.DRAFT] or \
             request.user in intervention_amendment.intervention.unicef_focal_points.all() or \
             request.user.groups.filter(name__in=['Partnership Manager',
