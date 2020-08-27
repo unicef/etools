@@ -92,6 +92,40 @@ class TestList(BaseInterventionTestCase):
         data = response.data
         self.assertEqual(data["id"], intervention.pk)
 
+    def test_list_for_partner(self):
+        InterventionFactory()
+
+        intervention = InterventionFactory()
+        user = UserFactory(is_staff=False, groups__data=[])
+        user_staff_member = PartnerStaffFactory(partner=intervention.agreement.partner, email=user.email)
+        user.profile.partner_staff_member = user_staff_member.id
+        user.profile.save()
+
+        response = self.forced_auth_req(
+            "get",
+            reverse('pmp_v3:intervention-list'),
+            user=user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["id"], intervention.pk)
+
+    def test_not_authenticated(self):
+        response = self.forced_auth_req(
+            "get",
+            reverse('pmp_v3:intervention-list'),
+            user=AnonymousUser(),
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_not_partner_user(self):
+        response = self.forced_auth_req(
+            "get",
+            reverse('pmp_v3:intervention-list'),
+            user=UserFactory(is_staff=False, groups__data=[]),
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
 
 class TestCreate(BaseInterventionTestCase):
     def test_post(self):

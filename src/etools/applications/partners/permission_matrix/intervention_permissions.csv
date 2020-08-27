@@ -27,35 +27,26 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.5,planned_budget,Partnership Manager,,Draft,Edit,TRUE
 3.5,planned_budget,Partnership Manager,,Signed,Edit,TRUE
 3.9.1,submission_date,*,,*,View,TRUE
-3.9.1,submission_date,Partnership Manager,unicef_court,Draft,Edit,TRUE
-3.9.1,submission_date,Partner User,partner_court,Draft,Edit,TRUE
+3.9.1,submission_date,Partnership Manager,,Draft,Edit,TRUE
 3.9.2,submission_date_prc,*,,*,View,TRUE
-3.9.2,submission_date_prc,Partnership Manager,unicef_court,Draft,Edit,TRUE
-3.9.2,submission_date_prc,Partner User,partner_court,Draft,Edit,TRUE
+3.9.2,submission_date_prc,Partnership Manager,,Draft,Edit,TRUE
 3.9.3,review_date_prc,*,,*,View,TRUE
-3.9.3,review_date_prc,Partnership Manager,unicef_court,Draft,Edit,TRUE
-3.9.3,review_date_prc,Partner User,partner_court,Draft,Edit,TRUE
+3.9.3,review_date_prc,Partnership Manager,,Draft,Edit,TRUE
 3.9.4,prc_review_document,Partnership Manager,,Draft,Edit,TRUE
 3.9.5,prc_review_attachment,*,,*,View,TRUE
-3.9.5,prc_review_attachment,Partnership Manager,unicef_court,Draft,Edit,TRUE
-3.9.5,prc_review_attachment,Partner User,partner_court,Draft,Edit,TRUE
+3.9.5,prc_review_attachment,Partnership Manager,,Draft,Edit,TRUE
 3.9.11,signed_pd_document,Partnership Manager,,Draft,Edit,TRUE
 3.9.12,signed_pd_attachment,*,,*,View,TRUE
-3.9.12,signed_pd_attachment,Partnership Manager,unicef_court,Draft,Edit,TRUE
-3.9.12,signed_pd_attachment,Partner User,partner_court,Draft,Edit,TRUE
+3.9.12,signed_pd_attachment,Partnership Manager,,Draft,Edit,TRUE
 3.9.5,partner_authorized_officer_signatory,*,,*,View,TRUE
-3.9.5,partner_authorized_officer_signatory,Partnership Manager,unicef_court,Draft,Edit,TRUE
-3.9.5,partner_authorized_officer_signatory,Partner User,partner_court,Draft,Edit,TRUE
+3.9.5,partner_authorized_officer_signatory,Partner User,,Draft,Edit,TRUE
 3.9.6,signed_by_partner_date,*,,*,View,TRUE
-3.9.6,signed_by_partner_date,Partnership Manager,unicef_court,Draft,Edit,TRUE
-3.9.6,signed_by_partner_date,Partner User,partner_court,Draft,Edit,TRUE
+3.9.6,signed_by_partner_date,Partner User,,Draft,Edit,TRUE
 3.9.7,unicef_signatory,*,,*,View,TRUE
-3.9.7,unicef_signatory,Partnership Manager,unicef_court,Draft,Edit,TRUE
-3.9.7,unicef_signatory,Partner User,partner_court,Draft,Edit,TRUE
+3.9.7,unicef_signatory,Partnership Manager,,Draft,Edit,TRUE
 3.9.7,unicef_signatory,Partnership Manager,,Signed,Edit,TRUE
 3.9.8,signed_by_unicef_date,*,,*,View,TRUE
-3.9.8,signed_by_unicef_date,Partnership Manager,unicef_court,Draft,Edit,TRUE
-3.9.8,signed_by_unicef_date,Partner User,partner_court,Draft,Edit,TRUE
+3.9.8,signed_by_unicef_date,Partnership Manager,,Draft,Edit,TRUE
 3.10.1,frs,UNICEF User,,*,View,TRUE
 3.10.1,frs,Partnership Manager,,Draft,Edit,TRUE
 3.10.1,frs,Partnership Manager,,Signed,Edit,TRUE
@@ -121,12 +112,13 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.13.1,reporting_requirements,*,,*,Required,FALSE
 ,pd_outputs,*,,*,View,TRUE
 ,pd_outputs,Partnership Manager,,Draft,Edit,TRUE
-,final_partnership_review,*,,*,View,TRUE
-,final_partnership_review,Partnership Manager,unicef_court,Draft,Edit,TRUE
-,final_partnership_review,Partner User,partner_court,Draft,Edit,TRUE
+,final_partnership_review,UNICEF User,,*,View,TRUE
+,final_partnership_review,Partnership Manager,,Ended,Edit,TRUE
 ,cash_transfer_modalities,*,,*,View,TRUE
 ,cash_transfer_modalities,Partnership Manager,unicef_court,Draft,Edit,TRUE
 ,cash_transfer_modalities,Partner User,partner_court,Draft,Edit,TRUE
+,hq_support_cost,*,,*,View,TRUE
+,hq_support_cost,Partnership Manager,,Draft,Edit,TRUE
 ,pd_outputs,*,,*,View,TRUE
 ,pd_outputs,Partnership Manager,unicef_court,Draft,Edit,TRUE
 ,pd_outputs,Partner User,partner_court,Draft,Edit,TRUE

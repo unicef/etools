@@ -1591,6 +1591,10 @@ def side_effect_two(i, old_instance=None, user=None):
     pass
 
 
+def get_default_cash_transfer_modalities():
+    return [Intervention.CASH_TRANSFER_DIRECT]
+
+
 class Intervention(TimeStampedModel):
     """
     Represents a partner intervention.
@@ -1958,11 +1962,13 @@ class Intervention(TimeStampedModel):
         decimal_places=1,
         default=0.0,
     )
-    cash_transfer_modalities = models.CharField(
-        verbose_name=_("Cash Transfer Modalities"),
-        max_length=50,
-        choices=CASH_TRANSFER_CHOICES,
-        default=CASH_TRANSFER_DIRECT,
+    cash_transfer_modalities = ArrayField(
+        models.CharField(
+            verbose_name=_("Cash Transfer Modalities"),
+            max_length=50,
+            choices=CASH_TRANSFER_CHOICES,
+        ),
+        default=get_default_cash_transfer_modalities,
     )
     unicef_review_type = models.CharField(
         verbose_name=_("UNICEF Review Type"),

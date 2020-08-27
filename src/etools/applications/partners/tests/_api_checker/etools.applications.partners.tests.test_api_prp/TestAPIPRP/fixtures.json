@@ -530,7 +530,7 @@
                 "ip_program_contribution": "",
                 "budget_owner": null,
                 "hq_support_cost": "0.0",
-                "cash_transfer_modalities": "direct",
+                "cash_transfer_modalities": ["direct"],
                 "unicef_review_type": "none",
                 "metadata": {},
                 "unicef_focal_points": [],

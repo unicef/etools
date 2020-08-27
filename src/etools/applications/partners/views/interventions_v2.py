@@ -43,7 +43,7 @@ from etools.applications.partners.models import (
 from etools.applications.partners.permissions import (
     PartnershipManagerPermission,
     PartnershipManagerRepPermission,
-    SENIOR_MANAGEMENT_GROUP, intervention_field_is_editable_permission,
+    SENIOR_MANAGEMENT_GROUP,
 )
 from etools.applications.partners.serializers.exports.interventions import (
     InterventionAmendmentExportFlatSerializer,
@@ -467,7 +467,11 @@ class InterventionAmendmentListAPIView(ExportModelMixin, ValidatorViewMixin, Lis
     Returns a list of InterventionAmendments.
     """
     serializer_class = InterventionAmendmentCUSerializer
-    permission_classes = (PartnershipManagerPermission, intervention_field_is_editable_permission('amendments'))
+    permission_classes = (
+        PartnershipManagerPermission,
+        # todo: permissions matrix should be checked; waiting for new requirements
+        # intervention_field_is_editable_permission('amendments')
+    )
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
         JSONRenderer,

@@ -80,7 +80,7 @@
             "ip_program_contribution": "",
             "budget_owner": null,
             "hq_support_cost": "0.0",
-            "cash_transfer_modalities": "dct",
+            "cash_transfer_modalities": ["dct"],
             "unicef_review_type": "none"
         },
         {

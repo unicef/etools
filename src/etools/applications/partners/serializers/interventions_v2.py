@@ -607,7 +607,8 @@ class InterventionCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotMode
     )
     final_partnership_review = SingleInterventionAttachmentField(
         type_name=FileType.FINAL_PARTNERSHIP_REVIEW,
-        read_field=InterventionAttachmentSerializer()
+        read_field=InterventionAttachmentSerializer(),
+        required=False,
     )
 
     class Meta:

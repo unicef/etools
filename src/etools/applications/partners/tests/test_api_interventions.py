@@ -1659,8 +1659,7 @@ class TestInterventionAmendmentCreateAPIView(BaseTenantTestCase):
     def setUp(self):
         super().setUp()
 
-        self.partnership_manager_user = UserFactory(is_staff=True)
-        self.partnership_manager_user.groups.add(GroupFactory())
+        self.partnership_manager_user = UserFactory(is_staff=True, groups__data=['Partnership Manager', 'UNICEF User'])
 
         self.intervention = InterventionFactory(status=Intervention.SIGNED)
         self.url = reverse(
