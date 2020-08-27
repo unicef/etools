@@ -39,7 +39,6 @@ class TestFundsReservationManagement(BaseTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertEqual(response.data['permissions']['view']['frs'], False)
         self.assertEqual(response.data['permissions']['edit']['frs'], False)
-        self.assertNotIn('frs', response.data)
 
     # test functionality
     @patch('etools.applications.funds.views.sync_single_delegated_fr')

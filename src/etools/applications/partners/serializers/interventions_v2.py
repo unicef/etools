@@ -664,7 +664,6 @@ class InterventionCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotMode
 
     @transaction.atomic
     def update(self, instance, validated_data):
-        # todo: not cleaner way to work with. how it can be improved?
         final_partnership_review = validated_data.pop('final_partnership_review', None)
 
         updated = super().update(instance, validated_data)

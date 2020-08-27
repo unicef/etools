@@ -386,6 +386,11 @@ class UserIsPartnerStaffMemberPermission(BasePermission):
         return bool(request.user.profile.partner_staff_member)
 
 
+class UserIsNotPartnerStaffMemberPermission(BasePermission):
+    def has_permission(self, request, view):
+        return not bool(request.user.profile.partner_staff_member)
+
+
 class UserIsObjectPartnerStaffMember(UserIsPartnerStaffMemberPermission):
     def has_object_permission(self, request, view, obj):
         if not hasattr(obj, 'partner'):

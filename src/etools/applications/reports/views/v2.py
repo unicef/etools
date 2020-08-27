@@ -211,7 +211,7 @@ class LowerResultsListAPIView(ExportModelMixin, ListAPIView):
 
 
 class LowerResultsDeleteView(DestroyAPIView):
-    # todo: permission_classes are ignored here too
+    # todo: permission_classes are ignored here. see comments in InterventionAmendmentDeleteView.delete
     permission_classes = (PartnershipManagerRepPermission,)
 
     def delete(self, request, *args, **kwargs):
