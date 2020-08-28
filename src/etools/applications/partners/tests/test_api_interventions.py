@@ -1914,8 +1914,10 @@ class TestInterventionAmendmentCreateAPIView(BaseTenantTestCase):
             ['Cannot add a new amendment while another amendment is in progress.']
         )
 
-    def _make_request(self, user=None, data="", request_format='json', **kwargs):
-        return self.forced_auth_req('post', self.url, user=user, data=data, request_format=request_format, **kwargs)
+    def _make_request(self, user=None, data=None, request_format='json', **kwargs):
+        return self.forced_auth_req(
+            'post', self.url, user=user, data=data or {}, request_format=request_format, **kwargs
+        )
 
 
 class TestInterventionAmendmentDeleteView(BaseTenantTestCase):

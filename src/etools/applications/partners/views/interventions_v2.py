@@ -468,10 +468,7 @@ class InterventionAmendmentListAPIView(ExportModelMixin, ValidatorViewMixin, Lis
     Returns a list of InterventionAmendments.
     """
     serializer_class = InterventionAmendmentCUSerializer
-    # todo: permission_classes are ignored here. see comments in InterventionAmendmentDeleteView.delete
-    #  UserIsNotPartnerStaffMemberPermission is just a plug for security hole to disallow partner edit amendments
-    #  in all statuses
-    permission_classes = (PartnershipManagerRepPermission, UserIsNotPartnerStaffMemberPermission)
+    permission_classes = (PartnershipManagerPermission, UserIsNotPartnerStaffMemberPermission)
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
         JSONRenderer,
@@ -518,11 +515,7 @@ class InterventionAmendmentListAPIView(ExportModelMixin, ValidatorViewMixin, Lis
 
 
 class InterventionAmendmentDeleteView(DestroyAPIView):
-    queryset = InterventionAmendment.objects.all()
     permission_classes = (PartnershipManagerRepPermission, UserIsNotPartnerStaffMemberPermission)
-
-    def get_root_object(self):
-        return self.get_object().intervention
 
     def delete(self, request, *args, **kwargs):
         try:

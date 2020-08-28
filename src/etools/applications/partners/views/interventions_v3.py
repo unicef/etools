@@ -54,9 +54,6 @@ class APIActionsMixin:
     """
     add viewsets-like action attribute to generic api views to reuse action-based things, for example permissions
     """
-    action = None
-    detail = None
-
     def get_action(self, method):
         if method == 'OPTIONS':
             return 'metadata'

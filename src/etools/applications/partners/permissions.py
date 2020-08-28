@@ -368,7 +368,7 @@ def intervention_field_is_editable_permission(field):
 def view_action_permission(*actions):
     class ViewActionPermission(BasePermission):
         def has_permission(self, request, view):
-            return view.action in actions
+            return hasattr(view, 'action') and view.action in actions
 
     return ViewActionPermission
 
@@ -383,18 +383,22 @@ def user_group_permission(*groups):
 
 class UserIsPartnerStaffMemberPermission(BasePermission):
     def has_permission(self, request, view):
-        return bool(request.user.profile.partner_staff_member)
+        return hasattr(request.user, 'profile') and bool(request.user.profile.partner_staff_member)
 
 
 class UserIsNotPartnerStaffMemberPermission(BasePermission):
     def has_permission(self, request, view):
-        return not bool(request.user.profile.partner_staff_member)
+        return hasattr(request.user, 'profile') and not bool(request.user.profile.partner_staff_member)
 
 
 class UserIsObjectPartnerStaffMember(UserIsPartnerStaffMemberPermission):
     def has_object_permission(self, request, view, obj):
         if not hasattr(obj, 'partner'):
             return False
+
+        if not hasattr(request.user, 'profile'):
+            return False
+
         return request.user.profile.partner_staff_member in obj.partner.staff_members.values_list('id', flat=True)
 
 
