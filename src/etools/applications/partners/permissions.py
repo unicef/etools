@@ -122,10 +122,10 @@ class InterventionPermissions(PMPPermissions):
         # focal points are prefetched, so just cast to array to collect ids
         partner_focal_points = [fp.id for fp in self.instance.partner_focal_points.all()]
 
-        if partner_staff_member_id == self.instance.partner_authorized_officer_signatory_id:
+        if partner_staff_member_id and partner_staff_member_id == self.instance.partner_authorized_officer_signatory_id:
             self.user_groups.extend(['Partner User', 'Partner Signer'])
 
-        if partner_staff_member_id in partner_focal_points:
+        if partner_staff_member_id and partner_staff_member_id in partner_focal_points:
             self.user_groups.extend(['Partner User', 'Partner Focal Point'])
 
         self.user_groups = list(set(self.user_groups))

@@ -19,7 +19,7 @@
         ],
         "content-length": [
             "Content-Length",
-            "7818"
+            "7819"
         ]
     },
     "data": {
@@ -159,7 +159,7 @@
                 "implementation_strategy": true,
                 "date_sent_to_partner": true,
                 "offices": false,
-                "hq_support_cost": true,
+                "hq_support_cost": false,
                 "sustainability_narrative": true,
                 "final_partnership_review": false,
                 "frs": false,
