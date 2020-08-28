@@ -25,9 +25,11 @@ from etools.applications.partners.tests.factories import (
     InterventionAttachmentFactory,
     InterventionBudgetFactory,
     InterventionFactory,
+    InterventionManagementBudgetFactory,
     InterventionPlannedVisitsFactory,
     InterventionReportingPeriodFactory,
     InterventionResultLinkFactory,
+    InterventionSupplyItemFactory,
     PartnerFactory,
     PartnerPlannedVisitsFactory,
     PartnerStaffFactory,
@@ -37,6 +39,7 @@ from etools.applications.partners.tests.factories import (
 from etools.applications.reports.tests.factories import (
     AppliedIndicatorFactory,
     CountryProgrammeFactory,
+    InterventionActivityFactory,
     LowerResultFactory,
     ResultFactory,
 )
@@ -1441,6 +1444,111 @@ class TestInterventionBudget(BaseTenantTestCase):
             partner_contribution_local=20.00,
         )
         self.assertEqual(str(budget), "{}: 35.00".format(intervention_str))
+
+    def test_calc_totals_no_assoc(self):
+        budget = InterventionBudgetFactory(
+            partner_contribution_local=10,
+            unicef_cash_local=20,
+            in_kind_amount_local=30,
+        )
+        budget.calc_totals()
+        self.assertEqual(budget.partner_contribution_local, 10)
+        self.assertEqual(budget.unicef_cash_local, 20)
+        self.assertEqual(budget.in_kind_amount_local, 30)
+        self.assertEqual(budget.programme_effectiveness, 0)
+        self.assertEqual(
+            "{:0.2f}".format(budget.partner_contribution_percent),
+            "{:0.2f}".format(10 / (10 + 20 + 30) * 100),
+        )
+
+    def test_calc_totals_results(self):
+        budget = InterventionBudgetFactory(
+            partner_contribution_local=10,
+            unicef_cash_local=20,
+            in_kind_amount_local=30,
+        )
+        link = InterventionResultLinkFactory(intervention=budget.intervention)
+        lower_result = LowerResultFactory(result_link=link)
+        for __ in range(3):
+            InterventionActivityFactory(
+                result=lower_result,
+                unicef_cash=101,
+                cso_cash=202,
+            )
+        budget.calc_totals()
+        self.assertEqual(budget.partner_contribution_local, 606)
+        self.assertEqual(budget.unicef_cash_local, 303)
+        self.assertEqual(budget.in_kind_amount_local, 30)
+        self.assertEqual(budget.programme_effectiveness, 0)
+        self.assertEqual(
+            "{:0.2f}".format(budget.partner_contribution_percent),
+            "{:0.2f}".format((606 / (606 + 303 + 30) * 100)),
+        )
+
+    def test_calc_totals_management_budget(self):
+        budget = InterventionBudgetFactory(
+            partner_contribution_local=10,
+            unicef_cash_local=20,
+            in_kind_amount_local=30,
+        )
+        InterventionManagementBudgetFactory(
+            intervention=budget.intervention,
+            act1_unicef=100,
+            act1_partner=200,
+            act2_unicef=300,
+            act2_partner=400,
+            act3_unicef=500,
+            act3_partner=600,
+        )
+        budget.calc_totals()
+        self.assertEqual(budget.partner_contribution_local, 1200)
+        self.assertEqual(budget.unicef_cash_local, 900)
+        self.assertEqual(budget.in_kind_amount_local, 30)
+        self.assertEqual(
+            budget.programme_effectiveness,
+            ((1200 + 900) / budget.total_local * 100),
+        )
+        self.assertEqual(
+            "{:0.2f}".format(budget.partner_contribution_percent),
+            "{:0.2f}".format(1200 / (1200 + 900 + 30) * 100),
+        )
+
+    def test_calc_totals_supply_items(self):
+        budget = InterventionBudgetFactory(
+            partner_contribution_local=10,
+            unicef_cash_local=20,
+            in_kind_amount_local=30,
+        )
+        for __ in range(3):
+            InterventionSupplyItemFactory(
+                intervention=budget.intervention,
+                unit_number=1,
+                unit_price=2,
+            )
+        budget.calc_totals()
+        self.assertEqual(budget.partner_contribution_local, 10)
+        self.assertEqual(budget.unicef_cash_local, 20)
+        self.assertEqual(budget.in_kind_amount_local, 6)
+        self.assertEqual(budget.programme_effectiveness, 0)
+        self.assertEqual(
+            "{:0.2f}".format(budget.partner_contribution_percent),
+            "{:0.2f}".format(10 / (10 + 20 + 6) * 100),
+        )
+
+
+class TestInterventionManagementBudget(BaseTenantTestCase):
+    def test_totals(self):
+        budget = InterventionManagementBudgetFactory(
+            act1_unicef=100,
+            act1_partner=200,
+            act2_unicef=300,
+            act2_partner=400,
+            act3_unicef=500,
+            act3_partner=600,
+        )
+        self.assertEqual(budget.partner_total, 1200)
+        self.assertEqual(budget.unicef_total, 900)
+        self.assertEqual(budget.total, 2100)
 
 
 class TestFileType(BaseTenantTestCase):

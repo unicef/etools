@@ -12,6 +12,14 @@ from etools.applications.partners.views.interventions_v3 import (
     PMPInterventionListCreateView,
     PMPInterventionManagementBudgetRetrieveUpdateView,
     PMPInterventionRetrieveUpdateView,
+    PMPInterventionSupplyItemListCreateView,
+    PMPInterventionSupplyItemRetrieveUpdateView,
+)
+from etools.applications.partners.views.interventions_v3_actions import (
+    PMPInterventionAcceptView,
+    PMPInterventionSendToPartnerView,
+    PMPInterventionSendToUNICEFView,
+    PMPInterventionUnlockView,
 )
 
 app_name = 'partners'
@@ -31,6 +39,16 @@ urlpatterns = [
         name='intervention-detail',
     ),
     path(
+        'interventions/<int:pk>/accept/',
+        view=PMPInterventionAcceptView.as_view(),
+        name='intervention-accept',
+    ),
+    path(
+        'interventions/<int:pk>/unlock/',
+        view=PMPInterventionUnlockView.as_view(),
+        name='intervention-unlock',
+    ),
+    path(
         'interventions/<int:intervention_pk>/pd-outputs/',
         view=InterventionPDOutputsListCreateView.as_view(),
         name='intervention-pd-output-list',
@@ -44,6 +62,30 @@ urlpatterns = [
         'interventions/<int:intervention_pk>/budget/',
         view=PMPInterventionManagementBudgetRetrieveUpdateView.as_view(),
         name='intervention-budget',
+    ),
+    path(
+        'interventions/<int:pk>/send_to_partner/',
+        view=PMPInterventionSendToPartnerView.as_view(
+            http_method_names=['patch'],
+        ),
+        name='intervention-send-partner',
+    ),
+    path(
+        'interventions/<int:pk>/send_to_unicef/',
+        view=PMPInterventionSendToUNICEFView.as_view(
+            http_method_names=['patch'],
+        ),
+        name='intervention-send-unicef',
+    ),
+    path(
+        'interventions/<int:intervention_pk>/supply/',
+        view=PMPInterventionSupplyItemListCreateView.as_view(),
+        name='intervention-supply-item',
+    ),
+    path(
+        'interventions/<int:intervention_pk>/supply/<int:pk>/',
+        view=PMPInterventionSupplyItemRetrieveUpdateView.as_view(),
+        name='intervention-supply-item-detail',
     ),
     path(
         'interventions/<int:intervention_pk>/pd-outputs/<int:output_pk>/activities/',
