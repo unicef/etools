@@ -32,11 +32,11 @@ from etools.applications.partners.serializers.interventions_v2 import (
     MinimalInterventionListSerializer,
 )
 from etools.applications.partners.serializers.interventions_v3 import (
-    InterventionAttachmentSerializer,
     InterventionDetailSerializer,
     InterventionDummySerializer,
     InterventionManagementBudgetSerializer,
-    InterventionSupplyItemSerializer, PMPInterventionAttachmentSerializer,
+    InterventionSupplyItemSerializer,
+    PMPInterventionAttachmentSerializer,
 )
 from etools.applications.partners.serializers.v3 import (
     PartnerInterventionLowerResultSerializer,
@@ -177,8 +177,7 @@ class PMPInterventionManagementBudgetRetrieveUpdateView(
 
     def get_intervention(self):
         if not hasattr(self, '_intervention'):
-            self._intervention = self.get_pd_or_404(self.kwargs.get("intervention_pk")
-            )
+            self._intervention = self.get_pd_or_404(self.kwargs.get("intervention_pk"))
         return self._intervention
 
     def get_object(self):
