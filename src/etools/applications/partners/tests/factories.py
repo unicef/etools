@@ -214,3 +214,18 @@ class PartnerPlannedVisitsFactory(factory.django.DjangoModelFactory):
 
     partner = factory.SubFactory(PartnerFactory)
     year = datetime.date.today().year
+
+
+class InterventionManagementBudgetFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.InterventionManagementBudget
+        django_get_or_create = ("intervention",)
+
+    intervention = factory.SubFactory(InterventionFactory)
+
+
+class InterventionSupplyItemFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.InterventionSupplyItem
+
+    intervention = factory.SubFactory(InterventionFactory)

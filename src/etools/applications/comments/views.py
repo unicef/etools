@@ -8,7 +8,6 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, mixins
-from unicef_restlib.pagination import DynamicPageNumberPagination
 from unicef_restlib.views import MultiSerializerViewSetMixin
 
 from etools.applications.comments.models import Comment
@@ -24,7 +23,6 @@ class CommentsViewSet(
     mixins.UpdateModelMixin,
     GenericViewSet,
 ):
-    pagination_class = DynamicPageNumberPagination
     serializer_class = CommentSerializer
     queryset = Comment.objects.select_related('user').prefetch_related('users_related')
     queryset = queryset.order_by('created', 'related_to')

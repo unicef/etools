@@ -7,7 +7,7 @@ from etools.applications.comments.views import CommentsViewSet
 app_name = 'comments'
 
 root_api = routers.SimpleRouter()
-root_api.register(r'(?P<related_app>[^/]+)/(?P<related_model>[^/]+)/(?P<related_id>\d+)/comments', CommentsViewSet,
+root_api.register(r'(?P<related_app>[^/]+)/(?P<related_model>[^/]+)/(?P<related_id>\d+)', CommentsViewSet,
                   basename='comments')
 
 

@@ -29,7 +29,11 @@ from etools.applications.core.mixins import ExportModelMixin
 from etools.applications.core.renderers import CSVFlatRenderer
 from etools.applications.partners.filters import PartnerScopeFilter
 from etools.applications.partners.models import Intervention, InterventionResultLink
-from etools.applications.partners.permissions import PartnershipManagerPermission, PartnershipManagerRepPermission
+from etools.applications.partners.permissions import (
+    PartnershipManagerPermission,
+    PartnershipManagerRepPermission,
+    SENIOR_MANAGEMENT_GROUP,
+)
 from etools.applications.reports.models import (
     AppliedIndicator,
     CountryProgramme,
@@ -217,7 +221,7 @@ class LowerResultsDeleteView(DestroyAPIView):
         if lower_result.result_link.intervention.status in [Intervention.DRAFT] or \
             request.user in lower_result.result_link.intervention.unicef_focal_points.all() or \
             request.user.groups.filter(name__in=['Partnership Manager',
-                                                 'Senior Management Team']).exists():
+                                                 SENIOR_MANAGEMENT_GROUP]).exists():
             lower_result.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         else:

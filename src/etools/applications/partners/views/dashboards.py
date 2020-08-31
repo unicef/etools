@@ -59,7 +59,7 @@ class InterventionPartnershipDashView(QueryStringFilterMixin, ListCreateAPIView)
         ).values("date").order_by("-date")[:1]
 
         qs = Intervention.objects.exclude(
-            status__in=[Intervention.DRAFT, Intervention.DEVELOPMENT],
+            status__in=[Intervention.DRAFT],
         ).prefetch_related(
             'agreement__partner',
         )

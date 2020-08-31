@@ -40,7 +40,11 @@ from etools.applications.partners.models import (
     InterventionReportingPeriod,
     InterventionResultLink,
 )
-from etools.applications.partners.permissions import PartnershipManagerPermission, PartnershipManagerRepPermission
+from etools.applications.partners.permissions import (
+    PartnershipManagerPermission,
+    PartnershipManagerRepPermission,
+    SENIOR_MANAGEMENT_GROUP,
+)
 from etools.applications.partners.serializers.exports.interventions import (
     InterventionAmendmentExportFlatSerializer,
     InterventionAmendmentExportSerializer,
@@ -509,7 +513,7 @@ class InterventionAmendmentDeleteView(DestroyAPIView):
         if intervention_amendment.intervention.status in [Intervention.DRAFT] or \
             request.user in intervention_amendment.intervention.unicef_focal_points.all() or \
             request.user.groups.filter(name__in=['Partnership Manager',
-                                                 'Senior Management Team']).exists():
+                                                 SENIOR_MANAGEMENT_GROUP]).exists():
             intervention_amendment.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         else:
