@@ -11,7 +11,7 @@ from etools.applications.partners.tests.factories import (
     InterventionResultLinkFactory,
     PartnerStaffFactory,
 )
-from etools.applications.reports.models import InterventionActivityItem, InterventionTimeFrame
+from etools.applications.reports.models import InterventionActivityItem, InterventionTimeFrame, ResultType
 from etools.applications.reports.tests.factories import (
     InterventionActivityFactory,
     InterventionActivityItemFactory,
@@ -34,7 +34,10 @@ class BaseTestCase(BaseTenantTestCase):
         self.partner_focal_point = UserFactory(groups__data=[], profile__partner_staff_member=self.staff_member.id)
         self.intervention.partner_focal_points.add(self.staff_member)
 
-        self.result_link = InterventionResultLinkFactory(intervention=self.intervention)
+        self.result_link = InterventionResultLinkFactory(
+            intervention=self.intervention,
+            cp_output__result_type__name=ResultType.OUTPUT,
+        )
         self.pd_output = LowerResultFactory(result_link=self.result_link)
 
         self.activity = InterventionActivityFactory(result=self.pd_output)
@@ -132,6 +135,19 @@ class TestFunctionality(BaseTestCase):
     def test_retrieve(self):
         response = self.forced_auth_req('get', self.detail_url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+
+    def test_time_frames_presented_in_details(self):
+        self.intervention.quarters.first().activities.add(self.activity)
+        response = self.forced_auth_req(
+            'get',
+            reverse('pmp_v3:intervention-detail', args=[self.intervention.id]),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.data['result_links'][0]['ll_results'][0]['activities'][0]['time_frames'][0]['name'],
+            'Q1'
+        )
 
 
 class TestPermissions(BaseTestCase):

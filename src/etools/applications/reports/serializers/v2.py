@@ -594,8 +594,7 @@ class InterventionActivityDetailSerializer(serializers.ModelSerializer):
 
 
 class InterventionActivitySerializer(serializers.ModelSerializer):
-    # todo
-    # time_frames = InterventionActivityTimeFrameSerializer(many=True)
+    time_frames = InterventionActivityTimeFrameSerializer(many=True)
 
     class Meta:
         model = InterventionActivity
@@ -603,7 +602,7 @@ class InterventionActivitySerializer(serializers.ModelSerializer):
             'id', 'name', 'context_details',
             'unicef_cash', 'cso_cash',
             'unicef_supplies', 'cso_supplies',
-            # 'time_frames',
+            'time_frames',
         )
 
 
