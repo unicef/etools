@@ -19,7 +19,7 @@
         ],
         "content-length": [
             "Content-Length",
-            "7729"
+            "7730"
         ]
     },
     "data": {
@@ -138,7 +138,7 @@
                 "equity_narrative": true,
                 "activation_letter_attachment": false,
                 "result_links": false,
-                "attachments": true,
+                "attachments": false,
                 "humanitarian_flag": true,
                 "signed_by_unicef_date": false,
                 "document_type": false,
