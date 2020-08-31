@@ -3,8 +3,8 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from unicef_attachments.fields import AttachmentSingleFileField
 
-from etools.applications.partners.models import Intervention, InterventionManagementBudget
-from etools.applications.partners.permissions import InterventionPermissions
+from etools.applications.partners.models import Intervention, InterventionManagementBudget, InterventionSupplyItem
+from etools.applications.partners.permissions import InterventionPermissions, SENIOR_MANAGEMENT_GROUP
 from etools.applications.partners.serializers.interventions_v2 import (
     FRsSerializer,
     InterventionAmendmentCUSerializer,
@@ -107,7 +107,8 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
 
     def _is_management(self):
         return get_user_model().objects.filter(
-            groups__name__in=['Senior Management Team'],
+            pk=self.context['request'].user.pk,
+            groups__name__in=[SENIOR_MANAGEMENT_GROUP],
             profile__country=self.context['request'].user.profile.country
         ).exists()
 
@@ -134,18 +135,21 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
 
             # budget owner
             if obj.budget_owner == user:
-                available_actions.append("accept")
+                if not obj.unicef_accepted:
+                    available_actions.append("accept")
                 available_actions.append("review")
                 available_actions.append("signature")
 
             # any unicef focal point user
             if user in obj.unicef_focal_points.all():
-                available_actions.append("accept")
                 available_actions.append("cancel")
-                available_actions.append("send_to_partner")
+                if obj.unicef_court:
+                    available_actions.append("send_to_partner")
                 available_actions.append("signature")
                 if obj.partner_accepted:
                     available_actions.append("unlock")
+                else:
+                    available_actions.append("accept")
                     # TODO confirm that this is focal point
                     # and not just any UNICEF user
                     available_actions.append("accept_and_review")
@@ -154,10 +158,12 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
         else:
             # any partner focal point user
             if self._is_partner_user(obj, user):
-                if not obj.partner_accepted:
-                    available_actions.append("accept")
-                if obj.unicef_accepted:
+                if not obj.unicef_court:
+                    available_actions.append("send_to_unicef")
+                if obj.partner_accepted:
                     available_actions.append("unlock")
+                else:
+                    available_actions.append("accept")
 
         return list(set(available_actions))
 
@@ -263,3 +269,20 @@ class InterventionDummySerializer(serializers.ModelSerializer):
     class Meta:
         model = Intervention
         fields = ()
+
+
+class InterventionSupplyItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InterventionSupplyItem
+        fields = (
+            "title",
+            "unit_number",
+            "unit_price",
+            "result",
+            "total_price",
+            "other_mentions",
+        )
+
+    def create(self, validated_data):
+        validated_data["intervention"] = self.initial_data.get("intervention")
+        return super().create(validated_data)

@@ -29,7 +29,7 @@ class CountryProgrammeFactory(factory.DjangoModelFactory):
         model = models.CountryProgramme
 
     name = factory.Sequence(lambda n: 'Country Programme {}'.format(n))
-    wbs = factory.Sequence(lambda n: '0000/A0/{:02d}'.format(n))
+    wbs = factory.Sequence(lambda n: '{:04d}/A0/01'.format(n))
     from_date = datetime.date(datetime.date.today().year, 1, 1)
     to_date = datetime.date(datetime.date.today().year, 12, 31)
 
