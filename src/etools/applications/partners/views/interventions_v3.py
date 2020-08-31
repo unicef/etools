@@ -12,7 +12,12 @@ from rest_framework.response import Response
 from rest_framework.status import is_success
 
 from etools.applications.field_monitoring.permissions import IsEditAction, IsReadAction
-from etools.applications.partners.models import Intervention, InterventionManagementBudget, InterventionSupplyItem
+from etools.applications.partners.models import (
+    Intervention,
+    InterventionAttachment,
+    InterventionManagementBudget,
+    InterventionSupplyItem,
+)
 from etools.applications.partners.permissions import (
     intervention_field_is_editable_permission,
     PartnershipManagerPermission,
@@ -27,16 +32,21 @@ from etools.applications.partners.serializers.interventions_v2 import (
     MinimalInterventionListSerializer,
 )
 from etools.applications.partners.serializers.interventions_v3 import (
+    InterventionAttachmentSerializer,
     InterventionDetailSerializer,
     InterventionDummySerializer,
     InterventionManagementBudgetSerializer,
-    InterventionSupplyItemSerializer,
+    InterventionSupplyItemSerializer, PMPInterventionAttachmentSerializer,
 )
 from etools.applications.partners.serializers.v3 import (
     PartnerInterventionLowerResultSerializer,
     UNICEFInterventionLowerResultSerializer,
 )
-from etools.applications.partners.views.interventions_v2 import InterventionDetailAPIView, InterventionListAPIView
+from etools.applications.partners.views.interventions_v2 import (
+    InterventionAttachmentUpdateDeleteView,
+    InterventionDetailAPIView,
+    InterventionListAPIView,
+)
 from etools.applications.partners.views.v3 import PMPBaseViewMixin
 from etools.applications.reports.models import InterventionActivity, LowerResult
 from etools.applications.reports.serializers.v2 import InterventionActivityDetailSerializer
@@ -245,3 +255,49 @@ class InterventionActivityCreateView(InterventionActivityViewMixin, CreateAPIVie
 
 class InterventionActivityDetailUpdateView(InterventionActivityViewMixin, RetrieveUpdateDestroyAPIView):
     pass
+
+
+class PMPInterventionAttachmentListCreateView(DetailedInterventionResponseMixin, ListCreateAPIView):
+    serializer_class = PMPInterventionAttachmentSerializer
+    permission_classes = [
+        IsAuthenticated,
+        IsReadAction | (IsEditAction & intervention_field_is_editable_permission('attachments')),
+    ]
+    queryset = InterventionAttachment.objects.all()
+
+    def get_root_object(self):
+        if not hasattr(self, '_intervention'):
+            self._intervention = Intervention.objects.filter(pk=self.kwargs.get('intervention_pk')).first()
+        return self._intervention
+
+    def get_queryset(self):
+        return super().get_queryset().filter(intervention=self.get_root_object())
+
+    def perform_create(self, serializer):
+        serializer.save(intervention=self.get_root_object())
+
+    def get_intervention(self) -> Intervention:
+        return self.get_root_object()
+
+
+class PMPInterventionAttachmentUpdateDeleteView(
+    DetailedInterventionResponseMixin,
+    InterventionAttachmentUpdateDeleteView,
+):
+    serializer_class = PMPInterventionAttachmentSerializer
+    queryset = InterventionAttachment.objects.all()
+    permission_classes = [
+        IsAuthenticated,
+        IsReadAction | (IsEditAction & intervention_field_is_editable_permission('attachments')),
+    ]
+
+    def get_root_object(self):
+        if not hasattr(self, '_intervention'):
+            self._intervention = Intervention.objects.filter(pk=self.kwargs.get('intervention_pk')).first()
+        return self._intervention
+
+    def get_queryset(self):
+        return super().get_queryset().filter(intervention=self.get_root_object())
+
+    def get_intervention(self) -> Intervention:
+        return self.get_root_object()

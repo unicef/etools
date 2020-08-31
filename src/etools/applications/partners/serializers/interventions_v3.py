@@ -296,3 +296,10 @@ class InterventionSupplyItemSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data["intervention"] = self.initial_data.get("intervention")
         return super().create(validated_data)
+
+
+class PMPInterventionAttachmentSerializer(InterventionAttachmentSerializer):
+    class Meta(InterventionAttachmentSerializer.Meta):
+        extra_kwargs = {
+            'intervention': {'read_only': True},
+        }

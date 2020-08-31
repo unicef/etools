@@ -9,6 +9,8 @@ from etools.applications.partners.views.interventions_v3 import (
     InterventionActivityDetailUpdateView,
     InterventionPDOutputsDetailUpdateView,
     InterventionPDOutputsListCreateView,
+    PMPInterventionAttachmentListCreateView,
+    PMPInterventionAttachmentUpdateDeleteView,
     PMPInterventionListCreateView,
     PMPInterventionManagementBudgetRetrieveUpdateView,
     PMPInterventionRetrieveUpdateView,
@@ -76,6 +78,16 @@ urlpatterns = [
             http_method_names=['patch'],
         ),
         name='intervention-send-unicef',
+    ),
+    path(
+        'interventions/<int:intervention_pk>/attachments/',
+        view=PMPInterventionAttachmentListCreateView.as_view(http_method_names=['get', 'post']),
+        name='intervention-attachment-list',
+    ),
+    path(
+        'interventions/<int:intervention_pk>/attachments/<int:pk>/',
+        view=PMPInterventionAttachmentUpdateDeleteView.as_view(http_method_names=['delete', 'patch']),
+        name='intervention-attachments-update',
     ),
     path(
         'interventions/<int:intervention_pk>/supply/',

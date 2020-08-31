@@ -102,3 +102,8 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,pd_outputs,UNICEF User,,Draft,Edit,TRUE
 ,pd_outputs,UNICEF User,unicef_court,Draft,Edit,TRUE
 ,pd_outputs,Partner User,partner_court,Draft,Edit,TRUE
+,attachments,*,,*,View,TRUE
+,attachments,Partnership Manager,unicef_court,Draft,Edit,TRUE
+,attachments,Partner User,partner_court,Draft,Edit,TRUE
+,attachments,Senior Management Team,,Draft,Edit,TRUE
+,attachments,Representative Office,,Draft,Edit,TRUE
