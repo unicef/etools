@@ -299,6 +299,7 @@ class InterventionDummySerializer(serializers.ModelSerializer):
         model = Intervention
         fields = ()
 
+
 class PMPInterventionAttachmentSerializer(InterventionAttachmentSerializer):
     class Meta(InterventionAttachmentSerializer.Meta):
         extra_kwargs = {
