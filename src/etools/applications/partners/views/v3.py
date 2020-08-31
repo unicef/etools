@@ -1,8 +1,7 @@
-from django.http import Http404
-
 from django.contrib.auth import get_user_model
 from django.db.models import Value
 from django.db.models.functions import Concat
+from django.http import Http404
 from django.utils.functional import cached_property
 
 from rest_framework import status
