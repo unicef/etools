@@ -16,6 +16,23 @@ from etools.applications.partners.serializers.interventions_v2 import (
 from etools.applications.partners.utils import get_quarters_range
 
 
+class InterventionSupplyItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InterventionSupplyItem
+        fields = (
+            "title",
+            "unit_number",
+            "unit_price",
+            "result",
+            "total_price",
+            "other_mentions",
+        )
+
+    def create(self, validated_data):
+        validated_data["intervention"] = self.initial_data.get("intervention")
+        return super().create(validated_data)
+
+
 class InterventionDetailSerializer(serializers.ModelSerializer):
     activation_letter_attachment = AttachmentSingleFileField(read_only=True)
     activation_letter_file = serializers.FileField(source='activation_letter', read_only=True)
@@ -49,6 +66,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     termination_doc_attachment = AttachmentSingleFileField(read_only=True)
     termination_doc_file = serializers.FileField(source='termination_doc', read_only=True)
     quarters = serializers.SerializerMethodField()
+    supply_items = InterventionSupplyItemSerializer(many=True, read_only=True)
 
     def get_location_p_codes(self, obj):
         return [location.p_code for location in obj.flat_locations.all()]
@@ -251,6 +269,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "submission_date",
             "submission_date_prc",
             "submitted_to_prc",
+            "supply_items",
             "sustainability_narrative",
             "sustainability_rating",
             "technical_guidance",
@@ -279,24 +298,6 @@ class InterventionDummySerializer(serializers.ModelSerializer):
     class Meta:
         model = Intervention
         fields = ()
-
-
-class InterventionSupplyItemSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = InterventionSupplyItem
-        fields = (
-            "title",
-            "unit_number",
-            "unit_price",
-            "result",
-            "total_price",
-            "other_mentions",
-        )
-
-    def create(self, validated_data):
-        validated_data["intervention"] = self.initial_data.get("intervention")
-        return super().create(validated_data)
-
 
 class PMPInterventionAttachmentSerializer(InterventionAttachmentSerializer):
     class Meta(InterventionAttachmentSerializer.Meta):

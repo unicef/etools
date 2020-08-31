@@ -192,7 +192,11 @@ class PMPInterventionManagementBudgetRetrieveUpdateView(
         return super().get_serializer(*args, **kwargs)
 
 
-class PMPInterventionSupplyItemListCreateView(PMPInterventionMixin, ListCreateAPIView):
+class PMPInterventionSupplyItemListCreateView(
+    DetailedInterventionResponseMixin,
+    PMPInterventionMixin,
+    ListCreateAPIView
+):
     queryset = InterventionSupplyItem.objects
     serializer_class = InterventionSupplyItemSerializer
 
@@ -210,7 +214,11 @@ class PMPInterventionSupplyItemListCreateView(PMPInterventionMixin, ListCreateAP
         return super().get_serializer(*args, **kwargs)
 
 
-class PMPInterventionSupplyItemRetrieveUpdateView(PMPInterventionMixin, RetrieveUpdateAPIView):
+class PMPInterventionSupplyItemRetrieveUpdateView(
+    DetailedInterventionResponseMixin,
+    PMPInterventionMixin,
+    RetrieveUpdateAPIView,
+):
     queryset = InterventionSupplyItem.objects
     serializer_class = InterventionSupplyItemSerializer
 
