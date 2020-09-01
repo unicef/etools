@@ -68,6 +68,7 @@ class TestPMPStaticDropdownsListApiView(BaseTenantTestCase):
                                      'partner_file_types',
                                      'partner_risk_rating',
                                      'sea_risk_ratings',
+                                     'gender_equity_sustainability_ratings',
                                      ))
 
     def _assertResponseFundamentals(self, response):

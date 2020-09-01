@@ -23,7 +23,7 @@ class BaseCommentSerializer(UserContextSerializerMixin, serializers.ModelSeriali
         model = Comment
         fields = (
             'id', 'user', 'users_related',
-            'text', 'state',
+            'text', 'state', 'created',
         )
         extra_kwargs = {
             'state': {'read_only': True},
