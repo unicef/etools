@@ -13,6 +13,9 @@ class InterventionLowerResultBaseSerializer(serializers.ModelSerializer):
         abstract = True
         model = LowerResult
         fields = ('id', 'name', 'code')
+        extra_kwargs = {
+            'code': {'required': False},
+        }
 
 
 class PartnerInterventionLowerResultSerializer(InterventionLowerResultBaseSerializer):

@@ -3,7 +3,13 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from unicef_attachments.fields import AttachmentSingleFileField
 
-from etools.applications.partners.models import Intervention, InterventionManagementBudget, InterventionSupplyItem
+from etools.applications.partners.models import (
+    FileType,
+    Intervention,
+    InterventionManagementBudget,
+    InterventionRisk,
+    InterventionSupplyItem,
+)
 from etools.applications.partners.permissions import InterventionPermissions, SENIOR_MANAGEMENT_GROUP
 from etools.applications.partners.serializers.interventions_v2 import (
     FRsSerializer,
@@ -12,8 +18,16 @@ from etools.applications.partners.serializers.interventions_v2 import (
     InterventionBudgetCUSerializer,
     InterventionResultNestedSerializer,
     PlannedVisitsNestedSerializer,
+    SingleInterventionAttachmentField,
 )
-from etools.applications.partners.utils import get_quarters_range
+from etools.applications.reports.serializers.v2 import InterventionTimeFrameSerializer
+
+
+class InterventionRiskSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InterventionRisk
+        fields = ('id', 'risk_type', 'mitigation_measures', 'intervention')
+        kwargs = {'intervention': {'write_only': True}}
 
 
 class InterventionDetailSerializer(serializers.ModelSerializer):
@@ -40,7 +54,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     permissions = serializers.SerializerMethodField(read_only=True)
     planned_budget = InterventionBudgetCUSerializer(read_only=True)
     planned_visits = PlannedVisitsNestedSerializer(many=True, read_only=True, required=False)
-    prc_review_attachment = AttachmentSingleFileField(read_only=True)
+    prc_review_attachment = AttachmentSingleFileField(required=False)
     prc_review_document_file = serializers.FileField(source='prc_review_document', read_only=True)
     result_links = InterventionResultNestedSerializer(many=True, read_only=True, required=False)
     section_names = serializers.SerializerMethodField(read_only=True)
@@ -49,7 +63,12 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     submitted_to_prc = serializers.ReadOnlyField()
     termination_doc_attachment = AttachmentSingleFileField(read_only=True)
     termination_doc_file = serializers.FileField(source='termination_doc', read_only=True)
-    quarters = serializers.SerializerMethodField()
+    final_partnership_review = SingleInterventionAttachmentField(
+        type_name=FileType.FINAL_PARTNERSHIP_REVIEW,
+        read_field=InterventionAttachmentSerializer()
+    )
+    risks = InterventionRiskSerializer(many=True, read_only=True)
+    quarters = InterventionTimeFrameSerializer(many=True, read_only=True)
 
     def get_location_p_codes(self, obj):
         return [location.p_code for location in obj.flat_locations.all()]
@@ -208,7 +227,6 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             }
             for i, quarter in enumerate(get_quarters_range(obj.start, obj.end))
         ]
-
     class Meta:
         model = Intervention
         fields = (
@@ -220,6 +238,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "available_actions",
             "budget_owner",
             "capacity_development",
+            "cash_transfer_modalities",
             "cfei_number",
             "cluster_names",
             "context",
@@ -234,6 +253,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "end",
             "equity_narrative",
             "equity_rating",
+            "final_partnership_review",
             "flagged_sections",
             "flat_locations",
             "frs",
@@ -242,6 +262,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "gender_rating",
             "grants",
             "humanitarian_flag",
+            "hq_support_cost",
             "id",
             "implementation_strategy",
             "in_amendment",
@@ -271,6 +292,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "reference_number_year",
             "result_links",
             "review_date_prc",
+            "risks",
             "section_names",
             "sections",
             "signed_by_partner_date",

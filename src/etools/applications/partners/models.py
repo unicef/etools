@@ -1591,6 +1591,10 @@ def side_effect_two(i, old_instance=None, user=None):
     pass
 
 
+def get_default_cash_transfer_modalities():
+    return [Intervention.CASH_TRANSFER_DIRECT]
+
+
 class Intervention(TimeStampedModel):
     """
     Represents a partner intervention.
@@ -1958,11 +1962,13 @@ class Intervention(TimeStampedModel):
         decimal_places=1,
         default=0.0,
     )
-    cash_transfer_modalities = models.CharField(
-        verbose_name=_("Cash Transfer Modalities"),
-        max_length=50,
-        choices=CASH_TRANSFER_CHOICES,
-        default=CASH_TRANSFER_DIRECT,
+    cash_transfer_modalities = ArrayField(
+        models.CharField(
+            verbose_name=_("Cash Transfer Modalities"),
+            max_length=50,
+            choices=CASH_TRANSFER_CHOICES,
+        ),
+        default=get_default_cash_transfer_modalities,
     )
     unicef_review_type = models.CharField(
         verbose_name=_("UNICEF Review Type"),
@@ -2153,6 +2159,11 @@ class Intervention(TimeStampedModel):
                 return self.created.year
         else:
             return datetime.date.today().year
+
+    @property
+    def final_partnership_review(self):
+        # to be used only to track changes in validator mixin
+        return self.attachments.filter(type__name=FileType.FINAL_PARTNERSHIP_REVIEW)
 
     def illegal_transitions(self):
         return False
@@ -2738,6 +2749,9 @@ class InterventionRisk(TimeStampedModel):
         choices=RISK_TYPE_CHOICES,
     )
     mitigation_measures = models.TextField()
+
+    class Meta:
+        ordering = ('id',)
 
     def __str__(self):
         return "{} {}".format(self.intervention, self.get_risk_display())

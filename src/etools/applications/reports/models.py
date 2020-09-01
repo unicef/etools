@@ -928,7 +928,13 @@ class InterventionActivity(TimeStampedModel):
         blank=True,
         null=True,
     )
-    # time_periods
+
+    time_frames = models.ManyToManyField(
+        'InterventionTimeFrame',
+        verbose_name=_('Time Frames Enabled'),
+        blank=True,
+        related_name='activities',
+    )
 
     class Meta:
         verbose_name = _('Intervention Activity')
@@ -989,13 +995,14 @@ class InterventionActivityItem(TimeStampedModel):
         return "{} {}".format(self.activity, self.name)
 
 
-class InterventionActivityTimeFrame(TimeStampedModel):
-    activity = models.ForeignKey(
-        InterventionActivity,
-        verbose_name=_("Activity"),
-        related_name="time_frames",
+class InterventionTimeFrame(TimeStampedModel):
+    intervention = models.ForeignKey(
+        'partners.Intervention',
+        verbose_name=_("Intervention"),
+        related_name="quarters",
         on_delete=models.CASCADE,
     )
+    quarter = models.PositiveSmallIntegerField()
     start_date = models.DateField(
         verbose_name=_("Start Date"),
     )
@@ -1005,7 +1012,10 @@ class InterventionActivityTimeFrame(TimeStampedModel):
 
     def __str__(self):
         return "{} {} - {}".format(
-            self.activity,
+            self.intervention,
             self.start_date,
             self.end_date,
         )
+
+    class Meta:
+        ordering = ('intervention', 'start_date',)
