@@ -1591,6 +1591,10 @@ def side_effect_two(i, old_instance=None, user=None):
     pass
 
 
+def get_default_cash_transfer_modalities():
+    return [Intervention.CASH_TRANSFER_DIRECT]
+
+
 class Intervention(TimeStampedModel):
     """
     Represents a partner intervention.
@@ -1604,6 +1608,8 @@ class Intervention(TimeStampedModel):
     """
 
     DRAFT = 'draft'
+    REVIEW = 'review'
+    SIGNATURE = 'signature'
     SIGNED = 'signed'
     ACTIVE = 'active'
     ENDED = 'ended'
@@ -1619,6 +1625,8 @@ class Intervention(TimeStampedModel):
         ENDED: [CLOSED]
     }
     TRANSITION_SIDE_EFFECTS = {
+        REVIEW: [],
+        SIGNATURE: [],
         SIGNED: [side_effect_one, side_effect_two],
         ACTIVE: [],
         SUSPENDED: [],
@@ -1630,6 +1638,8 @@ class Intervention(TimeStampedModel):
     CANCELLED = 'cancelled'
     INTERVENTION_STATUS = (
         (DRAFT, "Development"),
+        (REVIEW, "Review"),
+        (SIGNATURE, "Signature"),
         (SIGNED, 'Signed'),
         (ACTIVE, "Active"),
         (ENDED, "Ended"),
@@ -1958,11 +1968,13 @@ class Intervention(TimeStampedModel):
         decimal_places=1,
         default=0.0,
     )
-    cash_transfer_modalities = models.CharField(
-        verbose_name=_("Cash Transfer Modalities"),
-        max_length=50,
-        choices=CASH_TRANSFER_CHOICES,
-        default=CASH_TRANSFER_DIRECT,
+    cash_transfer_modalities = ArrayField(
+        models.CharField(
+            verbose_name=_("Cash Transfer Modalities"),
+            max_length=50,
+            choices=CASH_TRANSFER_CHOICES,
+        ),
+        default=get_default_cash_transfer_modalities,
     )
     unicef_review_type = models.CharField(
         verbose_name=_("UNICEF Review Type"),
@@ -2154,6 +2166,11 @@ class Intervention(TimeStampedModel):
         else:
             return datetime.date.today().year
 
+    @property
+    def final_partnership_review(self):
+        # to be used only to track changes in validator mixin
+        return self.attachments.filter(type__name=FileType.FINAL_PARTNERSHIP_REVIEW)
+
     def illegal_transitions(self):
         return False
 
@@ -2165,7 +2182,21 @@ class Intervention(TimeStampedModel):
         pass
 
     @transition(field=status,
-                source=[DRAFT, SUSPENDED, SIGNED],
+                source=[DRAFT],
+                target=[REVIEW],
+                conditions=[intervention_validation.transition_to_review])
+    def transtion_to_review(self):
+        pass
+
+    @transition(field=status,
+                source=[REVIEW],
+                target=[SIGNATURE],
+                conditions=[intervention_validation.transition_to_signature])
+    def transition_to_signature(self):
+        pass
+
+    @transition(field=status,
+                source=[SUSPENDED, SIGNED],
                 target=[ACTIVE],
                 conditions=[intervention_validation.transition_to_active],
                 permission=intervention_validation.partnership_manager_only)
@@ -2173,7 +2204,7 @@ class Intervention(TimeStampedModel):
         pass
 
     @transition(field=status,
-                source=[DRAFT, SUSPENDED],
+                source=[DRAFT, REVIEW, SIGNATURE, SUSPENDED],
                 target=[SIGNED],
                 conditions=[intervention_validation.transition_to_signed])
     def transition_to_signed(self):
@@ -2738,6 +2769,9 @@ class InterventionRisk(TimeStampedModel):
         choices=RISK_TYPE_CHOICES,
     )
     mitigation_measures = models.TextField()
+
+    class Meta:
+        ordering = ('id',)
 
     def __str__(self):
         return "{} {}".format(self.intervention, self.get_risk_display())

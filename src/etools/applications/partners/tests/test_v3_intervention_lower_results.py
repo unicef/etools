@@ -17,7 +17,7 @@ from etools.applications.users.tests.factories import UserFactory
 class TestInterventionLowerResultsViewBase(BaseTenantTestCase):
     def setUp(self):
         super().setUp()
-        self.user = UserFactory()
+        self.user = UserFactory(is_staff=True, groups__data=['Partnership Manager', 'UNICEF User'])
         self.intervention = InterventionFactory(status=Intervention.DRAFT, unicef_court=True)
 
         self.staff_member = PartnerStaffFactory(partner=self.intervention.agreement.partner)
@@ -44,7 +44,7 @@ class TestInterventionLowerResultsListView(TestInterventionLowerResultsViewBase)
         self.assertEqual([r['cp_output'] for r in response.data], [None, self.cp_output.id])
 
     def test_create_unassociated(self):
-        response = self.forced_auth_req('post', self.list_url, self.user, data={'name': 'test', 'code': 'test'})
+        response = self.forced_auth_req('post', self.list_url, self.user, data={'name': 'test'})
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
         pd_result = LowerResult.objects.get(id=response.data['id'])
         self.assertEqual(pd_result.result_link.intervention, self.intervention)
@@ -53,7 +53,7 @@ class TestInterventionLowerResultsListView(TestInterventionLowerResultsViewBase)
     def test_create_associated(self):
         response = self.forced_auth_req(
             'post', self.list_url, self.user,
-            data={'name': 'test', 'code': 'test', 'cp_output': self.cp_output.id}
+            data={'name': 'test', 'cp_output': self.cp_output.id}
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
         pd_result = LowerResult.objects.get(id=response.data['id'])
@@ -64,7 +64,7 @@ class TestInterventionLowerResultsListView(TestInterventionLowerResultsViewBase)
     def test_create_for_unknown_user(self):
         response = self.forced_auth_req(
             'post', self.list_url, UserFactory(groups__data=[]),
-            data={'name': 'test', 'code': 'test', 'cp_output': self.cp_output.id}
+            data={'name': 'test', 'cp_output': self.cp_output.id}
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
 
@@ -74,14 +74,14 @@ class TestInterventionLowerResultsListView(TestInterventionLowerResultsViewBase)
 
         response = self.forced_auth_req(
             'post', self.list_url, self.user,
-            data={'name': 'test', 'code': 'test', 'cp_output': self.cp_output.id}
+            data={'name': 'test', 'cp_output': self.cp_output.id}
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
 
     def test_create_assigned_partner_user_unicef_court(self):
         response = self.forced_auth_req(
             'post', self.list_url, self.partner_focal_point,
-            data={'name': 'test', 'code': 'test', 'cp_output': self.cp_output.id}
+            data={'name': 'test', 'cp_output': self.cp_output.id}
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
 
@@ -91,7 +91,7 @@ class TestInterventionLowerResultsListView(TestInterventionLowerResultsViewBase)
 
         response = self.forced_auth_req(
             'post', self.list_url, self.partner_focal_point,
-            data={'name': 'test', 'code': 'test', 'cp_output': self.cp_output.id}
+            data={'name': 'test', 'cp_output': self.cp_output.id}
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
         pd_result = LowerResult.objects.get(id=response.data['id'])
@@ -104,7 +104,7 @@ class TestInterventionLowerResultsListView(TestInterventionLowerResultsViewBase)
 
         response = self.forced_auth_req(
             'post', self.list_url, self.partner_focal_point,
-            data={'name': 'test', 'code': 'test', 'cp_output': self.cp_output.id}
+            data={'name': 'test', 'cp_output': self.cp_output.id}
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
 
@@ -115,7 +115,7 @@ class TestInterventionLowerResultsListView(TestInterventionLowerResultsViewBase)
 
         response = self.forced_auth_req(
             'post', self.list_url, self.partner_focal_point,
-            data={'name': 'test', 'code': 'test', 'cp_output': self.cp_output.id}
+            data={'name': 'test', 'cp_output': self.cp_output.id}
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
 
@@ -133,10 +133,26 @@ class TestInterventionLowerResultsDetailView(TestInterventionLowerResultsViewBas
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertEqual(response.data['cp_output'], self.result_link.cp_output.id)
-        self.assertFalse(InterventionResultLink.objects.filter(pk=old_result_link.pk))
+        self.assertFalse(InterventionResultLink.objects.filter(pk=old_result_link.pk).exists())
 
         result.refresh_from_db()
         self.assertEqual(result.result_link, self.result_link)
+
+    def test_associate_output_if_other_exists(self):
+        old_result_link = InterventionResultLinkFactory(intervention=self.intervention, cp_output=None)
+        result = LowerResultFactory(result_link=old_result_link)
+        LowerResultFactory(result_link=old_result_link)
+        self.assertEqual(old_result_link.ll_results.count(), 2)
+        response = self.forced_auth_req(
+            'patch',
+            reverse('partners:intervention-pd-output-detail', args=[self.intervention.pk, result.pk]),
+            self.user,
+            data={'cp_output': self.result_link.cp_output.id}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['cp_output'], self.result_link.cp_output.id)
+        self.assertTrue(InterventionResultLink.objects.filter(pk=old_result_link.pk).exists())
+        self.assertEqual(old_result_link.ll_results.count(), 1)
 
     def test_deassociate_temp_output(self):
         old_result_link = InterventionResultLinkFactory(intervention=self.intervention, cp_output=None)

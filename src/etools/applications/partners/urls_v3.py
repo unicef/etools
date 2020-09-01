@@ -9,6 +9,7 @@ from etools.applications.partners.views.interventions_v3 import (
     InterventionActivityDetailUpdateView,
     InterventionPDOutputsDetailUpdateView,
     InterventionPDOutputsListCreateView,
+    InterventionRiskDeleteView,
     PMPInterventionListCreateView,
     PMPInterventionManagementBudgetRetrieveUpdateView,
     PMPInterventionRetrieveUpdateView,
@@ -16,6 +17,7 @@ from etools.applications.partners.views.interventions_v3 import (
     PMPInterventionSupplyItemRetrieveUpdateView,
 )
 from etools.applications.partners.views.interventions_v3_actions import (
+    PMPInterventionAcceptReviewView,
     PMPInterventionAcceptView,
     PMPInterventionSendToPartnerView,
     PMPInterventionSendToUNICEFView,
@@ -43,6 +45,11 @@ urlpatterns = [
         'interventions/<int:pk>/accept/',
         view=PMPInterventionAcceptView.as_view(),
         name='intervention-accept',
+    ),
+    path(
+        'interventions/<int:pk>/accept_review/',
+        view=PMPInterventionAcceptReviewView.as_view(),
+        name='intervention-accept-review',
     ),
     path(
         'interventions/<int:pk>/unlock/',
@@ -97,6 +104,11 @@ urlpatterns = [
         'interventions/<int:intervention_pk>/pd-outputs/<int:output_pk>/activities/<int:pk>/',
         view=InterventionActivityDetailUpdateView.as_view(),
         name='intervention-activity-detail',
+    ),
+    path(
+        'interventions/<int:intervention_pk>/risks/<int:pk>/',
+        view=InterventionRiskDeleteView.as_view(http_method_names=['delete']),
+        name='intervention-risk-delete',
     ),
     path(
         'agreements/',

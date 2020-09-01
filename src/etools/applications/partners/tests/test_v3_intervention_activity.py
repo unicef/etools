@@ -11,11 +11,10 @@ from etools.applications.partners.tests.factories import (
     InterventionResultLinkFactory,
     PartnerStaffFactory,
 )
-from etools.applications.reports.models import InterventionActivityItem, InterventionActivityTimeFrame
+from etools.applications.reports.models import InterventionActivityItem, InterventionTimeFrame, ResultType
 from etools.applications.reports.tests.factories import (
     InterventionActivityFactory,
     InterventionActivityItemFactory,
-    InterventionActivityTimeFrameFactory,
     LowerResultFactory,
 )
 from etools.applications.users.tests.factories import UserFactory
@@ -24,7 +23,7 @@ from etools.applications.users.tests.factories import UserFactory
 class BaseTestCase(BaseTenantTestCase):
     def setUp(self):
         super().setUp()
-        self.user = UserFactory()
+        self.user = UserFactory(is_staff=True, groups__data=['Partnership Manager', 'UNICEF User'])
         self.intervention = InterventionFactory(
             status=Intervention.DRAFT, unicef_court=True,
             start=date(year=1970, month=1, day=1),
@@ -35,7 +34,10 @@ class BaseTestCase(BaseTenantTestCase):
         self.partner_focal_point = UserFactory(groups__data=[], profile__partner_staff_member=self.staff_member.id)
         self.intervention.partner_focal_points.add(self.staff_member)
 
-        self.result_link = InterventionResultLinkFactory(intervention=self.intervention)
+        self.result_link = InterventionResultLinkFactory(
+            intervention=self.intervention,
+            cp_output__result_type__name=ResultType.OUTPUT,
+        )
         self.pd_output = LowerResultFactory(result_link=self.result_link)
 
         self.activity = InterventionActivityFactory(result=self.pd_output)
@@ -76,17 +78,17 @@ class TestFunctionality(BaseTestCase):
         self.assertEqual(InterventionActivityItem.objects.filter(id=item_to_remove.id).exists(), False)
 
     def test_set_time_frames(self):
-        item_to_remove = InterventionActivityTimeFrameFactory(
-            activity=self.activity,
+        item_to_remove = InterventionTimeFrame.objects.get(
+            intervention=self.intervention,
             start_date=date(year=1970, month=10, day=1),
             end_date=date(year=1970, month=12, day=31)
         )
-        item_to_keep = InterventionActivityTimeFrameFactory(
-            activity=self.activity,
+        item_to_keep = InterventionTimeFrame.objects.get(
+            intervention=self.intervention,
             start_date=date(year=1970, month=4, day=1),
             end_date=date(year=1970, month=7, day=1)
         )
-        self.assertEqual(self.activity.time_frames.count(), 2)
+        self.activity.time_frames.add(item_to_keep, item_to_remove)
 
         response = self.forced_auth_req(
             'patch', self.detail_url,
@@ -104,8 +106,8 @@ class TestFunctionality(BaseTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertEqual(len(response.data['time_frames']), 4)
         self.assertEqual(self.activity.time_frames.count(), 2)
-        self.assertEqual(InterventionActivityTimeFrame.objects.filter(id=item_to_remove.id).exists(), False)
-        self.assertEqual(self.activity.time_frames.filter(id=item_to_keep.id).exists(), True)
+        self.assertEqual(self.activity.time_frames.filter(pk=item_to_remove.pk).exists(), False)
+        self.assertEqual(self.activity.time_frames.filter(pk=item_to_keep.pk).exists(), True)
         self.assertEqual([t['enabled'] for t in response.data['time_frames']], [False, True, True, False])
 
     def test_minimal_create(self):
@@ -133,6 +135,19 @@ class TestFunctionality(BaseTestCase):
     def test_retrieve(self):
         response = self.forced_auth_req('get', self.detail_url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+
+    def test_time_frames_presented_in_details(self):
+        self.intervention.quarters.first().activities.add(self.activity)
+        response = self.forced_auth_req(
+            'get',
+            reverse('pmp_v3:intervention-detail', args=[self.intervention.id]),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.data['result_links'][0]['ll_results'][0]['activities'][0]['time_frames'][0]['name'],
+            'Q1'
+        )
 
 
 class TestPermissions(BaseTestCase):

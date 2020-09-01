@@ -499,6 +499,7 @@ class PartnerOrganizationAddView(CreateAPIView):
 
 
 class PartnerOrganizationDeleteView(DestroyAPIView):
+    # todo: permission_classes are ignored here. see comments in InterventionAmendmentDeleteView.delete
     permission_classes = (PartnershipManagerRepPermission,)
 
     def delete(self, request, *args, **kwargs):
