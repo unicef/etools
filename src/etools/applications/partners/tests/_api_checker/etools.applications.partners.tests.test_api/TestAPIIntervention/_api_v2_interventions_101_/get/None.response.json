@@ -19,7 +19,7 @@
         ],
         "content-length": [
             "Content-Length",
-            "7729"
+            "7778"
         ]
     },
     "data": {
@@ -180,7 +180,8 @@
                 "cash_transfer_modalities": true,
                 "travel_activities": true,
                 "sections_present": true,
-                "pd_outputs": true
+                "pd_outputs": true,
+                "quarters": true
             },
             "required": {
                 "signed_pd_document": false,
@@ -265,7 +266,8 @@
                 "cash_transfer_modalities": false,
                 "travel_activities": false,
                 "sections_present": false,
-                "pd_outputs": false
+                "pd_outputs": false,
+                "quarters": false
             },
             "view": {
                 "signed_pd_document": false,
@@ -350,7 +352,8 @@
                 "cash_transfer_modalities": true,
                 "travel_activities": true,
                 "sections_present": false,
-                "pd_outputs": true
+                "pd_outputs": true,
+                "quarters": true
             }
         }
     },
