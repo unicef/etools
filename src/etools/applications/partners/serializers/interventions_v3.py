@@ -171,7 +171,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
                     available_actions.append("accept")
                     # TODO confirm that this is focal point
                     # and not just any UNICEF user
-                    available_actions.append("accept_and_review")
+                    available_actions.append("accept_review")
 
         # PD is assigned to Partner
         else:

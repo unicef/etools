@@ -17,6 +17,7 @@ from etools.applications.partners.views.interventions_v3 import (
     PMPInterventionSupplyItemRetrieveUpdateView,
 )
 from etools.applications.partners.views.interventions_v3_actions import (
+    PMPInterventionAcceptReviewView,
     PMPInterventionAcceptView,
     PMPInterventionSendToPartnerView,
     PMPInterventionSendToUNICEFView,
@@ -43,6 +44,11 @@ urlpatterns = [
         'interventions/<int:pk>/accept/',
         view=PMPInterventionAcceptView.as_view(),
         name='intervention-accept',
+    ),
+    path(
+        'interventions/<int:pk>/accept_review/',
+        view=PMPInterventionAcceptReviewView.as_view(),
+        name='intervention-accept-review',
     ),
     path(
         'interventions/<int:pk>/unlock/',
