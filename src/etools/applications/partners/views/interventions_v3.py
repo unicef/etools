@@ -206,6 +206,9 @@ class PMPInterventionSupplyItemListCreateView(
             intervention=self.get_pd(self.kwargs.get("intervention_pk")),
         )
 
+    def get_intervention(self) -> Intervention:
+        return self.get_pd(self.kwargs.get("intervention_pk"))
+
     def get_serializer(self, *args, **kwargs):
         if kwargs.get("data"):
             kwargs["data"]["intervention"] = self.get_pd(
@@ -221,6 +224,9 @@ class PMPInterventionSupplyItemRetrieveUpdateView(
 ):
     queryset = InterventionSupplyItem.objects
     serializer_class = InterventionSupplyItemSerializer
+
+    def get_intervention(self) -> Intervention:
+        return self.get_pd(self.kwargs.get("intervention_pk"))
 
 
 class InterventionActivityViewMixin(DetailedInterventionResponseMixin):
