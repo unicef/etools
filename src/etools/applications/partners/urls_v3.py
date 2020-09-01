@@ -23,6 +23,7 @@ from etools.applications.partners.views.interventions_v3_actions import (
     PMPInterventionSendToUNICEFView,
     PMPInterventionUnlockView,
 )
+from etools.applications.partners.views.v3 import PMPDropdownsListApiView
 
 app_name = 'partners'
 urlpatterns = [
@@ -121,4 +122,5 @@ urlpatterns = [
         ),
         name='agreement-detail',
     ),
+    path('dropdowns/dynamic/', view=PMPDropdownsListApiView.as_view(), name='dropdown-dynamic-list'),
 ]

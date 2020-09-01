@@ -407,8 +407,8 @@ class TestInterventionUpdate(BaseInterventionTestCase):
         intervention.refresh_from_db()
         self.assertEqual(intervention.agreement, agreement)
         self.assertListEqual(
-            list(intervention.partner_focal_points.all()),
-            [focal_1, focal_2],
+            sorted([fp.pk for fp in intervention.partner_focal_points.all()]),
+            sorted([focal_1.pk, focal_2.pk]),
         )
 
     def test_unicef_details(self):
