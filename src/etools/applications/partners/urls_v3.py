@@ -9,6 +9,7 @@ from etools.applications.partners.views.interventions_v3 import (
     InterventionActivityDetailUpdateView,
     InterventionPDOutputsDetailUpdateView,
     InterventionPDOutputsListCreateView,
+    InterventionRiskDeleteView,
     PMPInterventionListCreateView,
     PMPInterventionManagementBudgetRetrieveUpdateView,
     PMPInterventionRetrieveUpdateView,
@@ -96,6 +97,11 @@ urlpatterns = [
         'interventions/<int:intervention_pk>/pd-outputs/<int:output_pk>/activities/<int:pk>/',
         view=InterventionActivityDetailUpdateView.as_view(),
         name='intervention-activity-detail',
+    ),
+    path(
+        'interventions/<int:intervention_pk>/risks/<int:pk>/',
+        view=InterventionRiskDeleteView.as_view(http_method_names=['delete']),
+        name='intervention-risk-delete',
     ),
     path(
         'agreements/',

@@ -1,8 +1,11 @@
+from copy import copy
+
 from django.db import transaction
 
 from rest_framework import status
 from rest_framework.generics import (
     CreateAPIView,
+    DestroyAPIView,
     ListCreateAPIView,
     RetrieveUpdateAPIView,
     RetrieveUpdateDestroyAPIView,
@@ -11,10 +14,15 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from etools.applications.field_monitoring.permissions import IsEditAction, IsReadAction
-from etools.applications.partners.models import Intervention, InterventionManagementBudget, InterventionSupplyItem
+from etools.applications.partners.models import (
+    Intervention,
+    InterventionManagementBudget,
+    InterventionRisk,
+    InterventionSupplyItem,
+)
 from etools.applications.partners.permissions import (
     intervention_field_is_editable_permission,
-    PartnershipManagerPermission,
+    PMPInterventionPermission,
 )
 from etools.applications.partners.serializers.exports.interventions import (
     InterventionExportFlatSerializer,
@@ -29,6 +37,7 @@ from etools.applications.partners.serializers.interventions_v3 import (
     InterventionDetailSerializer,
     InterventionDummySerializer,
     InterventionManagementBudgetSerializer,
+    InterventionRiskSerializer,
     InterventionSupplyItemSerializer,
 )
 from etools.applications.partners.serializers.v3 import (
@@ -41,12 +50,47 @@ from etools.applications.reports.models import InterventionActivity, LowerResult
 from etools.applications.reports.serializers.v2 import InterventionActivityDetailSerializer
 
 
+class APIActionsMixin:
+    """
+    add viewsets-like action attribute to generic api views to reuse action-based things, for example permissions
+    """
+    def get_action(self, method):
+        if method == 'OPTIONS':
+            return 'metadata'
+
+        if not self.detail:
+            if method == 'GET':
+                return 'list'
+            elif method == 'POST':
+                return 'create'
+        else:
+            if method == 'GET':
+                return 'retrieve'
+            elif method == 'PUT':
+                return 'update'
+            elif method == 'PATCH':
+                return 'partial_update'
+            elif method == 'DELETE':
+                return 'delete'
+
+        return 'unknown'
+
+    def dispatch(self, request, *args, **kwargs):
+        # if api view is inherited from one of GenericAPIView subclasses, we can just check which methods are defined
+        if hasattr(self, 'list') or hasattr(self, 'create'):
+            self.detail = False
+        else:
+            self.detail = True
+        self.action = self.get_action(request.method.upper())
+        return super().dispatch(request, *args, **kwargs)
+
+
 class PMPInterventionMixin(PMPBaseViewMixin):
     SERIALIZER_OPTIONS = {
-        "list": (InterventionListSerializer, InterventionDummySerializer),
-        "create": (InterventionCreateUpdateSerializer, InterventionDummySerializer),
-        "detail": (InterventionDetailSerializer, InterventionDummySerializer),
-        "list_min": (MinimalInterventionListSerializer, InterventionDummySerializer),
+        "list": (InterventionListSerializer, InterventionListSerializer),
+        "create": (InterventionCreateUpdateSerializer, InterventionCreateUpdateSerializer),
+        "detail": (InterventionDetailSerializer, InterventionDetailSerializer),
+        "list_min": (MinimalInterventionListSerializer, MinimalInterventionListSerializer),
         "csv": (InterventionExportSerializer, InterventionDummySerializer),
         "csv_flat": (InterventionExportFlatSerializer, InterventionDummySerializer),
     }
@@ -59,8 +103,8 @@ class PMPInterventionMixin(PMPBaseViewMixin):
         return qs
 
 
-class PMPInterventionListCreateView(PMPInterventionMixin, InterventionListAPIView):
-    permission_classes = (IsAuthenticated, PartnershipManagerPermission,)
+class PMPInterventionListCreateView(APIActionsMixin, PMPInterventionMixin, InterventionListAPIView):
+    permission_classes = (IsAuthenticated, PMPInterventionPermission)
 
     def get_serializer_class(self):
         if self.request.method == "GET":
@@ -88,7 +132,13 @@ class PMPInterventionListCreateView(PMPInterventionMixin, InterventionListAPIVie
         )
 
 
-class PMPInterventionRetrieveUpdateView(PMPInterventionMixin, InterventionDetailAPIView):
+class PMPInterventionRetrieveUpdateView(APIActionsMixin, PMPInterventionMixin, InterventionDetailAPIView):
+    SERIALIZER_MAP = copy(InterventionDetailAPIView.SERIALIZER_MAP)
+    SERIALIZER_MAP['risks'] = InterventionRiskSerializer
+    related_fields = InterventionDetailAPIView.related_fields + [
+        'risks',
+    ]
+
     def get_serializer_class(self):
         if self.request.method in ["PATCH", "PUT"]:
             return self.map_serializer("create")
@@ -214,3 +264,19 @@ class InterventionActivityCreateView(InterventionActivityViewMixin, CreateAPIVie
 
 class InterventionActivityDetailUpdateView(InterventionActivityViewMixin, RetrieveUpdateDestroyAPIView):
     pass
+
+
+class InterventionRiskDeleteView(DestroyAPIView):
+    queryset = InterventionRisk.objects
+    permission_classes = [
+        IsAuthenticated,
+        IsReadAction | (IsEditAction & intervention_field_is_editable_permission('risks'))
+    ]
+
+    def get_root_object(self):
+        if not hasattr(self, '_intervention'):
+            self._intervention = Intervention.objects.filter(pk=self.kwargs.get('intervention_pk')).first()
+        return self._intervention
+
+    def get_queryset(self):
+        return super().get_queryset().filter(intervention=self.get_root_object())

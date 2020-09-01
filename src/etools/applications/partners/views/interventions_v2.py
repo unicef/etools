@@ -44,6 +44,7 @@ from etools.applications.partners.permissions import (
     PartnershipManagerPermission,
     PartnershipManagerRepPermission,
     SENIOR_MANAGEMENT_GROUP,
+    UserIsNotPartnerStaffMemberPermission,
 )
 from etools.applications.partners.serializers.exports.interventions import (
     InterventionAmendmentExportFlatSerializer,
@@ -284,6 +285,20 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
         'planned_visits': PlannedVisitsCUSerializer,
         'result_links': InterventionResultCUSerializer
     }
+    related_fields = [
+        'planned_budget',
+        'planned_visits',
+        'result_links'
+    ]
+    nested_related_names = [
+        'll_results'
+    ]
+    related_non_serialized_fields = [
+        # todo: add other CodedGenericRelation fields. at this moment they're not managed by permissions matrix
+        'prc_review_attachment',
+        'final_partnership_review',
+        'signed_pd_attachment',
+    ]
 
     def get_serializer_class(self):
         """
@@ -295,14 +310,11 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
 
     @transaction.atomic
     def update(self, request, *args, **kwargs):
-        related_fields = ['planned_budget',
-                          'planned_visits',
-                          'result_links']
-        nested_related_names = ['ll_results']
         self.instance, old_instance, serializer = self.my_update(
             request,
-            related_fields,
-            nested_related_names=nested_related_names,
+            self.related_fields,
+            nested_related_names=self.nested_related_names,
+            related_non_serialized_fields=self.related_non_serialized_fields,
             **kwargs
         )
 
@@ -456,7 +468,7 @@ class InterventionAmendmentListAPIView(ExportModelMixin, ValidatorViewMixin, Lis
     Returns a list of InterventionAmendments.
     """
     serializer_class = InterventionAmendmentCUSerializer
-    permission_classes = (PartnershipManagerPermission,)
+    permission_classes = (PartnershipManagerPermission, UserIsNotPartnerStaffMemberPermission)
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
         JSONRenderer,
@@ -503,13 +515,21 @@ class InterventionAmendmentListAPIView(ExportModelMixin, ValidatorViewMixin, Lis
 
 
 class InterventionAmendmentDeleteView(DestroyAPIView):
-    permission_classes = (PartnershipManagerRepPermission,)
+    permission_classes = (PartnershipManagerRepPermission, UserIsNotPartnerStaffMemberPermission)
 
     def delete(self, request, *args, **kwargs):
         try:
             intervention_amendment = InterventionAmendment.objects.get(id=int(kwargs['pk']))
         except InterventionAmendment.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
+
+        # todo: there are 3 possible checks for permissions: code below + permission_classes + permissions matrix.
+        #  should be refined and moved to permissions matrix. in fact, both permissions_classes and
+        #  permissions matrix are ignored. in addition to that, they are not synchronized to each other,
+        #  for example we ignore amendment mode here PartnershipManagerRepPermission.check_object_permissions
+        #  never executed. normally view.check_object_permissions is called
+        #  inside GenericAPIView.get_object method which is not used.
+
         if intervention_amendment.intervention.status in [Intervention.DRAFT] or \
             request.user in intervention_amendment.intervention.unicef_focal_points.all() or \
             request.user.groups.filter(name__in=['Partnership Manager',
@@ -764,6 +784,7 @@ class InterventionLocationListAPIView(QueryStringFilterMixin, ListAPIView):
 
 
 class InterventionDeleteView(DestroyAPIView):
+    # todo: permission_classes are ignored here. see comments in InterventionAmendmentDeleteView.delete
     permission_classes = (PartnershipManagerRepPermission,)
 
     def delete(self, request, *args, **kwargs):

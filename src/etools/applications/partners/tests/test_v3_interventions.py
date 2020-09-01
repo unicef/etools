@@ -65,7 +65,7 @@ class URLsTestCase(URLAssertionMixin, SimpleTestCase):
 class BaseInterventionTestCase(BaseTenantTestCase):
     def setUp(self):
         super().setUp()
-        self.user = UserFactory(is_staff=True)
+        self.user = UserFactory(is_staff=True, groups__data=['UNICEF User', 'Partnership Manager'])
         self.user.groups.add(GroupFactory())
         self.partner = PartnerFactory(name='Partner 1', vendor_number="VP1")
         self.agreement = AgreementFactory(
@@ -91,6 +91,40 @@ class TestList(BaseInterventionTestCase):
         data = response.data
         self.assertEqual(data["id"], intervention.pk)
 
+    def test_list_for_partner(self):
+        InterventionFactory()
+
+        intervention = InterventionFactory()
+        user = UserFactory(is_staff=False, groups__data=[])
+        user_staff_member = PartnerStaffFactory(partner=intervention.agreement.partner, email=user.email)
+        user.profile.partner_staff_member = user_staff_member.id
+        user.profile.save()
+
+        response = self.forced_auth_req(
+            "get",
+            reverse('pmp_v3:intervention-list'),
+            user=user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["id"], intervention.pk)
+
+    def test_not_authenticated(self):
+        response = self.forced_auth_req(
+            "get",
+            reverse('pmp_v3:intervention-list'),
+            user=AnonymousUser(),
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_not_partner_user(self):
+        response = self.forced_auth_req(
+            "get",
+            reverse('pmp_v3:intervention-list'),
+            user=UserFactory(is_staff=False, groups__data=[]),
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
 
 class TestCreate(BaseInterventionTestCase):
     def test_post(self):
@@ -110,7 +144,7 @@ class TestCreate(BaseInterventionTestCase):
             user=self.user,
             data=data
         )
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
         data = response.data
         i = Intervention.objects.get(pk=data.get("id"))
         self.assertTrue(i.humanitarian_flag)
@@ -552,7 +586,7 @@ class TestInterventionAccept(BaseInterventionTestCase):
                 self.url,
                 user=self.partner_user,
             )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         mock_send.assert_called()
         self.intervention.refresh_from_db()
         self.assertTrue(self.intervention.partner_accepted)
@@ -852,6 +886,7 @@ class TestTimeframesValidation(BaseInterventionTestCase):
             data={'start': datetime.date(year=1970, month=5, day=1)}
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['start'], '1970-05-01')
 
     def test_update_start_with_active_timeframe(self):
         self.activity.time_frames.add(

@@ -23,7 +23,7 @@ from etools.applications.users.tests.factories import UserFactory
 class BaseTestCase(BaseTenantTestCase):
     def setUp(self):
         super().setUp()
-        self.user = UserFactory()
+        self.user = UserFactory(is_staff=True, groups__data=['Partnership Manager', 'UNICEF User'])
         self.intervention = InterventionFactory(
             status=Intervention.DRAFT, unicef_court=True,
             start=date(year=1970, month=1, day=1),

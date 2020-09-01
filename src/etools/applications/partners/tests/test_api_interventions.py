@@ -131,7 +131,6 @@ class TestInterventionsAPI(BaseTenantTestCase):
             "other_info",
             "other_partners_involved",
             "partner_accepted",
-            "partner_authorized_officer_signatory",
             "partner_authorized_officer_signatory_id",
             "partner_focal_points",
             "pd_outputs",
@@ -148,7 +147,6 @@ class TestInterventionsAPI(BaseTenantTestCase):
             "risks",
             "sections",
             "sections_present",
-            "signed_by_partner_date",
             "signed_by_unicef_date",
             "signed_pd_attachment",
             "signed_pd_document",
@@ -1660,8 +1658,7 @@ class TestInterventionAmendmentCreateAPIView(BaseTenantTestCase):
     def setUp(self):
         super().setUp()
 
-        self.partnership_manager_user = UserFactory(is_staff=True)
-        self.partnership_manager_user.groups.add(GroupFactory())
+        self.partnership_manager_user = UserFactory(is_staff=True, groups__data=['Partnership Manager', 'UNICEF User'])
 
         self.intervention = InterventionFactory(status=Intervention.SIGNED)
         self.url = reverse(
@@ -1916,8 +1913,10 @@ class TestInterventionAmendmentCreateAPIView(BaseTenantTestCase):
             ['Cannot add a new amendment while another amendment is in progress.']
         )
 
-    def _make_request(self, user=None, data="", request_format='json', **kwargs):
-        return self.forced_auth_req('post', self.url, user=user, data=data, request_format=request_format, **kwargs)
+    def _make_request(self, user=None, data=None, request_format='json', **kwargs):
+        return self.forced_auth_req(
+            'post', self.url, user=user, data=data or {}, request_format=request_format, **kwargs
+        )
 
 
 class TestInterventionAmendmentDeleteView(BaseTenantTestCase):
