@@ -20,7 +20,7 @@ from etools.applications.partners.serializers.interventions_v2 import (
     PlannedVisitsNestedSerializer,
     SingleInterventionAttachmentField,
 )
-from etools.applications.partners.utils import get_quarters_range
+from etools.applications.reports.serializers.v2 import InterventionTimeFrameSerializer
 
 
 class InterventionRiskSerializer(serializers.ModelSerializer):
@@ -62,12 +62,12 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     submitted_to_prc = serializers.ReadOnlyField()
     termination_doc_attachment = AttachmentSingleFileField(read_only=True)
     termination_doc_file = serializers.FileField(source='termination_doc', read_only=True)
-    quarters = serializers.SerializerMethodField()
     final_partnership_review = SingleInterventionAttachmentField(
         type_name=FileType.FINAL_PARTNERSHIP_REVIEW,
         read_field=InterventionAttachmentSerializer()
     )
     risks = InterventionRiskSerializer(many=True, read_only=True)
+    quarters = InterventionTimeFrameSerializer(many=True, read_only=True)
 
     def get_location_p_codes(self, obj):
         return [location.p_code for location in obj.flat_locations.all()]
@@ -185,16 +185,6 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
                     available_actions.append("accept")
 
         return list(set(available_actions))
-
-    def get_quarters(self, obj: Intervention):
-        return [
-            {
-                'name': 'Q{}'.format(i + 1),
-                'start': quarter[0].strftime('%Y-%m-%d'),
-                'end': quarter[1].strftime('%Y-%m-%d')
-            }
-            for i, quarter in enumerate(get_quarters_range(obj.start, obj.end))
-        ]
 
     class Meta:
         model = Intervention

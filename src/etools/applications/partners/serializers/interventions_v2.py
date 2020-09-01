@@ -30,12 +30,7 @@ from etools.applications.partners.models import (
 )
 from etools.applications.partners.permissions import InterventionPermissions
 from etools.applications.partners.utils import get_quarters_range
-from etools.applications.reports.models import (
-    AppliedIndicator,
-    InterventionActivityTimeFrame,
-    LowerResult,
-    ReportingRequirement,
-)
+from etools.applications.reports.models import AppliedIndicator, LowerResult, ReportingRequirement
 from etools.applications.reports.serializers.v2 import (
     AppliedIndicatorBasicSerializer,
     IndicatorSerializer,
@@ -645,14 +640,19 @@ class InterventionCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotMode
             old_quarters = get_quarters_range(self.instance.start, self.instance.end)
             new_quarters = get_quarters_range(start, end)
 
-            if len(old_quarters) > len(new_quarters):
-                if InterventionActivityTimeFrame.objects.filter(
-                    activity__result__result_link__intervention=self.instance,
-                    start_date__gte=old_quarters[len(new_quarters)][0]
+            if old_quarters and len(old_quarters) > len(new_quarters):
+                if new_quarters:
+                    last_quarter = new_quarters[-1].quarter
+                else:
+                    last_quarter = 0
+
+                if self.instance.quarters.filter(
+                    quarter__gt=last_quarter,
+                    activities__isnull=False,
                 ).exists():
                     names_to_be_removed = ', '.join([
-                        'Q{}'.format(i + 1)
-                        for i in range(len(old_quarters), len(new_quarters))
+                        'Q{}'.format(q.quarter)
+                        for q in old_quarters[len(new_quarters):]
                     ])
                     error_text = _('Please adjust activities to not use the quarters to be removed ({}).').format(
                         names_to_be_removed
