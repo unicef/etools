@@ -32,13 +32,4 @@ class Migration(migrations.Migration):
             field=django.contrib.postgres.fields.ArrayField(base_field=models.CharField(choices=[('payment', 'Direct Payment'), ('reimbursement', 'Reimbursement'), ('dct', 'Direct Cash Transfer')], max_length=50, verbose_name='Cash Transfer Modalities'), default=etools.applications.partners.models.get_default_cash_transfer_modalities, size=None),
         ),
         migrations.RunPython(migrate_cash_transfer_modalities, migrate_cash_transfer_modalities_backward),
-        migrations.RemoveField(
-            model_name='intervention',
-            name='cash_transfer_modalities',
-        ),
-        migrations.RenameField(
-            model_name='intervention',
-            old_name='cash_transfer_modalities_new',
-            new_name='cash_transfer_modalities',
-        )
     ]
