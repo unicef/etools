@@ -19,7 +19,7 @@ from etools.applications.partners.models import (
     Intervention,
     InterventionAttachment,
     InterventionManagementBudget,
-   InterventionRisk,
+    InterventionRisk,
     InterventionSupplyItem,
 )
 from etools.applications.partners.permissions import (

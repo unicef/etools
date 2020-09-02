@@ -371,7 +371,8 @@ class IsPartnerUser(BasePermission):
 
     def has_object_permission(self, request, view, obj):
         return True
-      
+
+
 def view_action_permission(*actions):
     class ViewActionPermission(BasePermission):
         def has_permission(self, request, view):
