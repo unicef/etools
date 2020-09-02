@@ -112,7 +112,7 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
         available_actions = self.unicef_serializer.get_available_actions(pd)
         expected_actions = self.default_actions + [
             "accept",
-            "accept_and_review",
+            "accept_review",
             "cancel",
             "send_to_partner",
             "signature",

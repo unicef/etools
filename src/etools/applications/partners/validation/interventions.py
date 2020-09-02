@@ -138,6 +138,17 @@ def transition_to_suspended(i):
     return True
 
 
+def transition_to_review(i):
+    # TODO add validation rules/criteria
+    return True
+
+
+def transition_to_signature(i):
+    # TODO ensure final partnership review document is set
+    # this field is part of PR 2769
+    return True
+
+
 def transition_to_signed(i):
     from etools.applications.partners.models import Agreement
     if i.in_amendment is True:

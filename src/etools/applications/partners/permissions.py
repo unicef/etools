@@ -91,7 +91,7 @@ class PMPPermissions:
 class InterventionPermissions(PMPPermissions):
 
     MODEL_NAME = 'partners.Intervention'
-    EXTRA_FIELDS = ['sections_present', 'pd_outputs']
+    EXTRA_FIELDS = ['sections_present', 'pd_outputs', 'final_partnership_review']
 
     def __init__(self, **kwargs):
         """
@@ -122,10 +122,10 @@ class InterventionPermissions(PMPPermissions):
         # focal points are prefetched, so just cast to array to collect ids
         partner_focal_points = [fp.id for fp in self.instance.partner_focal_points.all()]
 
-        if partner_staff_member_id == self.instance.partner_authorized_officer_signatory_id:
+        if partner_staff_member_id and partner_staff_member_id == self.instance.partner_authorized_officer_signatory_id:
             self.user_groups.extend(['Partner User', 'Partner Signer'])
 
-        if partner_staff_member_id in partner_focal_points:
+        if partner_staff_member_id and partner_staff_member_id in partner_focal_points:
             self.user_groups.extend(['Partner User', 'Partner Focal Point'])
 
         self.user_groups = list(set(self.user_groups))
@@ -362,7 +362,104 @@ def intervention_field_is_editable_permission(field):
             )
             return permissions.get_permissions()['edit'].get(field)
 
-        def has_object_permission(self, request, view, obj):
-            return True
-
     return FieldPermission
+
+
+class IsPartnerUser(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and request.user.profile.partner_staff_member
+
+    def has_object_permission(self, request, view, obj):
+        return True
+      
+def view_action_permission(*actions):
+    class ViewActionPermission(BasePermission):
+        def has_permission(self, request, view):
+            return hasattr(view, 'action') and view.action in actions
+
+    return ViewActionPermission
+
+
+def user_group_permission(*groups):
+    class UserGroupPermission(BasePermission):
+        def has_permission(self, request, view):
+            return request.user.is_authenticated and is_user_in_groups(request.user, groups)
+
+    return UserGroupPermission
+
+
+class UserIsPartnerStaffMemberPermission(BasePermission):
+    def has_permission(self, request, view):
+        return hasattr(request.user, 'profile') and bool(request.user.profile.partner_staff_member)
+
+
+class UserIsNotPartnerStaffMemberPermission(BasePermission):
+    def has_permission(self, request, view):
+        return hasattr(request.user, 'profile') and not bool(request.user.profile.partner_staff_member)
+
+
+class UserIsObjectPartnerStaffMember(UserIsPartnerStaffMemberPermission):
+    def has_object_permission(self, request, view, obj):
+        if not hasattr(obj, 'partner'):
+            return False
+
+        if not hasattr(request.user, 'profile'):
+            return False
+
+        return request.user.profile.partner_staff_member in obj.partner.staff_members.values_list('id', flat=True)
+
+
+class UserIsStaffPermission(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.is_staff
+
+
+class IsSafeMethodPermission(BasePermission):
+    def has_permission(self, request, view):
+        return request.method in permissions.SAFE_METHODS
+
+
+class IsUnsafeMethodPermission(BasePermission):
+    def has_permission(self, request, view):
+        return request.method not in permissions.SAFE_METHODS
+
+
+"""
+PartnershipManagerPermission is too broad, so we can't just add partners and be sure it wouldn't have side effects.
+Rewritten using smaller permissions from comment describing how it should work.
+
+Applies general and object-based permissions.
+
+- For list views --
+  - user must be staff or in 'Partnership Manager' group
+
+- For create views --
+  - user must be in 'Partnership Manager' group
+
+- For retrieve views --
+  - user must be (staff or in 'Partnership Manager' group) OR
+                 (staff or listed as a partner staff member on the object)
+    # equals to: staff or in 'Partnership Manager' group or listed as a partner staff member on the object
+
+- For update/delete views --
+  - user must be (in 'Partnership Manager' group) OR
+                 (listed as a partner staff member on the object)
+"""
+PartnershipManagerRefinedPermission = (
+    view_action_permission('metadata') |
+    (view_action_permission('list') & (UserIsStaffPermission | user_group_permission('Partnership Manager'))) |
+    (view_action_permission('create') & user_group_permission('Partnership Manager')) |
+    (
+        view_action_permission('retrieve') &
+        (UserIsStaffPermission | user_group_permission('Partnership Manager') | UserIsObjectPartnerStaffMember)
+    ) |
+    (
+        view_action_permission('update', 'partial_update', 'delete') &
+        (user_group_permission('Partnership Manager') | UserIsObjectPartnerStaffMember)
+    )
+)
+
+# allow partners to load list ONLY for interventions to keep everything else working right as before; at least for now
+PMPInterventionPermission = (
+    PartnershipManagerRefinedPermission | (view_action_permission('list') & UserIsPartnerStaffMemberPermission)
+)

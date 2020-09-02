@@ -1,7 +1,7 @@
 import datetime
 import html
 import logging
-from typing import List, Tuple
+import typing
 
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
@@ -631,25 +631,23 @@ def sync_partner_staff_member(partner: PartnerOrganization, staff_member_data: P
     profile.countries_available.add(connection.tenant)
 
 
-def get_quarters_range(start: datetime.date, end: datetime.date) -> List[Tuple[datetime.date, datetime.date]]:
+class Quarter(typing.NamedTuple):
+    quarter: int
+    start: datetime.date
+    end: datetime.date
+
+
+def get_quarters_range(start: datetime.date, end: datetime.date) -> typing.List[Quarter]:
     """first date included, last excluded for every period in range"""
     if not start or not end:
         return []
 
     quarters = []
+    i = 0
     while start < end:
         period_end = min(start + relativedelta(months=3), end)
-        quarters.append((start, period_end))
+        quarters.append(Quarter(i + 1, start, period_end))
         start = period_end
+        i += 1
 
     return quarters
-
-
-def get_quarter_index(
-    start: datetime.date, end: datetime.date,
-    quarter_start: datetime.date, quarter_end: datetime.date
-) -> int:
-    for i, quarter in enumerate(get_quarters_range(start, end)):
-        if quarter[0] <= quarter_start <= quarter[1] and quarter[0] <= quarter_end <= quarter[1]:
-            return i
-    return -1

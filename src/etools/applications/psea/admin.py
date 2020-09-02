@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from etools.applications.psea.models import Answer, Assessment, Evidence, Indicator
+from etools.applications.psea.models import Answer, Assessment, Evidence, Indicator, Rating
 
 
 @admin.register(Assessment)
@@ -31,4 +31,10 @@ class EvidenceAdmin(admin.ModelAdmin):
 @admin.register(Indicator)
 class IndicatorAdmin(admin.ModelAdmin):
     list_display = ('subject', 'active')
+    list_filter = ('active',)
+
+
+@admin.register(Rating)
+class RatingAdmin(admin.ModelAdmin):
+    list_display = ('label', 'weight', 'active')
     list_filter = ('active',)

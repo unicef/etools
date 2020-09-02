@@ -251,6 +251,7 @@ class AgreementAmendmentListAPIView(ExportModelMixin, ListAPIView):
 
 
 class AgreementAmendmentDeleteView(DestroyAPIView):
+    # todo: permission_classes are ignored here. see comments in InterventionAmendmentDeleteView.delete
     permission_classes = (PartnershipManagerRepPermission,)
 
     def delete(self, request, *args, **kwargs):
@@ -266,6 +267,7 @@ class AgreementAmendmentDeleteView(DestroyAPIView):
 
 
 class AgreementDeleteView(DestroyAPIView):
+    # todo: permission_classes are ignored here. see comments in InterventionAmendmentDeleteView.delete
     permission_classes = (PartnershipManagerRepPermission,)
 
     def delete(self, request, *args, **kwargs):
