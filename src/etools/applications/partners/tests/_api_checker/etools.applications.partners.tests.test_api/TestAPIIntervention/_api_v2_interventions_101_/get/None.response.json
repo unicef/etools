@@ -19,7 +19,7 @@
         ],
         "content-length": [
             "Content-Length",
-            "7778"
+            "7868"
         ]
     },
     "data": {
@@ -181,7 +181,7 @@
                 "cash_transfer_modalities": false,
                 "travel_activities": true,
                 "sections_present": true,
-                "pd_outputs": true,
+                "pd_outputs": false,
                 "quarters": true
             },
             "required": {
