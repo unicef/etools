@@ -29,7 +29,7 @@ class CountryProgrammeFactory(factory.DjangoModelFactory):
         model = models.CountryProgramme
 
     name = factory.Sequence(lambda n: 'Country Programme {}'.format(n))
-    wbs = factory.Sequence(lambda n: '0000/A0/{:02d}'.format(n))
+    wbs = factory.Sequence(lambda n: '{:04d}/A0/01'.format(n))
     from_date = datetime.date(datetime.date.today().year, 1, 1)
     to_date = datetime.date(datetime.date.today().year, 12, 31)
 
@@ -176,10 +176,9 @@ class InterventionActivityItemFactory(factory.django.DjangoModelFactory):
         model = models.InterventionActivityItem
 
 
-class InterventionActivityTimeFrameFactory(factory.DjangoModelFactory):
-    activity = factory.SubFactory(InterventionActivityFactory)
+class InterventionTimeFrameFactory(factory.DjangoModelFactory):
     start_date = fuzzy.FuzzyDate(datetime.date(year=1970, month=1, day=1))
     end_date = factory.LazyAttribute(lambda s: fuzzy.FuzzyDate(s.start_date).fuzz())
 
     class Meta:
-        model = models.InterventionActivityTimeFrame
+        model = models.InterventionTimeFrame

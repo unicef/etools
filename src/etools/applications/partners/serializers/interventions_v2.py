@@ -2,7 +2,7 @@ from datetime import date, datetime
 from operator import itemgetter
 
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, QuerySet
 from django.utils.functional import cached_property
 from django.utils.translation import ugettext as _
 
@@ -10,6 +10,7 @@ from rest_framework import serializers
 from rest_framework.serializers import ValidationError
 from rest_framework.validators import UniqueTogetherValidator
 from unicef_attachments.fields import AttachmentSingleFileField
+from unicef_attachments.models import Attachment
 from unicef_attachments.serializers import AttachmentSerializerMixin
 from unicef_locations.serializers import LocationSerializer
 from unicef_snapshot.serializers import SnapshotModelSerializer
@@ -17,6 +18,7 @@ from unicef_snapshot.serializers import SnapshotModelSerializer
 from etools.applications.funds.models import FundsCommitmentItem, FundsReservationHeader
 from etools.applications.funds.serializers import FRHeaderSerializer, FRsSerializer
 from etools.applications.partners.models import (
+    FileType,
     Intervention,
     InterventionAmendment,
     InterventionAttachment,
@@ -28,12 +30,7 @@ from etools.applications.partners.models import (
 )
 from etools.applications.partners.permissions import InterventionPermissions
 from etools.applications.partners.utils import get_quarters_range
-from etools.applications.reports.models import (
-    AppliedIndicator,
-    InterventionActivityTimeFrame,
-    LowerResult,
-    ReportingRequirement,
-)
+from etools.applications.reports.models import AppliedIndicator, LowerResult, ReportingRequirement
 from etools.applications.reports.serializers.v2 import (
     AppliedIndicatorBasicSerializer,
     IndicatorSerializer,
@@ -352,6 +349,46 @@ class InterventionAttachmentSerializer(AttachmentSerializerMixin, serializers.Mo
         )
 
 
+class SingleInterventionAttachmentField(serializers.Field):
+    def __init__(self, *args, type_name: str = None, read_field: serializers.ModelSerializer = None, **kwargs):
+        self.type_name = type_name
+        self.read_field = read_field
+        super().__init__(*args, **kwargs)
+
+    def get_file_type(self) -> FileType:
+        return FileType.objects.get(name=self.type_name)
+
+    def get_intervention_attachment(self, intervention: Intervention) -> InterventionAttachment:
+        return intervention.attachments.filter(type=self.get_file_type()).first()
+
+    def to_internal_value(self, data: int) -> Attachment:
+        return Attachment.objects.filter(pk=data).first()
+
+    def to_representation(self, value: QuerySet) -> [dict]:
+        value = value.first()
+        if not value:
+            return None
+
+        return self.read_field.to_representation(instance=value)
+
+    def set_attachment(self, intervention: Intervention, attachment: Attachment) -> InterventionAttachment:
+        existing_attachment = self.get_intervention_attachment(intervention)
+        if existing_attachment:
+            existing_attachment.delete()
+
+        intervention_attachment = InterventionAttachment.objects.create(
+            intervention=intervention,
+            type=self.get_file_type(),
+            attachment=attachment.file,
+        )
+
+        attachment.code = 'partners_intervention_attachment'
+        attachment.content_object = intervention_attachment
+        attachment.save()
+
+        return intervention_attachment
+
+
 class InterventionResultNestedSerializer(serializers.ModelSerializer):
     cp_output_name = serializers.CharField(source="cp_output.output_name", read_only=True)
     ram_indicator_names = serializers.SerializerMethodField(read_only=True)
@@ -563,6 +600,11 @@ class InterventionCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotMode
         queryset=FundsReservationHeader.objects.prefetch_related('intervention').all(),
         required=False,
     )
+    final_partnership_review = SingleInterventionAttachmentField(
+        type_name=FileType.FINAL_PARTNERSHIP_REVIEW,
+        read_field=InterventionAttachmentSerializer(),
+        required=False,
+    )
 
     class Meta:
         model = Intervention
@@ -598,14 +640,19 @@ class InterventionCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotMode
             old_quarters = get_quarters_range(self.instance.start, self.instance.end)
             new_quarters = get_quarters_range(start, end)
 
-            if len(old_quarters) > len(new_quarters):
-                if InterventionActivityTimeFrame.objects.filter(
-                    activity__result__result_link__intervention=self.instance,
-                    start_date__gte=old_quarters[len(new_quarters)][0]
+            if old_quarters and len(old_quarters) > len(new_quarters):
+                if new_quarters:
+                    last_quarter = new_quarters[-1].quarter
+                else:
+                    last_quarter = 0
+
+                if self.instance.quarters.filter(
+                    quarter__gt=last_quarter,
+                    activities__isnull=False,
                 ).exists():
                     names_to_be_removed = ', '.join([
-                        'Q{}'.format(i + 1)
-                        for i in range(len(old_quarters), len(new_quarters))
+                        'Q{}'.format(q.quarter)
+                        for q in old_quarters[len(new_quarters):]
                     ])
                     error_text = _('Please adjust activities to not use the quarters to be removed ({}).').format(
                         names_to_be_removed
@@ -617,7 +664,13 @@ class InterventionCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotMode
 
     @transaction.atomic
     def update(self, instance, validated_data):
+        final_partnership_review = validated_data.pop('final_partnership_review', None)
+
         updated = super().update(instance, validated_data)
+
+        if final_partnership_review:
+            self.get_fields()['final_partnership_review'].set_attachment(instance, final_partnership_review)
+
         return updated
 
 

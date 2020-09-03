@@ -1113,8 +1113,7 @@ class TestInterventionViews(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
-        cls.partnership_manager_user = UserFactory(is_staff=True)
-        cls.partnership_manager_user.groups.add(GroupFactory())
+        cls.partnership_manager_user = UserFactory(is_staff=True, groups__data=['Partnership Manager', 'UNICEF User'])
         cls.agreement = AgreementFactory()
         cls.agreement2 = AgreementFactory(status="draft")
         cls.partnerstaff = PartnerStaffFactory(partner=cls.agreement.partner)
@@ -1729,12 +1728,13 @@ class TestInterventionViews(BaseTenantTestCase):
 
     def test_intervention_amendment_notificaton(self):
         def _send_req():
-            self.forced_auth_req(
+            response = self.forced_auth_req(
                 'patch',
                 reverse('partners_api:intervention-detail', args=[self.intervention_data.get("id")]),
                 user=self.partnership_manager_user,
                 data=data
             )
+            self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
 
         # make sure that the notification template is imported to the DB
         call_command("update_notifications")
@@ -1743,9 +1743,13 @@ class TestInterventionViews(BaseTenantTestCase):
         fr.intervention = self.intervention_obj
         fr.save()
 
-        attachment = AttachmentFactory()
-        office = OfficeFactory()
-        section = SectionFactory()
+        self.intervention_obj.sections.add(SectionFactory())
+        self.intervention_obj.offices.add(OfficeFactory())
+        AttachmentFactory(
+            file=SimpleUploadedFile('test.txt', b'test'),
+            code='partners_intervention_signed_pd',
+            content_object=self.intervention_obj,
+        )
 
         ts = TenantSwitchFactory(name="intervention_amendment_notifications_on", countries=[connection.tenant])
         ts.active = False
@@ -1760,9 +1764,7 @@ class TestInterventionViews(BaseTenantTestCase):
 
         self.assertEqual(self.intervention_obj.in_amendment, True)
 
-        data = {'in_amendment': False, 'frs': [fr.id], 'offices': [office.pk],
-                'sections': [section.pk], 'signed_pd_attachment': attachment.pk,
-                'country_programme': self.intervention_obj.country_programme.id}
+        data = {'in_amendment': False}
 
         mock_send = mock.Mock()
         notifpath = "etools.applications.partners.views.interventions_v2.send_intervention_amendment_added_notification"

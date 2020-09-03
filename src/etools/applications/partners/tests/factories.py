@@ -222,3 +222,19 @@ class InterventionManagementBudgetFactory(factory.django.DjangoModelFactory):
         django_get_or_create = ("intervention",)
 
     intervention = factory.SubFactory(InterventionFactory)
+
+
+class InterventionSupplyItemFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.InterventionSupplyItem
+
+    intervention = factory.SubFactory(InterventionFactory)
+
+
+class InterventionRiskFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.InterventionRisk
+
+    intervention = factory.SubFactory(InterventionFactory)
+    risk_type = fuzzy.FuzzyChoice(choices=dict(models.InterventionRisk.RISK_TYPE_CHOICES).keys())
+    mitigation_measures = fuzzy.FuzzyText()

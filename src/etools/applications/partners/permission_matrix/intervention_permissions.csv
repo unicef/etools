@@ -26,23 +26,34 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.4.1,result_links,Partnership Manager,prp_mode_on+contingency_on,Signed,Edit,TRUE
 3.5,planned_budget,Partnership Manager,,Draft,Edit,TRUE
 3.5,planned_budget,Partnership Manager,,Signed,Edit,TRUE
-3.6,planned_visits,Partnership Manager,,Draft,Edit,TRUE
+3.9.1,submission_date,*,,*,View,TRUE
 3.9.1,submission_date,Partnership Manager,,Draft,Edit,TRUE
+3.9.2,submission_date_prc,*,,*,View,TRUE
 3.9.2,submission_date_prc,Partnership Manager,,Draft,Edit,TRUE
+3.9.3,review_date_prc,*,,*,View,TRUE
 3.9.3,review_date_prc,Partnership Manager,,Draft,Edit,TRUE
 3.9.4,prc_review_document,Partnership Manager,,Draft,Edit,TRUE
+3.9.5,prc_review_attachment,*,,*,View,TRUE
 3.9.5,prc_review_attachment,Partnership Manager,,Draft,Edit,TRUE
 3.9.11,signed_pd_document,Partnership Manager,,Draft,Edit,TRUE
+3.9.12,signed_pd_attachment,*,,*,View,TRUE
 3.9.12,signed_pd_attachment,Partnership Manager,,Draft,Edit,TRUE
-3.9.5,partner_authorized_officer_signatory,Partnership Manager,,Draft,Edit,TRUE
-3.9.6,signed_by_partner_date,Partnership Manager,,Draft,Edit,TRUE
+3.9.5,partner_authorized_officer_signatory,*,,*,View,TRUE
+3.9.5,partner_authorized_officer_signatory,Partner User,,Draft,Edit,TRUE
+3.9.6,signed_by_partner_date,*,,*,View,TRUE
+3.9.6,signed_by_partner_date,Partner User,,Draft,Edit,TRUE
+3.9.7,unicef_signatory,*,,*,View,TRUE
 3.9.7,unicef_signatory,Partnership Manager,,Draft,Edit,TRUE
 3.9.7,unicef_signatory,Partnership Manager,,Signed,Edit,TRUE
+3.9.8,signed_by_unicef_date,*,,*,View,TRUE
 3.9.8,signed_by_unicef_date,Partnership Manager,,Draft,Edit,TRUE
+3.10.1,frs,UNICEF User,,*,View,TRUE
 3.10.1,frs,Partnership Manager,,Draft,Edit,TRUE
 3.10.1,frs,Partnership Manager,,Signed,Edit,TRUE
 3.10.1,frs,Partnership Manager,,Active,Edit,TRUE
-3.12,amendments,Partnership Manager,,Draft,Edit,TRUE
+3.12,amendments,*,,*,View,TRUE
+3.12,amendments,Partnership Manager,unicef_court,Draft,Edit,TRUE
+3.12,amendments,Partner User,partner_court,Draft,Edit,TRUE
 3.12,amendments,Partnership Manager,not_in_amendment_mode,Signed,Edit,TRUE
 3.12,amendments,Partnership Manager,not_in_amendment_mode,Active,Edit,TRUE
 3.12.6,in_amendment,Partnership Manager,,Signed,Edit,TRUE
@@ -58,33 +69,34 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.4.2,result_links,UNICEF User,prp_mode_on,*,View,TRUE
 3.7,reference_number_year,UNICEF User,,*,View,TRUE
 3.7,reference_number_year,UNICEF User,not_ssfa,Draft,Edit,TRUE
-3.7,reference_number_year,UNICEF User,not_ssfa,Draft,Required,FALSE
+3.7,reference_number_year,*,not_ssfa,Draft,Required,FALSE
 3.5,planned_budget,Partnership Manager,user_adds_amendment,*,Edit,TRUE
+3.6,planned_visits,UNICEF User,,*,View,TRUE
 3.6,planned_visits,Partnership Manager,,*,Edit,TRUE
-3.2.2,agreement,UNICEF User,,*,Required,TRUE
-3.2.3,document_type,UNICEF User,,*,Required,TRUE
-3.2.4,number,UNICEF User,,*,Required,TRUE
-3.2.5,title,UNICEF User,,*,Required,TRUE
-3.2.7,partner_focal_points,UNICEF User,,Draft,Required,FALSE
-3.2.7,submission_date,UNICEF User,,Draft,Required,FALSE
-3.2.8,offices,UNICEF User,,Draft,Required,FALSE
-3.2.9,unicef_focal_points,UNICEF User,,Draft,Required,FALSE
-3.3.1,country_programme,UNICEF User,,Draft,Required,FALSE
-3.3.2,start,UNICEF User,,Draft,Required,FALSE
-3.3.3,end,UNICEF User,,Draft,Required,FALSE
-3.3.2,start,UNICEF User,contingency on,Signed,Required,FALSE
-3.3.3,end,UNICEF User,contingency on,Signed,Required,FALSE
-3.3.5,sections_present,UNICEF User,,Draft,Required,FALSE
-3.9.11,signed_pd_attachment,UNICEF User,,Draft,Required,FALSE
-3.9.11,activation_letter_attachment,UNICEF User,contingency on,Active,Required,True
-3.9.11,termination_doc,UNICEF User,,Terminated,Required,True
-3.9.5,partner_authorized_officer_signatory,UNICEF User,,Draft,Required,FALSE
-3.9.6,signed_by_partner_date,UNICEF User,,Draft,Required,FALSE
-3.9.7,unicef_signatory,UNICEF User,,*,Required,FALSE
-3.9.8,signed_by_unicef_date,UNICEF User,,Draft,Required,FALSE
-3.10.1,frs,UNICEF User,,Draft,Required,FALSE
-3.10.1,frs,UNICEF User,,Signed,Required,FALSE
-3.10.1,frs,UNICEF User,,Suspended,Required,FALSE
+3.2.2,agreement,*,,*,Required,TRUE
+3.2.3,document_type,*,,*,Required,TRUE
+3.2.4,number,*,,*,Required,TRUE
+3.2.5,title,*,,*,Required,TRUE
+3.2.7,partner_focal_points,*,,Draft,Required,FALSE
+3.2.7,submission_date,*,,Draft,Required,FALSE
+3.2.8,offices,*,,Draft,Required,FALSE
+3.2.9,unicef_focal_points,*,,Draft,Required,FALSE
+3.3.1,country_programme,*,,Draft,Required,FALSE
+3.3.2,start,*,,Draft,Required,FALSE
+3.3.3,end,*,,Draft,Required,FALSE
+3.3.2,start,*,contingency on,Signed,Required,FALSE
+3.3.3,end,*,contingency on,Signed,Required,FALSE
+3.3.5,sections_present,*,,Draft,Required,FALSE
+3.9.11,signed_pd_attachment,*,,Draft,Required,FALSE
+3.9.11,activation_letter_attachment,*,contingency on,Active,Required,True
+3.9.11,termination_doc,*,,Terminated,Required,True
+3.9.5,partner_authorized_officer_signatory,*,,Draft,Required,FALSE
+3.9.6,signed_by_partner_date,*,,Draft,Required,FALSE
+3.9.7,unicef_signatory,*,,*,Required,FALSE
+3.9.8,signed_by_unicef_date,*,,Draft,Required,FALSE
+3.10.1,frs,*,,Draft,Required,FALSE
+3.10.1,frs,*,,Signed,Required,FALSE
+3.10.1,frs,*,,Suspended,Required,FALSE
 3.13.1,flat_locations,UNICEF User,,Draft,Edit,TRUE
 3.13.1,flat_locations,Partnership Manager,user_adds_amendment,Signed,Edit,TRUE
 3.13.1,flat_locations,Partnership Manager,contingency on,Signed,Edit,TRUE
@@ -97,8 +109,24 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.13.1,reporting_requirements,Partnership Manager,termination_doc_attached,Active,Edit,TRUE
 3.13.1,reporting_requirements,Partnership Manager,termination_doc_attached,Signed,Edit,TRUE
 3.13.1,reporting_requirements,UNICEF User,prp_server_on,*,View,TRUE
-3.13.1,reporting_requirements,UNICEF User,,*,Required,FALSE
+3.13.1,reporting_requirements,*,,*,Required,FALSE
 ,pd_outputs,*,,*,View,TRUE
-,pd_outputs,UNICEF User,,Draft,Edit,TRUE
-,pd_outputs,UNICEF User,unicef_court,Draft,Edit,TRUE
+,pd_outputs,Partnership Manager,,Draft,Edit,TRUE
+,final_partnership_review,UNICEF User,,*,View,TRUE
+,final_partnership_review,Partnership Manager,,Ended,Edit,TRUE
+,cash_transfer_modalities,*,,*,View,TRUE
+,cash_transfer_modalities,Partnership Manager,unicef_court,Draft,Edit,TRUE
+,cash_transfer_modalities,Partner User,partner_court,Draft,Edit,TRUE
+,hq_support_cost,*,,*,View,TRUE
+,hq_support_cost,Partnership Manager,,Draft,Edit,TRUE
+,pd_outputs,*,,*,View,TRUE
+,pd_outputs,Partnership Manager,unicef_court,Draft,Edit,TRUE
 ,pd_outputs,Partner User,partner_court,Draft,Edit,TRUE
+,risks,*,,*,View,TRUE
+,risks,Partnership Manager,unicef_court,Draft,Edit,TRUE
+,risks,Partner User,partner_court,Draft,Edit,TRUE
+,attachments,*,,*,View,TRUE
+,attachments,Partnership Manager,unicef_court,Draft,Edit,TRUE
+,attachments,Partner User,partner_court,Draft,Edit,TRUE
+,attachments,Senior Management Team,,Draft,Edit,TRUE
+,attachments,Representative Office,,Draft,Edit,TRUE

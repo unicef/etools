@@ -14,7 +14,6 @@ from etools.applications.reports.models import (
     IndicatorBlueprint,
     InterventionActivity,
     InterventionActivityItem,
-    InterventionActivityTimeFrame,
     LowerResult,
     Office,
     Result,
@@ -231,15 +230,11 @@ class InterventionActivityItemAdminInline(admin.TabularInline):
     model = InterventionActivityItem
 
 
-class InterventionActivityTimeFrameAdmin(admin.TabularInline):
-    model = InterventionActivityTimeFrame
-
-
 class InterventionActivityAdmin(admin.ModelAdmin):
     list_display = ('id', 'result', 'name')
     list_select_related = ('result',)
     search_fields = ('name', 'code')
-    inlines = (InterventionActivityItemAdminInline, InterventionActivityTimeFrameAdmin)
+    inlines = (InterventionActivityItemAdminInline,)
 
 
 admin.site.register(Result, ResultAdmin)

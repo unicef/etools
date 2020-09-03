@@ -33,6 +33,7 @@ class TestCommentsViewSet(APIViewSetTestCase, BaseTenantTestCase):
             sorted([obj['id'] for obj in response.data]),
             sorted([obj.pk for obj in valid_comments]),
         )
+        self.assertIn('created', response.data[0])
 
     def test_anonymous(self):
         self._test_list(AnonymousUser(), [], expected_status=status.HTTP_403_FORBIDDEN)

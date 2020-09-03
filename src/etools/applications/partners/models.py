@@ -597,22 +597,26 @@ class PartnerOrganization(TimeStampedModel):
 
         if ct <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL:
             programme_visits = 0
-        elif PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL < ct <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL2:
-            programme_visits = 1
-        elif PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL2 < ct <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL3:
-            if self.rating in [PartnerOrganization.RATING_HIGH, PartnerOrganization.RATING_SIGNIFICANT]:
-                programme_visits = 3
-            elif self.rating in [PartnerOrganization.RATING_MEDIUM, ]:
-                programme_visits = 2
-            elif self.rating in [PartnerOrganization.RATING_LOW, ]:
-                programme_visits = 1
         else:
-            if self.rating in [PartnerOrganization.RATING_HIGH, PartnerOrganization.RATING_SIGNIFICANT]:
-                programme_visits = 4
-            elif self.rating in [PartnerOrganization.RATING_MEDIUM, ]:
-                programme_visits = 3
-            elif self.rating in [PartnerOrganization.RATING_LOW, ]:
-                programme_visits = 2
+            programme_visits = 1
+        # The following logic is overridden with the COVID adaptations in the guidance
+        # Keep for posterity, the logic might come back after COVID dies down.
+        # elif PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL < ct<= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL2:
+        #     programme_visits = 1
+        # elif PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL2 < ct <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL3:
+        #     if self.rating in [PartnerOrganization.RATING_HIGH, PartnerOrganization.RATING_SIGNIFICANT]:
+        #         programme_visits = 3
+        #     elif self.rating in [PartnerOrganization.RATING_MEDIUM, ]:
+        #         programme_visits = 2
+        #     elif self.rating in [PartnerOrganization.RATING_LOW, ]:
+        #         programme_visits = 1
+        # else:
+        #     if self.rating in [PartnerOrganization.RATING_HIGH, PartnerOrganization.RATING_SIGNIFICANT]:
+        #         programme_visits = 4
+        #     elif self.rating in [PartnerOrganization.RATING_MEDIUM, ]:
+        #         programme_visits = 3
+        #     elif self.rating in [PartnerOrganization.RATING_LOW, ]:
+        #         programme_visits = 2
         return programme_visits
 
     @cached_property
@@ -1536,6 +1540,7 @@ class InterventionManager(models.Manager):
             'result_links__ll_results__applied_indicators__disaggregation',
             'result_links__ll_results__applied_indicators__locations',
             'flat_locations',
+            'supply_items',
         )
         return qs
 
@@ -1591,6 +1596,10 @@ def side_effect_two(i, old_instance=None, user=None):
     pass
 
 
+def get_default_cash_transfer_modalities():
+    return [Intervention.CASH_TRANSFER_DIRECT]
+
+
 class Intervention(TimeStampedModel):
     """
     Represents a partner intervention.
@@ -1604,6 +1613,8 @@ class Intervention(TimeStampedModel):
     """
 
     DRAFT = 'draft'
+    REVIEW = 'review'
+    SIGNATURE = 'signature'
     SIGNED = 'signed'
     ACTIVE = 'active'
     ENDED = 'ended'
@@ -1619,6 +1630,8 @@ class Intervention(TimeStampedModel):
         ENDED: [CLOSED]
     }
     TRANSITION_SIDE_EFFECTS = {
+        REVIEW: [],
+        SIGNATURE: [],
         SIGNED: [side_effect_one, side_effect_two],
         ACTIVE: [],
         SUSPENDED: [],
@@ -1630,6 +1643,8 @@ class Intervention(TimeStampedModel):
     CANCELLED = 'cancelled'
     INTERVENTION_STATUS = (
         (DRAFT, "Development"),
+        (REVIEW, "Review"),
+        (SIGNATURE, "Signature"),
         (SIGNED, 'Signed'),
         (ACTIVE, "Active"),
         (ENDED, "Ended"),
@@ -1958,11 +1973,13 @@ class Intervention(TimeStampedModel):
         decimal_places=1,
         default=0.0,
     )
-    cash_transfer_modalities = models.CharField(
-        verbose_name=_("Cash Transfer Modalities"),
-        max_length=50,
-        choices=CASH_TRANSFER_CHOICES,
-        default=CASH_TRANSFER_DIRECT,
+    cash_transfer_modalities = ArrayField(
+        models.CharField(
+            verbose_name=_("Cash Transfer Modalities"),
+            max_length=50,
+            choices=CASH_TRANSFER_CHOICES,
+        ),
+        default=get_default_cash_transfer_modalities,
     )
     unicef_review_type = models.CharField(
         verbose_name=_("UNICEF Review Type"),
@@ -2154,6 +2171,11 @@ class Intervention(TimeStampedModel):
         else:
             return datetime.date.today().year
 
+    @property
+    def final_partnership_review(self):
+        # to be used only to track changes in validator mixin
+        return self.attachments.filter(type__name=FileType.FINAL_PARTNERSHIP_REVIEW)
+
     def illegal_transitions(self):
         return False
 
@@ -2165,7 +2187,21 @@ class Intervention(TimeStampedModel):
         pass
 
     @transition(field=status,
-                source=[DRAFT, SUSPENDED, SIGNED],
+                source=[DRAFT],
+                target=[REVIEW],
+                conditions=[intervention_validation.transition_to_review])
+    def transtion_to_review(self):
+        pass
+
+    @transition(field=status,
+                source=[REVIEW],
+                target=[SIGNATURE],
+                conditions=[intervention_validation.transition_to_signature])
+    def transition_to_signature(self):
+        pass
+
+    @transition(field=status,
+                source=[SUSPENDED, SIGNED],
                 target=[ACTIVE],
                 conditions=[intervention_validation.transition_to_active],
                 permission=intervention_validation.partnership_manager_only)
@@ -2173,7 +2209,7 @@ class Intervention(TimeStampedModel):
         pass
 
     @transition(field=status,
-                source=[DRAFT, SUSPENDED],
+                source=[DRAFT, REVIEW, SIGNATURE, SUSPENDED],
                 target=[SIGNED],
                 conditions=[intervention_validation.transition_to_signed])
     def transition_to_signed(self):
@@ -2447,6 +2483,7 @@ class InterventionBudget(TimeStampedModel):
     intervention = models.OneToOneField(Intervention, related_name='planned_budget', null=True, blank=True,
                                         verbose_name=_('Intervention'), on_delete=models.CASCADE)
 
+    # legacy values
     partner_contribution = models.DecimalField(max_digits=20, decimal_places=2, default=0,
                                                verbose_name=_('Partner Contribution'))
     unicef_cash = models.DecimalField(max_digits=20, decimal_places=2, default=0, verbose_name=_('Unicef Cash'))
@@ -2458,21 +2495,36 @@ class InterventionBudget(TimeStampedModel):
     )
     total = models.DecimalField(max_digits=20, decimal_places=2, verbose_name=_('Total'))
 
+    # sum of all activity/management budget cso/partner values
     partner_contribution_local = models.DecimalField(max_digits=20, decimal_places=2, default=0,
                                                      verbose_name=_('Partner Contribution Local'))
+    # sum of all activity/management budget unicef values
     unicef_cash_local = models.DecimalField(max_digits=20, decimal_places=2, default=0,
                                             verbose_name=_('Unicef Cash Local'))
+    # sum of all supply items (InterventionSupplyItem)
     in_kind_amount_local = models.DecimalField(
         max_digits=20, decimal_places=2, default=0,
         verbose_name=_('UNICEF Supplies Local')
     )
     currency = CurrencyField(verbose_name=_('Currency'), null=False, default='')
     total_local = models.DecimalField(max_digits=20, decimal_places=2, verbose_name=_('Total Local'))
+    programme_effectiveness = models.DecimalField(
+        max_digits=20,
+        decimal_places=2,
+        verbose_name=_("Programme Effectiveness (%)"),
+        default=0,
+    )
 
     tracker = FieldTracker()
 
     class Meta:
         verbose_name_plural = _('Intervention budget')
+
+    @property
+    def partner_contribution_percent(self):
+        if self.total_local == 0:
+            return 0
+        return self.partner_contribution_local / self.total_local * 100
 
     def total_unicef_contribution(self):
         return self.unicef_cash + self.in_kind_amount
@@ -2485,8 +2537,7 @@ class InterventionBudget(TimeStampedModel):
         """
         Calculate total budget on save
         """
-        self.total = self.total_unicef_contribution() + self.partner_contribution
-        self.total_local = self.total_unicef_contribution_local() + self.partner_contribution_local
+        self.calc_totals(save=False)
         super().save(**kwargs)
 
     def __str__(self):
@@ -2496,6 +2547,49 @@ class InterventionBudget(TimeStampedModel):
             self.intervention,
             total_local
         )
+
+    def calc_totals(self, save=True):
+        # partner and unicef totals
+
+        def init_totals():
+            self.partner_contribution_local = 0
+            self.unicef_cash_local = 0
+
+        init = False
+        for link in self.intervention.result_links.all():
+            for result in link.ll_results.all():
+                for activity in result.activities.all():
+                    if not init:
+                        init_totals()
+                        init = True
+                    self.partner_contribution_local += activity.cso_cash
+                    self.unicef_cash_local += activity.unicef_cash
+        try:
+            programme_effectiveness = 0
+            partner_contribution_local = self.partner_contribution_local
+            unicef_cash_local = self.unicef_cash_local
+            if not init:
+                init_totals()
+                init = True
+            programme_effectiveness += self.intervention.management_budgets.total
+            self.partner_contribution_local += self.intervention.management_budgets.partner_total
+            self.unicef_cash_local += self.intervention.management_budgets.unicef_total
+        except InterventionManagementBudget.DoesNotExist:
+            self.partner_contribution_local = partner_contribution_local
+            self.unicef_cash_local = unicef_cash_local
+
+        # in kind totals
+        if self.intervention.supply_items.exists():
+            self.in_kind_amount_local = 0
+            for item in self.intervention.supply_items.all():
+                self.in_kind_amount_local += item.total_price
+
+        self.total = self.total_unicef_contribution() + self.partner_contribution
+        self.total_local = self.total_unicef_contribution_local() + self.partner_contribution_local
+        self.programme_effectiveness = programme_effectiveness / self.total_local * 100
+
+        if save:
+            self.save()
 
 
 class FileType(models.Model):
@@ -2681,12 +2775,15 @@ class InterventionRisk(TimeStampedModel):
     )
     mitigation_measures = models.TextField()
 
+    class Meta:
+        ordering = ('id',)
+
     def __str__(self):
         return "{} {}".format(self.intervention, self.get_risk_display())
 
 
 class InterventionManagementBudget(TimeStampedModel):
-    intervention = models.ForeignKey(
+    intervention = models.OneToOneField(
         Intervention,
         verbose_name=_("Intervention"),
         related_name="management_budgets",
@@ -2734,6 +2831,25 @@ class InterventionManagementBudget(TimeStampedModel):
         blank=True,
         null=True,
     )
+
+    @property
+    def partner_total(self):
+        return self.act1_partner + self.act2_partner + self.act3_partner
+
+    @property
+    def unicef_total(self):
+        return self.act1_unicef + self.act2_unicef + self.act3_unicef
+
+    @property
+    def total(self):
+        return self.partner_total + self.unicef_total
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        try:
+            self.intervention.planned_budget.calc_totals()
+        except InterventionBudget.DoesNotExist:
+            pass
 
 
 class InterventionSupplyItem(TimeStampedModel):
@@ -2783,3 +2899,7 @@ class InterventionSupplyItem(TimeStampedModel):
     def save(self, *args, **kwargs):
         self.total_price = self.unit_number * self.unit_price
         super().save()
+        try:
+            self.intervention.planned_budget.calc_totals()
+        except InterventionBudget.DoesNotExist:
+            pass
