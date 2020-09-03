@@ -17,6 +17,8 @@ from etools.applications.funds.tests.factories import FundsReservationHeaderFact
 from etools.applications.partners.models import Intervention, InterventionManagementBudget, InterventionSupplyItem
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
+    FileTypeFactory,
+    InterventionAttachmentFactory,
     InterventionFactory,
     InterventionManagementBudgetFactory,
     InterventionResultLinkFactory,
@@ -213,6 +215,7 @@ class TestManagementBudget(BaseInterventionTestCase):
         assert data["act2_partner"] is None
         assert data["act3_unicef"] is None
         assert data["act3_partner"] is None
+        self.assertNotIn('intervention', response.data)
 
     def test_put(self):
         intervention = InterventionFactory()
@@ -245,6 +248,7 @@ class TestManagementBudget(BaseInterventionTestCase):
         assert data["act2_partner"] == "4000.00"
         assert data["act3_unicef"] == "5000.00"
         assert data["act3_partner"] == "6000.00"
+        self.assertIn('intervention', response.data)
 
     def test_patch(self):
         intervention = InterventionFactory()
@@ -261,6 +265,7 @@ class TestManagementBudget(BaseInterventionTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.data
         assert data["act1_unicef"] == "1000.00"
+        self.assertIn('intervention', response.data)
 
 
 class TestSupplyItem(BaseInterventionTestCase):
@@ -893,3 +898,53 @@ class TestTimeframesValidation(BaseInterventionTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
         self.assertIn('end', response.data)
+
+
+class TestInterventionAttachments(BaseTenantTestCase):
+    def setUp(self):
+        self.intervention = InterventionFactory()
+        self.unicef_user = UserFactory(is_staff=True, groups__data=['UNICEF User'])
+        self.partnership_manager = UserFactory(is_staff=True, groups__data=['Partnership Manager', 'UNICEF User'])
+        self.example_attachment = AttachmentFactory(file="test_file.pdf", file_type=None, code="", )
+        self.list_url = reverse('pmp_v3:intervention-attachment-list', args=[self.intervention.id])
+
+    def test_list(self):
+        response = self.forced_auth_req(
+            'get',
+            self.list_url,
+            user=self.unicef_user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+
+    def test_add_attachment(self):
+        self.assertEqual(self.intervention.attachments.count(), 0)
+        response = self.forced_auth_req(
+            'post',
+            self.list_url,
+            user=self.partnership_manager,
+            data={
+                "type": FileTypeFactory().pk,
+                "attachment_document": self.example_attachment.pk,
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
+        self.assertEqual(self.intervention.attachments.count(), 1)
+        self.assertIsInstance(response.data['intervention'], dict)
+
+    def test_add_attachment_as_unicef_user(self):
+        response = self.forced_auth_req(
+            'post',
+            self.list_url,
+            user=self.unicef_user,
+            data={},
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
+
+    def test_remove_attachment(self):
+        attachment = InterventionAttachmentFactory(intervention=self.intervention)
+        response = self.forced_auth_req(
+            'delete',
+            reverse('pmp_v3:intervention-attachments-update', args=[self.intervention.id, attachment.id]),
+            user=self.partnership_manager,
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)

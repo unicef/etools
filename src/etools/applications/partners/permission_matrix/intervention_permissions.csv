@@ -125,3 +125,8 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,risks,*,,*,View,TRUE
 ,risks,Partnership Manager,unicef_court,Draft,Edit,TRUE
 ,risks,Partner User,partner_court,Draft,Edit,TRUE
+,attachments,*,,*,View,TRUE
+,attachments,Partnership Manager,unicef_court,Draft,Edit,TRUE
+,attachments,Partner User,partner_court,Draft,Edit,TRUE
+,attachments,Senior Management Team,,Draft,Edit,TRUE
+,attachments,Representative Office,,Draft,Edit,TRUE
