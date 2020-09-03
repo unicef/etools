@@ -1536,6 +1536,7 @@ class InterventionManager(models.Manager):
             'result_links__ll_results__applied_indicators__disaggregation',
             'result_links__ll_results__applied_indicators__locations',
             'flat_locations',
+            'supply_items',
         )
         return qs
 
