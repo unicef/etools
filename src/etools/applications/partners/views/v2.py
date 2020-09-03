@@ -25,6 +25,7 @@ from etools.applications.partners.models import (
     FileType,
     Intervention,
     InterventionAmendment,
+    InterventionRisk,
     PartnerOrganization,
     PartnerStaffMember,
     PartnerType,
@@ -103,6 +104,7 @@ class PMPStaticDropdownsListAPIView(APIView):
         partner_file_types = FileType.objects.values_list("name", flat=True)
         sea_risk_ratings = choices_to_json_ready(PartnerOrganization.RISK_RATINGS)
         gender_equity_sustainability_ratings = choices_to_json_ready(Intervention.RATING_CHOICES, sort_choices=False)
+        risk_types = choices_to_json_ready(InterventionRisk.RISK_TYPE_CHOICES, sort_choices=False)
 
         local_currency = local_workspace.local_currency.id if local_workspace.local_currency else None
 
@@ -127,6 +129,7 @@ class PMPStaticDropdownsListAPIView(APIView):
                 'partner_file_types': partner_file_types,
                 'sea_risk_ratings': sea_risk_ratings,
                 'gender_equity_sustainability_ratings': gender_equity_sustainability_ratings,
+                'risk_types': risk_types,
             },
             status=status.HTTP_200_OK
         )
