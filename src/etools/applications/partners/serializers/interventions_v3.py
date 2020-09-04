@@ -188,12 +188,11 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
         return list(set(available_actions))
 
     def get_status_list(self, obj):
-        # TODO uncomment status when PR 2770 merged
         if obj.status == obj.SUSPENDED:
             status_list = [
                 obj.DRAFT,
-                # obj.REVIEW,
-                # obj.SIGNED,
+                obj.REVIEW,
+                obj.SIGNED,
                 obj.SIGNED,
                 obj.SUSPENDED,
                 obj.ACTIVE,
@@ -202,16 +201,16 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
         elif obj.status == obj.TERMINATED:
             status_list = [
                 obj.DRAFT,
-                # obj.REVIEW,
-                # obj.SIGNATURE,
+                obj.REVIEW,
+                obj.SIGNATURE,
                 obj.SIGNED,
                 obj.TERMINATED,
             ]
         else:
             status_list = [
                 obj.DRAFT,
-                # obj.REVIEW,
-                # obj.SIGNATURE,
+                obj.REVIEW,
+                obj.SIGNATURE,
                 obj.SIGNED,
                 obj.ACTIVE,
                 obj.ENDED,
