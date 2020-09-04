@@ -143,8 +143,8 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
         status_list = self.unicef_serializer.get_status_list(pd)
         self.assertEqual(sorted(status_list), self._expected_status_list([
             Intervention.DRAFT,
-            # Intervention.REVIEW,
-            # Intervention.SIGNATURE,
+            Intervention.REVIEW,
+            Intervention.SIGNATURE,
             Intervention.SIGNED,
             Intervention.ACTIVE,
             Intervention.ENDED,
@@ -155,8 +155,8 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
         status_list = self.unicef_serializer.get_status_list(pd)
         self.assertEqual(sorted(status_list), self._expected_status_list([
             Intervention.DRAFT,
-            # Intervention.REVIEW,
-            # Intervention.SIGNATURE,
+            Intervention.REVIEW,
+            Intervention.SIGNATURE,
             Intervention.SIGNED,
             Intervention.SUSPENDED,
             Intervention.ACTIVE,
@@ -168,8 +168,8 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
         status_list = self.unicef_serializer.get_status_list(pd)
         self.assertEqual(sorted(status_list), self._expected_status_list([
             Intervention.DRAFT,
-            # Intervention.REVIEW,
-            # Intervention.SIGNATURE,
+            Intervention.REVIEW,
+            Intervention.SIGNATURE,
             Intervention.SIGNED,
             Intervention.TERMINATED,
         ]))
