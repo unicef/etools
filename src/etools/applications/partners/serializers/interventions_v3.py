@@ -20,6 +20,7 @@ from etools.applications.partners.serializers.interventions_v2 import (
     PlannedVisitsNestedSerializer,
     SingleInterventionAttachmentField,
 )
+from etools.applications.partners.utils import get_quarters_range
 from etools.applications.reports.serializers.v2 import InterventionTimeFrameSerializer
 
 
@@ -34,6 +35,7 @@ class InterventionSupplyItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = InterventionSupplyItem
         fields = (
+            "id",
             "title",
             "unit_number",
             "unit_price",
@@ -45,6 +47,19 @@ class InterventionSupplyItemSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data["intervention"] = self.initial_data.get("intervention")
         return super().create(validated_data)
+
+
+class InterventionManagementBudgetSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InterventionManagementBudget
+        fields = (
+            "act1_unicef",
+            "act1_partner",
+            "act2_unicef",
+            "act2_partner",
+            "act3_unicef",
+            "act3_partner",
+        )
 
 
 class InterventionDetailSerializer(serializers.ModelSerializer):
@@ -87,6 +102,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     risks = InterventionRiskSerializer(many=True, read_only=True)
     quarters = InterventionTimeFrameSerializer(many=True, read_only=True)
     supply_items = InterventionSupplyItemSerializer(many=True, read_only=True)
+    management_budgets = InterventionManagementBudgetSerializer(read_only=True)
 
     def get_location_p_codes(self, obj):
         return [location.p_code for location in obj.flat_locations.all()]
@@ -244,6 +260,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             }
             for i, quarter in enumerate(get_quarters_range(obj.start, obj.end))
         ]
+
     class Meta:
         model = Intervention
         fields = (
@@ -287,6 +304,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "location_names",
             "location_p_codes",
             "locations",
+            "management_budgets",
             "metadata",
             "modified",
             "number",
@@ -332,19 +350,6 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "title",
             "unicef_focal_points",
             "unicef_signatory",
-        )
-
-
-class InterventionManagementBudgetSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = InterventionManagementBudget
-        fields = (
-            "act1_unicef",
-            "act1_partner",
-            "act2_unicef",
-            "act2_partner",
-            "act3_unicef",
-            "act3_partner",
         )
 
 

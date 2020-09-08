@@ -208,13 +208,13 @@ class TestManagementBudget(BaseInterventionTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.data
-        assert budget_qs.exists()
-        assert data["act1_unicef"] is None
-        assert data["act1_partner"] is None
-        assert data["act2_unicef"] is None
-        assert data["act2_partner"] is None
-        assert data["act3_unicef"] is None
-        assert data["act3_partner"] is None
+        self.assertTrue(budget_qs.exists())
+        self.assertEqual(data["act1_unicef"], "0.00")
+        self.assertEqual(data["act1_partner"], "0.00")
+        self.assertEqual(data["act2_unicef"], "0.00")
+        self.assertEqual(data["act2_partner"], "0.00")
+        self.assertEqual(data["act3_unicef"], "0.00")
+        self.assertEqual(data["act3_partner"], "0.00")
         self.assertNotIn('intervention', response.data)
 
     def test_put(self):
@@ -241,13 +241,13 @@ class TestManagementBudget(BaseInterventionTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.data
-        assert budget_qs.exists()
-        assert data["act1_unicef"] == "1000.00"
-        assert data["act1_partner"] == "2000.00"
-        assert data["act2_unicef"] == "3000.00"
-        assert data["act2_partner"] == "4000.00"
-        assert data["act3_unicef"] == "5000.00"
-        assert data["act3_partner"] == "6000.00"
+        self.assertTrue(budget_qs.exists())
+        self.assertEqual(data["act1_unicef"], "1000.00")
+        self.assertEqual(data["act1_partner"], "2000.00")
+        self.assertEqual(data["act2_unicef"], "3000.00")
+        self.assertEqual(data["act2_partner"], "4000.00")
+        self.assertEqual(data["act3_unicef"], "5000.00")
+        self.assertEqual(data["act3_partner"], "6000.00")
         self.assertIn('intervention', response.data)
 
     def test_patch(self):
@@ -264,7 +264,7 @@ class TestManagementBudget(BaseInterventionTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.data
-        assert data["act1_unicef"] == "1000.00"
+        self.assertEqual(data["act1_unicef"], "1000.00")
         self.assertIn('intervention', response.data)
 
 
@@ -288,6 +288,7 @@ class TestSupplyItem(BaseInterventionTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), count)
+        self.assertIn('id', response.data[0])
 
     def test_post(self):
         item_qs = InterventionSupplyItem.objects.filter(
