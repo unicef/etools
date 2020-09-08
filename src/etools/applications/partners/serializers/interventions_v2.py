@@ -56,8 +56,17 @@ class InterventionBudgetCUSerializer(serializers.ModelSerializer):
             "partner_contribution_local",
             "unicef_cash_local",
             "in_kind_amount_local",
-            'currency'
+            "currency"
+            "programme_effectiveness",
+            "total_local",
+            "partner_contribution_percent",
+            "total_unicef_contribution_local",
         )
+        read_only_fields = (
+            "total_local",
+            "programme_effectiveness",
+        )
+
 
 
 class InterventionAmendmentCUSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
