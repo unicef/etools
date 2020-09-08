@@ -68,7 +68,6 @@ class InterventionBudgetCUSerializer(serializers.ModelSerializer):
         )
 
 
-
 class InterventionAmendmentCUSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
     amendment_number = serializers.CharField(read_only=True)
     signed_amendment_file = serializers.FileField(source="signed_amendment", read_only=True)
