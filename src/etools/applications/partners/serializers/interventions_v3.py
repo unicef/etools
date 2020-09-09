@@ -226,7 +226,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             status_list = [
                 obj.DRAFT,
                 obj.REVIEW,
-                obj.SIGNED,
+                obj.SIGNATURE,
                 obj.SIGNED,
                 obj.SUSPENDED,
                 obj.ACTIVE,
