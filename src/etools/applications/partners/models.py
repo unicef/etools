@@ -2793,43 +2793,37 @@ class InterventionManagementBudget(TimeStampedModel):
         verbose_name=_("UNICEF contribution for In-country management and support staff prorated to their contribution to the programme (representation, planning, coordination, logistics, administration, finance)"),
         decimal_places=2,
         max_digits=20,
-        blank=True,
-        null=True,
+        default=0,
     )
     act1_partner = models.DecimalField(
         verbose_name=_("Partner contribution for In-country management and support staff prorated to their contribution to the programme (representation, planning, coordination, logistics, administration, finance)"),
         decimal_places=2,
         max_digits=20,
-        blank=True,
-        null=True,
+        default=0,
     )
     act2_unicef = models.DecimalField(
         verbose_name=_("UNICEF contribution for Operational costs prorated to their contribution to the programme (office space, equipment, office supplies, maintenance)"),
         decimal_places=2,
         max_digits=20,
-        blank=True,
-        null=True,
+        default=0,
     )
     act2_partner = models.DecimalField(
         verbose_name=_("Partner contribution for Operational costs prorated to their contribution to the programme (office space, equipment, office supplies, maintenance)"),
         decimal_places=2,
         max_digits=20,
-        blank=True,
-        null=True,
+        default=0,
     )
     act3_unicef = models.DecimalField(
         verbose_name=_("UNICEF contribution for Planning, monitoring, evaluation and communication, prorated to their contribution to the programme (venue, travels, etc.)"),
         decimal_places=2,
         max_digits=20,
-        blank=True,
-        null=True,
+        default=0,
     )
     act3_partner = models.DecimalField(
         verbose_name=_("Partner contribution for Planning, monitoring, evaluation and communication, prorated to their contribution to the programme (venue, travels, etc.)"),
         decimal_places=2,
         max_digits=20,
-        blank=True,
-        null=True,
+        default=0,
     )
 
     @property
