@@ -376,6 +376,17 @@ class TestSupplyItem(BaseInterventionTestCase):
         self.assertEqual(response.data["unit_price"], "3.00")
         self.assertEqual(response.data["total_price"], "30.00")
 
+    def test_delete(self):
+        item = InterventionSupplyItemFactory(intervention=self.intervention)
+        response = self.forced_auth_req(
+            "delete",
+            reverse(
+                "pmp_v3:intervention-supply-item-detail",
+                args=[self.intervention.pk, item.pk],
+            )
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
 
 class TestInterventionUpdate(BaseInterventionTestCase):
     def _test_patch(self, mapping):
