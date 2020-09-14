@@ -53,6 +53,7 @@ class InterventionManagementBudgetSerializer(serializers.ModelSerializer):
     act1_total = serializers.SerializerMethodField()
     act2_total = serializers.SerializerMethodField()
     act3_total = serializers.SerializerMethodField()
+    total = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True)
 
     class Meta:
         model = InterventionManagementBudget
@@ -70,13 +71,13 @@ class InterventionManagementBudgetSerializer(serializers.ModelSerializer):
         )
 
     def get_act1_total(self, obj):
-        return obj.act1_unicef + obj.act1_partner
+        return str(obj.act1_unicef + obj.act1_partner)
 
     def get_act2_total(self, obj):
-        return obj.act2_unicef + obj.act2_partner
+        return str(obj.act2_unicef + obj.act2_partner)
 
     def get_act3_total(self, obj):
-        return obj.act3_unicef + obj.act3_partner
+        return str(obj.act3_unicef + obj.act3_partner)
 
 
 class InterventionDetailSerializer(serializers.ModelSerializer):
