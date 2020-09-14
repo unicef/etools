@@ -102,7 +102,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
                   "sections_present", "flat_locations", "reporting_periods", "activity",
                   "prc_review_attachment", "signed_pd_attachment", "actionpoint",
                   "reporting_requirements", "special_reporting_requirements", "reference_number_year", "number",
-                  "termination_doc_attachment", "monitoring_activities"],
+                  "termination_doc_attachment", "monitoring_activities", "cfei_number"],
         'signed': [],
         'active': ['']
     }

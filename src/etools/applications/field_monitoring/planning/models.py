@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import connection, models
+from django.db.models import Q
 from django.db.models.base import ModelBase
 from django.utils.translation import ugettext_lazy as _
 
@@ -296,7 +297,9 @@ class MonitoringActivity(
 
         applicable_questions = Question.objects.filter(is_active=True).distinct()
         if self.sections.exists():
-            applicable_questions = applicable_questions.filter(sections__in=self.sections.values_list('pk', flat=True))
+            applicable_questions = applicable_questions.filter(
+                Q(sections__in=self.sections.values_list('pk', flat=True)) |
+                Q(sections__isnull=True))
 
         questions = []
 
@@ -478,7 +481,7 @@ class MonitoringActivity(
     def complete(self):
         pass
 
-    @transition(field=status, source=STATUSES.submitted, target=STATUSES.assigned,
+    @transition(field=status, source=STATUSES.submitted, target=STATUSES.report_finalization,
                 permission=user_is_field_monitor_permission)
     def reject_report(self):
         pass
