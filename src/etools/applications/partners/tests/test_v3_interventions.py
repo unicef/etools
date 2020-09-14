@@ -207,10 +207,14 @@ class TestManagementBudget(BaseInterventionTestCase):
         self.assertIsNotNone(intervention.management_budgets)
         self.assertEqual(data["act1_unicef"], "0.00")
         self.assertEqual(data["act1_partner"], "0.00")
+        self.assertEqual(data["act1_total"], "0.00")
         self.assertEqual(data["act2_unicef"], "0.00")
         self.assertEqual(data["act2_partner"], "0.00")
+        self.assertEqual(data["act2_total"], "0.00")
         self.assertEqual(data["act3_unicef"], "0.00")
         self.assertEqual(data["act3_partner"], "0.00")
+        self.assertEqual(data["act3_total"], "0.00")
+        self.assertEqual(data["total"], "0.00")
         self.assertNotIn('intervention', response.data)
 
     def test_put(self):
@@ -236,10 +240,14 @@ class TestManagementBudget(BaseInterventionTestCase):
         self.assertIsNotNone(intervention.management_budgets)
         self.assertEqual(data["act1_unicef"], "1000.00")
         self.assertEqual(data["act1_partner"], "2000.00")
+        self.assertEqual(data["act1_total"], "3000.00")
         self.assertEqual(data["act2_unicef"], "3000.00")
         self.assertEqual(data["act2_partner"], "4000.00")
+        self.assertEqual(data["act2_total"], "7000.00")
         self.assertEqual(data["act3_unicef"], "5000.00")
         self.assertEqual(data["act3_partner"], "6000.00")
+        self.assertEqual(data["act3_total"], "11000.00")
+        self.assertEqual(data["total"], "21000.00")
         self.assertIn('intervention', response.data)
 
     def test_patch(self):
