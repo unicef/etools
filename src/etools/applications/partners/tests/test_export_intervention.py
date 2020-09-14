@@ -222,8 +222,8 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 66)
-        self.assertEqual(len(dataset[0]), 66)
+        self.assertEqual(len(dataset._get_headers()), 67)
+        self.assertEqual(len(dataset[0]), 67)
 
 
 class TestInterventionAmendmentModelExport(BaseInterventionModelExportTestCase):
