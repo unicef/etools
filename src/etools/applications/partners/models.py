@@ -2333,8 +2333,8 @@ class Intervention(TimeStampedModel):
         super().save()
 
         if not oldself:
-            InterventionBudget.objects.create(intervention=self)
             InterventionManagementBudget.objects.create(intervention=self)
+            InterventionBudget.objects.create(intervention=self)
 
 
 class InterventionAmendment(TimeStampedModel):
@@ -2595,7 +2595,10 @@ class InterventionBudget(TimeStampedModel):
 
         self.total = self.total_unicef_contribution() + self.partner_contribution
         self.total_local = self.total_unicef_contribution_local() + self.partner_contribution_local
-        self.programme_effectiveness = programme_effectiveness / self.total_local * 100
+        if self.total_local:
+            self.programme_effectiveness = programme_effectiveness / self.total_local * 100
+        else:
+            self.programme_effectiveness = 0
 
         if save:
             self.save()
@@ -2848,8 +2851,11 @@ class InterventionManagementBudget(TimeStampedModel):
         return self.partner_total + self.unicef_total
 
     def save(self, *args, **kwargs):
+        create = not self.pk
         super().save(*args, **kwargs)
-        self.intervention.planned_budget.calc_totals()
+        # planned budget is not created yet, so just skip; totals will be updated during planned budget creation
+        if not create:
+            self.intervention.planned_budget.calc_totals()
 
 
 class InterventionSupplyItem(TimeStampedModel):
