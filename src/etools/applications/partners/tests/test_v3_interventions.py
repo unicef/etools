@@ -203,10 +203,6 @@ class TestCreate(BaseInterventionTestCase):
 class TestManagementBudget(BaseInterventionTestCase):
     def test_get(self):
         intervention = InterventionFactory()
-        budget_qs = InterventionManagementBudget.objects.filter(
-            intervention=intervention,
-        )
-        assert not budget_qs.exists()
         response = self.forced_auth_req(
             "get",
             reverse(
@@ -217,7 +213,7 @@ class TestManagementBudget(BaseInterventionTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.data
-        self.assertTrue(budget_qs.exists())
+        self.assertIsNotNone(intervention.management_budgets)
         self.assertEqual(data["act1_unicef"], "0.00")
         self.assertEqual(data["act1_partner"], "0.00")
         self.assertEqual(data["act2_unicef"], "0.00")
@@ -228,10 +224,6 @@ class TestManagementBudget(BaseInterventionTestCase):
 
     def test_put(self):
         intervention = InterventionFactory()
-        budget_qs = InterventionManagementBudget.objects.filter(
-            intervention=intervention,
-        )
-        assert not budget_qs.exists()
         response = self.forced_auth_req(
             "put",
             reverse(
@@ -250,7 +242,7 @@ class TestManagementBudget(BaseInterventionTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.data
-        self.assertTrue(budget_qs.exists())
+        self.assertIsNotNone(intervention.management_budgets)
         self.assertEqual(data["act1_unicef"], "1000.00")
         self.assertEqual(data["act1_partner"], "2000.00")
         self.assertEqual(data["act2_unicef"], "3000.00")
@@ -432,6 +424,7 @@ class TestInterventionUpdate(BaseInterventionTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         intervention.refresh_from_db()
         self.assertEqual(intervention.agreement, agreement)
+        self.assertIsNotNone(response.data['management_budgets'])
         self.assertListEqual(
             sorted([fp.pk for fp in intervention.partner_focal_points.all()]),
             sorted([focal_1.pk, focal_2.pk]),
