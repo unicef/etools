@@ -27,6 +27,7 @@ class QuarterFactory(factory.django.DjangoModelFactory):
 class CountryProgrammeFactory(factory.DjangoModelFactory):
     class Meta:
         model = models.CountryProgramme
+        django_get_or_create = ('wbs',)
 
     name = factory.Sequence(lambda n: 'Country Programme {}'.format(n))
     wbs = factory.Sequence(lambda n: '{:04d}/A0/01'.format(n))

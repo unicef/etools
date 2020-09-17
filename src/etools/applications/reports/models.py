@@ -946,6 +946,10 @@ class InterventionActivity(TimeStampedModel):
     # total
     # partner percentage
 
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self.result.result_link.intervention.planned_budget.calc_totals()
+
 
 class InterventionActivityItem(TimeStampedModel):
     activity = models.ForeignKey(

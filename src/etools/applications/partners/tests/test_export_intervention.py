@@ -12,7 +12,6 @@ from etools.applications.partners.tests.factories import (
     AgreementFactory,
     InterventionAmendmentFactory,
     InterventionAttachmentFactory,
-    InterventionBudgetFactory,
     InterventionFactory,
     InterventionPlannedVisitsFactory,
     InterventionResultLinkFactory,
@@ -80,10 +79,8 @@ class BaseInterventionModelExportTestCase(BaseTenantTestCase):
             partner_authorized_officer_signatory=partnerstaff,
             country_programme=agreement.country_programme,
         )
-        cls.ib = InterventionBudgetFactory(
-            intervention=cls.intervention,
-            currency="USD"
-        )
+        cls.intervention.planned_budget.currency = "USD"
+        cls.intervention.planned_budget.save()
         cls.attachment = InterventionAttachmentFactory(
             intervention=cls.intervention,
         )
