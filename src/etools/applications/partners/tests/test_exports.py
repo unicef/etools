@@ -12,7 +12,6 @@ from etools.applications.partners.models import Intervention, PartnerOrganizatio
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
     CountryProgrammeFactory,
-    InterventionBudgetFactory,
     InterventionFactory,
     InterventionPlannedVisitsFactory,
     PartnerFactory,
@@ -81,7 +80,8 @@ class TestModelExport(BaseTenantTestCase):
             partner_authorized_officer_signatory=cls.partnerstaff,
             country_programme=cls.agreement.country_programme,
         )
-        cls.ib = InterventionBudgetFactory(intervention=cls.intervention, currency="USD")
+        cls.intervention.planned_budget.currency = "USD"
+        cls.intervention.planned_budget.save()
         cls.planned_visit = PartnerPlannedVisitsFactory(partner=cls.partner)
 
         output_res_type, _ = ResultType.objects.get_or_create(name='Output')

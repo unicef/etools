@@ -1,5 +1,6 @@
 import copy
 import datetime
+from decimal import Decimal
 from unittest import skip
 
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -25,7 +26,6 @@ from etools.applications.partners.tests.factories import (
     InterventionAttachmentFactory,
     InterventionBudgetFactory,
     InterventionFactory,
-    InterventionManagementBudgetFactory,
     InterventionPlannedVisitsFactory,
     InterventionReportingPeriodFactory,
     InterventionResultLinkFactory,
@@ -167,26 +167,15 @@ class TestHACTCalculations(BaseTenantTestCase):
         cls.intervention = InterventionFactory(
             status='active'
         )
-        current_cp = CountryProgrammeFactory(
+        CountryProgrammeFactory(
             name='Current Country Programme',
             from_date=datetime.date(year, 1, 1),
             to_date=datetime.date(year + 1, 12, 31)
         )
-        InterventionBudgetFactory(
-            intervention=cls.intervention,
-            partner_contribution=10000,
-            unicef_cash=60000,
-            in_kind_amount=5000
-        )
-
-        tz = timezone.get_default_timezone()
-
-        start = datetime.datetime.combine(current_cp.from_date, datetime.time(0, 0, 1, tzinfo=tz))
-        end = current_cp.from_date + datetime.timedelta(days=200)
-        end = datetime.datetime.combine(end, datetime.time(23, 59, 59, tzinfo=tz))
-        start = current_cp.from_date + datetime.timedelta(days=200)
-        start = datetime.datetime.combine(start, datetime.time(0, 0, 1, tzinfo=tz))
-        end = datetime.datetime.combine(current_cp.to_date, datetime.time(23, 59, 59, tzinfo=tz))
+        cls.intervention.planned_budget.partner_contribution = 10000
+        cls.intervention.planned_budget.unicef_cash = 60000
+        cls.intervention.planned_budget.in_kind_amount = 5000
+        cls.intervention.planned_budget.save()
 
 
 class TestPartnerOrganizationModel(BaseTenantTestCase):
@@ -778,10 +767,8 @@ class TestInterventionModel(BaseTenantTestCase):
     @skip("fr_currency property on intervention is being deprecated")
     def test_default_budget_currency(self):
         intervention = InterventionFactory()
-        InterventionBudgetFactory(
-            currency="USD",
-            intervention=intervention
-        )
+        intervention.planned_budget.currency = "USD"
+        intervention.planned_budget.save()
         self.assertEqual(intervention.default_budget_currency, "USD")
 
     @skip("fr_currency property on intervention is being deprecated")
@@ -803,60 +790,42 @@ class TestInterventionModel(BaseTenantTestCase):
         self.assertEqual(int(self.intervention.total_budget), 0)
         self.assertEqual(int(self.intervention.total_unicef_budget), 0)
 
-    def test_total_unicef_cash(self):
-        InterventionBudgetFactory(
-            intervention=self.intervention,
-            unicef_cash=100000,
-            unicef_cash_local=10,
-            partner_contribution=200,
-            partner_contribution_local=20,
-            in_kind_amount_local=10,
+    def _prepare_budgets(self):
+        self.intervention.management_budgets.act1_unicef = 5
+        self.intervention.management_budgets.act2_unicef = 5
+        self.intervention.management_budgets.act1_partner = 5
+        self.intervention.management_budgets.act3_partner = 15
+        self.intervention.management_budgets.save()
+        InterventionActivityFactory(
+            unicef_cash=2, cso_cash=3, result__result_link=InterventionResultLinkFactory(intervention=self.intervention)
         )
-        self.assertEqual(int(self.intervention.total_unicef_cash), 10)
+        InterventionSupplyItemFactory(intervention=self.intervention, unit_number=5, unit_price=2)
+        InterventionSupplyItemFactory(intervention=self.intervention, unit_number=1, unit_price=4)
+
+    def test_total_unicef_cash(self):
+        self._prepare_budgets()
+        # 2 (activity.unicef_cash) + sum of unicef act from management budgets (5 + 5)
+        self.assertEqual(int(self.intervention.total_unicef_cash), 12)
 
     def test_total_partner_contribution(self):
-        InterventionBudgetFactory(
-            intervention=self.intervention,
-            unicef_cash=100000,
-            unicef_cash_local=10,
-            partner_contribution=200,
-            partner_contribution_local=20,
-            in_kind_amount_local=10,
-        )
-        self.assertEqual(int(self.intervention.total_partner_contribution), 20)
-
-    def test_total_budget(self):
-        InterventionBudgetFactory(
-            intervention=self.intervention,
-            unicef_cash=100000,
-            unicef_cash_local=10,
-            partner_contribution=200,
-            partner_contribution_local=20,
-            in_kind_amount_local=10,
-        )
-        self.assertEqual(int(self.intervention.total_budget), 40)
+        self._prepare_budgets()
+        # 3 (activity.cso_cash) + sum of partner act from management budgets (5 + 15)
+        self.assertEqual(int(self.intervention.total_partner_contribution), 23)
 
     def test_total_in_kind_amount(self):
-        InterventionBudgetFactory(
-            intervention=self.intervention,
-            unicef_cash=100000,
-            unicef_cash_local=10,
-            partner_contribution=200,
-            in_kind_amount=3300,
-            in_kind_amount_local=10,
-        )
-        self.assertEqual(int(self.intervention.total_in_kind_amount), 10)
+        self._prepare_budgets()
+        # 5*2 + 1*4 (sum of items total price)
+        self.assertEqual(int(self.intervention.total_in_kind_amount), 14)
+
+    def test_total_budget(self):
+        self._prepare_budgets()
+        # 12 (total_unicef_cash) + 23 (total_partner_contribution) + 14 (total_in_kind_amount)
+        self.assertEqual(int(self.intervention.total_budget), 49)
 
     def test_total_unicef_budget(self):
-        InterventionBudgetFactory(
-            intervention=self.intervention,
-            unicef_cash=100000,
-            unicef_cash_local=10,
-            partner_contribution=200,
-            in_kind_amount=2000,
-            in_kind_amount_local=10,
-        )
-        self.assertEqual(int(self.intervention.total_unicef_budget), 20)
+        self._prepare_budgets()
+        # 12 (total_unicef_cash) + 14 (total_in_kind_amount)
+        self.assertEqual(int(self.intervention.total_unicef_budget), 26)
 
     def test_year(self):
         """Exercise the year property"""
@@ -1453,36 +1422,52 @@ class TestInterventionBudget(BaseTenantTestCase):
     def test_str(self):
         intervention = InterventionFactory()
         intervention_str = str(intervention)
-        budget = InterventionBudgetFactory(
-            intervention=intervention,
-            unicef_cash_local=10.00,
-            in_kind_amount_local=5.00,
-            partner_contribution_local=20.00,
-        )
-        self.assertEqual(str(budget), "{}: 35.00".format(intervention_str))
+
+        mgmt_budget = intervention.management_budgets
+        mgmt_budget.act1_unicef = 10
+        mgmt_budget.act1_partner = 5
+        mgmt_budget.act2_partner = 15
+        mgmt_budget.save()
+
+        InterventionSupplyItemFactory(intervention=intervention, unit_number=1, unit_price=5)
+
+        self.assertEqual(intervention.planned_budget.unicef_cash_local, 10)
+        self.assertEqual(intervention.planned_budget.in_kind_amount_local, 5)
+        self.assertEqual(intervention.planned_budget.partner_contribution_local, 20)
+
+        self.assertEqual(str(intervention.planned_budget), "{}: 35.00".format(intervention_str))
 
     def test_calc_totals_no_assoc(self):
-        budget = InterventionBudgetFactory(
-            partner_contribution_local=10,
-            unicef_cash_local=20,
-            in_kind_amount_local=30,
-        )
-        budget.calc_totals()
+        intervention = InterventionFactory()
+        mgmt_budget = intervention.management_budgets
+        budget = intervention.planned_budget
+
+        mgmt_budget.act1_unicef = 20
+        mgmt_budget.act1_partner = 10
+        mgmt_budget.save()
+
+        InterventionSupplyItemFactory(intervention=intervention, unit_number=6, unit_price=5)
+
         self.assertEqual(budget.partner_contribution_local, 10)
         self.assertEqual(budget.unicef_cash_local, 20)
         self.assertEqual(budget.in_kind_amount_local, 30)
-        self.assertEqual(budget.programme_effectiveness, 0)
+        self.assertEqual(budget.programme_effectiveness, 50)  # = mgmt_budget.total
         self.assertEqual(
             "{:0.2f}".format(budget.partner_contribution_percent),
             "{:0.2f}".format(10 / (10 + 20 + 30) * 100),
         )
 
     def test_calc_totals_results(self):
-        budget = InterventionBudgetFactory(
-            partner_contribution_local=10,
-            unicef_cash_local=20,
-            in_kind_amount_local=30,
-        )
+        intervention = InterventionFactory()
+        mgmt_budget = intervention.management_budgets
+        budget = intervention.planned_budget
+
+        mgmt_budget.act1_unicef = 20
+        mgmt_budget.act1_partner = 10
+        mgmt_budget.save()
+
+        InterventionSupplyItemFactory(intervention=intervention, unit_number=6, unit_price=5)
+
         link = InterventionResultLinkFactory(intervention=budget.intervention)
         lower_result = LowerResultFactory(result_link=link)
         for __ in range(3):
@@ -1491,32 +1476,34 @@ class TestInterventionBudget(BaseTenantTestCase):
                 unicef_cash=101,
                 cso_cash=202,
             )
-        budget.calc_totals()
-        self.assertEqual(budget.partner_contribution_local, 606)
-        self.assertEqual(budget.unicef_cash_local, 303)
+
+        self.assertEqual(budget.partner_contribution_local, 202 * 3 + 10)  # 616
+        self.assertEqual(budget.unicef_cash_local, 101 * 3 + 20)  # 323
         self.assertEqual(budget.in_kind_amount_local, 30)
-        self.assertEqual(budget.programme_effectiveness, 0)
+        self.assertEqual(budget.programme_effectiveness, Decimal(30) / (616 + 323 + 30) * 100)
         self.assertEqual(
             "{:0.2f}".format(budget.partner_contribution_percent),
-            "{:0.2f}".format((606 / (606 + 303 + 30) * 100)),
+            "{:0.2f}".format((616 / (616 + 323 + 30) * 100)),
         )
 
     def test_calc_totals_management_budget(self):
-        budget = InterventionBudgetFactory(
-            partner_contribution_local=10,
-            unicef_cash_local=20,
-            in_kind_amount_local=30,
-        )
-        InterventionManagementBudgetFactory(
-            intervention=budget.intervention,
-            act1_unicef=100,
-            act1_partner=200,
-            act2_unicef=300,
-            act2_partner=400,
-            act3_unicef=500,
-            act3_partner=600,
-        )
-        budget.calc_totals()
+        intervention = InterventionFactory()
+        budget = intervention.planned_budget
+        mgmt_budget = intervention.management_budgets
+
+        budget.partner_contribution_local = 10
+        budget.unicef_cash_local = 20
+        budget.in_kind_amount_local = 30
+        budget.save()
+
+        mgmt_budget.act1_unicef = 100
+        mgmt_budget.act1_partner = 200
+        mgmt_budget.act2_unicef = 300
+        mgmt_budget.act2_partner = 400
+        mgmt_budget.act3_unicef = 500
+        mgmt_budget.act3_partner = 600
+        mgmt_budget.save()
+
         self.assertEqual(budget.partner_contribution_local, 1200)
         self.assertEqual(budget.unicef_cash_local, 900)
         self.assertEqual(budget.in_kind_amount_local, 30)
@@ -1530,22 +1517,28 @@ class TestInterventionBudget(BaseTenantTestCase):
         )
 
     def test_calc_totals_supply_items(self):
-        budget = InterventionBudgetFactory(
-            partner_contribution_local=10,
-            unicef_cash_local=20,
-            in_kind_amount_local=30,
-        )
+        intervention = InterventionFactory()
+        budget = intervention.planned_budget
+
         for __ in range(3):
             InterventionSupplyItemFactory(
-                intervention=budget.intervention,
+                intervention=intervention,
                 unit_number=1,
                 unit_price=2,
             )
-        budget.calc_totals()
+
+        mgmt_budget = intervention.management_budgets
+        mgmt_budget.act1_unicef = 10
+        mgmt_budget.act1_partner = 5
+        mgmt_budget.act2_unicef = 10
+        mgmt_budget.act2_partner = 5
+        mgmt_budget.save()
+
         self.assertEqual(budget.partner_contribution_local, 10)
         self.assertEqual(budget.unicef_cash_local, 20)
         self.assertEqual(budget.in_kind_amount_local, 6)
-        self.assertEqual(budget.programme_effectiveness, 0)
+        # programme_effectiveness (mgmt_budget.total = 30) / total_local (unicef_contrib + cso_contrib = 36.00) * 100
+        self.assertEqual(budget.programme_effectiveness, Decimal('83.33333333333333333333333333'))
         self.assertEqual(
             "{:0.2f}".format(budget.partner_contribution_percent),
             "{:0.2f}".format(10 / (10 + 20 + 6) * 100),
@@ -1554,14 +1547,15 @@ class TestInterventionBudget(BaseTenantTestCase):
 
 class TestInterventionManagementBudget(BaseTenantTestCase):
     def test_totals(self):
-        budget = InterventionManagementBudgetFactory(
-            act1_unicef=100,
-            act1_partner=200,
-            act2_unicef=300,
-            act2_partner=400,
-            act3_unicef=500,
-            act3_partner=600,
-        )
+        intervention = InterventionFactory()
+        budget = intervention.management_budgets
+        budget.act1_unicef = 100
+        budget.act1_partner = 200
+        budget.act2_unicef = 300
+        budget.act2_partner = 400
+        budget.act3_unicef = 500
+        budget.act3_partner = 600
+        budget.save()
         self.assertEqual(budget.partner_total, 1200)
         self.assertEqual(budget.unicef_total, 900)
         self.assertEqual(budget.total, 2100)

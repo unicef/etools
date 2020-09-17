@@ -8,12 +8,7 @@ from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
 from etools.applications.partners.models import Intervention
-from etools.applications.partners.tests.factories import (
-    InterventionBudgetFactory,
-    InterventionFactory,
-    PartnerFactory,
-    PartnerStaffFactory,
-)
+from etools.applications.partners.tests.factories import InterventionFactory, PartnerFactory, PartnerStaffFactory
 from etools.applications.reports.tests.factories import CountryProgrammeFactory, OfficeFactory, SectionFactory
 from etools.applications.users.tests.factories import UserFactory
 
@@ -68,7 +63,8 @@ class BaseTestCase(BaseTenantTestCase):
             cash_transfer_modalities=[Intervention.CASH_TRANSFER_DIRECT],
         )
         FundsReservationHeaderFactory(intervention=self.ended_intervention)
-        InterventionBudgetFactory(intervention=self.ended_intervention, unicef_cash_local=1)
+        self.ended_intervention.planned_budget.unicef_cash_local = 1
+        self.ended_intervention.planned_budget.save()
         AttachmentFactory(
             file=SimpleUploadedFile('test.txt', b'test'),
             code='partners_intervention_ended_pd',
