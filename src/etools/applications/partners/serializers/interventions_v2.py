@@ -808,6 +808,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "id",
             "in_amendment",
             "location_names",
+            "cfei_number",
             "location_p_codes",
             "locations",
             "modified",

@@ -1728,6 +1728,13 @@ class Intervention(TimeStampedModel):
         choices=INTERVENTION_STATUS,
         default=DRAFT,
     )
+    cfei_number = models.CharField(
+        verbose_name=_("UNPP Number"),
+        max_length=150,
+        blank=True,
+        null=True,
+        default="",
+    )
     # dates
     start = models.DateField(
         verbose_name=_("Start Date"),
