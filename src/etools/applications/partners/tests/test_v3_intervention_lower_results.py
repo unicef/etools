@@ -167,6 +167,37 @@ class TestInterventionLowerResultsDetailView(TestInterventionLowerResultsViewBas
         self.assertTrue(InterventionResultLink.objects.filter(pk=old_result_link.pk).exists())
         self.assertEqual(old_result_link.ll_results.count(), 1)
 
+    def test_associate_two_outputs_duplicated_code(self):
+        first_pd_output = LowerResultFactory(
+            result_link=InterventionResultLinkFactory(
+                intervention=self.intervention, cp_output__result_type__name=ResultType.OUTPUT
+            ),
+            code=None
+        )
+        second_pd_output = LowerResultFactory(
+            result_link=InterventionResultLinkFactory(
+                intervention=self.intervention, cp_output__result_type__name=ResultType.OUTPUT
+            ),
+            code=None
+        )
+
+        # two pd outputs have same codes, so unique together by result_link + code will raise error without more logic
+        self.assertEqual(first_pd_output.code, second_pd_output.code)
+        first_response = self.forced_auth_req(
+            'patch',
+            reverse('partners:intervention-pd-output-detail', args=[self.intervention.pk, first_pd_output.pk]),
+            self.user,
+            data={'cp_output': self.result_link.cp_output.id}
+        )
+        self.assertEqual(first_response.status_code, status.HTTP_200_OK)
+        second_response = self.forced_auth_req(
+            'patch',
+            reverse('partners:intervention-pd-output-detail', args=[self.intervention.pk, second_pd_output.pk]),
+            self.user,
+            data={'cp_output': self.result_link.cp_output.id}
+        )
+        self.assertEqual(second_response.status_code, status.HTTP_200_OK)
+
     def test_deassociate_temp_output(self):
         old_result_link = InterventionResultLinkFactory(intervention=self.intervention, cp_output=None)
         result = LowerResultFactory(result_link=old_result_link)
