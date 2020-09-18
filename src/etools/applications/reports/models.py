@@ -5,6 +5,7 @@ from django.db import models, transaction
 from django.utils.functional import cached_property
 from django.utils.translation import ugettext as _
 
+from model_utils import FieldTracker
 from model_utils.fields import AutoCreatedField, AutoLastModifiedField
 from model_utils.models import TimeStampedModel
 from mptt.models import MPTTModel, TreeForeignKey
@@ -364,6 +365,8 @@ class LowerResult(TimeStampedModel):
     # automatically assigned unless assigned manually in the UI (Lower level WBS - like code)
     code = models.CharField(verbose_name=_("Code"), max_length=50)
 
+    tracker = FieldTracker()
+
     def __str__(self):
         return '{}: {}'.format(
             self.code,
@@ -375,7 +378,7 @@ class LowerResult(TimeStampedModel):
         ordering = ('created',)
 
     def save(self, **kwargs):
-        if not self.code:
+        if not self.code or self.tracker.has_changed('result_link_id'):
             try:
                 latest_ll_id = self.result_link.ll_results.latest('id').id
             except LowerResult.DoesNotExist:
