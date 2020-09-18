@@ -269,6 +269,15 @@ class TestInterventionsAPI(BaseTenantTestCase):
         self.assertEqual(status_code, status.HTTP_200_OK)
         self.assertEqual(len(response), 4)
 
+    def test_list_interventions_for_empty_result_link(self):
+        InterventionResultLinkFactory(cp_output=None)
+        response = self.forced_auth_req(
+            'get',
+            reverse('partners_api:intervention-list'),
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
     def test_add_contingency_pd(self):
         data = {
             "document_type": Intervention.PD,

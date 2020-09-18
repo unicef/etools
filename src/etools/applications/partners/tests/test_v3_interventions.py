@@ -128,6 +128,15 @@ class TestList(BaseInterventionTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    def test_list_interventions_for_empty_result_link(self):
+        InterventionResultLinkFactory(cp_output=None)
+        response = self.forced_auth_req(
+            'get',
+            reverse('pmp_v3:intervention-list'),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
 
 class TestCreate(BaseInterventionTestCase):
     def test_post(self):
