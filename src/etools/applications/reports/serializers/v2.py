@@ -462,11 +462,8 @@ class InterventionActivityItemSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'name',
-            'other_details',
             'unicef_cash',
             'cso_cash',
-            'unicef_supplies',
-            'cso_supplies',
         )
 
 
@@ -522,6 +519,7 @@ class InterventionActivityTimeFrameListSerializer(serializers.ListSerializer):
 class InterventionActivityDetailSerializer(serializers.ModelSerializer):
     items = InterventionActivityItemSerializer(many=True, required=False)
     time_frames = InterventionActivityTimeFrameListSerializer(required=False)
+    partner_percentage = serializers.DecimalField(max_digits=5, decimal_places=2, read_only=True)
 
     class Meta:
         model = InterventionActivity
@@ -531,10 +529,9 @@ class InterventionActivityDetailSerializer(serializers.ModelSerializer):
             'context_details',
             'unicef_cash',
             'cso_cash',
-            'unicef_supplies',
-            'cso_supplies',
             'items',
             'time_frames',
+            'partner_percentage',
         )
 
     def __init__(self, *args, **kwargs):
@@ -576,7 +573,10 @@ class InterventionActivityDetailSerializer(serializers.ModelSerializer):
             updated_pks.append(serializer.save(activity=instance).pk)
 
         # cleanup, remove unused options
-        instance.items.exclude(pk__in=updated_pks).delete()
+        removed_items = instance.items.exclude(pk__in=updated_pks).delete()
+        if removed_items:
+            # if items are removed, cash also should be recalculated
+            instance.update_cash()
 
     def set_time_frames(self, instance, time_frames):
         if time_frames is None:
@@ -595,13 +595,13 @@ class InterventionActivityDetailSerializer(serializers.ModelSerializer):
 
 class InterventionActivitySerializer(serializers.ModelSerializer):
     time_frames = InterventionActivityTimeFrameSerializer(many=True)
+    partner_percentage = serializers.DecimalField(max_digits=5, decimal_places=2, read_only=True)
 
     class Meta:
         model = InterventionActivity
         fields = (
             'id', 'name', 'context_details',
-            'unicef_cash', 'cso_cash',
-            'unicef_supplies', 'cso_supplies',
+            'unicef_cash', 'cso_cash', 'partner_percentage',
             'time_frames',
         )
 
