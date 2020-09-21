@@ -262,6 +262,7 @@ class InterventionListSerializer(BaseInterventionListSerializer):
             'donors',
             'donor_codes',
             'grants',
+            'cfei_number',
         )
 
 

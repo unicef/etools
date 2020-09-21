@@ -99,7 +99,12 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
         CSVFlatRenderer,
     )
 
-    search_terms = ('title__icontains', 'agreement__partner__name__icontains', 'number__icontains')
+    search_terms = (
+        'title__icontains',
+        'agreement__partner__name__icontains',
+        'number__icontains',
+        'cfei_number__icontains',
+    )
     filters = (
         ('partners', 'agreement__partner__in'),
         ('agreements', 'agreement__in'),

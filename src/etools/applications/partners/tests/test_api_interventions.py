@@ -656,6 +656,35 @@ class TestInterventionsAPI(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
 
+    def test_search_cfei_number(self):
+        response = self.forced_auth_req(
+            "get",
+            reverse('partners_api:intervention-list'),
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 3)
+
+        # set cfei_number value
+        cfei_number = "9723495790932423"
+        self.intervention.cfei_number = cfei_number
+        self.intervention.save()
+        self.assertEqual(
+            Intervention.objects.filter(
+                cfei_number__icontains=cfei_number,
+            ).count(),
+            1,
+        )
+
+        response = self.forced_auth_req(
+            "get",
+            reverse('partners_api:intervention-list'),
+            user=self.unicef_staff,
+            data={"search": cfei_number[:-5]}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+
 
 class TestAPIInterventionResultLinkListView(BaseTenantTestCase):
     """Exercise the list view for InterventionResultLinkListCreateView"""
