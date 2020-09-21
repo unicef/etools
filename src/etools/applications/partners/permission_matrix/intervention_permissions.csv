@@ -130,3 +130,5 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,attachments,Partner User,partner_court,Draft,Edit,TRUE
 ,attachments,Senior Management Team,,Draft,Edit,TRUE
 ,attachments,Representative Office,,Draft,Edit,TRUE
+,cfei_number,*,,*,View,TRUE
+,cfei_number,Partnership Manager,,Draft,Edit,TRUE

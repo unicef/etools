@@ -19,7 +19,7 @@
         ],
         "content-length": [
             "Content-Length",
-            "7869"
+            "7870"
         ]
     },
     "data": {
@@ -103,7 +103,7 @@
                 "agreement": false,
                 "unicef_court": true,
                 "planned_visits": false,
-                "cfei_number": true,
+                "cfei_number": false,
                 "sustainability_rating": true,
                 "unicef_signatory": false,
                 "unicef_signatory_id": true,

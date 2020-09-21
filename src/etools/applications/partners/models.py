@@ -1915,6 +1915,7 @@ class Intervention(TimeStampedModel):
         verbose_name=_("UNPP Number"),
         max_length=150,
         blank=True,
+        null=True,
         default="",
     )
     context = models.TextField(
