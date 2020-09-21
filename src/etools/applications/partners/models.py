@@ -1921,10 +1921,12 @@ class Intervention(TimeStampedModel):
     context = models.TextField(
         verbose_name=_("Context"),
         blank=True,
+        null=True,
     )
     implementation_strategy = models.TextField(
         verbose_name=_("Implementation Strategy"),
         blank=True,
+        null=True,
     )
     gender_rating = models.CharField(
         verbose_name=_("Gender Rating"),
@@ -1935,6 +1937,7 @@ class Intervention(TimeStampedModel):
     gender_narrative = models.TextField(
         verbose_name=_("Gender Narrative"),
         blank=True,
+        null=True,
     )
     equity_rating = models.CharField(
         verbose_name=_("Equity Rating"),
@@ -1945,6 +1948,7 @@ class Intervention(TimeStampedModel):
     equity_narrative = models.TextField(
         verbose_name=_("Equity Narrative"),
         blank=True,
+        null=True,
     )
     sustainability_rating = models.CharField(
         verbose_name=_("Sustainability Rating"),
@@ -1955,10 +1959,12 @@ class Intervention(TimeStampedModel):
     sustainability_narrative = models.TextField(
         verbose_name=_("Sustainability Narrative"),
         blank=True,
+        null=True,
     )
     ip_program_contribution = models.TextField(
         verbose_name=_("Partner Non-Financial Contribution to Programme"),
         blank=True,
+        null=True,
     )
     budget_owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -1991,18 +1997,22 @@ class Intervention(TimeStampedModel):
     capacity_development = models.TextField(
         verbose_name=_("Capacity Development"),
         blank=True,
+        null=True,
     )
     other_info = models.TextField(
         verbose_name=_("Other Info"),
         blank=True,
+        null=True,
     )
     other_partners_involved = models.TextField(
         verbose_name=_("Other Partners Involved"),
         blank=True,
+        null=True,
     )
     technical_guidance = models.TextField(
         verbose_name=_("Technical Guidance"),
         blank=True,
+        null=True,
     )
 
     # Flag if this has been migrated to a status that is not correct
