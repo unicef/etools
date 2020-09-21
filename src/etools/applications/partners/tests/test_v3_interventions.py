@@ -128,6 +128,15 @@ class TestList(BaseInterventionTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    def test_list_interventions_for_empty_result_link(self):
+        InterventionResultLinkFactory(cp_output=None)
+        response = self.forced_auth_req(
+            'get',
+            reverse('pmp_v3:intervention-list'),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
 
 class TestCreate(BaseInterventionTestCase):
     def test_post(self):
@@ -208,13 +217,13 @@ class TestManagementBudget(BaseInterventionTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.data
-        assert budget_qs.exists()
-        assert data["act1_unicef"] is None
-        assert data["act1_partner"] is None
-        assert data["act2_unicef"] is None
-        assert data["act2_partner"] is None
-        assert data["act3_unicef"] is None
-        assert data["act3_partner"] is None
+        self.assertTrue(budget_qs.exists())
+        self.assertEqual(data["act1_unicef"], "0.00")
+        self.assertEqual(data["act1_partner"], "0.00")
+        self.assertEqual(data["act2_unicef"], "0.00")
+        self.assertEqual(data["act2_partner"], "0.00")
+        self.assertEqual(data["act3_unicef"], "0.00")
+        self.assertEqual(data["act3_partner"], "0.00")
         self.assertNotIn('intervention', response.data)
 
     def test_put(self):
@@ -241,13 +250,13 @@ class TestManagementBudget(BaseInterventionTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.data
-        assert budget_qs.exists()
-        assert data["act1_unicef"] == "1000.00"
-        assert data["act1_partner"] == "2000.00"
-        assert data["act2_unicef"] == "3000.00"
-        assert data["act2_partner"] == "4000.00"
-        assert data["act3_unicef"] == "5000.00"
-        assert data["act3_partner"] == "6000.00"
+        self.assertTrue(budget_qs.exists())
+        self.assertEqual(data["act1_unicef"], "1000.00")
+        self.assertEqual(data["act1_partner"], "2000.00")
+        self.assertEqual(data["act2_unicef"], "3000.00")
+        self.assertEqual(data["act2_partner"], "4000.00")
+        self.assertEqual(data["act3_unicef"], "5000.00")
+        self.assertEqual(data["act3_partner"], "6000.00")
         self.assertIn('intervention', response.data)
 
     def test_patch(self):
@@ -264,7 +273,7 @@ class TestManagementBudget(BaseInterventionTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.data
-        assert data["act1_unicef"] == "1000.00"
+        self.assertEqual(data["act1_unicef"], "1000.00")
         self.assertIn('intervention', response.data)
 
 
@@ -288,6 +297,7 @@ class TestSupplyItem(BaseInterventionTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), count)
+        self.assertIn('id', response.data[0])
 
     def test_post(self):
         item_qs = InterventionSupplyItem.objects.filter(
@@ -374,6 +384,17 @@ class TestSupplyItem(BaseInterventionTestCase):
         self.assertEqual(response.data["unit_number"], "10.00")
         self.assertEqual(response.data["unit_price"], "3.00")
         self.assertEqual(response.data["total_price"], "30.00")
+
+    def test_delete(self):
+        item = InterventionSupplyItemFactory(intervention=self.intervention)
+        response = self.forced_auth_req(
+            "delete",
+            reverse(
+                "pmp_v3:intervention-supply-item-detail",
+                args=[self.intervention.pk, item.pk],
+            )
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
 
 class TestInterventionUpdate(BaseInterventionTestCase):

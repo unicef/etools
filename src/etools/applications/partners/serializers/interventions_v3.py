@@ -20,6 +20,7 @@ from etools.applications.partners.serializers.interventions_v2 import (
     PlannedVisitsNestedSerializer,
     SingleInterventionAttachmentField,
 )
+from etools.applications.partners.utils import get_quarters_range
 from etools.applications.reports.serializers.v2 import InterventionTimeFrameSerializer
 
 
@@ -34,6 +35,7 @@ class InterventionSupplyItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = InterventionSupplyItem
         fields = (
+            "id",
             "title",
             "unit_number",
             "unit_price",
@@ -47,12 +49,26 @@ class InterventionSupplyItemSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
 
+class InterventionManagementBudgetSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InterventionManagementBudget
+        fields = (
+            "act1_unicef",
+            "act1_partner",
+            "act2_unicef",
+            "act2_partner",
+            "act3_unicef",
+            "act3_partner",
+        )
+
+
 class InterventionDetailSerializer(serializers.ModelSerializer):
     activation_letter_attachment = AttachmentSingleFileField(read_only=True)
     activation_letter_file = serializers.FileField(source='activation_letter', read_only=True)
     amendments = InterventionAmendmentCUSerializer(many=True, read_only=True, required=False)
     attachments = InterventionAttachmentSerializer(many=True, read_only=True, required=False)
     available_actions = serializers.SerializerMethodField()
+    status_list = serializers.SerializerMethodField()
     cluster_names = serializers.SerializerMethodField()
     days_from_review_to_signed = serializers.CharField(read_only=True)
     days_from_submission_to_signed = serializers.CharField(read_only=True)
@@ -86,6 +102,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     risks = InterventionRiskSerializer(many=True, read_only=True)
     quarters = InterventionTimeFrameSerializer(many=True, read_only=True)
     supply_items = InterventionSupplyItemSerializer(many=True, read_only=True)
+    management_budgets = InterventionManagementBudgetSerializer(read_only=True)
 
     def get_location_p_codes(self, obj):
         return [location.p_code for location in obj.flat_locations.all()]
@@ -204,6 +221,46 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
 
         return list(set(available_actions))
 
+    def get_status_list(self, obj):
+        if obj.status == obj.SUSPENDED:
+            status_list = [
+                obj.DRAFT,
+                obj.REVIEW,
+                obj.SIGNATURE,
+                obj.SIGNED,
+                obj.SUSPENDED,
+                obj.ACTIVE,
+                obj.ENDED,
+            ]
+        elif obj.status == obj.TERMINATED:
+            status_list = [
+                obj.DRAFT,
+                obj.REVIEW,
+                obj.SIGNATURE,
+                obj.SIGNED,
+                obj.TERMINATED,
+            ]
+        else:
+            status_list = [
+                obj.DRAFT,
+                obj.REVIEW,
+                obj.SIGNATURE,
+                obj.SIGNED,
+                obj.ACTIVE,
+                obj.ENDED,
+            ]
+        return [s for s in obj.INTERVENTION_STATUS if s[0] in status_list]
+
+    def get_quarters(self, obj: Intervention):
+        return [
+            {
+                'name': 'Q{}'.format(i + 1),
+                'start': quarter[0].strftime('%Y-%m-%d'),
+                'end': quarter[1].strftime('%Y-%m-%d')
+            }
+            for i, quarter in enumerate(get_quarters_range(obj.start, obj.end))
+        ]
+
     class Meta:
         model = Intervention
         fields = (
@@ -247,6 +304,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "location_names",
             "location_p_codes",
             "locations",
+            "management_budgets",
             "metadata",
             "modified",
             "number",
@@ -279,6 +337,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "signed_pd_document_file",
             "start",
             "status",
+            "status_list",
             "submission_date",
             "submission_date_prc",
             "submitted_to_prc",
@@ -291,19 +350,6 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "title",
             "unicef_focal_points",
             "unicef_signatory",
-        )
-
-
-class InterventionManagementBudgetSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = InterventionManagementBudget
-        fields = (
-            "act1_unicef",
-            "act1_partner",
-            "act2_unicef",
-            "act2_partner",
-            "act3_unicef",
-            "act3_partner",
         )
 
 
