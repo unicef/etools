@@ -2,6 +2,7 @@ from datetime import date
 
 from django.contrib.postgres.fields import JSONField
 from django.db import models, transaction
+from django.db.models import Sum
 from django.utils.functional import cached_property
 from django.utils.translation import ugettext as _
 
@@ -902,34 +903,20 @@ class InterventionActivity(TimeStampedModel):
     )
     context_details = models.TextField(
         verbose_name=_("Context Details"),
+        blank=True,
+        null=True,
     )
     unicef_cash = models.DecimalField(
         verbose_name=_("UNICEF Cash"),
         decimal_places=2,
         max_digits=20,
-        blank=True,
-        null=True,
+        default=0,
     )
     cso_cash = models.DecimalField(
         verbose_name=_("CSO Cash"),
         decimal_places=2,
         max_digits=20,
-        blank=True,
-        null=True,
-    )
-    unicef_supplies = models.DecimalField(
-        verbose_name=_("UNICEF Supplies"),
-        decimal_places=2,
-        max_digits=20,
-        blank=True,
-        null=True,
-    )
-    cso_supplies = models.DecimalField(
-        verbose_name=_("CSO Supplies"),
-        decimal_places=2,
-        max_digits=20,
-        blank=True,
-        null=True,
+        default=0,
     )
 
     time_frames = models.ManyToManyField(
@@ -946,8 +933,29 @@ class InterventionActivity(TimeStampedModel):
     def __str__(self):
         return "{} {}".format(self.result, self.name)
 
-    # total
-    # partner percentage
+    def update_cash(self):
+        items = InterventionActivityItem.objects.filter(activity=self)
+        items_exists = items.exists()
+        if not items_exists:
+            return
+
+        aggregates = items.aggregate(
+            unicef_cash=Sum('unicef_cash'),
+            cso_cash=Sum('cso_cash'),
+        )
+        self.unicef_cash = aggregates['unicef_cash']
+        self.cso_cash = aggregates['cso_cash']
+        self.save()
+
+    @property
+    def total(self):
+        return self.unicef_cash + self.cso_cash
+
+    @property
+    def partner_percentage(self):
+        if not self.total:
+            return 0
+        return self.cso_cash / self.total * 100
 
 
 class InterventionActivityItem(TimeStampedModel):
@@ -961,41 +969,29 @@ class InterventionActivityItem(TimeStampedModel):
         verbose_name=_("Name"),
         max_length=150,
     )
-    other_details = models.TextField(
-        verbose_name=_("Context Details"),
-        blank=True
-    )
     unicef_cash = models.DecimalField(
         verbose_name=_("UNICEF Cash"),
         decimal_places=2,
         max_digits=20,
-        blank=True,
-        null=True,
+        default=0,
     )
     cso_cash = models.DecimalField(
         verbose_name=_("CSO Cash"),
         decimal_places=2,
         max_digits=20,
-        blank=True,
-        null=True,
-    )
-    unicef_supplies = models.DecimalField(
-        verbose_name=_("UNICEF Supplies"),
-        decimal_places=2,
-        max_digits=20,
-        blank=True,
-        null=True,
-    )
-    cso_supplies = models.DecimalField(
-        verbose_name=_("CSO Supplies"),
-        decimal_places=2,
-        max_digits=20,
-        blank=True,
-        null=True,
+        default=0,
     )
 
     def __str__(self):
         return "{} {}".format(self.activity, self.name)
+
+    def save(self, **kwargs):
+        super().save(**kwargs)
+        self.activity.update_cash()
+
+    def delete(self, **kwargs):
+        super().save(**kwargs)
+        self.activity.update_cash()
 
 
 class InterventionTimeFrame(TimeStampedModel):

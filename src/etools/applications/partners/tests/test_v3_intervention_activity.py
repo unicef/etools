@@ -52,6 +52,43 @@ class BaseTestCase(BaseTenantTestCase):
 
 
 class TestFunctionality(BaseTestCase):
+    def test_set_cash_values_directly(self):
+        response = self.forced_auth_req(
+            'patch', self.detail_url,
+            user=self.user,
+            data={
+                'unicef_cash': 1,
+                'cso_cash': 2,
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['unicef_cash'], '1.00')
+        self.assertEqual(response.data['cso_cash'], '2.00')
+        self.assertEqual(response.data['partner_percentage'], '66.67')
+
+    def test_set_cash_values_from_items(self):
+        InterventionActivityItemFactory(activity=self.activity, unicef_cash=8)
+        response = self.forced_auth_req(
+            'patch', self.detail_url,
+            user=self.user,
+            data={
+                'items': [
+                    {
+                        'name': 'first_item',
+                        'unicef_cash': '3.0', 'cso_cash': '4.0',
+                    },
+                    {
+                        'name': 'second_item',
+                        'unicef_cash': '0.0', 'cso_cash': '2.0',
+                    }
+                ],
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['unicef_cash'], '3.00')
+        self.assertEqual(response.data['cso_cash'], '6.00')
+        self.assertEqual(response.data['partner_percentage'], '66.67')
+
     def test_set_items(self):
         item_to_remove = InterventionActivityItemFactory(activity=self.activity)
         item_to_update = InterventionActivityItemFactory(activity=self.activity, name='old')
@@ -66,7 +103,6 @@ class TestFunctionality(BaseTestCase):
                     {
                         'name': 'first_item',
                         'unicef_cash': '1.0', 'cso_cash': '2.0',
-                        'unicef_supplies': '3.0', 'cso_supplies': '4.0',
                     }
                 ],
             }
@@ -114,7 +150,7 @@ class TestFunctionality(BaseTestCase):
         response = self.forced_auth_req(
             'post', self.list_url,
             user=self.user,
-            data={'name': 'test', 'context_details': 'test'}
+            data={'name': 'test'}
         )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
