@@ -19,7 +19,7 @@
         ],
         "content-length": [
             "Content-Length",
-            "2480"
+            "2531"
         ]
     },
     "data": [
@@ -62,7 +62,8 @@
             "location_p_codes": [],
             "donors": [],
             "donor_codes": [],
-            "grants": []
+            "grants": [],
+            "cfei_number": ""
         },
         {
             "id": 1455,
@@ -101,7 +102,8 @@
             "location_p_codes": [],
             "donors": [],
             "donor_codes": [],
-            "grants": []
+            "grants": [],
+            "cfei_number": ""
         },
         {
             "id": 101,
@@ -140,7 +142,8 @@
             "location_p_codes": [],
             "donors": [],
             "donor_codes": [],
-            "grants": []
+            "grants": [],
+            "cfei_number": ""
         }
     ],
     "content_type": null
