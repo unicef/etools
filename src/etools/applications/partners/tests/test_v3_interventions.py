@@ -136,6 +136,38 @@ class TestList(BaseInterventionTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+    def test_search_cfei_number(self):
+        for _ in range(3):
+            InterventionFactory()
+        intervention = InterventionFactory()
+        response = self.forced_auth_req(
+            "get",
+            reverse('pmp_v3:intervention-list'),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 4)
+
+        # set cfei_number value
+        cfei_number = "9723495790932423"
+        intervention.cfei_number = cfei_number
+        intervention.save()
+        self.assertEqual(
+            Intervention.objects.filter(
+                cfei_number__icontains=cfei_number,
+            ).count(),
+            1,
+        )
+
+        response = self.forced_auth_req(
+            "get",
+            reverse('pmp_v3:intervention-list'),
+            user=self.user,
+            data={"search": cfei_number[:-5]}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+
 
 class TestCreate(BaseInterventionTestCase):
     def test_post(self):
