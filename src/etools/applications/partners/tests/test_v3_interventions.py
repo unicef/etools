@@ -353,6 +353,38 @@ class TestSupplyItem(BaseInterventionTestCase):
         self.assertTrue(item_qs.exists())
         item = item_qs.first()
         self.assertEqual(item.intervention, self.intervention)
+        self.assertIsNone(item.result)
+
+    def test_post_with_cp_output(self):
+        item_qs = InterventionSupplyItem.objects.filter(
+            intervention=self.intervention,
+        )
+        result = InterventionResultLinkFactory(
+            cp_output__result_type__name=ResultType.OUTPUT,
+            intervention=self.intervention,
+        )
+        self.assertFalse(item_qs.exists())
+        response = self.forced_auth_req(
+            "post",
+            reverse(
+                "pmp_v3:intervention-supply-item",
+                args=[self.intervention.pk],
+            ),
+            data={
+                "title": "New Supply Item",
+                "unit_number": 10,
+                "unit_price": 2,
+                "result": result.pk,
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data["unit_number"], "10.00")
+        self.assertEqual(response.data["unit_price"], "2.00")
+        self.assertEqual(response.data["total_price"], "20.00")
+        self.assertTrue(item_qs.exists())
+        item = item_qs.first()
+        self.assertEqual(item.intervention, self.intervention)
+        self.assertEqual(item.result, result)
 
     def test_get(self):
         item = InterventionSupplyItemFactory(
