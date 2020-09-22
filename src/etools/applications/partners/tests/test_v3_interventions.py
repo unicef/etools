@@ -20,7 +20,6 @@ from etools.applications.partners.tests.factories import (
     FileTypeFactory,
     InterventionAttachmentFactory,
     InterventionFactory,
-    InterventionManagementBudgetFactory,
     InterventionResultLinkFactory,
     InterventionSupplyItemFactory,
     PartnerFactory,

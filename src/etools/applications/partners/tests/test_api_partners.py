@@ -20,7 +20,6 @@ from etools.applications.partners.models import (
     CoreValuesAssessment,
     Intervention,
     InterventionAmendment,
-    InterventionBudget,
     PartnerOrganization,
     PartnerPlannedVisits,
     PartnerType,
