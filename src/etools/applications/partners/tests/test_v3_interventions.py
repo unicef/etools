@@ -46,6 +46,7 @@ class URLsTestCase(URLAssertionMixin, SimpleTestCase):
             ('intervention-list', '', {}),
             ('intervention-detail', '1/', {'pk': 1}),
             ('intervention-accept', '1/accept/', {'pk': 1}),
+            ('intervention-review', '1/review/', {'pk': 1}),
             ('intervention-accept-review', '1/accept_review/', {'pk': 1}),
             ('intervention-send-partner', '1/send_to_partner/', {'pk': 1}),
             ('intervention-send-unicef', '1/send_to_unicef/', {'pk': 1}),
@@ -662,7 +663,7 @@ class TestInterventionAcceptReview(BaseInterventionActionTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_get(self):
+    def test_patch(self):
         # unicef accepts
         self.assertFalse(self.intervention.unicef_accepted)
         mock_send = mock.Mock()
@@ -671,6 +672,7 @@ class TestInterventionAcceptReview(BaseInterventionActionTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         mock_send.assert_called()
         self.intervention.refresh_from_db()
+        self.assertEqual(self.intervention.status, Intervention.REVIEW)
         self.assertTrue(self.intervention.unicef_accepted)
 
         # unicef attempt to accept and review again
@@ -679,6 +681,104 @@ class TestInterventionAcceptReview(BaseInterventionActionTestCase):
             response = self.forced_auth_req("patch", self.url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("PD is already in Review status.", response.data)
+        mock_send.assert_not_called()
+
+
+class TestInterventionReview(BaseInterventionActionTestCase):
+    def setUp(self):
+        super().setUp()
+        self.url = reverse(
+            'pmp_v3:intervention-review',
+            args=[self.intervention.pk],
+        )
+
+    def test_not_found(self):
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-review', args=[404]),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_partner_no_access(self):
+        intervention = InterventionFactory()
+        response = self.forced_auth_req(
+            "patch",
+            reverse(
+                'pmp_v3:intervention-review',
+                args=[intervention.pk],
+            ),
+            user=self.partner_user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_patch(self):
+        # unicef reviews
+        self.assertFalse(self.intervention.unicef_accepted)
+        mock_send = mock.Mock()
+        with mock.patch(self.notify_path, mock_send):
+            response = self.forced_auth_req("patch", self.url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mock_send.assert_called()
+        self.intervention.refresh_from_db()
+        self.assertEqual(self.intervention.status, Intervention.REVIEW)
+        self.assertFalse(self.intervention.unicef_accepted)
+
+        # unicef attempt to review again
+        mock_send = mock.Mock()
+        with mock.patch(self.notify_path, mock_send):
+            response = self.forced_auth_req("patch", self.url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("PD is already in Review status.", response.data)
+        mock_send.assert_not_called()
+
+
+class TestInterventionCancel(BaseInterventionActionTestCase):
+    def setUp(self):
+        super().setUp()
+        self.url = reverse(
+            'pmp_v3:intervention-cancel',
+            args=[self.intervention.pk],
+        )
+
+    def test_not_found(self):
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-cancel', args=[404]),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_partner_no_access(self):
+        intervention = InterventionFactory()
+        response = self.forced_auth_req(
+            "patch",
+            reverse(
+                'pmp_v3:intervention-cancel',
+                args=[intervention.pk],
+            ),
+            user=self.partner_user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_patch(self):
+        # unicef cancels
+        self.assertFalse(self.intervention.unicef_accepted)
+        mock_send = mock.Mock()
+        with mock.patch(self.notify_path, mock_send):
+            response = self.forced_auth_req("patch", self.url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mock_send.assert_called()
+        self.intervention.refresh_from_db()
+        self.assertEqual(self.intervention.status, Intervention.TERMINATED)
+        self.assertFalse(self.intervention.unicef_accepted)
+
+        # unicef attempt to cancel again
+        mock_send = mock.Mock()
+        with mock.patch(self.notify_path, mock_send):
+            response = self.forced_auth_req("patch", self.url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("PD has already been cancelled.", response.data)
         mock_send.assert_not_called()
 
 
@@ -707,7 +807,7 @@ class TestInterventionUnlock(BaseInterventionActionTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    def test_get(self):
+    def test_patch(self):
         self.intervention.unicef_accepted = True
         self.intervention.partner_accepted = True
         self.intervention.save()

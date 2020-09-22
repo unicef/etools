@@ -21,6 +21,8 @@ from etools.applications.partners.views.interventions_v3 import (
 from etools.applications.partners.views.interventions_v3_actions import (
     PMPInterventionAcceptReviewView,
     PMPInterventionAcceptView,
+    PMPInterventionCancelView,
+    PMPInterventionReviewView,
     PMPInterventionSendToPartnerView,
     PMPInterventionSendToUNICEFView,
     PMPInterventionUnlockView,
@@ -45,10 +47,13 @@ urlpatterns = [
     ),
     path(
         'interventions/<int:pk>/accept/',
-        view=PMPInterventionAcceptView.as_view(
-            http_method_names=['patch'],
-        ),
+        view=PMPInterventionAcceptView.as_view(http_method_names=['patch']),
         name='intervention-accept',
+    ),
+    path(
+        'interventions/<int:pk>/review/',
+        view=PMPInterventionReviewView.as_view(http_method_names=['patch']),
+        name='intervention-review',
     ),
     path(
         'interventions/<int:pk>/accept_review/',
@@ -58,10 +63,13 @@ urlpatterns = [
         name='intervention-accept-review',
     ),
     path(
+        'interventions/<int:pk>/cancel/',
+        view=PMPInterventionCancelView.as_view(http_method_names=['patch']),
+        name='intervention-cancel',
+    ),
+    path(
         'interventions/<int:pk>/unlock/',
-        view=PMPInterventionUnlockView.as_view(
-            http_method_names=['patch'],
-        ),
+        view=PMPInterventionUnlockView.as_view(http_method_names=['patch']),
         name='intervention-unlock',
     ),
     path(
