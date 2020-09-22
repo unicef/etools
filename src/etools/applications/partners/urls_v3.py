@@ -45,17 +45,23 @@ urlpatterns = [
     ),
     path(
         'interventions/<int:pk>/accept/',
-        view=PMPInterventionAcceptView.as_view(),
+        view=PMPInterventionAcceptView.as_view(
+            http_method_names=['patch'],
+        ),
         name='intervention-accept',
     ),
     path(
         'interventions/<int:pk>/accept_review/',
-        view=PMPInterventionAcceptReviewView.as_view(),
+        view=PMPInterventionAcceptReviewView.as_view(
+            http_method_names=['patch'],
+        ),
         name='intervention-accept-review',
     ),
     path(
         'interventions/<int:pk>/unlock/',
-        view=PMPInterventionUnlockView.as_view(),
+        view=PMPInterventionUnlockView.as_view(
+            http_method_names=['patch'],
+        ),
         name='intervention-unlock',
     ),
     path(
