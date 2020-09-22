@@ -2873,7 +2873,8 @@ class InterventionSupplyItem(TimeStampedModel):
         InterventionResultLink,
         verbose_name=_("Result"),
         on_delete=models.CASCADE,
-        default=0,
+        null=True,
+        blank=True,
     )
     total_price = models.DecimalField(
         verbose_name=_("Total Price"),
