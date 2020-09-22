@@ -266,7 +266,7 @@ class PMPInterventionSupplyItemListCreateView(
 class PMPInterventionSupplyItemRetrieveUpdateView(
     DetailedInterventionResponseMixin,
     PMPInterventionMixin,
-    RetrieveUpdateAPIView,
+    RetrieveUpdateDestroyAPIView,
 ):
     queryset = InterventionSupplyItem.objects
     serializer_class = InterventionSupplyItemSerializer

@@ -186,7 +186,7 @@ class BaseInterventionListSerializer(serializers.ModelSerializer):
         return [o.name for o in obj.offices.all()]
 
     def get_cp_outputs(self, obj):
-        return [rl.cp_output.id for rl in obj.result_links.all()]
+        return [rl.cp_output.id for rl in obj.result_links.all() if rl.cp_output]
 
     def get_section_names(self, obj):
         return [section.name for section in obj.sections.all()]
@@ -808,6 +808,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "id",
             "in_amendment",
             "location_names",
+            "cfei_number",
             "location_p_codes",
             "locations",
             "modified",

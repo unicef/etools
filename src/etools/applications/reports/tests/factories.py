@@ -157,8 +157,6 @@ class InterventionActivityFactory(factory.django.DjangoModelFactory):
     context_details = fuzzy.FuzzyText()
     unicef_cash = fuzzy.FuzzyDecimal(1000)
     cso_cash = fuzzy.FuzzyDecimal(1000)
-    unicef_supplies = fuzzy.FuzzyDecimal(1000)
-    cso_supplies = fuzzy.FuzzyDecimal(1000)
 
     class Meta:
         model = models.InterventionActivity
@@ -167,11 +165,8 @@ class InterventionActivityFactory(factory.django.DjangoModelFactory):
 class InterventionActivityItemFactory(factory.django.DjangoModelFactory):
     activity = factory.SubFactory(InterventionActivityFactory)
     name = fuzzy.FuzzyText()
-    other_details = fuzzy.FuzzyText()
     unicef_cash = fuzzy.FuzzyDecimal(1000)
     cso_cash = fuzzy.FuzzyDecimal(1000)
-    unicef_supplies = fuzzy.FuzzyDecimal(1000)
-    cso_supplies = fuzzy.FuzzyDecimal(1000)
 
     class Meta:
         model = models.InterventionActivityItem
