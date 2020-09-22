@@ -66,14 +66,17 @@ def setup_intervention_test_data(test_case, include_results_and_indicators=False
     test_case.result_type = ResultType.objects.get_or_create(name=ResultType.OUTPUT)[0]
     test_case.result = ResultFactory(result_type=test_case.result_type)
 
-    test_case.partnership_budget = InterventionBudget.objects.create(
-        intervention=test_case.intervention,
-        unicef_cash=10,
-        unicef_cash_local=100,
-        partner_contribution=20,
-        partner_contribution_local=200,
-        in_kind_amount_local=10,
-    )
+    test_case.management_budget = test_case.intervention.management_budgets
+    test_case.partnership_budget = test_case.intervention.planned_budget
+
+    # test_case.partnership_budget = InterventionBudget.objects.create(
+    #     intervention=test_case.intervention,
+    #     unicef_cash=10,
+    #     unicef_cash_local=100,
+    #     partner_contribution=20,
+    #     partner_contribution_local=200,
+    #     in_kind_amount_local=10,
+    # )
 
     # set up two frs not connected to any interventions
     test_case.fr_1 = FundsReservationHeaderFactory(intervention=None, currency='USD')
