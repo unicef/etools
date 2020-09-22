@@ -25,6 +25,7 @@ from etools.applications.partners.views.interventions_v3_actions import (
     PMPInterventionReviewView,
     PMPInterventionSendToPartnerView,
     PMPInterventionSendToUNICEFView,
+    PMPInterventionSignatureView,
     PMPInterventionUnlockView,
 )
 from etools.applications.partners.views.v3 import PMPDropdownsListApiView
@@ -66,6 +67,11 @@ urlpatterns = [
         'interventions/<int:pk>/cancel/',
         view=PMPInterventionCancelView.as_view(http_method_names=['patch']),
         name='intervention-cancel',
+    ),
+    path(
+        'interventions/<int:pk>/signature/',
+        view=PMPInterventionSignatureView.as_view(http_method_names=['patch']),
+        name='intervention-signature',
     ),
     path(
         'interventions/<int:pk>/unlock/',
