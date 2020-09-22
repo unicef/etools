@@ -296,6 +296,7 @@ class InterventionListSerializer(BaseInterventionListSerializer):
             'hq_support_cost',
             'cash_transfer_modalities',
             'unicef_review_type',
+            'cfei_number',
         )
 
 
