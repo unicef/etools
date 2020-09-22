@@ -59,7 +59,6 @@ from etools.applications.partners.serializers.exports.interventions import (
 from etools.applications.partners.serializers.interventions_v2 import (
     InterventionAmendmentCUSerializer,
     InterventionAttachmentSerializer,
-    InterventionBudgetCUSerializer,
     InterventionCreateUpdateSerializer,
     InterventionDetailSerializer,
     InterventionIndicatorSerializer,
@@ -124,7 +123,6 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
     )
 
     SERIALIZER_MAP = {
-        'planned_budget': InterventionBudgetCUSerializer,
         'planned_visits': PlannedVisitsCUSerializer,
         'result_links': InterventionResultCUSerializer
     }
@@ -154,7 +152,6 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
         :return: JSON
         """
         related_fields = [
-            'planned_budget',
             'planned_visits',
             'result_links'
         ]
@@ -281,12 +278,10 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
     permission_classes = (PartnershipManagerPermission,)
 
     SERIALIZER_MAP = {
-        'planned_budget': InterventionBudgetCUSerializer,
         'planned_visits': PlannedVisitsCUSerializer,
         'result_links': InterventionResultCUSerializer
     }
     related_fields = [
-        'planned_budget',
         'planned_visits',
         'result_links'
     ]

@@ -2333,8 +2333,8 @@ class Intervention(TimeStampedModel):
         super().save()
 
         if not oldself:
-            InterventionManagementBudget.objects.create(intervention=self)
-            InterventionBudget.objects.create(intervention=self)
+            self.management_budgets = InterventionManagementBudget.objects.create(intervention=self)
+            self.planned_budget = InterventionBudget.objects.create(intervention=self)
 
 
 class InterventionAmendment(TimeStampedModel):

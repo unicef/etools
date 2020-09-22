@@ -19,7 +19,7 @@
         ],
         "content-length": [
             "Content-Length",
-            "7870"
+            "8133"
         ]
     },
     "data": {
@@ -62,7 +62,18 @@
         "partner_authorized_officer_signatory": null,
         "partner_focal_points": [],
         "partner_vendor": null,
-        "planned_budget": null,
+        "planned_budget": {
+            "id": 101,
+            "intervention": 101,
+            "partner_contribution_local": "0.00",
+            "unicef_cash_local": "0.00",
+            "in_kind_amount_local":  "0.00",
+            "programme_effectiveness": "0.00",
+            "total_local":  "0.00",
+            "partner_contribution_percent": 0,
+            "total_unicef_contribution_local":  "0.00",
+            "currency": "USD"
+        },
         "planned_visits": [],
         "population_focus": null,
         "prc_review_attachment": null,
