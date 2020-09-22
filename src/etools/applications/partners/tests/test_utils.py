@@ -11,7 +11,7 @@ from etools.applications.attachments.tests.factories import AttachmentFileTypeFa
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
 from etools.applications.partners import utils
-from etools.applications.partners.models import Agreement, Intervention, InterventionBudget, InterventionResultLink
+from etools.applications.partners.models import Agreement, Intervention, InterventionResultLink
 from etools.applications.partners.tests.factories import AgreementFactory, InterventionFactory, PartnerFactory
 from etools.applications.reports.models import AppliedIndicator, IndicatorBlueprint, LowerResult, ResultType
 from etools.applications.reports.tests.factories import (
