@@ -203,6 +203,36 @@
                 }
             },
             {
+                "model": "partners.interventionmanagementbudget",
+                "pk": 1455,
+                "fields": {
+                    "intervention": 1455,
+                    "act1_unicef": 0,
+                    "act1_partner":  0,
+                    "act2_unicef": 0,
+                    "act2_partner":  0,
+                    "act3_unicef": 0,
+                    "act3_partner":  0
+                }
+            },
+            {
+                "model": "partners.interventionbudget",
+                "pk": 1455,
+                "fields": {
+                    "intervention": 1455,
+                    "partner_contribution": 0,
+                    "unicef_cash":  0,
+                    "in_kind_amount": 0,
+                    "total":  0,
+                    "partner_contribution_local": 0,
+                    "unicef_cash_local":  0,
+                    "in_kind_amount_local": 0,
+                    "currency":  "USD",
+                    "total_local": 0,
+                    "programme_effectiveness":  0
+                }
+            },
+            {
                 "model": "partners.agreement",
                 "pk": 1573,
                 "fields": {
@@ -364,6 +394,36 @@
                 }
             },
             {
+                "model": "partners.interventionmanagementbudget",
+                "pk": 1456,
+                "fields": {
+                    "intervention": 1456,
+                    "act1_unicef": 0,
+                    "act1_partner":  0,
+                    "act2_unicef": 0,
+                    "act2_partner":  0,
+                    "act3_unicef": 0,
+                    "act3_partner":  0
+                }
+            },
+            {
+                "model": "partners.interventionbudget",
+                "pk": 1456,
+                "fields": {
+                    "intervention": 1456,
+                    "partner_contribution": 0,
+                    "unicef_cash":  0,
+                    "in_kind_amount": 0,
+                    "total":  0,
+                    "partner_contribution_local": 0,
+                    "unicef_cash_local":  0,
+                    "in_kind_amount_local": 0,
+                    "currency":  "USD",
+                    "total_local": 0,
+                    "programme_effectiveness":  0
+                }
+            },
+            {
                 "model": "partners.agreement",
                 "pk": 1574,
                 "fields": {
@@ -513,5 +573,41 @@
                 }
             }
         ]
+    },
+    "mgmt_budget": {
+        "master": {
+            "model": "partners.interventionmanagementbudget",
+            "pk": 101,
+            "fields": {
+                "intervention": 101,
+                "act1_unicef": 0,
+                "act1_partner":  0,
+                "act2_unicef": 0,
+                "act2_partner":  0,
+                "act3_unicef": 0,
+                "act3_partner":  0
+            }
+        },
+        "deps": []
+    },
+    "planned_budget": {
+        "master": {
+            "model": "partners.interventionbudget",
+            "pk": 101,
+            "fields": {
+                "intervention": 101,
+                "partner_contribution": 0,
+                "unicef_cash":  0,
+                "in_kind_amount": 0,
+                "total":  0,
+                "partner_contribution_local": 0,
+                "unicef_cash_local":  0,
+                "in_kind_amount_local": 0,
+                "currency":  "USD",
+                "total_local": 0,
+                "programme_effectiveness":  0
+            }
+        },
+        "deps": []
     }
 }

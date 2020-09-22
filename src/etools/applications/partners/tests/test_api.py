@@ -4,14 +4,7 @@ from django.urls import reverse
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import PartnerOrganization, PartnerType
-from etools.applications.partners.tests.factories import (
-    AgreementAmendmentFactory,
-    AgreementFactory,
-    InterventionAmendmentFactory,
-    InterventionFactory,
-    InterventionResultLinkFactory,
-    PartnerFactory,
-)
+from etools.applications.partners.tests.factories import AgreementAmendmentFactory, AgreementFactory, PartnerFactory
 from etools.libraries.tests.api_checker import ApiCheckerMixin, AssertTimeStampedMixin, ViewSetChecker
 
 
@@ -46,14 +39,7 @@ class TestAPIIntervention(BaseTenantTestCase, metaclass=ViewSetChecker):
         reverse("partners_api:intervention-amendments"),
         reverse("partners_api:intervention-map"),
         reverse("partners_api:intervention-applied-indicators-list"),
-
     ]
-
-    def get_fixtures(cls):
-        return {'intervention': InterventionFactory(id=101),
-                'amendment': InterventionAmendmentFactory(),
-                'result': InterventionResultLinkFactory(),
-                }
 
 
 class TestPartners(BaseTenantTestCase, metaclass=ViewSetChecker):
