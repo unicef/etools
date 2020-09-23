@@ -129,6 +129,12 @@ class DetailedInterventionResponseMixin:
 
 class PMPInterventionListCreateView(APIActionsMixin, PMPInterventionMixin, InterventionListAPIView):
     permission_classes = (IsAuthenticated, PMPInterventionPermission)
+    search_terms = (
+        'title__icontains',
+        'agreement__partner__name__icontains',
+        'number__icontains',
+        'cfei_number__icontains',
+    )
 
     def get_serializer_class(self):
         if self.request.method == "GET":

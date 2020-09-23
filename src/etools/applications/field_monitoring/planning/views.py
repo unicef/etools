@@ -142,7 +142,7 @@ class MonitoringActivitiesViewSet(
         'tpm_partner', 'person_responsible', 'location__gateway', 'location_site',
     ).prefetch_related(
         'team_members', 'partners', 'interventions', 'cp_outputs'
-    )
+    ).order_by("-id")
     serializer_class = MonitoringActivitySerializer
     serializer_action_classes = {
         'list': MonitoringActivityLightSerializer

@@ -14,13 +14,12 @@ from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.core.tests.mixins import URLAssertionMixin
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory, FundsReservationItemFactory
-from etools.applications.partners.models import Intervention, InterventionManagementBudget, InterventionSupplyItem
+from etools.applications.partners.models import Intervention, InterventionSupplyItem
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
     FileTypeFactory,
     InterventionAttachmentFactory,
     InterventionFactory,
-    InterventionManagementBudgetFactory,
     InterventionResultLinkFactory,
     InterventionSupplyItemFactory,
     PartnerFactory,
@@ -138,6 +137,38 @@ class TestList(BaseInterventionTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+    def test_search_cfei_number(self):
+        for _ in range(3):
+            InterventionFactory()
+        intervention = InterventionFactory()
+        response = self.forced_auth_req(
+            "get",
+            reverse('pmp_v3:intervention-list'),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 4)
+
+        # set cfei_number value
+        cfei_number = "9723495790932423"
+        intervention.cfei_number = cfei_number
+        intervention.save()
+        self.assertEqual(
+            Intervention.objects.filter(
+                cfei_number__icontains=cfei_number,
+            ).count(),
+            1,
+        )
+
+        response = self.forced_auth_req(
+            "get",
+            reverse('pmp_v3:intervention-list'),
+            user=self.user,
+            data={"search": cfei_number[:-5]}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+
 
 class TestCreate(BaseInterventionTestCase):
     def test_post(self):
@@ -204,10 +235,6 @@ class TestCreate(BaseInterventionTestCase):
 class TestManagementBudget(BaseInterventionTestCase):
     def test_get(self):
         intervention = InterventionFactory()
-        budget_qs = InterventionManagementBudget.objects.filter(
-            intervention=intervention,
-        )
-        assert not budget_qs.exists()
         response = self.forced_auth_req(
             "get",
             reverse(
@@ -218,21 +245,21 @@ class TestManagementBudget(BaseInterventionTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.data
-        self.assertTrue(budget_qs.exists())
+        self.assertIsNotNone(intervention.management_budgets)
         self.assertEqual(data["act1_unicef"], "0.00")
         self.assertEqual(data["act1_partner"], "0.00")
+        self.assertEqual(data["act1_total"], "0.00")
         self.assertEqual(data["act2_unicef"], "0.00")
         self.assertEqual(data["act2_partner"], "0.00")
+        self.assertEqual(data["act2_total"], "0.00")
         self.assertEqual(data["act3_unicef"], "0.00")
         self.assertEqual(data["act3_partner"], "0.00")
+        self.assertEqual(data["act3_total"], "0.00")
+        self.assertEqual(data["total"], "0.00")
         self.assertNotIn('intervention', response.data)
 
     def test_put(self):
         intervention = InterventionFactory()
-        budget_qs = InterventionManagementBudget.objects.filter(
-            intervention=intervention,
-        )
-        assert not budget_qs.exists()
         response = self.forced_auth_req(
             "put",
             reverse(
@@ -251,18 +278,21 @@ class TestManagementBudget(BaseInterventionTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.data
-        self.assertTrue(budget_qs.exists())
+        self.assertIsNotNone(intervention.management_budgets)
         self.assertEqual(data["act1_unicef"], "1000.00")
         self.assertEqual(data["act1_partner"], "2000.00")
+        self.assertEqual(data["act1_total"], "3000.00")
         self.assertEqual(data["act2_unicef"], "3000.00")
         self.assertEqual(data["act2_partner"], "4000.00")
+        self.assertEqual(data["act2_total"], "7000.00")
         self.assertEqual(data["act3_unicef"], "5000.00")
         self.assertEqual(data["act3_partner"], "6000.00")
+        self.assertEqual(data["act3_total"], "11000.00")
+        self.assertEqual(data["total"], "21000.00")
         self.assertIn('intervention', response.data)
 
     def test_patch(self):
         intervention = InterventionFactory()
-        InterventionManagementBudgetFactory(intervention=intervention)
         response = self.forced_auth_req(
             "patch",
             reverse(
@@ -324,6 +354,38 @@ class TestSupplyItem(BaseInterventionTestCase):
         self.assertTrue(item_qs.exists())
         item = item_qs.first()
         self.assertEqual(item.intervention, self.intervention)
+        self.assertIsNone(item.result)
+
+    def test_post_with_cp_output(self):
+        item_qs = InterventionSupplyItem.objects.filter(
+            intervention=self.intervention,
+        )
+        result = InterventionResultLinkFactory(
+            cp_output__result_type__name=ResultType.OUTPUT,
+            intervention=self.intervention,
+        )
+        self.assertFalse(item_qs.exists())
+        response = self.forced_auth_req(
+            "post",
+            reverse(
+                "pmp_v3:intervention-supply-item",
+                args=[self.intervention.pk],
+            ),
+            data={
+                "title": "New Supply Item",
+                "unit_number": 10,
+                "unit_price": 2,
+                "result": result.pk,
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data["unit_number"], "10.00")
+        self.assertEqual(response.data["unit_price"], "2.00")
+        self.assertEqual(response.data["total_price"], "20.00")
+        self.assertTrue(item_qs.exists())
+        item = item_qs.first()
+        self.assertEqual(item.intervention, self.intervention)
+        self.assertEqual(item.result, result)
 
     def test_get(self):
         item = InterventionSupplyItemFactory(
@@ -433,6 +495,7 @@ class TestInterventionUpdate(BaseInterventionTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         intervention.refresh_from_db()
         self.assertEqual(intervention.agreement, agreement)
+        self.assertIsNotNone(response.data['management_budgets'])
         self.assertListEqual(
             sorted([fp.pk for fp in intervention.partner_focal_points.all()]),
             sorted([focal_1.pk, focal_2.pk]),

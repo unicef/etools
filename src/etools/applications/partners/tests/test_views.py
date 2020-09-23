@@ -51,6 +51,7 @@ from etools.applications.partners.tests.factories import (
     InterventionPlannedVisitsFactory,
     InterventionReportingPeriodFactory,
     InterventionResultLinkFactory,
+    InterventionSupplyItemFactory,
     PartnerFactory,
     PartnerStaffFactory,
     PlannedEngagementFactory,
@@ -481,14 +482,7 @@ class TestPartnershipViews(BaseTenantTestCase):
 
         cls.result_type = ResultTypeFactory()
         cls.result = ResultFactory(result_type=cls.result_type)
-        cls.partnership_budget = InterventionBudget.objects.create(
-            intervention=cls.intervention,
-            unicef_cash=100,
-            unicef_cash_local=10,
-            partner_contribution=200,
-            partner_contribution_local=20,
-            in_kind_amount_local=10,
-        )
+        cls.partnership_budget = cls.intervention.planned_budget
         cls.amendment = InterventionAmendment.objects.create(
             intervention=cls.intervention,
             types=[InterventionAmendment.RESULTS],
@@ -1136,6 +1130,7 @@ class TestInterventionViews(BaseTenantTestCase):
             user=self.partnership_manager_user,
             data=data
         )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
 
         self.intervention = response.data
         self.section = SectionFactory()
@@ -1199,15 +1194,6 @@ class TestInterventionViews(BaseTenantTestCase):
                     "quarter": 'q1'
                 },
             ],
-            "planned_budget": {
-                "partner_contribution": "2.00",
-                "unicef_cash": "3.00",
-                "in_kind_amount": "1.00",
-                "partner_contribution_local": "3.00",
-                "unicef_cash_local": "3.00",
-                "in_kind_amount_local": "0.00",
-                "total": "6.00"
-            },
             "sections": [self.section.id],
             "result_links": [
                 {
@@ -1226,11 +1212,15 @@ class TestInterventionViews(BaseTenantTestCase):
             user=self.partnership_manager_user,
             data=self.intervention_data
         )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
 
         self.intervention_data = response.data
         self.intervention_obj = Intervention.objects.get(id=self.intervention_data["id"])
         self.planned_visit = InterventionPlannedVisits.objects.create(
             intervention=self.intervention_obj
+        )
+        self.supply_item = InterventionSupplyItemFactory(
+            intervention=self.intervention_obj, unit_number=1, unit_price=1
         )
         attachment = "attachment.pdf"
         self.attachment = InterventionAttachment.objects.create(
@@ -2057,15 +2047,6 @@ class TestPartnershipDashboardView(BaseTenantTestCase):
             "offices": [],
             "fr_numbers": None,
             "population_focus": "Some focus",
-            "planned_budget": {
-                "partner_contribution": "2.00",
-                "unicef_cash": "3.00",
-                "in_kind_amount": "1.00",
-                "partner_contribution_local": "3.00",
-                "unicef_cash_local": "3.00",
-                "in_kind_amount_local": "0.00",
-                "total": "6.00"
-            },
             "sections": [self.section.id],
             "result_links": [
                 {

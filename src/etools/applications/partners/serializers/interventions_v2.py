@@ -47,6 +47,8 @@ class InterventionBudgetCUSerializer(serializers.ModelSerializer):
     partner_contribution_local = serializers.DecimalField(max_digits=20, decimal_places=2)
     unicef_cash_local = serializers.DecimalField(max_digits=20, decimal_places=2)
     in_kind_amount_local = serializers.DecimalField(max_digits=20, decimal_places=2)
+    total_unicef_contribution_local = serializers.DecimalField(max_digits=20, decimal_places=2)
+    total_local = serializers.DecimalField(max_digits=20, decimal_places=2)
 
     class Meta:
         model = InterventionBudget
@@ -296,6 +298,7 @@ class InterventionListSerializer(BaseInterventionListSerializer):
             'hq_support_cost',
             'cash_transfer_modalities',
             'unicef_review_type',
+            'cfei_number',
         )
 
 
@@ -808,6 +811,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "id",
             "in_amendment",
             "location_names",
+            "cfei_number",
             "location_p_codes",
             "locations",
             "modified",

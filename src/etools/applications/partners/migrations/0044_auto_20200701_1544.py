@@ -25,11 +25,6 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='intervention',
-            name='cfei_number',
-            field=models.CharField(blank=True, default='', max_length=150, verbose_name='UNPP Number'),
-        ),
-        migrations.AddField(
-            model_name='intervention',
             name='context',
             field=models.TextField(blank=True, verbose_name='Context'),
         ),

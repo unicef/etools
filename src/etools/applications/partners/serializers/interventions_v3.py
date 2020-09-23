@@ -50,16 +50,34 @@ class InterventionSupplyItemSerializer(serializers.ModelSerializer):
 
 
 class InterventionManagementBudgetSerializer(serializers.ModelSerializer):
+    act1_total = serializers.SerializerMethodField()
+    act2_total = serializers.SerializerMethodField()
+    act3_total = serializers.SerializerMethodField()
+    total = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True)
+
     class Meta:
         model = InterventionManagementBudget
         fields = (
             "act1_unicef",
             "act1_partner",
+            "act1_total",
             "act2_unicef",
             "act2_partner",
+            "act2_total",
             "act3_unicef",
             "act3_partner",
+            "act3_total",
+            "total",
         )
+
+    def get_act1_total(self, obj):
+        return str(obj.act1_unicef + obj.act1_partner)
+
+    def get_act2_total(self, obj):
+        return str(obj.act2_unicef + obj.act2_partner)
+
+    def get_act3_total(self, obj):
+        return str(obj.act3_unicef + obj.act3_partner)
 
 
 class InterventionDetailSerializer(serializers.ModelSerializer):

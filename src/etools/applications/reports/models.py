@@ -361,9 +361,7 @@ class LowerResult(TimeStampedModel):
     )
 
     name = models.CharField(verbose_name=_("Name"), max_length=500)
-
-    # automatically assigned unless assigned manually in the UI (Lower level WBS - like code)
-    code = models.CharField(verbose_name=_("Code"), max_length=50)
+    code = models.CharField(verbose_name=_("Code"), max_length=50, blank=True, null=True)
 
     def __str__(self):
         return '{}: {}'.format(
@@ -374,19 +372,6 @@ class LowerResult(TimeStampedModel):
     class Meta:
         unique_together = (('result_link', 'code'),)
         ordering = ('created',)
-
-    def save(self, **kwargs):
-        if not self.code:
-            try:
-                latest_ll_id = self.result_link.ll_results.latest('id').id
-            except LowerResult.DoesNotExist:
-                latest_ll_id = 0
-
-            self.code = '{}-{}'.format(
-                self.result_link.intervention.id,
-                latest_ll_id + 1
-            )
-        super().save(**kwargs)
 
 
 class Unit(models.Model):
@@ -926,6 +911,7 @@ class InterventionActivity(TimeStampedModel):
     class Meta:
         verbose_name = _('Intervention Activity')
         verbose_name_plural = _('Intervention Activities')
+        ordering = ('id',)
 
     def __str__(self):
         return "{} {}".format(self.result, self.name)
@@ -954,6 +940,10 @@ class InterventionActivity(TimeStampedModel):
             return 0
         return self.cso_cash / self.total * 100
 
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self.result.result_link.intervention.planned_budget.calc_totals()
+
 
 class InterventionActivityItem(TimeStampedModel):
     activity = models.ForeignKey(
@@ -978,6 +968,11 @@ class InterventionActivityItem(TimeStampedModel):
         max_digits=20,
         default=0,
     )
+
+    class Meta:
+        verbose_name = _('Intervention Activity Item')
+        verbose_name_plural = _('Intervention Activity Items')
+        ordering = ('id',)
 
     def __str__(self):
         return "{} {}".format(self.activity, self.name)

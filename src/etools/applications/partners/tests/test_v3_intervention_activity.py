@@ -188,6 +188,32 @@ class TestFunctionality(BaseTestCase):
             'Q1'
         )
 
+    def test_ordering_preserved_on_edit(self):
+        second_activity = InterventionActivityFactory(result=self.pd_output)
+
+        def check_ordering():
+            details_response = self.forced_auth_req(
+                'get',
+                reverse('pmp_v3:intervention-detail', args=[self.intervention.id]),
+                user=self.user,
+            )
+            self.assertEqual(details_response.status_code, status.HTTP_200_OK)
+            self.assertListEqual(
+                [a['id'] for a in details_response.data['result_links'][0]['ll_results'][0]['activities']],
+                [self.activity.id, second_activity.id]
+            )
+
+        check_ordering()
+
+        response = self.forced_auth_req(
+            'patch', self.detail_url,
+            user=self.user,
+            data={'context_details': 'test'}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        check_ordering()
+
 
 class TestPermissions(BaseTestCase):
     def test_create_for_unknown_user(self):
