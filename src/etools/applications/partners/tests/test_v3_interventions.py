@@ -260,8 +260,6 @@ class TestManagementBudget(BaseInterventionTestCase):
 
     def test_patch(self):
         intervention = InterventionFactory()
-        # todo
-        # InterventionManagementBudgetFactory(intervention=intervention)
         response = self.forced_auth_req(
             "patch",
             reverse(

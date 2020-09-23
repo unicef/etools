@@ -483,15 +483,6 @@ class TestPartnershipViews(BaseTenantTestCase):
         cls.result_type = ResultTypeFactory()
         cls.result = ResultFactory(result_type=cls.result_type)
         cls.partnership_budget = cls.intervention.planned_budget
-        # todo
-        # InterventionBudget.objects.create(
-        #     intervention=cls.intervention,
-        #     unicef_cash=100,
-        #     unicef_cash_local=10,
-        #     partner_contribution=200,
-        #     partner_contribution_local=20,
-        #     in_kind_amount_local=10,
-        # )
         cls.amendment = InterventionAmendment.objects.create(
             intervention=cls.intervention,
             types=[InterventionAmendment.RESULTS],
