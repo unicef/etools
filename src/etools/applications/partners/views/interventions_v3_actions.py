@@ -25,22 +25,25 @@ class PMPInterventionAcceptView(PMPInterventionMixin, InterventionDetailAPIView)
             recipients = [u.email for u in pd.partner_focal_points.all()]
             template_name = 'partners/intervention/unicef_accepted'
 
-        # send notification
-        context = {
-            "reference_number": pd.reference_number,
-            "partner_name": str(pd.agreement.partner),
-            "pd_link": reverse(
-                "pmp_v3:intervention-detail",
-                args=[pd.pk]
-            ),
-        }
-        send_notification_with_template(
-            recipients=recipients,
-            template_name=template_name,
-            context=context
-        )
+        response = super().update(request, *args, **kwargs)
 
-        return super().update(request, *args, **kwargs)
+        if response.status_code == 200:
+            # send notification
+            context = {
+                "reference_number": pd.reference_number,
+                "partner_name": str(pd.agreement.partner),
+                "pd_link": reverse(
+                    "pmp_v3:intervention-detail",
+                    args=[pd.pk]
+                ),
+            }
+            send_notification_with_template(
+                recipients=recipients,
+                template_name=template_name,
+                context=context
+            )
+
+        return response
 
 
 class PMPInterventionAcceptReviewView(PMPInterventionMixin, InterventionDetailAPIView):
@@ -55,27 +58,30 @@ class PMPInterventionAcceptReviewView(PMPInterventionMixin, InterventionDetailAP
             request.data.update({"unicef_accepted": True})
         request.data.update({"status": Intervention.REVIEW})
 
-        # send notification
-        recipients = [
-            u.email for u in pd.partner_focal_points.all()
-        ] + [
-            u.email for u in pd.unicef_focal_points.all()
-        ]
-        context = {
-            "reference_number": pd.reference_number,
-            "partner_name": str(pd.agreement.partner),
-            "pd_link": reverse(
-                "pmp_v3:intervention-detail",
-                args=[pd.pk]
-            ),
-        }
-        send_notification_with_template(
-            recipients=recipients,
-            template_name='partners/intervention/unicef_accepted_review',
-            context=context
-        )
+        response = super().update(request, *args, **kwargs)
 
-        return super().update(request, *args, **kwargs)
+        if response.status_code == 200:
+            # send notification
+            recipients = [
+                u.email for u in pd.partner_focal_points.all()
+            ] + [
+                u.email for u in pd.unicef_focal_points.all()
+            ]
+            context = {
+                "reference_number": pd.reference_number,
+                "partner_name": str(pd.agreement.partner),
+                "pd_link": reverse(
+                    "pmp_v3:intervention-detail",
+                    args=[pd.pk]
+                ),
+            }
+            send_notification_with_template(
+                recipients=recipients,
+                template_name='partners/intervention/unicef_accepted_review',
+                context=context
+            )
+
+        return response
 
 
 class PMPInterventionReviewView(PMPInterventionMixin, InterventionDetailAPIView):
@@ -88,27 +94,30 @@ class PMPInterventionReviewView(PMPInterventionMixin, InterventionDetailAPIView)
         request.data.clear()
         request.data.update({"status": Intervention.REVIEW})
 
-        # send notification
-        recipients = [
-            u.email for u in pd.partner_focal_points.all()
-        ] + [
-            u.email for u in pd.unicef_focal_points.all()
-        ]
-        context = {
-            "reference_number": pd.reference_number,
-            "partner_name": str(pd.agreement.partner),
-            "pd_link": reverse(
-                "pmp_v3:intervention-detail",
-                args=[pd.pk]
-            ),
-        }
-        send_notification_with_template(
-            recipients=recipients,
-            template_name='partners/intervention/unicef_reviewed',
-            context=context
-        )
+        response = super().update(request, *args, **kwargs)
 
-        return super().update(request, *args, **kwargs)
+        if response.status_code == 200:
+            # send notification
+            recipients = [
+                u.email for u in pd.partner_focal_points.all()
+            ] + [
+                u.email for u in pd.unicef_focal_points.all()
+            ]
+            context = {
+                "reference_number": pd.reference_number,
+                "partner_name": str(pd.agreement.partner),
+                "pd_link": reverse(
+                    "pmp_v3:intervention-detail",
+                    args=[pd.pk]
+                ),
+            }
+            send_notification_with_template(
+                recipients=recipients,
+                template_name='partners/intervention/unicef_reviewed',
+                context=context
+            )
+
+        return response
 
 
 class PMPInterventionCancelView(PMPInterventionMixin, InterventionDetailAPIView):
@@ -121,27 +130,30 @@ class PMPInterventionCancelView(PMPInterventionMixin, InterventionDetailAPIView)
         request.data.clear()
         request.data.update({"status": Intervention.CANCELLED})
 
-        # send notification
-        recipients = [
-            u.email for u in pd.partner_focal_points.all()
-        ] + [
-            u.email for u in pd.unicef_focal_points.all()
-        ]
-        context = {
-            "reference_number": pd.reference_number,
-            "partner_name": str(pd.agreement.partner),
-            "pd_link": reverse(
-                "pmp_v3:intervention-detail",
-                args=[pd.pk]
-            ),
-        }
-        send_notification_with_template(
-            recipients=recipients,
-            template_name='partners/intervention/unicef_cancel',
-            context=context
-        )
+        response = super().update(request, *args, **kwargs)
 
-        return super().update(request, *args, **kwargs)
+        if response.status_code == 200:
+            # send notification
+            recipients = [
+                u.email for u in pd.partner_focal_points.all()
+            ] + [
+                u.email for u in pd.unicef_focal_points.all()
+            ]
+            context = {
+                "reference_number": pd.reference_number,
+                "partner_name": str(pd.agreement.partner),
+                "pd_link": reverse(
+                    "pmp_v3:intervention-detail",
+                    args=[pd.pk]
+                ),
+            }
+            send_notification_with_template(
+                recipients=recipients,
+                template_name='partners/intervention/unicef_cancel',
+                context=context
+            )
+
+        return response
 
 
 class PMPInterventionTerminateView(PMPInterventionMixin, InterventionDetailAPIView):
@@ -154,27 +166,30 @@ class PMPInterventionTerminateView(PMPInterventionMixin, InterventionDetailAPIVi
         request.data.clear()
         request.data.update({"status": Intervention.TERMINATED})
 
-        # send notification
-        recipients = [
-            u.email for u in pd.partner_focal_points.all()
-        ] + [
-            u.email for u in pd.unicef_focal_points.all()
-        ]
-        context = {
-            "reference_number": pd.reference_number,
-            "partner_name": str(pd.agreement.partner),
-            "pd_link": reverse(
-                "pmp_v3:intervention-detail",
-                args=[pd.pk]
-            ),
-        }
-        send_notification_with_template(
-            recipients=recipients,
-            template_name='partners/intervention/unicef_terminated',
-            context=context
-        )
+        response = super().update(request, *args, **kwargs)
 
-        return super().update(request, *args, **kwargs)
+        if response.status_code == 200:
+            # send notification
+            recipients = [
+                u.email for u in pd.partner_focal_points.all()
+            ] + [
+                u.email for u in pd.unicef_focal_points.all()
+            ]
+            context = {
+                "reference_number": pd.reference_number,
+                "partner_name": str(pd.agreement.partner),
+                "pd_link": reverse(
+                    "pmp_v3:intervention-detail",
+                    args=[pd.pk]
+                ),
+            }
+            send_notification_with_template(
+                recipients=recipients,
+                template_name='partners/intervention/unicef_terminated',
+                context=context
+            )
+
+        return response
 
 
 class PMPInterventionSignatureView(PMPInterventionMixin, InterventionDetailAPIView):
@@ -187,27 +202,30 @@ class PMPInterventionSignatureView(PMPInterventionMixin, InterventionDetailAPIVi
         request.data.clear()
         request.data.update({"status": Intervention.SIGNATURE})
 
-        # send notification
-        recipients = [
-            u.email for u in pd.partner_focal_points.all()
-        ] + [
-            u.email for u in pd.unicef_focal_points.all()
-        ]
-        context = {
-            "reference_number": pd.reference_number,
-            "partner_name": str(pd.agreement.partner),
-            "pd_link": reverse(
-                "pmp_v3:intervention-detail",
-                args=[pd.pk]
-            ),
-        }
-        send_notification_with_template(
-            recipients=recipients,
-            template_name='partners/intervention/unicef_signature',
-            context=context
-        )
+        response = super().update(request, *args, **kwargs)
 
-        return super().update(request, *args, **kwargs)
+        if response.status_code == 200:
+            # send notification
+            recipients = [
+                u.email for u in pd.partner_focal_points.all()
+            ] + [
+                u.email for u in pd.unicef_focal_points.all()
+            ]
+            context = {
+                "reference_number": pd.reference_number,
+                "partner_name": str(pd.agreement.partner),
+                "pd_link": reverse(
+                    "pmp_v3:intervention-detail",
+                    args=[pd.pk]
+                ),
+            }
+            send_notification_with_template(
+                recipients=recipients,
+                template_name='partners/intervention/unicef_signature',
+                context=context
+            )
+
+        return response
 
 
 class PMPInterventionUnlockView(PMPInterventionMixin, InterventionDetailAPIView):
@@ -227,22 +245,25 @@ class PMPInterventionUnlockView(PMPInterventionMixin, InterventionDetailAPIView)
             recipients = [u.email for u in pd.partner_focal_points.all()]
             template_name = 'partners/intervention/unicef_unlocked'
 
-        # send notification
-        context = {
-            "reference_number": pd.reference_number,
-            "partner_name": str(pd.agreement.partner),
-            "pd_link": reverse(
-                "pmp_v3:intervention-detail",
-                args=[pd.pk]
-            ),
-        }
-        send_notification_with_template(
-            recipients=recipients,
-            template_name=template_name,
-            context=context
-        )
+        response = super().update(request, *args, **kwargs)
 
-        return super().update(request, *args, **kwargs)
+        if response.status_code == 200:
+            # send notification
+            context = {
+                "reference_number": pd.reference_number,
+                "partner_name": str(pd.agreement.partner),
+                "pd_link": reverse(
+                    "pmp_v3:intervention-detail",
+                    args=[pd.pk]
+                ),
+            }
+            send_notification_with_template(
+                recipients=recipients,
+                template_name=template_name,
+                context=context
+            )
+
+        return response
 
 
 class PMPInterventionSendToPartnerView(PMPInterventionMixin, InterventionDetailAPIView):
@@ -253,23 +274,26 @@ class PMPInterventionSendToPartnerView(PMPInterventionMixin, InterventionDetailA
         request.data.clear()
         request.data.update({"unicef_court": False})
 
-        # notify partner
-        recipients = [u.email for u in pd.partner_focal_points.all()]
-        context = {
-            "reference_number": pd.reference_number,
-            "partner_name": str(pd.agreement.partner),
-            "pd_link": reverse(
-                "pmp_v3:intervention-detail",
-                args=[pd.pk]
-            ),
-        }
-        send_notification_with_template(
-            recipients=recipients,
-            template_name='partners/intervention/send_to_partner',
-            context=context
-        )
+        response = super().update(request, *args, **kwargs)
 
-        return super().update(request, *args, **kwargs)
+        if response.status_code == 200:
+            # notify partner
+            recipients = [u.email for u in pd.partner_focal_points.all()]
+            context = {
+                "reference_number": pd.reference_number,
+                "partner_name": str(pd.agreement.partner),
+                "pd_link": reverse(
+                    "pmp_v3:intervention-detail",
+                    args=[pd.pk]
+                ),
+            }
+            send_notification_with_template(
+                recipients=recipients,
+                template_name='partners/intervention/send_to_partner',
+                context=context
+            )
+
+        return response
 
 
 class PMPInterventionSendToUNICEFView(PMPInterventionMixin, InterventionDetailAPIView):
@@ -280,20 +304,23 @@ class PMPInterventionSendToUNICEFView(PMPInterventionMixin, InterventionDetailAP
         request.data.clear()
         request.data.update({"unicef_court": True})
 
-        # notify unicef
-        recipients = [u.email for u in pd.unicef_focal_points.all()]
-        context = {
-            "reference_number": pd.reference_number,
-            "partner_name": str(pd.agreement.partner),
-            "pd_link": reverse(
-                "pmp_v3:intervention-detail",
-                args=[pd.pk]
-            ),
-        }
-        send_notification_with_template(
-            recipients=recipients,
-            template_name='partners/intervention/send_to_unicef',
-            context=context
-        )
+        response = super().update(request, *args, **kwargs)
 
-        return super().update(request, *args, **kwargs)
+        if response.status_code == 200:
+            # notify unicef
+            recipients = [u.email for u in pd.unicef_focal_points.all()]
+            context = {
+                "reference_number": pd.reference_number,
+                "partner_name": str(pd.agreement.partner),
+                "pd_link": reverse(
+                    "pmp_v3:intervention-detail",
+                    args=[pd.pk]
+                ),
+            }
+            send_notification_with_template(
+                recipients=recipients,
+                template_name='partners/intervention/send_to_unicef',
+                context=context
+            )
+
+        return response

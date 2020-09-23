@@ -844,6 +844,18 @@ class TestInterventionCancel(BaseInterventionActionTestCase):
         self.assertIn("PD has already been cancelled.", response.data)
         mock_send.assert_not_called()
 
+    def test_invalid(self):
+        mock_send = mock.Mock()
+        self.intervention.status = Intervention.SUSPENDED
+        self.intervention.save()
+
+        with mock.patch(self.notify_path, mock_send):
+            response = self.forced_auth_req("patch", self.url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        mock_send.assert_not_called()
+        self.intervention.refresh_from_db()
+        self.assertEqual(self.intervention.status, Intervention.SUSPENDED)
+
 
 class TestInterventionTerminate(BaseInterventionActionTestCase):
     def setUp(self):
