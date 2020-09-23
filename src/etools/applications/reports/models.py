@@ -911,6 +911,7 @@ class InterventionActivity(TimeStampedModel):
     class Meta:
         verbose_name = _('Intervention Activity')
         verbose_name_plural = _('Intervention Activities')
+        ordering = ('id',)
 
     def __str__(self):
         return "{} {}".format(self.result, self.name)
@@ -967,6 +968,11 @@ class InterventionActivityItem(TimeStampedModel):
         max_digits=20,
         default=0,
     )
+
+    class Meta:
+        verbose_name = _('Intervention Activity Item')
+        verbose_name_plural = _('Intervention Activity Items')
+        ordering = ('id',)
 
     def __str__(self):
         return "{} {}".format(self.activity, self.name)
