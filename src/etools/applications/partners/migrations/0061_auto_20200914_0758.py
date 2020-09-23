@@ -13,6 +13,7 @@ def create_budgets(apps, schema_editor):
             intervention=i,
             defaults={
                 "total": 0,
+                "total_local": 0,
             }
         )
         InterventionManagementBudget.objects.get_or_create(intervention=i)
