@@ -197,13 +197,18 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
 
         # available actions only provided in Development status
         if obj.status != obj.DRAFT:
+            # need to add terminate action for Senior Management team
+            if self._is_management():
+                if obj.status in [obj.ACTIVE, obj.SIGNED]:
+                    available_actions.append("terminate")
             return available_actions
 
         # PD is assigned to UNICEF
         if obj.unicef_court:
             # UNICEF User with Senior Management Team
             if self._is_management():
-                available_actions.append("cancel")
+                if obj.status in [obj.DRAFT, obj.REVIEW, obj.SIGNATURE]:
+                    available_actions.append("cancel")
 
             # budget owner
             if obj.budget_owner == user:

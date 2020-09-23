@@ -95,7 +95,7 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
         ]
         self.assertEqual(sorted(available_actions), sorted(expected_actions))
 
-    def test_available_actions_management(self):
+    def test_available_actions_management_cancel(self):
         pd = InterventionFactory()
         self.unicef_user.groups.add(
             GroupFactory(name=SENIOR_MANAGEMENT_GROUP),
@@ -103,6 +103,16 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
         self.assertEqual(pd.status, pd.DRAFT)
         available_actions = self.unicef_serializer.get_available_actions(pd)
         expected_actions = self.default_actions + ["cancel"]
+        self.assertEqual(sorted(available_actions), sorted(expected_actions))
+
+    def test_available_actions_management_terminate(self):
+        pd = InterventionFactory(status=Intervention.ACTIVE)
+        self.unicef_user.groups.add(
+            GroupFactory(name=SENIOR_MANAGEMENT_GROUP),
+        )
+        self.assertEqual(pd.status, pd.ACTIVE)
+        available_actions = self.unicef_serializer.get_available_actions(pd)
+        expected_actions = self.default_actions + ["terminate"]
         self.assertEqual(sorted(available_actions), sorted(expected_actions))
 
     def test_available_actions_unicef(self):
