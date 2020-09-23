@@ -9,7 +9,12 @@ def create_budgets(apps, schema_editor):
     InterventionManagementBudget = apps.get_model('partners', 'InterventionManagementBudget')
 
     for i in Intervention.objects.all():
-        InterventionBudget.objects.get_or_create(intervention=i)
+        InterventionBudget.objects.get_or_create(
+            intervention=i,
+            defaults={
+                "total": 0,
+            }
+        )
         InterventionManagementBudget.objects.get_or_create(intervention=i)
 
 
