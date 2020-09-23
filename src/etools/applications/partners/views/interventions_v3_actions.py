@@ -116,8 +116,41 @@ class PMPInterventionCancelView(PMPInterventionMixin, InterventionDetailAPIView)
         if self.is_partner_staff():
             return HttpResponseForbidden()
         pd = self.get_object()
-        if pd.status == Intervention.TERMINATED:
+        if pd.status == Intervention.CANCELLED:
             raise ValidationError("PD has already been cancelled.")
+        request.data.clear()
+        request.data.update({"status": Intervention.CANCELLED})
+
+        # send notification
+        recipients = [
+            u.email for u in pd.partner_focal_points.all()
+        ] + [
+            u.email for u in pd.unicef_focal_points.all()
+        ]
+        context = {
+            "reference_number": pd.reference_number,
+            "partner_name": str(pd.agreement.partner),
+            "pd_link": reverse(
+                "pmp_v3:intervention-detail",
+                args=[pd.pk]
+            ),
+        }
+        send_notification_with_template(
+            recipients=recipients,
+            template_name='partners/intervention/unicef_cancel',
+            context=context
+        )
+
+        return super().update(request, *args, **kwargs)
+
+
+class PMPInterventionTerminateView(PMPInterventionMixin, InterventionDetailAPIView):
+    def update(self, request, *args, **kwargs):
+        if self.is_partner_staff():
+            return HttpResponseForbidden()
+        pd = self.get_object()
+        if pd.status == Intervention.TERMINATED:
+            raise ValidationError("PD has already been terminated.")
         request.data.clear()
         request.data.update({"status": Intervention.TERMINATED})
 
@@ -137,7 +170,7 @@ class PMPInterventionCancelView(PMPInterventionMixin, InterventionDetailAPIView)
         }
         send_notification_with_template(
             recipients=recipients,
-            template_name='partners/intervention/unicef_cancel',
+            template_name='partners/intervention/unicef_terminated',
             context=context
         )
 

@@ -833,7 +833,7 @@ class TestInterventionCancel(BaseInterventionActionTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         mock_send.assert_called()
         self.intervention.refresh_from_db()
-        self.assertEqual(self.intervention.status, Intervention.TERMINATED)
+        self.assertEqual(self.intervention.status, Intervention.CANCELLED)
         self.assertFalse(self.intervention.unicef_accepted)
 
         # unicef attempt to cancel again
@@ -842,6 +842,55 @@ class TestInterventionCancel(BaseInterventionActionTestCase):
             response = self.forced_auth_req("patch", self.url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("PD has already been cancelled.", response.data)
+        mock_send.assert_not_called()
+
+
+class TestInterventionTerminate(BaseInterventionActionTestCase):
+    def setUp(self):
+        super().setUp()
+        self.url = reverse(
+            'pmp_v3:intervention-terminate',
+            args=[self.intervention.pk],
+        )
+
+    def test_not_found(self):
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-terminate', args=[404]),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_partner_no_access(self):
+        intervention = InterventionFactory()
+        response = self.forced_auth_req(
+            "patch",
+            reverse(
+                'pmp_v3:intervention-terminate',
+                args=[intervention.pk],
+            ),
+            user=self.partner_user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_patch(self):
+        # unicef terminates
+        self.assertFalse(self.intervention.unicef_accepted)
+        mock_send = mock.Mock()
+        with mock.patch(self.notify_path, mock_send):
+            response = self.forced_auth_req("patch", self.url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mock_send.assert_called()
+        self.intervention.refresh_from_db()
+        self.assertEqual(self.intervention.status, Intervention.TERMINATED)
+        self.assertFalse(self.intervention.unicef_accepted)
+
+        # unicef attempt to terminate again
+        mock_send = mock.Mock()
+        with mock.patch(self.notify_path, mock_send):
+            response = self.forced_auth_req("patch", self.url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("PD has already been terminated.", response.data)
         mock_send.assert_not_called()
 
 
