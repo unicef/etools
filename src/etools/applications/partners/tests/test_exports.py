@@ -80,8 +80,11 @@ class TestModelExport(BaseTenantTestCase):
             partner_authorized_officer_signatory=cls.partnerstaff,
             country_programme=cls.agreement.country_programme,
         )
-        cls.intervention.planned_budget.currency = "USD"
-        cls.intervention.planned_budget.save()
+
+        cls.ib = cls.intervention.planned_budget
+        cls.ib.currency = "USD"
+        cls.ib.save()
+
         cls.planned_visit = PartnerPlannedVisitsFactory(partner=cls.partner)
 
         output_res_type, _ = ResultType.objects.get_or_create(name='Output')
