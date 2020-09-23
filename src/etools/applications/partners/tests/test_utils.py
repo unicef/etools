@@ -11,7 +11,7 @@ from etools.applications.attachments.tests.factories import AttachmentFileTypeFa
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
 from etools.applications.partners import utils
-from etools.applications.partners.models import Agreement, Intervention, InterventionBudget, InterventionResultLink
+from etools.applications.partners.models import Agreement, Intervention, InterventionResultLink
 from etools.applications.partners.tests.factories import AgreementFactory, InterventionFactory, PartnerFactory
 from etools.applications.reports.models import AppliedIndicator, IndicatorBlueprint, LowerResult, ResultType
 from etools.applications.reports.tests.factories import (
@@ -66,14 +66,8 @@ def setup_intervention_test_data(test_case, include_results_and_indicators=False
     test_case.result_type = ResultType.objects.get_or_create(name=ResultType.OUTPUT)[0]
     test_case.result = ResultFactory(result_type=test_case.result_type)
 
-    test_case.partnership_budget = InterventionBudget.objects.create(
-        intervention=test_case.intervention,
-        unicef_cash=10,
-        unicef_cash_local=100,
-        partner_contribution=20,
-        partner_contribution_local=200,
-        in_kind_amount_local=10,
-    )
+    test_case.management_budget = test_case.intervention.management_budgets
+    test_case.partnership_budget = test_case.intervention.planned_budget
 
     # set up two frs not connected to any interventions
     test_case.fr_1 = FundsReservationHeaderFactory(intervention=None, currency='USD')

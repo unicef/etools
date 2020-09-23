@@ -939,6 +939,10 @@ class InterventionActivity(TimeStampedModel):
             return 0
         return self.cso_cash / self.total * 100
 
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self.result.result_link.intervention.planned_budget.calc_totals()
+
 
 class InterventionActivityItem(TimeStampedModel):
     activity = models.ForeignKey(

@@ -1921,10 +1921,12 @@ class Intervention(TimeStampedModel):
     context = models.TextField(
         verbose_name=_("Context"),
         blank=True,
+        null=True,
     )
     implementation_strategy = models.TextField(
         verbose_name=_("Implementation Strategy"),
         blank=True,
+        null=True,
     )
     gender_rating = models.CharField(
         verbose_name=_("Gender Rating"),
@@ -1935,6 +1937,7 @@ class Intervention(TimeStampedModel):
     gender_narrative = models.TextField(
         verbose_name=_("Gender Narrative"),
         blank=True,
+        null=True,
     )
     equity_rating = models.CharField(
         verbose_name=_("Equity Rating"),
@@ -1945,6 +1948,7 @@ class Intervention(TimeStampedModel):
     equity_narrative = models.TextField(
         verbose_name=_("Equity Narrative"),
         blank=True,
+        null=True,
     )
     sustainability_rating = models.CharField(
         verbose_name=_("Sustainability Rating"),
@@ -1955,10 +1959,12 @@ class Intervention(TimeStampedModel):
     sustainability_narrative = models.TextField(
         verbose_name=_("Sustainability Narrative"),
         blank=True,
+        null=True,
     )
     ip_program_contribution = models.TextField(
         verbose_name=_("Partner Non-Financial Contribution to Programme"),
         blank=True,
+        null=True,
     )
     budget_owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -1991,18 +1997,22 @@ class Intervention(TimeStampedModel):
     capacity_development = models.TextField(
         verbose_name=_("Capacity Development"),
         blank=True,
+        null=True,
     )
     other_info = models.TextField(
         verbose_name=_("Other Info"),
         blank=True,
+        null=True,
     )
     other_partners_involved = models.TextField(
         verbose_name=_("Other Partners Involved"),
         blank=True,
+        null=True,
     )
     technical_guidance = models.TextField(
         verbose_name=_("Technical Guidance"),
         blank=True,
+        null=True,
     )
 
     # Flag if this has been migrated to a status that is not correct
@@ -2094,15 +2104,15 @@ class Intervention(TimeStampedModel):
 
     @cached_property
     def total_partner_contribution(self):
-        return self.planned_budget.partner_contribution_local if hasattr(self, 'planned_budget') else 0
+        return self.planned_budget.partner_contribution_local
 
     @cached_property
     def total_unicef_cash(self):
-        return self.planned_budget.unicef_cash_local if hasattr(self, 'planned_budget') else 0
+        return self.planned_budget.unicef_cash_local
 
     @cached_property
     def total_in_kind_amount(self):
-        return self.planned_budget.in_kind_amount_local if hasattr(self, 'planned_budget') else 0
+        return self.planned_budget.in_kind_amount_local
 
     @cached_property
     def total_budget(self):
@@ -2321,6 +2331,10 @@ class Intervention(TimeStampedModel):
             self.update_ssfa_properties()
 
         super().save()
+
+        if not oldself:
+            self.management_budgets = InterventionManagementBudget.objects.create(intervention=self)
+            self.planned_budget = InterventionBudget.objects.create(intervention=self)
 
 
 class InterventionAmendment(TimeStampedModel):
@@ -2565,19 +2579,13 @@ class InterventionBudget(TimeStampedModel):
                         init = True
                     self.partner_contribution_local += activity.cso_cash
                     self.unicef_cash_local += activity.unicef_cash
-        try:
-            programme_effectiveness = 0
-            partner_contribution_local = self.partner_contribution_local
-            unicef_cash_local = self.unicef_cash_local
-            if not init:
-                init_totals()
-                init = True
-            programme_effectiveness += self.intervention.management_budgets.total
-            self.partner_contribution_local += self.intervention.management_budgets.partner_total
-            self.unicef_cash_local += self.intervention.management_budgets.unicef_total
-        except InterventionManagementBudget.DoesNotExist:
-            self.partner_contribution_local = partner_contribution_local
-            self.unicef_cash_local = unicef_cash_local
+
+        programme_effectiveness = 0
+        if not init:
+            init_totals()
+        programme_effectiveness += self.intervention.management_budgets.total
+        self.partner_contribution_local += self.intervention.management_budgets.partner_total
+        self.unicef_cash_local += self.intervention.management_budgets.unicef_total
 
         # in kind totals
         if self.intervention.supply_items.exists():
@@ -2587,7 +2595,10 @@ class InterventionBudget(TimeStampedModel):
 
         self.total = self.total_unicef_contribution() + self.partner_contribution
         self.total_local = self.total_unicef_contribution_local() + self.partner_contribution_local
-        self.programme_effectiveness = programme_effectiveness / self.total_local * 100
+        if self.total_local:
+            self.programme_effectiveness = programme_effectiveness / self.total_local * 100
+        else:
+            self.programme_effectiveness = 0
 
         if save:
             self.save()
@@ -2840,11 +2851,11 @@ class InterventionManagementBudget(TimeStampedModel):
         return self.partner_total + self.unicef_total
 
     def save(self, *args, **kwargs):
+        create = not self.pk
         super().save(*args, **kwargs)
-        try:
+        # planned budget is not created yet, so just skip; totals will be updated during planned budget creation
+        if not create:
             self.intervention.planned_budget.calc_totals()
-        except InterventionBudget.DoesNotExist:
-            pass
 
 
 class InterventionSupplyItem(TimeStampedModel):
@@ -2894,7 +2905,4 @@ class InterventionSupplyItem(TimeStampedModel):
     def save(self, *args, **kwargs):
         self.total_price = self.unit_number * self.unit_price
         super().save()
-        try:
-            self.intervention.planned_budget.calc_totals()
-        except InterventionBudget.DoesNotExist:
-            pass
+        self.intervention.planned_budget.calc_totals()

@@ -14,13 +14,12 @@ from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.core.tests.mixins import URLAssertionMixin
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory, FundsReservationItemFactory
-from etools.applications.partners.models import Intervention, InterventionManagementBudget, InterventionSupplyItem
+from etools.applications.partners.models import Intervention, InterventionSupplyItem
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
     FileTypeFactory,
     InterventionAttachmentFactory,
     InterventionFactory,
-    InterventionManagementBudgetFactory,
     InterventionResultLinkFactory,
     InterventionSupplyItemFactory,
     PartnerFactory,
@@ -203,10 +202,6 @@ class TestCreate(BaseInterventionTestCase):
 class TestManagementBudget(BaseInterventionTestCase):
     def test_get(self):
         intervention = InterventionFactory()
-        budget_qs = InterventionManagementBudget.objects.filter(
-            intervention=intervention,
-        )
-        assert not budget_qs.exists()
         response = self.forced_auth_req(
             "get",
             reverse(
@@ -217,21 +212,21 @@ class TestManagementBudget(BaseInterventionTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.data
-        self.assertTrue(budget_qs.exists())
+        self.assertIsNotNone(intervention.management_budgets)
         self.assertEqual(data["act1_unicef"], "0.00")
         self.assertEqual(data["act1_partner"], "0.00")
+        self.assertEqual(data["act1_total"], "0.00")
         self.assertEqual(data["act2_unicef"], "0.00")
         self.assertEqual(data["act2_partner"], "0.00")
+        self.assertEqual(data["act2_total"], "0.00")
         self.assertEqual(data["act3_unicef"], "0.00")
         self.assertEqual(data["act3_partner"], "0.00")
+        self.assertEqual(data["act3_total"], "0.00")
+        self.assertEqual(data["total"], "0.00")
         self.assertNotIn('intervention', response.data)
 
     def test_put(self):
         intervention = InterventionFactory()
-        budget_qs = InterventionManagementBudget.objects.filter(
-            intervention=intervention,
-        )
-        assert not budget_qs.exists()
         response = self.forced_auth_req(
             "put",
             reverse(
@@ -250,18 +245,21 @@ class TestManagementBudget(BaseInterventionTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.data
-        self.assertTrue(budget_qs.exists())
+        self.assertIsNotNone(intervention.management_budgets)
         self.assertEqual(data["act1_unicef"], "1000.00")
         self.assertEqual(data["act1_partner"], "2000.00")
+        self.assertEqual(data["act1_total"], "3000.00")
         self.assertEqual(data["act2_unicef"], "3000.00")
         self.assertEqual(data["act2_partner"], "4000.00")
+        self.assertEqual(data["act2_total"], "7000.00")
         self.assertEqual(data["act3_unicef"], "5000.00")
         self.assertEqual(data["act3_partner"], "6000.00")
+        self.assertEqual(data["act3_total"], "11000.00")
+        self.assertEqual(data["total"], "21000.00")
         self.assertIn('intervention', response.data)
 
     def test_patch(self):
         intervention = InterventionFactory()
-        InterventionManagementBudgetFactory(intervention=intervention)
         response = self.forced_auth_req(
             "patch",
             reverse(
@@ -432,6 +430,7 @@ class TestInterventionUpdate(BaseInterventionTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         intervention.refresh_from_db()
         self.assertEqual(intervention.agreement, agreement)
+        self.assertIsNotNone(response.data['management_budgets'])
         self.assertListEqual(
             sorted([fp.pk for fp in intervention.partner_focal_points.all()]),
             sorted([focal_1.pk, focal_2.pk]),
