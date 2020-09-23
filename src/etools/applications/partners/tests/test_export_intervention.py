@@ -79,8 +79,11 @@ class BaseInterventionModelExportTestCase(BaseTenantTestCase):
             partner_authorized_officer_signatory=partnerstaff,
             country_programme=agreement.country_programme,
         )
-        cls.intervention.planned_budget.currency = "USD"
-        cls.intervention.planned_budget.save()
+
+        cls.ib = cls.intervention.planned_budget
+        cls.ib.currency = "USD"
+        cls.ib.save()
+
         cls.attachment = InterventionAttachmentFactory(
             intervention=cls.intervention,
         )
