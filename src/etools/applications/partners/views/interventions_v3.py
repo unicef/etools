@@ -50,6 +50,7 @@ from etools.applications.partners.serializers.v3 import (
 from etools.applications.partners.views.interventions_v2 import (
     InterventionAttachmentUpdateDeleteView,
     InterventionDetailAPIView,
+    InterventionIndicatorsUpdateView,
     InterventionListAPIView,
 )
 from etools.applications.partners.views.v3 import PMPBaseViewMixin
@@ -379,6 +380,19 @@ class PMPInterventionAttachmentUpdateDeleteView(
 
     def get_queryset(self):
         return super().get_queryset().filter(intervention=self.get_root_object())
+
+    def get_intervention(self) -> Intervention:
+        return self.get_root_object()
+
+
+class PMPInterventionIndicatorsUpdateView(
+        DetailedInterventionResponseMixin,
+        InterventionIndicatorsUpdateView,
+):
+    def get_root_object(self):
+        if not hasattr(self, '_intervention'):
+            self._intervention = self.get_object().lower_result.result_link.intervention
+        return self._intervention
 
     def get_intervention(self) -> Intervention:
         return self.get_root_object()
