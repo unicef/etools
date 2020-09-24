@@ -58,7 +58,7 @@ class URLsTestCase(URLAssertionMixin, SimpleTestCase):
             ),
             (
                 'intervention-indicators-update',
-                'applied-indicators/1',
+                'applied-indicators/1/',
                 {'pk': 1},
             ),
         )
