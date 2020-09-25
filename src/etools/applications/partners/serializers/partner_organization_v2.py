@@ -106,6 +106,7 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = PartnerStaffMember
         fields = "__all__"
+        read_only_fields = ['user', ]
 
     def validate(self, data):
         data = super().validate(data)
@@ -123,10 +124,6 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
             raise ValidationError(
                 {'active': 'The email for the partner contact is used by another partner contact. Email has to be '
                            'unique to proceed {}'.format(email)})
-        else:
-            staff_member_qs = PartnerStaffMember.objects.filter(email=email)
-            if not self.instance and staff_member_qs.exists():
-                raise ValidationError({"email": "Email address in use already."})
 
         # make sure email addresses are not editable after creation.. user must be removed and re-added
         if self.instance:
@@ -143,6 +140,12 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
                     {'active':
                      'The Partner Staff member you are trying to activate is associated with a different partnership'}
                 )
+
+        if not self.instance:
+            if existing_user:
+                data['user'] = existing_user
+            else:
+                data['user'] = User.objects.create(username=email, email=email, is_staff=False)
 
         return data
 

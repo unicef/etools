@@ -1014,20 +1014,20 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(BaseTenantTestCase):
 
     def test_api_partners_update_with_members_exists(self):
         self.assertFalse(Activity.objects.exists())
-        response = self.forced_auth_req(
+        detail_response = self.forced_auth_req(
             'get',
             reverse('partners_api:partner-detail', args=[self.partner.pk]),
             user=self.unicef_staff,
         )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data["staff_members"]), 1)
-        self.assertEqual(response.data["staff_members"][0]["first_name"], "Mace")
+        self.assertEqual(detail_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(detail_response.data["staff_members"]), 1)
+        self.assertEqual(detail_response.data["staff_members"][0]["first_name"], "Mace")
 
         staff_members = [{
             "title": "Some title",
             "first_name": "John",
             "last_name": "Doe",
-            "email": response.data["staff_members"][0]["email"],
+            "email": detail_response.data["staff_members"][0]["email"],
             "active": True,
         }]
         data = {
@@ -1048,9 +1048,12 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(BaseTenantTestCase):
             response.data,
             {
                 "staff_members": {
-                    "email": [
+                    "active": [
                         ErrorDetail(
-                            string="Email address in use already.",
+                            string=(
+                                "The email for the partner contact is used by another partner contact. "
+                                "Email has to be unique to proceed {}"
+                            ).format(detail_response.data["staff_members"][0]["email"]),
                             code="invalid"
                         )
                     ]

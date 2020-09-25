@@ -175,8 +175,7 @@ class TestUsersListAPIView(BaseTenantTestCase):
     def test_partner_user(self):
         partner = PartnerFactory()
         partner_staff = partner.staff_members.all().first()
-        partner_user = UserFactory(email=partner_staff.email)
-        PartnerStaffFactory(partner=partner, user=partner_user)
+        partner_user = partner_staff.user
 
         self.assertTrue(get_user_model().objects.count() > 1)
         response = self.forced_auth_req(
