@@ -54,7 +54,7 @@ class PartnerStaffMemberForm(forms.ModelForm):
 
     class Meta:
         model = PartnerStaffMember
-        fields = '__all__'
+        exclude = ['user', ]
 
     def clean(self):
         cleaned_data = super().clean()
@@ -63,33 +63,22 @@ class PartnerStaffMemberForm(forms.ModelForm):
         validate_email(email)
         User = get_user_model()
 
-        partner_staff_members = []
-        for u in User.objects.filter(Q(username=email) | Q(email=email)).all():
-            staff_member = PartnerStaffMember.get_id_for_user(u)
-            if staff_member:
-                partner_staff_members.append(staff_member)
-
         if not self.instance.pk:
+            user = User.objects.filter(Q(username=email) | Q(email=email))
+            if user:
+                raise ValidationError("This user already exists: {}".format(email))
+
             cleaned_data['user'] = User.objects.create(email=email, username=email)
 
             # user should be active first time it's created
             if not active:
                 raise ValidationError({'active': self.ERROR_MESSAGES['active_by_default']})
 
-            if partner_staff_members:
-                raise ValidationError("This user already exists under a different partnership: {}".format(email))
-
         else:
             # make sure email addresses are not editable after creation.. user must be removed and re-added
             if email != self.instance.email:
                 raise ValidationError(
                     "User emails cannot be changed, please remove the user and add another one: {}".format(email))
-
-            # when adding the active tag to a previously untagged user
-            if active and not self.instance.active:
-                # make sure this user has not already been associated with another partnership.
-                if [x for x in partner_staff_members if x != self.instance.pk]:
-                    raise ValidationError({'active': self.ERROR_MESSAGES['user_unavailable']})
 
         return cleaned_data
 

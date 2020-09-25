@@ -40,7 +40,6 @@ class TestPartnersAdminForm(BaseTenantTestCase):
         )
 
 
-@skip('roman, fix this form')
 class TestPartnerStaffMemberForm(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
@@ -78,9 +77,7 @@ class TestPartnerStaffMemberForm(BaseTenantTestCase):
         form = forms.PartnerStaffMemberForm(self.data)
         self.assertFalse(form.is_valid())
         self.assertIn(
-            "This user already exists under a different partnership: {}".format(
-                staff.user.email
-            ),
+            "This user already exists: {}".format(staff.user.email),
             form.errors["__all__"]
         )
 
@@ -88,7 +85,11 @@ class TestPartnerStaffMemberForm(BaseTenantTestCase):
         """Duplicate emails are ok, if user not staff member already"""
         UserFactory(email="test@example.com")
         form = forms.PartnerStaffMemberForm(self.data)
-        self.assertTrue(form.is_valid())
+        self.assertFalse(form.is_valid())
+        self.assertIn(
+            "This user already exists: {}".format("test@example.com"),
+            form.errors["__all__"]
+        )
 
     def test_clean_email_change(self):
         """Email address may not be changed"""
@@ -129,20 +130,3 @@ class TestPartnerStaffMemberForm(BaseTenantTestCase):
         )
         form = forms.PartnerStaffMemberForm(self.data, instance=staff)
         self.assertTrue(form.is_valid(), form.errors)
-
-    def test_clean_activate_invalid(self):
-        """If staff member made active, invalid if user already associated
-        with another partner
-        """
-        partner = PartnerFactory()
-        staff = PartnerStaffFactory(
-            partner=partner,
-            active=False
-        )
-        self.data["email"] = staff.user.email
-        form = forms.PartnerStaffMemberForm(self.data, instance=staff)
-        self.assertFalse(form.is_valid())
-        self.assertIn(
-            "The Partner Staff member you are trying to activate is associated with a different partnership",
-            form.errors["active"]
-        )
