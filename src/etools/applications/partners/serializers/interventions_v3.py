@@ -53,6 +53,8 @@ class InterventionManagementBudgetSerializer(serializers.ModelSerializer):
     act1_total = serializers.SerializerMethodField()
     act2_total = serializers.SerializerMethodField()
     act3_total = serializers.SerializerMethodField()
+    partner_total = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True)
+    unicef_total = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True)
     total = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True)
 
     class Meta:
@@ -67,6 +69,8 @@ class InterventionManagementBudgetSerializer(serializers.ModelSerializer):
             "act3_unicef",
             "act3_partner",
             "act3_total",
+            "partner_total",
+            "unicef_total",
             "total",
         )
 
