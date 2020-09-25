@@ -10,7 +10,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from etools.applications.funds.models import FundsReservationItem
-from etools.applications.partners.models import FileType, Intervention, PartnerOrganization
+from etools.applications.partners.models import FileType, Intervention, PartnerOrganization, PartnerStaffMember
 from etools.applications.partners.permissions import IsPartnerUser
 from etools.applications.partners.views.v2 import choices_to_json_ready
 from etools.applications.reports.models import CountryProgramme, Result, ResultType
@@ -23,7 +23,7 @@ class PMPBaseViewMixin:
 
     def is_partner_staff(self):
         """Flag indicator whether user is a partner"""
-        return self.request.user.is_authenticated and self.request.user.profile.partner_staff_member
+        return self.request.user.is_authenticated and bool(PartnerStaffMember.get_for_user(self.request.user))
 
     def partners(self):
         """List of partners user associated with"""

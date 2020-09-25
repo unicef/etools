@@ -391,11 +391,9 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
                          ErrorDetail(string='Planned Visit can be set only for Government partners', code='invalid'))
 
     def test_update_staffmember_inactive(self):
-        partner_staff = PartnerStaffFactory(partner=self.partner)
         partner_staff_user = UserFactory(is_staff=True)
         partner_staff_user.groups.add(GroupFactory())
-        partner_staff_user.profile.partner_staff_member = partner_staff.pk
-        partner_staff_user.profile.save()
+        partner_staff = PartnerStaffFactory(partner=self.partner, user=partner_staff_user)
         agreement = AgreementFactory(
             status=Agreement.DRAFT,
             partner=self.partner,
@@ -785,11 +783,9 @@ class TestPartnerOrganizationAssessmentUpdateDeleteView(BaseTenantTestCase):
             vendor_number="DDD",
             short_name="Short name",
         )
-        cls.partner_staff = PartnerStaffFactory(partner=cls.partner)
         cls.partnership_manager_user = UserFactory(is_staff=True)
         cls.partnership_manager_user.groups.add(GroupFactory())
-        cls.partnership_manager_user.profile.partner_staff_member = cls.partner_staff.id
-        cls.partnership_manager_user.save()
+        cls.partner_staff = PartnerStaffFactory(partner=cls.partner, user=cls.partnership_manager_user)
 
     def setUp(self):
         self.assessment = AssessmentFactory(

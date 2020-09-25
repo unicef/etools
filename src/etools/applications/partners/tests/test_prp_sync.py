@@ -66,8 +66,8 @@ class TestPartnerStaffMembersImportTask(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.partner = PartnerFactory(staff_members=[])
-        cls.staff_member = PartnerStaffFactory(partner=cls.partner)
-        cls.staff_member_user = UserFactory(profile__partner_staff_member=cls.staff_member.id)
+        cls.staff_member_user = UserFactory()
+        cls.staff_member = PartnerStaffFactory(partner=cls.partner, user=cls.staff_member_user)
 
         cls.prp_partners_export_response_data = {
             'count': 2,

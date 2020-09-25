@@ -103,6 +103,8 @@ class InterventionPermissions(PMPPermissions):
         for example: in this case certain field are editable only when user adds an amendment. that means that we would
         need access to the old amendments, new amendments in order to check this.
         """
+        from etools.applications.partners.models import PartnerStaffMember
+
         super().__init__(**kwargs)
 
         # Inbound check flag is available here:
@@ -117,8 +119,8 @@ class InterventionPermissions(PMPPermissions):
         def prp_server_on():
             return tenant_switch_is_active("prp_server_on")
 
-        user_profile = self.user.profile
-        partner_staff_member_id = user_profile.partner_staff_member
+        partner_staff_member_id = PartnerStaffMember.get_id_for_user(self.user)
+
         # focal points are prefetched, so just cast to array to collect ids
         partner_focal_points = [fp.id for fp in self.instance.partner_focal_points.all()]
 
@@ -214,12 +216,16 @@ class PartnershipManagerPermission(permissions.BasePermission):
               - user is 'Partnership Manager' group member OR
               - user is listed as a partner staff member on the object, assuming the object has a partner attribute
         """
+        from etools.applications.partners.models import PartnerStaffMember
+
         has_access = user.is_staff or is_user_in_groups(user, ['Partnership Manager'])
+        if has_access:
+            return True
 
-        has_access = has_access or \
-            (hasattr(obj, 'partner') and
-             user.profile.partner_staff_member in obj.partner.staff_members.values_list('id', flat=True))
-
+        has_access = (
+            hasattr(obj, 'partner') and
+            PartnerStaffMember.get_id_for_user(user) in obj.partner.staff_members.values_list('id', flat=True)
+        )
         return has_access
 
     def has_permission(self, request, view):
@@ -246,8 +252,10 @@ class PartnershipManagerRepPermission(permissions.BasePermission):
     message = 'Accessing this item is not allowed.'
 
     def _has_access_permissions(self, user, object):
+        from etools.applications.partners.models import PartnerStaffMember
+
         if user.is_staff or \
-                user.profile.partner_staff_member in \
+                PartnerStaffMember.get_id_for_user(user) in \
                 object.partner.staff_members.values_list('id', flat=True):
             return True
 
@@ -271,8 +279,10 @@ class PartnershipSeniorManagerPermission(permissions.BasePermission):
     message = _('Accessing this item is not allowed.')
 
     def _has_access_permissions(self, user, object):
+        from etools.applications.partners.models import PartnerStaffMember
+
         if user.is_staff or \
-                user.profile.partner_staff_member in \
+                PartnerStaffMember.get_id_for_user(user) in \
                 object.partner.staff_members.values_list('id', flat=True):
             return True
 
@@ -367,7 +377,9 @@ def intervention_field_is_editable_permission(field):
 
 class IsPartnerUser(BasePermission):
     def has_permission(self, request, view):
-        return request.user.is_authenticated and request.user.profile.partner_staff_member
+        from etools.applications.partners.models import PartnerStaffMember
+
+        return request.user.is_authenticated and bool(PartnerStaffMember.get_for_user(request.user))
 
     def has_object_permission(self, request, view, obj):
         return True
@@ -391,23 +403,27 @@ def user_group_permission(*groups):
 
 class UserIsPartnerStaffMemberPermission(BasePermission):
     def has_permission(self, request, view):
-        return hasattr(request.user, 'profile') and bool(request.user.profile.partner_staff_member)
+        from etools.applications.partners.models import PartnerStaffMember
+
+        return bool(PartnerStaffMember.get_for_user(request.user))
 
 
 class UserIsNotPartnerStaffMemberPermission(BasePermission):
     def has_permission(self, request, view):
-        return hasattr(request.user, 'profile') and not bool(request.user.profile.partner_staff_member)
+        from etools.applications.partners.models import PartnerStaffMember
+
+        return not bool(PartnerStaffMember.get_for_user(request.user))
 
 
 class UserIsObjectPartnerStaffMember(UserIsPartnerStaffMemberPermission):
     def has_object_permission(self, request, view, obj):
+        from etools.applications.partners.models import PartnerStaffMember
+
         if not hasattr(obj, 'partner'):
             return False
 
-        if not hasattr(request.user, 'profile'):
-            return False
-
-        return request.user.profile.partner_staff_member in obj.partner.staff_members.values_list('id', flat=True)
+        partner_staff_members = obj.partner.staff_members.values_list('id', flat=True)
+        return PartnerStaffMember.get_id_for_user(request.user) in partner_staff_members
 
 
 class UserIsStaffPermission(BasePermission):

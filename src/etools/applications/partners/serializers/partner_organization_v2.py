@@ -56,7 +56,7 @@ class PartnerStaffMemberCreateSerializer(serializers.ModelSerializer):
             raise ValidationError({'active': 'New Staff Member needs to be active at the moment of creation'})
         try:
             existing_user = User.objects.filter(Q(username=email) | Q(email=email)).get()
-            if existing_user.profile.partner_staff_member:
+            if bool(PartnerStaffMember.get_for_user(existing_user)):
                 raise ValidationError("The email {} for the partner contact is used by another partner contact. "
                                       "Email has to be unique to proceed.".format(email))
         except User.DoesNotExist:
@@ -119,7 +119,7 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
             # this is a new user
             existing_user = None
 
-        if existing_user and not self.instance and existing_user.profile.partner_staff_member:
+        if existing_user and not self.instance and bool(PartnerStaffMember.get_for_user(existing_user)):
             raise ValidationError(
                 {'active': 'The email for the partner contact is used by another partner contact. Email has to be '
                            'unique to proceed {}'.format(email)})
@@ -138,8 +138,7 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
             # make sure this user has not already been associated with another partnership.
             # TODO: Users should have a json field with country partnerhip pairs not just partnerships
             if active and not self.instance.active and \
-                    existing_user and existing_user.profile.partner_staff_member and \
-                    existing_user.profile.partner_staff_member != self.instance.pk:
+                    existing_user and PartnerStaffMember.get_id_for_user(existing_user).id != self.instance.pk:
                 raise ValidationError(
                     {'active':
                      'The Partner Staff member you are trying to activate is associated with a different partnership'}

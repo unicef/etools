@@ -13,9 +13,7 @@ class TestPMPDropdownsListApiView(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
         cls.partner_user = UserFactory(is_staff=False)
-        staff_member = PartnerStaffFactory(email=cls.partner_user.email)
-        cls.partner_user.profile.partner_staff_member = staff_member.id
-        cls.partner_user.profile.save()
+        PartnerStaffFactory(email=cls.partner_user.email, user=cls.partner_user)
         cls.url = reverse('pmp_v3:dropdown-dynamic-list')
 
     def test_unicef_data(self):

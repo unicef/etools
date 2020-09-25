@@ -882,6 +882,12 @@ class PartnerStaffMember(TimeStampedModel):
         related_name='staff_members',
         on_delete=models.CASCADE,
     )
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        verbose_name=_("User"),
+        related_name='partner_staff_member',
+        on_delete=models.PROTECT,
+    )
     title = models.CharField(
         verbose_name=_("Title"),
         max_length=100,
@@ -910,6 +916,20 @@ class PartnerStaffMember(TimeStampedModel):
 
     tracker = FieldTracker()
     objects = PartnerStaffMemberManager()
+
+    @classmethod
+    def get_for_user(cls, user) -> ['PartnerStaffMember']:
+        # return linked instance for user if exists
+        try:
+            return user.partner_staff_member
+        except cls.DoesNotExist:
+            return None
+
+    @classmethod
+    def get_id_for_user(cls, user) -> [int]:
+        # extract id if exists else None; for better compatibility with existing code
+        staff_member = cls.get_for_user(user)
+        return staff_member.id if staff_member else None
 
     def get_full_name(self):
         full_name = '%s %s' % (self.first_name, self.last_name)

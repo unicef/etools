@@ -40,6 +40,7 @@ class TestPartnersAdminForm(BaseTenantTestCase):
 
 
 class TestPartnerStaffMemberForm(BaseTenantTestCase):
+    # todo: roman, fix this form
     @classmethod
     def setUpTestData(cls):
         cls.partner = PartnerFactory()
@@ -71,15 +72,13 @@ class TestPartnerStaffMemberForm(BaseTenantTestCase):
 
     def test_clean_duplicate_email(self):
         """Duplicate email not allowed if user associated as staff member"""
-        profile = ProfileFactory(
-            partner_staff_member=10,
-        )
-        self.data["email"] = profile.user.email
+        staff = PartnerStaffFactory()
+        self.data["email"] = staff.user.email
         form = forms.PartnerStaffMemberForm(self.data)
         self.assertFalse(form.is_valid())
         self.assertIn(
             "This user already exists under a different partnership: {}".format(
-                profile.user.email
+                staff.user.email
             ),
             form.errors["__all__"]
         )
@@ -113,36 +112,33 @@ class TestPartnerStaffMemberForm(BaseTenantTestCase):
             email="test@example.com",
         )
         form = forms.PartnerStaffMemberForm(self.data, instance=staff)
-        self.assertTrue(form.is_valid())
+        self.assertTrue(form.is_valid(), form.errors)
 
     def test_clean_activate(self):
         """If staff member made active, ensure user not already associated
         with another partner
         """
-        UserFactory(email="test@example.com")
+        user = UserFactory(email="test@example.com")
         partner = PartnerFactory()
         staff = PartnerStaffFactory(
             partner=partner,
             email="test@example.com",
-            active=False
+            active=False,
+            user=user,
         )
         form = forms.PartnerStaffMemberForm(self.data, instance=staff)
-        self.assertTrue(form.is_valid())
+        self.assertTrue(form.is_valid(), form.errors)
 
     def test_clean_activate_invalid(self):
         """If staff member made active, invalid if user already associated
         with another partner
         """
-        profile = ProfileFactory(
-            partner_staff_member=10,
-        )
         partner = PartnerFactory()
         staff = PartnerStaffFactory(
             partner=partner,
-            email=profile.user.email,
             active=False
         )
-        self.data["email"] = profile.user.email
+        self.data["email"] = staff.user.email
         form = forms.PartnerStaffMemberForm(self.data, instance=staff)
         self.assertFalse(form.is_valid())
         self.assertIn(

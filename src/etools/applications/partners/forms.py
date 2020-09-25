@@ -65,10 +65,13 @@ class PartnerStaffMemberForm(forms.ModelForm):
 
         partner_staff_members = []
         for u in User.objects.filter(Q(username=email) | Q(email=email)).all():
-            if u.profile.partner_staff_member:
-                partner_staff_members.append(u.profile.partner_staff_member)
+            staff_member = PartnerStaffMember.get_id_for_user(u)
+            if staff_member:
+                partner_staff_members.append(staff_member)
 
         if not self.instance.pk:
+            cleaned_data['user'] = User.objects.create(email=email, username=email)
+
             # user should be active first time it's created
             if not active:
                 raise ValidationError({'active': self.ERROR_MESSAGES['active_by_default']})

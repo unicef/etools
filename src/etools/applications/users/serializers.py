@@ -192,7 +192,6 @@ class UserCreationSerializer(serializers.ModelSerializer):
             user = get_user_model().objects.create(**validated_data)
             user.profile.country = user_profile['country']
             user.profile.tenant_profile.office = user_profile['office']
-            user.profile.partner_staff_member = 0
             user.profile.job_title = user_profile['job_title']
             user.profile.phone_number = user_profile['phone_number']
             user.profile.country_override = user_profile['country_override']

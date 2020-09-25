@@ -98,9 +98,7 @@ class TestList(BaseInterventionTestCase):
 
         intervention = InterventionFactory()
         user = UserFactory(is_staff=False, groups__data=[])
-        user_staff_member = PartnerStaffFactory(partner=intervention.agreement.partner, email=user.email)
-        user.profile.partner_staff_member = user_staff_member.id
-        user.profile.save()
+        user_staff_member = PartnerStaffFactory(partner=intervention.agreement.partner, email=user.email, user=user)
 
         response = self.forced_auth_req(
             "get",
@@ -197,9 +195,7 @@ class TestCreate(BaseInterventionTestCase):
 
     def test_add_intervention_by_partner_member(self):
         partner_user = UserFactory(is_staff=False, groups__data=[])
-        staff_member = PartnerStaffFactory(email=partner_user.email)
-        partner_user.profile.partner_staff_member = staff_member.id
-        partner_user.profile.save()
+        staff_member = PartnerStaffFactory(email=partner_user.email, user=partner_user)
         response = self.forced_auth_req(
             "post",
             reverse('pmp_v3:intervention-list'),
@@ -589,9 +585,7 @@ class BaseInterventionActionTestCase(BaseInterventionTestCase):
         call_command("update_notifications")
 
         self.partner_user = UserFactory(is_staff=False, groups__data=[])
-        staff_member = PartnerStaffFactory(email=self.partner_user.email)
-        self.partner_user.profile.partner_staff_member = staff_member.pk
-        self.partner_user.profile.save()
+        staff_member = PartnerStaffFactory(email=self.partner_user.email, user=self.partner_user)
         office = OfficeFactory()
         section = SectionFactory()
 

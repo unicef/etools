@@ -3,7 +3,7 @@ from django.urls import reverse
 from rest_framework import status
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
-from etools.applications.partners.tests.factories import InterventionFactory, PartnerFactory
+from etools.applications.partners.tests.factories import InterventionFactory, PartnerFactory, PartnerStaffFactory
 from etools.applications.reports.models import Office, Section
 from etools.applications.reports.tests.factories import OfficeFactory, SectionFactory
 from etools.applications.users.tests.factories import UserFactory
@@ -16,8 +16,7 @@ class BasePMPTestCase(BaseTenantTestCase):
         cls.partner = PartnerFactory()
         cls.partner_staff = cls.partner.staff_members.all().first()
         cls.partner_user = UserFactory(email=cls.partner_staff.email)
-        cls.partner_user.profile.partner_staff_member = True
-        cls.partner_user.profile.save()
+        PartnerStaffFactory(user=cls.partner_user, partner=cls.partner)
 
 
 class TestPMPOfficeViews(BasePMPTestCase):

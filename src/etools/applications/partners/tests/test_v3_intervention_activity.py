@@ -30,8 +30,11 @@ class BaseTestCase(BaseTenantTestCase):
             end=date(year=1970, month=12, day=31),
         )
 
-        self.staff_member = PartnerStaffFactory(partner=self.intervention.agreement.partner)
-        self.partner_focal_point = UserFactory(groups__data=[], profile__partner_staff_member=self.staff_member.id)
+        self.partner_focal_point = UserFactory(groups__data=[])
+        self.staff_member = PartnerStaffFactory(
+            partner=self.intervention.agreement.partner,
+            user=self.partner_focal_point,
+        )
         self.intervention.partner_focal_points.add(self.staff_member)
 
         self.result_link = InterventionResultLinkFactory(
