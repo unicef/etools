@@ -1,5 +1,3 @@
-from unittest import skip
-
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners import forms
 from etools.applications.partners.models import PartnerOrganization, PartnerType
