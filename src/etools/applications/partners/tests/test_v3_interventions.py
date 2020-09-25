@@ -98,7 +98,7 @@ class TestList(BaseInterventionTestCase):
 
         intervention = InterventionFactory()
         user = UserFactory(is_staff=False, groups__data=[])
-        user_staff_member = PartnerStaffFactory(partner=intervention.agreement.partner, email=user.email, user=user)
+        PartnerStaffFactory(partner=intervention.agreement.partner, email=user.email, user=user)
 
         response = self.forced_auth_req(
             "get",
@@ -195,7 +195,7 @@ class TestCreate(BaseInterventionTestCase):
 
     def test_add_intervention_by_partner_member(self):
         partner_user = UserFactory(is_staff=False, groups__data=[])
-        staff_member = PartnerStaffFactory(email=partner_user.email, user=partner_user)
+        PartnerStaffFactory(email=partner_user.email, user=partner_user)
         response = self.forced_auth_req(
             "post",
             reverse('pmp_v3:intervention-list'),

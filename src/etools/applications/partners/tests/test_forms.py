@@ -3,7 +3,7 @@ from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners import forms
 from etools.applications.partners.models import PartnerOrganization, PartnerType
 from etools.applications.partners.tests.factories import PartnerFactory, PartnerStaffFactory
-from etools.applications.users.tests.factories import ProfileFactory, UserFactory
+from etools.applications.users.tests.factories import UserFactory
 
 
 class TestPartnersAdminForm(BaseTenantTestCase):

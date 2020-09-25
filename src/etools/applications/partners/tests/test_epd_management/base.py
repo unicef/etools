@@ -27,12 +27,12 @@ class BaseTestCase(BaseTenantTestCase):
         )
 
         self.partner_authorized_officer = UserFactory(is_staff=False, groups__data=[])
-        PartnerStaffFactory(
+        partner_authorized_officer_staff = PartnerStaffFactory(
             partner=self.partner, email=self.partner_authorized_officer.email, user=self.partner_authorized_officer
         )
 
         self.partner_focal_point = UserFactory(is_staff=False, groups__data=[])
-        PartnerStaffFactory(
+        partner_focal_point_staff = PartnerStaffFactory(
             partner=self.partner, email=self.partner_focal_point.email, user=self.partner_focal_point
         )
 
