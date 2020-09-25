@@ -3,7 +3,7 @@ from django.urls import reverse
 from rest_framework import status
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
-from etools.applications.partners.tests.factories import InterventionFactory, PartnerFactory, PartnerStaffFactory
+from etools.applications.partners.tests.factories import InterventionFactory, PartnerFactory
 from etools.applications.reports.models import Office, Section
 from etools.applications.reports.tests.factories import OfficeFactory, SectionFactory
 from etools.applications.users.tests.factories import UserFactory
