@@ -2,6 +2,7 @@ import datetime
 import json
 
 from django.contrib.auth import get_user_model
+from django.db import connection
 from django.db.models import Q
 from django.utils import timezone
 
@@ -111,43 +112,42 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
     def validate(self, data):
         data = super().validate(data)
         email = data.get('email', "")
-        active = data.get('active', "")
         User = get_user_model()
 
-        try:
-            existing_user = User.objects.get(email=email)
-        except User.DoesNotExist:
-            # this is a new user
-            existing_user = None
+        if not self.instance:
+            user = User.objects.filter(Q(username=email) | Q(email=email)).first()
 
-        if existing_user and not self.instance and bool(PartnerStaffMember.get_for_user(existing_user)):
-            raise ValidationError(
-                {'active': 'The email for the partner contact is used by another partner contact. Email has to be '
-                           'unique to proceed {}'.format(email)})
+            if user:
+                if user.is_unicef_user():
+                    raise ValidationError('Unable to associate staff member to UNICEF user')
 
-        # make sure email addresses are not editable after creation.. user must be removed and re-added
-        if self.instance:
+                if PartnerStaffMember.get_for_user(user):
+                    raise ValidationError(
+                        {
+                            'active': 'The email for the partner contact is used by another partner contact. '
+                                      'Email has to be unique to proceed {}'.format(email)
+                        }
+                    )
+
+                data['user'] = user
+        else:
+            # make sure email addresses are not editable after creation.. user must be removed and re-added
             if email != self.instance.email:
                 raise ValidationError(
                     "User emails cannot be changed, please remove the user and add another one: {}".format(email))
 
-            # when adding the active tag to a previously untagged user
-            # make sure this user has not already been associated with another partnership.
-            # TODO: Users should have a json field with country partnerhip pairs not just partnerships
-            if active and not self.instance.active and \
-                    existing_user and PartnerStaffMember.get_id_for_user(existing_user).id != self.instance.pk:
-                raise ValidationError(
-                    {'active':
-                     'The Partner Staff member you are trying to activate is associated with a different partnership'}
-                )
-
-        if not self.instance:
-            if existing_user:
-                data['user'] = existing_user
-            else:
-                data['user'] = User.objects.create(username=email, email=email, is_staff=False)
-
         return data
+
+    def create(self, validated_data):
+        User = get_user_model()
+        if 'user' not in validated_data:
+            validated_data['user'] = User.objects.create(
+                username=validated_data['email'], email=validated_data['email'], is_staff=False
+            )
+
+        validated_data['user'].profile.countries_available.add(connection.tenant)
+
+        return super().create(validated_data)
 
     def update(self, instance, validated_data):
         instance = super().update(instance, validated_data)

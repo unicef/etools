@@ -1,3 +1,6 @@
+from django.db import connection
+from django.test import override_settings
+
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners import forms
 from etools.applications.partners.models import PartnerOrganization, PartnerType
@@ -75,19 +78,25 @@ class TestPartnerStaffMemberForm(BaseTenantTestCase):
         form = forms.PartnerStaffMemberForm(self.data)
         self.assertFalse(form.is_valid())
         self.assertIn(
-            "This user already exists: {}".format(staff.user.email),
+            "This user already exists under a different partnership: {}".format(
+                staff.user.email
+            ),
             form.errors["__all__"]
         )
 
-    def test_clean_duplicate_email_no_profile(self):
-        """Duplicate emails are ok, if user not staff member already"""
+    def test_clean_user_exists(self):
+        """Duplicate emails are ok, if user not unicef and not staff member already"""
+        UserFactory(email="test@example.com")
+        form = forms.PartnerStaffMemberForm(self.data)
+        self.assertTrue(form.is_valid())
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_clean_duplicate_email_no_profile_unicef(self):
+        """Duplicate emails are ok, if user not unicef and not staff member already"""
         UserFactory(email="test@example.com")
         form = forms.PartnerStaffMemberForm(self.data)
         self.assertFalse(form.is_valid())
-        self.assertIn(
-            "This user already exists: {}".format("test@example.com"),
-            form.errors["__all__"]
-        )
+        self.assertIn("Unable to associate staff member to UNICEF user", form.errors["__all__"])
 
     def test_clean_email_change(self):
         """Email address may not be changed"""
@@ -128,3 +137,19 @@ class TestPartnerStaffMemberForm(BaseTenantTestCase):
         )
         form = forms.PartnerStaffMemberForm(self.data, instance=staff)
         self.assertTrue(form.is_valid(), form.errors)
+
+    def test_save_user_assigned(self):
+        user = UserFactory(email="test@example.com")
+        user.profile.countries_available.clear()
+
+        form = forms.PartnerStaffMemberForm(self.data)
+        self.assertTrue(form.is_valid())
+        staff_member = form.save()
+        self.assertEqual(staff_member.user, user)
+        self.assertTrue(user.profile.countries_available.filter(id=connection.tenant.id).exists())
+
+    def test_save_user_created(self):
+        form = forms.PartnerStaffMemberForm(self.data)
+        self.assertTrue(form.is_valid())
+        staff_member = form.save()
+        self.assertTrue(staff_member.user.profile.countries_available.filter(id=connection.tenant.id).exists())

@@ -4,6 +4,7 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
+from django.db import connection
 from django.db.models import Q
 from django.utils.translation import ugettext as _
 
@@ -64,16 +65,20 @@ class PartnerStaffMemberForm(forms.ModelForm):
         User = get_user_model()
 
         if not self.instance.pk:
-            user = User.objects.filter(Q(username=email) | Q(email=email))
-            if user:
-                raise ValidationError("This user already exists: {}".format(email))
-
-            cleaned_data['user'] = User.objects.create(email=email, username=email)
-
             # user should be active first time it's created
             if not active:
                 raise ValidationError({'active': self.ERROR_MESSAGES['active_by_default']})
 
+            user = User.objects.filter(Q(username=email) | Q(email=email)).first()
+            if user:
+                if user.is_unicef_user():
+                    raise ValidationError('Unable to associate staff member to UNICEF user')
+
+                staff_member = PartnerStaffMember.get_id_for_user(user)
+                if staff_member:
+                    raise ValidationError("This user already exists under a different partnership: {}".format(email))
+
+                cleaned_data['user'] = user
         else:
             # make sure email addresses are not editable after creation.. user must be removed and re-added
             if email != self.instance.email:
@@ -81,6 +86,17 @@ class PartnerStaffMemberForm(forms.ModelForm):
                     "User emails cannot be changed, please remove the user and add another one: {}".format(email))
 
         return cleaned_data
+
+    def save(self, commit=True):
+        User = get_user_model()
+
+        if not self.instance.pk:
+            if 'user' in self.cleaned_data:
+                self.instance.user = self.cleaned_data['user']
+            else:
+                self.instance.user = User.objects.create(email=self.instance.email, username=self.instance.email)
+            self.instance.user.profile.countries_available.add(connection.tenant)
+        return super().save(commit=commit)
 
 
 class InterventionAttachmentForm(forms.ModelForm):
