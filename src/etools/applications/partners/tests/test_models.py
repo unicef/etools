@@ -1434,8 +1434,11 @@ class TestInterventionBudget(BaseTenantTestCase):
         self.assertEqual(intervention.planned_budget.unicef_cash_local, 10)
         self.assertEqual(intervention.planned_budget.in_kind_amount_local, 5)
         self.assertEqual(intervention.planned_budget.partner_contribution_local, 20)
-
         self.assertEqual(str(intervention.planned_budget), "{}: 35.00".format(intervention_str))
+        self.assertEqual(
+            intervention.planned_budget.total_cash_local(),
+            20 + 10,
+        )
 
     def test_calc_totals_no_assoc(self):
         intervention = InterventionFactory()
@@ -1456,6 +1459,7 @@ class TestInterventionBudget(BaseTenantTestCase):
             "{:0.2f}".format(budget.partner_contribution_percent),
             "{:0.2f}".format(10 / (10 + 20 + 30) * 100),
         )
+        self.assertEqual(budget.total_cash_local(), 10 + 20)
 
     def test_calc_totals_results(self):
         intervention = InterventionFactory()
@@ -1485,6 +1489,7 @@ class TestInterventionBudget(BaseTenantTestCase):
             "{:0.2f}".format(budget.partner_contribution_percent),
             "{:0.2f}".format((616 / (616 + 323 + 30) * 100)),
         )
+        self.assertEqual(budget.total_cash_local(), 616 + 323)
 
     def test_calc_totals_management_budget(self):
         intervention = InterventionFactory()
@@ -1515,6 +1520,7 @@ class TestInterventionBudget(BaseTenantTestCase):
             "{:0.2f}".format(budget.partner_contribution_percent),
             "{:0.2f}".format(1200 / (1200 + 900 + 30) * 100),
         )
+        self.assertEqual(budget.total_cash_local(), 1200 + 900)
 
     def test_calc_totals_supply_items(self):
         intervention = InterventionFactory()
@@ -1543,6 +1549,7 @@ class TestInterventionBudget(BaseTenantTestCase):
             "{:0.2f}".format(budget.partner_contribution_percent),
             "{:0.2f}".format(10 / (10 + 20 + 6) * 100),
         )
+        self.assertEqual(budget.total_cash_local(), 10 + 20)
 
 
 class TestInterventionManagementBudget(BaseTenantTestCase):

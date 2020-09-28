@@ -48,6 +48,7 @@ class InterventionBudgetCUSerializer(serializers.ModelSerializer):
     unicef_cash_local = serializers.DecimalField(max_digits=20, decimal_places=2)
     in_kind_amount_local = serializers.DecimalField(max_digits=20, decimal_places=2)
     total_unicef_contribution_local = serializers.DecimalField(max_digits=20, decimal_places=2)
+    total_cash_local = serializers.DecimalField(max_digits=20, decimal_places=2)
     total_local = serializers.DecimalField(max_digits=20, decimal_places=2)
 
     class Meta:
@@ -63,9 +64,11 @@ class InterventionBudgetCUSerializer(serializers.ModelSerializer):
             "total_local",
             "partner_contribution_percent",
             "total_unicef_contribution_local",
+            "total_cash_local",
         )
         read_only_fields = (
             "total_local",
+            "total_cash_local",
             "programme_effectiveness",
         )
 

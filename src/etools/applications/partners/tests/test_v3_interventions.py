@@ -250,6 +250,8 @@ class TestManagementBudget(BaseInterventionTestCase):
         self.assertEqual(data["act3_unicef"], "0.00")
         self.assertEqual(data["act3_partner"], "0.00")
         self.assertEqual(data["act3_total"], "0.00")
+        self.assertEqual(data["partner_total"], "0.00")
+        self.assertEqual(data["unicef_total"], "0.00")
         self.assertEqual(data["total"], "0.00")
         self.assertNotIn('intervention', response.data)
 
