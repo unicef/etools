@@ -163,9 +163,16 @@ class PMPInterventionTerminateView(PMPInterventionMixin, InterventionDetailAPIVi
         pd = self.get_object()
         if pd.status == Intervention.TERMINATED:
             raise ValidationError("PD has already been terminated.")
+
+        # copy aross attachment doc id and in_amendment flag if present
+        termination_doc = request.data.get("termination_doc_attachment")
+        end = request.data.get("end")
         request.data.clear()
         request.data.update({"status": Intervention.TERMINATED})
-
+        if termination_doc:
+            request.data["termination_doc_attachment"] = termination_doc
+        if end:
+            request.data["end"] = end
         response = super().update(request, *args, **kwargs)
 
         if response.status_code == 200:
