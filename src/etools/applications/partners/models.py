@@ -2236,6 +2236,21 @@ class Intervention(TimeStampedModel):
         pass
 
     @transition(field=status,
+                source=[
+                    SIGNED,
+                    ACTIVE,
+                    ENDED,
+                    IMPLEMENTED,
+                    CLOSED,
+                    SUSPENDED,
+                    TERMINATED,
+                ],
+                target=[CANCELLED],
+                conditions=[illegal_transitions])
+    def transition_to_cancelled_illegal(self):
+        pass
+
+    @transition(field=status,
                 source=[ACTIVE],
                 target=[ENDED],
                 conditions=[intervention_validation.transition_to_ended])
