@@ -2,13 +2,28 @@ from django.http import HttpResponseForbidden
 from django.urls import reverse
 
 from rest_framework.exceptions import ValidationError
+from rest_framework.response import Response
 from unicef_notification.utils import send_notification_with_template
 
 from etools.applications.partners.models import Intervention
 from etools.applications.partners.views.interventions_v3 import InterventionDetailAPIView, PMPInterventionMixin
 
 
-class PMPInterventionAcceptView(PMPInterventionMixin, InterventionDetailAPIView):
+class PMPInterventionActionView(PMPInterventionMixin, InterventionDetailAPIView):
+    def update(self, request, *args, **kwargs):
+        response = super().update(request, *args, **kwargs)
+        # need to overwrite successful response, so we get v3 serializer
+        if response.status_code == 200:
+            response = Response(
+                self.map_serializer("detail")(
+                    self.instance,
+                    context=self.get_serializer_context(),
+                ).data,
+            )
+        return response
+
+
+class PMPInterventionAcceptView(PMPInterventionActionView):
     def update(self, request, *args, **kwargs):
         pd = self.get_object()
         request.data.clear()
@@ -46,7 +61,7 @@ class PMPInterventionAcceptView(PMPInterventionMixin, InterventionDetailAPIView)
         return response
 
 
-class PMPInterventionAcceptReviewView(PMPInterventionMixin, InterventionDetailAPIView):
+class PMPInterventionAcceptReviewView(PMPInterventionActionView):
     def update(self, request, *args, **kwargs):
         if self.is_partner_staff():
             return HttpResponseForbidden()
@@ -84,7 +99,7 @@ class PMPInterventionAcceptReviewView(PMPInterventionMixin, InterventionDetailAP
         return response
 
 
-class PMPInterventionReviewView(PMPInterventionMixin, InterventionDetailAPIView):
+class PMPInterventionReviewView(PMPInterventionActionView):
     def update(self, request, *args, **kwargs):
         if self.is_partner_staff():
             return HttpResponseForbidden()
@@ -120,7 +135,7 @@ class PMPInterventionReviewView(PMPInterventionMixin, InterventionDetailAPIView)
         return response
 
 
-class PMPInterventionCancelView(PMPInterventionMixin, InterventionDetailAPIView):
+class PMPInterventionCancelView(PMPInterventionActionView):
     def update(self, request, *args, **kwargs):
         if self.is_partner_staff():
             return HttpResponseForbidden()
@@ -156,7 +171,7 @@ class PMPInterventionCancelView(PMPInterventionMixin, InterventionDetailAPIView)
         return response
 
 
-class PMPInterventionTerminateView(PMPInterventionMixin, InterventionDetailAPIView):
+class PMPInterventionTerminateView(PMPInterventionActionView):
     def update(self, request, *args, **kwargs):
         if self.is_partner_staff():
             return HttpResponseForbidden()
@@ -192,7 +207,7 @@ class PMPInterventionTerminateView(PMPInterventionMixin, InterventionDetailAPIVi
         return response
 
 
-class PMPInterventionSignatureView(PMPInterventionMixin, InterventionDetailAPIView):
+class PMPInterventionSignatureView(PMPInterventionActionView):
     def update(self, request, *args, **kwargs):
         if self.is_partner_staff():
             return HttpResponseForbidden()
@@ -228,7 +243,7 @@ class PMPInterventionSignatureView(PMPInterventionMixin, InterventionDetailAPIVi
         return response
 
 
-class PMPInterventionUnlockView(PMPInterventionMixin, InterventionDetailAPIView):
+class PMPInterventionUnlockView(PMPInterventionActionView):
     def update(self, request, *args, **kwargs):
         pd = self.get_object()
         request.data.clear()
@@ -266,7 +281,7 @@ class PMPInterventionUnlockView(PMPInterventionMixin, InterventionDetailAPIView)
         return response
 
 
-class PMPInterventionSendToPartnerView(PMPInterventionMixin, InterventionDetailAPIView):
+class PMPInterventionSendToPartnerView(PMPInterventionActionView):
     def update(self, request, *args, **kwargs):
         pd = self.get_object()
         if not pd.unicef_court:
@@ -296,7 +311,7 @@ class PMPInterventionSendToPartnerView(PMPInterventionMixin, InterventionDetailA
         return response
 
 
-class PMPInterventionSendToUNICEFView(PMPInterventionMixin, InterventionDetailAPIView):
+class PMPInterventionSendToUNICEFView(PMPInterventionActionView):
     def update(self, request, *args, **kwargs):
         pd = self.get_object()
         if pd.unicef_court:

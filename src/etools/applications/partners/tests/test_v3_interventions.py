@@ -663,6 +663,7 @@ class TestInterventionAccept(BaseInterventionActionTestCase):
         with mock.patch(self.notify_path, mock_send):
             response = self.forced_auth_req("patch", self.url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("available_actions", response.data)
         mock_send.assert_called()
         self.intervention.refresh_from_db()
         self.assertTrue(self.intervention.unicef_accepted)
