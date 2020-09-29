@@ -10,6 +10,8 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, mixins
 from unicef_restlib.views import MultiSerializerViewSetMixin
 
+from etools.applications.comments.export.renderers import CommentCSVRenderer
+from etools.applications.comments.export.serializers import CommentCSVSerializer
 from etools.applications.comments.models import Comment
 from etools.applications.comments.permissions import IsCommentAuthor
 from etools.applications.comments.serializers import CommentEditSerializer, CommentSerializer, NewCommentSerializer
@@ -81,3 +83,13 @@ class CommentsViewSet(
 
         serializer = self.get_serializer(comment)
         return Response(serializer.data)
+
+    @action(detail=False, methods=['get'], url_path='csv', url_name='export_csv', renderer_classes=[CommentCSVRenderer])
+    def export_csv(self, request, *args, **kwargs):
+        instance = self.get_related_instance()
+        instance_identifier = getattr(instance, 'reference_number', str(instance))
+        serializer = CommentCSVSerializer(instance=self.get_queryset(), many=True)
+
+        return Response(serializer.data, headers={
+            'Content-Disposition': 'attachment;filename={}.csv'.format(instance_identifier)
+        })
