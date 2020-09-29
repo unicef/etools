@@ -18,12 +18,12 @@ from etools.applications.partners.views.v3 import PMPBaseViewMixin
 
 class PMPAgreementViewMixin(PMPBaseViewMixin):
     SERIALIZER_OPTIONS = {
-        "list": (AgreementListSerializer, None),
-        "create": (AgreementCreateUpdateSerializer, None),
-        "csv": (AgreementExportSerializer, None),
-        "csv_flat": (AgreementExportFlatSerializer, None),
-        "update": (AgreementCreateUpdateSerializer, None),
-        "detail": (AgreementDetailSerializer, None),
+        "list": (AgreementListSerializer, AgreementListSerializer),
+        "create": (AgreementCreateUpdateSerializer, AgreementCreateUpdateSerializer),
+        "csv": (AgreementExportSerializer, AgreementExportSerializer),
+        "csv_flat": (AgreementExportFlatSerializer, AgreementExportFlatSerializer),
+        "update": (AgreementCreateUpdateSerializer, AgreementCreateUpdateSerializer),
+        "detail": (AgreementDetailSerializer, AgreementDetailSerializer),
     }
 
     def get_queryset(self, format=None):
