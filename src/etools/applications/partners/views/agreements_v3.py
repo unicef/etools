@@ -1,9 +1,10 @@
-from django.core.exceptions import PermissionDenied
 from django.db import transaction
 
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from etools.applications.partners.permissions import PMPAgreementPermission
 from etools.applications.partners.serializers.agreements_v2 import (
     AgreementCreateUpdateSerializer,
     AgreementDetailSerializer,
@@ -14,7 +15,7 @@ from etools.applications.partners.serializers.exports.agreements import (
     AgreementExportSerializer,
 )
 from etools.applications.partners.views.agreements_v2 import AgreementDetailAPIView, AgreementListAPIView
-from etools.applications.partners.views.v3 import PMPBaseViewMixin
+from etools.applications.partners.views.v3 import APIActionsMixin, PMPBaseViewMixin
 
 
 class PMPAgreementViewMixin(PMPBaseViewMixin):
@@ -36,9 +37,11 @@ class PMPAgreementViewMixin(PMPBaseViewMixin):
 
 
 class PMPAgreementListCreateAPIView(
+        APIActionsMixin,
         PMPAgreementViewMixin,
         AgreementListAPIView,
 ):
+    permission_classes = (IsAuthenticated, PMPAgreementPermission)
     filters = AgreementListAPIView.filters + [
         ('partner_id', 'partner__pk'),
     ]
@@ -55,8 +58,6 @@ class PMPAgreementListCreateAPIView(
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
-        if self.is_partner_staff():
-            raise PermissionDenied
         super().create(request, *args, **kwargs)
         return Response(
             self.map_serializer("detail")(

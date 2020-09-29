@@ -53,44 +53,9 @@ from etools.applications.partners.views.interventions_v2 import (
     InterventionIndicatorsUpdateView,
     InterventionListAPIView,
 )
-from etools.applications.partners.views.v3 import PMPBaseViewMixin
+from etools.applications.partners.views.v3 import APIActionsMixin, PMPBaseViewMixin
 from etools.applications.reports.models import InterventionActivity, LowerResult
 from etools.applications.reports.serializers.v2 import InterventionActivityDetailSerializer
-
-
-class APIActionsMixin:
-    """
-    add viewsets-like action attribute to generic api views to reuse action-based things, for example permissions
-    """
-    def get_action(self, method):
-        if method == 'OPTIONS':
-            return 'metadata'
-
-        if not self.detail:
-            if method == 'GET':
-                return 'list'
-            elif method == 'POST':
-                return 'create'
-        else:
-            if method == 'GET':
-                return 'retrieve'
-            elif method == 'PUT':
-                return 'update'
-            elif method == 'PATCH':
-                return 'partial_update'
-            elif method == 'DELETE':
-                return 'delete'
-
-        return 'unknown'
-
-    def dispatch(self, request, *args, **kwargs):
-        # if api view is inherited from one of GenericAPIView subclasses, we can just check which methods are defined
-        if hasattr(self, 'list') or hasattr(self, 'create'):
-            self.detail = False
-        else:
-            self.detail = True
-        self.action = self.get_action(request.method.upper())
-        return super().dispatch(request, *args, **kwargs)
 
 
 class PMPInterventionMixin(PMPBaseViewMixin):

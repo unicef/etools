@@ -461,7 +461,26 @@ PartnershipManagerRefinedPermission = (
     )
 )
 
-# allow partners to load list ONLY for interventions to keep everything else working right as before; at least for now
+# allow partners to load list ONLY for interventions to keep everything
+# else working right as before; at least for now
 PMPInterventionPermission = (
     PartnershipManagerRefinedPermission | (view_action_permission('list') & UserIsPartnerStaffMemberPermission)
+)
+
+# allow partners to load list ONLY for agreements to keep everything
+# else working right as before; at least for now
+PMPAgreementPermission = (
+    (view_action_permission('create') & (
+        UserIsStaffPermission | user_group_permission('Partnership Manager')
+    )) |
+    (view_action_permission(
+        'list',
+        'retrieve',
+        'update',
+        'partial_update',
+    ) & (
+        UserIsPartnerStaffMemberPermission | (
+            UserIsStaffPermission | user_group_permission('Partnership Manager')
+        )
+    ))
 )
