@@ -1,3 +1,4 @@
+from django.core.exceptions import PermissionDenied
 from django.db import transaction
 
 from rest_framework import status
@@ -54,6 +55,8 @@ class PMPAgreementListCreateAPIView(
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
+        if self.is_partner_staff():
+            raise PermissionDenied
         super().create(request, *args, **kwargs)
         return Response(
             self.map_serializer("detail")(

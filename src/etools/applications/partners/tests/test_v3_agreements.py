@@ -103,3 +103,22 @@ class TestCreate(BaseAgreementTestCase):
         data = response.data
         self.assertEqual(data['agreement_type'], Agreement.PCA)
         self.assertTrue(activity_qs.exists())
+
+    def test_post_by_partner(self):
+        activity_qs = Activity.objects.filter(action=Activity.CREATE)
+        self.assertFalse(activity_qs.exists())
+        data = {
+            "agreement_type": Agreement.PCA,
+            "partner": self.partner.pk,
+            "country_programme": self.country_programme.pk,
+            "reference_number_year": datetime.date.today().year,
+            "signed_by": self.pme_user.pk,
+        }
+        response = self.forced_auth_req(
+            "post",
+            reverse('pmp_v3:agreement-list'),
+            user=self.partner_user,
+            data=data
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertFalse(activity_qs.exists())
