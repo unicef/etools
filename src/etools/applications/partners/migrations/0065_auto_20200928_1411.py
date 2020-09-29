@@ -5,7 +5,7 @@ from django.db import migrations
 
 def migrate_cash_transfer_modalities(apps, schema_editor):
     Intervention = apps.get_model('partners', 'Intervention')
-    for intervention in Intervention:
+    for intervention in Intervention.objects.all():
         new_value = []
         for i, transfer in enumerate(intervention.cash_transfer_modalities):
             transfer_new = {
