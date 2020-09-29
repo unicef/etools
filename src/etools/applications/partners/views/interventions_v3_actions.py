@@ -1,5 +1,6 @@
 from django.http import HttpResponseForbidden
 from django.urls import reverse
+from django.utils import timezone
 
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
@@ -292,6 +293,12 @@ class PMPInterventionSendToPartnerView(PMPInterventionActionView):
         response = super().update(request, *args, **kwargs)
 
         if response.status_code == 200:
+            # set date sent to partner, if not set
+            pd.refresh_from_db()
+            if not pd.date_sent_to_partner:
+                pd.date_sent_to_partner = timezone.now()
+                pd.save()
+
             # notify partner
             recipients = [u.email for u in pd.partner_focal_points.all()]
             context = {
