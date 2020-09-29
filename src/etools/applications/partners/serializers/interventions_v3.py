@@ -10,7 +10,11 @@ from etools.applications.partners.models import (
     InterventionRisk,
     InterventionSupplyItem,
 )
-from etools.applications.partners.permissions import InterventionPermissions, SENIOR_MANAGEMENT_GROUP
+from etools.applications.partners.permissions import (
+    InterventionPermissions,
+    PARTNERSHIP_MANAGER_GROUP,
+    SENIOR_MANAGEMENT_GROUP,
+)
 from etools.applications.partners.serializers.interventions_v2 import (
     FRsSerializer,
     InterventionAmendmentCUSerializer,
@@ -188,6 +192,13 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             profile__country=self.context['request'].user.profile.country
         ).exists()
 
+    def _is_partnership_manager(self):
+        return get_user_model().objects.filter(
+            pk=self.context['request'].user.pk,
+            groups__name__in=[PARTNERSHIP_MANAGER_GROUP],
+            profile__country=self.context['request'].user.profile.country
+        ).exists()
+
     def _is_partner_user(self, obj, user):
         return user.email in [o.email for o in obj.partner_focal_points.all()]
 
@@ -199,16 +210,19 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
         ]
         user = self.context['request'].user
 
-        # available actions only provided in Development status
+        # Partnership Manager
+        if self._is_partnership_manager():
+            if obj.status in [obj.DRAFT, obj.REVIEW, obj.SIGNATURE]:
+                available_actions.append("cancel")
+            else:
+                available_actions.append("terminate")
+
+        # if NOT in Development status then we're done
         if obj.status != obj.DRAFT:
             return available_actions
 
         # PD is assigned to UNICEF
         if obj.unicef_court:
-            # UNICEF User with Senior Management Team
-            if self._is_management():
-                available_actions.append("cancel")
-
             # budget owner
             if obj.budget_owner == user:
                 if not obj.unicef_accepted:
