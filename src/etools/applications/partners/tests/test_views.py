@@ -1452,7 +1452,10 @@ class TestInterventionViews(BaseTenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('Agreement selected is not of type SSFA', response.data)
+        self.assertIn(
+            '"SSFA" is not a valid choice.',
+            response.data["document_type"],
+        )
 
     def test_intervention_validation_doctype_ssfa(self):
         self.agreement.agreement_type = Agreement.SSFA
