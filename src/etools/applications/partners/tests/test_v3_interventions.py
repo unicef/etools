@@ -1114,6 +1114,7 @@ class TestInterventionSendToUNICEF(BaseInterventionActionTestCase):
         self.intervention.save()
 
         self.assertFalse(self.intervention.unicef_court)
+        self.assertFalse(self.intervention.date_draft_by_partner)
 
         # partner sends PD to unicef
         mock_send = mock.Mock()
@@ -1137,6 +1138,8 @@ class TestInterventionSendToUNICEF(BaseInterventionActionTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("PD is currently with UNICEF", response.data)
         mock_send.assert_not_called()
+        self.intervention.refresh_from_db()
+        self.assertTrue(self.intervention.date_draft_by_partner)
 
 
 class TestTimeframesValidation(BaseInterventionTestCase):

@@ -1,5 +1,6 @@
 from django.http import HttpResponseForbidden
 from django.urls import reverse
+from django.utils import timezone
 
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
@@ -322,6 +323,12 @@ class PMPInterventionSendToUNICEFView(PMPInterventionActionView):
         response = super().update(request, *args, **kwargs)
 
         if response.status_code == 200:
+            # update first draft date, if not set
+            pd.refresh_from_db()
+            if not pd.date_draft_by_partner:
+                pd.date_draft_by_partner = timezone.now()
+                pd.save()
+
             # notify unicef
             recipients = [u.email for u in pd.unicef_focal_points.all()]
             context = {

@@ -315,6 +315,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "contingency_pd",
             "country_programme",
             "created",
+            "date_draft_by_partner",
             "days_from_review_to_signed",
             "days_from_submission_to_signed",
             "document_type",
