@@ -12,6 +12,7 @@ from etools.applications.partners.views.interventions_v3 import (
     InterventionRiskDeleteView,
     PMPInterventionAttachmentListCreateView,
     PMPInterventionAttachmentUpdateDeleteView,
+    PMPInterventionIndicatorsUpdateView,
     PMPInterventionListCreateView,
     PMPInterventionManagementBudgetRetrieveUpdateView,
     PMPInterventionRetrieveUpdateView,
@@ -147,6 +148,13 @@ urlpatterns = [
         'interventions/<int:intervention_pk>/risks/<int:pk>/',
         view=InterventionRiskDeleteView.as_view(http_method_names=['delete']),
         name='intervention-risk-delete',
+    ),
+    path(
+        'interventions/applied-indicators/<int:pk>/',
+        view=PMPInterventionIndicatorsUpdateView.as_view(
+            http_method_names=['get', 'patch', 'delete'],
+        ),
+        name='intervention-indicators-update',
     ),
     path(
         'agreements/',

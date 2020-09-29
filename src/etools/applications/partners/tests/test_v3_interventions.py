@@ -27,6 +27,7 @@ from etools.applications.partners.tests.factories import (
 )
 from etools.applications.reports.models import ResultType
 from etools.applications.reports.tests.factories import (
+    AppliedIndicatorFactory,
     InterventionActivityFactory,
     LowerResultFactory,
     OfficeFactory,
@@ -55,6 +56,11 @@ class URLsTestCase(URLAssertionMixin, SimpleTestCase):
                 'intervention-supply-item-detail',
                 '1/supply/2/',
                 {'intervention_pk': 1, 'pk': 2},
+            ),
+            (
+                'intervention-indicators-update',
+                'applied-indicators/1/',
+                {'pk': 1},
             ),
         )
         self.assertReversal(
@@ -1245,3 +1251,75 @@ class TestInterventionAttachments(BaseTenantTestCase):
             user=self.partnership_manager,
         )
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+
+class TestPMPInterventionIndicatorsUpdateView(BaseTenantTestCase):
+    def setUp(self):
+        self.intervention = InterventionFactory()
+        self.result_link = InterventionResultLinkFactory(
+            cp_output__result_type__name=ResultType.OUTPUT,
+            intervention=self.intervention,
+        )
+        self.lower_result = LowerResultFactory(result_link=self.result_link)
+        # Create another result link/lower result pair that will break this
+        # test if the views don't behave properly
+        LowerResultFactory(result_link=InterventionResultLinkFactory(
+            cp_output__result_type__name=ResultType.OUTPUT,
+        ))
+        self.indicator = AppliedIndicatorFactory(
+            lower_result=self.lower_result,
+        )
+        self.url = reverse(
+            'pmp_v3:intervention-indicators-update',
+            args=[self.indicator.pk]
+        )
+
+        location = LocationFactory()
+        self.section = SectionFactory()
+
+        self.result_link.intervention.flat_locations.add(location)
+        self.result_link.intervention.sections.add(self.section)
+        self.user = UserFactory()
+        self.partnership_manager = UserFactory(
+            is_staff=True,
+            groups__data=['Partnership Manager', 'UNICEF User'],
+        )
+
+    def test_permission(self):
+        response = self.forced_auth_req(
+            'patch',
+            self.url,
+            user=self.user,
+            data={},
+        )
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_patch(self):
+        data = {
+            "is_active": False,
+            "is_high_frequency": True,
+        }
+        self.assertTrue(self.indicator.is_active)
+        self.assertFalse(self.indicator.is_high_frequency)
+        self.assertEqual(self.intervention.status, Intervention.DRAFT)
+        response = self.forced_auth_req(
+            'patch',
+            self.url,
+            user=self.partnership_manager,
+            data=data,
+        )
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        # The id of the newly-created indicator should be associated with
+        # lower result, and it should be the only one associated with that
+        # result.
+        self.assertEqual(
+            [response.data['id']],
+            [
+                indicator.pk for indicator
+                in self.lower_result.applied_indicators.all()
+            ]
+        )
+        self.assertFalse(response.data["is_active"])
+        self.assertTrue(response.data["is_high_frequency"])
+        self.indicator.refresh_from_db()
+        self.assertFalse(self.indicator.is_active)
