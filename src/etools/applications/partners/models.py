@@ -1660,7 +1660,7 @@ class Intervention(TimeStampedModel):
     INTERVENTION_TYPES = (
         (PD, 'Programme Document'),
         (SHPD, 'Humanitarian Programme Document'),
-        (SSFA, 'SSFA'),
+        # (SSFA, 'SSFA'),
     )
 
     RATING_NONE = "none"
