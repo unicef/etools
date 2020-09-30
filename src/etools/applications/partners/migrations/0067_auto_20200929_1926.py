@@ -13,6 +13,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='intervention',
             name='document_type',
-            field=models.CharField(choices=[('PD', 'Programme Document'), ('SPD', 'Humanitarian Programme Document')], max_length=255, verbose_name='Document Type'),
+            field=models.CharField(choices=[('PD', 'Programme Document'), ('SPD', 'Simplified Programme Document')], max_length=255, verbose_name='Document Type'),
         ),
     ]
