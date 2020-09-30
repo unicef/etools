@@ -289,16 +289,14 @@ class PMPInterventionSendToPartnerView(PMPInterventionActionView):
             raise ValidationError("PD is currently with Partner")
         request.data.clear()
         request.data.update({"unicef_court": False})
+        if not pd.date_sent_to_partner:
+            request.data.update({
+                "date_sent_to_partner": timezone.now().strftime("%Y-%m-%d"),
+            })
 
         response = super().update(request, *args, **kwargs)
 
         if response.status_code == 200:
-            # set date sent to partner, if not set
-            pd.refresh_from_db()
-            if not pd.date_sent_to_partner:
-                pd.date_sent_to_partner = timezone.now()
-                pd.save()
-
             # notify partner
             recipients = [u.email for u in pd.partner_focal_points.all()]
             context = {
