@@ -238,6 +238,26 @@ class TestCreate(BaseInterventionTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
 
 
+class TestUpdate(BaseInterventionTestCase):
+    def test_patch_currency(self):
+        intervention = InterventionFactory()
+        budget = intervention.planned_budget
+        self.assertNotEqual(budget.currency, "USD")
+
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+            user=self.user,
+            data={'planned_budget': {
+                "id": budget.pk,
+                "currency": "USD",
+            }}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        budget.refresh_from_db()
+        self.assertEqual(budget.currency, "USD")
+
+
 class TestManagementBudget(BaseInterventionTestCase):
     def test_get(self):
         intervention = InterventionFactory()
