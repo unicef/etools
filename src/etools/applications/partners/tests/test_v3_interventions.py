@@ -1126,6 +1126,12 @@ class TestInterventionSendToUNICEF(BaseInterventionActionTestCase):
             )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         mock_send.assert_called()
+        self.intervention.refresh_from_db()
+        self.assertTrue(self.intervention.date_draft_by_partner)
+        self.assertEqual(
+            response.data["date_draft_by_partner"],
+            self.intervention.date_draft_by_partner.strftime("%Y-%m-%d"),
+        )
 
         # partner request when PD in partner court
         mock_send = mock.Mock()
@@ -1138,8 +1144,6 @@ class TestInterventionSendToUNICEF(BaseInterventionActionTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("PD is currently with UNICEF", response.data)
         mock_send.assert_not_called()
-        self.intervention.refresh_from_db()
-        self.assertTrue(self.intervention.date_draft_by_partner)
 
 
 class TestTimeframesValidation(BaseInterventionTestCase):
