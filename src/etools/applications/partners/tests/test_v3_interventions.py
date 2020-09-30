@@ -1095,6 +1095,12 @@ class TestInterventionSendToPartner(BaseInterventionActionTestCase):
             response = self.forced_auth_req("patch", self.url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         mock_send.assert_called()
+        self.intervention.refresh_from_db()
+        self.assertIsNotNone(self.intervention.date_sent_to_partner)
+        self.assertEqual(
+            response.data["date_sent_to_partner"],
+            self.intervention.date_sent_to_partner.strftime("%Y-%m-%d"),
+        )
 
         # unicef request when PD in partner court
         mock_send = mock.Mock()
@@ -1103,8 +1109,6 @@ class TestInterventionSendToPartner(BaseInterventionActionTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("PD is currently with Partner", response.data)
         mock_send.assert_not_called()
-        self.intervention.refresh_from_db()
-        self.assertIsNotNone(self.intervention.date_sent_to_partner)
 
 
 class TestInterventionSendToUNICEF(BaseInterventionActionTestCase):
