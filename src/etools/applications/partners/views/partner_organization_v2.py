@@ -338,7 +338,7 @@ class PartnerOrganizationDashboardAPIView(ExportModelMixin, QueryStringFilterMix
     def _add_active_pd_for_non_signed_pca(self, serializer):
         # TODO add tests
         flagged_interventions = Intervention.objects.filter(
-            document_type__in=[Intervention.PD, Intervention.SHPD],
+            document_type__in=[Intervention.PD, Intervention.SPD],
             status__in=[Intervention.ACTIVE, Intervention.SIGNED]).values_list('pk', flat=True)
         qs = PartnerOrganization.objects.filter(
             agreements__interventions__in=flagged_interventions).exclude(

@@ -317,7 +317,7 @@ class TestTransitionToSigned(BaseTenantTestCase):
         """Certain document types with agreement in certain status
         cannot be signed
         """
-        document_type_list = [Intervention.PD, Intervention.SHPD]
+        document_type_list = [Intervention.PD, Intervention.SPD]
         status_list = [Agreement.SUSPENDED, Agreement.TERMINATED]
         for s in status_list:
             agreement = AgreementFactory(status=s)
@@ -343,7 +343,7 @@ class TestTransitionToActive(BaseTenantTestCase):
         """Certain document types with agreement not in signed status
         cannot be made active
         """
-        document_type_list = [Intervention.PD, Intervention.SHPD]
+        document_type_list = [Intervention.PD, Intervention.SPD]
         agreement = AgreementFactory(status=Agreement.DRAFT)
         for d in document_type_list:
             intervention = InterventionFactory(
@@ -486,7 +486,7 @@ class TestStateDateRelatedAgreementValid(BaseTenantTestCase):
         agreement = AgreementFactory(
             start=datetime.date(2002, 1, 1)
         )
-        for document_type in [Intervention.PD, Intervention.SHPD]:
+        for document_type in [Intervention.PD, Intervention.SPD]:
             intervention = InterventionFactory(
                 agreement=agreement,
                 signed_pd_document="random.pdf",
@@ -503,7 +503,7 @@ class TestStateDateRelatedAgreementValid(BaseTenantTestCase):
         agreement = AgreementFactory(
             start=datetime.date(2002, 1, 1)
         )
-        for document_type in [Intervention.PD, Intervention.SHPD]:
+        for document_type in [Intervention.PD, Intervention.SPD]:
             intervention = InterventionFactory(
                 agreement=agreement,
                 start=datetime.date(2001, 1, 1),

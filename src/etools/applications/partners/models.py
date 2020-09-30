@@ -1329,7 +1329,7 @@ class Agreement(TimeStampedModel):
                 self.status in [Agreement.SUSPENDED, Agreement.TERMINATED]:
 
             interventions = self.interventions.filter(
-                document_type__in=[Intervention.PD, Intervention.SHPD]
+                document_type__in=[Intervention.PD, Intervention.SPD]
             )
             for item in interventions:
                 if item.status not in [Intervention.DRAFT,
@@ -1655,11 +1655,11 @@ class Intervention(TimeStampedModel):
         (TERMINATED, "Terminated"),
     )
     PD = 'PD'
-    SHPD = 'SPD'
+    SPD = 'SPD'
     SSFA = 'SSFA'
     INTERVENTION_TYPES = (
         (PD, 'Programme Document'),
-        (SHPD, 'Humanitarian Programme Document'),
+        (SPD, 'Simplified Programme Document'),
         # (SSFA, 'SSFA'),
     )
 
