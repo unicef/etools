@@ -223,7 +223,9 @@ class UserProfile(models.Model):
     # TODO: after migration remove the ability to add blank=True
     guid = models.CharField(max_length=40, unique=True, null=True, verbose_name=_('GUID'))
 
-    partner_staff_member = models.IntegerField(null=True, blank=True, verbose_name=_('Partner Staff Member'))
+    # legacy field; to be removed
+    _partner_staff_member = models.IntegerField(null=True, blank=True, verbose_name=_('Partner Staff Member'))
+
     country = models.ForeignKey(
         Country, null=True, blank=True, verbose_name=_('Country'),
         on_delete=models.CASCADE,
