@@ -51,6 +51,7 @@ from etools.applications.partners.serializers.v3 import (
 from etools.applications.partners.views.interventions_v2 import (
     InterventionAttachmentUpdateDeleteView,
     InterventionDetailAPIView,
+    InterventionIndicatorsListView,
     InterventionIndicatorsUpdateView,
     InterventionListAPIView,
     InterventionReportingRequirementView,
@@ -409,3 +410,10 @@ class PMPInterventionReportingRequirementView(
         InterventionReportingRequirementView,
 ):
     """Wrapper for PD reporting requirements"""
+
+
+class PMPInterventionIndicatorsListView(
+        PMPInterventionMixin,
+        InterventionIndicatorsListView,
+):
+    """Wrapper for PD indicators"""
