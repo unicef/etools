@@ -15,6 +15,7 @@ from etools.applications.partners.views.interventions_v3 import (
     PMPInterventionIndicatorsUpdateView,
     PMPInterventionListCreateView,
     PMPInterventionManagementBudgetRetrieveUpdateView,
+    PMPInterventionReportingRequirementView,
     PMPInterventionRetrieveUpdateView,
     PMPInterventionSupplyItemListCreateView,
     PMPInterventionSupplyItemRetrieveUpdateView,
@@ -173,6 +174,13 @@ urlpatterns = [
             http_method_names=['get', 'patch', 'delete'],
         ),
         name='intervention-indicators-update',
+    ),
+    path(
+        'interventions/<int:intervention_pk>/reporting-requirements/<str:report_type>/',
+        view=PMPInterventionReportingRequirementView.as_view(
+            http_method_names=['get', 'post', 'patch', 'delete']
+        ),
+        name='intervention-reporting-requirements',
     ),
     path(
         'agreements/',

@@ -53,6 +53,7 @@ from etools.applications.partners.views.interventions_v2 import (
     InterventionDetailAPIView,
     InterventionIndicatorsUpdateView,
     InterventionListAPIView,
+    InterventionReportingRequirementView,
 )
 from etools.applications.partners.views.v3 import PMPBaseViewMixin
 from etools.applications.reports.models import InterventionActivity, LowerResult
@@ -401,3 +402,10 @@ class PMPInterventionIndicatorsUpdateView(
 
     def get_intervention(self) -> Intervention:
         return self.get_root_object()
+
+
+class PMPInterventionReportingRequirementView(
+        PMPInterventionMixin,
+        InterventionReportingRequirementView,
+):
+    """Wrapper for PD reporting requirements"""

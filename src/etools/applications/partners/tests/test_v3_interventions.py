@@ -25,6 +25,7 @@ from etools.applications.partners.tests.factories import (
     PartnerFactory,
     PartnerStaffFactory,
 )
+from etools.applications.partners.tests.test_api_interventions import TestInterventionReportingRequirementView
 from etools.applications.reports.models import ResultType
 from etools.applications.reports.tests.factories import (
     AppliedIndicatorFactory,
@@ -61,6 +62,11 @@ class URLsTestCase(URLAssertionMixin, SimpleTestCase):
                 'intervention-indicators-update',
                 'applied-indicators/1/',
                 {'pk': 1},
+            ),
+            (
+                'intervention-reporting-requirements',
+                '1/reporting-requirements/HR/',
+                {'intervention_pk': 1, 'report_type': 'HR'},
             ),
         )
         self.assertReversal(
@@ -1343,3 +1349,14 @@ class TestPMPInterventionIndicatorsUpdateView(BaseTenantTestCase):
         self.assertTrue(response.data["is_high_frequency"])
         self.indicator.refresh_from_db()
         self.assertFalse(self.indicator.is_active)
+
+
+class TestPMPInterventionReportingRequirementView(
+        TestInterventionReportingRequirementView,
+):
+    def _get_url(self, report_type, intervention=None):
+        intervention = self.intervention if intervention is None else intervention
+        return reverse(
+            "pmp_v3:intervention-reporting-requirements",
+            args=[intervention.pk, report_type]
+        )

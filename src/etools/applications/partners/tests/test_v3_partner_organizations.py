@@ -21,6 +21,11 @@ class URLsTestCase(URLAssertionMixin, SimpleTestCase):
         """Verify URL pattern names generate the URLs we expect them to."""
         names_and_paths = (
             ('partner-list', '', {}),
+            (
+                'partner-staff-members-list',
+                '1/staff-members/',
+                {'partner_pk': 1},
+            ),
         )
         self.assertReversal(
             names_and_paths,
