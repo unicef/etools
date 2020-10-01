@@ -844,6 +844,13 @@ class PartnerOrganization(TimeStampedModel):
         admin_url_name = 'admin:partners_partnerorganization_change'
         return reverse(admin_url_name, args=(self.id,))
 
+    def user_is_staff_member(self, user):
+        staff_member = PartnerStaffMember.get_for_user(user)
+        if not staff_member:
+            return False
+
+        return staff_member.id in self.staff_members.values_list('id', flat=True)
+
 
 class CoreValuesAssessment(TimeStampedModel):
     partner = models.ForeignKey(PartnerOrganization, verbose_name=_("Partner"), related_name='core_values_assessments',

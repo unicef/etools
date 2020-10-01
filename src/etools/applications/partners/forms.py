@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from django.db import connection
-from django.db.models import Q
+from django.db import connection
 from django.utils.translation import ugettext as _
 
 from unicef_djangolib.forms import AutoSizeTextForm
@@ -69,7 +69,7 @@ class PartnerStaffMemberForm(forms.ModelForm):
             if not active:
                 raise ValidationError({'active': self.ERROR_MESSAGES['active_by_default']})
 
-            user = User.objects.filter(Q(username=email) | Q(email=email)).first()
+            user = User.objects.filter(email__iexact=email).first()
             if user:
                 if user.is_unicef_user():
                     raise ValidationError('Unable to associate staff member to UNICEF user')
@@ -94,7 +94,14 @@ class PartnerStaffMemberForm(forms.ModelForm):
             if 'user' in self.cleaned_data:
                 self.instance.user = self.cleaned_data['user']
             else:
-                self.instance.user = User.objects.create(email=self.instance.email, username=self.instance.email)
+                self.instance.user = User.objects.create(
+                    first_name=self.instance.first_name,
+                    last_name=self.instance.last_name,
+                    email=self.instance.email,
+                    username=self.instance.email,
+                    is_active=True,
+                    is_staff=False,
+                )
             self.instance.user.profile.countries_available.add(connection.tenant)
         return super().save(commit=commit)
 

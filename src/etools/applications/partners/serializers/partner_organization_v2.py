@@ -40,6 +40,7 @@ class CoreValuesAssessmentSerializer(AttachmentSerializerMixin, serializers.Mode
 
 
 class PartnerStaffMemberCreateSerializer(serializers.ModelSerializer):
+    # legacy serializer; not actually being used for creating
 
     class Meta:
         model = PartnerStaffMember
@@ -115,7 +116,7 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
         User = get_user_model()
 
         if not self.instance:
-            user = User.objects.filter(Q(username=email) | Q(email=email)).first()
+            user = User.objects.filter(email__iexact=email).first()
 
             if user:
                 if user.is_unicef_user():
@@ -142,7 +143,12 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
         User = get_user_model()
         if 'user' not in validated_data:
             validated_data['user'] = User.objects.create(
-                username=validated_data['email'], email=validated_data['email'], is_staff=False
+                first_name=validated_data.get('first_name'),
+                last_name=validated_data.get('first_name'),
+                username=validated_data['email'],
+                email=validated_data['email'],
+                is_staff=False,
+                is_active=True,
             )
 
         validated_data['user'].profile.countries_available.add(connection.tenant)
