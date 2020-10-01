@@ -1,5 +1,6 @@
 from django.http import HttpResponseForbidden
 from django.urls import reverse
+from django.utils import timezone
 
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
@@ -288,6 +289,10 @@ class PMPInterventionSendToPartnerView(PMPInterventionActionView):
             raise ValidationError("PD is currently with Partner")
         request.data.clear()
         request.data.update({"unicef_court": False})
+        if not pd.date_sent_to_partner:
+            request.data.update({
+                "date_sent_to_partner": timezone.now().strftime("%Y-%m-%d"),
+            })
 
         response = super().update(request, *args, **kwargs)
 

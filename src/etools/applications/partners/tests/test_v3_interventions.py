@@ -1091,6 +1091,7 @@ class TestInterventionSendToPartner(BaseInterventionActionTestCase):
 
     def test_get(self):
         self.assertTrue(self.intervention.unicef_court)
+        self.assertIsNone(self.intervention.date_sent_to_partner)
 
         # unicef sends PD to partner
         mock_send = mock.Mock(return_value=self.mock_email)
@@ -1098,6 +1099,12 @@ class TestInterventionSendToPartner(BaseInterventionActionTestCase):
             response = self.forced_auth_req("patch", self.url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         mock_send.assert_called()
+        self.intervention.refresh_from_db()
+        self.assertIsNotNone(self.intervention.date_sent_to_partner)
+        self.assertEqual(
+            response.data["date_sent_to_partner"],
+            self.intervention.date_sent_to_partner.strftime("%Y-%m-%d"),
+        )
 
         # unicef request when PD in partner court
         mock_send = mock.Mock()
