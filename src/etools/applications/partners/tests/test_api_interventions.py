@@ -2050,7 +2050,7 @@ class TestInterventionListMapView(BaseTenantTestCase):
         self.assertEqual(first["id"], intervention.pk)
 
 
-class TestInterventionReportingRequirementView(BaseTenantTestCase):
+class BaseInterventionReportingRequirementView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
@@ -2065,13 +2065,6 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
         )
         cls.lower_result = LowerResultFactory(result_link=cls.result_link)
         cls.indicator = AppliedIndicatorFactory(lower_result=cls.lower_result)
-
-    def _get_url(self, report_type, intervention=None):
-        intervention = self.intervention if intervention is None else intervention
-        return reverse(
-            "partners_api:intervention-reporting-requirements",
-            args=[intervention.pk, report_type]
-        )
 
     def test_get(self):
         for report_type, _ in ReportingRequirement.TYPE_CHOICES:
@@ -2424,3 +2417,14 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
                 response.status_code,
                 status.HTTP_405_METHOD_NOT_ALLOWED
             )
+
+
+class TestInterventionReportingRequirementView(
+        BaseInterventionReportingRequirementView,
+):
+    def _get_url(self, report_type, intervention=None):
+        intervention = self.intervention if intervention is None else intervention
+        return reverse(
+            "partners_api:intervention-reporting-requirements",
+            args=[intervention.pk, report_type]
+        )

@@ -25,7 +25,7 @@ from etools.applications.partners.tests.factories import (
     PartnerFactory,
     PartnerStaffFactory,
 )
-from etools.applications.partners.tests.test_api_interventions import TestInterventionReportingRequirementView
+from etools.applications.partners.tests.test_api_interventions import BaseInterventionReportingRequirementView
 from etools.applications.reports.models import ResultType
 from etools.applications.reports.tests.factories import (
     AppliedIndicatorFactory,
@@ -1352,7 +1352,7 @@ class TestPMPInterventionIndicatorsUpdateView(BaseTenantTestCase):
 
 
 class TestPMPInterventionReportingRequirementView(
-        TestInterventionReportingRequirementView,
+        BaseInterventionReportingRequirementView,
 ):
     def _get_url(self, report_type, intervention=None):
         intervention = self.intervention if intervention is None else intervention
