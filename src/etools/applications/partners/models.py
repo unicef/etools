@@ -1645,6 +1645,7 @@ class Intervention(TimeStampedModel):
     SIGNED = 'signed'
     ACTIVE = 'active'
     ENDED = 'ended'
+    CANCELLED = 'cancelled'
     IMPLEMENTED = 'implemented'
     CLOSED = 'closed'
     SUSPENDED = 'suspended'
@@ -1674,6 +1675,7 @@ class Intervention(TimeStampedModel):
         (SIGNATURE, "Signature"),
         (SIGNED, 'Signed'),
         (ACTIVE, "Active"),
+        (CANCELLED, "Cancelled"),
         (ENDED, "Ended"),
         (CLOSED, "Closed"),
         (SUSPENDED, "Suspended"),
@@ -2251,6 +2253,28 @@ class Intervention(TimeStampedModel):
                 target=[SIGNED],
                 conditions=[intervention_validation.transition_to_signed])
     def transition_to_signed(self):
+        pass
+
+    @transition(field=status,
+                source=[DRAFT, REVIEW, SIGNATURE],
+                target=[CANCELLED],
+                conditions=[intervention_validation.transition_to_cancelled])
+    def transition_to_cancelled(self):
+        pass
+
+    @transition(field=status,
+                source=[
+                    SIGNED,
+                    ACTIVE,
+                    ENDED,
+                    IMPLEMENTED,
+                    CLOSED,
+                    SUSPENDED,
+                    TERMINATED,
+                ],
+                target=[CANCELLED],
+                conditions=[illegal_transitions])
+    def transition_to_cancelled_illegal(self):
         pass
 
     @transition(field=status,

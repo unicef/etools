@@ -143,6 +143,11 @@ def transition_to_review(i):
     return True
 
 
+def transition_to_cancelled(i):
+    # TODO add validation rules/criteria
+    return True
+
+
 def transition_to_signature(i):
     # TODO ensure final partnership review document is set
     # this field is part of PR 2769

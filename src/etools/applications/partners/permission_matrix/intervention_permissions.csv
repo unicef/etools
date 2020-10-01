@@ -89,7 +89,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.3.5,sections_present,*,,Draft,Required,FALSE
 3.9.11,signed_pd_attachment,*,,Draft,Required,FALSE
 3.9.11,activation_letter_attachment,*,contingency on,Active,Required,True
-3.9.11,termination_doc,*,,Terminated,Required,True
+3.9.11,termination_doc_attachment,*,,Terminated,Required,True
 3.9.5,partner_authorized_officer_signatory,*,,Draft,Required,FALSE
 3.9.6,signed_by_partner_date,*,,Draft,Required,FALSE
 3.9.7,unicef_signatory,*,,*,Required,FALSE

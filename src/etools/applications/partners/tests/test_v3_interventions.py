@@ -27,6 +27,7 @@ from etools.applications.partners.tests.factories import (
 )
 from etools.applications.reports.models import ResultType
 from etools.applications.reports.tests.factories import (
+    AppliedIndicatorFactory,
     InterventionActivityFactory,
     LowerResultFactory,
     OfficeFactory,
@@ -45,6 +46,7 @@ class URLsTestCase(URLAssertionMixin, SimpleTestCase):
             ('intervention-list', '', {}),
             ('intervention-detail', '1/', {'pk': 1}),
             ('intervention-accept', '1/accept/', {'pk': 1}),
+            ('intervention-review', '1/review/', {'pk': 1}),
             ('intervention-accept-review', '1/accept_review/', {'pk': 1}),
             ('intervention-send-partner', '1/send_to_partner/', {'pk': 1}),
             ('intervention-send-unicef', '1/send_to_unicef/', {'pk': 1}),
@@ -54,6 +56,11 @@ class URLsTestCase(URLAssertionMixin, SimpleTestCase):
                 'intervention-supply-item-detail',
                 '1/supply/2/',
                 {'intervention_pk': 1, 'pk': 2},
+            ),
+            (
+                'intervention-indicators-update',
+                'applied-indicators/1/',
+                {'pk': 1},
             ),
         )
         self.assertReversal(
@@ -225,6 +232,26 @@ class TestCreate(BaseInterventionTestCase):
             }
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
+
+
+class TestUpdate(BaseInterventionTestCase):
+    def test_patch_currency(self):
+        intervention = InterventionFactory()
+        budget = intervention.planned_budget
+        self.assertNotEqual(budget.currency, "USD")
+
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+            user=self.user,
+            data={'planned_budget': {
+                "id": budget.pk,
+                "currency": "USD",
+            }}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        budget.refresh_from_db()
+        self.assertEqual(budget.currency, "USD")
 
 
 class TestManagementBudget(BaseInterventionTestCase):
@@ -656,6 +683,7 @@ class TestInterventionAccept(BaseInterventionActionTestCase):
         with mock.patch(self.notify_path, mock_send):
             response = self.forced_auth_req("patch", self.url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("available_actions", response.data)
         mock_send.assert_called()
         self.intervention.refresh_from_db()
         self.assertTrue(self.intervention.unicef_accepted)
@@ -721,7 +749,7 @@ class TestInterventionAcceptReview(BaseInterventionActionTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_get(self):
+    def test_patch(self):
         # unicef accepts
         self.assertFalse(self.intervention.unicef_accepted)
         mock_send = mock.Mock()
@@ -730,6 +758,7 @@ class TestInterventionAcceptReview(BaseInterventionActionTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         mock_send.assert_called()
         self.intervention.refresh_from_db()
+        self.assertEqual(self.intervention.status, Intervention.REVIEW)
         self.assertTrue(self.intervention.unicef_accepted)
 
         # unicef attempt to accept and review again
@@ -738,6 +767,214 @@ class TestInterventionAcceptReview(BaseInterventionActionTestCase):
             response = self.forced_auth_req("patch", self.url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("PD is already in Review status.", response.data)
+        mock_send.assert_not_called()
+
+
+class TestInterventionReview(BaseInterventionActionTestCase):
+    def setUp(self):
+        super().setUp()
+        self.url = reverse(
+            'pmp_v3:intervention-review',
+            args=[self.intervention.pk],
+        )
+
+    def test_not_found(self):
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-review', args=[404]),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_partner_no_access(self):
+        intervention = InterventionFactory()
+        response = self.forced_auth_req(
+            "patch",
+            reverse(
+                'pmp_v3:intervention-review',
+                args=[intervention.pk],
+            ),
+            user=self.partner_user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_patch(self):
+        # unicef reviews
+        self.assertFalse(self.intervention.unicef_accepted)
+        mock_send = mock.Mock()
+        with mock.patch(self.notify_path, mock_send):
+            response = self.forced_auth_req("patch", self.url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mock_send.assert_called()
+        self.intervention.refresh_from_db()
+        self.assertEqual(self.intervention.status, Intervention.REVIEW)
+        self.assertFalse(self.intervention.unicef_accepted)
+
+        # unicef attempt to review again
+        mock_send = mock.Mock()
+        with mock.patch(self.notify_path, mock_send):
+            response = self.forced_auth_req("patch", self.url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("PD is already in Review status.", response.data)
+        mock_send.assert_not_called()
+
+
+class TestInterventionCancel(BaseInterventionActionTestCase):
+    def setUp(self):
+        super().setUp()
+        self.url = reverse(
+            'pmp_v3:intervention-cancel',
+            args=[self.intervention.pk],
+        )
+
+    def test_not_found(self):
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-cancel', args=[404]),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_partner_no_access(self):
+        intervention = InterventionFactory()
+        response = self.forced_auth_req(
+            "patch",
+            reverse(
+                'pmp_v3:intervention-cancel',
+                args=[intervention.pk],
+            ),
+            user=self.partner_user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_patch(self):
+        # unicef cancels
+        self.assertFalse(self.intervention.unicef_accepted)
+        mock_send = mock.Mock()
+        with mock.patch(self.notify_path, mock_send):
+            response = self.forced_auth_req("patch", self.url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mock_send.assert_called()
+        self.intervention.refresh_from_db()
+        self.assertEqual(self.intervention.status, Intervention.CANCELLED)
+        self.assertFalse(self.intervention.unicef_accepted)
+
+        # unicef attempt to cancel again
+        mock_send = mock.Mock()
+        with mock.patch(self.notify_path, mock_send):
+            response = self.forced_auth_req("patch", self.url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("PD has already been cancelled.", response.data)
+        mock_send.assert_not_called()
+
+    def test_invalid(self):
+        mock_send = mock.Mock()
+        self.intervention.status = Intervention.SUSPENDED
+        self.intervention.save()
+
+        with mock.patch(self.notify_path, mock_send):
+            response = self.forced_auth_req("patch", self.url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        mock_send.assert_not_called()
+        self.intervention.refresh_from_db()
+        self.assertEqual(self.intervention.status, Intervention.SUSPENDED)
+
+
+class TestInterventionTerminate(BaseInterventionActionTestCase):
+    def setUp(self):
+        super().setUp()
+        self.url = reverse(
+            'pmp_v3:intervention-terminate',
+            args=[self.intervention.pk],
+        )
+
+    def test_not_found(self):
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-terminate', args=[404]),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_partner_no_access(self):
+        intervention = InterventionFactory()
+        response = self.forced_auth_req(
+            "patch",
+            reverse(
+                'pmp_v3:intervention-terminate',
+                args=[intervention.pk],
+            ),
+            user=self.partner_user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_patch(self):
+        # unicef terminates
+        self.assertFalse(self.intervention.unicef_accepted)
+        mock_send = mock.Mock()
+        with mock.patch(self.notify_path, mock_send):
+            response = self.forced_auth_req("patch", self.url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mock_send.assert_called()
+        self.intervention.refresh_from_db()
+        self.assertEqual(self.intervention.status, Intervention.TERMINATED)
+        self.assertFalse(self.intervention.unicef_accepted)
+
+        # unicef attempt to terminate again
+        mock_send = mock.Mock()
+        with mock.patch(self.notify_path, mock_send):
+            response = self.forced_auth_req("patch", self.url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("PD has already been terminated.", response.data)
+        mock_send.assert_not_called()
+
+
+class TestInterventionSignature(BaseInterventionActionTestCase):
+    def setUp(self):
+        super().setUp()
+        self.url = reverse(
+            'pmp_v3:intervention-signature',
+            args=[self.intervention.pk],
+        )
+
+    def test_not_found(self):
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-signature', args=[404]),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_partner_no_access(self):
+        intervention = InterventionFactory()
+        response = self.forced_auth_req(
+            "patch",
+            reverse(
+                'pmp_v3:intervention-signature',
+                args=[intervention.pk],
+            ),
+            user=self.partner_user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_patch(self):
+        # unicef signature
+        self.assertFalse(self.intervention.unicef_accepted)
+        mock_send = mock.Mock()
+        with mock.patch(self.notify_path, mock_send):
+            response = self.forced_auth_req("patch", self.url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mock_send.assert_called()
+        self.intervention.refresh_from_db()
+        self.assertEqual(self.intervention.status, Intervention.SIGNATURE)
+        self.assertFalse(self.intervention.unicef_accepted)
+
+        # unicef attempt to signature again
+        mock_send = mock.Mock()
+        with mock.patch(self.notify_path, mock_send):
+            response = self.forced_auth_req("patch", self.url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("PD is already in Signature status.", response.data)
         mock_send.assert_not_called()
 
 
@@ -766,7 +1003,7 @@ class TestInterventionUnlock(BaseInterventionActionTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    def test_get(self):
+    def test_patch(self):
         self.intervention.unicef_accepted = True
         self.intervention.partner_accepted = True
         self.intervention.save()
@@ -1028,3 +1265,75 @@ class TestInterventionAttachments(BaseTenantTestCase):
             user=self.partnership_manager,
         )
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+
+class TestPMPInterventionIndicatorsUpdateView(BaseTenantTestCase):
+    def setUp(self):
+        self.intervention = InterventionFactory()
+        self.result_link = InterventionResultLinkFactory(
+            cp_output__result_type__name=ResultType.OUTPUT,
+            intervention=self.intervention,
+        )
+        self.lower_result = LowerResultFactory(result_link=self.result_link)
+        # Create another result link/lower result pair that will break this
+        # test if the views don't behave properly
+        LowerResultFactory(result_link=InterventionResultLinkFactory(
+            cp_output__result_type__name=ResultType.OUTPUT,
+        ))
+        self.indicator = AppliedIndicatorFactory(
+            lower_result=self.lower_result,
+        )
+        self.url = reverse(
+            'pmp_v3:intervention-indicators-update',
+            args=[self.indicator.pk]
+        )
+
+        location = LocationFactory()
+        self.section = SectionFactory()
+
+        self.result_link.intervention.flat_locations.add(location)
+        self.result_link.intervention.sections.add(self.section)
+        self.user = UserFactory()
+        self.partnership_manager = UserFactory(
+            is_staff=True,
+            groups__data=['Partnership Manager', 'UNICEF User'],
+        )
+
+    def test_permission(self):
+        response = self.forced_auth_req(
+            'patch',
+            self.url,
+            user=self.user,
+            data={},
+        )
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_patch(self):
+        data = {
+            "is_active": False,
+            "is_high_frequency": True,
+        }
+        self.assertTrue(self.indicator.is_active)
+        self.assertFalse(self.indicator.is_high_frequency)
+        self.assertEqual(self.intervention.status, Intervention.DRAFT)
+        response = self.forced_auth_req(
+            'patch',
+            self.url,
+            user=self.partnership_manager,
+            data=data,
+        )
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        # The id of the newly-created indicator should be associated with
+        # lower result, and it should be the only one associated with that
+        # result.
+        self.assertEqual(
+            [response.data['id']],
+            [
+                indicator.pk for indicator
+                in self.lower_result.applied_indicators.all()
+            ]
+        )
+        self.assertFalse(response.data["is_active"])
+        self.assertTrue(response.data["is_high_frequency"])
+        self.indicator.refresh_from_db()
+        self.assertFalse(self.indicator.is_active)

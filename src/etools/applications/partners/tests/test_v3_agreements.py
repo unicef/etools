@@ -9,7 +9,7 @@ from unicef_snapshot.models import Activity
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.core.tests.mixins import URLAssertionMixin
 from etools.applications.partners.models import Agreement, PartnerType
-from etools.applications.partners.tests.factories import AgreementFactory, PartnerFactory
+from etools.applications.partners.tests.factories import AgreementFactory, PartnerFactory, PartnerStaffFactory
 from etools.applications.reports.tests.factories import CountryProgrammeFactory
 from etools.applications.users.tests.factories import GroupFactory, UserFactory
 
@@ -37,6 +37,13 @@ class BaseAgreementTestCase(BaseTenantTestCase):
         cls.partner = PartnerFactory(
             partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION,
         )
+        cls.partner_user = UserFactory(is_staff=False, groups__data=[])
+        user_staff_member = PartnerStaffFactory(
+            partner=cls.partner,
+            email=cls.partner_user.email,
+        )
+        cls.partner_user.profile.partner_staff_member = user_staff_member.pk
+        cls.partner_user.profile.save()
         cls.country_programme = CountryProgrammeFactory()
 
 
@@ -47,6 +54,16 @@ class TestList(BaseAgreementTestCase):
             "get",
             reverse("pmp_v3:agreement-list"),
             user=self.pme_user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), agreement_qs.count())
+
+    def test_get_by_partner(self):
+        agreement_qs = Agreement.objects
+        response = self.forced_auth_req(
+            "get",
+            reverse("pmp_v3:agreement-list"),
+            user=self.partner_user,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), agreement_qs.count())

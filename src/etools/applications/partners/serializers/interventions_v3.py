@@ -10,7 +10,11 @@ from etools.applications.partners.models import (
     InterventionRisk,
     InterventionSupplyItem,
 )
-from etools.applications.partners.permissions import InterventionPermissions, SENIOR_MANAGEMENT_GROUP
+from etools.applications.partners.permissions import (
+    InterventionPermissions,
+    PARTNERSHIP_MANAGER_GROUP,
+    SENIOR_MANAGEMENT_GROUP,
+)
 from etools.applications.partners.serializers.interventions_v2 import (
     FRsSerializer,
     InterventionAmendmentCUSerializer,
@@ -188,6 +192,13 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             profile__country=self.context['request'].user.profile.country
         ).exists()
 
+    def _is_partnership_manager(self):
+        return get_user_model().objects.filter(
+            pk=self.context['request'].user.pk,
+            groups__name__in=[PARTNERSHIP_MANAGER_GROUP],
+            profile__country=self.context['request'].user.profile.country
+        ).exists()
+
     def _is_partner_user(self, obj, user):
         return user.email in [o.email for o in obj.partner_focal_points.all()]
 
@@ -199,16 +210,19 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
         ]
         user = self.context['request'].user
 
-        # available actions only provided in Development status
+        # Partnership Manager
+        if self._is_partnership_manager():
+            if obj.status in [obj.DRAFT, obj.REVIEW, obj.SIGNATURE]:
+                available_actions.append("cancel")
+            else:
+                available_actions.append("terminate")
+
+        # if NOT in Development status then we're done
         if obj.status != obj.DRAFT:
             return available_actions
 
         # PD is assigned to UNICEF
         if obj.unicef_court:
-            # UNICEF User with Senior Management Team
-            if self._is_management():
-                available_actions.append("cancel")
-
             # budget owner
             if obj.budget_owner == user:
                 if not obj.unicef_accepted:
@@ -288,10 +302,12 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
         fields = (
             "activation_letter_attachment",
             "activation_letter_file",
+            # "actual_amount",
             "agreement",
             "amendments",
             "attachments",
             "available_actions",
+            # "budget_currency",
             "budget_owner",
             "capacity_development",
             "cash_transfer_modalities",
@@ -300,7 +316,10 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "context",
             "contingency_pd",
             "country_programme",
+            # "cp_outputs",
             "created",
+            # "cso_contribution",
+            "date_sent_to_partner",
             "days_from_review_to_signed",
             "days_from_submission_to_signed",
             "document_type",
@@ -314,11 +333,16 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "flat_locations",
             "frs",
             "frs_details",
+            # "frs_earliest_start_date",
+            # "frs_latest_end_date",
+            # "frs_total_frs_amt",
+            # "frs_total_intervention_amt",
+            # "frs_total_outstanding_amt",
             "gender_narrative",
             "gender_rating",
             "grants",
-            "humanitarian_flag",
             "hq_support_cost",
+            "humanitarian_flag",
             "id",
             "implementation_strategy",
             "in_amendment",
@@ -331,19 +355,21 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "modified",
             "number",
             "offices",
+            # "offices_names",
             "other_info",
             "other_partners_involved",
             "partner",
+            "partner_accepted",
             "partner_authorized_officer_signatory",
             "partner_focal_points",
             "partner_id",
+            # "partner_name",
             "partner_vendor",
             "permissions",
             "planned_budget",
             "planned_visits",
             "population_focus",
             "prc_review_attachment",
-            "prc_review_document",
             "prc_review_document_file",
             "quarters",
             "reference_number_year",
@@ -355,7 +381,6 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "signed_by_partner_date",
             "signed_by_unicef_date",
             "signed_pd_attachment",
-            "signed_pd_document",
             "signed_pd_document_file",
             "start",
             "status",
@@ -370,6 +395,11 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "termination_doc_attachment",
             "termination_doc_file",
             "title",
+            "total_budget",
+            "total_unicef_budget",
+            "unicef_accepted",
+            # "unicef_cash",
+            "unicef_court",
             "unicef_focal_points",
             "unicef_signatory",
         )
