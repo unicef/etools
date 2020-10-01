@@ -66,7 +66,7 @@ class TestModelExport(BaseTenantTestCase):
         AgreementFactory(signed_by_unicef_date=datetime.date.today())
         cls.intervention = InterventionFactory(
             agreement=cls.agreement,
-            document_type=Intervention.SHPD,
+            document_type=Intervention.SPD,
             status='draft',
             start=datetime.date.today(),
             end=datetime.date.today(),

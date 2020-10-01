@@ -159,8 +159,8 @@ def transition_to_signed(i):
     if i.in_amendment is True:
         raise TransitionError([_('Cannot Transition status while adding an amendment')])
 
-    if i.document_type in [i.PD, i.SHPD] and i.agreement.status in [Agreement.SUSPENDED, Agreement.TERMINATED,
-                                                                    Agreement.DRAFT]:
+    if i.document_type in [i.PD, i.SPD] and i.agreement.status in [Agreement.SUSPENDED, Agreement.TERMINATED,
+                                                                   Agreement.DRAFT]:
         raise TransitionError([_('The PCA related to this record is Draft, Suspended or Terminated. '
                                  'This Programme Document will not change status until the related PCA '
                                  'is in Signed status')])
@@ -184,7 +184,7 @@ def transition_to_active(i):
         raise TransitionError([_('Cannot Transition to ended if termination_doc attached')])
 
     # Validation id 1 -> if intervention is PD make sure the agreement is in active status
-    if i.document_type in [i.PD, i.SHPD] and i.agreement.status != i.agreement.SIGNED:
+    if i.document_type in [i.PD, i.SPD] and i.agreement.status != i.agreement.SIGNED:
         raise TransitionError([
             _('PD cannot be activated if the associated Agreement is not active')
         ])
@@ -214,7 +214,7 @@ def start_date_signed_valid(i):
 
 def start_date_related_agreement_valid(i):
     # i = intervention
-    if i.document_type in [i.PD, i.SHPD] and not i.contingency_pd and i.start and i.agreement.start and \
+    if i.document_type in [i.PD, i.SPD] and not i.contingency_pd and i.start and i.agreement.start and \
             (i.signed_pd_document or i.signed_pd_attachment) and i.start < i.agreement.start:
         return False
     return True
@@ -233,7 +233,7 @@ def document_type_pca_valid(i):
     """
         Checks if pd has an agreement of type PCA
     """
-    if i.document_type in [i.PD, i.SHPD] and i.agreement.agreement_type != i.agreement.PCA:
+    if i.document_type in [i.PD, i.SPD] and i.agreement.agreement_type != i.agreement.PCA:
         return False
     return True
 
