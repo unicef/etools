@@ -93,7 +93,7 @@ class PMPInterventionAcceptReviewView(PMPInterventionActionView):
             }
             send_notification_with_template(
                 recipients=recipients,
-                template_name='partners/intervention/unicef_accepted_review',
+                template_name='partners/intervention/unicef_accepted_reviewed',
                 context=context
             )
 
@@ -165,7 +165,7 @@ class PMPInterventionCancelView(PMPInterventionActionView):
             }
             send_notification_with_template(
                 recipients=recipients,
-                template_name='partners/intervention/unicef_cancel',
+                template_name='partners/intervention/unicef_cancelled',
                 context=context
             )
 
@@ -289,6 +289,10 @@ class PMPInterventionSendToPartnerView(PMPInterventionActionView):
             raise ValidationError("PD is currently with Partner")
         request.data.clear()
         request.data.update({"unicef_court": False})
+        if not pd.date_sent_to_partner:
+            request.data.update({
+                "date_sent_to_partner": timezone.now().strftime("%Y-%m-%d"),
+            })
 
         response = super().update(request, *args, **kwargs)
 

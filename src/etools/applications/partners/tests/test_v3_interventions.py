@@ -12,6 +12,7 @@ from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.factories import EmailFactory
 from etools.applications.core.tests.mixins import URLAssertionMixin
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory, FundsReservationItemFactory
 from etools.applications.partners.models import Intervention, InterventionSupplyItem
@@ -236,6 +237,26 @@ class TestCreate(BaseInterventionTestCase):
             }
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
+
+
+class TestUpdate(BaseInterventionTestCase):
+    def test_patch_currency(self):
+        intervention = InterventionFactory()
+        budget = intervention.planned_budget
+        self.assertNotEqual(budget.currency, "USD")
+
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+            user=self.user,
+            data={'planned_budget': {
+                "id": budget.pk,
+                "currency": "USD",
+            }}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        budget.refresh_from_db()
+        self.assertEqual(budget.currency, "USD")
 
 
 class TestManagementBudget(BaseInterventionTestCase):
@@ -634,7 +655,8 @@ class BaseInterventionActionTestCase(BaseInterventionTestCase):
             currency='USD',
         )
 
-        self.notify_path = "etools.applications.partners.views.interventions_v3_actions.send_notification_with_template"
+        self.notify_path = "post_office.mail.send"
+        self.mock_email = EmailFactory()
 
 
 class TestInterventionAccept(BaseInterventionActionTestCase):
@@ -665,7 +687,7 @@ class TestInterventionAccept(BaseInterventionActionTestCase):
     def test_get(self):
         # unicef accepts
         self.assertFalse(self.intervention.unicef_accepted)
-        mock_send = mock.Mock()
+        mock_send = mock.Mock(return_value=self.mock_email)
         with mock.patch(self.notify_path, mock_send):
             response = self.forced_auth_req("patch", self.url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -684,7 +706,7 @@ class TestInterventionAccept(BaseInterventionActionTestCase):
 
         # partner accepts
         self.assertFalse(self.intervention.partner_accepted)
-        mock_send = mock.Mock()
+        mock_send = mock.Mock(return_value=self.mock_email)
         with mock.patch(self.notify_path, mock_send):
             response = self.forced_auth_req(
                 "patch",
@@ -705,6 +727,7 @@ class TestInterventionAccept(BaseInterventionActionTestCase):
             )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("Partner has already accepted this PD.", response.data)
+        mock_send.assert_not_called()
 
 
 class TestInterventionAcceptReview(BaseInterventionActionTestCase):
@@ -738,7 +761,7 @@ class TestInterventionAcceptReview(BaseInterventionActionTestCase):
     def test_patch(self):
         # unicef accepts
         self.assertFalse(self.intervention.unicef_accepted)
-        mock_send = mock.Mock()
+        mock_send = mock.Mock(return_value=self.mock_email)
         with mock.patch(self.notify_path, mock_send):
             response = self.forced_auth_req("patch", self.url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -787,7 +810,7 @@ class TestInterventionReview(BaseInterventionActionTestCase):
     def test_patch(self):
         # unicef reviews
         self.assertFalse(self.intervention.unicef_accepted)
-        mock_send = mock.Mock()
+        mock_send = mock.Mock(return_value=self.mock_email)
         with mock.patch(self.notify_path, mock_send):
             response = self.forced_auth_req("patch", self.url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -836,7 +859,7 @@ class TestInterventionCancel(BaseInterventionActionTestCase):
     def test_patch(self):
         # unicef cancels
         self.assertFalse(self.intervention.unicef_accepted)
-        mock_send = mock.Mock()
+        mock_send = mock.Mock(return_value=self.mock_email)
         with mock.patch(self.notify_path, mock_send):
             response = self.forced_auth_req("patch", self.url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -897,7 +920,7 @@ class TestInterventionTerminate(BaseInterventionActionTestCase):
     def test_patch(self):
         # unicef terminates
         self.assertFalse(self.intervention.unicef_accepted)
-        mock_send = mock.Mock()
+        mock_send = mock.Mock(return_value=self.mock_email)
         with mock.patch(self.notify_path, mock_send):
             response = self.forced_auth_req("patch", self.url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -946,7 +969,7 @@ class TestInterventionSignature(BaseInterventionActionTestCase):
     def test_patch(self):
         # unicef signature
         self.assertFalse(self.intervention.unicef_accepted)
-        mock_send = mock.Mock()
+        mock_send = mock.Mock(return_value=self.mock_email)
         with mock.patch(self.notify_path, mock_send):
             response = self.forced_auth_req("patch", self.url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -996,7 +1019,7 @@ class TestInterventionUnlock(BaseInterventionActionTestCase):
 
         # unicef unlocks
         self.assertTrue(self.intervention.unicef_accepted)
-        mock_send = mock.Mock()
+        mock_send = mock.Mock(return_value=self.mock_email)
         with mock.patch(self.notify_path, mock_send):
             response = self.forced_auth_req("patch", self.url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -1014,7 +1037,7 @@ class TestInterventionUnlock(BaseInterventionActionTestCase):
 
         # partner unlocks
         self.assertTrue(self.intervention.partner_accepted)
-        mock_send = mock.Mock()
+        mock_send = mock.Mock(return_value=self.mock_email)
         with mock.patch(self.notify_path, mock_send):
             response = self.forced_auth_req(
                 "patch",
@@ -1035,6 +1058,7 @@ class TestInterventionUnlock(BaseInterventionActionTestCase):
             )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("PD is already unlocked.", response.data)
+        mock_send.assert_not_called()
 
 
 class TestInterventionSendToPartner(BaseInterventionActionTestCase):
@@ -1067,13 +1091,20 @@ class TestInterventionSendToPartner(BaseInterventionActionTestCase):
 
     def test_get(self):
         self.assertTrue(self.intervention.unicef_court)
+        self.assertIsNone(self.intervention.date_sent_to_partner)
 
         # unicef sends PD to partner
-        mock_send = mock.Mock()
+        mock_send = mock.Mock(return_value=self.mock_email)
         with mock.patch(self.notify_path, mock_send):
             response = self.forced_auth_req("patch", self.url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         mock_send.assert_called()
+        self.intervention.refresh_from_db()
+        self.assertIsNotNone(self.intervention.date_sent_to_partner)
+        self.assertEqual(
+            response.data["date_sent_to_partner"],
+            self.intervention.date_sent_to_partner.strftime("%Y-%m-%d"),
+        )
 
         # unicef request when PD in partner court
         mock_send = mock.Mock()
@@ -1117,7 +1148,7 @@ class TestInterventionSendToUNICEF(BaseInterventionActionTestCase):
         self.assertFalse(self.intervention.date_draft_by_partner)
 
         # partner sends PD to unicef
-        mock_send = mock.Mock()
+        mock_send = mock.Mock(return_value=self.mock_email)
         with mock.patch(self.notify_path, mock_send):
             response = self.forced_auth_req(
                 "patch",

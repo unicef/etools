@@ -31,6 +31,7 @@ from etools.applications.partners.serializers.exports.interventions import (
     InterventionExportSerializer,
 )
 from etools.applications.partners.serializers.interventions_v2 import (
+    InterventionBudgetCUSerializer,
     InterventionCreateUpdateSerializer,
     InterventionListSerializer,
     MinimalInterventionListSerializer,
@@ -165,9 +166,13 @@ class PMPInterventionListCreateView(APIActionsMixin, PMPInterventionMixin, Inter
 
 class PMPInterventionRetrieveUpdateView(APIActionsMixin, PMPInterventionMixin, InterventionDetailAPIView):
     SERIALIZER_MAP = copy(InterventionDetailAPIView.SERIALIZER_MAP)
-    SERIALIZER_MAP['risks'] = InterventionRiskSerializer
+    SERIALIZER_MAP.update({
+        'risks': InterventionRiskSerializer,
+        'planned_budget': InterventionBudgetCUSerializer,
+    })
     related_fields = InterventionDetailAPIView.related_fields + [
         'risks',
+        'planned_budget',
     ]
 
     def get_serializer_class(self):
