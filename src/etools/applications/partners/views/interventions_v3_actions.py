@@ -92,7 +92,7 @@ class PMPInterventionAcceptReviewView(PMPInterventionActionView):
             }
             send_notification_with_template(
                 recipients=recipients,
-                template_name='partners/intervention/unicef_accepted_review',
+                template_name='partners/intervention/unicef_accepted_reviewed',
                 context=context
             )
 
@@ -164,7 +164,7 @@ class PMPInterventionCancelView(PMPInterventionActionView):
             }
             send_notification_with_template(
                 recipients=recipients,
-                template_name='partners/intervention/unicef_cancel',
+                template_name='partners/intervention/unicef_cancelled',
                 context=context
             )
 
