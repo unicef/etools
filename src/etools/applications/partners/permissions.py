@@ -364,16 +364,6 @@ def intervention_field_is_editable_permission(field):
     return FieldPermission
 
 
-class IsPartnerUser(BasePermission):
-    def has_permission(self, request, view):
-        from etools.applications.partners.models import PartnerStaffMember
-
-        return request.user.is_authenticated and bool(PartnerStaffMember.get_for_user(request.user))
-
-    def has_object_permission(self, request, view, obj):
-        return True
-
-
 def view_action_permission(*actions):
     class ViewActionPermission(BasePermission):
         def has_permission(self, request, view):
@@ -406,13 +396,10 @@ class UserIsNotPartnerStaffMemberPermission(BasePermission):
 
 class UserIsObjectPartnerStaffMember(UserIsPartnerStaffMemberPermission):
     def has_object_permission(self, request, view, obj):
-        from etools.applications.partners.models import PartnerStaffMember
-
         if not hasattr(obj, 'partner'):
             return False
 
-        partner_staff_members = obj.partner.staff_members.values_list('id', flat=True)
-        return PartnerStaffMember.get_id_for_user(request.user) in partner_staff_members
+        return obj.partner.user_is_staff_member(request.user)
 
 
 class UserIsStaffPermission(BasePermission):
@@ -453,15 +440,15 @@ Applies general and object-based permissions.
 """
 PartnershipManagerRefinedPermission = (
     view_action_permission('metadata') |
-    (view_action_permission('list') & (UserIsStaffPermission | user_group_permission('Partnership Manager'))) |
-    (view_action_permission('create') & user_group_permission('Partnership Manager')) |
+    (view_action_permission('list') & (UserIsStaffPermission | user_group_permission(PARTNERSHIP_MANAGER_GROUP))) |
+    (view_action_permission('create') & user_group_permission(PARTNERSHIP_MANAGER_GROUP)) |
     (
         view_action_permission('retrieve') &
-        (UserIsStaffPermission | user_group_permission('Partnership Manager') | UserIsObjectPartnerStaffMember)
+        (UserIsStaffPermission | user_group_permission(PARTNERSHIP_MANAGER_GROUP) | UserIsObjectPartnerStaffMember)
     ) |
     (
         view_action_permission('update', 'partial_update', 'delete') &
-        (user_group_permission('Partnership Manager') | UserIsObjectPartnerStaffMember)
+        (user_group_permission(PARTNERSHIP_MANAGER_GROUP) | UserIsObjectPartnerStaffMember)
     )
 )
 

@@ -11,7 +11,7 @@ from rest_framework.views import APIView
 
 from etools.applications.funds.models import FundsReservationItem
 from etools.applications.partners.models import FileType, Intervention, PartnerOrganization, PartnerStaffMember
-from etools.applications.partners.permissions import IsPartnerUser
+from etools.applications.partners.permissions import UserIsPartnerStaffMemberPermission
 from etools.applications.partners.views.v2 import choices_to_json_ready
 from etools.applications.reports.models import CountryProgramme, Result, ResultType
 
@@ -74,7 +74,7 @@ class PMPBaseViewMixin:
 
 
 class PMPDropdownsListApiView(APIView):
-    permission_classes = (IsAuthenticated, IsAdminUser | IsPartnerUser)
+    permission_classes = (IsAuthenticated, IsAdminUser | UserIsPartnerStaffMemberPermission)
 
     @cached_property
     def partner(self):
