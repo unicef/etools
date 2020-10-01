@@ -172,6 +172,21 @@ class TestUsersListAPIView(BaseTenantTestCase):
         response_json = json.loads(response.rendered_content)
         self.assertEqual(len(response_json), 1)
 
+    def test_partner_user(self):
+        partner = PartnerFactory()
+        partner_staff = partner.staff_members.all().first()
+        partner_user = partner_staff.user
+
+        self.assertTrue(get_user_model().objects.count() > 1)
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            user=partner_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["id"], partner_user.pk)
+
 
 class TestMyProfileAPIView(BaseTenantTestCase):
     def setUp(self):
