@@ -323,6 +323,10 @@ class PMPInterventionSendToUNICEFView(PMPInterventionActionView):
             raise ValidationError("PD is currently with UNICEF")
         request.data.clear()
         request.data.update({"unicef_court": True})
+        if not pd.date_draft_by_partner:
+            request.data.update({
+                "date_draft_by_partner": timezone.now().strftime("%Y-%m-%d"),
+            })
 
         response = super().update(request, *args, **kwargs)
 

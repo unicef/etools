@@ -318,6 +318,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "country_programme",
             # "cp_outputs",
             "created",
+            "date_draft_by_partner",
             # "cso_contribution",
             "date_sent_to_partner",
             "days_from_review_to_signed",

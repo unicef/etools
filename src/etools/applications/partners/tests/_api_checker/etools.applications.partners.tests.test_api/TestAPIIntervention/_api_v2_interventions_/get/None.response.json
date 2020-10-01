@@ -19,7 +19,7 @@
         ],
         "content-length": [
             "Content-Length",
-            "3923"
+            "4010"
         ]
     },
     "data": [
@@ -68,6 +68,7 @@
             "date_sent_to_partner": null,
             "unicef_accepted": false,
             "partner_accepted": false,
+            "date_draft_by_partner": null,
             "cfei_number": "",
             "context": null,
             "implementation_strategy": null,
@@ -80,7 +81,9 @@
             "ip_program_contribution": null,
             "budget_owner": null,
             "hq_support_cost": "0.0",
-            "cash_transfer_modalities": ["dct"],
+            "cash_transfer_modalities": [
+                "dct"
+            ],
             "unicef_review_type": "none"
         },
         {
@@ -90,7 +93,7 @@
             "country_programme": null,
             "cp_outputs": [],
             "cso_contribution": "0.00",
-            "document_type": null,
+            "document_type": "",
             "end": null,
             "flagged_sections": [],
             "frs_earliest_start_date": null,
@@ -117,7 +120,7 @@
             "donor_codes": [],
             "donors": [],
             "fr_currencies_are_consistent": null,
-            "fr_currency": null,
+            "fr_currency": "",
             "grants": [],
             "location_p_codes": [],
             "multi_curr_flag": false,
@@ -126,6 +129,7 @@
             "date_sent_to_partner": null,
             "unicef_accepted": false,
             "partner_accepted": false,
+            "date_draft_by_partner": null,
             "cfei_number": "",
             "context": null,
             "implementation_strategy": null,
@@ -138,7 +142,9 @@
             "ip_program_contribution": null,
             "budget_owner": null,
             "hq_support_cost": "0.0",
-            "cash_transfer_modalities": "dct",
+            "cash_transfer_modalities": [
+                "dct"
+            ],
             "unicef_review_type": "none"
         },
         {
@@ -148,7 +154,7 @@
             "country_programme": null,
             "cp_outputs": [],
             "cso_contribution": "0.00",
-            "document_type": null,
+            "document_type": "",
             "end": null,
             "flagged_sections": [],
             "frs_earliest_start_date": null,
@@ -175,7 +181,7 @@
             "donor_codes": [],
             "donors": [],
             "fr_currencies_are_consistent": null,
-            "fr_currency": null,
+            "fr_currency": "",
             "grants": [],
             "location_p_codes": [],
             "multi_curr_flag": false,
@@ -184,6 +190,7 @@
             "date_sent_to_partner": null,
             "unicef_accepted": false,
             "partner_accepted": false,
+            "date_draft_by_partner": null,
             "cfei_number": "",
             "context": null,
             "implementation_strategy": null,
@@ -196,7 +203,9 @@
             "ip_program_contribution": null,
             "budget_owner": null,
             "hq_support_cost": "0.0",
-            "cash_transfer_modalities": "dct",
+            "cash_transfer_modalities": [
+                "dct"
+            ],
             "unicef_review_type": "none"
         }
     ],
