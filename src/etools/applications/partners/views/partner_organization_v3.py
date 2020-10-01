@@ -7,13 +7,17 @@ from etools.applications.partners.serializers.partner_organization_v2 import (
     PartnerOrganizationCreateUpdateSerializer,
     PartnerOrganizationDetailSerializer,
     PartnerOrganizationListSerializer,
+    PartnerStaffMemberDetailSerializer,
 )
 from etools.applications.partners.serializers.partner_organization_v3 import PartnerOrganizationDummySerializer
-from etools.applications.partners.views.partner_organization_v2 import PartnerOrganizationListAPIView
+from etools.applications.partners.views.partner_organization_v2 import (
+    PartnerOrganizationListAPIView,
+    PartnerStaffMemberListAPIVIew,
+)
 from etools.applications.partners.views.v3 import PMPBaseViewMixin
 
 
-class PMPpartnerOrganizationMixin(PMPBaseViewMixin):
+class PMPPartnerOrganizationMixin(PMPBaseViewMixin):
     SERIALIZER_OPTIONS = {
         "list": (PartnerOrganizationListSerializer, PartnerOrganizationListSerializer),
         "create": (PartnerOrganizationCreateUpdateSerializer, PartnerOrganizationDummySerializer),
@@ -27,8 +31,24 @@ class PMPpartnerOrganizationMixin(PMPBaseViewMixin):
         return self.partners()
 
 
-class PMPpartnerOrganizationListAPIView(
-        PMPpartnerOrganizationMixin,
-        PartnerOrganizationListAPIView
+class PMPPartnerOrganizationListAPIView(
+        PMPPartnerOrganizationMixin,
+        PartnerOrganizationListAPIView,
 ):
     """Wrapper for Partner Organizations"""
+
+
+class PMPPartnerStaffMemberMixin(PMPBaseViewMixin):
+    SERIALIZER_OPTIONS = {
+        "list": (PartnerStaffMemberDetailSerializer, PartnerStaffMemberDetailSerializer),
+    }
+
+    def get_queryset(self, format=None):
+        return self.queryset.filter(partner__in=self.partners())
+
+
+class PMPPartnerStaffMemberListAPIVIew(
+        PMPPartnerStaffMemberMixin,
+        PartnerStaffMemberListAPIVIew,
+):
+    """Wrapper for Partner Organizations staff members"""
