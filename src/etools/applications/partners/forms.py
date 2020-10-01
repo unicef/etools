@@ -5,7 +5,6 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from django.db import connection
-from django.db import connection
 from django.utils.translation import ugettext as _
 
 from unicef_djangolib.forms import AutoSizeTextForm
