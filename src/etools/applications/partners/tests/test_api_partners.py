@@ -2,7 +2,8 @@ import datetime
 import json
 from decimal import Decimal
 
-from django.test import SimpleTestCase
+from django.db import connection
+from django.test import override_settings, SimpleTestCase
 from django.urls import reverse
 
 from mock import Mock, patch
@@ -23,6 +24,7 @@ from etools.applications.partners.models import (
     InterventionBudget,
     PartnerOrganization,
     PartnerPlannedVisits,
+    PartnerStaffMember,
     PartnerType,
 )
 from etools.applications.partners.tests.factories import (
@@ -392,11 +394,9 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
                          ErrorDetail(string='Planned Visit can be set only for Government partners', code='invalid'))
 
     def test_update_staffmember_inactive(self):
-        partner_staff = PartnerStaffFactory(partner=self.partner)
         partner_staff_user = UserFactory(is_staff=True)
         partner_staff_user.groups.add(GroupFactory())
-        partner_staff_user.profile.partner_staff_member = partner_staff.pk
-        partner_staff_user.profile.save()
+        partner_staff = PartnerStaffFactory(partner=self.partner, user=partner_staff_user)
         agreement = AgreementFactory(
             status=Agreement.DRAFT,
             partner=self.partner,
@@ -429,6 +429,47 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
         )
         agreement.refresh_from_db()
         self.assertNotIn(partner_staff, agreement.authorized_officers.all())
+
+    def test_assign_staff_member_to_existing_user(self):
+        user = UserFactory(groups__data=[], is_staff=False)
+        user.profile.countries_available.clear()
+        response = self.forced_auth_req(
+            "patch", self.url,
+            data={"staff_members": [{"email": user.email, "active": True, 'first_name': 'mr', 'last_name': 'smith'}]},
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertIsNotNone(PartnerStaffMember.get_for_user(user))
+        self.assertTrue(user.profile.countries_available.filter(id=connection.tenant.id).exists())
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_assign_staff_member_to_unicef_user(self):
+        user = UserFactory()
+        response = self.forced_auth_req(
+            "patch", self.url,
+            data={"staff_members": [{"email": user.email, "active": True, 'first_name': 'mr', 'last_name': 'smith'}]},
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
+        self.assertIn(
+            'Unable to associate staff member to UNICEF user',
+            response.data['staff_members']['non_field_errors'],
+        )
+
+    def test_assign_staff_member_to_another_staff(self):
+        user = UserFactory(groups__data=[], is_staff=False)
+        PartnerStaffFactory(user=user)
+        response = self.forced_auth_req(
+            "patch", self.url,
+            data={"staff_members": [{"email": user.email, "active": True, 'first_name': 'mr', 'last_name': 'smith'}]},
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
+        self.assertIn(
+            'The email for the partner contact is used by another partner contact. '
+            'Email has to be unique to proceed {}'.format(user.email),
+            response.data['staff_members']['active'],
+        )
 
 
 class TestPartnerOrganizationHactAPIView(BaseTenantTestCase):
@@ -786,11 +827,9 @@ class TestPartnerOrganizationAssessmentUpdateDeleteView(BaseTenantTestCase):
             vendor_number="DDD",
             short_name="Short name",
         )
-        cls.partner_staff = PartnerStaffFactory(partner=cls.partner)
         cls.partnership_manager_user = UserFactory(is_staff=True)
         cls.partnership_manager_user.groups.add(GroupFactory())
-        cls.partnership_manager_user.profile.partner_staff_member = cls.partner_staff.id
-        cls.partnership_manager_user.save()
+        cls.partner_staff = PartnerStaffFactory(partner=cls.partner, user=cls.partnership_manager_user)
 
     def setUp(self):
         self.assessment = AssessmentFactory(
@@ -1023,20 +1062,20 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(BaseTenantTestCase):
 
     def test_api_partners_update_with_members_exists(self):
         self.assertFalse(Activity.objects.exists())
-        response = self.forced_auth_req(
+        detail_response = self.forced_auth_req(
             'get',
             reverse('partners_api:partner-detail', args=[self.partner.pk]),
             user=self.unicef_staff,
         )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data["staff_members"]), 1)
-        self.assertEqual(response.data["staff_members"][0]["first_name"], "Mace")
+        self.assertEqual(detail_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(detail_response.data["staff_members"]), 1)
+        self.assertEqual(detail_response.data["staff_members"][0]["first_name"], "Mace")
 
         staff_members = [{
             "title": "Some title",
             "first_name": "John",
             "last_name": "Doe",
-            "email": response.data["staff_members"][0]["email"],
+            "email": detail_response.data["staff_members"][0]["email"],
             "active": True,
         }]
         data = {
@@ -1057,9 +1096,12 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(BaseTenantTestCase):
             response.data,
             {
                 "staff_members": {
-                    "email": [
+                    "active": [
                         ErrorDetail(
-                            string="Email address in use already.",
+                            string=(
+                                "The email for the partner contact is used by another partner contact. "
+                                "Email has to be unique to proceed {}"
+                            ).format(detail_response.data["staff_members"][0]["email"]),
                             code="invalid"
                         )
                     ]

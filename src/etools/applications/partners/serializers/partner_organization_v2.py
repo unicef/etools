@@ -2,6 +2,7 @@ import datetime
 import json
 
 from django.contrib.auth import get_user_model
+from django.db import connection
 from django.db.models import Q
 from django.utils import timezone
 
@@ -39,6 +40,7 @@ class CoreValuesAssessmentSerializer(AttachmentSerializerMixin, serializers.Mode
 
 
 class PartnerStaffMemberCreateSerializer(serializers.ModelSerializer):
+    # legacy serializer; not actually being used for creating
 
     class Meta:
         model = PartnerStaffMember
@@ -56,7 +58,7 @@ class PartnerStaffMemberCreateSerializer(serializers.ModelSerializer):
             raise ValidationError({'active': 'New Staff Member needs to be active at the moment of creation'})
         try:
             existing_user = User.objects.filter(Q(username=email) | Q(email=email)).get()
-            if existing_user.profile.partner_staff_member:
+            if bool(PartnerStaffMember.get_for_user(existing_user)):
                 raise ValidationError("The email {} for the partner contact is used by another partner contact. "
                                       "Email has to be unique to proceed.".format(email))
         except User.DoesNotExist:
@@ -106,46 +108,52 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = PartnerStaffMember
         fields = "__all__"
+        read_only_fields = ['user', ]
 
     def validate(self, data):
         data = super().validate(data)
         email = data.get('email', "")
-        active = data.get('active', "")
         User = get_user_model()
 
-        try:
-            existing_user = User.objects.get(email=email)
-        except User.DoesNotExist:
-            # this is a new user
-            existing_user = None
+        if not self.instance:
+            user = User.objects.filter(email__iexact=email).first()
 
-        if existing_user and not self.instance and existing_user.profile.partner_staff_member:
-            raise ValidationError(
-                {'active': 'The email for the partner contact is used by another partner contact. Email has to be '
-                           'unique to proceed {}'.format(email)})
+            if user:
+                if user.is_unicef_user():
+                    raise ValidationError('Unable to associate staff member to UNICEF user')
+
+                if PartnerStaffMember.get_for_user(user):
+                    raise ValidationError(
+                        {
+                            'active': 'The email for the partner contact is used by another partner contact. '
+                                      'Email has to be unique to proceed {}'.format(email)
+                        }
+                    )
+
+                data['user'] = user
         else:
-            staff_member_qs = PartnerStaffMember.objects.filter(email=email)
-            if not self.instance and staff_member_qs.exists():
-                raise ValidationError({"email": "Email address in use already."})
-
-        # make sure email addresses are not editable after creation.. user must be removed and re-added
-        if self.instance:
+            # make sure email addresses are not editable after creation.. user must be removed and re-added
             if email != self.instance.email:
                 raise ValidationError(
                     "User emails cannot be changed, please remove the user and add another one: {}".format(email))
 
-            # when adding the active tag to a previously untagged user
-            # make sure this user has not already been associated with another partnership.
-            # TODO: Users should have a json field with country partnerhip pairs not just partnerships
-            if active and not self.instance.active and \
-                    existing_user and existing_user.profile.partner_staff_member and \
-                    existing_user.profile.partner_staff_member != self.instance.pk:
-                raise ValidationError(
-                    {'active':
-                     'The Partner Staff member you are trying to activate is associated with a different partnership'}
-                )
-
         return data
+
+    def create(self, validated_data):
+        User = get_user_model()
+        if 'user' not in validated_data:
+            validated_data['user'] = User.objects.create(
+                first_name=validated_data.get('first_name'),
+                last_name=validated_data.get('first_name'),
+                username=validated_data['email'],
+                email=validated_data['email'],
+                is_staff=False,
+                is_active=True,
+            )
+
+        validated_data['user'].profile.countries_available.add(connection.tenant)
+
+        return super().create(validated_data)
 
     def update(self, instance, validated_data):
         instance = super().update(instance, validated_data)

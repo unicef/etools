@@ -4,7 +4,7 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
-from django.db.models import Q
+from django.db import connection
 from django.utils.translation import ugettext as _
 
 from unicef_djangolib.forms import AutoSizeTextForm
@@ -54,7 +54,7 @@ class PartnerStaffMemberForm(forms.ModelForm):
 
     class Meta:
         model = PartnerStaffMember
-        fields = '__all__'
+        exclude = ['user', ]
 
     def clean(self):
         cleaned_data = super().clean()
@@ -63,32 +63,46 @@ class PartnerStaffMemberForm(forms.ModelForm):
         validate_email(email)
         User = get_user_model()
 
-        partner_staff_members = []
-        for u in User.objects.filter(Q(username=email) | Q(email=email)).all():
-            if u.profile.partner_staff_member:
-                partner_staff_members.append(u.profile.partner_staff_member)
-
         if not self.instance.pk:
             # user should be active first time it's created
             if not active:
                 raise ValidationError({'active': self.ERROR_MESSAGES['active_by_default']})
 
-            if partner_staff_members:
-                raise ValidationError("This user already exists under a different partnership: {}".format(email))
+            user = User.objects.filter(email__iexact=email).first()
+            if user:
+                if user.is_unicef_user():
+                    raise ValidationError('Unable to associate staff member to UNICEF user')
 
+                staff_member = PartnerStaffMember.get_id_for_user(user)
+                if staff_member:
+                    raise ValidationError("This user already exists under a different partnership: {}".format(email))
+
+                cleaned_data['user'] = user
         else:
             # make sure email addresses are not editable after creation.. user must be removed and re-added
             if email != self.instance.email:
                 raise ValidationError(
                     "User emails cannot be changed, please remove the user and add another one: {}".format(email))
 
-            # when adding the active tag to a previously untagged user
-            if active and not self.instance.active:
-                # make sure this user has not already been associated with another partnership.
-                if [x for x in partner_staff_members if x != self.instance.pk]:
-                    raise ValidationError({'active': self.ERROR_MESSAGES['user_unavailable']})
-
         return cleaned_data
+
+    def save(self, commit=True):
+        User = get_user_model()
+
+        if not self.instance.pk:
+            if 'user' in self.cleaned_data:
+                self.instance.user = self.cleaned_data['user']
+            else:
+                self.instance.user = User.objects.create(
+                    first_name=self.instance.first_name,
+                    last_name=self.instance.last_name,
+                    email=self.instance.email,
+                    username=self.instance.email,
+                    is_active=True,
+                    is_staff=False,
+                )
+            self.instance.user.profile.countries_available.add(connection.tenant)
+        return super().save(commit=commit)
 
 
 class InterventionAttachmentForm(forms.ModelForm):
