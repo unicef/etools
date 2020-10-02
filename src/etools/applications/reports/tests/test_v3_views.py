@@ -6,6 +6,7 @@ from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.tests.factories import InterventionFactory, PartnerFactory
 from etools.applications.reports.models import Office, Section
 from etools.applications.reports.tests.factories import OfficeFactory, SectionFactory
+from etools.applications.reports.tests.test_views import SpecialReportingRequirementListCreateMixin
 from etools.applications.users.tests.factories import UserFactory
 
 
@@ -106,3 +107,16 @@ class TestPMPSectionViews(BasePMPTestCase):
         pd.partner_focal_points.add(self.partner_staff)
         response = self.forced_auth_req('get', url, user=self.partner_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
+class TestPMPSpecialReportingRequirementListCreateView(
+        SpecialReportingRequirementListCreateMixin,
+        BaseTenantTestCase,
+):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.url = reverse(
+            "reports_v3:interventions-special-reporting-requirements",
+            kwargs={'intervention_pk': cls.intervention.pk}
+        )

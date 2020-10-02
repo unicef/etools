@@ -1,5 +1,5 @@
 import datetime
-from unittest import mock
+from unittest import mock, skip
 
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.models import ContentType
@@ -25,6 +25,10 @@ from etools.applications.partners.tests.factories import (
     InterventionSupplyItemFactory,
     PartnerFactory,
     PartnerStaffFactory,
+)
+from etools.applications.partners.tests.test_api_interventions import (
+    BaseAPIInterventionIndicatorsListMixin,
+    BaseInterventionReportingRequirementMixin,
 )
 from etools.applications.reports.models import ResultType
 from etools.applications.reports.tests.factories import (
@@ -62,6 +66,16 @@ class URLsTestCase(URLAssertionMixin, SimpleTestCase):
                 'intervention-indicators-update',
                 'applied-indicators/1/',
                 {'pk': 1},
+            ),
+            (
+                'intervention-reporting-requirements',
+                '1/reporting-requirements/HR/',
+                {'intervention_pk': 1, 'report_type': 'HR'},
+            ),
+            (
+                'intervention-indicators-list',
+                'lower-results/1/indicators/',
+                {'lower_result_pk': 1},
             ),
         )
         self.assertReversal(
@@ -1361,3 +1375,36 @@ class TestPMPInterventionIndicatorsUpdateView(BaseTenantTestCase):
         self.assertTrue(response.data["is_high_frequency"])
         self.indicator.refresh_from_db()
         self.assertFalse(self.indicator.is_active)
+
+
+class TestPMPInterventionReportingRequirementView(
+        BaseInterventionReportingRequirementMixin,
+        BaseTenantTestCase,
+):
+    def _get_url(self, report_type, intervention=None):
+        intervention = self.intervention if intervention is None else intervention
+        return reverse(
+            "pmp_v3:intervention-reporting-requirements",
+            args=[intervention.pk, report_type]
+        )
+
+
+class TestPMPInterventionIndicatorsListView(
+        BaseAPIInterventionIndicatorsListMixin,
+        BaseTenantTestCase,
+):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.url = reverse(
+            'pmp_v3:intervention-indicators-list',
+            kwargs={'lower_result_pk': cls.lower_result.pk},
+        )
+
+    @skip("waiting of permissions")
+    def test_no_permission_user_forbidden(self):
+        super().test_no_permission_user_forbidden()
+
+    @skip("waiting of permissions")
+    def test_group_permission(self):
+        super().test_group_permission()

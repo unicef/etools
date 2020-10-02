@@ -1179,7 +1179,7 @@ class TestAPIInterventionLowerResultCreateView(BaseTenantTestCase):
         self.assertNotEqual(response_json.get('code'), 'ZZZ')
 
 
-class TestAPIInterventionIndicatorsListView(BaseTenantTestCase):
+class BaseAPIInterventionIndicatorsListMixin:
     """Exercise the list view for InterventionIndicatorsListView (these are AppliedIndicator instances)"""
     @classmethod
     def setUpClass(cls):
@@ -1195,9 +1195,6 @@ class TestAPIInterventionIndicatorsListView(BaseTenantTestCase):
         # Create another result link/lower result/indicator combo that will break this test if the views don't
         # filter properly
         AppliedIndicatorFactory(lower_result=LowerResultFactory(result_link=InterventionResultLinkFactory()))
-
-        cls.url = reverse('partners_api:intervention-indicators-list',
-                          kwargs={'lower_result_pk': cls.lower_result.id})
 
         # cls.expected_field_names is the list of field names expected in responses.
         cls.expected_field_names = sorted((
@@ -1282,6 +1279,19 @@ class TestAPIInterventionIndicatorsListView(BaseTenantTestCase):
         # Now the request should succeed.
         response = self._make_request(user)
         self.assertResponseFundamentals(response)
+
+
+class TestAPIInterventionIndicatorsListView(
+        BaseAPIInterventionIndicatorsListMixin,
+        BaseTenantTestCase,
+):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.url = reverse(
+            'partners_api:intervention-indicators-list',
+            kwargs={'lower_result_pk': cls.lower_result.pk},
+        )
 
 
 class TestAPInterventionIndicatorsCreateView(BaseTenantTestCase):
@@ -2051,7 +2061,7 @@ class TestInterventionListMapView(BaseTenantTestCase):
         self.assertEqual(first["id"], intervention.pk)
 
 
-class TestInterventionReportingRequirementView(BaseTenantTestCase):
+class BaseInterventionReportingRequirementMixin:
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
@@ -2066,13 +2076,6 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
         )
         cls.lower_result = LowerResultFactory(result_link=cls.result_link)
         cls.indicator = AppliedIndicatorFactory(lower_result=cls.lower_result)
-
-    def _get_url(self, report_type, intervention=None):
-        intervention = self.intervention if intervention is None else intervention
-        return reverse(
-            "partners_api:intervention-reporting-requirements",
-            args=[intervention.pk, report_type]
-        )
 
     def test_get(self):
         for report_type, _ in ReportingRequirement.TYPE_CHOICES:
@@ -2425,3 +2428,15 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
                 response.status_code,
                 status.HTTP_405_METHOD_NOT_ALLOWED
             )
+
+
+class TestInterventionReportingRequirementView(
+        BaseInterventionReportingRequirementMixin,
+        BaseTenantTestCase,
+):
+    def _get_url(self, report_type, intervention=None):
+        intervention = self.intervention if intervention is None else intervention
+        return reverse(
+            "partners_api:intervention-reporting-requirements",
+            args=[intervention.pk, report_type]
+        )
