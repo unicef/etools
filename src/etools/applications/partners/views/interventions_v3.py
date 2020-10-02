@@ -38,7 +38,6 @@ from etools.applications.partners.serializers.interventions_v2 import (
 )
 from etools.applications.partners.serializers.interventions_v3 import (
     InterventionDetailSerializer,
-    InterventionDummySerializer,
     InterventionManagementBudgetSerializer,
     InterventionRiskSerializer,
     InterventionSupplyItemSerializer,
@@ -97,15 +96,6 @@ class APIActionsMixin:
 
 
 class PMPInterventionMixin(PMPBaseViewMixin):
-    SERIALIZER_OPTIONS = {
-        "list": (InterventionListSerializer, InterventionListSerializer),
-        "create": (InterventionCreateUpdateSerializer, InterventionCreateUpdateSerializer),
-        "detail": (InterventionDetailSerializer, InterventionDetailSerializer),
-        "list_min": (MinimalInterventionListSerializer, MinimalInterventionListSerializer),
-        "csv": (InterventionExportSerializer, InterventionDummySerializer),
-        "csv_flat": (InterventionExportFlatSerializer, InterventionDummySerializer),
-    }
-
     def get_queryset(self, format=None):
         qs = super().get_queryset()
         # if partner, limit to interventions that they are associated with
@@ -144,20 +134,23 @@ class PMPInterventionListCreateView(APIActionsMixin, PMPInterventionMixin, Inter
         if self.request.method == "GET":
             query_params = self.request.query_params
             if "format" in query_params.keys():
-                if query_params.get("format") in ["csv", "csv_flat"]:
-                    return self.map_serializer(query_params.get("format"))
+                export_format = query_params.get("format")
+                if export_format == "csv":
+                    return InterventionExportSerializer
+                elif export_format == "csv_flat":
+                    return InterventionExportFlatSerializer
             if "verbosity" in query_params.keys():
                 if query_params.get("verbosity") == 'minimal':
-                    return self.map_serializer("list_min")
+                    return MinimalInterventionListSerializer
         if self.request.method == "POST":
-            return self.map_serializer("create")
-        return self.map_serializer("list")
+            return InterventionCreateUpdateSerializer
+        return InterventionListSerializer
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
         super().create(request, *args, **kwargs)
         return Response(
-            self.map_serializer("detail")(
+            InterventionDetailSerializer(
                 self.instance,
                 context=self.get_serializer_context(),
             ).data,
@@ -179,14 +172,14 @@ class PMPInterventionRetrieveUpdateView(APIActionsMixin, PMPInterventionMixin, I
 
     def get_serializer_class(self):
         if self.request.method in ["PATCH", "PUT"]:
-            return self.map_serializer("create")
-        return self.map_serializer("detail")
+            return InterventionCreateUpdateSerializer
+        return InterventionDetailSerializer
 
     @transaction.atomic
     def update(self, request, *args, **kwargs):
         super().update(request, *args, **kwargs)
         return Response(
-            self.map_serializer("detail")(
+            InterventionDetailSerializer(
                 self.instance,
                 context=self.get_serializer_context(),
             ).data,

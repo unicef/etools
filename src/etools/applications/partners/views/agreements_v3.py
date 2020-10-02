@@ -8,24 +8,11 @@ from etools.applications.partners.serializers.agreements_v2 import (
     AgreementDetailSerializer,
     AgreementListSerializer,
 )
-from etools.applications.partners.serializers.exports.agreements import (
-    AgreementExportFlatSerializer,
-    AgreementExportSerializer,
-)
 from etools.applications.partners.views.agreements_v2 import AgreementDetailAPIView, AgreementListAPIView
 from etools.applications.partners.views.v3 import PMPBaseViewMixin
 
 
 class PMPAgreementViewMixin(PMPBaseViewMixin):
-    SERIALIZER_OPTIONS = {
-        "list": (AgreementListSerializer, AgreementListSerializer),
-        "create": (AgreementCreateUpdateSerializer, AgreementCreateUpdateSerializer),
-        "csv": (AgreementExportSerializer, AgreementExportSerializer),
-        "csv_flat": (AgreementExportFlatSerializer, AgreementExportFlatSerializer),
-        "update": (AgreementCreateUpdateSerializer, AgreementCreateUpdateSerializer),
-        "detail": (AgreementDetailSerializer, AgreementDetailSerializer),
-    }
-
     def get_queryset(self, format=None):
         qs = super().get_queryset()
         # if partner, limit to agreements that they are associated with
@@ -49,14 +36,14 @@ class PMPAgreementListCreateAPIView(
                 if query_params.get("format") in ['csv', 'csv_flat']:
                     return self.get_serializer(query_params.get("format"))
         elif self.request.method == "POST":
-            return self.map_serializer("create")
-        return self.map_serializer("list")
+            return AgreementCreateUpdateSerializer
+        return AgreementListSerializer
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
         super().create(request, *args, **kwargs)
         return Response(
-            self.map_serializer("detail")(
+            AgreementDetailSerializer(
                 self.instance,
                 context=self.get_serializer_context(),
             ).data,
@@ -70,14 +57,14 @@ class PMPAgreementDetailUpdateAPIView(
 ):
     def get_serializer_class(self, format=None):
         if self.request.method in ["PATCH"]:
-            return self.map_serializer("update")
-        return self.map_serializer("detail")
+            return AgreementCreateUpdateSerializer
+        return AgreementDetailSerializer
 
     @transaction.atomic
     def update(self, request, *args, **kwargs):
         super().update(self, request, *args, **kwargs)
         return Response(
-            self.map_serializer("detail")(
+            AgreementDetailSerializer(
                 self.instance,
                 context=self.get_serializer_context(),
             ).data,
