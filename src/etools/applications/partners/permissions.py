@@ -473,12 +473,7 @@ PMPAgreementPermission = (
     (view_action_permission('create') & (
         UserIsStaffPermission | user_group_permission('Partnership Manager')
     )) |
-    (view_action_permission(
-        'list',
-        'retrieve',
-        'update',
-        'partial_update',
-    ) & (
+    (view_action_permission('list', 'retrieve') & (
         UserIsPartnerStaffMemberPermission | (
             UserIsStaffPermission | user_group_permission('Partnership Manager')
         )
