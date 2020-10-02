@@ -53,7 +53,7 @@ from etools.applications.partners.views.interventions_v2 import (
     InterventionIndicatorsUpdateView,
     InterventionListAPIView,
 )
-from etools.applications.partners.views.v3 import APIActionsMixin, PMPBaseViewMixin
+from etools.applications.partners.views.v3 import PMPBaseViewMixin
 from etools.applications.reports.models import InterventionActivity, LowerResult
 from etools.applications.reports.serializers.v2 import InterventionActivityDetailSerializer
 
@@ -93,7 +93,7 @@ class DetailedInterventionResponseMixin:
         return response
 
 
-class PMPInterventionListCreateView(APIActionsMixin, PMPInterventionMixin, InterventionListAPIView):
+class PMPInterventionListCreateView(PMPInterventionMixin, InterventionListAPIView):
     permission_classes = (IsAuthenticated, PMPInterventionPermission)
     search_terms = (
         'title__icontains',
@@ -128,7 +128,7 @@ class PMPInterventionListCreateView(APIActionsMixin, PMPInterventionMixin, Inter
         )
 
 
-class PMPInterventionRetrieveUpdateView(APIActionsMixin, PMPInterventionMixin, InterventionDetailAPIView):
+class PMPInterventionRetrieveUpdateView(PMPInterventionMixin, InterventionDetailAPIView):
     SERIALIZER_MAP = copy(InterventionDetailAPIView.SERIALIZER_MAP)
     SERIALIZER_MAP['risks'] = InterventionRiskSerializer
     related_fields = InterventionDetailAPIView.related_fields + [

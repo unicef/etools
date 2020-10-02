@@ -15,7 +15,7 @@ from etools.applications.partners.serializers.exports.agreements import (
     AgreementExportSerializer,
 )
 from etools.applications.partners.views.agreements_v2 import AgreementDetailAPIView, AgreementListAPIView
-from etools.applications.partners.views.v3 import APIActionsMixin, PMPBaseViewMixin
+from etools.applications.partners.views.v3 import PMPBaseViewMixin
 
 
 class PMPAgreementViewMixin(PMPBaseViewMixin):
@@ -37,7 +37,6 @@ class PMPAgreementViewMixin(PMPBaseViewMixin):
 
 
 class PMPAgreementListCreateAPIView(
-        APIActionsMixin,
         PMPAgreementViewMixin,
         AgreementListAPIView,
 ):
