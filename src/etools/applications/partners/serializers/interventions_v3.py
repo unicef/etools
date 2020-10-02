@@ -278,9 +278,6 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             ]
         elif obj.status == obj.CANCELLED:
             status_list = [
-                obj.DRAFT,
-                obj.REVIEW,
-                obj.SIGNATURE,
                 obj.CANCELLED,
             ]
         else:
