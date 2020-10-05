@@ -377,7 +377,7 @@ class IsPartnerUser(BasePermission):
 def view_action_permission(*actions):
     class ViewActionPermission(BasePermission):
         def has_permission(self, request, view):
-            return hasattr(view, 'action') and view.action in actions
+            return request.method.upper() in actions
 
     return ViewActionPermission
 
@@ -448,20 +448,34 @@ Applies general and object-based permissions.
                  (listed as a partner staff member on the object)
 """
 PartnershipManagerRefinedPermission = (
-    view_action_permission('metadata') |
-    (view_action_permission('list') & (UserIsStaffPermission | user_group_permission('Partnership Manager'))) |
-    (view_action_permission('create') & user_group_permission('Partnership Manager')) |
+    view_action_permission('OPTIONS') |
+    (view_action_permission('GET') & (UserIsStaffPermission | user_group_permission('Partnership Manager'))) |
+    (view_action_permission('POST') & user_group_permission('Partnership Manager')) |
     (
-        view_action_permission('retrieve') &
+        view_action_permission('GET') &
         (UserIsStaffPermission | user_group_permission('Partnership Manager') | UserIsObjectPartnerStaffMember)
     ) |
     (
-        view_action_permission('update', 'partial_update', 'delete') &
+        view_action_permission('PUT', 'PATCH', 'DELETE') &
         (user_group_permission('Partnership Manager') | UserIsObjectPartnerStaffMember)
     )
 )
 
-# allow partners to load list ONLY for interventions to keep everything else working right as before; at least for now
+# allow partners to load list ONLY for interventions to keep everything
+# else working right as before; at least for now
 PMPInterventionPermission = (
-    PartnershipManagerRefinedPermission | (view_action_permission('list') & UserIsPartnerStaffMemberPermission)
+    PartnershipManagerRefinedPermission | (view_action_permission('GET') & UserIsPartnerStaffMemberPermission)
+)
+
+# allow partners to load list ONLY for agreements to keep everything
+# else working right as before; at least for now
+PMPAgreementPermission = (
+    (view_action_permission('POST') & (
+        UserIsStaffPermission | user_group_permission('Partnership Manager')
+    )) |
+    (view_action_permission('GET') & (
+        UserIsPartnerStaffMemberPermission | (
+            UserIsStaffPermission | user_group_permission('Partnership Manager')
+        )
+    ))
 )

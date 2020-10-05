@@ -1,8 +1,10 @@
 from django.db import transaction
 
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from etools.applications.partners.permissions import PMPAgreementPermission
 from etools.applications.partners.serializers.agreements_v2 import (
     AgreementCreateUpdateSerializer,
     AgreementDetailSerializer,
@@ -38,6 +40,7 @@ class PMPAgreementListCreateAPIView(
         PMPAgreementViewMixin,
         AgreementListAPIView,
 ):
+    permission_classes = (IsAuthenticated, PMPAgreementPermission)
     filters = AgreementListAPIView.filters + [
         ('partner_id', 'partner__pk'),
     ]
