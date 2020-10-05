@@ -65,6 +65,12 @@ class TestFunctionality(BaseTestCase):
         self.assertEqual(response.data['unicef_cash'], '1.00')
         self.assertEqual(response.data['cso_cash'], '2.00')
         self.assertEqual(response.data['partner_percentage'], '66.67')
+        self.intervention.refresh_from_db()
+        budget_response = response.data["intervention"]["planned_budget"]
+        self.assertEqual(
+            budget_response["total_cash_local"],
+            str(self.intervention.planned_budget.total_cash_local()),
+        )
 
     def test_set_cash_values_from_items(self):
         InterventionActivityItemFactory(activity=self.activity, unicef_cash=8)
