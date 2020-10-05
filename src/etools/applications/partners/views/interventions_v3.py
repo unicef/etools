@@ -263,9 +263,9 @@ class InterventionActivityViewMixin(DetailedInterventionResponseMixin):
     serializer_class = InterventionActivityDetailSerializer
 
     def get_root_object(self):
-        if not hasattr(self, '_intervention'):
-            self._intervention = Intervention.objects.filter(pk=self.kwargs.get('intervention_pk')).first()
-        return self._intervention
+        return Intervention.objects.filter(
+            pk=self.kwargs.get('intervention_pk'),
+        ).first()
 
     def get_intervention(self) -> Intervention:
         return self.get_root_object()
