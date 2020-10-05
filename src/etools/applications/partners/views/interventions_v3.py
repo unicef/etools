@@ -413,7 +413,12 @@ class PMPInterventionReportingRequirementView(
 
 
 class PMPInterventionIndicatorsListView(
-        PMPInterventionMixin,
+        DetailedInterventionResponseMixin,
         InterventionIndicatorsListView,
 ):
-    """Wrapper for PD indicators"""
+    def get_intervention(self):
+        if not hasattr(self, '_intervention'):
+            self._intervention = LowerResult.objects.get(
+                pk=self.kwargs.get("lower_result_pk"),
+            ).result_link.intervention
+        return self._intervention

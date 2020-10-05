@@ -1294,7 +1294,7 @@ class TestAPIInterventionIndicatorsListView(
         )
 
 
-class TestAPInterventionIndicatorsCreateView(BaseTenantTestCase):
+class BaseAPIInterventionIndicatorsCreateMixin:
     """Exercise the create view for InterventionIndicatorsListView (these are AppliedIndicator instances)"""
     @classmethod
     def setUpClass(cls):
@@ -1387,6 +1387,19 @@ class TestAPInterventionIndicatorsCreateView(BaseTenantTestCase):
         self.assertIsInstance(response_json['non_field_errors'], list)
         self.assertEqual(response_json['non_field_errors'],
                          ['This indicator is already being monitored for this Result'])
+
+
+class TestAPIInterventionIndicatorsCreateView(
+        BaseAPIInterventionIndicatorsCreateMixin,
+        BaseTenantTestCase,
+):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.url = reverse(
+            'partners_api:intervention-indicators-list',
+            kwargs={'lower_result_pk': cls.lower_result.pk},
+        )
 
 
 class TestAPInterventionIndicatorsUpdateView(BaseTenantTestCase):
