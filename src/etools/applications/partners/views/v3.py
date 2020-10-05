@@ -131,6 +131,7 @@ class PMPDropdownsListApiView(APIView):
             flat=True,
         ).exclude(
             cso_type__isnull=True,
+        ).exclude(
             cso_type__exact='',
         ).order_by('cso_type').distinct('cso_type')
         return choices_to_json_ready(list(cso_types))
