@@ -27,6 +27,7 @@ from etools.applications.partners.tests.factories import (
     PartnerStaffFactory,
 )
 from etools.applications.partners.tests.test_api_interventions import (
+    BaseAPIInterventionIndicatorsCreateMixin,
     BaseAPIInterventionIndicatorsListMixin,
     BaseInterventionReportingRequirementMixin,
 )
@@ -1408,3 +1409,18 @@ class TestPMPInterventionIndicatorsListView(
     @skip("waiting of permissions")
     def test_group_permission(self):
         super().test_group_permission()
+
+
+class TestPMPInterventionIndicatorsCreateView(
+        BaseAPIInterventionIndicatorsCreateMixin,
+        BaseTenantTestCase,
+):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.result_link.cp_output.result_type.name = ResultType.OUTPUT
+        cls.result_link.cp_output.result_type.save()
+        cls.url = reverse(
+            'pmp_v3:intervention-indicators-list',
+            kwargs={'lower_result_pk': cls.lower_result.pk},
+        )
