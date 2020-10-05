@@ -77,15 +77,6 @@ class PMPBaseViewMixin:
             partner_focal_points__email=self.request.user.email,
         )
 
-    def map_serializer(self, serializer):
-        default_serializer, partner_serializer = self.SERIALIZER_OPTIONS.get(
-            serializer,
-            (None, None),
-        )
-        if self.is_partner_staff():
-            return partner_serializer
-        return default_serializer
-
 
 class PMPDropdownsListApiView(APIView):
     permission_classes = (IsAuthenticated, IsAdminUser | IsPartnerUser)
