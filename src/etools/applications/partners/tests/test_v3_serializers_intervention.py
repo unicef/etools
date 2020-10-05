@@ -183,3 +183,10 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
             Intervention.SIGNED,
             Intervention.TERMINATED,
         ]))
+
+    def test_status_list_cancelled(self):
+        pd = InterventionFactory(status=Intervention.CANCELLED)
+        status_list = self.unicef_serializer.get_status_list(pd)
+        self.assertEqual(sorted(status_list), self._expected_status_list([
+            Intervention.CANCELLED,
+        ]))
