@@ -115,6 +115,17 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
         expected_actions = self.default_actions + ["terminate"]
         self.assertEqual(sorted(available_actions), sorted(expected_actions))
 
+        # not available if closed
+        for status in [
+                Intervention.CLOSED,
+                Intervention.ENDED,
+                Intervention.TERMINATED,
+        ]:
+            pd.status = status
+            pd.save()
+            available_actions = self.unicef_serializer.get_available_actions(pd)
+            self.assertNotIn("terminate", available_actions)
+
     def test_available_actions_unicef(self):
         pd = InterventionFactory()
         pd.unicef_focal_points.add(self.unicef_user)
