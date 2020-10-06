@@ -1417,6 +1417,25 @@ class TestInterventionResultLink(BaseTenantTestCase):
             "{} {}".format(intervention_str, result_str)
         )
 
+    def test_total(self):
+        intervention = InterventionFactory()
+        result = ResultFactory(
+            name="Name",
+            code="Code"
+        )
+        link = InterventionResultLinkFactory(
+            intervention=intervention,
+            cp_output=result,
+        )
+
+        # empty
+        self.assertEqual(link.total(), 0)
+
+        # lower results
+        ll = LowerResultFactory(result_link=link)
+        InterventionActivityFactory(result=ll, unicef_cash=10, cso_cash=20)
+        self.assertEqual(link.total(), 30)
+
 
 class TestInterventionBudget(BaseTenantTestCase):
     def test_str(self):

@@ -38,6 +38,7 @@ from etools.applications.reports.tests.factories import (
     LowerResultFactory,
     OfficeFactory,
     ReportingRequirementFactory,
+    ResultFactory,
     SectionFactory,
 )
 from etools.applications.users.tests.factories import GroupFactory, UserFactory
@@ -100,22 +101,6 @@ class BaseInterventionTestCase(BaseTenantTestCase):
 
 
 class TestList(BaseInterventionTestCase):
-    def test_get(self):
-        intervention = InterventionFactory()
-        frs = FundsReservationHeaderFactory(
-            intervention=intervention,
-            currency='USD',
-        )
-        FundsReservationItemFactory(fund_reservation=frs)
-        response = self.forced_auth_req(
-            "get",
-            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
-            user=self.user,
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        data = response.data
-        self.assertEqual(data["id"], intervention.pk)
-
     def test_list_for_partner(self):
         InterventionFactory()
 
@@ -190,6 +175,36 @@ class TestList(BaseInterventionTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
+
+
+class TestDetail(BaseInterventionTestCase):
+    def test_get(self):
+        intervention = InterventionFactory()
+        frs = FundsReservationHeaderFactory(
+            intervention=intervention,
+            currency='USD',
+        )
+        FundsReservationItemFactory(fund_reservation=frs)
+        result = ResultFactory(
+            name="TestDetail",
+            code="detail",
+            result_type__name=ResultType.OUTPUT,
+        )
+        link = InterventionResultLinkFactory(
+            cp_output=result,
+            intervention=intervention,
+        )
+        ll = LowerResultFactory(result_link=link)
+        InterventionActivityFactory(result=ll, unicef_cash=10, cso_cash=20)
+        response = self.forced_auth_req(
+            "get",
+            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data
+        self.assertEqual(data["id"], intervention.pk)
+        self.assertEqual(data["result_links"][0]["total"], 30)
 
 
 class TestCreate(BaseInterventionTestCase):

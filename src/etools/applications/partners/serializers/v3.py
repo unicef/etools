@@ -12,7 +12,7 @@ class InterventionLowerResultBaseSerializer(serializers.ModelSerializer):
     class Meta:
         abstract = True
         model = LowerResult
-        fields = ('id', 'name', 'code')
+        fields = ('id', 'name', 'code', 'total')
         extra_kwargs = {
             'code': {'required': False},
         }
