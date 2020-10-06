@@ -1432,9 +1432,10 @@ class TestInterventionResultLink(BaseTenantTestCase):
         # empty
         self.assertEqual(link.total(), 0)
 
-        # indicators
-        indicator = IndicatorFactory(result=result, total=10)
-        self.assertEqual(link.total(), 10)
+        # lower results
+        ll = LowerResultFactory(result_link=link)
+        InterventionActivityFactory(result=ll, unicef_cash=10, cso_cash=20)
+        self.assertEqual(link.total(), 30)
 
 
 class TestInterventionBudget(BaseTenantTestCase):
