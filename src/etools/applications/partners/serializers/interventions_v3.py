@@ -214,7 +214,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
         if self._is_partnership_manager():
             if obj.status in [obj.DRAFT, obj.REVIEW, obj.SIGNATURE]:
                 available_actions.append("cancel")
-            else:
+            elif obj.status not in [obj.ENDED, obj.CLOSED, obj.TERMINATED]:
                 available_actions.append("terminate")
 
         # if NOT in Development status then we're done
