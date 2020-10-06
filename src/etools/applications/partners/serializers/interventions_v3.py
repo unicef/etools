@@ -267,6 +267,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
                 obj.SUSPENDED,
                 obj.ACTIVE,
                 obj.ENDED,
+                obj.CLOSED,
             ]
         elif obj.status == obj.TERMINATED:
             status_list = [
@@ -288,6 +289,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
                 obj.SIGNED,
                 obj.ACTIVE,
                 obj.ENDED,
+                obj.CLOSED,
             ]
         return [s for s in obj.INTERVENTION_STATUS if s[0] in status_list]
 

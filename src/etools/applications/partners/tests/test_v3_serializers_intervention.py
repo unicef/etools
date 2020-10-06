@@ -158,6 +158,7 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
             Intervention.SIGNED,
             Intervention.ACTIVE,
             Intervention.ENDED,
+            Intervention.CLOSED,
         ]))
 
     def test_status_list_suspended(self):
@@ -171,6 +172,7 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
             Intervention.SUSPENDED,
             Intervention.ACTIVE,
             Intervention.ENDED,
+            Intervention.CLOSED,
         ]))
 
     def test_status_list_terminated(self):
