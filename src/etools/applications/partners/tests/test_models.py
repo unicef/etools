@@ -39,6 +39,7 @@ from etools.applications.partners.tests.factories import (
 from etools.applications.reports.tests.factories import (
     AppliedIndicatorFactory,
     CountryProgrammeFactory,
+    IndicatorFactory,
     InterventionActivityFactory,
     LowerResultFactory,
     ResultFactory,
@@ -1416,6 +1417,24 @@ class TestInterventionResultLink(BaseTenantTestCase):
             str(link),
             "{} {}".format(intervention_str, result_str)
         )
+
+    def test_total(self):
+        intervention = InterventionFactory()
+        result = ResultFactory(
+            name="Name",
+            code="Code"
+        )
+        link = InterventionResultLinkFactory(
+            intervention=intervention,
+            cp_output=result,
+        )
+
+        # empty
+        self.assertEqual(link.total(), 0)
+
+        # indicators
+        indicator = IndicatorFactory(result=result, total=10)
+        self.assertEqual(link.total(), 10)
 
 
 class TestInterventionBudget(BaseTenantTestCase):

@@ -2516,6 +2516,14 @@ class InterventionResultLink(TimeStampedModel):
             self.intervention, self.cp_output
         )
 
+    def total(self):
+        total = Indicator.objects.filter(
+            result=self.cp_output,
+        ).aggregate(Sum("total")).get("total__sum")
+        if total is None:
+            return 0
+        return total
+
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
 
