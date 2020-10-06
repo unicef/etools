@@ -34,7 +34,6 @@ from etools.applications.partners.tests.test_api_interventions import (
 from etools.applications.reports.models import ResultType
 from etools.applications.reports.tests.factories import (
     AppliedIndicatorFactory,
-    IndicatorFactory,
     InterventionActivityFactory,
     LowerResultFactory,
     OfficeFactory,
@@ -195,7 +194,8 @@ class TestDetail(BaseInterventionTestCase):
             cp_output=result,
             intervention=intervention,
         )
-        indicator = IndicatorFactory(result=result, total=10)
+        ll = LowerResultFactory(result_link=link)
+        InterventionActivityFactory(result=ll, unicef_cash=10, cso_cash=20)
         response = self.forced_auth_req(
             "get",
             reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
@@ -204,7 +204,7 @@ class TestDetail(BaseInterventionTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.data
         self.assertEqual(data["id"], intervention.pk)
-        self.assertEqual(data["result_links"][0]["total"], indicator.total)
+        self.assertEqual(data["result_links"][0]["total"], 30)
 
 
 class TestCreate(BaseInterventionTestCase):

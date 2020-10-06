@@ -39,7 +39,6 @@ from etools.applications.partners.tests.factories import (
 from etools.applications.reports.tests.factories import (
     AppliedIndicatorFactory,
     CountryProgrammeFactory,
-    IndicatorFactory,
     InterventionActivityFactory,
     LowerResultFactory,
     ResultFactory,

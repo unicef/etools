@@ -18,9 +18,9 @@ from etools.applications.reports.models import (
 )
 from etools.applications.reports.tests.factories import (
     CountryProgrammeFactory,
-    InterventionActivityFactory,
     IndicatorBlueprintFactory,
     IndicatorFactory,
+    InterventionActivityFactory,
     LowerResultFactory,
     QuarterFactory,
     ResultFactory,
