@@ -8,8 +8,10 @@ from django.http import Http404
 from django.utils.translation import ugettext_lazy as _
 
 from django_filters.rest_framework import DjangoFilterBackend
+from easy_pdf.rendering import render_to_pdf_response
 from etools_validator.mixins import ValidatorViewMixin
 from rest_framework import mixins, status, viewsets
+from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.response import Response
@@ -142,7 +144,7 @@ class MonitoringActivitiesViewSet(
         'tpm_partner', 'person_responsible', 'location__gateway', 'location_site',
     ).prefetch_related(
         'team_members', 'partners', 'interventions', 'cp_outputs'
-    )
+    ).order_by("-id")
     serializer_class = MonitoringActivitySerializer
     serializer_action_classes = {
         'list': MonitoringActivityLightSerializer
@@ -215,6 +217,18 @@ class MonitoringActivitiesViewSet(
             raise ValidationError(validator.errors)
 
         return Response(self.get_serializer_class()(instance, context=self.get_serializer_context()).data)
+
+    @action(detail=True, methods=['get'], url_path='visit-letter')
+    def tpm_visit_letter(self, request, *args, **kwargs):
+        ma = self.get_object()
+        return render_to_pdf_response(
+            request, "fm/visit_letter_pdf.html", context={
+                "ma": ma,
+                "partners": list(ma.partners.all()),
+                "results": list(ma.cp_outputs.all())
+            },
+            filename="visit_letter_{}.pdf".format(ma.reference_number)
+        )
 
 
 class FMUsersViewSet(
