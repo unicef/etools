@@ -2,14 +2,14 @@ import datetime
 from unittest import skip
 
 from django.contrib.auth.models import AnonymousUser
-from django.test import SimpleTestCase
+from django.test import override_settings, SimpleTestCase
 from django.urls import reverse
 
 from rest_framework import status
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.core.tests.mixins import URLAssertionMixin
-from etools.applications.partners.models import PartnerStaffMember
+from etools.applications.partners.models import PartnerOrganization, PartnerStaffMember
 from etools.applications.partners.tests.factories import AgreementFactory, PartnerFactory, PartnerStaffFactory
 from etools.applications.users.tests.factories import GroupFactory, UserFactory
 
@@ -51,6 +51,20 @@ class BasePartnerOrganizationTestCase(BaseTenantTestCase):
 
 
 class TestPartnerOrganizationList(BasePartnerOrganizationTestCase):
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_list_for_unicef(self):
+        partner = PartnerFactory()
+        response = self.forced_auth_req(
+            "get",
+            reverse('pmp_v3:partner-list'),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            len(response.data),
+            PartnerOrganization.objects.count(),
+        )
+
     def test_list_for_partner(self):
         partner = PartnerFactory()
         user = UserFactory(is_staff=False, groups__data=[])
