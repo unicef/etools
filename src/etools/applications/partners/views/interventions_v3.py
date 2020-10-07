@@ -164,9 +164,7 @@ class InterventionPDOutputsViewMixin(DetailedInterventionResponseMixin):
         return PartnerInterventionLowerResultSerializer
 
     def get_root_object(self):
-        if not hasattr(self, '_intervention'):
-            self._intervention = Intervention.objects.filter(pk=self.kwargs.get('intervention_pk')).first()
-        return self._intervention
+        return Intervention.objects.filter(pk=self.kwargs.get('intervention_pk')).first()
 
     def get_intervention(self):
         return self.get_root_object()
@@ -194,9 +192,7 @@ class PMPInterventionManagementBudgetRetrieveUpdateView(
     serializer_class = InterventionManagementBudgetSerializer
 
     def get_intervention(self):
-        if not hasattr(self, '_intervention'):
-            self._intervention = self.get_pd_or_404(self.kwargs.get("intervention_pk"))
-        return self._intervention
+        return self.get_pd_or_404(self.kwargs.get("intervention_pk"))
 
     def get_object(self):
         obj, __ = InterventionManagementBudget.objects.get_or_create(
