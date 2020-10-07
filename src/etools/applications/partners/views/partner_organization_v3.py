@@ -5,16 +5,14 @@ from etools.applications.partners.views.partner_organization_v2 import (
 from etools.applications.partners.views.v3 import PMPBaseViewMixin
 
 
-class PMPPartnerOrganizationMixin(PMPBaseViewMixin):
-    def get_queryset(self, format=None):
-        return self.partners()
-
-
 class PMPPartnerOrganizationListAPIView(
-        PMPPartnerOrganizationMixin,
+        PMPBaseViewMixin,
         PartnerOrganizationListAPIView,
 ):
-    """Wrapper for Partner Organizations"""
+    def get_queryset(self, format=None):
+        if self.is_partner_staff():
+            return self.partners()
+        return super().get_queryset(format=format)
 
 
 class PMPPartnerStaffMemberMixin(PMPBaseViewMixin):
