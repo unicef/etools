@@ -2021,6 +2021,11 @@ class Intervention(TimeStampedModel):
         blank=True,
         null=True,
     )
+    cancel_justification = models.TextField(
+        verbose_name=_("Cancel Justification"),
+        blank=True,
+        null=True,
+    )
 
     # Flag if this has been migrated to a status that is not correct
     # previous status

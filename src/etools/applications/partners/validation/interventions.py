@@ -144,7 +144,8 @@ def transition_to_review(i):
 
 
 def transition_to_cancelled(i):
-    # TODO add validation rules/criteria
+    if not i.cancel_justification:
+        raise TransitionError([_('Justification required for cancellation')])
     return True
 
 

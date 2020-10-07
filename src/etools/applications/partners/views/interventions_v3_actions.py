@@ -144,7 +144,6 @@ class PMPInterventionCancelView(PMPInterventionActionView):
         pd = self.get_object()
         if pd.status == Intervention.CANCELLED:
             raise ValidationError("PD has already been cancelled.")
-        request.data.clear()
         request.data.update({"status": Intervention.CANCELLED})
 
         response = super().update(request, *args, **kwargs)
