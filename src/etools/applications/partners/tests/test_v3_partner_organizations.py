@@ -53,7 +53,7 @@ class BasePartnerOrganizationTestCase(BaseTenantTestCase):
 class TestPartnerOrganizationList(BasePartnerOrganizationTestCase):
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_list_for_unicef(self):
-        partner = PartnerFactory()
+        PartnerFactory()
         response = self.forced_auth_req(
             "get",
             reverse('pmp_v3:partner-list'),

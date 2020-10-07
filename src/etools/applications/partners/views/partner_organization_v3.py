@@ -1,4 +1,3 @@
-from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.views.partner_organization_v2 import (
     PartnerOrganizationListAPIView,
     PartnerStaffMemberListAPIVIew,
