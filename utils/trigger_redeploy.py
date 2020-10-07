@@ -76,7 +76,7 @@ def redeploy():
         },
         "epd": {
             "endpoint": "https://elbecerro.unicef.io/v3",
-            "project": "etools-tst",
+            "project": "etools-test",
             "workloads": ["web-tst", "worker-tst", "beater-tst", "worker-vision-tst"],
             "jobs": ["backend-migrations"]
         }
