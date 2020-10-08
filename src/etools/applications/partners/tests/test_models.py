@@ -1476,7 +1476,7 @@ class TestInterventionBudget(BaseTenantTestCase):
     def test_default_currency(self):
         # no default currency
         intervention_1 = InterventionFactory()
-        self.assertEqual(intervention_1.planned_budget.currency, "")
+        self.assertEqual(intervention_1.planned_budget.currency, "USD")
 
         # with default currency
         currency = "ZAR"

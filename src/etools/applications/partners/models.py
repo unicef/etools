@@ -2597,7 +2597,7 @@ class InterventionBudget(TimeStampedModel):
             try:
                 self.currency = connection.tenant.local_currency.code
             except AttributeError:
-                self.currency = ""
+                self.currency = "USD"
 
         super().save(**kwargs)
 
