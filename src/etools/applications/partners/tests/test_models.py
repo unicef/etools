@@ -5,6 +5,7 @@ from unittest import skip
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
+from django.db import connection
 from django.test import SimpleTestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -36,6 +37,7 @@ from etools.applications.partners.tests.factories import (
     PlannedEngagementFactory,
     WorkspaceFileTypeFactory,
 )
+from etools.applications.publics.tests.factories import PublicsCurrencyFactory
 from etools.applications.reports.tests.factories import (
     AppliedIndicatorFactory,
     CountryProgrammeFactory,
@@ -1096,6 +1098,18 @@ class TestInterventionModel(BaseTenantTestCase):
         self.assertEqual(intervention.status, models.Intervention.CLOSED)
         self.assertEqual(agreement.status, models.Agreement.ENDED)
 
+    def test_planned_budget(self):
+        currency = "PEN"
+        budget_qs = models.InterventionBudget.objects.filter(
+            currency=currency,
+        )
+        self.assertFalse(budget_qs.exists())
+        country = connection.tenant
+        country.local_currency = PublicsCurrencyFactory(code=currency)
+        country.local_currency.save()
+        InterventionFactory()
+        self.assertTrue(budget_qs.exists())
+
 
 class TestGetFilePaths(BaseTenantTestCase):
     def test_get_agreement_path(self):
@@ -1458,6 +1472,19 @@ class TestInterventionBudget(BaseTenantTestCase):
             intervention.planned_budget.total_cash_local(),
             20 + 10,
         )
+
+    def test_default_currency(self):
+        # no default currency
+        intervention_1 = InterventionFactory()
+        self.assertEqual(intervention_1.planned_budget.currency, "")
+
+        # with default currency
+        currency = "ZAR"
+        country = connection.tenant
+        country.local_currency = PublicsCurrencyFactory(code=currency)
+        country.local_currency.save()
+        intervention = InterventionFactory()
+        self.assertEqual(intervention.planned_budget.currency, currency)
 
     def test_calc_totals_no_assoc(self):
         intervention = InterventionFactory()

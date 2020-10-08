@@ -2591,6 +2591,14 @@ class InterventionBudget(TimeStampedModel):
         Calculate total budget on save
         """
         self.calc_totals(save=False)
+
+        # attempt to set default currency
+        if not self.currency:
+            try:
+                self.currency = connection.tenant.local_currency.code
+            except AttributeError:
+                self.currency = ""
+
         super().save(**kwargs)
 
     def __str__(self):
