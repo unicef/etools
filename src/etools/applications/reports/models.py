@@ -987,10 +987,6 @@ class InterventionActivityItem(TimeStampedModel):
         super().save(**kwargs)
         self.activity.update_cash()
 
-    def delete(self, **kwargs):
-        super().save(**kwargs)
-        self.activity.update_cash()
-
 
 class InterventionTimeFrame(TimeStampedModel):
     intervention = models.ForeignKey(

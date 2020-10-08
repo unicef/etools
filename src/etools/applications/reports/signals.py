@@ -1,9 +1,14 @@
-from django.db.models.signals import post_save
+from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
 from etools.applications.partners.models import Intervention
 from etools.applications.partners.utils import get_quarters_range
-from etools.applications.reports.models import InterventionTimeFrame
+from etools.applications.reports.models import (
+    InterventionActivity,
+    InterventionActivityItem,
+    InterventionTimeFrame,
+    LowerResult,
+)
 
 
 @receiver(post_save, sender=Intervention)
@@ -35,3 +40,23 @@ def recalculate_time_frames(instance: Intervention, created: bool, **kwargs):
                 intervention=instance, quarter=new_quarter.quarter,
                 defaults={'start_date': new_quarter.start, 'end_date': new_quarter.end},
             )
+
+
+@receiver(post_delete, sender=InterventionActivity)
+def calc_totals_on_delete(instance, **kwargs):
+    try:
+        result = LowerResult.objects.get(pk=instance.result.pk)
+    except LowerResult.DoesNotExist:
+        pass
+    else:
+        result.result_link.intervention.planned_budget.calc_totals()
+
+
+@receiver(post_delete, sender=InterventionActivityItem)
+def update_cash_on_delete(instance, **kwargs):
+    try:
+        Activity = InterventionActivity.objects.get(pk=instance.activity.pk)
+    except InterventionActivity.DoesNotExist:
+        pass
+    else:
+        Activity.update_cash()
