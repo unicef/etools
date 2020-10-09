@@ -7,6 +7,7 @@ from django.db import connection, transaction
 
 from unicef_vision.synchronizers import FileDataSynchronizer
 from unicef_vision.utils import comp_decimals
+from unicef_vision.settings import INSIGHT_DATE_FORMAT
 
 from etools.applications.partners.models import PartnerOrganization, PlannedEngagement
 from etools.applications.partners.tasks import notify_partner_hidden
@@ -120,7 +121,7 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
             if mapped_key in self.DATE_FIELDS:
                 apiobj_field = None
                 if mapped_key in api_obj and api_obj[mapped_key]:
-                    datetime.strptime(api_obj[mapped_key], '%d-%b-%y')
+                    datetime.strptime(api_obj[mapped_key], INSIGHT_DATE_FORMAT)
 
             if field == 'partner_type':
                 apiobj_field = self.get_partner_type(api_obj)
@@ -187,7 +188,7 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
                     if partner.get("HIGEST_RISK_RATING", "") is not None else ''
                 partner_org.highest_risk_rating_type = partner.get("HIGEST_RISK_RATING_TYPE", "")
                 partner_org.psea_assessment_date = datetime.strptime(
-                    partner['PSEA_ASSESSMENT_DATE'], '%d-%b-%y') if partner['PSEA_ASSESSMENT_DATE'] else None
+                    partner['PSEA_ASSESSMENT_DATE'], INSIGHT_DATE_FORMAT) if partner['PSEA_ASSESSMENT_DATE'] else None
                 partner_org.sea_risk_rating_name = partner["SEA_RISK_RATING_NAME"] \
                     if partner["SEA_RISK_RATING_NAME"] else ''
                 saving = True

@@ -5,9 +5,9 @@ from decimal import Decimal
 
 from django.db.models import Sum
 
-from unicef_vision.exceptions import VisionException
 from unicef_vision.synchronizers import FileDataSynchronizer, MultiModelDataSynchronizer
 from unicef_vision.utils import comp_decimals
+from unicef_vision.settings import INSIGHT_DATE_FORMAT
 
 from etools.applications.funds.models import (
     FundsCommitmentHeader,
@@ -120,8 +120,9 @@ class FundReservationsSynchronizer(VisionDataTenantSynchronizer):
     def _convert_records(self, records):
         # Since our counterparts are unable to return json for the json endpoints in case of 400+ or 500+ we should
         # catch known errors
-
         json_records = super()._convert_records(records)
+        if type(json_records) is dict:
+            json_records = [json_records]
         for r in json_records:
             self._fill_required_keys(r)
         return json_records
@@ -146,7 +147,7 @@ class FundReservationsSynchronizer(VisionDataTenantSynchronizer):
     @staticmethod
     def get_value_for_field(field, value):
         if field in ['start_date', 'end_date', 'document_date', 'due_date']:
-            return datetime.datetime.strptime(value, '%d-%b-%y').date()
+            return datetime.datetime.strptime(value, INSIGHT_DATE_FORMAT).date()
         if field == 'multi_curr_flag':
             return value is not None and value != 'N'
         if field == 'completed_flag':
@@ -355,9 +356,6 @@ class FundCommitmentSynchronizer(VisionDataTenantSynchronizer):
         self.REVERSE_ITEM_FIELDS = [self.REVERSE_MAPPING[v] for v in self.LINE_ITEM_FIELDS]
         super().__init__(*args, **kwargs)
 
-    def _convert_records(self, records):
-        return records["ROWSET"]["ROW"]
-
     def map_header_objects(self, qs):
         for item in qs:
             self.fc_headers[item.fc_number] = item
@@ -380,7 +378,7 @@ class FundCommitmentSynchronizer(VisionDataTenantSynchronizer):
     @staticmethod
     def get_value_for_field(field, value):
         if field in ['document_date', 'due_date'] and value:
-            return datetime.datetime.strptime(value, '%d-%b-%y').date()
+            return datetime.datetime.strptime(value, INSIGHT_DATE_FORMAT).date()
 
         if field in ['commitment_amount', 'commitment_amount_dc', 'amount_changed']:
             return Decimal(value.replace(",", ""))
