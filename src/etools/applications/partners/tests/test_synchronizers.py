@@ -28,7 +28,7 @@ class TestPartnerSynchronizer(BaseTenantTestCase):
             "TOTAL_CASH_TRANSFERRED_YTD": "70.00",
         }
         self.records = {"ROWSET": {"ROW": [self.data]}}
-        self.adapter = synchronizers.PartnerSynchronizer(self.country.business_area_code)
+        self.adapter = synchronizers.PartnerSynchronizer(business_area_code=self.country.business_area_code)
 
     def test_convert_records(self):
         self.assertEqual(
@@ -230,7 +230,8 @@ class TestDCTSynchronizer(BaseTenantTestCase):
             name="New",
             vendor_number=cls.vendor_key
         )
-        cls.synchronizer = synchronizers.DirectCashTransferSynchronizer(cls.country.business_area_code)
+        cls.synchronizer = synchronizers.DirectCashTransferSynchronizer(
+            business_area_code=cls.country.business_area_code)
 
     def test_create_dict(self):
         dcts = self.synchronizer.create_dict(self.api_response)

@@ -218,16 +218,16 @@ def get_location_ids_in_use(location_ids):
     location_ids_in_use = []
 
     for intervention in Intervention.objects.all():
-        location_ids_in_use += [l.id for l in intervention.flat_locations.filter(id__in=location_ids)]
+        location_ids_in_use += [loc.id for loc in intervention.flat_locations.filter(id__in=location_ids)]
 
     for indicator in AppliedIndicator.objects.all():
-        location_ids_in_use += [l.id for l in indicator.locations.filter(id__in=location_ids)]
+        location_ids_in_use += [loc.id for loc in indicator.locations.filter(id__in=location_ids)]
 
     for travelactivity in TravelActivity.objects.all():
-        location_ids_in_use += [l.id for l in travelactivity.locations.filter(id__in=location_ids)]
+        location_ids_in_use += [loc.id for loc in travelactivity.locations.filter(id__in=location_ids)]
 
     for activity in Activity.objects.all():
-        location_ids_in_use += [l.id for l in activity.locations.filter(id__in=location_ids)]
+        location_ids_in_use += [loc.id for loc in activity.locations.filter(id__in=location_ids)]
 
     location_ids_in_use += [a.location_id for a in ActionPoint.objects.filter(location__in=location_ids).distinct()]
 

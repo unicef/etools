@@ -2,7 +2,7 @@ import logging
 
 from django.db import connection
 
-from django_tenants.utils import get_tenant_model, get_public_schema_name
+from django_tenants.utils import get_public_schema_name, get_tenant_model
 from unicef_vision.synchronizers import VisionDataSynchronizer
 
 from etools.applications.vision.models import VisionSyncLog

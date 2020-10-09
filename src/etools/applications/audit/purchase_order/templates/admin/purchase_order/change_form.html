@@ -1,0 +1,8 @@
+{% extends "admin/django_tenants/tenant/change_form.html" %}
+{% load i18n etools %}
+{% block object-tools-items %}
+    {{ block.super }}
+    <li><a href="{% url 'admin:purchase_order' original.id %}" style="background-color:#0099ff">{% trans "Sync Purchase Order" %}</a></li>
+
+
+{% endblock object-tools-items %}

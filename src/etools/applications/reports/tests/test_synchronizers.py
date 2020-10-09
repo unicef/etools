@@ -389,7 +389,7 @@ class TestProgrammeSynchronizer(BaseTenantTestCase):
             "PROGRAMME_AREA_CODE": "",
             "PROGRAMME_AREA_NAME": "",
         }
-        self.adapter = ProgrammeSynchronizer(self.country.business_area_code)
+        self.adapter = ProgrammeSynchronizer(business_area_code=self.country.business_area_code)
 
     def test_get_json(self):
         data = {"test": "123"}
@@ -596,7 +596,7 @@ class TestRAMSynchronizer(BaseTenantTestCase):
             "BASELINE": "BLINE",
             "TARGET": "Target",
         }
-        self.adapter = RAMSynchronizer(self.country.business_area_code)
+        self.adapter = RAMSynchronizer(business_area_code=self.country.business_area_code)
 
     def test_convert_records(self):
         records = json.dumps([self.data])
