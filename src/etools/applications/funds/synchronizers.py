@@ -120,18 +120,8 @@ class FundReservationsSynchronizer(VisionDataTenantSynchronizer):
     def _convert_records(self, records):
         # Since our counterparts are unable to return json for the json endpoints in case of 400+ or 500+ we should
         # catch known errors
-        try:
-            json_records = records["ROWSET"]["ROW"]
-        except json.decoder.JSONDecodeError:
-            if "No data exists" in records:
-                raise VisionException("Vision error 400: No data could be found")
-            else:
-                raise
-        # Since our counterpart APIs are designed in a way that can surprise us what data structure we might encounter
-        # we have to do some type checking and convert on our side.
-        # TODO: fix this when the other team is able to keep consistency on API data structure.
-        if type(json_records) is dict:
-            json_records = [json_records]
+
+        json_records = super()._convert_records(records)
         for r in json_records:
             self._fill_required_keys(r)
         return json_records
@@ -381,7 +371,7 @@ class FundCommitmentSynchronizer(VisionDataTenantSynchronizer):
                 return False
             if not record['FC_NUMBER']:
                 return False
-            if not record['FR_NUMBER']:
+            if not record['VENDOR_CODE']:
                 return False
             return True
 

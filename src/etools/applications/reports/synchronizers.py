@@ -258,10 +258,6 @@ class ProgrammeSynchronizer(VisionDataTenantSynchronizer):
         ("HUMANITARIAN_TAG", "humanitarian_tag"),
     )
 
-    @staticmethod
-    def _get_json(data):
-        return [] if data == INSIGHT_NO_DATA_MESSAGE else data
-
     def _filter_by_time_range(self, records):
         records = super()._filter_records(records)
 
@@ -309,10 +305,7 @@ class ProgrammeSynchronizer(VisionDataTenantSynchronizer):
         return self._clean_records(records)
 
     def _save_records(self, records):
-        # TODO maybe ? save to file in azure somewhere at this point.. have a separate task to read from file and update
-
         synchronizer = ResultStructureSynchronizer(records)
-
         return synchronizer.update()
 
 
@@ -325,9 +318,6 @@ class RAMSynchronizer(VisionDataTenantSynchronizer):
         "INDICATOR_BASELINE",
         "INDICATOR_TARGET",
     )
-
-    def _convert_records(self, records):
-        return records['ROWSET']['ROW']
 
     def _save_records(self, records):
         processed = self.process_indicators(records)

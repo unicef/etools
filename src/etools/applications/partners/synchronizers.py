@@ -5,7 +5,6 @@ from decimal import Decimal
 from django.core.exceptions import ValidationError
 from django.db import connection, transaction
 
-from unicef_vision.loaders import INSIGHT_NO_DATA_MESSAGE
 from unicef_vision.synchronizers import FileDataSynchronizer
 from unicef_vision.utils import comp_decimals
 
@@ -86,9 +85,6 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
         'short_name': 'SEARCH_TERM1',
     }
 
-    def _convert_records(self, records):
-        return records['ROWSET']['ROW']
-
     def _filter_records(self, records):
         records = super()._filter_records(records)
 
@@ -98,10 +94,6 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
             return True
 
         return [rec for rec in records if bad_record(rec)]
-
-    @staticmethod
-    def _get_json(data):
-        return [] if data == INSIGHT_NO_DATA_MESSAGE else data
 
     def _changed_fields(self, local_obj, api_obj):
         fields = [
@@ -119,6 +111,7 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
             'rating',
             'type_of_assessment',
             'blocked',
+            "sea_risk_rating_name",
         ]
         for field in fields:
             mapped_key = self.MAPPING[field]
@@ -157,8 +150,8 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
                 ))
 
                 if partner_org.id:
-                    partner_org.deleted_flag = True if partner['MARKED_FOR_DELETION'] else False
-                    partner_org.blocked = True if partner['POSTING_BLOCK'] else False
+                    partner_org.deleted_flag = bool(partner['MARKED_FOR_DELETION'])
+                    partner_org.blocked = bool(partner['POSTING_BLOCK'])
                     partner_org.hidden = True
                     partner_org.save()
                 return processed
@@ -180,8 +173,8 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
                 partner_org.last_assessment_date = datetime.strptime(
                     partner['DATE_OF_ASSESSMENT'], '%d-%b-%y') if partner["DATE_OF_ASSESSMENT"] else None
                 partner_org.partner_type = self.get_partner_type(partner)
-                partner_org.deleted_flag = True if partner['MARKED_FOR_DELETION'] else False
-                posting_block = True if partner['POSTING_BLOCK'] else False
+                partner_org.deleted_flag = bool(partner['MARKED_FOR_DELETION'])
+                posting_block = bool(partner['POSTING_BLOCK'])
 
                 if posting_block and not partner_org.blocked:  # i'm blocking the partner now
                     notify_block = True
@@ -189,8 +182,7 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
 
                 partner_org.hidden = partner_org.deleted_flag or partner_org.blocked or partner_org.manually_blocked
                 partner_org.vision_synced = True
-                partner_org.short_name = partner.get('SEARCH_TERM1', '') \
-                    if partner.get('SEARCH_TERM1', '') is not None else ''
+                partner_org.short_name = partner['SEARCH_TERM1'] or ''
                 partner_org.highest_risk_rating_name = partner.get("HIGEST_RISK_RATING", "") \
                     if partner.get("HIGEST_RISK_RATING", "") is not None else ''
                 partner_org.highest_risk_rating_type = partner.get("HIGEST_RISK_RATING_TYPE", "")
@@ -372,9 +364,6 @@ class DirectCashTransferSynchronizer(VisionDataTenantSynchronizer):
                 logger.info('Validation error')
 
         return processed
-
-    def _convert_records(self, records):
-        return records["ROWSET"]["ROW"]
 
     def _save_records(self, records):
         filtered_records = self._filter_records(records)
