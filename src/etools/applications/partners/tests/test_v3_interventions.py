@@ -273,7 +273,7 @@ class TestUpdate(BaseInterventionTestCase):
     def test_patch_currency(self):
         intervention = InterventionFactory()
         budget = intervention.planned_budget
-        self.assertNotEqual(budget.currency, "USD")
+        self.assertNotEqual(budget.currency, "PEN")
 
         response = self.forced_auth_req(
             "patch",
@@ -281,12 +281,12 @@ class TestUpdate(BaseInterventionTestCase):
             user=self.user,
             data={'planned_budget': {
                 "id": budget.pk,
-                "currency": "USD",
+                "currency": "PEN",
             }}
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         budget.refresh_from_db()
-        self.assertEqual(budget.currency, "USD")
+        self.assertEqual(budget.currency, "PEN")
 
 
 class TestManagementBudget(BaseInterventionTestCase):
