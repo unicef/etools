@@ -1,5 +1,6 @@
 import logging
 from decimal import Decimal
+from typing import Tuple
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractBaseUser, Group, PermissionsMixin, UserManager
@@ -11,6 +12,7 @@ from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
 
 from django_tenants.models import TenantMixin
+from django_tenants.utils import get_public_schema_name
 from model_utils.models import TimeStampedModel
 
 logger = logging.getLogger(__name__)
@@ -72,6 +74,33 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
     @cached_property
     def full_name(self):
         return self.get_full_name()
+
+    def get_partner_staff_member(self) -> ['PartnerStaffMember']:
+        # just wrapper to avoid try...catch in place
+        try:
+            return self.partner_staff_member
+        except self._meta.get_field('partner_staff_member').related_model.DoesNotExist:
+            return None
+
+    def get_active_partner_staff_member(self) -> [Tuple['Country', 'PartnerStaffMember']]:
+        # search for active staff member even if it's in another tenant
+        from etools.applications.partners.models import PartnerStaffMember
+
+        original_tenant = connection.tenant
+        try:
+            for country in Country.objects.exclude(name__in=[get_public_schema_name(), 'Global']).all():
+                connection.set_tenant(country)
+                try:
+                    staff_member = PartnerStaffMember.objects.get(user=self)
+                except PartnerStaffMember.DoesNotExist:
+                    continue
+
+                if staff_member.active:
+                    return country, staff_member
+        finally:
+            connection.set_tenant(original_tenant)
+
+        return None, None
 
 
 class Country(TenantMixin):
