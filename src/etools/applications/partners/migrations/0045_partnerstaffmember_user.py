@@ -16,6 +16,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='partnerstaffmember',
             name='user',
-            field=models.OneToOneField(null=True, on_delete=django.db.models.deletion.PROTECT, related_name='partner_staff_member', to=settings.AUTH_USER_MODEL, verbose_name='User'),
+            field=models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, related_name='partner_staff_member', to=settings.AUTH_USER_MODEL, verbose_name='User'),
         ),
     ]

@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 from django.db import connection
 from django.db.models import Q
 from django.utils import timezone
+from django_tenants.utils import get_public_schema_name
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -27,6 +28,7 @@ from etools.applications.partners.serializers.interventions_v2 import (
     InterventionListSerializer,
     InterventionMonitorSerializer,
 )
+from etools.applications.users.models import Country
 
 
 class CoreValuesAssessmentSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
@@ -58,7 +60,7 @@ class PartnerStaffMemberCreateSerializer(serializers.ModelSerializer):
             raise ValidationError({'active': 'New Staff Member needs to be active at the moment of creation'})
         try:
             existing_user = User.objects.filter(Q(username=email) | Q(email=email)).get()
-            if bool(PartnerStaffMember.get_for_user(existing_user)):
+            if existing_user.get_partner_staff_member():
                 raise ValidationError("The email {} for the partner contact is used by another partner contact. "
                                       "Email has to be unique to proceed.".format(email))
         except User.DoesNotExist:
@@ -113,6 +115,7 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
     def validate(self, data):
         data = super().validate(data)
         email = data.get('email', "")
+        active = data.get('active')
         User = get_user_model()
 
         if not self.instance:
@@ -122,7 +125,7 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
                 if user.is_unicef_user():
                     raise ValidationError('Unable to associate staff member to UNICEF user')
 
-                if PartnerStaffMember.get_for_user(user):
+                if user.get_partner_staff_member():
                     raise ValidationError(
                         {
                             'active': 'The email for the partner contact is used by another partner contact. '
@@ -136,6 +139,28 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
             if email != self.instance.email:
                 raise ValidationError(
                     "User emails cannot be changed, please remove the user and add another one: {}".format(email))
+
+            # when adding the active tag to a previously untagged user
+            if active and not self.instance.active:
+                # make sure this user has not already been associated with another partnership.
+                user = User.objects.filter(email__iexact=email).first()
+                country, active_staff_member = user.get_active_partner_staff_member()
+                if active_staff_member and country != connection.tenant:
+                    raise ValidationError({
+                        'active': 'The Partner Staff member you are trying to activate is associated '
+                                  'with a different partnership'
+                    })
+
+            # disabled is unavailable if user already synced to PRP to avoid data inconsistencies
+            if self.instance.active and not active:
+                if Intervention.objects.filter(
+                    # todo epd: Q(date_sent_to_partner__isnull=False, agreement__partner__staff_members=self.instance) |
+                    Q(
+                        ~Q(status=Intervention.DRAFT),
+                        Q(partner_focal_points=self.instance) | Q(partner_authorized_officer_signatory=self.instance),
+                    ),
+                ).exists():
+                    raise ValidationError({'active': 'User already synced to PRP and cannot be disabled.'})
 
         return data
 
@@ -151,12 +176,27 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
                 is_active=True,
             )
 
-        validated_data['user'].profile.countries_available.add(connection.tenant)
+        instance = super().create(validated_data)
 
-        return super().create(validated_data)
+        if instance.active:
+            instance.user.profile.countries_available.add(connection.tenant)
+            instance.user.profile.country = connection.tenant
+            instance.user.profile.save()
+
+        return instance
 
     def update(self, instance, validated_data):
         instance = super().update(instance, validated_data)
+
+        # todo: move logic to signal
+        if instance.active:
+            instance.user.profile.countries_available.add(connection.tenant)
+        else:
+            instance.user.profile.countries_available.remove(connection.tenant)
+            public_schemas = [get_public_schema_name(), 'Global']
+            instance.user.profile.country = Country.objects.filter(schema_name__in=public_schemas).first()
+            instance.user.profile.save()
+
         # if inactive, remove from DRAFT Agreements and PDs
         if not instance.active:
             agreement_qs = instance.agreement_authorizations.filter(
@@ -170,6 +210,7 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
             )
             for pd in pd_qs.all():
                 pd.partner_focal_points.remove(instance)
+
         return instance
 
 
