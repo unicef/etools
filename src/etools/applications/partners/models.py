@@ -6,13 +6,13 @@ from django.conf import settings
 from django.contrib.postgres.fields import ArrayField, JSONField
 from django.db import connection, models, transaction
 from django.db.models import Case, CharField, Count, F, Max, Min, OuterRef, Q, Subquery, Sum, When
-from django.db.models.signals import post_save, pre_delete
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.translation import ugettext as _
 
 from django_fsm import FSMField, transition
+from django_tenants.utils import get_public_schema_name
 from model_utils import Choices, FieldTracker
 from model_utils.models import TimeStampedModel
 from unicef_attachments.models import Attachment
@@ -33,6 +33,7 @@ from etools.applications.partners.validation.agreements import (
 from etools.applications.reports.models import CountryProgramme, Indicator, Office, Result, Section
 from etools.applications.t2f.models import Travel, TravelActivity, TravelType
 from etools.applications.tpm.models import TPMActivity, TPMVisit
+from etools.applications.users.models import Country
 from etools.libraries.djangolib.models import MaxDistinct, StringConcat
 from etools.libraries.pythonlib.datetime import get_current_year, get_quarter
 from etools.libraries.pythonlib.encoders import CustomJSONEncoder
@@ -937,24 +938,29 @@ class PartnerStaffMember(TimeStampedModel):
             self.partner.name
         )
 
-    # TODO: instead of signals we need this transactional
-    def reactivate_signal(self):
-        # sends a signal to activate the user
-        post_save.send(PartnerStaffMember, instance=self, created=True)
-
-    def deactivate_signal(self):
-        # sends a signal to deactivate user and remove partnerstaffmember link
-        pre_delete.send(PartnerStaffMember, instance=self)
-
+    @transaction.atomic
     def save(self, **kwargs):
-        # if the instance exists and active was changed, re-associate user
-        if self.pk:
-            # get the instance that exists in the db to compare active states
-            existing_instance = PartnerStaffMember.objects.get(pk=self.pk)
-            if existing_instance.active and not self.active:
-                self.deactivate_signal()
-            elif not existing_instance.active and self.active:
-                self.reactivate_signal()
+        """
+        core ideas:
+        1. user with profile should exists on create if staff member activation status is being changed
+        2. only one user staff member can be active through all tenants
+        """
+
+        if self.user and self.tracker.has_changed('active'):
+            if self.active:
+                # staff is activated
+                self.user.profile.countries_available.add(connection.tenant)
+                self.user.profile.country = connection.tenant
+                self.user.profile.save()
+            else:
+                # staff is deactivated
+                self.user.profile.countries_available.remove(connection.tenant)
+                # using first() here because public schema unavailable during testing
+                self.user.profile.country = Country.objects.filter(schema_name=get_public_schema_name()).first()
+                self.user.profile.save()
+
+            self.user.is_active = self.active
+            self.user.save()
 
         return super().save(**kwargs)
 
