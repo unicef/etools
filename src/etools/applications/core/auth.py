@@ -101,6 +101,7 @@ def user_details(strategy, details, user=None, *args, **kwargs):
 
 
 class CustomAzureADBBCOAuth2(AzureADB2COAuth2):
+    BASE_URL = 'https://{tenant_id}.b2clogin.com/{tenant_id}.onmicrosoft.com'
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -128,13 +129,12 @@ class CustomSocialAuthExceptionMiddleware(SocialAuthExceptionMiddleware):
             if 'AADB2C90118' in error_description:
                 auth_class = CustomAzureADBBCOAuth2()
                 redirect_home = auth_class.get_redirect_uri()
-                redirect_url = 'https://login.microsoftonline.com/' + \
-                               settings.TENANT_ID + \
-                               "/oauth2/v2.0/authorize?p=" + \
-                               settings.SOCIAL_PASSWORD_RESET_POLICY + \
-                               "&client_id=" + settings.KEY + \
-                               "&nonce=defaultNonce&redirect_uri=" + redirect_home + \
-                               "&scope=openid+email&response_type=code"
+                redirect_url = auth_class.base_url + '/oauth2/v2.0/' + \
+                               'authorize?p=' + settings.SOCIAL_PASSWORD_RESET_POLICY + \
+                               '&client_id=' + settings.KEY + \
+                               '&nonce=defaultNonce&redirect_uri=' + redirect_home + \
+                               '&scope=openid+email&response_type=code'
+
                 return redirect_url
 
         # TODO: In case of password reset the state can't be verified figure out a way to log the user in after reset
