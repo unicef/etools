@@ -283,7 +283,16 @@ class LowerResultSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = LowerResult
-        fields = '__all__'
+        fields = [
+            "id",
+            "name",
+            "code",
+            "result_link",
+            "total",
+            "applied_indicators",
+            "created",
+            "modified",
+        ]
 
 
 class LowerResultCUSerializer(serializers.ModelSerializer):
@@ -565,4 +574,4 @@ class LowerResultWithActivitiesSerializer(LowerResultSerializer):
     activities = InterventionActivitySerializer(read_only=True, many=True)
 
     class Meta(LowerResultSerializer.Meta):
-        pass
+        fields = LowerResultSerializer.Meta.fields + ["activities"]
