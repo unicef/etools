@@ -18,9 +18,8 @@ from etools.libraries.pythonlib.collections import HashableDict
 
 PARTNERSHIP_MANAGER_GROUP = "Partnership Manager"
 READ_ONLY_API_GROUP_NAME = 'Read-Only API'
-SENIOR_MANAGEMENT_GROUP = 'Senior Management Team'
-PARTNERSHIP_MANAGER_GROUP = 'Partnership Manager'
 REPRESENTATIVE_OFFICE_GROUP = 'Representative Office'
+SENIOR_MANAGEMENT_GROUP = 'Senior Management Team'
 
 
 class PMPPermissions:
@@ -368,7 +367,7 @@ def intervention_field_is_editable_permission(field):
 def view_action_permission(*actions):
     class ViewActionPermission(BasePermission):
         def has_permission(self, request, view):
-            return hasattr(view, 'action') and view.action in actions
+            return request.method.upper() in actions
 
     return ViewActionPermission
 
@@ -440,20 +439,34 @@ Applies general and object-based permissions.
                  (listed as a partner staff member on the object)
 """
 PartnershipManagerRefinedPermission = (
-    view_action_permission('metadata') |
-    (view_action_permission('list') & (UserIsStaffPermission | user_group_permission(PARTNERSHIP_MANAGER_GROUP))) |
-    (view_action_permission('create') & user_group_permission(PARTNERSHIP_MANAGER_GROUP)) |
+    view_action_permission('OPTIONS') |
+    (view_action_permission('GET') & (UserIsStaffPermission | user_group_permission(PARTNERSHIP_MANAGER_GROUP))) |
+    (view_action_permission('POST') & user_group_permission(PARTNERSHIP_MANAGER_GROUP)) |
     (
-        view_action_permission('retrieve') &
+        view_action_permission('GET') &
         (UserIsStaffPermission | user_group_permission(PARTNERSHIP_MANAGER_GROUP) | UserIsObjectPartnerStaffMember)
     ) |
     (
-        view_action_permission('update', 'partial_update', 'delete') &
+        view_action_permission('PUT', 'PATCH', 'DELETE') &
         (user_group_permission(PARTNERSHIP_MANAGER_GROUP) | UserIsObjectPartnerStaffMember)
     )
 )
 
-# allow partners to load list ONLY for interventions to keep everything else working right as before; at least for now
+# allow partners to load list ONLY for interventions to keep everything
+# else working right as before; at least for now
 PMPInterventionPermission = (
-    PartnershipManagerRefinedPermission | (view_action_permission('list') & UserIsPartnerStaffMemberPermission)
+    PartnershipManagerRefinedPermission | (view_action_permission('GET') & UserIsPartnerStaffMemberPermission)
+)
+
+# allow partners to load list ONLY for agreements to keep everything
+# else working right as before; at least for now
+PMPAgreementPermission = (
+    (view_action_permission('POST') & (
+        UserIsStaffPermission | user_group_permission('Partnership Manager')
+    )) |
+    (view_action_permission('GET') & (
+        UserIsPartnerStaffMemberPermission | (
+            UserIsStaffPermission | user_group_permission('Partnership Manager')
+        )
+    ))
 )

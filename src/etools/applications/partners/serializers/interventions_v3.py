@@ -214,7 +214,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
         if self._is_partnership_manager():
             if obj.status in [obj.DRAFT, obj.REVIEW, obj.SIGNATURE]:
                 available_actions.append("cancel")
-            else:
+            elif obj.status not in [obj.ENDED, obj.CLOSED, obj.TERMINATED]:
                 available_actions.append("terminate")
 
         # if NOT in Development status then we're done
@@ -267,6 +267,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
                 obj.SUSPENDED,
                 obj.ACTIVE,
                 obj.ENDED,
+                obj.CLOSED,
             ]
         elif obj.status == obj.TERMINATED:
             status_list = [
@@ -276,6 +277,10 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
                 obj.SIGNED,
                 obj.TERMINATED,
             ]
+        elif obj.status == obj.CANCELLED:
+            status_list = [
+                obj.CANCELLED,
+            ]
         else:
             status_list = [
                 obj.DRAFT,
@@ -284,6 +289,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
                 obj.SIGNED,
                 obj.ACTIVE,
                 obj.ENDED,
+                obj.CLOSED,
             ]
         return [s for s in obj.INTERVENTION_STATUS if s[0] in status_list]
 
@@ -318,6 +324,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "country_programme",
             # "cp_outputs",
             "created",
+            "date_draft_by_partner",
             # "cso_contribution",
             "date_sent_to_partner",
             "days_from_review_to_signed",
@@ -403,12 +410,6 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "unicef_focal_points",
             "unicef_signatory",
         )
-
-
-class InterventionDummySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Intervention
-        fields = ()
 
 
 class PMPInterventionAttachmentSerializer(InterventionAttachmentSerializer):

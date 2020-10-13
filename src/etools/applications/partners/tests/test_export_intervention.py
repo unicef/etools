@@ -65,7 +65,7 @@ class BaseInterventionModelExportTestCase(BaseTenantTestCase):
         AgreementFactory(signed_by_unicef_date=datetime.date.today())
         cls.intervention = InterventionFactory(
             agreement=agreement,
-            document_type=Intervention.SHPD,
+            document_type=Intervention.SPD,
             status=Intervention.DRAFT,
             start=datetime.date.today(),
             end=datetime.date.today(),
@@ -222,8 +222,8 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 89)
-        self.assertEqual(len(dataset[0]), 89)
+        self.assertEqual(len(dataset._get_headers()), 90)
+        self.assertEqual(len(dataset[0]), 90)
 
 
 class TestInterventionAmendmentModelExport(BaseInterventionModelExportTestCase):

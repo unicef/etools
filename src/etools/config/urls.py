@@ -113,6 +113,10 @@ urlpatterns = [
         r'^api/pmp/v3/',
         include('etools.applications.partners.urls_v3', namespace='pmp_v3'),
     ),
+    url(
+        r'^api/reports/v3/',
+        include('etools.applications.reports.urls_v3', namespace='reports_v3'),
+    ),
 
     url(r'^api/docs/', schema_view),
     url(r'^api/schema/coreapi', schema_view_json_coreapi),

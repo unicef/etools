@@ -115,6 +115,17 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
         expected_actions = self.default_actions + ["terminate"]
         self.assertEqual(sorted(available_actions), sorted(expected_actions))
 
+        # not available if closed
+        for status in [
+                Intervention.CLOSED,
+                Intervention.ENDED,
+                Intervention.TERMINATED,
+        ]:
+            pd.status = status
+            pd.save()
+            available_actions = self.unicef_serializer.get_available_actions(pd)
+            self.assertNotIn("terminate", available_actions)
+
     def test_available_actions_unicef(self):
         pd = InterventionFactory()
         pd.unicef_focal_points.add(self.unicef_user)
@@ -158,6 +169,7 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
             Intervention.SIGNED,
             Intervention.ACTIVE,
             Intervention.ENDED,
+            Intervention.CLOSED,
         ]))
 
     def test_status_list_suspended(self):
@@ -171,6 +183,7 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
             Intervention.SUSPENDED,
             Intervention.ACTIVE,
             Intervention.ENDED,
+            Intervention.CLOSED,
         ]))
 
     def test_status_list_terminated(self):
@@ -182,4 +195,11 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
             Intervention.SIGNATURE,
             Intervention.SIGNED,
             Intervention.TERMINATED,
+        ]))
+
+    def test_status_list_cancelled(self):
+        pd = InterventionFactory(status=Intervention.CANCELLED)
+        status_list = self.unicef_serializer.get_status_list(pd)
+        self.assertEqual(sorted(status_list), self._expected_status_list([
+            Intervention.CANCELLED,
         ]))

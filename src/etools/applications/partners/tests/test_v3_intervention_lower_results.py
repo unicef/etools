@@ -10,7 +10,7 @@ from etools.applications.partners.tests.factories import (
     PartnerStaffFactory,
 )
 from etools.applications.reports.models import LowerResult, ResultType
-from etools.applications.reports.tests.factories import LowerResultFactory, ResultFactory
+from etools.applications.reports.tests.factories import InterventionActivityFactory, LowerResultFactory, ResultFactory
 from etools.applications.users.tests.factories import UserFactory
 
 
@@ -141,6 +141,7 @@ class TestInterventionLowerResultsDetailView(TestInterventionLowerResultsViewBas
     def test_associate_output(self):
         old_result_link = InterventionResultLinkFactory(intervention=self.intervention, cp_output=None)
         result = LowerResultFactory(result_link=old_result_link)
+        InterventionActivityFactory(result=result, unicef_cash=10, cso_cash=20)
         response = self.forced_auth_req(
             'patch',
             reverse('partners:intervention-pd-output-detail', args=[self.intervention.pk, result.pk]),
@@ -150,6 +151,7 @@ class TestInterventionLowerResultsDetailView(TestInterventionLowerResultsViewBas
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertEqual(response.data['cp_output'], self.result_link.cp_output.id)
         self.assertFalse(InterventionResultLink.objects.filter(pk=old_result_link.pk).exists())
+        self.assertEqual(response.data['total'], result.total())
 
         result.refresh_from_db()
         self.assertEqual(result.result_link, self.result_link)

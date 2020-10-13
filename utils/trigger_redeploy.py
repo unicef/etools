@@ -37,7 +37,7 @@ def get_env_vars():
     prefix_map = {
         "develop": "DEV_",
         "staging": "STG_",
-        "staging": "EPD_",
+        "epd": "EPD_",
     }
 
     # script expects CIRCLE_BRANCH to be in the enviornment variables
@@ -76,8 +76,8 @@ def redeploy():
         },
         "epd": {
             "endpoint": "https://elbecerro.unicef.io/v3",
-            "project": "etools-tst",
-            "workloads": ["web-dev", "worker-dev", "beater-dev", "worker-vision-dev"],
+            "project": "etools-test",
+            "workloads": ["web-tst", "worker-tst", "beater-tst", "worker-vision-tst"],
             "jobs": ["backend-migrations"]
         }
     }

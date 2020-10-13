@@ -6,6 +6,7 @@ from etools.applications.partners.views.v3 import PMPBaseViewMixin
 from etools.applications.reports.models import Office, Section
 from etools.applications.reports.serializers.v1 import SectionCreateSerializer
 from etools.applications.reports.serializers.v2 import OfficeSerializer
+from etools.applications.reports.views.v2 import SpecialReportingRequirementListCreateView
 
 
 class PMPOfficeViewSet(
@@ -56,3 +57,10 @@ class PMPSectionViewSet(
         if self.is_partner_staff():
             qs = qs.filter(interventions__in=self.pds())
         return qs
+
+
+class PMPSpecialReportingRequirementListCreateView(
+        PMPBaseViewMixin,
+        SpecialReportingRequirementListCreateView,
+):
+    """Wrapper for Special Reporting Requirement View"""

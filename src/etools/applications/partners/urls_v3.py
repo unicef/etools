@@ -12,9 +12,11 @@ from etools.applications.partners.views.interventions_v3 import (
     InterventionRiskDeleteView,
     PMPInterventionAttachmentListCreateView,
     PMPInterventionAttachmentUpdateDeleteView,
+    PMPInterventionIndicatorsListView,
     PMPInterventionIndicatorsUpdateView,
     PMPInterventionListCreateView,
     PMPInterventionManagementBudgetRetrieveUpdateView,
+    PMPInterventionReportingRequirementView,
     PMPInterventionRetrieveUpdateView,
     PMPInterventionSupplyItemListCreateView,
     PMPInterventionSupplyItemRetrieveUpdateView,
@@ -30,10 +32,28 @@ from etools.applications.partners.views.interventions_v3_actions import (
     PMPInterventionTerminateView,
     PMPInterventionUnlockView,
 )
+from etools.applications.partners.views.partner_organization_v3 import (
+    PMPPartnerOrganizationListAPIView,
+    PMPPartnerStaffMemberListAPIVIew,
+)
 from etools.applications.partners.views.v3 import PMPDropdownsListApiView
 
 app_name = 'partners'
 urlpatterns = [
+    path(
+        'partners/',
+        view=PMPPartnerOrganizationListAPIView.as_view(
+            http_method_names=['get'],
+        ),
+        name='partner-list',
+    ),
+    path(
+        'partners/<int:partner_pk>/staff-members/',
+        view=PMPPartnerStaffMemberListAPIVIew.as_view(
+            http_method_names=['get'],
+        ),
+        name='partner-staff-members-list',
+    ),
     path(
         'interventions/',
         view=PMPInterventionListCreateView.as_view(
@@ -155,6 +175,20 @@ urlpatterns = [
             http_method_names=['get', 'patch', 'delete'],
         ),
         name='intervention-indicators-update',
+    ),
+    path(
+        'interventions/<int:intervention_pk>/reporting-requirements/<str:report_type>/',
+        view=PMPInterventionReportingRequirementView.as_view(
+            http_method_names=['get', 'post', 'patch', 'delete']
+        ),
+        name='intervention-reporting-requirements',
+    ),
+    path(
+        'interventions/lower-results/<int:lower_result_pk>/indicators/',
+        view=PMPInterventionIndicatorsListView.as_view(
+            http_method_names=['get', 'post'],
+        ),
+        name='intervention-indicators-list',
     ),
     path(
         'agreements/',

@@ -1,11 +1,14 @@
-
 import datetime
 
 from django.test import SimpleTestCase
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import Agreement
-from etools.applications.partners.tests.factories import AgreementFactory, InterventionFactory
+from etools.applications.partners.tests.factories import (
+    AgreementFactory,
+    InterventionFactory,
+    InterventionResultLinkFactory,
+)
 from etools.applications.reports.models import (
     CountryProgramme,
     Indicator,
@@ -17,6 +20,7 @@ from etools.applications.reports.tests.factories import (
     CountryProgrammeFactory,
     IndicatorBlueprintFactory,
     IndicatorFactory,
+    InterventionActivityFactory,
     LowerResultFactory,
     QuarterFactory,
     ResultFactory,
@@ -227,6 +231,18 @@ class TestResult(BaseTenantTestCase):
         programme = CountryProgrammeFactory(wbs="WBS")
         result = ResultFactory(wbs="SBW", country_programme=programme)
         self.assertFalse(result.valid_entry())
+
+
+class TestLowerResult(BaseTenantTestCase):
+    def test_total(self):
+        ll = LowerResultFactory(result_link=InterventionResultLinkFactory())
+
+        # empty
+        self.assertEqual(ll.total(), 0)
+
+        # add activities
+        InterventionActivityFactory(result=ll, unicef_cash=10, cso_cash=20)
+        self.assertEqual(ll.total(), 30)
 
 
 class TestIndicatorBlueprint(BaseTenantTestCase):

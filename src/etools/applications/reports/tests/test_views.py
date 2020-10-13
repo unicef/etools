@@ -930,7 +930,7 @@ class TestClusterListAPIView(BaseTenantTestCase):
         self.assertEquals(['ABC', 'XYZ'], clusters)
 
 
-class TestSpecialReportingRequirementListCreateView(BaseTenantTestCase):
+class SpecialReportingRequirementListCreateMixin:
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
@@ -1023,6 +1023,19 @@ class TestSpecialReportingRequirementListCreateView(BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(requirement_qs.count(), init_count + 1)
+
+
+class TestSpecialReportingRequirementListCreateView(
+        SpecialReportingRequirementListCreateMixin,
+        BaseTenantTestCase,
+):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.url = reverse(
+            "reports:interventions-special-reporting-requirements",
+            kwargs={'intervention_pk': cls.intervention.pk}
+        )
 
 
 class TestSpecialReportingRequirementRetrieveUpdateDestroyView(BaseTenantTestCase):

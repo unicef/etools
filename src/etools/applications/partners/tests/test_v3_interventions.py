@@ -1,5 +1,5 @@
 import datetime
-from unittest import mock
+from unittest import mock, skip
 
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.models import ContentType
@@ -12,6 +12,7 @@ from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.core.tests.factories import EmailFactory
 from etools.applications.core.tests.mixins import URLAssertionMixin
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory, FundsReservationItemFactory
 from etools.applications.partners.models import Intervention, InterventionSupplyItem
@@ -25,6 +26,11 @@ from etools.applications.partners.tests.factories import (
     PartnerFactory,
     PartnerStaffFactory,
 )
+from etools.applications.partners.tests.test_api_interventions import (
+    BaseAPIInterventionIndicatorsCreateMixin,
+    BaseAPIInterventionIndicatorsListMixin,
+    BaseInterventionReportingRequirementMixin,
+)
 from etools.applications.reports.models import ResultType
 from etools.applications.reports.tests.factories import (
     AppliedIndicatorFactory,
@@ -32,6 +38,7 @@ from etools.applications.reports.tests.factories import (
     LowerResultFactory,
     OfficeFactory,
     ReportingRequirementFactory,
+    ResultFactory,
     SectionFactory,
 )
 from etools.applications.users.tests.factories import GroupFactory, UserFactory
@@ -62,6 +69,16 @@ class URLsTestCase(URLAssertionMixin, SimpleTestCase):
                 'applied-indicators/1/',
                 {'pk': 1},
             ),
+            (
+                'intervention-reporting-requirements',
+                '1/reporting-requirements/HR/',
+                {'intervention_pk': 1, 'report_type': 'HR'},
+            ),
+            (
+                'intervention-indicators-list',
+                'lower-results/1/indicators/',
+                {'lower_result_pk': 1},
+            ),
         )
         self.assertReversal(
             names_and_paths,
@@ -84,22 +101,6 @@ class BaseInterventionTestCase(BaseTenantTestCase):
 
 
 class TestList(BaseInterventionTestCase):
-    def test_get(self):
-        intervention = InterventionFactory()
-        frs = FundsReservationHeaderFactory(
-            intervention=intervention,
-            currency='USD',
-        )
-        FundsReservationItemFactory(fund_reservation=frs)
-        response = self.forced_auth_req(
-            "get",
-            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
-            user=self.user,
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        data = response.data
-        self.assertEqual(data["id"], intervention.pk)
-
     def test_list_for_partner(self):
         InterventionFactory()
 
@@ -174,6 +175,36 @@ class TestList(BaseInterventionTestCase):
         self.assertEqual(len(response.data), 1)
 
 
+class TestDetail(BaseInterventionTestCase):
+    def test_get(self):
+        intervention = InterventionFactory()
+        frs = FundsReservationHeaderFactory(
+            intervention=intervention,
+            currency='USD',
+        )
+        FundsReservationItemFactory(fund_reservation=frs)
+        result = ResultFactory(
+            name="TestDetail",
+            code="detail",
+            result_type__name=ResultType.OUTPUT,
+        )
+        link = InterventionResultLinkFactory(
+            cp_output=result,
+            intervention=intervention,
+        )
+        ll = LowerResultFactory(result_link=link)
+        InterventionActivityFactory(result=ll, unicef_cash=10, cso_cash=20)
+        response = self.forced_auth_req(
+            "get",
+            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data
+        self.assertEqual(data["id"], intervention.pk)
+        self.assertEqual(data["result_links"][0]["total"], 30)
+
+
 class TestCreate(BaseInterventionTestCase):
     def test_post(self):
         data = {
@@ -238,7 +269,7 @@ class TestUpdate(BaseInterventionTestCase):
     def test_patch_currency(self):
         intervention = InterventionFactory()
         budget = intervention.planned_budget
-        self.assertNotEqual(budget.currency, "USD")
+        self.assertNotEqual(budget.currency, "PEN")
 
         response = self.forced_auth_req(
             "patch",
@@ -246,12 +277,12 @@ class TestUpdate(BaseInterventionTestCase):
             user=self.user,
             data={'planned_budget': {
                 "id": budget.pk,
-                "currency": "USD",
+                "currency": "PEN",
             }}
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         budget.refresh_from_db()
-        self.assertEqual(budget.currency, "USD")
+        self.assertEqual(budget.currency, "PEN")
 
 
 class TestManagementBudget(BaseInterventionTestCase):
@@ -648,7 +679,8 @@ class BaseInterventionActionTestCase(BaseInterventionTestCase):
             currency='USD',
         )
 
-        self.notify_path = "etools.applications.partners.views.interventions_v3_actions.send_notification_with_template"
+        self.notify_path = "post_office.mail.send"
+        self.mock_email = EmailFactory()
 
 
 class TestInterventionAccept(BaseInterventionActionTestCase):
@@ -679,7 +711,7 @@ class TestInterventionAccept(BaseInterventionActionTestCase):
     def test_get(self):
         # unicef accepts
         self.assertFalse(self.intervention.unicef_accepted)
-        mock_send = mock.Mock()
+        mock_send = mock.Mock(return_value=self.mock_email)
         with mock.patch(self.notify_path, mock_send):
             response = self.forced_auth_req("patch", self.url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -698,7 +730,7 @@ class TestInterventionAccept(BaseInterventionActionTestCase):
 
         # partner accepts
         self.assertFalse(self.intervention.partner_accepted)
-        mock_send = mock.Mock()
+        mock_send = mock.Mock(return_value=self.mock_email)
         with mock.patch(self.notify_path, mock_send):
             response = self.forced_auth_req(
                 "patch",
@@ -719,6 +751,7 @@ class TestInterventionAccept(BaseInterventionActionTestCase):
             )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("Partner has already accepted this PD.", response.data)
+        mock_send.assert_not_called()
 
 
 class TestInterventionAcceptReview(BaseInterventionActionTestCase):
@@ -752,7 +785,7 @@ class TestInterventionAcceptReview(BaseInterventionActionTestCase):
     def test_patch(self):
         # unicef accepts
         self.assertFalse(self.intervention.unicef_accepted)
-        mock_send = mock.Mock()
+        mock_send = mock.Mock(return_value=self.mock_email)
         with mock.patch(self.notify_path, mock_send):
             response = self.forced_auth_req("patch", self.url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -801,7 +834,7 @@ class TestInterventionReview(BaseInterventionActionTestCase):
     def test_patch(self):
         # unicef reviews
         self.assertFalse(self.intervention.unicef_accepted)
-        mock_send = mock.Mock()
+        mock_send = mock.Mock(return_value=self.mock_email)
         with mock.patch(self.notify_path, mock_send):
             response = self.forced_auth_req("patch", self.url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -850,7 +883,7 @@ class TestInterventionCancel(BaseInterventionActionTestCase):
     def test_patch(self):
         # unicef cancels
         self.assertFalse(self.intervention.unicef_accepted)
-        mock_send = mock.Mock()
+        mock_send = mock.Mock(return_value=self.mock_email)
         with mock.patch(self.notify_path, mock_send):
             response = self.forced_auth_req("patch", self.url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -911,7 +944,7 @@ class TestInterventionTerminate(BaseInterventionActionTestCase):
     def test_patch(self):
         # unicef terminates
         self.assertFalse(self.intervention.unicef_accepted)
-        mock_send = mock.Mock()
+        mock_send = mock.Mock(return_value=self.mock_email)
         with mock.patch(self.notify_path, mock_send):
             response = self.forced_auth_req("patch", self.url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -960,7 +993,7 @@ class TestInterventionSignature(BaseInterventionActionTestCase):
     def test_patch(self):
         # unicef signature
         self.assertFalse(self.intervention.unicef_accepted)
-        mock_send = mock.Mock()
+        mock_send = mock.Mock(return_value=self.mock_email)
         with mock.patch(self.notify_path, mock_send):
             response = self.forced_auth_req("patch", self.url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -1010,7 +1043,7 @@ class TestInterventionUnlock(BaseInterventionActionTestCase):
 
         # unicef unlocks
         self.assertTrue(self.intervention.unicef_accepted)
-        mock_send = mock.Mock()
+        mock_send = mock.Mock(return_value=self.mock_email)
         with mock.patch(self.notify_path, mock_send):
             response = self.forced_auth_req("patch", self.url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -1028,7 +1061,7 @@ class TestInterventionUnlock(BaseInterventionActionTestCase):
 
         # partner unlocks
         self.assertTrue(self.intervention.partner_accepted)
-        mock_send = mock.Mock()
+        mock_send = mock.Mock(return_value=self.mock_email)
         with mock.patch(self.notify_path, mock_send):
             response = self.forced_auth_req(
                 "patch",
@@ -1049,6 +1082,7 @@ class TestInterventionUnlock(BaseInterventionActionTestCase):
             )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("PD is already unlocked.", response.data)
+        mock_send.assert_not_called()
 
 
 class TestInterventionSendToPartner(BaseInterventionActionTestCase):
@@ -1081,13 +1115,20 @@ class TestInterventionSendToPartner(BaseInterventionActionTestCase):
 
     def test_get(self):
         self.assertTrue(self.intervention.unicef_court)
+        self.assertIsNone(self.intervention.date_sent_to_partner)
 
         # unicef sends PD to partner
-        mock_send = mock.Mock()
+        mock_send = mock.Mock(return_value=self.mock_email)
         with mock.patch(self.notify_path, mock_send):
             response = self.forced_auth_req("patch", self.url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         mock_send.assert_called()
+        self.intervention.refresh_from_db()
+        self.assertIsNotNone(self.intervention.date_sent_to_partner)
+        self.assertEqual(
+            response.data["date_sent_to_partner"],
+            self.intervention.date_sent_to_partner.strftime("%Y-%m-%d"),
+        )
 
         # unicef request when PD in partner court
         mock_send = mock.Mock()
@@ -1128,9 +1169,10 @@ class TestInterventionSendToUNICEF(BaseInterventionActionTestCase):
         self.intervention.save()
 
         self.assertFalse(self.intervention.unicef_court)
+        self.assertFalse(self.intervention.date_draft_by_partner)
 
         # partner sends PD to unicef
-        mock_send = mock.Mock()
+        mock_send = mock.Mock(return_value=self.mock_email)
         with mock.patch(self.notify_path, mock_send):
             response = self.forced_auth_req(
                 "patch",
@@ -1139,6 +1181,12 @@ class TestInterventionSendToUNICEF(BaseInterventionActionTestCase):
             )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         mock_send.assert_called()
+        self.intervention.refresh_from_db()
+        self.assertTrue(self.intervention.date_draft_by_partner)
+        self.assertEqual(
+            response.data["date_draft_by_partner"],
+            self.intervention.date_draft_by_partner.strftime("%Y-%m-%d"),
+        )
 
         # partner request when PD in partner court
         mock_send = mock.Mock()
@@ -1337,3 +1385,51 @@ class TestPMPInterventionIndicatorsUpdateView(BaseTenantTestCase):
         self.assertTrue(response.data["is_high_frequency"])
         self.indicator.refresh_from_db()
         self.assertFalse(self.indicator.is_active)
+
+
+class TestPMPInterventionReportingRequirementView(
+        BaseInterventionReportingRequirementMixin,
+        BaseTenantTestCase,
+):
+    def _get_url(self, report_type, intervention=None):
+        intervention = self.intervention if intervention is None else intervention
+        return reverse(
+            "pmp_v3:intervention-reporting-requirements",
+            args=[intervention.pk, report_type]
+        )
+
+
+class TestPMPInterventionIndicatorsListView(
+        BaseAPIInterventionIndicatorsListMixin,
+        BaseTenantTestCase,
+):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.url = reverse(
+            'pmp_v3:intervention-indicators-list',
+            kwargs={'lower_result_pk': cls.lower_result.pk},
+        )
+
+    @skip("waiting of permissions")
+    def test_no_permission_user_forbidden(self):
+        super().test_no_permission_user_forbidden()
+
+    @skip("waiting of permissions")
+    def test_group_permission(self):
+        super().test_group_permission()
+
+
+class TestPMPInterventionIndicatorsCreateView(
+        BaseAPIInterventionIndicatorsCreateMixin,
+        BaseTenantTestCase,
+):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.result_link.cp_output.result_type.name = ResultType.OUTPUT
+        cls.result_link.cp_output.result_type.save()
+        cls.url = reverse(
+            'pmp_v3:intervention-indicators-list',
+            kwargs={'lower_result_pk': cls.lower_result.pk},
+        )

@@ -373,6 +373,12 @@ class LowerResult(TimeStampedModel):
         unique_together = (('result_link', 'code'),)
         ordering = ('created',)
 
+    def total(self):
+        results = self.activities.aggregate(
+            total=Sum("unicef_cash") + Sum("cso_cash"),
+        )
+        return results["total"] if results["total"] is not None else 0
+
 
 class Unit(models.Model):
     """

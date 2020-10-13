@@ -1107,7 +1107,7 @@ class TestInterventionViews(BaseTenantTestCase):
 
     def setUp(self):
         data = {
-            "document_type": Intervention.SHPD,
+            "document_type": Intervention.SPD,
             "status": Intervention.DRAFT,
             "title": "2009 EFY AWP",
             "start": (timezone.now().date()).isoformat(),
@@ -1160,7 +1160,7 @@ class TestInterventionViews(BaseTenantTestCase):
         self.intervention_data = {
             "agreement": self.agreement2.id,
             "partner_id": self.agreement2.partner.id,
-            "document_type": Intervention.SHPD,
+            "document_type": Intervention.SPD,
             "title": "2009 EFY AWP Updated",
             "status": Intervention.DRAFT,
             "start": (timezone.now().date()).isoformat(),
@@ -1257,7 +1257,7 @@ class TestInterventionViews(BaseTenantTestCase):
 
     def test_intervention_create(self):
         data = {
-            "document_type": Intervention.SHPD,
+            "document_type": Intervention.SPD,
             "status": Intervention.DRAFT,
             "title": "2009 EFY AWP Updated",
             "start": (timezone.now().date()).isoformat(),
@@ -1276,7 +1276,7 @@ class TestInterventionViews(BaseTenantTestCase):
 
     def test_intervention_create_unicef_user_fail(self):
         data = {
-            "document_type": Intervention.SHPD,
+            "document_type": Intervention.SPD,
             "status": Intervention.DRAFT,
             "title": "2009 EFY AWP Updated fail",
             "start": (timezone.now().date()).isoformat(),
@@ -1444,7 +1444,10 @@ class TestInterventionViews(BaseTenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('Agreement selected is not of type SSFA', response.data)
+        self.assertIn(
+            '"SSFA" is not a valid choice.',
+            response.data["document_type"],
+        )
 
     def test_intervention_validation_doctype_ssfa(self):
         self.agreement.agreement_type = Agreement.SSFA
@@ -1998,7 +2001,7 @@ class TestPartnershipDashboardView(BaseTenantTestCase):
         self.agreement2 = AgreementFactory(status=Agreement.DRAFT)
         self.partnerstaff = PartnerStaffFactory(partner=self.agreement.partner)
         data = {
-            "document_type": Intervention.SHPD,
+            "document_type": Intervention.SPD,
             "status": Intervention.DRAFT,
             "title": "2009 EFY AWP",
             "start": "2016-10-28",
@@ -2020,7 +2023,7 @@ class TestPartnershipDashboardView(BaseTenantTestCase):
         self.intervention_data = {
             "agreement": self.agreement2.id,
             "partner_id": self.agreement2.partner.id,
-            "document_type": Intervention.SHPD,
+            "document_type": Intervention.SPD,
             "title": "2009 EFY AWP Updated",
             "status": Intervention.DRAFT,
             "start": "2017-01-28",

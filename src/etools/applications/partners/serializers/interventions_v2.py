@@ -287,6 +287,7 @@ class InterventionListSerializer(BaseInterventionListSerializer):
             'date_sent_to_partner',
             'unicef_accepted',
             'partner_accepted',
+            'date_draft_by_partner',
             'cfei_number',
             'context',
             'implementation_strategy',
@@ -414,10 +415,14 @@ class InterventionResultNestedSerializer(serializers.ModelSerializer):
     class Meta:
         model = InterventionResultLink
         fields = (
-            'id', 'intervention',
-            'cp_output', 'cp_output_name',
-            'ram_indicators', 'ram_indicator_names',
-            'll_results'
+            'id',
+            'intervention',
+            'cp_output',
+            'cp_output_name',
+            'ram_indicators',
+            'ram_indicator_names',
+            'll_results',
+            'total',
         )
 
 

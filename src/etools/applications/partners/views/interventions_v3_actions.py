@@ -1,11 +1,13 @@
 from django.http import HttpResponseForbidden
 from django.urls import reverse
+from django.utils import timezone
 
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from unicef_notification.utils import send_notification_with_template
 
 from etools.applications.partners.models import Intervention
+from etools.applications.partners.serializers.interventions_v3 import InterventionDetailSerializer
 from etools.applications.partners.views.interventions_v3 import InterventionDetailAPIView, PMPInterventionMixin
 
 
@@ -15,7 +17,7 @@ class PMPInterventionActionView(PMPInterventionMixin, InterventionDetailAPIView)
         # need to overwrite successful response, so we get v3 serializer
         if response.status_code == 200:
             response = Response(
-                self.map_serializer("detail")(
+                InterventionDetailSerializer(
                     self.instance,
                     context=self.get_serializer_context(),
                 ).data,
@@ -92,7 +94,7 @@ class PMPInterventionAcceptReviewView(PMPInterventionActionView):
             }
             send_notification_with_template(
                 recipients=recipients,
-                template_name='partners/intervention/unicef_accepted_review',
+                template_name='partners/intervention/unicef_accepted_reviewed',
                 context=context
             )
 
@@ -164,7 +166,7 @@ class PMPInterventionCancelView(PMPInterventionActionView):
             }
             send_notification_with_template(
                 recipients=recipients,
-                template_name='partners/intervention/unicef_cancel',
+                template_name='partners/intervention/unicef_cancelled',
                 context=context
             )
 
@@ -288,6 +290,10 @@ class PMPInterventionSendToPartnerView(PMPInterventionActionView):
             raise ValidationError("PD is currently with Partner")
         request.data.clear()
         request.data.update({"unicef_court": False})
+        if not pd.date_sent_to_partner:
+            request.data.update({
+                "date_sent_to_partner": timezone.now().strftime("%Y-%m-%d"),
+            })
 
         response = super().update(request, *args, **kwargs)
 
@@ -318,6 +324,10 @@ class PMPInterventionSendToUNICEFView(PMPInterventionActionView):
             raise ValidationError("PD is currently with UNICEF")
         request.data.clear()
         request.data.update({"unicef_court": True})
+        if not pd.date_draft_by_partner:
+            request.data.update({
+                "date_draft_by_partner": timezone.now().strftime("%Y-%m-%d"),
+            })
 
         response = super().update(request, *args, **kwargs)
 

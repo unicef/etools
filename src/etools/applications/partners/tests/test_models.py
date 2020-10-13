@@ -36,6 +36,7 @@ from etools.applications.partners.tests.factories import (
     PlannedEngagementFactory,
     WorkspaceFileTypeFactory,
 )
+from etools.applications.publics.tests.factories import PublicsCurrencyFactory
 from etools.applications.reports.tests.factories import (
     AppliedIndicatorFactory,
     CountryProgrammeFactory,
@@ -1096,6 +1097,45 @@ class TestInterventionModel(BaseTenantTestCase):
         self.assertEqual(intervention.status, models.Intervention.CLOSED)
         self.assertEqual(agreement.status, models.Agreement.ENDED)
 
+    def test_planned_budget(self):
+        currency = "PEN"
+        budget_qs = models.InterventionBudget.objects.filter(
+            currency=currency,
+        )
+        self.assertFalse(budget_qs.exists())
+        country = connection.tenant
+        country.local_currency = PublicsCurrencyFactory(code=currency)
+        country.local_currency.save()
+        InterventionFactory()
+        self.assertTrue(budget_qs.exists())
+
+    def test_hq_support_cost(self):
+        partner = PartnerFactory(
+            cso_type=models.PartnerOrganization.CSO_TYPE_COMMUNITY,
+        )
+        intervention = InterventionFactory(agreement__partner=partner)
+        self.assertEqual(intervention.hq_support_cost, 0.0)
+
+        # INGO type
+        partner = PartnerFactory(
+            cso_type=models.PartnerOrganization.CSO_TYPE_INTERNATIONAL,
+        )
+        intervention = InterventionFactory(agreement__partner=partner)
+        self.assertEqual(intervention.hq_support_cost, 7.0)
+
+        # INGO set value
+        intervention = InterventionFactory(
+            agreement__partner=partner,
+            hq_support_cost=5.0,
+        )
+        self.assertEqual(intervention.hq_support_cost, 5.0)
+
+        # update value
+        intervention.hq_support_cost = 2.0
+        intervention.save()
+        intervention.refresh_from_db()
+        self.assertEqual(intervention.hq_support_cost, 2.0)
+
 
 class TestGetFilePaths(BaseTenantTestCase):
     def test_get_agreement_path(self):
@@ -1423,6 +1463,25 @@ class TestInterventionResultLink(BaseTenantTestCase):
             "{} {}".format(intervention_str, result_str)
         )
 
+    def test_total(self):
+        intervention = InterventionFactory()
+        result = ResultFactory(
+            name="Name",
+            code="Code"
+        )
+        link = InterventionResultLinkFactory(
+            intervention=intervention,
+            cp_output=result,
+        )
+
+        # empty
+        self.assertEqual(link.total(), 0)
+
+        # lower results
+        ll = LowerResultFactory(result_link=link)
+        InterventionActivityFactory(result=ll, unicef_cash=10, cso_cash=20)
+        self.assertEqual(link.total(), 30)
+
 
 class TestInterventionBudget(BaseTenantTestCase):
     def test_str(self):
@@ -1445,6 +1504,19 @@ class TestInterventionBudget(BaseTenantTestCase):
             intervention.planned_budget.total_cash_local(),
             20 + 10,
         )
+
+    def test_default_currency(self):
+        # no default currency
+        intervention_1 = InterventionFactory()
+        self.assertEqual(intervention_1.planned_budget.currency, "USD")
+
+        # with default currency
+        currency = "ZAR"
+        country = connection.tenant
+        country.local_currency = PublicsCurrencyFactory(code=currency)
+        country.local_currency.save()
+        intervention = InterventionFactory()
+        self.assertEqual(intervention.planned_budget.currency, currency)
 
     def test_calc_totals_no_assoc(self):
         intervention = InterventionFactory()

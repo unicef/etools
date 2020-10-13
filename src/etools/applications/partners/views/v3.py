@@ -8,8 +8,23 @@ from rest_framework import status
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from unicef_attachments.models import FileType as AttachmentFileType
+from unicef_djangolib.fields import CURRENCIES
+from unicef_locations.models import GatewayType
 
+from etools.applications.attachments.models import AttachmentFlat
 from etools.applications.funds.models import FundsReservationItem
+from etools.applications.partners.models import (
+    Agreement,
+    AgreementAmendment,
+    Assessment,
+    FileType,
+    Intervention,
+    InterventionAmendment,
+    InterventionRisk,
+    PartnerOrganization,
+    PartnerType,
+)
 from etools.applications.partners.models import FileType, Intervention, PartnerOrganization, PartnerStaffMember
 from etools.applications.partners.permissions import UserIsPartnerStaffMemberPermission
 from etools.applications.partners.views.v2 import choices_to_json_ready
@@ -63,15 +78,6 @@ class PMPBaseViewMixin:
             partner_focal_points__email=self.request.user.email,
         )
 
-    def map_serializer(self, serializer):
-        default_serializer, partner_serializer = self.SERIALIZER_OPTIONS.get(
-            serializer,
-            (None, None),
-        )
-        if self.is_partner_staff():
-            return partner_serializer
-        return default_serializer
-
 
 class PMPDropdownsListApiView(APIView):
     permission_classes = (IsAuthenticated, IsAdminUser | UserIsPartnerStaffMemberPermission)
@@ -120,6 +126,23 @@ class PMPDropdownsListApiView(APIView):
             sort_choices=False
         )
 
+    def get_cso_types(self):
+        cso_types = PartnerOrganization.objects.values_list(
+            'cso_type',
+            flat=True,
+        ).exclude(
+            cso_type__isnull=True,
+        ).exclude(
+            cso_type__exact='',
+        ).order_by('cso_type').distinct('cso_type')
+        return choices_to_json_ready(list(cso_types))
+
+    def get_local_currency(self):
+        local_workspace = self.request.user.profile.country
+        if local_workspace.local_currency:
+            return local_workspace.local_currency.pk
+        return None
+
     def get(self, request):
         """
         Return All dropdown values used for Agreements form
@@ -127,6 +150,68 @@ class PMPDropdownsListApiView(APIView):
         response_data = {
             'cp_outputs': self.get_cp_outputs(request),
             'file_types': self.get_file_types(request),
+            'cso_types': self.get_cso_types(),
+            'partner_types': choices_to_json_ready(PartnerType.CHOICES),
+            'agency_choices': choices_to_json_ready(
+                PartnerOrganization.AGENCY_CHOICES,
+            ),
+            'partner_risk_rating': choices_to_json_ready(
+                PartnerOrganization.RISK_RATINGS,
+            ),
+            'assessment_types': choices_to_json_ready(
+                Assessment.ASSESSMENT_TYPES,
+            ),
+            'agreement_types': choices_to_json_ready(
+                Agreement.AGREEMENT_TYPES,
+            ),
+            'agreement_status': choices_to_json_ready(
+                Agreement.STATUS_CHOICES,
+                sort_choices=False,
+            ),
+            'agreement_amendment_types': choices_to_json_ready(
+                AgreementAmendment.AMENDMENT_TYPES,
+            ),
+            'intervention_doc_type': choices_to_json_ready(
+                Intervention.INTERVENTION_TYPES,
+            ),
+            'intervention_status': choices_to_json_ready(
+                Intervention.INTERVENTION_STATUS,
+                sort_choices=False,
+            ),
+            'intervention_amendment_types': choices_to_json_ready(
+                InterventionAmendment.AMENDMENT_TYPES,
+            ),
+            'currencies': choices_to_json_ready(CURRENCIES),
+            'local_currency': self.get_local_currency(),
+            'location_types': GatewayType.objects.values(
+                'id',
+                'name',
+                'admin_level',
+            ).order_by('id'),
+            'attachment_types': AttachmentFileType.objects.values_list(
+                "label",
+                flat=True,
+            ),
+            'attachment_types_active': AttachmentFlat.get_file_types(),
+            'partner_file_types': FileType.objects.values_list(
+                "name",
+                flat=True,
+            ),
+            'sea_risk_ratings': choices_to_json_ready(
+                PartnerOrganization.RISK_RATINGS,
+            ),
+            'gender_equity_sustainability_ratings': choices_to_json_ready(
+                Intervention.RATING_CHOICES,
+                sort_choices=False,
+            ),
+            'risk_types': choices_to_json_ready(
+                InterventionRisk.RISK_TYPE_CHOICES,
+                sort_choices=False,
+            ),
+            'cash_transfer_modalities': choices_to_json_ready(
+                Intervention.CASH_TRANSFER_CHOICES,
+                sort_choices=False,
+            ),
         }
         if request.user.is_staff:
             response_data.update({

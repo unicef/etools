@@ -297,11 +297,15 @@ class PartnerOrganization(TimeStampedModel):
         ('WHO', 'WHO')
     )
 
+    CSO_TYPE_INTERNATIONAL = 'International'
+    CSO_TYPE_NATIONAL = 'National'
+    CSO_TYPE_COMMUNITY = 'Community Based Organization'
+    CSO_TYPE_ACADEMIC = 'Academic Institution'
     CSO_TYPES = Choices(
-        'International',
-        'National',
-        'Community Based Organization',
-        'Academic Institution',
+        CSO_TYPE_INTERNATIONAL,
+        CSO_TYPE_NATIONAL,
+        CSO_TYPE_COMMUNITY,
+        CSO_TYPE_ACADEMIC,
     )
 
     ASSURANCE_VOID = 'void'
@@ -1350,7 +1354,7 @@ class Agreement(TimeStampedModel):
                 self.status in [Agreement.SUSPENDED, Agreement.TERMINATED]:
 
             interventions = self.interventions.filter(
-                document_type__in=[Intervention.PD, Intervention.SHPD]
+                document_type__in=[Intervention.PD, Intervention.SPD]
             )
             for item in interventions:
                 if item.status not in [Intervention.DRAFT,
@@ -1676,12 +1680,12 @@ class Intervention(TimeStampedModel):
         (TERMINATED, "Terminated"),
     )
     PD = 'PD'
-    SHPD = 'SPD'
+    SPD = 'SPD'
     SSFA = 'SSFA'
     INTERVENTION_TYPES = (
         (PD, 'Programme Document'),
-        (SHPD, 'Humanitarian Programme Document'),
-        (SSFA, 'SSFA'),
+        (SPD, 'Simplified Programme Document'),
+        # (SSFA, 'SSFA'),
     )
 
     RATING_NONE = "none"
@@ -1933,6 +1937,11 @@ class Intervention(TimeStampedModel):
     partner_accepted = models.BooleanField(
         verbose_name=("Partner Accepted"),
         default=False,
+    )
+    date_draft_by_partner = models.DateField(
+        verbose_name=_("Date first draft by Partner"),
+        null=True,
+        blank=True,
     )
     cfei_number = models.CharField(
         verbose_name=_("UNPP Number"),
@@ -2352,6 +2361,12 @@ class Intervention(TimeStampedModel):
 
     @transaction.atomic
     def save(self, force_insert=False, save_from_agreement=False, **kwargs):
+        # automatically set hq_support_cost to 7% for INGOs
+        if not self.pk:
+            if self.agreement.partner.cso_type == PartnerOrganization.CSO_TYPE_INTERNATIONAL:
+                if not self.hq_support_cost:
+                    self.hq_support_cost = 7.0
+
         # check status auto updates
         # TODO: move this outside of save in the future to properly check transitions
         # self.check_status_auto_updates()
@@ -2532,6 +2547,12 @@ class InterventionResultLink(TimeStampedModel):
             self.intervention, self.cp_output
         )
 
+    def total(self):
+        results = self.ll_results.aggregate(
+            total=Sum("activities__unicef_cash") + Sum("activities__cso_cash"),
+        )
+        return results["total"] if results["total"] is not None else 0
+
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
 
@@ -2601,6 +2622,14 @@ class InterventionBudget(TimeStampedModel):
         Calculate total budget on save
         """
         self.calc_totals(save=False)
+
+        # attempt to set default currency
+        if not self.currency:
+            try:
+                self.currency = connection.tenant.local_currency.code
+            except AttributeError:
+                self.currency = "USD"
+
         super().save(**kwargs)
 
     def __str__(self):
