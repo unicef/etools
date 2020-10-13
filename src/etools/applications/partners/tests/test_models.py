@@ -1110,6 +1110,33 @@ class TestInterventionModel(BaseTenantTestCase):
         InterventionFactory()
         self.assertTrue(budget_qs.exists())
 
+    def test_hq_support_cost(self):
+        partner = PartnerFactory(
+            cso_type=models.PartnerOrganization.CSO_TYPE_COMMUNITY,
+        )
+        intervention = InterventionFactory(agreement__partner=partner)
+        self.assertEqual(intervention.hq_support_cost, 0.0)
+
+        # INGO type
+        partner = PartnerFactory(
+            cso_type=models.PartnerOrganization.CSO_TYPE_INTERNATIONAL,
+        )
+        intervention = InterventionFactory(agreement__partner=partner)
+        self.assertEqual(intervention.hq_support_cost, 7.0)
+
+        # INGO set value
+        intervention = InterventionFactory(
+            agreement__partner=partner,
+            hq_support_cost=5.0,
+        )
+        self.assertEqual(intervention.hq_support_cost, 5.0)
+
+        # update value
+        intervention.hq_support_cost = 2.0
+        intervention.save()
+        intervention.refresh_from_db()
+        self.assertEqual(intervention.hq_support_cost, 2.0)
+
 
 class TestGetFilePaths(BaseTenantTestCase):
     def test_get_agreement_path(self):
@@ -1612,6 +1639,26 @@ class TestInterventionManagementBudget(BaseTenantTestCase):
         self.assertEqual(budget.partner_total, 1200)
         self.assertEqual(budget.unicef_total, 900)
         self.assertEqual(budget.total, 2100)
+
+
+class TestInterventionSupplyItem(BaseTenantTestCase):
+    def test_delete(self):
+        intervention = InterventionFactory()
+        budget = intervention.planned_budget
+
+        for __ in range(3):
+            item = InterventionSupplyItemFactory(
+                intervention=intervention,
+                unit_number=1,
+                unit_price=2,
+            )
+
+        self.assertEqual(budget.in_kind_amount_local, 6)
+
+        item.delete()
+
+        budget.refresh_from_db()
+        self.assertEqual(budget.in_kind_amount_local, 4)
 
 
 class TestFileType(BaseTenantTestCase):

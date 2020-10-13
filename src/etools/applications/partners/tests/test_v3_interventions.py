@@ -307,7 +307,7 @@ class TestUpdate(BaseInterventionTestCase):
     def test_patch_currency(self):
         intervention = InterventionFactory()
         budget = intervention.planned_budget
-        self.assertNotEqual(budget.currency, "USD")
+        self.assertNotEqual(budget.currency, "PEN")
 
         response = self.forced_auth_req(
             "patch",
@@ -315,12 +315,12 @@ class TestUpdate(BaseInterventionTestCase):
             user=self.user,
             data={'planned_budget': {
                 "id": budget.pk,
-                "currency": "USD",
+                "currency": "PEN",
             }}
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         budget.refresh_from_db()
-        self.assertEqual(budget.currency, "USD")
+        self.assertEqual(budget.currency, "PEN")
 
 
 class TestManagementBudget(BaseInterventionTestCase):
@@ -928,14 +928,24 @@ class TestInterventionCancel(BaseInterventionActionTestCase):
     def test_patch(self):
         # unicef cancels
         self.assertFalse(self.intervention.unicef_accepted)
+        self.assertIsNone(self.intervention.cancel_justification)
         mock_send = mock.Mock(return_value=self.mock_email)
         with mock.patch(self.notify_path, mock_send):
-            response = self.forced_auth_req("patch", self.url, user=self.user)
+            response = self.forced_auth_req(
+                "patch",
+                self.url,
+                data={"cancel_justification": "Needs to be cancelled"},
+                user=self.user,
+            )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         mock_send.assert_called()
         self.intervention.refresh_from_db()
         self.assertEqual(self.intervention.status, Intervention.CANCELLED)
         self.assertFalse(self.intervention.unicef_accepted)
+        self.assertEqual(
+            self.intervention.cancel_justification,
+            "Needs to be cancelled",
+        )
 
         # unicef attempt to cancel again
         mock_send = mock.Mock()

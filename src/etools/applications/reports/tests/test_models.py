@@ -21,6 +21,7 @@ from etools.applications.reports.tests.factories import (
     IndicatorBlueprintFactory,
     IndicatorFactory,
     InterventionActivityFactory,
+    InterventionActivityItemFactory,
     LowerResultFactory,
     QuarterFactory,
     ResultFactory,
@@ -271,6 +272,52 @@ class TestIndicator(BaseTenantTestCase):
         indicator = Indicator(name="Indicator", code="C123")
         indicator.save()
         self.assertEqual(indicator.code, "C123")
+
+
+class TestInterventionActivity(BaseTenantTestCase):
+    def test_delete(self):
+        intervention = InterventionFactory()
+        budget = intervention.planned_budget
+
+        link = InterventionResultLinkFactory(intervention=intervention)
+        lower_result = LowerResultFactory(result_link=link)
+        for __ in range(3):
+            activity = InterventionActivityFactory(
+                result=lower_result,
+                unicef_cash=101,
+                cso_cash=202,
+            )
+
+        self.assertEqual(budget.total_cash_local(), 909)
+
+        activity.delete()
+
+        budget.refresh_from_db()
+        self.assertEqual(budget.total_cash_local(), 606)
+
+
+class TestInterventionActivityItem(BaseTenantTestCase):
+    def test_delete(self):
+        intervention = InterventionFactory()
+        link = InterventionResultLinkFactory(intervention=intervention)
+        lower_result = LowerResultFactory(result_link=link)
+        activity = InterventionActivityFactory(result=lower_result)
+        for __ in range(3):
+            item = InterventionActivityItemFactory(
+                activity=activity,
+                unicef_cash=20,
+                cso_cash=10,
+            )
+
+        activity.refresh_from_db()
+        self.assertEqual(activity.unicef_cash, 60)
+        self.assertEqual(activity.cso_cash, 30)
+
+        item.delete()
+
+        activity.refresh_from_db()
+        self.assertEqual(activity.unicef_cash, 40)
+        self.assertEqual(activity.cso_cash, 20)
 
 
 class TestInterventionTimeFrame(BaseTenantTestCase):

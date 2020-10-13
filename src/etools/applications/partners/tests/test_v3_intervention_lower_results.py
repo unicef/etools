@@ -149,6 +149,10 @@ class TestInterventionLowerResultsDetailView(TestInterventionLowerResultsViewBas
         self.assertEqual(response.data['cp_output'], self.result_link.cp_output.id)
         self.assertFalse(InterventionResultLink.objects.filter(pk=old_result_link.pk).exists())
         self.assertEqual(response.data['total'], result.total())
+        for links in response.data["intervention"]["result_links"]:
+            self.assertIn("total", links)
+            for ll_result in links["ll_results"]:
+                self.assertIn("total", ll_result)
 
         result.refresh_from_db()
         self.assertEqual(result.result_link, self.result_link)

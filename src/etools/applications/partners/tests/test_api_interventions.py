@@ -99,6 +99,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
             "attachments",
             "budget_owner",
             "budget_owner_id",
+            "cancel_justification",
             "capacity_development",
             "cash_transfer_modalities",
             "cfei_number",
