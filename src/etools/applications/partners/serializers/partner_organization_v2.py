@@ -5,7 +5,6 @@ from django.contrib.auth import get_user_model
 from django.db import connection
 from django.db.models import Q
 from django.utils import timezone
-from django_tenants.utils import get_public_schema_name
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -28,7 +27,6 @@ from etools.applications.partners.serializers.interventions_v2 import (
     InterventionListSerializer,
     InterventionMonitorSerializer,
 )
-from etools.applications.users.models import Country
 
 
 class CoreValuesAssessmentSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
@@ -176,26 +174,10 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
                 is_active=True,
             )
 
-        instance = super().create(validated_data)
-
-        if instance.active:
-            instance.user.profile.countries_available.add(connection.tenant)
-            instance.user.profile.country = connection.tenant
-            instance.user.profile.save()
-
-        return instance
+        return super().create(validated_data)
 
     def update(self, instance, validated_data):
         instance = super().update(instance, validated_data)
-
-        # todo: move logic to signal
-        if instance.active:
-            instance.user.profile.countries_available.add(connection.tenant)
-        else:
-            instance.user.profile.countries_available.remove(connection.tenant)
-            public_schemas = [get_public_schema_name(), 'Global']
-            instance.user.profile.country = Country.objects.filter(schema_name__in=public_schemas).first()
-            instance.user.profile.save()
 
         # if inactive, remove from DRAFT Agreements and PDs
         if not instance.active:

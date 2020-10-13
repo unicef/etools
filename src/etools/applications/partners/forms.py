@@ -7,7 +7,6 @@ from django.core.validators import validate_email
 from django.db import connection
 from django.db.models import Q
 from django.utils.translation import ugettext as _
-from django_tenants.utils import get_public_schema_name
 
 from unicef_djangolib.forms import AutoSizeTextForm
 
@@ -18,7 +17,6 @@ from etools.applications.partners.models import (
     PartnerStaffMember,
     PartnerType,
 )
-from etools.applications.publics.models import Country
 
 logger = logging.getLogger('partners.forms')
 
@@ -125,17 +123,7 @@ class PartnerStaffMemberForm(forms.ModelForm):
                     is_staff=False,
                 )
 
-        instance = super().save(commit=commit)
-
-        if 'active' in self.cleaned_data:
-            active = self.cleaned_data['active']
-            public_schemas = [get_public_schema_name(), 'Global']
-            if active:
-                instance.user.profile.countries_available.add(connection.tenant)
-            else:
-                instance.user.profile.countries_available.remove(connection.tenant)
-                instance.user.profile.country = Country.objects.filter(schema_name__in=public_schemas).first()
-                instance.user.profile.save()
+        return super().save(commit=commit)
 
 
 class InterventionAttachmentForm(forms.ModelForm):
