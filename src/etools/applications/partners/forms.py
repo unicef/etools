@@ -5,11 +5,13 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from django.db import connection
+from django.db.models import Q
 from django.utils.translation import ugettext as _
 
 from unicef_djangolib.forms import AutoSizeTextForm
 
 from etools.applications.partners.models import (
+    Intervention,
     InterventionAttachment,
     PartnerOrganization,
     PartnerStaffMember,
@@ -73,7 +75,7 @@ class PartnerStaffMemberForm(forms.ModelForm):
                 if user.is_unicef_user():
                     raise ValidationError('Unable to associate staff member to UNICEF user')
 
-                staff_member = PartnerStaffMember.get_id_for_user(user)
+                staff_member = user.get_partner_staff_member()
                 if staff_member:
                     raise ValidationError("This user already exists under a different partnership: {}".format(email))
 
@@ -83,6 +85,25 @@ class PartnerStaffMemberForm(forms.ModelForm):
             if email != self.instance.email:
                 raise ValidationError(
                     "User emails cannot be changed, please remove the user and add another one: {}".format(email))
+
+            # when adding the active tag to a previously untagged user
+            if active and not self.instance.active:
+                # make sure this user has not already been associated with another partnership.
+                user = User.objects.filter(email__iexact=email).first()
+                country, active_staff_member = user.get_active_partner_staff_member()
+                if active_staff_member and country != connection.tenant:
+                    raise ValidationError({'active': self.ERROR_MESSAGES['user_unavailable']})
+
+            # disabled is unavailable if user already synced to PRP to avoid data inconsistencies
+            if self.instance.active and not active:
+                if Intervention.objects.filter(
+                    # todo epd: Q(date_sent_to_partner__isnull=False, agreement__partner__staff_members=self.instance) |
+                    Q(
+                        ~Q(status=Intervention.DRAFT),
+                        Q(partner_focal_points=self.instance) | Q(partner_authorized_officer_signatory=self.instance),
+                    ),
+                ).exists():
+                    raise ValidationError({'active': 'User already synced to PRP and cannot be disabled.'})
 
         return cleaned_data
 
@@ -101,7 +122,7 @@ class PartnerStaffMemberForm(forms.ModelForm):
                     is_active=True,
                     is_staff=False,
                 )
-            self.instance.user.profile.countries_available.add(connection.tenant)
+
         return super().save(commit=commit)
 
 
