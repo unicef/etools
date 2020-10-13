@@ -16,8 +16,11 @@ class PMPPartnerOrganizationListAPIView(
 
 
 class PMPPartnerStaffMemberMixin(PMPBaseViewMixin):
-    def get_queryset(self, format=None):
-        return self.queryset.filter(partner__in=self.partners())
+    def get_queryset(self):
+        qs = self.queryset
+        if self.is_partner_staff():
+            qs = qs.filter(partner__in=self.partners())
+        return qs
 
 
 class PMPPartnerStaffMemberListAPIVIew(
