@@ -291,7 +291,7 @@ class TestInterventionTimeFrame(BaseTenantTestCase):
         item_to_keep = InterventionTimeFrame.objects.get(
             intervention=intervention,
             start_date=datetime.date(year=1980, month=4, day=1),
-            end_date=datetime.date(year=1980, month=7, day=1)
+            end_date=datetime.date(year=1980, month=6, day=30)
         )
         item_to_remove = InterventionTimeFrame.objects.get(
             intervention=intervention,
@@ -303,7 +303,7 @@ class TestInterventionTimeFrame(BaseTenantTestCase):
         intervention.save()
         item_to_keep.refresh_from_db()
         self.assertEqual(item_to_keep.start_date, datetime.date(year=1979, month=9, day=1))
-        self.assertEqual(item_to_keep.end_date, datetime.date(year=1979, month=12, day=1))
+        self.assertEqual(item_to_keep.end_date, datetime.date(year=1979, month=11, day=30))
         self.assertEqual(intervention.quarters.filter(id=item_to_remove.id).exists(), False)
 
     def test_time_frame_created_on_dates_change(self):

@@ -1226,7 +1226,7 @@ class TestTimeframesValidation(BaseInterventionTestCase):
         self.activity.time_frames.add(
             self.intervention.quarters.get(
                 start_date=datetime.date(year=1970, month=4, day=1),
-                end_date=datetime.date(year=1970, month=7, day=1)
+                end_date=datetime.date(year=1970, month=6, day=30)
             )
         )
         response = self.forced_auth_req(
