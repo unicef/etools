@@ -137,22 +137,6 @@ class TestList(BaseInterventionTestCase):
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]["id"], intervention.pk)
 
-        # attempt clear date sent, but with snapshot
-        with mock.patch(PRP_PARTNER_SYNC, mock.Mock()):
-            pre_save = create_dict_with_relations(intervention)
-            intervention.date_sent_to_partner = None
-            intervention.save()
-            create_snapshot(intervention, pre_save, user)
-
-        response = self.forced_auth_req(
-            "get",
-            reverse('pmp_v3:intervention-list'),
-            user=user,
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]["id"], intervention.pk)
-
     def test_not_authenticated(self):
         response = self.forced_auth_req(
             "get",
@@ -321,6 +305,51 @@ class TestUpdate(BaseInterventionTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         budget.refresh_from_db()
         self.assertEqual(budget.currency, "PEN")
+
+
+class TestDelete(BaseInterventionTestCase):
+    def setUp(self):
+        super().setUp()
+        self.intervention = InterventionFactory()
+        self.user = UserFactory(is_staff=True)
+        self.partner_user = UserFactory(is_staff=False, groups__data=[])
+        user_staff_member = PartnerStaffFactory(
+            partner=self.intervention.agreement.partner,
+            email=self.partner_user.email,
+        )
+        self.partner_user.profile.partner_staff_member = user_staff_member.pk
+        self.partner_user.profile.save()
+        self.intervention.partner_focal_points.add(user_staff_member)
+        self.intervention_qs = Intervention.objects.filter(
+            pk=self.intervention.pk,
+        )
+
+    def test_with_date_sent_to_partner_reset(self):
+        # attempt clear date sent, but with snapshot
+        with mock.patch(PRP_PARTNER_SYNC, mock.Mock()):
+            pre_save = create_dict_with_relations(self.intervention)
+            self.intervention.date_sent_to_partner = None
+            self.intervention.save()
+            create_snapshot(self.intervention, pre_save, self.user)
+
+        self.assertTrue(self.intervention_qs.exists())
+        response = self.forced_auth_req(
+            "delete",
+            reverse('pmp_v3:intervention-delete', args=[self.intervention.pk]),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(self.intervention_qs.exists())
+
+    def test_delete_partner(self):
+        self.assertTrue(self.intervention_qs.exists())
+        response = self.forced_auth_req(
+            "delete",
+            reverse('pmp_v3:intervention-delete', args=[self.intervention.pk]),
+            user=self.partner_user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertTrue(self.intervention_qs.exists())
 
 
 class TestManagementBudget(BaseInterventionTestCase):

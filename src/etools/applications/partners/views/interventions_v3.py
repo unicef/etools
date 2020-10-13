@@ -1,8 +1,6 @@
 from copy import copy
 
-from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
-from django.db.models import Q
 
 from rest_framework import status
 from rest_framework.generics import (
@@ -15,7 +13,6 @@ from rest_framework.generics import (
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.status import is_success
-from unicef_snapshot.models import Activity
 
 from etools.applications.field_monitoring.permissions import IsEditAction, IsReadAction
 from etools.applications.partners.models import (
@@ -52,6 +49,7 @@ from etools.applications.partners.serializers.v3 import (
 )
 from etools.applications.partners.views.interventions_v2 import (
     InterventionAttachmentUpdateDeleteView,
+    InterventionDeleteView,
     InterventionDetailAPIView,
     InterventionIndicatorsListView,
     InterventionIndicatorsUpdateView,
@@ -67,21 +65,10 @@ class PMPInterventionMixin(PMPBaseViewMixin):
     def get_queryset(self, format=None):
         qs = super().get_queryset()
         # if partner, limit to interventions that they are associated with
-        # so long as PD has been sent to partner before
         if self.is_partner_staff():
-            sent_to_partner = Activity.objects.filter(
-                target_content_type=ContentType.objects.get_for_model(
-                    Intervention,
-                ),
-                target_object_id__in=[p.pk for p in self.pds()],
-                change__has_key="date_sent_to_partner"
-            ).values_list("target_object_id", flat=True)
             qs = qs.filter(
-                Q(agreement__partner__in=self.partners()),
-                (
-                    Q(pk__in=[int(p) for p in sent_to_partner]) |
-                    Q(date_sent_to_partner__isnull=False)
-                ),
+                agreement__partner__in=self.partners(),
+                date_sent_to_partner__isnull=False,
             )
         return qs
 
@@ -166,6 +153,10 @@ class PMPInterventionRetrieveUpdateView(PMPInterventionMixin, InterventionDetail
                 context=self.get_serializer_context(),
             ).data,
         )
+
+
+class PMPInterventionDeleteView(PMPInterventionMixin, InterventionDeleteView):
+    """Wrapper for InterventionDeleteView"""
 
 
 class InterventionPDOutputsViewMixin(DetailedInterventionResponseMixin):
