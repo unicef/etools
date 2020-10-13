@@ -315,6 +315,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "available_actions",
             # "budget_currency",
             "budget_owner",
+            "cancel_justification",
             "capacity_development",
             "cash_transfer_modalities",
             "cfei_number",
