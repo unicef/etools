@@ -1110,6 +1110,33 @@ class TestInterventionModel(BaseTenantTestCase):
         InterventionFactory()
         self.assertTrue(budget_qs.exists())
 
+    def test_hq_support_cost(self):
+        partner = PartnerFactory(
+            cso_type=models.PartnerOrganization.CSO_TYPE_COMMUNITY,
+        )
+        intervention = InterventionFactory(agreement__partner=partner)
+        self.assertEqual(intervention.hq_support_cost, 0.0)
+
+        # INGO type
+        partner = PartnerFactory(
+            cso_type=models.PartnerOrganization.CSO_TYPE_INTERNATIONAL,
+        )
+        intervention = InterventionFactory(agreement__partner=partner)
+        self.assertEqual(intervention.hq_support_cost, 7.0)
+
+        # INGO set value
+        intervention = InterventionFactory(
+            agreement__partner=partner,
+            hq_support_cost=5.0,
+        )
+        self.assertEqual(intervention.hq_support_cost, 5.0)
+
+        # update value
+        intervention.hq_support_cost = 2.0
+        intervention.save()
+        intervention.refresh_from_db()
+        self.assertEqual(intervention.hq_support_cost, 2.0)
+
 
 class TestGetFilePaths(BaseTenantTestCase):
     def test_get_agreement_path(self):
