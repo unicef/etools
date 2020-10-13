@@ -122,3 +122,25 @@ class TestCreate(BaseAgreementTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertFalse(activity_qs.exists())
+
+
+class TestUpdate(BaseAgreementTestCase):
+    def test_patch(self):
+        agreement = AgreementFactory(
+            partner=self.partner,
+            agreement_type=Agreement.SSFA,
+            status=Agreement.DRAFT,
+            signed_by=self.pme_user,
+            start=datetime.date.today(),
+        )
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:agreement-detail', args=[agreement.pk]),
+            user=self.partner_user,
+            data={
+                "reference_number_year": 2020,
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        agreement.refresh_from_db()
+        self.assertEqual(agreement.reference_number_year, 2020)
