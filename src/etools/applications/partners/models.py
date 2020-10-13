@@ -296,11 +296,15 @@ class PartnerOrganization(TimeStampedModel):
         ('WHO', 'WHO')
     )
 
+    CSO_TYPE_INTERNATIONAL = 'International'
+    CSO_TYPE_NATIONAL = 'National'
+    CSO_TYPE_COMMUNITY = 'Community Based Organization'
+    CSO_TYPE_ACADEMIC = 'Academic Institution'
     CSO_TYPES = Choices(
-        'International',
-        'National',
-        'Community Based Organization',
-        'Academic Institution',
+        CSO_TYPE_INTERNATIONAL,
+        CSO_TYPE_NATIONAL,
+        CSO_TYPE_COMMUNITY,
+        CSO_TYPE_ACADEMIC,
     )
 
     ASSURANCE_VOID = 'void'
@@ -2336,6 +2340,12 @@ class Intervention(TimeStampedModel):
 
     @transaction.atomic
     def save(self, force_insert=False, save_from_agreement=False, **kwargs):
+        # automatically set hq_support_cost to 7% for INGOs
+        if not self.pk:
+            if self.agreement.partner.cso_type == PartnerOrganization.CSO_TYPE_INTERNATIONAL:
+                if not self.hq_support_cost:
+                    self.hq_support_cost = 7.0
+
         # check status auto updates
         # TODO: move this outside of save in the future to properly check transitions
         # self.check_status_auto_updates()
