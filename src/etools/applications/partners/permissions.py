@@ -140,6 +140,8 @@ class InterventionPermissions(PMPPermissions):
             'user_adds_amendment': user_added_amendment(self.instance),
             'prp_mode_on': not prp_mode_off(),
             'prp_mode_on+contingency_on': not prp_mode_off() and self.instance.contingency_pd,
+            'prp_mode_on+unicef_court': not prp_mode_off() and self.instance.unicef_court,
+            'prp_mode_on+partner_court': not prp_mode_off() and not self.instance.unicef_court,
             'prp_mode_off': prp_mode_off(),
             'prp_server_on': prp_server_on(),
             'user_adds_amendment+prp_mode_on': user_added_amendment(self.instance) and not prp_mode_off(),
