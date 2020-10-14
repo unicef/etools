@@ -302,7 +302,7 @@ class InterventionAdmin(
                     'reference_number_year',
                     'title',
                     'status',
-                    'country_programme',
+                    'country_programmes',
                     'submission_date',
                     'sections',
                     'flat_locations',
