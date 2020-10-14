@@ -1,6 +1,6 @@
 import logging
 from decimal import Decimal
-from typing import Tuple
+from typing import Tuple, TYPE_CHECKING
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractBaseUser, Group, PermissionsMixin, UserManager
@@ -14,6 +14,9 @@ from django.utils.translation import ugettext_lazy as _
 from django_tenants.models import TenantMixin
 from django_tenants.utils import get_public_schema_name
 from model_utils.models import TimeStampedModel
+
+if TYPE_CHECKING:
+    from etools.applications.partners.models import PartnerStaffMember
 
 logger = logging.getLogger(__name__)
 
