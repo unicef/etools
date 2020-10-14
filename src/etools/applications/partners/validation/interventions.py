@@ -288,8 +288,8 @@ def locations_valid(i):
 
 
 def cp_structure_valid(i):
-    if i.country_programme and i.agreement.agreement_type == i.agreement.PCA \
-            and i.country_programme != i.agreement.country_programme:
+    if i.country_programmes.count() and i.agreement.agreement_type == i.agreement.PCA \
+            and i.agreement.country_programme not in i.country_programmes.all():
         raise BasicValidationError(_('The Country Programme selected on this PD is not the same as the '
                                      'Country Programme selected on the Agreement, '
                                      'please select "{}"'.format(i.agreement.country_programme)))

@@ -204,10 +204,8 @@ class InterventionExportSerializer(serializers.ModelSerializer):
         source='agreement.agreement_number',
         allow_null=True,
     )
-    country_programme = serializers.CharField(
-        label=_("Country Programme"),
-        source='country_programme.name',
-        allow_null=True,
+    country_programme = serializers.SerializerMethodField(
+        label=_("Country Programmes"),
     )
     offices = serializers.SerializerMethodField(label=_("UNICEF Office"))
     sectors = serializers.SerializerMethodField(label=_("Sections"))
@@ -350,6 +348,9 @@ class InterventionExportSerializer(serializers.ModelSerializer):
 
     def get_unicef_signatory(self, obj):
         return obj.unicef_signatory.get_full_name() if obj.unicef_signatory else ''
+
+    def get_country_programmes(self, obj):
+        return ', '.join([cp.name for cp in obj.country_programmes.all()])
 
     def get_offices(self, obj):
         return ', '.join([o.name for o in obj.offices.all()])
