@@ -2,6 +2,7 @@ import json
 from collections import namedtuple
 
 from django.db import connection
+from django.test import override_settings
 from django.utils import timezone
 
 from mock import patch
@@ -39,6 +40,7 @@ class TestInterventionPartnerSyncSignal(BaseTenantTestCase):
 
 
 class TestInterventionPartnerSyncTask(BaseTenantTestCase):
+    @override_settings(PRP_API_ENDPOINT='http://example.com/api/')
     @patch(
         'etools.applications.partners.prp_api.requests.post',
         return_value=namedtuple('Response', ['status_code', 'text'])(200, '{}')
@@ -52,6 +54,7 @@ class TestInterventionPartnerSyncTask(BaseTenantTestCase):
 
 
 class TestPartnerStaffMembersImportTask(BaseTenantTestCase):
+    @override_settings(PRP_API_ENDPOINT='http://example.com/api/')
     @patch(
         'etools.applications.partners.prp_api.requests.post',
         return_value=namedtuple('Response', ['status_code', 'text'])(200, '{}')
@@ -109,6 +112,7 @@ class TestPartnerStaffMembersImportTask(BaseTenantTestCase):
                 return namedtuple('Response', ['status_code', 'text'])(404, '{}')
         cls.get_prp_export_response = get_prp_export_response
 
+    @override_settings(PRP_API_ENDPOINT='http://example.com/api/')
     @patch('etools.applications.partners.prp_api.requests.get')
     def test_sync(self, request_mock):
         self.assertEqual(self.partner.staff_members.count(), 1)

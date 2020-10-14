@@ -4,9 +4,9 @@ from django.test import TestCase
 from rest_framework import serializers
 from unicef_restlib.serializers import WritableNestedSerializerMixin
 
+from .models import Child1, Parent
 from ..models import Permission
 from ..serializers import PermissionsBasedSerializerMixin
-from .models import Child1, Parent
 
 
 class Child1Serializer(PermissionsBasedSerializerMixin, WritableNestedSerializerMixin, serializers.ModelSerializer):

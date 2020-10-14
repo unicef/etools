@@ -28,6 +28,7 @@ class PRPAPI(object):
         self.url_prototype = settings.PRP_API_ENDPOINT
         self.username = settings.PRP_API_USER
         self.password = settings.PRP_API_PASSWORD
+        self.enabled = bool(self.url_prototype)
 
     def _get_headers(self, data=None):
         headers = {'Content-Type': 'application/json', 'Keep-Alive': '1800'}
@@ -40,6 +41,9 @@ class PRPAPI(object):
         return headers
 
     def _push_request(self, data=None, timeout=None):
+        if not self.enabled:
+            return
+
         headers = self._get_headers(data)
 
         if data:
@@ -55,6 +59,9 @@ class PRPAPI(object):
         return data
 
     def _simple_get_request(self, timeout=None):
+        if not self.enabled:
+            return
+
         r = requests.get(url=self.url, headers=self._get_headers(), verify=True, timeout=timeout)
         if r.status_code >= 400:
             r.raise_for_status()

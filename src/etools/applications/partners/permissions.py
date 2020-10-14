@@ -105,8 +105,6 @@ class InterventionPermissions(PMPPermissions):
         for example: in this case certain field are editable only when user adds an amendment. that means that we would
         need access to the old amendments, new amendments in order to check this.
         """
-        from etools.applications.partners.models import PartnerStaffMember
-
         super().__init__(**kwargs)
 
         # Inbound check flag is available here:
@@ -121,15 +119,15 @@ class InterventionPermissions(PMPPermissions):
         def prp_server_on():
             return tenant_switch_is_active("prp_server_on")
 
-        partner_staff_member_id = PartnerStaffMember.get_id_for_user(self.user)
+        staff_member = self.user.get_partner_staff_member()
 
         # focal points are prefetched, so just cast to array to collect ids
         partner_focal_points = [fp.id for fp in self.instance.partner_focal_points.all()]
 
-        if partner_staff_member_id and partner_staff_member_id == self.instance.partner_authorized_officer_signatory_id:
+        if staff_member and staff_member.id == self.instance.partner_authorized_officer_signatory_id:
             self.user_groups.extend(['Partner User', 'Partner Signer'])
 
-        if partner_staff_member_id and partner_staff_member_id in partner_focal_points:
+        if staff_member and staff_member.id in partner_focal_points:
             self.user_groups.extend(['Partner User', 'Partner Focal Point'])
 
         self.user_groups = list(set(self.user_groups))
@@ -382,16 +380,12 @@ def user_group_permission(*groups):
 
 class UserIsPartnerStaffMemberPermission(BasePermission):
     def has_permission(self, request, view):
-        from etools.applications.partners.models import PartnerStaffMember
-
-        return bool(PartnerStaffMember.get_for_user(request.user))
+        return request.user.get_partner_staff_member()
 
 
 class UserIsNotPartnerStaffMemberPermission(BasePermission):
     def has_permission(self, request, view):
-        from etools.applications.partners.models import PartnerStaffMember
-
-        return not bool(PartnerStaffMember.get_for_user(request.user))
+        return not request.user.get_partner_staff_member()
 
 
 class UserIsObjectPartnerStaffMember(UserIsPartnerStaffMemberPermission):
