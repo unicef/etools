@@ -5,10 +5,11 @@ from django.db.models import signals
 import factory
 from factory.fuzzy import FuzzyText
 
-from etools.applications.core.tests.cases import SCHEMA_NAME
 from etools.applications.publics.tests.factories import PublicsCurrencyFactory
 from etools.applications.reports.tests.factories import OfficeFactory, UserTenantProfileFactory
 from etools.applications.users import models
+
+SCHEMA_NAME = 'test'
 
 
 class GroupFactory(factory.django.DjangoModelFactory):

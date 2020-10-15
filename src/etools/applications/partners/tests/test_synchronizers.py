@@ -1,5 +1,4 @@
 import datetime
-import json
 
 from unicef_vision.loaders import INSIGHT_NO_DATA_MESSAGE
 
@@ -26,13 +25,21 @@ class TestPartnerSynchronizer(BaseTenantTestCase):
             "NET_CASH_TRANSFERRED_CY": "90.00",
             "REPORTED_CY": "80.00",
             "TOTAL_CASH_TRANSFERRED_YTD": "70.00",
+            "CSO_TYPE": 'NATIONAL NGO',
+            "TYPE_OF_ASSESSMENT": "HIGH RISK ASSUMED",
+            "CORE_VALUE_ASSESSMENT_DT": "10-Jan-20",
+            "DATE_OF_ASSESSMENT": "20-Jan-20",
+            "MARKED_FOR_DELETION": False,
+            "POSTING_BLOCK": False,
+            "PSEA_ASSESSMENT_DATE": "03-Jan-22",
+            "SEA_RISK_RATING_NAME": "Test"
         }
         self.records = {"ROWSET": {"ROW": [self.data]}}
         self.adapter = synchronizers.PartnerSynchronizer(business_area_code=self.country.business_area_code)
 
     def test_convert_records(self):
         self.assertEqual(
-            self.adapter._convert_records(json.dumps(self.records)),
+            self.adapter._convert_records({"ROWSET": {"ROW": [self.records]}})[0]['ROWSET']['ROW'],
             [self.data]
         )
 
@@ -56,6 +63,7 @@ class TestPartnerSynchronizer(BaseTenantTestCase):
         self.assertEqual(response, [])
 
     def test_get_cso_type_none(self):
+        self.data["CSO_TYPE"] = None
         self.assertIsNone(self.adapter.get_cso_type(self.data))
 
     def test_get_cso_type(self):
