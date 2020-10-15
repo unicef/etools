@@ -47,7 +47,10 @@ class PMPPermissions:
             if self.instance.status != condition_group['status']:
                 return False
         if condition_group['group'] and condition_group['group'] != '*':
-            if condition_group['group'] not in self.user_groups:
+            groups = condition_group['group'].split("|")
+
+            # If none of the groups defined match any of the groups in the user groups
+            if not set(groups).intersection(set(self.user_groups)):
                 return False
         if condition_group['condition'] and condition_group['condition'] != '*':
             # use the following commented line in case we want to not use a condition mapper and interpret the
