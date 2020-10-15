@@ -65,7 +65,7 @@ class PMPAgreementDetailUpdateAPIView(
 
     @transaction.atomic
     def update(self, request, *args, **kwargs):
-        super().update(self, request, *args, **kwargs)
+        super().update(request, *args, **kwargs)
         return Response(
             AgreementDetailSerializer(
                 self.instance,

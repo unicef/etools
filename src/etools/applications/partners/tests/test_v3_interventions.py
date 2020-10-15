@@ -36,6 +36,7 @@ from etools.applications.partners.tests.test_api_interventions import (
 from etools.applications.reports.models import ResultType
 from etools.applications.reports.tests.factories import (
     AppliedIndicatorFactory,
+    CountryProgrammeFactory,
     InterventionActivityFactory,
     LowerResultFactory,
     OfficeFactory,
@@ -305,6 +306,38 @@ class TestUpdate(BaseInterventionTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         budget.refresh_from_db()
         self.assertEqual(budget.currency, "PEN")
+
+    def test_patch_country_programme(self):
+        intervention = InterventionFactory()
+        agreement = intervention.agreement
+        cp = CountryProgrammeFactory()
+        self.assertNotEqual(agreement.country_programme, cp)
+        self.assertNotIn(cp, intervention.country_programmes.all())
+
+        # country programme invalid, not associated with agreement
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+            user=self.user,
+            data={
+                "country_programmes": [cp.pk],
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        # valid country programme
+        agreement.country_programme = cp
+        agreement.save()
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+            user=self.user,
+            data={
+                "country_programmes": [cp.pk],
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn(cp, intervention.country_programmes.all())
 
 
 class TestDelete(BaseInterventionTestCase):
@@ -724,7 +757,6 @@ class BaseInterventionActionTestCase(BaseInterventionTestCase):
         )
         self.intervention = InterventionFactory(
             agreement=agreement,
-            country_programme=agreement.country_programme,
             start=datetime.date.today(),
             end=datetime.date.today() + datetime.timedelta(days=3),
             signed_by_unicef_date=datetime.date.today(),
@@ -732,6 +764,7 @@ class BaseInterventionActionTestCase(BaseInterventionTestCase):
             unicef_signatory=self.user,
             partner_authorized_officer_signatory=staff_member,
         )
+        self.intervention.country_programmes.add(agreement.country_programme)
         self.intervention.partner_focal_points.add(staff_member)
         self.intervention.unicef_focal_points.add(self.user)
         self.intervention.offices.add(office)
@@ -1313,7 +1346,7 @@ class TestTimeframesValidation(BaseInterventionTestCase):
         self.activity.time_frames.add(
             self.intervention.quarters.get(
                 start_date=datetime.date(year=1970, month=4, day=1),
-                end_date=datetime.date(year=1970, month=7, day=1)
+                end_date=datetime.date(year=1970, month=6, day=30)
             )
         )
         response = self.forced_auth_req(

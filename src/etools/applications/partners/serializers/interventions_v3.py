@@ -322,7 +322,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "cluster_names",
             "context",
             "contingency_pd",
-            "country_programme",
+            "country_programmes",
             # "cp_outputs",
             "created",
             "date_draft_by_partner",
