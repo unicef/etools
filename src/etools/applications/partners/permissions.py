@@ -122,7 +122,7 @@ class InterventionPermissions(PMPPermissions):
             return tenant_switch_is_active("prp_server_on")
 
         def unlocked(instance):
-            return not(instance.partner_accepted or instance.unicef_accepted)
+            return not instance.locked
 
         user_profile = self.user.profile
         partner_staff_member_id = user_profile.partner_staff_member
@@ -153,8 +153,8 @@ class InterventionPermissions(PMPPermissions):
             'user_adds_amendment+prp_mode_on': user_added_amendment(self.instance) and not prp_mode_off(),
             'termination_doc_attached': self.instance.termination_doc_attachment.exists(),
             'not_ended': self.instance.end >= datetime.datetime.now().date() if self.instance.end else False,
-            'unicef_court': self.instance.unicef_court and not unlocked(self.instance),
-            'partner_court': not self.instance.unicef_court and not unlocked(self.instance),
+            'unicef_court': self.instance.unicef_court and unlocked(self.instance),
+            'partner_court': not self.instance.unicef_court and unlocked(self.instance),
             'unlocked': unlocked(self.instance)
         }
 

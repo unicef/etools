@@ -2072,6 +2072,10 @@ class Intervention(TimeStampedModel):
         return True if any([self.submission_date_prc, self.review_date_prc, self.prc_review_document]) else False
 
     @property
+    def locked(self):
+        return self.partner_accepted or self.unicef_accepted
+    
+    @property
     def days_from_review_to_signed(self):
         if not self.review_date_prc:
             return 'Not Reviewed'

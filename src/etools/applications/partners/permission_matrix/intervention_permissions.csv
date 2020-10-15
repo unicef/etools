@@ -162,8 +162,10 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,unicef_signatory,*,,*,View,TRUE
 ,unicef_signatory,Partnership Manager,,Signature,Edit,TRUE
 ,unicef_signatory,*,,*,Required,FALSE
-,unicef_accepted,*,,*,Required,FALSE
-,partner_accepted,*,,*,Required,FALSE
+,unicef_accepted,*,,Draft,Edit,TRUE
+,unicef_accepted,*,,Draft,Required,FALSE
+,partner_accepted,*,,Draft,Required,FALSE
+,partner_accepted,*,,Draft,Edit,TRUE
 ,partner_authorized_officer_signatory,*,,Review,Required,FALSE
 ,signed_by_partner_date,*,,Review,Required,FALSE
 ,signed_by_unicef_date,*,,Review,Required,FALSE

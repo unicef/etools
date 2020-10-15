@@ -365,6 +365,8 @@ class InterventionValid(CompleteValidation):
     def state_review_valid(self, intervention, user=None):
         self.check_required_fields(intervention)
         self.check_rigid_fields(intervention, related=True)
+        if not (intervention.partner_accepted and intervention.unicef_accepted):
+            raise StateValidationError([_('Unicef and Partner both need to accept')])
         if not all_activities_have_timeframes(intervention):
             raise StateValidationError([_('All activities must have at least one time frame')])
         if not all_pd_outputs_are_associated(intervention):
