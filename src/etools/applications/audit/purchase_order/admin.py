@@ -1,7 +1,7 @@
 from functools import update_wrapper
 
-from django.contrib import admin
 from django.conf.urls import url
+from django.contrib import admin
 from django.http.response import HttpResponseRedirect
 from django.urls import reverse
 
@@ -54,6 +54,7 @@ class PurchaseOrderAdmin(admin.ModelAdmin):
 
     def get_urls(self):
         urls = super().get_urls()
+
         def wrap(view):
             def wrapper(*args, **kwargs):
                 return self.admin_site.admin_view(view)(*args, **kwargs)
