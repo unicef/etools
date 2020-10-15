@@ -26,6 +26,7 @@ from etools.applications.partners.serializers.interventions_v2 import (
 )
 from etools.applications.partners.utils import get_quarters_range
 from etools.applications.reports.serializers.v2 import InterventionTimeFrameSerializer
+from etools.applications.users.serializers_v3 import MinimalUserSerializer
 
 
 class InterventionRiskSerializer(serializers.ModelSerializer):
@@ -94,6 +95,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     amendments = InterventionAmendmentCUSerializer(many=True, read_only=True, required=False)
     attachments = InterventionAttachmentSerializer(many=True, read_only=True, required=False)
     available_actions = serializers.SerializerMethodField()
+    budget_owner = MinimalUserSerializer()
     status_list = serializers.SerializerMethodField()
     cluster_names = serializers.SerializerMethodField()
     days_from_review_to_signed = serializers.CharField(read_only=True)
@@ -129,6 +131,8 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     quarters = InterventionTimeFrameSerializer(many=True, read_only=True)
     supply_items = InterventionSupplyItemSerializer(many=True, read_only=True)
     management_budgets = InterventionManagementBudgetSerializer(read_only=True)
+    unicef_signatory = MinimalUserSerializer()
+    unicef_focal_points = MinimalUserSerializer(many=True)
 
     def get_location_p_codes(self, obj):
         return [location.p_code for location in obj.flat_locations.all()]

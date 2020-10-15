@@ -98,6 +98,15 @@ class BaseInterventionTestCase(BaseTenantTestCase):
             partner=self.partner,
             signed_by_unicef_date=datetime.date.today(),
         )
+        self.user_serialized = {
+            "id": self.user.pk,
+            "name": self.user.get_full_name(),
+            "first_name": self.user.first_name,
+            "middle_name": self.user.middle_name,
+            "last_name": self.user.last_name,
+            "username": self.user.username,
+            "email": self.user.email,
+        }
 
 
 class TestList(BaseInterventionTestCase):
@@ -179,7 +188,7 @@ class TestList(BaseInterventionTestCase):
 
 class TestDetail(BaseInterventionTestCase):
     def test_get(self):
-        intervention = InterventionFactory()
+        intervention = InterventionFactory(unicef_signatory=self.user)
         frs = FundsReservationHeaderFactory(
             intervention=intervention,
             currency='USD',
@@ -205,6 +214,7 @@ class TestDetail(BaseInterventionTestCase):
         data = response.data
         self.assertEqual(data["id"], intervention.pk)
         self.assertEqual(data["result_links"][0]["total"], 30)
+        self.assertEqual(data["unicef_signatory"], self.user_serialized)
 
 
 class TestCreate(BaseInterventionTestCase):
@@ -231,7 +241,7 @@ class TestCreate(BaseInterventionTestCase):
         self.assertTrue(i.humanitarian_flag)
         self.assertTrue(data.get("humanitarian_flag"))
         self.assertEqual(data.get("cfei_number"), "321")
-        self.assertEqual(data.get("budget_owner"), self.user.pk)
+        self.assertEqual(data.get("budget_owner"), self.user_serialized)
 
     def test_add_intervention_by_partner_member(self):
         partner_user = UserFactory(is_staff=False, groups__data=[])
