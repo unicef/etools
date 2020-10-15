@@ -15,7 +15,7 @@ from etools.libraries.djangolib.utils import get_current_site
 from etools.libraries.tests.factories import StatusFactoryMetaClass
 
 
-class ActionPointCommentFactory(factory.DjangoModelFactory):
+class ActionPointCommentFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Comment
 
@@ -25,7 +25,7 @@ class ActionPointCommentFactory(factory.DjangoModelFactory):
     site = factory.LazyAttribute(lambda o: get_current_site())
 
 
-class ActionPointCategoryFactory(factory.DjangoModelFactory):
+class ActionPointCategoryFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Category
 
@@ -33,7 +33,7 @@ class ActionPointCategoryFactory(factory.DjangoModelFactory):
     description = factory.fuzzy.FuzzyText()
 
 
-class BaseActionPointFactory(factory.DjangoModelFactory):
+class BaseActionPointFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = ActionPoint
 

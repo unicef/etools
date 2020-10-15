@@ -24,7 +24,7 @@ class QuarterFactory(factory.django.DjangoModelFactory):
     end_date = datetime.datetime(datetime.date.today().year, 3, 31, tzinfo=timezone.get_default_timezone())
 
 
-class CountryProgrammeFactory(factory.DjangoModelFactory):
+class CountryProgrammeFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.CountryProgramme
 
