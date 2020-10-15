@@ -81,6 +81,7 @@ class BaseMonitoringActivityFactory(factory.DjangoModelFactory):
 
 
 class DraftActivityFactory(BaseMonitoringActivityFactory):
+    field_office = factory.SubFactory(OfficeFactory)
     status = MonitoringActivity.STATUSES.draft
 
 
@@ -97,7 +98,6 @@ class ReviewActivityFactory(ChecklistActivityFactory):
 class PreAssignedActivityFactory(ReviewActivityFactory):
     person_responsible = factory.SubFactory(UserFactory, unicef_user=True)
     team_members__count = 2
-    field_office = factory.SubFactory(OfficeFactory)
 
 
 class AssignedActivityFactory(PreAssignedActivityFactory):
