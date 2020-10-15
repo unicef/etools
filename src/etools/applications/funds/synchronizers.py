@@ -5,6 +5,7 @@ from decimal import Decimal
 from django.db.models import Sum
 
 from unicef_vision.settings import INSIGHT_DATE_FORMAT
+from unicef_vision.exceptions import VisionException
 from unicef_vision.synchronizers import FileDataSynchronizer, MultiModelDataSynchronizer
 from unicef_vision.utils import comp_decimals
 
@@ -120,6 +121,7 @@ class FundReservationsSynchronizer(VisionDataTenantSynchronizer):
         # Since our counterparts are unable to return json for the json endpoints in case of 400+ or 500+ we should
         # catch known errors
         json_records = super()._convert_records(records)
+
         if type(json_records) is dict:
             json_records = [json_records]
         for r in json_records:

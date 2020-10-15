@@ -363,7 +363,6 @@ class DirectCashTransferSynchronizer(VisionDataTenantSynchronizer):
                 logger.info('No object found')
             except ValidationError:
                 logger.info('Validation error')
-
         return processed
 
     def _save_records(self, records):
