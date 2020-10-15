@@ -204,7 +204,7 @@ class InterventionExportSerializer(serializers.ModelSerializer):
         source='agreement.agreement_number',
         allow_null=True,
     )
-    country_programme = serializers.SerializerMethodField(
+    country_programmes = serializers.SerializerMethodField(
         label=_("Country Programmes"),
     )
     offices = serializers.SerializerMethodField(label=_("UNICEF Office"))
@@ -304,7 +304,7 @@ class InterventionExportSerializer(serializers.ModelSerializer):
             "partner_type",
             "cso_type",
             "agreement_number",
-            "country_programme",
+            "country_programmes",
             "document_type",
             "number",
             "title",
