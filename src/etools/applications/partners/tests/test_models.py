@@ -316,19 +316,25 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
         self.partner_organization.net_ct_cy = 490000.00
         self.partner_organization.reported_cy = 490000.00
         self.partner_organization.rating = models.PartnerOrganization.RATING_HIGH
-        self.assert_min_requirements(3, 1)
+        # The following logic is overridden with the COVID adaptations in the guidance
+        # self.assert_min_requirements(3, 1)
+        self.assert_min_requirements(1, 1)
 
     def test_hact_min_requirements_ct_between_100k_and_500k_significant(self):
         self.partner_organization.net_ct_cy = 490000.00
         self.partner_organization.reported_cy = 490000.00
         self.partner_organization.rating = models.PartnerOrganization.RATING_SIGNIFICANT
-        self.assert_min_requirements(3, 1)
+        # The following logic is overridden with the COVID adaptations in the guidance
+        # self.assert_min_requirements(3, 1)
+        self.assert_min_requirements(1, 1)
 
     def test_hact_min_requirements_ct_between_100k_and_500k_moderate(self):
         self.partner_organization.net_ct_cy = 490000.00
         self.partner_organization.reported_cy = 490000.00
         self.partner_organization.rating = models.PartnerOrganization.RATING_MEDIUM
-        self.assert_min_requirements(2, 1)
+        # The following logic is overridden with the COVID adaptations in the guidance
+        # self.assert_min_requirements(2, 1)
+        self.assert_min_requirements(1, 1)
 
     def test_hact_min_requirements_ct_between_100k_and_500k_low(self):
         self.partner_organization.net_ct_cy = 490000.00
@@ -340,25 +346,33 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
         self.partner_organization.net_ct_cy = 510000.00
         self.partner_organization.reported_cy = 510000.00
         self.partner_organization.rating = models.PartnerOrganization.RATING_HIGH
-        self.assert_min_requirements(4, 1)
+        # The following logic is overridden with the COVID adaptations in the guidance
+        # self.assert_min_requirements(4, 1)
+        self.assert_min_requirements(1, 1)
 
     def test_hact_min_requirements_ct_over_500k_significant(self):
         self.partner_organization.net_ct_cy = 510000.00
         self.partner_organization.reported_cy = 510000.00
         self.partner_organization.rating = models.PartnerOrganization.RATING_SIGNIFICANT
-        self.assert_min_requirements(4, 1)
+        # The following logic is overridden with the COVID adaptations in the guidance
+        # self.assert_min_requirements(4, 1)
+        self.assert_min_requirements(1, 1)
 
     def test_hact_min_requirements_ct_over_500k_moderate(self):
         self.partner_organization.net_ct_cy = 510000.00
         self.partner_organization.reported_cy = 510000.00
         self.partner_organization.rating = models.PartnerOrganization.RATING_MEDIUM
-        self.assert_min_requirements(3, 1)
+        # The following logic is overridden with the COVID adaptations in the guidance
+        # self.assert_min_requirements(3, 1)
+        self.assert_min_requirements(1, 1)
 
     def test_hact_min_requirements_ct_over_500k_low(self):
         self.partner_organization.net_ct_cy = 510000.00
         self.partner_organization.reported_cy = 510000.00
         self.partner_organization.rating = models.PartnerOrganization.RATING_LOW
-        self.assert_min_requirements(2, 1)
+        # The following logic is overridden with the COVID adaptations in the guidance
+        # self.assert_min_requirements(2, 1)
+        self.assert_min_requirements(1, 1)
 
     def test_planned_visits_gov(self):
         self.partner_organization.partner_type = models.PartnerType.GOVERNMENT
