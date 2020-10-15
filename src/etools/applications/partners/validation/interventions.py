@@ -8,7 +8,7 @@ from etools_validator.utils import check_required_fields, check_rigid_fields
 from etools_validator.validation import CompleteValidation
 
 from etools.applications.partners.permissions import InterventionPermissions
-from etools.applications.reports.models import AppliedIndicator
+from etools.applications.reports.models import AppliedIndicator, InterventionActivity
 
 logger = logging.getLogger('partners.interventions.validation')
 
@@ -296,6 +296,16 @@ def cp_structure_valid(i):
     return True
 
 
+def all_pd_outputs_are_associated(i):
+    return i.result_links.filter(cp_output__isnull=False).exists()
+
+
+def all_activities_have_timeframes(i):
+    return InterventionActivity.objects.\
+        filter(result__result_link__intervention=i).\
+        filter(time_frames__isnull=False).exists()
+
+
 class InterventionValid(CompleteValidation):
     VALIDATION_CLASS = 'partners.Intervention'
     # validations that will be checked on every object... these functions only take the new instance
@@ -352,9 +362,22 @@ class InterventionValid(CompleteValidation):
         self.check_rigid_fields(intervention, related=True)
         return True
 
+    def state_review_valid(self, intervention, user=None):
+        self.check_required_fields(intervention)
+        self.check_rigid_fields(intervention, related=True)
+        if not all_activities_have_timeframes(intervention):
+            raise StateValidationError([_('All activities must have at least one time frame')])
+        if not all_pd_outputs_are_associated(intervention):
+            raise StateValidationError([_('All PD Outputs need to be associated to a CP Output')])
+        return True
+
     def state_signed_valid(self, intervention, user=None):
         self.check_required_fields(intervention)
         self.check_rigid_fields(intervention, related=True)
+        if not all_activities_have_timeframes(intervention):
+            raise StateValidationError([_('All activities must have at least one time frame')])
+        if not all_pd_outputs_are_associated(intervention):
+            raise StateValidationError([_('All PD Outputs need to be associated to a CP Output')])
         if intervention.contingency_pd is False and intervention.total_unicef_budget == 0:
             raise StateValidationError([_('UNICEF Cash $ or UNICEF Supplies $ should not be 0')])
         return True
@@ -367,7 +390,10 @@ class InterventionValid(CompleteValidation):
     def state_active_valid(self, intervention, user=None):
         self.check_required_fields(intervention)
         self.check_rigid_fields(intervention, related=True)
-
+        if not all_activities_have_timeframes(intervention):
+            raise StateValidationError([_('All activities must have at least one time frame')])
+        if not all_pd_outputs_are_associated(intervention):
+            raise StateValidationError([_('All PD Outputs need to be associated to a CP Output')])
         today = date.today()
         if not (intervention.start <= today):
             raise StateValidationError([_('Today is not after the start date')])
@@ -378,6 +404,10 @@ class InterventionValid(CompleteValidation):
     def state_ended_valid(self, intervention, user=None):
         self.check_required_fields(intervention)
         self.check_rigid_fields(intervention, related=True)
+        if not all_activities_have_timeframes(intervention):
+            raise StateValidationError([_('All activities must have at least one time frame')])
+        if not all_pd_outputs_are_associated(intervention):
+            raise StateValidationError([_('All PD Outputs need to be associated to a CP Output')])
 
         today = date.today()
         if not today > intervention.end:

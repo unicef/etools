@@ -15,7 +15,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.3.7,attachments,Senior Management Team,,Draft,Edit,TRUE
 3.3.2,attachments,Representative Office,,Draft,Edit,TRUE
 3.3.2,budget_owner,Partnership Manager,,Draft,Edit,TRUE
-3.3.2,budget_owner,Partnership Manager,,Review,Required,TRUE
+3.3.2,budget_owner,*,,Draft,Required,FALSE
 3.3.3,capacity_development,Partnership Manager,unicef_court,Draft,Edit,TRUE
 3.3.3,capacity_development,Partner User,partner_court,Draft,Edit,TRUE
 3.3.3,cash_transfer_modalities,*,,*,View,TRUE
@@ -27,7 +27,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.4.1,contingency_pd,Partnership Manager,,Draft,Edit,TRUE
 3.4.1,country_programme,Partnership Manager,,Draft,Edit,TRUE
 3.5,country_programme,Partnership Manager,user_adds_amendment,*,Edit,TRUE
-3.5,country_programme,*,,Draft,Required,FALSE
+3.5,country_programme,*,,*,Required,FALSE
 3.9.1,document_type,Partnership Manager,,Draft,Edit,TRUE
 3.9.1,document_type,*,,*,Required,TRUE
 3.9.2,end,Partnership Manager,unicef_court,Draft,Edit,TRUE
@@ -106,7 +106,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.13.1,reporting_requirements,Partnership Manager,termination_doc_attached,Active,Edit,TRUE
 3.13.1,reporting_requirements,Partnership Manager,termination_doc_attached,Signed,Edit,TRUE
 3.13.1,reporting_requirements,UNICEF User,prp_server_on,*,View,TRUE
-3.13.1,reporting_requirements,*,,*,Required,FALSE
+3.13.1,reporting_requirements,*,,Draft,Required,FALSE
 ,result_links,Partner User,partner_court,Draft,Edit,TRUE
 3.13.1,result_links,Partnership Manager,unicef_court,Draft,Edit,TRUE
 3.13.1,result_links,Partnership Manager,contingency_on,Signed,Edit,TRUE
@@ -162,3 +162,9 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,unicef_signatory,*,,*,View,TRUE
 ,unicef_signatory,Partnership Manager,,Signature,Edit,TRUE
 ,unicef_signatory,*,,*,Required,FALSE
+,unicef_accepted,*,,*,Required,FALSE
+,partner_accepted,*,,*,Required,FALSE
+,partner_authorized_officer_signatory,*,,Review,Required,FALSE
+,signed_by_partner_date,*,,Review,Required,FALSE
+,signed_by_unicef_date,*,,Review,Required,FALSE
+,signed_pd_attachment,*,,Review,Required,FALSE

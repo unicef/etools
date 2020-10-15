@@ -1629,7 +1629,7 @@ class Intervention(TimeStampedModel):
     TERMINATED = 'terminated'
 
     AUTO_TRANSITIONS = {
-        DRAFT: [SIGNED],
+        DRAFT: [REVIEW],
         SIGNED: [ACTIVE, TERMINATED],
         ACTIVE: [ENDED, TERMINATED],
         ENDED: [CLOSED]
@@ -2236,7 +2236,7 @@ class Intervention(TimeStampedModel):
         pass
 
     @transition(field=status,
-                source=[DRAFT, REVIEW, SIGNATURE, SUSPENDED],
+                source=[REVIEW, SIGNATURE, SUSPENDED],
                 target=[SIGNED],
                 conditions=[intervention_validation.transition_to_signed])
     def transition_to_signed(self):
