@@ -6,8 +6,6 @@ from django.core.management import call_command
 from django.utils import timezone
 
 from dateutil.relativedelta import relativedelta
-from mock import Mock, patch
-
 from unicef_locations.tests.factories import GatewayTypeFactory, LocationFactory
 
 from etools.applications.attachments.tests.factories import AttachmentFileTypeFactory
