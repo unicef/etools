@@ -1,10 +1,10 @@
 import datetime
-import json
 import logging
 from decimal import Decimal
 
 from django.db.models import Sum
 
+from unicef_vision.settings import INSIGHT_DATE_FORMAT
 from unicef_vision.exceptions import VisionException
 from unicef_vision.synchronizers import FileDataSynchronizer, MultiModelDataSynchronizer
 from unicef_vision.utils import comp_decimals
@@ -120,16 +120,8 @@ class FundReservationsSynchronizer(VisionDataTenantSynchronizer):
     def _convert_records(self, records):
         # Since our counterparts are unable to return json for the json endpoints in case of 400+ or 500+ we should
         # catch known errors
-        try:
-            json_records = records["ROWSET"]["ROW"]
-        except json.decoder.JSONDecodeError:
-            if "No data exists" in records:
-                raise VisionException("Vision error 400: No data could be found")
-            else:
-                raise
-        # Since our counterpart APIs are designed in a way that can surprise us what data structure we might encounter
-        # we have to do some type checking and convert on our side.
-        # TODO: fix this when the other team is able to keep consistency on API data structure.
+        json_records = super()._convert_records(records)
+
         if type(json_records) is dict:
             json_records = [json_records]
         for r in json_records:
@@ -156,7 +148,7 @@ class FundReservationsSynchronizer(VisionDataTenantSynchronizer):
     @staticmethod
     def get_value_for_field(field, value):
         if field in ['start_date', 'end_date', 'document_date', 'due_date']:
-            return datetime.datetime.strptime(value, '%d-%b-%y').date()
+            return datetime.datetime.strptime(value, INSIGHT_DATE_FORMAT).date()
         if field == 'multi_curr_flag':
             return value is not None and value != 'N'
         if field == 'completed_flag':
@@ -365,9 +357,6 @@ class FundCommitmentSynchronizer(VisionDataTenantSynchronizer):
         self.REVERSE_ITEM_FIELDS = [self.REVERSE_MAPPING[v] for v in self.LINE_ITEM_FIELDS]
         super().__init__(*args, **kwargs)
 
-    def _convert_records(self, records):
-        return records["ROWSET"]["ROW"]
-
     def map_header_objects(self, qs):
         for item in qs:
             self.fc_headers[item.fc_number] = item
@@ -381,7 +370,7 @@ class FundCommitmentSynchronizer(VisionDataTenantSynchronizer):
                 return False
             if not record['FC_NUMBER']:
                 return False
-            if not record['FR_NUMBER']:
+            if not record['VENDOR_CODE']:
                 return False
             return True
 
@@ -390,7 +379,7 @@ class FundCommitmentSynchronizer(VisionDataTenantSynchronizer):
     @staticmethod
     def get_value_for_field(field, value):
         if field in ['document_date', 'due_date'] and value:
-            return datetime.datetime.strptime(value, '%d-%b-%y').date()
+            return datetime.datetime.strptime(value, INSIGHT_DATE_FORMAT).date()
 
         if field in ['commitment_amount', 'commitment_amount_dc', 'amount_changed']:
             return Decimal(value.replace(",", ""))

@@ -3,7 +3,7 @@ import logging
 
 from django.db import transaction
 
-from unicef_vision.loaders import INSIGHT_NO_DATA_MESSAGE
+from unicef_vision.settings import INSIGHT_DATE_FORMAT
 
 from etools.applications.reports.models import CountryProgramme, Indicator, Result, ResultType
 from etools.applications.vision.synchronizers import VisionDataTenantSynchronizer
@@ -258,10 +258,6 @@ class ProgrammeSynchronizer(VisionDataTenantSynchronizer):
         ("HUMANITARIAN_TAG", "humanitarian_tag"),
     )
 
-    @staticmethod
-    def _get_json(data):
-        return [] if data == INSIGHT_NO_DATA_MESSAGE else data
-
     def _filter_by_time_range(self, records):
         records = super()._filter_records(records)
 
@@ -303,16 +299,13 @@ class ProgrammeSynchronizer(VisionDataTenantSynchronizer):
         records = records['ROWSET']['ROW']
         for r in records:
             for k in self.DATES:
-                r[k] = datetime.datetime.strptime(r[k], "%d-%b-%y").date() if r[k] else None
+                r[k] = datetime.datetime.strptime(r[k], INSIGHT_DATE_FORMAT).date() if r[k] else None
             r['HUMANITARIAN_TAG'] = r['HUMANITARIAN_TAG'] not in ['No', 'None', '0']
 
         return self._clean_records(records)
 
     def _save_records(self, records):
-        # TODO maybe ? save to file in azure somewhere at this point.. have a separate task to read from file and update
-
         synchronizer = ResultStructureSynchronizer(records)
-
         return synchronizer.update()
 
 
@@ -325,9 +318,6 @@ class RAMSynchronizer(VisionDataTenantSynchronizer):
         "INDICATOR_BASELINE",
         "INDICATOR_TARGET",
     )
-
-    def _convert_records(self, records):
-        return records['ROWSET']['ROW']
 
     def _save_records(self, records):
         processed = self.process_indicators(records)

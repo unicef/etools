@@ -80,7 +80,10 @@ def sync_handler(self, business_area_code, handler):
         # No point in retrying if there's no such country
     else:
         try:
-            SYNC_HANDLERS[handler](business_area_code=country.business_area_code).sync()
+            if handler == "programme":
+                SYNC_HANDLERS[handler](business_area_code=country.business_area_code, cycle="all").sync()
+            else:
+                SYNC_HANDLERS[handler](business_area_code=country.business_area_code).sync()
             logger.info("{} sync successfully for {} [{}]".format(handler, country.name, business_area_code))
 
         except VisionException:
