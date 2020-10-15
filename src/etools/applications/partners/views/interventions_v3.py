@@ -94,6 +94,9 @@ class PMPInterventionListCreateView(PMPInterventionMixin, InterventionListAPIVie
         'number__icontains',
         'cfei_number__icontains',
     )
+    filters = InterventionListAPIView.filters + [
+        ('sent_to_partner', 'date_sent_to_partner__isnullnot'),
+    ]
 
     def get_serializer_class(self):
         if self.request.method == "GET":

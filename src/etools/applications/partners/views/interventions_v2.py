@@ -104,7 +104,7 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
     )
 
     search_terms = ('title__icontains', 'agreement__partner__name__icontains', 'number__icontains')
-    filters = (
+    filters = [
         ('partners', 'agreement__partner__in'),
         ('agreements', 'agreement__in'),
         ('document_type', 'document_type__in'),
@@ -120,7 +120,7 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
         ('office', 'offices__in'),
         ('location', 'result_links__ll_results__applied_indicators__locations__name__icontains'),
         ('contingency_pd', 'contingency_pd'),
-    )
+    ]
 
     SERIALIZER_MAP = {
         'planned_visits': PlannedVisitsCUSerializer,
