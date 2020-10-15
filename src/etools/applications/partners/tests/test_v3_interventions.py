@@ -9,6 +9,7 @@ from django.urls import reverse
 
 from rest_framework import status
 from unicef_locations.tests.factories import LocationFactory
+from unicef_snapshot.utils import create_dict_with_relations, create_snapshot
 
 from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
@@ -25,6 +26,7 @@ from etools.applications.partners.tests.factories import (
     InterventionSupplyItemFactory,
     PartnerFactory,
     PartnerStaffFactory,
+    PRP_PARTNER_SYNC,
 )
 from etools.applications.partners.tests.test_api_interventions import (
     BaseAPIInterventionIndicatorsCreateMixin,
@@ -103,13 +105,29 @@ class BaseInterventionTestCase(BaseTenantTestCase):
 
 class TestList(BaseInterventionTestCase):
     def test_list_for_partner(self):
-        InterventionFactory()
-
         intervention = InterventionFactory()
         user = UserFactory(is_staff=False, groups__data=[])
-        user_staff_member = PartnerStaffFactory(partner=intervention.agreement.partner, email=user.email)
-        user.profile.partner_staff_member = user_staff_member.id
+        user_staff_member = PartnerStaffFactory(
+            partner=intervention.agreement.partner,
+            email=user.email,
+        )
+        user.profile.partner_staff_member = user_staff_member.pk
         user.profile.save()
+        intervention.partner_focal_points.add(user_staff_member)
+
+        # not sent to partner
+        response = self.forced_auth_req(
+            "get",
+            reverse('pmp_v3:intervention-list'),
+            user=user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 0)
+
+        # sent to partner
+        with mock.patch(PRP_PARTNER_SYNC, mock.Mock()):
+            intervention.date_sent_to_partner = datetime.date.today()
+            intervention.save()
 
         response = self.forced_auth_req(
             "get",
@@ -320,6 +338,51 @@ class TestUpdate(BaseInterventionTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn(cp, intervention.country_programmes.all())
+
+
+class TestDelete(BaseInterventionTestCase):
+    def setUp(self):
+        super().setUp()
+        self.intervention = InterventionFactory()
+        self.user = UserFactory(is_staff=True)
+        self.partner_user = UserFactory(is_staff=False, groups__data=[])
+        user_staff_member = PartnerStaffFactory(
+            partner=self.intervention.agreement.partner,
+            email=self.partner_user.email,
+        )
+        self.partner_user.profile.partner_staff_member = user_staff_member.pk
+        self.partner_user.profile.save()
+        self.intervention.partner_focal_points.add(user_staff_member)
+        self.intervention_qs = Intervention.objects.filter(
+            pk=self.intervention.pk,
+        )
+
+    def test_with_date_sent_to_partner_reset(self):
+        # attempt clear date sent, but with snapshot
+        with mock.patch(PRP_PARTNER_SYNC, mock.Mock()):
+            pre_save = create_dict_with_relations(self.intervention)
+            self.intervention.date_sent_to_partner = None
+            self.intervention.save()
+            create_snapshot(self.intervention, pre_save, self.user)
+
+        self.assertTrue(self.intervention_qs.exists())
+        response = self.forced_auth_req(
+            "delete",
+            reverse('pmp_v3:intervention-delete', args=[self.intervention.pk]),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(self.intervention_qs.exists())
+
+    def test_delete_partner(self):
+        self.assertTrue(self.intervention_qs.exists())
+        response = self.forced_auth_req(
+            "delete",
+            reverse('pmp_v3:intervention-delete', args=[self.intervention.pk]),
+            user=self.partner_user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertTrue(self.intervention_qs.exists())
 
 
 class TestManagementBudget(BaseInterventionTestCase):
@@ -748,6 +811,10 @@ class TestInterventionAccept(BaseInterventionActionTestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_get(self):
+        with mock.patch(PRP_PARTNER_SYNC, mock.Mock()):
+            self.intervention.date_sent_to_partner = datetime.date.today()
+            self.intervention.save()
+
         # unicef accepts
         self.assertFalse(self.intervention.unicef_accepted)
         mock_send = mock.Mock(return_value=self.mock_email)
@@ -769,6 +836,7 @@ class TestInterventionAccept(BaseInterventionActionTestCase):
 
         # partner accepts
         self.assertFalse(self.intervention.partner_accepted)
+        self.assertIsNotNone(self.intervention.date_sent_to_partner)
         mock_send = mock.Mock(return_value=self.mock_email)
         with mock.patch(self.notify_path, mock_send):
             response = self.forced_auth_req(
@@ -1086,9 +1154,11 @@ class TestInterventionUnlock(BaseInterventionActionTestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_patch(self):
-        self.intervention.unicef_accepted = True
-        self.intervention.partner_accepted = True
-        self.intervention.save()
+        with mock.patch(PRP_PARTNER_SYNC, mock.Mock()):
+            self.intervention.unicef_accepted = True
+            self.intervention.partner_accepted = True
+            self.intervention.date_sent_to_partner = datetime.date.today()
+            self.intervention.save()
 
         # unicef unlocks
         self.assertTrue(self.intervention.unicef_accepted)
@@ -1169,7 +1239,12 @@ class TestInterventionSendToPartner(BaseInterventionActionTestCase):
         # unicef sends PD to partner
         mock_send = mock.Mock(return_value=self.mock_email)
         with mock.patch(self.notify_path, mock_send):
-            response = self.forced_auth_req("patch", self.url, user=self.user)
+            with mock.patch(PRP_PARTNER_SYNC, mock.Mock()):
+                response = self.forced_auth_req(
+                    "patch",
+                    self.url,
+                    user=self.user,
+                )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         mock_send.assert_called()
         self.intervention.refresh_from_db()
@@ -1214,8 +1289,10 @@ class TestInterventionSendToUNICEF(BaseInterventionActionTestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_get(self):
-        self.intervention.unicef_court = False
-        self.intervention.save()
+        with mock.patch(PRP_PARTNER_SYNC, mock.Mock()):
+            self.intervention.unicef_court = False
+            self.intervention.date_sent_to_partner = datetime.date.today()
+            self.intervention.save()
 
         self.assertFalse(self.intervention.unicef_court)
         self.assertFalse(self.intervention.date_draft_by_partner)

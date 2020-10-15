@@ -1,4 +1,3 @@
-
 import datetime
 
 import factory
@@ -8,6 +7,8 @@ from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.partners import models
 from etools.applications.reports.tests.factories import CountryProgrammeFactory, ResultFactory
 from etools.applications.users.tests.factories import UserFactory
+
+PRP_PARTNER_SYNC = "etools.applications.partners.signals.sync_partner_to_prp"
 
 
 class WorkspaceFileTypeFactory(factory.django.DjangoModelFactory):

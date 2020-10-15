@@ -1,6 +1,7 @@
 import datetime
 import json
 import os
+from unittest.mock import Mock, patch
 
 from django.urls import resolve, reverse
 from django.utils import timezone
@@ -20,7 +21,12 @@ from etools.applications.partners.models import (
     PartnerOrganization,
 )
 from etools.applications.partners.permissions import READ_ONLY_API_GROUP_NAME
-from etools.applications.partners.tests.factories import AgreementFactory, InterventionFactory, PartnerFactory
+from etools.applications.partners.tests.factories import (
+    AgreementFactory,
+    InterventionFactory,
+    PartnerFactory,
+    PRP_PARTNER_SYNC,
+)
 from etools.applications.partners.tests.test_utils import setup_intervention_test_data
 from etools.applications.reports.models import AppliedIndicator, IndicatorBlueprint, LowerResult, ResultType
 from etools.applications.reports.tests.factories import ReportingRequirementFactory, ResultFactory
@@ -219,17 +225,18 @@ class TestAPIPRP(ApiCheckerMixin, AssertTimeStampedMixin, WorkspaceRequiredAPITe
         unicef_staff = UserFactory(is_staff=True, email='staff@unicef.org')
         result_type = ResultType.objects.get_or_create(name=ResultType.OUTPUT)[0]
         intervention = InterventionFactory(agreement=agreement, title='Intervention 1')
-        active_intervention = InterventionFactory(
-            agreement=active_agreement, title='Active Intervention',
-            document_type=Intervention.PD, start=today - datetime.timedelta(days=1),
-            end=today + datetime.timedelta(days=90),
-            status='active',
-            date_sent_to_partner=today - datetime.timedelta(days=1),
-            signed_by_unicef_date=today - datetime.timedelta(days=1),
-            signed_by_partner_date=today - datetime.timedelta(days=1),
-            unicef_signatory=unicef_staff,
-            partner_authorized_officer_signatory=partner1.staff_members.all().first()
-        )
+        with patch(PRP_PARTNER_SYNC, Mock()):
+            active_intervention = InterventionFactory(
+                agreement=active_agreement, title='Active Intervention',
+                document_type=Intervention.PD, start=today - datetime.timedelta(days=1),
+                end=today + datetime.timedelta(days=90),
+                status='active',
+                date_sent_to_partner=today - datetime.timedelta(days=1),
+                signed_by_unicef_date=today - datetime.timedelta(days=1),
+                signed_by_partner_date=today - datetime.timedelta(days=1),
+                unicef_signatory=unicef_staff,
+                partner_authorized_officer_signatory=partner1.staff_members.all().first()
+            )
         result = ResultFactory(result_type=result_type)
         result_link = InterventionResultLink.objects.create(intervention=active_intervention, cp_output=result)
         indicator_blueprint = IndicatorBlueprint.objects.create(title='The Blueprint')
