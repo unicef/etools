@@ -119,11 +119,11 @@ class TestSendPCARequiredNotification(BaseTenantTestCase):
 
     def test_direct_cp(self):
         cp = CountryProgrammeFactory(to_date=self.lead_date)
-        InterventionFactory(
+        intervention = InterventionFactory(
             document_type=Intervention.PD,
             end=self.lead_date + datetime.timedelta(days=10),
-            country_programme=cp,
         )
+        intervention.country_programmes.add(cp)
         mock_send = Mock()
         with patch(self.send_path, mock_send):
             utils.send_pca_required_notifications()

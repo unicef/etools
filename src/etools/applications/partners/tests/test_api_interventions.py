@@ -106,6 +106,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
             "context",
             "contingency_pd",
             "country_programme",
+            "country_programmes",
             "country_programme_id",
             "created",
             "date_sent_to_partner",
