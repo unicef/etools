@@ -595,7 +595,7 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
         return custom_urls + urls
 
     def sync_partner(self, request, pk):
-        sync_partner(PartnerOrganization.objects.get(id=pk).vendor_number)
+        sync_partner(PartnerOrganization.objects.get(id=pk).vendor_number, request.user.profile.country)
         return HttpResponseRedirect(reverse('admin:partners_partnerorganization_change', args=[pk]))
 
 

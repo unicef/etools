@@ -10,9 +10,9 @@ from celery.utils.log import get_task_logger
 from django_tenants.utils import schema_context
 from unicef_notification.utils import send_notification_with_template
 from unicef_vision.exceptions import VisionException
+from unicef_vision.utils import get_data_from_insight
 
 from etools.applications.partners.models import Agreement, Intervention, PartnerOrganization
-from etools.applications.partners.synchronizers import PartnerSynchronizer
 from etools.applications.partners.utils import (
     copy_all_attachments,
     send_intervention_draft_notification,
@@ -306,15 +306,17 @@ def check_intervention_past_start():
 
 
 @app.task
-def sync_partner(vendor_number=None):
-    logger.info('Starting update values for purchase order')
+def sync_partner(vendor_number=None, country=None):
+    from etools.applications.partners.synchronizers import PartnerSynchronizer
     try:
-        logger.info('Starting purchase order update for  {}'.format(
-            vendor_number
-        ))
-        PartnerSynchronizer(vendor_number).sync()
-        logger.info("Update finished successfully for {}".format(vendor_number))
+        valid_response, response = get_data_from_insight('GetPartnerDetailsInfo_json/{vendor_code}',
+                                                     {"vendor_code": vendor_number})
+        partner_resp = response["ROWSET"]["ROW"]
+        partner_sync = PartnerSynchronizer(business_area_code=country.business_area_code)
+        if not partner_sync._filter_records([partner_resp]):
+            raise VisionException
+
+        partner_sync._partner_save(partner_resp, full_sync=False)
     except VisionException:
         logger.exception("{} sync failed".format(PartnerSynchronizer.__name__))
-        # Keep going to the next country
     logger.info('Partner {} synced successfully.'.format(vendor_number))

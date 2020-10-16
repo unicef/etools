@@ -2,5 +2,5 @@
 {% load i18n etools %}
 {% block object-tools-items %}
     {{ block.super }}
-    <li><a href="{% url 'admin:partners_partnerorganization_sync_partner' original.id %}" style="background-color:#0099ff">{% trans "Sync Partner" %}</a></li>
+    <li><a href="{% url 'admin:partnerorganization_sync_partner' original.id %}" style="background-color:#0099ff">{% trans "Sync Partner" %}</a></li>
 {% endblock object-tools-items %}
