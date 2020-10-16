@@ -1,4 +1,5 @@
 from datetime import date
+from unittest.mock import Mock, patch
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 
@@ -8,7 +9,12 @@ from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
 from etools.applications.partners.models import Intervention
-from etools.applications.partners.tests.factories import InterventionFactory, PartnerFactory, PartnerStaffFactory
+from etools.applications.partners.tests.factories import (
+    InterventionFactory,
+    PartnerFactory,
+    PartnerStaffFactory,
+    PRP_PARTNER_SYNC,
+)
 from etools.applications.reports.tests.factories import (
     CountryProgrammeFactory,
     OfficeFactory,
@@ -46,11 +52,14 @@ class BaseTestCase(BaseTenantTestCase):
         self.partner_focal_point.profile.partner_staff_member = partner_focal_point_staff.id
         self.partner_focal_point.profile.save()
 
-        self.draft_intervention = InterventionFactory(
-            agreement__partner=self.partner,
-            partner_authorized_officer_signatory=partner_authorized_officer_staff,
-            cash_transfer_modalities=[Intervention.CASH_TRANSFER_DIRECT],
-        )
+        mock_prp_sync = Mock()
+        with patch(PRP_PARTNER_SYNC, mock_prp_sync()):
+            self.draft_intervention = InterventionFactory(
+                agreement__partner=self.partner,
+                partner_authorized_officer_signatory=partner_authorized_officer_staff,
+                cash_transfer_modalities=[Intervention.CASH_TRANSFER_DIRECT],
+                date_sent_to_partner=date.today(),
+            )
         self.draft_intervention.unicef_focal_points.add(UserFactory())
         self.draft_intervention.partner_focal_points.add(partner_focal_point_staff)
 

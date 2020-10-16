@@ -49,6 +49,7 @@ from etools.applications.partners.serializers.v3 import (
 )
 from etools.applications.partners.views.interventions_v2 import (
     InterventionAttachmentUpdateDeleteView,
+    InterventionDeleteView,
     InterventionDetailAPIView,
     InterventionIndicatorsListView,
     InterventionIndicatorsUpdateView,
@@ -65,7 +66,10 @@ class PMPInterventionMixin(PMPBaseViewMixin):
         qs = super().get_queryset()
         # if partner, limit to interventions that they are associated with
         if self.is_partner_staff():
-            qs = qs.filter(agreement__partner__in=self.partners())
+            qs = qs.filter(
+                agreement__partner__in=self.partners(),
+                date_sent_to_partner__isnull=False,
+            )
         return qs
 
 
@@ -149,6 +153,10 @@ class PMPInterventionRetrieveUpdateView(PMPInterventionMixin, InterventionDetail
                 context=self.get_serializer_context(),
             ).data,
         )
+
+
+class PMPInterventionDeleteView(PMPInterventionMixin, InterventionDeleteView):
+    """Wrapper for InterventionDeleteView"""
 
 
 class InterventionPDOutputsViewMixin(DetailedInterventionResponseMixin):
