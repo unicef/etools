@@ -61,6 +61,7 @@ from etools.applications.reports.models import ResultType
 from etools.applications.reports.tests.factories import (
     CountryProgrammeFactory,
     OfficeFactory,
+    ReportingRequirementFactory,
     ResultFactory,
     ResultTypeFactory,
     SectionFactory,
@@ -1752,7 +1753,9 @@ class TestInterventionViews(BaseTenantTestCase):
         self.intervention_obj.status = Intervention.ACTIVE
         self.intervention_obj.unicef_focal_points.add(self.unicef_staff)
         self.intervention_obj.partner_focal_points.add(PartnerStaffFactory())
+        self.intervention_obj.budget_owner = UserFactory()
         self.intervention_obj.save()
+        ReportingRequirementFactory(intervention=self.intervention_obj)
         self.assertEqual(self.intervention_obj.status, Intervention.ACTIVE)
 
         self.assertEqual(self.intervention_obj.in_amendment, True)

@@ -297,13 +297,13 @@ def cp_structure_valid(i):
 
 
 def all_pd_outputs_are_associated(i):
-    return i.result_links.filter(cp_output__isnull=False).exists()
+    return not i.result_links.filter(cp_output__isnull=True).exists()
 
 
 def all_activities_have_timeframes(i):
-    return InterventionActivity.objects.\
+    return not InterventionActivity.objects.\
         filter(result__result_link__intervention=i).\
-        filter(time_frames__isnull=False).exists()
+        filter(time_frames__isnull=True).exists()
 
 
 class InterventionValid(CompleteValidation):

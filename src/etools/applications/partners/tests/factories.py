@@ -113,6 +113,8 @@ class InterventionFactory(factory.django.DjangoModelFactory):
     title = factory.Sequence(lambda n: 'Intervention Title {}'.format(n))
     submission_date = datetime.datetime.today()
     reference_number_year = datetime.date.today().year
+    start = datetime.date.today()
+    end = datetime.date.today() + datetime.timedelta(days=365)
 
 
 class InterventionAmendmentFactory(factory.django.DjangoModelFactory):

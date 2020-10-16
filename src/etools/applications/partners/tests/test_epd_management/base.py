@@ -9,7 +9,12 @@ from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
 from etools.applications.partners.models import Intervention
 from etools.applications.partners.tests.factories import InterventionFactory, PartnerFactory, PartnerStaffFactory
-from etools.applications.reports.tests.factories import CountryProgrammeFactory, OfficeFactory, SectionFactory
+from etools.applications.reports.tests.factories import (
+    CountryProgrammeFactory,
+    OfficeFactory,
+    ReportingRequirementFactory,
+    SectionFactory,
+)
 from etools.applications.users.tests.factories import UserFactory
 
 
@@ -50,9 +55,9 @@ class BaseTestCase(BaseTenantTestCase):
         self.draft_intervention.partner_focal_points.add(partner_focal_point_staff)
 
         country_programme = CountryProgrammeFactory()
-        self.ended_intervention = InterventionFactory(
+        signature_fields = dict(
             agreement__partner=self.partner,
-            status=Intervention.ENDED,
+            status=Intervention.SIGNATURE,
             signed_by_partner_date=date(year=1970, month=1, day=1),
             partner_authorized_officer_signatory=partner_authorized_officer_staff,
             signed_by_unicef_date=date(year=1970, month=1, day=1),
@@ -61,7 +66,27 @@ class BaseTestCase(BaseTenantTestCase):
             end=date(year=1970, month=3, day=1),
             agreement__country_programme=country_programme,
             cash_transfer_modalities=[Intervention.CASH_TRANSFER_DIRECT],
+            budget_owner=UserFactory(),
         )
+        self.signature_intervention = InterventionFactory(**signature_fields)
+        ReportingRequirementFactory(intervention=self.signature_intervention)
+        FundsReservationHeaderFactory(intervention=self.signature_intervention)
+        AttachmentFactory(
+            file=SimpleUploadedFile('test.txt', b'test'),
+            code='partners_intervention_signed_pd',
+            content_object=self.signature_intervention,
+        )
+        self.signature_intervention.unicef_focal_points.add(UserFactory())
+        self.signature_intervention.sections.add(SectionFactory())
+        self.signature_intervention.offices.add(OfficeFactory())
+        self.signature_intervention.partner_focal_points.add(partner_focal_point_staff)
+
+        ended_fields = dict(**signature_fields)
+        ended_fields.update(**dict(
+            status=Intervention.ENDED,
+        ))
+        self.ended_intervention = InterventionFactory(**ended_fields)
+        ReportingRequirementFactory(intervention=self.ended_intervention)
         FundsReservationHeaderFactory(intervention=self.ended_intervention)
         self.ended_intervention.planned_budget.unicef_cash_local = 1
         self.ended_intervention.planned_budget.save()

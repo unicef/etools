@@ -407,6 +407,8 @@ class TestInterventionLocationExport(BaseInterventionModelExportTestCase):
 
         # Another intervention, with no locations
         self.intervention2 = InterventionFactory(
+            start=None,
+            end=None,
             agreement=AgreementFactory(
                 partner=PartnerFactory(name='Partner 2', vendor_number='123'),
             ),
@@ -424,6 +426,8 @@ class TestInterventionLocationExport(BaseInterventionModelExportTestCase):
 
         # Intervention with no sectors
         self.intervention3 = InterventionFactory(
+            start=None,
+            end=None,
             agreement=AgreementFactory(
                 partner=PartnerFactory(name='Partner 3', vendor_number='456'),
             ),

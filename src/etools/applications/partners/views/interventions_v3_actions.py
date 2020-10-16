@@ -42,11 +42,11 @@ class PMPInterventionAcceptView(PMPInterventionActionView):
         if self.is_partner_staff():
             if not self.is_partner_focal_point(pd):
                 raise ValidationError("You need to be a focal point in order to perform this action")
+            if pd.partner_accepted:
+                raise ValidationError("Partner has already accepted this PD.")
             if pd.unicef_court:
                 raise ValidationError("You cannot perform this action while the PD "
                                       "is not available for partner to edit")
-            if pd.partner_accepted:
-                raise ValidationError("Partner has already accepted this PD.")
             # When accepting on behalf of the partner since there is no further action, it will automatically
             # be sent to unicef
             request.data.update({"partner_accepted": True, "unicef_court": True})

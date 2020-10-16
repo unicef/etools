@@ -28,6 +28,7 @@ class PRPAPI(object):
         self.url_prototype = settings.PRP_API_ENDPOINT
         self.username = settings.PRP_API_USER
         self.password = settings.PRP_API_PASSWORD
+        self.enabled = bool(self.url_prototype)
 
     def _get_headers(self, data=None):
         headers = {'Content-Type': 'application/json', 'Keep-Alive': '1800'}
@@ -40,6 +41,9 @@ class PRPAPI(object):
         return headers
 
     def _push_request(self, data=None, timeout=None):
+        if not self.enabled:
+            return
+
         headers = self._get_headers(data)
 
         if data:
@@ -55,6 +59,9 @@ class PRPAPI(object):
         return data
 
     def _simple_get_request(self, timeout=None):
+        if not self.enabled:
+            return
+
         r = requests.get(url=self.url, headers=self._get_headers(), verify=True, timeout=timeout)
         if r.status_code >= 400:
             r.raise_for_status()
@@ -62,12 +69,18 @@ class PRPAPI(object):
         return json.loads(r.text)
 
     def send_partner_data(self, business_area_code: str, partner_data: Dict):
+        if not self.enabled:
+            return
+
         self.url = self.url_prototype + '/unicef/pmp/import/{0}/partner/'.format(business_area_code)
         # we send emails during users creation, so timeout increased a bit here
         response_data = self._push_request(data=partner_data, timeout=3000)
         return response_data
 
     def get_partners_list(self) -> Iterable[PRPPartnerResponse]:
+        if not self.enabled:
+            return []
+
         base_url = self.url_prototype + '/unicef/pmp/export/partners/?page={0}&page_size={1}'
         page = 1
         page_size = 50
@@ -82,6 +95,9 @@ class PRPAPI(object):
             page += 1
 
     def get_partner_staff_members(self, partner_id: int) -> Iterable[PRPPartnerUserResponse]:
+        if not self.enabled:
+            return []
+
         base_url = self.url_prototype + '/unicef/pmp/export/partners/{0}/staff-members/?page={1}&page_size={2}'
         page = 1
         page_size = 50

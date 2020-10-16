@@ -668,6 +668,7 @@ class BaseInterventionActionTestCase(BaseInterventionTestCase):
             signed_by_partner_date=datetime.date.today(),
             unicef_signatory=self.user,
             partner_authorized_officer_signatory=staff_member,
+            budget_owner=UserFactory(),
         )
         self.intervention.partner_focal_points.add(staff_member)
         self.intervention.unicef_focal_points.add(self.user)
@@ -735,6 +736,11 @@ class TestInterventionAccept(BaseInterventionActionTestCase):
         mock_send.assert_not_called()
 
         # partner accepts
+        self.intervention.unicef_accepted = False
+        self.intervention.unicef_court = False
+        self.intervention.save()
+
+        self.assertEqual(self.intervention.status, Intervention.DRAFT)
         self.assertFalse(self.intervention.partner_accepted)
         mock_send = mock.Mock(return_value=self.mock_email)
         with mock.patch(self.notify_path, mock_send):
@@ -789,16 +795,18 @@ class TestInterventionAcceptReview(BaseInterventionActionTestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_patch(self):
+        self.intervention.partner_accepted = True
+        self.intervention.unicef_accepted = True
+        self.intervention.save()
+
         # unicef accepts
-        self.assertFalse(self.intervention.unicef_accepted)
         mock_send = mock.Mock(return_value=self.mock_email)
         with mock.patch(self.notify_path, mock_send):
             response = self.forced_auth_req("patch", self.url, user=self.user)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         mock_send.assert_called()
         self.intervention.refresh_from_db()
         self.assertEqual(self.intervention.status, Intervention.REVIEW)
-        self.assertTrue(self.intervention.unicef_accepted)
 
         # unicef attempt to accept and review again
         mock_send = mock.Mock()
@@ -838,16 +846,18 @@ class TestInterventionReview(BaseInterventionActionTestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_patch(self):
+        self.intervention.partner_accepted = True
+        self.intervention.unicef_accepted = True
+        self.intervention.save()
+
         # unicef reviews
-        self.assertFalse(self.intervention.unicef_accepted)
         mock_send = mock.Mock(return_value=self.mock_email)
         with mock.patch(self.notify_path, mock_send):
             response = self.forced_auth_req("patch", self.url, user=self.user)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         mock_send.assert_called()
         self.intervention.refresh_from_db()
         self.assertEqual(self.intervention.status, Intervention.REVIEW)
-        self.assertFalse(self.intervention.unicef_accepted)
 
         # unicef attempt to review again
         mock_send = mock.Mock()
@@ -1074,6 +1084,10 @@ class TestInterventionUnlock(BaseInterventionActionTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("PD is already unlocked.", response.data)
         mock_send.assert_not_called()
+
+        self.intervention.unicef_accepted = True
+        self.intervention.partner_accepted = True
+        self.intervention.save()
 
         # partner unlocks
         self.assertTrue(self.intervention.partner_accepted)

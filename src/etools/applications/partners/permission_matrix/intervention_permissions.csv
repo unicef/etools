@@ -101,7 +101,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.13.1,reference_number_year,*,not_ssfa,Draft,Required,FALSE
 3.13.1,reporting_requirements,Partnership Manager,unicef_court,Draft,Edit,TRUE
 3.13.1,reporting_requirements,Partner User,partner_court,Draft,Edit,TRUE
-3.13.1,reporting_requirements,Partnership Manager,contingency_on,Signed,Edit,TRUE
+3.13.1,reporting_requirements,Partnership Manager,contingency on,Signed,Edit,TRUE
 3.13.1,reporting_requirements,Partnership Manager,not_ended,Terminated,Edit,TRUE
 3.13.1,reporting_requirements,Partnership Manager,termination_doc_attached,Active,Edit,TRUE
 3.13.1,reporting_requirements,Partnership Manager,termination_doc_attached,Signed,Edit,TRUE
@@ -109,7 +109,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.13.1,reporting_requirements,*,,Draft,Required,FALSE
 ,result_links,Partner User,partner_court,Draft,Edit,TRUE
 3.13.1,result_links,Partnership Manager,unicef_court,Draft,Edit,TRUE
-3.13.1,result_links,Partnership Manager,contingency_on,Signed,Edit,TRUE
+3.13.1,result_links,Partnership Manager,contingency on,Signed,Edit,TRUE
 3.13.1,result_links,Partnership Manager,user_adds_amendment,*,Edit,TRUE
 ,result_links,UNICEF User,prp_mode_on,*,View,TRUE
 ,review_date_prc,*,,*,View,TRUE
