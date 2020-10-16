@@ -273,7 +273,7 @@ class PMPInterventionUnlockView(PMPInterventionActionView):
     def update(self, request, *args, **kwargs):
         pd = self.get_object()
         request.data.clear()
-        if not(pd.partner_accepted or pd.unicef_accepted):
+        if not pd.locked:
             raise ValidationError("PD is already unlocked.")
 
         if self.is_partner_staff():

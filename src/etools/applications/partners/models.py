@@ -2073,8 +2073,11 @@ class Intervention(TimeStampedModel):
 
     @property
     def locked(self):
+        # an Intervention is "locked" for editing if any of the parties accepted the current version
+        # in order for editing to continue the "acceptance" needs to be lifted so that it can be re-acknowledged
+        # and accepted again after the edits were done.
         return self.partner_accepted or self.unicef_accepted
-    
+
     @property
     def days_from_review_to_signed(self):
         if not self.review_date_prc:
