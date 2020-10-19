@@ -20,11 +20,7 @@ from etools.applications.partners.models import (
     PartnerOrganization,
 )
 from etools.applications.partners.permissions import READ_ONLY_API_GROUP_NAME
-from etools.applications.partners.tests.factories import (
-    AgreementFactory,
-    InterventionFactory,
-    PartnerFactory,
-)
+from etools.applications.partners.tests.factories import AgreementFactory, InterventionFactory, PartnerFactory
 from etools.applications.partners.tests.test_utils import setup_intervention_test_data
 from etools.applications.reports.models import AppliedIndicator, IndicatorBlueprint, LowerResult, ResultType
 from etools.applications.reports.tests.factories import ReportingRequirementFactory, ResultFactory
