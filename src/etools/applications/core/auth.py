@@ -130,10 +130,10 @@ class CustomSocialAuthExceptionMiddleware(SocialAuthExceptionMiddleware):
                 auth_class = CustomAzureADBBCOAuth2()
                 redirect_home = auth_class.get_redirect_uri()
                 redirect_url = auth_class.base_url + '/oauth2/v2.0/' + \
-                               'authorize?p=' + settings.SOCIAL_PASSWORD_RESET_POLICY + \
-                               '&client_id=' + settings.KEY + \
-                               '&nonce=defaultNonce&redirect_uri=' + redirect_home + \
-                               '&scope=openid+email&response_type=code'
+                    'authorize?p=' + settings.SOCIAL_PASSWORD_RESET_POLICY + \
+                    '&client_id=' + settings.KEY + \
+                    '&nonce=defaultNonce&redirect_uri=' + redirect_home + \
+                    '&scope=openid+email&response_type=code'
 
                 return redirect_url
 
