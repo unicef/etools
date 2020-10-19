@@ -126,7 +126,7 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
                 if user.is_unicef_user():
                     raise ValidationError('Unable to associate staff member to UNICEF user')
 
-                if user.get_active_partner_staff_member():
+                if user.get_partner_staff_member():
                     raise ValidationError(
                         {
                             'active': 'The email for the partner contact is used by another partner contact. '
