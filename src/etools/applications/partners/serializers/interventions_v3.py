@@ -239,6 +239,9 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
         return user.email in [o.email for o in obj.partner_focal_points.all()]
 
     def get_available_actions(self, obj):
+        default_ordering = ["send_to_unicef", "send_to_partner",
+                            "accept", "review", "unlock", "cancel",
+                            "terminate", "download_comments", "export", "generate_pdf"]
         available_actions = [
             "download_comments",
             "export",
@@ -255,7 +258,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
 
         # if NOT in Development status then we're done
         if obj.status != obj.DRAFT:
-            return available_actions
+            return [action for action in default_ordering if action in available_actions]
 
         # PD is assigned to UNICEF
         if obj.unicef_court:
@@ -263,22 +266,15 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             if obj.budget_owner == user:
                 if not obj.unicef_accepted:
                     available_actions.append("accept")
-                available_actions.append("review")
-                available_actions.append("signature")
+                if obj.unicef_accepted and obj.partner_accepted:
+                    available_actions.append("review")
 
             # any unicef focal point user
             if user in obj.unicef_focal_points.all():
+                available_actions.append("send_to_partner")
                 available_actions.append("cancel")
-                if obj.unicef_court:
-                    available_actions.append("send_to_partner")
-                available_actions.append("signature")
                 if obj.partner_accepted:
                     available_actions.append("unlock")
-                else:
-                    available_actions.append("accept")
-                    # TODO confirm that this is focal point
-                    # and not just any UNICEF user
-                    available_actions.append("accept_review")
 
         # PD is assigned to Partner
         else:
@@ -286,12 +282,12 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             if self._is_partner_user(obj, user):
                 if not obj.unicef_court:
                     available_actions.append("send_to_unicef")
-                if obj.partner_accepted:
+                if obj.partner_accepted or obj.unicef_accepted:
                     available_actions.append("unlock")
-                else:
+                if not obj.partner_accepted:
                     available_actions.append("accept")
 
-        return list(set(available_actions))
+        return [action for action in default_ordering if action in available_actions]
 
     def get_status_list(self, obj):
         if obj.status == obj.SUSPENDED:

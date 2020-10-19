@@ -13,12 +13,7 @@ from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
 from etools.applications.partners import utils
 from etools.applications.partners.models import Agreement, Intervention, InterventionResultLink
-from etools.applications.partners.tests.factories import (
-    AgreementFactory,
-    InterventionFactory,
-    PartnerFactory,
-    PRP_PARTNER_SYNC,
-)
+from etools.applications.partners.tests.factories import AgreementFactory, InterventionFactory, PartnerFactory
 from etools.applications.reports.models import AppliedIndicator, IndicatorBlueprint, LowerResult, ResultType
 from etools.applications.reports.tests.factories import (
     CountryProgrammeFactory,
@@ -55,20 +50,19 @@ def setup_intervention_test_data(test_case, include_results_and_indicators=False
         document_type=Intervention.PD,
         status=Intervention.DRAFT,
     )
-    with patch(PRP_PARTNER_SYNC, Mock()):
-        test_case.active_intervention = InterventionFactory(
-            agreement=test_case.active_agreement,
-            title='Active Intervention',
-            document_type=Intervention.PD,
-            start=today - datetime.timedelta(days=1),
-            end=today + datetime.timedelta(days=90),
-            status=Intervention.ACTIVE,
-            date_sent_to_partner=today - datetime.timedelta(days=1),
-            signed_by_unicef_date=today - datetime.timedelta(days=1),
-            signed_by_partner_date=today - datetime.timedelta(days=1),
-            unicef_signatory=test_case.unicef_staff,
-            partner_authorized_officer_signatory=test_case.partner1.staff_members.all().first()
-        )
+    test_case.active_intervention = InterventionFactory(
+        agreement=test_case.active_agreement,
+        title='Active Intervention',
+        document_type=Intervention.PD,
+        start=today - datetime.timedelta(days=1),
+        end=today + datetime.timedelta(days=90),
+        status=Intervention.ACTIVE,
+        date_sent_to_partner=today - datetime.timedelta(days=1),
+        signed_by_unicef_date=today - datetime.timedelta(days=1),
+        signed_by_partner_date=today - datetime.timedelta(days=1),
+        unicef_signatory=test_case.unicef_staff,
+        partner_authorized_officer_signatory=test_case.partner1.staff_members.all().first()
+    )
     test_case.reporting_requirement = ReportingRequirementFactory(intervention=test_case.active_intervention)
     test_case.result_type = ResultType.objects.get_or_create(name=ResultType.OUTPUT)[0]
     test_case.result = ResultFactory(result_type=test_case.result_type)
