@@ -383,6 +383,11 @@ class InterventionValid(CompleteValidation):
             raise StateValidationError([_('All PD Outputs need to be associated to a CP Output')])
         return True
 
+    def state_signature_valid(self, intervention, user=None):
+        self.check_required_fields(intervention)
+        self.check_rigid_fields(intervention, related=True)
+        return True
+
     def state_signed_valid(self, intervention, user=None):
         self.check_required_fields(intervention)
         self.check_rigid_fields(intervention, related=True)

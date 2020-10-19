@@ -1,5 +1,3 @@
-from unittest import skip
-
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 
@@ -51,7 +49,6 @@ class TestFinalPartnershipReviewManagement(BaseTestCase):
         self.assertEqual(response.data['permissions']['view']['final_partnership_review'], True)
         self.assertEqual(response.data['permissions']['edit']['final_partnership_review'], True)
 
-    @skip('sorry, have no time right now for this :(')
     def test_partner_permissions(self):
         response = self.forced_auth_req(
             'get',
