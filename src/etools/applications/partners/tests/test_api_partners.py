@@ -440,7 +440,8 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
             response.data['staff_members']['active'][0],
-            'User already synced to PRP and cannot be disabled.'
+            'User already synced to PRP and cannot be disabled. '
+            'Please instruct the partner to disable from PRP'
         )
 
     @patch('etools.applications.users.models.User.get_active_partner_staff_member')
@@ -466,7 +467,8 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
         self.assertEqual(
             response.data['staff_members']['active'][0],
-            'The Partner Staff member you are trying to activate is associated with a different partnership'
+            'The Partner Staff member you are trying to activate is associated '
+            'with a different Partner Organization'
         )
 
     def test_assign_staff_member_to_existing_user(self):
