@@ -1,7 +1,6 @@
 import datetime
 import json
 import os
-from unittest.mock import Mock, patch
 
 from django.urls import resolve, reverse
 from django.utils import timezone
