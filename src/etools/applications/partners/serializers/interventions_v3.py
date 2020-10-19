@@ -1,6 +1,11 @@
+import codecs
+import csv
+import decimal
+
 from django.contrib.auth import get_user_model
 
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 from unicef_attachments.fields import AttachmentSingleFileField
 
 from etools.applications.partners.models import (
@@ -51,6 +56,37 @@ class InterventionSupplyItemSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data["intervention"] = self.initial_data.get("intervention")
         return super().create(validated_data)
+
+
+class InterventionSupplyItemUploadSerializer(serializers.Serializer):
+    supply_items_file = serializers.FileField()
+
+    def valid_row(self, row):
+        product = row["Product Number"].strip()
+        if product and not product.startswith("\"Disclaimer"):
+            return True
+        return False
+
+    def extract_file_data(self):
+        data = []
+        reader = csv.DictReader(
+            codecs.iterdecode(
+                self.validated_data.get("supply_items_file"),
+                "utf-8",
+            ),
+            delimiter=",",
+        )
+        for row in reader:
+            if self.valid_row(row):
+                try:
+                    data.append((
+                        row["Product Title"],
+                        decimal.Decimal(row["Quantity"]),
+                        decimal.Decimal(row["Indicative Price"]),
+                    ))
+                except decimal.InvalidOperation:
+                    raise ValidationError(f"Unable to process row: {row}")
+        return data
 
 
 class InterventionManagementBudgetSerializer(serializers.ModelSerializer):
