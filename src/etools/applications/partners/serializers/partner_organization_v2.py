@@ -117,9 +117,12 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
         User = get_user_model()
 
         if not self.instance:
-            user = User.objects.filter(email__iexact=email).first()
+            try:
+                user = User.objects.get(email=email)
+            except User.DoesNotExist:
+                pass
 
-            if user:
+            else:
                 if user.is_unicef_user():
                     raise ValidationError('Unable to associate staff member to UNICEF user')
 
@@ -141,12 +144,16 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
             # when adding the active tag to a previously untagged user
             if active and not self.instance.active:
                 # make sure this user has not already been associated with another partnership.
-                user = User.objects.filter(email__iexact=email).first()
+                try:
+                    user = User.objects.get(email=email)
+                except User.DoesNotExist:
+                    pass
+
                 country, active_staff_member = user.get_active_partner_staff_member()
                 if active_staff_member and country != connection.tenant:
                     raise ValidationError({
                         'active': 'The Partner Staff member you are trying to activate is associated '
-                                  'with a different partnership'
+                                  'with a different Partner Organization'
                     })
 
             # disabled is unavailable if user already synced to PRP to avoid data inconsistencies
@@ -158,7 +165,8 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
                         Q(partner_focal_points=self.instance) | Q(partner_authorized_officer_signatory=self.instance),
                     ),
                 ).exists():
-                    raise ValidationError({'active': 'User already synced to PRP and cannot be disabled.'})
+                    raise ValidationError({'active': 'User already synced to PRP and cannot be disabled. '
+                                                     'Please instruct the partner to disable from PRP'})
 
         return data
 
