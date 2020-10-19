@@ -1629,7 +1629,7 @@ class Intervention(TimeStampedModel):
     TERMINATED = 'terminated'
 
     AUTO_TRANSITIONS = {
-        DRAFT: [SIGNED],
+        DRAFT: [REVIEW],
         SIGNED: [ACTIVE, TERMINATED],
         ACTIVE: [ENDED, TERMINATED],
         ENDED: [CLOSED]
@@ -2081,6 +2081,13 @@ class Intervention(TimeStampedModel):
         return True if any([self.submission_date_prc, self.review_date_prc, self.prc_review_document]) else False
 
     @property
+    def locked(self):
+        # an Intervention is "locked" for editing if any of the parties accepted the current version
+        # in order for editing to continue the "acceptance" needs to be lifted so that it can be re-acknowledged
+        # and accepted again after the edits were done.
+        return self.partner_accepted or self.unicef_accepted
+
+    @property
     def days_from_review_to_signed(self):
         if not self.review_date_prc:
             return 'Not Reviewed'
@@ -2245,7 +2252,7 @@ class Intervention(TimeStampedModel):
         pass
 
     @transition(field=status,
-                source=[DRAFT, REVIEW, SIGNATURE, SUSPENDED],
+                source=[REVIEW, SIGNATURE, SUSPENDED],
                 target=[SIGNED],
                 conditions=[intervention_validation.transition_to_signed])
     def transition_to_signed(self):
