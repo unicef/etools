@@ -586,6 +586,13 @@ class TestPartnerOrganizationAddView(BaseTenantTestCase):
                     'TOTAL_CASH_TRANSFERRED_YTD': "2,000",
                     'REPORTED_CY': "2,000",
                     "COUNTRY": "239",
+                    "TYPE_OF_ASSESSMENT": "HIGH RISK ASSUMED",
+                    "DATE_OF_ASSESSMENT": "20-Jan-20",
+                    "MARKED_FOR_DELETION": False,
+                    "POSTING_BLOCK": False,
+                    "PSEA_ASSESSMENT_DATE": "03-Jan-22",
+                    "SEA_RISK_RATING_NAME": "Test",
+                    "SEARCH_TERM1": "Search Term",
                 }
             }
         }))

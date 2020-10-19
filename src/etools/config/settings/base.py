@@ -477,7 +477,7 @@ TASK_ADMIN_USER = get_from_secrets_or_env('TASK_ADMIN_USER', 'etools_task_admin@
 
 INSIGHT_LOGGER_MODEL = "vision.VisionSyncLog"
 INSIGHT_SUB_KEY = get_from_secrets_or_env('INSIGHT_SUB_KEY', 'invalid_key')
-INSIGHT_URL = get_from_secrets_or_env('INSIGHT_URL', 'invalid_url')
+INSIGHT_URL = get_from_secrets_or_env('INSIGHT_URL', 'http://invalid_vision_url')
 
 
 # ALLOW BASIC AUTH FOR DEMO SITE
