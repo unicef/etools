@@ -62,7 +62,7 @@ class TestSignedDocumentsManagement(APIViewSetTestCase, BaseTestCase):
             self.assertEqual(response.data['permissions']['view'][field], True, field)
             self.assertEqual(response.data['permissions']['edit'][field], True, field)
 
-        for field in self.signature_partner_data.keys():
+        for field in dict(**self.draft_unicef_data, **self.review_unicef_data, **self.signature_partner_data).keys():
             self.assertEqual(response.data['permissions']['view'][field], True, field)
             self.assertEqual(response.data['permissions']['edit'][field], False, field)
 
@@ -76,7 +76,7 @@ class TestSignedDocumentsManagement(APIViewSetTestCase, BaseTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
 
-        for field in self.signature_unicef_data.keys():
+        for field in dict(**self.draft_unicef_data, **self.review_unicef_data, **self.signature_unicef_data).keys():
             self.assertEqual(response.data['permissions']['view'][field], True, field)
             self.assertEqual(response.data['permissions']['edit'][field], False, field)
 
@@ -132,22 +132,10 @@ class TestSignedDocumentsManagement(APIViewSetTestCase, BaseTestCase):
         )
 
     def test_partner_update_draft(self):
-        self._test_update_fields(
-            self.partner_focal_point, self.draft_intervention,
-            restricted_fields=dict(
-                **self.draft_unicef_data, **self.review_unicef_data,
-                **self.signature_unicef_data, **self.signature_partner_data
-            ),
-        )
+        self._test_update_fields(self.partner_focal_point, self.draft_intervention, restricted_fields=self.all_data)
 
     def test_partner_update_review(self):
-        self._test_update_fields(
-            self.partner_focal_point, self.review_intervention,
-            restricted_fields=dict(
-                **self.draft_unicef_data, **self.review_unicef_data,
-                **self.signature_unicef_data, **self.signature_partner_data
-            ),
-        )
+        self._test_update_fields(self.partner_focal_point, self.review_intervention, restricted_fields=self.all_data)
 
     def test_partner_update_signature(self):
         self._test_update_fields(
