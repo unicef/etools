@@ -21,6 +21,7 @@ from etools.applications.partners.views.interventions_v3 import (
     PMPInterventionRetrieveUpdateView,
     PMPInterventionSupplyItemListCreateView,
     PMPInterventionSupplyItemRetrieveUpdateView,
+    PMPInterventionSupplyItemUploadView,
 )
 from etools.applications.partners.views.interventions_v3_actions import (
     PMPInterventionAcceptReviewView,
@@ -154,6 +155,11 @@ urlpatterns = [
         'interventions/<int:intervention_pk>/supply/',
         view=PMPInterventionSupplyItemListCreateView.as_view(),
         name='intervention-supply-item',
+    ),
+    path(
+        'interventions/<int:intervention_pk>/supply/upload/',
+        view=PMPInterventionSupplyItemUploadView.as_view(),
+        name='intervention-supply-item-upload',
     ),
     path(
         'interventions/<int:intervention_pk>/supply/<int:pk>/',

@@ -3,6 +3,7 @@ from unittest import mock, skip
 
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.models import ContentType
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
 from django.test import SimpleTestCase
 from django.urls import reverse
@@ -464,6 +465,18 @@ class TestSupplyItem(BaseInterventionTestCase):
     def setUp(self):
         super().setUp()
         self.intervention = InterventionFactory()
+        self.supply_items_file = SimpleUploadedFile(
+            'my_list.csv',
+            u'''"Product Number","Product Title","Product Description","Unit of Measure",Quantity,"Indicative Price","Total Price"\n
+            S9975020,"First aid kit A","First aid kit A",EA,1,28,28\n
+            S9935097,"School-in-a-box 40 students  2016","School-in-a-box for 40 students  2016",EA,1,146.85,146.85\n
+            S9935082,"Arabic Teacher's Kit","Arabic Teacher's Kit",EA,1,46.48,46.48\n
+            S9935081,"Arabic Student Kit Grade 5-8","Arabic Student Kit for Grades 5 to 8.",EA,1,97.12,97.12\n
+            S9903001,"AWD Kit  Periphery kit  Logistics Part","AWD Kit  Periphery kit  Logistics Part",EA,1,1059.82,1059.82\n
+            "Disclaimer : This list is not for online ordering of products but only to help staff and partners in preparing their requirements. Prices are only indicative and may vary once the final transaction is placed with UNICEF. Freight and handling charges are not included intothe price."\n
+            '''.encode('utf-8'),
+            content_type="multipart/form-data",
+        )
 
     def test_list(self):
         count = 10
@@ -610,6 +623,69 @@ class TestSupplyItem(BaseInterventionTestCase):
             )
         )
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_upload(self):
+        # add supply item that will be updated
+        item = InterventionSupplyItemFactory(
+            intervention=self.intervention,
+            title="First aid kit A",
+            unit_number=3,
+            unit_price=28,
+        )
+        self.assertEqual(self.intervention.supply_items.count(), 1)
+        response = self.forced_auth_req(
+            "post",
+            reverse(
+                "pmp_v3:intervention-supply-item-upload",
+                args=[self.intervention.pk],
+            ),
+            data={
+                "supply_items_file": self.supply_items_file,
+            },
+            request_format=None,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(self.intervention.supply_items.count(), 5)
+        # check that item unit number was updated correctly
+        item.refresh_from_db()
+        self.assertEqual(item.unit_number, 4)
+
+    def test_upload_invalid_file(self):
+        response = self.forced_auth_req(
+            "post",
+            reverse(
+                "pmp_v3:intervention-supply-item-upload",
+                args=[self.intervention.pk],
+            ),
+            data={
+                "supply_items_file": "wrong",
+            },
+            request_format=None,
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("supply_items_file", response.data)
+
+    def test_upload_invalid_file_row(self):
+        supply_items_file = SimpleUploadedFile(
+            'my_list.csv',
+            u'''"Product Number","Product Title","Product Description","Unit of Measure",Quantity,"Indicative Price","Total Price"\n
+            S9975020,"First aid kit A","First aid kit A",EA,1,wrong,28\n
+            '''.encode('utf-8'),
+            content_type="multipart/form-data",
+        )
+        response = self.forced_auth_req(
+            "post",
+            reverse(
+                "pmp_v3:intervention-supply-item-upload",
+                args=[self.intervention.pk],
+            ),
+            data={
+                "supply_items_file": supply_items_file,
+            },
+            request_format=None,
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("supply_items_file", response.data)
 
 
 class TestInterventionUpdate(BaseInterventionTestCase):
