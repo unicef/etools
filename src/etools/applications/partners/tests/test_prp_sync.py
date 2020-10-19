@@ -29,7 +29,7 @@ class TestInterventionPartnerSyncSignal(BaseTenantTestCase):
         intervention = InterventionFactory()
         sync_task_mock.assert_not_called()
 
-        intervention.start = timezone.now()
+        intervention.start = timezone.now().date()
         intervention.save()
         sync_task_mock.assert_not_called()
 

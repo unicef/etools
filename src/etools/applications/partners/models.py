@@ -1650,7 +1650,7 @@ class Intervention(TimeStampedModel):
     TERMINATED = 'terminated'
 
     AUTO_TRANSITIONS = {
-        DRAFT: [SIGNED],
+        DRAFT: [REVIEW],
         SIGNED: [ACTIVE, TERMINATED],
         ACTIVE: [ENDED, TERMINATED],
         ENDED: [CLOSED]
@@ -1732,12 +1732,21 @@ class Intervention(TimeStampedModel):
         on_delete=models.CASCADE,
     )
     # Even though CP is defined at the Agreement Level, for a particular intervention this can be different.
+    # TODO remove country_programme field, replaced with country_programmes
+    # after ePD has been released to production
     country_programme = models.ForeignKey(
         CountryProgramme,
         verbose_name=_("Country Programme"),
-        related_name='interventions',
+        # related_name='interventions',
         blank=True, null=True,
         on_delete=models.DO_NOTHING,
+        help_text='Which Country Programme does this Intervention belong to?',
+    )
+    country_programmes = models.ManyToManyField(
+        CountryProgramme,
+        verbose_name=_("Country Programmes"),
+        related_name='interventions',
+        blank=True,
         help_text='Which Country Programme does this Intervention belong to?',
     )
     number = models.CharField(
@@ -2046,6 +2055,11 @@ class Intervention(TimeStampedModel):
         blank=True,
         null=True,
     )
+    cancel_justification = models.TextField(
+        verbose_name=_("Cancel Justification"),
+        blank=True,
+        null=True,
+    )
 
     # Flag if this has been migrated to a status that is not correct
     # previous status
@@ -2086,6 +2100,13 @@ class Intervention(TimeStampedModel):
     @property
     def submitted_to_prc(self):
         return True if any([self.submission_date_prc, self.review_date_prc, self.prc_review_document]) else False
+
+    @property
+    def locked(self):
+        # an Intervention is "locked" for editing if any of the parties accepted the current version
+        # in order for editing to continue the "acceptance" needs to be lifted so that it can be re-acknowledged
+        # and accepted again after the edits were done.
+        return self.partner_accepted or self.unicef_accepted
 
     @property
     def days_from_review_to_signed(self):
@@ -2252,7 +2273,7 @@ class Intervention(TimeStampedModel):
         pass
 
     @transition(field=status,
-                source=[DRAFT, REVIEW, SIGNATURE, SUSPENDED],
+                source=[REVIEW, SIGNATURE, SUSPENDED],
                 target=[SIGNED],
                 conditions=[intervention_validation.transition_to_signed])
     def transition_to_signed(self):

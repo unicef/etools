@@ -131,7 +131,7 @@ class TestFunctionality(BaseTestCase):
         item_to_keep = InterventionTimeFrame.objects.get(
             intervention=self.intervention,
             start_date=date(year=1970, month=4, day=1),
-            end_date=date(year=1970, month=7, day=1)
+            end_date=date(year=1970, month=6, day=30)
         )
         self.activity.time_frames.add(item_to_keep, item_to_remove)
         time_frames = [q.id for q in self.intervention.quarters.all()[1:3]]

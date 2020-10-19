@@ -42,7 +42,7 @@ class TestFinancialManagement(BaseTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertEqual(response.data['permissions']['view']['cash_transfer_modalities'], True)
-        self.assertEqual(response.data['permissions']['edit']['cash_transfer_modalities'], False)
+        self.assertEqual(response.data['permissions']['edit']['cash_transfer_modalities'], True)
         self.assertEqual(response.data['permissions']['view']['hq_support_cost'], True)
         self.assertEqual(response.data['permissions']['edit']['hq_support_cost'], True)
 
@@ -68,7 +68,7 @@ class TestFinancialManagement(BaseTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertEqual(response.data['permissions']['view']['cash_transfer_modalities'], True)
-        self.assertEqual(response.data['permissions']['edit']['cash_transfer_modalities'], True)
+        self.assertEqual(response.data['permissions']['edit']['cash_transfer_modalities'], False)
         self.assertEqual(response.data['permissions']['view']['hq_support_cost'], True)
         self.assertEqual(response.data['permissions']['edit']['hq_support_cost'], False)
 
@@ -95,8 +95,7 @@ class TestFinancialManagement(BaseTestCase):
                 'cash_transfer_modalities': [Intervention.CASH_TRANSFER_PAYMENT],
             }
         )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('Cannot change fields while in draft: cash_transfer_modalities', response.data[0])
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
 
     def test_update_manager_cash_transfer_modalities_ended(self):
         response = self.forced_auth_req(
@@ -124,7 +123,7 @@ class TestFinancialManagement(BaseTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertEqual(response.data['hq_support_cost'], '3.5')
 
-    def test_update_partner_cash_transfer_modalities_unicef_court(self):
+    def test_update_partner_cash_transfer_modalities(self):
         response = self.forced_auth_req(
             'patch',
             reverse('pmp_v3:intervention-detail', args=[self.draft_intervention.pk]),
@@ -147,8 +146,7 @@ class TestFinancialManagement(BaseTestCase):
                 'cash_transfer_modalities': [Intervention.CASH_TRANSFER_PAYMENT],
             }
         )
-        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
-        self.assertEqual(response.data['cash_transfer_modalities'], [Intervention.CASH_TRANSFER_PAYMENT])
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_update_partner_hq_support_cost_partner_court(self):
         self.draft_intervention.unicef_court = False
