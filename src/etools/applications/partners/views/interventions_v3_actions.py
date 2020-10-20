@@ -6,7 +6,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from unicef_notification.utils import send_notification_with_template
 
-from etools.applications.partners.models import Intervention, PartnerStaffMember
+from etools.applications.partners.models import Intervention
 from etools.applications.partners.serializers.interventions_v3 import InterventionDetailSerializer
 from etools.applications.partners.views.interventions_v3 import InterventionDetailAPIView, PMPInterventionMixin
 
@@ -25,10 +25,8 @@ class PMPInterventionActionView(PMPInterventionMixin, InterventionDetailAPIView)
         return response
 
     def is_partner_focal_point(self, pd):
-        # Todo: once the epd user branch is merged in make sure to correct the contents of this function
-        try:
-            psm = PartnerStaffMember.objects.get(pk=self.request.user.profile.partner_staff_member)
-        except PartnerStaffMember.DoesNotExist:
+        psm = self.request.user.get_partner_staff_member()
+        if not psm:
             return False
         return psm in pd.partner_focal_points.all()
 

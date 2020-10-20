@@ -78,6 +78,11 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
     def full_name(self):
         return self.get_full_name()
 
+    @cached_property
+    def partner(self):
+        staff_member = self.get_partner_staff_member()
+        return staff_member.partner if staff_member else None
+
     def get_partner_staff_member(self) -> ['PartnerStaffMember']:
         # just wrapper to avoid try...catch in place
         try:

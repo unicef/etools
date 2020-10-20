@@ -341,11 +341,10 @@ class TestDelete(BaseInterventionTestCase):
         self.user = UserFactory(is_staff=True)
         self.partner_user = UserFactory(is_staff=False, groups__data=[])
         user_staff_member = PartnerStaffFactory(
+            user=self.partner_user,
             partner=self.intervention.agreement.partner,
             email=self.partner_user.email,
         )
-        self.partner_user.profile.partner_staff_member = user_staff_member.pk
-        self.partner_user.profile.save()
         self.intervention.partner_focal_points.add(user_staff_member)
         self.intervention_qs = Intervention.objects.filter(
             pk=self.intervention.pk,
