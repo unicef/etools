@@ -65,6 +65,12 @@ class TestFunctionality(BaseTestCase):
         self.assertEqual(response.data['unicef_cash'], '1.00')
         self.assertEqual(response.data['cso_cash'], '2.00')
         self.assertEqual(response.data['partner_percentage'], '66.67')
+        self.intervention.refresh_from_db()
+        budget_response = response.data["intervention"]["planned_budget"]
+        self.assertEqual(
+            budget_response["total_cash_local"],
+            str(self.intervention.planned_budget.total_cash_local()),
+        )
 
     def test_set_cash_values_from_items(self):
         InterventionActivityItemFactory(activity=self.activity, unicef_cash=8)
@@ -122,29 +128,23 @@ class TestFunctionality(BaseTestCase):
         item_to_keep = InterventionTimeFrame.objects.get(
             intervention=self.intervention,
             start_date=date(year=1970, month=4, day=1),
-            end_date=date(year=1970, month=7, day=1)
+            end_date=date(year=1970, month=6, day=30)
         )
         self.activity.time_frames.add(item_to_keep, item_to_remove)
+        time_frames = [q.id for q in self.intervention.quarters.all()[1:3]]
 
         response = self.forced_auth_req(
             'patch', self.detail_url,
             user=self.user,
-            data={
-                'time_frames': [
-                    {'enabled': False},
-                    {'enabled': True},
-                    {'enabled': True},
-                    {'enabled': False},
-                ],
-            }
+            data={'time_frames': time_frames},
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
-        self.assertEqual(len(response.data['time_frames']), 4)
+        self.assertEqual(len(response.data['time_frames']), 2)
         self.assertEqual(self.activity.time_frames.count(), 2)
         self.assertEqual(self.activity.time_frames.filter(pk=item_to_remove.pk).exists(), False)
         self.assertEqual(self.activity.time_frames.filter(pk=item_to_keep.pk).exists(), True)
-        self.assertEqual([t['enabled'] for t in response.data['time_frames']], [False, True, True, False])
+        self.assertEqual(response.data['time_frames'], time_frames)
 
     def test_minimal_create(self):
         response = self.forced_auth_req(
@@ -183,10 +183,33 @@ class TestFunctionality(BaseTestCase):
             user=self.user,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(
-            response.data['result_links'][0]['ll_results'][0]['activities'][0]['time_frames'][0]['name'],
-            'Q1'
+        self.assertIn('time_frames', response.data['result_links'][0]['ll_results'][0]['activities'][0])
+
+    def test_ordering_preserved_on_edit(self):
+        second_activity = InterventionActivityFactory(result=self.pd_output)
+
+        def check_ordering():
+            details_response = self.forced_auth_req(
+                'get',
+                reverse('pmp_v3:intervention-detail', args=[self.intervention.id]),
+                user=self.user,
+            )
+            self.assertEqual(details_response.status_code, status.HTTP_200_OK)
+            self.assertListEqual(
+                [a['id'] for a in details_response.data['result_links'][0]['ll_results'][0]['activities']],
+                [self.activity.id, second_activity.id]
+            )
+
+        check_ordering()
+
+        response = self.forced_auth_req(
+            'patch', self.detail_url,
+            user=self.user,
+            data={'context_details': 'test'}
         )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        check_ordering()
 
 
 class TestPermissions(BaseTestCase):

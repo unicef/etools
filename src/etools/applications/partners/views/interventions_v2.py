@@ -59,7 +59,6 @@ from etools.applications.partners.serializers.exports.interventions import (
 from etools.applications.partners.serializers.interventions_v2 import (
     InterventionAmendmentCUSerializer,
     InterventionAttachmentSerializer,
-    InterventionBudgetCUSerializer,
     InterventionCreateUpdateSerializer,
     InterventionDetailSerializer,
     InterventionIndicatorSerializer,
@@ -124,7 +123,6 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
     )
 
     SERIALIZER_MAP = {
-        'planned_budget': InterventionBudgetCUSerializer,
         'planned_visits': PlannedVisitsCUSerializer,
         'result_links': InterventionResultCUSerializer
     }
@@ -154,7 +152,6 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
         :return: JSON
         """
         related_fields = [
-            'planned_budget',
             'planned_visits',
             'result_links'
         ]
@@ -281,12 +278,10 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
     permission_classes = (PartnershipManagerPermission,)
 
     SERIALIZER_MAP = {
-        'planned_budget': InterventionBudgetCUSerializer,
         'planned_visits': PlannedVisitsCUSerializer,
         'result_links': InterventionResultCUSerializer
     }
     related_fields = [
-        'planned_budget',
         'planned_visits',
         'result_links'
     ]
@@ -786,13 +781,10 @@ class InterventionLocationListAPIView(QueryStringFilterMixin, ListAPIView):
 class InterventionDeleteView(DestroyAPIView):
     # todo: permission_classes are ignored here. see comments in InterventionAmendmentDeleteView.delete
     permission_classes = (PartnershipManagerRepPermission,)
+    queryset = Intervention.objects
 
     def delete(self, request, *args, **kwargs):
-        try:
-            intervention = Intervention.objects.get(id=int(kwargs['pk']))
-        except Intervention.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-
+        intervention = self.get_object()
         if intervention.status != Intervention.DRAFT:
             raise ValidationError("Cannot delete a PD or SSFA that is not Draft")
 
@@ -807,9 +799,20 @@ class InterventionDeleteView(DestroyAPIView):
             if len(historical_statuses) > 1 or \
                     (len(historical_statuses) == 1 and historical_statuses.pop() != Intervention.DRAFT):
                 raise ValidationError("Cannot delete a PD or SSFA that was manually moved back to Draft")
-            else:
-                intervention.delete()
-                return Response(status=status.HTTP_204_NO_CONTENT)
+
+            # do not delete any PDs that have been sent to a partner before
+            date_sent_to_partner_qs = Activity.objects.filter(
+                target_content_type=ContentType.objects.get_for_model(
+                    Intervention,
+                ),
+                target_object_id=intervention.pk,
+                change__has_key="date_sent_to_partner"
+            )
+            if date_sent_to_partner_qs.exists():
+                raise ValidationError("PD has already been sent to Partner.")
+
+            intervention.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class InterventionReportingRequirementView(APIView):

@@ -16,6 +16,7 @@ from etools.libraries.pythonlib.collections import HashableDict
 # Initially, this is only being used for PRP-related endpoints.
 
 
+PARTNERSHIP_MANAGER_GROUP = "Partnership Manager"
 READ_ONLY_API_GROUP_NAME = 'Read-Only API'
 SENIOR_MANAGEMENT_GROUP = "Senior Management Team"
 
@@ -46,7 +47,10 @@ class PMPPermissions:
             if self.instance.status != condition_group['status']:
                 return False
         if condition_group['group'] and condition_group['group'] != '*':
-            if condition_group['group'] not in self.user_groups:
+            groups = condition_group['group'].split("|")
+
+            # If none of the groups defined match any of the groups in the user groups
+            if not set(groups).intersection(set(self.user_groups)):
                 return False
         if condition_group['condition'] and condition_group['condition'] != '*':
             # use the following commented line in case we want to not use a condition mapper and interpret the
@@ -117,6 +121,9 @@ class InterventionPermissions(PMPPermissions):
         def prp_server_on():
             return tenant_switch_is_active("prp_server_on")
 
+        def unlocked(instance):
+            return not instance.locked
+
         user_profile = self.user.profile
         partner_staff_member_id = user_profile.partner_staff_member
         # focal points are prefetched, so just cast to array to collect ids
@@ -139,13 +146,16 @@ class InterventionPermissions(PMPPermissions):
             'user_adds_amendment': user_added_amendment(self.instance),
             'prp_mode_on': not prp_mode_off(),
             'prp_mode_on+contingency_on': not prp_mode_off() and self.instance.contingency_pd,
+            'prp_mode_on+unicef_court': not prp_mode_off() and self.instance.unicef_court,
+            'prp_mode_on+partner_court': not prp_mode_off() and not self.instance.unicef_court,
             'prp_mode_off': prp_mode_off(),
             'prp_server_on': prp_server_on(),
             'user_adds_amendment+prp_mode_on': user_added_amendment(self.instance) and not prp_mode_off(),
             'termination_doc_attached': self.instance.termination_doc_attachment.exists(),
             'not_ended': self.instance.end >= datetime.datetime.now().date() if self.instance.end else False,
-            'unicef_court': self.instance.unicef_court,
-            'partner_court': not self.instance.unicef_court,
+            'unicef_court': self.instance.unicef_court and unlocked(self.instance),
+            'partner_court': not self.instance.unicef_court and unlocked(self.instance),
+            'unlocked': unlocked(self.instance)
         }
 
 
@@ -376,7 +386,7 @@ class IsPartnerUser(BasePermission):
 def view_action_permission(*actions):
     class ViewActionPermission(BasePermission):
         def has_permission(self, request, view):
-            return hasattr(view, 'action') and view.action in actions
+            return request.method.upper() in actions
 
     return ViewActionPermission
 
@@ -447,20 +457,34 @@ Applies general and object-based permissions.
                  (listed as a partner staff member on the object)
 """
 PartnershipManagerRefinedPermission = (
-    view_action_permission('metadata') |
-    (view_action_permission('list') & (UserIsStaffPermission | user_group_permission('Partnership Manager'))) |
-    (view_action_permission('create') & user_group_permission('Partnership Manager')) |
+    view_action_permission('OPTIONS') |
+    (view_action_permission('GET') & (UserIsStaffPermission | user_group_permission('Partnership Manager'))) |
+    (view_action_permission('POST') & user_group_permission('Partnership Manager')) |
     (
-        view_action_permission('retrieve') &
+        view_action_permission('GET') &
         (UserIsStaffPermission | user_group_permission('Partnership Manager') | UserIsObjectPartnerStaffMember)
     ) |
     (
-        view_action_permission('update', 'partial_update', 'delete') &
+        view_action_permission('PUT', 'PATCH', 'DELETE') &
         (user_group_permission('Partnership Manager') | UserIsObjectPartnerStaffMember)
     )
 )
 
-# allow partners to load list ONLY for interventions to keep everything else working right as before; at least for now
+# allow partners to load list ONLY for interventions to keep everything
+# else working right as before; at least for now
 PMPInterventionPermission = (
-    PartnershipManagerRefinedPermission | (view_action_permission('list') & UserIsPartnerStaffMemberPermission)
+    PartnershipManagerRefinedPermission | (view_action_permission('GET') & UserIsPartnerStaffMemberPermission)
+)
+
+# allow partners to load list ONLY for agreements to keep everything
+# else working right as before; at least for now
+PMPAgreementPermission = (
+    (view_action_permission('POST') & (
+        UserIsStaffPermission | user_group_permission('Partnership Manager')
+    )) |
+    (view_action_permission('GET') & (
+        UserIsPartnerStaffMemberPermission | (
+            UserIsStaffPermission | user_group_permission('Partnership Manager')
+        )
+    ))
 )

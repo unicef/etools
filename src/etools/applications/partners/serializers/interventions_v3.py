@@ -1,6 +1,11 @@
+import codecs
+import csv
+import decimal
+
 from django.contrib.auth import get_user_model
 
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 from unicef_attachments.fields import AttachmentSingleFileField
 
 from etools.applications.partners.models import (
@@ -10,7 +15,11 @@ from etools.applications.partners.models import (
     InterventionRisk,
     InterventionSupplyItem,
 )
-from etools.applications.partners.permissions import InterventionPermissions, SENIOR_MANAGEMENT_GROUP
+from etools.applications.partners.permissions import (
+    InterventionPermissions,
+    PARTNERSHIP_MANAGER_GROUP,
+    SENIOR_MANAGEMENT_GROUP,
+)
 from etools.applications.partners.serializers.interventions_v2 import (
     FRsSerializer,
     InterventionAmendmentCUSerializer,
@@ -49,17 +58,70 @@ class InterventionSupplyItemSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
 
+class InterventionSupplyItemUploadSerializer(serializers.Serializer):
+    supply_items_file = serializers.FileField()
+
+    def valid_row(self, row):
+        product = row["Product Number"].strip()
+        if product and not product.startswith("\"Disclaimer"):
+            return True
+        return False
+
+    def extract_file_data(self):
+        data = []
+        reader = csv.DictReader(
+            codecs.iterdecode(
+                self.validated_data.get("supply_items_file"),
+                "utf-8",
+            ),
+            delimiter=",",
+        )
+        for row in reader:
+            if self.valid_row(row):
+                try:
+                    data.append((
+                        row["Product Title"],
+                        decimal.Decimal(row["Quantity"]),
+                        decimal.Decimal(row["Indicative Price"]),
+                    ))
+                except decimal.InvalidOperation:
+                    raise ValidationError(f"Unable to process row: {row}")
+        return data
+
+
 class InterventionManagementBudgetSerializer(serializers.ModelSerializer):
+    act1_total = serializers.SerializerMethodField()
+    act2_total = serializers.SerializerMethodField()
+    act3_total = serializers.SerializerMethodField()
+    partner_total = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True)
+    unicef_total = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True)
+    total = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True)
+
     class Meta:
         model = InterventionManagementBudget
         fields = (
             "act1_unicef",
             "act1_partner",
+            "act1_total",
             "act2_unicef",
             "act2_partner",
+            "act2_total",
             "act3_unicef",
             "act3_partner",
+            "act3_total",
+            "partner_total",
+            "unicef_total",
+            "total",
         )
+
+    def get_act1_total(self, obj):
+        return str(obj.act1_unicef + obj.act1_partner)
+
+    def get_act2_total(self, obj):
+        return str(obj.act2_unicef + obj.act2_partner)
+
+    def get_act3_total(self, obj):
+        return str(obj.act3_unicef + obj.act3_partner)
 
 
 class InterventionDetailSerializer(serializers.ModelSerializer):
@@ -166,10 +228,20 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             profile__country=self.context['request'].user.profile.country
         ).exists()
 
+    def _is_partnership_manager(self):
+        return get_user_model().objects.filter(
+            pk=self.context['request'].user.pk,
+            groups__name__in=[PARTNERSHIP_MANAGER_GROUP],
+            profile__country=self.context['request'].user.profile.country
+        ).exists()
+
     def _is_partner_user(self, obj, user):
         return user.email in [o.email for o in obj.partner_focal_points.all()]
 
     def get_available_actions(self, obj):
+        default_ordering = ["send_to_unicef", "send_to_partner",
+                            "accept", "review", "unlock", "cancel",
+                            "terminate", "download_comments", "export", "generate_pdf"]
         available_actions = [
             "download_comments",
             "export",
@@ -177,36 +249,32 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
         ]
         user = self.context['request'].user
 
-        # available actions only provided in Development status
+        # Partnership Manager
+        if self._is_partnership_manager():
+            if obj.status in [obj.DRAFT, obj.REVIEW, obj.SIGNATURE]:
+                available_actions.append("cancel")
+            elif obj.status not in [obj.ENDED, obj.CLOSED, obj.TERMINATED]:
+                available_actions.append("terminate")
+
+        # if NOT in Development status then we're done
         if obj.status != obj.DRAFT:
-            return available_actions
+            return [action for action in default_ordering if action in available_actions]
 
         # PD is assigned to UNICEF
         if obj.unicef_court:
-            # UNICEF User with Senior Management Team
-            if self._is_management():
-                available_actions.append("cancel")
-
             # budget owner
             if obj.budget_owner == user:
                 if not obj.unicef_accepted:
                     available_actions.append("accept")
-                available_actions.append("review")
-                available_actions.append("signature")
+                if obj.unicef_accepted and obj.partner_accepted:
+                    available_actions.append("review")
 
             # any unicef focal point user
             if user in obj.unicef_focal_points.all():
+                available_actions.append("send_to_partner")
                 available_actions.append("cancel")
-                if obj.unicef_court:
-                    available_actions.append("send_to_partner")
-                available_actions.append("signature")
                 if obj.partner_accepted:
                     available_actions.append("unlock")
-                else:
-                    available_actions.append("accept")
-                    # TODO confirm that this is focal point
-                    # and not just any UNICEF user
-                    available_actions.append("accept_review")
 
         # PD is assigned to Partner
         else:
@@ -214,12 +282,12 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             if self._is_partner_user(obj, user):
                 if not obj.unicef_court:
                     available_actions.append("send_to_unicef")
-                if obj.partner_accepted:
+                if obj.partner_accepted or obj.unicef_accepted:
                     available_actions.append("unlock")
-                else:
+                if not obj.partner_accepted:
                     available_actions.append("accept")
 
-        return list(set(available_actions))
+        return [action for action in default_ordering if action in available_actions]
 
     def get_status_list(self, obj):
         if obj.status == obj.SUSPENDED:
@@ -231,6 +299,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
                 obj.SUSPENDED,
                 obj.ACTIVE,
                 obj.ENDED,
+                obj.CLOSED,
             ]
         elif obj.status == obj.TERMINATED:
             status_list = [
@@ -240,6 +309,10 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
                 obj.SIGNED,
                 obj.TERMINATED,
             ]
+        elif obj.status == obj.CANCELLED:
+            status_list = [
+                obj.CANCELLED,
+            ]
         else:
             status_list = [
                 obj.DRAFT,
@@ -248,6 +321,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
                 obj.SIGNED,
                 obj.ACTIVE,
                 obj.ENDED,
+                obj.CLOSED,
             ]
         return [s for s in obj.INTERVENTION_STATUS if s[0] in status_list]
 
@@ -266,19 +340,26 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
         fields = (
             "activation_letter_attachment",
             "activation_letter_file",
+            # "actual_amount",
             "agreement",
             "amendments",
             "attachments",
             "available_actions",
+            # "budget_currency",
             "budget_owner",
+            "cancel_justification",
             "capacity_development",
             "cash_transfer_modalities",
             "cfei_number",
             "cluster_names",
             "context",
             "contingency_pd",
-            "country_programme",
+            "country_programmes",
+            # "cp_outputs",
             "created",
+            "date_draft_by_partner",
+            # "cso_contribution",
+            "date_sent_to_partner",
             "days_from_review_to_signed",
             "days_from_submission_to_signed",
             "document_type",
@@ -292,11 +373,16 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "flat_locations",
             "frs",
             "frs_details",
+            # "frs_earliest_start_date",
+            # "frs_latest_end_date",
+            # "frs_total_frs_amt",
+            # "frs_total_intervention_amt",
+            # "frs_total_outstanding_amt",
             "gender_narrative",
             "gender_rating",
             "grants",
-            "humanitarian_flag",
             "hq_support_cost",
+            "humanitarian_flag",
             "id",
             "implementation_strategy",
             "in_amendment",
@@ -309,19 +395,21 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "modified",
             "number",
             "offices",
+            # "offices_names",
             "other_info",
             "other_partners_involved",
             "partner",
+            "partner_accepted",
             "partner_authorized_officer_signatory",
             "partner_focal_points",
             "partner_id",
+            # "partner_name",
             "partner_vendor",
             "permissions",
             "planned_budget",
             "planned_visits",
             "population_focus",
             "prc_review_attachment",
-            "prc_review_document",
             "prc_review_document_file",
             "quarters",
             "reference_number_year",
@@ -333,7 +421,6 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "signed_by_partner_date",
             "signed_by_unicef_date",
             "signed_pd_attachment",
-            "signed_pd_document",
             "signed_pd_document_file",
             "start",
             "status",
@@ -348,15 +435,14 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "termination_doc_attachment",
             "termination_doc_file",
             "title",
+            "total_budget",
+            "total_unicef_budget",
+            "unicef_accepted",
+            # "unicef_cash",
+            "unicef_court",
             "unicef_focal_points",
             "unicef_signatory",
         )
-
-
-class InterventionDummySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Intervention
-        fields = ()
 
 
 class PMPInterventionAttachmentSerializer(InterventionAttachmentSerializer):

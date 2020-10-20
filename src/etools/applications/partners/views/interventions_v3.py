@@ -3,6 +3,7 @@ from copy import copy
 from django.db import transaction
 
 from rest_framework import status
+from rest_framework.exceptions import ValidationError
 from rest_framework.generics import (
     CreateAPIView,
     DestroyAPIView,
@@ -13,6 +14,7 @@ from rest_framework.generics import (
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.status import is_success
+from rest_framework.views import APIView
 
 from etools.applications.field_monitoring.permissions import IsEditAction, IsReadAction
 from etools.applications.partners.models import (
@@ -31,16 +33,17 @@ from etools.applications.partners.serializers.exports.interventions import (
     InterventionExportSerializer,
 )
 from etools.applications.partners.serializers.interventions_v2 import (
+    InterventionBudgetCUSerializer,
     InterventionCreateUpdateSerializer,
     InterventionListSerializer,
     MinimalInterventionListSerializer,
 )
 from etools.applications.partners.serializers.interventions_v3 import (
     InterventionDetailSerializer,
-    InterventionDummySerializer,
     InterventionManagementBudgetSerializer,
     InterventionRiskSerializer,
     InterventionSupplyItemSerializer,
+    InterventionSupplyItemUploadSerializer,
     PMPInterventionAttachmentSerializer,
 )
 from etools.applications.partners.serializers.v3 import (
@@ -49,64 +52,27 @@ from etools.applications.partners.serializers.v3 import (
 )
 from etools.applications.partners.views.interventions_v2 import (
     InterventionAttachmentUpdateDeleteView,
+    InterventionDeleteView,
     InterventionDetailAPIView,
+    InterventionIndicatorsListView,
+    InterventionIndicatorsUpdateView,
     InterventionListAPIView,
+    InterventionReportingRequirementView,
 )
 from etools.applications.partners.views.v3 import PMPBaseViewMixin
 from etools.applications.reports.models import InterventionActivity, LowerResult
 from etools.applications.reports.serializers.v2 import InterventionActivityDetailSerializer
 
 
-class APIActionsMixin:
-    """
-    add viewsets-like action attribute to generic api views to reuse action-based things, for example permissions
-    """
-    def get_action(self, method):
-        if method == 'OPTIONS':
-            return 'metadata'
-
-        if not self.detail:
-            if method == 'GET':
-                return 'list'
-            elif method == 'POST':
-                return 'create'
-        else:
-            if method == 'GET':
-                return 'retrieve'
-            elif method == 'PUT':
-                return 'update'
-            elif method == 'PATCH':
-                return 'partial_update'
-            elif method == 'DELETE':
-                return 'delete'
-
-        return 'unknown'
-
-    def dispatch(self, request, *args, **kwargs):
-        # if api view is inherited from one of GenericAPIView subclasses, we can just check which methods are defined
-        if hasattr(self, 'list') or hasattr(self, 'create'):
-            self.detail = False
-        else:
-            self.detail = True
-        self.action = self.get_action(request.method.upper())
-        return super().dispatch(request, *args, **kwargs)
-
-
 class PMPInterventionMixin(PMPBaseViewMixin):
-    SERIALIZER_OPTIONS = {
-        "list": (InterventionListSerializer, InterventionListSerializer),
-        "create": (InterventionCreateUpdateSerializer, InterventionCreateUpdateSerializer),
-        "detail": (InterventionDetailSerializer, InterventionDetailSerializer),
-        "list_min": (MinimalInterventionListSerializer, MinimalInterventionListSerializer),
-        "csv": (InterventionExportSerializer, InterventionDummySerializer),
-        "csv_flat": (InterventionExportFlatSerializer, InterventionDummySerializer),
-    }
-
     def get_queryset(self, format=None):
         qs = super().get_queryset()
         # if partner, limit to interventions that they are associated with
         if self.is_partner_staff():
-            qs = qs.filter(agreement__partner__in=self.partners())
+            qs = qs.filter(
+                agreement__partner__in=self.partners(),
+                date_sent_to_partner__isnull=False,
+            )
         return qs
 
 
@@ -127,27 +93,36 @@ class DetailedInterventionResponseMixin:
         return response
 
 
-class PMPInterventionListCreateView(APIActionsMixin, PMPInterventionMixin, InterventionListAPIView):
+class PMPInterventionListCreateView(PMPInterventionMixin, InterventionListAPIView):
     permission_classes = (IsAuthenticated, PMPInterventionPermission)
+    search_terms = (
+        'title__icontains',
+        'agreement__partner__name__icontains',
+        'number__icontains',
+        'cfei_number__icontains',
+    )
 
     def get_serializer_class(self):
         if self.request.method == "GET":
             query_params = self.request.query_params
             if "format" in query_params.keys():
-                if query_params.get("format") in ["csv", "csv_flat"]:
-                    return self.map_serializer(query_params.get("format"))
+                export_format = query_params.get("format")
+                if export_format == "csv":
+                    return InterventionExportSerializer
+                elif export_format == "csv_flat":
+                    return InterventionExportFlatSerializer
             if "verbosity" in query_params.keys():
                 if query_params.get("verbosity") == 'minimal':
-                    return self.map_serializer("list_min")
+                    return MinimalInterventionListSerializer
         if self.request.method == "POST":
-            return self.map_serializer("create")
-        return self.map_serializer("list")
+            return InterventionCreateUpdateSerializer
+        return InterventionListSerializer
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
         super().create(request, *args, **kwargs)
         return Response(
-            self.map_serializer("detail")(
+            InterventionDetailSerializer(
                 self.instance,
                 context=self.get_serializer_context(),
             ).data,
@@ -156,27 +131,35 @@ class PMPInterventionListCreateView(APIActionsMixin, PMPInterventionMixin, Inter
         )
 
 
-class PMPInterventionRetrieveUpdateView(APIActionsMixin, PMPInterventionMixin, InterventionDetailAPIView):
+class PMPInterventionRetrieveUpdateView(PMPInterventionMixin, InterventionDetailAPIView):
     SERIALIZER_MAP = copy(InterventionDetailAPIView.SERIALIZER_MAP)
-    SERIALIZER_MAP['risks'] = InterventionRiskSerializer
+    SERIALIZER_MAP.update({
+        'risks': InterventionRiskSerializer,
+        'planned_budget': InterventionBudgetCUSerializer,
+    })
     related_fields = InterventionDetailAPIView.related_fields + [
         'risks',
+        'planned_budget',
     ]
 
     def get_serializer_class(self):
         if self.request.method in ["PATCH", "PUT"]:
-            return self.map_serializer("create")
-        return self.map_serializer("detail")
+            return InterventionCreateUpdateSerializer
+        return InterventionDetailSerializer
 
     @transaction.atomic
     def update(self, request, *args, **kwargs):
         super().update(request, *args, **kwargs)
         return Response(
-            self.map_serializer("detail")(
+            InterventionDetailSerializer(
                 self.instance,
                 context=self.get_serializer_context(),
             ).data,
         )
+
+
+class PMPInterventionDeleteView(PMPInterventionMixin, InterventionDeleteView):
+    """Wrapper for InterventionDeleteView"""
 
 
 class InterventionPDOutputsViewMixin(DetailedInterventionResponseMixin):
@@ -192,9 +175,7 @@ class InterventionPDOutputsViewMixin(DetailedInterventionResponseMixin):
         return PartnerInterventionLowerResultSerializer
 
     def get_root_object(self):
-        if not hasattr(self, '_intervention'):
-            self._intervention = Intervention.objects.filter(pk=self.kwargs.get('intervention_pk')).first()
-        return self._intervention
+        return Intervention.objects.filter(pk=self.kwargs.get('intervention_pk')).first()
 
     def get_intervention(self):
         return self.get_root_object()
@@ -222,9 +203,7 @@ class PMPInterventionManagementBudgetRetrieveUpdateView(
     serializer_class = InterventionManagementBudgetSerializer
 
     def get_intervention(self):
-        if not hasattr(self, '_intervention'):
-            self._intervention = self.get_pd_or_404(self.kwargs.get("intervention_pk"))
-        return self._intervention
+        return self.get_pd_or_404(self.kwargs.get("intervention_pk"))
 
     def get_object(self):
         obj, __ = InterventionManagementBudget.objects.get_or_create(
@@ -238,10 +217,9 @@ class PMPInterventionManagementBudgetRetrieveUpdateView(
         return super().get_serializer(*args, **kwargs)
 
 
-class PMPInterventionSupplyItemListCreateView(
-    DetailedInterventionResponseMixin,
-    PMPInterventionMixin,
-    ListCreateAPIView
+class PMPInterventionSupplyItemMixin(
+        DetailedInterventionResponseMixin,
+        PMPInterventionMixin,
 ):
     queryset = InterventionSupplyItem.objects
     serializer_class = InterventionSupplyItemSerializer
@@ -255,6 +233,11 @@ class PMPInterventionSupplyItemListCreateView(
     def get_intervention(self) -> Intervention:
         return self.get_pd(self.kwargs.get("intervention_pk"))
 
+
+class PMPInterventionSupplyItemListCreateView(
+        PMPInterventionSupplyItemMixin,
+        ListCreateAPIView,
+):
     def get_serializer(self, *args, **kwargs):
         if kwargs.get("data"):
             kwargs["data"]["intervention"] = self.get_pd(
@@ -264,15 +247,63 @@ class PMPInterventionSupplyItemListCreateView(
 
 
 class PMPInterventionSupplyItemRetrieveUpdateView(
-    DetailedInterventionResponseMixin,
-    PMPInterventionMixin,
-    RetrieveUpdateDestroyAPIView,
+        PMPInterventionSupplyItemMixin,
+        RetrieveUpdateDestroyAPIView,
 ):
-    queryset = InterventionSupplyItem.objects
-    serializer_class = InterventionSupplyItemSerializer
+    """View for retrieve/update/destroy of Intervention Supply Item"""
 
-    def get_intervention(self) -> Intervention:
-        return self.get_pd(self.kwargs.get("intervention_pk"))
+
+class PMPInterventionSupplyItemUploadView(
+        PMPInterventionMixin,
+        APIView,
+):
+    serializer_class = InterventionSupplyItemUploadSerializer
+
+    def post(self, request, *args, **kwargs):
+        intervention = self.get_pd_or_404(self.kwargs.get("intervention_pk"))
+        serializer = InterventionSupplyItemUploadSerializer(data=request.data)
+        # validate csv uploaded file
+        if not serializer.is_valid():
+            return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
+
+        # processing of file not in validator as we want to extra the data
+        # and use in later process
+        try:
+            file_data = serializer.extract_file_data()
+        except ValidationError as err:
+            return Response(
+                {"supply_items_file": err.detail},
+                status.HTTP_400_BAD_REQUEST,
+            )
+
+        # update all supply items related to intervention
+        for title, unit_number, unit_price in file_data:
+            # check if supply item exists
+            supply_qs = InterventionSupplyItem.objects.filter(
+                intervention=intervention,
+                title=title,
+                unit_price=unit_price,
+            )
+            if supply_qs.exists():
+                item = supply_qs.get()
+                item.unit_number += unit_number
+                item.save()
+            else:
+                InterventionSupplyItem.objects.create(
+                    intervention=intervention,
+                    title=title,
+                    unit_number=unit_number,
+                    unit_price=unit_price,
+                )
+        # make sure we get the correct totals
+        intervention.refresh_from_db()
+        return Response(
+            InterventionDetailSerializer(
+                intervention,
+                context={"request": request},
+            ).data,
+            status=status.HTTP_200_OK,
+        )
 
 
 class InterventionActivityViewMixin(DetailedInterventionResponseMixin):
@@ -284,9 +315,9 @@ class InterventionActivityViewMixin(DetailedInterventionResponseMixin):
     serializer_class = InterventionActivityDetailSerializer
 
     def get_root_object(self):
-        if not hasattr(self, '_intervention'):
-            self._intervention = Intervention.objects.filter(pk=self.kwargs.get('intervention_pk')).first()
-        return self._intervention
+        return Intervention.objects.filter(
+            pk=self.kwargs.get('intervention_pk'),
+        ).first()
 
     def get_intervention(self) -> Intervention:
         return self.get_root_object()
@@ -376,3 +407,35 @@ class PMPInterventionAttachmentUpdateDeleteView(
 
     def get_intervention(self) -> Intervention:
         return self.get_root_object()
+
+
+class PMPInterventionIndicatorsUpdateView(
+        DetailedInterventionResponseMixin,
+        InterventionIndicatorsUpdateView,
+):
+    def get_root_object(self):
+        if not hasattr(self, '_intervention'):
+            self._intervention = self.get_object().lower_result.result_link.intervention
+        return self._intervention
+
+    def get_intervention(self) -> Intervention:
+        return self.get_root_object()
+
+
+class PMPInterventionReportingRequirementView(
+        PMPInterventionMixin,
+        InterventionReportingRequirementView,
+):
+    """Wrapper for PD reporting requirements"""
+
+
+class PMPInterventionIndicatorsListView(
+        DetailedInterventionResponseMixin,
+        InterventionIndicatorsListView,
+):
+    def get_intervention(self):
+        if not hasattr(self, '_intervention'):
+            self._intervention = LowerResult.objects.get(
+                pk=self.kwargs.get("lower_result_pk"),
+            ).result_link.intervention
+        return self._intervention

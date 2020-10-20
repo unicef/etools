@@ -12,7 +12,6 @@ from etools.applications.partners.models import Intervention, PartnerOrganizatio
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
     CountryProgrammeFactory,
-    InterventionBudgetFactory,
     InterventionFactory,
     InterventionPlannedVisitsFactory,
     PartnerFactory,
@@ -67,7 +66,7 @@ class TestModelExport(BaseTenantTestCase):
         AgreementFactory(signed_by_unicef_date=datetime.date.today())
         cls.intervention = InterventionFactory(
             agreement=cls.agreement,
-            document_type=Intervention.SHPD,
+            document_type=Intervention.SPD,
             status='draft',
             start=datetime.date.today(),
             end=datetime.date.today(),
@@ -81,7 +80,11 @@ class TestModelExport(BaseTenantTestCase):
             partner_authorized_officer_signatory=cls.partnerstaff,
             country_programme=cls.agreement.country_programme,
         )
-        cls.ib = InterventionBudgetFactory(intervention=cls.intervention, currency="USD")
+
+        cls.ib = cls.intervention.planned_budget
+        cls.ib.currency = "USD"
+        cls.ib.save()
+
         cls.planned_visit = PartnerPlannedVisitsFactory(partner=cls.partner)
 
         output_res_type, _ = ResultType.objects.get_or_create(name='Output')
@@ -109,7 +112,7 @@ class TestModelExport(BaseTenantTestCase):
             "Partner Type",
             "CSO Type",
             "Agreement",
-            "Country Programme",
+            "country_programme",
             "Document Type",
             "Reference Number",
             "Document Title",
@@ -158,7 +161,10 @@ class TestModelExport(BaseTenantTestCase):
             self.intervention.agreement.partner.partner_type,
             '',
             self.intervention.agreement.agreement_number,
-            str(self.intervention.country_programme.name),
+            ", ".join(self.intervention.country_programmes.values_list(
+                "name",
+                flat=True,
+            )),
             self.intervention.document_type,
             self.intervention.number,
             str(self.intervention.title),

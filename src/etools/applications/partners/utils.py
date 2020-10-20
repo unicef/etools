@@ -523,7 +523,7 @@ def send_agreement_suspended_notification(agreement, user):
 
 
 def send_intervention_draft_notification():
-    """Send an email to PD/SHPD/SSFA's focal point(s) if in draft status"""
+    """Send an email to PD/SPD/SSFA's focal point(s) if in draft status"""
     sdate_diff = make_aware(datetime.datetime.combine(now(), datetime.time.min) - datetime.timedelta(days=7))
     for intervention in Intervention.objects.filter(
             status=Intervention.DRAFT,
@@ -544,7 +544,7 @@ def send_intervention_draft_notification():
 
 
 def send_intervention_past_start_notification():
-    """Send an email to PD/SHPD/SSFA's focal point(s) if signed
+    """Send an email to PD/SPD/SSFA's focal point(s) if signed
     and start date is past with no FR added"""
     intervention_qs = Intervention.objects.filter(
         status=Intervention.SIGNED,
@@ -571,7 +571,7 @@ def send_intervention_past_start_notification():
 
 
 def send_intervention_amendment_added_notification(intervention):
-    """Send an email to PD/SHPD/SSFA's focal point(s) if intervention amendment is added"""
+    """Send an email to PD/SPD/SSFA's focal point(s) if intervention amendment is added"""
     recipients = [
         fp.email for fp in intervention.partner_focal_points.all()
         if fp.email
@@ -645,9 +645,10 @@ def get_quarters_range(start: datetime.date, end: datetime.date) -> typing.List[
     quarters = []
     i = 0
     while start < end:
-        period_end = min(start + relativedelta(months=3), end)
+        quarter_end = start + relativedelta(months=3) - relativedelta(days=1)
+        period_end = min(quarter_end, end)
         quarters.append(Quarter(i + 1, start, period_end))
-        start = period_end
+        start = quarter_end + relativedelta(days=1)
         i += 1
 
     return quarters

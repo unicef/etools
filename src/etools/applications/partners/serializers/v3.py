@@ -8,11 +8,27 @@ from etools.applications.partners.models import InterventionResultLink
 from etools.applications.reports.models import LowerResult, Result, ResultType
 
 
+class CPOutputValidator:
+    set_context = True
+
+    def set_context(self, field):
+        self.intervention = field.parent.intervention
+
+    def __call__(self, value):
+        # check that value provided matches allowed options
+        cp_output_qs = InterventionResultLink.objects.filter(
+            intervention=self.intervention,
+            cp_output=value,
+        )
+        if not cp_output_qs.exists():
+            raise serializers.ValidationError(_("Invalid CP Output provided."))
+
+
 class InterventionLowerResultBaseSerializer(serializers.ModelSerializer):
     class Meta:
         abstract = True
         model = LowerResult
-        fields = ('id', 'name', 'code')
+        fields = ('id', 'name', 'code', 'total')
         extra_kwargs = {
             'code': {'required': False},
         }
@@ -50,6 +66,7 @@ class UNICEFInterventionLowerResultSerializer(InterventionLowerResultBaseSeriali
         ),
         source='result_link.cp_output_id',
         allow_null=True,
+        validators=[CPOutputValidator()],
     )
 
     class Meta(InterventionLowerResultBaseSerializer.Meta):

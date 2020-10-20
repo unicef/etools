@@ -47,6 +47,9 @@ class InterventionBudgetCUSerializer(serializers.ModelSerializer):
     partner_contribution_local = serializers.DecimalField(max_digits=20, decimal_places=2)
     unicef_cash_local = serializers.DecimalField(max_digits=20, decimal_places=2)
     in_kind_amount_local = serializers.DecimalField(max_digits=20, decimal_places=2)
+    total_unicef_contribution_local = serializers.DecimalField(max_digits=20, decimal_places=2)
+    total_cash_local = serializers.DecimalField(max_digits=20, decimal_places=2)
+    total_local = serializers.DecimalField(max_digits=20, decimal_places=2)
 
     class Meta:
         model = InterventionBudget
@@ -61,9 +64,11 @@ class InterventionBudgetCUSerializer(serializers.ModelSerializer):
             "total_local",
             "partner_contribution_percent",
             "total_unicef_contribution_local",
+            "total_cash_local",
         )
         read_only_fields = (
             "total_local",
+            "total_cash_local",
             "programme_effectiveness",
         )
 
@@ -282,6 +287,7 @@ class InterventionListSerializer(BaseInterventionListSerializer):
             'date_sent_to_partner',
             'unicef_accepted',
             'partner_accepted',
+            'date_draft_by_partner',
             'cfei_number',
             'context',
             'implementation_strategy',
@@ -296,6 +302,7 @@ class InterventionListSerializer(BaseInterventionListSerializer):
             'hq_support_cost',
             'cash_transfer_modalities',
             'unicef_review_type',
+            'cfei_number',
         )
 
 
@@ -408,10 +415,14 @@ class InterventionResultNestedSerializer(serializers.ModelSerializer):
     class Meta:
         model = InterventionResultLink
         fields = (
-            'id', 'intervention',
-            'cp_output', 'cp_output_name',
-            'ram_indicators', 'ram_indicator_names',
-            'll_results'
+            'id',
+            'intervention',
+            'cp_output',
+            'cp_output_name',
+            'ram_indicators',
+            'ram_indicator_names',
+            'll_results',
+            'total',
         )
 
 
@@ -808,6 +819,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "id",
             "in_amendment",
             "location_names",
+            "cfei_number",
             "location_p_codes",
             "locations",
             "modified",

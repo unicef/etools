@@ -10,7 +10,7 @@ from etools.applications.partners.tests.factories import (
     PartnerStaffFactory,
 )
 from etools.applications.reports.models import LowerResult, ResultType
-from etools.applications.reports.tests.factories import LowerResultFactory, ResultFactory
+from etools.applications.reports.tests.factories import InterventionActivityFactory, LowerResultFactory, ResultFactory
 from etools.applications.users.tests.factories import UserFactory
 
 
@@ -59,6 +59,27 @@ class TestInterventionLowerResultsListView(TestInterventionLowerResultsViewBase)
         pd_result = LowerResult.objects.get(id=response.data['id'])
         self.assertEqual(pd_result.result_link.intervention, self.intervention)
         self.assertEqual(pd_result.result_link.cp_output, self.cp_output)
+
+    def test_create_associated_invalid_cp_output(self):
+        cp_output = ResultFactory(result_type__name=ResultType.OUTPUT)
+        cp_output_qs = InterventionResultLink.objects.filter(
+            intervention=self.intervention,
+            cp_output=cp_output,
+        )
+        self.assertFalse(cp_output_qs.exists())
+        response = self.forced_auth_req(
+            'post',
+            self.list_url,
+            self.user,
+            data={'name': 'test', 'cp_output': cp_output.pk},
+        )
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_400_BAD_REQUEST,
+            response.data,
+        )
+        self.assertIn("cp_output", response.data)
+        self.assertFalse(cp_output_qs.exists())
 
     def test_intervention_provided_on_create(self):
         response = self.forced_auth_req(
@@ -138,6 +159,7 @@ class TestInterventionLowerResultsDetailView(TestInterventionLowerResultsViewBas
     def test_associate_output(self):
         old_result_link = InterventionResultLinkFactory(intervention=self.intervention, cp_output=None)
         result = LowerResultFactory(result_link=old_result_link)
+        InterventionActivityFactory(result=result, unicef_cash=10, cso_cash=20)
         response = self.forced_auth_req(
             'patch',
             reverse('partners:intervention-pd-output-detail', args=[self.intervention.pk, result.pk]),
@@ -147,6 +169,11 @@ class TestInterventionLowerResultsDetailView(TestInterventionLowerResultsViewBas
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertEqual(response.data['cp_output'], self.result_link.cp_output.id)
         self.assertFalse(InterventionResultLink.objects.filter(pk=old_result_link.pk).exists())
+        self.assertEqual(response.data['total'], result.total())
+        for links in response.data["intervention"]["result_links"]:
+            self.assertIn("total", links)
+            for ll_result in links["ll_results"]:
+                self.assertIn("total", ll_result)
 
         result.refresh_from_db()
         self.assertEqual(result.result_link, self.result_link)
@@ -166,6 +193,37 @@ class TestInterventionLowerResultsDetailView(TestInterventionLowerResultsViewBas
         self.assertEqual(response.data['cp_output'], self.result_link.cp_output.id)
         self.assertTrue(InterventionResultLink.objects.filter(pk=old_result_link.pk).exists())
         self.assertEqual(old_result_link.ll_results.count(), 1)
+
+    def test_associate_two_outputs_duplicated_code(self):
+        first_pd_output = LowerResultFactory(
+            result_link=InterventionResultLinkFactory(
+                intervention=self.intervention, cp_output__result_type__name=ResultType.OUTPUT
+            ),
+            code=None
+        )
+        second_pd_output = LowerResultFactory(
+            result_link=InterventionResultLinkFactory(
+                intervention=self.intervention, cp_output__result_type__name=ResultType.OUTPUT
+            ),
+            code=None
+        )
+
+        # two pd outputs have same codes, so unique together by result_link + code will raise error without more logic
+        self.assertEqual(first_pd_output.code, second_pd_output.code)
+        first_response = self.forced_auth_req(
+            'patch',
+            reverse('partners:intervention-pd-output-detail', args=[self.intervention.pk, first_pd_output.pk]),
+            self.user,
+            data={'cp_output': self.result_link.cp_output.id}
+        )
+        self.assertEqual(first_response.status_code, status.HTTP_200_OK)
+        second_response = self.forced_auth_req(
+            'patch',
+            reverse('partners:intervention-pd-output-detail', args=[self.intervention.pk, second_pd_output.pk]),
+            self.user,
+            data={'cp_output': self.result_link.cp_output.id}
+        )
+        self.assertEqual(second_response.status_code, status.HTTP_200_OK)
 
     def test_deassociate_temp_output(self):
         old_result_link = InterventionResultLinkFactory(intervention=self.intervention, cp_output=None)

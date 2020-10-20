@@ -6,7 +6,6 @@ from rest_framework.exceptions import ValidationError
 from unicef_rest_export.serializers import ExportSerializer
 
 from etools.applications.partners.models import Intervention
-from etools.applications.partners.utils import get_quarters_range
 from etools.applications.reports.models import (
     AppliedIndicator,
     Disaggregation,
@@ -284,7 +283,16 @@ class LowerResultSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = LowerResult
-        fields = '__all__'
+        fields = [
+            "id",
+            "name",
+            "code",
+            "result_link",
+            "total",
+            "applied_indicators",
+            "created",
+            "modified",
+        ]
 
 
 class LowerResultCUSerializer(serializers.ModelSerializer):
@@ -474,51 +482,14 @@ class InterventionTimeFrameSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = InterventionTimeFrame
-        fields = ('name', 'start', 'end',)
+        fields = ('id', 'name', 'start', 'end',)
 
     def get_name(self, obj: InterventionTimeFrame):
         return 'Q{}'.format(obj.quarter)
 
 
-class InterventionActivityTimeFrameSerializer(InterventionTimeFrameSerializer):
-    enabled = serializers.BooleanField(write_only=True)
-
-    class Meta(InterventionTimeFrameSerializer.Meta):
-        fields = InterventionTimeFrameSerializer.Meta.fields + (
-            'enabled',
-        )
-
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        data['enabled'] = bool(instance.pk)
-        return data
-
-
-class InterventionActivityTimeFrameListSerializer(serializers.ListSerializer):
-    child = InterventionActivityTimeFrameSerializer()
-
-    def to_representation(self, data):
-        if isinstance(self.root.instance, Intervention):
-            intervention = self.root.instance
-        else:
-            intervention = self.root.intervention
-
-        quarters = {i + 1: q for i, q in enumerate(get_quarters_range(intervention.start, intervention.end))}
-        existing_quarters = {q.quarter: q for q in data.all()}
-        return [
-            self.child.to_representation(
-                existing_quarters[i] if i in existing_quarters.keys()
-                else InterventionTimeFrame(
-                    intervention=intervention, quarter=q.quarter, start_date=q.start, end_date=q.end
-                )
-            )
-            for i, q in quarters.items()
-        ]
-
-
 class InterventionActivityDetailSerializer(serializers.ModelSerializer):
     items = InterventionActivityItemSerializer(many=True, required=False)
-    time_frames = InterventionActivityTimeFrameListSerializer(required=False)
     partner_percentage = serializers.DecimalField(max_digits=5, decimal_places=2, read_only=True)
 
     class Meta:
@@ -582,19 +553,12 @@ class InterventionActivityDetailSerializer(serializers.ModelSerializer):
         if time_frames is None:
             return
 
-        intervention_quarters = self.intervention.quarters.all()
-        if len(time_frames) != len(intervention_quarters):
-            raise ValidationError({'time_frames': [_("Provided periods count doesn't match the original.")]})
-
-        for time_frame_data, quarter in zip(time_frames, intervention_quarters):
-            if time_frame_data['enabled']:
-                instance.time_frames.add(quarter)
-            else:
-                instance.time_frames.remove(quarter)
+        new_time_frames = self.intervention.quarters.filter(id__in=[t.id for t in time_frames])
+        instance.time_frames.clear()
+        instance.time_frames.add(*new_time_frames)
 
 
 class InterventionActivitySerializer(serializers.ModelSerializer):
-    time_frames = InterventionActivityTimeFrameSerializer(many=True)
     partner_percentage = serializers.DecimalField(max_digits=5, decimal_places=2, read_only=True)
 
     class Meta:
@@ -610,4 +574,4 @@ class LowerResultWithActivitiesSerializer(LowerResultSerializer):
     activities = InterventionActivitySerializer(read_only=True, many=True)
 
     class Meta(LowerResultSerializer.Meta):
-        pass
+        fields = LowerResultSerializer.Meta.fields + ["activities"]
