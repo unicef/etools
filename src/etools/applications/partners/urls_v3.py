@@ -12,6 +12,7 @@ from etools.applications.partners.views.interventions_v3 import (
     InterventionRiskDeleteView,
     PMPInterventionAttachmentListCreateView,
     PMPInterventionAttachmentUpdateDeleteView,
+    PMPInterventionDeleteView,
     PMPInterventionIndicatorsListView,
     PMPInterventionIndicatorsUpdateView,
     PMPInterventionListCreateView,
@@ -20,6 +21,7 @@ from etools.applications.partners.views.interventions_v3 import (
     PMPInterventionRetrieveUpdateView,
     PMPInterventionSupplyItemListCreateView,
     PMPInterventionSupplyItemRetrieveUpdateView,
+    PMPInterventionSupplyItemUploadView,
 )
 from etools.applications.partners.views.interventions_v3_actions import (
     PMPInterventionAcceptReviewView,
@@ -67,6 +69,11 @@ urlpatterns = [
             http_method_names=['get', 'patch'],
         ),
         name='intervention-detail',
+    ),
+    path(
+        'interventions/<int:pk>/delete/',
+        view=PMPInterventionDeleteView.as_view(http_method_names=['delete']),
+        name='intervention-delete',
     ),
     path(
         'interventions/<int:pk>/accept/',
@@ -148,6 +155,11 @@ urlpatterns = [
         'interventions/<int:intervention_pk>/supply/',
         view=PMPInterventionSupplyItemListCreateView.as_view(),
         name='intervention-supply-item',
+    ),
+    path(
+        'interventions/<int:intervention_pk>/supply/upload/',
+        view=PMPInterventionSupplyItemUploadView.as_view(),
+        name='intervention-supply-item-upload',
     ),
     path(
         'interventions/<int:intervention_pk>/supply/<int:pk>/',

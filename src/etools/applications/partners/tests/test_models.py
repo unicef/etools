@@ -1646,6 +1646,26 @@ class TestInterventionManagementBudget(BaseTenantTestCase):
         self.assertEqual(budget.total, 2100)
 
 
+class TestInterventionSupplyItem(BaseTenantTestCase):
+    def test_delete(self):
+        intervention = InterventionFactory()
+        budget = intervention.planned_budget
+
+        for __ in range(3):
+            item = InterventionSupplyItemFactory(
+                intervention=intervention,
+                unit_number=1,
+                unit_price=2,
+            )
+
+        self.assertEqual(budget.in_kind_amount_local, 6)
+
+        item.delete()
+
+        budget.refresh_from_db()
+        self.assertEqual(budget.in_kind_amount_local, 4)
+
+
 class TestFileType(BaseTenantTestCase):
     def test_str(self):
         f = models.FileType(name="FileType")

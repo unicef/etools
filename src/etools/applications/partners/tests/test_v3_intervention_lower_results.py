@@ -63,6 +63,27 @@ class TestInterventionLowerResultsListView(TestInterventionLowerResultsViewBase)
         self.assertEqual(pd_result.result_link.intervention, self.intervention)
         self.assertEqual(pd_result.result_link.cp_output, self.cp_output)
 
+    def test_create_associated_invalid_cp_output(self):
+        cp_output = ResultFactory(result_type__name=ResultType.OUTPUT)
+        cp_output_qs = InterventionResultLink.objects.filter(
+            intervention=self.intervention,
+            cp_output=cp_output,
+        )
+        self.assertFalse(cp_output_qs.exists())
+        response = self.forced_auth_req(
+            'post',
+            self.list_url,
+            self.user,
+            data={'name': 'test', 'cp_output': cp_output.pk},
+        )
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_400_BAD_REQUEST,
+            response.data,
+        )
+        self.assertIn("cp_output", response.data)
+        self.assertFalse(cp_output_qs.exists())
+
     def test_intervention_provided_on_create(self):
         response = self.forced_auth_req(
             'post', self.list_url, self.user,
@@ -152,6 +173,10 @@ class TestInterventionLowerResultsDetailView(TestInterventionLowerResultsViewBas
         self.assertEqual(response.data['cp_output'], self.result_link.cp_output.id)
         self.assertFalse(InterventionResultLink.objects.filter(pk=old_result_link.pk).exists())
         self.assertEqual(response.data['total'], result.total())
+        for links in response.data["intervention"]["result_links"]:
+            self.assertIn("total", links)
+            for ll_result in links["ll_results"]:
+                self.assertIn("total", ll_result)
 
         result.refresh_from_db()
         self.assertEqual(result.result_link, self.result_link)

@@ -48,7 +48,10 @@ class PMPPermissions:
             if self.instance.status != condition_group['status']:
                 return False
         if condition_group['group'] and condition_group['group'] != '*':
-            if condition_group['group'] not in self.user_groups:
+            groups = condition_group['group'].split("|")
+
+            # If none of the groups defined match any of the groups in the user groups
+            if not set(groups).intersection(set(self.user_groups)):
                 return False
         if condition_group['condition'] and condition_group['condition'] != '*':
             # use the following commented line in case we want to not use a condition mapper and interpret the
@@ -119,6 +122,9 @@ class InterventionPermissions(PMPPermissions):
         def prp_server_on():
             return tenant_switch_is_active("prp_server_on")
 
+        def unlocked(instance):
+            return not instance.locked
+
         staff_member = self.user.get_partner_staff_member()
 
         # focal points are prefetched, so just cast to array to collect ids
@@ -141,13 +147,16 @@ class InterventionPermissions(PMPPermissions):
             'user_adds_amendment': user_added_amendment(self.instance),
             'prp_mode_on': not prp_mode_off(),
             'prp_mode_on+contingency_on': not prp_mode_off() and self.instance.contingency_pd,
+            'prp_mode_on+unicef_court': not prp_mode_off() and self.instance.unicef_court,
+            'prp_mode_on+partner_court': not prp_mode_off() and not self.instance.unicef_court,
             'prp_mode_off': prp_mode_off(),
             'prp_server_on': prp_server_on(),
             'user_adds_amendment+prp_mode_on': user_added_amendment(self.instance) and not prp_mode_off(),
             'termination_doc_attached': self.instance.termination_doc_attachment.exists(),
             'not_ended': self.instance.end >= datetime.datetime.now().date() if self.instance.end else False,
-            'unicef_court': self.instance.unicef_court,
-            'partner_court': not self.instance.unicef_court,
+            'unicef_court': self.instance.unicef_court and unlocked(self.instance),
+            'partner_court': not self.instance.unicef_court and unlocked(self.instance),
+            'unlocked': unlocked(self.instance)
         }
 
 

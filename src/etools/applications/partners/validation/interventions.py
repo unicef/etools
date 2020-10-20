@@ -8,7 +8,7 @@ from etools_validator.utils import check_required_fields, check_rigid_fields
 from etools_validator.validation import CompleteValidation
 
 from etools.applications.partners.permissions import InterventionPermissions
-from etools.applications.reports.models import AppliedIndicator
+from etools.applications.reports.models import AppliedIndicator, InterventionActivity
 
 logger = logging.getLogger('partners.interventions.validation')
 
@@ -144,7 +144,8 @@ def transition_to_review(i):
 
 
 def transition_to_cancelled(i):
-    # TODO add validation rules/criteria
+    if not i.cancel_justification:
+        raise TransitionError([_('Justification required for cancellation')])
     return True
 
 
@@ -287,12 +288,32 @@ def locations_valid(i):
 
 
 def cp_structure_valid(i):
-    if i.country_programme and i.agreement.agreement_type == i.agreement.PCA \
-            and i.country_programme != i.agreement.country_programme:
-        raise BasicValidationError(_('The Country Programme selected on this PD is not the same as the '
-                                     'Country Programme selected on the Agreement, '
-                                     'please select "{}"'.format(i.agreement.country_programme)))
+    if i.agreement.agreement_type == i.agreement.PCA:
+        invalid = False
+        if i.country_programme:
+            if i.country_programme != i.agreement.country_programme:
+                invalid = True
+        if i.country_programmes.count():
+            if i.agreement.country_programme not in i.country_programmes.all():
+                invalid = True
+
+        if invalid:
+            raise BasicValidationError(
+                _('The Country Programme selected on this PD is not the same '
+                  'as the Country Programme selected on the Agreement, '
+                  'please select "{}"'.format(i.agreement.country_programme)),
+            )
     return True
+
+
+def all_pd_outputs_are_associated(i):
+    return not i.result_links.filter(cp_output__isnull=True).exists()
+
+
+def all_activities_have_timeframes(i):
+    return not InterventionActivity.objects.\
+        filter(result__result_link__intervention=i).\
+        filter(time_frames__isnull=True).exists()
 
 
 class InterventionValid(CompleteValidation):
@@ -351,9 +372,29 @@ class InterventionValid(CompleteValidation):
         self.check_rigid_fields(intervention, related=True)
         return True
 
+    def state_review_valid(self, intervention, user=None):
+        self.check_required_fields(intervention)
+        self.check_rigid_fields(intervention, related=True)
+        if not (intervention.partner_accepted and intervention.unicef_accepted):
+            raise StateValidationError([_('Unicef and Partner both need to accept')])
+        if not all_activities_have_timeframes(intervention):
+            raise StateValidationError([_('All activities must have at least one time frame')])
+        if not all_pd_outputs_are_associated(intervention):
+            raise StateValidationError([_('All PD Outputs need to be associated to a CP Output')])
+        return True
+
+    def state_signature_valid(self, intervention, user=None):
+        self.check_required_fields(intervention)
+        self.check_rigid_fields(intervention, related=True)
+        return True
+
     def state_signed_valid(self, intervention, user=None):
         self.check_required_fields(intervention)
         self.check_rigid_fields(intervention, related=True)
+        if not all_activities_have_timeframes(intervention):
+            raise StateValidationError([_('All activities must have at least one time frame')])
+        if not all_pd_outputs_are_associated(intervention):
+            raise StateValidationError([_('All PD Outputs need to be associated to a CP Output')])
         if intervention.contingency_pd is False and intervention.total_unicef_budget == 0:
             raise StateValidationError([_('UNICEF Cash $ or UNICEF Supplies $ should not be 0')])
         return True
@@ -366,7 +407,10 @@ class InterventionValid(CompleteValidation):
     def state_active_valid(self, intervention, user=None):
         self.check_required_fields(intervention)
         self.check_rigid_fields(intervention, related=True)
-
+        if not all_activities_have_timeframes(intervention):
+            raise StateValidationError([_('All activities must have at least one time frame')])
+        if not all_pd_outputs_are_associated(intervention):
+            raise StateValidationError([_('All PD Outputs need to be associated to a CP Output')])
         today = date.today()
         if not (intervention.start <= today):
             raise StateValidationError([_('Today is not after the start date')])
@@ -377,6 +421,10 @@ class InterventionValid(CompleteValidation):
     def state_ended_valid(self, intervention, user=None):
         self.check_required_fields(intervention)
         self.check_rigid_fields(intervention, related=True)
+        if not all_activities_have_timeframes(intervention):
+            raise StateValidationError([_('All activities must have at least one time frame')])
+        if not all_pd_outputs_are_associated(intervention):
+            raise StateValidationError([_('All PD Outputs need to be associated to a CP Output')])
 
         today = date.today()
         if not today > intervention.end:

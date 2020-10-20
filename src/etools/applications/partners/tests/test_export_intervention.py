@@ -120,7 +120,7 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
             "Partner Type",
             "CSO Type",
             "Agreement",
-            "Country Programme",
+            "country_programme",
             "Document Type",
             "Reference Number",
             "Document Title",
@@ -169,7 +169,10 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
             self.intervention.agreement.partner.partner_type,
             '',
             self.intervention.agreement.agreement_number,
-            str(self.intervention.country_programme.name),
+            ", ".join(self.intervention.country_programmes.values_list(
+                "name",
+                flat=True,
+            )),
             self.intervention.document_type,
             self.intervention.number,
             str(self.intervention.title),
@@ -222,8 +225,8 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 90)
-        self.assertEqual(len(dataset[0]), 90)
+        self.assertEqual(len(dataset._get_headers()), 92)
+        self.assertEqual(len(dataset[0]), 92)
 
 
 class TestInterventionAmendmentModelExport(BaseInterventionModelExportTestCase):
@@ -407,6 +410,8 @@ class TestInterventionLocationExport(BaseInterventionModelExportTestCase):
 
         # Another intervention, with no locations
         self.intervention2 = InterventionFactory(
+            start=None,
+            end=None,
             agreement=AgreementFactory(
                 partner=PartnerFactory(name='Partner 2', vendor_number='123'),
             ),
@@ -424,6 +429,8 @@ class TestInterventionLocationExport(BaseInterventionModelExportTestCase):
 
         # Intervention with no sectors
         self.intervention3 = InterventionFactory(
+            start=None,
+            end=None,
             agreement=AgreementFactory(
                 partner=PartnerFactory(name='Partner 3', vendor_number='456'),
             ),

@@ -21,6 +21,7 @@ from etools.applications.reports.tests.factories import (
     IndicatorBlueprintFactory,
     IndicatorFactory,
     InterventionActivityFactory,
+    InterventionActivityItemFactory,
     LowerResultFactory,
     QuarterFactory,
     ResultFactory,
@@ -273,6 +274,52 @@ class TestIndicator(BaseTenantTestCase):
         self.assertEqual(indicator.code, "C123")
 
 
+class TestInterventionActivity(BaseTenantTestCase):
+    def test_delete(self):
+        intervention = InterventionFactory()
+        budget = intervention.planned_budget
+
+        link = InterventionResultLinkFactory(intervention=intervention)
+        lower_result = LowerResultFactory(result_link=link)
+        for __ in range(3):
+            activity = InterventionActivityFactory(
+                result=lower_result,
+                unicef_cash=101,
+                cso_cash=202,
+            )
+
+        self.assertEqual(budget.total_cash_local(), 909)
+
+        activity.delete()
+
+        budget.refresh_from_db()
+        self.assertEqual(budget.total_cash_local(), 606)
+
+
+class TestInterventionActivityItem(BaseTenantTestCase):
+    def test_delete(self):
+        intervention = InterventionFactory()
+        link = InterventionResultLinkFactory(intervention=intervention)
+        lower_result = LowerResultFactory(result_link=link)
+        activity = InterventionActivityFactory(result=lower_result)
+        for __ in range(3):
+            item = InterventionActivityItemFactory(
+                activity=activity,
+                unicef_cash=20,
+                cso_cash=10,
+            )
+
+        activity.refresh_from_db()
+        self.assertEqual(activity.unicef_cash, 60)
+        self.assertEqual(activity.cso_cash, 30)
+
+        item.delete()
+
+        activity.refresh_from_db()
+        self.assertEqual(activity.unicef_cash, 40)
+        self.assertEqual(activity.cso_cash, 20)
+
+
 class TestInterventionTimeFrame(BaseTenantTestCase):
     def test_intervention_save_no_changes(self):
         intervention = InterventionFactory(
@@ -291,7 +338,7 @@ class TestInterventionTimeFrame(BaseTenantTestCase):
         item_to_keep = InterventionTimeFrame.objects.get(
             intervention=intervention,
             start_date=datetime.date(year=1980, month=4, day=1),
-            end_date=datetime.date(year=1980, month=7, day=1)
+            end_date=datetime.date(year=1980, month=6, day=30)
         )
         item_to_remove = InterventionTimeFrame.objects.get(
             intervention=intervention,
@@ -303,7 +350,7 @@ class TestInterventionTimeFrame(BaseTenantTestCase):
         intervention.save()
         item_to_keep.refresh_from_db()
         self.assertEqual(item_to_keep.start_date, datetime.date(year=1979, month=9, day=1))
-        self.assertEqual(item_to_keep.end_date, datetime.date(year=1979, month=12, day=1))
+        self.assertEqual(item_to_keep.end_date, datetime.date(year=1979, month=11, day=30))
         self.assertEqual(intervention.quarters.filter(id=item_to_remove.id).exists(), False)
 
     def test_time_frame_created_on_dates_change(self):

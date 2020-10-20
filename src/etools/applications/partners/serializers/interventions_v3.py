@@ -1,6 +1,11 @@
+import codecs
+import csv
+import decimal
+
 from django.contrib.auth import get_user_model
 
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 from unicef_attachments.fields import AttachmentSingleFileField
 
 from etools.applications.partners.models import (
@@ -51,6 +56,37 @@ class InterventionSupplyItemSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data["intervention"] = self.initial_data.get("intervention")
         return super().create(validated_data)
+
+
+class InterventionSupplyItemUploadSerializer(serializers.Serializer):
+    supply_items_file = serializers.FileField()
+
+    def valid_row(self, row):
+        product = row["Product Number"].strip()
+        if product and not product.startswith("\"Disclaimer"):
+            return True
+        return False
+
+    def extract_file_data(self):
+        data = []
+        reader = csv.DictReader(
+            codecs.iterdecode(
+                self.validated_data.get("supply_items_file"),
+                "utf-8",
+            ),
+            delimiter=",",
+        )
+        for row in reader:
+            if self.valid_row(row):
+                try:
+                    data.append((
+                        row["Product Title"],
+                        decimal.Decimal(row["Quantity"]),
+                        decimal.Decimal(row["Indicative Price"]),
+                    ))
+                except decimal.InvalidOperation:
+                    raise ValidationError(f"Unable to process row: {row}")
+        return data
 
 
 class InterventionManagementBudgetSerializer(serializers.ModelSerializer):
@@ -203,6 +239,9 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
         return user.email in [o.email for o in obj.partner_focal_points.all()]
 
     def get_available_actions(self, obj):
+        default_ordering = ["send_to_unicef", "send_to_partner",
+                            "accept", "review", "unlock", "cancel",
+                            "terminate", "download_comments", "export", "generate_pdf"]
         available_actions = [
             "download_comments",
             "export",
@@ -219,7 +258,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
 
         # if NOT in Development status then we're done
         if obj.status != obj.DRAFT:
-            return available_actions
+            return [action for action in default_ordering if action in available_actions]
 
         # PD is assigned to UNICEF
         if obj.unicef_court:
@@ -227,22 +266,15 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             if obj.budget_owner == user:
                 if not obj.unicef_accepted:
                     available_actions.append("accept")
-                available_actions.append("review")
-                available_actions.append("signature")
+                if obj.unicef_accepted and obj.partner_accepted:
+                    available_actions.append("review")
 
             # any unicef focal point user
             if user in obj.unicef_focal_points.all():
+                available_actions.append("send_to_partner")
                 available_actions.append("cancel")
-                if obj.unicef_court:
-                    available_actions.append("send_to_partner")
-                available_actions.append("signature")
                 if obj.partner_accepted:
                     available_actions.append("unlock")
-                else:
-                    available_actions.append("accept")
-                    # TODO confirm that this is focal point
-                    # and not just any UNICEF user
-                    available_actions.append("accept_review")
 
         # PD is assigned to Partner
         else:
@@ -250,12 +282,12 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             if self._is_partner_user(obj, user):
                 if not obj.unicef_court:
                     available_actions.append("send_to_unicef")
-                if obj.partner_accepted:
+                if obj.partner_accepted or obj.unicef_accepted:
                     available_actions.append("unlock")
-                else:
+                if not obj.partner_accepted:
                     available_actions.append("accept")
 
-        return list(set(available_actions))
+        return [action for action in default_ordering if action in available_actions]
 
     def get_status_list(self, obj):
         if obj.status == obj.SUSPENDED:
@@ -315,13 +347,14 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "available_actions",
             # "budget_currency",
             "budget_owner",
+            "cancel_justification",
             "capacity_development",
             "cash_transfer_modalities",
             "cfei_number",
             "cluster_names",
             "context",
             "contingency_pd",
-            "country_programme",
+            "country_programmes",
             # "cp_outputs",
             "created",
             "date_draft_by_partner",
