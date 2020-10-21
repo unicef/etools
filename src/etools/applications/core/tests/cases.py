@@ -9,7 +9,7 @@ from rest_framework.test import APIClient, APIRequestFactory, force_authenticate
 from unicef_notification.models import EmailTemplate
 
 from etools.applications.users.models import WorkspaceCounter
-from etools.applications.users.tests.factories import CountryFactory, SCHEMA_NAME
+from etools.applications.users.tests.factories import SCHEMA_NAME
 
 TENANT_DOMAIN = 'tenant.test.com'
 
@@ -63,7 +63,7 @@ class BaseTenantTestCase(TenantTestCase):
             'country_short_code': 'TST'
         })
         cls.domain = get_tenant_domain_model().objects.get_or_create(domain=TENANT_DOMAIN, tenant=cls.tenant)
-        cls.public = CountryFactory.build(schema_name='public', business_area_code='ABC')
+        # cls.public = TenantModel.objects.get_or_create(schema_name='public', business_area_code='ABC', name='UNICEF')
 
         try:
             cls.tenant.counters

@@ -113,6 +113,8 @@ def intervention_status_automatic_transition():
 @transaction.atomic
 def _make_intervention_status_automatic_transitions(country_name):
     """Implementation core of intervention_status_automatic_transition() (q.v.)"""
+    logger.info('Starting intervention auto status transition for country {}'.format(country_name))
+
     admin_user = get_user_model().objects.get(username=settings.TASK_ADMIN_USER)
     bad_interventions = []
     active_ended = Intervention.objects.filter(status=Intervention.ACTIVE,
@@ -136,10 +138,10 @@ def _make_intervention_status_automatic_transitions(country_name):
             else:
                 bad_interventions.append(intervention)
 
-    # logger.error('Bad interventions {}'.format(len(bad_interventions)))
-    # logger.error('Bad interventions ids: ' + ' '.join(str(a.id) for a in bad_interventions))
-    # logger.info('Total interventions {}'.format(active_ended.count() + qs.count()))
-    # logger.info("Transitioned interventions {} ".format(processed))
+    logger.error('Bad interventions {}'.format(len(bad_interventions)))
+    logger.error('Bad interventions ids: ' + ' '.join(str(a.id) for a in bad_interventions))
+    logger.info('Total interventions {}'.format(active_ended.count() + qs.count()))
+    logger.info("Transitioned interventions {} ".format(processed))
 
 
 @app.task

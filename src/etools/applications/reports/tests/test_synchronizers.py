@@ -1,7 +1,5 @@
 import datetime
 
-from unicef_vision.loaders import INSIGHT_NO_DATA_MESSAGE
-
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.reports.models import CountryProgramme, Indicator, Result, ResultType
 from etools.applications.reports.synchronizers import (
@@ -390,14 +388,6 @@ class TestProgrammeSynchronizer(BaseTenantTestCase):
         }
         self.adapter = ProgrammeSynchronizer(business_area_code=self.country.business_area_code)
 
-    def test_get_json(self):
-        data = {"test": "123"}
-        self.assertEqual(self.adapter._get_json(data), data)
-        self.assertEqual(
-            self.adapter._get_json(INSIGHT_NO_DATA_MESSAGE),
-            []
-        )
-
     def test_filter_by_time_range(self):
         """Check that records that have outcome end date record greater
         than last year are NOT filtered out
@@ -551,7 +541,7 @@ class TestProgrammeSynchronizer(BaseTenantTestCase):
         self.data["OUTCOME_AREA_CODE"] = "OC_CODE"
         self.data["OUTCOME_DESCRIPTION"] = "OC_NAME"
         self.data["OUTCOME_START_DATE"] = "20-Feb-13"
-        self.data["OUTCOME_END_DATE"] = "20-Feb-13"
+        self.data["OUTCOME_END_DATE"] = "20-Feb-20"
         self.data["OUTPUT_START_DATE"] = "29-Oct-44"
         self.data["OUTPUT_END_DATE"] = "29-Oct-44"
         self.data["ACTIVITY_START_DATE"] = "29-Oct-45"
@@ -564,15 +554,15 @@ class TestProgrammeSynchronizer(BaseTenantTestCase):
             "cps": {"": {
                 "name": "",
                 "wbs": "",
-                "from_date": datetime.date(2013, 2, 20),
-                "to_date": datetime.date(2013, 2, 20),
+                "from_date": datetime.date(2000, 5, 14),
+                "to_date": datetime.date(2013, 5, 26),
             }},
             "outcomes": {"OC_WBS": {
                 "code": "OC_CODE",
                 "wbs": "OC_WBS",
                 "name": "OC_NAME",
-                "from_date": datetime.date(2044, 10, 29),
-                "to_date": datetime.date(2044, 10, 29),
+                "from_date": datetime.date(2013, 2, 20),
+                "to_date": datetime.date(2020, 2, 20),
             }},
             "outputs": {},
             "activities": {}

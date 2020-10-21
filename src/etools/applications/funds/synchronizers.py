@@ -5,7 +5,6 @@ from decimal import Decimal
 from django.db.models import Sum
 
 from unicef_vision.settings import INSIGHT_DATE_FORMAT
-from unicef_vision.exceptions import VisionException
 from unicef_vision.synchronizers import FileDataSynchronizer, MultiModelDataSynchronizer
 from unicef_vision.utils import comp_decimals
 

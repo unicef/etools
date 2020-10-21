@@ -1,7 +1,5 @@
 import datetime
 
-from unicef_vision.loaders import INSIGHT_NO_DATA_MESSAGE
-
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners import synchronizers
 from etools.applications.partners.models import PartnerOrganization
@@ -32,7 +30,8 @@ class TestPartnerSynchronizer(BaseTenantTestCase):
             "MARKED_FOR_DELETION": False,
             "POSTING_BLOCK": False,
             "PSEA_ASSESSMENT_DATE": "03-Jan-22",
-            "SEA_RISK_RATING_NAME": "Test"
+            "SEA_RISK_RATING_NAME": "Test",
+            "SEARCH_TERM1": "Short Name"
         }
         self.records = {"ROWSET": {"ROW": [self.data]}}
         self.adapter = synchronizers.PartnerSynchronizer(business_area_code=self.country.business_area_code)
@@ -52,14 +51,6 @@ class TestPartnerSynchronizer(BaseTenantTestCase):
         """If missing vendor name ignore record"""
         self.data["VENDOR_NAME"] = ""
         response = self.adapter._filter_records([self.data])
-        self.assertEqual(response, [])
-
-    def test_get_json(self):
-        response = self.adapter._get_json(self.data)
-        self.assertEqual(response, self.data)
-
-    def test_get_json_no_data(self):
-        response = self.adapter._get_json(INSIGHT_NO_DATA_MESSAGE)
         self.assertEqual(response, [])
 
     def test_get_cso_type_none(self):
