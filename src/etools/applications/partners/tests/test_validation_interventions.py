@@ -14,9 +14,12 @@ from etools.applications.partners.tests.factories import (
     InterventionAmendmentFactory,
     InterventionAttachmentFactory,
     InterventionFactory,
+    InterventionResultLinkFactory,
     PartnerStaffFactory,
 )
 from etools.applications.partners.validation.interventions import (
+    all_activities_have_timeframes,
+    all_pd_outputs_are_associated,
     InterventionValid,
     partnership_manager_only,
     signed_date_valid,
@@ -30,6 +33,7 @@ from etools.applications.partners.validation.interventions import (
     transition_to_suspended,
     transition_to_terminated,
 )
+from etools.applications.reports.tests.factories import InterventionActivityFactory, InterventionTimeFrameFactory
 from etools.applications.users.tests.factories import GroupFactory, UserFactory
 
 
@@ -811,6 +815,49 @@ class TestInterventionValid(BaseTenantTestCase):
             ):
                 validator.check_rigid_fields(self.intervention)
 
+    def _init_valid_review_intervention(self):
+        self.intervention.partner_accepted = True
+        self.intervention.unicef_accepted = True
+        activity = InterventionActivityFactory(
+            result__result_link=InterventionResultLinkFactory(intervention=self.intervention)
+        )
+        time_frame = InterventionTimeFrameFactory(intervention=self.intervention, quarter=1)
+        activity.time_frames.add(time_frame)
+
+    def test_state_review_valid(self):
+        self._init_valid_review_intervention()
+        self.validator.state_review_valid(self.intervention)
+
+    def test_state_review_partner_not_accepted(self):
+        self._init_valid_review_intervention()
+        self.intervention.partner_accepted = False
+        with self.assertRaisesRegexp(StateValidationError, "Unicef and Partner both need to accept"):
+            self.validator.state_review_valid(self.intervention)
+
+    def test_state_review_unicef_not_accepted(self):
+        self._init_valid_review_intervention()
+        self.intervention.unicef_accepted = False
+        with self.assertRaisesRegexp(StateValidationError, "Unicef and Partner both need to accept"):
+            self.validator.state_review_valid(self.intervention)
+
+    def test_state_review_activity_have_no_timeframe(self):
+        self._init_valid_review_intervention()
+        self.intervention.quarters.first().activities.clear()
+        with self.assertRaisesRegexp(StateValidationError, "All activities must have at least one time frame"):
+            self.validator.state_review_valid(self.intervention)
+
+    def test_state_review_temp_result_link_exists(self):
+        self._init_valid_review_intervention()
+        result_link = self.intervention.result_links.first()
+        result_link.cp_output = None
+        result_link.save()
+        with self.assertRaisesRegexp(StateValidationError, "All PD Outputs need to be associated to a CP Output"):
+            self.validator.state_review_valid(self.intervention)
+
+    def test_state_signature_valid(self):
+        # rigid checks skipped, so no custom validators here
+        self.validator.state_signature_valid(self.intervention)
+
     def test_state_signed_valid_invalid(self):
         """Invalid if unicef budget is 0"""
         self.intervention.total_unicef_budget = 0
@@ -863,3 +910,43 @@ class TestInterventionValid(BaseTenantTestCase):
         """Invalid if end date is after today"""
         self.intervention.end = datetime.date(2001, 1, 1)
         self.assertTrue(self.validator.state_ended_valid(self.intervention))
+
+
+class TestAllPDOutputsAreAssociated(BaseTenantTestCase):
+    def setUp(self):
+        super().setUp()
+        self.intervention = InterventionFactory()
+
+    def test_valid_empty(self):
+        self.assertTrue(all_pd_outputs_are_associated(self.intervention))
+
+    def test_valid_correct_link(self):
+        InterventionResultLinkFactory(intervention=self.intervention)
+        self.assertTrue(all_pd_outputs_are_associated(self.intervention))
+
+    def test_invalid_bad_link_exists(self):
+        InterventionResultLinkFactory(intervention=self.intervention)
+        InterventionResultLinkFactory(intervention=self.intervention, cp_output=None)
+        self.assertFalse(all_pd_outputs_are_associated(self.intervention))
+
+
+class TestAllActivitiesHaveTimeFrames(BaseTenantTestCase):
+    def setUp(self):
+        super().setUp()
+        self.intervention = InterventionFactory()
+
+    def test_valid_empty(self):
+        self.assertTrue(all_activities_have_timeframes(self.intervention))
+
+    def test_valid_time_frame_added(self):
+        activity = InterventionActivityFactory(
+            result__result_link=InterventionResultLinkFactory(intervention=self.intervention)
+        )
+        time_frame = InterventionTimeFrameFactory(intervention=self.intervention, quarter=1)
+        activity.time_frames.add(time_frame)
+        self.assertTrue(all_activities_have_timeframes(self.intervention))
+
+    def test_invalid_activity_without_fime_frame(self):
+        InterventionActivityFactory(result__result_link=InterventionResultLinkFactory(intervention=self.intervention))
+        InterventionTimeFrameFactory(intervention=self.intervention, quarter=1)
+        self.assertFalse(all_activities_have_timeframes(self.intervention))

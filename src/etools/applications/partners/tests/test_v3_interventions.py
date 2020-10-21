@@ -17,7 +17,7 @@ from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.core.tests.factories import EmailFactory
 from etools.applications.core.tests.mixins import URLAssertionMixin
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory, FundsReservationItemFactory
-from etools.applications.partners.models import Intervention, InterventionSupplyItem
+from etools.applications.partners.models import FileType, Intervention, InterventionSupplyItem
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
     FileTypeFactory,
@@ -1191,11 +1191,12 @@ class TestInterventionSignature(BaseInterventionActionTestCase):
 
     def test_patch(self):
         # unicef signature
+        InterventionAttachmentFactory(intervention=self.intervention, type__name=FileType.FINAL_PARTNERSHIP_REVIEW)
         self.assertFalse(self.intervention.unicef_accepted)
         mock_send = mock.Mock(return_value=self.mock_email)
         with mock.patch(self.notify_path, mock_send):
             response = self.forced_auth_req("patch", self.url, user=self.user)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         mock_send.assert_called()
         self.intervention.refresh_from_db()
         self.assertEqual(self.intervention.status, Intervention.SIGNATURE)
@@ -1208,6 +1209,11 @@ class TestInterventionSignature(BaseInterventionActionTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("PD is already in Signature status.", response.data)
         mock_send.assert_not_called()
+
+    def test_final_partnership_review_required(self):
+        response = self.forced_auth_req("patch", self.url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Final Partnership Review required for Signature status", response.data)
 
 
 class TestInterventionUnlock(BaseInterventionActionTestCase):

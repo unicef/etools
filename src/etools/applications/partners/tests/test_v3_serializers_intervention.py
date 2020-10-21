@@ -91,6 +91,16 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
         expected_actions = self.default_actions + ["accept"]
         self.assertEqual(sorted(available_actions), sorted(expected_actions))
 
+    def test_available_actions_management_review(self):
+        pd = InterventionFactory(status=Intervention.REVIEW)
+        self.unicef_user.groups.add(
+            GroupFactory(name=PARTNERSHIP_MANAGER_GROUP),
+        )
+        self.assertEqual(pd.status, Intervention.REVIEW)
+        available_actions = self.unicef_serializer.get_available_actions(pd)
+        expected_actions = self.default_actions + ["cancel", "signature"]
+        self.assertEqual(sorted(available_actions), sorted(expected_actions))
+
     def test_available_actions_management_cancel(self):
         pd = InterventionFactory()
         self.unicef_user.groups.add(

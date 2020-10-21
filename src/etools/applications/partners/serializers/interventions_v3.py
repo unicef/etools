@@ -240,7 +240,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
 
     def get_available_actions(self, obj):
         default_ordering = ["send_to_unicef", "send_to_partner",
-                            "accept", "review", "unlock", "cancel",
+                            "accept", "review", "signature", "unlock", "cancel",
                             "terminate", "download_comments", "export", "generate_pdf"]
         available_actions = [
             "download_comments",
@@ -255,6 +255,9 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
                 available_actions.append("cancel")
             elif obj.status not in [obj.ENDED, obj.CLOSED, obj.TERMINATED]:
                 available_actions.append("terminate")
+
+            if obj.status == obj.REVIEW:
+                available_actions.append("signature")
 
         # if NOT in Development status then we're done
         if obj.status != obj.DRAFT:

@@ -150,8 +150,8 @@ def transition_to_cancelled(i):
 
 
 def transition_to_signature(i):
-    # TODO ensure final partnership review document is set
-    # this field is part of PR 2769
+    if not i.final_partnership_review.exists():
+        raise TransitionError([_('Final Partnership Review required for Signature status')])
     return True
 
 
@@ -316,6 +316,10 @@ def all_activities_have_timeframes(i):
         filter(time_frames__isnull=True).exists()
 
 
+def final_partnership_review_attached(i):
+    return i.final_partnership_review.exists()
+
+
 class InterventionValid(CompleteValidation):
     VALIDATION_CLASS = 'partners.Intervention'
     # validations that will be checked on every object... these functions only take the new instance
@@ -386,6 +390,8 @@ class InterventionValid(CompleteValidation):
     def state_signature_valid(self, intervention, user=None):
         self.check_required_fields(intervention)
         self.check_rigid_fields(intervention, related=True)
+        if not final_partnership_review_attached(intervention):
+            raise StateValidationError([_('Final Partnership Review required for Signature status')])
         return True
 
     def state_signed_valid(self, intervention, user=None):
