@@ -1,9 +1,6 @@
-
 import json
 
 from django.urls import reverse
-
-import factory
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.publics.models import Currency, TravelExpenseType
@@ -119,7 +116,7 @@ class StaticDataEndpoints(BaseTenantTestCase):
     def test_currencies_view(self):
 
         self.assertEqual(Currency.objects.count(), 1)
-        for __ in range (3):
+        for __ in range(3):
             PublicsCurrencyFactory()
 
         with self.assertNumQueries(5):
