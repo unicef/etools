@@ -1137,6 +1137,13 @@ class TestInterventionModel(BaseTenantTestCase):
         intervention.refresh_from_db()
         self.assertEqual(intervention.hq_support_cost, 2.0)
 
+    def test_date_last_amendment_update(self):
+        intervention = InterventionFactory()
+        self.assertEqual(intervention.date_last_amended, None)
+        InterventionAmendmentFactory(intervention=intervention)
+        intervention.refresh_from_db()
+        self.assertNotEqual(intervention.date_last_amended, None)
+
 
 class TestGetFilePaths(BaseTenantTestCase):
     def test_get_agreement_path(self):

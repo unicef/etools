@@ -111,6 +111,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
             "created",
             "date_sent_to_partner",
             "date_draft_by_partner",
+            "date_last_amended",
             "document_type",
             "end",
             "engagement",

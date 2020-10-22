@@ -1931,6 +1931,11 @@ class Intervention(TimeStampedModel):
         null=True,
         blank=True,
     )
+    date_last_amended = models.DateTimeField(
+        verbose_name=_("Date Last Amended"),
+        null=True,
+        blank=True,
+    )
     cfei_number = models.CharField(
         verbose_name=_("UNPP Number"),
         max_length=150,
@@ -2492,6 +2497,7 @@ class InterventionAmendment(TimeStampedModel):
         if self.pk is None:
             self.amendment_number = self.compute_reference_number()
             self.intervention.in_amendment = True
+            self.intervention.date_last_amended = datetime.date.today()
             self.intervention.save(amendment_number=self.amendment_number)
         return super().save(**kwargs)
 
