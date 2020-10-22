@@ -27,6 +27,8 @@ from etools.applications.partners.serializers.interventions_v2 import (
     InterventionListSerializer,
     InterventionMonitorSerializer,
 )
+from etools.applications.users.serializers import EmailSerializerMixin
+from etools.libraries.djangolib.validators import uppercase_forbidden_validator
 
 
 class CoreValuesAssessmentSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
@@ -102,9 +104,10 @@ class PartnerStaffMemberNestedSerializer(PartnerStaffMemberCreateSerializer):
         )
 
 
-class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
-    email = serializers.EmailField(required=True)
-
+class PartnerStaffMemberCreateUpdateSerializer(
+        EmailSerializerMixin,
+        serializers.ModelSerializer,
+):
     class Meta:
         model = PartnerStaffMember
         fields = "__all__"
@@ -136,6 +139,9 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
 
                 data['user'] = user
         else:
+            # validate email, throws validation error is invalid
+            uppercase_forbidden_validator(email)
+
             # make sure email addresses are not editable after creation.. user must be removed and re-added
             if email != self.instance.email:
                 raise ValidationError(
