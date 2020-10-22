@@ -4,6 +4,7 @@ from typing import Tuple, TYPE_CHECKING
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractBaseUser, Group, PermissionsMixin, UserManager
+from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import connection, models
@@ -109,6 +110,11 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
             connection.set_tenant(original_tenant)
 
         return None, None
+
+    def save(self, *args, **kwargs):
+        if self.email != self.email.lower():
+            raise ValidationError("Email must be lowercase.")
+        super().save(*args, **kwargs)
 
 
 class Country(TenantMixin):
