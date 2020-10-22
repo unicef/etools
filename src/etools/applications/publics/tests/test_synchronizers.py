@@ -1,6 +1,8 @@
 
 import json
 
+from mock import Mock, patch
+
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.publics import synchronizers
 from etools.applications.publics.models import (
@@ -19,6 +21,7 @@ class TestCurrencySynchronizer(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.country = Country.objects.first()
 
+    @patch("etools.applications.vision.synchronizers.get_public_schema_name", Mock(return_value="test"))
     def setUp(self):
         self.data = {
             "CURRENCY_NAME": "United States",
@@ -51,6 +54,7 @@ class TestTravelAgenciesSynchronizer(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.country = Country.objects.first()
 
+    @patch("etools.applications.vision.synchronizers.get_public_schema_name", Mock(return_value="test"))
     def setUp(self):
         self.data = {
             "VENDOR_NAME": "ACME Inc.",

@@ -283,7 +283,8 @@ AUTHENTICATION_BACKENDS = (
 AUTH_USER_MODEL = 'users.User'
 LOGIN_REDIRECT_URL = '/'
 
-HOST = get_from_secrets_or_env('DJANGO_ALLOWED_HOST', 'http://localhost:8000/')
+HOST = get_from_secrets_or_env('DJANGO_ALLOWED_HOST', 'http://localhost:8082')
+
 LOGIN_URL = LOGOUT_REDIRECT_URL = get_from_secrets_or_env('LOGIN_URL', '/landing/')
 
 # CONTRIB: GIS (GeoDjango)
@@ -477,7 +478,7 @@ TASK_ADMIN_USER = get_from_secrets_or_env('TASK_ADMIN_USER', 'etools_task_admin@
 
 INSIGHT_LOGGER_MODEL = "vision.VisionSyncLog"
 INSIGHT_SUB_KEY = get_from_secrets_or_env('INSIGHT_SUB_KEY', 'invalid_key')
-INSIGHT_URL = get_from_secrets_or_env('INSIGHT_URL', 'invalid_url')
+INSIGHT_URL = get_from_secrets_or_env('INSIGHT_URL', 'http://invalid_vision_url')
 
 
 # ALLOW BASIC AUTH FOR DEMO SITE
@@ -506,7 +507,7 @@ SOCIAL_AUTH_SANITIZE_REDIRECTS = False
 SOCIAL_AUTH_POSTGRES_JSONFIELD = True
 POLICY = os.getenv('AZURE_B2C_POLICY_NAME', "b2c_1A_UNICEF_PARTNERS_signup_signin")
 
-TENANT_ID = os.getenv('AZURE_B2C_TENANT', 'unicefpartners.onmicrosoft.com')
+TENANT_ID = os.getenv('AZURE_B2C_TENANT', 'unicefpartners')
 SCOPE = ['openid', 'email']
 IGNORE_DEFAULT_SCOPE = True
 SOCIAL_AUTH_USERNAME_IS_FULL_EMAIL = True

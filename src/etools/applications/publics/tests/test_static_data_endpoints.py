@@ -3,8 +3,6 @@ import json
 
 from django.urls import reverse
 
-import factory
-
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.publics.models import Currency, TravelExpenseType
 from etools.applications.publics.tests.factories import (
@@ -47,7 +45,7 @@ class StaticDataEndpoints(BaseTenantTestCase):
     def test_endpoint(self):
         # This line is duplicated on purpose. Currency will have always 1+N number of queries
         # because of the exchange rate
-        factory.build_batch(PublicsCurrencyFactory, 4)
+        PublicsCurrencyFactory.create_batch(4)
 
         # Create one of each model to check if all serializers are working fine
         PublicsAirlineCompanyFactory()
@@ -118,7 +116,7 @@ class StaticDataEndpoints(BaseTenantTestCase):
     def test_currencies_view(self):
 
         self.assertEqual(Currency.objects.count(), 1)
-        factory.build_batch(PublicsCurrencyFactory, 3)
+        PublicsCurrencyFactory.create_batch(3)
 
         with self.assertNumQueries(5):
             response = self.forced_auth_req('get', reverse('publics:currencies'),
@@ -161,7 +159,7 @@ class StaticDataEndpoints(BaseTenantTestCase):
         self.assertKeysIn(expected_keys, response_json[0], exact=True)
 
     def test_business_areas_view(self):
-        factory.build_batch(PublicsBusinessAreaFactory, 3)
+        PublicsBusinessAreaFactory.create_batch(3)
 
         with self.assertNumQueries(1):
             response = self.forced_auth_req('get', reverse('publics:business_areas'),
@@ -175,7 +173,7 @@ class StaticDataEndpoints(BaseTenantTestCase):
         self.assertKeysIn(expected_keys, response_json[0], exact=True)
 
     def test_expense_types_view(self):
-        factory.build_batch(PublicsTravelExpenseTypeFactory, 3)
+        PublicsTravelExpenseTypeFactory.create_batch(3)
 
         with self.assertNumQueries(1):
             response = self.forced_auth_req('get', reverse('publics:expense_types'),
@@ -189,7 +187,7 @@ class StaticDataEndpoints(BaseTenantTestCase):
         self.assertKeysIn(expected_keys, response_json[0], exact=True)
 
     def test_airlines_view(self):
-        factory.build_batch(PublicsAirlineCompanyFactory, 3)
+        PublicsAirlineCompanyFactory.create_batch(3)
 
         with self.assertNumQueries(1):
             response = self.forced_auth_req('get', reverse('publics:airlines'),
