@@ -56,9 +56,10 @@ interactions:
     uri: http://invalid_vision_url/fundsreservations/im%20a%20bad%20value/?businessarea=ZZZ
   response:
     body:
-      string: '"<Error><Code>1002<\/Code><UserMessage>Application Error<\/UserMessage><DevMessage>No
-        data exists for the row or column.<\/DevMessage><MoreInfo>,at,UNICEF,BI,WebServices,DataAccess,OracleDBConnection,ExecuteOracleReaderCommand,String,ProcName,CommandType,cmdType,String,paramName,OracleType,paramType,String,paramValues,ParameterDirection,paramDirections,at,UNICEF,BI,WebServices,DataAccess,BIServiceDA,GetFundsReservation,String,businessAreaCode,at,UNICEF,BI,WebServices,Business,BIServiceBO,GetFundsReservation,JSON,String,businessAreaCode,<\/MoreInfo><\/Error>"'
+      string: '{}'
     headers:
+      Cache-Control:
+      - no-cache
       Content-Type:
       - application/json; charset=utf-8
       Date:
@@ -69,6 +70,8 @@ interactions:
       - no-cache
       Vary:
       - Accept-Encoding
+      X-AspNet-Version:
+      - 4.0.30319
       X-Powered-By:
       - ASP.NET
       content-length:

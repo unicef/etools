@@ -10,8 +10,6 @@ interactions:
       - keep-alive
       Content-Type:
       - application/json
-      Ocp-Apim-Subscription-Key:
-      - 38cf7b4a47e848748967487688aed9fc
       User-Agent:
       - python-requests/2.22.0
     method: GET
