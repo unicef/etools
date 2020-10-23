@@ -708,7 +708,6 @@ class TestSupplyItem(BaseInterventionTestCase):
             request_format=None,
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        print(response.data)
         self.assertIn(
             'Unable to process row 3, missing value for `Indicative Price`',
             response.data["supply_items_file"]
