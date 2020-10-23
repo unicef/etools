@@ -687,6 +687,33 @@ class TestSupplyItem(BaseInterventionTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("supply_items_file", response.data)
 
+    def test_upload_invalid_missing_column(self):
+        supply_items_file = SimpleUploadedFile(
+            'my_list.csv',
+            u'''Product Number,Product Title,Quantity,Indicative Price\n
+                \n
+                1,test,42,\n
+            '''.encode('utf-8'),
+            content_type="multipart/form-data",
+        )
+        response = self.forced_auth_req(
+            "post",
+            reverse(
+                "pmp_v3:intervention-supply-item-upload",
+                args=[self.intervention.pk],
+            ),
+            data={
+                "supply_items_file": supply_items_file,
+            },
+            request_format=None,
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        print(response.data)
+        self.assertIn(
+            'Unable to process row 3, missing value for `Indicative Price`',
+            response.data["supply_items_file"]
+        )
+
 
 class TestInterventionUpdate(BaseInterventionTestCase):
     def _test_patch(self, mapping):

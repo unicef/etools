@@ -59,13 +59,28 @@ class InterventionSupplyItemSerializer(serializers.ModelSerializer):
 
 
 class InterventionSupplyItemUploadSerializer(serializers.Serializer):
+    required_columns = ["Product Number", "Product Title", "Quantity", "Indicative Price"]
+
     supply_items_file = serializers.FileField()
 
-    def valid_row(self, row):
-        product = row["Product Number"].strip()
-        if product and not product.startswith("\"Disclaimer"):
-            return True
-        return False
+    def valid_row(self, row, index):
+        # cleanup values before work
+        for column in self.required_columns:
+            if row.get(column):
+                row[column] = row[column].strip()
+
+        if row.get("Product Number", "").startswith("\"Disclaimer"):
+            return False
+
+        # skip if row is empty
+        if not any(row.get(c) for c in self.required_columns):
+            return False
+
+        for required_column in self.required_columns:
+            if not row.get(required_column):
+                raise ValidationError(f"Unable to process row {index}, missing value for `{required_column}`")
+
+        return True
 
     def extract_file_data(self):
         data = []
@@ -76,16 +91,20 @@ class InterventionSupplyItemUploadSerializer(serializers.Serializer):
             ),
             delimiter=",",
         )
-        for row in reader:
-            if self.valid_row(row):
+        for i, row in enumerate(reader):
+            index = i + 2  # enumeration starts from zero plus one for header
+            if self.valid_row(row, index):
                 try:
-                    data.append((
-                        row["Product Title"],
-                        decimal.Decimal(row["Quantity"]),
-                        decimal.Decimal(row["Indicative Price"]),
-                    ))
+                    quantity = decimal.Decimal(row["Quantity"])
                 except decimal.InvalidOperation:
-                    raise ValidationError(f"Unable to process row: {row}")
+                    raise ValidationError(f"Unable to process row {index}, bad number provided for `Quantity`")
+
+                try:
+                    price = decimal.Decimal(row["Indicative Price"])
+                except decimal.InvalidOperation:
+                    raise ValidationError(f"Unable to process row {index}, bad number provided for `Indicative Price`")
+
+                data.append((row["Product Title"], quantity, price,))
         return data
 
 
