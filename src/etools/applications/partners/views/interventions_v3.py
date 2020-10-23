@@ -441,6 +441,11 @@ class PMPInterventionIndicatorsUpdateView(
         DetailedInterventionResponseMixin,
         InterventionIndicatorsUpdateView,
 ):
+    permission_classes = [
+        IsAuthenticated,
+        IsReadAction | (IsEditAction & intervention_field_is_editable_permission('result_links')),
+    ]
+
     def get_root_object(self):
         if not hasattr(self, '_intervention'):
             self._intervention = self.get_object().lower_result.result_link.intervention
@@ -461,9 +466,17 @@ class PMPInterventionIndicatorsListView(
         DetailedInterventionResponseMixin,
         InterventionIndicatorsListView,
 ):
+    permission_classes = [
+        IsAuthenticated,
+        IsReadAction | (IsEditAction & intervention_field_is_editable_permission('result_links')),
+    ]
+
     def get_intervention(self):
         if not hasattr(self, '_intervention'):
             self._intervention = LowerResult.objects.get(
                 pk=self.kwargs.get("lower_result_pk"),
             ).result_link.intervention
         return self._intervention
+
+    def get_root_object(self):
+        return self.get_intervention()

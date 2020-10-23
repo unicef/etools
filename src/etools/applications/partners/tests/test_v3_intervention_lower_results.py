@@ -1,6 +1,7 @@
 from django.urls import reverse
 
 from rest_framework import status
+from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import Intervention, InterventionResultLink
@@ -10,7 +11,13 @@ from etools.applications.partners.tests.factories import (
     PartnerStaffFactory,
 )
 from etools.applications.reports.models import LowerResult, ResultType
-from etools.applications.reports.tests.factories import InterventionActivityFactory, LowerResultFactory, ResultFactory
+from etools.applications.reports.tests.factories import (
+    AppliedIndicatorFactory,
+    InterventionActivityFactory,
+    LowerResultFactory,
+    ResultFactory,
+    SectionFactory,
+)
 from etools.applications.users.tests.factories import UserFactory
 
 
@@ -26,6 +33,11 @@ class TestInterventionLowerResultsViewBase(BaseTenantTestCase):
             user=self.partner_focal_point,
         )
         self.intervention.partner_focal_points.add(self.staff_member)
+
+        self.partner_staff_member = UserFactory(
+            groups__data=[],
+            profile__partner_staff_member=PartnerStaffFactory(partner=self.intervention.agreement.partner).id
+        )
 
         self.cp_output = ResultFactory(result_type__name=ResultType.OUTPUT)
         self.result_link = InterventionResultLinkFactory(intervention=self.intervention, cp_output=self.cp_output)
@@ -296,3 +308,116 @@ class TestInterventionLowerResultsDetailView(TestInterventionLowerResultsViewBas
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertNotIn('intervention', response.data)
+
+
+class TestAppliedIndicatorsCreate(TestInterventionLowerResultsViewBase):
+    def setUp(self):
+        super().setUp()
+        self.lower_result = LowerResultFactory(result_link=self.result_link)
+        self.list_url = reverse('partners:intervention-indicators-list', args=[self.lower_result.pk])
+        self.location = LocationFactory()
+        self.intervention.flat_locations.add(self.location)
+        self.intervention.sections.add(SectionFactory())
+        self.create_data = {
+            'indicator': {'title': "42", 'display_type': "number", 'unit': "number"},
+            'locations': [self.location.pk],
+            'section': self.intervention.sections.first().pk,
+        }
+
+    def test_create_unicef(self):
+        response = self.forced_auth_req('post', self.list_url, self.user, data=self.create_data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
+
+    def test_create_unicef_partner_court(self):
+        self.intervention.unicef_court = False
+        self.intervention.save()
+        response = self.forced_auth_req('post', self.list_url, self.user, data=self.create_data)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
+
+    def test_create_partner_focal_point_unicef_court(self):
+        response = self.forced_auth_req('post', self.list_url, self.partner_focal_point, data=self.create_data)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
+
+    def test_create_partner_focal_point_partner_court(self):
+        self.intervention.unicef_court = False
+        self.intervention.save()
+        response = self.forced_auth_req('post', self.list_url, self.partner_focal_point, data=self.create_data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
+
+    def test_create_partner_user(self):
+        self.intervention.unicef_court = False
+        self.intervention.save()
+        response = self.forced_auth_req('post', self.list_url, self.partner_staff_member, data=self.create_data)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
+
+
+class TestAppliedIndicatorsUpdate(TestInterventionLowerResultsViewBase):
+    def setUp(self):
+        super().setUp()
+        self.lower_result = LowerResultFactory(result_link=self.result_link)
+        self.applied_indicator = AppliedIndicatorFactory(
+            lower_result=self.lower_result,
+            section=SectionFactory(),
+        )
+        self.applied_indicator.locations.add(LocationFactory())
+        self.detail_url = reverse('partners:intervention-indicators-update', args=[self.applied_indicator.pk])
+        self.intervention.flat_locations.add(self.applied_indicator.locations.first())
+        self.intervention.sections.add(self.applied_indicator.section)
+
+    def test_update_unicef(self):
+        response = self.forced_auth_req('patch', self.detail_url, self.user, data={})
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+
+    def test_update_unicef_partner_court(self):
+        self.intervention.unicef_court = False
+        self.intervention.save()
+        response = self.forced_auth_req('patch', self.detail_url, self.user, data={})
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
+
+    def test_update_partner_focal_point_unicef_court(self):
+        response = self.forced_auth_req('patch', self.detail_url, self.partner_focal_point, data={})
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
+
+    def test_update_partner_focal_point_partner_court(self):
+        self.intervention.unicef_court = False
+        self.intervention.save()
+        response = self.forced_auth_req('patch', self.detail_url, self.partner_focal_point, data={})
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+
+    def test_update_partner_user(self):
+        self.intervention.unicef_court = False
+        self.intervention.save()
+        response = self.forced_auth_req('patch', self.detail_url, self.partner_staff_member, data={})
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
+
+    def test_destroy_unicef(self):
+        response = self.forced_auth_req('delete', self.detail_url, self.user)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT, response.data)
+
+    def test_destroy_after_draft(self):
+        self.intervention.status = Intervention.SIGNED
+        self.intervention.save()
+        response = self.forced_auth_req('delete', self.detail_url, self.user)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
+
+    def test_destroy_unicef_partner_court(self):
+        self.intervention.unicef_court = False
+        self.intervention.save()
+        response = self.forced_auth_req('delete', self.detail_url, self.user)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
+
+    def test_destroy_partner_focal_point_unicef_court(self):
+        response = self.forced_auth_req('delete', self.detail_url, self.partner_focal_point)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
+
+    def test_destroy_partner_focal_point_partner_court(self):
+        self.intervention.unicef_court = False
+        self.intervention.save()
+        response = self.forced_auth_req('delete', self.detail_url, self.partner_focal_point)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT, response.data)
+
+    def test_destroy_partner_user(self):
+        self.intervention.unicef_court = False
+        self.intervention.save()
+        response = self.forced_auth_req('delete', self.detail_url, self.partner_staff_member)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
