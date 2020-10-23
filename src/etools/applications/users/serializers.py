@@ -1,25 +1,10 @@
 from django.contrib.auth import get_user_model
 from django.utils.encoding import force_text
-from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
-from rest_framework.validators import UniqueValidator
 
 from etools.applications.users.models import Country, Group, UserProfile
-from etools.libraries.djangolib.validators import uppercase_forbidden_validator
-
-
-class EmailSerializerMixin:
-    email = serializers.EmailField(
-        label=_('E-mail Address'),
-        validators=[
-            UniqueValidator(
-                queryset=get_user_model().objects.all(),
-                message='This user already exists in the system',
-            ),
-            uppercase_forbidden_validator,
-        ],
-    )
+from etools.applications.users.validators import EmailValidator
 
 
 class SimpleCountrySerializer(serializers.ModelSerializer):
@@ -48,13 +33,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
 class UserManagementSerializer(serializers.Serializer):
     user_email = serializers.EmailField(
         required=True,
-        validators=[
-            UniqueValidator(
-                queryset=get_user_model().objects.all(),
-                message='This user already exists in the system',
-            ),
-            uppercase_forbidden_validator,
-        ],
+        validators=[EmailValidator()],
     )
     roles = serializers.ListSerializer(child=serializers.ChoiceField(choices=["Partnership Manager",
                                                                               "PME",
@@ -74,13 +53,7 @@ class SimpleProfileSerializer(serializers.ModelSerializer):
     user_id = serializers.CharField(source="user.id")
     email = serializers.EmailField(
         source="user.email",
-        validators=[
-            UniqueValidator(
-                queryset=get_user_model().objects.all(),
-                message='This user already exists in the system',
-            ),
-            uppercase_forbidden_validator,
-        ],
+        validators=[EmailValidator()],
     )
     full_name = serializers.SerializerMethodField()
 
@@ -171,7 +144,8 @@ class SimpleNestedProfileSerializer(serializers.ModelSerializer):
         fields = ('country', 'office')
 
 
-class SimpleUserSerializer(EmailSerializerMixin, serializers.ModelSerializer):
+class SimpleUserSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(validators=[EmailValidator()])
     profile = SimpleNestedProfileSerializer()
 
     class Meta:
@@ -198,14 +172,12 @@ class MinimalUserSerializer(SimpleUserSerializer):
         fields = ('id', 'name', 'first_name', 'middle_name', 'last_name')
 
 
-class UserCreationSerializer(
-        EmailSerializerMixin,
-        serializers.ModelSerializer,
-):
+class UserCreationSerializer(serializers.ModelSerializer):
     id = serializers.CharField(read_only=True)
     groups = serializers.SerializerMethodField()
     user_permissions = serializers.SerializerMethodField()
     profile = UserProfileCreationSerializer()
+    email = serializers.EmailField(validators=[EmailValidator()])
 
     def get_groups(self, user):
         return [grp.id for grp in user.groups.all()]

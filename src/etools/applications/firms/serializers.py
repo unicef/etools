@@ -5,7 +5,7 @@ from rest_framework import serializers
 from unicef_restlib.serializers import WritableNestedSerializerMixin
 
 from etools.applications.users.models import UserProfile
-from etools.applications.users.serializers import EmailSerializerMixin
+from etools.applications.users.validators import EmailValidator
 
 
 class UserProfileSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
@@ -23,11 +23,11 @@ class UserProfileSerializer(WritableNestedSerializerMixin, serializers.ModelSeri
 
 
 class UserSerializer(
-        EmailSerializerMixin,
         WritableNestedSerializerMixin,
         serializers.ModelSerializer,
 ):
     profile = UserProfileSerializer(required=False)
+    email = serializers.EmailField(validators=[EmailValidator()])
 
     class Meta(WritableNestedSerializerMixin.Meta):
         model = get_user_model()
