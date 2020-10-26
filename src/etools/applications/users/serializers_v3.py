@@ -135,6 +135,7 @@ class SimpleUserSerializer(serializers.ModelSerializer):
         )
 
 
+# TODO: user upper case validator here
 class ExternalUserSerializer(MinimalUserSerializer):
     email = serializers.EmailField(
         label='Email Address',
