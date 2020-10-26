@@ -35,11 +35,11 @@ from etools.applications.partners.serializers.exports.interventions import (
 from etools.applications.partners.serializers.interventions_v2 import (
     InterventionBudgetCUSerializer,
     InterventionCreateUpdateSerializer,
-    InterventionListSerializer,
     MinimalInterventionListSerializer,
 )
 from etools.applications.partners.serializers.interventions_v3 import (
     InterventionDetailSerializer,
+    InterventionListSerializer,
     InterventionManagementBudgetSerializer,
     InterventionRiskSerializer,
     InterventionSupplyItemSerializer,
