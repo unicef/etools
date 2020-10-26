@@ -633,7 +633,7 @@ class InterventionsViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTen
         InterventionFactory(status=Intervention.SUSPENDED)
         InterventionFactory(status=Intervention.TERMINATED)
 
-        with self.assertNumQueries(9):  # 3 basic + 6 prefetches from InterventionManager
+        with self.assertNumQueries(10):  # 3 basic + 7 prefetches from InterventionManager
             self._test_list(self.unicef_user, valid_interventions)
 
     def test_filter_by_outputs(self):
