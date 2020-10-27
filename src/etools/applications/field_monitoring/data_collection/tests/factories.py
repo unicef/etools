@@ -6,7 +6,7 @@ from etools.applications.field_monitoring.planning.tests.factories import Monito
 from etools.applications.field_monitoring.tests.factories import UserFactory
 
 
-class ActivityQuestionFactory(factory.DjangoModelFactory):
+class ActivityQuestionFactory(factory.django.DjangoModelFactory):
     question = factory.SubFactory(QuestionFactory)
     monitoring_activity = factory.SubFactory(MonitoringActivityFactory)
 
@@ -16,7 +16,7 @@ class ActivityQuestionFactory(factory.DjangoModelFactory):
         model = ActivityQuestion
 
 
-class StartedChecklistFactory(factory.DjangoModelFactory):
+class StartedChecklistFactory(factory.django.DjangoModelFactory):
     monitoring_activity = factory.SubFactory(MonitoringActivityFactory)
     method = factory.SubFactory(MethodFactory)
     information_source = factory.fuzzy.FuzzyText()
@@ -26,7 +26,7 @@ class StartedChecklistFactory(factory.DjangoModelFactory):
         model = StartedChecklist
 
 
-class FindingFactory(factory.DjangoModelFactory):
+class FindingFactory(factory.django.DjangoModelFactory):
     started_checklist = factory.SubFactory(StartedChecklistFactory)
     activity_question = factory.SubFactory(ActivityQuestionFactory)
     value = factory.fuzzy.FuzzyText()

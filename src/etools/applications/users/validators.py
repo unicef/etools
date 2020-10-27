@@ -1,6 +1,8 @@
+from django.contrib.auth import get_user_model
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework.exceptions import ValidationError
+from rest_framework.validators import UniqueValidator
 
 
 class ExternalUserValidator:
@@ -14,8 +16,26 @@ class ExternalUserValidator:
                 _("UNICEF email address not allowed for external user."),
             )
 
+        if value != value.lower():
+            raise ValidationError(_("Email needs to be lower case."))
+
         # make sure user is not staff member
         tpm_staff_qs = TPMPartnerStaffMember.objects.filter(user__email=value)
         audit_staff = AuditorStaffMember.objects.filter(user__email=value)
         if tpm_staff_qs.exists() or audit_staff.exists():
             raise ValidationError(_("User is a staff member."))
+
+
+class EmailValidator(UniqueValidator):
+    def __init__(self, queryset=None):
+        if queryset is None:
+            queryset = get_user_model().objects.all()
+        super().__init__(
+            queryset,
+            message="This user already exists in the system.",
+        )
+
+    def __call__(self, value):
+        if value != value.lower():
+            raise ValidationError(_("Email needs to be lower case."))
+        super().__call__(value)

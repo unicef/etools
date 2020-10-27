@@ -1,7 +1,4 @@
 import datetime
-import json
-
-from unicef_vision.loaders import VISION_NO_DATA_MESSAGE
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners import synchronizers
@@ -26,13 +23,22 @@ class TestPartnerSynchronizer(BaseTenantTestCase):
             "NET_CASH_TRANSFERRED_CY": "90.00",
             "REPORTED_CY": "80.00",
             "TOTAL_CASH_TRANSFERRED_YTD": "70.00",
+            "CSO_TYPE": 'NATIONAL NGO',
+            "TYPE_OF_ASSESSMENT": "HIGH RISK ASSUMED",
+            "CORE_VALUE_ASSESSMENT_DT": "10-Jan-20",
+            "DATE_OF_ASSESSMENT": "20-Jan-20",
+            "MARKED_FOR_DELETION": False,
+            "POSTING_BLOCK": False,
+            "PSEA_ASSESSMENT_DATE": "03-Jan-22",
+            "SEA_RISK_RATING_NAME": "Test",
+            "SEARCH_TERM1": "Short Name"
         }
         self.records = {"ROWSET": {"ROW": [self.data]}}
-        self.adapter = synchronizers.PartnerSynchronizer(self.country.business_area_code)
+        self.adapter = synchronizers.PartnerSynchronizer(business_area_code=self.country.business_area_code)
 
     def test_convert_records(self):
         self.assertEqual(
-            self.adapter._convert_records(json.dumps(self.records)),
+            self.adapter._convert_records({"ROWSET": {"ROW": [self.records]}})[0]['ROWSET']['ROW'],
             [self.data]
         )
 
@@ -47,15 +53,8 @@ class TestPartnerSynchronizer(BaseTenantTestCase):
         response = self.adapter._filter_records([self.data])
         self.assertEqual(response, [])
 
-    def test_get_json(self):
-        response = self.adapter._get_json(self.data)
-        self.assertEqual(response, self.data)
-
-    def test_get_json_no_data(self):
-        response = self.adapter._get_json(VISION_NO_DATA_MESSAGE)
-        self.assertEqual(response, [])
-
     def test_get_cso_type_none(self):
+        self.data["CSO_TYPE"] = None
         self.assertIsNone(self.adapter.get_cso_type(self.data))
 
     def test_get_cso_type(self):
@@ -230,7 +229,8 @@ class TestDCTSynchronizer(BaseTenantTestCase):
             name="New",
             vendor_number=cls.vendor_key
         )
-        cls.synchronizer = synchronizers.DirectCashTransferSynchronizer(cls.country.business_area_code)
+        cls.synchronizer = synchronizers.DirectCashTransferSynchronizer(
+            business_area_code=cls.country.business_area_code)
 
     def test_create_dict(self):
         dcts = self.synchronizer.create_dict(self.api_response)

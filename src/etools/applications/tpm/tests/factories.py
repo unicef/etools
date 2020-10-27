@@ -54,7 +54,7 @@ class FullInterventionFactory(InterventionFactory):
     result_links = factory.RelatedFactory(InterventionResultLinkFactory, 'intervention')
 
 
-class TPMActivityFactory(factory.DjangoModelFactory):
+class TPMActivityFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = TPMActivity
 
@@ -135,7 +135,7 @@ class TPMUserFactory(UserFactory):
         TPMPartnerStaffMemberFactory(tpm_partner=extracted, user=self)
 
 
-class BaseTPMVisitFactory(factory.DjangoModelFactory):
+class BaseTPMVisitFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = TPMVisit
 
