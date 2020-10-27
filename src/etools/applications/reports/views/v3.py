@@ -34,7 +34,7 @@ class PMPOfficeViewSet(
 
         # if partner, limit to offices that they are associated with via PD
         if self.is_partner_staff():
-            qs = qs.filter(office_interventions__in=self.pds())
+            qs = qs.filter(office_interventions__in=self.pds()).distinct()
         return qs
 
 
@@ -55,7 +55,7 @@ class PMPSectionViewSet(
         qs = super().get_queryset()
         # if partner, limit to sections that they are associated with via PD
         if self.is_partner_staff():
-            qs = qs.filter(interventions__in=self.pds())
+            qs = qs.filter(interventions__in=self.pds()).distinct()
         return qs
 
 

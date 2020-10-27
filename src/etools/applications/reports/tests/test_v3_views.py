@@ -26,9 +26,11 @@ class TestPMPOfficeViews(BasePMPTestCase):
         for __ in range(10):
             OfficeFactory()
         office = OfficeFactory()
-        pd = InterventionFactory()
-        pd.offices.add(office)
-        pd.partner_focal_points.add(self.partner_staff)
+        for i in range(2):
+            # check partner will get not receive duplicates
+            pd = InterventionFactory()
+            pd.offices.add(office)
+            pd.partner_focal_points.add(self.partner_staff)
 
         url = reverse('offices-pmp-list')
         office_qs = Office.objects
@@ -70,9 +72,11 @@ class TestPMPSectionViews(BasePMPTestCase):
         for __ in range(10):
             SectionFactory()
         section = SectionFactory()
-        pd = InterventionFactory()
-        pd.sections.add(section)
-        pd.partner_focal_points.add(self.partner_staff)
+        for i in range(2):
+            # check partner will get not receive duplicates
+            pd = InterventionFactory()
+            pd.sections.add(section)
+            pd.partner_focal_points.add(self.partner_staff)
 
         url = reverse('sections-pmp-list')
         section_qs = Section.objects
