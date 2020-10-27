@@ -531,12 +531,10 @@ class TestAgreementCreateAPIView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
-        partner_staff = PartnerStaffFactory(partner=cls.partner)
 
         cls.partnership_manager_user = UserFactory(is_staff=True)
         cls.partnership_manager_user.groups.add(GroupFactory())
-        cls.partnership_manager_user.profile.partner_staff_member = partner_staff.id
-        cls.partnership_manager_user.save()
+        PartnerStaffFactory(partner=cls.partner, user=cls.partnership_manager_user)
         cls.file_type_agreement = AttachmentFileTypeFactory()
 
     def test_minimal_create(self):
@@ -705,17 +703,13 @@ class TestAgreementAPIView(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
         cls.partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
-        cls.partner_staff = PartnerStaffFactory(partner=cls.partner)
-        cls.partner_staff2 = PartnerStaffFactory(partner=cls.partner)
 
         cls.partner_staff_user = UserFactory(is_staff=True)
-        cls.partner_staff_user.profile.partner_staff_member = cls.partner_staff.id
-        cls.partner_staff_user.save()
+        cls.partner_staff = PartnerStaffFactory(partner=cls.partner, user=cls.partner_staff_user)
 
         cls.partnership_manager_user = UserFactory(is_staff=True)
         cls.partnership_manager_user.groups.add(GroupFactory())
-        cls.partnership_manager_user.profile.partner_staff_member = cls.partner_staff.id
-        cls.partnership_manager_user.save()
+        cls.partner_staff2 = PartnerStaffFactory(partner=cls.partner, user=cls.partnership_manager_user)
 
         cls.notify_path = "etools.applications.partners.utils.send_notification_with_template"
 
@@ -1085,11 +1079,9 @@ class TestPartnerStaffMemberAPIView(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
         cls.partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
-        cls.partner_staff = PartnerStaffFactory(partner=cls.partner)
         cls.partner_staff_user = UserFactory(is_staff=True)
         cls.partner_staff_user.groups.add(GroupFactory())
-        cls.partner_staff_user.profile.partner_staff_member = cls.partner_staff.id
-        cls.partner_staff_user.profile.save()
+        cls.partner_staff = PartnerStaffFactory(partner=cls.partner, user=cls.partner_staff_user)
         cls.url = reverse(
             "partners_api:partner-staff-members-list",
             args=[cls.partner.pk]
