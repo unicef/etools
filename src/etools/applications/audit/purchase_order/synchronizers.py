@@ -1,13 +1,14 @@
 from collections import OrderedDict
 
-from unicef_vision.synchronizers import ManualVisionSynchronizer
+from unicef_vision.synchronizers import MultiModelDataSynchronizer
 
 from etools.applications.audit.purchase_order.models import AuditorFirm, PurchaseOrder, PurchaseOrderItem
 from etools.applications.vision.synchronizers import VisionDataTenantSynchronizer
 
 
-class POSynchronizer(VisionDataTenantSynchronizer, ManualVisionSynchronizer):
-    ENDPOINT = 'GetPurchaseOrderInfo_JSON'
+class POSynchronizer(VisionDataTenantSynchronizer, MultiModelDataSynchronizer):
+    ENDPOINT = 'purchaseorders'
+    GLOBAL_CALL = True
     REQUIRED_KEYS = (
         "PO_NUMBER",
         "PO_DATE",
@@ -45,7 +46,7 @@ class POSynchronizer(VisionDataTenantSynchronizer, ManualVisionSynchronizer):
             'vision_synced': True
         }
     }
-    DATE_FIELDS = ['EXPIRY_DATE', 'PO_DATE', ]
+    DATE_FIELDS = ["PO_DATE", "EXPIRY_DATE"]
 
     def _filter_records(self, records):
         records = super()._filter_records(records)

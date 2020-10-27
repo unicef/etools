@@ -471,7 +471,7 @@ class PartnerOrganizationAddView(CreateAPIView):
             return Response({"error": "No vendor number provided for Partner Organization"},
                             status=status.HTTP_400_BAD_REQUEST)
 
-        valid_response, response = get_data_from_insight('GetPartnerDetailsInfo_json/{vendor_code}',
+        valid_response, response = get_data_from_insight('partners/?vendor={vendor_code}',
                                                          {"vendor_code": vendor})
         if not valid_response:
             return Response({"error": response}, status=status.HTTP_400_BAD_REQUEST)
@@ -489,7 +489,6 @@ class PartnerOrganizationAddView(CreateAPIView):
         if not partner_sync._filter_records([partner_resp]):
             return Response({"error": 'Partner skipped because one or more of the required fields are missing'},
                             status=status.HTTP_400_BAD_REQUEST)
-
         partner_sync._partner_save(partner_resp, full_sync=False)
 
         partner = PartnerOrganization.objects.get(
