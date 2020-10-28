@@ -214,7 +214,10 @@ class TestDetail(BaseInterventionTestCase):
         data = response.data
         self.assertEqual(data["id"], intervention.pk)
         self.assertEqual(data["result_links"][0]["total"], 30)
-        self.assertEqual(data["unicef_signatory"], self.user_serialized)
+        self.assertEqual(
+            data["unicef_signatory"]["id"],
+            self.user_serialized["id"],
+        )
 
 
 class TestCreate(BaseInterventionTestCase):
@@ -241,7 +244,10 @@ class TestCreate(BaseInterventionTestCase):
         self.assertTrue(i.humanitarian_flag)
         self.assertTrue(data.get("humanitarian_flag"))
         self.assertEqual(data.get("cfei_number"), "321")
-        self.assertEqual(data.get("budget_owner"), self.user_serialized)
+        self.assertEqual(
+            data["budget_owner"]["id"],
+            self.user_serialized.get("id"),
+        )
 
     def test_add_intervention_by_partner_member(self):
         partner_user = UserFactory(is_staff=False, groups__data=[])
