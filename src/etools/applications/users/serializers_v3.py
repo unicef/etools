@@ -23,10 +23,23 @@ AP_ALLOWED_COUNTRIES = [
 # used for user list view
 class MinimalUserSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='get_full_name', read_only=True)
+    phone_number = serializers.CharField(
+        source='profile.phone_number',
+        read_only=True,
+    )
 
     class Meta:
         model = get_user_model()
-        fields = ('id', 'name', 'first_name', 'middle_name', 'last_name', 'username', 'email', )
+        fields = (
+            'id',
+            'name',
+            'first_name',
+            'middle_name',
+            'last_name',
+            'username',
+            'email',
+            'phone_number',
+        )
 
 
 # used for user detail view
