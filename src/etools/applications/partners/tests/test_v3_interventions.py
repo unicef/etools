@@ -474,7 +474,8 @@ class TestManagementBudget(BaseInterventionTestCase):
 class TestSupplyItem(BaseInterventionTestCase):
     def setUp(self):
         super().setUp()
-        self.intervention = InterventionFactory()
+        self.partner = PartnerFactory()
+        self.intervention = InterventionFactory(date_sent_to_partner=datetime.date.today(), agreement__partner=self.partner)
         self.supply_items_file = SimpleUploadedFile(
             'my_list.csv',
             u'''"Product Number","Product Title","Product Description","Unit of Measure",Quantity,"Indicative Price","Total Price"\n
@@ -487,6 +488,14 @@ class TestSupplyItem(BaseInterventionTestCase):
             '''.encode('utf-8'),
             content_type="multipart/form-data",
         )
+        self.partner_focal_point = UserFactory(is_staff=False, groups__data=[])
+        partner_focal_point_staff = PartnerStaffFactory(
+            partner=self.partner, email=self.partner_focal_point.email
+        )
+        self.partner_focal_point.profile.partner_staff_member = partner_focal_point_staff.id
+        self.partner_focal_point.profile.save()
+
+        self.intervention.partner_focal_points.add(partner_focal_point_staff)
 
     def test_list(self):
         count = 10
@@ -504,6 +513,19 @@ class TestSupplyItem(BaseInterventionTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), count)
         self.assertIn('id', response.data[0])
+
+    def test_list_as_partner_user(self):
+        InterventionSupplyItemFactory(intervention=self.intervention)
+        response = self.forced_auth_req(
+            "get",
+            reverse(
+                "pmp_v3:intervention-supply-item",
+                args=[self.intervention.pk],
+            ),
+            user=self.partner_focal_point
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
 
     def test_post(self):
         item_qs = InterventionSupplyItem.objects.filter(
@@ -631,6 +653,21 @@ class TestSupplyItem(BaseInterventionTestCase):
                 "pmp_v3:intervention-supply-item-detail",
                 args=[self.intervention.pk, item.pk],
             )
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_delete_as_partner_user(self):
+        self.intervention.unicef_court = True
+        self.intervention.save()
+
+        item = InterventionSupplyItemFactory(intervention=self.intervention)
+        response = self.forced_auth_req(
+            "delete",
+            reverse(
+                "pmp_v3:intervention-supply-item-detail",
+                args=[self.intervention.pk, item.pk],
+            ),
+            user=self.partner_focal_point
         )
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
