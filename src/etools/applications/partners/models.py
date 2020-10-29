@@ -1769,6 +1769,11 @@ class Intervention(TimeStampedModel):
         blank=True,
     )
     reference_number_year = models.IntegerField(null=True)
+    date_partnership_review_performed = models.DateField(
+        verbose_name=_('Date Final Partnership Review Performed'),
+        null=True,
+        blank=True,
+    )
     review_date_prc = models.DateField(
         verbose_name=_('Review Date by PRC'),
         help_text='The date the PRC reviewed the partnership',
