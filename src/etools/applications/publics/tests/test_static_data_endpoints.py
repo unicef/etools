@@ -1,9 +1,6 @@
-
 import json
 
 from django.urls import reverse
-
-import factory
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.publics.models import Currency, TravelExpenseType
