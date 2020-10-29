@@ -20,7 +20,7 @@ class TestInterventionPartnerSyncSignal(BaseTenantTestCase):
         intervention = InterventionFactory()
         sync_task_mock.assert_not_called()
 
-        intervention.date_sent_to_partner = timezone.now()
+        intervention.submission_date = timezone.now()
         intervention.save()
         sync_task_mock.assert_called_with(connection.tenant.name, intervention.agreement.partner_id)
 
@@ -35,7 +35,7 @@ class TestInterventionPartnerSyncSignal(BaseTenantTestCase):
 
     @patch('etools.applications.partners.signals.sync_partner_to_prp.delay')
     def test_intervention_sync_called_on_create(self, sync_task_mock):
-        intervention = InterventionFactory(date_sent_to_partner=timezone.now())
+        intervention = InterventionFactory(submission_date=timezone.now())
         sync_task_mock.assert_called_with(connection.tenant.name, intervention.agreement.partner_id)
 
 

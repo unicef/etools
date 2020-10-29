@@ -284,7 +284,7 @@ class InterventionListSerializer(BaseInterventionListSerializer):
             'multi_curr_flag',
             'humanitarian_flag',
             'unicef_court',
-            'date_sent_to_partner',
+            'submission_date',
             'unicef_accepted',
             'partner_accepted',
             'date_draft_by_partner',

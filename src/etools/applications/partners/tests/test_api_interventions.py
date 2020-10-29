@@ -109,7 +109,6 @@ class TestInterventionsAPI(BaseTenantTestCase):
             "country_programmes",
             "country_programme_id",
             "created",
-            "date_sent_to_partner",
             "date_draft_by_partner",
             "document_type",
             "end",

@@ -327,7 +327,6 @@ class InterventionAdmin(
         (_('ePD'), {
             'fields': (
                 'unicef_court',
-                'date_sent_to_partner',
                 ('unicef_accepted', 'partner_accepted'),
                 'cfei_number',
                 'context',

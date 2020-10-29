@@ -363,7 +363,6 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "created",
             "date_draft_by_partner",
             # "cso_contribution",
-            "date_sent_to_partner",
             "days_from_review_to_signed",
             "days_from_submission_to_signed",
             "document_type",

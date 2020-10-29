@@ -71,7 +71,7 @@ class PMPInterventionMixin(PMPBaseViewMixin):
         if self.is_partner_staff():
             qs = qs.filter(
                 agreement__partner__in=self.partners(),
-                date_sent_to_partner__isnull=False,
+                submission_date__isnull=False,
             )
         return qs
 

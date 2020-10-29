@@ -55,7 +55,7 @@ class PRPInterventionListAPIView(QueryStringFilterMixin, ListAPIView):
     ).order_by().values("intervention")
 
     queryset = Intervention.objects.filter(
-        Q(status=Intervention.DRAFT, date_sent_to_partner__isnull=False) | ~Q(status=Intervention.DRAFT),
+        Q(status=Intervention.DRAFT, submission_date__isnull=False) | ~Q(status=Intervention.DRAFT),
         result_links__ll_results__applied_indicators__isnull=False,
         reporting_requirements__isnull=False,
         in_amendment=False,

@@ -801,14 +801,14 @@ class InterventionDeleteView(DestroyAPIView):
                 raise ValidationError("Cannot delete a PD or SSFA that was manually moved back to Draft")
 
             # do not delete any PDs that have been sent to a partner before
-            date_sent_to_partner_qs = Activity.objects.filter(
+            submission_date_qs = Activity.objects.filter(
                 target_content_type=ContentType.objects.get_for_model(
                     Intervention,
                 ),
                 target_object_id=intervention.pk,
-                change__has_key="date_sent_to_partner"
+                change__has_key="submission_date"
             )
-            if date_sent_to_partner_qs.exists():
+            if submission_date_qs.exists():
                 raise ValidationError("PD has already been sent to Partner.")
 
             intervention.delete()
