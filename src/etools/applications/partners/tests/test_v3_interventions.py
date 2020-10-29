@@ -980,6 +980,7 @@ class TestInterventionAcceptReview(BaseInterventionActionTestCase):
     def test_patch(self):
         self.intervention.partner_accepted = True
         self.intervention.unicef_accepted = True
+        self.intervention.submission_date = datetime.date.today()
         self.intervention.save()
 
         # unicef accepts
@@ -1031,6 +1032,7 @@ class TestInterventionReview(BaseInterventionActionTestCase):
     def test_patch(self):
         self.intervention.partner_accepted = True
         self.intervention.unicef_accepted = True
+        self.intervention.submission_date = datetime.date.today()
         self.intervention.save()
 
         # unicef reviews
@@ -1201,6 +1203,9 @@ class TestInterventionSignature(BaseInterventionActionTestCase):
 
     def test_patch(self):
         # unicef signature
+        self.intervention.submission_date = datetime.date.today()
+        self.intervention.save()
+
         self.assertFalse(self.intervention.unicef_accepted)
         mock_send = mock.Mock(return_value=self.mock_email)
         with mock.patch(self.notify_path, mock_send):
