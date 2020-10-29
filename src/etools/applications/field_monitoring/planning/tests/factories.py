@@ -13,7 +13,7 @@ from etools.applications.users.tests.factories import OfficeFactory
 from etools.libraries.tests.factories import StatusFactoryMetaClass
 
 
-class YearPlanFactory(factory.DjangoModelFactory):
+class YearPlanFactory(factory.django.DjangoModelFactory):
     year = date.today().year
 
     prioritization_criteria = fuzzy.FuzzyText()
@@ -27,7 +27,7 @@ class YearPlanFactory(factory.DjangoModelFactory):
         django_get_or_create = ('year',)
 
 
-class BaseMonitoringActivityFactory(factory.DjangoModelFactory):
+class BaseMonitoringActivityFactory(factory.django.DjangoModelFactory):
     monitor_type = 'staff'
     location = factory.SubFactory(LocationFactory)
 
@@ -139,7 +139,7 @@ class MonitoringActivityFactory(BaseMonitoringActivityFactory, metaclass=StatusF
     }
 
 
-class QuestionTemplateFactory(factory.DjangoModelFactory):
+class QuestionTemplateFactory(factory.django.DjangoModelFactory):
     question = factory.SubFactory(QuestionFactory)
     specific_details = fuzzy.FuzzyText()
 
