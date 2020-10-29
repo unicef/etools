@@ -74,7 +74,7 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         )
 
     def test_validation_pd_has_no_start(self):
-        intervention = InterventionFactory(in_amendment=True)
+        intervention = InterventionFactory(in_amendment=True, start=None, end=None)
         result_link = InterventionResultLinkFactory(intervention=intervention)
         lower_result = LowerResultFactory(result_link=result_link)
         AppliedIndicatorFactory(lower_result=lower_result)

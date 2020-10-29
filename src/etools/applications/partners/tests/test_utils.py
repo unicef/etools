@@ -1,11 +1,11 @@
 import datetime
+from unittest.mock import Mock, patch
 
 from django.conf import settings
 from django.core.management import call_command
 from django.utils import timezone
 
 from dateutil.relativedelta import relativedelta
-from mock import Mock, patch
 from unicef_locations.tests.factories import GatewayTypeFactory, LocationFactory
 
 from etools.applications.attachments.tests.factories import AttachmentFileTypeFactory
@@ -119,11 +119,11 @@ class TestSendPCARequiredNotification(BaseTenantTestCase):
 
     def test_direct_cp(self):
         cp = CountryProgrammeFactory(to_date=self.lead_date)
-        InterventionFactory(
+        intervention = InterventionFactory(
             document_type=Intervention.PD,
             end=self.lead_date + datetime.timedelta(days=10),
-            country_programme=cp,
         )
+        intervention.country_programmes.add(cp)
         mock_send = Mock()
         with patch(self.send_path, mock_send):
             utils.send_pca_required_notifications()
