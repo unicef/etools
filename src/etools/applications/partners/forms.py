@@ -96,12 +96,12 @@ class PartnerStaffMemberForm(forms.ModelForm):
                     pass
                 else:
                     if self.instance.user != user:
-                        raise ValidationError({'user': self.ERROR_MESSAGES['user_mismatch']})
+                        raise ValidationError({'email': self.ERROR_MESSAGES['user_mismatch']})
 
                     psm_country = user.get_staff_member_country()
                     if psm_country and psm_country != connection.tenant:
-                        raise ValidationError({'user': self.ERROR_MESSAGES['psm_mismatch'].
-                                              format(psm_country.schema_name)})
+                        raise ValidationError({'email': self.ERROR_MESSAGES['psm_mismatch'].
+                                              format(psm_country)})
 
             # disabled is unavailable if user already synced to PRP to avoid data inconsistencies
             if self.instance.active and not active:

@@ -467,26 +467,26 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
             'Please instruct the partner to disable from PRP'
         )
 
-    @patch('etools.applications.users.models.User.get_active_partner_staff_member')
-    def test_update_staff_member_already_active_in_other_tenant(self, active_staff_mock):
-        active_staff_mock.return_value = (Country(name='fake country', id=-1), PartnerStaffMember(id=-1))
+    def test_update_staff_member_already_active_in_other_tenant(self):
+        staff_mock = Mock(return_value=Country(name='fake country', id=-1))
 
         partner_staff = PartnerStaffFactory(
             email='test@example.com',
             active=False,
             user__email='test@example.com',
         )
-        response = self.forced_auth_req(
-            "patch", self.url,
-            data={
-                "staff_members": [{
-                    "id": partner_staff.pk,
-                    "email": partner_staff.email,
-                    "active": True,
-                }]
-            },
-            user=self.unicef_staff,
-        )
+        with patch('etools.applications.users.models.User.get_staff_member_country', staff_mock):
+            response = self.forced_auth_req(
+                "patch", self.url,
+                data={
+                    "staff_members": [{
+                        "id": partner_staff.pk,
+                        "email": partner_staff.email,
+                        "active": True,
+                    }]
+                },
+                user=self.unicef_staff,
+            )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
         self.assertEqual(
             response.data['staff_members']['active'][0],
