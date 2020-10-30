@@ -1,6 +1,6 @@
 import logging
 from decimal import Decimal
-from typing import Tuple, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractBaseUser, Group, PermissionsMixin, UserManager
