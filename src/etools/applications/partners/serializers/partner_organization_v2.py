@@ -58,11 +58,15 @@ class PartnerStaffMemberCreateSerializer(serializers.ModelSerializer):
             raise ValidationError({'active': 'New Staff Member needs to be active at the moment of creation'})
         try:
             existing_user = User.objects.filter(Q(username=email) | Q(email=email)).get()
-            if existing_user.get_partner_staff_member():
-                raise ValidationError("The email {} for the partner contact is used by another partner contact. "
-                                      "Email has to be unique to proceed.".format(email))
         except User.DoesNotExist:
             pass
+        else:
+            if bool(existing_user.get_related_partner_staff_member()):
+                raise ValidationError(
+                    "The email {} for the partner contact is used by another "
+                    "partner contact. Email has to be unique to "
+                    "proceed.".format(email)
+                )
 
         return data
 
@@ -126,7 +130,7 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
                 if user.is_unicef_user():
                     raise ValidationError('Unable to associate staff member to UNICEF user')
 
-                if user.get_partner_staff_member():
+                if bool(user.get_related_partner_staff_member()):
                     raise ValidationError(
                         {
                             'active': 'The email for the partner contact is used by another partner contact. '
