@@ -1,7 +1,4 @@
 import datetime
-import json
-
-from unicef_vision.loaders import VISION_NO_DATA_MESSAGE
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.reports.models import CountryProgramme, Indicator, Result, ResultType
@@ -389,15 +386,7 @@ class TestProgrammeSynchronizer(BaseTenantTestCase):
             "PROGRAMME_AREA_CODE": "",
             "PROGRAMME_AREA_NAME": "",
         }
-        self.adapter = ProgrammeSynchronizer(self.country.business_area_code)
-
-    def test_get_json(self):
-        data = {"test": "123"}
-        self.assertEqual(self.adapter._get_json(data), data)
-        self.assertEqual(
-            self.adapter._get_json(VISION_NO_DATA_MESSAGE),
-            []
-        )
+        self.adapter = ProgrammeSynchronizer(business_area_code=self.country.business_area_code)
 
     def test_filter_by_time_range(self):
         """Check that records that have outcome end date record greater
@@ -546,36 +535,34 @@ class TestProgrammeSynchronizer(BaseTenantTestCase):
         })
 
     def test_convert_records(self):
-        self.data["CP_START_DATE"] = "/Date(1361336400000)/"
-        self.data["CP_END_DATE"] = "/Date(1361336400000)/"
+        self.data["CP_START_DATE"] = "14-May-00"
+        self.data["CP_END_DATE"] = "26-May-13"
         self.data["OUTCOME_WBS"] = "OC_WBS"
         self.data["OUTCOME_AREA_CODE"] = "OC_CODE"
         self.data["OUTCOME_DESCRIPTION"] = "OC_NAME"
-        self.data["OUTCOME_START_DATE"] = "/Date(2361336400000)/"
-        self.data["OUTCOME_END_DATE"] = "/Date(2361336400000)/"
-        self.data["OUTPUT_START_DATE"] = "/Date(2361336400000)/"
-        self.data["OUTPUT_END_DATE"] = "/Date(2361336400000)/"
-        self.data["ACTIVITY_START_DATE"] = "/Date(2361336400000)/"
-        self.data["ACTIVITY_END_DATE"] = "/Date(2361336400000)/"
+        self.data["OUTCOME_START_DATE"] = "20-Feb-13"
+        self.data["OUTCOME_END_DATE"] = "20-Feb-20"
+        self.data["OUTPUT_START_DATE"] = "29-Oct-44"
+        self.data["OUTPUT_END_DATE"] = "29-Oct-44"
+        self.data["ACTIVITY_START_DATE"] = "29-Oct-45"
+        self.data["ACTIVITY_END_DATE"] = "29-Oct-45"
         self.data["HUMANITARIAN_MARKER_CODE"] = "HUMANITARIAN_MARKER_CODE"
         self.data["HUMANITARIAN_MARKER_NAME"] = "HUMANITARIAN_MARKER_NAME"
-        records = {
-            "GetProgrammeStructureList_JSONResult": json.dumps([self.data])
-        }
+        records = {'ROWSET': {'ROW': [self.data, ]}}
         result = self.adapter._convert_records(records)
         self.assertEqual(result, {
             "cps": {"": {
                 "name": "",
                 "wbs": "",
-                "from_date": datetime.date(2013, 2, 20),
-                "to_date": datetime.date(2013, 2, 20),
+                "from_date": datetime.date(2000, 5, 14),
+                "to_date": datetime.date(2013, 5, 26),
             }},
             "outcomes": {"OC_WBS": {
                 "code": "OC_CODE",
                 "wbs": "OC_WBS",
                 "name": "OC_NAME",
-                "from_date": datetime.date(2044, 10, 29),
-                "to_date": datetime.date(2044, 10, 29),
+                "from_date": datetime.date(2013, 2, 20),
+                "to_date": datetime.date(2020, 2, 20),
             }},
             "outputs": {},
             "activities": {}
@@ -593,14 +580,14 @@ class TestRAMSynchronizer(BaseTenantTestCase):
             "INDICATOR_DESCRIPTION": "NAME",
             "INDICATOR_CODE": "WBS",
             "WBS_ELEMENT_CODE": "1234567890ABCDE",
-            "BASELINE": "BLINE",
-            "TARGET": "Target",
+            "INDICATOR_BASELINE": "BLINE",
+            "INDICATOR_TARGET": "Target",
         }
-        self.adapter = RAMSynchronizer(self.country.business_area_code)
+        self.adapter = RAMSynchronizer(business_area_code=self.country.business_area_code)
 
     def test_convert_records(self):
-        records = json.dumps([self.data])
-        self.assertEqual(self.adapter._convert_records(records), [self.data])
+        records = {'ROWSET': {'ROW': self.data}}
+        self.assertEqual(self.adapter._convert_records(records), self.data)
 
     def test_clean_records(self):
         records, wbss = self.adapter._clean_records([self.data])
