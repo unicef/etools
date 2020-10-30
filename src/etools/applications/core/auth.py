@@ -134,6 +134,7 @@ class CustomSocialAuthExceptionMiddleware(SocialAuthExceptionMiddleware):
                     '&client_id=' + settings.KEY + \
                     '&nonce=defaultNonce&redirect_uri=' + redirect_home + \
                     '&scope=openid+email&response_type=code'
+
                 return redirect_url
 
         # TODO: In case of password reset the state can't be verified figure out a way to log the user in after reset

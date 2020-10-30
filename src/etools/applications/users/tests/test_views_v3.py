@@ -348,3 +348,18 @@ class TestExternalUserAPIView(BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("email", response.data)
+
+    def test_post_invalid_email(self):
+        response = self.forced_auth_req(
+            'post',
+            reverse("users_v3:external-list"),
+            user=self.unicef_staff,
+            data={
+                "email": "TEST@example.com",
+                "first_name": "Joe",
+                "last_name": "Soap",
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("email", response.data)
