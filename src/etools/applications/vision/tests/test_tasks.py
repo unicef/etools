@@ -119,7 +119,7 @@ class TestVisionSyncTask(SimpleTestCase):
         countries = [arguments[0][0] for arguments in mock_handler.delay.call_args_list]
         self.assertEqual(countries.count('Global'), public_task)
 
-    def _assertTenantHandlersSynced(self, mock_handler, all_sync_task=15, sync_t0=6, sync_t1=6, sync_t2=6):
+    def _assertTenantHandlersSynced(self, mock_handler, all_sync_task=15, sync_t0=5, sync_t1=5, sync_t2=5):
         """Verify that tenant handler tasks were called
         all_sync_task is the number of tasks called.
         sync_t0 is the number of tasks called for ZZZ Test 0
