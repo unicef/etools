@@ -24,7 +24,6 @@ from etools.applications.partners.models import (
     InterventionBudget,
     PartnerOrganization,
     PartnerPlannedVisits,
-    PartnerStaffMember,
     PartnerType,
 )
 from etools.applications.partners.tests.factories import (

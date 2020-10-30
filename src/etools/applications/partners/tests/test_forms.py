@@ -5,7 +5,7 @@ from django.test import override_settings
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners import forms
-from etools.applications.partners.models import Intervention, PartnerOrganization, PartnerStaffMember, PartnerType
+from etools.applications.partners.models import Intervention, PartnerOrganization, PartnerType
 from etools.applications.partners.tests.factories import InterventionFactory, PartnerFactory, PartnerStaffFactory
 from etools.applications.publics.models import Country
 from etools.applications.users.tests.factories import UserFactory
