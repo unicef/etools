@@ -102,7 +102,7 @@ class AzureUserMapper:
             status['skipped'] = 1
             return status
 
-        key_value = record[self.KEY_ATTRIBUTE]
+        key_value = record[self.KEY_ATTRIBUTE].lower()
         logger.debug(key_value)
 
         try:
