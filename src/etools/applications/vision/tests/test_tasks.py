@@ -110,7 +110,7 @@ class TestVisionSyncTask(SimpleTestCase):
             self.assertEqual(call_args[0], (country, ))
             self.assertEqual(call_args[1], {})
 
-    def _assertGlobalHandlersSynced(self, mock_handler, all_sync_task=18, public_task=0):
+    def _assertGlobalHandlersSynced(self, mock_handler, all_sync_task=15, public_task=0):
         """Verify that public handler tasks were called
         all_sync_task is the number of tasks called.
         sync_t0 is the number of tasks called for public schema
@@ -183,8 +183,8 @@ class TestVisionSyncTask(SimpleTestCase):
         etools.applications.vision.tasks.vision_sync_task(business_area_code='ZZZ Test0')
 
         self._assertCountryMockCalls(countryMock)
-        self._assertGlobalHandlersSynced(mock_handler, all_sync_task=6)
-        self._assertTenantHandlersSynced(mock_handler, 6, 6, 0, 0)
+        self._assertGlobalHandlersSynced(mock_handler, all_sync_task=5)
+        self._assertTenantHandlersSynced(mock_handler, 5, 5, 0, 0)
         self._assertConnectionTenantSet(mock_django_db_connection, selected_countries)
         self._assertVisionLastSynced(selected_countries)
         self._assertSlackNotified(mock_send_to_slack, selected_countries)
