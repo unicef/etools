@@ -430,7 +430,9 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
             response.data['staff_members']['email'][0],
-            'Email cannot have uppercase characters.',
+            'User emails cannot be changed, please remove the user and add another one: {}'.format(
+                partner_staff.email.upper(),
+            ),
         )
 
     def test_update_staffmember_inactive_prp_synced_from_intervention(self):

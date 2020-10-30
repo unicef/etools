@@ -121,6 +121,11 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
         User = get_user_model()
 
         if not self.instance:
+            if email != email.lower():
+                raise ValidationError(
+                    {"email": "Email cannot have uppercase characters."},
+                )
+
             try:
                 user = User.objects.get(email=email)
             except User.DoesNotExist:
@@ -140,15 +145,14 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
 
                 data['user'] = user
         else:
-            if email != email.lower():
-                raise ValidationError(
-                    {"email": "Email cannot have uppercase characters."},
-                )
-
             # make sure email addresses are not editable after creation.. user must be removed and re-added
             if email != self.instance.email:
                 raise ValidationError(
-                    "User emails cannot be changed, please remove the user and add another one: {}".format(email))
+                    {
+                        "email": "User emails cannot be changed, please remove"
+                        " the user and add another one: {}".format(email)
+                    }
+                )
 
             # when adding the active tag to a previously untagged user
             if active and not self.instance.active:
