@@ -61,7 +61,7 @@ class PartnerStaffMemberCreateSerializer(serializers.ModelSerializer):
         except User.DoesNotExist:
             pass
         else:
-            if bool(existing_user.get_related_partner_staff_member()):
+            if bool(existing_user.staff_member_country()):
                 raise ValidationError(
                     "The email {} for the partner contact is used by another "
                     "partner contact. Email has to be unique to "
@@ -130,7 +130,7 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
                 if user.is_unicef_user():
                     raise ValidationError('Unable to associate staff member to UNICEF user')
 
-                if bool(user.get_related_partner_staff_member()):
+                if bool(user.get_staff_member_country):
                     raise ValidationError(
                         {
                             'active': 'The email for the partner contact is used by another partner contact. '
@@ -157,13 +157,13 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
                     user = User.objects.get(email=email)
                 except User.DoesNotExist:
                     pass
-
-                country, active_staff_member = user.get_active_partner_staff_member()
-                if active_staff_member and country != connection.tenant:
-                    raise ValidationError({
-                        'active': 'The Partner Staff member you are trying to activate is associated '
-                                  'with a different Partner Organization'
-                    })
+                else:
+                    psm_country = user.get_staff_member_country()
+                    if psm_country and psm_country != connection.tenant:
+                        raise ValidationError({
+                            'active': 'The Partner Staff member you are trying to activate is associated '
+                                      'with a different Partner Organization'
+                        })
 
             # disabled is unavailable if user already synced to PRP to avoid data inconsistencies
             if self.instance.active and not active:

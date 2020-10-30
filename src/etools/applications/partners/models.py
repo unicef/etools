@@ -948,7 +948,7 @@ class PartnerStaffMember(TimeStampedModel):
 
         # make sure no other partner staff records exist with matching email
         if not self.pk and self.user:
-            if bool(self.user.get_related_partner_staff_member()):
+            if bool(self.user.get_staff_member_country()):
                 raise IntegrityError(
                     "Partner Staff Member record already exists with matching email.",
                 )
