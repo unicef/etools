@@ -4,7 +4,7 @@ import json
 
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField, JSONField
-from django.db import connection, models, transaction
+from django.db import connection, IntegrityError, models, transaction
 from django.db.models import Case, CharField, Count, F, Max, Min, OuterRef, Q, Subquery, Sum, When
 from django.urls import reverse
 from django.utils import timezone
@@ -945,6 +945,13 @@ class PartnerStaffMember(TimeStampedModel):
         1. user with profile should exists on create if staff member activation status is being changed
         2. only one user staff member can be active through all tenants
         """
+
+        # make sure no other partner staff records exist with matching email
+        if not self.pk and self.user:
+            if bool(self.user.get_staff_member_country()):
+                raise IntegrityError(
+                    "Partner Staff Member record already exists with matching email.",
+                )
 
         if self.user and self.tracker.has_changed('active'):
             if self.active:
