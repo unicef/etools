@@ -18,7 +18,7 @@ SYNC_HANDLERS = {
     'ram': RAMSynchronizer,
     'partner': PartnerSynchronizer,
     'fund_reservation': FundReservationsSynchronizer,
-    'fund_commitment': FundCommitmentSynchronizer,
+    # 'fund_commitment': FundCommitmentSynchronizer,
     'dct': DirectCashTransferSynchronizer,
 }
 
