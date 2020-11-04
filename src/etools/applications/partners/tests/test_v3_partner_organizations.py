@@ -138,7 +138,7 @@ class TestPartnerStaffMemberList(BasePartnerOrganizationTestCase):
         # partner user not able to view another partners users
         partner_2 = PartnerFactory()
         user_2 = UserFactory(is_staff=False, groups__data=[])
-        user_staff_member_2 = PartnerStaffFactory(
+        PartnerStaffFactory(
             partner=partner_2,
             user=user_2,
         )

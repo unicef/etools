@@ -6,7 +6,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from unicef_notification.utils import send_notification_with_template
 
-from etools.applications.partners.models import Intervention, PartnerStaffMember
+from etools.applications.partners.models import Intervention
 from etools.applications.partners.serializers.interventions_v3 import InterventionDetailSerializer
 from etools.applications.partners.views.interventions_v3 import InterventionDetailAPIView, PMPInterventionMixin
 
