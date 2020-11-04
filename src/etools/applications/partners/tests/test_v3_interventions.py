@@ -118,10 +118,8 @@ class TestList(BaseInterventionTestCase):
         user = UserFactory(is_staff=False, groups__data=[])
         user_staff_member = PartnerStaffFactory(
             partner=intervention.agreement.partner,
-            email=user.email,
+            user=user,
         )
-        user.profile.partner_staff_member = user_staff_member.pk
-        user.profile.save()
         intervention.partner_focal_points.add(user_staff_member)
 
         # not sent to partner
@@ -355,10 +353,8 @@ class TestDelete(BaseInterventionTestCase):
         self.partner_user = UserFactory(is_staff=False, groups__data=[])
         user_staff_member = PartnerStaffFactory(
             partner=self.intervention.agreement.partner,
-            email=self.partner_user.email,
+            user=self.partner_user,
         )
-        self.partner_user.profile.partner_staff_member = user_staff_member.pk
-        self.partner_user.profile.save()
         self.intervention.partner_focal_points.add(user_staff_member)
         self.intervention_qs = Intervention.objects.filter(
             pk=self.intervention.pk,

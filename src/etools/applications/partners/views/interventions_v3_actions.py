@@ -25,10 +25,8 @@ class PMPInterventionActionView(PMPInterventionMixin, InterventionDetailAPIView)
         return response
 
     def is_partner_focal_point(self, pd):
-        # Todo: once the epd user branch is merged in make sure to correct the contents of this function
-        try:
-            psm = PartnerStaffMember.objects.get(pk=self.request.user.profile.partner_staff_member)
-        except PartnerStaffMember.DoesNotExist:
+        psm = self.request.user.partner_staff_member
+        if psm is None:
             return False
         return psm in pd.partner_focal_points.all()
 

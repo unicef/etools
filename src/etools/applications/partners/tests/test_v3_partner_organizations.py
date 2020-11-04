@@ -140,10 +140,8 @@ class TestPartnerStaffMemberList(BasePartnerOrganizationTestCase):
         user_2 = UserFactory(is_staff=False, groups__data=[])
         user_staff_member_2 = PartnerStaffFactory(
             partner=partner_2,
-            email=user_2.email,
+            user=user_2,
         )
-        user_2.profile.partner_staff_member = user_staff_member_2.pk
-        user_2.profile.save()
         response = self.forced_auth_req(
             "get",
             reverse('pmp_v3:partner-staff-members-list', args=[partner.pk]),
