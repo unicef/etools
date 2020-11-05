@@ -2,12 +2,14 @@ from copy import copy
 
 from django.db import transaction
 
+from easy_pdf.rendering import render_to_pdf_response
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import (
     CreateAPIView,
     DestroyAPIView,
     ListCreateAPIView,
+    RetrieveAPIView,
     RetrieveUpdateAPIView,
     RetrieveUpdateDestroyAPIView,
 )
@@ -26,6 +28,7 @@ from etools.applications.partners.models import (
 )
 from etools.applications.partners.permissions import (
     intervention_field_is_editable_permission,
+    PartnershipManagerPermission,
     PMPInterventionPermission,
 )
 from etools.applications.partners.serializers.exports.interventions import (
@@ -156,6 +159,22 @@ class PMPInterventionRetrieveUpdateView(PMPInterventionMixin, InterventionDetail
                 context=self.get_serializer_context(),
             ).data,
         )
+
+
+class PMPInterventionPDFView(PMPInterventionMixin, RetrieveAPIView):
+    queryset = Intervention.objects.detail_qs().all()
+    permission_classes = (PartnershipManagerPermission,)
+
+    def get_pdf_filename(self):
+        return str(self.pd)
+
+    def get(self, request, *args, **kwargs):
+        pd = self.get_pd_or_404(self.kwargs.get("pk"))
+        data = {
+            "pd": self.get_queryset().get(pk=pd.pk),
+        }
+
+        return render_to_pdf_response(request, "pd/detail.html", data)
 
 
 class PMPInterventionDeleteView(PMPInterventionMixin, InterventionDeleteView):
