@@ -203,10 +203,11 @@ class TestList(BaseInterventionTestCase):
 
 
 class TestDetail(BaseInterventionTestCase):
-    def test_get(self):
-        intervention = InterventionFactory(unicef_signatory=self.user)
+    def setUp(self):
+        super().setUp()
+        self.intervention = InterventionFactory(unicef_signatory=self.user)
         frs = FundsReservationHeaderFactory(
-            intervention=intervention,
+            intervention=self.intervention,
             currency='USD',
         )
         FundsReservationItemFactory(fund_reservation=frs)
@@ -217,20 +218,45 @@ class TestDetail(BaseInterventionTestCase):
         )
         link = InterventionResultLinkFactory(
             cp_output=result,
-            intervention=intervention,
+            intervention=self.intervention,
         )
         ll = LowerResultFactory(result_link=link)
         InterventionActivityFactory(result=ll, unicef_cash=10, cso_cash=20)
+
+    def test_get(self):
         response = self.forced_auth_req(
             "get",
-            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+            reverse('pmp_v3:intervention-detail', args=[self.intervention.pk]),
             user=self.user,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.data
-        self.assertEqual(data["id"], intervention.pk)
+        self.assertEqual(data["id"], self.intervention.pk)
         self.assertEqual(data["result_links"][0]["total"], 30)
         self.assertEqual(data["unicef_signatory"], self.user_serialized)
+
+    def test_pdf(self):
+        response = self.forced_auth_req(
+            "get",
+            reverse(
+                'pmp_v3:intervention-detail-pdf',
+                args=[self.intervention.pk],
+            ),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response['Content-Type'], 'application/pdf')
+
+    def test_pdf_not_found(self):
+        response = self.forced_auth_req(
+            "get",
+            reverse(
+                'pmp_v3:intervention-detail-pdf',
+                args=[40404],
+            ),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
 class TestCreate(BaseInterventionTestCase):
