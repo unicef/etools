@@ -2,7 +2,8 @@ import datetime
 import json
 from decimal import Decimal
 
-from django.test import SimpleTestCase
+from django.db import connection
+from django.test import override_settings, SimpleTestCase
 from django.urls import reverse
 
 from mock import Mock, patch
@@ -36,6 +37,7 @@ from etools.applications.partners.views.partner_organization_v2 import PartnerOr
 from etools.applications.reports.models import ResultType
 from etools.applications.reports.tests.factories import CountryProgrammeFactory, ResultFactory, ResultTypeFactory
 from etools.applications.t2f.tests.factories import TravelActivityFactory
+from etools.applications.users.models import Country
 from etools.applications.users.tests.factories import GroupFactory, UserFactory
 
 INSIGHT_PATH = "etools.applications.partners.views.partner_organization_v2.get_data_from_insight"
@@ -391,23 +393,8 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
                          ErrorDetail(string='Planned Visit can be set only for Government partners', code='invalid'))
 
     def test_update_staffmember_inactive(self):
-        partner_staff = PartnerStaffFactory(partner=self.partner)
-        partner_staff_user = UserFactory(is_staff=True)
-        partner_staff_user.groups.add(GroupFactory())
-        partner_staff_user.profile.partner_staff_member = partner_staff.pk
-        partner_staff_user.profile.save()
-        agreement = AgreementFactory(
-            status=Agreement.DRAFT,
-            partner=self.partner,
-        )
-        agreement.authorized_officers.add(partner_staff)
-        intervention = InterventionFactory(
-            status=Intervention.DRAFT,
-            agreement=agreement,
-        )
-        intervention.partner_focal_points.add(partner_staff)
-        self.assertIn(partner_staff, intervention.partner_focal_points.all())
-        self.assertIn(partner_staff, agreement.authorized_officers.all())
+        partner_staff_user = UserFactory(is_staff=True, groups__data=[])
+        partner_staff = PartnerStaffFactory(partner=self.partner, user=partner_staff_user)
         response = self.forced_auth_req(
             "patch",
             self.url,
@@ -421,13 +408,132 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
             user=self.unicef_staff,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        intervention.refresh_from_db()
-        self.assertNotIn(
-            partner_staff,
-            intervention.partner_focal_points.all(),
+
+    def test_update_staffmember_invalid_email(self):
+        partner_staff_user = UserFactory(is_staff=True, groups__data=[])
+        partner_staff = PartnerStaffFactory(
+            partner=self.partner,
+            user=partner_staff_user,
         )
-        agreement.refresh_from_db()
-        self.assertNotIn(partner_staff, agreement.authorized_officers.all())
+        response = self.forced_auth_req(
+            "patch",
+            self.url,
+            data={
+                "staff_members": [{
+                    "id": partner_staff.pk,
+                    "email": partner_staff.email.upper(),
+                }],
+            },
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.data['staff_members']['email'][0],
+            'User emails cannot be changed, please remove the user and add another one: {}'.format(
+                partner_staff.email.upper(),
+            ),
+        )
+
+    def test_update_staffmember_inactive_prp_synced_from_intervention(self):
+        partner_staff_user = UserFactory(is_staff=True, groups__data=[])
+        partner_staff = PartnerStaffFactory(partner=self.partner, user=partner_staff_user, active=True)
+        agreement = AgreementFactory(
+            status=Agreement.SIGNED,
+            partner=self.partner,
+        )
+        agreement.authorized_officers.add(partner_staff)
+        intervention = InterventionFactory(
+            status=Intervention.SIGNED,
+            agreement=agreement,
+        )
+        intervention.partner_focal_points.add(partner_staff)
+        self.assertIn(partner_staff, intervention.partner_focal_points.all())
+        self.assertIn(partner_staff, agreement.authorized_officers.all())
+        response = self.forced_auth_req(
+            "patch", self.url,
+            data={
+                "staff_members": [{
+                    "id": partner_staff.pk,
+                    "email": partner_staff.email,
+                    "active": False,
+                }]
+            },
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.data['staff_members']['active'][0],
+            'User already synced to PRP and cannot be disabled. '
+            'Please instruct the partner to disable from PRP'
+        )
+
+    def test_update_staff_member_already_active_in_other_tenant(self):
+        staff_mock = Mock(return_value=Country(name='fake country', id=-1))
+
+        partner_staff = PartnerStaffFactory(
+            email='test@example.com',
+            active=False,
+            user__email='test@example.com',
+        )
+        with patch('etools.applications.users.models.User.get_staff_member_country', staff_mock):
+            response = self.forced_auth_req(
+                "patch", self.url,
+                data={
+                    "staff_members": [{
+                        "id": partner_staff.pk,
+                        "email": partner_staff.email,
+                        "active": True,
+                    }]
+                },
+                user=self.unicef_staff,
+            )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
+        self.assertEqual(
+            response.data['staff_members']['active'][0],
+            'The Partner Staff member you are trying to activate is associated '
+            'with a different Partner Organization'
+        )
+
+    def test_assign_staff_member_to_existing_user(self):
+        user = UserFactory(groups__data=[], is_staff=False)
+        user.profile.countries_available.clear()
+        response = self.forced_auth_req(
+            "patch", self.url,
+            data={"staff_members": [{"email": user.email, "active": True, 'first_name': 'mr', 'last_name': 'smith'}]},
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertIsNotNone(user.get_partner_staff_member())
+        self.assertTrue(user.profile.countries_available.filter(id=connection.tenant.id).exists())
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_assign_staff_member_to_unicef_user(self):
+        user = UserFactory()
+        response = self.forced_auth_req(
+            "patch", self.url,
+            data={"staff_members": [{"email": user.email, "active": True, 'first_name': 'mr', 'last_name': 'smith'}]},
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
+        self.assertIn(
+            'Unable to associate staff member to UNICEF user',
+            response.data['staff_members']['non_field_errors'],
+        )
+
+    def test_assign_staff_member_to_another_staff(self):
+        user = UserFactory(groups__data=[], is_staff=False)
+        PartnerStaffFactory(user=user)
+        response = self.forced_auth_req(
+            "patch", self.url,
+            data={"staff_members": [{"email": user.email, "active": True, 'first_name': 'mr', 'last_name': 'smith'}]},
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
+        self.assertIn(
+            'The email for the partner contact is used by another partner contact. '
+            'Email has to be unique to proceed {}'.format(user.email),
+            response.data['staff_members']['active'],
+        )
 
 
 class TestPartnerOrganizationHactAPIView(BaseTenantTestCase):
@@ -585,6 +691,13 @@ class TestPartnerOrganizationAddView(BaseTenantTestCase):
                     'TOTAL_CASH_TRANSFERRED_YTD': "2,000",
                     'REPORTED_CY': "2,000",
                     "COUNTRY": "239",
+                    "TYPE_OF_ASSESSMENT": "HIGH RISK ASSUMED",
+                    "DATE_OF_ASSESSMENT": "20-Jan-20",
+                    "MARKED_FOR_DELETION": False,
+                    "POSTING_BLOCK": False,
+                    "PSEA_ASSESSMENT_DATE": "03-Jan-22",
+                    "SEA_RISK_RATING_NAME": "Test",
+                    "SEARCH_TERM1": "Search Term",
                 }
             }
         }))
@@ -785,11 +898,9 @@ class TestPartnerOrganizationAssessmentUpdateDeleteView(BaseTenantTestCase):
             vendor_number="DDD",
             short_name="Short name",
         )
-        cls.partner_staff = PartnerStaffFactory(partner=cls.partner)
         cls.partnership_manager_user = UserFactory(is_staff=True)
         cls.partnership_manager_user.groups.add(GroupFactory())
-        cls.partnership_manager_user.profile.partner_staff_member = cls.partner_staff.id
-        cls.partnership_manager_user.save()
+        cls.partner_staff = PartnerStaffFactory(partner=cls.partner, user=cls.partnership_manager_user)
 
     def setUp(self):
         self.assessment = AssessmentFactory(
@@ -1018,20 +1129,20 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(BaseTenantTestCase):
 
     def test_api_partners_update_with_members_exists(self):
         self.assertFalse(Activity.objects.exists())
-        response = self.forced_auth_req(
+        detail_response = self.forced_auth_req(
             'get',
             reverse('partners_api:partner-detail', args=[self.partner.pk]),
             user=self.unicef_staff,
         )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data["staff_members"]), 1)
-        self.assertEqual(response.data["staff_members"][0]["first_name"], "Mace")
+        self.assertEqual(detail_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(detail_response.data["staff_members"]), 1)
+        self.assertEqual(detail_response.data["staff_members"][0]["first_name"], "Mace")
 
         staff_members = [{
             "title": "Some title",
             "first_name": "John",
             "last_name": "Doe",
-            "email": response.data["staff_members"][0]["email"],
+            "email": detail_response.data["staff_members"][0]["email"],
             "active": True,
         }]
         data = {
@@ -1052,9 +1163,12 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(BaseTenantTestCase):
             response.data,
             {
                 "staff_members": {
-                    "email": [
+                    "active": [
                         ErrorDetail(
-                            string="Email address in use already.",
+                            string=(
+                                "The email for the partner contact is used by another partner contact. "
+                                "Email has to be unique to proceed {}"
+                            ).format(detail_response.data["staff_members"][0]["email"]),
                             code="invalid"
                         )
                     ]

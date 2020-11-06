@@ -9,7 +9,7 @@ from etools.applications.users.tests.factories import ProfileFactory
 
 
 @factory.django.mute_signals(post_save)
-class BaseUserFactory(factory.DjangoModelFactory):
+class BaseUserFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = get_user_model()
         django_get_or_create = ("email", )
@@ -21,14 +21,14 @@ class BaseUserFactory(factory.DjangoModelFactory):
     profile = factory.RelatedFactory(ProfileFactory, 'user')
 
 
-class BaseStaffMemberFactory(factory.DjangoModelFactory):
+class BaseStaffMemberFactory(factory.django.DjangoModelFactory):
     class Meta:
         abstract = True
 
     user = factory.SubFactory(BaseUserFactory)
 
 
-class BaseFirmFactory(factory.DjangoModelFactory):
+class BaseFirmFactory(factory.django.DjangoModelFactory):
     class Meta:
         abstract = True
 

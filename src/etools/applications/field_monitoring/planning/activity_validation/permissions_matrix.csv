@@ -12,8 +12,6 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,end_date,Field Monitor,,checklist,edit,TRUE
 ,end_date,Field Monitor,,review,edit,TRUE
 ,field_office,Field Monitor,,draft,edit,TRUE
-,field_office,Field Monitor,,checklist,edit,TRUE
-,field_office,Field Monitor,,review,edit,TRUE
 ,monitor_type,Field Monitor,,draft,edit,TRUE
 ,monitor_type,Field Monitor,,checklist,edit,TRUE
 ,monitor_type,Field Monitor,,review,edit,TRUE
