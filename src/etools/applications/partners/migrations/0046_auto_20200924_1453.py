@@ -27,7 +27,7 @@ def migrate_staff_members_to_fk(apps, schema_editor):
         PartnerStaffMember.objects.filter(active=False)
     ):
 
-        user = User.objects.filter(email__iexact=staff_member.email).first()
+        user = User.objects.filter(email=staff_member.email).first()
 
         if not user and staff_member.active:
             user = User.objects.create(

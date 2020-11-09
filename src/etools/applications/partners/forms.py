@@ -91,7 +91,7 @@ class PartnerStaffMemberForm(forms.ModelForm):
             # when adding the active tag to a previously untagged user
             if active and not self.instance.active:
                 try:
-                    user = User.objects.get(email__iexact=email)
+                    user = User.objects.get(email=email)
                 except User.DoesNotExist():
                     pass
                 else:
@@ -102,17 +102,6 @@ class PartnerStaffMemberForm(forms.ModelForm):
                     if psm_country and psm_country != connection.tenant:
                         raise ValidationError({'email': self.ERROR_MESSAGES['psm_mismatch'].
                                               format(psm_country)})
-
-            # disabled is unavailable if user already synced to PRP to avoid data inconsistencies
-            if self.instance.active and not active:
-                if Intervention.objects.filter(
-                    # todo epd: Q(date_sent_to_partner__isnull=False, agreement__partner__staff_members=self.instance) |
-                    Q(
-                        ~Q(status=Intervention.DRAFT),
-                        Q(partner_focal_points=self.instance) | Q(partner_authorized_officer_signatory=self.instance),
-                    ),
-                ).exists():
-                    raise ValidationError({'active': 'User already synced to PRP and cannot be disabled.'})
 
             # disabled is unavailable if user already synced to PRP to avoid data inconsistencies
             if self.instance.active and not active:
