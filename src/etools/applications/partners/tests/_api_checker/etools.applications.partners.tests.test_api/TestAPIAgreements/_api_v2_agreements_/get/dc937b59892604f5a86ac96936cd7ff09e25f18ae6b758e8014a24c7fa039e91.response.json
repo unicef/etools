@@ -19,13 +19,14 @@
         ],
         "content-length": [
             "Content-Length",
-            "342"
+            "367"
         ]
     },
     "data": [
         {
             "id": 5,
             "partner": 5,
+            "authorized_officers": [],
             "country_programme": 5,
             "agreement_number": "TST/PCA20185",
             "partner_name": "Partner 4",

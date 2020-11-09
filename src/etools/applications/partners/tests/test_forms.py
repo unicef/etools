@@ -5,7 +5,7 @@ from django.test import override_settings
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners import forms
-from etools.applications.partners.models import Intervention, PartnerOrganization, PartnerStaffMember, PartnerType
+from etools.applications.partners.models import Intervention, PartnerOrganization, PartnerType
 from etools.applications.partners.tests.factories import InterventionFactory, PartnerFactory, PartnerStaffFactory
 from etools.applications.publics.models import Country
 from etools.applications.users.tests.factories import UserFactory
@@ -154,8 +154,7 @@ class TestPartnerStaffMemberForm(BaseTenantTestCase):
         form = forms.PartnerStaffMemberForm(self.data, instance=staff)
         self.assertTrue(form.is_valid())
 
-    @patch('etools.applications.users.models.User.get_active_partner_staff_member')
-    def test_clean_activate_invalid(self, active_staff_mock):
+    def test_clean_activate_invalid(self):
         """If staff member made active, invalid if user already associated
         with another partner
         """
@@ -176,49 +175,6 @@ class TestPartnerStaffMemberForm(BaseTenantTestCase):
             "User is associated with another staff member record in fake country",
             form.errors["email"]
         )
-
-    def test_clean_deactivate(self):
-        user = UserFactory(email="test@example.com")
-        partner = PartnerFactory()
-        self.data['active'] = False
-        staff = PartnerStaffFactory(
-            partner=partner,
-            email="test@example.com",
-            active=True,
-            user=user,
-        )
-        form = forms.PartnerStaffMemberForm(self.data, instance=staff)
-        self.assertTrue(form.is_valid())
-
-    def test_clean_deactivate_prp_synced(self):
-        user = UserFactory(email="test@example.com")
-        partner = PartnerFactory()
-        self.data['active'] = False
-        staff = PartnerStaffFactory(
-            partner=partner,
-            email="test@example.com",
-            active=True,
-            user=user,
-        )
-        InterventionFactory(status=Intervention.SIGNED).partner_focal_points.add(staff)
-        form = forms.PartnerStaffMemberForm(self.data, instance=staff)
-        self.assertFalse(form.is_valid())
-
-    def test_save_user_assigned(self):
-        user = UserFactory(email="test@example.com")
-        user.profile.countries_available.clear()
-
-        form = forms.PartnerStaffMemberForm(self.data)
-        self.assertTrue(form.is_valid())
-        staff_member = form.save()
-        self.assertEqual(staff_member.user, user)
-        self.assertTrue(user.profile.countries_available.filter(id=connection.tenant.id).exists())
-
-    def test_save_user_created(self):
-        form = forms.PartnerStaffMemberForm(self.data)
-        self.assertTrue(form.is_valid())
-        staff_member = form.save()
-        self.assertTrue(staff_member.user.profile.countries_available.filter(id=connection.tenant.id).exists())
 
     def test_clean_deactivate(self):
         user = UserFactory(email="test@example.com")

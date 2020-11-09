@@ -23,7 +23,6 @@ from etools.applications.partners.models import (
     InterventionAmendment,
     PartnerOrganization,
     PartnerPlannedVisits,
-    PartnerStaffMember,
     PartnerType,
 )
 from etools.applications.partners.tests.factories import (
