@@ -16,10 +16,10 @@ from etools.libraries.pythonlib.collections import HashableDict
 # Initially, this is only being used for PRP-related endpoints.
 
 
-PARTNERSHIP_MANAGER_GROUP = "Partnership Manager"
 READ_ONLY_API_GROUP_NAME = 'Read-Only API'
-REPRESENTATIVE_OFFICE_GROUP = 'Representative Office'
 SENIOR_MANAGEMENT_GROUP = 'Senior Management Team'
+PARTNERSHIP_MANAGER_GROUP = 'Partnership Manager'
+REPRESENTATIVE_OFFICE_GROUP = 'Representative Office'
 
 
 class PMPPermissions:

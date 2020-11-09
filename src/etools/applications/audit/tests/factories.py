@@ -85,14 +85,14 @@ class AuditPartnerFactory(BaseFirmFactory):
     staff_members = factory.RelatedFactory(AuditorStaffMemberFactory, 'auditor_firm')
 
 
-class PurchaseOrderItemFactory(factory.DjangoModelFactory):
+class PurchaseOrderItemFactory(factory.django.DjangoModelFactory):
     number = fuzzy.FuzzyInteger(10, 1000, 10)
 
     class Meta:
         model = PurchaseOrderItem
 
 
-class PurchaseOrderFactory(factory.DjangoModelFactory):
+class PurchaseOrderFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = PurchaseOrder
 
@@ -101,7 +101,7 @@ class PurchaseOrderFactory(factory.DjangoModelFactory):
     order_number = fuzzy.FuzzyText(length=20)
 
 
-class EngagementFactory(factory.DjangoModelFactory):
+class EngagementFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Engagement
 
@@ -144,7 +144,7 @@ class StaffSpotCheckFactory(SpotCheckFactory):
     agreement = factory.SubFactory(PurchaseOrderFactory, auditor_firm__unicef_users_allowed=True)
 
 
-class RiskCategoryFactory(factory.DjangoModelFactory):
+class RiskCategoryFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = RiskCategory
 
@@ -153,7 +153,7 @@ class RiskCategoryFactory(factory.DjangoModelFactory):
     code = fuzzy.FuzzyText(length=20)
 
 
-class RiskBluePrintFactory(factory.DjangoModelFactory):
+class RiskBluePrintFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = RiskBluePrint
 
@@ -163,7 +163,7 @@ class RiskBluePrintFactory(factory.DjangoModelFactory):
     description = fuzzy.FuzzyText(length=30)
 
 
-class RiskFactory(factory.DjangoModelFactory):
+class RiskFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Risk
 
@@ -173,14 +173,14 @@ class RiskFactory(factory.DjangoModelFactory):
     value = fuzzy.FuzzyChoice(choices=dict(Risk.VALUES).keys())
 
 
-class FindingFactory(factory.DjangoModelFactory):
+class FindingFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Finding
 
     spot_check = factory.SubFactory(SpotCheckFactory)
 
 
-class KeyInternalControlFactory(factory.DjangoModelFactory):
+class KeyInternalControlFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = KeyInternalControl
 
@@ -190,7 +190,7 @@ class KeyInternalControlFactory(factory.DjangoModelFactory):
     ip_response = fuzzy.FuzzyText(length=50).fuzz()
 
 
-class DetailedFindingInfoFactory(factory.DjangoModelFactory):
+class DetailedFindingInfoFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = DetailedFindingInfo
 
@@ -199,7 +199,7 @@ class DetailedFindingInfoFactory(factory.DjangoModelFactory):
     recommendation = fuzzy.FuzzyText(length=100)
 
 
-class SpecificProcedureFactory(factory.DjangoModelFactory):
+class SpecificProcedureFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = SpecificProcedure
 

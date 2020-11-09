@@ -1,60 +1,59 @@
-from collections import OrderedDict
-from copy import deepcopy
+import logging
 
-from unicef_vision.synchronizers import ManualVisionSynchronizer
-
-from etools.applications.publics.models import Country
 from etools.applications.tpm.tpmpartners.models import TPMPartner
 from etools.applications.vision.synchronizers import VisionDataTenantSynchronizer
 
-
-def _get_country_name(value):
-    country_obj = Country.objects.filter(vision_code=value).first()
-    return country_obj.name if country_obj else value
+logger = logging.getLogger(__name__)
 
 
-class TPMPartnerSynchronizer(VisionDataTenantSynchronizer, ManualVisionSynchronizer):
-    ENDPOINT = 'GetPartnerDetailsInfo_JSON'
+class TPMPartnerSynchronizer(VisionDataTenantSynchronizer):
+    GLOBAL_CALL = True
+    ENDPOINT = 'partners'
     REQUIRED_KEYS = (
         "VENDOR_CODE",
         "VENDOR_NAME",
     )
 
     MAPPING = {
-        'partner': {
-            "vendor_number": "VENDOR_CODE",
-            "name": "VENDOR_NAME",
-            "street_address": "STREET",
-            "city": "CITY",
-            "postal_code": "POSTAL_CODE",
-            "country": "COUNTRY",
-            "email": "EMAIL",
-            "phone_number": "PHONE_NUMBER",
-            "blocked": "POSTING_BLOCK",
-            "deleted_flag": "MARKED_FOR_DELETION",
-        },
-    }
-    MODEL_MAPPING = OrderedDict({
-        'partner': TPMPartner,
-    })
-    FIELD_HANDLERS = {
-        'partner': {
-            "blocked": lambda x: True if x else False,
-            "deleted_flag": lambda x: True if x else False,
-            "country": _get_country_name,
-        }
-    }
-    DEFAULTS = {
-        TPMPartner: {'vision_synced': True},
+        "vendor_number": "VENDOR_CODE",
+        "name": "VENDOR_NAME",
+        "street_address": "STREET",
+        "city": "CITY",
+        "postal_code": "POSTAL_CODE",
+        "country": "COUNTRY",
+        "email": "EMAIL",
+        "phone_number": "PHONE_NUMBER",
+        "blocked": "POSTING_BLOCK",
+        "deleted_flag": "MARKED_FOR_DELETION",
     }
 
+    def _partner_save(self, partner):
+        processed = 0
+
+        try:
+            defaults = {
+                'name': partner['VENDOR_NAME'],
+                'street_address': partner['STREET'] if partner['STREET'] else '',
+                'city': partner['CITY'] if partner['CITY'] else '',
+                'postal_code': partner['POSTAL_CODE'] if partner["POSTAL_CODE"] else '',
+                'country': partner['COUNTRY'] if partner['COUNTRY'] else '',
+                'email': partner['EMAIL'] if partner['EMAIL'] else '',
+                'phone_number': partner['PHONE_NUMBER'] if partner['PHONE_NUMBER'] else '',
+                'vision_synced': True,
+                'blocked': True if partner['POSTING_BLOCK'] else False,
+                'deleted_flag': True if partner['MARKED_FOR_DELETION'] else False,
+                'hidden': True if partner['POSTING_BLOCK'] or partner['MARKED_FOR_DELETION'] else False,
+            }
+            TPMPartner.objects.update_or_create(vendor_number=partner['VENDOR_CODE'], defaults=defaults)
+            processed = 1
+
+        except Exception:
+            logger.exception('Exception occurred during Partner Sync')
+
+        return processed
+
     def _convert_records(self, records):
-        records = super()._convert_records(records)
-        if isinstance(records, dict):
-            records = records.get('ROWSET', {}).get('ROW', [])
-            if not isinstance(records, list):
-                records = [records, ]
-        return records
+        return [records['ROWSET']['ROW']]
 
     def _filter_records(self, records):
         records = super()._filter_records(records)
@@ -66,7 +65,11 @@ class TPMPartnerSynchronizer(VisionDataTenantSynchronizer, ManualVisionSynchroni
 
         return [rec for rec in records if bad_record(rec)]
 
+    def _save_records(self, records):
+        processed = 0
+        filtered_records = self._filter_records(records)
 
-class TPMPartnerManualSynchronizer(TPMPartnerSynchronizer):
-    DEFAULTS = deepcopy(TPMPartnerSynchronizer.DEFAULTS)
-    DEFAULTS[TPMPartner]['hidden'] = True
+        for partner in filtered_records:
+            processed += self._partner_save(partner)
+
+        return processed

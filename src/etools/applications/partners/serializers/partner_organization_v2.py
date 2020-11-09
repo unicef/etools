@@ -58,11 +58,15 @@ class PartnerStaffMemberCreateSerializer(serializers.ModelSerializer):
             raise ValidationError({'active': 'New Staff Member needs to be active at the moment of creation'})
         try:
             existing_user = User.objects.filter(Q(username=email) | Q(email=email)).get()
-            if existing_user.get_partner_staff_member():
-                raise ValidationError("The email {} for the partner contact is used by another partner contact. "
-                                      "Email has to be unique to proceed.".format(email))
         except User.DoesNotExist:
             pass
+        else:
+            if bool(existing_user.staff_member_country()):
+                raise ValidationError(
+                    "The email {} for the partner contact is used by another "
+                    "partner contact. Email has to be unique to "
+                    "proceed.".format(email)
+                )
 
         return data
 
@@ -117,6 +121,11 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
         User = get_user_model()
 
         if not self.instance:
+            if email != email.lower():
+                raise ValidationError(
+                    {"email": "Email cannot have uppercase characters."},
+                )
+
             try:
                 user = User.objects.get(email=email)
             except User.DoesNotExist:
@@ -126,7 +135,7 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
                 if user.is_unicef_user():
                     raise ValidationError('Unable to associate staff member to UNICEF user')
 
-                if user.get_partner_staff_member():
+                if bool(user.get_staff_member_country()):
                     raise ValidationError(
                         {
                             'active': 'The email for the partner contact is used by another partner contact. '
@@ -139,7 +148,11 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
             # make sure email addresses are not editable after creation.. user must be removed and re-added
             if email != self.instance.email:
                 raise ValidationError(
-                    "User emails cannot be changed, please remove the user and add another one: {}".format(email))
+                    {
+                        "email": "User emails cannot be changed, please remove"
+                        " the user and add another one: {}".format(email)
+                    }
+                )
 
             # when adding the active tag to a previously untagged user
             if active and not self.instance.active:
@@ -148,13 +161,13 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
                     user = User.objects.get(email=email)
                 except User.DoesNotExist:
                     pass
-
-                country, active_staff_member = user.get_active_partner_staff_member()
-                if active_staff_member and country != connection.tenant:
-                    raise ValidationError({
-                        'active': 'The Partner Staff member you are trying to activate is associated '
-                                  'with a different Partner Organization'
-                    })
+                else:
+                    psm_country = user.get_staff_member_country()
+                    if psm_country and psm_country != connection.tenant:
+                        raise ValidationError({
+                            'active': 'The Partner Staff member you are trying to activate is associated '
+                                      'with a different Partner Organization'
+                        })
 
             # disabled is unavailable if user already synced to PRP to avoid data inconsistencies
             if self.instance.active and not active:

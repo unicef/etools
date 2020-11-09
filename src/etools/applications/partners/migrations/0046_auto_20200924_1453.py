@@ -8,8 +8,6 @@ from django.db import migrations, models
 import django.db.models.deletion
 from string import ascii_lowercase
 
-def get_random_sequence(length=5):
-    return ''.join([random.choice(ascii_lowercase) for _i in range(length)])
 
 
 def migrate_staff_members_to_fk(apps, schema_editor):
@@ -23,30 +21,21 @@ def migrate_staff_members_to_fk(apps, schema_editor):
         # this field was already removed; nothing to do here
         return
 
-    used_emails = set()
-
     # iterate over active users at first
     for staff_member in itertools.chain(
         PartnerStaffMember.objects.filter(active=True),
         PartnerStaffMember.objects.filter(active=False)
     ):
-        if staff_member.email.lower() in used_emails:
-            # only one staff member allowed to be assigned for the user per tenant
-            new_email = 'dupe__' + get_random_sequence() + '__' + staff_member.email
-            print("duplicated staff member email {}. changed to {}".format(staff_member.email, new_email))
-            staff_member.email = new_email
-            staff_member.save()
-            continue
 
         user = User.objects.filter(email__iexact=staff_member.email).first()
 
-        if not user:
+        if not user and staff_member.active:
             user = User.objects.create(
                 first_name=staff_member.first_name,
                 last_name=staff_member.last_name,
                 email=staff_member.email,
                 username=staff_member.email,
-                is_active=True,
+                is_active=staff_member.active,
                 is_staff=False,
             )
             UserProfile.objects.create(
@@ -54,10 +43,8 @@ def migrate_staff_members_to_fk(apps, schema_editor):
                 job_title=staff_member.title,
                 phone_number=staff_member.phone,
             )
-
         staff_member.user = user
         staff_member.save()
-        used_emails.add(staff_member.email.lower())
 
 
 class Migration(migrations.Migration):

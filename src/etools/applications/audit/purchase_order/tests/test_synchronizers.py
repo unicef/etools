@@ -1,6 +1,7 @@
 
-import json
 from unittest import mock
+
+from mock import Mock, patch
 
 from etools.applications.audit.purchase_order import synchronizers
 from etools.applications.audit.purchase_order.models import AuditorFirm, PurchaseOrder, PurchaseOrderItem
@@ -9,16 +10,17 @@ from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.users.models import Country
 
 
-class TestPSynchronizer(BaseTenantTestCase):
+class TestPOSynchronizer(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.country = Country.objects.first()
 
+    @patch("etools.applications.vision.synchronizers.get_public_schema_name", Mock(return_value="test"))
     def setUp(self):
         self.data = {
             "PO_NUMBER": "123",
-            "PO_DATE": "/Date(1361336400000)/",
-            "EXPIRY_DATE": "/Date(1361336400000)/",
+            "PO_DATE": "20-Apr-13",
+            "EXPIRY_DATE": "30-May-18",
             "VENDOR_CODE": "321",
             "VENDOR_NAME": "ACME Inc.",
             "VENDOR_CTRY_NAME": self.country.name,
@@ -26,15 +28,16 @@ class TestPSynchronizer(BaseTenantTestCase):
             "GRANT_REF": "Grantor",
             "PO_ITEM": "456",
         }
-        self.adapter = synchronizers.POSynchronizer(self.country.business_area_code)
+        self.adapter = synchronizers.POSynchronizer()
 
     def test_init_no_object_number(self):
-        a = synchronizers.POSynchronizer(self.country.business_area_code)
-        self.assertEqual(a.business_area_code, self.country.business_area_code)
+        with patch("etools.applications.vision.synchronizers.get_public_schema_name", Mock(return_value="test")):
+            synchronizers.POSynchronizer()
 
     def test_init(self):
-        a = synchronizers.POSynchronizer(self.country.business_area_code, object_number="123")
-        self.assertEqual(a.business_area_code, self.country.business_area_code)
+        with patch("etools.applications.vision.synchronizers.get_public_schema_name", Mock(return_value="test")):
+            a = synchronizers.POSynchronizer("123")
+        self.assertEqual(a.detail, "123")
 
     def test_convert_records_list(self):
         """Ensure list is not touched"""
@@ -43,7 +46,7 @@ class TestPSynchronizer(BaseTenantTestCase):
 
     def test_convert_records(self):
         """Ensure json string is decoded"""
-        response = self.adapter._convert_records(json.dumps([1, 2, 3]))
+        response = self.adapter._convert_records({"ROWSET": {"ROW": [1, 2, 3]}})
         self.assertEqual(response, [1, 2, 3])
 
     def test_filter_records(self):
@@ -81,6 +84,7 @@ class TestUpdatePurchaseOrders(BaseTenantTestCase):
         cls.country = Country.objects.first()
 
     @mock.patch("etools.applications.vision.tasks.logger.exception")
+    @mock.patch("etools.applications.vision.synchronizers.get_public_schema_name", Mock(return_value="test"))
     def test_update_purchase_orders_no_country(self, mock_logger_exception):
         """Ensure no exceptions if no countries"""
         update_purchase_orders(country_name="Wrong")
@@ -88,6 +92,7 @@ class TestUpdatePurchaseOrders(BaseTenantTestCase):
 
     @mock.patch("etools.applications.vision.tasks.logger.exception")
     @mock.patch("etools.applications.audit.purchase_order.tasks.POSynchronizer")
+    @mock.patch("etools.applications.vision.synchronizers.get_public_schema_name", Mock(return_value="test"))
     def test_update_purchase_orders(self, synchronizer, mock_logger_exception):
         """Ensure no exceptions if no countries"""
         update_purchase_orders()

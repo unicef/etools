@@ -410,6 +410,31 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+    def test_update_staffmember_invalid_email(self):
+        partner_staff_user = UserFactory(is_staff=True, groups__data=[])
+        partner_staff = PartnerStaffFactory(
+            partner=self.partner,
+            user=partner_staff_user,
+        )
+        response = self.forced_auth_req(
+            "patch",
+            self.url,
+            data={
+                "staff_members": [{
+                    "id": partner_staff.pk,
+                    "email": partner_staff.email.upper(),
+                }],
+            },
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.data['staff_members']['email'][0],
+            'User emails cannot be changed, please remove the user and add another one: {}'.format(
+                partner_staff.email.upper(),
+            ),
+        )
+
     def test_update_staffmember_inactive_prp_synced_from_intervention(self):
         partner_staff_user = UserFactory(is_staff=True, groups__data=[])
         partner_staff = PartnerStaffFactory(partner=self.partner, user=partner_staff_user, active=True)
@@ -443,26 +468,26 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
             'Please instruct the partner to disable from PRP'
         )
 
-    @patch('etools.applications.users.models.User.get_active_partner_staff_member')
-    def test_update_staff_member_already_active_in_other_tenant(self, active_staff_mock):
-        active_staff_mock.return_value = (Country(name='fake country', id=-1), PartnerStaffMember(id=-1))
+    def test_update_staff_member_already_active_in_other_tenant(self):
+        staff_mock = Mock(return_value=Country(name='fake country', id=-1))
 
         partner_staff = PartnerStaffFactory(
             email='test@example.com',
             active=False,
             user__email='test@example.com',
         )
-        response = self.forced_auth_req(
-            "patch", self.url,
-            data={
-                "staff_members": [{
-                    "id": partner_staff.pk,
-                    "email": partner_staff.email,
-                    "active": True,
-                }]
-            },
-            user=self.unicef_staff,
-        )
+        with patch('etools.applications.users.models.User.get_staff_member_country', staff_mock):
+            response = self.forced_auth_req(
+                "patch", self.url,
+                data={
+                    "staff_members": [{
+                        "id": partner_staff.pk,
+                        "email": partner_staff.email,
+                        "active": True,
+                    }]
+                },
+                user=self.unicef_staff,
+            )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
         self.assertEqual(
             response.data['staff_members']['active'][0],
@@ -667,6 +692,13 @@ class TestPartnerOrganizationAddView(BaseTenantTestCase):
                     'TOTAL_CASH_TRANSFERRED_YTD': "2,000",
                     'REPORTED_CY': "2,000",
                     "COUNTRY": "239",
+                    "TYPE_OF_ASSESSMENT": "HIGH RISK ASSUMED",
+                    "DATE_OF_ASSESSMENT": "20-Jan-20",
+                    "MARKED_FOR_DELETION": False,
+                    "POSTING_BLOCK": False,
+                    "PSEA_ASSESSMENT_DATE": "03-Jan-22",
+                    "SEA_RISK_RATING_NAME": "Test",
+                    "SEARCH_TERM1": "Search Term",
                 }
             }
         }))

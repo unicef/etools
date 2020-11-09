@@ -4,6 +4,7 @@ from typing import Tuple, TYPE_CHECKING
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractBaseUser, Group, PermissionsMixin, UserManager
+from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import connection, models
@@ -12,7 +13,7 @@ from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
 
 from django_tenants.models import TenantMixin
-from django_tenants.utils import get_public_schema_name
+from django_tenants.utils import get_public_schema_name, tenant_context
 from model_utils.models import TimeStampedModel
 
 if TYPE_CHECKING:
@@ -90,25 +91,18 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
         except self._meta.get_field('partner_staff_member').related_model.DoesNotExist:
             return None
 
-    def get_active_partner_staff_member(self) -> [Tuple['Country', 'PartnerStaffMember']]:
-        # search for active staff member even if it's in another tenant
+    def get_staff_member_country(self):
         from etools.applications.partners.models import PartnerStaffMember
+        for country in Country.objects.exclude(name__in=[get_public_schema_name(), 'Global']).all():
+            with tenant_context(country):
+                if PartnerStaffMember.objects.filter(user=self).exists():
+                    return country
+        return None
 
-        original_tenant = connection.tenant
-        try:
-            for country in Country.objects.exclude(name__in=[get_public_schema_name(), 'Global']).all():
-                connection.set_tenant(country)
-                try:
-                    staff_member = PartnerStaffMember.objects.get(user=self)
-                except PartnerStaffMember.DoesNotExist:
-                    continue
-
-                if staff_member.active:
-                    return country, staff_member
-        finally:
-            connection.set_tenant(original_tenant)
-
-        return None, None
+    def save(self, *args, **kwargs):
+        if self.email != self.email.lower():
+            raise ValidationError("Email must be lowercase.")
+        super().save(*args, **kwargs)
 
 
 class Country(TenantMixin):

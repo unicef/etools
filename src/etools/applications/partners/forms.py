@@ -48,7 +48,9 @@ class PartnerStaffMemberForm(forms.ModelForm):
     ERROR_MESSAGES = {
         'active_by_default': 'New Staff Member needs to be active at the moment of creation',
         'user_unavailable': 'The Partner Staff member you are trying to activate is associated with'
-                            ' a different partnership'
+                            ' a different partnership',
+        "user_mismatch": "User Mismatch",
+        "psm_mismatch": "User is associated with another staff member record in {}"
     }
 
     def __init__(self, *args, **kwargs):
@@ -88,11 +90,29 @@ class PartnerStaffMemberForm(forms.ModelForm):
 
             # when adding the active tag to a previously untagged user
             if active and not self.instance.active:
-                # make sure this user has not already been associated with another partnership.
-                user = User.objects.filter(email__iexact=email).first()
-                country, active_staff_member = user.get_active_partner_staff_member()
-                if active_staff_member and country != connection.tenant:
-                    raise ValidationError({'active': self.ERROR_MESSAGES['user_unavailable']})
+                try:
+                    user = User.objects.get(email__iexact=email)
+                except User.DoesNotExist():
+                    pass
+                else:
+                    if self.instance.user != user:
+                        raise ValidationError({'email': self.ERROR_MESSAGES['user_mismatch']})
+
+                    psm_country = user.get_staff_member_country()
+                    if psm_country and psm_country != connection.tenant:
+                        raise ValidationError({'email': self.ERROR_MESSAGES['psm_mismatch'].
+                                              format(psm_country)})
+
+            # disabled is unavailable if user already synced to PRP to avoid data inconsistencies
+            if self.instance.active and not active:
+                if Intervention.objects.filter(
+                    # todo epd: Q(date_sent_to_partner__isnull=False, agreement__partner__staff_members=self.instance) |
+                    Q(
+                        ~Q(status=Intervention.DRAFT),
+                        Q(partner_focal_points=self.instance) | Q(partner_authorized_officer_signatory=self.instance),
+                    ),
+                ).exists():
+                    raise ValidationError({'active': 'User already synced to PRP and cannot be disabled.'})
 
             # disabled is unavailable if user already synced to PRP to avoid data inconsistencies
             if self.instance.active and not active:

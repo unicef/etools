@@ -4,7 +4,7 @@ from django.utils import timezone
 from celery.utils.log import get_task_logger
 from unicef_vision.exceptions import VisionException
 
-from etools.applications.funds.synchronizers import FundCommitmentSynchronizer, FundReservationsSynchronizer
+from etools.applications.funds.synchronizers import FundReservationsSynchronizer
 from etools.applications.partners.synchronizers import DirectCashTransferSynchronizer, PartnerSynchronizer
 from etools.applications.reports.synchronizers import ProgrammeSynchronizer, RAMSynchronizer
 from etools.applications.users.models import Country
@@ -18,7 +18,7 @@ SYNC_HANDLERS = {
     'ram': RAMSynchronizer,
     'partner': PartnerSynchronizer,
     'fund_reservation': FundReservationsSynchronizer,
-    'fund_commitment': FundCommitmentSynchronizer,
+    # 'fund_commitment': FundCommitmentSynchronizer,
     'dct': DirectCashTransferSynchronizer,
 }
 
@@ -80,7 +80,10 @@ def sync_handler(self, business_area_code, handler):
         # No point in retrying if there's no such country
     else:
         try:
-            SYNC_HANDLERS[handler](country.business_area_code).sync()
+            if handler == "programme":
+                SYNC_HANDLERS[handler](business_area_code=country.business_area_code, cycle="all").sync()
+            else:
+                SYNC_HANDLERS[handler](business_area_code=country.business_area_code).sync()
             logger.info("{} sync successfully for {} [{}]".format(handler, country.name, business_area_code))
 
         except VisionException:
