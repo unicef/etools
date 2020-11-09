@@ -41,6 +41,7 @@ class PMPOfficeViewSet(
 
 class PMPSectionViewSet(
         PMPBaseViewMixin,
+        ExternalModuleFilterMixin,
         QueryStringFilterMixin,
         mixins.RetrieveModelMixin,
         mixins.ListModelMixin,
@@ -48,16 +49,15 @@ class PMPSectionViewSet(
 ):
     queryset = Section.objects
     serializer_class = SectionCreateSerializer
+    module2filters = {
+        "pmp": ['interventions__partner_focal_points__user', ]
+    }
     filters = (
         ('active', 'active'),
     )
 
     def get_queryset(self, format=None):
-        qs = super().get_queryset()
-        # if partner, limit to sections that they are associated with via PD
-        if self.is_partner_staff():
-            qs = qs.filter(interventions__in=self.pds())
-        return qs
+        return super().get_queryset(module="pmp")
 
 
 class PMPSpecialReportingRequirementListCreateView(
