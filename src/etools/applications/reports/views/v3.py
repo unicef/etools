@@ -7,19 +7,24 @@ from etools.applications.reports.models import Office, Section
 from etools.applications.reports.serializers.v1 import SectionCreateSerializer
 from etools.applications.reports.serializers.v2 import OfficeSerializer
 from etools.applications.reports.views.v2 import SpecialReportingRequirementListCreateView
+from etools.libraries.djangolib.views import ExternalModuleFilterMixin
 
 
 class PMPOfficeViewSet(
         PMPBaseViewMixin,
+        ExternalModuleFilterMixin,
         mixins.RetrieveModelMixin,
         mixins.ListModelMixin,
         viewsets.GenericViewSet,
 ):
     serializer_class = OfficeSerializer
     queryset = Office.objects
+    module2filters = {
+        "pmp": ['office_interventions__partner_focal_points__user', ]
+    }
 
     def get_queryset(self):
-        qs = super().get_queryset()
+        qs = super().get_queryset(module="pmp")
         if "values" in self.request.query_params.keys():
             # Used for ghost data - filter in all(), and return straight away.
             try:
@@ -31,10 +36,6 @@ class PMPOfficeViewSet(
                 raise ValidationError("ID values must be integers")
             else:
                 qs = qs.filter(pk__in=ids)
-
-        # if partner, limit to offices that they are associated with via PD
-        if self.is_partner_staff():
-            qs = qs.filter(office_interventions__in=self.pds())
         return qs
 
 
