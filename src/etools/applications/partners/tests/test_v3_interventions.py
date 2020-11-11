@@ -132,7 +132,7 @@ class TestList(BaseInterventionTestCase):
         self.assertEqual(len(response.data), 0)
 
         # sent to partner
-        intervention.submission_date = datetime.date.today()
+        intervention.date_sent_to_partner = datetime.date.today()
         intervention.save()
 
         response = self.forced_auth_req(
@@ -386,10 +386,10 @@ class TestDelete(BaseInterventionTestCase):
             pk=self.intervention.pk,
         )
 
-    def test_with_submission_date_reset(self):
+    def test_with_date_sent_to_partner_reset(self):
         # attempt clear date sent, but with snapshot
         pre_save = create_dict_with_relations(self.intervention)
-        self.intervention.submission_date = None
+        self.intervention.date_sent_to_partner = None
         self.intervention.save()
         create_snapshot(self.intervention, pre_save, self.user)
 
@@ -976,7 +976,7 @@ class TestInterventionAccept(BaseInterventionActionTestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_get(self):
-        self.intervention.submission_date = datetime.date.today()
+        self.intervention.date_sent_to_partner = datetime.date.today()
         self.intervention.save()
 
         # unicef accepts
@@ -1005,7 +1005,7 @@ class TestInterventionAccept(BaseInterventionActionTestCase):
 
         self.assertEqual(self.intervention.status, Intervention.DRAFT)
         self.assertFalse(self.intervention.partner_accepted)
-        self.assertIsNotNone(self.intervention.submission_date)
+        self.assertIsNotNone(self.intervention.date_sent_to_partner)
         mock_send = mock.Mock(return_value=self.mock_email)
         with mock.patch(self.notify_path, mock_send):
             response = self.forced_auth_req(
@@ -1061,7 +1061,6 @@ class TestInterventionAcceptReview(BaseInterventionActionTestCase):
     def test_patch(self):
         self.intervention.partner_accepted = True
         self.intervention.unicef_accepted = True
-        self.intervention.submission_date = datetime.date.today()
         self.intervention.save()
 
         # unicef accepts
@@ -1113,7 +1112,6 @@ class TestInterventionReview(BaseInterventionActionTestCase):
     def test_patch(self):
         self.intervention.partner_accepted = True
         self.intervention.unicef_accepted = True
-        self.intervention.submission_date = datetime.date.today()
         self.intervention.save()
 
         # unicef reviews
@@ -1284,9 +1282,6 @@ class TestInterventionSignature(BaseInterventionActionTestCase):
 
     def test_patch(self):
         # unicef signature
-        self.intervention.submission_date = datetime.date.today()
-        self.intervention.save()
-
         self.assertFalse(self.intervention.unicef_accepted)
         mock_send = mock.Mock(return_value=self.mock_email)
         with mock.patch(self.notify_path, mock_send):
@@ -1334,7 +1329,7 @@ class TestInterventionUnlock(BaseInterventionActionTestCase):
     def test_patch(self):
         self.intervention.unicef_accepted = True
         self.intervention.partner_accepted = True
-        self.intervention.submission_date = datetime.date.today()
+        self.intervention.date_sent_to_partner = datetime.date.today()
         self.intervention.save()
 
         # unicef unlocks
@@ -1415,7 +1410,7 @@ class TestInterventionSendToPartner(BaseInterventionActionTestCase):
 
     def test_get(self):
         self.assertTrue(self.intervention.unicef_court)
-        self.assertIsNone(self.intervention.submission_date)
+        self.assertIsNone(self.intervention.date_sent_to_partner)
 
         # unicef sends PD to partner
         mock_send = mock.Mock(return_value=self.mock_email)
@@ -1428,10 +1423,10 @@ class TestInterventionSendToPartner(BaseInterventionActionTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         mock_send.assert_called()
         self.intervention.refresh_from_db()
-        self.assertIsNotNone(self.intervention.submission_date)
+        self.assertIsNotNone(self.intervention.date_sent_to_partner)
         self.assertEqual(
-            response.data["submission_date"],
-            self.intervention.submission_date.strftime("%Y-%m-%d"),
+            response.data["date_sent_to_partner"],
+            self.intervention.date_sent_to_partner.strftime("%Y-%m-%d"),
         )
 
         # unicef request when PD in partner court
@@ -1470,11 +1465,10 @@ class TestInterventionSendToUNICEF(BaseInterventionActionTestCase):
 
     def test_get(self):
         self.intervention.unicef_court = False
-        self.intervention.submission_date = datetime.date.today()
+        self.intervention.date_sent_to_partner = datetime.date.today()
         self.intervention.save()
 
         self.assertFalse(self.intervention.unicef_court)
-        self.assertFalse(self.intervention.date_draft_by_partner)
 
         # partner sends PD to unicef
         mock_send = mock.Mock(return_value=self.mock_email)
@@ -1487,10 +1481,10 @@ class TestInterventionSendToUNICEF(BaseInterventionActionTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         mock_send.assert_called()
         self.intervention.refresh_from_db()
-        self.assertTrue(self.intervention.date_draft_by_partner)
+        self.assertTrue(self.intervention.submission_date)
         self.assertEqual(
-            response.data["date_draft_by_partner"],
-            self.intervention.date_draft_by_partner.strftime("%Y-%m-%d"),
+            response.data["submission_date"],
+            self.intervention.submission_date.strftime("%Y-%m-%d"),
         )
 
         # partner request when PD in partner court

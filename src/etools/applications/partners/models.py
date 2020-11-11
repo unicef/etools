@@ -1946,6 +1946,11 @@ class Intervention(TimeStampedModel):
         verbose_name=("UNICEF Editing"),
         default=True,
     )
+    date_sent_to_partner = models.DateField(
+        verbose_name=_("Date first sent to Partner"),
+        null=True,
+        blank=True,
+    )
     unicef_accepted = models.BooleanField(
         verbose_name=("UNICEF Accepted"),
         default=False,
@@ -1953,11 +1958,6 @@ class Intervention(TimeStampedModel):
     partner_accepted = models.BooleanField(
         verbose_name=("Partner Accepted"),
         default=False,
-    )
-    date_draft_by_partner = models.DateField(
-        verbose_name=_("Date first draft by Partner"),
-        null=True,
-        blank=True,
     )
     cfei_number = models.CharField(
         verbose_name=_("UNPP Number"),

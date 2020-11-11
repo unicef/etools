@@ -8,7 +8,7 @@ from etools.applications.partners.tasks import sync_partner_to_prp
 
 @receiver(post_save, sender=Intervention)
 def sync_pd_partner_to_prp(instance: Intervention, created: bool, **kwargs):
-    if instance.submission_date and instance.tracker.has_changed('submission_date'):
+    if instance.date_sent_to_partner and instance.tracker.has_changed('date_sent_to_partner'):
         sync_partner_to_prp.delay(connection.tenant.name, instance.agreement.partner_id)
 
 

@@ -12,6 +12,6 @@ class Migration(migrations.Migration):
     operations = [
         migrations.RemoveField(
             model_name='intervention',
-            name='date_sent_to_partner',
+            name='date_draft_by_partner',
         ),
     ]

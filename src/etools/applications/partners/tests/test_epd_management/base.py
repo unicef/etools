@@ -46,7 +46,7 @@ class BaseTestCase(BaseTenantTestCase):
             agreement__partner=self.partner,
             partner_authorized_officer_signatory=partner_authorized_officer_staff,
             cash_transfer_modalities=[Intervention.CASH_TRANSFER_DIRECT],
-            submission_date=date.today(),
+            date_sent_to_partner=date.today(),
         )
         self.draft_intervention.unicef_focal_points.add(UserFactory())
         self.draft_intervention.partner_focal_points.add(partner_focal_point_staff)
@@ -59,7 +59,7 @@ class BaseTestCase(BaseTenantTestCase):
             country_programme=country_programme,
             start=date(year=1970, month=2, day=1),
             end=date(year=1970, month=3, day=1),
-            submission_date=date.today(),
+            date_sent_to_partner=date.today(),
             agreement__country_programme=country_programme,
             cash_transfer_modalities=[Intervention.CASH_TRANSFER_DIRECT],
             budget_owner=UserFactory(),

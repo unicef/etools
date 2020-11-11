@@ -57,7 +57,7 @@ def setup_intervention_test_data(test_case, include_results_and_indicators=False
         start=today - datetime.timedelta(days=1),
         end=today + datetime.timedelta(days=90),
         status=Intervention.ACTIVE,
-        submission_date=today - datetime.timedelta(days=1),
+        date_sent_to_partner=today - datetime.timedelta(days=1),
         signed_by_unicef_date=today - datetime.timedelta(days=1),
         signed_by_partner_date=today - datetime.timedelta(days=1),
         unicef_signatory=test_case.unicef_staff,
