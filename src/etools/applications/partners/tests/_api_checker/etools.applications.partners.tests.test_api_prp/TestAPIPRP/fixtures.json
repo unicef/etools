@@ -1036,16 +1036,38 @@
                 }
             },
             {
+                "model": "users.user",
+                "pk": 21119,
+                "fields": {
+                    "created": "2020-07-06T14:43:28.638Z",
+                    "modified": "2020-07-06T14:43:28.647Z",
+                    "username": "VDehuwVZJsrp1",
+                    "email": "mace01@example.com",
+                    "password": "md5$Sb1yheiteoIY$0f201e1088bcd69234ff733fedb2a3c2",
+                    "first_name": "",
+                    "middle_name": "",
+                    "last_name": "",
+                    "date_joined": "2020-07-06T14:43:28.638Z",
+                    "last_login": null,
+                    "is_active": true,
+                    "is_staff": false,
+                    "is_superuser": false,
+                    "groups": [],
+                    "user_permissions": []
+                }
+            },
+            {
                 "model": "partners.partnerstaffmember",
                 "pk": 5677,
                 "fields": {
+                    "user": 21119,
                     "created": "2020-07-06T14:43:28.555Z",
                     "modified": "2020-07-06T14:43:28.555Z",
                     "partner": 5609,
                     "title": "Jedi Master",
                     "first_name": "Mace",
                     "last_name": "Windu",
-                    "email": "mace1@example.com",
+                    "email": "mace01@example.com",
                     "phone": "",
                     "active": true
                 }
@@ -1269,16 +1291,38 @@
                 }
             },
             {
+                "model": "users.user",
+                "pk": 21120,
+                "fields": {
+                    "created": "2020-07-06T14:43:28.638Z",
+                    "modified": "2020-07-06T14:43:28.647Z",
+                    "username": "VDehuwVZJsrp2",
+                    "email": "mace05@example.com",
+                    "password": "md5$Sb1yheiteoIY$0f201e1088bcd69234ff733fedb2a3c2",
+                    "first_name": "",
+                    "middle_name": "",
+                    "last_name": "",
+                    "date_joined": "2020-07-06T14:43:28.638Z",
+                    "last_login": null,
+                    "is_active": true,
+                    "is_staff": false,
+                    "is_superuser": false,
+                    "groups": [],
+                    "user_permissions": []
+                }
+            },
+            {
                 "model": "partners.partnerstaffmember",
                 "pk": 5677,
                 "fields": {
+                    "user": 21120,
                     "created": "2020-07-06T14:43:28.555Z",
                     "modified": "2020-07-06T14:43:28.555Z",
                     "partner": 5609,
                     "title": "Jedi Master",
                     "first_name": "Mace",
                     "last_name": "Windu",
-                    "email": "mace1@example.com",
+                    "email": "mace05@example.com",
                     "phone": "",
                     "active": true
                 }
@@ -1806,16 +1850,38 @@
                 }
             },
             {
+                "model": "users.user",
+                "pk": 21121,
+                "fields": {
+                    "created": "2020-07-06T14:43:28.638Z",
+                    "modified": "2020-07-06T14:43:28.647Z",
+                    "username": "VDehuwVZJsrp6",
+                    "email": "mace06@example.com",
+                    "password": "md5$Sb1yheiteoIY$0f201e1088bcd69234ff733fedb2a3c2",
+                    "first_name": "",
+                    "middle_name": "",
+                    "last_name": "",
+                    "date_joined": "2020-07-06T14:43:28.638Z",
+                    "last_login": null,
+                    "is_active": true,
+                    "is_staff": false,
+                    "is_superuser": false,
+                    "groups": [],
+                    "user_permissions": []
+                }
+            },
+            {
                 "model": "partners.partnerstaffmember",
                 "pk": 5677,
                 "fields": {
+                    "user": 21121,
                     "created": "2020-07-06T14:43:28.555Z",
                     "modified": "2020-07-06T14:43:28.555Z",
                     "partner": 5609,
                     "title": "Jedi Master",
                     "first_name": "Mace",
                     "last_name": "Windu",
-                    "email": "mace1@example.com",
+                    "email": "mace06@example.com",
                     "phone": "",
                     "active": true
                 }
@@ -2088,16 +2154,38 @@
                 }
             },
             {
+                "model": "users.user",
+                "pk": 21122,
+                "fields": {
+                    "created": "2020-07-06T14:43:28.638Z",
+                    "modified": "2020-07-06T14:43:28.647Z",
+                    "username": "VDehuwVZJsrp3",
+                    "email": "mace03@example.com",
+                    "password": "md5$Sb1yheiteoIY$0f201e1088bcd69234ff733fedb2a3c2",
+                    "first_name": "",
+                    "middle_name": "",
+                    "last_name": "",
+                    "date_joined": "2020-07-06T14:43:28.638Z",
+                    "last_login": null,
+                    "is_active": true,
+                    "is_staff": false,
+                    "is_superuser": false,
+                    "groups": [],
+                    "user_permissions": []
+                }
+            },
+            {
                 "model": "partners.partnerstaffmember",
                 "pk": 5677,
                 "fields": {
+                    "user": 21122,
                     "created": "2020-07-06T14:43:28.555Z",
                     "modified": "2020-07-06T14:43:28.555Z",
                     "partner": 5609,
                     "title": "Jedi Master",
                     "first_name": "Mace",
                     "last_name": "Windu",
-                    "email": "mace1@example.com",
+                    "email": "mace03@example.com",
                     "phone": "",
                     "active": true
                 }
@@ -2446,16 +2534,38 @@
                 }
             },
             {
+                "model": "users.user",
+                "pk": 21123,
+                "fields": {
+                    "created": "2020-07-06T14:43:28.638Z",
+                    "modified": "2020-07-06T14:43:28.647Z",
+                    "username": "VDehuwVZJsrp4",
+                    "email": "mace04@example.com",
+                    "password": "md5$Sb1yheiteoIY$0f201e1088bcd69234ff733fedb2a3c2",
+                    "first_name": "",
+                    "middle_name": "",
+                    "last_name": "",
+                    "date_joined": "2020-07-06T14:43:28.638Z",
+                    "last_login": null,
+                    "is_active": true,
+                    "is_staff": false,
+                    "is_superuser": false,
+                    "groups": [],
+                    "user_permissions": []
+                }
+            },
+            {
                 "model": "partners.partnerstaffmember",
                 "pk": 5677,
                 "fields": {
+                    "user": 21123,
                     "created": "2020-07-06T14:43:28.555Z",
                     "modified": "2020-07-06T14:43:28.555Z",
                     "partner": 5609,
                     "title": "Jedi Master",
                     "first_name": "Mace",
                     "last_name": "Windu",
-                    "email": "mace1@example.com",
+                    "email": "mace04@example.com",
                     "phone": "",
                     "active": true
                 }

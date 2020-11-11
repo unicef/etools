@@ -41,8 +41,10 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.9.12,equity_narrative,Partner User,partner_court,Draft,Edit,TRUE
 3.9.11,equity_rating,Partnership Manager,unicef_court,Draft,Edit,TRUE
 3.9.12,equity_rating,Partner User,partner_court,Draft,Edit,TRUE
-3.9.12,final_partnership_review,UNICEF User,,*,View,TRUE
+3.9.5,final_partnership_review,UNICEF User,,*,View,TRUE
 3.9.5,final_partnership_review,Partnership Manager,,Ended,Edit,TRUE
+3.9.5,date_partnership_review_performed,UNICEF User,,*,View,TRUE
+3.9.5,date_partnership_review_performed,Partnership Manager,,Ended,Edit,TRUE
 3.9.5,flat_locations,Partnership Manager,unicef_court,Draft,Edit,TRUE
 3.9.6,flat_locations,Partner User,partner_court,Draft,Edit,TRUE
 3.9.6,flat_locations,Partnership Manager,user_adds_amendment,Signed,Edit,TRUE

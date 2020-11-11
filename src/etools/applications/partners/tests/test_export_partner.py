@@ -207,8 +207,8 @@ class TestPartnerStaffMemberModelExport(PartnerModelExportTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 2)
-        self.assertEqual(len(dataset._get_headers()), 10)
-        self.assertEqual(len(dataset[0]), 10)
+        self.assertEqual(len(dataset._get_headers()), 11)
+        self.assertEqual(len(dataset[0]), 11)
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_csv_flat_export_api(self):
@@ -222,8 +222,8 @@ class TestPartnerStaffMemberModelExport(PartnerModelExportTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 2)
-        self.assertEqual(len(dataset._get_headers()), 11)
-        self.assertEqual(len(dataset[0]), 11)
+        self.assertEqual(len(dataset._get_headers()), 12)
+        self.assertEqual(len(dataset[0]), 12)
 
 
 class TestPartnerOrganizationAssessmentModelExport(PartnerModelExportTestCase):

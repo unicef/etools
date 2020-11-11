@@ -44,7 +44,7 @@ class StaticDataEndpoints(BaseTenantTestCase):
     def test_endpoint(self):
         # This line is duplicated on purpose. Currency will have always 1+N number of queries
         # because of the exchange rate
-        for _ in range(4):
+        for __ in range(4):
             PublicsCurrencyFactory()
 
         # Create one of each model to check if all serializers are working fine
@@ -116,7 +116,7 @@ class StaticDataEndpoints(BaseTenantTestCase):
     def test_currencies_view(self):
 
         self.assertEqual(Currency.objects.count(), 1)
-        for _ in range(3):
+        for __ in range(3):
             PublicsCurrencyFactory()
 
         with self.assertNumQueries(5):
@@ -160,7 +160,7 @@ class StaticDataEndpoints(BaseTenantTestCase):
         self.assertKeysIn(expected_keys, response_json[0], exact=True)
 
     def test_business_areas_view(self):
-        for _ in range(3):
+        for __ in range(3):
             PublicsBusinessAreaFactory()
 
         with self.assertNumQueries(1):
@@ -175,7 +175,7 @@ class StaticDataEndpoints(BaseTenantTestCase):
         self.assertKeysIn(expected_keys, response_json[0], exact=True)
 
     def test_expense_types_view(self):
-        for _ in range(3):
+        for __ in range(3):
             PublicsTravelExpenseTypeFactory()
 
         with self.assertNumQueries(1):
@@ -190,7 +190,7 @@ class StaticDataEndpoints(BaseTenantTestCase):
         self.assertKeysIn(expected_keys, response_json[0], exact=True)
 
     def test_airlines_view(self):
-        for _ in range(3):
+        for __ in range(3):
             PublicsAirlineCompanyFactory()
 
         with self.assertNumQueries(1):
