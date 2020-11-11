@@ -30,6 +30,7 @@ class MonitoringActivitiesFilterSet(filters.FilterSet):
             'start_date': ['gte', 'lte'],
             'end_date': ['gte', 'lte'],
             'status': ['exact', 'in'],
+            'field_office': ['exact', 'in'],
         }
 
 

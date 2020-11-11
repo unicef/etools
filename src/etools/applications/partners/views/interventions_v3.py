@@ -2,12 +2,14 @@ from copy import copy
 
 from django.db import transaction
 
+from easy_pdf.rendering import render_to_pdf_response
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import (
     CreateAPIView,
     DestroyAPIView,
     ListCreateAPIView,
+    RetrieveAPIView,
     RetrieveUpdateAPIView,
     RetrieveUpdateDestroyAPIView,
 )
@@ -26,6 +28,7 @@ from etools.applications.partners.models import (
 )
 from etools.applications.partners.permissions import (
     intervention_field_is_editable_permission,
+    PartnershipManagerPermission,
     PMPInterventionPermission,
 )
 from etools.applications.partners.serializers.exports.interventions import (
@@ -65,14 +68,17 @@ from etools.applications.reports.serializers.v2 import InterventionActivityDetai
 
 
 class PMPInterventionMixin(PMPBaseViewMixin):
+    def get_partner_staff_qs(self, qs):
+        return qs.filter(
+            agreement__partner__in=self.partners(),
+            date_sent_to_partner__isnull=False,
+        )
+
     def get_queryset(self, format=None):
         qs = super().get_queryset()
         # if partner, limit to interventions that they are associated with
         if self.is_partner_staff():
-            qs = qs.filter(
-                agreement__partner__in=self.partners(),
-                submission_date__isnull=False,
-            )
+            qs = self.get_partner_staff_qs(qs)
         return qs
 
 
@@ -158,6 +164,22 @@ class PMPInterventionRetrieveUpdateView(PMPInterventionMixin, InterventionDetail
         )
 
 
+class PMPInterventionPDFView(PMPInterventionMixin, RetrieveAPIView):
+    queryset = Intervention.objects.detail_qs().all()
+    permission_classes = (PartnershipManagerPermission,)
+
+    def get_pdf_filename(self):
+        return str(self.pd)
+
+    def get(self, request, *args, **kwargs):
+        pd = self.get_pd_or_404(self.kwargs.get("pk"))
+        data = {
+            "pd": self.get_queryset().get(pk=pd.pk),
+        }
+
+        return render_to_pdf_response(request, "pd/detail.html", data)
+
+
 class PMPInterventionDeleteView(PMPInterventionMixin, InterventionDeleteView):
     """Wrapper for InterventionDeleteView"""
 
@@ -223,6 +245,12 @@ class PMPInterventionSupplyItemMixin(
 ):
     queryset = InterventionSupplyItem.objects
     serializer_class = InterventionSupplyItemSerializer
+
+    def get_partner_staff_qs(self, qs):
+        return qs.filter(
+            intervention__agreement__partner__in=self.partners(),
+            intervention__date_sent_to_partner__isnull=False,
+        ).distinct()
 
     def get_queryset(self):
         qs = super().get_queryset()
@@ -413,6 +441,11 @@ class PMPInterventionIndicatorsUpdateView(
         DetailedInterventionResponseMixin,
         InterventionIndicatorsUpdateView,
 ):
+    permission_classes = [
+        IsAuthenticated,
+        IsReadAction | (IsEditAction & intervention_field_is_editable_permission('result_links')),
+    ]
+
     def get_root_object(self):
         if not hasattr(self, '_intervention'):
             self._intervention = self.get_object().lower_result.result_link.intervention
@@ -433,9 +466,17 @@ class PMPInterventionIndicatorsListView(
         DetailedInterventionResponseMixin,
         InterventionIndicatorsListView,
 ):
+    permission_classes = [
+        IsAuthenticated,
+        IsReadAction | (IsEditAction & intervention_field_is_editable_permission('result_links')),
+    ]
+
     def get_intervention(self):
         if not hasattr(self, '_intervention'):
             self._intervention = LowerResult.objects.get(
                 pk=self.kwargs.get("lower_result_pk"),
             ).result_link.intervention
         return self._intervention
+
+    def get_root_object(self):
+        return self.get_intervention()

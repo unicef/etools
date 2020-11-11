@@ -19,7 +19,7 @@
         ],
         "content-length": [
             "Content-Length",
-            "8358"
+            "8568"
         ]
     },
     "data": {
@@ -196,7 +196,8 @@
                 "reporting_requirements": false,
                 "sections_present": true,
                 "pd_outputs": false,
-                "final_partnership_review": false
+                "final_partnership_review": false,
+                "date_partnership_review_performed": false
             },
             "required": {
                 "supply_items": false,
@@ -285,7 +286,8 @@
                 "reporting_requirements": false,
                 "sections_present": false,
                 "pd_outputs": false,
-                "final_partnership_review": false
+                "final_partnership_review": false,
+                "date_partnership_review_performed": false
             },
             "view": {
                 "supply_items": false,
@@ -374,7 +376,8 @@
                 "reporting_requirements": false,
                 "sections_present": false,
                 "pd_outputs": true,
-                "final_partnership_review": true
+                "final_partnership_review": true,
+                "date_partnership_review_performed": true
             }
         }
     },

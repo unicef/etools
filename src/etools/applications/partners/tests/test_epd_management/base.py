@@ -28,24 +28,19 @@ class BaseTestCase(BaseTenantTestCase):
 
         self.partner = PartnerFactory(vendor_number=fuzzy.FuzzyText(length=20).fuzz())
         self.partner_staff_member = UserFactory(is_staff=False, groups__data=[])
-        self.partner_staff_member.profile.partner_staff_member = PartnerStaffFactory(
-            partner=self.partner, email=self.partner_staff_member.email
-        ).id
-        self.partner_staff_member.profile.save()
+        PartnerStaffFactory(
+            partner=self.partner, email=self.partner_staff_member.email, user=self.partner_staff_member,
+        )
 
         self.partner_authorized_officer = UserFactory(is_staff=False, groups__data=[])
         partner_authorized_officer_staff = PartnerStaffFactory(
-            partner=self.partner, email=self.partner_authorized_officer.email
+            partner=self.partner, email=self.partner_authorized_officer.email, user=self.partner_authorized_officer
         )
-        self.partner_authorized_officer.profile.partner_staff_member_user = partner_authorized_officer_staff.id
-        self.partner_authorized_officer.profile.save()
 
         self.partner_focal_point = UserFactory(is_staff=False, groups__data=[])
         partner_focal_point_staff = PartnerStaffFactory(
-            partner=self.partner, email=self.partner_focal_point.email
+            partner=self.partner, email=self.partner_focal_point.email, user=self.partner_focal_point
         )
-        self.partner_focal_point.profile.partner_staff_member = partner_focal_point_staff.id
-        self.partner_focal_point.profile.save()
 
         self.draft_intervention = InterventionFactory(
             agreement__partner=self.partner,

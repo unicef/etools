@@ -127,10 +127,9 @@ class TestActiveUser(BaseTenantTestCase):
             user=self.unicef_staff
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data, [{
-            "countryName": "",
-            "records": {"total": 1}
-        }])
+        self.assertEqual(response.data, [
+            {"countryName": "", "records": {"total": 1}}
+        ])
 
 
 class TestAgreementsStatisticsView(BaseTenantTestCase):

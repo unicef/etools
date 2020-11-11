@@ -102,7 +102,7 @@ class AzureUserMapper:
             status['skipped'] = 1
             return status
 
-        key_value = record[self.KEY_ATTRIBUTE]
+        key_value = record[self.KEY_ATTRIBUTE].lower()
         logger.debug(key_value)
 
         try:
@@ -151,9 +151,10 @@ class AzureUserMapper:
     def update_user(self, user, record):
         modified = False
         for attr, record_attr in self.USER_ATTR_MAP.items():
-
             record_value = record.get(record_attr, None)
             if record_value:
+                if attr in ["username", "email"]:
+                    record_value = record_value.lower()
                 attr_modified = self._set_attribute(user, attr, record_value)
                 modified = modified or attr_modified
 

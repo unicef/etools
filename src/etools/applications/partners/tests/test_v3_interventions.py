@@ -118,10 +118,8 @@ class TestList(BaseInterventionTestCase):
         user = UserFactory(is_staff=False, groups__data=[])
         user_staff_member = PartnerStaffFactory(
             partner=intervention.agreement.partner,
-            email=user.email,
+            user=user,
         )
-        user.profile.partner_staff_member = user_staff_member.pk
-        user.profile.save()
         intervention.partner_focal_points.add(user_staff_member)
 
         # not sent to partner
@@ -205,10 +203,11 @@ class TestList(BaseInterventionTestCase):
 
 
 class TestDetail(BaseInterventionTestCase):
-    def test_get(self):
-        intervention = InterventionFactory(unicef_signatory=self.user)
+    def setUp(self):
+        super().setUp()
+        self.intervention = InterventionFactory(unicef_signatory=self.user)
         frs = FundsReservationHeaderFactory(
-            intervention=intervention,
+            intervention=self.intervention,
             currency='USD',
         )
         FundsReservationItemFactory(fund_reservation=frs)
@@ -219,20 +218,45 @@ class TestDetail(BaseInterventionTestCase):
         )
         link = InterventionResultLinkFactory(
             cp_output=result,
-            intervention=intervention,
+            intervention=self.intervention,
         )
         ll = LowerResultFactory(result_link=link)
         InterventionActivityFactory(result=ll, unicef_cash=10, cso_cash=20)
+
+    def test_get(self):
         response = self.forced_auth_req(
             "get",
-            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+            reverse('pmp_v3:intervention-detail', args=[self.intervention.pk]),
             user=self.user,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.data
-        self.assertEqual(data["id"], intervention.pk)
+        self.assertEqual(data["id"], self.intervention.pk)
         self.assertEqual(data["result_links"][0]["total"], 30)
         self.assertEqual(data["unicef_signatory"], self.user_serialized)
+
+    def test_pdf(self):
+        response = self.forced_auth_req(
+            "get",
+            reverse(
+                'pmp_v3:intervention-detail-pdf',
+                args=[self.intervention.pk],
+            ),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response['Content-Type'], 'application/pdf')
+
+    def test_pdf_not_found(self):
+        response = self.forced_auth_req(
+            "get",
+            reverse(
+                'pmp_v3:intervention-detail-pdf',
+                args=[40404],
+            ),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
 class TestCreate(BaseInterventionTestCase):
@@ -263,9 +287,7 @@ class TestCreate(BaseInterventionTestCase):
 
     def test_add_intervention_by_partner_member(self):
         partner_user = UserFactory(is_staff=False, groups__data=[])
-        staff_member = PartnerStaffFactory(email=partner_user.email)
-        partner_user.profile.partner_staff_member = staff_member.id
-        partner_user.profile.save()
+        PartnerStaffFactory(email=partner_user.email, user=partner_user)
         response = self.forced_auth_req(
             "post",
             reverse('pmp_v3:intervention-list'),
@@ -357,10 +379,8 @@ class TestDelete(BaseInterventionTestCase):
         self.partner_user = UserFactory(is_staff=False, groups__data=[])
         user_staff_member = PartnerStaffFactory(
             partner=self.intervention.agreement.partner,
-            email=self.partner_user.email,
+            user=self.partner_user,
         )
-        self.partner_user.profile.partner_staff_member = user_staff_member.pk
-        self.partner_user.profile.save()
         self.intervention.partner_focal_points.add(user_staff_member)
         self.intervention_qs = Intervention.objects.filter(
             pk=self.intervention.pk,
@@ -474,7 +494,8 @@ class TestManagementBudget(BaseInterventionTestCase):
 class TestSupplyItem(BaseInterventionTestCase):
     def setUp(self):
         super().setUp()
-        self.intervention = InterventionFactory()
+        self.partner = PartnerFactory()
+        self.intervention = InterventionFactory(date_sent_to_partner=datetime.date.today(), agreement__partner=self.partner)
         self.supply_items_file = SimpleUploadedFile(
             'my_list.csv',
             u'''"Product Number","Product Title","Product Description","Unit of Measure",Quantity,"Indicative Price","Total Price"\n
@@ -487,6 +508,14 @@ class TestSupplyItem(BaseInterventionTestCase):
             '''.encode('utf-8'),
             content_type="multipart/form-data",
         )
+        self.partner_focal_point = UserFactory(is_staff=False, groups__data=[])
+        partner_focal_point_staff = PartnerStaffFactory(
+            partner=self.partner, email=self.partner_focal_point.email
+        )
+        self.partner_focal_point.profile.partner_staff_member = partner_focal_point_staff.id
+        self.partner_focal_point.profile.save()
+
+        self.intervention.partner_focal_points.add(partner_focal_point_staff)
 
     def test_list(self):
         count = 10
@@ -504,6 +533,19 @@ class TestSupplyItem(BaseInterventionTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), count)
         self.assertIn('id', response.data[0])
+
+    def test_list_as_partner_user(self):
+        InterventionSupplyItemFactory(intervention=self.intervention)
+        response = self.forced_auth_req(
+            "get",
+            reverse(
+                "pmp_v3:intervention-supply-item",
+                args=[self.intervention.pk],
+            ),
+            user=self.partner_focal_point
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
 
     def test_post(self):
         item_qs = InterventionSupplyItem.objects.filter(
@@ -634,6 +676,21 @@ class TestSupplyItem(BaseInterventionTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
+    def test_delete_as_partner_user(self):
+        self.intervention.unicef_court = True
+        self.intervention.save()
+
+        item = InterventionSupplyItemFactory(intervention=self.intervention)
+        response = self.forced_auth_req(
+            "delete",
+            reverse(
+                "pmp_v3:intervention-supply-item-detail",
+                args=[self.intervention.pk, item.pk],
+            ),
+            user=self.partner_focal_point
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
     def test_upload(self):
         # add supply item that will be updated
         item = InterventionSupplyItemFactory(
@@ -696,6 +753,32 @@ class TestSupplyItem(BaseInterventionTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("supply_items_file", response.data)
+
+    def test_upload_invalid_missing_column(self):
+        supply_items_file = SimpleUploadedFile(
+            'my_list.csv',
+            u'''Product Number,Product Title,Quantity,Indicative Price\n
+                \n
+                1,test,42,\n
+            '''.encode('utf-8'),
+            content_type="multipart/form-data",
+        )
+        response = self.forced_auth_req(
+            "post",
+            reverse(
+                "pmp_v3:intervention-supply-item-upload",
+                args=[self.intervention.pk],
+            ),
+            data={
+                "supply_items_file": supply_items_file,
+            },
+            request_format=None,
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn(
+            'Unable to process row 3, missing value for `Indicative Price`',
+            response.data["supply_items_file"]
+        )
 
 
 class TestInterventionUpdate(BaseInterventionTestCase):
@@ -828,9 +911,7 @@ class BaseInterventionActionTestCase(BaseInterventionTestCase):
         call_command("update_notifications")
 
         self.partner_user = UserFactory(is_staff=False, groups__data=[])
-        staff_member = PartnerStaffFactory(email=self.partner_user.email)
-        self.partner_user.profile.partner_staff_member = staff_member.pk
-        self.partner_user.profile.save()
+        staff_member = PartnerStaffFactory(email=self.partner_user.email, user=self.partner_user)
         office = OfficeFactory()
         section = SectionFactory()
 
