@@ -172,7 +172,7 @@ class InterventionActivityItemFactory(factory.django.DjangoModelFactory):
         model = models.InterventionActivityItem
 
 
-class InterventionTimeFrameFactory(factory.DjangoModelFactory):
+class InterventionTimeFrameFactory(factory.django.DjangoModelFactory):
     start_date = fuzzy.FuzzyDate(datetime.date(year=1970, month=1, day=1))
     end_date = factory.LazyAttribute(lambda s: fuzzy.FuzzyDate(s.start_date).fuzz())
 

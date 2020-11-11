@@ -592,23 +592,6 @@ def send_intervention_amendment_added_notification(intervention):
 
 
 def sync_partner_staff_member(partner: PartnerOrganization, staff_member_data: PRPPartnerUserResponse):
-    staff_member_update_fields = {
-        'title': staff_member_data.title, 'active': staff_member_data.is_active,
-        'first_name': staff_member_data.first_name, 'last_name': staff_member_data.last_name,
-        'phone': staff_member_data.phone_number,
-    }
-    staff_member, staff_member_created = PartnerStaffMember.objects.get_or_create(
-        partner=partner, email__iexact=staff_member_data.email,
-        defaults={
-            'email': staff_member_data.email, 'partner': partner,
-            **staff_member_update_fields
-        }
-    )
-    if not staff_member_created:
-        for key, value in staff_member_update_fields.items():
-            setattr(staff_member, key, value)
-        staff_member.save()
-
     user_update_fields = {
         'is_active': staff_member_data.is_active,
         'first_name': staff_member_data.first_name, 'last_name': staff_member_data.last_name,
@@ -625,10 +608,27 @@ def sync_partner_staff_member(partner: PartnerOrganization, staff_member_data: P
     profile = user.profile
     profile.job_title = staff_member_data.title
     profile.phone_number = staff_member_data.phone_number
-    profile.partner_staff_member = staff_member.id
     profile.country = profile.country or connection.tenant
     profile.save()
     profile.countries_available.add(connection.tenant)
+
+    staff_member_update_fields = {
+        'user': user,
+        'title': staff_member_data.title, 'active': staff_member_data.is_active,
+        'first_name': staff_member_data.first_name, 'last_name': staff_member_data.last_name,
+        'phone': staff_member_data.phone_number,
+    }
+    staff_member, staff_member_created = PartnerStaffMember.objects.get_or_create(
+        partner=partner, email__iexact=staff_member_data.email,
+        defaults={
+            'email': staff_member_data.email, 'partner': partner,
+            **staff_member_update_fields
+        }
+    )
+    if not staff_member_created:
+        for key, value in staff_member_update_fields.items():
+            setattr(staff_member, key, value)
+        staff_member.save()
 
 
 class Quarter(typing.NamedTuple):

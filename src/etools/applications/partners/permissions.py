@@ -20,7 +20,6 @@ READ_ONLY_API_GROUP_NAME = 'Read-Only API'
 SENIOR_MANAGEMENT_GROUP = 'Senior Management Team'
 PARTNERSHIP_MANAGER_GROUP = 'Partnership Manager'
 REPRESENTATIVE_OFFICE_GROUP = 'Representative Office'
-SENIOR_MANAGEMENT_GROUP = "Senior Management Team"
 
 
 class PMPPermissions:
@@ -126,15 +125,15 @@ class InterventionPermissions(PMPPermissions):
         def unlocked(instance):
             return not instance.locked
 
-        user_profile = self.user.profile
-        partner_staff_member_id = user_profile.partner_staff_member
+        staff_member = self.user.get_partner_staff_member()
+
         # focal points are prefetched, so just cast to array to collect ids
         partner_focal_points = [fp.id for fp in self.instance.partner_focal_points.all()]
 
-        if partner_staff_member_id and partner_staff_member_id == self.instance.partner_authorized_officer_signatory_id:
+        if staff_member and staff_member.id == self.instance.partner_authorized_officer_signatory_id:
             self.user_groups.extend(['Partner User', 'Partner Signer'])
 
-        if partner_staff_member_id and partner_staff_member_id in partner_focal_points:
+        if staff_member and staff_member.id in partner_focal_points:
             self.user_groups.extend(['Partner User', 'Partner Focal Point'])
 
         self.user_groups = list(set(self.user_groups))
@@ -372,14 +371,6 @@ def intervention_field_is_editable_permission(field):
     return FieldPermission
 
 
-class IsPartnerUser(BasePermission):
-    def has_permission(self, request, view):
-        return request.user.is_authenticated and request.user.profile.partner_staff_member
-
-    def has_object_permission(self, request, view, obj):
-        return True
-
-
 def view_action_permission(*actions):
     class ViewActionPermission(BasePermission):
         def has_permission(self, request, view):
@@ -398,12 +389,12 @@ def user_group_permission(*groups):
 
 class UserIsPartnerStaffMemberPermission(BasePermission):
     def has_permission(self, request, view):
-        return hasattr(request.user, 'profile') and bool(request.user.profile.partner_staff_member)
+        return request.user.get_partner_staff_member()
 
 
 class UserIsNotPartnerStaffMemberPermission(BasePermission):
     def has_permission(self, request, view):
-        return hasattr(request.user, 'profile') and not bool(request.user.profile.partner_staff_member)
+        return not request.user.get_partner_staff_member()
 
 
 class UserIsObjectPartnerStaffMember(UserIsPartnerStaffMemberPermission):
@@ -411,10 +402,7 @@ class UserIsObjectPartnerStaffMember(UserIsPartnerStaffMemberPermission):
         if not hasattr(obj, 'partner'):
             return False
 
-        if not hasattr(request.user, 'profile'):
-            return False
-
-        return request.user.profile.partner_staff_member in obj.partner.staff_members.values_list('id', flat=True)
+        return obj.partner.user_is_staff_member(request.user)
 
 
 class UserIsStaffPermission(BasePermission):
@@ -455,15 +443,15 @@ Applies general and object-based permissions.
 """
 PartnershipManagerRefinedPermission = (
     view_action_permission('OPTIONS') |
-    (view_action_permission('GET') & (UserIsStaffPermission | user_group_permission('Partnership Manager'))) |
-    (view_action_permission('POST') & user_group_permission('Partnership Manager')) |
+    (view_action_permission('GET') & (UserIsStaffPermission | user_group_permission(PARTNERSHIP_MANAGER_GROUP))) |
+    (view_action_permission('POST') & user_group_permission(PARTNERSHIP_MANAGER_GROUP)) |
     (
         view_action_permission('GET') &
-        (UserIsStaffPermission | user_group_permission('Partnership Manager') | UserIsObjectPartnerStaffMember)
+        (UserIsStaffPermission | user_group_permission(PARTNERSHIP_MANAGER_GROUP) | UserIsObjectPartnerStaffMember)
     ) |
     (
         view_action_permission('PUT', 'PATCH', 'DELETE') &
-        (user_group_permission('Partnership Manager') | UserIsObjectPartnerStaffMember)
+        (user_group_permission(PARTNERSHIP_MANAGER_GROUP) | UserIsObjectPartnerStaffMember)
     )
 )
 

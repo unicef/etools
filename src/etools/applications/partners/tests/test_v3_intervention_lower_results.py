@@ -20,8 +20,11 @@ class TestInterventionLowerResultsViewBase(BaseTenantTestCase):
         self.user = UserFactory(is_staff=True, groups__data=['Partnership Manager', 'UNICEF User'])
         self.intervention = InterventionFactory(status=Intervention.DRAFT, unicef_court=True)
 
-        self.staff_member = PartnerStaffFactory(partner=self.intervention.agreement.partner)
-        self.partner_focal_point = UserFactory(groups__data=[], profile__partner_staff_member=self.staff_member.id)
+        self.partner_focal_point = UserFactory(groups__data=[])
+        self.staff_member = PartnerStaffFactory(
+            partner=self.intervention.agreement.partner,
+            user=self.partner_focal_point,
+        )
         self.intervention.partner_focal_points.add(self.staff_member)
 
         self.cp_output = ResultFactory(result_type__name=ResultType.OUTPUT)

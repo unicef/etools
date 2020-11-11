@@ -37,13 +37,7 @@ class BaseAgreementTestCase(BaseTenantTestCase):
         cls.partner = PartnerFactory(
             partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION,
         )
-        cls.partner_user = UserFactory(is_staff=False, groups__data=[])
-        user_staff_member = PartnerStaffFactory(
-            partner=cls.partner,
-            email=cls.partner_user.email,
-        )
-        cls.partner_user.profile.partner_staff_member = user_staff_member.pk
-        cls.partner_user.profile.save()
+        cls.partner_user = PartnerStaffFactory(partner=cls.partner).user
         cls.country_programme = CountryProgrammeFactory()
 
 

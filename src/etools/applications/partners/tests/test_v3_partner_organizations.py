@@ -67,13 +67,7 @@ class TestPartnerOrganizationList(BasePartnerOrganizationTestCase):
 
     def test_list_for_partner(self):
         partner = PartnerFactory()
-        user = UserFactory(is_staff=False, groups__data=[])
-        user_staff_member = PartnerStaffFactory(
-            partner=partner,
-            email=user.email,
-        )
-        user.profile.partner_staff_member = user_staff_member.pk
-        user.profile.save()
+        user = PartnerStaffFactory(partner=partner).user
 
         response = self.forced_auth_req(
             "get",
@@ -128,13 +122,7 @@ class TestPartnerStaffMemberList(BasePartnerOrganizationTestCase):
     def test_list_for_partner(self):
         partner = PartnerFactory()
         for __ in range(10):
-            user = UserFactory(is_staff=False, groups__data=[])
-            user_staff_member = PartnerStaffFactory(
-                partner=partner,
-                email=user.email,
-            )
-            user.profile.partner_staff_member = user_staff_member.pk
-            user.profile.save()
+            user = PartnerStaffFactory(partner=partner).user
 
         response = self.forced_auth_req(
             "get",
@@ -150,12 +138,10 @@ class TestPartnerStaffMemberList(BasePartnerOrganizationTestCase):
         # partner user not able to view another partners users
         partner_2 = PartnerFactory()
         user_2 = UserFactory(is_staff=False, groups__data=[])
-        user_staff_member_2 = PartnerStaffFactory(
+        PartnerStaffFactory(
             partner=partner_2,
-            email=user_2.email,
+            user=user_2,
         )
-        user_2.profile.partner_staff_member = user_staff_member_2.pk
-        user_2.profile.save()
         response = self.forced_auth_req(
             "get",
             reverse('pmp_v3:partner-staff-members-list', args=[partner.pk]),
