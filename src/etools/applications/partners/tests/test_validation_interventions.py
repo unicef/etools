@@ -30,6 +30,7 @@ from etools.applications.partners.validation.interventions import (
     transition_to_suspended,
     transition_to_terminated,
 )
+from etools.applications.reports.tests.factories import ReportingRequirementFactory
 from etools.applications.users.tests.factories import GroupFactory, UserFactory
 
 
@@ -772,6 +773,61 @@ class TestSSFAgreementHasNoOtherIntervention(BaseTenantTestCase):
                 "Agreement selected is not of type SSFA"
         ):
             ssfa_agreement_has_no_other_intervention(self.intervention)
+
+
+class TestReportingRequirementsValid(BaseTenantTestCase):
+    def setUp(self):
+        super().setUp()
+        self.unicef_staff = UserFactory(is_staff=True)
+        self.intervention = InterventionFactory(
+            start=datetime.date.today(),
+            end=datetime.date.today() + datetime.timedelta(days=365),
+        )
+        self.validator = InterventionValid(
+            self.intervention,
+            user=self.unicef_staff,
+            disable_rigid_check=True,
+        )
+        self.validator.permissions = self.validator.get_permissions(
+            self.intervention
+        )
+
+    def test_intervention_valid_without_dates(self):
+        self.intervention.start = None
+        self.intervention.end = None
+        ReportingRequirementFactory(intervention=self.intervention)
+        self.assertTrue(self.validator.is_valid)
+
+    def test_intervention_valid_without_reporting_requirements(self):
+        self.assertTrue(self.validator.is_valid)
+
+    def test_intervention_valid_dates_not_aligned(self):
+        ReportingRequirementFactory(
+            intervention=self.intervention,
+            start_date=self.intervention.start,
+            end_date=self.intervention.start + datetime.timedelta(days=1),
+        )
+        ReportingRequirementFactory(
+            intervention=self.intervention,
+            start_date=self.intervention.start + datetime.timedelta(days=2),
+            end_date=self.intervention.end + datetime.timedelta(days=1),
+        )
+        self.assertFalse(self.validator.is_valid)
+        self.assertEqual(len(self.validator.errors), 1)
+        self.assertEqual(self.validator.errors[0], 'Reporting requirements are not aligned with intervention dates')
+
+    def test_intervention_valid_dates_aligned(self):
+        ReportingRequirementFactory(
+            intervention=self.intervention,
+            start_date=self.intervention.start,
+            end_date=self.intervention.start + datetime.timedelta(days=1),
+        )
+        ReportingRequirementFactory(
+            intervention=self.intervention,
+            start_date=self.intervention.start + datetime.timedelta(days=2),
+            end_date=self.intervention.end,
+        )
+        self.assertTrue(self.validator.is_valid)
 
 
 class TestInterventionValid(BaseTenantTestCase):

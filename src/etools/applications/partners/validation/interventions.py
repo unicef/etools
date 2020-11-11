@@ -1,6 +1,7 @@
 import logging
 from datetime import date
 
+from django.db.models import Max, Min
 from django.utils.translation import ugettext as _
 
 from etools_validator.exceptions import BasicValidationError, StateValidationError, TransitionError
@@ -316,6 +317,26 @@ def all_activities_have_timeframes(i):
         filter(time_frames__isnull=True).exists()
 
 
+def reporting_requirements_dates_valid(i):
+    if not i.start or not i.end:
+        # intervention dates are not provided, start_end_dates_valid should handle this case
+        return True
+
+    aggregates = i.reporting_requirements.aggregate(
+        start_date=Min('start_date'),
+        end_date=Max('end_date'),
+    )
+
+    if aggregates['start_date'] is None and aggregates['end_date'] is None:
+        # none of reporting requirements are provided
+        return True
+
+    if not i.start == aggregates['start_date'] or not i.end == aggregates['end_date']:
+        raise BasicValidationError(_('Reporting requirements are not aligned with intervention dates'))
+
+    return True
+
+
 class InterventionValid(CompleteValidation):
     VALIDATION_CLASS = 'partners.Intervention'
     # validations that will be checked on every object... these functions only take the new instance
@@ -330,6 +351,7 @@ class InterventionValid(CompleteValidation):
         sections_valid,
         locations_valid,
         cp_structure_valid,
+        reporting_requirements_dates_valid,
     ]
 
     VALID_ERRORS = {
