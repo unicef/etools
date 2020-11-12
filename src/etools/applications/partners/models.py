@@ -3019,4 +3019,4 @@ class InterventionSupplyItem(TimeStampedModel):
 
     def delete(self, **kwargs):
         super().delete(**kwargs)
-        transaction.on_commit(lambda: self.intervention.planned_budget.calc_totals())
+        self.intervention.planned_budget.calc_totals()
