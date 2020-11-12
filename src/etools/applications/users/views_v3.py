@@ -118,10 +118,8 @@ class ExternalUserViewSet(
 ):
     model = get_user_model()
     queryset = get_user_model().objects.exclude(
-        # TODO should staff, and superuser be excluded as well
-        # or is excluding on @unicef.org email enough?
-        Q(email__endswith="@unicef.org") | Q(is_staff=True) | Q(is_superuser=True)
-    ).all()
+        Q(email__endswith="@unicef.org") | Q(is_staff=True) | Q(is_superuser=True) |
+        Q(partner_staff_member__isnull=False)).all()
     serializer_class = ExternalUserSerializer
     permission_classes = (IsAdminUser, )
 

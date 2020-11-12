@@ -87,10 +87,9 @@ def transition_to_closed(i):
 
     # If total_actual_amt_usd >100,000 then attachments has to include
     # at least 1 record with type: "Final Partnership Review"
-    if i.total_frs['total_actual_amt_usd'] >= 100000:
-        if i.attachments.filter(type__name='Final Partnership Review').count() < 1:
-            raise TransitionError([_('Total amount transferred greater than 100,000 and no Final Partnership Review '
-                                     'was attached')])
+    if i.total_frs['total_actual_amt_usd'] >= 100000 and not i.final_partnership_review.exists():
+        raise TransitionError([_('Total amount transferred greater than 100,000 and no Final Partnership Review '
+                                 'was attached')])
 
     # TODO: figure out Action Point Validation once the spec is completed
 

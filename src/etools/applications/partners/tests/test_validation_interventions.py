@@ -191,7 +191,7 @@ class TestTransitionToClosed(BaseTenantTestCase):
         self.assertFundamentals(self.intervention.total_frs)
 
     def test_attachment_invalid(self):
-        """If Total actual amount > 100,000 need attachment with
+        """If Total actual amount > 100,000 need active attachment with
         type Final Partnership Review
         """
         frs = FundsReservationHeaderFactory(
@@ -203,6 +203,11 @@ class TestTransitionToClosed(BaseTenantTestCase):
             outstanding_amt_local=0.00,
             outstanding_amt=0.00,
             intervention_amt=0.00,
+        )
+        InterventionAttachmentFactory(
+            intervention=self.intervention,
+            type=self.file_parnership_file_type,
+            active=False,
         )
 
         with self.assertRaisesRegexp(

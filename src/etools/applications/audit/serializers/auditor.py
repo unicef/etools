@@ -36,6 +36,7 @@ class AuditorStaffMemberSerializer(BaseStaffMemberSerializer):
         queryset=get_user_model().objects.all()
     )
 
+    # TODO: make sure email provided is lower_case
     def validate(self, attrs):
         validated_data = super().validate(attrs)
         user_pk = validated_data.pop('user_pk', None)

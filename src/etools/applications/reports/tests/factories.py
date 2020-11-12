@@ -24,7 +24,7 @@ class QuarterFactory(factory.django.DjangoModelFactory):
     end_date = datetime.datetime(datetime.date.today().year, 3, 31, tzinfo=timezone.get_default_timezone())
 
 
-class CountryProgrammeFactory(factory.DjangoModelFactory):
+class CountryProgrammeFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.CountryProgramme
         django_get_or_create = ('wbs',)
@@ -172,7 +172,7 @@ class InterventionActivityItemFactory(factory.django.DjangoModelFactory):
         model = models.InterventionActivityItem
 
 
-class InterventionTimeFrameFactory(factory.DjangoModelFactory):
+class InterventionTimeFrameFactory(factory.django.DjangoModelFactory):
     start_date = fuzzy.FuzzyDate(datetime.date(year=1970, month=1, day=1))
     end_date = factory.LazyAttribute(lambda s: fuzzy.FuzzyDate(s.start_date).fuzz())
 

@@ -31,6 +31,7 @@ from etools.applications.partners.serializers.interventions_v2 import (
 )
 from etools.applications.partners.utils import get_quarters_range
 from etools.applications.reports.serializers.v2 import InterventionTimeFrameSerializer
+from etools.applications.users.serializers_v3 import MinimalUserSerializer
 
 
 class InterventionRiskSerializer(serializers.ModelSerializer):
@@ -59,13 +60,28 @@ class InterventionSupplyItemSerializer(serializers.ModelSerializer):
 
 
 class InterventionSupplyItemUploadSerializer(serializers.Serializer):
+    required_columns = ["Product Number", "Product Title", "Quantity", "Indicative Price"]
+
     supply_items_file = serializers.FileField()
 
-    def valid_row(self, row):
-        product = row["Product Number"].strip()
-        if product and not product.startswith("\"Disclaimer"):
-            return True
-        return False
+    def valid_row(self, row, index):
+        # cleanup values before work
+        for column in self.required_columns:
+            if row.get(column):
+                row[column] = row[column].strip()
+
+        if row.get("Product Number", "").startswith("\"Disclaimer"):
+            return False
+
+        # skip if row is empty
+        if not any(row.get(c) for c in self.required_columns):
+            return False
+
+        for required_column in self.required_columns:
+            if not row.get(required_column):
+                raise ValidationError(f"Unable to process row {index}, missing value for `{required_column}`")
+
+        return True
 
     def extract_file_data(self):
         data = []
@@ -76,16 +92,20 @@ class InterventionSupplyItemUploadSerializer(serializers.Serializer):
             ),
             delimiter=",",
         )
-        for row in reader:
-            if self.valid_row(row):
+        for i, row in enumerate(reader):
+            index = i + 2  # enumeration starts from zero plus one for header
+            if self.valid_row(row, index):
                 try:
-                    data.append((
-                        row["Product Title"],
-                        decimal.Decimal(row["Quantity"]),
-                        decimal.Decimal(row["Indicative Price"]),
-                    ))
+                    quantity = decimal.Decimal(row["Quantity"])
                 except decimal.InvalidOperation:
-                    raise ValidationError(f"Unable to process row: {row}")
+                    raise ValidationError(f"Unable to process row {index}, bad number provided for `Quantity`")
+
+                try:
+                    price = decimal.Decimal(row["Indicative Price"])
+                except decimal.InvalidOperation:
+                    raise ValidationError(f"Unable to process row {index}, bad number provided for `Indicative Price`")
+
+                data.append((row["Product Title"], quantity, price,))
         return data
 
 
@@ -130,6 +150,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     amendments = InterventionAmendmentCUSerializer(many=True, read_only=True, required=False)
     attachments = InterventionAttachmentSerializer(many=True, read_only=True, required=False)
     available_actions = serializers.SerializerMethodField()
+    budget_owner = MinimalUserSerializer()
     status_list = serializers.SerializerMethodField()
     cluster_names = serializers.SerializerMethodField()
     days_from_review_to_signed = serializers.CharField(read_only=True)
@@ -165,6 +186,8 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     quarters = InterventionTimeFrameSerializer(many=True, read_only=True)
     supply_items = InterventionSupplyItemSerializer(many=True, read_only=True)
     management_budgets = InterventionManagementBudgetSerializer(read_only=True)
+    unicef_signatory = MinimalUserSerializer()
+    unicef_focal_points = MinimalUserSerializer(many=True)
 
     def get_location_p_codes(self, obj):
         return [location.p_code for location in obj.flat_locations.all()]
@@ -359,6 +382,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "created",
             "date_draft_by_partner",
             # "cso_contribution",
+            "date_partnership_review_performed",
             "date_sent_to_partner",
             "days_from_review_to_signed",
             "days_from_submission_to_signed",
