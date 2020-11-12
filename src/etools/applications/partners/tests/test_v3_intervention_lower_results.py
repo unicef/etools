@@ -34,10 +34,7 @@ class TestInterventionLowerResultsViewBase(BaseTenantTestCase):
         )
         self.intervention.partner_focal_points.add(self.staff_member)
 
-        self.partner_staff_member = UserFactory(
-            groups__data=[],
-            profile__partner_staff_member=PartnerStaffFactory(partner=self.intervention.agreement.partner).id
-        )
+        self.partner_staff_member = PartnerStaffFactory(partner=self.intervention.agreement.partner).user
 
         self.cp_output = ResultFactory(result_type__name=ResultType.OUTPUT)
         self.result_link = InterventionResultLinkFactory(intervention=self.intervention, cp_output=self.cp_output)

@@ -19,7 +19,7 @@
         ],
         "content-length": [
             "Content-Length",
-            "8570"
+            "8568"
         ]
     },
     "data": {
@@ -83,9 +83,6 @@
         "contingency_pd": false,
         "amendments": [],
         "attachments": [],
-
-
-
         "permissions": {
             "edit": {
                 "actionpoint": true,
@@ -106,7 +103,7 @@
                 "contingency_pd": false,
                 "country_programme": false,
                 "country_programme_id": true,
-                "country_programmes": false,
+                "country_programmes": true,
                 "created": true,
                 "date_draft_by_partner": true,
                 "date_partnership_review_performed": false,
@@ -288,7 +285,7 @@
                 "contingency_pd": false,
                 "country_programme": false,
                 "country_programme_id": true,
-                "country_programmes": false,
+                "country_programmes": true,
                 "created": true,
                 "date_draft_by_partner": true,
                 "date_partnership_review_performed": true,
