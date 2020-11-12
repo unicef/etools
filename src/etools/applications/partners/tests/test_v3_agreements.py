@@ -1,6 +1,6 @@
 import datetime
 
-from django.test import SimpleTestCase
+from django.test import override_settings, SimpleTestCase
 from django.urls import reverse
 
 from rest_framework import status
@@ -37,11 +37,13 @@ class BaseAgreementTestCase(BaseTenantTestCase):
         cls.partner = PartnerFactory(
             partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION,
         )
-        cls.partner_user = PartnerStaffFactory(partner=cls.partner).user
+        cls.partner_staff = PartnerStaffFactory(partner=cls.partner)
+        cls.partner_user = cls.partner_staff.user
         cls.country_programme = CountryProgrammeFactory()
 
 
 class TestList(BaseAgreementTestCase):
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_get(self):
         agreement_qs = Agreement.objects
         response = self.forced_auth_req(
@@ -62,13 +64,25 @@ class TestList(BaseAgreementTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), agreement_qs.count())
 
+    def test_get_by_partner_not_related(self):
+        user = UserFactory(is_staff=False)
+        user.groups.add(GroupFactory(name="Partnership Manager"))
+        response = self.forced_auth_req(
+            "get",
+            reverse("pmp_v3:agreement-list"),
+            user=user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, [])
+
     def test_get_filter_partner_id(self):
-        AgreementFactory(partner=self.partner)
+        agreement = AgreementFactory(partner=self.partner)
+        agreement.authorized_officers.add(self.partner_staff)
         agreement_qs = Agreement.objects.filter(partner=self.partner)
         response = self.forced_auth_req(
             "get",
             reverse("pmp_v3:agreement-list"),
-            user=self.pme_user,
+            user=self.partner_user,
             partner_id=self.partner.pk,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -127,6 +141,7 @@ class TestUpdate(BaseAgreementTestCase):
             signed_by=self.pme_user,
             start=datetime.date.today(),
         )
+        agreement.authorized_officers.add(self.partner_staff)
         response = self.forced_auth_req(
             "patch",
             reverse('pmp_v3:agreement-detail', args=[agreement.pk]),

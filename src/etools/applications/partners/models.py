@@ -1797,6 +1797,11 @@ class Intervention(TimeStampedModel):
         blank=True,
     )
     reference_number_year = models.IntegerField(null=True)
+    date_partnership_review_performed = models.DateField(
+        verbose_name=_('Date Final Partnership Review Performed'),
+        null=True,
+        blank=True,
+    )
     review_date_prc = models.DateField(
         verbose_name=_('Review Date by PRC'),
         help_text='The date the PRC reviewed the partnership',
@@ -2245,7 +2250,7 @@ class Intervention(TimeStampedModel):
     @property
     def final_partnership_review(self):
         # to be used only to track changes in validator mixin
-        return self.attachments.filter(type__name=FileType.FINAL_PARTNERSHIP_REVIEW)
+        return self.attachments.filter(type__name=FileType.FINAL_PARTNERSHIP_REVIEW, active=True)
 
     def illegal_transitions(self):
         return False
