@@ -1,5 +1,6 @@
 import datetime
 
+from django.test import override_settings
 from django.urls import reverse
 
 from rest_framework import status
@@ -29,42 +30,62 @@ class BasePMPTestCase(BaseTenantTestCase):
         cls.user = UserFactory(is_staff=True)
         cls.partner = PartnerFactory()
         cls.partner_staff = cls.partner.staff_members.all().first()
-        cls.partner_user = UserFactory(email=cls.partner_staff.email)
-        cls.partner_user.profile.partner_staff_member = True
-        cls.partner_user.profile.save()
+        cls.partner_user = cls.partner_staff.user
 
 
 class TestPMPOfficeViews(BasePMPTestCase):
-    def test_list(self):
+    def setUp(self):
+        super().setUp()
         for __ in range(10):
             OfficeFactory()
-        office = OfficeFactory()
+        self.office = OfficeFactory()
         pd = InterventionFactory()
-        pd.offices.add(office)
+        pd.offices.add(self.office)
         pd.partner_focal_points.add(self.partner_staff)
 
-        url = reverse('offices-pmp-list')
-        office_qs = Office.objects
-        self.assertTrue(office_qs.count() > 10)
+        self.url = reverse('offices-pmp-list')
+        self.office_qs = Office.objects
+        self.assertTrue(self.office_qs.count() > 10)
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_list(self):
         # unicef staff
-        response = self.forced_auth_req('get', url)
+        self.assertTrue(self.user.is_unicef_user())
+        response = self.forced_auth_req('get', self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), office_qs.count())
+        self.assertEqual(len(response.data), self.office_qs.count())
 
+    def test_list_partner(self):
         # partner
-        response = self.forced_auth_req('get', url, user=self.partner_user)
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            user=self.partner_user,
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
-        self.assertEqual(str(response.data[0]["id"]), str(office.pk))
+        self.assertEqual(str(response.data[0]["id"]), str(self.office.pk))
 
+        # partner no interventions
+        user = UserFactory(is_staff=False)
+        response = self.forced_auth_req('get', self.url, user=user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, [])
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_detail(self):
         office = OfficeFactory()
 
         # unicef staff
-        url = reverse('offices-pmp-detail', args=[office.pk])
-        response = self.forced_auth_req('get', url)
+        response = self.forced_auth_req(
+            'get',
+            reverse('offices-pmp-detail', args=[office.pk]),
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_detail_partner(self):
+        office = OfficeFactory()
+        url = reverse('offices-pmp-detail', args=[office.pk])
 
         # partner not associated
         response = self.forced_auth_req('get', url, user=self.partner_user)
@@ -79,36 +100,57 @@ class TestPMPOfficeViews(BasePMPTestCase):
 
 
 class TestPMPSectionViews(BasePMPTestCase):
-    def test_list(self):
+    def setUp(self):
+        super().setUp()
         for __ in range(10):
             SectionFactory()
-        section = SectionFactory()
+        self.section = SectionFactory()
         pd = InterventionFactory()
-        pd.sections.add(section)
+        pd.sections.add(self.section)
         pd.partner_focal_points.add(self.partner_staff)
 
-        url = reverse('sections-pmp-list')
-        section_qs = Section.objects
-        self.assertTrue(section_qs.count() > 10)
+        self.url = reverse('sections-pmp-list')
+        self.section_qs = Section.objects
+        self.assertTrue(self.section_qs.count() > 10)
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_list(self):
         # unicef staff
-        response = self.forced_auth_req('get', url)
+        response = self.forced_auth_req('get', self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), section_qs.count())
+        self.assertEqual(len(response.data), self.section_qs.count())
 
+    def test_list_partner(self):
         # partner
-        response = self.forced_auth_req('get', url, user=self.partner_user)
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            user=self.partner_user,
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
-        self.assertEqual(str(response.data[0]["id"]), str(section.pk))
+        self.assertEqual(str(response.data[0]["id"]), str(self.section.pk))
 
+        # partner no relationship
+        user = UserFactory(is_staff=False)
+        response = self.forced_auth_req('get', self.url, user=user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, [])
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_detail(self):
         section = SectionFactory()
 
         # unicef staff
-        url = reverse('sections-pmp-detail', args=[section.pk])
-        response = self.forced_auth_req('get', url)
+        response = self.forced_auth_req(
+            'get',
+            reverse('sections-pmp-detail', args=[section.pk]),
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_detail_partner(self):
+        section = SectionFactory()
+        url = reverse('sections-pmp-detail', args=[section.pk])
 
         # partner not associated
         response = self.forced_auth_req('get', url, user=self.partner_user)

@@ -25,7 +25,7 @@ from etools.applications.partners.models import (
     PartnerOrganization,
     PartnerType,
 )
-from etools.applications.partners.permissions import IsPartnerUser
+from etools.applications.partners.permissions import UserIsPartnerStaffMemberPermission
 from etools.applications.partners.views.v2 import choices_to_json_ready
 from etools.applications.reports.models import CountryProgramme, Result, ResultType
 
@@ -37,7 +37,7 @@ class PMPBaseViewMixin:
 
     def is_partner_staff(self):
         """Flag indicator whether user is a partner"""
-        return self.request.user.is_authenticated and self.request.user.profile.partner_staff_member
+        return self.request.user.is_authenticated and self.request.user.get_partner_staff_member()
 
     def partners(self):
         """List of partners user associated with"""
@@ -79,7 +79,7 @@ class PMPBaseViewMixin:
 
 
 class PMPDropdownsListApiView(APIView):
-    permission_classes = (IsAuthenticated, IsAdminUser | IsPartnerUser)
+    permission_classes = (IsAuthenticated, IsAdminUser | UserIsPartnerStaffMemberPermission)
 
     @cached_property
     def partner(self):

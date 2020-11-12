@@ -17,6 +17,7 @@ from etools.applications.partners.views.interventions_v3 import (
     PMPInterventionIndicatorsUpdateView,
     PMPInterventionListCreateView,
     PMPInterventionManagementBudgetRetrieveUpdateView,
+    PMPInterventionPDFView,
     PMPInterventionReportingRequirementView,
     PMPInterventionRetrieveUpdateView,
     PMPInterventionSupplyItemListCreateView,
@@ -69,6 +70,11 @@ urlpatterns = [
             http_method_names=['get', 'patch'],
         ),
         name='intervention-detail',
+    ),
+    path(
+        'interventions/<int:pk>/pdf/',
+        view=PMPInterventionPDFView.as_view(http_method_names=['get']),
+        name='intervention-detail-pdf',
     ),
     path(
         'interventions/<int:pk>/delete/',

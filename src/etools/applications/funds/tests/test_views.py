@@ -114,8 +114,8 @@ class TestFRHeaderView(BaseTenantTestCase):
         data = {'values': ','.join(['another bad value', 'im a bad value', ])}
         status_code, result = self.run_request(data)
         self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(result['error'], 'The FR another bad value could not be found in eTools and could not be '
-                                          'synced from Vision. Vision error 400: No data could be found')
+        self.assertEqual(result['error'], 'One or more of the FRs are used by another PD/SSFA or '
+                                          'could not be found in eTools.')
     # TODO: add tests to cover, frs correctly brought in from mock. with correct vendor numbers, FR missing from vision,
     # FR with multiple line items, and FR with only one line item.
 
@@ -132,6 +132,7 @@ class TestFRHeaderView(BaseTenantTestCase):
 
     @VCR.use_cassette(str(Path(__file__).parent / 'vcr_cassettes/fund_reservation.yml'))
     def test_get_success_sync_vision(self):
+        """set vendor_code to PVN in the cassette"""
         self.fr_1.intervention = self.intervention
         self.fr_1.save()
         data = {'values': ','.join(['9999', self.fr_1.fr_number]),

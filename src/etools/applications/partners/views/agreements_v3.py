@@ -12,15 +12,19 @@ from etools.applications.partners.serializers.agreements_v2 import (
 )
 from etools.applications.partners.views.agreements_v2 import AgreementDetailAPIView, AgreementListAPIView
 from etools.applications.partners.views.v3 import PMPBaseViewMixin
+from etools.libraries.djangolib.views import ExternalModuleFilterMixin
 
 
-class PMPAgreementViewMixin(PMPBaseViewMixin):
+class PMPAgreementViewMixin(
+        PMPBaseViewMixin,
+        ExternalModuleFilterMixin,
+):
+    module2filters = {
+        "pmp": ["authorized_officers__user"],
+    }
+
     def get_queryset(self, format=None):
-        qs = super().get_queryset()
-        # if partner, limit to agreements that they are associated with
-        if self.is_partner_staff():
-            qs = qs.filter(partner__in=self.partners())
-        return qs
+        return super().get_queryset(module="pmp")
 
 
 class PMPAgreementListCreateAPIView(
