@@ -206,7 +206,7 @@ class TestList(BaseInterventionTestCase):
         country_programme = CountryProgrammeFactory()
         intervention.country_programmes.add(country_programme)
         InterventionFactory()
-        with self.assertNumQueries(10):
+        with self.assertNumQueries(11):
             response = self.forced_auth_req(
                 "get",
                 reverse('pmp_v3:intervention-list'),
