@@ -1,3 +1,5 @@
+from django.shortcuts import get_object_or_404
+
 from rest_framework import mixins, viewsets
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
@@ -79,7 +81,7 @@ class PMPSpecialReportingRequirementListCreateView(
     ]
 
     def get_root_object(self):
-        return Intervention.objects.filter(pk=self.kwargs.get('intervention_pk')).first()
+        return get_object_or_404(Intervention.objects, pk=self.kwargs.get('intervention_pk'))
 
     def get_intervention(self):
         return self.get_root_object()
@@ -96,7 +98,7 @@ class PMPSpecialReportingRequirementRetrieveUpdateDestroyView(
     ]
 
     def get_root_object(self):
-        return Intervention.objects.filter(pk=self.kwargs.get('intervention_pk')).first()
+        return get_object_or_404(Intervention.objects, pk=self.kwargs.get('intervention_pk'))
 
     def get_intervention(self):
         return self.get_root_object()
