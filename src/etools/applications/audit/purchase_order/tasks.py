@@ -30,3 +30,18 @@ def update_purchase_orders(country_name=None):
             logger.exception("{} sync failed".format(POSynchronizer.__name__))
             # Keep going to the next country
     logger.info('Purchase orders synced successfully for {}.'.format(', '.join(processed)))
+
+
+@app.task
+def sync_purchase_order(order_number=None):
+    logger.info('Starting update values for purchase order')
+    try:
+        logger.info('Starting purchase order update for  {}'.format(
+            order_number
+        ))
+        POSynchronizer(order_number).sync()
+        logger.info("Update finished successfully for {}".format(order_number))
+    except VisionException:
+        logger.exception("{} sync failed".format(POSynchronizer.__name__))
+        # Keep going to the next country
+    logger.info('Purchase orders synced successfully for {}.'.format(order_number))

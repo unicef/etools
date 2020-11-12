@@ -13,46 +13,32 @@ interactions:
       User-Agent:
       - python-requests/2.22.0
     method: GET
-    uri: http://invalid_vision_url/GetFundsReservationInfo_JSON/9999
+    uri: http://invalid_vision_url/fundsreservations/9999/?businessarea=ZZZ
   response:
     body:
-      string: '"{ \"ROWSET\": { \"ROW\": [ {\"ACTUAL_CASH_TRANSFER\": \"383131\",
-        \"ACTUAL_CASH_TRANSFER_DC\": \"383131\", \"COMPLETED_FLAG\": \"N\", \"CURRENCY\":
-        \"USD\", \"CURRENT_FR_AMOUNT\": \"383131\", \"DONOR_CODE\": \"G45301\", \"DONOR_NAME\":
-        \"Macioce\", \"DUE_DATE\": \"01-FEB-17\", \"FR_DOC_DATE\": \"17-JAN-17\",
-        \"FR_DOCUMENT_TEXT\": \"WASH NZ:EM LIF SAVIMG IN KHAZER \\\/ACF 1ST TRANCHE\",
-        \"FR_END_DATE\": \"31-MAR-17\", \"FR_LINE_ITEM_TEXT\": \"WASH NZ:EM LIF SAVIMG
-        IN KHAZER \\\/ACF 1ST TRANCHE\", \"FR_NUMBER\": \"9999\", \"FR_OVERALL_AMOUNT\":
-        \"383131\", \"FR_START_DATE\": \"17-JAN-17\", \"FR_TYPE\": \"Programme Document
-        Against PCA\", \"FUND\": \"SM\", \"GRANT_NBR\": \"XYZ\", \"LINE_ITEM\":
-        \"2\", \"MULTI_CURR_FLAG\": \"N\", \"OUTSTANDING_DCT\": \"0\", \"OUTSTANDING_DCT_DC\":
-        \"0\", \"OVERALL_AMOUNT\": \"246176\", \"OVERALL_AMOUNT_DC\": \"246176\",
-        \"VENDOR_CODE\": \"PVN\", \"WBS_ELEMENT\": \"2130\\\/A0\\\/08\\\/002\\\/005\\\/312\"
-        }, {\"ACTUAL_CASH_TRANSFER\": \"383131\", \"ACTUAL_CASH_TRANSFER_DC\": \"383131\",
-        \"COMPLETED_FLAG\": \"N\", \"CURRENCY\": \"USD\", \"CURRENT_FR_AMOUNT\": \"383131\",
-        \"DONOR_CODE\": \"G45605\", \"DONOR_NAME\": \"USA (USAID) OFDA\", \"DUE_DATE\":
-        \"01-FEB-17\", \"FR_DOC_DATE\": \"17-JAN-17\", \"FR_DOCUMENT_TEXT\": \"XYA
-        NZ:EM LIF ZAOJ \\\/ACF 1ST TRANCHE\", \"FR_END_DATE\": \"31-MAR-17\",
-        \"FR_LINE_ITEM_TEXT\": \"WASH NZ:EM LIF SAVIMG IN KHAZER \\\/ACF 1ST TRANCHE\",
-        \"FR_NUMBER\": \"9999\", \"FR_OVERALL_AMOUNT\": \"383131\", \"FR_START_DATE\":
-        \"17-JAN-17\", \"FR_TYPE\": \"Programme Document Against PCA\", \"FUND\":
-        \"SM\", \"GRANT_NBR\": \"SM160255\", \"LINE_ITEM\": \"1\", \"MULTI_CURR_FLAG\":
-        \"N\", \"OUTSTANDING_DCT\": \"0\", \"OUTSTANDING_DCT_DC\": \"0\", \"OVERALL_AMOUNT\":
-        \"136955\", \"OVERALL_AMOUNT_DC\": \"136955\", \"VENDOR_CODE\": \"PVN\",
-        \"WBS_ELEMENT\": \"2130\\\/A0\\\/08\\\/002\\\/005\\\/312\" } ] }}"'
+      string: '{"ROWSET":{"ROW":{"VENDOR_CODE":"PVN","FR_NUMBER":"9999","FR_DOC_DATE":"21-FEB-12","FR_TYPE":"Programme
+        Document Against PCA","CURRENCY":"AFN","FR_DOCUMENT_TEXT":"CP-REIMBURSMENT
+        PAYMENT TO SDLR","FR_START_DATE":"01-DEC-11","FR_END_DATE":"31-DEC-11","LINE_ITEM":"1","WBS_ELEMENT":"0060/A0/06/010/001/003","GRANT_REF":"NON-GRANT","DONOR_CODE":"N/A","DONOR_NAME":"N/A","FUND":"GC","OVERALL_AMOUNT":"53837.52","OVERALL_AMOUNT_DC":"2658643","DUE_DATE":"21-FEB-12","FR_LINE_ITEM_TEXT":"CP-REIMBURSMENT
+        PAYMENT TO SDLR","FR_OVERALL_AMOUNT":"53837.52","CURRENT_FR_AMOUNT":"38946.21","ACTUAL_CASH_TRANSFER":"38946.21","OUTSTANDING_DCT":"0","ACTUAL_CASH_TRANSFER_DC":"0","OUTSTANDING_DCT_DC":"0","MULTI_CURR_FLAG":"Y","COMPLETED_FLAG":"N","ETOOLS_REF_NUMBER":null}}}'
     headers:
+      Cache-Control:
+      - no-cache
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Mon, 22 Jul 2019 19:02:08 GMT
-      Server:
-      - Microsoft-IIS/8.5 Microsoft-HTTPAPI/2.0
+      - Mon, 19 Oct 2020 21:03:35 GMT
+      Expires:
+      - '-1'
+      Pragma:
+      - no-cache
       Vary:
       - Accept-Encoding
+      X-AspNet-Version:
+      - 4.0.30319
       X-Powered-By:
       - ASP.NET
       content-length:
-      - '1934'
+      - '770'
     status:
       code: 200
       message: OK
