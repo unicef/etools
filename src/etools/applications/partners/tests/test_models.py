@@ -11,7 +11,6 @@ from django.urls import reverse
 from django.utils import timezone
 
 from freezegun import freeze_time
-from mock import Mock, patch
 
 from etools.applications.audit.models import Engagement
 from etools.applications.audit.tests.factories import AuditFactory, SpecialAuditFactory, SpotCheckFactory
@@ -1290,12 +1289,15 @@ class TestPartnerStaffMember(BaseTenantTestCase):
         staff = PartnerStaffFactory(
             partner=partner,
         )
+        staff.user.profile.countries_available.add(connection.tenant)
         self.assertTrue(staff.active)
-        mock_send = Mock()
-        with patch("etools.applications.partners.models.pre_delete.send", mock_send):
-            staff.active = False
-            staff.save()
-        self.assertEqual(mock_send.call_count, 1)
+
+        staff.active = False
+        staff.save()
+
+        self.assertEqual(staff.user.is_active, False)
+        self.assertEqual(staff.user.profile.country, None)
+        self.assertEqual(staff.user.profile.countries_available.filter(id=connection.tenant.id).exists(), False)
 
     def test_save_update_reactivate(self):
         partner = PartnerFactory()
@@ -1303,12 +1305,15 @@ class TestPartnerStaffMember(BaseTenantTestCase):
             partner=partner,
             active=False,
         )
+        staff.user.profile.countries_available.remove(connection.tenant)
         self.assertFalse(staff.active)
-        mock_send = Mock()
-        with patch("etools.applications.partners.models.post_save.send", mock_send):
-            staff.active = True
-            staff.save()
-        self.assertEqual(mock_send.call_count, 2)
+
+        staff.active = True
+        staff.save()
+
+        self.assertEqual(staff.user.is_active, True)
+        self.assertEqual(staff.user.profile.country, connection.tenant)
+        self.assertEqual(staff.user.profile.countries_available.filter(id=connection.tenant.id).exists(), True)
 
 
 class TestAssessment(BaseTenantTestCase):

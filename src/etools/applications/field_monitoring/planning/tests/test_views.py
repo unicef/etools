@@ -339,6 +339,38 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         self.assertTrue(permissions['view']['activity_question_set_review'])
         self.assertTrue(permissions['view']['additional_info'])
 
+    def test_field_office_update(self):
+        activity = MonitoringActivityFactory(monitor_type='staff', status='draft', field_office=None)
+        self.assertIsNone(activity.field_office)
+        response = self._test_update(self.fm_user, activity, {'field_office': OfficeFactory().id})
+        self.assertIsNotNone(response.data['field_office'])
+        activity.refresh_from_db()
+        self.assertIsNotNone(activity.field_office)
+
+        permissions = response.data['permissions']
+        self.assertTrue(permissions['view']['field_office'])
+        self.assertTrue(permissions['edit']['field_office'])
+
+    def test_field_office_not_editable_in_checklist(self):
+        activity = MonitoringActivityFactory(monitor_type='staff', status='checklist')
+        response = self._test_retrieve(self.fm_user, activity)
+        permissions = response.data['permissions']
+        self.assertTrue(permissions['view']['field_office'])
+        self.assertFalse(permissions['edit']['field_office'])
+
+    def test_filter_by_field_office(self):
+        MonitoringActivityFactory(monitor_type='staff', status='draft')
+        activity1 = MonitoringActivityFactory(monitor_type='staff', status='draft')
+        activity2 = MonitoringActivityFactory(monitor_type='staff', status='draft')
+        self._test_list(
+            self.fm_user, [activity1],
+            data={'field_office': str(activity1.field_office.id)},
+        )
+        self._test_list(
+            self.fm_user, [activity1, activity2],
+            data={'field_office__in': f'{activity1.field_office.id},{activity2.field_office.id}'},
+        )
+
 
 class TestActivityAttachmentsView(FMBaseTestCaseMixin, APIViewSetTestCase):
     base_view = 'field_monitoring_planning:activity_attachments'

@@ -8,14 +8,14 @@ from etools.applications.funds import models
 from etools.applications.partners.tests.factories import InterventionFactory
 
 
-class DonorFactory(factory.DjangoModelFactory):
+class DonorFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.Donor
 
     name = fuzzy.FuzzyText(length=45)
 
 
-class GrantFactory(factory.DjangoModelFactory):
+class GrantFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.Grant
 
@@ -23,7 +23,7 @@ class GrantFactory(factory.DjangoModelFactory):
     name = fuzzy.FuzzyText(length=32)
 
 
-class FundsCommitmentItemFactory(factory.DjangoModelFactory):
+class FundsCommitmentItemFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.FundsCommitmentItem
 
@@ -31,7 +31,7 @@ class FundsCommitmentItemFactory(factory.DjangoModelFactory):
     line_item = fuzzy.FuzzyText(length=5)
 
 
-class FundsReservationHeaderFactory(factory.DjangoModelFactory):
+class FundsReservationHeaderFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.FundsReservationHeader
 
@@ -64,7 +64,7 @@ class FundsReservationHeaderFactory(factory.DjangoModelFactory):
     )
 
 
-class FundsReservationItemFactory(factory.DjangoModelFactory):
+class FundsReservationItemFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.FundsReservationItem
 
@@ -72,6 +72,6 @@ class FundsReservationItemFactory(factory.DjangoModelFactory):
     line_item = fuzzy.FuzzyInteger(low=1, high=300)
 
 
-class FundsCommitmentHeaderFactory(factory.DjangoModelFactory):
+class FundsCommitmentHeaderFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.FundsCommitmentHeader

@@ -74,6 +74,7 @@ class TestPartnerStaffMemberAdmin(TestAdminCase):
     def test_save_model_create(self):
         self.assertFalse(Activity.objects.exists())
         obj = PartnerStaffMember(
+            user=self.user,
             email="test@example.com",
             partner=self.partner,
         )
