@@ -17,7 +17,7 @@ from etools.applications.field_monitoring.fm_settings.models import (
 from etools.applications.users.tests.factories import UserFactory
 
 
-class MethodFactory(factory.DjangoModelFactory):
+class MethodFactory(factory.django.DjangoModelFactory):
     name = factory.Sequence(lambda n: 'Method {}'.format(n))
     short_name = factory.Sequence(lambda n: 'M{}'.format(n))
 
@@ -25,7 +25,7 @@ class MethodFactory(factory.DjangoModelFactory):
         model = Method
 
 
-class LocationSiteFactory(factory.DjangoModelFactory):
+class LocationSiteFactory(factory.django.DjangoModelFactory):
     name = factory.Sequence(lambda n: 'Location {}'.format(n))
     point = GEOSGeometry("POINT(20 20)")
     p_code = factory.Sequence(lambda n: 'PCODE{}'.format(n))
@@ -36,21 +36,21 @@ class LocationSiteFactory(factory.DjangoModelFactory):
         model = LocationSite
 
 
-class CategoryFactory(factory.DjangoModelFactory):
+class CategoryFactory(factory.django.DjangoModelFactory):
     name = factory.Sequence(lambda n: 'Category {}'.format(n))
 
     class Meta:
         model = Category
 
 
-class OptionFactory(factory.DjangoModelFactory):
+class OptionFactory(factory.django.DjangoModelFactory):
     label = factory.Sequence(lambda n: 'Question {}'.format(n))
 
     class Meta:
         model = Option
 
 
-class QuestionFactory(factory.DjangoModelFactory):
+class QuestionFactory(factory.django.DjangoModelFactory):
     category = factory.SubFactory(CategoryFactory)
     answer_type = fuzzy.FuzzyChoice(dict(Question.ANSWER_TYPES).keys())
     is_custom = True
@@ -79,7 +79,7 @@ class QuestionFactory(factory.DjangoModelFactory):
             self.sections.add(*extracted)
 
 
-class LogIssueFactory(factory.DjangoModelFactory):
+class LogIssueFactory(factory.django.DjangoModelFactory):
     author = factory.SubFactory(UserFactory)
     issue = fuzzy.FuzzyText()
 

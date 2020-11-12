@@ -4,13 +4,13 @@ import itertools
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import connection, transaction
-from django.db.models import F, Sum
+from django.db.models import F, Prefetch, Sum
 
 from celery.utils.log import get_task_logger
 from django_tenants.utils import get_tenant_model, schema_context
 from unicef_notification.utils import send_notification_with_template
 
-from etools.applications.partners.models import Agreement, Intervention, PartnerOrganization
+from etools.applications.partners.models import Agreement, Intervention, PartnerOrganization, PartnerStaffMember
 from etools.applications.partners.prp_api import PRPAPI
 from etools.applications.partners.serializers.prp_v1 import PRPPartnerOrganizationWithStaffMembersSerializer
 from etools.applications.partners.utils import (
@@ -119,35 +119,23 @@ def _make_intervention_status_automatic_transitions(country_name):
     logger.info('Starting intervention auto status transition for country {}'.format(country_name))
 
     admin_user = get_user_model().objects.get(username=settings.TASK_ADMIN_USER)
-
-    # these are agreements that are not even valid within their own status
-    # compiling a list of them to send to an admin or save somewhere in the future
     bad_interventions = []
-
     active_ended = Intervention.objects.filter(status=Intervention.ACTIVE,
                                                end__lt=datetime.date.today())
-
-    # get all the interventions for which their status is endend and total otustanding_amt is 0 and
-    # actual_amt is the same as the total_amt
-
     qs = Intervention.objects\
         .prefetch_related('frs')\
         .filter(status=Intervention.ENDED)\
-        .annotate(frs_total_outstanding=Sum('frs__outstanding_amt'),
-                  frs_total_actual_amt=Sum('frs__actual_amt'),
-                  frs_intervention_amt=Sum('frs__intervention_amt'))\
+        .annotate(frs_total_outstanding=Sum('frs__outstanding_amt_local'),
+                  frs_total_actual_amt=Sum('frs__total_amt_local'),
+                  frs_intervention_amt=Sum('frs__actual_amt_local'))\
         .filter(frs_total_outstanding=0, frs_total_actual_amt=F('frs_intervention_amt'))
-
     processed = 0
-
     for intervention in itertools.chain(active_ended, qs):
         old_status = intervention.status
         with transaction.atomic():
-            # this function mutates the intervention
             validator = InterventionValid(intervention, user=admin_user, disable_rigid_check=True)
             if validator.is_valid:
                 if intervention.status != old_status:
-                    # this one transitioned forward
                     intervention.save()
                     processed += 1
             else:
@@ -311,7 +299,9 @@ def sync_partner_to_prp(tenant: str, partner_id: int):
     tenant = get_tenant_model().objects.get(name=tenant)
     connection.set_tenant(tenant)
 
-    partner = PartnerOrganization.objects.get(id=partner_id)
+    partner = PartnerOrganization.objects.filter(id=partner_id).prefetch_related(
+        Prefetch('staff_members', PartnerStaffMember.objects.filter(active=True))
+    ).get()
     partner_data = PRPPartnerOrganizationWithStaffMembersSerializer(instance=partner).data
     PRPAPI().send_partner_data(tenant.business_area_code, partner_data)
 
