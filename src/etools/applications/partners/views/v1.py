@@ -52,18 +52,20 @@ class PCAPDFView(LoginRequiredMixin, PDFTemplateView):
         if not self.agreement.authorized_officers.exists():
             return {"error": 'Partner Organization has no "Authorized Officers selected" selected'}
 
-        valid_response, response = get_data_from_insight('GetPartnerDetailsInfo_json/{vendor_code}',
+        valid_response, response = get_data_from_insight('partners/?vendor={vendor_code}',
                                                          {"vendor_code": self.agreement.partner.vendor_number})
 
         if not valid_response:
             return {"error": response}
         try:
             banks_records = response["ROWSET"]["ROW"]["VENDOR_BANK"]["VENDOR_BANK_ROW"]
+            if isinstance(banks_records, dict):
+                banks_records = [banks_records]
         except (KeyError, TypeError):
             return {"error": 'Response returned by the Server does not have the necessary values to generate PCA'}
 
         bank_key_values = [
-            ('bank_address', "BANK_ADDRESS"),
+            ('bank_address', "STREET"),
             ('bank_name', 'BANK_NAME'),
             ('account_title', "ACCT_HOLDER"),
             ('routing_details', "SWIFT_CODE"),

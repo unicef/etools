@@ -4,6 +4,7 @@ from django.utils.encoding import force_text
 from rest_framework import serializers
 
 from etools.applications.users.models import Country, Group, UserProfile
+from etools.applications.users.validators import EmailValidator
 
 
 class SimpleCountrySerializer(serializers.ModelSerializer):
@@ -30,7 +31,10 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
 
 class UserManagementSerializer(serializers.Serializer):
-    user_email = serializers.EmailField(required=True)
+    user_email = serializers.EmailField(
+        required=True,
+        validators=[EmailValidator()],
+    )
     roles = serializers.ListSerializer(child=serializers.ChoiceField(choices=["Partnership Manager",
                                                                               "PME",
                                                                               "Travel Administrator",
@@ -47,7 +51,10 @@ class UserManagementSerializer(serializers.Serializer):
 class SimpleProfileSerializer(serializers.ModelSerializer):
 
     user_id = serializers.CharField(source="user.id")
-    email = serializers.CharField(source="user.email")
+    email = serializers.EmailField(
+        source="user.email",
+        validators=[EmailValidator()],
+    )
     full_name = serializers.SerializerMethodField()
 
     def get_full_name(self, obj):
@@ -138,6 +145,7 @@ class SimpleNestedProfileSerializer(serializers.ModelSerializer):
 
 
 class SimpleUserSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(validators=[EmailValidator()])
     profile = SimpleNestedProfileSerializer()
 
     class Meta:
@@ -165,11 +173,11 @@ class MinimalUserSerializer(SimpleUserSerializer):
 
 
 class UserCreationSerializer(serializers.ModelSerializer):
-
     id = serializers.CharField(read_only=True)
     groups = serializers.SerializerMethodField()
     user_permissions = serializers.SerializerMethodField()
     profile = UserProfileCreationSerializer()
+    email = serializers.EmailField(validators=[EmailValidator()])
 
     def get_groups(self, user):
         return [grp.id for grp in user.groups.all()]
@@ -192,7 +200,6 @@ class UserCreationSerializer(serializers.ModelSerializer):
             user = get_user_model().objects.create(**validated_data)
             user.profile.country = user_profile['country']
             user.profile.tenant_profile.office = user_profile['office']
-            user.profile.partner_staff_member = 0
             user.profile.job_title = user_profile['job_title']
             user.profile.phone_number = user_profile['phone_number']
             user.profile.country_override = user_profile['country_override']

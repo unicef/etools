@@ -1,6 +1,5 @@
 
 import datetime
-import json
 from decimal import Decimal
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
@@ -39,7 +38,7 @@ class TestFundReservationsSynchronizer(BaseTenantTestCase):
             "FR_END_DATE": "20-Dec-15",
             "LINE_ITEM": "987",
             "WBS_ELEMENT": "WBS",
-            "GRANT_NBR": "456",
+            "GRANT_REF": "456",
             "FUND": "Fund",
             "OVERALL_AMOUNT": "20.00",
             "OVERALL_AMOUNT_DC": "5.00",
@@ -90,7 +89,7 @@ class TestFundReservationsSynchronizer(BaseTenantTestCase):
             fr_ref_number="123-987",
             line_item=self.data["LINE_ITEM"],
             wbs=self.data["WBS_ELEMENT"],
-            grant_number=self.data["GRANT_NBR"],
+            grant_number=self.data["GRANT_REF"],
             fund=self.data["FUND"],
             overall_amount=self.data["OVERALL_AMOUNT"],
             overall_amount_dc=self.data["OVERALL_AMOUNT_DC"],
@@ -112,19 +111,16 @@ class TestFundReservationsSynchronizer(BaseTenantTestCase):
             start_date=datetime.date(2015, 1, 13),
             end_date=datetime.date(2015, 12, 20),
         )
-        self.adapter = synchronizers.FundReservationsSynchronizer(self.country.business_area_code)
+        self.adapter = synchronizers.FundReservationsSynchronizer(business_area_code=self.country.business_area_code)
 
     def test_init(self):
-        a = synchronizers.FundReservationsSynchronizer(self.country.business_area_code)
+        a = synchronizers.FundReservationsSynchronizer(business_area_code=self.country.business_area_code)
         self.assertEqual(a.header_records, {})
         self.assertEqual(a.item_records, {})
         self.assertEqual(a.fr_headers, {})
 
     def test_convert_records(self):
-        self.assertEqual(
-            self.adapter._convert_records(json.dumps({"ROWSET": {"ROW": [self.data]}})),
-            [self.data]
-        )
+        self.assertEqual(self.adapter._convert_records([self.data]), [self.data])
 
     def test_update_fr_totals_no_fr_items__overall_amount_dc(self):
         # Test for https://app.clubhouse.io/unicefetools/story/4978/fr-handler-none-values-failing-on-frs
@@ -135,21 +131,18 @@ class TestFundReservationsSynchronizer(BaseTenantTestCase):
     def test_filter_records_no_overall_amount(self):
         """If no overall amount then ignore record"""
         self.data["OVERALL_AMOUNT"] = ""
-        records = {"ROWSET": {"ROW": [self.data]}}
-        response = self.adapter._filter_records(records)
+        response = self.adapter._filter_records([self.data])
         self.assertEqual(response, [])
 
     def test_filter_records_no_fr_number(self):
         """If no fr number then ignore record"""
         self.data["FR_NUMBER"] = ""
-        records = {"ROWSET": {"ROW": [self.data]}}
-        response = self.adapter._filter_records(records)
+        response = self.adapter._filter_records([self.data])
         self.assertEqual(response, [])
 
     def test_filter_records(self):
         """If have both overall number and fr number then keep record"""
-        records = [self.data]
-        response = self.adapter._filter_records(records)
+        response = self.adapter._filter_records([self.data])
         self.assertEqual(response, [self.data])
 
     def test_get_value_for_field_date(self):
@@ -312,7 +305,7 @@ class TestFundCommitmentSynchronizer(BaseTenantTestCase):
             "RESP_PERSON": "Resp Person",
             "LINE_ITEM": "987",
             "WBS_ELEMENT": "WBS",
-            "GRANT_NBR": "456",
+            "GRANT_REF": "456",
             "FUND": "Fund",
             "GL_ACCOUNT": "0405",
             "DUE_DATE": "05-May-17",
@@ -356,7 +349,7 @@ class TestFundCommitmentSynchronizer(BaseTenantTestCase):
             fc_ref_number="123-987",
             line_item=self.data["LINE_ITEM"],
             wbs=self.data["WBS_ELEMENT"],
-            grant_number=self.data["GRANT_NBR"],
+            grant_number=self.data["GRANT_REF"],
             fund=self.data["FUND"],
             gl_account=self.data["GL_ACCOUNT"],
             due_date=datetime.date(2017, 5, 5),
@@ -376,19 +369,16 @@ class TestFundCommitmentSynchronizer(BaseTenantTestCase):
             exchange_rate=self.data["EXCHANGE_RATE"],
             responsible_person=self.data["RESP_PERSON"],
         )
-        self.adapter = synchronizers.FundCommitmentSynchronizer(self.country.business_area_code)
+        self.adapter = synchronizers.FundCommitmentSynchronizer(business_area_code=self.country.business_area_code)
 
     def test_init(self):
-        a = synchronizers.FundCommitmentSynchronizer(self.country.business_area_code)
+        a = synchronizers.FundCommitmentSynchronizer(business_area_code=self.country.business_area_code)
         self.assertEqual(a.header_records, {})
         self.assertEqual(a.item_records, {})
         self.assertEqual(a.fc_headers, {})
 
     def test_convert_records(self):
-        self.assertEqual(
-            self.adapter._convert_records(json.dumps([self.data])),
-            [self.data]
-        )
+        self.assertEqual(self.adapter._convert_records([self.data]), [self.data])
 
     def test_filter_records_no_commitment_amount_usd(self):
         """If no commitment amount usd then ignore record"""
@@ -406,8 +396,7 @@ class TestFundCommitmentSynchronizer(BaseTenantTestCase):
 
     def test_filter_records(self):
         """If have both fc number and commitment amount usd then keep record"""
-        records = {"ROWSET": {"ROW": [self.data]}}
-        response = self.adapter._filter_records(records)
+        response = self.adapter._filter_records([self.data])
         self.assertEqual(response, [self.data])
 
     def test_get_value_for_field_dates(self):
@@ -548,7 +537,5 @@ class TestFundCommitmentSynchronizer(BaseTenantTestCase):
 
     def test_save_records(self):
         self.data["LINE_ITEM"] = "333"
-        response = self.adapter._save_records(
-            {"ROWSET": {"ROW": [self.data]}}
-        )
+        response = self.adapter._save_records([self.data])
         self.assertEqual(response, 1)

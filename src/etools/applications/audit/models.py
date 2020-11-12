@@ -170,6 +170,7 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
 
     active_pd = models.ManyToManyField('partners.Intervention', verbose_name=_('Active PDs'), blank=True)
 
+    # TODO: clarify this.. do we even need this
     authorized_officers = models.ManyToManyField(
         PartnerStaffMember, verbose_name=_('Authorized Officers'), blank=True, related_name="engagement_authorizations"
     )

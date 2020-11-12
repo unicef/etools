@@ -11,26 +11,71 @@ interactions:
       Content-Type:
       - application/json
       User-Agent:
-      - python-requests/2.21.0
+      - python-requests/2.22.0
     method: GET
-    uri: http://invalid_vision_url/GetFundsReservationInfo_JSON/another%20bad%20value
+    uri: http://invalid_vision_url/fundsreservations/another%20bad%20value/?businessarea=ZZZ
   response:
     body:
-      string: '"<Error><Code>1002<\/Code><UserMessage>Application Error<\/UserMessage><DevMessage>No
-        data exists for the row or column.<\/DevMessage><MoreInfo>,at,UNICEF,BI,WebServices,DataAccess,OracleDBConnection,ExecuteOracleReaderCommand,String,ProcName,CommandType,cmdType,String,paramName,OracleType,paramType,String,paramValues,ParameterDirection,paramDirections,at,UNICEF,BI,WebServices,DataAccess,BIServiceDA,GetFundsReservation,String,businessAreaCode,at,UNICEF,BI,WebServices,Business,BIServiceBO,GetFundsReservation,JSON,String,businessAreaCode,<\/MoreInfo><\/Error>"'
+      string: '{}'
     headers:
+      Cache-Control:
+      - no-cache
       Content-Type:
       - application/json; charset=utf-8
       Date:
-      - Tue, 13 Aug 2019 17:44:46 GMT
-      Server:
-      - Microsoft-IIS/8.5 Microsoft-HTTPAPI/2.0
+      - Mon, 19 Oct 2020 21:13:21 GMT
+      Expires:
+      - '-1'
+      Pragma:
+      - no-cache
       Vary:
       - Accept-Encoding
+      X-AspNet-Version:
+      - 4.0.30319
       X-Powered-By:
       - ASP.NET
       content-length:
-      - '564'
+      - '2'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Type:
+      - application/json
+      User-Agent:
+      - python-requests/2.22.0
+    method: GET
+    uri: http://invalid_vision_url/fundsreservations/im%20a%20bad%20value/?businessarea=ZZZ
+  response:
+    body:
+      string: '{}'
+    headers:
+      Cache-Control:
+      - no-cache
+      Content-Type:
+      - application/json; charset=utf-8
+      Date:
+      - Mon, 19 Oct 2020 21:13:23 GMT
+      Expires:
+      - '-1'
+      Pragma:
+      - no-cache
+      Vary:
+      - Accept-Encoding
+      X-AspNet-Version:
+      - 4.0.30319
+      X-Powered-By:
+      - ASP.NET
+      content-length:
+      - '2'
     status:
       code: 200
       message: OK

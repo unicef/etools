@@ -14,7 +14,7 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
         cls.unicef_user = UserFactory()
         cls.partner = PartnerFactory()
         cls.partner_staff = cls.partner.staff_members.all().first()
-        cls.partner_user = UserFactory(email=cls.partner_staff.email)
+        cls.partner_user = cls.partner_staff.user
         cls.mock_unicef_request = Mock(user=cls.unicef_user)
         cls.mock_partner_request = Mock(user=cls.partner_user)
         cls.unicef_serializer = serializers.InterventionDetailSerializer(

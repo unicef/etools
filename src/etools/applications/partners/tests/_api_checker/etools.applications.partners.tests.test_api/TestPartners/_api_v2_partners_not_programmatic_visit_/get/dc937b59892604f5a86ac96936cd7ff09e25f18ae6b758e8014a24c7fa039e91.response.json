@@ -1,0 +1,57 @@
+{
+    "status_code": 200,
+    "headers": {
+        "content-type": [
+            "Content-Type",
+            "application/json"
+        ],
+        "vary": [
+            "Vary",
+            "Accept, Origin, Cookie"
+        ],
+        "allow": [
+            "Allow",
+            "GET"
+        ],
+        "x-frame-options": [
+            "X-Frame-Options",
+            "SAMEORIGIN"
+        ],
+        "content-length": [
+            "Content-Length",
+            "517"
+        ]
+    },
+    "data": [
+        {
+            "street_address": null,
+            "last_assessment_date": null,
+            "address": null,
+            "city": null,
+            "postal_code": null,
+            "country": null,
+            "id": 575,
+            "vendor_number": null,
+            "deleted_flag": false,
+            "blocked": false,
+            "name": "Partner 9",
+            "short_name": "",
+            "partner_type": "",
+            "cso_type": null,
+            "rating": null,
+            "shared_with": null,
+            "email": null,
+            "phone_number": null,
+            "total_ct_cp": null,
+            "total_ct_cy": null,
+            "net_ct_cy": "2501.00",
+            "reported_cy": "10000.00",
+            "total_ct_ytd": null,
+            "hidden": false,
+            "basis_for_risk_rating": "",
+            "psea_assessment_date": null,
+            "sea_risk_rating_name": ""
+        }
+    ],
+    "content_type": null
+}

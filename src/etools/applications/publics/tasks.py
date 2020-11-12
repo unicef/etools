@@ -1,7 +1,7 @@
 import csv
-import xml.etree.ElementTree as ET
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
+from xml.etree import ElementTree as ET
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.transaction import atomic

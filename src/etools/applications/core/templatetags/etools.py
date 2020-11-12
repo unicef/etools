@@ -14,7 +14,7 @@ def etools_version():
 
 @register.simple_tag
 def vision_url():
-    return settings.VISION_URL
+    return settings.INSIGHT_URL
 
 
 @register.simple_tag(takes_context=True)
