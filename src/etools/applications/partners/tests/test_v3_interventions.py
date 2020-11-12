@@ -1,4 +1,5 @@
 import datetime
+from decimal import Decimal
 from unittest import mock, skip
 
 from django.contrib.auth.models import AnonymousUser
@@ -716,6 +717,13 @@ class TestSupplyItem(BaseInterventionTestCase):
         # check that item unit number was updated correctly
         item.refresh_from_db()
         self.assertEqual(item.unit_number, 4)
+        # check records saved correctly
+        new_item = self.intervention.supply_items.get(
+            unicef_product_number="S9935097",
+        )
+        self.assertEqual(new_item.title, "School-in-a-box 40 students  2016")
+        self.assertEqual(new_item.unit_number, 1)
+        self.assertEqual(new_item.unit_price, Decimal("146.85"))
 
     def test_upload_invalid_file(self):
         response = self.forced_auth_req(
