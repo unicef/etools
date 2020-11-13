@@ -1558,6 +1558,7 @@ class InterventionManager(models.Manager):
             'offices',
             'planned_budget',
             'sections',
+            'country_programmes',
         )
 
     def detail_qs(self):
@@ -2698,10 +2699,9 @@ class InterventionBudget(TimeStampedModel):
         self.unicef_cash_local += self.intervention.management_budgets.unicef_total
 
         # in kind totals
-        if self.intervention.supply_items.exists():
-            self.in_kind_amount_local = 0
-            for item in self.intervention.supply_items.all():
-                self.in_kind_amount_local += item.total_price
+        self.in_kind_amount_local = 0
+        for item in self.intervention.supply_items.all():
+            self.in_kind_amount_local += item.total_price
 
         self.total = self.total_unicef_contribution() + self.partner_contribution
         self.total_local = self.total_unicef_contribution_local() + self.partner_contribution_local
@@ -3016,4 +3016,8 @@ class InterventionSupplyItem(TimeStampedModel):
     def save(self, *args, **kwargs):
         self.total_price = self.unit_number * self.unit_price
         super().save()
+        self.intervention.planned_budget.calc_totals()
+
+    def delete(self, **kwargs):
+        super().delete(**kwargs)
         self.intervention.planned_budget.calc_totals()
