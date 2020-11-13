@@ -335,6 +335,44 @@ class TestCreate(BaseInterventionTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
 
+    def test_add_currency(self):
+        response = self.forced_auth_req(
+            "post",
+            reverse('pmp_v3:intervention-list'),
+            user=self.user,
+            data={
+                'document_type': Intervention.PD,
+                'title': 'PD with Currency',
+                'agreement': self.agreement.pk,
+                'planned_budget': {
+                    'currency': 'AFN',
+                }
+            }
+        )
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_201_CREATED,
+            response.data,
+        )
+        pd = Intervention.objects.get(pk=response.data["id"])
+        self.assertEqual(pd.planned_budget.currency, 'AFN')
+
+    def test_add_currency_invalid(self):
+        response = self.forced_auth_req(
+            "post",
+            reverse('pmp_v3:intervention-list'),
+            user=self.user,
+            data={
+                'document_type': Intervention.PD,
+                'title': 'PD with Currency',
+                'agreement': self.agreement.pk,
+                'planned_budget': {
+                    'currency': 'WRONG',
+                }
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
 
 class TestUpdate(BaseInterventionTestCase):
     def test_patch_currency(self):
