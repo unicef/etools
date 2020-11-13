@@ -25,6 +25,7 @@ from etools.applications.partners.serializers.interventions_v2 import (
     InterventionAmendmentCUSerializer,
     InterventionAttachmentSerializer,
     InterventionBudgetCUSerializer,
+    InterventionListSerializer as InterventionV2ListSerializer,
     InterventionResultNestedSerializer,
     PlannedVisitsNestedSerializer,
     SingleInterventionAttachmentField,
@@ -483,3 +484,12 @@ class PMPInterventionAttachmentSerializer(InterventionAttachmentSerializer):
         extra_kwargs = {
             'intervention': {'read_only': True},
         }
+
+
+class InterventionListSerializer(InterventionV2ListSerializer):
+    class Meta(InterventionV2ListSerializer.Meta):
+        fields = InterventionV2ListSerializer.Meta.fields + (
+            'country_programmes',
+        )
+        # remove old legacy field to avoid inconvenience
+        fields = tuple(f for f in fields if f != 'country_programme')

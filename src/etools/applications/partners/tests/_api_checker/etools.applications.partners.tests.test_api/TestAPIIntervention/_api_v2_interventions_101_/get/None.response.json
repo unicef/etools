@@ -19,7 +19,7 @@
         ],
         "content-length": [
             "Content-Length",
-            "8568"
+            "8445"
         ]
     },
     "data": {
@@ -184,7 +184,7 @@
                 "ip_program_contribution": false,
                 "agreement_id": true,
                 "reporting_periods": true,
-                "country_programmes": true,
+                "country_programmes": false,
                 "humanitarian_flag": true,
                 "number": false,
                 "planned_budget": false,
@@ -366,7 +366,7 @@
                 "ip_program_contribution": false,
                 "agreement_id": true,
                 "reporting_periods": true,
-                "country_programmes": true,
+                "country_programmes": false,
                 "humanitarian_flag": true,
                 "number": false,
                 "planned_budget": false,
