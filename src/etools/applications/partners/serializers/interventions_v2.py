@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from operator import itemgetter
 
 from django.db import transaction
@@ -943,6 +943,7 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
 
     def _validate_qpr(self, requirements):
         self._validate_start_date(requirements)
+        self._validate_end_date(requirements)
         self._validate_date_intervals(requirements)
 
     def _validate_hr(self, requirements):
@@ -959,6 +960,7 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
             )
 
         self._validate_start_date(requirements)
+        self._validate_end_date(requirements)
         self._validate_date_intervals(requirements)
 
     def _validate_start_date(self, requirements):
@@ -969,6 +971,18 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
                 "reporting_requirements": {
                     "start_date": _(
                         "Start date needs to be on or after PD start date."
+                    )
+                }
+            })
+
+    def _validate_end_date(self, requirements):
+        # Ensure that the last reporting requirement start date
+        # is on or before PD end date
+        if requirements[0]["end_date"] > self.intervention.end:
+            raise serializers.ValidationError({
+                "reporting_requirements": {
+                    "end_date": _(
+                        "End date needs to be on or before PD end date."
                     )
                 }
             })
@@ -986,8 +1000,7 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
                 })
 
             if i > 0:
-                if (requirements[i]["start_date"] - requirements[i - 1]["end_date"]).days > 1 or \
-                        (requirements[i]["start_date"] < requirements[i - 1]["end_date"]):
+                if requirements[i]["start_date"] != requirements[i - 1]["end_date"] + timedelta(days=1):
                     raise serializers.ValidationError({
                         "reporting_requirements": {
                             "start_date": _(
