@@ -287,7 +287,7 @@ class InterventionListSerializer(BaseInterventionListSerializer):
             'date_sent_to_partner',
             'unicef_accepted',
             'partner_accepted',
-            'date_draft_by_partner',
+            'submission_date',
             'cfei_number',
             'context',
             'implementation_strategy',
