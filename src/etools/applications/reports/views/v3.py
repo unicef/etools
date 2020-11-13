@@ -1,12 +1,22 @@
+from django.shortcuts import get_object_or_404
+
 from rest_framework import mixins, viewsets
 from rest_framework.exceptions import ValidationError
+from rest_framework.permissions import IsAuthenticated
 from unicef_restlib.views import QueryStringFilterMixin
 
+from etools.applications.field_monitoring.permissions import IsEditAction, IsReadAction
+from etools.applications.partners.models import Intervention
+from etools.applications.partners.permissions import intervention_field_is_editable_permission
+from etools.applications.partners.views.interventions_v3 import DetailedInterventionResponseMixin
 from etools.applications.partners.views.v3 import PMPBaseViewMixin
 from etools.applications.reports.models import Office, Section
 from etools.applications.reports.serializers.v1 import SectionCreateSerializer
 from etools.applications.reports.serializers.v2 import OfficeSerializer
-from etools.applications.reports.views.v2 import SpecialReportingRequirementListCreateView
+from etools.applications.reports.views.v2 import (
+    SpecialReportingRequirementListCreateView,
+    SpecialReportingRequirementRetrieveUpdateDestroyView,
+)
 from etools.libraries.djangolib.views import ExternalModuleFilterMixin
 
 
@@ -62,6 +72,33 @@ class PMPSectionViewSet(
 
 class PMPSpecialReportingRequirementListCreateView(
         PMPBaseViewMixin,
+        DetailedInterventionResponseMixin,
         SpecialReportingRequirementListCreateView,
 ):
-    """Wrapper for Special Reporting Requirement View"""
+    permission_classes = [
+        IsAuthenticated,
+        IsReadAction | (IsEditAction & intervention_field_is_editable_permission('reporting_requirements')),
+    ]
+
+    def get_root_object(self):
+        return get_object_or_404(Intervention.objects, pk=self.kwargs.get('intervention_pk'))
+
+    def get_intervention(self):
+        return self.get_root_object()
+
+
+class PMPSpecialReportingRequirementRetrieveUpdateDestroyView(
+    PMPBaseViewMixin,
+    DetailedInterventionResponseMixin,
+    SpecialReportingRequirementRetrieveUpdateDestroyView,
+):
+    permission_classes = [
+        IsAuthenticated,
+        IsReadAction | (IsEditAction & intervention_field_is_editable_permission('reporting_requirements')),
+    ]
+
+    def get_root_object(self):
+        return get_object_or_404(Intervention.objects, pk=self.kwargs.get('intervention_pk'))
+
+    def get_intervention(self):
+        return self.get_root_object()

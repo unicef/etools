@@ -19,7 +19,7 @@
         ],
         "content-length": [
             "Content-Length",
-            "8568"
+            "8570"
         ]
     },
     "data": {
@@ -103,7 +103,7 @@
                 "contingency_pd": false,
                 "country_programme": false,
                 "country_programme_id": true,
-                "country_programmes": true,
+                "country_programmes": false,
                 "created": true,
                 "date_draft_by_partner": true,
                 "date_partnership_review_performed": false,
@@ -285,7 +285,7 @@
                 "contingency_pd": false,
                 "country_programme": false,
                 "country_programme_id": true,
-                "country_programmes": true,
+                "country_programmes": false,
                 "created": true,
                 "date_draft_by_partner": true,
                 "date_partnership_review_performed": true,

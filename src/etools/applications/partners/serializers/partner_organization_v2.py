@@ -27,6 +27,7 @@ from etools.applications.partners.serializers.interventions_v2 import (
     InterventionListSerializer,
     InterventionMonitorSerializer,
 )
+from etools.applications.users.serializers import MinimalUserSerializer
 
 
 class CoreValuesAssessmentSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
@@ -218,6 +219,14 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
 
 
 class PartnerStaffMemberDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PartnerStaffMember
+        fields = "__all__"
+
+
+class PartnerStaffMemberUserSerializer(serializers.ModelSerializer):
+    user = MinimalUserSerializer()
+
     class Meta:
         model = PartnerStaffMember
         fields = "__all__"

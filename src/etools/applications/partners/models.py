@@ -1558,6 +1558,7 @@ class InterventionManager(models.Manager):
             'offices',
             'planned_budget',
             'sections',
+            'country_programmes',
         )
 
     def detail_qs(self):
