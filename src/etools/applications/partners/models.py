@@ -2428,6 +2428,7 @@ class Intervention(TimeStampedModel):
         if not oldself:
             self.management_budgets = InterventionManagementBudget.objects.create(intervention=self)
             self.planned_budget = InterventionBudget.objects.create(intervention=self)
+            self.review = InterventionReview.objects.create(intervention=self)
 
 
 class InterventionAmendment(TimeStampedModel):
@@ -3017,3 +3018,15 @@ class InterventionSupplyItem(TimeStampedModel):
         self.total_price = self.unit_number * self.unit_price
         super().save()
         self.intervention.planned_budget.calc_totals()
+
+
+class InterventionReview(models.Model):
+    intervention = models.OneToOneField(Intervention, on_delete=models.CASCADE, related_name='review')
+
+    q1_answer = models.TextField(blank=True, null=True, verbose_name=_('Question 1'))
+    q2_answer = models.TextField(blank=True, null=True, verbose_name=_('Question 2'))
+    q3_answer = models.TextField(blank=True, null=True, verbose_name=_('Question 3'))
+    review_passed = models.BooleanField(default=False, verbose_name=_('Review Passed'))
+
+    def __str__(self):
+        return f'{self.intervention} review'

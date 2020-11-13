@@ -30,6 +30,7 @@ from etools.applications.partners.models import (  # TODO intervention sector lo
     InterventionBudget,
     InterventionPlannedVisits,
     InterventionResultLink,
+    InterventionReview,
     PartnerOrganization,
     PartnerStaffMember,
     PlannedEngagement,
@@ -239,6 +240,10 @@ class SignedPDAttachmentInline(AttachmentSingleInline):
     code = 'partners_intervention_signed_pd'
 
 
+class InterventionReviewInline(admin.TabularInline):
+    model = InterventionReview
+
+
 class InterventionAdmin(
         AttachmentInlineAdminMixin,
         CountryUsersAdminMixin,
@@ -353,6 +358,7 @@ class InterventionAdmin(
         PRCReviewAttachmentInline,
         SignedPDAttachmentInline,
         InterventionPlannedVisitsInline,
+        InterventionReviewInline,
     )
 
     def created_date(self, obj):

@@ -370,6 +370,21 @@ class TestUpdate(BaseInterventionTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn(cp, intervention.country_programmes.all())
 
+    def test_patch_review(self):
+        intervention = InterventionFactory(status=Intervention.REVIEW)
+        response = self.forced_auth_req(
+            'patch',
+            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+            user=self.user,
+            data={
+                'review': {
+                    'q1_answer': 'review passed',
+                    'review_passed': True
+                },
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+
 
 class TestDelete(BaseInterventionTestCase):
     def setUp(self):

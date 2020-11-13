@@ -12,6 +12,7 @@ from etools.applications.partners.models import (
     FileType,
     Intervention,
     InterventionManagementBudget,
+    InterventionReview,
     InterventionRisk,
     InterventionSupplyItem,
 )
@@ -474,3 +475,15 @@ class PMPInterventionAttachmentSerializer(InterventionAttachmentSerializer):
         extra_kwargs = {
             'intervention': {'read_only': True},
         }
+
+
+class InterventionReviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InterventionReview
+        fields = (
+            'intervention',
+            'q1_answer',
+            'q2_answer',
+            'q3_answer',
+            'review_passed',
+        )
