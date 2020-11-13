@@ -1960,11 +1960,6 @@ class Intervention(TimeStampedModel):
         verbose_name=("Partner Accepted"),
         default=False,
     )
-    date_draft_by_partner = models.DateField(
-        verbose_name=_("Date first draft by Partner"),
-        null=True,
-        blank=True,
-    )
     cfei_number = models.CharField(
         verbose_name=_("UNPP Number"),
         max_length=150,
@@ -3008,6 +3003,12 @@ class InterventionSupplyItem(TimeStampedModel):
     other_mentions = models.TextField(
         verbose_name=_("Other Mentions"),
         blank=True,
+    )
+    unicef_product_number = models.CharField(
+        verbose_name=_("UNICEF Product Number"),
+        max_length=150,
+        blank=True,
+        default="",
     )
 
     def __str__(self):

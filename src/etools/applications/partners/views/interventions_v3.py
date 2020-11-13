@@ -319,7 +319,7 @@ class PMPInterventionSupplyItemUploadView(
             )
 
         # update all supply items related to intervention
-        for title, unit_number, unit_price in file_data:
+        for title, unit_number, unit_price, product_number in file_data:
             # check if supply item exists
             supply_qs = InterventionSupplyItem.objects.filter(
                 intervention=intervention,
@@ -336,6 +336,7 @@ class PMPInterventionSupplyItemUploadView(
                     title=title,
                     unit_number=unit_number,
                     unit_price=unit_price,
+                    unicef_product_number=product_number,
                 )
         # make sure we get the correct totals
         intervention.refresh_from_db()
