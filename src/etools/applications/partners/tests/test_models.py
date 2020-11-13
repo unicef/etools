@@ -1576,8 +1576,13 @@ class TestInterventionBudget(BaseTenantTestCase):
 
         budget.partner_contribution_local = 10
         budget.unicef_cash_local = 20
-        budget.in_kind_amount_local = 30
         budget.save()
+
+        InterventionSupplyItemFactory(
+            intervention=intervention,
+            unit_number=10,
+            unit_price=3,
+        )
 
         mgmt_budget.act1_unicef = 100
         mgmt_budget.act1_partner = 200
