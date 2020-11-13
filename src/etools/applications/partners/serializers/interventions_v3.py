@@ -29,6 +29,7 @@ from etools.applications.partners.serializers.interventions_v2 import (
     PlannedVisitsNestedSerializer,
     SingleInterventionAttachmentField,
 )
+from etools.applications.partners.serializers.partner_organization_v2 import PartnerStaffMemberUserSerializer
 from etools.applications.partners.utils import get_quarters_range
 from etools.applications.reports.serializers.v2 import InterventionTimeFrameSerializer
 from etools.applications.users.serializers_v3 import MinimalUserSerializer
@@ -188,6 +189,8 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     management_budgets = InterventionManagementBudgetSerializer(read_only=True)
     unicef_signatory = MinimalUserSerializer()
     unicef_focal_points = MinimalUserSerializer(many=True)
+    partner_focal_points = PartnerStaffMemberUserSerializer(many=True)
+    partner_authorized_officer_signatory = PartnerStaffMemberUserSerializer()
 
     def get_location_p_codes(self, obj):
         return [location.p_code for location in obj.flat_locations.all()]
