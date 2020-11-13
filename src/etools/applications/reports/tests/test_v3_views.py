@@ -262,12 +262,7 @@ class TestSpecialReportingRequirementRetrieveUpdateDestroyView(BaseTenantTestCas
         cls.unicef_staff.groups.add(group)
 
         cls.partner = PartnerFactory()
-        cls.partner_focal_point = UserFactory(is_staff=False, groups__data=[])
-        partner_focal_point_staff = PartnerStaffFactory(
-            partner=cls.partner, email=cls.partner_focal_point.email
-        )
-        cls.partner_focal_point.profile.partner_staff_member = partner_focal_point_staff.id
-        cls.partner_focal_point.profile.save()
+        cls.partner_focal_point = PartnerStaffFactory(partner=cls.partner).user
 
         cls.intervention = InterventionFactory(
             start=datetime.date(2001, 1, 1),
@@ -276,7 +271,7 @@ class TestSpecialReportingRequirementRetrieveUpdateDestroyView(BaseTenantTestCas
             agreement__partner=cls.partner,
             date_sent_to_partner=datetime.date.today()
         )
-        cls.intervention.partner_focal_points.add(partner_focal_point_staff)
+        cls.intervention.partner_focal_points.add(cls.partner_focal_point.get_partner_staff_member())
 
     def _get_url(self, requirement):
         return reverse(
