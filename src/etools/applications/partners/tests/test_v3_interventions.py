@@ -601,16 +601,19 @@ class TestSupplyItem(BaseInterventionTestCase):
                 "title": "New Supply Item",
                 "unit_number": 10,
                 "unit_price": 2,
+                "unicef_product_number": "ACME-123",
             },
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data["unit_number"], "10.00")
         self.assertEqual(response.data["unit_price"], "2.00")
         self.assertEqual(response.data["total_price"], "20.00")
+        self.assertEqual(response.data["unicef_product_number"], "ACME-123")
         self.assertTrue(item_qs.exists())
         item = item_qs.first()
         self.assertEqual(item.intervention, self.intervention)
         self.assertIsNone(item.result)
+        self.assertEqual(item.unicef_product_number, "ACME-123")
 
     def test_post_with_cp_output(self):
         item_qs = InterventionSupplyItem.objects.filter(
