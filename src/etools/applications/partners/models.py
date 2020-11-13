@@ -3004,6 +3004,12 @@ class InterventionSupplyItem(TimeStampedModel):
         verbose_name=_("Other Mentions"),
         blank=True,
     )
+    unicef_product_number = models.CharField(
+        verbose_name=_("UNICEF Product Number"),
+        max_length=150,
+        blank=True,
+        default="",
+    )
 
     def __str__(self):
         return "{} {}".format(self.intervention, self.title)

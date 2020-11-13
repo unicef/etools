@@ -54,6 +54,7 @@ class InterventionSupplyItemSerializer(serializers.ModelSerializer):
             "result",
             "total_price",
             "other_mentions",
+            "unicef_product_number",
         )
 
     def create(self, validated_data):
@@ -107,7 +108,12 @@ class InterventionSupplyItemUploadSerializer(serializers.Serializer):
                 except decimal.InvalidOperation:
                     raise ValidationError(f"Unable to process row {index}, bad number provided for `Indicative Price`")
 
-                data.append((row["Product Title"], quantity, price,))
+                data.append((
+                    row["Product Title"],
+                    quantity,
+                    price,
+                    row["Product Number"],
+                ))
         return data
 
 

@@ -1,4 +1,5 @@
 import datetime
+from decimal import Decimal
 from unittest import mock, skip
 
 from django.contrib.auth.models import AnonymousUser
@@ -617,16 +618,19 @@ class TestSupplyItem(BaseInterventionTestCase):
                 "title": "New Supply Item",
                 "unit_number": 10,
                 "unit_price": 2,
+                "unicef_product_number": "ACME-123",
             },
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data["unit_number"], "10.00")
         self.assertEqual(response.data["unit_price"], "2.00")
         self.assertEqual(response.data["total_price"], "20.00")
+        self.assertEqual(response.data["unicef_product_number"], "ACME-123")
         self.assertTrue(item_qs.exists())
         item = item_qs.first()
         self.assertEqual(item.intervention, self.intervention)
         self.assertIsNone(item.result)
+        self.assertEqual(item.unicef_product_number, "ACME-123")
 
     def test_post_with_cp_output(self):
         item_qs = InterventionSupplyItem.objects.filter(
@@ -786,6 +790,13 @@ class TestSupplyItem(BaseInterventionTestCase):
         # check that item unit number was updated correctly
         item.refresh_from_db()
         self.assertEqual(item.unit_number, 4)
+        # check records saved correctly
+        new_item = self.intervention.supply_items.get(
+            unicef_product_number="S9935097",
+        )
+        self.assertEqual(new_item.title, "School-in-a-box 40 students  2016")
+        self.assertEqual(new_item.unit_number, 1)
+        self.assertEqual(new_item.unit_price, Decimal("146.85"))
 
     def test_upload_invalid_file(self):
         response = self.forced_auth_req(
