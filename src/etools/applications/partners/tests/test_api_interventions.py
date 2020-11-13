@@ -638,7 +638,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
                               [perm for perm in required_permissions if required_permissions[perm]])
 
     def test_list_interventions(self):
-        EXPECTED_QUERIES = 9
+        EXPECTED_QUERIES = 10
         with self.assertNumQueries(EXPECTED_QUERIES):
             status_code, response = self.run_request_list_ep(user=self.unicef_staff, method='get')
 
@@ -672,7 +672,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
         self.ts = TenantSwitchFactory(name="prp_mode_off", countries=[connection.tenant])
         self.assertTrue(tenant_switch_is_active(self.ts.name))
 
-        EXPECTED_QUERIES = 9
+        EXPECTED_QUERIES = 10
         with self.assertNumQueries(EXPECTED_QUERIES):
             status_code, response = self.run_request_list_ep(user=self.unicef_staff, method='get')
 

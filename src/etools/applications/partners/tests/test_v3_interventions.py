@@ -201,6 +201,23 @@ class TestList(BaseInterventionTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
 
+    def test_updated_country_programmes_field_in_use(self):
+        intervention = InterventionFactory()
+        country_programme = CountryProgrammeFactory()
+        intervention.country_programmes.add(country_programme)
+        InterventionFactory()
+        with self.assertNumQueries(11):
+            response = self.forced_auth_req(
+                "get",
+                reverse('pmp_v3:intervention-list'),
+                user=self.user,
+            )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+        intervention_data = sorted(response.data, key=lambda i: i['id'])[0]
+        self.assertNotIn('country_programme', intervention_data)
+        self.assertEqual([country_programme.id], intervention_data['country_programmes'])
+
 
 class TestDetail(BaseInterventionTestCase):
     def setUp(self):
@@ -728,6 +745,21 @@ class TestSupplyItem(BaseInterventionTestCase):
             user=self.partner_focal_point
         )
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_budget_update_on_delete(self):
+        budget = self.intervention.planned_budget
+        item = InterventionSupplyItemFactory(intervention=self.intervention, unit_number=1, unit_price=2)
+        self.assertEqual(budget.in_kind_amount_local, 2)
+        response = self.forced_auth_req(
+            "delete",
+            reverse(
+                "pmp_v3:intervention-supply-item-detail",
+                args=[self.intervention.pk, item.pk],
+            )
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        budget.refresh_from_db()
+        self.assertEqual(budget.in_kind_amount_local, 0)
 
     def test_upload(self):
         # add supply item that will be updated
