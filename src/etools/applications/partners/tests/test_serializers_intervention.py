@@ -358,6 +358,10 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
             "report_type": ReportingRequirement.TYPE_HR,
             "reporting_requirements": [{
                 "start_date": datetime.date(2001, 4, 15),
+                "due_date": datetime.date(2001, 5, 1),
+                "end_date": datetime.date(2001, 5, 1),
+            }, {
+                "start_date": datetime.date(2001, 5, 2),
                 "due_date": datetime.date(2001, 5, 15),
                 "end_date": datetime.date(2002, 1, 1),
             }]

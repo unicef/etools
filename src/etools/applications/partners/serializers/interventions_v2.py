@@ -978,7 +978,7 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
     def _validate_end_date(self, requirements):
         # Ensure that the last reporting requirement start date
         # is on or before PD end date
-        if requirements[0]["end_date"] > self.intervention.end:
+        if requirements[-1]["end_date"] > self.intervention.end:
             raise serializers.ValidationError({
                 "reporting_requirements": {
                     "end_date": _(
