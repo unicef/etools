@@ -17,6 +17,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.status import is_success
 from rest_framework.views import APIView
+from unicef_djangolib.fields import CURRENCY_LIST
 
 from etools.applications.field_monitoring.permissions import IsEditAction, IsReadAction
 from etools.applications.partners.models import (
@@ -38,11 +39,11 @@ from etools.applications.partners.serializers.exports.interventions import (
 from etools.applications.partners.serializers.interventions_v2 import (
     InterventionBudgetCUSerializer,
     InterventionCreateUpdateSerializer,
-    InterventionListSerializer,
     MinimalInterventionListSerializer,
 )
 from etools.applications.partners.serializers.interventions_v3 import (
     InterventionDetailSerializer,
+    InterventionListSerializer,
     InterventionManagementBudgetSerializer,
     InterventionRiskSerializer,
     InterventionSupplyItemSerializer,
@@ -126,7 +127,17 @@ class PMPInterventionListCreateView(PMPInterventionMixin, InterventionListAPIVie
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
+        planned_budget = request.data.get("planned_budget")
         super().create(request, *args, **kwargs)
+
+        # check if setting currency
+        if planned_budget and planned_budget.get("currency"):
+            currency = planned_budget.get("currency")
+            if currency not in CURRENCY_LIST:
+                raise ValidationError(f"Invalid currency: {currency}.")
+            self.instance.planned_budget.currency = currency
+            self.instance.planned_budget.save()
+
         return Response(
             InterventionDetailSerializer(
                 self.instance,
@@ -305,7 +316,7 @@ class PMPInterventionSupplyItemUploadView(
             )
 
         # update all supply items related to intervention
-        for title, unit_number, unit_price in file_data:
+        for title, unit_number, unit_price, product_number in file_data:
             # check if supply item exists
             supply_qs = InterventionSupplyItem.objects.filter(
                 intervention=intervention,
@@ -322,6 +333,7 @@ class PMPInterventionSupplyItemUploadView(
                     title=title,
                     unit_number=unit_number,
                     unit_price=unit_price,
+                    unicef_product_number=product_number,
                 )
         # make sure we get the correct totals
         intervention.refresh_from_db()

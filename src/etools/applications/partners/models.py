@@ -1558,6 +1558,7 @@ class InterventionManager(models.Manager):
             'offices',
             'planned_budget',
             'sections',
+            'country_programmes',
         )
 
     def detail_qs(self):
@@ -1958,11 +1959,6 @@ class Intervention(TimeStampedModel):
     partner_accepted = models.BooleanField(
         verbose_name=("Partner Accepted"),
         default=False,
-    )
-    date_draft_by_partner = models.DateField(
-        verbose_name=_("Date first draft by Partner"),
-        null=True,
-        blank=True,
     )
     cfei_number = models.CharField(
         verbose_name=_("UNPP Number"),
@@ -2698,10 +2694,9 @@ class InterventionBudget(TimeStampedModel):
         self.unicef_cash_local += self.intervention.management_budgets.unicef_total
 
         # in kind totals
-        if self.intervention.supply_items.exists():
-            self.in_kind_amount_local = 0
-            for item in self.intervention.supply_items.all():
-                self.in_kind_amount_local += item.total_price
+        self.in_kind_amount_local = 0
+        for item in self.intervention.supply_items.all():
+            self.in_kind_amount_local += item.total_price
 
         self.total = self.total_unicef_contribution() + self.partner_contribution
         self.total_local = self.total_unicef_contribution_local() + self.partner_contribution_local
@@ -3009,6 +3004,12 @@ class InterventionSupplyItem(TimeStampedModel):
         verbose_name=_("Other Mentions"),
         blank=True,
     )
+    unicef_product_number = models.CharField(
+        verbose_name=_("UNICEF Product Number"),
+        max_length=150,
+        blank=True,
+        default="",
+    )
 
     def __str__(self):
         return "{} {}".format(self.intervention, self.title)
@@ -3016,4 +3017,8 @@ class InterventionSupplyItem(TimeStampedModel):
     def save(self, *args, **kwargs):
         self.total_price = self.unit_number * self.unit_price
         super().save()
+        self.intervention.planned_budget.calc_totals()
+
+    def delete(self, **kwargs):
+        super().delete(**kwargs)
         self.intervention.planned_budget.calc_totals()
