@@ -25,10 +25,12 @@ from etools.applications.partners.serializers.interventions_v2 import (
     InterventionAmendmentCUSerializer,
     InterventionAttachmentSerializer,
     InterventionBudgetCUSerializer,
+    InterventionListSerializer as InterventionV2ListSerializer,
     InterventionResultNestedSerializer,
     PlannedVisitsNestedSerializer,
     SingleInterventionAttachmentField,
 )
+from etools.applications.partners.serializers.partner_organization_v2 import PartnerStaffMemberUserSerializer
 from etools.applications.partners.utils import get_quarters_range
 from etools.applications.reports.serializers.v2 import InterventionTimeFrameSerializer
 from etools.applications.users.serializers_v3 import MinimalUserSerializer
@@ -52,6 +54,7 @@ class InterventionSupplyItemSerializer(serializers.ModelSerializer):
             "result",
             "total_price",
             "other_mentions",
+            "unicef_product_number",
         )
 
     def create(self, validated_data):
@@ -105,7 +108,12 @@ class InterventionSupplyItemUploadSerializer(serializers.Serializer):
                 except decimal.InvalidOperation:
                     raise ValidationError(f"Unable to process row {index}, bad number provided for `Indicative Price`")
 
-                data.append((row["Product Title"], quantity, price,))
+                data.append((
+                    row["Product Title"],
+                    quantity,
+                    price,
+                    row["Product Number"],
+                ))
         return data
 
 
@@ -188,6 +196,8 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     management_budgets = InterventionManagementBudgetSerializer(read_only=True)
     unicef_signatory = MinimalUserSerializer()
     unicef_focal_points = MinimalUserSerializer(many=True)
+    partner_focal_points = PartnerStaffMemberUserSerializer(many=True)
+    partner_authorized_officer_signatory = PartnerStaffMemberUserSerializer()
 
     def get_location_p_codes(self, obj):
         return [location.p_code for location in obj.flat_locations.all()]
@@ -380,7 +390,6 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "country_programmes",
             # "cp_outputs",
             "created",
-            "date_draft_by_partner",
             # "cso_contribution",
             "date_partnership_review_performed",
             "date_sent_to_partner",
@@ -474,3 +483,12 @@ class PMPInterventionAttachmentSerializer(InterventionAttachmentSerializer):
         extra_kwargs = {
             'intervention': {'read_only': True},
         }
+
+
+class InterventionListSerializer(InterventionV2ListSerializer):
+    class Meta(InterventionV2ListSerializer.Meta):
+        fields = InterventionV2ListSerializer.Meta.fields + (
+            'country_programmes',
+        )
+        # remove old legacy field to avoid inconvenience
+        fields = tuple(f for f in fields if f != 'country_programme')
