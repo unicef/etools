@@ -8,9 +8,9 @@ from unicef_restlib.views import QueryStringFilterMixin
 from etools.applications.field_monitoring.permissions import IsEditAction, IsReadAction
 from etools.applications.partners.models import Intervention, InterventionResultLink
 from etools.applications.partners.permissions import (
+    intervention_field_is_editable_permission,
     UserIsPartnerStaffMemberPermission,
     UserIsStaffPermission,
-    intervention_field_is_editable_permission,
 )
 from etools.applications.partners.views.interventions_v3 import DetailedInterventionResponseMixin
 from etools.applications.partners.views.v3 import PMPBaseViewMixin

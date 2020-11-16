@@ -6,26 +6,18 @@ from django.urls import reverse
 from rest_framework import status
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.partners.models import Intervention
 from etools.applications.partners.tests.factories import (
     InterventionFactory,
     InterventionResultLinkFactory,
     PartnerFactory,
     PartnerStaffFactory,
 )
-from etools.applications.reports.models import Office, Section
+from etools.applications.reports.models import Office, Section, SpecialReportingRequirement
 from etools.applications.reports.tests.factories import (
     AppliedIndicatorFactory,
     IndicatorBlueprintFactory,
     LowerResultFactory,
-    OfficeFactory,
-    SectionFactory,
-)
-from etools.applications.reports.tests.test_views import SpecialReportingRequirementListCreateMixin
-from etools.applications.users.tests.factories import UserFactory
-from etools.applications.partners.models import Intervention
-from etools.applications.partners.tests.factories import InterventionFactory, PartnerFactory, PartnerStaffFactory
-from etools.applications.reports.models import Office, Section, SpecialReportingRequirement
-from etools.applications.reports.tests.factories import (
     OfficeFactory,
     SectionFactory,
     SpecialReportingRequirementFactory,
