@@ -297,7 +297,7 @@ def check_intervention_past_start():
 def sync_partner(vendor_number=None, country=None):
     from etools.applications.partners.synchronizers import PartnerSynchronizer
     try:
-        valid_response, response = get_data_from_insight('GetPartnerDetailsInfo_json/{vendor_code}',
+        valid_response, response = get_data_from_insight('partners/?vendor={vendor_code}',
                                                      {"vendor_code": vendor_number})
         partner_resp = response["ROWSET"]["ROW"]
         partner_sync = PartnerSynchronizer(business_area_code=country.business_area_code)
