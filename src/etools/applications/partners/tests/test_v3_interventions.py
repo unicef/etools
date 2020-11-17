@@ -110,6 +110,7 @@ class BaseInterventionTestCase(BaseTenantTestCase):
             "last_name": self.user.last_name,
             "username": self.user.username,
             "email": self.user.email,
+            "phone": self.user.profile.phone_number,
         }
 
 
@@ -288,6 +289,7 @@ class TestCreate(BaseInterventionTestCase):
             "humanitarian_flag": True,
             "cfei_number": "321",
             "budget_owner": self.user.pk,
+            "phone": self.user.profile.phone_number,
         }
         response = self.forced_auth_req(
             "post",
