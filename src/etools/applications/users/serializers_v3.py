@@ -6,7 +6,7 @@ from rest_framework import serializers
 from etools.applications.audit.models import Auditor
 from etools.applications.users.models import Country, UserProfile
 from etools.applications.users.serializers import GroupSerializer, SimpleCountrySerializer
-from etools.applications.users.validators import ExternalUserValidator
+from etools.applications.users.validators import EmailValidator, ExternalUserValidator
 
 # temporary list of Countries that will use the Auditor Portal Module.
 # Logic be removed once feature gating is in place
@@ -23,6 +23,7 @@ AP_ALLOWED_COUNTRIES = [
 # used for user list view
 class MinimalUserSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='get_full_name', read_only=True)
+    email = serializers.EmailField(validators=[EmailValidator()])
 
     class Meta:
         model = get_user_model()
@@ -34,6 +35,7 @@ class MinimalUserDetailSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='get_full_name', read_only=True)
     job_title = serializers.CharField(source='profile.job_title')
     vendor_number = serializers.CharField(source='profile.vendor_number')
+    email = serializers.EmailField(validators=[EmailValidator()])
 
     class Meta:
         model = get_user_model()
@@ -114,6 +116,7 @@ class ProfileRetrieveUpdateSerializer(serializers.ModelSerializer):
 
 class SimpleUserSerializer(serializers.ModelSerializer):
     country = serializers.CharField(source='profile.country', read_only=True)
+    email = serializers.EmailField(validators=[EmailValidator()])
 
     class Meta:
         model = get_user_model()
@@ -132,9 +135,10 @@ class SimpleUserSerializer(serializers.ModelSerializer):
         )
 
 
+# TODO: user upper case validator here
 class ExternalUserSerializer(MinimalUserSerializer):
     email = serializers.EmailField(
-        label='Email address',
+        label='Email Address',
         max_length=254,
         validators=[ExternalUserValidator()],
     )

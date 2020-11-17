@@ -118,35 +118,23 @@ def _make_intervention_status_automatic_transitions(country_name):
     logger.info('Starting intervention auto status transition for country {}'.format(country_name))
 
     admin_user = get_user_model().objects.get(username=settings.TASK_ADMIN_USER)
-
-    # these are agreements that are not even valid within their own status
-    # compiling a list of them to send to an admin or save somewhere in the future
     bad_interventions = []
-
     active_ended = Intervention.objects.filter(status=Intervention.ACTIVE,
                                                end__lt=datetime.date.today())
-
-    # get all the interventions for which their status is endend and total otustanding_amt is 0 and
-    # actual_amt is the same as the total_amt
-
     qs = Intervention.objects\
         .prefetch_related('frs')\
         .filter(status=Intervention.ENDED)\
-        .annotate(frs_total_outstanding=Sum('frs__outstanding_amt'),
-                  frs_total_actual_amt=Sum('frs__actual_amt'),
-                  frs_intervention_amt=Sum('frs__intervention_amt'))\
+        .annotate(frs_total_outstanding=Sum('frs__outstanding_amt_local'),
+                  frs_total_actual_amt=Sum('frs__total_amt_local'),
+                  frs_intervention_amt=Sum('frs__actual_amt_local'))\
         .filter(frs_total_outstanding=0, frs_total_actual_amt=F('frs_intervention_amt'))
-
     processed = 0
-
     for intervention in itertools.chain(active_ended, qs):
         old_status = intervention.status
         with transaction.atomic():
-            # this function mutates the intervention
             validator = InterventionValid(intervention, user=admin_user, disable_rigid_check=True)
             if validator.is_valid:
                 if intervention.status != old_status:
-                    # this one transitioned forward
                     intervention.save()
                     processed += 1
             else:

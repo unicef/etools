@@ -53,7 +53,7 @@ class TravelActivityFactory(factory.django.DjangoModelFactory):
                 self.travels.add(travel)
 
 
-class ItineraryItemFactory(factory.DjangoModelFactory):
+class ItineraryItemFactory(factory.django.DjangoModelFactory):
     origin = fuzzy.FuzzyText(length=32)
     destination = fuzzy.FuzzyText(length=32)
     departure_date = fuzzy.FuzzyDate(
@@ -77,7 +77,7 @@ class ItineraryItemFactory(factory.DjangoModelFactory):
         model = models.ItineraryItem
 
 
-class TravelFactory(factory.DjangoModelFactory):
+class TravelFactory(factory.django.DjangoModelFactory):
     traveler = factory.SubFactory(UserFactory)
     supervisor = factory.SubFactory(UserFactory)
     office = factory.SubFactory(OfficeFactory)
@@ -115,7 +115,7 @@ class FuzzyTravelStatus(factory.fuzzy.BaseFuzzyAttribute):
         )
 
 
-class TravelAttachmentFactory(factory.DjangoModelFactory):
+class TravelAttachmentFactory(factory.django.DjangoModelFactory):
     travel = factory.SubFactory(TravelFactory)
     type = fuzzy.FuzzyText(length=64)
     name = fuzzy.FuzzyText(length=50)

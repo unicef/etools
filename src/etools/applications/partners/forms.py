@@ -4,12 +4,14 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
+from django.db import connection
 from django.db.models import Q
 from django.utils.translation import ugettext as _
 
 from unicef_djangolib.forms import AutoSizeTextForm
 
 from etools.applications.partners.models import (
+    Intervention,
     InterventionAttachment,
     PartnerOrganization,
     PartnerStaffMember,
@@ -46,7 +48,9 @@ class PartnerStaffMemberForm(forms.ModelForm):
     ERROR_MESSAGES = {
         'active_by_default': 'New Staff Member needs to be active at the moment of creation',
         'user_unavailable': 'The Partner Staff member you are trying to activate is associated with'
-                            ' a different partnership'
+                            ' a different partnership',
+        "user_mismatch": "User Mismatch",
+        "psm_mismatch": "User is associated with another staff member record in {}"
     }
 
     def __init__(self, *args, **kwargs):
@@ -54,7 +58,7 @@ class PartnerStaffMemberForm(forms.ModelForm):
 
     class Meta:
         model = PartnerStaffMember
-        fields = '__all__'
+        exclude = ['user', ]
 
     def clean(self):
         cleaned_data = super().clean()
@@ -63,19 +67,21 @@ class PartnerStaffMemberForm(forms.ModelForm):
         validate_email(email)
         User = get_user_model()
 
-        partner_staff_members = []
-        for u in User.objects.filter(Q(username=email) | Q(email=email)).all():
-            if u.profile.partner_staff_member:
-                partner_staff_members.append(u.profile.partner_staff_member)
-
         if not self.instance.pk:
             # user should be active first time it's created
             if not active:
                 raise ValidationError({'active': self.ERROR_MESSAGES['active_by_default']})
 
-            if partner_staff_members:
-                raise ValidationError("This user already exists under a different partnership: {}".format(email))
+            user = User.objects.filter(email__iexact=email).first()
+            if user:
+                if user.is_unicef_user():
+                    raise ValidationError('Unable to associate staff member to UNICEF user')
 
+                staff_member = user.get_partner_staff_member()
+                if staff_member:
+                    raise ValidationError("This user already exists under a different partnership: {}".format(email))
+
+                cleaned_data['user'] = user
         else:
             # make sure email addresses are not editable after creation.. user must be removed and re-added
             if email != self.instance.email:
@@ -84,11 +90,49 @@ class PartnerStaffMemberForm(forms.ModelForm):
 
             # when adding the active tag to a previously untagged user
             if active and not self.instance.active:
-                # make sure this user has not already been associated with another partnership.
-                if [x for x in partner_staff_members if x != self.instance.pk]:
-                    raise ValidationError({'active': self.ERROR_MESSAGES['user_unavailable']})
+                try:
+                    user = User.objects.get(email=email)
+                except User.DoesNotExist():
+                    pass
+                else:
+                    if self.instance.user != user:
+                        raise ValidationError({'email': self.ERROR_MESSAGES['user_mismatch']})
+
+                    psm_country = user.get_staff_member_country()
+                    if psm_country and psm_country != connection.tenant:
+                        raise ValidationError({'email': self.ERROR_MESSAGES['psm_mismatch'].
+                                              format(psm_country)})
+
+            # disabled is unavailable if user already synced to PRP to avoid data inconsistencies
+            if self.instance.active and not active:
+                if Intervention.objects.filter(
+                    # todo epd: Q(date_sent_to_partner__isnull=False, agreement__partner__staff_members=self.instance) |
+                    Q(
+                        ~Q(status=Intervention.DRAFT),
+                        Q(partner_focal_points=self.instance) | Q(partner_authorized_officer_signatory=self.instance),
+                    ),
+                ).exists():
+                    raise ValidationError({'active': 'User already synced to PRP and cannot be disabled.'})
 
         return cleaned_data
+
+    def save(self, commit=True):
+        User = get_user_model()
+
+        if not self.instance.pk:
+            if 'user' in self.cleaned_data:
+                self.instance.user = self.cleaned_data['user']
+            else:
+                self.instance.user = User.objects.create(
+                    first_name=self.instance.first_name,
+                    last_name=self.instance.last_name,
+                    email=self.instance.email,
+                    username=self.instance.email,
+                    is_active=True,
+                    is_staff=False,
+                )
+
+        return super().save(commit=commit)
 
 
 class InterventionAttachmentForm(forms.ModelForm):

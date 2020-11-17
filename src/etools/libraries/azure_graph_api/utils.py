@@ -29,7 +29,7 @@ def handle_record(record):
 
     record_dict = {
         'Username*': record.get('userPrincipalName', '-'),
-        'Email*': record.get('mail', '-'),
+        'Email*': record.get('mail', '-').lower(),
         'Name*': record.get('givenName', '-'),
         'Surname*': record.get('surname', '-'),
         'Type*': record.get('userType', '-'),
