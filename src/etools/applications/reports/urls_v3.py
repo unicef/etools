@@ -1,6 +1,7 @@
 from django.urls import path
 
 from etools.applications.reports.views.v3 import (
+    PMPResultFrameworkView,
     PMPSpecialReportingRequirementListCreateView,
     PMPSpecialReportingRequirementRetrieveUpdateDestroyView,
 )
@@ -17,4 +18,9 @@ urlpatterns = [
         view=PMPSpecialReportingRequirementRetrieveUpdateDestroyView.as_view(),
         name="interventions-special-reporting-requirements-update",
     ),
+    path(
+        'interventions/results/<int:pk>/',
+        view=PMPResultFrameworkView.as_view(),
+        name="interventions-results-framework"
+    )
 ]

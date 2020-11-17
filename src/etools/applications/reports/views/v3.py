@@ -6,14 +6,19 @@ from rest_framework.permissions import IsAuthenticated
 from unicef_restlib.views import QueryStringFilterMixin
 
 from etools.applications.field_monitoring.permissions import IsEditAction, IsReadAction
-from etools.applications.partners.models import Intervention
-from etools.applications.partners.permissions import intervention_field_is_editable_permission
+from etools.applications.partners.models import Intervention, InterventionResultLink
+from etools.applications.partners.permissions import (
+    intervention_field_is_editable_permission,
+    UserIsPartnerStaffMemberPermission,
+    UserIsStaffPermission,
+)
 from etools.applications.partners.views.interventions_v3 import DetailedInterventionResponseMixin
 from etools.applications.partners.views.v3 import PMPBaseViewMixin
 from etools.applications.reports.models import Office, Section
 from etools.applications.reports.serializers.v1 import SectionCreateSerializer
 from etools.applications.reports.serializers.v2 import OfficeSerializer
 from etools.applications.reports.views.v2 import (
+    ResultFrameworkView,
     SpecialReportingRequirementListCreateView,
     SpecialReportingRequirementRetrieveUpdateDestroyView,
 )
@@ -102,3 +107,24 @@ class PMPSpecialReportingRequirementRetrieveUpdateDestroyView(
 
     def get_intervention(self):
         return self.get_root_object()
+
+
+class PMPResultFrameworkView(PMPBaseViewMixin, ResultFrameworkView):
+    permission_classes = [UserIsStaffPermission | UserIsPartnerStaffMemberPermission]
+
+    def get_queryset(self, format=None):
+        qs = InterventionResultLink.objects.filter(
+            intervention=self.kwargs.get("pk")
+        )
+        if self.is_partner_staff():
+            qs = qs.filter(
+                intervention__agreement__partner__in=self.partners(),
+                intervention__date_sent_to_partner__isnull=False,
+            )
+
+        data = []
+        for result_link in qs:
+            data.append(result_link)
+            for ll_result in result_link.ll_results.all():
+                data += ll_result.applied_indicators.all()
+        return data
