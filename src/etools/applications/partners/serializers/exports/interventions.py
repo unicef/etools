@@ -350,7 +350,10 @@ class InterventionExportSerializer(serializers.ModelSerializer):
         return obj.unicef_signatory.get_full_name() if obj.unicef_signatory else ''
 
     def get_country_programmes(self, obj):
-        return ', '.join([cp.name for cp in obj.country_programmes.all()])
+        country_programmes = list(obj.country_programmes.all())
+        if not country_programmes:
+            country_programmes = [obj.agreement.country_programme]
+        return ', '.join([cp.name for cp in country_programmes])
 
     def get_offices(self, obj):
         return ', '.join([o.name for o in obj.offices.all()])
