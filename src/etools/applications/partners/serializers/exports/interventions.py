@@ -383,7 +383,8 @@ class InterventionExportSerializer(serializers.ModelSerializer):
         return ', '.join([pf.get_full_name() for pf in obj.unicef_focal_points.all()])
 
     def get_cp_outputs(self, obj):
-        return ', '.join([rs.cp_output.name for rs in obj.result_links.all()])
+        # cp output can be not specified for interventions in development
+        return ', '.join([rs.cp_output.name for rs in obj.result_links.all() if rs.cp_output])
 
     def fr_currencies_ok(self, obj):
         return obj.frs__currency__count == 1 if obj.frs__currency__count else None
