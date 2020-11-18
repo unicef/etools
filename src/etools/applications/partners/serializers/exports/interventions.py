@@ -351,7 +351,7 @@ class InterventionExportSerializer(serializers.ModelSerializer):
 
     def get_country_programmes(self, obj):
         country_programmes = list(obj.country_programmes.all())
-        if not country_programmes:
+        if not country_programmes and obj.agreement.country_programme:
             country_programmes = [obj.agreement.country_programme]
         return ', '.join([cp.name for cp in country_programmes])
 
