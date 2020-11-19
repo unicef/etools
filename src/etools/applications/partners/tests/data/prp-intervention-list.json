@@ -90,6 +90,7 @@
     "special_reports": [],
     "status": "active",
     "cso_budget_currency": "",
+    "cso_contribution_other": null,
     "id": 642,
     "cso_budget": "0.00",
     "disbursement": null,

@@ -254,6 +254,10 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
     cso_budget = serializers.DecimalField(source='total_partner_contribution', read_only=True,
                                           max_digits=20, decimal_places=2)
     cso_budget_currency = serializers.SerializerMethodField(read_only=True)
+    cso_contribution_other = serializers.CharField(
+        source='planned_budget.partner_contribution_other',
+        read_only=True,
+    )
     unicef_budget = serializers.DecimalField(source='total_unicef_budget', read_only=True,
                                              max_digits=20, decimal_places=2)
     unicef_budget_supplies = serializers.DecimalField(source='total_in_kind_amount', read_only=True,
@@ -328,9 +332,13 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
             'unicef_focal_points',
             'agreement_auth_officers',
             'focal_points',
-            'start_date', 'end_date',
-            'cso_budget', 'cso_budget_currency',
-            'unicef_budget', 'unicef_budget_currency',
+            'start_date',
+            'end_date',
+            'cso_budget',
+            'cso_budget_currency',
+            'cso_contribution_other',
+            'unicef_budget',
+            'unicef_budget_currency',
             'reporting_requirements',
             'expected_results',
             'update_date',

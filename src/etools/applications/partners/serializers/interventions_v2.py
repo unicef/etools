@@ -50,6 +50,7 @@ class InterventionBudgetCUSerializer(serializers.ModelSerializer):
             "id",
             "intervention",
             "partner_contribution_local",
+            "partner_contribution_other",
             "unicef_cash_local",
             "in_kind_amount_local",
             'currency'

@@ -2345,6 +2345,10 @@ class InterventionBudget(TimeStampedModel):
 
     partner_contribution = models.DecimalField(max_digits=20, decimal_places=2, default=0,
                                                verbose_name=_('Partner Contribution'))
+    partner_contribution_other = models.TextField(
+        verbose_name=_('Partner Non-Financial Contribution'),
+        blank=True,
+    )
     unicef_cash = models.DecimalField(max_digits=20, decimal_places=2, default=0, verbose_name=_('Unicef Cash'))
     in_kind_amount = models.DecimalField(
         max_digits=20,
