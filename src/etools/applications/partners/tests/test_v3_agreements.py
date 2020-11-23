@@ -40,6 +40,10 @@ class BaseAgreementTestCase(BaseTenantTestCase):
         cls.partner_staff = PartnerStaffFactory(partner=cls.partner)
         cls.partner_user = cls.partner_staff.user
         cls.country_programme = CountryProgrammeFactory()
+        cls.agreement = AgreementFactory(partner=cls.partner)
+        cls.agreement.authorized_officers.add(cls.partner_staff)
+        for __ in range(10):
+            AgreementFactory()
 
 
 class TestList(BaseAgreementTestCase):
@@ -52,16 +56,18 @@ class TestList(BaseAgreementTestCase):
             user=self.pme_user,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(len(response.data) > 0)
         self.assertEqual(len(response.data), agreement_qs.count())
 
     def test_get_by_partner(self):
-        agreement_qs = Agreement.objects
+        agreement_qs = Agreement.objects.filter(partner=self.partner)
         response = self.forced_auth_req(
             "get",
             reverse("pmp_v3:agreement-list"),
             user=self.partner_user,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(len(response.data) > 0)
         self.assertEqual(len(response.data), agreement_qs.count())
 
     def test_get_by_partner_not_related(self):
