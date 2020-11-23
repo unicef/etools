@@ -371,6 +371,24 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             data={'field_office__in': f'{activity1.field_office.id},{activity2.field_office.id}'},
         )
 
+    def test_filter_by_section(self):
+        MonitoringActivityFactory(monitor_type='staff', status='draft')
+        section = SectionFactory()
+        activity1 = MonitoringActivityFactory(
+            monitor_type='staff',
+            status='draft',
+            sections=[section],
+        )
+        activity2 = MonitoringActivityFactory(
+            monitor_type='staff',
+            status='draft',
+            sections=[section],
+        )
+        self._test_list(
+            self.fm_user, [activity1, activity2],
+            data={'sections__in': f'{section.id}'},
+        )
+
 
 class TestActivityAttachmentsView(FMBaseTestCaseMixin, APIViewSetTestCase):
     base_view = 'field_monitoring_planning:activity_attachments'

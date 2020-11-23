@@ -127,6 +127,21 @@ class ChecklistBlueprintViewTestCase(APIViewSetTestCase, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertDictEqual(response.data, {'information_source': ['This field is required']})
 
+    def test_save_blueprint_values_validation(self):
+        response = self.make_detail_request(
+            self.team_member,
+            self.started_checklist,
+            action='blueprint',
+            method='post',
+            data={'information_source': {"name": 'value' * 100}}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn(
+            'Ensure this field has no more than 100 characters.',
+            response.data['information_source'],
+        )
+
 
 class MonitoringActivityOfflineBlueprintsSyncTestCase(APIViewSetTestCase, BaseTenantTestCase):
     base_view = 'field_monitoring_planning:activities'
