@@ -34,11 +34,14 @@ class BaseAgreementTestCase(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.pme_user = UserFactory(is_staff=True)
         cls.pme_user.groups.add(GroupFactory())
+        cls.partner_user = UserFactory(is_staff=False)
         cls.partner = PartnerFactory(
             partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION,
         )
-        cls.partner_staff = PartnerStaffFactory(partner=cls.partner)
-        cls.partner_user = cls.partner_staff.user
+        cls.partner_staff = PartnerStaffFactory(
+            partner=cls.partner,
+            user=cls.partner_user,
+        )
         cls.country_programme = CountryProgrammeFactory()
         cls.agreement = AgreementFactory(partner=cls.partner)
         cls.agreement.authorized_officers.add(cls.partner_staff)
@@ -71,12 +74,11 @@ class TestList(BaseAgreementTestCase):
         self.assertEqual(len(response.data), agreement_qs.count())
 
     def test_get_by_partner_not_related(self):
-        user = UserFactory(is_staff=False)
-        user.groups.add(GroupFactory(name="Partnership Manager"))
+        staff = PartnerStaffFactory()
         response = self.forced_auth_req(
             "get",
             reverse("pmp_v3:agreement-list"),
-            user=user,
+            user=staff.user,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, [])
