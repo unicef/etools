@@ -423,6 +423,7 @@ class AssessmentAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
 class PartnerStaffMemberAdmin(SnapshotModelAdmin):
     model = PartnerStaffMember
     form = PartnerStaffMemberForm
+    raw_id_fields = ("partner", "user",)
 
     # display_staff_member_name() is used only in list_display. It could be replaced by this simple lambda --
     #     lambda instance: str(instance)
@@ -437,11 +438,13 @@ class PartnerStaffMemberAdmin(SnapshotModelAdmin):
         display_staff_member_name,
         'title',
         'email',
+        'user',
     )
     search_fields = (
         'first_name',
         'last_name',
-        'email'
+        'email',
+        'user',
     )
     inlines = [
         ActivityInline,
