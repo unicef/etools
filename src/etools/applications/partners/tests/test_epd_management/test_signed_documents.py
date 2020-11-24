@@ -132,6 +132,8 @@ class TestSignedDocumentsManagement(APIViewSetTestCase, BaseTestCase):
         )
 
     def test_partner_update_draft(self):
+        for k in self.draft_unicef_data:
+            self.all_data.pop(k)
         self._test_update_fields(self.partner_focal_point, self.draft_intervention, restricted_fields=self.all_data)
 
     def test_partner_update_review(self):
