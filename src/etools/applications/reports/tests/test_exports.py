@@ -133,6 +133,6 @@ class TestInterventionAppliedIndicatorsV2Export(BaseTenantTestCase):
             '-',
             '',
             '',
-            ','.join([l.name for l in self.indicator.locations.all()]),
+            ','.join([location.name for location in self.indicator.locations.all()]),
             'cfei',
         ))
