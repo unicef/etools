@@ -78,6 +78,7 @@ class BaseInterventionModelExportTestCase(BaseTenantTestCase):
             population_focus="Population focus",
             partner_authorized_officer_signatory=partnerstaff,
             country_programme=agreement.country_programme,
+            cfei_number='cfei',
         )
 
         cls.ib = cls.intervention.planned_budget
@@ -160,6 +161,7 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
             "# of attachments",
             "CP Outputs",
             "URL",
+            "UNPP Number",
         ])
 
         self.assertEqual(dataset[0], (
@@ -212,6 +214,7 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
             str(self.intervention.attachments.count()),
             '',
             'https://testserver/pmp/interventions/{}/details/'.format(self.intervention.id),
+            'cfei',
         ))
 
     def test_csv_flat_export_api(self):
