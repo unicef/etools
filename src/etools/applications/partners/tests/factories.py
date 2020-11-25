@@ -116,6 +116,14 @@ class InterventionFactory(factory.django.DjangoModelFactory):
     start = datetime.date.today()
     end = datetime.date.today() + datetime.timedelta(days=365)
 
+    @factory.post_generation
+    def country_programmes(self, create, extracted, **kwargs):
+        if create and self.country_programme:
+            self.country_programmes.add(self.country_programme)
+
+        if extracted:
+            self.country_programmes.add(*extracted)
+
 
 class InterventionAmendmentFactory(factory.django.DjangoModelFactory):
     class Meta:
