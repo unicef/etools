@@ -371,6 +371,24 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             data={'field_office__in': f'{activity1.field_office.id},{activity2.field_office.id}'},
         )
 
+    def test_filter_by_section(self):
+        MonitoringActivityFactory(monitor_type='staff', status='draft')
+        section = SectionFactory()
+        activity1 = MonitoringActivityFactory(
+            monitor_type='staff',
+            status='draft',
+            sections=[section],
+        )
+        activity2 = MonitoringActivityFactory(
+            monitor_type='staff',
+            status='draft',
+            sections=[section],
+        )
+        self._test_list(
+            self.fm_user, [activity1, activity2],
+            data={'sections__in': f'{section.id}'},
+        )
+
 
 class TestActivityAttachmentsView(FMBaseTestCaseMixin, APIViewSetTestCase):
     base_view = 'field_monitoring_planning:activity_attachments'
@@ -665,7 +683,7 @@ class InterventionsViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTen
         InterventionFactory(status=Intervention.SUSPENDED)
         InterventionFactory(status=Intervention.TERMINATED)
 
-        with self.assertNumQueries(9):  # 3 basic + 6 prefetches from InterventionManager
+        with self.assertNumQueries(10):  # 3 basic + 7 prefetches from InterventionManager
             self._test_list(self.unicef_user, valid_interventions)
 
     def test_filter_by_outputs(self):
@@ -713,7 +731,7 @@ class MonitoringActivityActionPointsViewTestCase(FMBaseTestCaseMixin, APIViewSet
         action_points = MonitoringActivityActionPointFactory.create_batch(size=10, monitoring_activity=self.activity)
         MonitoringActivityActionPointFactory()
 
-        with self.assertNumQueries(12):  # prefetched 13 queries
+        with self.assertNumQueries(14):  # prefetched 13 queries
             self._test_list(self.unicef_user, action_points)
 
     def test_create(self):

@@ -1,4 +1,5 @@
 import datetime
+from decimal import Decimal
 from unittest import mock, skip
 
 from django.contrib.auth.models import AnonymousUser
@@ -109,6 +110,7 @@ class BaseInterventionTestCase(BaseTenantTestCase):
             "last_name": self.user.last_name,
             "username": self.user.username,
             "email": self.user.email,
+            "phone": self.user.profile.phone_number,
         }
 
 
@@ -201,6 +203,23 @@ class TestList(BaseInterventionTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
 
+    def test_updated_country_programmes_field_in_use(self):
+        intervention = InterventionFactory()
+        country_programme = CountryProgrammeFactory()
+        intervention.country_programmes.add(country_programme)
+        InterventionFactory()
+        with self.assertNumQueries(11):
+            response = self.forced_auth_req(
+                "get",
+                reverse('pmp_v3:intervention-list'),
+                user=self.user,
+            )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+        intervention_data = sorted(response.data, key=lambda i: i['id'])[0]
+        self.assertNotIn('country_programme', intervention_data)
+        self.assertEqual([country_programme.id], intervention_data['country_programmes'])
+
 
 class TestDetail(BaseInterventionTestCase):
     def setUp(self):
@@ -270,6 +289,7 @@ class TestCreate(BaseInterventionTestCase):
             "humanitarian_flag": True,
             "cfei_number": "321",
             "budget_owner": self.user.pk,
+            "phone": self.user.profile.phone_number,
         }
         response = self.forced_auth_req(
             "post",
@@ -317,6 +337,44 @@ class TestCreate(BaseInterventionTestCase):
             }
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
+
+    def test_add_currency(self):
+        response = self.forced_auth_req(
+            "post",
+            reverse('pmp_v3:intervention-list'),
+            user=self.user,
+            data={
+                'document_type': Intervention.PD,
+                'title': 'PD with Currency',
+                'agreement': self.agreement.pk,
+                'planned_budget': {
+                    'currency': 'AFN',
+                }
+            }
+        )
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_201_CREATED,
+            response.data,
+        )
+        pd = Intervention.objects.get(pk=response.data["id"])
+        self.assertEqual(pd.planned_budget.currency, 'AFN')
+
+    def test_add_currency_invalid(self):
+        response = self.forced_auth_req(
+            "post",
+            reverse('pmp_v3:intervention-list'),
+            user=self.user,
+            data={
+                'document_type': Intervention.PD,
+                'title': 'PD with Currency',
+                'agreement': self.agreement.pk,
+                'planned_budget': {
+                    'currency': 'WRONG',
+                }
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
 class TestUpdate(BaseInterventionTestCase):
@@ -577,16 +635,19 @@ class TestSupplyItem(BaseInterventionTestCase):
                 "title": "New Supply Item",
                 "unit_number": 10,
                 "unit_price": 2,
+                "unicef_product_number": "ACME-123",
             },
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data["unit_number"], "10.00")
         self.assertEqual(response.data["unit_price"], "2.00")
         self.assertEqual(response.data["total_price"], "20.00")
+        self.assertEqual(response.data["unicef_product_number"], "ACME-123")
         self.assertTrue(item_qs.exists())
         item = item_qs.first()
         self.assertEqual(item.intervention, self.intervention)
         self.assertIsNone(item.result)
+        self.assertEqual(item.unicef_product_number, "ACME-123")
 
     def test_post_with_cp_output(self):
         item_qs = InterventionSupplyItem.objects.filter(
@@ -706,6 +767,21 @@ class TestSupplyItem(BaseInterventionTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
+    def test_budget_update_on_delete(self):
+        budget = self.intervention.planned_budget
+        item = InterventionSupplyItemFactory(intervention=self.intervention, unit_number=1, unit_price=2)
+        self.assertEqual(budget.in_kind_amount_local, 2)
+        response = self.forced_auth_req(
+            "delete",
+            reverse(
+                "pmp_v3:intervention-supply-item-detail",
+                args=[self.intervention.pk, item.pk],
+            )
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        budget.refresh_from_db()
+        self.assertEqual(budget.in_kind_amount_local, 0)
+
     def test_upload(self):
         # add supply item that will be updated
         item = InterventionSupplyItemFactory(
@@ -731,6 +807,13 @@ class TestSupplyItem(BaseInterventionTestCase):
         # check that item unit number was updated correctly
         item.refresh_from_db()
         self.assertEqual(item.unit_number, 4)
+        # check records saved correctly
+        new_item = self.intervention.supply_items.get(
+            unicef_product_number="S9935097",
+        )
+        self.assertEqual(new_item.title, "School-in-a-box 40 students  2016")
+        self.assertEqual(new_item.unit_number, 1)
+        self.assertEqual(new_item.unit_price, Decimal("146.85"))
 
     def test_upload_invalid_file(self):
         response = self.forced_auth_req(
@@ -1484,7 +1567,6 @@ class TestInterventionSendToUNICEF(BaseInterventionActionTestCase):
         self.intervention.save()
 
         self.assertFalse(self.intervention.unicef_court)
-        self.assertFalse(self.intervention.date_draft_by_partner)
 
         # partner sends PD to unicef
         mock_send = mock.Mock(return_value=self.mock_email)
@@ -1497,10 +1579,10 @@ class TestInterventionSendToUNICEF(BaseInterventionActionTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         mock_send.assert_called()
         self.intervention.refresh_from_db()
-        self.assertTrue(self.intervention.date_draft_by_partner)
+        self.assertTrue(self.intervention.submission_date)
         self.assertEqual(
-            response.data["date_draft_by_partner"],
-            self.intervention.date_draft_by_partner.strftime("%Y-%m-%d"),
+            response.data["submission_date"],
+            self.intervention.submission_date.strftime("%Y-%m-%d"),
         )
 
         # partner request when PD in partner court

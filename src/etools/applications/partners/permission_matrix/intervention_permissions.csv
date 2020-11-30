@@ -25,9 +25,12 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.3.5,context,Partnership Manager,unicef_court,Draft,Edit,TRUE
 3.3.5,context,Partner User,partner_court,Draft,Edit,TRUE
 3.4.1,contingency_pd,Partnership Manager,,Draft,Edit,TRUE
-3.4.1,country_programme,Partnership Manager,,Draft,Edit,TRUE
+3.5,country_programme,Partnership Manager,,Draft,Edit,TRUE
 3.5,country_programme,Partnership Manager,user_adds_amendment,*,Edit,TRUE
 3.5,country_programme,*,,*,Required,FALSE
+3.5,country_programmes,Partnership Manager,,Draft,Edit,TRUE
+3.5,country_programmes,Partnership Manager,user_adds_amendment,*,Edit,TRUE
+3.5,country_programmes,*,,*,Required,FALSE
 3.9.1,document_type,Partnership Manager,,Draft,Edit,TRUE
 3.9.1,document_type,*,,*,Required,TRUE
 3.9.2,end,Partnership Manager,unicef_court,Draft,Edit,TRUE
@@ -143,6 +146,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,start,*,contingency on,Signed,Required,FALSE
 ,submission_date,*,,*,View,TRUE
 ,submission_date,Partnership Manager,,Draft,Edit,TRUE
+,submission_date,Partner User,,Draft,Edit,TRUE
 ,submission_date,*,,Draft,Required,FALSE
 ,submission_date_prc,*,,*,View,TRUE
 ,submission_date_prc,Partnership Manager,,Review,Edit,TRUE

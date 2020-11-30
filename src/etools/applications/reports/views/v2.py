@@ -5,6 +5,7 @@ import operator
 
 from django.db.models import Q
 from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
 from django.utils.translation import ugettext as _
 
 from rest_framework import status
@@ -477,10 +478,11 @@ class ResultFrameworkView(ExportView):
     permission_classes = (PartnershipManagerPermission, )
     renderer_classes = (ResultFrameworkRenderer, )
 
+    def get_intervention(self):
+        return get_object_or_404(Intervention.objects, pk=self.kwargs.get("pk"))
+
     def get_queryset(self, format=None):
-        qs = InterventionResultLink.objects.filter(
-            intervention=self.kwargs.get("pk")
-        )
+        qs = InterventionResultLink.objects.filter(intervention=self.get_intervention())
         data = []
         for result_link in qs:
             data.append(result_link)
@@ -496,9 +498,8 @@ class ResultFrameworkView(ExportView):
             **kwargs,
         )
         if response.accepted_renderer.format == "docx_table":
-            intervention = self.get_queryset()[0].intervention
             response["content-disposition"] = "attachment; filename={}_results.docx".format(
-                intervention.reference_number
+                self.get_intervention().reference_number
             )
         return response
 

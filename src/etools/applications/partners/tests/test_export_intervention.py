@@ -79,6 +79,7 @@ class BaseInterventionModelExportTestCase(BaseTenantTestCase):
             partner_authorized_officer_signatory=partnerstaff,
             country_programme=agreement.country_programme,
         )
+        cls.intervention.country_programmes.add(agreement.country_programme)
 
         cls.ib = cls.intervention.planned_budget
         cls.ib.currency = "USD"
@@ -120,7 +121,7 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
             "Partner Type",
             "CSO Type",
             "Agreement",
-            "country_programme",
+            "Country Programmes",
             "Document Type",
             "Reference Number",
             "Document Title",
@@ -214,6 +215,20 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
             'https://testserver/pmp/interventions/{}/details/'.format(self.intervention.id),
         ))
 
+    def test_agreement_country_programmes_used(self):
+        self.intervention.country_programmes.clear()
+        response = self.forced_auth_req(
+            'get',
+            reverse('pmp_v3:intervention-list'),
+            user=self.unicef_staff,
+            data={"format": "csv"},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
+        country_programmes_idx = dataset._get_headers().index('Country Programmes')
+        self.assertEqual(dataset[0][country_programmes_idx], self.intervention.agreement.country_programme.name)
+
     def test_csv_flat_export_api(self):
         response = self.forced_auth_req(
             'get',
@@ -225,8 +240,8 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 93)
-        self.assertEqual(len(dataset[0]), 93)
+        self.assertEqual(len(dataset._get_headers()), 92)
+        self.assertEqual(len(dataset[0]), 92)
 
 
 class TestInterventionAmendmentModelExport(BaseInterventionModelExportTestCase):
