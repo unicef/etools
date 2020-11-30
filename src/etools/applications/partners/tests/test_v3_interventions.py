@@ -19,6 +19,7 @@ from etools.applications.core.tests.factories import EmailFactory
 from etools.applications.core.tests.mixins import URLAssertionMixin
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory, FundsReservationItemFactory
 from etools.applications.partners.models import Intervention, InterventionSupplyItem
+from etools.applications.partners.permissions import SENIOR_MANAGEMENT_GROUP, UNICEF_USER
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
     FileTypeFactory,
@@ -428,20 +429,65 @@ class TestUpdate(BaseInterventionTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn(cp, intervention.country_programmes.all())
 
-    def test_patch_review(self):
-        intervention = InterventionFactory(status=Intervention.REVIEW)
+
+class TestUpdateReviewStatus(BaseInterventionTestCase):
+    def setUp(self):
+        super().setUp()
+        self.intervention = InterventionFactory(
+            agreement=self.agreement,
+            status=Intervention.REVIEW,
+            partner_authorized_officer_signatory=PartnerStaffFactory(partner=self.partner),
+            country_programme=self.agreement.country_programme,
+            start=datetime.date(year=1970, month=2, day=1),
+            end=datetime.date(year=1970, month=3, day=1),
+            date_sent_to_partner=datetime.date.today(),
+            agreement__country_programme=self.agreement.country_programme,
+            cash_transfer_modalities=[Intervention.CASH_TRANSFER_DIRECT],
+            budget_owner=UserFactory(),
+            partner_accepted=True,
+            unicef_accepted=True,
+        )
+
+        ReportingRequirementFactory(intervention=self.intervention)
+        self.intervention.unicef_focal_points.add(UserFactory())
+        self.intervention.sections.add(SectionFactory())
+        self.intervention.offices.add(OfficeFactory())
+        self.partner_focal_point = PartnerStaffFactory(partner=self.intervention.agreement.partner)
+        self.intervention.partner_focal_points.add(self.partner_focal_point)
+
+    def test_patch_review_senior_manager(self):
         response = self.forced_auth_req(
             'patch',
-            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
-            user=self.user,
+            reverse('pmp_v3:intervention-detail', args=[self.intervention.pk]),
+            user=UserFactory(groups__data=[UNICEF_USER, SENIOR_MANAGEMENT_GROUP]),
             data={
                 'review': {
+                    'id': self.intervention.review.id,
                     'q1_answer': 'review passed',
-                    'review_passed': True
+                    'review_passed': True,
                 },
             }
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        review = self.intervention.review
+        review.refresh_from_db()
+        self.assertEqual(review.q1_answer, 'review passed')
+
+    def test_patch_review_partnership_manager(self):
+        response = self.forced_auth_req(
+            'patch',
+            reverse('pmp_v3:intervention-detail', args=[self.intervention.pk]),
+            user=self.user,
+            data={
+                'review': {
+                    'id': self.intervention.review.id,
+                    'q1_answer': 'review passed',
+                    'review_passed': True,
+                },
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
+        self.assertIn('Cannot change fields while in review: review', response.data)
 
 
 class TestDelete(BaseInterventionTestCase):

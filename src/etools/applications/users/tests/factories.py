@@ -5,6 +5,7 @@ from django.db.models import signals
 import factory
 from factory.fuzzy import FuzzyText
 
+from etools.applications.partners.permissions import UNICEF_USER
 from etools.applications.publics.tests.factories import PublicsCurrencyFactory
 from etools.applications.reports.tests.factories import OfficeFactory, UserTenantProfileFactory
 from etools.applications.users import models
@@ -77,7 +78,7 @@ class UserFactory(factory.django.DjangoModelFactory):
     password = factory.PostGenerationMethodCall('set_password', 'test')
 
     # unicef user is set as group by default, but we can easily overwrite it by passing empty list
-    groups__data = ['UNICEF User']
+    groups__data = [UNICEF_USER]
 
     # We pass in 'user' to link the generated Profile to our just-generated User
     # This will call ProfileFactory(user=our_new_user), thus skipping the SubFactory.

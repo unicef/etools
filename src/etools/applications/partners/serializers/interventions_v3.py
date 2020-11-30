@@ -153,6 +153,19 @@ class InterventionManagementBudgetSerializer(serializers.ModelSerializer):
         return str(obj.act3_unicef + obj.act3_partner)
 
 
+class InterventionReviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InterventionReview
+        fields = (
+            'id',
+            'intervention',
+            'q1_answer',
+            'q2_answer',
+            'q3_answer',
+            'review_passed',
+        )
+
+
 class InterventionDetailSerializer(serializers.ModelSerializer):
     activation_letter_attachment = AttachmentSingleFileField(read_only=True)
     activation_letter_file = serializers.FileField(source='activation_letter', read_only=True)
@@ -199,6 +212,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     unicef_focal_points = MinimalUserSerializer(many=True)
     partner_focal_points = PartnerStaffMemberUserSerializer(many=True)
     partner_authorized_officer_signatory = PartnerStaffMemberUserSerializer()
+    review = InterventionReviewSerializer(read_only=True)
 
     def get_location_p_codes(self, obj):
         return [location.p_code for location in obj.flat_locations.all()]
@@ -448,6 +462,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "quarters",
             "reference_number_year",
             "result_links",
+            "review",
             "review_date_prc",
             "risks",
             "section_names",
@@ -493,15 +508,3 @@ class InterventionListSerializer(InterventionV2ListSerializer):
         )
         # remove old legacy field to avoid inconvenience
         fields = tuple(f for f in fields if f != 'country_programme')
-
-
-class InterventionReviewSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = InterventionReview
-        fields = (
-            'intervention',
-            'q1_answer',
-            'q2_answer',
-            'q3_answer',
-            'review_passed',
-        )
