@@ -207,3 +207,13 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,ip_program_contribution,*,,Draft,Required,FALSE
 ,cash_transfer_modalities,*,,Draft,Required,FALSE
 ,cancel_justification,*,,Cancelled,Required,TRUE
+3.9.5,end,*,contingency on,Review,Required,FALSE
+3.9.5,end,*,contingency on,Signature,Required,FALSE
+3.9.5,start,*,contingency on,Review,Required,FALSE
+3.9.5,start,*,contingency on,Signature,Required,FALSE
+,signed_by_partner_date,*,,signature,Required,FALSE
+,signed_by_unicef_date,*,,signature,Required,FALSE
+,partner_authorized_officer_signatory,*,,signature,Required,FALSE
+,signed_pd_attachment,*,,signature,Required,FALSE
+3.2.7,partner_authorized_officer_signatory,Partnership Manager,,Signature,Edit,TRUE
+,signed_by_partner_date,Partnership Manager,,signature,Edit,TRUE

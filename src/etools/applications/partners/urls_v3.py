@@ -23,11 +23,14 @@ from etools.applications.partners.views.interventions_v3 import (
     PMPInterventionSupplyItemListCreateView,
     PMPInterventionSupplyItemRetrieveUpdateView,
     PMPInterventionSupplyItemUploadView,
+    PMPReviewDetailView,
+    PMPReviewView,
 )
 from etools.applications.partners.views.interventions_v3_actions import (
     PMPInterventionAcceptReviewView,
     PMPInterventionAcceptView,
     PMPInterventionCancelView,
+    PMPInterventionRejectReviewView,
     PMPInterventionReviewView,
     PMPInterventionSendToPartnerView,
     PMPInterventionSendToUNICEFView,
@@ -99,6 +102,13 @@ urlpatterns = [
         name='intervention-accept-review',
     ),
     path(
+        'interventions/<int:pk>/reject_review/',
+        view=PMPInterventionRejectReviewView.as_view(
+            http_method_names=['patch'],
+        ),
+        name='intervention-reject-review',
+    ),
+    path(
         'interventions/<int:pk>/cancel/',
         view=PMPInterventionCancelView.as_view(http_method_names=['patch']),
         name='intervention-cancel',
@@ -109,7 +119,7 @@ urlpatterns = [
         name='intervention-terminate',
     ),
     path(
-        'interventions/<int:pk>/signature/',
+        'interventions/<int:pk>/sign/',
         view=PMPInterventionSignatureView.as_view(http_method_names=['patch']),
         name='intervention-signature',
     ),
@@ -171,6 +181,16 @@ urlpatterns = [
         'interventions/<int:intervention_pk>/supply/<int:pk>/',
         view=PMPInterventionSupplyItemRetrieveUpdateView.as_view(),
         name='intervention-supply-item-detail',
+    ),
+    path(
+        'interventions/<int:intervention_pk>/review/',
+        view=PMPReviewView.as_view(),
+        name='intervention-review',
+    ),
+    path(
+        'interventions/<int:intervention_pk>/review/<int:pk>/',
+        view=PMPReviewDetailView.as_view(),
+        name='intervention-review-detail',
     ),
     path(
         'interventions/<int:intervention_pk>/pd-outputs/<int:output_pk>/activities/',

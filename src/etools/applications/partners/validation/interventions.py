@@ -315,6 +315,11 @@ def all_activities_have_timeframes(i):
         filter(time_frames__isnull=True).exists()
 
 
+def review_was_accepted(i):
+    r = i.reviews.first()
+    return r.overall_approval if r else False
+
+
 class InterventionValid(CompleteValidation):
     VALIDATION_CLASS = 'partners.Intervention'
     # validations that will be checked on every object... these functions only take the new instance
@@ -354,6 +359,7 @@ class InterventionValid(CompleteValidation):
         required_fields = [f for f in self.permissions['required'] if self.permissions['required'][f] is True]
         required_valid, fields = check_required_fields(intervention, required_fields)
         if not required_valid:
+            print(fields)
             raise StateValidationError(['Required fields not completed in {}: {}'.format(
                 intervention.status, ', '.join(f for f in fields))])
 
@@ -385,17 +391,24 @@ class InterventionValid(CompleteValidation):
     def state_signature_valid(self, intervention, user=None):
         self.check_required_fields(intervention)
         self.check_rigid_fields(intervention, related=True)
+        if not review_was_accepted(intervention):
+            raise StateValidationError([_('Review needs to be approved')])
         return True
 
     def state_signed_valid(self, intervention, user=None):
+        print("in stateful validation")
         self.check_required_fields(intervention)
         self.check_rigid_fields(intervention, related=True)
         if not all_activities_have_timeframes(intervention):
+            print("error1")
             raise StateValidationError([_('All activities must have at least one time frame')])
         if not all_pd_outputs_are_associated(intervention):
+            print("error2")
             raise StateValidationError([_('All PD Outputs need to be associated to a CP Output')])
         if intervention.contingency_pd is False and intervention.total_unicef_budget == 0:
+            print("error3")
             raise StateValidationError([_('UNICEF Cash $ or UNICEF Supplies $ should not be 0')])
+        print("stateful passes")
         return True
 
     def state_suspended_valid(self, intervention, user=None):

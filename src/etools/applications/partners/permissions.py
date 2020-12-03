@@ -156,13 +156,16 @@ class InterventionPermissions(PMPPermissions):
             'not_ended': self.instance.end >= datetime.datetime.now().date() if self.instance.end else False,
             'unicef_court': self.instance.unicef_court and unlocked(self.instance),
             'partner_court': not self.instance.unicef_court and unlocked(self.instance),
-            'unlocked': unlocked(self.instance)
+            'unlocked': unlocked(self.instance),
+            'is_spd': self.instance.document_type == self.instance.SPD
         }
 
     # override get_permissions to enable us to prevent old interventions from being blocked on transitions
     def get_permissions(self):
         def intervention_is_v1():
-            return self.instance.start < datetime.date(year=2020, month=10, day=1)
+            if self.instance.status in [self.instance.DRAFT]:
+                return False
+            return self.instance.start < datetime.date(year=2020, month=10, day=1) if self.instance.start else False
 
         # TODO: Remove this method when there are no active legacy programme documents
         list_of_new_fields = ["budget_owner",

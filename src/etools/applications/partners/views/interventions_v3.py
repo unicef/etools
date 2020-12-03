@@ -24,6 +24,7 @@ from etools.applications.partners.models import (
     Intervention,
     InterventionAttachment,
     InterventionManagementBudget,
+    InterventionReview,
     InterventionRisk,
     InterventionSupplyItem,
 )
@@ -51,6 +52,7 @@ from etools.applications.partners.serializers.interventions_v3 import (
     PMPInterventionAttachmentSerializer,
 )
 from etools.applications.partners.serializers.v3 import (
+    InterventionReviewSerializer,
     PartnerInterventionLowerResultSerializer,
     UNICEFInterventionLowerResultSerializer,
 )
@@ -248,6 +250,29 @@ class PMPInterventionManagementBudgetRetrieveUpdateView(
         if kwargs.get("data"):
             kwargs["data"]["intervention"] = self.kwargs.get("intervention_pk")
         return super().get_serializer(*args, **kwargs)
+
+
+class PMPReviewMixin(DetailedInterventionResponseMixin, PMPBaseViewMixin):
+    queryset = InterventionReview.objects.all()
+    permission_classes = [
+        IsAuthenticated,
+        IsReadAction | (IsEditAction & intervention_field_is_editable_permission('reviews'))
+    ]
+    serializer_class = InterventionReviewSerializer
+
+    def get_queryset(self, qs):
+        qs = super().get_queryset(qs)
+        if self.is_partner_staff():
+            return qs.none()
+        return qs
+
+
+class PMPReviewView(PMPReviewMixin, ListCreateAPIView):
+    pass
+
+
+class PMPReviewDetailView(PMPReviewMixin, RetrieveUpdateAPIView):
+    pass
 
 
 class PMPInterventionSupplyItemMixin(
