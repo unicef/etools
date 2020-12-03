@@ -200,13 +200,13 @@ class InterventionPermissions(PMPPermissions):
             for field in self.all_model_fields:
                 if action == "required" and field in list_of_new_fields and intervention_is_v1():
                     my_permissions[action][field] = False
-                elif field not in ps:
-                    my_permissions[action][field] = self.actions_default_permissions[action]
-                else:
+                elif field in ps:
                     if not ps[field][action]['true'] and not ps[field][action]['false']:
                         my_permissions[action][field] = self.actions_default_permissions[action]
                     else:
                         my_permissions[action][field] = self.get_field_permissions(action, ps[field])
+                else:
+                    my_permissions[action][field] = self.actions_default_permissions[action]
         return my_permissions
 
 
