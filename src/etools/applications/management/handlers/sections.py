@@ -89,7 +89,7 @@ class SectionHandler:
             'section',
         ),
         'fm_activities': (
-            MonitoringActivity.objects.filter(status=activity_updatable_status),
+            MonitoringActivity.objects.filter(status__in=activity_updatable_status),
             'sections',
         ),
         'fm_questions': (
