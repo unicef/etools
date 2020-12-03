@@ -203,7 +203,10 @@ class InterventionPermissions(PMPPermissions):
                 elif field not in ps:
                     my_permissions[action][field] = self.actions_default_permissions[action]
                 else:
-                    my_permissions[action][field] = self.get_field_permissions(action, ps[field])
+                    if not ps[field][action]['true'] and not ps[field][action]['false']:
+                        my_permissions[action][field] = self.actions_default_permissions[action]
+                    else:
+                        my_permissions[action][field] = self.get_field_permissions(action, ps[field])
         return my_permissions
 
 

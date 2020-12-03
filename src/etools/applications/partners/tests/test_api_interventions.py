@@ -156,6 +156,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
             "sustainability_rating",
             "technical_guidance",
             "termination_doc",  # not used, legacy
+            "termination_doc_attachment",
             "title",
             "travel_activities",
             "unicef_accepted",
