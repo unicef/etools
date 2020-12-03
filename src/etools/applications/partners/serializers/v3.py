@@ -4,7 +4,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from unicef_restlib.fields import SeparatedReadWriteField
 
-from etools.applications.partners.models import InterventionResultLink
+from etools.applications.partners.models import InterventionResultLink, InterventionReview
 from etools.applications.reports.models import LowerResult, Result, ResultType
 
 
@@ -32,6 +32,12 @@ class InterventionLowerResultBaseSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'code': {'required': False},
         }
+
+
+class InterventionReviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InterventionReview
+        fields = "__all__"
 
 
 class PartnerInterventionLowerResultSerializer(InterventionLowerResultBaseSerializer):

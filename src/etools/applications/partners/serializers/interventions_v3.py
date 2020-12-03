@@ -31,6 +31,7 @@ from etools.applications.partners.serializers.interventions_v2 import (
     SingleInterventionAttachmentField,
 )
 from etools.applications.partners.serializers.partner_organization_v2 import PartnerStaffMemberUserSerializer
+from etools.applications.partners.serializers.v3 import InterventionReviewSerializer
 from etools.applications.partners.utils import get_quarters_range
 from etools.applications.reports.serializers.v2 import InterventionTimeFrameSerializer
 from etools.applications.users.serializers_v3 import MinimalUserSerializer
@@ -191,6 +192,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
         read_field=InterventionAttachmentSerializer()
     )
     risks = InterventionRiskSerializer(many=True, read_only=True)
+    reviews = InterventionReviewSerializer(many=True, read_only=True)
     quarters = InterventionTimeFrameSerializer(many=True, read_only=True)
     supply_items = InterventionSupplyItemSerializer(many=True, read_only=True)
     management_budgets = InterventionManagementBudgetSerializer(read_only=True)
@@ -273,7 +275,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
 
     def get_available_actions(self, obj):
         default_ordering = ["send_to_unicef", "send_to_partner",
-                            "accept", "review", "unlock", "cancel",
+                            "accept", "review", "sign", "reject_review", "unlock", "cancel", "suspend", "unsuspend"
                             "terminate", "download_comments", "export", "generate_pdf"]
         available_actions = [
             "download_comments",
@@ -288,6 +290,14 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
                 available_actions.append("cancel")
             elif obj.status not in [obj.ENDED, obj.CLOSED, obj.TERMINATED]:
                 available_actions.append("terminate")
+                if obj.status not in [obj.SUSPENDED]:
+                    available_actions.append("suspend")
+            if obj.status == obj.SUSPENDED:
+                available_actions.append("unsuspend")
+            if obj.status == obj.REVIEW:
+                available_actions.append("sign")
+                available_actions.append("reject_review")
+
 
         # if NOT in Development status then we're done
         if obj.status != obj.DRAFT:
@@ -448,6 +458,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "reference_number_year",
             "result_links",
             "review_date_prc",
+            "reviews",
             "risks",
             "section_names",
             "sections",
