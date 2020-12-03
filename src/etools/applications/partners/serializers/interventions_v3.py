@@ -298,7 +298,6 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
                 available_actions.append("sign")
                 available_actions.append("reject_review")
 
-
         # if NOT in Development status then we're done
         if obj.status != obj.DRAFT:
             return [action for action in default_ordering if action in available_actions]
