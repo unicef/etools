@@ -2118,7 +2118,7 @@ class Intervention(TimeStampedModel):
         return self.partner_accepted or self.unicef_accepted
 
     @property
-    def days_from_review_to_sign(self):
+    def days_from_review_to_signed(self):
         if not self.review_date_prc:
             return 'Not Reviewed'
         if not self.signed_by_unicef_date or not self.signed_by_partner_date:
