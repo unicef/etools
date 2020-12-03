@@ -32,8 +32,10 @@ from etools.applications.partners.views.interventions_v3_actions import (
     PMPInterventionSendToPartnerView,
     PMPInterventionSendToUNICEFView,
     PMPInterventionSignatureView,
+    PMPInterventionSuspendView,
     PMPInterventionTerminateView,
     PMPInterventionUnlockView,
+    PMPInterventionUnsuspendView,
 )
 from etools.applications.partners.views.partner_organization_v3 import (
     PMPPartnerOrganizationListAPIView,
@@ -107,6 +109,16 @@ urlpatterns = [
         'interventions/<int:pk>/terminate/',
         view=PMPInterventionTerminateView.as_view(http_method_names=['patch']),
         name='intervention-terminate',
+    ),
+    path(
+        'interventions/<int:pk>/suspend/',
+        view=PMPInterventionSuspendView.as_view(http_method_names=['patch']),
+        name='intervention-suspend',
+    ),
+    path(
+        'interventions/<int:pk>/unsuspend/',
+        view=PMPInterventionUnsuspendView.as_view(http_method_names=['patch']),
+        name='intervention-unsuspend',
     ),
     path(
         'interventions/<int:pk>/signature/',
