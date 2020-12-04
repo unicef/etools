@@ -39,6 +39,7 @@ class TestPMPDropdownsListApiView(BaseTenantTestCase):
             'partner_types',
             'risk_types',
             'sea_risk_ratings',
+            'review_types',
         ]
 
     def test_unicef_data(self):
