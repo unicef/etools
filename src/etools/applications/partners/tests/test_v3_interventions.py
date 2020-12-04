@@ -18,13 +18,14 @@ from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.core.tests.factories import EmailFactory
 from etools.applications.core.tests.mixins import URLAssertionMixin
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory, FundsReservationItemFactory
-from etools.applications.partners.models import Intervention, InterventionSupplyItem
+from etools.applications.partners.models import Intervention, InterventionReview, InterventionSupplyItem
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
     FileTypeFactory,
     InterventionAttachmentFactory,
     InterventionFactory,
     InterventionResultLinkFactory,
+    InterventionReviewFactory,
     InterventionSupplyItemFactory,
     PartnerFactory,
     PartnerStaffFactory,
@@ -1213,6 +1214,90 @@ class TestInterventionReview(BaseInterventionActionTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("PD is already in Review status.", response.data)
         mock_send.assert_not_called()
+
+
+class TestInterventionReviews(BaseInterventionTestCase):
+    def setUp(self):
+        super().setUp()
+        self.partner = PartnerFactory()
+        self.intervention = InterventionFactory(
+            date_sent_to_partner=datetime.date.today(),
+            agreement__partner=self.partner,
+        )
+
+    def test_list(self):
+        for __ in range(10):
+            InterventionReviewFactory(intervention=self.intervention)
+
+        review_qs = InterventionReview.objects.filter(
+            intervention=self.intervention,
+        )
+        response = self.forced_auth_req(
+            "get",
+            reverse(
+                "pmp_v3:intervention-reviews",
+                args=[self.intervention.pk],
+            ),
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), review_qs.count())
+        self.assertIn('id', response.data[0])
+
+    def test_post(self):
+        review_qs = InterventionReview.objects.filter(
+            intervention=self.intervention,
+        )
+        count = review_qs.count()
+        response = self.forced_auth_req(
+            "post",
+            reverse(
+                "pmp_v3:intervention-reviews",
+                args=[self.intervention.pk],
+            ),
+            data={
+                "overall_approval": True,
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(response.data["overall_approval"])
+        self.assertEqual(review_qs.count(), count + 1)
+        review = review_qs.first()
+        self.assertEqual(review.pk, response.data["id"])
+        self.assertEqual(review.intervention, self.intervention)
+        self.assertTrue(review.overall_approval)
+
+    def test_get(self):
+        review = InterventionReviewFactory(intervention=self.intervention)
+        response = self.forced_auth_req(
+            "get",
+            reverse(
+                "pmp_v3:intervention-reviews-detail",
+                args=[self.intervention.pk, review.pk],
+            ),
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["id"], review.pk)
+
+    def test_patch(self):
+        review = InterventionReviewFactory(
+            intervention=self.intervention,
+            overall_approval=True,
+        )
+        response = self.forced_auth_req(
+            "patch",
+            reverse(
+                "pmp_v3:intervention-reviews-detail",
+                args=[self.intervention.pk, review.pk],
+            ),
+            data={
+                "overall_approval": False,
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["id"], review.pk)
+        self.assertFalse(response.data["overall_approval"])
+        review.refresh_from_db()
+        self.assertFalse(review.overall_approval)
 
 
 class TestInterventionCancel(BaseInterventionActionTestCase):

@@ -183,14 +183,14 @@ urlpatterns = [
         name='intervention-supply-item-detail',
     ),
     path(
-        'interventions/<int:intervention_pk>/review/',
+        'interventions/<int:intervention_pk>/reviews/',
         view=PMPReviewView.as_view(),
-        name='intervention-review',
+        name='intervention-reviews',
     ),
     path(
-        'interventions/<int:intervention_pk>/review/<int:pk>/',
+        'interventions/<int:intervention_pk>/reviews/<int:pk>/',
         view=PMPReviewDetailView.as_view(),
-        name='intervention-review-detail',
+        name='intervention-reviews-detail',
     ),
     path(
         'interventions/<int:intervention_pk>/pd-outputs/<int:output_pk>/activities/',
