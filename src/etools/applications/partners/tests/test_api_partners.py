@@ -407,7 +407,16 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
             },
             user=self.unicef_staff,
         )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.data["staff_members"]["active"],
+            [
+                ErrorDetail(
+                    string='User already synced to PRP and cannot be disabled. '
+                    'Please instruct the partner to disable from PRP',
+                    code='invalid'),
+            ]
+        )
 
     def test_update_staffmember_invalid_email(self):
         partner_staff_user = UserFactory(is_staff=True, groups__data=[])

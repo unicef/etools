@@ -108,7 +108,7 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
         )
         self.assertEqual(pd.status, pd.ACTIVE)
         available_actions = self.unicef_serializer.get_available_actions(pd)
-        expected_actions = self.default_actions + ["suspend", "terminate"]
+        expected_actions = self.default_actions + ["suspend"]
         self.assertEqual(sorted(available_actions), sorted(expected_actions))
 
         # not available if closed

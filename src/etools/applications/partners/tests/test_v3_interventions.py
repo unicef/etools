@@ -117,7 +117,7 @@ class BaseInterventionTestCase(BaseTenantTestCase):
 
 class TestList(BaseInterventionTestCase):
     def test_list_for_partner(self):
-        intervention = InterventionFactory()
+        intervention = InterventionFactory(date_sent_to_partner=None)
         user = UserFactory(is_staff=False, groups__data=[])
         user_staff_member = PartnerStaffFactory(
             partner=intervention.agreement.partner,
@@ -1145,6 +1145,7 @@ class TestInterventionAcceptReview(BaseInterventionActionTestCase):
     def test_patch(self):
         self.intervention.partner_accepted = True
         self.intervention.unicef_accepted = True
+        self.intervention.date_sent_to_partner = datetime.date.today()
         self.intervention.save()
 
         # unicef accepts
@@ -1196,6 +1197,7 @@ class TestInterventionReview(BaseInterventionActionTestCase):
     def test_patch(self):
         self.intervention.partner_accepted = True
         self.intervention.unicef_accepted = True
+        self.intervention.date_sent_to_partner = datetime.date.today()
         self.intervention.save()
 
         # unicef reviews
@@ -1450,7 +1452,9 @@ class TestInterventionSignature(BaseInterventionActionTestCase):
 
     def test_patch(self):
         # unicef signature
-        self.assertFalse(self.intervention.unicef_accepted)
+        self.intervention.date_sent_to_partner = datetime.date.today()
+        self.intervention.save()
+        InterventionReviewFactory(intervention=self.intervention)
         mock_send = mock.Mock(return_value=self.mock_email)
         with mock.patch(self.notify_path, mock_send):
             response = self.forced_auth_req("patch", self.url, user=self.user)
@@ -1458,7 +1462,6 @@ class TestInterventionSignature(BaseInterventionActionTestCase):
         mock_send.assert_called()
         self.intervention.refresh_from_db()
         self.assertEqual(self.intervention.status, Intervention.SIGNATURE)
-        self.assertFalse(self.intervention.unicef_accepted)
 
         # unicef attempt to signature again
         mock_send = mock.Mock()
@@ -1577,6 +1580,8 @@ class TestInterventionSendToPartner(BaseInterventionActionTestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_get(self):
+        self.intervention.date_sent_to_partner = None
+        self.intervention.save()
         self.assertTrue(self.intervention.unicef_court)
         self.assertIsNone(self.intervention.date_sent_to_partner)
 
