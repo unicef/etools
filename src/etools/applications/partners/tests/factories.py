@@ -121,7 +121,7 @@ class InterventionFactory(factory.django.DjangoModelFactory):
     implementation_strategy = "implementation_strategy"
     ip_program_contribution = "ip_program_contribution"
     sustainability_narrative = "sustainability_narrative"
-    date_sent_to_partner = datetime.date.today()
+    # date_sent_to_partner = datetime.date.today()
 
     @factory.post_generation
     def country_programmes(self, create, extracted, **kwargs):
