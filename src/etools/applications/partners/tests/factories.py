@@ -123,7 +123,6 @@ class InterventionFactory(factory.django.DjangoModelFactory):
     sustainability_narrative = "sustainability_narrative"
     date_sent_to_partner = datetime.date.today()
 
-
     @factory.post_generation
     def country_programmes(self, create, extracted, **kwargs):
         if create and self.country_programme:
