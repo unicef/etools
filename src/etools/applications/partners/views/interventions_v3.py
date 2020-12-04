@@ -260,15 +260,29 @@ class PMPReviewMixin(DetailedInterventionResponseMixin, PMPBaseViewMixin):
     ]
     serializer_class = InterventionReviewSerializer
 
-    def get_queryset(self, qs):
-        qs = super().get_queryset(qs)
+    def get_root_object(self):
+        return Intervention.objects.get(pk=self.kwargs["intervention_pk"])
+
+    def get_intervention(self) -> Intervention:
+        return self.get_root_object()
+
+    def get_queryset(self):
+        qs = super().get_queryset().filter(
+            intervention__pk=self.kwargs["intervention_pk"],
+        )
         if self.is_partner_staff():
             return qs.none()
         return qs
 
+    def get_serializer(self, *args, **kwargs):
+        if "data" in kwargs:
+            kwargs["data"]["intervention"] = self.get_root_object().pk
+        return super().get_serializer(*args, **kwargs)
+
 
 class PMPReviewView(PMPReviewMixin, ListCreateAPIView):
-    pass
+    lookup_url_kwarg = "intervention_pk"
+    lookup_field = "intervention_id"
 
 
 class PMPReviewDetailView(PMPReviewMixin, RetrieveUpdateAPIView):
