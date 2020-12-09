@@ -1746,6 +1746,12 @@ class TestInterventionViews(BaseTenantTestCase):
         self.intervention_obj.unicef_focal_points.add(self.unicef_staff)
         self.intervention_obj.partner_focal_points.add(PartnerStaffFactory())
         self.intervention_obj.budget_owner = UserFactory()
+        self.intervention_obj.date_sent_to_partner = datetime.date.today()
+        self.intervention_obj.ip_program_contribution = "contribution"
+        self.intervention_obj.implementation_strategy = "strategy"
+        self.intervention_obj.equity_narrative = "equity narrative"
+        self.intervention_obj.context = "context"
+        self.intervention_obj.gender_narrative = "gender_narrative"
         self.intervention_obj.save()
         ReportingRequirementFactory(intervention=self.intervention_obj)
         self.assertEqual(self.intervention_obj.status, Intervention.ACTIVE)

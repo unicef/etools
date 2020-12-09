@@ -223,7 +223,7 @@ class AgreementCSVRenderer(r.CSVRenderer):
 
 class InterventionCSVRenderer(r.CSVRenderer):
     header = [
-        "partner_name", "vendor_number", "status", "partner_type", "cso_type", "agreement_number", "country_programme",
+        "partner_name", "vendor_number", "status", "partner_type", "cso_type", "agreement_number", "country_programmes",
         "document_type", "number", "title", "start", "end", "offices", "sectors", "locations", "contingency_pd",
         "intervention_clusters", "unicef_focal_points", "partner_focal_points", "budget_currency", "cso_contribution",
         "unicef_budget", "unicef_supply", "total_planned_budget", "fr_numbers", "fr_currency", "fr_posting_date",
@@ -241,7 +241,7 @@ class InterventionCSVRenderer(r.CSVRenderer):
         "partner_type": "Partner Type",
         "cso_type": "CSO Type",
         "agreement_number": "Agreement",
-        "country_programme": "Country Programme",
+        "country_programmes": "Country Programme",
         "document_type": "Document Type",
         "number": "Reference Number",
         "title": "Document Title",
