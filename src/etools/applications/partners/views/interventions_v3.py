@@ -228,7 +228,12 @@ class InterventionPDOutputsListCreateView(InterventionPDOutputsViewMixin, ListCr
 
 
 class InterventionPDOutputsDetailUpdateView(InterventionPDOutputsViewMixin, RetrieveUpdateDestroyAPIView):
-    pass
+    def perform_destroy(self, instance):
+        # do cleanup if pd output is still not associated to cp output
+        result_link = instance.result_link
+        instance.delete()
+        if result_link.cp_output is None:
+            result_link.delete()
 
 
 class PMPInterventionManagementBudgetRetrieveUpdateView(
