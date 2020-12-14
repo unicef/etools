@@ -1575,7 +1575,7 @@ class TestInterventionBudget(BaseTenantTestCase):
         self.assertEqual(budget.total_cash_local(), 616 + 323)
 
     def test_calc_totals_management_budget(self):
-        intervention = InterventionFactory()
+        intervention = InterventionFactory(hq_support_cost=7)
         budget = intervention.planned_budget
         mgmt_budget = intervention.management_budgets
 
@@ -1609,6 +1609,8 @@ class TestInterventionBudget(BaseTenantTestCase):
             "{:0.2f}".format(1200 / (1200 + 900 + 30) * 100),
         )
         self.assertEqual(budget.total_cash_local(), 1200 + 900)
+        self.assertEqual(budget.total_unicef_contribution_local(), 930)
+        self.assertAlmostEqual(budget.total_unicef_cash_local_wo_hq, Decimal('869.15'), places=1)
 
     def test_calc_totals_supply_items(self):
         intervention = InterventionFactory()
