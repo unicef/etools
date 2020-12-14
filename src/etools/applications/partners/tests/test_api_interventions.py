@@ -150,7 +150,6 @@ class TestInterventionsAPI(BaseTenantTestCase):
             "special_reporting_requirements",
             "start",
             "status",
-            "submission_date",
             "supply_items",
             "sustainability_narrative",
             "sustainability_rating",
