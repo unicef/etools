@@ -145,9 +145,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,start,*,,Draft,Required,FALSE
 ,start,*,contingency on,Signed,Required,FALSE
 ,submission_date,*,,*,View,TRUE
-,submission_date,Partnership Manager,,Draft,Edit,TRUE
-,submission_date,Partner User,,Draft,Edit,TRUE
-,submission_date,*,,Draft,Required,FALSE
+,submission_date,*,,*,Edit,FALSE
 ,submission_date_prc,*,,*,View,TRUE
 ,submission_date_prc,Partnership Manager,,Review,Edit,TRUE
 ,supply_items,Partnership Manager,unicef_court,Draft,Edit,TRUE

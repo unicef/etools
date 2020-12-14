@@ -15,16 +15,12 @@ class TestSignedDocumentsManagement(APIViewSetTestCase, BaseTestCase):
 
     def setUp(self):
         super().setUp()
-        self.draft_unicef_data = {
-            'submission_date': '1970-01-01',
-        }
         self.review_unicef_data = {
             'review_date_prc': '1970-01-01',
             'submission_date_prc': '1970-01-01',
             'prc_review_attachment': AttachmentFactory(file=SimpleUploadedFile('hello_world.txt', b'hello world!')).pk,
         }
         self.signature_unicef_data = {
-            'signed_by_unicef_date': '1970-01-02',
             'unicef_signatory': UserFactory().id,
             'signed_pd_attachment': AttachmentFactory(file=SimpleUploadedFile('hello_world.txt', b'hello world!')).pk,
         }
@@ -32,10 +28,7 @@ class TestSignedDocumentsManagement(APIViewSetTestCase, BaseTestCase):
             'partner_authorized_officer_signatory': PartnerStaffFactory(partner=self.partner).pk,
             'signed_by_partner_date': '1970-01-02',
         }
-        self.all_data = {
-            **self.draft_unicef_data, **self.review_unicef_data, **self.review_unicef_data,
-            **self.signature_partner_data,
-        }
+        self.all_data = {**self.review_unicef_data, **self.review_unicef_data, **self.signature_partner_data}
 
     # test permissions
     def test_unicef_user_permissions(self):
@@ -62,7 +55,7 @@ class TestSignedDocumentsManagement(APIViewSetTestCase, BaseTestCase):
             self.assertEqual(response.data['permissions']['view'][field], True, field)
             self.assertEqual(response.data['permissions']['edit'][field], True, field)
 
-        for field in dict(**self.draft_unicef_data, **self.review_unicef_data).keys():
+        for field in self.review_unicef_data.keys():
             self.assertEqual(response.data['permissions']['view'][field], True, field)
             self.assertEqual(response.data['permissions']['edit'][field], False, field)
 
@@ -76,7 +69,7 @@ class TestSignedDocumentsManagement(APIViewSetTestCase, BaseTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
 
-        for field in dict(**self.draft_unicef_data, **self.review_unicef_data, **self.signature_unicef_data).keys():
+        for field in dict(**self.review_unicef_data, **self.signature_unicef_data).keys():
             self.assertEqual(response.data['permissions']['view'][field], True, field)
             self.assertEqual(response.data['permissions']['edit'][field], False, field)
 
@@ -86,7 +79,7 @@ class TestSignedDocumentsManagement(APIViewSetTestCase, BaseTestCase):
 
     # test functionality
     def test_base_update(self):
-        self._test_update(self.partnership_manager, self.draft_intervention, data=self.draft_unicef_data)
+        self._test_update(self.partnership_manager, self.review_intervention, data=self.review_unicef_data)
 
     def _test_update_fields(self, user, intervention, allowed_fields=None, restricted_fields=None):
         # check in loop because there are only one error will be raised at a moment
@@ -110,30 +103,24 @@ class TestSignedDocumentsManagement(APIViewSetTestCase, BaseTestCase):
             restricted_fields=dict(
                 **self.review_unicef_data, **self.signature_unicef_data, **self.signature_partner_data
             ),
-            allowed_fields=self.draft_unicef_data,
+            allowed_fields={},
         )
 
     def test_partnership_manager_update_review(self):
         self._test_update_fields(
             self.partnership_manager, self.review_intervention,
-            restricted_fields=dict(
-                **self.draft_unicef_data, **self.signature_unicef_data, **self.signature_partner_data
-            ),
+            restricted_fields=dict(**self.signature_unicef_data, **self.signature_partner_data),
             allowed_fields=self.review_unicef_data,
         )
 
     def test_partnership_manager_update_signature(self):
         self._test_update_fields(
             self.partnership_manager, self.signature_intervention,
-            restricted_fields=dict(
-                **self.draft_unicef_data, **self.review_unicef_data
-            ),
+            restricted_fields=self.review_unicef_data,
             allowed_fields=self.signature_unicef_data
         )
 
     def test_partner_update_draft(self):
-        for k in self.draft_unicef_data:
-            self.all_data.pop(k)
         self._test_update_fields(self.partner_focal_point, self.draft_intervention, restricted_fields=self.all_data)
 
     def test_partner_update_review(self):
@@ -142,8 +129,6 @@ class TestSignedDocumentsManagement(APIViewSetTestCase, BaseTestCase):
     def test_partner_update_signature(self):
         self._test_update_fields(
             self.partner_focal_point, self.signature_intervention,
-            restricted_fields=dict(
-                **self.draft_unicef_data, **self.review_unicef_data, **self.signature_unicef_data
-            ),
+            restricted_fields=dict(**self.review_unicef_data, **self.signature_unicef_data),
             allowed_fields=self.signature_partner_data
         )
