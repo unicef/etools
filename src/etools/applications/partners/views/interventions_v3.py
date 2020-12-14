@@ -30,7 +30,6 @@ from etools.applications.partners.models import (
 )
 from etools.applications.partners.permissions import (
     intervention_field_is_editable_permission,
-    PartnershipManagerPermission,
     PMPInterventionPermission,
 )
 from etools.applications.partners.serializers.exports.interventions import (
