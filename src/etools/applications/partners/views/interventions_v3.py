@@ -179,7 +179,7 @@ class PMPInterventionRetrieveUpdateView(PMPInterventionMixin, InterventionDetail
 
 class PMPInterventionPDFView(PMPInterventionMixin, RetrieveAPIView):
     queryset = Intervention.objects.detail_qs().all()
-    permission_classes = (PartnershipManagerPermission,)
+    permission_classes = (PMPInterventionPermission,)
 
     def get_pdf_filename(self):
         return str(self.pd)

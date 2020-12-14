@@ -225,7 +225,7 @@ class TestList(BaseInterventionTestCase):
 class TestDetail(BaseInterventionTestCase):
     def setUp(self):
         super().setUp()
-        self.intervention = InterventionFactory(unicef_signatory=self.user)
+        self.intervention = InterventionFactory(unicef_signatory=self.user, date_sent_to_partner=datetime.date.today())
         frs = FundsReservationHeaderFactory(
             intervention=self.intervention,
             currency='USD',
@@ -266,6 +266,26 @@ class TestDetail(BaseInterventionTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response['Content-Type'], 'application/pdf')
+
+    def test_pdf_partner_user(self):
+        staff_member = PartnerStaffFactory(partner=self.intervention.agreement.partner)
+        self.intervention.partner_focal_points.add(staff_member)
+        response = self.forced_auth_req(
+            "get",
+            reverse('pmp_v3:intervention-detail-pdf', args=[self.intervention.pk]),
+            user=staff_member.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response['Content-Type'], 'application/pdf')
+
+    def test_pdf_another_partner_user(self):
+        staff_member = PartnerStaffFactory()
+        response = self.forced_auth_req(
+            "get",
+            reverse('pmp_v3:intervention-detail-pdf', args=[self.intervention.pk]),
+            user=staff_member.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_pdf_not_found(self):
         response = self.forced_auth_req(
