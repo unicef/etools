@@ -65,11 +65,13 @@ class InterventionBudgetCUSerializer(serializers.ModelSerializer):
             "partner_contribution_percent",
             "total_unicef_contribution_local",
             "total_cash_local",
+            "total_unicef_cash_local_wo_hq",
         )
         read_only_fields = (
             "total_local",
             "total_cash_local",
             "programme_effectiveness",
+            "total_unicef_cash_local_wo_hq",
         )
 
 
