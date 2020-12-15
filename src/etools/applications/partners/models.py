@@ -2639,6 +2639,10 @@ class InterventionBudget(TimeStampedModel):
         verbose_name=_("Programme Effectiveness (%)"),
         default=0,
     )
+    total_hq_cash_local = models.DecimalField(
+        max_digits=20, decimal_places=2, default=0,
+        verbose_name=_('Total HQ Cash Local')
+    )
     total_unicef_cash_local_wo_hq = models.DecimalField(
         max_digits=20, decimal_places=2, default=0,
         verbose_name=_('Total Unicef Cash Local Without HQ Contribution')
@@ -2717,9 +2721,15 @@ class InterventionBudget(TimeStampedModel):
         for item in self.intervention.supply_items.all():
             self.in_kind_amount_local += item.total_price
 
+        self.total_hq_cash_local = 0
         self.total_unicef_cash_local_wo_hq = self.total_unicef_contribution_local()
         if self.intervention.hq_support_cost:
             self.total_unicef_cash_local_wo_hq /= decimal.Decimal(1 + self.intervention.hq_support_cost * 0.01)
+            self.total_hq_cash_local = self.total_unicef_cash_local_wo_hq
+            self.total_hq_cash_local *= decimal.Decimal(self.intervention.hq_support_cost * 0.01)
+            # get rid of extra decimal places according to field specs
+            self.total_hq_cash_local = self.total_hq_cash_local.quantize(decimal.Decimal('.01'))
+            self.total_unicef_cash_local_wo_hq = self.total_unicef_cash_local_wo_hq.quantize(decimal.Decimal('.01'))
 
         self.total = self.total_unicef_contribution() + self.partner_contribution
         self.total_local = self.total_unicef_contribution_local() + self.partner_contribution_local
