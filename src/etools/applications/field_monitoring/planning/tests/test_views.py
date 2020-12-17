@@ -107,7 +107,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             MonitoringActivityFactory(monitor_type='staff'),
         ]
 
-        with self.assertNumQueries(7):
+        with self.assertNumQueries(10):
             self._test_list(self.unicef_user, activities, data={'page': 1, 'page_size': 10})
 
     def test_search_by_ref_number(self):
@@ -369,6 +369,24 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         self._test_list(
             self.fm_user, [activity1, activity2],
             data={'field_office__in': f'{activity1.field_office.id},{activity2.field_office.id}'},
+        )
+
+    def test_filter_by_section(self):
+        MonitoringActivityFactory(monitor_type='staff', status='draft')
+        section = SectionFactory()
+        activity1 = MonitoringActivityFactory(
+            monitor_type='staff',
+            status='draft',
+            sections=[section],
+        )
+        activity2 = MonitoringActivityFactory(
+            monitor_type='staff',
+            status='draft',
+            sections=[section],
+        )
+        self._test_list(
+            self.fm_user, [activity1, activity2],
+            data={'sections__in': f'{section.id}'},
         )
 
 

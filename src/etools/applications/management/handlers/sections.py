@@ -3,6 +3,8 @@ from django.db.transaction import atomic
 
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.audit.models import Engagement
+from etools.applications.field_monitoring.fm_settings.models import Question
+from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.management.models import SectionHistory
 from etools.applications.partners.models import Intervention
 from etools.applications.reports.models import AppliedIndicator, Section
@@ -51,6 +53,13 @@ class SectionHandler:
         # Engagement.FINAL,
         # Engagement.CANCELLED,
     ]
+    activity_updatable_status = [
+        MonitoringActivity.STATUS_DRAFT,
+        MonitoringActivity.STATUS_CHECKLIST,
+        MonitoringActivity.STATUS_REVIEW,
+        MonitoringActivity.STATUS_ASSIGNED,
+        MonitoringActivity.STATUS_DATA_COLLECTION,
+    ]
 
     # dictionary to mark instances, for each model that has a m2m relationship to Sections,
     # in order to follow up later and clean (remove references to old sections) them.
@@ -78,7 +87,15 @@ class SectionHandler:
         'action_points': (
             ActionPoint.objects.filter(status=ActionPoint.STATUS_OPEN),
             'section',
-        )
+        ),
+        'fm_activities': (
+            MonitoringActivity.objects.filter(status__in=activity_updatable_status),
+            'sections',
+        ),
+        'fm_questions': (
+            Question.objects,
+            'sections',
+        ),
     }
 
     @staticmethod
@@ -129,6 +146,8 @@ class SectionHandler:
                 'travels': [2, 4 ],
                 'tpm_activities': [],
                 'action_points': [3],
+                'fm_activities': [],
+                'fm_questions': [],
             },
             "Health": {
                 'interventions': [1, 5],
@@ -136,6 +155,8 @@ class SectionHandler:
                 'travels': [4 ],
                 'tpm_activities': [],
                 'action_points': [1],
+                'fm_activities': [],
+                'fm_questions': [],
             }
         }
         """
@@ -188,6 +209,8 @@ class SectionHandler:
                     'travels': [2, 4 ],
                     'tpm_activities': [],
                     'action_points': [3],
+                    'fm_activities': [],
+                    'fm_questions': [],
                 },
         """
         for model_key in SectionHandler.queryset_migration_mapping.keys():
