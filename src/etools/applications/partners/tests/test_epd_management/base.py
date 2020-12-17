@@ -9,7 +9,12 @@ from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
 from etools.applications.partners.models import Intervention
-from etools.applications.partners.tests.factories import InterventionFactory, PartnerFactory, PartnerStaffFactory
+from etools.applications.partners.tests.factories import (
+    InterventionFactory,
+    InterventionReviewFactory,
+    PartnerFactory,
+    PartnerStaffFactory,
+)
 from etools.applications.reports.tests.factories import (
     CountryProgrammeFactory,
     OfficeFactory,
@@ -80,6 +85,7 @@ class BaseTestCase(BaseTenantTestCase):
             signed_by_unicef_date=date(year=1970, month=1, day=1),
         ))
         self.signature_intervention = InterventionFactory(**signature_fields)
+        InterventionReviewFactory(intervention=self.signature_intervention)
         ReportingRequirementFactory(intervention=self.signature_intervention)
         FundsReservationHeaderFactory(intervention=self.signature_intervention)
         AttachmentFactory(

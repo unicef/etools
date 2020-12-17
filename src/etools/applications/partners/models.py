@@ -1659,6 +1659,7 @@ class Intervention(TimeStampedModel):
 
     AUTO_TRANSITIONS = {
         DRAFT: [REVIEW],
+        SIGNATURE: [SIGNED],
         SIGNED: [ACTIVE, TERMINATED],
         ACTIVE: [ENDED, TERMINATED],
         ENDED: [CLOSED]
@@ -2424,6 +2425,7 @@ class Intervention(TimeStampedModel):
         if not oldself:
             self.management_budgets = InterventionManagementBudget.objects.create(intervention=self)
             self.planned_budget = InterventionBudget.objects.create(intervention=self)
+            self.review = InterventionReview.objects.create(intervention=self)
 
 
 class InterventionAmendment(TimeStampedModel):
@@ -2707,6 +2709,45 @@ class InterventionBudget(TimeStampedModel):
 
         if save:
             self.save()
+
+
+class InterventionReview(TimeStampedModel):
+    PRC = 'prc'
+    NPRC = 'non-prc'
+    NORW = 'no-review'
+
+    REVIEW_TYPES = Choices(
+        (PRC, 'PRC Review'),
+        (NPRC, 'Non-PRC Review'),
+        (NORW, 'No Review Required'),
+    )
+
+    intervention = models.ForeignKey(
+        Intervention,
+        verbose_name=_("Intervention"),
+        related_name='reviews',
+        on_delete=models.CASCADE,
+    )
+
+    amendment = models.ForeignKey(
+        InterventionAmendment,
+        null=True,
+        blank=True,
+        verbose_name=_("Amendment"),
+        related_name='reviews',
+        on_delete=models.CASCADE,
+    )
+
+    review_type = models.CharField(
+        max_length=50,
+        verbose_name=_('Types'),
+        default=PRC,
+        choices=REVIEW_TYPES)
+
+    overall_approval = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ["-created"]
 
 
 class FileType(models.Model):

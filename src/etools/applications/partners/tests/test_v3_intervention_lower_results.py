@@ -267,6 +267,19 @@ class TestInterventionLowerResultsDetailView(TestInterventionLowerResultsViewBas
         self.assertNotEqual(result.result_link, self.result_link)
         self.assertEqual(result.result_link.cp_output, None)
 
+    def test_delete_unassociated_pd_output(self):
+        result_link = InterventionResultLinkFactory(intervention=self.intervention, cp_output=None)
+        result = LowerResultFactory(result_link=result_link)
+        InterventionActivityFactory(result=result, unicef_cash=10, cso_cash=20)
+        response = self.forced_auth_req(
+            'delete',
+            reverse('partners:intervention-pd-output-detail', args=[self.intervention.pk, result.pk]),
+            self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        self.assertFalse(InterventionResultLink.objects.filter(pk=result_link.pk).exists())
+
     # permissions are common with list view and were explicitly checked in corresponding api test case
 
     def test_associate_output_as_partner(self):

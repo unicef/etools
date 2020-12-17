@@ -124,6 +124,23 @@ class PMPInterventionAcceptReviewView(PMPInterventionActionView):
         return response
 
 
+class PMPInterventionRejectReviewView(PMPInterventionActionView):
+    def update(self, request, *args, **kwargs):
+        if self.is_partner_staff():
+            return HttpResponseForbidden()
+        pd = self.get_object()
+        if pd.status != Intervention.REVIEW:
+            raise ValidationError("PD needs to be in Review state")
+        request.data.clear()
+        request.data.update({"status": Intervention.DRAFT})
+        request.data.update({"unicef_accepted": False})
+
+        response = super().update(request, *args, **kwargs)
+
+        # TODO: send email to unicef focal points that PD was rejected from review.
+        return response
+
+
 class PMPInterventionReviewView(PMPInterventionActionView):
     def update(self, request, *args, **kwargs):
         if self.is_partner_staff():
