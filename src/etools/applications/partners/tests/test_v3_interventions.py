@@ -225,7 +225,7 @@ class TestList(BaseInterventionTestCase):
 class TestDetail(BaseInterventionTestCase):
     def setUp(self):
         super().setUp()
-        self.intervention = InterventionFactory(unicef_signatory=self.user)
+        self.intervention = InterventionFactory(unicef_signatory=self.user, date_sent_to_partner=datetime.date.today())
         frs = FundsReservationHeaderFactory(
             intervention=self.intervention,
             currency='USD',
@@ -266,6 +266,26 @@ class TestDetail(BaseInterventionTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response['Content-Type'], 'application/pdf')
+
+    def test_pdf_partner_user(self):
+        staff_member = PartnerStaffFactory(partner=self.intervention.agreement.partner)
+        self.intervention.partner_focal_points.add(staff_member)
+        response = self.forced_auth_req(
+            "get",
+            reverse('pmp_v3:intervention-detail-pdf', args=[self.intervention.pk]),
+            user=staff_member.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response['Content-Type'], 'application/pdf')
+
+    def test_pdf_another_partner_user(self):
+        staff_member = PartnerStaffFactory()
+        response = self.forced_auth_req(
+            "get",
+            reverse('pmp_v3:intervention-detail-pdf', args=[self.intervention.pk]),
+            user=staff_member.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_pdf_not_found(self):
         response = self.forced_auth_req(
@@ -1419,6 +1439,111 @@ class TestInterventionTerminate(BaseInterventionActionTestCase):
             response = self.forced_auth_req("patch", self.url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("PD has already been terminated.", response.data)
+        mock_send.assert_not_called()
+
+
+class TestInterventionSuspend(BaseInterventionActionTestCase):
+    def setUp(self):
+        super().setUp()
+        self.url = reverse(
+            'pmp_v3:intervention-suspend',
+            args=[self.intervention.pk],
+        )
+
+    def test_not_found(self):
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-suspend', args=[404]),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_partner_no_access(self):
+        intervention = InterventionFactory()
+        response = self.forced_auth_req(
+            "patch",
+            reverse(
+                'pmp_v3:intervention-suspend',
+                args=[intervention.pk],
+            ),
+            user=self.partner_user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_patch(self):
+        # unicef suspends
+        self.intervention.date_sent_to_partner = datetime.date.today()
+        self.intervention.save()
+        self.assertFalse(self.intervention.unicef_accepted)
+        mock_send = mock.Mock(return_value=self.mock_email)
+        with mock.patch(self.notify_path, mock_send):
+            response = self.forced_auth_req("patch", self.url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mock_send.assert_called()
+        self.intervention.refresh_from_db()
+        self.assertEqual(self.intervention.status, Intervention.SUSPENDED)
+        self.assertFalse(self.intervention.unicef_accepted)
+
+        # unicef attempt to suspend again
+        mock_send = mock.Mock()
+        with mock.patch(self.notify_path, mock_send):
+            response = self.forced_auth_req("patch", self.url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("PD has already been suspended.", response.data)
+        mock_send.assert_not_called()
+
+
+class TestInterventionUnsuspend(BaseInterventionActionTestCase):
+    def setUp(self):
+        super().setUp()
+        self.url = reverse(
+            'pmp_v3:intervention-unsuspend',
+            args=[self.intervention.pk],
+        )
+
+    def test_not_found(self):
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-unsuspend', args=[404]),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_partner_no_access(self):
+        intervention = InterventionFactory()
+        response = self.forced_auth_req(
+            "patch",
+            reverse(
+                'pmp_v3:intervention-unsuspend',
+                args=[intervention.pk],
+            ),
+            user=self.partner_user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_patch(self):
+        # unicef unsuspends
+        self.intervention.status = self.intervention.SUSPENDED
+        self.intervention.date_sent_to_partner = datetime.date.today()
+        self.intervention.save()
+        self.intervention.management_budgets.act1_unicef = 10.00
+        self.intervention.management_budgets.save()
+        self.assertFalse(self.intervention.unicef_accepted)
+        mock_send = mock.Mock(return_value=self.mock_email)
+        with mock.patch(self.notify_path, mock_send):
+            response = self.forced_auth_req("patch", self.url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mock_send.assert_called()
+        self.intervention.refresh_from_db()
+        self.assertEqual(self.intervention.status, Intervention.ACTIVE)
+        self.assertFalse(self.intervention.unicef_accepted)
+
+        # unicef attempt to unsuspend again
+        mock_send = mock.Mock()
+        with mock.patch(self.notify_path, mock_send):
+            response = self.forced_auth_req("patch", self.url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("PD is not suspended.", response.data)
         mock_send.assert_not_called()
 
 
