@@ -449,6 +449,37 @@ class TestUpdate(BaseInterventionTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn(cp, intervention.country_programmes.all())
 
+    def test_update_hq_cash_local(self):
+        intervention = InterventionFactory()
+        budget = intervention.planned_budget
+
+        InterventionActivityFactory(
+            result__result_link=InterventionResultLinkFactory(
+                cp_output__result_type__name=ResultType.OUTPUT,
+                intervention=intervention
+            ),
+            unicef_cash=40,
+        )
+
+        budget.refresh_from_db()
+        self.assertEqual(budget.total_hq_cash_local, 0)
+        self.assertEqual(budget.unicef_cash_local, 40)
+
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+            user=self.user,
+            data={'planned_budget': {
+                "id": budget.pk,
+                "total_hq_cash_local": "10.00",
+            }}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        budget.refresh_from_db()
+        self.assertEqual(budget.total_hq_cash_local, 10)
+        self.assertEqual(budget.unicef_cash_local, 50)
+
+
 
 class TestDelete(BaseInterventionTestCase):
     def setUp(self):

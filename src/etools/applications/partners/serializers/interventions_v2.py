@@ -73,7 +73,6 @@ class InterventionBudgetCUSerializer(serializers.ModelSerializer):
             "total_cash_local",
             "programme_effectiveness",
             "total_unicef_cash_local_wo_hq",
-            "total_hq_cash_local",
         )
 
 
