@@ -480,7 +480,6 @@ class TestUpdate(BaseInterventionTestCase):
         self.assertEqual(budget.unicef_cash_local, 50)
 
 
-
 class TestDelete(BaseInterventionTestCase):
     def setUp(self):
         super().setUp()
