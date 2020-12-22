@@ -2624,6 +2624,15 @@ class InterventionBudget(TimeStampedModel):
     partner_contribution_local = models.DecimalField(max_digits=20, decimal_places=2, default=0,
                                                      verbose_name=_('Partner Contribution Local'))
     # sum of all activity/management budget unicef values
+    total_unicef_cash_local_wo_hq = models.DecimalField(
+        max_digits=20, decimal_places=2, default=0,
+        verbose_name=_('Total HQ Cash Local')
+    )
+    total_hq_cash_local = models.DecimalField(
+        max_digits=20, decimal_places=2, default=0,
+        verbose_name=_('Total HQ Cash Local')
+    )
+    # unicef cash including headquarters contribution
     unicef_cash_local = models.DecimalField(max_digits=20, decimal_places=2, default=0,
                                             verbose_name=_('Unicef Cash Local'))
     # sum of all supply items (InterventionSupplyItem)
@@ -2638,14 +2647,6 @@ class InterventionBudget(TimeStampedModel):
         decimal_places=2,
         verbose_name=_("Programme Effectiveness (%)"),
         default=0,
-    )
-    total_hq_cash_local = models.DecimalField(
-        max_digits=20, decimal_places=2, default=0,
-        verbose_name=_('Total HQ Cash Local')
-    )
-    total_unicef_cash_local_wo_hq = models.DecimalField(
-        max_digits=20, decimal_places=2, default=0,
-        verbose_name=_('Total Unicef Cash Local Without HQ Contribution')
     )
 
     tracker = FieldTracker()
@@ -2697,7 +2698,7 @@ class InterventionBudget(TimeStampedModel):
 
         def init_totals():
             self.partner_contribution_local = 0
-            self.unicef_cash_local = 0
+            self.total_unicef_cash_local_wo_hq = 0
 
         init = False
         for link in self.intervention.result_links.all():
@@ -2707,29 +2708,20 @@ class InterventionBudget(TimeStampedModel):
                         init_totals()
                         init = True
                     self.partner_contribution_local += activity.cso_cash
-                    self.unicef_cash_local += activity.unicef_cash
+                    self.total_unicef_cash_local_wo_hq += activity.unicef_cash
 
         programme_effectiveness = 0
         if not init:
             init_totals()
         programme_effectiveness += self.intervention.management_budgets.total
         self.partner_contribution_local += self.intervention.management_budgets.partner_total
-        self.unicef_cash_local += self.intervention.management_budgets.unicef_total
+        self.total_unicef_cash_local_wo_hq += self.intervention.management_budgets.unicef_total
+        self.unicef_cash_local = self.total_unicef_cash_local_wo_hq + self.total_hq_cash_local
 
         # in kind totals
         self.in_kind_amount_local = 0
         for item in self.intervention.supply_items.all():
             self.in_kind_amount_local += item.total_price
-
-        self.total_hq_cash_local = 0
-        self.total_unicef_cash_local_wo_hq = self.total_unicef_contribution_local()
-        if self.intervention.hq_support_cost:
-            self.total_unicef_cash_local_wo_hq /= decimal.Decimal(1 + self.intervention.hq_support_cost * 0.01)
-            self.total_hq_cash_local = self.total_unicef_cash_local_wo_hq
-            self.total_hq_cash_local *= decimal.Decimal(self.intervention.hq_support_cost * 0.01)
-            # get rid of extra decimal places according to field specs
-            self.total_hq_cash_local = self.total_hq_cash_local.quantize(decimal.Decimal('.01'))
-            self.total_unicef_cash_local_wo_hq = self.total_unicef_cash_local_wo_hq.quantize(decimal.Decimal('.01'))
 
         self.total = self.total_unicef_contribution() + self.partner_contribution
         self.total_local = self.total_unicef_contribution_local() + self.partner_contribution_local
