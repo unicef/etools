@@ -62,7 +62,7 @@ class TestSignedDocumentsManagement(APIViewSetTestCase, BaseTestCase):
             self.assertEqual(response.data['permissions']['view'][field], True, field)
             self.assertEqual(response.data['permissions']['edit'][field], True, field)
 
-        for field in dict(**self.draft_unicef_data, **self.review_unicef_data, **self.signature_partner_data).keys():
+        for field in dict(**self.draft_unicef_data, **self.review_unicef_data).keys():
             self.assertEqual(response.data['permissions']['view'][field], True, field)
             self.assertEqual(response.data['permissions']['edit'][field], False, field)
 
@@ -126,12 +126,14 @@ class TestSignedDocumentsManagement(APIViewSetTestCase, BaseTestCase):
         self._test_update_fields(
             self.partnership_manager, self.signature_intervention,
             restricted_fields=dict(
-                **self.draft_unicef_data, **self.review_unicef_data, **self.signature_partner_data
+                **self.draft_unicef_data, **self.review_unicef_data
             ),
             allowed_fields=self.signature_unicef_data
         )
 
     def test_partner_update_draft(self):
+        for k in self.draft_unicef_data:
+            self.all_data.pop(k)
         self._test_update_fields(self.partner_focal_point, self.draft_intervention, restricted_fields=self.all_data)
 
     def test_partner_update_review(self):

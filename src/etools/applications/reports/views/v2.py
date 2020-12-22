@@ -224,7 +224,13 @@ class LowerResultsDeleteView(DestroyAPIView):
             request.user in lower_result.result_link.intervention.unicef_focal_points.all() or \
             request.user.groups.filter(name__in=['Partnership Manager',
                                                  SENIOR_MANAGEMENT_GROUP]).exists():
+
+            # do cleanup if pd output is still not associated to cp output
+            result_link = lower_result.result_link
             lower_result.delete()
+            if result_link.cp_output is None:
+                result_link.delete()
+
             return Response(status=status.HTTP_204_NO_CONTENT)
         else:
             raise ValidationError("You do not have permissions to delete a lower result")

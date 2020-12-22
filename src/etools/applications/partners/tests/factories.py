@@ -115,6 +115,21 @@ class InterventionFactory(factory.django.DjangoModelFactory):
     reference_number_year = datetime.date.today().year
     start = datetime.date.today()
     end = datetime.date.today() + datetime.timedelta(days=365)
+    equity_narrative = "equity_narrative"
+    context = "context"
+    gender_narrative = "gender_narrative"
+    implementation_strategy = "implementation_strategy"
+    ip_program_contribution = "ip_program_contribution"
+    sustainability_narrative = "sustainability_narrative"
+    # date_sent_to_partner = datetime.date.today()
+
+    @factory.post_generation
+    def country_programmes(self, create, extracted, **kwargs):
+        if create and self.country_programme:
+            self.country_programmes.add(self.country_programme)
+
+        if extracted:
+            self.country_programmes.add(*extracted)
 
 
 class InterventionAmendmentFactory(factory.django.DjangoModelFactory):
@@ -154,6 +169,14 @@ class InterventionBudgetFactory(factory.django.DjangoModelFactory):
     partner_contribution_local = 20.00
     in_kind_amount = 10.00
     in_kind_amount_local = 10.00
+
+
+class InterventionReviewFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.InterventionReview
+
+    intervention = factory.SubFactory(InterventionFactory)
+    overall_approval = True
 
 
 class InterventionReportingPeriodFactory(factory.django.DjangoModelFactory):

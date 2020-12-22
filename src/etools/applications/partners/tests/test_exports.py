@@ -112,7 +112,7 @@ class TestModelExport(BaseTenantTestCase):
             "Partner Type",
             "CSO Type",
             "Agreement",
-            "country_programme",
+            "Country Programmes",
             "Document Type",
             "Reference Number",
             "Document Title",

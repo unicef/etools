@@ -24,12 +24,12 @@ from etools.applications.partners.models import (
     Intervention,
     InterventionAttachment,
     InterventionManagementBudget,
+    InterventionReview,
     InterventionRisk,
     InterventionSupplyItem,
 )
 from etools.applications.partners.permissions import (
     intervention_field_is_editable_permission,
-    PartnershipManagerPermission,
     PMPInterventionPermission,
 )
 from etools.applications.partners.serializers.exports.interventions import (
@@ -51,6 +51,7 @@ from etools.applications.partners.serializers.interventions_v3 import (
     PMPInterventionAttachmentSerializer,
 )
 from etools.applications.partners.serializers.v3 import (
+    InterventionReviewSerializer,
     PartnerInterventionLowerResultSerializer,
     UNICEFInterventionLowerResultSerializer,
 )
@@ -177,7 +178,7 @@ class PMPInterventionRetrieveUpdateView(PMPInterventionMixin, InterventionDetail
 
 class PMPInterventionPDFView(PMPInterventionMixin, RetrieveAPIView):
     queryset = Intervention.objects.detail_qs().all()
-    permission_classes = (PartnershipManagerPermission,)
+    permission_classes = (PMPInterventionPermission,)
 
     def get_pdf_filename(self):
         return str(self.pd)
@@ -226,7 +227,12 @@ class InterventionPDOutputsListCreateView(InterventionPDOutputsViewMixin, ListCr
 
 
 class InterventionPDOutputsDetailUpdateView(InterventionPDOutputsViewMixin, RetrieveUpdateDestroyAPIView):
-    pass
+    def perform_destroy(self, instance):
+        # do cleanup if pd output is still not associated to cp output
+        result_link = instance.result_link
+        instance.delete()
+        if result_link.cp_output is None:
+            result_link.delete()
 
 
 class PMPInterventionManagementBudgetRetrieveUpdateView(
@@ -248,6 +254,43 @@ class PMPInterventionManagementBudgetRetrieveUpdateView(
         if kwargs.get("data"):
             kwargs["data"]["intervention"] = self.kwargs.get("intervention_pk")
         return super().get_serializer(*args, **kwargs)
+
+
+class PMPReviewMixin(DetailedInterventionResponseMixin, PMPBaseViewMixin):
+    queryset = InterventionReview.objects.all()
+    permission_classes = [
+        IsAuthenticated,
+        IsReadAction | (IsEditAction & intervention_field_is_editable_permission('reviews'))
+    ]
+    serializer_class = InterventionReviewSerializer
+
+    def get_root_object(self):
+        return Intervention.objects.get(pk=self.kwargs["intervention_pk"])
+
+    def get_intervention(self) -> Intervention:
+        return self.get_root_object()
+
+    def get_queryset(self):
+        qs = super().get_queryset().filter(
+            intervention__pk=self.kwargs["intervention_pk"],
+        )
+        if self.is_partner_staff():
+            return qs.none()
+        return qs
+
+    def get_serializer(self, *args, **kwargs):
+        if "data" in kwargs:
+            kwargs["data"]["intervention"] = self.get_root_object().pk
+        return super().get_serializer(*args, **kwargs)
+
+
+class PMPReviewView(PMPReviewMixin, ListCreateAPIView):
+    lookup_url_kwarg = "intervention_pk"
+    lookup_field = "intervention_id"
+
+
+class PMPReviewDetailView(PMPReviewMixin, RetrieveUpdateAPIView):
+    pass
 
 
 class PMPInterventionSupplyItemMixin(
