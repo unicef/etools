@@ -203,6 +203,10 @@ class GeographicCoverageViewTestCase(BaseTenantTestCase):
             location=cls.first_location, status=MonitoringActivity.STATUSES.draft
         )
 
+        cls.sublocation_activity = MonitoringActivityFactory(
+            location__parent=cls.second_location, status=MonitoringActivity.STATUSES.completed
+        )
+
     def test_response(self):
         with self.assertNumQueries(1):
             response = self.forced_auth_req(
@@ -216,7 +220,7 @@ class GeographicCoverageViewTestCase(BaseTenantTestCase):
         self.assertEqual(response.data[0]['id'], self.first_location.id)
         self.assertEqual(response.data[0]['completed_visits'], 6)
         self.assertEqual(response.data[1]['id'], self.second_location.id)
-        self.assertEqual(response.data[1]['completed_visits'], 0)
+        self.assertEqual(response.data[1]['completed_visits'], 1)
 
     def test_filter_by_section(self):
         with self.assertNumQueries(1):
