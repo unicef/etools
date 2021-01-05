@@ -274,9 +274,22 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
         return user.email in [o.email for o in obj.partner_focal_points.all()]
 
     def get_available_actions(self, obj):
-        default_ordering = ["send_to_unicef", "send_to_partner",
-                            "accept", "review", "sign", "reject_review", "unlock", "cancel", "suspend", "unsuspend"
-                            "terminate", "download_comments", "export", "generate_pdf"]
+        default_ordering = [
+            "send_to_unicef",
+            "send_to_partner",
+            "accept",
+            "review",
+            "sign",
+            "reject_review",
+            "unlock",
+            "cancel",
+            "suspend",
+            "unsuspend",
+            "terminate",
+            "download_comments",
+            "export",
+            "generate_pdf",
+        ]
         available_actions = [
             "download_comments",
             "export",
