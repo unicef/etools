@@ -1656,6 +1656,7 @@ class Intervention(TimeStampedModel):
     CLOSED = 'closed'
     SUSPENDED = 'suspended'
     TERMINATED = 'terminated'
+    EXPIRED = 'expired'
 
     AUTO_TRANSITIONS = {
         DRAFT: [REVIEW],
@@ -1687,6 +1688,7 @@ class Intervention(TimeStampedModel):
         (CLOSED, "Closed"),
         (SUSPENDED, "Suspended"),
         (TERMINATED, "Terminated"),
+        (EXPIRED, "Expired"),
     )
     PD = 'PD'
     SPD = 'SPD'

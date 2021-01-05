@@ -1063,3 +1063,24 @@ class TestCheckInterventionPastStartStatus(BaseTenantTestCase):
         with mock.patch(send_path, mock_send):
             etools.applications.partners.tasks.check_intervention_past_start()
         self.assertEqual(mock_send.call_count, 1)
+
+
+class TestInterventionExpired(BaseTenantTestCase):
+    def test_task(self):
+        today = datetime.date.today()
+        intervention_1 = InterventionFactory(
+            contingency_pd=True,
+            status=Intervention.SIGNED,
+            start=today - datetime.timedelta(days=2),
+            agreement__country_programme__to_date=today - datetime.timedelta(days=2),
+        )
+        intervention_2 = InterventionFactory(
+            contingency_pd=True,
+            status=Intervention.SIGNED,
+            start=today - datetime.timedelta(days=2),
+        )
+        etools.applications.partners.tasks.intervention_expired()
+        intervention_1.refresh_from_db()
+        intervention_2.refresh_from_db()
+        self.assertEqual(intervention_1.status, Intervention.EXPIRED)
+        self.assertEqual(intervention_2.status, Intervention.SIGNED)

@@ -332,3 +332,32 @@ def sync_partners_staff_members_from_prp():
 
         for staff_member_data in api.get_partner_staff_members(partner_data.id):
             sync_partner_staff_member(partner, staff_member_data)
+
+
+@app.task
+def intervention_expired():
+    for country in Country.objects.exclude(name='Global').all():
+        connection.set_tenant(country)
+        _set_intervention_expired(country.name)
+
+
+def _set_intervention_expired(country_name):
+    # Check and transition to 'Expired' any contingency PD that has not
+    # been activated and the CP for which was created has now expired
+    logger.info(
+        'Starting intervention expirations for country {}'.format(
+            country_name,
+        ),
+    )
+    pd_qs = Intervention.objects.filter(
+        contingency_pd=True,
+        status__in=[
+            Intervention.REVIEW,
+            Intervention.SIGNATURE,
+            Intervention.SIGNED,
+        ],
+        agreement__country_programme__to_date__lt=datetime.date.today(),
+    )
+    for pd in pd_qs:
+        pd.status = Intervention.EXPIRED
+        pd.save()
