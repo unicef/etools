@@ -101,6 +101,16 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
         expected_actions = self.default_actions + ["cancel"]
         self.assertEqual(sorted(available_actions), sorted(expected_actions))
 
+    def test_available_actions_management_unsuspend(self):
+        pd = InterventionFactory(status=Intervention.SUSPENDED)
+        self.unicef_user.groups.add(
+            GroupFactory(name=PARTNERSHIP_MANAGER_GROUP),
+        )
+        self.assertEqual(pd.status, pd.SUSPENDED)
+        available_actions = self.unicef_serializer.get_available_actions(pd)
+        expected_actions = self.default_actions + ["terminate", "unsuspend"]
+        self.assertEqual(sorted(available_actions), sorted(expected_actions))
+
     def test_available_actions_management_terminate(self):
         pd = InterventionFactory(status=Intervention.ACTIVE)
         self.unicef_user.groups.add(
@@ -108,7 +118,7 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
         )
         self.assertEqual(pd.status, pd.ACTIVE)
         available_actions = self.unicef_serializer.get_available_actions(pd)
-        expected_actions = self.default_actions + ["suspend"]
+        expected_actions = self.default_actions + ["suspend", "terminate"]
         self.assertEqual(sorted(available_actions), sorted(expected_actions))
 
         # not available if closed
