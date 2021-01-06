@@ -70,7 +70,7 @@ sentry-sdk = "*"
 requests = "==2.22"
 social-auth-app-django = "==3.1"
 social-auth-core = {extras = ["azuread"],version = "==3.2"}
-tenant-schemas-celery = "==0.2.1"
+tenant-schemas-celery = "==1.0.1"
 unicef_attachments = "==0.9.0"
 unicef-djangolib = "==0.5.4"
 unicef-locations = "==1.8"
