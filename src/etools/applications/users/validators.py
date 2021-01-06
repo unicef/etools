@@ -35,7 +35,7 @@ class EmailValidator(UniqueValidator):
             message="This user already exists in the system.",
         )
 
-    def __call__(self, value):
+    def __call__(self, value, serializer_field):
         if value != value.lower():
             raise ValidationError(_("Email needs to be lower case."))
-        super().__call__(value)
+        super().__call__(value, serializer_field)
