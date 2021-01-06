@@ -658,15 +658,16 @@ class InterventionCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotMode
                     limit,
                 ),
             )
+        return value
 
     def validate_context(self, value):
-        self._validate_character_limitation(value)
+        return self._validate_character_limitation(value)
 
     def validate_implementation_strategy(self, value):
-        self._validate_character_limitation(value)
+        return self._validate_character_limitation(value)
 
     def validate_ip_program_contribution(self, value):
-        self._validate_character_limitation(value)
+        return self._validate_character_limitation(value)
 
     def validate(self, attrs):
         validated_data = super().validate(attrs)
