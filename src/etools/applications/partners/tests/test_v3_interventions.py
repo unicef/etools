@@ -397,6 +397,32 @@ class TestCreate(BaseInterventionTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+    def test_add_invalid_character_limit(self):
+        data = {
+            "document_type": Intervention.PD,
+            "title": "PMP Intervention",
+            "agreement": self.agreement.pk,
+            "context": "long text" * 5000,
+            "implementation_strategy": "long text" * 5000,
+            "ip_program_contribution": "long text" * 5000,
+        }
+        response = self.forced_auth_req(
+            "post",
+            reverse('pmp_v3:intervention-list'),
+            user=self.user,
+            data=data
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        for i in [
+                "context",
+                "implementation_strategy",
+                "ip_program_contribution",
+        ]:
+            self.assertEqual(
+                response.data[i],
+                ["This field is limited to 5000 or less characters."],
+            )
+
 
 class TestUpdate(BaseInterventionTestCase):
     def test_patch_currency(self):
