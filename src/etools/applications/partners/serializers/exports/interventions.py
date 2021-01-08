@@ -256,7 +256,7 @@ class InterventionExportSerializer(serializers.ModelSerializer):
         decimal_places=2,
     )
     total_planned_budget = serializers.DecimalField(
-        label=_("Total PD/SSFA Budget"),
+        label=_("Total PD/SPD Budget"),
         source='total_budget',
         read_only=True,
         max_digits=20,

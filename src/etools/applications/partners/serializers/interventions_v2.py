@@ -639,7 +639,7 @@ class InterventionCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotMode
         for fr in frs:
             if fr.intervention:
                 if (self.instance is None) or (not self.instance.id) or (fr.intervention.id != self.instance.id):
-                    raise ValidationError(['One or more of the FRs selected is related to a different PD/SSFA,'
+                    raise ValidationError(['One or more of the FRs selected is related to a different PD/SPD,'
                                            ' {}'.format(fr.fr_number)])
             else:
                 pass
@@ -1148,7 +1148,7 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
                 if r['start_date'] <= today and not self._past_records_editable and\
                         not current_reqs_dict.get(h11(self._get_hash_key_string(r))):
                     raise ValidationError("A record that starts in the passed cannot"
-                                          " be modified on a non-draft PD/SSFA")
+                                          " be modified on a non-draft PD/SPD")
                 ReportingRequirement.objects.filter(pk=pk).update(**r)
             else:
                 ReportingRequirement.objects.create(**r)

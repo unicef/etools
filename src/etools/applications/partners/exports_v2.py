@@ -257,7 +257,7 @@ class InterventionCSVRenderer(r.CSVRenderer):
         "cso_contribution": "Total CSO Budget (USD)",
         "unicef_budget": "UNICEF Cash (USD)",
         "unicef_supply": "UNICEF Supply (USD)",
-        "total_planned_budget": "Total PD/SSFA Budget (USD)",
+        "total_planned_budget": "Total PD/SPD Budget (USD)",
         "fr_numbers": "FR Number(s)",
         "fr_currency": "FR Currency",
         "fr_posting_date": "FR Posting Date",
@@ -315,7 +315,7 @@ class PartnershipDashCSVRenderer(r.CSVRenderer):
     labels = {
         "partner_name": "IP Name",
         "partner_vendor_number": "Vendor Number",
-        "number": "PD/SSFA Ref #",
+        "number": "PD/SPD Ref #",
         "sections": "Section",
         "offices_names": "Field Office",
         "status": "Status",

@@ -30,7 +30,7 @@ def interventions_connected_with_partners(i):
 
     diff = set(partners) - set(i.partners.values_list('id', flat=True))
     if diff:
-        error_text = _("You've selected a PD/SSFA and unselected some of it's corresponding partners, "
+        error_text = _("You've selected a PD/SPD and unselected some of it's corresponding partners, "
                        "please either remove the PD or add the partners back before saving: {}")
         wrong_partners = PartnerOrganization.objects.filter(id__in=diff).values_list('name', flat=True)
         raise BasicValidationError(error_text.format(', '.join(wrong_partners)))
@@ -47,7 +47,7 @@ def interventions_connected_with_cp_outputs(i):
 
     diff = set(cp_outputs) - set(i.cp_outputs.values_list('id', flat=True))
     if diff:
-        error_text = _("You've selected a PD/SSFA and unselected some of it's corresponding outputs, "
+        error_text = _("You've selected a PD/SPD and unselected some of it's corresponding outputs, "
                        "please either remove the PD or add the outputs back before saving: {}")
         wrong_cp_outputs = Result.objects.filter(id__in=diff).values_list('name', flat=True)
         raise BasicValidationError(error_text.format(', '.join(wrong_cp_outputs)))
