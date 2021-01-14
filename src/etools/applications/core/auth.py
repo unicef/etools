@@ -70,7 +70,7 @@ def create_user(strategy, details, backend, user=None, *args, **kwargs):
     }
 
 
-def user_details(strategy, details, user=None, *args, **kwargs):
+def user_details(strategy, details, backend, user=None, *args, **kwargs):
     # This is where we update the user
     # see what the property to map by is here
     if user:
@@ -97,7 +97,7 @@ def user_details(strategy, details, user=None, *args, **kwargs):
         #         user.profile.country = country
         #         user.profile.save()
 
-    return social_core_user.user_details(strategy, details, user, *args, **kwargs)
+    return social_core_user.user_details(strategy, details, backend, user, *args, **kwargs)
 
 
 class CustomAzureADBBCOAuth2(AzureADB2COAuth2):
