@@ -1,5 +1,5 @@
 from django.utils.timezone import now
-from django.utils.translation import ugettext
+from django.utils.translation import gettext as _
 
 from rest_framework import ISO_8601, serializers
 from rest_framework.exceptions import ValidationError
@@ -132,6 +132,6 @@ class MultiGhostDataSerializer(GhostDataPKSerializer):
             return value
 
         if value not in self.context['available_categories']:
-            raise ValidationError(ugettext('Invalid category'))
+            raise ValidationError(_('Invalid category'))
 
         return value
