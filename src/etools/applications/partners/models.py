@@ -9,7 +9,7 @@ from django.db.models import Case, CharField, Count, F, Max, Min, OuterRef, Q, S
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.functional import cached_property
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from django_fsm import FSMField, transition
 from django_tenants.utils import get_public_schema_name
