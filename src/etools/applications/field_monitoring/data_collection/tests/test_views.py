@@ -368,7 +368,7 @@ class TestChecklistOverallFindingsView(ChecklistDataCollectionTestMixin, APIView
         return [self.activity.pk, self.started_checklist.id]
 
     def test_list(self):
-        with self.assertNumQueries(8):
+        with self.assertNumQueries(6):
             self._test_list(self.unicef_user, self.started_checklist.overall_findings.all())
 
     def test_update_unicef(self):
@@ -555,7 +555,7 @@ class TestActivityOverallFindingsView(ChecklistDataCollectionTestMixin, APIViewS
 
         AttachmentFactory(content_object=checklist.overall_findings.first())
 
-        with self.assertNumQueries(11):
+        with self.assertNumQueries(9):
             response = self._test_list(self.unicef_user, [self.overall_finding])
         self.assertIn('attachments', response.data['results'][0])
         self.assertNotEqual(response.data['results'][0]['attachments'], [])
@@ -660,7 +660,7 @@ class TestActivityChecklistOverallAttachments(ChecklistDataCollectionTestMixin, 
         AttachmentFactory(content_object=self.activity.overall_findings.first())
         checklist_overall_attachment = AttachmentFactory(content_object=self.started_checklist.overall_findings.first())
 
-        with self.assertNumQueries(9):
+        with self.assertNumQueries(7):
             self._test_list(self.unicef_user, expected_objects=[checklist_overall_attachment])
 
     def test_file_types(self):

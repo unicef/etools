@@ -65,7 +65,7 @@ jobs:
           name: Run Tests
           command: |
             pip install --upgrade tox
-            tox -e d22,report
+            tox -e d32,report
       - save_cache:
           key: deps2-{{ .Branch }}--{{ checksum "Pipfile.lock" }}-{{ checksum ".circleci/config.yml" }}
           paths:

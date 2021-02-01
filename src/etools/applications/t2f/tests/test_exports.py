@@ -1,9 +1,9 @@
 import csv
 import datetime
 import logging
+from io import StringIO
 
 from django.urls import reverse
-from django.utils.six import StringIO
 
 from pytz import UTC
 from unicef_locations.tests.factories import LocationFactory

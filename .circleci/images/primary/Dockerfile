@@ -18,7 +18,8 @@ RUN apk add \
 RUN apk add postgresql-dev \
     libffi-dev\
     jpeg-dev \
-    python-dev
+    python-dev \
+    libmagic
 
 RUN apk add --update-cache --repository http://dl-cdn.alpinelinux.org/alpine/edge/community/ \
     gdal \

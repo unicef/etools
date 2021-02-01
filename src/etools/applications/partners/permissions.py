@@ -1,7 +1,7 @@
 import datetime
+from functools import lru_cache
 
 from django.apps import apps
-from django.utils.lru_cache import lru_cache
 from django.utils.translation import gettext as _
 
 from etools_validator.utils import check_rigid_related

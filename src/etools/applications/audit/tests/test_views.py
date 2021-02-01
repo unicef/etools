@@ -1217,7 +1217,7 @@ class TestEngagementSpecialPDFExportViewSet(EngagementTransitionsTestCaseMixin, 
 
         self.assertEqual(response.status_code, status_code)
         if status_code == status.HTTP_200_OK:
-            self.assertIn(response._headers['content-disposition'][0], 'Content-Disposition')
+            self.assertIn('Content-Disposition', response.headers)
 
     def test_guest(self):
         self.user = None
@@ -1260,7 +1260,7 @@ class TestEngagementPDFExportViewSet(EngagementTransitionsTestCaseMixin, BaseTen
 
         self.assertEqual(response.status_code, status_code)
         if status_code == status.HTTP_200_OK:
-            self.assertIn(response._headers['content-disposition'][0], 'Content-Disposition')
+            self.assertIn('Content-Disposition', response.headers)
 
     def test_guest(self):
         self.user = None
