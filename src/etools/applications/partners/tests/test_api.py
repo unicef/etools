@@ -44,7 +44,7 @@ class TestAPIIntervention(BaseTenantTestCase, metaclass=ViewSetChecker):
         reverse("partners_api:intervention-detail", args=[101]),
         reverse("partners_api:intervention-indicators"),
         reverse("partners_api:intervention-amendments"),
-        reverse("partners_api:intervention-map"),
+        # reverse("partners_api:intervention-map"),
         reverse("partners_api:intervention-applied-indicators-list"),
 
     ]

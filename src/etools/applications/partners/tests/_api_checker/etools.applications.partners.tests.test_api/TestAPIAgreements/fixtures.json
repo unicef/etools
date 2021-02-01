@@ -4,20 +4,20 @@
             "model": "partners.agreement",
             "pk": 5,
             "fields": {
-                "created": "2018-12-06T10:18:32.829Z",
-                "modified": "2018-12-06T10:18:32.863Z",
+                "created": "2021-02-01T21:57:18.082Z",
+                "modified": "2021-02-01T21:57:18.115Z",
                 "partner": 5,
                 "country_programme": 5,
                 "agreement_type": "PCA",
-                "agreement_number": "TST/PCA20185",
+                "agreement_number": "TST/PCA20215",
                 "attached_agreement": "",
-                "start": "2018-12-06",
-                "end": "2018-12-31",
-                "reference_number_year": 2018,
+                "start": "2021-02-01",
+                "end": "2021-12-31",
+                "reference_number_year": 2021,
                 "special_conditions_pca": false,
-                "signed_by_unicef_date": "2018-12-06",
+                "signed_by_unicef_date": "2021-02-01",
                 "signed_by": null,
-                "signed_by_partner_date": "2018-12-06",
+                "signed_by_partner_date": "2021-02-01",
                 "partner_manager": null,
                 "status": "signed",
                 "authorized_officers": []
@@ -28,8 +28,8 @@
                 "model": "partners.partnerorganization",
                 "pk": 5,
                 "fields": {
-                    "created": "2018-12-06T10:18:32.801Z",
-                    "modified": "2018-12-06T10:18:32.815Z",
+                    "created": "2021-02-01T21:57:18.042Z",
+                    "modified": "2021-02-01T21:57:18.077Z",
                     "partner_type": "",
                     "cso_type": null,
                     "name": "Partner 4",
@@ -75,7 +75,8 @@
                                 "q4": 0,
                                 "total": 0
                             },
-                            "follow_up_required": 0
+                            "follow_up_required": 0,
+                            "minimum_requirements": 0
                         },
                         "assurance_coverage": "void",
                         "programmatic_visits": {
@@ -92,11 +93,16 @@
                                 "q3": 0,
                                 "q4": 0,
                                 "total": 0
-                            }
+                            },
+                            "minimum_requirements": 0
                         },
                         "outstanding_findings": 0
                     },
-                    "basis_for_risk_rating": ""
+                    "basis_for_risk_rating": "",
+                    "psea_assessment_date": null,
+                    "sea_risk_rating_name": "",
+                    "highest_risk_rating_type": "",
+                    "highest_risk_rating_name": ""
                 }
             },
             {
@@ -106,8 +112,8 @@
                     "name": "Country Programme 4",
                     "wbs": "0000/A0/04",
                     "invalid": false,
-                    "from_date": "2018-01-01",
-                    "to_date": "2018-12-31"
+                    "from_date": "2021-01-01",
+                    "to_date": "2021-12-31"
                 }
             }
         ]
@@ -117,8 +123,8 @@
             "model": "partners.agreementamendment",
             "pk": 1,
             "fields": {
-                "created": "2018-12-06T10:18:32.866Z",
-                "modified": "2018-12-06T10:18:32.870Z",
+                "created": "2021-02-01T21:57:18.117Z",
+                "modified": "2021-02-01T21:57:18.117Z",
                 "number": "tmp01",
                 "agreement": 5,
                 "signed_amendment": "",
@@ -131,20 +137,20 @@
                 "model": "partners.agreement",
                 "pk": 5,
                 "fields": {
-                    "created": "2018-12-06T10:18:32.829Z",
-                    "modified": "2018-12-06T10:18:32.863Z",
+                    "created": "2021-02-01T21:57:18.082Z",
+                    "modified": "2021-02-01T21:57:18.115Z",
                     "partner": 5,
                     "country_programme": 5,
                     "agreement_type": "PCA",
-                    "agreement_number": "TST/PCA20185",
+                    "agreement_number": "TST/PCA20215",
                     "attached_agreement": "",
-                    "start": "2018-12-06",
-                    "end": "2018-12-31",
-                    "reference_number_year": 2018,
+                    "start": "2021-02-01",
+                    "end": "2021-12-31",
+                    "reference_number_year": 2021,
                     "special_conditions_pca": false,
-                    "signed_by_unicef_date": "2018-12-06",
+                    "signed_by_unicef_date": "2021-02-01",
                     "signed_by": null,
-                    "signed_by_partner_date": "2018-12-06",
+                    "signed_by_partner_date": "2021-02-01",
                     "partner_manager": null,
                     "status": "signed",
                     "authorized_officers": []
@@ -154,8 +160,8 @@
                 "model": "partners.partnerorganization",
                 "pk": 5,
                 "fields": {
-                    "created": "2018-12-06T10:18:32.801Z",
-                    "modified": "2018-12-06T10:18:32.815Z",
+                    "created": "2021-02-01T21:57:18.042Z",
+                    "modified": "2021-02-01T21:57:18.077Z",
                     "partner_type": "",
                     "cso_type": null,
                     "name": "Partner 4",
@@ -201,7 +207,8 @@
                                 "q4": 0,
                                 "total": 0
                             },
-                            "follow_up_required": 0
+                            "follow_up_required": 0,
+                            "minimum_requirements": 0
                         },
                         "assurance_coverage": "void",
                         "programmatic_visits": {
@@ -218,11 +225,16 @@
                                 "q3": 0,
                                 "q4": 0,
                                 "total": 0
-                            }
+                            },
+                            "minimum_requirements": 0
                         },
                         "outstanding_findings": 0
                     },
-                    "basis_for_risk_rating": ""
+                    "basis_for_risk_rating": "",
+                    "psea_assessment_date": null,
+                    "sea_risk_rating_name": "",
+                    "highest_risk_rating_type": "",
+                    "highest_risk_rating_name": ""
                 }
             },
             {
@@ -232,8 +244,8 @@
                     "name": "Country Programme 4",
                     "wbs": "0000/A0/04",
                     "invalid": false,
-                    "from_date": "2018-01-01",
-                    "to_date": "2018-12-31"
+                    "from_date": "2021-01-01",
+                    "to_date": "2021-12-31"
                 }
             }
         ]

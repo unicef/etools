@@ -15,11 +15,11 @@
         ],
         "x-frame-options": [
             "X-Frame-Options",
-            "SAMEORIGIN"
+            "DENY"
         ],
         "content-length": [
             "Content-Length",
-            "1608"
+            "1658"
         ]
     },
     "data": {
@@ -40,7 +40,8 @@
                     "q4": 0,
                     "total": 0
                 },
-                "follow_up_required": 0
+                "follow_up_required": 0,
+                "minimum_requirements": 0
             },
             "assurance_coverage": "void",
             "programmatic_visits": {
@@ -57,7 +58,8 @@
                     "q3": 0,
                     "q4": 0,
                     "total": 0
-                }
+                },
+                "minimum_requirements": 0
             },
             "outstanding_findings": 0
         },
@@ -78,8 +80,8 @@
         "sea_risk_rating_name": "",
         "highest_risk_rating_type": "",
         "highest_risk_rating_name": "",
-        "created": "2018-12-05T16:22:58.948000Z",
-        "modified": "2018-12-05T16:22:58.954000Z",
+        "created": "2021-02-01T21:57:23.166000Z",
+        "modified": "2021-02-01T21:57:23.223000Z",
         "partner_type": "Civil Society Organization",
         "cso_type": "International",
         "name": "Partner 8",

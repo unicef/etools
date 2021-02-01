@@ -15,7 +15,7 @@
         ],
         "x-frame-options": [
             "X-Frame-Options",
-            "SAMEORIGIN"
+            "DENY"
         ],
         "content-length": [
             "Content-Length",
@@ -25,8 +25,8 @@
     "data": [
         {
             "id": 1,
-            "created": "2018-12-06T10:18:32.866000Z",
-            "modified": "2018-12-06T10:18:32.870000Z",
+            "created": "2021-02-01T21:57:18.117256Z",
+            "modified": "2021-02-01T21:57:18.117256Z",
             "number": "tmp01",
             "signed_amendment": null,
             "types": [

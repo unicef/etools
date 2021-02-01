@@ -15,11 +15,11 @@
         ],
         "x-frame-options": [
             "X-Frame-Options",
-            "SAMEORIGIN"
+            "DENY"
         ],
         "content-length": [
             "Content-Length",
-            "1070"
+            "1068"
         ]
     },
     "data": [
@@ -59,7 +59,7 @@
             "city": null,
             "postal_code": null,
             "country": null,
-            "id": 575,
+            "id": 9,
             "vendor_number": null,
             "deleted_flag": false,
             "blocked": false,
