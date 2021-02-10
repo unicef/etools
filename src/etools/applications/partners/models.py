@@ -253,6 +253,16 @@ class PartnerOrganization(TimeStampedModel):
         (RATING_NOT_REQUIRED, 'Not Required'),
     )
 
+    RATING_HIGH_RISK_ASSUMED = 'High Risk Assumed'
+    RATING_LOW_RISK_ASSUMED = 'Low Risk Assumed'
+    RATING_NOT_ASSESSED = 'Not Assessed'
+
+    PSEA_RISK_RATING = RISK_RATINGS + (
+        (RATING_HIGH_RISK_ASSUMED, RATING_HIGH_RISK_ASSUMED),
+        (RATING_LOW_RISK_ASSUMED, RATING_LOW_RISK_ASSUMED),
+        (RATING_NOT_ASSESSED, RATING_NOT_ASSESSED),
+    )
+
     MICRO_ASSESSMENT = 'MICRO ASSESSMENT'
     HIGH_RISK_ASSUMED = 'HIGH RISK ASSUMED'
     LOW_RISK_ASSUMED = 'LOW RISK ASSUMED'
@@ -598,26 +608,22 @@ class PartnerOrganization(TimeStampedModel):
 
         if ct <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL:
             programme_visits = 0
-        else:
+        elif PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL < ct <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL2:
             programme_visits = 1
-        # The following logic is overridden with the COVID adaptations in the guidance
-        # Keep for posterity, the logic might come back after COVID dies down.
-        # elif PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL < ct<= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL2:
-        #     programme_visits = 1
-        # elif PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL2 < ct <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL3:
-        #     if self.rating in [PartnerOrganization.RATING_HIGH, PartnerOrganization.RATING_SIGNIFICANT]:
-        #         programme_visits = 3
-        #     elif self.rating in [PartnerOrganization.RATING_MEDIUM, ]:
-        #         programme_visits = 2
-        #     elif self.rating in [PartnerOrganization.RATING_LOW, ]:
-        #         programme_visits = 1
-        # else:
-        #     if self.rating in [PartnerOrganization.RATING_HIGH, PartnerOrganization.RATING_SIGNIFICANT]:
-        #         programme_visits = 4
-        #     elif self.rating in [PartnerOrganization.RATING_MEDIUM, ]:
-        #         programme_visits = 3
-        #     elif self.rating in [PartnerOrganization.RATING_LOW, ]:
-        #         programme_visits = 2
+        elif PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL2 < ct <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL3:
+            if self.rating in [PartnerOrganization.RATING_HIGH, PartnerOrganization.RATING_SIGNIFICANT]:
+                programme_visits = 3
+            elif self.rating in [PartnerOrganization.RATING_MEDIUM, ]:
+                programme_visits = 2
+            elif self.rating in [PartnerOrganization.RATING_LOW, ]:
+                programme_visits = 1
+        else:
+            if self.rating in [PartnerOrganization.RATING_HIGH, PartnerOrganization.RATING_SIGNIFICANT]:
+                programme_visits = 4
+            elif self.rating in [PartnerOrganization.RATING_MEDIUM, ]:
+                programme_visits = 3
+            elif self.rating in [PartnerOrganization.RATING_LOW, ]:
+                programme_visits = 2
         return programme_visits
 
     @cached_property

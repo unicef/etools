@@ -125,11 +125,7 @@ class TestAggregateHact(BaseTenantTestCase):
         assurance_activities = self.aggregate_hact.get_assurance_activities()
         self.assertEqual(len(list(assurance_activities.keys())), 6)
         self.assertEqual(assurance_activities['programmatic_visits']['completed'], 0)
-
-        # The following logic is overridden with the COVID adaptations in the guidance
-        # self.assertEqual(assurance_activities['programmatic_visits']['min_required'], 5)
-        self.assertEqual(assurance_activities['programmatic_visits']['min_required'], 2)
-
+        self.assertEqual(assurance_activities['programmatic_visits']['min_required'], 5)
         self.assertEqual(assurance_activities['spot_checks']['completed'], 0)
         self.assertEqual(assurance_activities['spot_checks']['required'], 6)
         self.assertEqual(assurance_activities['scheduled_audit'], 1)
