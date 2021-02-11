@@ -478,6 +478,8 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
         'vendor_number',
         'partner_type',
         'rating',
+        'highest_risk_rating_name',
+        'highest_risk_rating_type',
         'type_of_assessment',
         'email',
         'phone_number',
