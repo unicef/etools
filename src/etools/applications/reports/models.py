@@ -3,7 +3,7 @@ from datetime import date
 from django.contrib.postgres.fields import JSONField
 from django.db import models, transaction
 from django.utils.functional import cached_property
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from model_utils.fields import AutoCreatedField, AutoLastModifiedField
 from model_utils.models import TimeStampedModel

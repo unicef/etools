@@ -9,7 +9,7 @@ from django.db.models import Case, F, Q, When
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.timezone import now as timezone_now
-from django.utils.translation import ugettext, ugettext_lazy as _
+from django.utils.translation import gettext as _
 
 from django_fsm import FSMField, transition
 from unicef_attachments.models import Attachment
@@ -223,10 +223,10 @@ class Travel(models.Model):
 
     def validate_itinerary(self):
         if self.ta_required and self.itinerary.all().count() < 2:
-            raise TransitionError(ugettext('Travel must have at least two itinerary item'))
+            raise TransitionError(_('Travel must have at least two itinerary item'))
 
         if self.ta_required and self.itinerary.filter(dsa_region=None).exists():
-            raise TransitionError(ugettext('All itinerary items has to have DSA region assigned'))
+            raise TransitionError(_('All itinerary items has to have DSA region assigned'))
 
         return True
 
