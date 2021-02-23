@@ -127,7 +127,8 @@ class Country(TenantMixin):
         verbose_name=_("ISO3 Code"),
     )
     long_name = models.CharField(max_length=255, default='', blank=True, verbose_name=_('Long Name'))
-    business_area_code = models.CharField(max_length=10, default='', blank=True, verbose_name=_('Business Area Code'))
+    business_area_code = models.CharField(max_length=10, default='', blank=True, unique=True,
+                                          verbose_name=_('Business Area Code'))
     latitude = models.DecimalField(
         null=True, blank=True, verbose_name=_('Latitude'), max_digits=8, decimal_places=5,
         validators=[MinValueValidator(Decimal(-90)), MaxValueValidator(Decimal(90))]

@@ -15,9 +15,9 @@ class TestAddCountry(BaseTenantTestCase):
         name = "test"
         PublicsCurrencyFactory(code="USD")
         with self.assertRaisesRegexp(CommandError, "Can't create tenant"):
-            call_command("add_country", name)
+            call_command("add_country", name, '1234')
 
     def test_command_exception(self):
         country = Country.objects.first()
         with self.assertRaisesRegexp(CommandError, "Currency matching query"):
-            call_command("add_country", country.name)
+            call_command("add_country", country.name, '1234')
