@@ -1,6 +1,5 @@
 from django.db import transaction
 from django.db.models import Q
-from django.utils.encoding import force_text
 
 import celery
 from carto.exceptions import CartoException
@@ -163,27 +162,19 @@ def update_sites_from_cartodb(carto_table_pk):
                         sites_not_added += 1
                         continue
 
-                    parent = None
-                    parent_code = None
-                    parent_instance = None
+                    parent = parent_code = parent_instance = None
 
                     # attempt to reference the parent of this location
                     if carto_table.parent_code_col and carto_table.parent:
                         msg = None
                         parent = carto_table.parent.__class__
                         parent_code = row[carto_table.parent_code_col]
-                        try:
-                            parent_instance = Location.objects.get(p_code=parent_code)
-                        except Location.MultipleObjectsReturned:
-                            msg = "Multiple locations found for parent code: {}".format(
-                                parent_code
-                            )
-                        except Location.DoesNotExist:
-                            msg = "No locations found for parent code: {}".format(
-                                parent_code
-                            )
-                        except Exception as exp:
-                            msg = force_text(exp)
+                        parent_instances = Location.objects.filter(p_code=parent_code)
+                        parent_instance = parent_instances.first()
+                        if parent_instance.count() > 1:
+                            msg = "Multiple locations found for parent code: {}".format(parent_code)
+                        elif parent_instance.count() == 0:
+                            msg = "No locations found for parent code: {}".format(parent_code)
 
                         if msg is not None:
                             logger.warning(msg)
