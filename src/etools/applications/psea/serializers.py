@@ -2,7 +2,7 @@ from copy import copy
 
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
 from unicef_attachments.fields import FileTypeModelChoiceField
@@ -161,6 +161,7 @@ class AssessmentDetailSerializer(AssessmentSerializer):
 
 class AssessmentExportSerializer(AssessmentSerializer):
     focal_points = serializers.SerializerMethodField()
+    overall_rating_display = serializers.ReadOnlyField()
 
     class Meta(AssessmentSerializer.Meta):
         fields = [
@@ -170,6 +171,7 @@ class AssessmentExportSerializer(AssessmentSerializer):
             "partner_name",
             "status",
             "rating",
+            "overall_rating_display",
             "assessor",
             "focal_points",
         ]

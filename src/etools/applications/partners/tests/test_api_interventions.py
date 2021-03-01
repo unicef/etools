@@ -726,7 +726,31 @@ class TestInterventionsAPI(BaseTenantTestCase):
             data={"contingency_pd": True}
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
+        self.assertEqual(
+            len(response.data),
+            Intervention.objects.filter(contingency_pd=True).count(),
+        )
+
+        response = self.forced_auth_req(
+            "get",
+            reverse('partners_api:intervention-list'),
+            user=self.unicef_staff,
+            data={"contingency_pd": False}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            len(response.data),
+            Intervention.objects.filter(contingency_pd=False).count(),
+        )
+
+        # assert all pds returned if contingency filter toggle is off
+        response = self.forced_auth_req(
+            "get",
+            reverse('partners_api:intervention-list'),
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), Intervention.objects.count())
 
     def test_filtering_grants(self):
         grant_number = "GE001"

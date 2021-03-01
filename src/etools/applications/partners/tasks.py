@@ -9,6 +9,8 @@ from django.db.models import F, Prefetch, Sum
 from celery.utils.log import get_task_logger
 from django_tenants.utils import get_tenant_model, schema_context
 from unicef_notification.utils import send_notification_with_template
+from unicef_vision.exceptions import VisionException
+from unicef_vision.utils import get_data_from_insight
 
 from etools.applications.partners.models import Agreement, Intervention, PartnerOrganization, PartnerStaffMember
 from etools.applications.partners.prp_api import PRPAPI
@@ -294,7 +296,6 @@ def check_intervention_past_start():
     run_on_all_tenants(send_intervention_past_start_notification)
 
 
-@app.task
 def sync_partner_to_prp(tenant: str, partner_id: int):
     tenant = get_tenant_model().objects.get(name=tenant)
     connection.set_tenant(tenant)
@@ -332,3 +333,19 @@ def sync_partners_staff_members_from_prp():
 
         for staff_member_data in api.get_partner_staff_members(partner_data.id):
             sync_partner_staff_member(partner, staff_member_data)
+
+            
+def sync_partner(vendor_number=None, country=None):
+    from etools.applications.partners.synchronizers import PartnerSynchronizer
+    try:
+        valid_response, response = get_data_from_insight('partners/?vendor={vendor_code}',
+                                                         {"vendor_code": vendor_number})
+        partner_resp = response["ROWSET"]["ROW"]
+        partner_sync = PartnerSynchronizer(business_area_code=country.business_area_code)
+        if not partner_sync._filter_records([partner_resp]):
+            raise VisionException
+
+        partner_sync._partner_save(partner_resp, full_sync=False)
+    except VisionException:
+        logger.exception("{} sync failed".format(PartnerSynchronizer.__name__))
+    logger.info('Partner {} synced successfully.'.format(vendor_number))

@@ -2,7 +2,7 @@ import datetime
 
 from django.apps import apps
 from django.utils.lru_cache import lru_cache
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from etools_validator.utils import check_rigid_related
 from rest_framework import permissions
@@ -217,7 +217,7 @@ class PartnershipManagerPermission(permissions.BasePermission):
       - user must be (in 'Partnership Manager' group) OR
                      (listed as a partner staff member on the object)
     """
-    message = 'Accessing this item is not allowed.'
+    message = _('Accessing this item is not allowed.')
 
     def _has_access_permissions(self, user, obj):
         """True if --
@@ -253,7 +253,7 @@ class PartnershipManagerPermission(permissions.BasePermission):
 
 
 class PartnershipManagerRepPermission(permissions.BasePermission):
-    message = 'Accessing this item is not allowed.'
+    message = _('Accessing this item is not allowed.')
 
     def _has_access_permissions(self, user, object):
         if user.is_staff or object.partner.user_is_staff_member(user):
