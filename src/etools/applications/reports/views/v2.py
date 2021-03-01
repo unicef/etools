@@ -5,7 +5,7 @@ import operator
 
 from django.db.models import Q
 from django.http import HttpResponse
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from rest_framework import status
 from rest_framework.exceptions import ValidationError

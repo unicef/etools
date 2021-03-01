@@ -9,7 +9,7 @@ from django.db.models import Case, CharField, Count, F, Max, Min, OuterRef, Q, S
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.functional import cached_property
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from django_fsm import FSMField, transition
 from django_tenants.utils import get_public_schema_name
@@ -521,6 +521,7 @@ class PartnerOrganization(TimeStampedModel):
     highest_risk_rating_name = models.CharField(
         max_length=150,
         verbose_name=_("Highest Risk Rating Name"),
+        choices=PSEA_RISK_RATING,
         blank=True,
         default='',
     )
@@ -590,7 +591,7 @@ class PartnerOrganization(TimeStampedModel):
     @cached_property
     def approaching_threshold_flag(self):
         total_ct_ytd = self.total_ct_ytd or 0
-        not_required = self.rating == PartnerOrganization.RATING_NOT_REQUIRED
+        not_required = self.highest_risk_rating_name == PartnerOrganization.RATING_NOT_REQUIRED
         ct_year_overflow = total_ct_ytd > PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL
         return not_required and ct_year_overflow
 
@@ -611,18 +612,24 @@ class PartnerOrganization(TimeStampedModel):
         elif PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL < ct <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL2:
             programme_visits = 1
         elif PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL2 < ct <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL3:
-            if self.rating in [PartnerOrganization.RATING_HIGH, PartnerOrganization.RATING_SIGNIFICANT]:
+            if self.highest_risk_rating_name in [PartnerOrganization.RATING_HIGH,
+                                                 PartnerOrganization.RATING_HIGH_RISK_ASSUMED,
+                                                 PartnerOrganization.RATING_SIGNIFICANT]:
                 programme_visits = 3
-            elif self.rating in [PartnerOrganization.RATING_MEDIUM, ]:
+            elif self.highest_risk_rating_name in [PartnerOrganization.RATING_MEDIUM, ]:
                 programme_visits = 2
-            elif self.rating in [PartnerOrganization.RATING_LOW, ]:
+            elif self.highest_risk_rating_name in [PartnerOrganization.RATING_LOW,
+                                                   PartnerOrganization.RATING_LOW_RISK_ASSUMED]:
                 programme_visits = 1
         else:
-            if self.rating in [PartnerOrganization.RATING_HIGH, PartnerOrganization.RATING_SIGNIFICANT]:
+            if self.highest_risk_rating_name in [PartnerOrganization.RATING_HIGH,
+                                                 PartnerOrganization.RATING_HIGH_RISK_ASSUMED,
+                                                 PartnerOrganization.RATING_SIGNIFICANT]:
                 programme_visits = 4
-            elif self.rating in [PartnerOrganization.RATING_MEDIUM, ]:
+            elif self.highest_risk_rating_name in [PartnerOrganization.RATING_MEDIUM, ]:
                 programme_visits = 3
-            elif self.rating in [PartnerOrganization.RATING_LOW, ]:
+            elif self.highest_risk_rating_name in [PartnerOrganization.RATING_LOW,
+                                                   PartnerOrganization.RATING_LOW_RISK_ASSUMED]:
                 programme_visits = 2
         return programme_visits
 
