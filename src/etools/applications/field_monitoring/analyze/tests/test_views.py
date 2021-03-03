@@ -123,7 +123,7 @@ class PartnersCoverageViewTestCase(BaseTenantTestCase):
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]['id'], partner.id)
         self.assertEqual(response.data[0]['completed_visits'], 1)
-        self.assertEqual(response.data[0]['planned_visits'], 10)
+        self.assertEqual(response.data[0]['planned_visits'], 0)
         self.assertEqual(response.data[0]['days_since_visit'], 15)
         self.assertEqual(response.data[0]['minimum_required_visits'], partner.min_req_programme_visits)
 
