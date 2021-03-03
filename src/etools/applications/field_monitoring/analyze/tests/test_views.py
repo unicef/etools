@@ -112,7 +112,7 @@ class PartnersCoverageViewTestCase(BaseTenantTestCase):
         )
         MonitoringActivityFactory(partners=[partner])
 
-        with self.assertNumQueries(1):
+        with self.assertNumQueries(2):
             response = self.forced_auth_req(
                 'get',
                 reverse('field_monitoring_analyze:coverage-partners'),

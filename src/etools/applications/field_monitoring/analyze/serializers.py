@@ -9,6 +9,7 @@ from etools.applications.partners.models import Intervention, PartnerOrganizatio
 from etools.applications.partners.serializers.interventions_v2 import MinimalInterventionListSerializer
 from etools.applications.reports.models import Result
 from etools.applications.reports.serializers.v2 import MinimalOutputListSerializer
+from etools.libraries.pythonlib.datetime import get_current_year
 
 
 class OverallSerializer(serializers.Serializer):
