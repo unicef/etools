@@ -9,7 +9,6 @@ from etools.applications.partners.models import Intervention, PartnerOrganizatio
 from etools.applications.partners.serializers.interventions_v2 import MinimalInterventionListSerializer
 from etools.applications.reports.models import Result
 from etools.applications.reports.serializers.v2 import MinimalOutputListSerializer
-from etools.libraries.pythonlib.datetime import get_current_year
 
 
 class OverallSerializer(serializers.Serializer):
@@ -38,10 +37,7 @@ class PartnersCoverageSerializer(serializers.ModelSerializer):
         ]
 
     def get_planned_visits(self, obj):
-        try:
-            return obj.planned_visits.get(year=get_current_year()).total
-        except obj.DoesNotExist:
-            return 0
+        return obj.hact_values["programmatic_visits"]["planned"]["total"] or 0
 
     def get_days_since_visit(self, obj):
         return get_days_since_last_visit(obj)

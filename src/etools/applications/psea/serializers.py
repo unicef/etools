@@ -161,6 +161,7 @@ class AssessmentDetailSerializer(AssessmentSerializer):
 
 class AssessmentExportSerializer(AssessmentSerializer):
     focal_points = serializers.SerializerMethodField()
+    overall_rating_display = serializers.ReadOnlyField()
 
     class Meta(AssessmentSerializer.Meta):
         fields = [
@@ -170,6 +171,7 @@ class AssessmentExportSerializer(AssessmentSerializer):
             "partner_name",
             "status",
             "rating",
+            "overall_rating_display",
             "assessor",
             "focal_points",
         ]
