@@ -37,7 +37,7 @@ class PartnersCoverageSerializer(serializers.ModelSerializer):
         ]
 
     def get_planned_visits(self, obj):
-        return 0
+        return obj.hact_values["programmatic_visits"]["planned"]["total"] or 0
 
     def get_days_since_visit(self, obj):
         return get_days_since_last_visit(obj)

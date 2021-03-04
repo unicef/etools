@@ -184,8 +184,7 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
                 partner_org.hidden = partner_org.deleted_flag or partner_org.blocked or partner_org.manually_blocked
                 partner_org.vision_synced = True
                 partner_org.short_name = partner['SEARCH_TERM1'] or ''
-                partner_org.highest_risk_rating_name = partner.get("HIGEST_RISK_RATING", "") \
-                    if partner.get("HIGEST_RISK_RATING", "") is not None else ''
+                partner_org.highest_risk_rating_name = self.get_partner_higest_rating(partner)
                 partner_org.highest_risk_rating_type = partner.get("HIGEST_RISK_RATING_TYPE", "")
                 partner_org.psea_assessment_date = datetime.strptime(
                     partner['PSEA_ASSESSMENT_DATE'], INSIGHT_DATE_FORMAT) if partner['PSEA_ASSESSMENT_DATE'] else None
@@ -280,6 +279,11 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
     def get_partner_rating(partner):
         allowed_risk_rating = dict([(x[1], x[0]) for x in PartnerOrganization.RISK_RATINGS])
         return allowed_risk_rating.get(partner.get('RISK_RATING', ''), '')
+
+    @staticmethod
+    def get_partner_higest_rating(partner):
+        allowed_risk_rating = dict([(x[1], x[0]) for x in PartnerOrganization.PSEA_RISK_RATING])
+        return allowed_risk_rating.get(partner.get('HIGEST_RISK_RATING', ''), '')
 
     @staticmethod
     def get_type_of_assessment(partner):
