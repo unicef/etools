@@ -316,7 +316,6 @@ class RAMSynchronizer(VisionDataTenantSynchronizer):
         "INDICATOR_CODE",
         "WBS_ELEMENT_CODE",
         "INDICATOR_BASELINE",
-        "INDICATOR_TARGET",
     )
 
     def _save_records(self, records):
@@ -344,7 +343,7 @@ class RAMSynchronizer(VisionDataTenantSynchronizer):
                 'name': r['INDICATOR_DESCRIPTION'][:1024],
                 'baseline': r['INDICATOR_BASELINE'][:255] if r['INDICATOR_BASELINE'] else '',
                 'code': code,
-                'target': r['INDICATOR_TARGET'][:255],
+                'target': r['INDICATOR_TARGET'][:255] if r['INDICATOR_TARGET'] else '',
                 'ram_indicator': True,
                 'result__wbs': '/'.join([a[0:4], a[4:6], a[6:8], a[8:11], a[11:14]])
             }
