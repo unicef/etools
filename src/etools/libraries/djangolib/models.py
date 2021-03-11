@@ -4,8 +4,8 @@ from datetime import datetime
 from django.contrib.auth.models import Group
 from django.db import models
 from django.db.models import Aggregate
+from django.db.models.manager import BaseManager
 from django.db.models.query import QuerySet
-from django.db.models.query_utils import Q
 from django.utils.timezone import now
 
 from model_utils.managers import InheritanceManager
@@ -114,22 +114,18 @@ class InheritedModelMixin(object):
 
 
 class ValidityQuerySet(QuerySet):
-    """
-    Queryset which overwrites the delete method to support soft delete functionality
-    By default it filters out all soft deleted instances
-    """
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        if self.model:
-            self.add_intial_q()
-
     def delete(self):
         self.update(deleted_at=now())
 
-    def add_intial_q(self):
-        self.query.add_q(Q(deleted_at=EPOCH_ZERO))
+
+class ValidityManager(BaseManager.from_queryset(ValidityQuerySet)):
+    """
+    Manager which overwrites the delete method to support soft delete functionality
+    By default it filters out all soft deleted instances
+    """
+
+    def get_queryset(self):
+        return super().get_queryset().filter(deleted_at=EPOCH_ZERO)
 
 
 class SoftDeleteMixin(models.Model):
@@ -138,7 +134,7 @@ class SoftDeleteMixin(models.Model):
     database but still hide it from the end users. Example: Country changes currency - the old one has to be kept but
     hidden (soft deleted)
 
-    The functionality achieved by using the SoftDeleteMixin and the ValidityQuerySet. Both of them are depending on the
+    The functionality achieved by using the SoftDeleteMixin and the ValidityManager. Both of them are depending on the
     `deleted_at` field, which defaults to EPOCH_ZERO to allow unique constrains in the db.
     IMPORTANT: Default has to be a value - boolean field or nullable datetime would not work
     IMPORTANT #2: This model does not prevent cascaded deletion - this can only happen if the soft deleted model points
@@ -150,7 +146,7 @@ class SoftDeleteMixin(models.Model):
     # IMPORTANT: The order of these two queryset is important. The normal queryset has to be defined first to have that
     #            as a default queryset
     admin_objects = QuerySet.as_manager()
-    objects = ValidityQuerySet.as_manager()
+    objects = ValidityManager()
 
     class Meta:
         abstract = True
