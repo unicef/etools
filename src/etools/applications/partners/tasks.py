@@ -296,6 +296,7 @@ def check_intervention_past_start():
     run_on_all_tenants(send_intervention_past_start_notification)
 
 
+@app.task
 def sync_partner_to_prp(tenant: str, partner_id: int):
     tenant = get_tenant_model().objects.get(name=tenant)
     connection.set_tenant(tenant)
