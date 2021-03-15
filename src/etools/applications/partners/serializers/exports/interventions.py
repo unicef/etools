@@ -368,6 +368,7 @@ class InterventionExportSerializer(serializers.ModelSerializer):
         return "Yes" if obj.contingency_pd else "No"
 
     def get_locations(self, obj):
+        breakpoint()
         return ', '.join([loc.name for loc in obj.flat_locations.all()])
 
     def get_fr_posting_date(self, obj):

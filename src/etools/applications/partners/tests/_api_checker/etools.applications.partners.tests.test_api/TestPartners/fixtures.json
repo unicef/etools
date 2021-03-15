@@ -4,11 +4,11 @@
             "model": "partners.partnerorganization",
             "pk": 101,
             "fields": {
-                "created": "2018-12-05T16:22:58.948Z",
-                "modified": "2018-12-05T16:22:58.954Z",
+                "created": "2021-03-16T15:29:39.538Z",
+                "modified": "2021-03-16T15:29:39.568Z",
                 "partner_type": "Civil Society Organization",
                 "cso_type": "International",
-                "name": "Partner 8",
+                "name": "Partner 4",
                 "short_name": "Short name",
                 "description": "",
                 "shared_with": null,
@@ -51,7 +51,8 @@
                             "q4": 0,
                             "total": 0
                         },
-                        "follow_up_required": 0
+                        "follow_up_required": 0,
+                        "minimum_requirements": 0
                     },
                     "assurance_coverage": "void",
                     "programmatic_visits": {
@@ -68,11 +69,16 @@
                             "q3": 0,
                             "q4": 0,
                             "total": 0
-                        }
+                        },
+                        "minimum_requirements": 0
                     },
                     "outstanding_findings": 0
                 },
-                "basis_for_risk_rating": ""
+                "basis_for_risk_rating": "",
+                "psea_assessment_date": null,
+                "sea_risk_rating_name": "",
+                "highest_risk_rating_type": "",
+                "highest_risk_rating_name": ""
             }
         },
         "deps": []
@@ -80,13 +86,13 @@
     "partner_not_programmatic_visit_compliant": {
         "master": {
             "model": "partners.partnerorganization",
-            "pk": 575,
+            "pk": 169,
             "fields": {
-                "created": "2018-12-05T16:22:58.957Z",
-                "modified": "2018-12-05T16:22:58.961Z",
+                "created": "2021-03-16T15:29:39.571Z",
+                "modified": "2021-03-16T15:29:39.594Z",
                 "partner_type": "",
                 "cso_type": null,
-                "name": "Partner 9",
+                "name": "Partner 5",
                 "short_name": "",
                 "description": "",
                 "shared_with": null,
@@ -123,7 +129,11 @@
                         }
                     }
                 },
-                "basis_for_risk_rating": ""
+                "basis_for_risk_rating": "",
+                "psea_assessment_date": null,
+                "sea_risk_rating_name": "",
+                "highest_risk_rating_type": "",
+                "highest_risk_rating_name": ""
             }
         },
         "deps": []

@@ -250,6 +250,7 @@ class InterventionListSerializer(BaseInterventionListSerializer):
         return obj.location_p_codes.split('|') if obj.location_p_codes else []
 
     def get_donors(self, obj):
+        breakpoint()
         return obj.donors.split('|') if obj.donors else []
 
     def get_donor_codes(self, obj):
