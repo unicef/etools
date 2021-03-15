@@ -315,6 +315,11 @@ def all_activities_have_timeframes(i):
         filter(time_frames__isnull=True).exists()
 
 
+def review_was_accepted(i):
+    r = i.reviews.first()
+    return r.overall_approval if r else False
+
+
 class InterventionValid(CompleteValidation):
     VALIDATION_CLASS = 'partners.Intervention'
     # validations that will be checked on every object... these functions only take the new instance
@@ -385,6 +390,8 @@ class InterventionValid(CompleteValidation):
     def state_signature_valid(self, intervention, user=None):
         self.check_required_fields(intervention)
         self.check_rigid_fields(intervention, related=True)
+        if not review_was_accepted(intervention):
+            raise StateValidationError([_('Review needs to be approved')])
         return True
 
     def state_signed_valid(self, intervention, user=None):

@@ -176,3 +176,44 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,signed_by_partner_date,*,,Review,Required,FALSE
 ,signed_by_unicef_date,*,,Review,Required,FALSE
 ,signed_pd_attachment,*,,Review,Required,FALSE
+,date_sent_to_partner,*,,Draft,Required,FALSE
+,context,*,,Draft,Required,FALSE
+,implementation_strategy,*,,Draft,Required,FALSE
+,gender_rating,*,,Draft,Required,FALSE
+,gender_narrative,*,,Draft,Required,FALSE
+,equity_rating,*,,Draft,Required,FALSE
+,equity_narrative,*,,Draft,Required,FALSE
+,sustainability_rating,*,,Draft,Required,FALSE
+,sustainability_narrative,*,,Draft,Required,FALSE
+,sustainability_rating,*,is_spd,Review,Required,FALSE
+,sustainability_narrative,*,is_spd,Review,Required,FALSE
+,sustainability_rating,*,is_spd,Signature,Required,FALSE
+,sustainability_narrative,*,is_spd,Signature,Required,FALSE
+,sustainability_rating,*,is_spd,Signed,Required,FALSE
+,sustainability_narrative,*,is_spd,Signed,Required,FALSE
+,sustainability_narrative,*,is_spd,Active,Required,FALSE
+,sustainability_rating,*,is_spd,Active,Required,FALSE
+,sustainability_narrative,*,is_spd,Ended,Required,FALSE
+,sustainability_rating,*,is_spd,Ended,Required,FALSE
+,sustainability_narrative,*,is_spd,Closed,Required,FALSE
+,sustainability_rating,*,is_spd,Closed,Required,FALSE
+,sustainability_rating,*,is_spd,Suspended,Required,FALSE
+,sustainability_narrative,*,is_spd,Suspended,Required,FALSE
+,sustainability_rating,*,is_spd,Terminated,Required,FALSE
+,sustainability_narrative,*,is_spd,Terminated,Required,FALSE
+,sustainability_rating,*,is_spd,Cancelled,Required,FALSE
+,sustainability_narrative,*,is_spd,Cancelled,Required,FALSE
+,hq_support_cost,*,,Draft,Required,FALSE
+,ip_program_contribution,*,,Draft,Required,FALSE
+,cash_transfer_modalities,*,,Draft,Required,FALSE
+,cancel_justification,*,,Cancelled,Required,TRUE
+3.9.5,end,*,contingency on,Review,Required,FALSE
+3.9.5,end,*,contingency on,Signature,Required,FALSE
+3.9.5,start,*,contingency on,Review,Required,FALSE
+3.9.5,start,*,contingency on,Signature,Required,FALSE
+,signed_by_partner_date,*,,signature,Required,FALSE
+,signed_by_unicef_date,*,,signature,Required,FALSE
+,partner_authorized_officer_signatory,*,,signature,Required,FALSE
+,signed_pd_attachment,*,,signature,Required,FALSE
+3.2.7,partner_authorized_officer_signatory,Partnership Manager,,Signature,Edit,TRUE
+,signed_by_partner_date,Partnership Manager,,signature,Edit,TRUE

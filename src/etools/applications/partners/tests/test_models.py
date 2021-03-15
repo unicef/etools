@@ -2,6 +2,7 @@ import copy
 import datetime
 from decimal import Decimal
 from unittest import skip
+from unittest.mock import Mock, patch
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
@@ -1103,7 +1104,9 @@ class TestInterventionModel(BaseTenantTestCase):
         country = connection.tenant
         country.local_currency = PublicsCurrencyFactory(code=currency)
         country.local_currency.save()
-        InterventionFactory()
+        mock_tenant = Mock(tenant=country)
+        with patch("etools.applications.partners.models.connection", mock_tenant):
+            InterventionFactory()
         self.assertTrue(budget_qs.exists())
 
     def test_hq_support_cost(self):
@@ -1512,7 +1515,9 @@ class TestInterventionBudget(BaseTenantTestCase):
         country = connection.tenant
         country.local_currency = PublicsCurrencyFactory(code=currency)
         country.local_currency.save()
-        intervention = InterventionFactory()
+        mock_tenant = Mock(tenant=country)
+        with patch("etools.applications.partners.models.connection", mock_tenant):
+            intervention = InterventionFactory()
         self.assertEqual(intervention.planned_budget.currency, currency)
 
     def test_calc_totals_no_assoc(self):

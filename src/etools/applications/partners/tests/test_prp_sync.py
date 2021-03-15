@@ -17,7 +17,7 @@ from etools.applications.users.tests.factories import UserFactory
 class TestInterventionPartnerSyncSignal(BaseTenantTestCase):
     @patch('etools.applications.partners.signals.sync_partner_to_prp.delay')
     def test_intervention_sync_called(self, sync_task_mock):
-        intervention = InterventionFactory()
+        intervention = InterventionFactory(date_sent_to_partner=None)
         sync_task_mock.assert_not_called()
 
         intervention.date_sent_to_partner = timezone.now()
@@ -26,7 +26,7 @@ class TestInterventionPartnerSyncSignal(BaseTenantTestCase):
 
     @patch('etools.applications.partners.signals.sync_partner_to_prp.delay')
     def test_intervention_sync_not_called_on_save(self, sync_task_mock):
-        intervention = InterventionFactory()
+        intervention = InterventionFactory(date_sent_to_partner=None)
         sync_task_mock.assert_not_called()
 
         intervention.start = timezone.now().date()
@@ -46,7 +46,7 @@ class TestInterventionPartnerSyncTask(BaseTenantTestCase):
         return_value=namedtuple('Response', ['status_code', 'text'])(200, '{}')
     )
     def test_request_to_prp_sent(self, request_mock):
-        intervention = InterventionFactory()
+        intervention = InterventionFactory(date_sent_to_partner=None)
         request_mock.assert_not_called()
 
         sync_partner_to_prp(connection.tenant.name, intervention.agreement.partner_id)
@@ -60,7 +60,7 @@ class TestPartnerStaffMembersImportTask(BaseTenantTestCase):
         return_value=namedtuple('Response', ['status_code', 'text'])(200, '{}')
     )
     def test_request_to_prp_sent(self, request_mock):
-        intervention = InterventionFactory()
+        intervention = InterventionFactory(date_sent_to_partner=None)
         request_mock.assert_not_called()
 
         sync_partner_to_prp(connection.tenant.name, intervention.agreement.partner_id)

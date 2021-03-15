@@ -23,17 +23,22 @@ from etools.applications.partners.views.interventions_v3 import (
     PMPInterventionSupplyItemListCreateView,
     PMPInterventionSupplyItemRetrieveUpdateView,
     PMPInterventionSupplyItemUploadView,
+    PMPReviewDetailView,
+    PMPReviewView,
 )
 from etools.applications.partners.views.interventions_v3_actions import (
     PMPInterventionAcceptReviewView,
     PMPInterventionAcceptView,
     PMPInterventionCancelView,
+    PMPInterventionRejectReviewView,
     PMPInterventionReviewView,
     PMPInterventionSendToPartnerView,
     PMPInterventionSendToUNICEFView,
     PMPInterventionSignatureView,
+    PMPInterventionSuspendView,
     PMPInterventionTerminateView,
     PMPInterventionUnlockView,
+    PMPInterventionUnsuspendView,
 )
 from etools.applications.partners.views.partner_organization_v3 import (
     PMPPartnerOrganizationListAPIView,
@@ -99,6 +104,13 @@ urlpatterns = [
         name='intervention-accept-review',
     ),
     path(
+        'interventions/<int:pk>/reject_review/',
+        view=PMPInterventionRejectReviewView.as_view(
+            http_method_names=['patch'],
+        ),
+        name='intervention-reject-review',
+    ),
+    path(
         'interventions/<int:pk>/cancel/',
         view=PMPInterventionCancelView.as_view(http_method_names=['patch']),
         name='intervention-cancel',
@@ -109,7 +121,17 @@ urlpatterns = [
         name='intervention-terminate',
     ),
     path(
-        'interventions/<int:pk>/signature/',
+        'interventions/<int:pk>/suspend/',
+        view=PMPInterventionSuspendView.as_view(http_method_names=['patch']),
+        name='intervention-suspend',
+    ),
+    path(
+        'interventions/<int:pk>/unsuspend/',
+        view=PMPInterventionUnsuspendView.as_view(http_method_names=['patch']),
+        name='intervention-unsuspend',
+    ),
+    path(
+        'interventions/<int:pk>/sign/',
         view=PMPInterventionSignatureView.as_view(http_method_names=['patch']),
         name='intervention-signature',
     ),
@@ -171,6 +193,16 @@ urlpatterns = [
         'interventions/<int:intervention_pk>/supply/<int:pk>/',
         view=PMPInterventionSupplyItemRetrieveUpdateView.as_view(),
         name='intervention-supply-item-detail',
+    ),
+    path(
+        'interventions/<int:intervention_pk>/reviews/',
+        view=PMPReviewView.as_view(),
+        name='intervention-reviews',
+    ),
+    path(
+        'interventions/<int:intervention_pk>/reviews/<int:pk>/',
+        view=PMPReviewDetailView.as_view(),
+        name='intervention-reviews-detail',
     ),
     path(
         'interventions/<int:intervention_pk>/pd-outputs/<int:output_pk>/activities/',

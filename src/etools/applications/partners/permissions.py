@@ -156,8 +156,58 @@ class InterventionPermissions(PMPPermissions):
             'not_ended': self.instance.end >= datetime.datetime.now().date() if self.instance.end else False,
             'unicef_court': self.instance.unicef_court and unlocked(self.instance),
             'partner_court': not self.instance.unicef_court and unlocked(self.instance),
-            'unlocked': unlocked(self.instance)
+            'unlocked': unlocked(self.instance),
+            'is_spd': self.instance.document_type == self.instance.SPD
         }
+
+    # override get_permissions to enable us to prevent old interventions from being blocked on transitions
+    def get_permissions(self):
+        def intervention_is_v1():
+            if self.instance.status in [self.instance.DRAFT]:
+                return False
+            return self.instance.start < datetime.date(year=2020, month=10, day=1) if self.instance.start else False
+
+        # TODO: Remove this method when there are no active legacy programme documents
+        list_of_new_fields = ["budget_owner",
+                              "humanitarian_flag",
+                              "unicef_court",
+                              "date_sent_to_partner",
+                              "unicef_accepted",
+                              "partner_accepted",
+                              "context",
+                              "implementation_strategy",
+                              "gender_rating",
+                              "gender_narrative",
+                              "equity_rating",
+                              "equity_narrative",
+                              "sustainability_rating",
+                              "sustainability_narrative",
+                              "ip_program_contribution",
+                              "budget_owner",
+                              "hq_support_cost",
+                              "cash_transfer_modalities",
+                              "unicef_review_type",
+                              "capacity_development",
+                              "other_info",
+                              "other_partners_involved",
+                              "technical_guidance",
+                              "cancel_justification",
+                              "population_focus"]
+        ps = self.permission_structure
+        my_permissions = {}
+        for action in self.possible_actions:
+            my_permissions[action] = {}
+            for field in self.all_model_fields:
+                if action == "required" and field in list_of_new_fields and intervention_is_v1():
+                    my_permissions[action][field] = False
+                elif field in ps:
+                    if not ps[field][action]['true'] and not ps[field][action]['false']:
+                        my_permissions[action][field] = self.actions_default_permissions[action]
+                    else:
+                        my_permissions[action][field] = self.get_field_permissions(action, ps[field])
+                else:
+                    my_permissions[action][field] = self.actions_default_permissions[action]
+        return my_permissions
 
 
 class AgreementPermissions(PMPPermissions):
