@@ -334,7 +334,7 @@ def sync_partners_staff_members_from_prp():
         for staff_member_data in api.get_partner_staff_members(partner_data.id):
             sync_partner_staff_member(partner, staff_member_data)
 
-            
+
 def sync_partner(vendor_number=None, country=None):
     from etools.applications.partners.synchronizers import PartnerSynchronizer
     try:
