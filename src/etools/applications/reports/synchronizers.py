@@ -325,6 +325,7 @@ class RAMSynchronizer(VisionDataTenantSynchronizer):
     def _filter_records(self, records):
         def is_valid_record(record):
             for key in self.REQUIRED_KEYS:
+                # previous API wasn't returning keys with null value
                 if key not in record or not record[key]:
                     return False
             if record['INDICATOR_DESCRIPTION'] in ['', None] or record["INDICATOR_CODE"] in ['undefined', '', None]:
