@@ -11,7 +11,7 @@ from etools.applications.partners.tests.factories import (
     InterventionFactory,
     InterventionResultLinkFactory,
     PartnerFactory,
-    PlannedEngagementFactory)
+)
 from etools.libraries.tests.api_checker import ApiCheckerMixin, AssertTimeStampedMixin, ViewSetChecker
 
 
@@ -49,9 +49,10 @@ class TestAPIIntervention(BaseTenantTestCase, metaclass=ViewSetChecker):
     ]
 
     def get_fixtures(cls):
-        return {'intervention': InterventionFactory(id=101),
-                'amendment': InterventionAmendmentFactory(),
-                'result': InterventionResultLinkFactory(),
+        return {
+            'intervention': InterventionFactory(id=101),
+            'amendment': InterventionAmendmentFactory(),
+            'result': InterventionResultLinkFactory(),
         }
 
 
