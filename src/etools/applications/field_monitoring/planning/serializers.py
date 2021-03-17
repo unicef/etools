@@ -1,6 +1,6 @@
 from copy import copy
 
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
 from unicef_attachments.fields import FileTypeModelChoiceField
@@ -116,6 +116,7 @@ class MonitoringActivityLightSerializer(serializers.ModelSerializer):
     partners = SeparatedReadWriteField(read_field=MinimalPartnerOrganizationListSerializer(many=True))
     interventions = SeparatedReadWriteField(read_field=FMInterventionListSerializer(many=True))
     cp_outputs = SeparatedReadWriteField(read_field=MinimalOutputListSerializer(many=True))
+    sections = SeparatedReadWriteField(read_field=SectionSerializer(many=True), required=False)
 
     checklists_count = serializers.ReadOnlyField()
 
@@ -131,6 +132,7 @@ class MonitoringActivityLightSerializer(serializers.ModelSerializer):
             'checklists_count',
             'reject_reason', 'report_reject_reason', 'cancel_reason',
             'status',
+            'sections',
         )
 
 
@@ -138,11 +140,10 @@ class MonitoringActivitySerializer(UserContextSerializerMixin, MonitoringActivit
     permissions = serializers.SerializerMethodField(read_only=True)
     transitions = serializers.SerializerMethodField(read_only=True)
     field_office = SeparatedReadWriteField(read_field=OfficeSerializer())
-    sections = SeparatedReadWriteField(read_field=SectionSerializer(many=True), required=False)
 
     class Meta(MonitoringActivityLightSerializer.Meta):
         fields = MonitoringActivityLightSerializer.Meta.fields + (
-            'field_office', 'sections', 'permissions', 'transitions',
+            'field_office', 'permissions', 'transitions',
         )
 
     def get_permissions(self, obj):

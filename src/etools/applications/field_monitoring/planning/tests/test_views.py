@@ -107,7 +107,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             MonitoringActivityFactory(monitor_type='staff'),
         ]
 
-        with self.assertNumQueries(7):
+        with self.assertNumQueries(10):
             self._test_list(self.unicef_user, activities, data={'page': 1, 'page_size': 10})
 
     def test_search_by_ref_number(self):
@@ -731,7 +731,7 @@ class MonitoringActivityActionPointsViewTestCase(FMBaseTestCaseMixin, APIViewSet
         action_points = MonitoringActivityActionPointFactory.create_batch(size=10, monitoring_activity=self.activity)
         MonitoringActivityActionPointFactory()
 
-        with self.assertNumQueries(14):  # prefetched 13 queries
+        with self.assertNumQueries(15):  # prefetched 13 queries
             self._test_list(self.unicef_user, action_points)
 
     def test_create(self):

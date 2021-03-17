@@ -15,9 +15,14 @@ from etools.applications.field_monitoring.fm_settings.tests.factories import Log
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.field_monitoring.planning.tests.factories import MonitoringActivityFactory
 from etools.applications.field_monitoring.tests.factories import UserFactory
-from etools.applications.partners.tests.factories import InterventionFactory, PartnerFactory
+from etools.applications.partners.tests.factories import (
+    InterventionFactory,
+    PartnerFactory,
+    PartnerPlannedVisitsFactory,
+)
 from etools.applications.reports.models import ResultType
 from etools.applications.reports.tests.factories import ResultFactory, SectionFactory
+from etools.libraries.pythonlib.datetime import get_current_year
 
 
 class OverallViewTestCase(BaseTenantTestCase):
@@ -88,6 +93,18 @@ class PartnersCoverageViewTestCase(BaseTenantTestCase):
     def test_response(self):
         partner = PartnerFactory()
         PartnerFactory()  # no activities, should be hidden
+        PartnerPlannedVisitsFactory(
+            partner=partner,
+            year=get_current_year(),
+            programmatic_q1=1,
+            programmatic_q2=2,
+            programmatic_q3=3,
+            programmatic_q4=4,
+        )
+        PartnerPlannedVisitsFactory(
+            partner=partner,
+            year=get_current_year() - 1,
+        )
 
         MonitoringActivityFactory(
             partners=[partner], status=MonitoringActivity.STATUSES.completed,
@@ -95,7 +112,7 @@ class PartnersCoverageViewTestCase(BaseTenantTestCase):
         )
         MonitoringActivityFactory(partners=[partner])
 
-        with self.assertNumQueries(1):
+        with self.assertNumQueries(2):
             response = self.forced_auth_req(
                 'get',
                 reverse('field_monitoring_analyze:coverage-partners'),
@@ -106,6 +123,7 @@ class PartnersCoverageViewTestCase(BaseTenantTestCase):
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]['id'], partner.id)
         self.assertEqual(response.data[0]['completed_visits'], 1)
+        self.assertEqual(response.data[0]['planned_visits'], 10)
         self.assertEqual(response.data[0]['days_since_visit'], 15)
         self.assertEqual(response.data[0]['minimum_required_visits'], partner.min_req_programme_visits)
 

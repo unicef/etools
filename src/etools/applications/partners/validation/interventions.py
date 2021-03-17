@@ -1,7 +1,7 @@
 import logging
 from datetime import date
 
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from etools_validator.exceptions import BasicValidationError, StateValidationError, TransitionError
 from etools_validator.utils import check_required_fields, check_rigid_fields
