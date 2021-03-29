@@ -4,19 +4,20 @@
             "model": "partners.intervention",
             "pk": 101,
             "fields": {
-                "created": "2019-07-01T20:32:43.418Z",
-                "modified": "2019-07-01T20:32:43.421Z",
+                "created": "2021-03-16T16:08:38.756Z",
+                "modified": "2021-03-16T16:08:38.806Z",
                 "document_type": "",
-                "agreement": 1572,
+                "agreement": 152,
                 "country_programme": null,
-                "number": "TST/PCA20191572/2019101",
+                "number": "TST/PCA2021152/2021101",
                 "title": "Intervention Title 0",
                 "status": "draft",
-                "start": null,
-                "end": null,
-                "submission_date": "2019-07-01",
+                "start": "2021-03-16",
+                "end": "2022-03-16",
+                "submission_date": "2021-03-16",
                 "submission_date_prc": null,
-                "reference_number_year": 2019,
+                "reference_number_year": 2021,
+                "date_partnership_review_performed": null,
                 "review_date_prc": null,
                 "prc_review_document": "",
                 "signed_pd_document": "",
@@ -29,7 +30,32 @@
                 "termination_doc": "",
                 "population_focus": null,
                 "in_amendment": false,
+                "humanitarian_flag": false,
+                "unicef_court": true,
+                "date_sent_to_partner": null,
+                "unicef_accepted": false,
+                "partner_accepted": false,
+                "cfei_number": "",
+                "context": "context",
+                "implementation_strategy": "implementation_strategy",
+                "gender_rating": "none",
+                "gender_narrative": "gender_narrative",
+                "equity_rating": "none",
+                "equity_narrative": "equity_narrative",
+                "sustainability_rating": "none",
+                "sustainability_narrative": "sustainability_narrative",
+                "ip_program_contribution": "ip_program_contribution",
+                "budget_owner": null,
+                "hq_support_cost": "0.0",
+                "cash_transfer_modalities": "[\"dct\"]",
+                "unicef_review_type": "none",
+                "capacity_development": null,
+                "other_info": null,
+                "other_partners_involved": null,
+                "technical_guidance": null,
+                "cancel_justification": null,
                 "metadata": {},
+                "country_programmes": [],
                 "unicef_focal_points": [],
                 "partner_focal_points": [],
                 "sections": [],
@@ -40,22 +66,22 @@
         "deps": [
             {
                 "model": "partners.agreement",
-                "pk": 1572,
+                "pk": 152,
                 "fields": {
-                    "created": "2019-07-01T20:32:43.395Z",
-                    "modified": "2019-07-01T20:32:43.417Z",
-                    "partner": 1496,
-                    "country_programme": 1448,
+                    "created": "2021-03-16T16:08:38.677Z",
+                    "modified": "2021-03-16T16:08:38.753Z",
+                    "partner": 171,
+                    "country_programme": 152,
                     "agreement_type": "PCA",
-                    "agreement_number": "TST/PCA20191572",
+                    "agreement_number": "TST/PCA2021152",
                     "attached_agreement": "",
-                    "start": "2019-07-01",
-                    "end": "2019-12-31",
-                    "reference_number_year": 2019,
+                    "start": "2021-03-16",
+                    "end": "2021-12-31",
+                    "reference_number_year": 2021,
                     "special_conditions_pca": false,
-                    "signed_by_unicef_date": "2019-07-01",
+                    "signed_by_unicef_date": "2021-03-16",
                     "signed_by": null,
-                    "signed_by_partner_date": "2019-07-01",
+                    "signed_by_partner_date": "2021-03-16",
                     "partner_manager": null,
                     "status": "signed",
                     "authorized_officers": []
@@ -63,10 +89,10 @@
             },
             {
                 "model": "partners.partnerorganization",
-                "pk": 1496,
+                "pk": 171,
                 "fields": {
-                    "created": "2019-07-01T20:32:43.381Z",
-                    "modified": "2019-07-01T20:32:43.387Z",
+                    "created": "2021-03-16T16:08:38.639Z",
+                    "modified": "2021-03-16T16:08:38.672Z",
                     "partner_type": "",
                     "cso_type": null,
                     "name": "Partner 0",
@@ -112,7 +138,8 @@
                                 "q4": 0,
                                 "total": 0
                             },
-                            "follow_up_required": 0
+                            "follow_up_required": 0,
+                            "minimum_requirements": 0
                         },
                         "assurance_coverage": "void",
                         "programmatic_visits": {
@@ -129,22 +156,27 @@
                                 "q3": 0,
                                 "q4": 0,
                                 "total": 0
-                            }
+                            },
+                            "minimum_requirements": 0
                         },
                         "outstanding_findings": 0
                     },
-                    "basis_for_risk_rating": ""
+                    "basis_for_risk_rating": "",
+                    "psea_assessment_date": null,
+                    "sea_risk_rating_name": "",
+                    "highest_risk_rating_type": "",
+                    "highest_risk_rating_name": ""
                 }
             },
             {
                 "model": "reports.countryprogramme",
-                "pk": 1448,
+                "pk": 152,
                 "fields": {
                     "name": "Country Programme 0",
-                    "wbs": "0000/A0/00",
+                    "wbs": "0000/A0/01",
                     "invalid": false,
-                    "from_date": "2019-01-01",
-                    "to_date": "2019-12-31"
+                    "from_date": "2021-01-01",
+                    "to_date": "2021-12-31"
                 }
             }
         ]
@@ -152,36 +184,37 @@
     "amendment": {
         "master": {
             "model": "partners.interventionamendment",
-            "pk": 42,
+            "pk": 14,
             "fields": {
-                "created": "2019-07-01T20:32:43.465Z",
-                "modified": "2019-07-01T20:32:43.501Z",
-                "intervention": 1455,
+                "created": "2021-03-16T16:08:38.915Z",
+                "modified": "2021-03-16T16:08:38.915Z",
+                "intervention": 116,
                 "types": "[\"Change authorized officer\"]",
-                "other_description": "pxRKBufTiSdqiGAOyXwghKOpNAMJCXkyyvpGCFZerSqsemMYaY",
-                "signed_date": "2019-07-01",
+                "other_description": "MaRCKSzsizcIhEiOUyOYMPvWyDSUWDbGYlVwdriWMJHZXueJLe",
+                "signed_date": "2021-03-16",
                 "amendment_number": 1,
-                "signed_amendment": "test/file_attachments/partner_organization/1497/1497/agreements/1573/interventions/1455/amendments/None/test_file.pdf"
+                "signed_amendment": "test/file_attachments/partner_organization/172/172/agreements/153/interventions/116/amendments/None/test_file.pdf"
             }
         },
         "deps": [
             {
                 "model": "partners.intervention",
-                "pk": 1455,
+                "pk": 116,
                 "fields": {
-                    "created": "2019-07-01T20:32:43.453Z",
-                    "modified": "2019-07-01T20:32:43.497Z",
+                    "created": "2021-03-16T16:08:38.875Z",
+                    "modified": "2021-03-16T16:08:38.944Z",
                     "document_type": "",
-                    "agreement": 1573,
+                    "agreement": 153,
                     "country_programme": null,
-                    "number": "TST/PCA20191573/20191455",
+                    "number": "TST/PCA2021153/2021116",
                     "title": "Intervention Title 1",
                     "status": "draft",
-                    "start": null,
-                    "end": null,
-                    "submission_date": "2019-07-01",
+                    "start": "2021-03-16",
+                    "end": "2022-03-16",
+                    "submission_date": "2021-03-16",
                     "submission_date_prc": null,
-                    "reference_number_year": 2019,
+                    "reference_number_year": 2021,
+                    "date_partnership_review_performed": null,
                     "review_date_prc": null,
                     "prc_review_document": "",
                     "signed_pd_document": "",
@@ -194,7 +227,32 @@
                     "termination_doc": "",
                     "population_focus": null,
                     "in_amendment": true,
+                    "humanitarian_flag": false,
+                    "unicef_court": true,
+                    "date_sent_to_partner": null,
+                    "unicef_accepted": false,
+                    "partner_accepted": false,
+                    "cfei_number": "",
+                    "context": "context",
+                    "implementation_strategy": "implementation_strategy",
+                    "gender_rating": "none",
+                    "gender_narrative": "gender_narrative",
+                    "equity_rating": "none",
+                    "equity_narrative": "equity_narrative",
+                    "sustainability_rating": "none",
+                    "sustainability_narrative": "sustainability_narrative",
+                    "ip_program_contribution": "ip_program_contribution",
+                    "budget_owner": null,
+                    "hq_support_cost": "0.0",
+                    "cash_transfer_modalities": "[\"dct\"]",
+                    "unicef_review_type": "none",
+                    "capacity_development": null,
+                    "other_info": null,
+                    "other_partners_involved": null,
+                    "technical_guidance": null,
+                    "cancel_justification": null,
                     "metadata": {},
+                    "country_programmes": [],
                     "unicef_focal_points": [],
                     "partner_focal_points": [],
                     "sections": [],
@@ -203,53 +261,23 @@
                 }
             },
             {
-                "model": "partners.interventionmanagementbudget",
-                "pk": 1455,
-                "fields": {
-                    "intervention": 1455,
-                    "act1_unicef": 0,
-                    "act1_partner":  0,
-                    "act2_unicef": 0,
-                    "act2_partner":  0,
-                    "act3_unicef": 0,
-                    "act3_partner":  0
-                }
-            },
-            {
-                "model": "partners.interventionbudget",
-                "pk": 1455,
-                "fields": {
-                    "intervention": 1455,
-                    "partner_contribution": 0,
-                    "unicef_cash":  0,
-                    "in_kind_amount": 0,
-                    "total":  0,
-                    "partner_contribution_local": 0,
-                    "unicef_cash_local":  0,
-                    "in_kind_amount_local": 0,
-                    "currency":  "USD",
-                    "total_local": 0,
-                    "programme_effectiveness":  0
-                }
-            },
-            {
                 "model": "partners.agreement",
-                "pk": 1573,
+                "pk": 153,
                 "fields": {
-                    "created": "2019-07-01T20:32:43.437Z",
-                    "modified": "2019-07-01T20:32:43.451Z",
-                    "partner": 1497,
-                    "country_programme": 1449,
+                    "created": "2021-03-16T16:08:38.839Z",
+                    "modified": "2021-03-16T16:08:38.874Z",
+                    "partner": 172,
+                    "country_programme": 153,
                     "agreement_type": "PCA",
-                    "agreement_number": "TST/PCA20191573",
+                    "agreement_number": "TST/PCA2021153",
                     "attached_agreement": "",
-                    "start": "2019-07-01",
-                    "end": "2019-12-31",
-                    "reference_number_year": 2019,
+                    "start": "2021-03-16",
+                    "end": "2021-12-31",
+                    "reference_number_year": 2021,
                     "special_conditions_pca": false,
-                    "signed_by_unicef_date": "2019-07-01",
+                    "signed_by_unicef_date": "2021-03-16",
                     "signed_by": null,
-                    "signed_by_partner_date": "2019-07-01",
+                    "signed_by_partner_date": "2021-03-16",
                     "partner_manager": null,
                     "status": "signed",
                     "authorized_officers": []
@@ -257,10 +285,10 @@
             },
             {
                 "model": "partners.partnerorganization",
-                "pk": 1497,
+                "pk": 172,
                 "fields": {
-                    "created": "2019-07-01T20:32:43.426Z",
-                    "modified": "2019-07-01T20:32:43.432Z",
+                    "created": "2021-03-16T16:08:38.809Z",
+                    "modified": "2021-03-16T16:08:38.835Z",
                     "partner_type": "",
                     "cso_type": null,
                     "name": "Partner 1",
@@ -306,7 +334,8 @@
                                 "q4": 0,
                                 "total": 0
                             },
-                            "follow_up_required": 0
+                            "follow_up_required": 0,
+                            "minimum_requirements": 0
                         },
                         "assurance_coverage": "void",
                         "programmatic_visits": {
@@ -323,22 +352,27 @@
                                 "q3": 0,
                                 "q4": 0,
                                 "total": 0
-                            }
+                            },
+                            "minimum_requirements": 0
                         },
                         "outstanding_findings": 0
                     },
-                    "basis_for_risk_rating": ""
+                    "basis_for_risk_rating": "",
+                    "psea_assessment_date": null,
+                    "sea_risk_rating_name": "",
+                    "highest_risk_rating_type": "",
+                    "highest_risk_rating_name": ""
                 }
             },
             {
                 "model": "reports.countryprogramme",
-                "pk": 1449,
+                "pk": 153,
                 "fields": {
                     "name": "Country Programme 1",
-                    "wbs": "0000/A0/01",
+                    "wbs": "0001/A0/01",
                     "invalid": false,
-                    "from_date": "2019-01-01",
-                    "to_date": "2019-12-31"
+                    "from_date": "2021-01-01",
+                    "to_date": "2021-12-31"
                 }
             }
         ]
@@ -346,33 +380,34 @@
     "result": {
         "master": {
             "model": "partners.interventionresultlink",
-            "pk": 889,
+            "pk": 14,
             "fields": {
-                "created": "2019-07-01T20:32:43.555Z",
-                "modified": "2019-07-01T20:32:43.555Z",
-                "intervention": 1456,
-                "cp_output": 953,
+                "created": "2021-03-16T16:08:39.067Z",
+                "modified": "2021-03-16T16:08:39.067Z",
+                "intervention": 117,
+                "cp_output": 56,
                 "ram_indicators": []
             }
         },
         "deps": [
             {
                 "model": "partners.intervention",
-                "pk": 1456,
+                "pk": 117,
                 "fields": {
-                    "created": "2019-07-01T20:32:43.538Z",
-                    "modified": "2019-07-01T20:32:43.541Z",
+                    "created": "2021-03-16T16:08:39.021Z",
+                    "modified": "2021-03-16T16:08:39.058Z",
                     "document_type": "",
-                    "agreement": 1574,
+                    "agreement": 154,
                     "country_programme": null,
-                    "number": "TST/PCA20191574/20191456",
+                    "number": "TST/PCA2021154/2021117",
                     "title": "Intervention Title 2",
                     "status": "draft",
-                    "start": null,
-                    "end": null,
-                    "submission_date": "2019-07-01",
+                    "start": "2021-03-16",
+                    "end": "2022-03-16",
+                    "submission_date": "2021-03-16",
                     "submission_date_prc": null,
-                    "reference_number_year": 2019,
+                    "reference_number_year": 2021,
+                    "date_partnership_review_performed": null,
                     "review_date_prc": null,
                     "prc_review_document": "",
                     "signed_pd_document": "",
@@ -385,7 +420,32 @@
                     "termination_doc": "",
                     "population_focus": null,
                     "in_amendment": false,
+                    "humanitarian_flag": false,
+                    "unicef_court": true,
+                    "date_sent_to_partner": null,
+                    "unicef_accepted": false,
+                    "partner_accepted": false,
+                    "cfei_number": "",
+                    "context": "context",
+                    "implementation_strategy": "implementation_strategy",
+                    "gender_rating": "none",
+                    "gender_narrative": "gender_narrative",
+                    "equity_rating": "none",
+                    "equity_narrative": "equity_narrative",
+                    "sustainability_rating": "none",
+                    "sustainability_narrative": "sustainability_narrative",
+                    "ip_program_contribution": "ip_program_contribution",
+                    "budget_owner": null,
+                    "hq_support_cost": "0.0",
+                    "cash_transfer_modalities": "[\"dct\"]",
+                    "unicef_review_type": "none",
+                    "capacity_development": null,
+                    "other_info": null,
+                    "other_partners_involved": null,
+                    "technical_guidance": null,
+                    "cancel_justification": null,
                     "metadata": {},
+                    "country_programmes": [],
                     "unicef_focal_points": [],
                     "partner_focal_points": [],
                     "sections": [],
@@ -394,53 +454,23 @@
                 }
             },
             {
-                "model": "partners.interventionmanagementbudget",
-                "pk": 1456,
-                "fields": {
-                    "intervention": 1456,
-                    "act1_unicef": 0,
-                    "act1_partner":  0,
-                    "act2_unicef": 0,
-                    "act2_partner":  0,
-                    "act3_unicef": 0,
-                    "act3_partner":  0
-                }
-            },
-            {
-                "model": "partners.interventionbudget",
-                "pk": 1456,
-                "fields": {
-                    "intervention": 1456,
-                    "partner_contribution": 0,
-                    "unicef_cash":  0,
-                    "in_kind_amount": 0,
-                    "total":  0,
-                    "partner_contribution_local": 0,
-                    "unicef_cash_local":  0,
-                    "in_kind_amount_local": 0,
-                    "currency":  "USD",
-                    "total_local": 0,
-                    "programme_effectiveness":  0
-                }
-            },
-            {
                 "model": "partners.agreement",
-                "pk": 1574,
+                "pk": 154,
                 "fields": {
-                    "created": "2019-07-01T20:32:43.510Z",
-                    "modified": "2019-07-01T20:32:43.537Z",
-                    "partner": 1498,
-                    "country_programme": 1450,
+                    "created": "2021-03-16T16:08:38.988Z",
+                    "modified": "2021-03-16T16:08:39.020Z",
+                    "partner": 173,
+                    "country_programme": 154,
                     "agreement_type": "PCA",
-                    "agreement_number": "TST/PCA20191574",
+                    "agreement_number": "TST/PCA2021154",
                     "attached_agreement": "",
-                    "start": "2019-07-01",
-                    "end": "2019-12-31",
-                    "reference_number_year": 2019,
+                    "start": "2021-03-16",
+                    "end": "2021-12-31",
+                    "reference_number_year": 2021,
                     "special_conditions_pca": false,
-                    "signed_by_unicef_date": "2019-07-01",
+                    "signed_by_unicef_date": "2021-03-16",
                     "signed_by": null,
-                    "signed_by_partner_date": "2019-07-01",
+                    "signed_by_partner_date": "2021-03-16",
                     "partner_manager": null,
                     "status": "signed",
                     "authorized_officers": []
@@ -448,10 +478,10 @@
             },
             {
                 "model": "partners.partnerorganization",
-                "pk": 1498,
+                "pk": 173,
                 "fields": {
-                    "created": "2019-07-01T20:32:43.504Z",
-                    "modified": "2019-07-01T20:32:43.507Z",
+                    "created": "2021-03-16T16:08:38.955Z",
+                    "modified": "2021-03-16T16:08:38.983Z",
                     "partner_type": "",
                     "cso_type": null,
                     "name": "Partner 2",
@@ -497,7 +527,8 @@
                                 "q4": 0,
                                 "total": 0
                             },
-                            "follow_up_required": 0
+                            "follow_up_required": 0,
+                            "minimum_requirements": 0
                         },
                         "assurance_coverage": "void",
                         "programmatic_visits": {
@@ -514,35 +545,40 @@
                                 "q3": 0,
                                 "q4": 0,
                                 "total": 0
-                            }
+                            },
+                            "minimum_requirements": 0
                         },
                         "outstanding_findings": 0
                     },
-                    "basis_for_risk_rating": ""
+                    "basis_for_risk_rating": "",
+                    "psea_assessment_date": null,
+                    "sea_risk_rating_name": "",
+                    "highest_risk_rating_type": "",
+                    "highest_risk_rating_name": ""
                 }
             },
             {
                 "model": "reports.countryprogramme",
-                "pk": 1450,
+                "pk": 154,
                 "fields": {
                     "name": "Country Programme 2",
-                    "wbs": "0000/A0/02",
+                    "wbs": "0002/A0/01",
                     "invalid": false,
-                    "from_date": "2019-01-01",
-                    "to_date": "2019-12-31"
+                    "from_date": "2021-01-01",
+                    "to_date": "2021-12-31"
                 }
             },
             {
                 "model": "reports.result",
-                "pk": 953,
+                "pk": 56,
                 "fields": {
                     "country_programme": null,
-                    "result_type": 915,
+                    "result_type": 31,
                     "sector": null,
                     "name": "Result 0",
                     "code": null,
-                    "from_date": "2019-01-01",
-                    "to_date": "2019-12-31",
+                    "from_date": "2021-01-01",
+                    "to_date": "2021-12-31",
                     "parent": null,
                     "humanitarian_tag": false,
                     "humanitarian_marker_code": null,
@@ -557,8 +593,8 @@
                     "activity_focus_name": null,
                     "hidden": false,
                     "ram": false,
-                    "created": "2019-07-01T20:32:43.549Z",
-                    "modified": "2019-07-01T20:32:43.552Z",
+                    "created": "2021-03-16T16:08:39.063Z",
+                    "modified": "2021-03-16T16:08:39.063Z",
                     "lft": 1,
                     "rght": 2,
                     "tree_id": 1,
@@ -567,47 +603,11 @@
             },
             {
                 "model": "reports.resulttype",
-                "pk": 915,
+                "pk": 31,
                 "fields": {
                     "name": "ResultType 0"
                 }
             }
         ]
-    },
-    "mgmt_budget": {
-        "master": {
-            "model": "partners.interventionmanagementbudget",
-            "pk": 101,
-            "fields": {
-                "intervention": 101,
-                "act1_unicef": 0,
-                "act1_partner":  0,
-                "act2_unicef": 0,
-                "act2_partner":  0,
-                "act3_unicef": 0,
-                "act3_partner":  0
-            }
-        },
-        "deps": []
-    },
-    "planned_budget": {
-        "master": {
-            "model": "partners.interventionbudget",
-            "pk": 101,
-            "fields": {
-                "intervention": 101,
-                "partner_contribution": 0,
-                "unicef_cash":  0,
-                "in_kind_amount": 0,
-                "total":  0,
-                "partner_contribution_local": 0,
-                "unicef_cash_local":  0,
-                "in_kind_amount_local": 0,
-                "currency":  "USD",
-                "total_local": 0,
-                "programme_effectiveness":  0
-            }
-        },
-        "deps": []
     }
 }
