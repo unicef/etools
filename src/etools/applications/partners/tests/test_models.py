@@ -4,12 +4,12 @@ from unittest import skip
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
+from django.db import connection
 from django.test import SimpleTestCase
 from django.urls import reverse
 from django.utils import timezone
 
 from freezegun import freeze_time
-from mock import Mock, patch
 
 from etools.applications.audit.models import Engagement
 from etools.applications.audit.tests.factories import AuditFactory, SpecialAuditFactory, SpotCheckFactory
@@ -255,7 +255,7 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
         hact_min_req = self.partner_organization.hact_min_requirements
         data = {
             "audits": 0,
-            "programme_visits": programmatic_visit,
+            "programmatic_visits": programmatic_visit,
             "spot_checks": spot_check,
         }
         self.assertEqual(hact_min_req, data)
@@ -273,16 +273,19 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
         self.assertFalse(self.partner_organization.expiring_assessment_flag)
 
     def test_approaching_threshold_flag_true(self):
-        self.partner_organization.rating = models.PartnerOrganization.RATING_NOT_REQUIRED
+        self.partner_organization.highest_risk_rating_name = models.PartnerOrganization.RATING_NOT_REQUIRED
+        self.partner_organization.rating = models.PartnerOrganization.RATING_LOW_RISK_ASSUMED
         self.assertTrue(self.partner_organization.approaching_threshold_flag)
 
     def test_approaching_threshold_flag_false(self):
-        self.partner_organization.rating = models.PartnerOrganization.RATING_NOT_REQUIRED
+        self.partner_organization.highest_risk_rating_name = models.PartnerOrganization.RATING_NOT_REQUIRED
+        self.partner_organization.rating = models.PartnerOrganization.RATING_LOW
         self.partner_organization.total_ct_ytd = models.PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL - 1
         self.assertFalse(self.partner_organization.approaching_threshold_flag)
 
     def test_approaching_threshold_flag_false_moderate(self):
-        self.partner_organization.rating = models. PartnerOrganization.RATING_MEDIUM
+        self.partner_organization.highest_risk_rating_name = models.PartnerOrganization.RATING_MEDIUM
+        self.partner_organization.rating = models.PartnerOrganization.RATING_HIGH
         self.assertFalse(self.partner_organization.approaching_threshold_flag)
 
     def test_hact_min_requirements_ct_under_25k(self):
@@ -291,7 +294,7 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
         hact_min_req = self.partner_organization.hact_min_requirements
         data = {
             "audits": 0,
-            "programme_visits": 0,
+            "programmatic_visits": 0,
             "spot_checks": 0,
         }
         self.assertEqual(hact_min_req, data)
@@ -315,49 +318,57 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
     def test_hact_min_requirements_ct_between_100k_and_500k_high(self):
         self.partner_organization.net_ct_cy = 490000.00
         self.partner_organization.reported_cy = 490000.00
-        self.partner_organization.rating = models.PartnerOrganization.RATING_HIGH
+        self.partner_organization.highest_risk_rating_name = models.PartnerOrganization.RATING_HIGH_RISK_ASSUMED
+        self.partner_organization.rating = models.PartnerOrganization.RATING_MEDIUM
         self.assert_min_requirements(3, 1)
 
     def test_hact_min_requirements_ct_between_100k_and_500k_significant(self):
         self.partner_organization.net_ct_cy = 490000.00
         self.partner_organization.reported_cy = 490000.00
-        self.partner_organization.rating = models.PartnerOrganization.RATING_SIGNIFICANT
+        self.partner_organization.highest_risk_rating_name = models.PartnerOrganization.RATING_SIGNIFICANT
+        self.partner_organization.rating = models.PartnerOrganization.RATING_MEDIUM
         self.assert_min_requirements(3, 1)
 
     def test_hact_min_requirements_ct_between_100k_and_500k_moderate(self):
         self.partner_organization.net_ct_cy = 490000.00
         self.partner_organization.reported_cy = 490000.00
-        self.partner_organization.rating = models.PartnerOrganization.RATING_MEDIUM
+        self.partner_organization.highest_risk_rating_name = models.PartnerOrganization.RATING_MEDIUM
+        self.partner_organization.rating = models.PartnerOrganization.RATING_LOW
         self.assert_min_requirements(2, 1)
 
     def test_hact_min_requirements_ct_between_100k_and_500k_low(self):
         self.partner_organization.net_ct_cy = 490000.00
         self.partner_organization.reported_cy = 490000.00
-        self.partner_organization.rating = models.PartnerOrganization.RATING_LOW
+        self.partner_organization.highest_risk_rating_name = models.PartnerOrganization.RATING_LOW
+        self.partner_organization.rating = models.PartnerOrganization.RATING_HIGH
         self.assert_min_requirements(1, 1)
 
     def test_hact_min_requirements_ct_over_500k_high(self):
         self.partner_organization.net_ct_cy = 510000.00
         self.partner_organization.reported_cy = 510000.00
-        self.partner_organization.rating = models.PartnerOrganization.RATING_HIGH
+        self.partner_organization.highest_risk_rating_name = models.PartnerOrganization.RATING_HIGH
+        self.partner_organization.rating = models.PartnerOrganization.RATING_MEDIUM
         self.assert_min_requirements(4, 1)
 
     def test_hact_min_requirements_ct_over_500k_significant(self):
         self.partner_organization.net_ct_cy = 510000.00
         self.partner_organization.reported_cy = 510000.00
-        self.partner_organization.rating = models.PartnerOrganization.RATING_SIGNIFICANT
+        self.partner_organization.highest_risk_rating_name = models.PartnerOrganization.RATING_SIGNIFICANT
+        self.partner_organization.rating = models.PartnerOrganization.RATING_LOW
         self.assert_min_requirements(4, 1)
 
     def test_hact_min_requirements_ct_over_500k_moderate(self):
         self.partner_organization.net_ct_cy = 510000.00
         self.partner_organization.reported_cy = 510000.00
-        self.partner_organization.rating = models.PartnerOrganization.RATING_MEDIUM
+        self.partner_organization.highest_risk_rating_name = models.PartnerOrganization.RATING_MEDIUM
+        self.partner_organization.rating = models.PartnerOrganization.RATING_LOW
         self.assert_min_requirements(3, 1)
 
     def test_hact_min_requirements_ct_over_500k_low(self):
         self.partner_organization.net_ct_cy = 510000.00
         self.partner_organization.reported_cy = 510000.00
-        self.partner_organization.rating = models.PartnerOrganization.RATING_LOW
+        self.partner_organization.highest_risk_rating_name = models.PartnerOrganization.RATING_LOW_RISK_ASSUMED
+        self.partner_organization.rating = models.PartnerOrganization.RATING_MEDIUM
         self.assert_min_requirements(2, 1)
 
     def test_planned_visits_gov(self):
@@ -1261,12 +1272,15 @@ class TestPartnerStaffMember(BaseTenantTestCase):
         staff = PartnerStaffFactory(
             partner=partner,
         )
+        staff.user.profile.countries_available.add(connection.tenant)
         self.assertTrue(staff.active)
-        mock_send = Mock()
-        with patch("etools.applications.partners.models.pre_delete.send", mock_send):
-            staff.active = False
-            staff.save()
-        self.assertEqual(mock_send.call_count, 1)
+
+        staff.active = False
+        staff.save()
+
+        self.assertEqual(staff.user.is_active, False)
+        self.assertEqual(staff.user.profile.country, None)
+        self.assertEqual(staff.user.profile.countries_available.filter(id=connection.tenant.id).exists(), False)
 
     def test_save_update_reactivate(self):
         partner = PartnerFactory()
@@ -1274,12 +1288,15 @@ class TestPartnerStaffMember(BaseTenantTestCase):
             partner=partner,
             active=False,
         )
+        staff.user.profile.countries_available.remove(connection.tenant)
         self.assertFalse(staff.active)
-        mock_send = Mock()
-        with patch("etools.applications.partners.models.post_save.send", mock_send):
-            staff.active = True
-            staff.save()
-        self.assertEqual(mock_send.call_count, 2)
+
+        staff.active = True
+        staff.save()
+
+        self.assertEqual(staff.user.is_active, True)
+        self.assertEqual(staff.user.profile.country, connection.tenant)
+        self.assertEqual(staff.user.profile.countries_available.filter(id=connection.tenant.id).exists(), True)
 
 
 class TestAssessment(BaseTenantTestCase):

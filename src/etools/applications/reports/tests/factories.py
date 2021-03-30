@@ -1,4 +1,3 @@
-
 import datetime
 
 from django.utils import timezone
@@ -25,7 +24,7 @@ class QuarterFactory(factory.django.DjangoModelFactory):
     end_date = datetime.datetime(datetime.date.today().year, 3, 31, tzinfo=timezone.get_default_timezone())
 
 
-class CountryProgrammeFactory(factory.DjangoModelFactory):
+class CountryProgrammeFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.CountryProgramme
 
@@ -38,6 +37,7 @@ class CountryProgrammeFactory(factory.DjangoModelFactory):
 class ResultTypeFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.ResultType
+        django_get_or_create = ('name', )
 
     name = factory.Sequence(lambda n: 'ResultType {}'.format(n))
 
@@ -133,3 +133,18 @@ class SpecialReportingRequirementFactory(factory.django.DjangoModelFactory):
 
     due_date = fuzzy.FuzzyDate(datetime.date(2001, 1, 1))
     description = fuzzy.FuzzyText(length=50)
+
+
+class OfficeFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.Office
+
+    name = fuzzy.FuzzyText(length=50)
+
+
+class UserTenantProfileFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.UserTenantProfile
+        django_get_or_create = ('profile', )
+
+    office = factory.SubFactory(OfficeFactory)

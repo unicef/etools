@@ -2,7 +2,7 @@ import datetime
 
 from django.apps import apps
 from django.utils.lru_cache import lru_cache
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from etools_validator.utils import check_rigid_related
 from rest_framework import permissions
@@ -16,6 +16,9 @@ from etools.libraries.pythonlib.collections import HashableDict
 
 
 READ_ONLY_API_GROUP_NAME = 'Read-Only API'
+SENIOR_MANAGEMENT_GROUP = 'Senior Management Team'
+PARTNERSHIP_MANAGER_GROUP = 'Partnership Manager'
+REPRESENTATIVE_OFFICE_GROUP = 'Representative Office'
 
 
 class PMPPermissions:
@@ -148,6 +151,13 @@ class AgreementPermissions(PMPPermissions):
         super().__init__(**kwargs)
         inbound_check = kwargs.get('inbound_check', False)
 
+        def termination_doc_attached():
+            if self.instance.agreement_type != self.instance.PCA:
+                return True
+            if self.instance.termination_doc.exists():
+                return True
+            return False
+
         def user_added_amendment(instance):
             assert inbound_check, 'this function cannot be called unless instantiated with inbound_check=True'
             # check_rigid_related checks if there were any changes from the previous
@@ -160,7 +170,8 @@ class AgreementPermissions(PMPPermissions):
             'is type SSFA': self.instance.agreement_type == self.instance.SSFA,
             'is type MOU': self.instance.agreement_type == self.instance.MOU,
             # this condition can only be checked on data save
-            'user adds amendment': False if not inbound_check else user_added_amendment(self.instance)
+            'user adds amendment': False if not inbound_check else user_added_amendment(self.instance),
+            'termination_doc_attached': termination_doc_attached(),
         }
 
 
@@ -181,7 +192,7 @@ class PartnershipManagerPermission(permissions.BasePermission):
       - user must be (in 'Partnership Manager' group) OR
                      (listed as a partner staff member on the object)
     """
-    message = 'Accessing this item is not allowed.'
+    message = _('Accessing this item is not allowed.')
 
     def _has_access_permissions(self, user, obj):
         """True if --
@@ -189,12 +200,11 @@ class PartnershipManagerPermission(permissions.BasePermission):
               - user is 'Partnership Manager' group member OR
               - user is listed as a partner staff member on the object, assuming the object has a partner attribute
         """
-        has_access = user.is_staff or is_user_in_groups(user, ['Partnership Manager'])
+        has_access = user.is_staff or is_user_in_groups(user, [PARTNERSHIP_MANAGER_GROUP])
+        if has_access:
+            return True
 
-        has_access = has_access or \
-            (hasattr(obj, 'partner') and
-             user.profile.partner_staff_member in obj.partner.staff_members.values_list('id', flat=True))
-
+        has_access = hasattr(obj, 'partner') and obj.partner.user_is_staff_member(user)
         return has_access
 
     def has_permission(self, request, view):
@@ -203,9 +213,9 @@ class PartnershipManagerPermission(permissions.BasePermission):
         """
         if request.method in permissions.SAFE_METHODS:
             # Check permissions for read-only request
-            return request.user.is_staff or is_user_in_groups(request.user, ['Partnership Manager'])
+            return request.user.is_staff or is_user_in_groups(request.user, [PARTNERSHIP_MANAGER_GROUP])
         else:
-            return is_user_in_groups(request.user, ['Partnership Manager'])
+            return is_user_in_groups(request.user, [PARTNERSHIP_MANAGER_GROUP])
 
     def has_object_permission(self, request, view, obj):
         if request.method in permissions.SAFE_METHODS:
@@ -214,16 +224,14 @@ class PartnershipManagerPermission(permissions.BasePermission):
         else:
             # Check permissions for write request
             return self._has_access_permissions(request.user, obj) and \
-                is_user_in_groups(request.user, ['Partnership Manager'])
+                is_user_in_groups(request.user, [PARTNERSHIP_MANAGER_GROUP])
 
 
 class PartnershipManagerRepPermission(permissions.BasePermission):
-    message = 'Accessing this item is not allowed.'
+    message = _('Accessing this item is not allowed.')
 
     def _has_access_permissions(self, user, object):
-        if user.is_staff or \
-                user.profile.partner_staff_member in \
-                object.partner.staff_members.values_list('id', flat=True):
+        if user.is_staff or object.partner.user_is_staff_member(user):
             return True
 
     def has_object_permission(self, request, view, obj):
@@ -235,9 +243,9 @@ class PartnershipManagerRepPermission(permissions.BasePermission):
             return self._has_access_permissions(request.user, obj) and is_user_in_groups(
                 request.user,
                 [
-                    'Partnership Manager',
-                    'Senior Management Team',
-                    'Representative Office'
+                    PARTNERSHIP_MANAGER_GROUP,
+                    SENIOR_MANAGEMENT_GROUP,
+                    REPRESENTATIVE_OFFICE_GROUP,
                 ]
             )
 
@@ -246,9 +254,7 @@ class PartnershipSeniorManagerPermission(permissions.BasePermission):
     message = _('Accessing this item is not allowed.')
 
     def _has_access_permissions(self, user, object):
-        if user.is_staff or \
-                user.profile.partner_staff_member in \
-                object.partner.staff_members.values_list('id', flat=True):
+        if user.is_staff or object.partner.user_is_staff_member(user):
             return True
 
     def has_object_permission(self, request, view, obj):
@@ -259,7 +265,7 @@ class PartnershipSeniorManagerPermission(permissions.BasePermission):
             # Check permissions for write request
             return self._has_access_permissions(request.user, obj) and is_user_in_groups(
                 request.user,
-                ['Partnership Manager', 'Senior Management Team']
+                [PARTNERSHIP_MANAGER_GROUP, SENIOR_MANAGEMENT_GROUP]
             )
 
 

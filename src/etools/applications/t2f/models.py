@@ -5,11 +5,11 @@ from decimal import Decimal
 from django.conf import settings
 from django.contrib.postgres.fields.array import ArrayField
 from django.db import connection, models, transaction
-from django.db.models import Q
+from django.db.models import Case, F, Q, When
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.timezone import now as timezone_now
-from django.utils.translation import ugettext, ugettext_lazy as _
+from django.utils.translation import gettext as _
 
 from django_fsm import FSMField, transition
 from unicef_attachments.models import Attachment
@@ -133,7 +133,7 @@ class Travel(models.Model):
         on_delete=models.CASCADE,
     )
     office = models.ForeignKey(
-        'users.Office', null=True, blank=True, related_name='+', verbose_name=_('Office'),
+        'reports.Office', null=True, blank=True, related_name='+', verbose_name=_('Office'),
         on_delete=models.CASCADE,
     )
     section = models.ForeignKey(
@@ -223,10 +223,10 @@ class Travel(models.Model):
 
     def validate_itinerary(self):
         if self.ta_required and self.itinerary.all().count() < 2:
-            raise TransitionError(ugettext('Travel must have at least two itinerary item'))
+            raise TransitionError(_('Travel must have at least two itinerary item'))
 
         if self.ta_required and self.itinerary.filter(dsa_region=None).exists():
-            raise TransitionError(ugettext('All itinerary items has to have DSA region assigned'))
+            raise TransitionError(_('All itinerary items has to have DSA region assigned'))
 
         return True
 
@@ -321,6 +321,37 @@ class Travel(models.Model):
         return build_frontend_url('t2f', 'edit-travel', self.id)
 
 
+class TravelActivityManager(models.Manager):
+    # def get_queryset(self):
+    #     return super().get_queryset()
+    def annotated_objects(self):
+        qs = self.get_queryset()
+        qs = qs.annotate(
+            primary_ref_number=Case(When(
+                travels__traveler=F('primary_traveler'),
+                then=F('travels__reference_number')),
+                output_field=models.CharField()),
+            other_travel_ref_number=F('travels__reference_number'),
+            travel_id=Case(When(
+                travels__traveler=F('primary_traveler'),
+                then=F('travels__pk')),
+                output_field=models.CharField()),
+        )
+        # get all ids of TravelActivity that have at least one matching travel where travels_traveler==primary_traveler
+        sub = qs.exclude(travel_id__isnull=True).values_list("id", flat=True)
+
+        # There are the following scenarios:
+        # 1. Travel Activity has no travels associated with it, but action points exist related. weird case
+        # 2. Travel Activity has one or more travels but none of the travels have TA primary = Trip Traveller
+        # 3. Travel Activity has one or more travels and one of them have TA primary = Trip Traveller (traveler match)
+        # to cover everything we want to:
+        # 1. create a table of TA-Travel (one to one) where we show which TA-Travel combination has a traveler match
+        # 2. create a lst of TA ids where we know for a fact that there is one TA-Travel record with traveler match
+        # 3. exclude from the table all records without a traveler match that are not in our list
+        # The result should be a list of TAs with distinct ids with annotated travel_id when we have traveler match
+        return qs.exclude(travel_id__isnull=True, id__in=sub)
+
+
 class TravelActivity(models.Model):
     travels = models.ManyToManyField('Travel', related_name='activities', verbose_name=_('Travels'))
     travel_type = models.CharField(max_length=64, choices=TravelType.CHOICES, blank=True,
@@ -346,6 +377,8 @@ class TravelActivity(models.Model):
     primary_traveler = models.ForeignKey(
         settings.AUTH_USER_MODEL, verbose_name=_('Primary Traveler'), on_delete=models.CASCADE)
     date = models.DateField(null=True, blank=True, verbose_name=_('Date'))
+
+    objects = TravelActivityManager()
 
     class Meta:
         verbose_name_plural = _("Travel Activities")

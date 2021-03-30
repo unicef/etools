@@ -16,6 +16,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('--schema', dest='schema')
+        parser.add_argument('--year', dest='year', help='History year', type=int, default=datetime.now().year)
 
     def get_or_empty(self, hact_json, keys):
         value = hact_json
@@ -44,6 +45,10 @@ class Command(BaseCommand):
             ('Risk Rating', partner.rating),
             ('Expiring Threshold', partner.flags['expiring_assessment_flag']),
             ('Approach Threshold', partner.flags['approaching_threshold_flag']),
+            ('Last PSEA Assess. Date', partner.psea_assessment_date),
+            ('PSEA Risk Rating', partner.sea_risk_rating_name),
+            ('Highest Risk Rating Type', partner.highest_risk_rating_type),
+            ('Highest Risk Rating Name', partner.highest_risk_rating_name),
             ('Programmatic Visits Planned Q1',
              self.get_or_empty(partner_hact, ['programmatic_visits', 'planned', 'q1'])),
             ('Programmatic Visits Planned Q2',
@@ -52,7 +57,7 @@ class Command(BaseCommand):
              self.get_or_empty(partner_hact, ['programmatic_visits', 'planned', 'q3'])),
             ('Programmatic Visits Planned Q4',
              self.get_or_empty(partner_hact, ['programmatic_visits', 'planned', 'q4'])),
-            ('Programmatic Visits M.R', partner.hact_min_requirements.get('programme_visits')),
+            ('Programmatic Visits M.R', partner.hact_min_requirements.get('programmatic_visits')),
             ('Programmatic Visits Completed Q1',
              self.get_or_empty(partner_hact, ['programmatic_visits', 'completed', 'q1'])),
             ('Programmatic Visits Completed Q2',
@@ -85,7 +90,7 @@ class Command(BaseCommand):
         if options['schema']:
             countries = countries.filter(schema_name=options['schema'])
 
-        year = datetime.now().year
+        year = options.get('year')
         self.stdout.write('Freeze HACT data for {}'.format(year))
 
         for country in countries:

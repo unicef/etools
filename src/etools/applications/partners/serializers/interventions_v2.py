@@ -4,10 +4,11 @@ from operator import itemgetter
 from django.db import transaction
 from django.db.models import Q
 from django.utils.functional import cached_property
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from rest_framework import serializers
 from rest_framework.serializers import ValidationError
+from rest_framework.validators import UniqueTogetherValidator
 from unicef_attachments.fields import AttachmentSingleFileField
 from unicef_attachments.serializers import AttachmentSerializerMixin
 from unicef_locations.serializers import LocationSerializer
@@ -66,6 +67,13 @@ class InterventionAmendmentCUSerializer(AttachmentSerializerMixin, serializers.M
     class Meta:
         model = InterventionAmendment
         fields = "__all__"
+        validators = [
+            UniqueTogetherValidator(
+                queryset=InterventionAmendment.objects.all(),
+                fields=["intervention", "signed_date"],
+                message=_("There is already an amendment with this signed date."),
+            )
+        ]
 
     def validate(self, data):
         data = super().validate(data)
@@ -169,10 +177,10 @@ class BaseInterventionListSerializer(serializers.ModelSerializer):
         return [rl.cp_output.id for rl in obj.result_links.all()]
 
     def get_section_names(self, obj):
-        return [l.name for l in obj.sections.all()]
+        return [section.name for section in obj.sections.all()]
 
     def get_flagged_sections(self, obj):
-        return [l.pk for l in obj.sections.all()]
+        return [section.pk for section in obj.sections.all()]
 
     class Meta:
         model = Intervention
@@ -204,7 +212,8 @@ class BaseInterventionListSerializer(serializers.ModelSerializer):
             'total_budget',
             'metadata',
             'flagged_sections',
-            'budget_currency'
+            'budget_currency',
+            'contingency_pd',
         )
 
 
@@ -642,16 +651,20 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
         return permissions.get_permissions()
 
     def get_locations(self, obj):
-        return [l.id for l in obj.flat_locations.all()]
+        return [loc.id for loc in obj.flat_locations.all()]
 
     def get_location_names(self, obj):
-        return ['{} [{} - {}]'.format(l.name, l.gateway.name, l.p_code) for l in obj.flat_locations.all()]
+        return ['{} [{} - {}]'.format(
+            loc.name,
+            loc.gateway.name,
+            loc.p_code
+        ) for loc in obj.flat_locations.all()]
 
     def get_section_names(self, obj):
-        return [l.name for l in obj.sections.all()]
+        return [loc.name for loc in obj.sections.all()]
 
     def get_flagged_sections(self, obj):
-        return [l.id for l in obj.sections.all()]
+        return [loc.id for loc in obj.sections.all()]
 
     def get_cluster_names(self, obj):
         return [c for c in obj.intervention_clusters()]
@@ -668,6 +681,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "attachments", 'permissions', 'partner_id', "sections", "planned_visits",
             "locations", "location_names", "cluster_names", "flat_locations", "flagged_sections", "section_names",
             "in_amendment", "prc_review_attachment", "signed_pd_attachment", "donors", "donor_codes", "grants",
+            "cfei_number",
             "location_p_codes",
             "days_from_submission_to_signed",
             "days_from_review_to_signed",
@@ -878,6 +892,8 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
                     raise serializers.ValidationError(
                         _("Changes not allowed when PD is terminated.")
                     )
+            elif self.intervention.contingency_pd and self.intervention.status == Intervention.SIGNED:
+                pass
             else:
                 if not self.intervention.in_amendment and not self.intervention.termination_doc_attachment.exists():
                     raise serializers.ValidationError(

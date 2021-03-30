@@ -69,6 +69,7 @@ class AgreementDetailSerializer(serializers.ModelSerializer):
     partner_signatory = SimpleStaffMemberSerializer(source='partner_manager')
     attached_agreement_file = serializers.FileField(source="attached_agreement", read_only=True)
     attachment = AttachmentSingleFileField(read_only=True)
+    termination_doc = AttachmentSingleFileField()
     permissions = serializers.SerializerMethodField(read_only=True)
 
     def get_permissions(self, obj):
@@ -95,6 +96,7 @@ class AgreementCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotModelSe
     agreement_number = serializers.CharField(read_only=True)
     attached_agreement_file = serializers.FileField(source="attached_agreement", read_only=True)
     attachment = AttachmentSingleFileField()
+    termination_doc = AttachmentSingleFileField()
 
     class Meta:
         model = Agreement

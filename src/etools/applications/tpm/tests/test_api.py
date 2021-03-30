@@ -19,13 +19,12 @@ class TestAPIActivities(AssertTimeStampedMixin, BaseTenantTestCase, metaclass=Vi
 
     def get_fixtures(cls):
         tpm_partner = TPMPartnerFactory()
-        tpm_user = TPMUserFactory(tpm_partner=tpm_partner, email='macioce@unicef.org')
+        tpm_user = TPMUserFactory(tpm_partner=tpm_partner, email='macioce@example.com')
         location = LocationFactory()
         visit = TPMVisitFactory(status='tpm_accepted',
                                 tpm_partner=tpm_user.tpmpartners_tpmpartnerstaffmember.tpm_partner,
                                 tpm_partner_focal_points=[tpm_user.tpmpartners_tpmpartnerstaffmember],
                                 tpm_activities__count=0)
-
         activity = TPMActivityFactory(tpm_visit=visit, locations=[location])
 
         return {

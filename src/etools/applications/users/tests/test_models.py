@@ -1,10 +1,11 @@
-
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.test import SimpleTestCase
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.reports.tests.factories import OfficeFactory
 from etools.applications.users import models
-from etools.applications.users.tests.factories import CountryFactory, OfficeFactory, ProfileFactory, UserFactory
+from etools.applications.users.tests.factories import CountryFactory, ProfileFactory, UserFactory
 
 
 class TestWorkspaceCounter(BaseTenantTestCase):
@@ -112,6 +113,15 @@ class TestUserModel(BaseTenantTestCase):
 
         user = UserFactory(email='unicef@macioce.org')
         self.assertFalse(user.is_unicef_user())
+
+    def test_save(self):
+        user = UserFactory()
+        user.email = "normal@example.com"
+        user.save()
+
+        # with email with upper case characters
+        user.email = "NotNormal@example.com"
+        self.assertRaises(ValidationError, user.save)
 
 
 class TestStrUnicode(SimpleTestCase):

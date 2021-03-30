@@ -1,17 +1,23 @@
 import logging
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractBaseUser, Group, PermissionsMixin, UserManager
+from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import connection, models
 from django.db.models.signals import post_save
 from django.utils.functional import cached_property
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from django_tenants.models import TenantMixin
+from django_tenants.utils import get_public_schema_name, tenant_context
 from model_utils.models import TimeStampedModel
+
+if TYPE_CHECKING:
+    from etools.applications.partners.models import PartnerStaffMember
 
 logger = logging.getLogger(__name__)
 
@@ -73,6 +79,31 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
     def full_name(self):
         return self.get_full_name()
 
+    @cached_property
+    def partner(self):
+        staff_member = self.get_partner_staff_member()
+        return staff_member.partner if staff_member else None
+
+    def get_partner_staff_member(self) -> ['PartnerStaffMember']:
+        # just wrapper to avoid try...catch in place
+        try:
+            return self.partner_staff_member
+        except self._meta.get_field('partner_staff_member').related_model.DoesNotExist:
+            return None
+
+    def get_staff_member_country(self):
+        from etools.applications.partners.models import PartnerStaffMember
+        for country in Country.objects.exclude(name__in=[get_public_schema_name(), 'Global']).all():
+            with tenant_context(country):
+                if PartnerStaffMember.objects.filter(user=self).exists():
+                    return country
+        return None
+
+    def save(self, *args, **kwargs):
+        if self.email != self.email.lower():
+            raise ValidationError("Email must be lowercase.")
+        super().save(*args, **kwargs)
+
 
 class Country(TenantMixin):
     """
@@ -85,7 +116,15 @@ class Country(TenantMixin):
     name = models.CharField(max_length=100, verbose_name=_('Name'))
     country_short_code = models.CharField(
         max_length=10,
-        default='', blank=True, verbose_name=_('Short Code')
+        default='',
+        blank=True,
+        verbose_name=_('UNICEF Country Reference Code')
+    )
+    iso3_code = models.CharField(
+        max_length=10,
+        blank=True,
+        default='',
+        verbose_name=_("ISO3 Code"),
     )
     long_name = models.CharField(max_length=255, default='', blank=True, verbose_name=_('Long Name'))
     business_area_code = models.CharField(max_length=10, default='', blank=True, verbose_name=_('Business Area Code'))
@@ -182,7 +221,7 @@ class Office(models.Model):
     zonal_chief = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         blank=True, null=True,
-        related_name='offices',
+        related_name='offices_old',
         verbose_name='Chief',
         on_delete=models.CASCADE,
     )
@@ -215,7 +254,9 @@ class UserProfile(models.Model):
     # TODO: after migration remove the ability to add blank=True
     guid = models.CharField(max_length=40, unique=True, null=True, verbose_name=_('GUID'))
 
-    partner_staff_member = models.IntegerField(null=True, blank=True, verbose_name=_('Partner Staff Member'))
+    # legacy field; to be removed
+    _partner_staff_member = models.IntegerField(null=True, blank=True, verbose_name=_('Partner Staff Member'))
+
     country = models.ForeignKey(
         Country, null=True, blank=True, verbose_name=_('Country'),
         on_delete=models.CASCADE,

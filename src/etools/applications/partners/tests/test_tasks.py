@@ -538,11 +538,14 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
                          for i in range(3)]
 
         # Make an intervention with some associated funds reservation headers that the task should find.
-        intervention = InterventionFactory(status=Intervention.ENDED)
+        intervention = InterventionFactory(status=Intervention.ENDED, end=end_date)
         for i in range(3):
-            FundsReservationHeaderFactory(intervention=intervention, outstanding_amt=Decimal(0.00),
-                                          intervention_amt=_make_decimal(i),
-                                          actual_amt=_make_decimal(i), total_amt=_make_decimal(i))
+            FundsReservationHeaderFactory(
+                intervention=intervention,
+                outstanding_amt_local=Decimal(0.00),
+                actual_amt_local=_make_decimal(i),
+                total_amt_local=_make_decimal(i),
+            )
         interventions.append(intervention)
 
         # Create a few items that should be ignored. If they're not ignored, this test will fail.
@@ -608,9 +611,11 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
         # Make an intervention with some associated funds reservation headers that the task should find.
         intervention = InterventionFactory(status=Intervention.ENDED)
         for i in range(3):
-            FundsReservationHeaderFactory(intervention=intervention, outstanding_amt=Decimal(0.00),
-                                          intervention_amt=_make_decimal(i),
-                                          actual_amt=_make_decimal(i), total_amt=_make_decimal(i))
+            FundsReservationHeaderFactory(
+                intervention=intervention,
+                outstanding_amt_local=Decimal(0.00),
+                actual_amt_local=_make_decimal(i),
+                total_amt_local=_make_decimal(i))
         interventions.append(intervention)
 
         # Create a few items that should be ignored. If they're not ignored, this test will fail.
@@ -950,9 +955,8 @@ class TestNotifyOfInterventionsEndingSoon(PartnersTestBaseClass):
 class TestCopyAttachments(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.file_type_partner = AttachmentFileTypeFactory(
-            code="partners_partner_assessment"
-        )
+        cls.code = "partners_partner_assessment"
+        cls.file_type_partner = AttachmentFileTypeFactory()
         cls.core_value_assessment = CoreValuesAssessmentFactory(
             assessment="sample.pdf"
         )
@@ -961,7 +965,7 @@ class TestCopyAttachments(BaseTenantTestCase):
         attachment = AttachmentFactory(
             content_object=self.core_value_assessment,
             file_type=self.file_type_partner,
-            code=self.file_type_partner.code,
+            code=self.code,
             file="random.pdf"
         )
         etools.applications.partners.tasks.copy_attachments()

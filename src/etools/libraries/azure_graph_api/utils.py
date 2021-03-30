@@ -1,4 +1,3 @@
-
 import logging
 
 from etools.applications.users.tasks import AzureUserMapper
@@ -29,15 +28,18 @@ def handle_record(record):
     status = user_sync.create_or_update_user(record)
 
     record_dict = {
+        'Username*': record.get('userPrincipalName', '-'),
+        'Email*': record['mail'].lower() if record.get('mail', None) else '',
+        'Name*': record.get('givenName', '-'),
+        'Surname*': record.get('surname', '-'),
+        'Type*': record.get('userType', '-'),
+        'Company Name*': record.get('companyName', '-'),
         'ID': record.get('id', '-'),
-        'Username': record.get('userPrincipalName', '-'),
-        'Email': record.get('mail', '-'),
-        'Name': record.get('givenName', '-'),
-        'Surname': record.get('surname', '-'),
         'Phone': record.get('businessPhones', '-'),
         'Mobile': record.get('mobilePhone', '-'),
         'Department': record.get('department', '-'),
-        'Country Code [Business Area Code]': record.get('extension_f4805b4021f643d0aa596e1367d432f1_extensionAttribute1', '-'),
+        'Country Code [Business Area Code]': record.get(
+            'extension_f4805b4021f643d0aa596e1367d432f1_extensionAttribute1', '-'),
         'Country': record.get('country', '-'),
         'Index Number': record.get('extension_f4805b4021f643d0aa596e1367d432f1_extensionAttribute2', '-'),
         'Nationality': record.get('extension_f4805b4021f643d0aa596e1367d432f1_extensionAttribute3', '-'),
@@ -61,7 +63,6 @@ def handle_record(record):
 
         'office Location': record.get('officeLocation', '-'),
         'usage Location': record.get('usageLocation', '-'),
-        'Type': record.get('userType', '-'),
     }
 
     for label, value in record_dict.items():

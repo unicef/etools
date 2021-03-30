@@ -2,7 +2,7 @@ from django.conf import settings
 from django.db import connection, models
 from django.db.models import Sum
 from django.utils import timezone
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from django_fsm import FSMField, transition
 from model_utils import Choices
@@ -17,6 +17,7 @@ from etools.applications.core.permissions import import_permissions
 from etools.applications.core.urlresolvers import build_frontend_url
 from etools.applications.psea.validation import (
     assessment_assigned,
+    assessment_assigned_reassessment,
     assessment_final,
     assessment_focal_point_user,
     assessment_illegal_transition,
@@ -95,7 +96,7 @@ class Assessment(TimeStampedModel):
         STATUS_ASSIGNED: [STATUS_IN_PROGRESS],
     }
     TRANSITION_SIDE_EFFECTS = {
-        STATUS_ASSIGNED: [assessment_assigned],
+        STATUS_ASSIGNED: [assessment_assigned, assessment_assigned_reassessment],
         STATUS_SUBMITTED: [assessment_submitted],
         STATUS_REJECTED: [assessment_rejected],
         STATUS_FINAL: [assessment_final],
@@ -137,8 +138,7 @@ class Assessment(TimeStampedModel):
         ordering = ("-assessment_date",)
 
     def get_object_url(self, **kwargs):
-        # TODO double check this with frontend developers
-        return build_frontend_url('psea', 'assessment', 'detail', self.id, **kwargs)
+        return build_frontend_url('psea', 'assessments', self.id, 'details', **kwargs)
 
     def get_rejected_comment(self):
         rejected_qs = self.status_history.filter(
@@ -166,11 +166,26 @@ class Assessment(TimeStampedModel):
             return True
         return False
 
-    def get_recipients(self):
+    @property
+    def overall_rating_display(self):
+        if not self.overall_rating:
+            display = ""
+        elif self.overall_rating <= 8:
+            display = "High"
+        elif 8 < self.overall_rating <= 14:
+            display = "Moderate"
+        elif self.overall_rating >= 15:
+            display = "Low"
+        return display
+
+    def get_assessor_recipients(self):
         return self.assessor.get_recipients()
 
     def get_focal_recipients(self):
         return [u.email for u in self.focal_points.all()]
+
+    def get_all_recipients(self):
+        return self.get_assessor_recipients() + self.get_focal_recipients()
 
     def rating(self):
         if self.answers_complete():
@@ -201,6 +216,15 @@ class Assessment(TimeStampedModel):
                 return True
         return False
 
+    def user_is_external(self, user):
+        assessor_qs = Assessor.objects.filter(
+            assessment=self,
+            assessor_type=Assessor.TYPE_EXTERNAL,
+        )
+        if assessor_qs.filter(user=user).exists():
+            return True
+        return False
+
     def user_belongs(self, user):
         if self.pk and user in self.focal_points.all():
             return True
@@ -208,9 +232,13 @@ class Assessment(TimeStampedModel):
 
     def get_mail_context(self, user):
         context = {
-            "partner": self.partner,
+            "partner_name": self.partner.name,
+            "partner_vendor_number": self.partner.vendor_number,
             "url": self.get_object_url(user=user),
-            "assessment": self
+            "overall_rating": self.overall_rating_display,
+            "assessment_date": str(self.assessment_date),
+            "assessor": str(self.assessor),
+            "focal_points": ", ".join(f"{fp.get_full_name()} ({fp.email})" for fp in self.focal_points.all())
         }
         if self.status == self.STATUS_REJECTED:
             context["rejected_comment"] = self.get_rejected_comment()

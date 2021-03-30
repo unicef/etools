@@ -20,14 +20,9 @@ from etools.applications.reports.views.v1 import (
     SectionViewSet,
     UnitViewSet,
 )
+from etools.applications.reports.views.v2 import OfficeViewSet
 from etools.applications.t2f.urls import urlpatterns as t2f_patterns
-from etools.applications.users.views import (
-    CountriesViewSet,
-    GroupViewSet,
-    ModuleRedirectView,
-    OfficeViewSet,
-    UserViewSet,
-)
+from etools.applications.users.views import CountriesViewSet, GroupViewSet, ModuleRedirectView, UserViewSet
 # these imports are used to autodiscover admin forms located outside of INSTALLED_APPS(the libraries folder for example)
 from etools.libraries.locations import admin as locations_admin  # noqa: ignore=F401
 from etools.libraries.locations.views import (
@@ -79,6 +74,7 @@ urlpatterns = [
     url(r'^locations/', include('unicef_locations.urls')),
     url(r'^locations/cartodbtables/$', CartoDBTablesView.as_view(), name='cartodbtables'),
     url(r'^locations/autocomplete/$', LocationQuerySetView.as_view(), name='locations_autocomplete'),
+    url(r'^api/v1/field-monitoring/', include('etools.applications.field_monitoring.urls')),
 
     # GIS API urls
     url(r'^api/management/gis/', include('etools.applications.management.urls_gis')),

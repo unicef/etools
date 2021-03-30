@@ -11,9 +11,9 @@ from etools.applications.publics.tests.factories import (
     PublicsCurrencyFactory,
     PublicsDSARegionFactory,
 )
-from etools.applications.reports.tests.factories import ResultFactory, SectionFactory
+from etools.applications.reports.tests.factories import OfficeFactory, ResultFactory, SectionFactory
 from etools.applications.t2f import models
-from etools.applications.users.tests.factories import OfficeFactory, UserFactory
+from etools.applications.users.tests.factories import UserFactory
 
 _FUZZY_START_DATE = datetime.date(datetime.date.today().year, 1, 1)
 _FUZZY_END_DATE = datetime.date(datetime.date.today().year, 12, 31)
@@ -53,7 +53,7 @@ class TravelActivityFactory(factory.django.DjangoModelFactory):
                 self.travels.add(travel)
 
 
-class ItineraryItemFactory(factory.DjangoModelFactory):
+class ItineraryItemFactory(factory.django.DjangoModelFactory):
     origin = fuzzy.FuzzyText(length=32)
     destination = fuzzy.FuzzyText(length=32)
     departure_date = fuzzy.FuzzyDate(
@@ -77,7 +77,7 @@ class ItineraryItemFactory(factory.DjangoModelFactory):
         model = models.ItineraryItem
 
 
-class TravelFactory(factory.DjangoModelFactory):
+class TravelFactory(factory.django.DjangoModelFactory):
     traveler = factory.SubFactory(UserFactory)
     supervisor = factory.SubFactory(UserFactory)
     office = factory.SubFactory(OfficeFactory)
@@ -115,7 +115,7 @@ class FuzzyTravelStatus(factory.fuzzy.BaseFuzzyAttribute):
         )
 
 
-class TravelAttachmentFactory(factory.DjangoModelFactory):
+class TravelAttachmentFactory(factory.django.DjangoModelFactory):
     travel = factory.SubFactory(TravelFactory)
     type = fuzzy.FuzzyText(length=64)
     name = fuzzy.FuzzyText(length=50)

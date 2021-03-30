@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 set -ex
 
 # If set, use DJANGO_SETTINGS_MODULE from environment, except that we never want to use production settings
@@ -13,9 +13,9 @@ python -W ignore manage.py check
 python -W ignore manage.py makemigrations --dry-run --check
 
 # Check code style unless running under tox, in which case tox runs flake8 separately
-if [[ $RUNNING_UNDER_TOX != 1 ]] ; then
+if [[ "$(echo "$RUNNING_UNDER_TOX")" != 1 ]] ; then
     time flake8 src/
-    time isort -rc src/ --check-only
+    time isort src/ --check-only
 fi
 
 # Run unittests and coverage report

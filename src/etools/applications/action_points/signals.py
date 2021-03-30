@@ -1,4 +1,3 @@
-
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
@@ -20,5 +19,6 @@ def action_point_updated_receiver(instance, created, **kwargs):
     if relevant_ap_instance:
         if created:
             instance.send_email(instance.assigned_to, email_template, cc=[instance.assigned_by.email])
-        elif instance.tracker.has_changed('assigned_to'):
-            instance.send_email(instance.assigned_to, email_template)
+        elif not instance.tracker.has_changed('reference_number'):
+            if instance.tracker.has_changed('assigned_to'):
+                instance.send_email(instance.assigned_to, email_template)

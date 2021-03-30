@@ -27,30 +27,22 @@ from etools.applications.reports.tests.factories import CountryProgrammeFactory
 class TestCopyAttachments(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.file_type_partner = AttachmentFileTypeFactory(
-            code="partners_partner_assessment"
-        )
-        cls.file_type_agreement = AttachmentFileTypeFactory(
-            code="partners_agreement"
-        )
-        cls.file_type_assessment = AttachmentFileTypeFactory(
-            code="partners_assessment_report"
-        )
-        cls.file_type_agreement_amendment = AttachmentFileTypeFactory(
-            code="partners_agreement_amendment"
-        )
-        cls.file_type_intervention_prc_review = AttachmentFileTypeFactory(
-            code="partners_intervention_prc_review"
-        )
-        cls.file_type_intervention_signed_pd = AttachmentFileTypeFactory(
-            code="partners_intervention_signed_pd"
-        )
-        cls.file_type_intervention_amendment = AttachmentFileTypeFactory(
-            code="partners_intervention_amendment_signed"
-        )
-        cls.file_type_intervention_attachment = AttachmentFileTypeFactory(
-            code="partners_intervention_attachment"
-        )
+        cls.partner_code = "partners_partner_assessment"
+        cls.file_type_partner = AttachmentFileTypeFactory()
+        cls.agreement_code = "partners_agreement"
+        cls.file_type_agreement = AttachmentFileTypeFactory()
+        cls.assessment_code = "partners_assessment_report"
+        cls.file_type_assessment = AttachmentFileTypeFactory()
+        cls.agreement_amendment_code = "partners_agreement_amendment"
+        cls.file_type_agreement_amendment = AttachmentFileTypeFactory()
+        cls.intervention_prc_review_code = "partners_intervention_prc_review"
+        cls.file_type_intervention_prc_review = AttachmentFileTypeFactory()
+        cls.intervention_signed_pd_code = "partners_intervention_signed_pd"
+        cls.file_type_intervention_signed_pd = AttachmentFileTypeFactory()
+        cls.intervention_amendment_code = "partners_intervention_amendment_signed"
+        cls.file_type_intervention_amendment = AttachmentFileTypeFactory()
+        cls.intervention_attachment_code = "partners_intervention_attachment"
+        cls.file_type_intervention_attachment = AttachmentFileTypeFactory()
         cls.partner = PartnerFactory(
         )
         cls.core_values_assessment = CoreValuesAssessmentFactory(
@@ -59,6 +51,8 @@ class TestCopyAttachments(BaseTenantTestCase):
         cls.agreement = AgreementFactory(
             attached_agreement="sample.pdf"
         )
+        # remove attachment auto created by factory
+        Attachment.objects.filter(object_id=cls.agreement.pk).delete()
         cls.assessment = AssessmentFactory(
             report="sample.pdf"
         )
@@ -79,8 +73,7 @@ class TestCopyAttachments(BaseTenantTestCase):
     def test_partner_create(self):
         attachment_qs = Attachment.objects.filter(
             object_id=self.core_values_assessment.pk,
-            code=self.file_type_partner.code,
-            file_type=self.file_type_partner
+            code=self.partner_code,
         )
         self.assertFalse(attachment_qs.exists())
         call_command("copy_attachments")
@@ -95,7 +88,7 @@ class TestCopyAttachments(BaseTenantTestCase):
         attachment = AttachmentFactory(
             content_object=self.core_values_assessment,
             file_type=self.file_type_partner,
-            code=self.file_type_partner.code,
+            code=self.partner_code,
             file="random.pdf"
         )
         call_command("copy_attachments")
@@ -108,8 +101,7 @@ class TestCopyAttachments(BaseTenantTestCase):
     def test_agreement_create(self):
         attachment_qs = Attachment.objects.filter(
             object_id=self.agreement.pk,
-            code=self.file_type_agreement.code,
-            file_type=self.file_type_agreement
+            code=self.agreement_code,
         )
         self.assertFalse(attachment_qs.exists())
         call_command("copy_attachments")
@@ -124,7 +116,7 @@ class TestCopyAttachments(BaseTenantTestCase):
         attachment = AttachmentFactory(
             content_object=self.agreement,
             file_type=self.file_type_agreement,
-            code=self.file_type_agreement.code,
+            code=self.agreement_code,
             file="random.pdf"
         )
         call_command("copy_attachments")
@@ -137,8 +129,7 @@ class TestCopyAttachments(BaseTenantTestCase):
     def test_assessment_create(self):
         attachment_qs = Attachment.objects.filter(
             object_id=self.assessment.pk,
-            code=self.file_type_assessment.code,
-            file_type=self.file_type_assessment
+            code=self.assessment_code,
         )
         self.assertFalse(attachment_qs.exists())
         call_command("copy_attachments")
@@ -153,7 +144,7 @@ class TestCopyAttachments(BaseTenantTestCase):
         attachment = AttachmentFactory(
             content_object=self.assessment,
             file_type=self.file_type_assessment,
-            code=self.file_type_assessment.code,
+            code=self.assessment_code,
             file="random.pdf"
         )
         call_command("copy_attachments")
@@ -166,8 +157,7 @@ class TestCopyAttachments(BaseTenantTestCase):
     def test_agreement_amendment_create(self):
         attachment_qs = Attachment.objects.filter(
             object_id=self.agreement_amendment.pk,
-            code=self.file_type_agreement_amendment.code,
-            file_type=self.file_type_agreement_amendment
+            code=self.agreement_amendment_code,
         )
         self.assertFalse(attachment_qs.exists())
         call_command("copy_attachments")
@@ -182,7 +172,7 @@ class TestCopyAttachments(BaseTenantTestCase):
         attachment = AttachmentFactory(
             content_object=self.agreement_amendment,
             file_type=self.file_type_agreement_amendment,
-            code=self.file_type_agreement_amendment.code,
+            code=self.agreement_amendment_code,
             file="random.pdf"
         )
         call_command("copy_attachments")
@@ -195,13 +185,11 @@ class TestCopyAttachments(BaseTenantTestCase):
     def test_intervention_create(self):
         attachment_prc_qs = Attachment.objects.filter(
             object_id=self.intervention.pk,
-            code=self.file_type_intervention_prc_review.code,
-            file_type=self.file_type_intervention_prc_review
+            code=self.intervention_prc_review_code,
         )
         attachment_pd_qs = Attachment.objects.filter(
             object_id=self.intervention.pk,
-            code=self.file_type_intervention_signed_pd.code,
-            file_type=self.file_type_intervention_signed_pd
+            code=self.intervention_signed_pd_code,
         )
         self.assertFalse(attachment_prc_qs.exists())
         self.assertFalse(attachment_pd_qs.exists())
@@ -223,13 +211,13 @@ class TestCopyAttachments(BaseTenantTestCase):
         attachment_prc = AttachmentFactory(
             content_object=self.intervention,
             file_type=self.file_type_intervention_prc_review,
-            code=self.file_type_intervention_prc_review.code,
+            code=self.intervention_prc_review_code,
             file="random.pdf"
         )
         attachment_pd = AttachmentFactory(
             content_object=self.intervention,
             file_type=self.file_type_intervention_signed_pd,
-            code=self.file_type_intervention_signed_pd.code,
+            code=self.intervention_signed_pd_code,
             file="random.pdf"
         )
         call_command("copy_attachments")
@@ -247,8 +235,7 @@ class TestCopyAttachments(BaseTenantTestCase):
     def test_intervention_amendment_create(self):
         attachment_qs = Attachment.objects.filter(
             object_id=self.intervention_amendment.pk,
-            code=self.file_type_intervention_amendment.code,
-            file_type=self.file_type_intervention_amendment
+            code=self.intervention_amendment_code,
         )
         self.assertFalse(attachment_qs.exists())
         call_command("copy_attachments")
@@ -263,7 +250,7 @@ class TestCopyAttachments(BaseTenantTestCase):
         attachment = AttachmentFactory(
             content_object=self.intervention_amendment,
             file_type=self.file_type_intervention_amendment,
-            code=self.file_type_intervention_amendment.code,
+            code=self.intervention_amendment_code,
             file="random.pdf"
         )
         call_command("copy_attachments")
@@ -276,8 +263,7 @@ class TestCopyAttachments(BaseTenantTestCase):
     def test_intervention_attachment_create(self):
         attachment_qs = Attachment.objects.filter(
             object_id=self.intervention_attachment.pk,
-            code=self.file_type_intervention_attachment.code,
-            file_type=self.file_type_intervention_attachment
+            code=self.intervention_attachment_code,
         )
         self.assertFalse(attachment_qs.exists())
         call_command("copy_attachments")
@@ -292,7 +278,7 @@ class TestCopyAttachments(BaseTenantTestCase):
         attachment = AttachmentFactory(
             content_object=self.intervention_attachment,
             file_type=self.file_type_intervention_attachment,
-            code=self.file_type_intervention_attachment.code,
+            code=self.intervention_attachment_code,
             file="random.pdf"
         )
         call_command("copy_attachments")

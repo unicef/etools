@@ -4,15 +4,15 @@ import json
 
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField, JSONField
-from django.db import connection, models, transaction
+from django.db import connection, IntegrityError, models, transaction
 from django.db.models import Case, CharField, Count, F, Max, Min, OuterRef, Q, Subquery, Sum, When
-from django.db.models.signals import post_save, pre_delete
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.functional import cached_property
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from django_fsm import FSMField, transition
+from django_tenants.utils import get_public_schema_name
 from model_utils import Choices, FieldTracker
 from model_utils.models import TimeStampedModel
 from unicef_attachments.models import Attachment
@@ -21,16 +21,19 @@ from unicef_locations.models import Location
 
 from etools.applications.core.permissions import import_permissions
 from etools.applications.funds.models import FundsReservationHeader
-from etools.applications.partners.validation import interventions as intervention_validation
+from etools.applications.partners.validation import (
+    agreements as agreement_validation,
+    interventions as intervention_validation,
+)
 from etools.applications.partners.validation.agreements import (
     agreement_transition_to_ended_valid,
     agreement_transition_to_signed_valid,
     agreements_illegal_transition,
 )
-from etools.applications.reports.models import CountryProgramme, Indicator, Result, Section
+from etools.applications.reports.models import CountryProgramme, Indicator, Office, Result, Section
 from etools.applications.t2f.models import Travel, TravelActivity, TravelType
 from etools.applications.tpm.models import TPMActivity, TPMVisit
-from etools.applications.users.models import Office
+from etools.applications.users.models import Country
 from etools.libraries.djangolib.models import MaxDistinct, StringConcat
 from etools.libraries.pythonlib.datetime import get_current_year, get_quarter
 from etools.libraries.pythonlib.encoders import CustomJSONEncoder
@@ -157,6 +160,7 @@ def hact_default():
             'completed': 0,
         },
         'spot_checks': {
+            'minimum_requirements': 0,
             'completed': {
                 'q1': 0,
                 'q2': 0,
@@ -167,6 +171,7 @@ def hact_default():
             'follow_up_required': 0,
         },
         'programmatic_visits': {
+            'minimum_requirements': 0,
             'planned': {
                 'q1': 0,
                 'q2': 0,
@@ -196,7 +201,7 @@ class PartnerOrganizationQuerySet(models.QuerySet):
             Q(total_ct_cp__gt=0), hidden=False, *args, **kwargs)
 
     def hact_active(self, *args, **kwargs):
-        return self.filter(Q(reported_cy__gt=0) | Q(total_ct_cy__gt=0), hidden=False, *args, **kwargs)
+        return self.filter(Q(reported_cy__gt=0) | Q(total_ct_cy__gt=0), *args, **kwargs)
 
     def not_programmatic_visit_compliant(self, *args, **kwargs):
         return self.hact_active(net_ct_cy__gt=PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL,
@@ -246,6 +251,16 @@ class PartnerOrganization(TimeStampedModel):
         (RATING_MEDIUM, 'Medium'),
         (RATING_LOW, 'Low'),
         (RATING_NOT_REQUIRED, 'Not Required'),
+    )
+
+    RATING_HIGH_RISK_ASSUMED = 'High Risk Assumed'
+    RATING_LOW_RISK_ASSUMED = 'Low Risk Assumed'
+    RATING_NOT_ASSESSED = 'Not Assessed'
+
+    PSEA_RISK_RATING = RISK_RATINGS + (
+        (RATING_HIGH_RISK_ASSUMED, RATING_HIGH_RISK_ASSUMED),
+        (RATING_LOW_RISK_ASSUMED, RATING_LOW_RISK_ASSUMED),
+        (RATING_NOT_ASSESSED, RATING_NOT_ASSESSED),
     )
 
     MICRO_ASSESSMENT = 'MICRO ASSESSMENT'
@@ -486,6 +501,30 @@ class PartnerOrganization(TimeStampedModel):
     hact_values = JSONField(blank=True, null=True, default=hact_default, verbose_name='HACT')
     basis_for_risk_rating = models.CharField(
         verbose_name=_("Basis for Risk Rating"), max_length=50, default='', blank=True)
+    psea_assessment_date = models.DateTimeField(
+        verbose_name=_("Last PSEA Assess. Date"),
+        null=True,
+        blank=True,
+    )
+    sea_risk_rating_name = models.CharField(
+        max_length=150,
+        verbose_name=_("PSEA Risk Rating"),
+        blank=True,
+        default='',
+    )
+    highest_risk_rating_type = models.CharField(
+        max_length=150,
+        verbose_name=_("Highest Risk Rating Type"),
+        blank=True,
+        default='',
+    )
+    highest_risk_rating_name = models.CharField(
+        max_length=150,
+        verbose_name=_("Highest Risk Rating Name"),
+        choices=PSEA_RISK_RATING,
+        blank=True,
+        default='',
+    )
 
     tracker = FieldTracker()
     objects = PartnerOrganizationQuerySet.as_manager()
@@ -552,7 +591,7 @@ class PartnerOrganization(TimeStampedModel):
     @cached_property
     def approaching_threshold_flag(self):
         total_ct_ytd = self.total_ct_ytd or 0
-        not_required = self.rating == PartnerOrganization.RATING_NOT_REQUIRED
+        not_required = self.highest_risk_rating_name == PartnerOrganization.RATING_NOT_REQUIRED
         ct_year_overflow = total_ct_ytd > PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL
         return not_required and ct_year_overflow
 
@@ -573,18 +612,24 @@ class PartnerOrganization(TimeStampedModel):
         elif PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL < ct <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL2:
             programme_visits = 1
         elif PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL2 < ct <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL3:
-            if self.rating in [PartnerOrganization.RATING_HIGH, PartnerOrganization.RATING_SIGNIFICANT]:
+            if self.highest_risk_rating_name in [PartnerOrganization.RATING_HIGH,
+                                                 PartnerOrganization.RATING_HIGH_RISK_ASSUMED,
+                                                 PartnerOrganization.RATING_SIGNIFICANT]:
                 programme_visits = 3
-            elif self.rating in [PartnerOrganization.RATING_MEDIUM, ]:
+            elif self.highest_risk_rating_name in [PartnerOrganization.RATING_MEDIUM, ]:
                 programme_visits = 2
-            elif self.rating in [PartnerOrganization.RATING_LOW, ]:
+            elif self.highest_risk_rating_name in [PartnerOrganization.RATING_LOW,
+                                                   PartnerOrganization.RATING_LOW_RISK_ASSUMED]:
                 programme_visits = 1
         else:
-            if self.rating in [PartnerOrganization.RATING_HIGH, PartnerOrganization.RATING_SIGNIFICANT]:
+            if self.highest_risk_rating_name in [PartnerOrganization.RATING_HIGH,
+                                                 PartnerOrganization.RATING_HIGH_RISK_ASSUMED,
+                                                 PartnerOrganization.RATING_SIGNIFICANT]:
                 programme_visits = 4
-            elif self.rating in [PartnerOrganization.RATING_MEDIUM, ]:
+            elif self.highest_risk_rating_name in [PartnerOrganization.RATING_MEDIUM, ]:
                 programme_visits = 3
-            elif self.rating in [PartnerOrganization.RATING_LOW, ]:
+            elif self.highest_risk_rating_name in [PartnerOrganization.RATING_LOW,
+                                                   PartnerOrganization.RATING_LOW_RISK_ASSUMED]:
                 programme_visits = 2
         return programme_visits
 
@@ -604,7 +649,7 @@ class PartnerOrganization(TimeStampedModel):
     def hact_min_requirements(self):
 
         return {
-            'programme_visits': self.min_req_programme_visits,
+            'programmatic_visits': self.min_req_programme_visits,
             'spot_checks': self.min_req_spot_checks,
             'audits': self.min_req_audits,
         }
@@ -617,10 +662,10 @@ class PartnerOrganization(TimeStampedModel):
         sc = hact['spot_checks']['completed']['total']
         au = hact['audits']['completed']
 
-        if pv + sc + au == 0:
-            return PartnerOrganization.ASSURANCE_VOID
-        elif (pv >= self.min_req_programme_visits) & (sc >= self.min_req_spot_checks) & (au >= self.min_req_audits):
+        if (pv >= self.min_req_programme_visits) & (sc >= self.min_req_spot_checks) & (au >= self.min_req_audits):
             return PartnerOrganization.ASSURANCE_COMPLETE
+        elif pv + sc + au == 0:
+            return PartnerOrganization.ASSURANCE_VOID
         else:
             return PartnerOrganization.ASSURANCE_PARTIAL
 
@@ -662,6 +707,9 @@ class PartnerOrganization(TimeStampedModel):
         """
         :return: all completed programmatic visits
         """
+        # Avoid circular imports
+        from etools.applications.field_monitoring.data_collection.models import ActivityQuestion
+
         hact = self.get_hact_json()
 
         pv = hact['programmatic_visits']['completed']['total']
@@ -698,11 +746,22 @@ class PartnerOrganization(TimeStampedModel):
 
             tpm_total = tpmv1 + tpmv2 + tpmv3 + tpmv4
 
-            hact['programmatic_visits']['completed']['q1'] = pvq1 + tpmv1
-            hact['programmatic_visits']['completed']['q2'] = pvq2 + tpmv2
-            hact['programmatic_visits']['completed']['q3'] = pvq3 + tpmv3
-            hact['programmatic_visits']['completed']['q4'] = pvq4 + tpmv4
-            hact['programmatic_visits']['completed']['total'] = pv + tpm_total
+            # field monitoring activities qualify as programmatic visits if during a monitoring activity the hact
+            # question was answered with an overall rating and the visit is completed
+            fmvqs = ActivityQuestion.objects.filter(question__is_hact=True, partner=self,
+                                                    overall_finding__value__isnull=False,
+                                                    monitoring_activity__status="completed")
+            fmvq1 = fmvqs.filter(monitoring_activity__end_date__quarter=1).count()
+            fmvq2 = fmvqs.filter(monitoring_activity__end_date__quarter=2).count()
+            fmvq3 = fmvqs.filter(monitoring_activity__end_date__quarter=3).count()
+            fmvq4 = fmvqs.filter(monitoring_activity__end_date__quarter=4).count()
+            fmv_total = fmvq1 + fmvq2 + fmvq3 + fmvq4
+
+            hact['programmatic_visits']['completed']['q1'] = pvq1 + tpmv1 + fmvq1
+            hact['programmatic_visits']['completed']['q2'] = pvq2 + tpmv2 + fmvq2
+            hact['programmatic_visits']['completed']['q3'] = pvq3 + tpmv3 + fmvq3
+            hact['programmatic_visits']['completed']['q4'] = pvq4 + tpmv4 + fmvq4
+            hact['programmatic_visits']['completed']['total'] = pv + tpm_total + fmv_total
 
         self.hact_values = hact
         self.save()
@@ -783,9 +842,28 @@ class PartnerOrganization(TimeStampedModel):
         self.hact_values = json.dumps(hact, cls=CustomJSONEncoder)
         self.save()
 
+    def update_min_requirements(self):
+        hact = self.get_hact_json()
+        updated = []
+        for hact_eng in ['programmatic_visits', 'spot_checks', 'audits']:
+            if hact[hact_eng]['minimum_requirements'] != self.hact_min_requirements[hact_eng]:
+                hact[hact_eng]['minimum_requirements'] = self.hact_min_requirements[hact_eng]
+                updated.append(hact_eng)
+        if updated:
+            self.hact_values = json.dumps(hact, cls=CustomJSONEncoder)
+            self.save()
+            return updated
+
     def get_admin_url(self):
         admin_url_name = 'admin:partners_partnerorganization_change'
         return reverse(admin_url_name, args=(self.id,))
+
+    def user_is_staff_member(self, user):
+        staff_member = user.get_partner_staff_member()
+        if not staff_member:
+            return False
+
+        return staff_member.id in self.staff_members.values_list('id', flat=True)
 
 
 class CoreValuesAssessment(TimeStampedModel):
@@ -825,9 +903,17 @@ class PartnerStaffMember(TimeStampedModel):
         related_name='staff_members',
         on_delete=models.CASCADE,
     )
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        verbose_name=_("User"),
+        related_name='partner_staff_member',
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+    )
     title = models.CharField(
         verbose_name=_("Title"),
-        max_length=64,
+        max_length=100,
         null=True,
         blank=True,
     )
@@ -865,24 +951,36 @@ class PartnerStaffMember(TimeStampedModel):
             self.partner.name
         )
 
-    # TODO: instead of signals we need this transactional
-    def reactivate_signal(self):
-        # sends a signal to activate the user
-        post_save.send(PartnerStaffMember, instance=self, created=True)
-
-    def deactivate_signal(self):
-        # sends a signal to deactivate user and remove partnerstaffmember link
-        pre_delete.send(PartnerStaffMember, instance=self)
-
+    @transaction.atomic
     def save(self, **kwargs):
-        # if the instance exists and active was changed, re-associate user
-        if self.pk:
-            # get the instance that exists in the db to compare active states
-            existing_instance = PartnerStaffMember.objects.get(pk=self.pk)
-            if existing_instance.active and not self.active:
-                self.deactivate_signal()
-            elif not existing_instance.active and self.active:
-                self.reactivate_signal()
+        """
+        core ideas:
+        1. user with profile should exists on create if staff member activation status is being changed
+        2. only one user staff member can be active through all tenants
+        """
+
+        # make sure no other partner staff records exist with matching email
+        if not self.pk and self.user:
+            if bool(self.user.get_staff_member_country()):
+                raise IntegrityError(
+                    "Partner Staff Member record already exists with matching email.",
+                )
+
+        if self.user and self.tracker.has_changed('active'):
+            if self.active:
+                # staff is activated
+                self.user.profile.countries_available.add(connection.tenant)
+                self.user.profile.country = connection.tenant
+                self.user.profile.save()
+            else:
+                # staff is deactivated
+                self.user.profile.countries_available.remove(connection.tenant)
+                # using first() here because public schema unavailable during testing
+                self.user.profile.country = Country.objects.filter(schema_name=get_public_schema_name()).first()
+                self.user.profile.save()
+
+            self.user.is_active = self.active
+            self.user.save()
 
         return super().save(**kwargs)
 
@@ -1150,6 +1248,13 @@ class Agreement(TimeStampedModel):
         code='partners_agreement',
         blank=True
     )
+    termination_doc = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Termination document for PCAs'),
+        code='partners_agreement_termination_doc',
+        blank=True,
+        null=True
+    )
     start = models.DateField(
         verbose_name=_("Start Date"),
         null=True,
@@ -1215,8 +1320,6 @@ class Agreement(TimeStampedModel):
             self.partner.name,
             self.start.strftime('%d-%m-%Y') if self.start else '',
             self.end.strftime('%d-%m-%Y') if self.end else '',
-            self.signed_by_partner_date,
-            self.signed_by_unicef_date
         )
 
     def get_object_url(self):
@@ -1307,10 +1410,17 @@ class Agreement(TimeStampedModel):
         pass
 
     @transition(field=status,
+                source=[SIGNED],
+                target=[TERMINATED, SUSPENDED],
+                conditions=[agreement_validation.transition_to_terminated])
+    def transition_to_terminated(self):
+        pass
+
+    @transition(field=status,
                 source=[DRAFT],
                 target=[TERMINATED, SUSPENDED],
                 conditions=[agreements_illegal_transition])
-    def transition_to_terminated(self):
+    def transition_to_terminated_illegal(self):
         pass
 
     @transaction.atomic
@@ -1533,7 +1643,7 @@ class Intervention(TimeStampedModel):
     Relates to :model:`reports.CountryProgramme`
     Relates to :model:`AUTH_USER_MODEL`
     Relates to :model:`partners.PartnerStaffMember`
-    Relates to :model:`users.Office`
+    Relates to :model:`reports.Office`
     """
 
     DRAFT = 'draft'
@@ -1616,6 +1726,13 @@ class Intervention(TimeStampedModel):
         blank=True,
         choices=INTERVENTION_STATUS,
         default=DRAFT
+    )
+    cfei_number = models.CharField(
+        verbose_name=_("UNPP Number"),
+        max_length=150,
+        blank=True,
+        null=True,
+        default="",
     )
     # dates
     start = models.DateField(

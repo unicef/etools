@@ -1,4 +1,3 @@
-import json
 import logging
 from datetime import datetime
 from decimal import Decimal
@@ -6,7 +5,7 @@ from decimal import Decimal
 from django.core.exceptions import ValidationError
 from django.db import connection, transaction
 
-from unicef_vision.loaders import VISION_NO_DATA_MESSAGE
+from unicef_vision.settings import INSIGHT_DATE_FORMAT
 from unicef_vision.synchronizers import FileDataSynchronizer
 from unicef_vision.utils import comp_decimals
 
@@ -19,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 class PartnerSynchronizer(VisionDataTenantSynchronizer):
 
-    ENDPOINT = 'GetPartnerDetailsInfo_json'
+    ENDPOINT = 'partners'
     REQUIRED_KEYS = (
         'PARTNER_TYPE_DESC',
         'VENDOR_NAME',
@@ -45,11 +44,17 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
         'MARKED_FOR_DELETION',
         'POSTING_BLOCK',
         'PARTNER_TYPE_DESC',
+        'PSEA_ASSESSMENT_DATE',
+        'SEA_RISK_RATING_NAME',
+        'HIGEST_RISK_RATING_TYPE',
+        'HIGEST_RISK_RATING',
+        'SEARCH_TERM1',
     )
 
     DATE_FIELDS = (
         'DATE_OF_ASSESSMENT',
         'CORE_VALUE_ASSESSMENT_DT',
+        'PSEA_ASSESSMENT_DATE',
     )
 
     MAPPING = {
@@ -73,11 +78,13 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
         'total_ct_cy': "TOTAL_CASH_TRANSFERRED_CY",
         'net_ct_cy': 'NET_CASH_TRANSFERRED_CY',
         'reported_cy': 'REPORTED_CY',
-        'total_ct_ytd': 'TOTAL_CASH_TRANSFERRED_YTD'
+        'total_ct_ytd': 'TOTAL_CASH_TRANSFERRED_YTD',
+        'psea_assessment_date': 'PSEA_ASSESSMENT_DATE',
+        'sea_risk_rating_name': 'SEA_RISK_RATING_NAME',
+        'highest_risk_rating_type': 'HIGEST_RISK_RATING_TYPE',
+        'highest_risk_rating_name': 'HIGEST_RISK_RATING',
+        'short_name': 'SEARCH_TERM1',
     }
-
-    def _convert_records(self, records):
-        return json.loads(records)['ROWSET']['ROW']
 
     def _filter_records(self, records):
         records = super()._filter_records(records)
@@ -88,10 +95,6 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
             return True
 
         return [rec for rec in records if bad_record(rec)]
-
-    @staticmethod
-    def _get_json(data):
-        return [] if data == VISION_NO_DATA_MESSAGE else data
 
     def _changed_fields(self, local_obj, api_obj):
         fields = [
@@ -109,6 +112,7 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
             'rating',
             'type_of_assessment',
             'blocked',
+            "sea_risk_rating_name",
         ]
         for field in fields:
             mapped_key = self.MAPPING[field]
@@ -116,8 +120,8 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
 
             if mapped_key in self.DATE_FIELDS:
                 apiobj_field = None
-                if mapped_key in api_obj:
-                    datetime.strptime(api_obj[mapped_key], '%d-%b-%y')
+                if mapped_key in api_obj and api_obj[mapped_key]:
+                    datetime.strptime(api_obj[mapped_key], INSIGHT_DATE_FORMAT)
 
             if field == 'partner_type':
                 apiobj_field = self.get_partner_type(api_obj)
@@ -145,9 +149,10 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
                 logger.info('Partner {} skipped, because PartnerType is {}'.format(
                     partner['VENDOR_NAME'], partner['PARTNER_TYPE_DESC']
                 ))
+
                 if partner_org.id:
-                    partner_org.deleted_flag = True if partner.get('MARKED_FOR_DELETION', None) else False
-                    partner_org.blocked = True if partner.get('POSTING_BLOCK', None) else False
+                    partner_org.deleted_flag = bool(partner['MARKED_FOR_DELETION'])
+                    partner_org.blocked = bool(partner['POSTING_BLOCK'])
                     partner_org.hidden = True
                     partner_org.save()
                 return processed
@@ -165,12 +170,12 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
                 partner_org.email = partner.get('EMAIL', '')
                 partner_org.core_values_assessment_date = datetime.strptime(
                     partner['CORE_VALUE_ASSESSMENT_DT'],
-                    '%d-%b-%y') if 'CORE_VALUE_ASSESSMENT_DT' in partner else None
+                    '%d-%b-%y') if partner['CORE_VALUE_ASSESSMENT_DT'] else None
                 partner_org.last_assessment_date = datetime.strptime(
-                    partner['DATE_OF_ASSESSMENT'], '%d-%b-%y') if 'DATE_OF_ASSESSMENT' in partner else None
+                    partner['DATE_OF_ASSESSMENT'], '%d-%b-%y') if partner["DATE_OF_ASSESSMENT"] else None
                 partner_org.partner_type = self.get_partner_type(partner)
-                partner_org.deleted_flag = True if 'MARKED_FOR_DELETION' in partner else False
-                posting_block = True if 'POSTING_BLOCK' in partner else False
+                partner_org.deleted_flag = bool(partner['MARKED_FOR_DELETION'])
+                posting_block = bool(partner['POSTING_BLOCK'])
 
                 if posting_block and not partner_org.blocked:  # i'm blocking the partner now
                     notify_block = True
@@ -178,6 +183,13 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
 
                 partner_org.hidden = partner_org.deleted_flag or partner_org.blocked or partner_org.manually_blocked
                 partner_org.vision_synced = True
+                partner_org.short_name = partner['SEARCH_TERM1'] or ''
+                partner_org.highest_risk_rating_name = self.get_partner_higest_rating(partner)
+                partner_org.highest_risk_rating_type = partner.get("HIGEST_RISK_RATING_TYPE", "")
+                partner_org.psea_assessment_date = datetime.strptime(
+                    partner['PSEA_ASSESSMENT_DATE'], INSIGHT_DATE_FORMAT) if partner['PSEA_ASSESSMENT_DATE'] else None
+                partner_org.sea_risk_rating_name = partner["SEA_RISK_RATING_NAME"] \
+                    if partner["SEA_RISK_RATING_NAME"] else ''
                 saving = True
 
             if full_sync and (
@@ -249,7 +261,7 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
             'COMMUNITY BASED ORGANIZATION': 'Community Based Organization',
             'ACADEMIC INSTITUTION': 'Academic Institution'
         }
-        if 'CSO_TYPE' in partner and partner['CSO_TYPE'].upper() in cso_type_mapping:
+        if partner['CSO_TYPE'] and partner['CSO_TYPE'].upper() in cso_type_mapping:
             return cso_type_mapping[partner['CSO_TYPE'].upper()]
 
     @staticmethod
@@ -260,7 +272,8 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
             'GOVERNMENT': 'Government',
             'UN AGENCY': 'UN Agency',
         }
-        return type_mapping.get(partner['PARTNER_TYPE_DESC'].upper(), None)
+        if partner['PARTNER_TYPE_DESC']:
+            return type_mapping.get(partner['PARTNER_TYPE_DESC'].upper(), None)
 
     @staticmethod
     def get_partner_rating(partner):
@@ -268,9 +281,14 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
         return allowed_risk_rating.get(partner.get('RISK_RATING', ''), '')
 
     @staticmethod
+    def get_partner_higest_rating(partner):
+        allowed_risk_rating = dict([(x[1], x[0]) for x in PartnerOrganization.PSEA_RISK_RATING])
+        return allowed_risk_rating.get(partner.get('HIGEST_RISK_RATING', ''), '')
+
+    @staticmethod
     def get_type_of_assessment(partner):
         type_of_assessments = dict(PartnerOrganization.TYPE_OF_ASSESSMENT)
-        if 'TYPE_OF_ASSESSMENT' in partner:
+        if partner['TYPE_OF_ASSESSMENT']:
             return type_of_assessments.get(partner['TYPE_OF_ASSESSMENT'].upper(), partner['TYPE_OF_ASSESSMENT'])
         return ''
 
@@ -289,7 +307,7 @@ class DirectCashTransferSynchronizer(VisionDataTenantSynchronizer):
 
     model = PartnerOrganization
 
-    ENDPOINT = 'GetDCTInfo_json'
+    ENDPOINT = 'dcts'
     UNIQUE_KEY = 'VENDOR_CODE'
 
     REQUIRED_KEYS = (
@@ -332,7 +350,7 @@ class DirectCashTransferSynchronizer(VisionDataTenantSynchronizer):
             if vendor_code not in dcts:
                 dcts[vendor_code] = {key: 0 for key, value in self.MAPPING.items()}
             for key, value in self.MAPPING.items():
-                dcts[vendor_code][key] += record[value]
+                dcts[vendor_code][key] += float(record[value])
         return dcts
 
     @transaction.atomic
@@ -349,11 +367,7 @@ class DirectCashTransferSynchronizer(VisionDataTenantSynchronizer):
                 logger.info('No object found')
             except ValidationError:
                 logger.info('Validation error')
-
         return processed
-
-    def _convert_records(self, records):
-        return json.loads(records)
 
     def _save_records(self, records):
         filtered_records = self._filter_records(records)

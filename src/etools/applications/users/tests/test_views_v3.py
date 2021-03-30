@@ -5,6 +5,7 @@ from django.urls import reverse
 
 from rest_framework import status
 
+from etools.applications.audit.models import Auditor
 from etools.applications.audit.tests.factories import AuditorUserFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.tpm.tests.factories import SimpleTPMPartnerFactory, TPMPartnerStaffMemberFactory
@@ -298,6 +299,8 @@ class TestExternalUserAPIView(BaseTenantTestCase):
         self.assertTrue(user_qs.exists())
         user = user_qs.first()
         self.assertIn(self.tenant, user.profile.countries_available.all())
+        self.assertEqual(self.tenant, user.profile.country_override)
+        self.assertIn(Auditor.as_group(), user.groups.all())
 
     def test_post_exists(self):
         profile = ProfileFactory()
@@ -338,6 +341,21 @@ class TestExternalUserAPIView(BaseTenantTestCase):
             user=self.unicef_staff,
             data={
                 "email": "test@unicef.org",
+                "first_name": "Joe",
+                "last_name": "Soap",
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("email", response.data)
+
+    def test_post_invalid_email(self):
+        response = self.forced_auth_req(
+            'post',
+            reverse("users_v3:external-list"),
+            user=self.unicef_staff,
+            data={
+                "email": "TEST@example.com",
                 "first_name": "Joe",
                 "last_name": "Soap",
             }

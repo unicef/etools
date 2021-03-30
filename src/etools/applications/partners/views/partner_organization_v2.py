@@ -16,7 +16,7 @@ from rest_framework.generics import (
     ListCreateAPIView,
     RetrieveUpdateDestroyAPIView,
 )
-from rest_framework.permissions import IsAdminUser, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_csv import renderers as r
 from unicef_restlib.views import QueryStringFilterMixin
@@ -74,10 +74,12 @@ from etools.applications.partners.synchronizers import PartnerSynchronizer
 from etools.applications.partners.views.helpers import set_tenant_or_fail
 from etools.applications.t2f.models import Travel, TravelActivity, TravelType
 from etools.libraries.djangolib.models import StringConcat
-from etools.libraries.djangolib.views import ExportFilenameMixin
+from etools.libraries.djangolib.views import ExportFilenameMixin, import ExternalModuleFilterMixin
 
 
-class PartnerOrganizationListAPIView(QueryStringFilterMixin, ExportModelMixin, ListCreateAPIView):
+
+class PartnerOrganizationListAPIView(ExternalModuleFilterMixin, QueryStringFilterMixin, ExportModelMixin,
+                                     ListCreateAPIView):
     """
     Create new Partners.
     Returns a list of Partners.
@@ -95,8 +97,15 @@ class PartnerOrganizationListAPIView(QueryStringFilterMixin, ExportModelMixin, L
         ('partner_type', 'partner_type__in'),
         ('cso_type', 'cso_type__in'),
         ('rating', 'rating__in'),
+        ('sea_risk_rating', 'sea_risk_rating_name__in'),
+        ('psea_assessment_date_before', 'psea_assessment_date__lt'),
+        ('psea_assessment_date_after', 'psea_assessment_date__gt'),
     )
     search_terms = ('name__icontains', 'vendor_number__icontains', 'short_name__icontains')
+    module2filters = {
+        'tpm': ['activity__tpmactivity__tpm_visit__tpm_partner__staff_members__user', ],
+        'psea': ['psea_assessment__assessor__auditor_firm_staff__user', 'psea_assessment__assessor__user']
+    }
     filename = 'partner'
 
     def get_serializer_class(self, format=None):
@@ -115,17 +124,8 @@ class PartnerOrganizationListAPIView(QueryStringFilterMixin, ExportModelMixin, L
         return super().get_serializer_class()
 
     def get_queryset(self, format=None):
-        q = PartnerOrganization.objects.all()
+        qs = super().get_queryset()
         query_params = self.request.query_params
-        user = self.request.user
-        if not user.is_unicef_user() and not user.groups.filter(name="Read-Only API").exists():
-            module = query_params.get('externals_module', None)
-            if module == "psea":
-                q = q.filter(Q(psea_assessment__assessor__auditor_firm_staff__user=user) |
-                             Q(psea_assessment__assessor__user=user))
-            else:
-                # if no module query param or module has an unexpected value return none
-                return PartnerOrganization.objects.none()
 
         workspace = query_params.get('workspace', None)
         if workspace:
@@ -158,8 +158,8 @@ class PartnerOrganizationListAPIView(QueryStringFilterMixin, ExportModelMixin, L
 
             if queries:
                 expression = functools.reduce(operator.and_, queries)
-                q = q.filter(expression)
-        return q
+                qs = qs.filter(expression)
+        return qs
 
     def list(self, request, format=None):
         """
@@ -222,7 +222,7 @@ class PartnerOrganizationDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroy
 class PartnerOrganizationDashboardAPIView(ExportFilenameMixin, ExportModelMixin, QueryStringFilterMixin, ListAPIView):
     """Returns a list of Implementing partners for the dashboard."""
 
-    permission_classes = (IsAuthenticatedOrReadOnly,)
+    permission_classes = (IsAuthenticated,)
     serializer_class = PartnerOrganizationDashboardSerializer
     filename = 'IP_dashboard'
     renderer_classes = (r.JSONRenderer, PartnerOrganizationDashboardCsvRenderer)
@@ -389,7 +389,7 @@ class PlannedEngagementAPIView(ListAPIView):
     serializer_class = PlannedEngagementSerializer
 
 
-class PartnerStaffMemberListAPIVIew(ExportModelMixin, ListAPIView):
+class PartnerStaffMemberListAPIVIew(ExternalModuleFilterMixin, ExportModelMixin, ListAPIView):
     """
     Returns a list of all Partner staff members
     """
@@ -402,21 +402,10 @@ class PartnerStaffMemberListAPIVIew(ExportModelMixin, ListAPIView):
         r.CSVRenderer,
         CSVFlatRenderer,
     )
-
-    def get_queryset(self):
-        qs = super().get_queryset()
-        query_params = self.request.query_params
-        user = self.request.user
-        if not user.is_unicef_user() and not user.groups.filter(name="Read-Only API").exists():
-            module = query_params.get('externals_module', None)
-            if module == "psea":
-                # make sure the user can see these
-                qs = qs.filter(Q(partner__psea_assessment__assessor__auditor_firm_staff__user=user) |
-                               Q(partner__psea_assessment__assessor__user=user))
-            else:
-                # if no module query param or module has an unexpected value return none
-                return PartnerStaffMember.objects.none()
-        return qs
+    module2filters = {
+        'psea': ['partner__psea_assessment__assessor__auditor_firm_staff__user',
+                 'partner__psea_assessment__assessor__user']
+    }
 
     def get_serializer_class(self, format=None):
         """
@@ -483,9 +472,9 @@ class PartnerOrganizationAddView(CreateAPIView):
             return Response({"error": "No vendor number provided for Partner Organization"},
                             status=status.HTTP_400_BAD_REQUEST)
 
-        valid_response, response = get_data_from_insight('GetPartnerDetailsInfo_json/{vendor_code}',
+        valid_response, response = get_data_from_insight('partners/?vendor={vendor_code}',
                                                          {"vendor_code": vendor})
-        if not valid_response:
+        if not valid_response and "ROWSET" not in response:
             return Response({"error": response}, status=status.HTTP_400_BAD_REQUEST)
 
         partner_resp = response["ROWSET"]["ROW"]
@@ -501,7 +490,6 @@ class PartnerOrganizationAddView(CreateAPIView):
         if not partner_sync._filter_records([partner_resp]):
             return Response({"error": 'Partner skipped because one or more of the required fields are missing'},
                             status=status.HTTP_400_BAD_REQUEST)
-
         partner_sync._partner_save(partner_resp, full_sync=False)
 
         partner = PartnerOrganization.objects.get(

@@ -2,6 +2,7 @@ import datetime
 import json
 
 from django.contrib.auth import get_user_model
+from django.db import connection
 from django.db.models import Q
 from django.utils import timezone
 
@@ -12,6 +13,7 @@ from unicef_attachments.serializers import AttachmentSerializerMixin
 from unicef_snapshot.serializers import SnapshotModelSerializer
 
 from etools.applications.partners.models import (
+    Agreement,
     Assessment,
     CoreValuesAssessment,
     Intervention,
@@ -38,6 +40,7 @@ class CoreValuesAssessmentSerializer(AttachmentSerializerMixin, serializers.Mode
 
 
 class PartnerStaffMemberCreateSerializer(serializers.ModelSerializer):
+    # legacy serializer; not actually being used for creating
 
     class Meta:
         model = PartnerStaffMember
@@ -55,11 +58,15 @@ class PartnerStaffMemberCreateSerializer(serializers.ModelSerializer):
             raise ValidationError({'active': 'New Staff Member needs to be active at the moment of creation'})
         try:
             existing_user = User.objects.filter(Q(username=email) | Q(email=email)).get()
-            if existing_user.profile.partner_staff_member:
-                raise ValidationError("The email {} for the partner contact is used by another partner contact. "
-                                      "Email has to be unique to proceed.".format(email))
         except User.DoesNotExist:
             pass
+        else:
+            if bool(existing_user.staff_member_country()):
+                raise ValidationError(
+                    "The email {} for the partner contact is used by another "
+                    "partner contact. Email has to be unique to "
+                    "proceed.".format(email)
+                )
 
         return data
 
@@ -105,46 +112,109 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = PartnerStaffMember
         fields = "__all__"
+        read_only_fields = ['user', ]
 
     def validate(self, data):
         data = super().validate(data)
         email = data.get('email', "")
-        active = data.get('active', "")
+        active = data.get('active')
         User = get_user_model()
 
-        try:
-            existing_user = User.objects.get(email=email)
-        except User.DoesNotExist:
-            # this is a new user
-            existing_user = None
-
-        if existing_user and not self.instance and existing_user.profile.partner_staff_member:
-            raise ValidationError(
-                {'active': 'The email for the partner contact is used by another partner contact. Email has to be '
-                           'unique to proceed {}'.format(email)})
-        else:
-            staff_member_qs = PartnerStaffMember.objects.filter(email=email)
-            if not self.instance and staff_member_qs.exists():
-                raise ValidationError({"email": "Email address in use already."})
-
-        # make sure email addresses are not editable after creation.. user must be removed and re-added
-        if self.instance:
-            if email != self.instance.email:
+        if not self.instance:
+            if email != email.lower():
                 raise ValidationError(
-                    "User emails cannot be changed, please remove the user and add another one: {}".format(email))
-
-            # when adding the active tag to a previously untagged user
-            # make sure this user has not already been associated with another partnership.
-            # TODO: Users should have a json field with country partnerhip pairs not just partnerships
-            if active and not self.instance.active and \
-                    existing_user and existing_user.profile.partner_staff_member and \
-                    existing_user.profile.partner_staff_member != self.instance.pk:
-                raise ValidationError(
-                    {'active':
-                     'The Partner Staff member you are trying to activate is associated with a different partnership'}
+                    {"email": "Email cannot have uppercase characters."},
                 )
 
+            try:
+                user = User.objects.get(email=email)
+            except User.DoesNotExist:
+                pass
+
+            else:
+                if user.is_unicef_user():
+                    raise ValidationError('Unable to associate staff member to UNICEF user')
+
+                if bool(user.get_staff_member_country()):
+                    raise ValidationError(
+                        {
+                            'active': 'The email for the partner contact is used by another partner contact. '
+                                      'Email has to be unique to proceed {}'.format(email)
+                        }
+                    )
+
+                data['user'] = user
+        else:
+            # make sure email addresses are not editable after creation.. user must be removed and re-added
+            if email != self.instance.email:
+                raise ValidationError(
+                    {
+                        "email": "User emails cannot be changed, please remove"
+                        " the user and add another one: {}".format(email)
+                    }
+                )
+
+            # when adding the active tag to a previously untagged user
+            if active and not self.instance.active:
+                # make sure this user has not already been associated with another partnership.
+                try:
+                    user = User.objects.get(email=email)
+                except User.DoesNotExist:
+                    pass
+                else:
+                    psm_country = user.get_staff_member_country()
+                    if psm_country and psm_country != connection.tenant:
+                        raise ValidationError({
+                            'active': 'The Partner Staff member you are trying to activate is associated '
+                                      'with a different Partner Organization'
+                        })
+
+            # disabled is unavailable if user already synced to PRP to avoid data inconsistencies
+            if self.instance.active and not active:
+                if Intervention.objects.filter(
+                    # todo epd: Q(date_sent_to_partner__isnull=False, agreement__partner__staff_members=self.instance) |
+                    Q(
+                        ~Q(status=Intervention.DRAFT),
+                        Q(partner_focal_points=self.instance) | Q(partner_authorized_officer_signatory=self.instance),
+                    ),
+                ).exists():
+                    raise ValidationError({'active': 'User already synced to PRP and cannot be disabled. '
+                                                     'Please instruct the partner to disable from PRP'})
+
         return data
+
+    def create(self, validated_data):
+        User = get_user_model()
+        if 'user' not in validated_data:
+            validated_data['user'] = User.objects.create(
+                first_name=validated_data.get('first_name'),
+                last_name=validated_data.get('first_name'),
+                username=validated_data['email'],
+                email=validated_data['email'],
+                is_staff=False,
+                is_active=True,
+            )
+
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        instance = super().update(instance, validated_data)
+
+        # if inactive, remove from DRAFT Agreements and PDs
+        if not instance.active:
+            agreement_qs = instance.agreement_authorizations.filter(
+                status=Agreement.DRAFT,
+            )
+            for agreement in agreement_qs.all():
+                agreement.authorized_officers.remove(instance)
+            pd_qs = Intervention.objects.filter(
+                status=Intervention.DRAFT,
+                partner_focal_points=instance,
+            )
+            for pd in pd_qs.all():
+                pd.partner_focal_points.remove(instance)
+
+        return instance
 
 
 class PartnerStaffMemberDetailSerializer(serializers.ModelSerializer):
@@ -201,6 +271,8 @@ class PartnerOrganizationListSerializer(serializers.ModelSerializer):
             "total_ct_ytd",
             "hidden",
             "basis_for_risk_rating",
+            "psea_assessment_date",
+            "sea_risk_rating_name",
         )
 
 
@@ -329,6 +401,9 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
     core_values_assessments = CoreValuesAssessmentSerializer(many=True, read_only=True, required=False)
     partner_type_slug = serializers.ReadOnlyField()
     flags = serializers.ReadOnlyField()
+    sea_risk_rating_name = serializers.CharField(label="psea_risk_rating")
+    highest_risk_rating_type = serializers.CharField(label="highest_risk_type")
+    highest_risk_rating_name = serializers.CharField(label="highest_risk_rating")
 
     def get_hact_values(self, obj):
         return json.loads(obj.hact_values) if isinstance(obj.hact_values, str) else obj.hact_values

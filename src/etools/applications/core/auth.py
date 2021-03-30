@@ -6,7 +6,12 @@ from django.contrib.auth.models import Group
 from django.http import HttpResponseRedirect
 
 import jwt
-from rest_framework.authentication import BasicAuthentication, SessionAuthentication, TokenAuthentication
+from rest_framework.authentication import (
+    BasicAuthentication,
+    get_authorization_header,
+    SessionAuthentication,
+    TokenAuthentication,
+)
 from rest_framework.exceptions import AuthenticationFailed, PermissionDenied
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from rest_framework_jwt.settings import api_settings
@@ -65,7 +70,7 @@ def create_user(strategy, details, backend, user=None, *args, **kwargs):
     }
 
 
-def user_details(strategy, details, user=None, *args, **kwargs):
+def user_details(strategy, details, backend, user=None, *args, **kwargs):
     # This is where we update the user
     # see what the property to map by is here
     if user:
@@ -92,13 +97,14 @@ def user_details(strategy, details, user=None, *args, **kwargs):
         #         user.profile.country = country
         #         user.profile.save()
 
-    return social_core_user.user_details(strategy, details, user, *args, **kwargs)
+    return social_core_user.user_details(strategy, details, backend, user, *args, **kwargs)
 
 
 class CustomAzureADBBCOAuth2(AzureADB2COAuth2):
+    BASE_URL = 'https://{tenant_id}.b2clogin.com/{tenant_id}.onmicrosoft.com'
 
     def __init__(self, *args, **kwargs):
-        super(CustomAzureADBBCOAuth2, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.redirect_uri = settings.HOST + '/social/complete/azuread-b2c-oauth2/'
 
 
@@ -123,13 +129,12 @@ class CustomSocialAuthExceptionMiddleware(SocialAuthExceptionMiddleware):
             if 'AADB2C90118' in error_description:
                 auth_class = CustomAzureADBBCOAuth2()
                 redirect_home = auth_class.get_redirect_uri()
-                redirect_url = 'https://login.microsoftonline.com/' + \
-                               settings.TENANT_ID + \
-                               "/oauth2/v2.0/authorize?p=" + \
-                               settings.SOCIAL_PASSWORD_RESET_POLICY + \
-                               "&client_id=" + settings.KEY + \
-                               "&nonce=defaultNonce&redirect_uri=" + redirect_home + \
-                               "&scope=openid+email&response_type=code"
+                redirect_url = auth_class.base_url + '/oauth2/v2.0/' + \
+                    'authorize?p=' + settings.SOCIAL_PASSWORD_RESET_POLICY + \
+                    '&client_id=' + settings.KEY + \
+                    '&nonce=defaultNonce&redirect_uri=' + redirect_home + \
+                    '&scope=openid+email&response_type=code'
+
                 return redirect_url
 
         # TODO: In case of password reset the state can't be verified figure out a way to log the user in after reset
@@ -145,6 +150,27 @@ class DRFBasicAuthMixin(BasicAuthentication):
         user, token = super_return
         set_country(user, request)
         return user, token
+
+
+class eToolsOLCTokenAuth(TokenAuthentication):
+    def authenticate(self, request):
+        key = get_authorization_header(request)
+        try:
+            token = key.decode()
+        except UnicodeError:
+            # 'Invalid token header. '
+            # 'Token string should not contain invalid characters.'
+            return None
+        if bool(token == f"Token {settings.ETOOLS_OFFLINE_TOKEN}"):
+            try:
+                email = request.data.get("user")
+                user = get_user_model().objects.get(email=email)
+            except get_user_model().DoesNotExist:
+                return None
+            else:
+                set_country(user, request)
+                return user, token
+        return None
 
 
 class EtoolsTokenAuthentication(TokenAuthentication):

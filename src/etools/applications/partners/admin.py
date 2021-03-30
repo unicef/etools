@@ -1,10 +1,14 @@
+from functools import update_wrapper
+
+from django.conf.urls import url
 from django.contrib import admin
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.forms import SelectMultiple
+from django.http.response import HttpResponseRedirect
 from django.urls import reverse
 from django.utils.safestring import mark_safe
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from import_export.admin import ExportMixin
 from unicef_attachments.admin import AttachmentSingleInline
@@ -34,6 +38,7 @@ from etools.applications.partners.models import (  # TODO intervention sector lo
     PartnerStaffMember,
     PlannedEngagement,
 )
+from etools.applications.partners.tasks import sync_partner
 
 
 class AttachmentSingleInline(AttachmentSingleInline):
@@ -262,15 +267,22 @@ class InterventionAdmin(
         'total_budget',
         'attachments_link',
     )
+    raw_id_fields = [
+        'agreement',
+        'flat_locations',
+        'partner_authorized_officer_signatory',
+        'unicef_signatory',
+        'unicef_focal_points',
+        'partner_focal_points',
+    ]
     list_filter = (
-        'number',
-        'agreement__partner',
         'document_type',
         'status',
     )
     search_fields = (
         'number',
         'title',
+        'agreement__partner__name'
     )
     readonly_fields = (
         'total_budget',
@@ -450,6 +462,7 @@ class CoreValueAssessmentInline(admin.StackedInline):
 
 class PartnerAdmin(ExportMixin, admin.ModelAdmin):
     form = PartnersAdminForm
+    change_form_template = 'admin/partners/partnerorganization/change_form.html'
     resource_class = PartnerExport
     search_fields = (
         'name',
@@ -465,6 +478,8 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
         'vendor_number',
         'partner_type',
         'rating',
+        'highest_risk_rating_name',
+        'highest_risk_rating_type',
         'type_of_assessment',
         'email',
         'phone_number',
@@ -494,6 +509,10 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
         'total_ct_ytd',
         'outstanding_dct_amount_6_to_9_months_usd',
         'outstanding_dct_amount_more_than_9_months_usd',
+        'psea_assessment_date',
+        'sea_risk_rating_name',
+        'highest_risk_rating_name',
+        'highest_risk_rating_type',
     )
     fieldsets = (
         (_('Partner Details'), {
@@ -513,6 +532,10 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
                  'phone_number',
                  'email',
                  'core_values_assessment_date',
+                 'psea_assessment_date',
+                 'sea_risk_rating_name',
+                 'highest_risk_rating_name',
+                 'highest_risk_rating_type',
                  'manually_blocked',
                  'deleted_flag',
                  'blocked',
@@ -557,6 +580,25 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
 
     def has_module_permission(self, request):
         return request.user.is_superuser or request.user.groups.filter(name='Country Office Administrator').exists()
+
+    def get_urls(self):
+        urls = super().get_urls()
+
+        def wrap(view):
+            def wrapper(*args, **kwargs):
+                return self.admin_site.admin_view(view)(*args, **kwargs)
+
+            return update_wrapper(wrapper, view)
+
+        custom_urls = [
+            url(r'^(?P<pk>\d+)/sync_partner/$', wrap(self.sync_partner),
+                name='partnerorganization_sync_partner'),
+        ]
+        return custom_urls + urls
+
+    def sync_partner(self, request, pk):
+        sync_partner(PartnerOrganization.objects.get(id=pk).vendor_number, request.user.profile.country)
+        return HttpResponseRedirect(reverse('admin:partners_partnerorganization_change', args=[pk]))
 
 
 class PlannedEngagementAdmin(admin.ModelAdmin):

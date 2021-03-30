@@ -1,7 +1,7 @@
-
-from django.urls import reverse
+from django.urls import resolve, reverse
 
 from rest_framework import status
+from rest_framework.test import APIRequestFactory
 from tablib.core import Dataset
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
@@ -11,7 +11,7 @@ from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.users.tests.factories import UserFactory
 
 
-class TestHactHistoryAPIView(BaseTenantTestCase):
+class TestHactBaseAPIView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_user = UserFactory(is_staff=True)
@@ -51,6 +51,8 @@ class TestHactHistoryAPIView(BaseTenantTestCase):
             ['Flag for Follow up', "No"],
         ]
 
+
+class TestHactHistoryAPIView(TestHactBaseAPIView):
     def test_get(self):
         history = HactHistoryFactory(
             partner=self.partner,
@@ -201,3 +203,17 @@ class TestHactHistoryAPIView(BaseTenantTestCase):
             "2",
             "No",
         ))
+
+
+class TestHactGraphAPIView(TestHactBaseAPIView):
+    def test_unauthenticated_user_forbidden(self):
+        """Ensure an unauthenticated user gets the 403 smackdown"""
+        factory = APIRequestFactory()
+        view_info = resolve(self.url)
+        request = factory.get(self.url)
+        response = view_info.func(request)
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_get(self):
+        response = self.forced_auth_req("get", self.url, user=self.unicef_user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)

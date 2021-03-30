@@ -3,6 +3,7 @@ from unittest import skip
 
 from etools_validator.exceptions import BasicValidationError, TransitionError
 
+from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import Agreement
 from etools.applications.partners.tests.factories import (
@@ -94,6 +95,27 @@ class TestAgreementTransitionToEndedValid(BaseTenantTestCase):
         self.assertTrue(
             agreements.agreement_transition_to_ended_valid(agreement)
         )
+
+
+class TestTransitionToTerminated(BaseTenantTestCase):
+    def test_valid(self):
+        terminable_statuses = [Agreement.SIGNED]
+        for terminable_status in terminable_statuses:
+            agreement = AgreementFactory(status=terminable_status)
+            a = AttachmentFactory(
+                code='partners_agreement_termination_doc',
+                content_object=agreement,
+            )
+            agreement.termination_doc.add(a)
+            self.assertTrue(agreements.transition_to_terminated(agreement))
+
+    def test_invalid_status(self):
+        non_terminable_statuses = [Agreement.DRAFT, Agreement.ENDED]
+
+        for non_terminable_status in non_terminable_statuses:
+            agreement = AgreementFactory(status=non_terminable_status)
+            with self.assertRaises(TransitionError):
+                agreements.transition_to_terminated(agreement)
 
 
 class TestAgreementsIllegalTransition(BaseTenantTestCase):

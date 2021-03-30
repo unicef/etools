@@ -6,7 +6,7 @@ from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.db.models import Count, Q, Sum
 from django.db.models.functions import Coalesce
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from model_utils.models import TimeStampedModel
 
@@ -83,80 +83,103 @@ class AggregateHact(TimeStampedModel):
         ct_amount_first = self.get_queryset().filter(total_ct_ytd__lte=FIRST_LEVEL)
         cash_transfers_amounts_first = [
             '$0-50,000',
-            ct_amount_first.filter(rating=PartnerOrganization.RATING_NOT_REQUIRED).aggregate(
+            ct_amount_first.filter(highest_risk_rating_name__in=[
+                PartnerOrganization.RATING_NOT_REQUIRED, PartnerOrganization.RATING_NOT_ASSESSED
+            ]).aggregate(total=Coalesce(Sum('total_ct_ytd'), 0))['total'],
+            ct_amount_first.filter(highest_risk_rating_name__in=[
+                PartnerOrganization.RATING_LOW, PartnerOrganization.RATING_LOW_RISK_ASSUMED
+            ]).aggregate(total=Coalesce(Sum('total_ct_ytd'), 0))['total'],
+            ct_amount_first.filter(highest_risk_rating_name=PartnerOrganization.RATING_MEDIUM).aggregate(
                 total=Coalesce(Sum('total_ct_ytd'), 0))['total'],
-            ct_amount_first.filter(rating=PartnerOrganization.RATING_LOW).aggregate(
+            ct_amount_first.filter(highest_risk_rating_name=PartnerOrganization.RATING_SIGNIFICANT).aggregate(
                 total=Coalesce(Sum('total_ct_ytd'), 0))['total'],
-            ct_amount_first.filter(rating=PartnerOrganization.RATING_MEDIUM).aggregate(
-                total=Coalesce(Sum('total_ct_ytd'), 0))['total'],
-            ct_amount_first.filter(rating=PartnerOrganization.RATING_SIGNIFICANT).aggregate(
-                total=Coalesce(Sum('total_ct_ytd'), 0))['total'],
-            ct_amount_first.filter(rating=PartnerOrganization.RATING_HIGH).aggregate(
-                total=Coalesce(Sum('total_ct_ytd'), 0))['total'],
+            ct_amount_first.filter(highest_risk_rating_name__in=[
+                PartnerOrganization.RATING_HIGH, PartnerOrganization.RATING_HIGH_RISK_ASSUMED
+            ]).aggregate(total=Coalesce(Sum('total_ct_ytd'), 0))['total'],
             ct_amount_first.aggregate(count=Count('total_ct_ytd'))['count'],
         ]
 
         ct_amount_second = self.get_queryset().filter(total_ct_ytd__gt=FIRST_LEVEL, total_ct_ytd__lte=SECOND_LEVEL)
         cash_transfers_amounts_second = [
             '$50,001-100,000',
-            ct_amount_second.filter(rating=PartnerOrganization.RATING_NOT_REQUIRED).aggregate(
+            ct_amount_second.filter(highest_risk_rating_name__in=[
+                PartnerOrganization.RATING_NOT_REQUIRED, PartnerOrganization.RATING_NOT_ASSESSED
+            ]).aggregate(
                 total=Coalesce(Sum('total_ct_ytd'), 0))['total'],
-            ct_amount_second.filter(rating=PartnerOrganization.RATING_LOW).aggregate(
+            ct_amount_second.filter(highest_risk_rating_name__in=[
+                PartnerOrganization.RATING_LOW, PartnerOrganization.RATING_LOW_RISK_ASSUMED
+            ]).aggregate(
                 total=Coalesce(Sum('total_ct_ytd'), 0))['total'],
-            ct_amount_second.filter(rating=PartnerOrganization.RATING_MEDIUM).aggregate(
+            ct_amount_second.filter(highest_risk_rating_name=PartnerOrganization.RATING_MEDIUM).aggregate(
                 total=Coalesce(Sum('total_ct_ytd'), 0))['total'],
-            ct_amount_second.filter(rating=PartnerOrganization.RATING_SIGNIFICANT).aggregate(
+            ct_amount_second.filter(highest_risk_rating_name=PartnerOrganization.RATING_SIGNIFICANT).aggregate(
                 total=Coalesce(Sum('total_ct_ytd'), 0))['total'],
-            ct_amount_second.filter(rating=PartnerOrganization.RATING_HIGH).aggregate(
-                total=Coalesce(Sum('total_ct_ytd'), 0))['total'],
+            ct_amount_second.filter(highest_risk_rating_name__in=[
+                PartnerOrganization.RATING_HIGH, PartnerOrganization.RATING_HIGH_RISK_ASSUMED
+            ]).aggregate(total=Coalesce(Sum('total_ct_ytd'), 0))['total'],
             ct_amount_second.aggregate(count=Count('total_ct_ytd'))['count'],
         ]
 
         ct_amount_third = self.get_queryset().filter(total_ct_ytd__gt=SECOND_LEVEL, total_ct_ytd__lte=THIRD_LEVEL)
         cash_transfers_amounts_third = [
             '$100,001-350,000',
-            ct_amount_third.filter(rating=PartnerOrganization.RATING_NOT_REQUIRED).aggregate(
+            ct_amount_third.filter(highest_risk_rating_name__in=[
+                PartnerOrganization.RATING_NOT_REQUIRED, PartnerOrganization.RATING_NOT_ASSESSED
+            ]).aggregate(
                 total=Coalesce(Sum('total_ct_ytd'), 0))['total'],
-            ct_amount_third.filter(rating=PartnerOrganization.RATING_LOW).aggregate(
+            ct_amount_third.filter(highest_risk_rating_name__in=[
+                PartnerOrganization.RATING_LOW, PartnerOrganization.RATING_LOW_RISK_ASSUMED
+            ]).aggregate(
                 total=Coalesce(Sum('total_ct_ytd'), 0))['total'],
-            ct_amount_third.filter(rating=PartnerOrganization.RATING_MEDIUM).aggregate(
+            ct_amount_third.filter(highest_risk_rating_name=PartnerOrganization.RATING_MEDIUM).aggregate(
                 total=Coalesce(Sum('total_ct_ytd'), 0))['total'],
-            ct_amount_third.filter(rating=PartnerOrganization.RATING_SIGNIFICANT).aggregate(
+            ct_amount_third.filter(highest_risk_rating_name=PartnerOrganization.RATING_SIGNIFICANT).aggregate(
                 total=Coalesce(Sum('total_ct_ytd'), 0))['total'],
-            ct_amount_third.filter(rating=PartnerOrganization.RATING_HIGH).aggregate(
-                total=Coalesce(Sum('total_ct_ytd'), 0))['total'],
+            ct_amount_third.filter(highest_risk_rating_name__in=[
+                PartnerOrganization.RATING_HIGH, PartnerOrganization.RATING_HIGH_RISK_ASSUMED
+            ]).aggregate(total=Coalesce(Sum('total_ct_ytd'), 0))['total'],
             ct_amount_third.aggregate(count=Count('total_ct_ytd'))['count'],
         ]
 
         ct_amount_fourth = self.get_queryset().filter(total_ct_ytd__gt=THIRD_LEVEL, total_ct_ytd__lte=FOURTH_LEVEL)
         cash_transfers_amounts_fourth = [
             '$350,001-500,000',
-            ct_amount_fourth.filter(rating=PartnerOrganization.RATING_NOT_REQUIRED).aggregate(
+            ct_amount_fourth.filter(highest_risk_rating_name__in=[
+                PartnerOrganization.RATING_NOT_REQUIRED, PartnerOrganization.RATING_NOT_ASSESSED
+            ]).aggregate(
                 total=Coalesce(Sum('total_ct_ytd'), 0))['total'],
-            ct_amount_fourth.filter(rating=PartnerOrganization.RATING_LOW).aggregate(
+            ct_amount_fourth.filter(highest_risk_rating_name__in=[
+                PartnerOrganization.RATING_LOW, PartnerOrganization.RATING_LOW_RISK_ASSUMED
+            ]).aggregate(
                 total=Coalesce(Sum('total_ct_ytd'), 0))['total'],
-            ct_amount_fourth.filter(rating=PartnerOrganization.RATING_MEDIUM).aggregate(
+            ct_amount_fourth.filter(highest_risk_rating_name=PartnerOrganization.RATING_MEDIUM).aggregate(
                 total=Coalesce(Sum('total_ct_ytd'), 0))['total'],
-            ct_amount_fourth.filter(rating=PartnerOrganization.RATING_SIGNIFICANT).aggregate(
+            ct_amount_fourth.filter(highest_risk_rating_name=PartnerOrganization.RATING_SIGNIFICANT).aggregate(
                 total=Coalesce(Sum('total_ct_ytd'), 0))['total'],
-            ct_amount_fourth.filter(rating=PartnerOrganization.RATING_HIGH).aggregate(
-                total=Coalesce(Sum('total_ct_ytd'), 0))['total'],
+            ct_amount_fourth.filter(highest_risk_rating_name__in=[
+                PartnerOrganization.RATING_HIGH, PartnerOrganization.RATING_HIGH_RISK_ASSUMED
+            ]).aggregate(total=Coalesce(Sum('total_ct_ytd'), 0))['total'],
             ct_amount_fourth.aggregate(count=Count('total_ct_ytd'))['count'],
         ]
 
         ct_amount_fifth = self.get_queryset().filter(total_ct_ytd__gt=FOURTH_LEVEL)
         cash_transfers_amounts_fifth = [
             '>$500,000',
-            ct_amount_fifth.filter(rating=PartnerOrganization.RATING_NOT_REQUIRED).aggregate(
+            ct_amount_fifth.filter(highest_risk_rating_name__in=[
+                PartnerOrganization.RATING_NOT_REQUIRED, PartnerOrganization.RATING_NOT_ASSESSED
+            ]).aggregate(
                 total=Coalesce(Sum('total_ct_ytd'), 0))['total'],
-            ct_amount_fifth.filter(rating=PartnerOrganization.RATING_LOW).aggregate(
+            ct_amount_fifth.filter(highest_risk_rating_name__in=[
+                PartnerOrganization.RATING_LOW, PartnerOrganization.RATING_LOW_RISK_ASSUMED
+            ]).aggregate(
                 total=Coalesce(Sum('total_ct_ytd'), 0))['total'],
-            ct_amount_fifth.filter(rating=PartnerOrganization.RATING_MEDIUM).aggregate(
+            ct_amount_fifth.filter(highest_risk_rating_name__in=PartnerOrganization.RATING_MEDIUM).aggregate(
                 total=Coalesce(Sum('total_ct_ytd'), 0))['total'],
-            ct_amount_fifth.filter(rating=PartnerOrganization.RATING_SIGNIFICANT).aggregate(
+            ct_amount_fifth.filter(highest_risk_rating_name__in=PartnerOrganization.RATING_SIGNIFICANT).aggregate(
                 total=Coalesce(Sum('total_ct_ytd'), 0))['total'],
-            ct_amount_fifth.filter(rating=PartnerOrganization.RATING_HIGH).aggregate(
-                total=Coalesce(Sum('total_ct_ytd'), 0))['total'],
+            ct_amount_fifth.filter(highest_risk_rating_name__in=[
+                PartnerOrganization.RATING_HIGH, PartnerOrganization.RATING_HIGH_RISK_ASSUMED
+            ]).aggregate(total=Coalesce(Sum('total_ct_ytd'), 0))['total'],
             ct_amount_fifth.aggregate(count=Count('total_ct_ytd'))['count'],
         ]
 
@@ -175,13 +198,19 @@ class AggregateHact(TimeStampedModel):
             'count': Count('total_ct_ytd')
         }
 
-        high = self.get_queryset().filter(rating=PartnerOrganization.RATING_HIGH).aggregate(**total_ct_dict)
+        high = self.get_queryset().filter(
+            highest_risk_rating_name__in=[PartnerOrganization.RATING_HIGH, PartnerOrganization.RATING_HIGH_RISK_ASSUMED]
+        ).aggregate(**total_ct_dict)
         significant = self.get_queryset().filter(
-            rating=PartnerOrganization.RATING_SIGNIFICANT).aggregate(**total_ct_dict)
-        moderate = self.get_queryset().filter(rating=PartnerOrganization.RATING_MEDIUM).aggregate(**total_ct_dict)
-        low = self.get_queryset().filter(rating=PartnerOrganization.RATING_LOW).aggregate(**total_ct_dict)
+            highest_risk_rating_name__in=PartnerOrganization.RATING_SIGNIFICANT).aggregate(**total_ct_dict)
+        moderate = self.get_queryset().filter(
+            highest_risk_rating_name__in=PartnerOrganization.RATING_MEDIUM).aggregate(**total_ct_dict)
+        low = self.get_queryset().filter(highest_risk_rating_name__in=[
+            PartnerOrganization.RATING_LOW, PartnerOrganization.RATING_LOW_RISK_ASSUMED]).aggregate(**total_ct_dict)
         non_assessed = self.get_queryset().filter(
-            rating=PartnerOrganization.RATING_NOT_REQUIRED).aggregate(**total_ct_dict)
+            highest_risk_rating_name__in=[
+                PartnerOrganization.RATING_NOT_REQUIRED, PartnerOrganization.RATING_NOT_ASSESSED
+            ]).aggregate(**total_ct_dict)
 
         return [
             ['Risk Rating', 'Total Cash Transfers', {'role': 'style'}, 'Number of IPs'],
@@ -211,7 +240,7 @@ class AggregateHact(TimeStampedModel):
     @staticmethod
     def get_spot_checks_completed():
         qs = SpotCheck.objects.filter(
-            Q(partner__reported_cy__gt=0) | Q(partner__total_ct_cy__gt=0), partner__hidden=False,
+            Q(partner__reported_cy__gt=0) | Q(partner__total_ct_cy__gt=0),
             date_of_draft_report_to_ip__year=datetime.now().year).exclude(status=Engagement.CANCELLED)
         return [
             ['Completed by', 'Count'],
@@ -228,7 +257,7 @@ class AggregateHact(TimeStampedModel):
             },
             'spot_checks': {
                 'completed': SpotCheck.objects.filter(
-                    Q(partner__reported_cy__gt=0) | Q(partner__total_ct_cy__gt=0), partner__hidden=False,
+                    Q(partner__reported_cy__gt=0) | Q(partner__total_ct_cy__gt=0),
                     date_of_draft_report_to_ip__year=datetime.now().year).exclude(
                     status=Engagement.CANCELLED).count(),
                 'required': sum([p.planned_engagement.spot_check_required for p in self.get_queryset().filter(
@@ -237,15 +266,15 @@ class AggregateHact(TimeStampedModel):
                     'planned_engagement__spot_check_follow_up'), 0))['total']
             },
             'scheduled_audit': Audit.objects.filter(
-                Q(partner__reported_cy__gt=0) | Q(partner__total_ct_cy__gt=0), partner__hidden=False,
+                Q(partner__reported_cy__gt=0) | Q(partner__total_ct_cy__gt=0),
                 date_of_draft_report_to_ip__year=datetime.now().year).exclude(
                 status=Engagement.CANCELLED).count(),
             'special_audit': SpecialAudit.objects.filter(
-                Q(partner__reported_cy__gt=0) | Q(partner__total_ct_cy__gt=0), partner__hidden=False,
+                Q(partner__reported_cy__gt=0) | Q(partner__total_ct_cy__gt=0),
                 date_of_draft_report_to_ip__year=datetime.now().year).exclude(
                 status=Engagement.CANCELLED).count(),
             'micro_assessment': MicroAssessment.objects.filter(
-                Q(partner__reported_cy__gt=0) | Q(partner__total_ct_cy__gt=0), partner__hidden=False,
+                Q(partner__reported_cy__gt=0) | Q(partner__total_ct_cy__gt=0),
                 date_of_draft_report_to_ip__year=datetime.now().year).exclude(
                 status=Engagement.CANCELLED).count(),
             'missing_micro_assessment': PartnerOrganization.objects.hact_active(
@@ -255,7 +284,7 @@ class AggregateHact(TimeStampedModel):
     @staticmethod
     def get_financial_findings():
         audits = Audit.objects.filter(
-            Q(partner__reported_cy__gt=0) | Q(partner__total_ct_cy__gt=0), partner__hidden=False,
+            Q(partner__reported_cy__gt=0) | Q(partner__total_ct_cy__gt=0),
             date_of_draft_report_to_ip__year=datetime.now().year).exclude(status=Engagement.CANCELLED)
 
         refunds = audits.filter(amount_refunded__isnull=False).aggregate(
@@ -283,7 +312,7 @@ class AggregateHact(TimeStampedModel):
         outstanding = _ff - _ar - _asdp - _wor
 
         outstanding_audits_y1 = Audit.objects.filter(
-            Q(partner__reported_cy__gt=0) | Q(partner__total_ct_cy__gt=0), partner__hidden=False,
+            Q(partner__reported_cy__gt=0) | Q(partner__total_ct_cy__gt=0),
             date_of_draft_report_to_ip__year=datetime.now().year - 1).exclude(status=Engagement.CANCELLED)
         _ff_y1 = outstanding_audits_y1.filter(financial_findings__isnull=False).aggregate(
             total=Coalesce(Sum('financial_findings'), 0))['total']
@@ -347,7 +376,7 @@ class AggregateHact(TimeStampedModel):
     def get_financial_findings_numbers():
 
         audits = Audit.objects.filter(
-            Q(partner__reported_cy__gt=0) | Q(partner__total_ct_cy__gt=0), partner__hidden=False,
+            Q(partner__reported_cy__gt=0) | Q(partner__total_ct_cy__gt=0),
             date_of_draft_report_to_ip__year=datetime.now().year).exclude(status=Engagement.CANCELLED)
         return [
             {
@@ -409,7 +438,7 @@ class AggregateHact(TimeStampedModel):
             ],
             'table': [
                 {
-                    'label': 'Active Partners',
+                    'label': 'Partners',
                     'value': PartnerOrganization.objects.hact_active().count()
                 },
                 {

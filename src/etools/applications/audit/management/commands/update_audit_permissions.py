@@ -1,4 +1,3 @@
-
 from django.core.management import BaseCommand
 from django.db.models import Q
 
@@ -79,6 +78,8 @@ class Command(BaseCommand):
         'audit.engagement.joint_audit',
         'audit.engagement.shared_ip_with',
         'audit.engagement.related_agreement',
+        'audit.engagement.sections',
+        'audit.engagement.offices',
     ]
 
     engagement_status_editable_date_fields = [
@@ -107,6 +108,7 @@ class Command(BaseCommand):
 
     staff_members_block = [
         'audit.engagement.staff_members',
+        'audit.engagement.users_notified'
     ]
 
     action_points_block = [
@@ -375,12 +377,14 @@ class Command(BaseCommand):
         opened_action_point_condition = self.action_point_status(EngagementActionPoint.STATUSES.open)
 
         self.add_permissions(
-            self.focal_point, 'edit',
+            self.all_unicef_users,
+            'edit',
             'audit.engagement.action_points',
             condition=final_engagement_condition
         )
         self.add_permissions(
-            self.focal_point, 'edit',
+            self.all_unicef_users,
+            'edit',
             'audit.engagementactionpoint.*',
             condition=final_engagement_condition + self.new_action_point(),
         )

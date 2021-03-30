@@ -1,5 +1,5 @@
 from django.db import transaction
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -13,12 +13,17 @@ from etools.applications.reports.models import (
     Indicator,
     IndicatorBlueprint,
     LowerResult,
+    Office,
     ReportingRequirement,
     Result,
     ResultType,
     SpecialReportingRequirement,
 )
-from etools.applications.reports.validators import value_none_or_numbers, value_numbers
+from etools.applications.reports.validators import (
+    SpecialReportingRequirementUniqueValidator,
+    value_none_or_numbers,
+    value_numbers,
+)
 
 
 class MinimalOutputListSerializer(serializers.ModelSerializer):
@@ -166,19 +171,25 @@ class AppliedIndicatorSerializer(serializers.ModelSerializer):
                     'You cannot change the Indicator Target Denominator if PD/SSFA is '
                     'not in status Draft or Signed'
                 ))
-            if attrs['target']['d'] != self.instance.target_display[1] \
-               and not (
-                   status in [Intervention.DRAFT, Intervention.SIGNED] or (
-                    status == Intervention.ACTIVE and in_amendment and
-                    self.instance.indicator.display_type != IndicatorBlueprint.RATIO)):
+            if attrs['target']['d'] != self.instance.target_display[1] and not (
+                    status in [Intervention.DRAFT, Intervention.SIGNED] or (
+                        status == Intervention.ACTIVE and in_amendment and
+                        (
+                            self.instance.indicator and
+                            self.instance.indicator.display_type != IndicatorBlueprint.RATIO
+                        )
+                    )
+            ):
                 raise ValidationError(_(
                     'You cannot change the Indicator Target Denominator if PD/SSFA is '
                     'not in status Draft or Signed'
                 ))
 
         # make sure locations are in the intervention
-        locations = set(l.id for l in attrs.get('locations', []))
-        if not locations.issubset(l.id for l in lower_result.result_link.intervention.flat_locations.all()):
+        locations = set(loc.id for loc in attrs.get('locations', []))
+        if not locations.issubset(
+                l_result.id for l_result in lower_result.result_link.intervention.flat_locations.all()
+        ):
             raise ValidationError(_('This indicator can only have locations that were '
                                     'previously saved on the intervention'))
 
@@ -364,6 +375,11 @@ class SpecialReportingRequirementSerializer(serializers.ModelSerializer):
     class Meta:
         model = SpecialReportingRequirement
         fields = "__all__"
+        validators = [
+            SpecialReportingRequirementUniqueValidator(
+                queryset=SpecialReportingRequirement.objects.all(),
+            )
+        ]
 
 
 class ResultFrameworkSerializer(serializers.Serializer):
@@ -414,9 +430,21 @@ class ResultFrameworkSerializer(serializers.Serializer):
 
     def get_locations(self, obj):
         if hasattr(obj, "locations"):
-            return "\n".join(set([l.name for l in obj.locations.all()]))
+            return "\n".join(set([loc.name for loc in obj.locations.all()]))
         return ""
 
 
 class ResultFrameworkExportSerializer(ExportSerializer):
     pass
+
+
+class OfficeLightSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Office
+        fields = ('id', 'name')
+
+
+class OfficeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Office
+        fields = "__all__"

@@ -3,7 +3,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db.models import Prefetch
 from django.http import Http404
 from django.utils import timezone
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from django_filters.rest_framework import DjangoFilterBackend
 from easy_pdf.rendering import render_to_pdf_response
@@ -214,10 +214,7 @@ class PurchaseOrderViewSet(
         instance = queryset.filter(order_number=kwargs.get('order_number')).first()
 
         if not instance:
-            handler = POSynchronizer(
-                business_area_code=request.user.profile.country.business_area_code,
-                object_number=kwargs.get('order_number')
-            )
+            handler = POSynchronizer(kwargs.get('order_number'))
             handler.sync()
             instance = queryset.filter(order_number=kwargs.get('order_number')).first()
 
@@ -271,7 +268,14 @@ class EngagementViewSet(
         SearchFilter, DisplayStatusFilter, DjangoFilterBackend,
         UniqueIDOrderingFilter, OrderingFilter,
     )
-    search_fields = ('partner__name', 'agreement__auditor_firm__name', '=id')
+    search_fields = (
+        'partner__name',
+        'partner__vendor_number',
+        'partner__short_name',
+        'agreement__auditor_firm__name',
+        'offices__name',
+        '=id',
+    )
     ordering_fields = ('agreement__order_number', 'agreement__auditor_firm__name',
                        'partner__name', 'engagement_type', 'status')
     filterset_class = EngagementFilter
@@ -444,6 +448,7 @@ class SpotCheckViewSet(EngagementManagementMixin, EngagementViewSet):
     queryset = SpotCheck.objects.all()
     serializer_class = SpotCheckSerializer
     csv_export_serializer = SpotCheckDetailCSVSerializer
+    serializer_action_classes = {}
 
     @action(detail=True, methods=['get'], url_path='csv', renderer_classes=[SpotCheckDetailCSVRenderer])
     def export_csv(self, request, *args, **kwargs):

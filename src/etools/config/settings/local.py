@@ -80,13 +80,19 @@ LOGGING['disable_existing_loggers'] = False  # don't disable any existing logger
 LOGGING['filters'] = {
     'tenant_context': {
         '()': 'django_tenants.log.TenantContextFilter'
-    }
+    },
 }
 LOGGING['formatters'] = {
     'tenant_context': {
-        'format': '[%(schema_name)s:%(domain_url)s] '
+        'format': '[%(schema_name)s:%(name)s] '
         '%(levelname)-7s %(asctime)s %(message)s',
     },
 }
+LOGGING['loggers'] = {'django.db': {}}
 LOGGING['handlers']['console']['filters'] = ['tenant_context']
 LOGGING['handlers']['console']['formatter'] = 'tenant_context'
+
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 10240
+
+# Optional for debugging db queries
+# MIDDLEWARE += ('etools.applications.core.middleware.QueryCountDebugMiddleware',)

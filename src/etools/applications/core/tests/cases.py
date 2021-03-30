@@ -9,9 +9,9 @@ from rest_framework.test import APIClient, APIRequestFactory, force_authenticate
 from unicef_notification.models import EmailTemplate
 
 from etools.applications.users.models import WorkspaceCounter
+from etools.applications.users.tests.factories import SCHEMA_NAME
 
 TENANT_DOMAIN = 'tenant.test.com'
-SCHEMA_NAME = 'test'
 
 
 class BaseTenantTestCase(TenantTestCase):
@@ -63,6 +63,7 @@ class BaseTenantTestCase(TenantTestCase):
             'country_short_code': 'TST'
         })
         cls.domain = get_tenant_domain_model().objects.get_or_create(domain=TENANT_DOMAIN, tenant=cls.tenant)
+        # cls.public = TenantModel.objects.get_or_create(schema_name='public', business_area_code='ABC', name='UNICEF')
 
         try:
             cls.tenant.counters
@@ -112,9 +113,13 @@ class BaseTenantTestCase(TenantTestCase):
         """
         factory = APIRequestFactory()
 
-        data = data or {}
+        if data is None:
+            data = {}
+
         req_to_call = getattr(factory, method)
         request = req_to_call(url, data, format=request_format, **kwargs)
+        if hasattr(user, "profile") and user.profile.country:
+            request.tenant = user.profile.country
 
         user = user or self.user
         force_authenticate(request, user=user)

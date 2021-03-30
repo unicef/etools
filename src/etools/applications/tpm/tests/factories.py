@@ -12,10 +12,10 @@ from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.firms.tests.factories import BaseFirmFactory, BaseStaffMemberFactory
 from etools.applications.partners.models import InterventionResultLink
 from etools.applications.partners.tests.factories import InterventionFactory
-from etools.applications.reports.tests.factories import ResultFactory, SectionFactory
+from etools.applications.reports.tests.factories import OfficeFactory, ResultFactory, SectionFactory
 from etools.applications.tpm.models import TPMActivity, TPMVisit, TPMVisitReportRejectComment
 from etools.applications.tpm.tpmpartners.models import TPMPartner, TPMPartnerStaffMember
-from etools.applications.users.tests.factories import OfficeFactory as SimpleOfficeFactory, PMEUserFactory, UserFactory
+from etools.applications.users.tests.factories import PMEUserFactory, UserFactory
 from etools.libraries.tests.factories import StatusFactoryMetaClass
 
 _FUZZY_START_DATE = timezone.now().date() - datetime.timedelta(days=5)
@@ -54,17 +54,7 @@ class FullInterventionFactory(InterventionFactory):
     result_links = factory.RelatedFactory(InterventionResultLinkFactory, 'intervention')
 
 
-class OfficeFactory(SimpleOfficeFactory):
-    @classmethod
-    def _create(cls, model_class, *args, **kwargs):
-        obj = super()._create(model_class, *args, **kwargs)
-        if hasattr(connection.tenant, 'id') and connection.tenant.schema_name != 'public':
-            connection.tenant.offices.add(obj)
-
-        return obj
-
-
-class TPMActivityFactory(factory.DjangoModelFactory):
+class TPMActivityFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = TPMActivity
 
@@ -145,7 +135,7 @@ class TPMUserFactory(UserFactory):
         TPMPartnerStaffMemberFactory(tpm_partner=extracted, user=self)
 
 
-class BaseTPMVisitFactory(factory.DjangoModelFactory):
+class BaseTPMVisitFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = TPMVisit
 

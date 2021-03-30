@@ -91,7 +91,7 @@ class TestAssessment(BaseTenantTestCase):
         )
         self.assertEqual(assessment.get_rejected_comment(), "Rejected comment")
 
-    def test_get_recipients(self):
+    def test_get_assessor_recipients(self):
         assessment = AssessmentFactory()
         firm = AuditPartnerFactory()
         staff = AuditorStaffMemberFactory(auditor_firm=firm)
@@ -101,7 +101,10 @@ class TestAssessment(BaseTenantTestCase):
             assessor_type=Assessor.TYPE_VENDOR,
         )
         assessor.auditor_firm_staff.set([staff])
-        self.assertEqual(assessment.get_recipients(), [staff.user.email])
+        self.assertEqual(
+            assessment.get_assessor_recipients(),
+            [staff.user.email],
+        )
 
     def test_get_focal_recipients(self):
         assessment = AssessmentFactory()
@@ -109,6 +112,23 @@ class TestAssessment(BaseTenantTestCase):
         user = UserFactory()
         assessment.focal_points.add(user)
         self.assertEqual(assessment.get_focal_recipients(), [user.email])
+
+    def test_get_all_recipients(self):
+        assessment = AssessmentFactory()
+        firm = AuditPartnerFactory()
+        staff = AuditorStaffMemberFactory(auditor_firm=firm)
+        assessor = AssessorFactory(
+            assessment=assessment,
+            user=None,
+            assessor_type=Assessor.TYPE_VENDOR,
+        )
+        assessor.auditor_firm_staff.set([staff])
+        user = UserFactory()
+        assessment.focal_points.add(user)
+        self.assertEqual(
+            assessment.get_all_recipients(),
+            [staff.user.email, user.email],
+        )
 
     def test_user_is_assessor_user(self):
         assessment = AssessmentFactory()
@@ -162,10 +182,15 @@ class TestAssessment(BaseTenantTestCase):
     def test_get_mail_context(self):
         user = UserFactory()
         assessment = AssessmentFactory()
+        AssessorFactory(assessment=assessment)
         self.assertEqual(assessment.get_mail_context(user), {
-            "partner": assessment.partner,
+            "partner_name": assessment.partner.name,
+            "partner_vendor_number": assessment.partner.vendor_number,
             "url": assessment.get_object_url(user=user),
-            "assessment": assessment,
+            "focal_points": ", ".join(f"{fp.get_full_name()} ({fp.email})" for fp in assessment.focal_points.all()),
+            "overall_rating": assessment.overall_rating_display,
+            "assessment_date": str(assessment.assessment_date),
+            "assessor": str(assessment.assessor),
         })
 
     def test_get_reference_number(self):
@@ -198,14 +223,19 @@ class TestAssessmentActionPoint(BaseTenantTestCase):
     def test_get_mail_context(self):
         user = UserFactory()
         assessment = AssessmentFactory()
+        AssessorFactory(assessment=assessment)
         ap = AssessmentActionPointFactory(
             psea_assessment=assessment,
         )
         context = ap.get_mail_context(user=user)
         self.assertEqual(context["psea_assessment"], {
-            "partner": assessment.partner,
+            "partner_name": assessment.partner.name,
+            "partner_vendor_number": assessment.partner.vendor_number,
             "url": assessment.get_object_url(user=user),
-            "assessment": assessment,
+            "overall_rating": assessment.overall_rating_display,
+            "focal_points": ", ".join(f"{fp.get_full_name()} ({fp.email})" for fp in assessment.focal_points.all()),
+            "assessment_date": str(assessment.assessment_date),
+            "assessor": str(assessment.assessor),
         })
 
 

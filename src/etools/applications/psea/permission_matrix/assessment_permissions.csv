@@ -1,13 +1,17 @@
 Field no,Verbose Name,Field Name,Group,Condition,Status,Action,Allowed
 1.1.1,Partner Name,partner,UNICEF Audit Focal Point,,draft,Edit,TRUE
-1.2.0,Focal Points,focal_points,*,,final,Edit,FALSE
+1.2.0,Focal Points,focal_points,,,final,Edit,FALSE
+1.2.0,Focal Points,focal_points,,is external,,Edit,FALSE
 1.2.1,Assessment Date,assessment_date,UNICEF Audit Focal Point,,draft,Edit,TRUE
 1.2.2,Assessment Date,assessment_date,UNICEF Audit Focal Point,,assigned,Edit,TRUE
 1.2.3,Assessment Date,assessment_date,UNICEF Audit Focal Point,,in_progress,Edit,TRUE
 1.2.4,Assessment Date,assessment_date,UNICEF Audit Focal Point,,submitted,Edit,TRUE
+1.2.3,Assessment Date,assessment_date,,user belongs,in_progress,Edit,TRUE
+1.2.4,Assessment Date,assessment_date,,user belongs,submitted,Edit,TRUE
+1.2.4,Assessment Date,assessment_date,,user belongs,rejected,Edit,TRUE
 1.3.1,Assessor,assessor,UNICEF Audit Focal Point,,draft,Edit,TRUE
-1.4.1,Answers,answers,,user belongs,in_progress,Edit,TRUE
-1.4.2,Answers,answers,,user belongs,rejected,Edit,TRUE
+1.4.1,Answers,answers,,is assessor,in_progress,Edit,TRUE
+1.4.2,Answers,answers,,is assessor,rejected,Edit,TRUE
 1.1.2,Partner Name,partner,,,*,Required,TRUE
 1.2.5,Assessment Date,assessment_date,,,draft,Required,FALSE
 1.2.5,Assessment Date,assessment_date,,,assigned,Required,FALSE

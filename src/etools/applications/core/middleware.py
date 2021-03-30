@@ -6,6 +6,7 @@ from django.db import connection
 from django.http.response import HttpResponseRedirect
 from django.template.response import SimpleTemplateResponse
 from django.urls import reverse
+from django.utils.deprecation import MiddlewareMixin
 
 from django_tenants.middleware import TenantMainMiddleware
 from django_tenants.utils import get_public_schema_name
@@ -23,6 +24,25 @@ ANONYMOUS_ALLOWED_URL_FRAGMENTS = [
 ]
 
 INACTIVE_WORKSPACE_URL = reverse('workspace-inactive')
+
+
+class QueryCountDebugMiddleware(MiddlewareMixin):
+    """ Debug db connections"""
+    # inspired from https://gist.github.com/j4mie/956843
+    def process_response(self, request, response):
+        if response.status_code == 200:
+            total_time = 0
+            for query in connection.queries:
+                query_time = query.get('time')
+                if query_time is None:
+                    query_time = query.get('duration', 0) / 1000
+                total_time += float(query_time)
+
+            logger.debug('%s queries run, total %s seconds' % (len(connection.queries), total_time))
+            for q in connection.queries:
+                logger.debug(q['time'])
+        return response
+    pass
 
 
 class EToolsTenantMiddleware(TenantMainMiddleware):

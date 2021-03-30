@@ -1,4 +1,4 @@
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from rest_framework import serializers
 
@@ -364,7 +364,7 @@ class InterventionExportSerializer(serializers.ModelSerializer):
         return "Yes" if obj.contingency_pd else "No"
 
     def get_locations(self, obj):
-        return ', '.join([l.name for l in obj.flat_locations.all()])
+        return ', '.join([loc.name for loc in obj.flat_locations.all()])
 
     def get_fr_posting_date(self, obj):
         return ', '.join(['{}'.format(f.document_date) for f in obj.frs.all()])

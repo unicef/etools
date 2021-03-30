@@ -22,6 +22,7 @@ from unicef_snapshot.models import Activity
 
 from etools.applications.core.mixins import ExportModelMixin
 from etools.applications.core.renderers import CSVFlatRenderer
+from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.partners.exports_v2 import InterventionCSVRenderer, InterventionLocationCSVRenderer
 from etools.applications.partners.filters import (
     AppliedIndicatorsFilter,
@@ -70,6 +71,7 @@ from etools.applications.partners.serializers.interventions_v2 import (
     MinimalInterventionListSerializer,
     PlannedVisitsCUSerializer,
 )
+from etools.applications.partners.utils import send_intervention_amendment_added_notification
 from etools.applications.partners.validation.interventions import InterventionValid
 from etools.applications.reports.models import AppliedIndicator, LowerResult, ReportingRequirement
 from etools.applications.reports.serializers.v2 import AppliedIndicatorSerializer, LowerResultSimpleCUSerializer
@@ -113,6 +115,7 @@ class InterventionListAPIView(ExportFilenameMixin, QueryStringFilterMixin, Expor
         ('end_after', 'end__gte'),
         ('office', 'offices__in'),
         ('location', 'result_links__ll_results__applied_indicators__locations__name__icontains'),
+        ('contingency_pd', 'contingency_pd'),
     )
 
     SERIALIZER_MAP = {
@@ -300,6 +303,10 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
         if not validator.is_valid:
             logging.debug(validator.errors)
             raise ValidationError(validator.errors)
+
+        if tenant_switch_is_active('intervention_amendment_notifications_on') and \
+                old_instance and not instance.in_amendment and old_instance.in_amendment:
+            send_intervention_amendment_added_notification(instance)
 
         if getattr(instance, '_prefetched_objects_cache', None):
             # If 'prefetch_related' has been applied to a queryset, we need to

@@ -1,4 +1,3 @@
-
 from django.test import RequestFactory
 from django.urls import reverse
 
@@ -152,6 +151,32 @@ class TestAppliedIndicatorSerializer(BaseTenantTestCase):
         )
         serializer = AppliedIndicatorSerializer(data=self.data, context={"request": request})
         self.assertTrue(serializer.is_valid())
+
+    def test_validate_indicator_none(self):
+        self.data.pop("indicator")
+
+        self.data["cluster_indicator_id"] = "404"
+        self.data["target"] = {'d': 1, 'v': 2}
+        self.intervention.flat_locations.add(self.location)
+        self.applied_indicator.indicator = None
+        self.applied_indicator.save()
+        self.assertEqual(self.intervention.status, Intervention.ACTIVE)
+        self.assertFalse(self.intervention.in_amendment)
+        self.assertIsNone(self.applied_indicator.indicator)
+
+        serializer = AppliedIndicatorSerializer(
+            instance=self.applied_indicator,
+            data=self.data,
+        )
+        self.assertFalse(serializer.is_valid())
+        self.assertEqual(
+            serializer.errors, {
+                "non_field_errors": [
+                    "You cannot change the Indicator Target Denominator if "
+                    "PD/SSFA is not in status Draft or Signed"
+                ]
+            }
+        )
 
     def test_validate_invalid_section(self):
         """If sector already set on applied indicator then fail validation"""

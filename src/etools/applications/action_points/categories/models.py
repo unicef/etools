@@ -1,5 +1,5 @@
 from django.db import models
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from model_utils import Choices
 from model_utils.models import TimeStampedModel
@@ -13,6 +13,7 @@ class Category(OrderedModel, TimeStampedModel):
         ('tpm', _('Third Party Monitoring')),
         ('audit', _('Financial Assurance')),
         ('psea', _('PSEA Assessment')),
+        ('fm', _('Field Monitoring')),
     )
 
     module = models.CharField(max_length=10, choices=MODULE_CHOICES, verbose_name=_('Module'))

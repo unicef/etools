@@ -2,9 +2,10 @@ import datetime
 from operator import itemgetter
 
 from django.test import SimpleTestCase
-from django.urls import reverse
+from django.urls import resolve, reverse
 
 from rest_framework import status
+from rest_framework.test import APIRequestFactory
 from tablib.core import Dataset
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
@@ -29,6 +30,7 @@ from etools.applications.reports.tests.factories import (
     IndicatorBlueprintFactory,
     IndicatorFactory,
     LowerResultFactory,
+    OfficeFactory,
     ResultFactory,
     ResultTypeFactory,
     SpecialReportingRequirementFactory,
@@ -280,6 +282,11 @@ class TestDisaggregationListCreateViews(BaseTenantTestCase):
         cls.group = GroupFactory(name="PME")
         cls.pme_user.groups.add(cls.group)
         cls.url = reverse('reports:disaggregation-list-create')
+
+    def test_unauthed(self):
+        request = APIRequestFactory().get(self.url, format="json")
+        response = resolve(self.url).func(request)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_get(self):
         """
@@ -977,6 +984,46 @@ class TestSpecialReportingRequirementListCreateView(BaseTenantTestCase):
         self.assertEqual(response.data["intervention"], self.intervention.pk)
         self.assertEqual(response.data["description"], "Randomness")
 
+    def test_post_invalid_due_dates(self):
+        due_date = datetime.date(2001, 4, 15)
+        SpecialReportingRequirementFactory(
+            intervention=self.intervention,
+            due_date=due_date,
+        )
+        requirement_qs = SpecialReportingRequirement.objects.filter(
+            intervention=self.intervention,
+        )
+        init_count = requirement_qs.count()
+        response = self.forced_auth_req(
+            "post",
+            self.url,
+            user=self.unicef_staff,
+            data={
+                "due_date": due_date,
+                "description": "Randomness"
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(requirement_qs.count(), init_count)
+        self.assertEqual(response.data, {
+            "due_date": [
+                "There is already a special report with this due date.",
+            ]
+        })
+
+        due_date += datetime.timedelta(days=2)
+        response = self.forced_auth_req(
+            "post",
+            self.url,
+            user=self.unicef_staff,
+            data={
+                "due_date": due_date,
+                "description": "Randomness"
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(requirement_qs.count(), init_count + 1)
+
 
 class TestSpecialReportingRequirementRetrieveUpdateDestroyView(BaseTenantTestCase):
     @classmethod
@@ -1123,3 +1170,30 @@ class TestResultFrameworkView(BaseTenantTestCase):
                 self.intervention.reference_number
             )
         )
+
+
+class TestOfficeViews(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.url = '/api/offices/'
+
+    def test_api_office_list_values(self):
+        o1 = OfficeFactory()
+        o2 = OfficeFactory()
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            user=self.unicef_staff,
+            data={"values": "{},{}".format(o1.id, o2.id)}
+        )
+        # Returns empty set - figure out public schema testing
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_api_offices_detail(self):
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)

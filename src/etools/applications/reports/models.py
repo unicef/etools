@@ -3,12 +3,14 @@ from datetime import date
 from django.contrib.postgres.fields import JSONField
 from django.db import models, transaction
 from django.utils.functional import cached_property
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from model_utils.fields import AutoCreatedField, AutoLastModifiedField
 from model_utils.models import TimeStampedModel
 from mptt.models import MPTTModel, TreeForeignKey
 from unicef_locations.models import Location
+
+from etools.applications.users.models import UserProfile
 
 
 class Quarter(models.Model):
@@ -134,7 +136,7 @@ class Section(TimeStampedModel):
     Represents a section
     """
 
-    name = models.CharField(max_length=45, unique=True, verbose_name=_('Name'))
+    name = models.CharField(max_length=128, unique=True, verbose_name=_('Name'))
     description = models.CharField(max_length=256, blank=True, null=True, verbose_name=_('Description'))
     alternate_id = models.IntegerField(blank=True, null=True, verbose_name=_('Alternate ID'))
     alternate_name = models.CharField(max_length=255, null=True, default='', verbose_name=_('Alternate Name'))
@@ -657,7 +659,7 @@ class AppliedIndicator(TimeStampedModel):
 
     @cached_property
     def target_display(self):
-        ind_type = self.indicator.display_type
+        ind_type = self.indicator.display_type if self.indicator else None
         numerator = self.target.get('v', self.target)
         denominator = '-'
         if ind_type == IndicatorBlueprint.RATIO:
@@ -850,3 +852,35 @@ class SpecialReportingRequirement(TimeStampedModel):
 
     def __str__(self):
         return str(self.due_date)
+
+
+class Office(models.Model):
+    """
+    Represents an office for the country
+
+    Relates to :model:`AUTH_USER_MODEL`
+    """
+
+    name = models.CharField(max_length=254, verbose_name=_('Name'))
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        ordering = ('name', )
+
+
+class UserTenantProfile(models.Model):
+    profile = models.OneToOneField(
+        UserProfile,
+        verbose_name=_('Profile'),
+        on_delete=models.CASCADE,
+        related_name="tenant_profile",
+    )
+    office = models.ForeignKey(
+        "reports.Office",
+        null=True,
+        blank=True,
+        verbose_name=_('Office'),
+        on_delete=models.CASCADE,
+    )

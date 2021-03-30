@@ -101,6 +101,7 @@ class PMPStaticDropdownsListAPIView(APIView):
         )
         attachment_types_active = AttachmentFlat.get_file_types()
         partner_file_types = FileType.objects.values_list("name", flat=True)
+        sea_risk_ratings = choices_to_json_ready(PartnerOrganization.PSEA_RISK_RATING)
 
         local_currency = local_workspace.local_currency.id if local_workspace.local_currency else None
 
@@ -123,6 +124,7 @@ class PMPStaticDropdownsListAPIView(APIView):
                 'attachment_types': attachment_types,
                 'attachment_types_active': attachment_types_active,
                 'partner_file_types': partner_file_types,
+                'sea_risk_ratings': sea_risk_ratings,
             },
             status=status.HTTP_200_OK
         )

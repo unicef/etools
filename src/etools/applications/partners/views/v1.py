@@ -15,6 +15,7 @@ from etools.applications.partners.serializers.v1 import FileTypeSerializer
 
 
 class PCAPDFView(LoginRequiredMixin, PDFTemplateView):
+    agreement = None
     template_name = "pca/english_pdf.html"
     # TODO add proper templates for different languages
     language_templates_mapping = {
@@ -29,7 +30,9 @@ class PCAPDFView(LoginRequiredMixin, PDFTemplateView):
     }
 
     def get_pdf_filename(self):
-        return '{0.reference_number}-{0.partner}.pdf'.format(self.agreement)
+        if self.agreement:
+            return '{0.reference_number}-{0.partner}.pdf'.format(self.agreement)
+        return 'export.pdf'
 
     def get_context_data(self, **kwargs):
         agr_id = self.kwargs.get('agr')
@@ -52,18 +55,20 @@ class PCAPDFView(LoginRequiredMixin, PDFTemplateView):
         if not self.agreement.authorized_officers.exists():
             return {"error": 'Partner Organization has no "Authorized Officers selected" selected'}
 
-        valid_response, response = get_data_from_insight('GetPartnerDetailsInfo_json/{vendor_code}',
+        valid_response, response = get_data_from_insight('partners/?vendor={vendor_code}',
                                                          {"vendor_code": self.agreement.partner.vendor_number})
 
         if not valid_response:
             return {"error": response}
         try:
             banks_records = response["ROWSET"]["ROW"]["VENDOR_BANK"]["VENDOR_BANK_ROW"]
+            if isinstance(banks_records, dict):
+                banks_records = [banks_records]
         except (KeyError, TypeError):
             return {"error": 'Response returned by the Server does not have the necessary values to generate PCA'}
 
         bank_key_values = [
-            ('bank_address', "BANK_ADDRESS"),
+            ('bank_address', "STREET"),
             ('bank_name', 'BANK_NAME'),
             ('account_title', "ACCT_HOLDER"),
             ('routing_details', "SWIFT_CODE"),
@@ -81,7 +86,7 @@ class PCAPDFView(LoginRequiredMixin, PDFTemplateView):
                 bank_objects.append(Bank(*[b[i[1]] for i in bank_key_values]))
 
         officers_list = []
-        for officer in self.agreement.authorized_officers.all():
+        for officer in self.agreement.authorized_officers.filter(active=True):
             officers_list.append(
                 {'first_name': officer.first_name,
                  'last_name': officer.last_name,

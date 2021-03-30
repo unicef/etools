@@ -28,11 +28,11 @@ def get_partner_obj(obj):
         Agreement,
         AgreementAmendment,
         Assessment,
+        CoreValuesAssessment,
         Intervention,
         InterventionAmendment,
         InterventionAttachment,
         PartnerOrganization,
-        CoreValuesAssessment,
     )
     from etools.applications.tpm.models import TPMActivity
 
@@ -75,11 +75,7 @@ def get_pd_ssfa(obj):
     InterventionAttachment
     InterventionAmendment
     """
-    from etools.applications.partners.models import (
-        Intervention,
-        InterventionAmendment,
-        InterventionAttachment,
-    )
+    from etools.applications.partners.models import Intervention, InterventionAmendment, InterventionAttachment
     from etools.applications.tpm.models import TPMActivity
 
     if isinstance(obj.content_object, Intervention):
@@ -106,6 +102,7 @@ def get_agreement_obj(obj):
         InterventionAttachment,
     )
     from etools.applications.tpm.models import TPMActivity
+
     if isinstance(obj.content_object, (Agreement)):
         return obj.content_object
     elif isinstance(obj.content_object, (AgreementAmendment, Intervention)):
@@ -176,7 +173,7 @@ def denormalize_attachment(attachment):
             "filename": attachment.filename,
             "uploaded_by": uploaded_by,
             "source": source,
-            "created": attachment.created.strftime("%d %b %Y"),
+            "created": attachment.created,
         }
     )
 

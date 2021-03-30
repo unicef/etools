@@ -59,7 +59,11 @@ class PRPPartnerOrganizationListSerializer(serializers.ModelSerializer):
             "phone_number",
             "basis_for_risk_rating",
             "core_values_assessment_date",
-            "type_of_assessment"
+            "type_of_assessment",
+            "sea_risk_rating_name",
+            "psea_assessment_date",
+            "highest_risk_rating_name",
+            "highest_risk_rating_type",
         )
 
 
@@ -141,7 +145,7 @@ class PRPIndicatorSerializer(serializers.ModelSerializer):
     unit = serializers.SerializerMethodField()
     display_type = serializers.SerializerMethodField()
     blueprint_id = serializers.PrimaryKeyRelatedField(source='indicator', read_only=True)
-    locations = PRPLocationSerializer(read_only=True, many=True)
+    locations = serializers.SerializerMethodField()
     disaggregation = DisaggregationSerializer(read_only=True, many=True)
     target = serializers.JSONField(required=False)
     baseline = serializers.JSONField(required=False)
@@ -154,6 +158,20 @@ class PRPIndicatorSerializer(serializers.ModelSerializer):
 
     def get_display_type(self, ai):
         return ai.indicator.display_type if ai.indicator else ''
+
+    def get_locations(self, obj):
+        location_qs = obj.locations.values(
+            "id",
+            "name",
+            "p_code",
+            "gateway__name",
+            "gateway__admin_level",
+        )
+        for loc in location_qs:
+            loc["pcode"] = loc.pop("p_code")
+            loc["location_type"] = loc.pop("gateway__name")
+            loc["admin_level"] = loc.pop("gateway__admin_level")
+        return list(location_qs)
 
     class Meta:
         model = AppliedIndicator

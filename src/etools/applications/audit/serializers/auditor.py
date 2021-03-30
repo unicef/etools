@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
 from unicef_restlib.fields import SeparatedReadWriteField
@@ -36,6 +36,7 @@ class AuditorStaffMemberSerializer(BaseStaffMemberSerializer):
         queryset=get_user_model().objects.all()
     )
 
+    # TODO: make sure email provided is lower_case
     def validate(self, attrs):
         validated_data = super().validate(attrs)
         user_pk = validated_data.pop('user_pk', None)

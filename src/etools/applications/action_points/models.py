@@ -2,7 +2,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import connection, models
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from django_fsm import FSMField, transition
 from model_utils import Choices, FieldTracker
@@ -18,6 +18,14 @@ from etools.applications.core.urlresolvers import build_frontend_url
 from etools.libraries.djangolib.models import GroupWrapper
 from etools.libraries.djangolib.utils import get_environment
 from etools.libraries.fsm.views import has_action_permission
+
+
+class ActionPointManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().prefetch_related('author',
+                                                       'section', 'office', 'location', 'partner',
+                                                       'cp_output__result_type', 'engagement', 'intervention')\
+            .select_related('assigned_to', "assigned_by", "category")
 
 
 class ActionPoint(TimeStampedModel):
@@ -54,7 +62,7 @@ class ActionPoint(TimeStampedModel):
     high_priority = models.BooleanField(default=False, verbose_name=_('High Priority'))
     section = models.ForeignKey('reports.Section', verbose_name=_('Section'), blank=True, null=True,
                                 on_delete=models.CASCADE)
-    office = models.ForeignKey('users.Office', verbose_name=_('Office'), blank=True, null=True,
+    office = models.ForeignKey('reports.Office', verbose_name=_('Office'), blank=True, null=True,
                                on_delete=models.CASCADE)
     location = models.ForeignKey('locations.Location', verbose_name=_('Location'), blank=True, null=True,
                                  on_delete=models.CASCADE)
@@ -72,13 +80,22 @@ class ActionPoint(TimeStampedModel):
                                      related_name='action_points', on_delete=models.CASCADE)
     travel_activity = models.ForeignKey('t2f.TravelActivity', verbose_name=_('Travel Activity'), blank=True, null=True,
                                         on_delete=models.CASCADE)
+    monitoring_activity = models.ForeignKey('field_monitoring_planning.MonitoringActivity',
+                                            verbose_name=_('Monitoring Activity'), blank=True, null=True,
+                                            on_delete=models.CASCADE)
     date_of_completion = MonitorField(verbose_name=_('Date Action Point Completed'), null=True, blank=True,
                                       default=None, monitor='status', when=[STATUSES.completed])
     comments = GenericRelation('django_comments.Comment', object_id_field='object_pk')
     history = GenericRelation('unicef_snapshot.Activity', object_id_field='target_object_id',
                               content_type_field='target_content_type')
+    reference_number = models.CharField(
+        verbose_name=_("Reference Number"),
+        max_length=100,
+        null=True,
+    )
+    tracker = FieldTracker(fields=['assigned_to', 'reference_number'])
 
-    tracker = FieldTracker(fields=['assigned_to'])
+    objects = ActionPointManager()
 
     class Meta:
         ordering = ('id', )
@@ -91,7 +108,9 @@ class ActionPoint(TimeStampedModel):
 
     @property
     def related_object(self):
-        return self.engagement_subclass or self.tpm_activity or self.travel_activity or self.psea_assessment
+        related_object = self.engagement_subclass or self.tpm_activity or self.travel_activity
+        related_object = related_object or self.psea_assessment or self.monitoring_activity
+        return related_object
 
     @property
     def related_object_str(self):
@@ -128,15 +147,24 @@ class ActionPoint(TimeStampedModel):
             return self.MODULE_CHOICES.t2f
         elif self.psea_assessment:
             return self.MODULE_CHOICES.psea
+        elif self.monitoring_activity:
+            return self.MODULE_CHOICES.fm
         return self.MODULE_CHOICES.apd
 
-    @property
-    def reference_number(self):
+    def get_reference_number(self):
+        if self.reference_number:
+            return self.reference_number
         return '{}/{}/{}/APD'.format(
             connection.tenant.country_short_code or '',
             self.created.year,
             self.id,
         )
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        if not self.reference_number:
+            self.reference_number = self.get_reference_number()
+            self.save()
 
     def get_object_url(self, **kwargs):
         return build_frontend_url('apd', 'action-points', 'detail', self.id, **kwargs)
@@ -178,7 +206,7 @@ class ActionPoint(TimeStampedModel):
         return {
             'person_responsible': self.assigned_to.get_full_name(),
             'assigned_by': self.assigned_by.get_full_name(),
-            'reference_number': self.reference_number,
+            'reference_number': self.get_reference_number(),
             'partner': self.partner.name if self.partner else '',
             'description': self.description,
             'due_date': self.due_date.strftime('%d %b %Y') if self.due_date else '',

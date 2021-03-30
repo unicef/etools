@@ -1,6 +1,7 @@
-from django.urls import reverse
+from django.urls import resolve, reverse
 
 from rest_framework import status
+from rest_framework.test import APIRequestFactory
 
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.audit.tests.factories import EngagementFactory
@@ -17,17 +18,18 @@ from etools.applications.partners.tests.factories import (
     PartnerFactory,
 )
 from etools.applications.tpm.tests.factories import SimpleTPMPartnerFactory, TPMActivityFactory, TPMVisitFactory
-from etools.applications.users.tests.factories import UserFactory
+from etools.applications.users.tests.factories import ProfileFactory, UserFactory
 
 
 class TestAttachmentListView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.code_1 = "test_code_1"
-        cls.file_type_1 = AttachmentFileTypeFactory(code=cls.code_1)
+        cls.file_type_1 = AttachmentFileTypeFactory()
         cls.code_2 = "test_code_2"
-        cls.file_type_2 = AttachmentFileTypeFactory(code=cls.code_2)
+        cls.file_type_2 = AttachmentFileTypeFactory()
         cls.unicef_staff = UserFactory(is_staff=True)
+        ProfileFactory(user=cls.unicef_staff)
         cls.user = UserFactory()
         cls.url = reverse("attachments:list")
         cls.attachment_1 = AttachmentFactory(
@@ -115,6 +117,18 @@ class TestAttachmentListView(BaseTenantTestCase):
         } for x in response.data]
         self.assertCountEqual(received, expected)
 
+    def test_unauthenticated_user_forbidden(self):
+        factory = APIRequestFactory()
+        view_info = resolve(self.url)
+        request = factory.get(self.url)
+        response = view_info.func(request)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_non_schema_user(self):
+        user = UserFactory(profile=None)
+        response = self.forced_auth_req("get", self.url, user=user)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
     def test_get_no_file(self):
         attachment = AttachmentFactory(
             file_type=self.file_type_1,
@@ -160,7 +174,7 @@ class TestAttachmentListView(BaseTenantTestCase):
 
     def test_partner(self):
         code = "partners_partner_assessment"
-        file_type = AttachmentFileTypeFactory(code=code)
+        file_type = AttachmentFileTypeFactory()
         AttachmentFactory(
             file_type=file_type,
             code=code,
@@ -187,7 +201,7 @@ class TestAttachmentListView(BaseTenantTestCase):
 
     def test_assessment(self):
         code = "partners_assessment_report"
-        file_type = AttachmentFileTypeFactory(code=code)
+        file_type = AttachmentFileTypeFactory()
         AttachmentFactory(
             file_type=file_type,
             code=code,
@@ -214,7 +228,7 @@ class TestAttachmentListView(BaseTenantTestCase):
 
     def test_agreement(self):
         code = "partners_agreement"
-        file_type = AttachmentFileTypeFactory(code=code)
+        file_type = AttachmentFileTypeFactory()
         AttachmentFactory(
             file_type=file_type,
             code=code,
@@ -241,7 +255,7 @@ class TestAttachmentListView(BaseTenantTestCase):
 
     def test_agreement_amendment(self):
         code = "partners_agreement_amendment"
-        file_type = AttachmentFileTypeFactory(code=code)
+        file_type = AttachmentFileTypeFactory()
         AttachmentFactory(
             file_type=file_type,
             code=code,
@@ -268,7 +282,7 @@ class TestAttachmentListView(BaseTenantTestCase):
 
     def test_intervention_amendment(self):
         code = "partners_intervention_amendment_signed"
-        file_type = AttachmentFileTypeFactory(code=code)
+        file_type = AttachmentFileTypeFactory()
         AttachmentFactory(
             file_type=file_type,
             code=code,
@@ -295,7 +309,7 @@ class TestAttachmentListView(BaseTenantTestCase):
 
     def test_intervention_attachment(self):
         code = "partners_intervention_attachment"
-        file_type = AttachmentFileTypeFactory(code=code)
+        file_type = AttachmentFileTypeFactory()
         AttachmentFactory(
             file_type=file_type,
             code=code,
@@ -327,9 +341,9 @@ class TestAttachmentListView(BaseTenantTestCase):
 
     def test_intervention(self):
         code_prc = "partners_intervention_prc_review"
-        file_type_prc = AttachmentFileTypeFactory(code=code_prc)
+        file_type_prc = AttachmentFileTypeFactory()
         code_pd = "partners_intervention_signed_pd"
-        file_type_pd = AttachmentFileTypeFactory(code=code_pd)
+        file_type_pd = AttachmentFileTypeFactory()
         AttachmentFactory(
             file_type=file_type_prc,
             code=code_prc,
@@ -370,10 +384,7 @@ class TestAttachmentListView(BaseTenantTestCase):
 
     def test_tpm_activity_attachments(self):
         code = "activity_attachments"
-        file_type = AttachmentFileTypeFactory(
-            label="Activity Attachment",
-            code=code
-        )
+        file_type = AttachmentFileTypeFactory(label="Activity Attachment")
         AttachmentFactory(
             file_type=file_type,
             code=code,
@@ -405,10 +416,7 @@ class TestAttachmentListView(BaseTenantTestCase):
 
     def test_tpm_activity_report_attachments(self):
         code = "activity_report"
-        file_type = AttachmentFileTypeFactory(
-            label="Activity Report",
-            code=code
-        )
+        file_type = AttachmentFileTypeFactory(label="Activity Report")
         AttachmentFactory(
             file_type=file_type,
             code=code,
@@ -440,10 +448,7 @@ class TestAttachmentListView(BaseTenantTestCase):
 
     def test_audit_engagement_attachments(self):
         code = "audit_engagement"
-        file_type = AttachmentFileTypeFactory(
-            label="Audit Engagement",
-            code=code
-        )
+        file_type = AttachmentFileTypeFactory(label="Audit Engagement")
         AttachmentFactory(
             file_type=file_type,
             code=code,
@@ -475,10 +480,7 @@ class TestAttachmentListView(BaseTenantTestCase):
 
     def test_audit_engagement_report_attachments(self):
         code = "audit_report"
-        file_type = AttachmentFileTypeFactory(
-            label="Audit Report",
-            code=code
-        )
+        file_type = AttachmentFileTypeFactory(label="Audit Report")
         AttachmentFactory(
             file_type=file_type,
             code=code,

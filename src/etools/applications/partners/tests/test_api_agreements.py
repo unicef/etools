@@ -53,10 +53,10 @@ class TestAgreementsAPI(BaseTenantTestCase):
                                                           signed_amendment="application/pdf",
                                                           signed_date=datetime.date.today())
         cls.file_type_agreement = AttachmentFileTypeFactory(
-            code="partners_agreement"
+            code="partners_agreement",
         )
         cls.file_type_agreement_amendment = AttachmentFileTypeFactory(
-            code="partners_agreement_amendment"
+            code="partners_agreement_amendment",
         )
 
     def run_request_list_ep(self, data={}, user=None, method='post'):
@@ -485,3 +485,32 @@ class TestAgreementsAPI(BaseTenantTestCase):
 
         self.assertEqual(status_code, status.HTTP_200_OK)
         mock_send.assert_called()
+
+    def test_terminate_no_doc(self):
+        agreement = AgreementFactory(
+            partner=self.partner1,
+            status=Agreement.SIGNED,
+        )
+        self.assertEqual(agreement.status, Agreement.SIGNED)
+        self.assertFalse(agreement.termination_doc.exists())
+        data = {"status": Agreement.TERMINATED}
+        status_code, response = self.run_request(
+            agreement.pk,
+            data,
+            method="patch",
+        )
+        self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response,
+            ["Cannot Transition without termination doc attached"],
+        )
+        # add termination document
+        AttachmentFactory(
+            content_object=agreement,
+            code='partners_agreement_termination_doc',
+        )
+        self.assertTrue(agreement.termination_doc.exists())
+        status_code, _ = self.run_request(agreement.pk, data, method="patch")
+        self.assertEqual(status_code, status.HTTP_200_OK)
+        agreement.refresh_from_db()
+        self.assertEqual(agreement.status, Agreement.TERMINATED)

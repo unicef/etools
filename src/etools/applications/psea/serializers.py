@@ -1,7 +1,8 @@
 from copy import copy
 
 from django.contrib.contenttypes.models import ContentType
-from django.utils.translation import ugettext_lazy as _
+from django.db import transaction
+from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
 from unicef_attachments.fields import FileTypeModelChoiceField
@@ -28,9 +29,9 @@ from etools.applications.psea.models import (
     Rating,
 )
 from etools.applications.psea.permissions import AssessmentPermissions
-from etools.applications.psea.validators import EvidenceDescriptionValidator
+from etools.applications.psea.validators import EvidenceDescriptionValidator, PastDateValidator
 from etools.applications.reports.serializers.v1 import SectionSerializer
-from etools.applications.users.serializers import OfficeSerializer
+from etools.applications.reports.serializers.v2 import OfficeSerializer
 from etools.applications.users.serializers_v3 import MinimalUserSerializer
 from etools.applications.users.validators import ExternalUserValidator
 
@@ -62,23 +63,20 @@ class AssessmentSerializer(BaseAssessmentSerializer):
     status_list = serializers.SerializerMethodField()
     rejected_comment = serializers.SerializerMethodField()
     available_actions = serializers.SerializerMethodField()
+    assessment_date = serializers.DateField(
+        validators=[PastDateValidator()],
+        allow_null=True,
+        required=False,
+    )
 
     class Meta(BaseAssessmentSerializer.Meta):
         fields = '__all__'
         read_only_fields = ["reference_number", "overall_rating", "status"]
 
     def get_overall_rating(self, obj):
-        if not obj.overall_rating:
-            display = ""
-        elif obj.overall_rating <= 11:
-            display = "High"
-        elif 11 < obj.overall_rating <= 19:
-            display = "Moderate"
-        elif obj.overall_rating >= 20:
-            display = "Low"
         return {
             "value": obj.overall_rating,
-            "display": display,
+            "display": obj.overall_rating_display,
         }
 
     def get_assessor(self, obj):
@@ -163,6 +161,37 @@ class AssessmentDetailSerializer(AssessmentSerializer):
 
 class AssessmentExportSerializer(AssessmentSerializer):
     focal_points = serializers.SerializerMethodField()
+    overall_rating_display = serializers.ReadOnlyField()
+
+    cs1 = serializers.SerializerMethodField()
+    cs2 = serializers.SerializerMethodField()
+    cs3 = serializers.SerializerMethodField()
+    cs4 = serializers.SerializerMethodField()
+    cs5 = serializers.SerializerMethodField()
+    cs6 = serializers.SerializerMethodField()
+
+    @staticmethod
+    def cs(obj, pk):
+        if obj.status == Assessment.STATUS_FINAL:
+            return obj.answers.get(indicator__pk=pk).rating.label
+
+    def get_cs1(self, obj):
+        return self.cs(obj, 1)
+
+    def get_cs2(self, obj):
+        return self.cs(obj, 2)
+
+    def get_cs3(self, obj):
+        return self.cs(obj, 3)
+
+    def get_cs4(self, obj):
+        return self.cs(obj, 4)
+
+    def get_cs5(self, obj):
+        return self.cs(obj, 5)
+
+    def get_cs6(self, obj):
+        return self.cs(obj, 6)
 
     class Meta(AssessmentSerializer.Meta):
         fields = [
@@ -172,8 +201,15 @@ class AssessmentExportSerializer(AssessmentSerializer):
             "partner_name",
             "status",
             "rating",
+            "overall_rating_display",
             "assessor",
             "focal_points",
+            "cs1",
+            "cs2",
+            "cs3",
+            "cs4",
+            "cs5",
+            "cs6",
         ]
 
     def get_focal_points(self, obj):
@@ -388,20 +424,16 @@ class IndicatorSerializer(serializers.ModelSerializer):
 
     def get_document_types(self, obj):
         """Get document types limited to indicator"""
-        # TODO can refactor this once attachment file type
-        # group field PR (#2462) is merged
-        # relying on the indicator_pk from psea_indicator fixture
         MAP_INDICATOR_DOC_TYPE = {
-            1: [34, 35, 53, 54],
+            1: [34, 35, 54, 53],
             2: [37, 38, 39, 53],
             3: [55, 40, 41, 53],
-            4: [46, 47, 53],
+            4: [46, 47, 53, 42, 60],
             5: [48, 56, 49, 53],
             6: [51, 52, 57, 53],
         }
-        return FileType.objects.filter(
+        return FileType.objects.group_by("psea_answer").filter(
             pk__in=MAP_INDICATOR_DOC_TYPE.get(obj.pk, []),
-            code="psea_answer",
         ).values(
             "id",
             "label",
@@ -413,7 +445,7 @@ class AnswerAttachmentSerializer(serializers.ModelSerializer):
     # attachment = serializers.IntegerField(source="pk")
     file_type = FileTypeModelChoiceField(
         label=_("Document Type"),
-        queryset=FileType.objects.filter(code="psea_answer"),
+        queryset=FileType.objects.group_by("psea_answer"),
     )
 
     class Meta:
@@ -483,13 +515,14 @@ class AnswerSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         evidence_data = validated_data.pop("evidences")
         attachment_data = validated_data.pop("attachments")
-        answer = Answer.objects.create(**validated_data)
-        for evidence in evidence_data:
-            AnswerEvidence.objects.create(
-                answer=answer,
-                **evidence,
-            )
-        self._set_attachments(answer, attachment_data)
+        with transaction.atomic():
+            answer = Answer.objects.create(**validated_data)
+            for evidence in evidence_data:
+                AnswerEvidence.objects.create(
+                    answer=answer,
+                    **evidence,
+                )
+            self._set_attachments(answer, attachment_data)
         return answer
 
     def update(self, instance, validated_data):

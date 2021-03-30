@@ -102,7 +102,7 @@ class AzureUserMapper:
             status['skipped'] = 1
             return status
 
-        key_value = record[self.KEY_ATTRIBUTE]
+        key_value = record[self.KEY_ATTRIBUTE].lower()
         logger.debug(key_value)
 
         try:
@@ -144,16 +144,17 @@ class AzureUserMapper:
                     allowed_values = [allowed_values, ]
 
                 if record.get(field[0], False) not in allowed_values:
-                    logger.debug("User is not in Unicef organization {}".format(field[1]))
+                    logger.debug("User is not in UNICEF organization {}".format(field[1]))
                     return False
         return True
 
     def update_user(self, user, record):
         modified = False
         for attr, record_attr in self.USER_ATTR_MAP.items():
-
             record_value = record.get(record_attr, None)
             if record_value:
+                if attr in ["username", "email"]:
+                    record_value = record_value.lower()
                 attr_modified = self._set_attribute(user, attr, record_value)
                 modified = modified or attr_modified
 

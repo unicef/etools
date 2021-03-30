@@ -90,6 +90,9 @@ DATABASE_ROUTERS = (
 # DJANGO: DEBUGGING
 DEBUG = str2bool(get_from_secrets_or_env('DJANGO_DEBUG'))
 
+# user that can update other user credentials via api
+SERVICE_NOW_USER = get_from_secrets_or_env('SERVICE_NOW_USER', 'api_servicenow_etools@unicef.org')
+
 # DJANGO: EMAIL
 DEFAULT_FROM_EMAIL = "no-reply@unicef.org"
 EMAIL_BACKEND = 'unicef_notification.backends.EmailBackend'
@@ -147,7 +150,7 @@ LOGGING = {
         'level': 'INFO'
     },
 }
-GDAL_LIBRARY_PATH = '/usr/lib/libgdal.so.20'
+
 # DJANGO: MODELS
 FIXTURE_DIRS = (
     os.path.join(os.path.dirname(etools.__file__), 'applications', 'core', 'data'),
@@ -193,6 +196,8 @@ SHARED_APPS = (
     'waffle',
     'etools.applications.permissions2',
     'unicef_notification',
+    'etools_offline',
+    'etools.applications.offline',
 )
 
 TENANT_APPS = (
@@ -213,6 +218,10 @@ TENANT_APPS = (
     'etools.applications.management',
     'etools.applications.action_points',
     'etools.applications.psea',
+    'etools.applications.field_monitoring.fm_settings',
+    'etools.applications.field_monitoring.planning',
+    'etools.applications.field_monitoring.data_collection',
+    'etools.applications.field_monitoring.analyze',
     'unicef_snapshot',
     'unicef_attachments',
     'unicef_vision',
@@ -274,7 +283,8 @@ AUTHENTICATION_BACKENDS = (
 AUTH_USER_MODEL = 'users.User'
 LOGIN_REDIRECT_URL = '/'
 
-HOST = get_from_secrets_or_env('DJANGO_ALLOWED_HOST', 'http://localhost:8000/')
+HOST = get_from_secrets_or_env('DJANGO_ALLOWED_HOST', 'http://localhost:8082')
+
 LOGIN_URL = LOGOUT_REDIRECT_URL = get_from_secrets_or_env('LOGIN_URL', '/landing/')
 
 # CONTRIB: GIS (GeoDjango)
@@ -314,7 +324,8 @@ CELERY_ACCEPT_CONTENT = ['pickle', 'json', 'application/text']
 CELERY_BROKER_URL = get_from_secrets_or_env('REDIS_URL', 'redis://localhost:6379/0')
 CELERY_BROKER_VISIBILITY_VAR = get_from_secrets_or_env('CELERY_VISIBILITY_TIMEOUT', 1800)  # in seconds
 CELERY_BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': int(CELERY_BROKER_VISIBILITY_VAR)}
-CELERY_RESULT_BACKEND = 'django-db'
+# CELERY_RESULT_BACKEND = 'django-db'
+CELERY_CACHE_BACKEND = 'default'
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers.DatabaseScheduler'
 # Sensible settings for celery
 CELERY_TASK_ALWAYS_EAGER = False
@@ -359,6 +370,7 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.SessionAuthentication',
         'etools.applications.core.auth.EToolsTenantJWTAuthentication',
+        'etools.applications.core.auth.eToolsOLCTokenAuth',
         'etools.applications.core.auth.EtoolsTokenAuthentication',
     ),
     'TEST_REQUEST_RENDERER_CLASSES': (
@@ -464,10 +476,9 @@ SLACK_URL = get_from_secrets_or_env('SLACK_URL')
 
 TASK_ADMIN_USER = get_from_secrets_or_env('TASK_ADMIN_USER', 'etools_task_admin@unicef.org')
 
-VISION_LOGGER_MODEL = "vision.VisionSyncLog"
-VISION_URL = get_from_secrets_or_env('VISION_URL', 'http://invalid_vision_url')
-VISION_USER = get_from_secrets_or_env('VISION_USER', 'invalid_vision_user')
-VISION_PASSWORD = get_from_secrets_or_env('VISION_PASSWORD', 'invalid_vision_password')
+INSIGHT_LOGGER_MODEL = "vision.VisionSyncLog"
+INSIGHT_SUB_KEY = get_from_secrets_or_env('INSIGHT_SUB_KEY', 'invalid_key')
+INSIGHT_URL = get_from_secrets_or_env('INSIGHT_URL', 'http://invalid_vision_url')
 
 
 # ALLOW BASIC AUTH FOR DEMO SITE
@@ -496,7 +507,7 @@ SOCIAL_AUTH_SANITIZE_REDIRECTS = False
 SOCIAL_AUTH_POSTGRES_JSONFIELD = True
 POLICY = os.getenv('AZURE_B2C_POLICY_NAME', "b2c_1A_UNICEF_PARTNERS_signup_signin")
 
-TENANT_ID = os.getenv('AZURE_B2C_TENANT', 'unicefpartners.onmicrosoft.com')
+TENANT_ID = os.getenv('AZURE_B2C_TENANT', 'unicefpartners')
 SCOPE = ['openid', 'email']
 IGNORE_DEFAULT_SCOPE = True
 SOCIAL_AUTH_USERNAME_IS_FULL_EMAIL = True
@@ -542,9 +553,10 @@ UNICEF_LOCATIONS_GET_CACHE_KEY = 'etools.libraries.locations.views.cache_key'
 ATTACHMENT_FILEPATH_PREFIX_FUNC = "etools.applications.attachments.utils.get_filepath_prefix"
 ATTACHMENT_FLAT_MODEL = "etools.applications.attachments.models.AttachmentFlat"
 ATTACHMENT_DENORMALIZE_FUNC = "etools.applications.attachments.utils.denormalize_attachment"
+ATTACHMENT_PERMISSIONS = "etools.applications.attachments.permissions.IsInSchema"
 
 GEOS_LIBRARY_PATH = os.getenv('GEOS_LIBRARY_PATH', '/usr/lib/libgeos_c.so.1')  # default path
-GDAL_LIBRARY_PATH = os.getenv('GDAL_LIBRARY_PATH', '/usr/lib/libgdal.so.20')  # default path
+GDAL_LIBRARY_PATH = os.getenv('GDAL_LIBRARY_PATH', '/usr/lib/libgdal.so.26')  # default path
 
 SHELL_PLUS_PRE_IMPORTS = (
     ('etools.applications.core.util_scripts', '*'),
@@ -555,3 +567,11 @@ PSEA_ASSESSMENT_FINAL_RECIPIENTS = get_from_secrets_or_env(
     'PSEA_ASSESSMENT_FINAL_RECIPIENTS',
     '',
 ).split(',')
+
+INSIGHT_REQUESTS_TIMEOUT = get_from_secrets_or_env('INSIGHT_REQUESTS_TIMEOUT', 400)  # in seconds
+
+# Etools offline collect
+# https://github.com/unicef/etools-offline-collect/blob/develop/client/README.md
+ETOOLS_OFFLINE_API = get_from_secrets_or_env('ETOOLS_OFFLINE_API', '')
+ETOOLS_OFFLINE_TOKEN = get_from_secrets_or_env('ETOOLS_OFFLINE_TOKEN', '')
+ETOOLS_OFFLINE_TASK_APP = "etools.config.celery.get_task_app"

@@ -7,7 +7,7 @@ from django.db import connection, models
 from django.db.transaction import atomic
 from django.utils import timezone
 from django.utils.encoding import force_text
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from django_fsm import FSMField, transition
 from model_utils import Choices, FieldTracker
@@ -33,6 +33,7 @@ from etools.applications.audit.transitions.serializers import EngagementCancelSe
 from etools.applications.audit.utils import generate_final_report
 from etools.applications.core.urlresolvers import build_frontend_url
 from etools.applications.partners.models import PartnerOrganization, PartnerStaffMember
+from etools.applications.reports.models import Office, Section
 from etools.libraries.djangolib.models import GroupWrapper, InheritedModelMixin
 from etools.libraries.djangolib.utils import get_environment
 from etools.libraries.fsm.views import has_action_permission
@@ -163,13 +164,27 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
     ), blank=True, default=list, verbose_name=_('Shared Audit with'))
 
     staff_members = models.ManyToManyField(AuditorStaffMember, verbose_name=_('Staff Members'))
+    users_notified = models.ManyToManyField(get_user_model(), blank=True, verbose_name=_('Notified When Completed'))
 
     cancel_comment = models.TextField(blank=True, verbose_name=_('Cancel Comment'))
 
     active_pd = models.ManyToManyField('partners.Intervention', verbose_name=_('Active PDs'), blank=True)
 
+    # TODO: clarify this.. do we even need this
     authorized_officers = models.ManyToManyField(
         PartnerStaffMember, verbose_name=_('Authorized Officers'), blank=True, related_name="engagement_authorizations"
+    )
+    sections = models.ManyToManyField(
+        Section,
+        verbose_name=_("Sections"),
+        blank=True,
+        related_name='engagements',
+    )
+    offices = models.ManyToManyField(
+        Office,
+        verbose_name=_('Offices'),
+        blank=True,
+        related_name='engagements',
     )
 
     objects = InheritanceManager()
@@ -234,8 +249,7 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
         }
 
     def _notify_focal_points(self, template_name, context=None):
-        for focal_point in get_user_model().objects.filter(groups=UNICEFAuditFocalPoint.as_group(),
-                                                           profile__countries_available=connection.tenant):
+        for focal_point in self.users_notified.all():
             # Build the context in the same order the previous version of the code did,
             # just in case something relies on it (intentionally or not).
             ctx = {
@@ -397,9 +411,7 @@ class SpotCheck(Engagement):
         verbose_name=_('Total Amount of Ineligible Expenditure'), default=0, blank=True,
         decimal_places=2, max_digits=20,
     )
-
     internal_controls = models.TextField(verbose_name=_('Internal Controls'), blank=True)
-
     final_report = CodedGenericRelation(
         Attachment,
         verbose_name=_('Spot Check Final Report'),

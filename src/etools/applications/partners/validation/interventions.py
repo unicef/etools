@@ -1,7 +1,7 @@
 import logging
 from datetime import date
 
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from etools_validator.exceptions import BasicValidationError, StateValidationError, TransitionError
 from etools_validator.utils import check_required_fields, check_rigid_fields
@@ -69,12 +69,21 @@ def transition_to_closed(i):
     # In case FRs are marked as completed validation needs to move forward regardless of value discrepancy
     # In case it's a supply only PD, the total FRs will be $0.01 and validation needs to move forward
     # to be safe given decimal field here compare to a float we're saying smaller than $0.1 & continue with validation
-    if not i.total_frs['total_completed_flag'] and \
-            not float(i.total_frs['total_frs_amt']) < 0.1 and \
-            (i.total_frs['total_frs_amt'] != i.total_frs['total_actual_amt'] or
-             i.total_frs['total_outstanding_amt'] != 0):
-        raise TransitionError([_('Total FR amount needs to equal total actual amount, and '
-                                 'Total Outstanding DCTs need to equal to 0')])
+    if i.total_frs['total_completed_flag']:
+        if i.total_frs['total_outstanding_amt'] != 0:
+            raise TransitionError(
+                [_('Total Outstanding DCTs need to equal to 0')],
+            )
+    else:
+        if not float(i.total_frs['total_frs_amt']) < 0.1:
+            if (
+                    i.total_frs['total_frs_amt'] != i.total_frs['total_actual_amt'] or
+                    i.total_frs['total_outstanding_amt'] != 0
+            ):
+                raise TransitionError(
+                    [_('Total FR amount needs to equal total actual amount'
+                       ', and Total Outstanding DCTs need to equal to 0')]
+                )
 
     # If total_actual_amt_usd >100,000 then attachments has to include
     # at least 1 record with type: "Final Partnership Review"
@@ -250,14 +259,14 @@ def locations_valid(i):
     ainds = AppliedIndicator.objects.filter(lower_result__result_link__intervention__pk=i.pk).all()
     ind_locations = set()
     for ind in ainds:
-        for l in ind.locations.all():
-            ind_locations.add(l)
+        for loc in ind.locations.all():
+            ind_locations.add(loc)
     intervention_locations = set(i.flat_locations.all())
     if not ind_locations.issubset(intervention_locations):
         raise BasicValidationError(_('The following locations have been selected on '
                                      'the PD/SSFA indicators and cannot be removed'
                                      ' without removing them from the indicators first: ') +
-                                   ', '.join([str(l) for l in ind_locations - intervention_locations]))
+                                   ', '.join([str(loc) for loc in ind_locations - intervention_locations]))
     return True
 
 

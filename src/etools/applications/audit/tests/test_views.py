@@ -13,7 +13,7 @@ from unicef_attachments.models import Attachment
 
 from etools.applications.action_points.tests.factories import ActionPointCategoryFactory, ActionPointFactory
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
-from etools.applications.audit.models import Auditor, Engagement, Risk
+from etools.applications.audit.models import Auditor, Engagement, Risk, SpotCheck
 from etools.applications.audit.tests.base import AuditTestCaseMixin, EngagementTransitionsTestCaseMixin
 from etools.applications.audit.tests.factories import (
     AuditFactory,
@@ -21,6 +21,7 @@ from etools.applications.audit.tests.factories import (
     AuditPartnerFactory,
     EngagementFactory,
     MicroAssessmentFactory,
+    PartnerWithAgreementsFactory,
     PurchaseOrderFactory,
     RiskBluePrintFactory,
     RiskCategoryFactory,
@@ -33,6 +34,7 @@ from etools.applications.audit.tests.test_transitions import MATransitionsTestCa
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import PartnerType
 from etools.applications.reports.tests.factories import SectionFactory
+from etools.applications.users.tests.factories import OfficeFactory
 
 
 class BaseTestCategoryRisksViewSet(EngagementTransitionsTestCaseMixin):
@@ -418,11 +420,11 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, BaseTenantT
         self.assertIn('text/csv', response['Content-Type'])
 
     def test_staff_spot_checks_csv_view(self):
-        engagement = StaffSpotCheckFactory()
+        StaffSpotCheckFactory()
 
         response = self.forced_auth_req(
             'get',
-            '/api/audit/staff-spot-checks/csv/'.format(engagement.id),
+            '/api/audit/staff-spot-checks/csv/',
             user=self.unicef_user,
         )
 
@@ -432,6 +434,32 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, BaseTenantT
     def test_search_by_id(self):
         self._test_list(self.auditor, [self.engagement], filter_params={'search': self.engagement.pk})
         self._test_list(self.auditor, filter_params={'search': -1})
+
+    def test_search_by_vendor_number(self):
+        partner = PartnerWithAgreementsFactory(vendor_number="321")
+        engagement = self.engagement_factory(
+            agreement__auditor_firm=self.auditor_firm,
+            partner=partner,
+        )
+        self.assertTrue(partner.vendor_number)
+        self._test_list(
+            self.auditor,
+            [engagement],
+            filter_params={'search': engagement.partner.vendor_number},
+        )
+
+    def test_search_by_short_name(self):
+        partner = PartnerWithAgreementsFactory(short_name="shorty")
+        engagement = self.engagement_factory(
+            agreement__auditor_firm=self.auditor_firm,
+            partner=partner,
+        )
+        self.assertTrue(partner.short_name)
+        self._test_list(
+            self.auditor,
+            [engagement],
+            filter_params={'search': engagement.partner.short_name},
+        )
 
 
 class BaseTestEngagementsCreateViewSet(EngagementTransitionsTestCaseMixin):
@@ -449,6 +477,7 @@ class BaseTestEngagementsCreateViewSet(EngagementTransitionsTestCaseMixin):
             'partner': self.engagement.partner_id,
             'engagement_type': self.engagement.engagement_type,
             'authorized_officers': self.engagement.authorized_officers.values_list('id', flat=True),
+            'users_notified': self.engagement.users_notified.values_list('id', flat=True),
             'staff_members': self.engagement.staff_members.values_list('id', flat=True),
             'active_pd': self.engagement.active_pd.values_list('id', flat=True),
             'shared_ip_with': self.engagement.shared_ip_with,
@@ -528,6 +557,81 @@ class TestSpotCheckCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEn
                                  BaseTenantTestCase):
     engagement_factory = SpotCheckFactory
 
+    def test_list(self):
+        self.endpoint = "spot-checks"
+        section = SectionFactory()
+        spot_check = SpotCheckFactory()
+        spot_check.sections.set([section.pk])
+        office = OfficeFactory()
+        spot_check.offices.set([office.pk])
+        response = response = self.forced_auth_req(
+            'get',
+            self.engagements_url(),
+            user=self.unicef_focal_point,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        found = False
+        for data in response.data["results"]:
+            if data["id"] == spot_check.pk:
+                found = True
+                self.assertEqual(
+                    data["sections"],
+                    [{"id": section.pk, "name": section.name}],
+                )
+                self.assertEqual(
+                    data["offices"],
+                    [{"id": office.pk, "name": office.name}],
+                )
+        self.assertTrue(found)
+
+    def test_sections(self):
+        self.endpoint = "spot-checks"
+        section_1 = SectionFactory()
+        section_2 = SectionFactory()
+        self.create_data["sections"] = [section_1.pk, section_2.pk]
+        response = self._do_create(self.unicef_focal_point, self.create_data)
+
+        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(
+            sorted(response.data['sections'], key=lambda x: x["id"]),
+            sorted(
+                [
+                    {"id": section_1.pk, "name": section_1.name},
+                    {"id": section_2.pk, "name": section_2.name},
+                ],
+                key=lambda x: x["id"]
+            ),
+        )
+        spot_check = SpotCheck.objects.get(pk=response.data["id"])
+        self.assertEqual(
+            sorted([s.pk for s in spot_check.sections.all()]),
+            sorted([section_1.pk, section_2.pk]),
+        )
+
+    def test_offices(self):
+        self.endpoint = "spot-checks"
+        office_1 = OfficeFactory()
+        office_2 = OfficeFactory()
+        self.create_data["offices"] = [office_1.pk, office_2.pk]
+        response = self._do_create(self.unicef_focal_point, self.create_data)
+
+        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        self.assertEquals(
+            sorted(response.data['offices'], key=lambda x: x["id"]),
+            sorted(
+                [
+                    {"id": office_1.pk, "name": office_1.name},
+                    {"id": office_2.pk, "name": office_2.name},
+                ],
+                key=lambda x: x["id"],
+            ),
+        )
+        spot_check = SpotCheck.objects.get(pk=response.data["id"])
+        self.assertEquals(
+            sorted([o.pk for o in spot_check.offices.all()]),
+            sorted([office_1.pk, office_2.pk]),
+        )
+
 
 class SpecialAuditCreateViewSet(BaseTestEngagementsCreateViewSet, BaseTenantTestCase):
     engagement_factory = SpecialAuditFactory
@@ -586,7 +690,7 @@ class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenan
 class TestEngagementActionPointViewSet(EngagementTransitionsTestCaseMixin, BaseTenantTestCase):
     engagement_factory = MicroAssessmentFactory
 
-    def test_action_point_added(self):
+    def test_action_point_added_focal_point(self):
         self._init_finalized_engagement()
         self.assertEqual(self.engagement.action_points.count(), 0)
 
@@ -600,7 +704,29 @@ class TestEngagementActionPointViewSet(EngagementTransitionsTestCaseMixin, BaseT
                 'due_date': fuzzy.FuzzyDate(datetime.date(2001, 1, 1)).fuzz(),
                 'assigned_to': self.unicef_user.id,
                 'section': SectionFactory().id,
-                'office': self.unicef_focal_point.profile.office.id,
+                'office': self.unicef_focal_point.profile.tenant_profile.office.id,
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(self.engagement.action_points.count(), 1)
+        self.assertIsNotNone(self.engagement.action_points.first().partner)
+
+    def test_action_point_added_unicef_user(self):
+        self._init_finalized_engagement()
+        self.assertEqual(self.engagement.action_points.count(), 0)
+
+        response = self.forced_auth_req(
+            'post',
+            '/api/audit/engagements/{}/action-points/'.format(self.engagement.id),
+            user=self.unicef_user,
+            data={
+                'category': ActionPointCategoryFactory(module='audit').id,
+                'description': fuzzy.FuzzyText(length=100).fuzz(),
+                'due_date': fuzzy.FuzzyDate(datetime.date(2001, 1, 1)).fuzz(),
+                'assigned_to': self.unicef_user.id,
+                'section': SectionFactory().id,
+                'office': self.unicef_focal_point.profile.tenant_profile.office.id,
             }
         )
 
@@ -681,6 +807,7 @@ class TestStaffSpotCheck(AuditTestCaseMixin, BaseTenantTestCase):
             'total_value': spot_check.total_value,
             'partner': spot_check.partner_id,
             'authorized_officers': spot_check.authorized_officers.values_list('id', flat=True),
+            'users_notified': spot_check.users_notified.values_list('id', flat=True),
             'staff_members': spot_check.staff_members.values_list('id', flat=True),
             'active_pd': spot_check.active_pd.values_list('id', flat=True),
             'shared_ip_with': spot_check.shared_ip_with,
@@ -1213,7 +1340,7 @@ class TestEngagementAttachmentsView(MATransitionsTestCaseMixin, BaseTenantTestCa
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
-        cls.file_type = AttachmentFileTypeFactory(code='audit_engagement')
+        cls.file_type = AttachmentFileTypeFactory(group=['audit_engagement'])
 
     def test_list(self):
         attachment = AttachmentFactory(
@@ -1259,7 +1386,9 @@ class TestEngagementAttachmentsView(MATransitionsTestCaseMixin, BaseTenantTestCa
         self.assertEqual(attachment.code, "audit_engagement")
 
     def test_patch(self):
-        file_type_old = AttachmentFileTypeFactory(code="different_engagement")
+        file_type_old = AttachmentFileTypeFactory(
+            group=["different_engagement"],
+        )
         attachment = AttachmentFactory(
             file="sample.pdf",
             file_type=file_type_old,
@@ -1333,7 +1462,7 @@ class TestEngagementReportAttachmentsView(MATransitionsTestCaseMixin, BaseTenant
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
-        cls.file_type = AttachmentFileTypeFactory(code='audit_report')
+        cls.file_type = AttachmentFileTypeFactory(group=['audit_report'])
 
     def test_list(self):
         attachment = AttachmentFactory(
@@ -1380,7 +1509,7 @@ class TestEngagementReportAttachmentsView(MATransitionsTestCaseMixin, BaseTenant
         self.assertEqual(attachment.code, "audit_report")
 
     def test_patch(self):
-        file_type_old = AttachmentFileTypeFactory(code="different_report")
+        file_type_old = AttachmentFileTypeFactory(group=["different_report"])
         attachment = AttachmentFactory(
             file="sample.pdf",
             file_type=file_type_old,

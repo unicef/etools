@@ -1,7 +1,7 @@
 import logging
 from datetime import date
 
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from etools_validator.exceptions import BasicValidationError, StateValidationError, TransitionError
 from etools_validator.utils import check_required_fields, check_rigid_fields
@@ -42,6 +42,12 @@ def agreement_transition_to_ended_valid(agreement):
     if agreement.status == agreement.SIGNED and agreement.end and agreement.end < today:
         return True
     raise TransitionError(['agreement_transition_to_ended_invalid'])
+
+
+def transition_to_terminated(agreement):
+    if agreement.agreement_type == agreement.PCA and not agreement.termination_doc.exists():
+        raise TransitionError([_('Cannot Transition without termination doc attached')])
+    return True
 
 
 def agreements_illegal_transition(agreement):

@@ -4,6 +4,7 @@ from django.conf.urls import url
 from django.contrib import admin, messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
+from django.db import connection
 from django.http.response import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
@@ -13,9 +14,18 @@ from django_tenants.utils import get_public_schema_name
 
 from etools.applications.funds.tasks import sync_all_delegated_frs, sync_country_delegated_fr
 from etools.applications.hact.tasks import update_hact_for_country, update_hact_values
-from etools.applications.users.models import Country, Office, UserProfile, WorkspaceCounter
+from etools.applications.users.models import Country, UserProfile, WorkspaceCounter
 from etools.applications.vision.tasks import sync_handler, vision_sync_task
 from etools.libraries.azure_graph_api.tasks import sync_user
+
+
+def get_office(obj):
+    if connection.tenant.schema_name == get_public_schema_name():
+        return None
+    try:
+        return obj.profile.tenant_profile.office
+    except AttributeError:
+        return None
 
 
 class ProfileInline(admin.StackedInline):
@@ -35,7 +45,7 @@ class ProfileInline(admin.StackedInline):
         'countries_available',
     )
     search_fields = (
-        'office__name',
+        'tenant_profile__office__name',
         'country__name',
         'user__email'
     )
@@ -64,6 +74,9 @@ class ProfileInline(admin.StackedInline):
         return super().formfield_for_manytomany(
             db_field, request, **kwargs
         )
+
+    def office(self, obj):
+        return get_office(obj)
 
 
 class ProfileAdmin(admin.ModelAdmin):
@@ -101,7 +114,7 @@ class ProfileAdmin(admin.ModelAdmin):
         'countries_available',
     )
     search_fields = (
-        'office__name',
+        'tenant_profile__office__name',
         'country__name',
         'user__email'
     )
@@ -148,6 +161,9 @@ class ProfileAdmin(admin.ModelAdmin):
         return super().formfield_for_manytomany(
             db_field, request, **kwargs
         )
+
+    def office(self, obj):
+        return get_office(obj)
 
     def save_model(self, request, obj, form, change):
         if form.data.get('supervisor'):
@@ -201,7 +217,7 @@ class UserAdminPlus(UserAdmin):
     country.admin_order_field = 'profile__country'
 
     def office(self, obj):
-        return obj.profile.office
+        return get_office(obj)
 
     def has_add_permission(self, request):
         return False
@@ -244,6 +260,7 @@ class CountryAdmin(TenantAdminMixin, admin.ModelAdmin):
 
     list_display = (
         'name',
+        'iso3_code',
         'country_short_code',
         'business_area_code',
         'vision_sync_enabled',
@@ -278,7 +295,7 @@ class CountryAdmin(TenantAdminMixin, admin.ModelAdmin):
         return custom_urls + urls
 
     def sync_fund_commitment(self, request, pk):
-        return self.execute_sync(pk, 'fund_commitment')
+        return self.execute_sync(pk, 'fund_commitment', request)
 
     def sync_fund_reservation_delegated(self, request, pk):
         country = Country.objects.get(pk=pk)
@@ -286,30 +303,32 @@ class CountryAdmin(TenantAdminMixin, admin.ModelAdmin):
             sync_all_delegated_frs.delay()
         else:
             sync_country_delegated_fr.delay(country.business_area_code)
+        messages.info(request, "Task fund reservation delegated scheduled")
         return HttpResponseRedirect(reverse('admin:users_country_change', args=[country.pk]))
 
     def sync_fund_reservation(self, request, pk):
-        return self.execute_sync(pk, 'fund_reservation')
+        return self.execute_sync(pk, 'fund_reservation', request)
 
     def sync_partners(self, request, pk):
-        return self.execute_sync(pk, 'partner')
+        return self.execute_sync(pk, 'partner', request)
 
     def sync_programme(self, request, pk):
-        return self.execute_sync(pk, 'programme')
+        return self.execute_sync(pk, 'programme', request)
 
     def sync_ram(self, request, pk):
-        return self.execute_sync(pk, 'ram')
+        return self.execute_sync(pk, 'ram', request)
 
     def sync_dct(self, request, pk):
-        return self.execute_sync(pk, 'dct')
+        return self.execute_sync(pk, 'dct', request)
 
     @staticmethod
-    def execute_sync(country_pk, synchronizer):
+    def execute_sync(country_pk, synchronizer, request):
         country = Country.objects.get(pk=country_pk)
         if country.schema_name == get_public_schema_name():
             vision_sync_task(synchronizers=[synchronizer, ])
         else:
             sync_handler.delay(country.business_area_code, synchronizer)
+        messages.info(request, f"Task {synchronizer} scheduled")
         return HttpResponseRedirect(reverse('admin:users_country_change', args=[country.pk]))
 
     def update_hact(self, request, pk):
@@ -327,5 +346,4 @@ class CountryAdmin(TenantAdminMixin, admin.ModelAdmin):
 admin.site.register(get_user_model(), UserAdminPlus)
 admin.site.register(UserProfile, ProfileAdmin)
 admin.site.register(Country, CountryAdmin)
-admin.site.register(Office)
 admin.site.register(WorkspaceCounter)

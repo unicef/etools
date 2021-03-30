@@ -21,9 +21,7 @@ from etools.applications.users.tests.factories import UserFactory
 class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.file_type = AttachmentFileTypeFactory(
-            code="t2f_travel_attachment"
-        )
+        cls.file_type = AttachmentFileTypeFactory()
         cls.traveler = UserFactory(is_staff=True)
         cls.unicef_staff = UserFactory(is_staff=True)
 
@@ -71,7 +69,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
             name='\u0628\u0631\u0646\u0627\u0645\u062c \u062a\u062f\u0631\u064a\u0628 \u0627\u0644\u0645\u062a\u0627\u0628\u0639\u064a\u0646.pdf',  # noqa
             file=factory.django.FileField(filename='travels/lebanon/24800/\u0628\u0631\u0646\u0627\u0645\u062c_\u062a\u062f\u0631\u064a\u0628_\u0627\u0644\u0645\u062a\u0627\u0628\u0639\u064a\u0646.pdf')  # noqa
         )
-        with self.assertNumQueries(15):
+        with self.assertNumQueries(16):
             response = self.forced_auth_req(
                 'get',
                 reverse('t2f:travels:details:index', args=[self.travel.pk]),

@@ -4,7 +4,7 @@ from django.db.models import ObjectDoesNotExist, Q
 from django.http import HttpResponseForbidden
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from django_filters.rest_framework import DjangoFilterBackend
 from etools_validator.mixins import ValidatorViewMixin
@@ -77,9 +77,15 @@ class AssessmentViewSet(
             'assessor__user__last_name__icontains',
         ]),
         ('partner', 'partner_id__in'),
+        ('sea_risk_rating', {
+            'high': [('overall_rating__gte', 0), ('overall_rating__lte', 8)],
+            'moderate': [('overall_rating__gte', 9), ('overall_rating__lte', 14)],
+            'low': [('overall_rating__gt', 15), ],
+        }),
         ('status', 'status__in'),
         ('unicef_focal_point', 'focal_points__pk__in'),
-        ('assessment_date', 'assessment_date'),
+        ('assessment_date__lt', 'assessment_date__lt'),
+        ('assessment_date__gt', 'assessment_date__gt'),
         ('assessor_staff', 'assessor__user__pk__in'),
         ('assessor_external', 'assessor__user__pk__in'),
         ('assessor_firm', 'assessor__auditor_firm__pk__in'),

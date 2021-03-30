@@ -6,6 +6,7 @@ from urllib.parse import urlparse
 
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.management import call_command
 from django.db import connection
 from django.test import override_settings, SimpleTestCase
 from django.urls import resolve, reverse
@@ -21,9 +22,11 @@ from unicef_snapshot.models import Activity
 
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.action_points.tests.factories import ActionPointFactory
-from etools.applications.attachments.tests.factories import AttachmentFileTypeFactory
+from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.core.tests.mixins import URLAssertionMixin
+from etools.applications.environment.helpers import tenant_switch_is_active
+from etools.applications.environment.tests.factories import TenantSwitchFactory
 from etools.applications.funds.models import FundsCommitmentHeader, FundsCommitmentItem
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
 from etools.applications.partners.models import (
@@ -56,13 +59,14 @@ from etools.applications.partners.views import partner_organization_v2, v2
 from etools.applications.reports.models import ResultType
 from etools.applications.reports.tests.factories import (
     CountryProgrammeFactory,
+    OfficeFactory,
     ResultFactory,
     ResultTypeFactory,
     SectionFactory,
 )
 from etools.applications.t2f.models import Travel, TravelType
 from etools.applications.t2f.tests.factories import TravelActivityFactory, TravelFactory
-from etools.applications.users.tests.factories import GroupFactory, OfficeFactory, UserFactory
+from etools.applications.users.tests.factories import GroupFactory, UserFactory
 
 
 class URLsTestCase(URLAssertionMixin, SimpleTestCase):
@@ -164,7 +168,7 @@ class TestAPIPartnerOrganizationListView(BaseTenantTestCase):
             'address', 'blocked', 'basis_for_risk_rating', 'city', 'country', 'cso_type', 'deleted_flag', 'email',
             'hidden', 'id', 'last_assessment_date', 'name', 'net_ct_cy', 'partner_type', 'phone_number', 'postal_code',
             'rating', 'reported_cy', 'shared_with', 'short_name', 'street_address', 'total_ct_cp', 'total_ct_cy',
-            'total_ct_ytd', 'vendor_number',
+            'total_ct_ytd', 'vendor_number', 'psea_assessment_date', 'sea_risk_rating_name',
         ))
 
     def assertResponseFundamentals(self, response, expected_keys=None):
@@ -270,6 +274,56 @@ class TestAPIPartnerOrganizationListView(BaseTenantTestCase):
         response_json = json.loads(response.rendered_content)
         self.assertIsInstance(response_json, list)
         self.assertEqual(len(response_json), 0)
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_filter_sea_risk_rating(self):
+        """Ensure filtering by the sea_risk_rating works as expected"""
+        sea_risk_rating = "High"
+        self.partner = PartnerFactory(sea_risk_rating_name=sea_risk_rating)
+        for _ in range(10):
+            PartnerFactory()
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            data={"sea_risk_rating": sea_risk_rating},
+        )
+        self.assertResponseFundamentals(response)
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_filter_psea_assessment_date_before(self):
+        """Ensure filtering by the psea_assessment_date_before works
+        as expected"""
+        date = datetime.date(2001, 1, 1)
+        self.partner = PartnerFactory(psea_assessment_date=date)
+        date_after = date + datetime.timedelta(days=20)
+        for _ in range(10):
+            PartnerFactory(psea_assessment_date=date_after)
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            data={
+                "psea_assessment_date_before": date + datetime.timedelta(days=1),
+            },
+        )
+        self.assertResponseFundamentals(response)
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_filter_psea_assessment_date_after(self):
+        """Ensure filtering by the psea_assessment_date_after works
+        as expected"""
+        date = datetime.date(2001, 1, 1)
+        self.partner = PartnerFactory(psea_assessment_date=date)
+        date_before = date - datetime.timedelta(days=20)
+        for _ in range(10):
+            PartnerFactory(psea_assessment_date=date_before)
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            data={
+                "psea_assessment_date_after": date - datetime.timedelta(days=1),
+            },
+        )
+        self.assertResponseFundamentals(response)
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_search_name(self):
@@ -477,15 +531,11 @@ class TestAgreementCreateAPIView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
-        partner_staff = PartnerStaffFactory(partner=cls.partner)
 
         cls.partnership_manager_user = UserFactory(is_staff=True)
         cls.partnership_manager_user.groups.add(GroupFactory())
-        cls.partnership_manager_user.profile.partner_staff_member = partner_staff.id
-        cls.partnership_manager_user.save()
-        cls.file_type_agreement = AttachmentFileTypeFactory(
-            code="partners_agreement"
-        )
+        PartnerStaffFactory(partner=cls.partner, user=cls.partnership_manager_user)
+        cls.file_type_agreement = AttachmentFileTypeFactory()
 
     def test_minimal_create(self):
         """Test passing as few fields as possible to create"""
@@ -547,9 +597,7 @@ class TestAgreementAPIFileAttachments(BaseTenantTestCase):
             partner=cls.partner,
             attached_agreement=None,
         )
-        cls.file_type_agreement = AttachmentFileTypeFactory(
-            code="partners_agreement"
-        )
+        cls.file_type_agreement = AttachmentFileTypeFactory()
 
     def _get_and_assert_response(self):
         """Helper method to get the agreement and verify some basic about the response JSON (which it returns)."""
@@ -655,17 +703,13 @@ class TestAgreementAPIView(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
         cls.partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
-        cls.partner_staff = PartnerStaffFactory(partner=cls.partner)
-        cls.partner_staff2 = PartnerStaffFactory(partner=cls.partner)
 
         cls.partner_staff_user = UserFactory(is_staff=True)
-        cls.partner_staff_user.profile.partner_staff_member = cls.partner_staff.id
-        cls.partner_staff_user.save()
+        cls.partner_staff = PartnerStaffFactory(partner=cls.partner, user=cls.partner_staff_user)
 
         cls.partnership_manager_user = UserFactory(is_staff=True)
         cls.partnership_manager_user.groups.add(GroupFactory())
-        cls.partnership_manager_user.profile.partner_staff_member = cls.partner_staff.id
-        cls.partnership_manager_user.save()
+        cls.partner_staff2 = PartnerStaffFactory(partner=cls.partner, user=cls.partnership_manager_user)
 
         cls.notify_path = "etools.applications.partners.utils.send_notification_with_template"
 
@@ -709,9 +753,7 @@ class TestAgreementAPIView(BaseTenantTestCase):
         cls.intervention = InterventionFactory(
             agreement=cls.agreement,
             document_type=Intervention.PD)
-        cls.file_type_agreement = AttachmentFileTypeFactory(
-            code="partners_agreement"
-        )
+        cls.file_type_agreement = AttachmentFileTypeFactory()
 
     def test_cp_end_date_update(self):
         data = {
@@ -1037,11 +1079,9 @@ class TestPartnerStaffMemberAPIView(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
         cls.partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
-        cls.partner_staff = PartnerStaffFactory(partner=cls.partner)
         cls.partner_staff_user = UserFactory(is_staff=True)
         cls.partner_staff_user.groups.add(GroupFactory())
-        cls.partner_staff_user.profile.partner_staff_member = cls.partner_staff.id
-        cls.partner_staff_user.profile.save()
+        cls.partner_staff = PartnerStaffFactory(partner=cls.partner, user=cls.partner_staff_user)
         cls.url = reverse(
             "partners_api:partner-staff-members-list",
             args=[cls.partner.pk]
@@ -1678,6 +1718,66 @@ class TestInterventionViews(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]["id"], self.intervention["id"])
+
+    def test_intervention_amendment_notificaton(self):
+        def _send_req():
+            self.forced_auth_req(
+                'patch',
+                reverse('partners_api:intervention-detail', args=[self.intervention_data.get("id")]),
+                user=self.partnership_manager_user,
+                data=data
+            )
+
+        # make sure that the notification template is imported to the DB
+        call_command("update_notifications")
+
+        fr = FundsReservationHeaderFactory()
+        fr.intervention = self.intervention_obj
+        fr.save()
+
+        attachment = AttachmentFactory()
+        office = OfficeFactory()
+        section = SectionFactory()
+
+        ts = TenantSwitchFactory(name="intervention_amendment_notifications_on", countries=[connection.tenant])
+        ts.active = False
+        ts.save()
+
+        self.intervention_obj.country_programme = self.intervention_obj.agreement.country_programme
+        self.intervention_obj.status = Intervention.ACTIVE
+        self.intervention_obj.unicef_focal_points.add(self.unicef_staff)
+        self.intervention_obj.partner_focal_points.add(PartnerStaffFactory())
+        self.intervention_obj.save()
+        self.assertEqual(self.intervention_obj.status, Intervention.ACTIVE)
+
+        self.assertEqual(self.intervention_obj.in_amendment, True)
+
+        data = {'in_amendment': False, 'frs': [fr.id], 'offices': [office.pk],
+                'sections': [section.pk], 'signed_pd_attachment': attachment.pk,
+                'country_programme': self.intervention_obj.country_programme.id}
+
+        mock_send = mock.Mock()
+        notifpath = "etools.applications.partners.views.interventions_v2.send_intervention_amendment_added_notification"
+        with mock.patch(notifpath, mock_send):
+            self.assertFalse(tenant_switch_is_active('intervention_amendment_notifications_on'))
+            _send_req()
+            self.assertEqual(mock_send.call_count, 0)
+
+        self.intervention_obj.in_amendment = True
+        self.intervention_obj.save()
+
+        ts.flush()
+        ts.active = True
+        ts.save()
+
+        with mock.patch(notifpath, mock_send):
+            self.assertTrue(tenant_switch_is_active('intervention_amendment_notifications_on'))
+            _send_req()
+            self.assertEqual(mock_send.call_count, 1)
+            mock_send.assert_called_with(self.intervention_obj)
+
+        self.intervention_obj.refresh_from_db()
+        self.assertEqual(self.intervention_obj.in_amendment, False)
 
 
 class TestInterventionReportingPeriodViews(BaseTenantTestCase):
