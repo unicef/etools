@@ -33,13 +33,13 @@ class SyncFRs(APIView):
             return Response(status=400, data={'error': 'You must pass "area" as a query param'})
 
         try:
-            country = Country.objects.get(business_area_code=business_area)
+            Country.objects.get(business_area_code=business_area)
         except Country.DoesNotExist:
             return Response(status=400, data={'error': 'Business Area code invalid'})
 
-        FundReservationsSynchronizer(country).sync()
+        FundReservationsSynchronizer(business_area_code=business_area).sync()
 
-        return Response({'success': 'Funds Reservation sync for {} successfully performed'.format(country.name)})
+        return Response({'success': 'Funds Reservation sync for {} successfully performed'.format(business_area)})
 
 
 class SyncCountries(APIView):

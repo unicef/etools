@@ -1,5 +1,8 @@
 import json
 
+from django.contrib.postgres.fields.jsonb import KeyTextTransform
+from django.db.models import Max
+
 from rest_framework import serializers
 from unicef_locations.models import Location
 
@@ -9,7 +12,6 @@ from etools.applications.partners.models import Intervention, PartnerOrganizatio
 from etools.applications.partners.serializers.interventions_v2 import MinimalInterventionListSerializer
 from etools.applications.reports.models import Result
 from etools.applications.reports.serializers.v2 import MinimalOutputListSerializer
-from etools.libraries.pythonlib.datetime import get_current_year
 
 
 class OverallSerializer(serializers.Serializer):
@@ -20,7 +22,13 @@ class OverallSerializer(serializers.Serializer):
         return MonitoringActivity.objects.filter(status=MonitoringActivity.STATUSES.completed).count()
 
     def get_visits_planned(self, obj):
-        return 0
+        def _rec_key_text(keys):
+            head = keys.pop()
+            if not keys:
+                return head
+            return KeyTextTransform(head, _rec_key_text(keys))
+        exp = _rec_key_text(['hact_values', 'programmatic_visits', 'planned', 'total'])
+        return PartnerOrganization.objects.annotate(visits=exp).aggregate(max=Max('visits'))['max'] or 0
 
 
 class PartnersCoverageSerializer(serializers.ModelSerializer):
@@ -38,10 +46,7 @@ class PartnersCoverageSerializer(serializers.ModelSerializer):
         ]
 
     def get_planned_visits(self, obj):
-        try:
-            return obj.planned_visits.get(year=get_current_year()).total
-        except obj.DoesNotExist:
-            return 0
+        return obj.hact_values["programmatic_visits"]["planned"]["total"] or 0
 
     def get_days_since_visit(self, obj):
         return get_days_since_last_visit(obj)
