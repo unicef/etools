@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from django.db import IntegrityError, transaction
 from django.db.models import Q
 from django.utils.encoding import force_text
@@ -8,6 +9,7 @@ from carto.sql import SQLClient
 from celery.utils.log import get_task_logger
 from unicef_locations.auth import LocationsCartoNoAuthClient
 from unicef_locations.models import CartoDBTable, Location, LocationRemapHistory
+from unicef_notification.utils import send_notification_with_template
 from unicef_vision.utils import get_vision_logger_domain_model
 
 from etools.applications.users.models import Country
@@ -330,6 +332,20 @@ def cleanup_obsolete_locations(self, carto_table_pk):
     log.successful = True
     log.save()
     return True
+
+
+@celery.current_app.task
+def notify_import_site_completed(carto_table_pk, user_pk):
+    user = get_user_model().objects.get(pk=user_pk)
+    context = {
+        'table': CartoDBTable.objects.get(pk=carto_table_pk),
+        'recipient': user.get_full_name(),
+    }
+    send_notification_with_template(
+        recipients=[user.email],
+        template_name='locations/import_completed',
+        context=context
+    )
 
 
 class NoRemapInUseException(Exception):
