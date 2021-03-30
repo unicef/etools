@@ -5,7 +5,7 @@ from django.db import connection, models
 from django.utils import timezone
 from django.utils.encoding import force_text
 from django.utils.functional import cached_property
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from django_fsm import FSMField, transition
 from model_utils import Choices, FieldTracker

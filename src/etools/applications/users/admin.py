@@ -295,7 +295,7 @@ class CountryAdmin(TenantAdminMixin, admin.ModelAdmin):
         return custom_urls + urls
 
     def sync_fund_commitment(self, request, pk):
-        return self.execute_sync(pk, 'fund_commitment')
+        return self.execute_sync(pk, 'fund_commitment', request)
 
     def sync_fund_reservation_delegated(self, request, pk):
         country = Country.objects.get(pk=pk)
@@ -303,30 +303,32 @@ class CountryAdmin(TenantAdminMixin, admin.ModelAdmin):
             sync_all_delegated_frs.delay()
         else:
             sync_country_delegated_fr.delay(country.business_area_code)
+        messages.info(request, "Task fund reservation delegated scheduled")
         return HttpResponseRedirect(reverse('admin:users_country_change', args=[country.pk]))
 
     def sync_fund_reservation(self, request, pk):
-        return self.execute_sync(pk, 'fund_reservation')
+        return self.execute_sync(pk, 'fund_reservation', request)
 
     def sync_partners(self, request, pk):
-        return self.execute_sync(pk, 'partner')
+        return self.execute_sync(pk, 'partner', request)
 
     def sync_programme(self, request, pk):
-        return self.execute_sync(pk, 'programme')
+        return self.execute_sync(pk, 'programme', request)
 
     def sync_ram(self, request, pk):
-        return self.execute_sync(pk, 'ram')
+        return self.execute_sync(pk, 'ram', request)
 
     def sync_dct(self, request, pk):
-        return self.execute_sync(pk, 'dct')
+        return self.execute_sync(pk, 'dct', request)
 
     @staticmethod
-    def execute_sync(country_pk, synchronizer):
+    def execute_sync(country_pk, synchronizer, request):
         country = Country.objects.get(pk=country_pk)
         if country.schema_name == get_public_schema_name():
             vision_sync_task(synchronizers=[synchronizer, ])
         else:
             sync_handler.delay(country.business_area_code, synchronizer)
+        messages.info(request, f"Task {synchronizer} scheduled")
         return HttpResponseRedirect(reverse('admin:users_country_change', args=[country.pk]))
 
     def update_hact(self, request, pk):

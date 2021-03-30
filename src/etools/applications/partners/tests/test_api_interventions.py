@@ -22,6 +22,7 @@ from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.core.tests.mixins import URLAssertionMixin
 from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.environment.tests.factories import TenantSwitchFactory
+from etools.applications.funds.tests.factories import FundsReservationItemFactory
 from etools.applications.partners.models import Intervention, InterventionAmendment, InterventionResultLink
 from etools.applications.partners.permissions import InterventionPermissions
 from etools.applications.partners.tests.factories import (
@@ -727,7 +728,67 @@ class TestInterventionsAPI(BaseTenantTestCase):
             data={"contingency_pd": True}
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
+        self.assertEqual(
+            len(response.data),
+            Intervention.objects.filter(contingency_pd=True).count(),
+        )
+
+        response = self.forced_auth_req(
+            "get",
+            reverse('partners_api:intervention-list'),
+            user=self.unicef_staff,
+            data={"contingency_pd": False}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            len(response.data),
+            Intervention.objects.filter(contingency_pd=False).count(),
+        )
+
+        # assert all pds returned if contingency filter toggle is off
+        response = self.forced_auth_req(
+            "get",
+            reverse('partners_api:intervention-list'),
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), Intervention.objects.count())
+
+    def test_filtering_grants(self):
+        grant_number = "GE001"
+        FundsReservationItemFactory(
+            fund_reservation=self.fr_1,
+            grant_number=grant_number,
+        )
+        pd_qs = Intervention.objects.filter(
+            frs__fr_items__grant_number=grant_number,
+        )
+        self.assertTrue(pd_qs.count() < Intervention.objects.count())
+        response = self.forced_auth_req(
+            "get",
+            reverse('partners_api:intervention-list'),
+            user=self.unicef_staff,
+            data={"grants": grant_number}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), pd_qs.count())
+
+    def test_filtering_donors(self):
+        donor = "DON001"
+        FundsReservationItemFactory(
+            fund_reservation=self.fr_1,
+            donor=donor,
+        )
+        pd_qs = Intervention.objects.filter(frs__fr_items__donor=donor)
+        self.assertTrue(pd_qs.count() < Intervention.objects.count())
+        response = self.forced_auth_req(
+            "get",
+            reverse('partners_api:intervention-list'),
+            user=self.unicef_staff,
+            data={"donors": donor}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), pd_qs.count())
 
 
 class TestAPIInterventionResultLinkListView(BaseTenantTestCase):

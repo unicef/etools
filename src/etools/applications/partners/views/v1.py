@@ -15,6 +15,7 @@ from etools.applications.partners.serializers.v1 import FileTypeSerializer
 
 
 class PCAPDFView(LoginRequiredMixin, PDFTemplateView):
+    agreement = None
     template_name = "pca/english_pdf.html"
     # TODO add proper templates for different languages
     language_templates_mapping = {
@@ -29,7 +30,9 @@ class PCAPDFView(LoginRequiredMixin, PDFTemplateView):
     }
 
     def get_pdf_filename(self):
-        return '{0.reference_number}-{0.partner}.pdf'.format(self.agreement)
+        if self.agreement:
+            return '{0.reference_number}-{0.partner}.pdf'.format(self.agreement)
+        return 'export.pdf'
 
     def get_context_data(self, **kwargs):
         agr_id = self.kwargs.get('agr')

@@ -81,11 +81,12 @@ class TestUserDetails(BaseTenantTestCase):
 
     def test_no_user(self):
         with patch(SOCIAL_USER_PATH, self.mock_social):
-            r = auth.user_details("strategy", self.details, None)
+            r = auth.user_details("strategy", self.details, None, None)
         self.assertEqual(r, "Returned")
         self.mock_social.user_details.assert_called_with(
             "strategy",
             self.details,
+            None,
             None
         )
 
@@ -96,11 +97,12 @@ class TestUserDetails(BaseTenantTestCase):
         )
         self.details["business_area_code"] = user.profile.country.business_area_code
         with patch(SOCIAL_USER_PATH, self.mock_social):
-            r = auth.user_details("strategy", self.details, user)
+            r = auth.user_details("strategy", self.details, None, user)
         self.assertEqual(r, "Returned")
         self.mock_social.user_details.assert_called_with(
             "strategy",
             self.details,
+            None,
             user
         )
 
@@ -115,11 +117,12 @@ class TestUserDetails(BaseTenantTestCase):
         user.profile.save()
         self.assertIsNone(user.profile.country)
         with patch(SOCIAL_USER_PATH, self.mock_social):
-            r = auth.user_details("strategy", self.details, user)
+            r = auth.user_details("strategy", self.details, None, user)
         self.assertEqual(r, "Returned")
         self.mock_social.user_details.assert_called_with(
             "strategy",
             self.details,
+            None,
             user
         )
         user_updated = get_user_model().objects.get(pk=user.pk)
@@ -137,11 +140,12 @@ class TestUserDetails(BaseTenantTestCase):
         self.details["idp"] = "UNICEF Azure AD"
         self.assertFalse(user.is_staff)
         with patch(SOCIAL_USER_PATH, self.mock_social):
-            r = auth.user_details("strategy", self.details, user)
+            r = auth.user_details("strategy", self.details, None, user)
         self.assertEqual(r, "Returned")
         self.mock_social.user_details.assert_called_with(
             "strategy",
             self.details,
+            None,
             user
         )
         user_updated = get_user_model().objects.get(pk=user.pk)

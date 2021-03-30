@@ -57,3 +57,15 @@ class POSynchronizer(VisionDataTenantSynchronizer, MultiModelDataSynchronizer):
             return True
 
         return [rec for rec in records if bad_record(rec)]
+
+    # remove when unicef-vision v0.7 or higher is available
+    def _convert_records(self, records):
+        if isinstance(records, list):
+            return records
+        elif records and "ROWSET" in records:
+            records = records["ROWSET"]["ROW"]
+            if isinstance(records, list):
+                return records
+            else:
+                return [records, ]
+        return []

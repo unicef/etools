@@ -3,7 +3,7 @@ from django.contrib.contenttypes.fields import GenericRelation
 from django.db import connection, models
 from django.db.models import Q
 from django.db.models.base import ModelBase
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from django_fsm import FSMField, transition
 from model_utils import Choices, FieldTracker
@@ -116,16 +116,25 @@ class MonitoringActivity(
         ('tpm', _('TPM')),
     )
 
+    STATUS_DRAFT = 'draft'
+    STATUS_CHECKLIST = 'checklist'
+    STATUS_REVIEW = 'review'
+    STATUS_ASSIGNED = 'assigned'
+    STATUS_DATA_COLLECTION = 'data_collection'
+    STATUS_REPORT_FINALIZATION = 'report_finalization'
+    STATUS_SUBMITTED = 'submitted'
+    STATUS_COMPLETED = 'completed'
+    STATUS_CANCELLED = 'cancelled'
     STATUSES = Choices(
-        ('draft', _('Draft')),
-        ('checklist', _('Checklist')),
-        ('review', _('Review')),
-        ('assigned', _('Assigned')),
-        ('data_collection', _('Data Collection')),
-        ('report_finalization', _('Report Finalization')),
-        ('submitted', _('Submitted')),
-        ('completed', _('Completed')),
-        ('cancelled', _('Cancelled')),
+        (STATUS_DRAFT, _('Draft')),
+        (STATUS_CHECKLIST, _('Checklist')),
+        (STATUS_REVIEW, _('Review')),
+        (STATUS_ASSIGNED, _('Assigned')),
+        (STATUS_DATA_COLLECTION, _('Data Collection')),
+        (STATUS_REPORT_FINALIZATION, _('Report Finalization')),
+        (STATUS_SUBMITTED, _('Submitted')),
+        (STATUS_COMPLETED, _('Completed')),
+        (STATUS_CANCELLED, _('Cancelled')),
     )
     TPM_AVAILABLE_STATUSES = [
         STATUSES.assigned,
