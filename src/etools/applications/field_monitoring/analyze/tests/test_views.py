@@ -36,7 +36,7 @@ class OverallViewTestCase(BaseTenantTestCase):
         cls.failed_activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.cancelled)
 
     def test_response(self):
-        with self.assertNumQueries(1):
+        with self.assertNumQueries(2):
             response = self.forced_auth_req(
                 'get',
                 reverse('field_monitoring_analyze:overall'),
@@ -112,7 +112,7 @@ class PartnersCoverageViewTestCase(BaseTenantTestCase):
         )
         MonitoringActivityFactory(partners=[partner])
 
-        with self.assertNumQueries(2):
+        with self.assertNumQueries(1):
             response = self.forced_auth_req(
                 'get',
                 reverse('field_monitoring_analyze:coverage-partners'),
@@ -123,7 +123,7 @@ class PartnersCoverageViewTestCase(BaseTenantTestCase):
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]['id'], partner.id)
         self.assertEqual(response.data[0]['completed_visits'], 1)
-        self.assertEqual(response.data[0]['planned_visits'], 10)
+        self.assertEqual(response.data[0]['planned_visits'], 0)
         self.assertEqual(response.data[0]['days_since_visit'], 15)
         self.assertEqual(response.data[0]['minimum_required_visits'], partner.min_req_programme_visits)
 

@@ -438,8 +438,8 @@ def update_model_locations(remapped_locations, model, related_object, related_pr
                         ThroughModel.objects.filter(**filter_args).delete()
 
         # update through table only after it was cleaned up from duplicates
-        for loc in remapped_locations:
-            ThroughModel.objects.filter(location=loc[1]).update(location=loc[0])
+        for new_loc, old_loc in remapped_locations:
+            ThroughModel.objects.filter(location=old_loc).update(location=new_loc)
 
 
 def save_location_remap_history(remapped_location_pairs):
@@ -455,8 +455,8 @@ def save_location_remap_history(remapped_location_pairs):
         return
 
     multiples = defaultdict(list)
-    for loc_tp in remapped_locations:
-        multiples[loc_tp[0]].append(loc_tp[1])
+    for new_loc, old_loc in remapped_locations:
+        multiples[new_loc].append(old_loc)
 
     for model, related_object, related_property in [(AppliedIndicator, "appliedindicator", "locations"),
                                                     (TravelActivity, "travelactivity", "locations"),
@@ -465,12 +465,12 @@ def save_location_remap_history(remapped_location_pairs):
         update_model_locations(remapped_locations, model, related_object, related_property, multiples)
 
     # action points
-    for loc_tp in remapped_locations:
-        ActionPoint.objects.filter(location=loc_tp[1]).update(location=loc_tp[0])
+    for new_loc, old_loc in remapped_locations:
+        ActionPoint.objects.filter(location=old_loc).update(location=new_loc)
 
-    for loc_tp in remapped_locations:
+    for new_loc, old_loc in remapped_locations:
         LocationRemapHistory.objects.create(
-            old_location=Location.objects.all_locations().get(id=loc_tp[1]),
-            new_location=Location.objects.all_locations().get(id=loc_tp[0]),
-            comments="Remapped location id {} to id {}".format(loc_tp[1], loc_tp[0])
+            old_location=Location.objects.all_locations().get(id=old_loc),
+            new_location=Location.objects.all_locations().get(id=new_loc),
+            comments="Remapped location id {} to id {}".format(old_loc, new_loc)
         )

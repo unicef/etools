@@ -139,11 +139,11 @@ class MonitoringActivityLightSerializer(serializers.ModelSerializer):
 class MonitoringActivitySerializer(UserContextSerializerMixin, MonitoringActivityLightSerializer):
     permissions = serializers.SerializerMethodField(read_only=True)
     transitions = serializers.SerializerMethodField(read_only=True)
-    field_office = SeparatedReadWriteField(read_field=OfficeSerializer())
+    offices = SeparatedReadWriteField(read_field=OfficeSerializer(many=True), required=False)
 
     class Meta(MonitoringActivityLightSerializer.Meta):
         fields = MonitoringActivityLightSerializer.Meta.fields + (
-            'field_office', 'permissions', 'transitions',
+            'offices', 'permissions', 'transitions',
         )
 
     def get_permissions(self, obj):
