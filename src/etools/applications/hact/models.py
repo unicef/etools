@@ -13,7 +13,6 @@ from model_utils.models import TimeStampedModel
 from etools.applications.audit.models import Audit, Engagement, MicroAssessment, SpecialAudit, SpotCheck
 from etools.applications.partners.models import PartnerOrganization, PartnerType
 from etools.libraries.pythonlib.datetime import get_current_year
-from etools.libraries.pythonlib.encoders import CustomJSONEncoder
 
 
 class HactHistory(TimeStampedModel):
@@ -42,7 +41,7 @@ class AggregateHact(TimeStampedModel):
         return f'{self.year}'
 
     def update(self):
-        self.partner_values = json.dumps({
+        self.partner_values = {
             'assurance_activities': self.get_assurance_activities(),
             'assurance_coverage': self.get_assurance_coverage(),
             'financial_findings': self.get_financial_findings(),
@@ -53,7 +52,7 @@ class AggregateHact(TimeStampedModel):
                 'cash_transfers_partner_type': self.get_cash_transfer_partner_type(),
                 'spot_checks_completed': self.get_spot_checks_completed(),
             },
-        }, cls=CustomJSONEncoder)
+        }
         self.save()
 
     @staticmethod

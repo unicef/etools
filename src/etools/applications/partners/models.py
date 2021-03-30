@@ -839,7 +839,7 @@ class PartnerOrganization(TimeStampedModel):
         hact['outstanding_findings'] = sum([
             audit.pending_unsupported_amount for audit in audits if audit.pending_unsupported_amount])
         hact['assurance_coverage'] = self.assurance_coverage
-        self.hact_values = json.dumps(hact, cls=CustomJSONEncoder)
+        self.hact_values = hact
         self.save()
 
     def update_min_requirements(self):
@@ -850,7 +850,7 @@ class PartnerOrganization(TimeStampedModel):
                 hact[hact_eng]['minimum_requirements'] = self.hact_min_requirements[hact_eng]
                 updated.append(hact_eng)
         if updated:
-            self.hact_values = json.dumps(hact, cls=CustomJSONEncoder)
+            self.hact_values = hact
             self.save()
             return updated
 
