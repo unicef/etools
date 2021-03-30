@@ -7,7 +7,8 @@ def office2offices(apps, schema_editor):
     if connection.tenant.schema_name != "test":
         MonitoringActivity = apps.get_model('field_monitoring_planning', 'MonitoringActivity')
         for ma in MonitoringActivity.admin_objects.all():
-            ma.offices.add(ma.field_office)
+            if ma.field_office:
+                ma.offices.add(ma.field_office)
 
 
 class Migration(migrations.Migration):
