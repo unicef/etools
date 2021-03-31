@@ -654,6 +654,24 @@ class InterventionCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotMode
                 #                                     ' {}'.format(fr.fr_number)})
         return frs
 
+    def _validate_character_limitation(self, value, limit=5000):
+        if len(value) > limit:
+            raise serializers.ValidationError(
+                "This field is limited to {} or less characters.".format(
+                    limit,
+                ),
+            )
+        return value
+
+    def validate_context(self, value):
+        return self._validate_character_limitation(value)
+
+    def validate_implementation_strategy(self, value):
+        return self._validate_character_limitation(value)
+
+    def validate_ip_program_contribution(self, value):
+        return self._validate_character_limitation(value)
+
     def validate(self, attrs):
         validated_data = super().validate(attrs)
         if self.instance and ('start' in validated_data or 'end' in validated_data):

@@ -58,7 +58,7 @@ class PartnerStaffMemberForm(forms.ModelForm):
 
     class Meta:
         model = PartnerStaffMember
-        exclude = ['user', ]
+        exclude = ("user", )
 
     def clean(self):
         cleaned_data = super().clean()
