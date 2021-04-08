@@ -58,7 +58,6 @@ class PCAPDFView(LoginRequiredMixin, PDFTemplateView):
         valid_response, response = get_data_from_insight('partners/?vendor={vendor_code}&key={key}',
                                                          {"vendor_code": self.agreement.partner.vendor_number,
                                                           "key": settings.INSIGHT_BANK_KEY})
-        print(settings.INSIGHT_BANK_KEY)
         if not valid_response:
             return {"error": response}
         try:
