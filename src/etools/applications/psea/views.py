@@ -80,7 +80,7 @@ class AssessmentViewSet(
         ('sea_risk_rating', {
             'high': [('overall_rating__gte', 0), ('overall_rating__lte', 8)],
             'moderate': [('overall_rating__gte', 9), ('overall_rating__lte', 14)],
-            'low': [('overall_rating__gt', 15), ],
+            'low': [('overall_rating__gte', 15), ],
         }),
         ('status', 'status__in'),
         ('unicef_focal_point', 'focal_points__pk__in'),
