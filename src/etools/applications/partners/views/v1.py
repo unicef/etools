@@ -55,9 +55,10 @@ class PCAPDFView(LoginRequiredMixin, PDFTemplateView):
         if not self.agreement.authorized_officers.exists():
             return {"error": 'Partner Organization has no "Authorized Officers selected" selected'}
 
-        valid_response, response = get_data_from_insight('partners/?vendor={vendor_code}',
-                                                         {"vendor_code": self.agreement.partner.vendor_number})
-
+        valid_response, response = get_data_from_insight('partners/?vendor={vendor_code}&key={key}',
+                                                         {"vendor_code": self.agreement.partner.vendor_number,
+                                                          "key": settings.INSIGHT_BANK_KEY})
+        print(settings.INSIGHT_BANK_KEY)
         if not valid_response:
             return {"error": response}
         try:
