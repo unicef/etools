@@ -544,10 +544,10 @@
         },
         "gdal": {
             "hashes": [
-                "sha256:b8e9079f3a0b4dc0c69eafda29a655b70f5c1e2a94a039a3b6dfae0a083e07b6"
+                "sha256:44db073647881faa9dec902e83deff9b8f4f453336bffff8516336f48f5d22c5"
             ],
             "index": "pypi",
-            "version": "==3.2.2"
+            "version": "==3.0.2"
         },
         "gunicorn": {
             "hashes": [
