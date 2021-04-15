@@ -75,6 +75,7 @@ class AuditorStaffAdmin(admin.ModelAdmin):
     list_display = ['user', 'email', 'auditor_firm', 'hidden']
     list_filter = ['auditor_firm', 'hidden']
     search_fields = ['user__username', 'user__email', 'user__first_name', 'user__last_name', 'auditor_firm__name', ]
+    readonly_fields = 'history',
 
     def email(self, obj):
         return obj.user.email
