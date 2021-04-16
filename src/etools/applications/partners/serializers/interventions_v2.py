@@ -655,7 +655,7 @@ class InterventionCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotMode
         return frs
 
     def _validate_character_limitation(self, value, limit=5000):
-        if len(value) > limit:
+        if value and len(value) > limit:
             raise serializers.ValidationError(
                 "This field is limited to {} or less characters.".format(
                     limit,
