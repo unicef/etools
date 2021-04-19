@@ -163,6 +163,36 @@ class AssessmentExportSerializer(AssessmentSerializer):
     focal_points = serializers.SerializerMethodField()
     overall_rating_display = serializers.ReadOnlyField()
 
+    cs1 = serializers.SerializerMethodField()
+    cs2 = serializers.SerializerMethodField()
+    cs3 = serializers.SerializerMethodField()
+    cs4 = serializers.SerializerMethodField()
+    cs5 = serializers.SerializerMethodField()
+    cs6 = serializers.SerializerMethodField()
+
+    @staticmethod
+    def cs(obj, pk):
+        if obj.status == Assessment.STATUS_FINAL:
+            return obj.answers.get(indicator__pk=pk).rating.label
+
+    def get_cs1(self, obj):
+        return self.cs(obj, 1)
+
+    def get_cs2(self, obj):
+        return self.cs(obj, 2)
+
+    def get_cs3(self, obj):
+        return self.cs(obj, 3)
+
+    def get_cs4(self, obj):
+        return self.cs(obj, 4)
+
+    def get_cs5(self, obj):
+        return self.cs(obj, 5)
+
+    def get_cs6(self, obj):
+        return self.cs(obj, 6)
+
     class Meta(AssessmentSerializer.Meta):
         fields = [
             "id",
@@ -174,6 +204,12 @@ class AssessmentExportSerializer(AssessmentSerializer):
             "overall_rating_display",
             "assessor",
             "focal_points",
+            "cs1",
+            "cs2",
+            "cs3",
+            "cs4",
+            "cs5",
+            "cs6",
         ]
 
     def get_focal_points(self, obj):

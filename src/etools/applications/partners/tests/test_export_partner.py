@@ -79,7 +79,11 @@ class TestPartnerOrganizationModelExport(PartnerModelExportTestCase):
             'Address',
             'Phone Number',
             'Email Address',
-            'Risk Rating',
+            'HACT Risk Rating',
+            'PSEA Risk Rating',
+            'Last PSEA Assess. Date',
+            'Highest Risk Rating Type',
+            'Highest Risk Rating Name',
             'Date Last Assessed Against Core Values',
             'Actual Cash Transfer for CP (USD)',
             'Actual Cash Transfer for Current Year (USD)',
@@ -101,7 +105,7 @@ class TestPartnerOrganizationModelExport(PartnerModelExportTestCase):
         # so just ensuring that all relevant staff members are in the results
         for sm in self.partner.staff_members.filter(active=True).all():
             member = "{} ({})".format(sm.get_full_name(), sm.email)
-            self.assertIn(member, test_option[18])
+            self.assertIn(member, test_option[22])
 
         self.assertEqual(test_option, (
             self.partner.vendor_number,
@@ -114,6 +118,10 @@ class TestPartnerOrganizationModelExport(PartnerModelExportTestCase):
             self.partner.phone_number,
             self.partner.email,
             self.partner.rating,
+            '',
+            '',
+            '',
+            '',
             '{}'.format(self.partner.core_values_assessment_date),
             '{:.2f}'.format(self.partner.total_ct_cp),
             '{:.2f}'.format(self.partner.total_ct_ytd),
@@ -122,7 +130,7 @@ class TestPartnerOrganizationModelExport(PartnerModelExportTestCase):
             self.partner.type_of_assessment,
             '{}'.format(self.partner.last_assessment_date),
             '',
-            test_option[18],
+            test_option[22],
             'https://testserver/pmp/partners/{}/details/'.format(self.partner.id),
             '{} (Q1:{} Q2:{}, Q3:{}, Q4:{})'.format(
                 self.planned_visit.year,
