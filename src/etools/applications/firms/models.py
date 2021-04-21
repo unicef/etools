@@ -85,7 +85,7 @@ class BaseStaffMember(ModelHavingTenantRelationsMixin, TimeStampedModel):
         related_name='%(app_label)s_%(class)s',
         on_delete=models.CASCADE
     )
-    history = ArrayField(models.CharField(max_length=50, verbose_name=_("History")), default=list, blank=True)
+    history = ArrayField(models.CharField(max_length=128, verbose_name=_("History")), default=list, blank=True)
 
     class Meta:
         abstract = True

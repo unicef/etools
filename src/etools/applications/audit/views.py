@@ -519,7 +519,7 @@ class AuditorStaffMembersViewSet(
         self.check_serializer_permissions(serializer, edit=True)
 
         hidden_staff = AuditorStaffMember.objects.filter(
-            user__email=serializer.validated_data['user']['email'],
+            user__email=getattr(serializer.validated_data['user'], 'email', ''),
             hidden=True,
         ).first()
         if hidden_staff:
@@ -529,7 +529,7 @@ class AuditorStaffMembersViewSet(
                 hidden_staff.hidden = False
                 timestamp = str(now())
                 hidden_staff.history.append(
-                    f'requestor:{self.request.user},hidden:{hidden_staff.hidden},timestamp:{timestamp}'
+                    f'requestor:{self.request.user.username},hidden:{hidden_staff.hidden},timestamp:{timestamp}'
                 )
                 hidden_staff.save()
                 deactivated_user = hidden_staff.user
@@ -554,7 +554,7 @@ class AuditorStaffMembersViewSet(
         timestamp = str(now())
         instance.hidden = True
         instance.history.append(
-            f'requestor:{self.request.user},hidden:{instance.hidden},timestamp:{timestamp}'
+            f'requestor:{self.request.user.username},hidden:{instance.hidden},timestamp:{timestamp}'
         )
         instance.save()
         if not instance.user.is_unicef_user():
