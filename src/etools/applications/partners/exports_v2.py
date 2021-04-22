@@ -6,7 +6,7 @@ from etools.applications.core.renderers import FriendlyCSVRenderer
 class PartnerOrganizationCSVRenderer(r.CSVRenderer):
     header = ['vendor_number', 'organization_full_name',
               'short_name', 'alternate_name', 'partner_type', 'shared_with', 'address',
-              'phone_number', 'email_address', 'risk_rating', 'sea_risk_rating_name', 'psea_assessment_date',
+              'phone_number', 'email_address', 'risk_rating', 'sea_risk_rating_nm', 'psea_assessment_date',
               'highest_risk_rating_type', 'highest_risk_rating_name', 'date_last_assessment_against_core_values',
               'actual_cash_transfer_for_cp', 'actual_cash_transfer_for_current_year', 'marked_for_deletion', 'blocked',
               'type_of_assessment', 'date_assessed', 'assessments', 'staff_members', 'url', 'planned_visits', ]
