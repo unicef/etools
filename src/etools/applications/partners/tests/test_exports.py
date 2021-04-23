@@ -277,7 +277,7 @@ class TestModelExport(BaseTenantTestCase):
             'Phone Number',
             'Email Address',
             'HACT Risk Rating',
-            'PSEA Risk Rating',
+            'SEA Risk Rating',
             'Last PSEA Assess. Date',
             'Highest Risk Rating Type',
             'Highest Risk Rating Name',
