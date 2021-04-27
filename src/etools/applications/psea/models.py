@@ -102,6 +102,10 @@ class Assessment(TimeStampedModel):
         STATUS_FINAL: [assessment_final],
     }
 
+    LOW_RATING = "Low"
+    MODERATE_RATING = "Moderate"
+    HIGH_RATING = "High"
+
     reference_number = models.CharField(
         max_length=100,
         verbose_name=_("Reference Number"),
@@ -171,11 +175,11 @@ class Assessment(TimeStampedModel):
         if not self.overall_rating:
             display = ""
         elif self.overall_rating <= 8:
-            display = "High"
+            display = Assessment.HIGH_RATING
         elif 8 < self.overall_rating <= 14:
-            display = "Moderate"
+            display = Assessment.MODERATE_RATING
         elif self.overall_rating >= 15:
-            display = "Low"
+            display = Assessment.LOW_RATING
         return display
 
     def get_assessor_recipients(self):

@@ -31,7 +31,7 @@ class EngagementAdmin(admin.ModelAdmin):
     ]
     search_fields = 'partner__name', 'agreement__auditor_firm__name',
     filter_horizontal = ('authorized_officers', 'active_pd', 'staff_members', 'users_notified', 'sections', 'offices')
-    raw_id_fields = ('po_item', 'partner')
+    raw_id_fields = ('po_item', 'partner', 'active_pd', 'staff_members', 'authorized_officers', 'users_notified', )
 
 
 @admin.register(RiskCategory)

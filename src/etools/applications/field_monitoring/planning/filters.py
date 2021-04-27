@@ -15,6 +15,7 @@ class MonitoringActivitiesFilterSet(filters.FilterSet):
     interventions__in = M2MInFilter(field_name="interventions")
     cp_outputs__in = M2MInFilter(field_name="cp_outputs")
     sections__in = M2MInFilter(field_name="sections")
+    offices__in = M2MInFilter(field_name="offices")
 
     class Meta:
         model = MonitoringActivity
@@ -31,7 +32,7 @@ class MonitoringActivitiesFilterSet(filters.FilterSet):
             'start_date': ['gte', 'lte'],
             'end_date': ['gte', 'lte'],
             'status': ['exact', 'in'],
-            'field_office': ['exact', 'in'],
+            'offices': ['exact', 'in'],
             'sections': ['in'],
         }
 

@@ -204,7 +204,8 @@ class MonitoringActivity(
 
     field_office = models.ForeignKey('reports.Office', blank=True, null=True, verbose_name=_('Field Office'),
                                      on_delete=models.CASCADE)
-
+    offices = models.ManyToManyField('reports.Office', blank=True, verbose_name=_('Field Offices'),
+                                     related_name='offices')
     sections = models.ManyToManyField(Section, blank=True, verbose_name=_('Sections'))
 
     location = models.ForeignKey(Location, verbose_name=_('Location'), related_name='monitoring_activities',

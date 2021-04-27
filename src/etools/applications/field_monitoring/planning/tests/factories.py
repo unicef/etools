@@ -9,7 +9,6 @@ from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.field_monitoring.fm_settings.tests.factories import QuestionFactory
 from etools.applications.field_monitoring.planning.models import MonitoringActivity, QuestionTemplate, YearPlan
 from etools.applications.field_monitoring.tests.factories import UserFactory
-from etools.applications.users.tests.factories import OfficeFactory
 from etools.libraries.tests.factories import StatusFactoryMetaClass
 
 
@@ -52,6 +51,11 @@ class BaseMonitoringActivityFactory(factory.django.DjangoModelFactory):
             self.sections.add(*extracted)
 
     @factory.post_generation
+    def offices(self, created, extracted, **kwargs):
+        if extracted:
+            self.offices.add(*extracted)
+
+    @factory.post_generation
     def partners(self, created, extracted, **kwargs):
         if extracted:
             self.partners.add(*extracted)
@@ -81,7 +85,6 @@ class BaseMonitoringActivityFactory(factory.django.DjangoModelFactory):
 
 
 class DraftActivityFactory(BaseMonitoringActivityFactory):
-    field_office = factory.SubFactory(OfficeFactory)
     status = MonitoringActivity.STATUSES.draft
 
 

@@ -3,7 +3,6 @@ import logging
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError as DjangoValidationError
-from django.db.models import Q
 from django.db.transaction import atomic
 from django.http import Http404, HttpResponseForbidden, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404
@@ -18,9 +17,6 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from unicef_restlib.permissions import IsSuperUser
 
-from etools.applications.audit.models import Auditor, Engagement
-from etools.applications.psea.models import Assessment
-from etools.applications.tpm.models import ThirdPartyMonitor
 from etools.applications.users.models import Country, UserProfile
 from etools.applications.users.permissions import IsServiceNowUser
 from etools.applications.users.serializers import (
@@ -361,38 +357,37 @@ class CountriesViewSet(ListAPIView):
 
 
 class ModuleRedirectView(RedirectView):
-    url = '/dash/'
+    url = '/menu/'
     permanent = False
 
-    def get_redirect_url(self, *args, **kwargs):
-        if not self.request.user.is_staff:
-            if ThirdPartyMonitor.as_group() in self.request.user.groups.all():
-                return '/tpm/'
-
-            elif Auditor.as_group() in self.request.user.groups.all():
-
-                if Engagement.objects.filter(
-                        status__in=[Engagement.PARTNER_CONTACTED, Engagement.REPORT_SUBMITTED],
-                        staff_members__user=self.request.user,
-                ):
-                    return '/ap/'
-                elif Assessment.objects.filter(
-                        Q(partner__psea_assessment__assessor__user=self.request.user) |
-                        Q(partner__psea_assessment__assessor__auditor_firm_staff__user=self.request.user),
-                        status__in=[
-                            Assessment.STATUS_DRAFT,
-                            Assessment.STATUS_ASSIGNED,
-                            Assessment.STATUS_IN_PROGRESS,
-                            Assessment.STATUS_SUBMITTED,
-                            Assessment.STATUS_REJECTED,
-                        ],
-                ):
-                    return '/psea/'
-                elif Engagement.objects.filter(
-                        agreement__auditor_firm__staff_members__user=self.request.user,
-                ):
-                    return '/ap/'
-                else:
-                    return '/psea/'
-
-        return super().get_redirect_url(*args, **kwargs)
+    # def get_redirect_url(self, *args, **kwargs):
+    #     if not self.request.user.is_staff:
+    #         if ThirdPartyMonitor.as_group() in self.request.user.groups.all():
+    #             return '/tpm/'
+    #
+    #         elif Auditor.as_group() in self.request.user.groups.all():
+    #             if Engagement.objects.filter(
+    #                     status__in=[Engagement.PARTNER_CONTACTED, Engagement.REPORT_SUBMITTED],
+    #                     staff_members__user=self.request.user,
+    #             ):
+    #                 return '/ap/'
+    #             elif Assessment.objects.filter(
+    #                     Q(partner__psea_assessment__assessor__user=self.request.user) |
+    #                     Q(partner__psea_assessment__assessor__auditor_firm_staff__user=self.request.user),
+    #                     status__in=[
+    #                         Assessment.STATUS_DRAFT,
+    #                         Assessment.STATUS_ASSIGNED,
+    #                         Assessment.STATUS_IN_PROGRESS,
+    #                         Assessment.STATUS_SUBMITTED,
+    #                         Assessment.STATUS_REJECTED,
+    #                     ],
+    #             ):
+    #                 return '/psea/'
+    #             elif Engagement.objects.filter(
+    #                     agreement__auditor_firm__staff_members__user=self.request.user,
+    #             ):
+    #                 return '/ap/'
+    #             else:
+    #                 return '/psea/'
+    #
+    #     return super().get_redirect_url(*args, **kwargs)

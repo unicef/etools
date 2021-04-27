@@ -38,10 +38,12 @@ class PartnerOrganizationExportSerializer(serializers.ModelSerializer):
         label=_("Email Address"),
         source='email'
     )
-    risk_rating = serializers.CharField(
-        label=_("Risk Rating"),
-        source='rating'
-    )
+    risk_rating = serializers.CharField(label=_("HACT Risk Rating"), source='rating')
+    sea_risk_rating_nm = serializers.ReadOnlyField(label=_('SEA Risk Rating'), source='sea_risk_rating_name')
+    psea_assessment_date = serializers.DateTimeField(read_only=True, format='%d-%m-%Y')
+    highest_risk_rating_type = serializers.ReadOnlyField()
+    highest_risk_rating_name = serializers.ReadOnlyField()
+
     date_last_assessment_against_core_values = serializers.CharField(
         label=_("Date Last Assessed Against Core Values"),
         source='core_values_assessment_date'
@@ -76,9 +78,11 @@ class PartnerOrganizationExportSerializer(serializers.ModelSerializer):
         #   Bank Info (just the number of accounts synced from VISION)
         fields = ('vendor_number', 'marked_for_deletion', 'blocked', 'organization_full_name',
                   'short_name', 'alternate_name', 'partner_type', 'shared_with', 'address',
-                  'email_address', 'phone_number', 'risk_rating', 'type_of_assessment', 'date_assessed',
+                  'email_address', 'phone_number', 'risk_rating', 'sea_risk_rating_nm', 'psea_assessment_date',
+                  'highest_risk_rating_type', 'highest_risk_rating_name', 'type_of_assessment', 'date_assessed',
                   'actual_cash_transfer_for_cp', 'actual_cash_transfer_for_current_year', 'staff_members',
-                  'date_last_assessment_against_core_values', 'assessments', 'url', 'basis_for_risk_rating', 'planned_visits')
+                  'date_last_assessment_against_core_values', 'assessments', 'url', 'basis_for_risk_rating',
+                  'planned_visits')
 
     def get_staff_members(self, obj):
         return ', '.join(['{} ({})'.format(sm.get_full_name(), sm.email)
@@ -124,7 +128,7 @@ class PartnerOrganizationExportFlatSerializer(
 
     class Meta:
         model = PartnerOrganization
-        fields = "__all__"
+        exclude = ('sea_risk_rating_name', )
 
     def get_vision_synced(self, obj):
         return "Yes" if obj.vision_synced else "No"
