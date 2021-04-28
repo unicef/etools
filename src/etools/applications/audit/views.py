@@ -518,29 +518,28 @@ class AuditorStaffMembersViewSet(
     def perform_update(self, serializer):
         self.check_serializer_permissions(serializer, edit=True)
 
-        hidden_staff = AuditorStaffMember.objects.filter(
-            user__email=getattr(serializer.validated_data['user'], 'email', ''),
-            hidden=True,
-        ).first()
-        if hidden_staff:
-            if hidden_staff.auditor_firm != self.get_parent_object():
-                raise ValidationError(f'User already associated with {hidden_staff.auditor_firm}')
-            else:
-                hidden_staff.hidden = False
-                timestamp = str(now())
-                hidden_staff.history.append(
-                    f'requestor:{self.request.user.username},hidden:{hidden_staff.hidden},timestamp:{timestamp}'
-                )
-                hidden_staff.save()
-                deactivated_user = hidden_staff.user
-                deactivated_user.is_active = True
-                deactivated_user.save()
-                deleted_profile = hidden_staff.user.profile
-                deleted_profile.countries_available.add(self.request.tenant)
-                if not deleted_profile.country:
-                    deleted_profile.country = self.request.tenant
-                deleted_profile.save()
-            return
+        if 'email' in serializer.validated_data['user']:
+            hidden_staff = AuditorStaffMember.objects.filter(
+                user__email=serializer.validated_data['user']['email'], hidden=True).first()
+            if hidden_staff:
+                if hidden_staff.auditor_firm != self.get_parent_object():
+                    raise ValidationError(f'User already associated with {hidden_staff.auditor_firm}')
+                else:
+                    hidden_staff.hidden = False
+                    timestamp = str(now())
+                    hidden_staff.history.append(
+                        f'requestor:{self.request.user.username},hidden:{hidden_staff.hidden},timestamp:{timestamp}'
+                    )
+                    hidden_staff.save()
+                    deactivated_user = hidden_staff.user
+                    deactivated_user.is_active = True
+                    deactivated_user.save()
+                    deleted_profile = hidden_staff.user.profile
+                    deleted_profile.countries_available.add(self.request.tenant)
+                    if not deleted_profile.country:
+                        deleted_profile.country = self.request.tenant
+                    deleted_profile.save()
+                return
 
         super().perform_update(serializer)
         instance = serializer.save(auditor_firm=self.get_parent_object())
