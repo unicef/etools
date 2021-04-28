@@ -1,0 +1,26 @@
+[
+{
+  "model": "field_monitoring_planning.questiontemplate",
+  "pk": 1034,
+  "fields": {
+    "partner": null,
+    "cp_output": null,
+    "intervention": null,
+    "question": 1034,
+    "is_active": true,
+    "specific_details": "Minimum criteria for PSEA training include the following :1) a definition of SEA (that is aligned with the UN's definition); 2) explanation on prohibition of SEA; and 3) actions that personnel are required to take (i.e. prompt reporting of allegations and X- partner staff X- partner staff Scale -5 None 1-25% have received training. 26%-50% have received training. 51-75% have received training. 76-100% have received training. Corresponds to indicator in Output 2.3, Results Monitoring Framework referral of victims)."
+  }
+},
+{
+  "model": "field_monitoring_planning.questiontemplate",
+  "pk": 1035,
+  "fields": {
+    "partner": null,
+    "cp_output": null,
+    "intervention": null,
+    "question": 1035,
+    "is_active": true,
+    "specific_details": "Necessary elements include: 1. Available in the local language; 2. Adapted for different levels of literacy; 3. Contact information is clear (SMS, email or phone number); 4. Design is child-sensitive."
+  }
+}
+]
