@@ -16,10 +16,12 @@ from etools.libraries.pythonlib.collections import HashableDict
 # Initially, this is only being used for PRP-related endpoints.
 
 
+UNICEF_USER = 'UNICEF User'
 READ_ONLY_API_GROUP_NAME = 'Read-Only API'
 SENIOR_MANAGEMENT_GROUP = 'Senior Management Team'
 PARTNERSHIP_MANAGER_GROUP = 'Partnership Manager'
 REPRESENTATIVE_OFFICE_GROUP = 'Representative Office'
+PRC_SECRETARY = 'PRC Secretary'
 
 
 class PMPPermissions:
@@ -96,7 +98,7 @@ class PMPPermissions:
 class InterventionPermissions(PMPPermissions):
 
     MODEL_NAME = 'partners.Intervention'
-    EXTRA_FIELDS = ['sections_present', 'pd_outputs', 'final_partnership_review']
+    EXTRA_FIELDS = ['sections_present', 'pd_outputs', 'final_partnership_review', 'prc_reviews']
 
     def __init__(self, **kwargs):
         """
@@ -135,6 +137,14 @@ class InterventionPermissions(PMPPermissions):
 
         if staff_member and staff_member.id in partner_focal_points:
             self.user_groups.extend(['Partner User', 'Partner Focal Point'])
+
+        review = self.instance.review
+        if review:
+            if self.user.id == review.overall_approver_id:
+                self.user_groups.append('Overall Approver')
+
+            if review.prc_reviews.filter(overall_review=review, user=self.user).exists():
+                self.user_groups.append('PRC Officer')
 
         self.user_groups = list(set(self.user_groups))
 
@@ -523,3 +533,11 @@ PMPAgreementPermission = (
         )
     ))
 )
+
+
+class UserBelongsToObjectPermission(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        if not hasattr(obj, 'user'):
+            return False
+
+        return obj.user == request.user

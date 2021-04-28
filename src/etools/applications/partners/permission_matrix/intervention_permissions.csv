@@ -172,6 +172,12 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,unicef_accepted,*,,Draft,Required,FALSE
 ,partner_accepted,*,,Draft,Required,FALSE
 ,partner_accepted,*,,Draft,Edit,TRUE
+,reviews,PRC Secretary,,Review,Edit,TRUE
+,reviews,Overall Approver,,Review,Edit,TRUE
+,reviews,Partner User,,*,View,FALSE
+,prc_reviews,PRC Officer,,Review,Edit,TRUE
+,prc_reviews,UNICEF User,,Draft,View,FALSE
+,prc_reviews,Partner User,,*,View,FALSE
 ,partner_authorized_officer_signatory,*,,Review,Required,FALSE
 ,signed_by_partner_date,*,,Review,Required,FALSE
 ,signed_by_unicef_date,*,,Review,Required,FALSE

@@ -23,7 +23,10 @@ from etools.applications.partners.views.interventions_v3 import (
     PMPInterventionSupplyItemListCreateView,
     PMPInterventionSupplyItemRetrieveUpdateView,
     PMPInterventionSupplyItemUploadView,
+    PMPOfficerReviewDetailView,
+    PMPOfficerReviewListView,
     PMPReviewDetailView,
+    PMPReviewNotifyView,
     PMPReviewView,
 )
 from etools.applications.partners.views.interventions_v3_actions import (
@@ -203,6 +206,21 @@ urlpatterns = [
         'interventions/<int:intervention_pk>/reviews/<int:pk>/',
         view=PMPReviewDetailView.as_view(),
         name='intervention-reviews-detail',
+    ),
+    path(
+        'interventions/<int:intervention_pk>/reviews/<int:pk>/notify/',
+        view=PMPReviewNotifyView.as_view(),
+        name='intervention-reviews-notify',
+    ),
+    path(
+        'interventions/<int:intervention_pk>/reviews/<int:review_pk>/officers-reviews/',
+        view=PMPOfficerReviewListView.as_view(),
+        name='intervention-officers-review-list',
+    ),
+    path(
+        'interventions/<int:intervention_pk>/reviews/<int:review_pk>/officers-reviews/<int:user_pk>/',
+        view=PMPOfficerReviewDetailView.as_view(),
+        name='intervention-officers-review-detail',
     ),
     path(
         'interventions/<int:intervention_pk>/pd-outputs/<int:output_pk>/activities/',

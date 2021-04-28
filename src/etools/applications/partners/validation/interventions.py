@@ -138,7 +138,12 @@ def transition_to_suspended(i):
 
 
 def transition_to_review(i):
-    # TODO add validation rules/criteria
+    if not (i.partner_accepted and i.unicef_accepted):
+        raise TransitionError([_('Unicef and Partner both need to accept')])
+
+    if not i.review:
+        raise TransitionError([_('Intervention Review is missing.')])
+
     return True
 
 
@@ -316,7 +321,7 @@ def all_activities_have_timeframes(i):
 
 
 def review_was_accepted(i):
-    r = i.reviews.first()
+    r = i.review
     return r.overall_approval if r else False
 
 

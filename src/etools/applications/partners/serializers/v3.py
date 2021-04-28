@@ -1,11 +1,13 @@
+from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from unicef_restlib.fields import SeparatedReadWriteField
 
-from etools.applications.partners.models import InterventionResultLink, InterventionReview
+from etools.applications.partners.models import InterventionResultLink, InterventionReview, PRCOfficerInterventionReview
 from etools.applications.reports.models import LowerResult, Result, ResultType
+from etools.applications.users.serializers_v3 import MinimalUserSerializer
 
 
 class CPOutputValidator:
@@ -35,9 +37,91 @@ class InterventionLowerResultBaseSerializer(serializers.ModelSerializer):
 
 
 class InterventionReviewSerializer(serializers.ModelSerializer):
+    started_by = MinimalUserSerializer(read_only=True)
+    submitted_by = MinimalUserSerializer(read_only=True)
+    overall_approver = SeparatedReadWriteField(read_field=MinimalUserSerializer())
+
     class Meta:
         model = InterventionReview
-        fields = "__all__"
+        fields = (
+            'id',
+            'amendment',
+            'review_type',
+            'started_date',
+            'started_by',
+            'submitted_by',
+            'submitted_date',
+
+            'meeting_date',
+            'prc_officers',
+            'overall_approver',
+
+            'relationship_is_represented',
+            'partner_comparative_advantage',
+            'relationships_are_positive',
+            'pd_is_relevant',
+            'pd_is_guided',
+            'ges_considered',
+            'budget_is_aligned',
+            'supply_issues_considered',
+
+            'overall_comment',
+            'actions_list',
+            'overall_approval',
+        )
+        read_only_fields = (
+            'amendment', 'review_type', 'overall_approval',
+        )
+
+    def update(self, instance, validated_data):
+        self._update_prc_officers(instance, validated_data)
+        return super().update(instance, validated_data)
+
+    def _update_prc_officers(self, instance, validated_data):
+        new_prc_officers = validated_data.pop('prc_officers', None)
+        if new_prc_officers is None:
+            return
+
+        original_prc_officers = instance.prc_officers.all()
+        diff = set(original_prc_officers) - set(new_prc_officers)
+        instance.prc_officers.add(*new_prc_officers)
+        instance.prc_officers.remove(*diff)
+
+
+class PRCOfficerInterventionReviewSerializer(serializers.ModelSerializer):
+    user = MinimalUserSerializer(read_only=True)
+
+    class Meta:
+        model = PRCOfficerInterventionReview
+        fields = (
+            'id',
+            'user',
+
+            'relationship_is_represented',
+            'partner_comparative_advantage',
+            'relationships_are_positive',
+            'pd_is_relevant',
+            'pd_is_guided',
+            'ges_considered',
+            'budget_is_aligned',
+            'supply_issues_considered',
+
+            'overall_comment',
+            'overall_approval',
+            'started_date',
+            'submitted_date',
+        )
+        read_only_fields = (
+            'started_date',
+            'submitted_date',
+        )
+
+    def update(self, instance, validated_data):
+        if not instance.started_date:
+            validated_data['started_date'] = timezone.now().date()
+        if validated_data.get('overall_approval') is not None:
+            validated_data['submitted_date'] = timezone.now().date()
+        return super().update(instance, validated_data)
 
 
 class PartnerInterventionLowerResultSerializer(InterventionLowerResultBaseSerializer):

@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.http import HttpResponseForbidden
 from django.urls import reverse
 from django.utils import timezone
@@ -7,7 +8,10 @@ from rest_framework.response import Response
 from unicef_notification.utils import send_notification_with_template
 
 from etools.applications.partners.models import Intervention
-from etools.applications.partners.serializers.interventions_v3 import InterventionDetailSerializer
+from etools.applications.partners.serializers.interventions_v3 import (
+    InterventionDetailSerializer,
+    InterventionReviewActionSerializer,
+)
 from etools.applications.partners.views.interventions_v3 import InterventionDetailAPIView, PMPInterventionMixin
 
 
@@ -125,15 +129,28 @@ class PMPInterventionAcceptReviewView(PMPInterventionActionView):
 
 
 class PMPInterventionRejectReviewView(PMPInterventionActionView):
+    @transaction.atomic
     def update(self, request, *args, **kwargs):
         if self.is_partner_staff():
             return HttpResponseForbidden()
         pd = self.get_object()
         if pd.status != Intervention.REVIEW:
             raise ValidationError("PD needs to be in Review state")
+        if not pd.review:
+            raise ValidationError("PD review is missing")
+        if pd.review.overall_approver_id != request.user.pk:
+            raise ValidationError("Only overall approver can reject review.")
+
+        pd.review.overall_approval = False
+        pd.review.submitted_by = request.user
+        pd.review.save()
+
         request.data.clear()
-        request.data.update({"status": Intervention.DRAFT})
-        request.data.update({"unicef_accepted": False})
+        request.data.update({
+            "status": Intervention.DRAFT,
+            "unicef_accepted": False,
+            "partner_accepted": False,
+        })
 
         response = super().update(request, *args, **kwargs)
 
@@ -142,12 +159,22 @@ class PMPInterventionRejectReviewView(PMPInterventionActionView):
 
 
 class PMPInterventionReviewView(PMPInterventionActionView):
+    @transaction.atomic
     def update(self, request, *args, **kwargs):
         if self.is_partner_staff():
             return HttpResponseForbidden()
         pd = self.get_object()
         if pd.status == Intervention.REVIEW:
             raise ValidationError("PD is already in Review status.")
+
+        serializer = InterventionReviewActionSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(
+            intervention=pd,
+            started_date=timezone.now().date(),
+            started_by=request.user
+        )
+
         request.data.clear()
         request.data.update({"status": Intervention.REVIEW})
 
@@ -327,6 +354,14 @@ class PMPInterventionSignatureView(PMPInterventionActionView):
         pd = self.get_object()
         if pd.status == Intervention.SIGNATURE:
             raise ValidationError("PD is already in Signature status.")
+        if not pd.review:
+            raise ValidationError("PD review is missing")
+        if pd.review.overall_approver_id != request.user.pk:
+            raise ValidationError("Only overall approver can accept review.")
+
+        pd.review.overall_approval = True
+        pd.review.save()
+
         request.data.clear()
         request.data.update({"status": Intervention.SIGNATURE})
 
