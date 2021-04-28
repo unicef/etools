@@ -1642,6 +1642,12 @@ def side_effect_two(i, old_instance=None, user=None):
     pass
 
 
+def update_review_submitted_date(i, old_instance=None, user=None):
+    review = i.reviews.order_by('-created').last()
+    review.review_submitted_date = timezone.now().date()
+    review.save()
+
+
 def get_default_cash_transfer_modalities():
     return [Intervention.CASH_TRANSFER_DIRECT]
 
@@ -1678,7 +1684,7 @@ class Intervention(TimeStampedModel):
         ENDED: [CLOSED]
     }
     TRANSITION_SIDE_EFFECTS = {
-        REVIEW: [],
+        REVIEW: [update_review_submitted_date],
         SIGNATURE: [],
         SIGNED: [side_effect_one, side_effect_two],
         ACTIVE: [],
@@ -2734,12 +2740,26 @@ class InterventionBudget(TimeStampedModel):
             self.save()
 
 
-class InterventionReview(TimeStampedModel):
+class InterventionReviewQuestionnaire(models.Model):
+    answer_1 = models.CharField(blank=True, max_length=100)
+    answer_2 = models.CharField(blank=True, max_length=100)
+    # to be refined
+
+    overall_comment = models.TextField(blank=True)
+    overall_approval = models.BooleanField(default=False)
+
+    class Meta:
+        abstract = True
+
+
+class InterventionReview(InterventionReviewQuestionnaire, TimeStampedModel):
+    NA = 'na'
     PRC = 'prc'
     NPRC = 'non-prc'
     NORW = 'no-review'
 
     REVIEW_TYPES = Choices(
+        (NA, 'Not Available'),
         (PRC, 'PRC Review'),
         (NPRC, 'Non-PRC Review'),
         (NORW, 'No Review Required'),
@@ -2764,13 +2784,43 @@ class InterventionReview(TimeStampedModel):
     review_type = models.CharField(
         max_length=50,
         verbose_name=_('Types'),
-        default=PRC,
+        default=NA,
         choices=REVIEW_TYPES)
 
-    overall_approval = models.BooleanField(default=False)
+    review_submitted_date = models.DateField(blank=True, null=True, verbose_name=_('Review Submitted Date'))
+
+    meeting_date = models.DateField(blank=True, null=True, verbose_name=_('Meeting Date'))
+    prc_officers = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        verbose_name=_('PRC Officers'),
+        blank=True,
+        related_name='+',
+    )
+    overall_approver = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name=_('Overall Approver'),
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name='+',
+    )
 
     class Meta:
         ordering = ["-created"]
+
+
+class PRCOfficerInterventionReview(InterventionReviewQuestionnaire, TimeStampedModel):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name=_('User'),
+        related_name='prc_reviews',
+        on_delete=models.CASCADE,
+    )
+
+    overall_review = models.ForeignKey(InterventionReview, on_delete=models.CASCADE, related_name='prc_reviews')
+
+    class Meta:
+        ordering = ['-created']
 
 
 class FileType(models.Model):

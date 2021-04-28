@@ -1223,6 +1223,9 @@ class TestInterventionAcceptReview(BaseInterventionActionTestCase):
         self.intervention.unicef_accepted = True
         self.intervention.date_sent_to_partner = datetime.date.today()
         self.intervention.save()
+        review = self.intervention.reviews.last()
+        review.review_type = 'non-prc'
+        review.save()
 
         # unicef accepts
         mock_send = mock.Mock(return_value=self.mock_email)

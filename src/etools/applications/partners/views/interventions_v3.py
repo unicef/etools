@@ -11,7 +11,7 @@ from rest_framework.generics import (
     ListCreateAPIView,
     RetrieveAPIView,
     RetrieveUpdateAPIView,
-    RetrieveUpdateDestroyAPIView,
+    RetrieveUpdateDestroyAPIView, ListAPIView, UpdateAPIView,
 )
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -26,11 +26,11 @@ from etools.applications.partners.models import (
     InterventionManagementBudget,
     InterventionReview,
     InterventionRisk,
-    InterventionSupplyItem,
+    InterventionSupplyItem, PRCOfficerInterventionReview,
 )
 from etools.applications.partners.permissions import (
     intervention_field_is_editable_permission,
-    PMPInterventionPermission,
+    PMPInterventionPermission, UserIsStaffPermission, UserBelongsToObjectPermission,
 )
 from etools.applications.partners.serializers.exports.interventions import (
     InterventionExportFlatSerializer,
@@ -53,7 +53,7 @@ from etools.applications.partners.serializers.interventions_v3 import (
 from etools.applications.partners.serializers.v3 import (
     InterventionReviewSerializer,
     PartnerInterventionLowerResultSerializer,
-    UNICEFInterventionLowerResultSerializer,
+    UNICEFInterventionLowerResultSerializer, PRCOfficerInterventionReviewSerializer,
 )
 from etools.applications.partners.views.interventions_v2 import (
     InterventionAttachmentUpdateDeleteView,
@@ -291,6 +291,43 @@ class PMPReviewView(PMPReviewMixin, ListCreateAPIView):
 
 class PMPReviewDetailView(PMPReviewMixin, RetrieveUpdateAPIView):
     pass
+
+
+class PMPOfficerReviewBaseView(DetailedInterventionResponseMixin, PMPBaseViewMixin):
+    queryset = PRCOfficerInterventionReview.objects.prefetch_related('user').all()
+    serializer_class = PRCOfficerInterventionReviewSerializer
+
+    def get_root_object(self):
+        return Intervention.objects.get(pk=self.kwargs['intervention_pk'])
+
+    def get_intervention(self) -> Intervention:
+        return self.get_root_object()
+
+    def get_queryset(self):
+        qs = super().get_queryset().filter(
+            overall_review_id=self.kwargs['review_pk'],
+            overall_review__intervention_id=self.kwargs['intervention_pk'],
+        )
+        if self.is_partner_staff():
+            return qs.none()
+        return qs
+
+
+class PMPOfficerReviewListView(PMPOfficerReviewBaseView, ListAPIView):
+    permission_classes = [IsAuthenticated, UserIsStaffPermission]
+
+
+class PMPOfficerReviewDetailView(PMPOfficerReviewBaseView, UpdateAPIView):
+    permission_classes = [
+        IsAuthenticated,
+        UserIsStaffPermission,
+        intervention_field_is_editable_permission('prc_reviews'),
+        UserBelongsToObjectPermission,
+    ]
+    lookup_field = 'user_id'
+    lookup_url_kwarg = 'user_pk'
+
+    # todo: approve/reject actions which will edit overall_approval and set date
 
 
 class PMPInterventionSupplyItemMixin(

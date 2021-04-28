@@ -20,6 +20,7 @@ READ_ONLY_API_GROUP_NAME = 'Read-Only API'
 SENIOR_MANAGEMENT_GROUP = 'Senior Management Team'
 PARTNERSHIP_MANAGER_GROUP = 'Partnership Manager'
 REPRESENTATIVE_OFFICE_GROUP = 'Representative Office'
+PRC_SECRETARY = 'PRC Secretary'
 
 
 class PMPPermissions:
@@ -96,7 +97,7 @@ class PMPPermissions:
 class InterventionPermissions(PMPPermissions):
 
     MODEL_NAME = 'partners.Intervention'
-    EXTRA_FIELDS = ['sections_present', 'pd_outputs', 'final_partnership_review']
+    EXTRA_FIELDS = ['sections_present', 'pd_outputs', 'final_partnership_review', 'prc_reviews']
 
     def __init__(self, **kwargs):
         """
@@ -523,3 +524,11 @@ PMPAgreementPermission = (
         )
     ))
 )
+
+
+class UserBelongsToObjectPermission(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        if not hasattr(obj, 'user'):
+            return False
+
+        return obj.user == request.user

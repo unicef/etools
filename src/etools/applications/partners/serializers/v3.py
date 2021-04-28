@@ -3,9 +3,11 @@ from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from unicef_restlib.fields import SeparatedReadWriteField
+from unicef_restlib.serializers import UserContextSerializerMixin
 
-from etools.applications.partners.models import InterventionResultLink, InterventionReview
+from etools.applications.partners.models import InterventionResultLink, InterventionReview, PRCOfficerInterventionReview
 from etools.applications.reports.models import LowerResult, Result, ResultType
+from etools.applications.users.serializers_v3 import MinimalUserSerializer
 
 
 class CPOutputValidator:
@@ -38,6 +40,23 @@ class InterventionReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = InterventionReview
         fields = "__all__"
+
+
+class PRCOfficerInterventionReviewSerializer(serializers.ModelSerializer):
+    user = MinimalUserSerializer(read_only=True)
+
+    class Meta:
+        model = PRCOfficerInterventionReview
+        fields = (
+            'id',
+            'user',
+            'answer_1',
+            'answer_2',
+            # todo
+            'overall_comment',
+            'overall_approval',
+        )
+        read_only_fields = ('overall_approval',)
 
 
 class PartnerInterventionLowerResultSerializer(InterventionLowerResultBaseSerializer):

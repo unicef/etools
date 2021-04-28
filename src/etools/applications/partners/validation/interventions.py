@@ -138,7 +138,16 @@ def transition_to_suspended(i):
 
 
 def transition_to_review(i):
-    # TODO add validation rules/criteria
+    from etools.applications.partners.models import InterventionReview
+
+    # todo: uncomment and fix tests
+    # if not (i.partner_accepted and i.unicef_accepted):
+    #     raise StateValidationError([_('Unicef and Partner both need to accept')])
+
+    # todo: see comment from state_review_valid
+    # if i.reviews.order_by('-created').last().review_type == InterventionReview.NA:
+    #     raise StateValidationError([_('Review type not selected')])
+
     return True
 
 
@@ -377,10 +386,17 @@ class InterventionValid(CompleteValidation):
         return True
 
     def state_review_valid(self, intervention, user=None):
+        from etools.applications.partners.models import InterventionReview
+
         self.check_required_fields(intervention)
         self.check_rigid_fields(intervention, related=True)
         if not (intervention.partner_accepted and intervention.unicef_accepted):
             raise StateValidationError([_('Unicef and Partner both need to accept')])
+        # below can be not true in case of contingency amendments
+        # case: create intervention -> create contingency amendment -> run flow as usual
+        # problem: contingency review will be used here
+        if intervention.reviews.order_by('-created').last().review_type == InterventionReview.NA:
+            raise StateValidationError([_('Review type not selected')])
         if not all_activities_have_timeframes(intervention):
             raise StateValidationError([_('All activities must have at least one time frame')])
         if not all_pd_outputs_are_associated(intervention):

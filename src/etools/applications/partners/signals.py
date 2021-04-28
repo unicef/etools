@@ -1,8 +1,9 @@
 from django.db import connection
-from django.db.models.signals import post_delete, post_save
+from django.db.models.signals import post_delete, post_save, m2m_changed
 from django.dispatch import receiver
 
-from etools.applications.partners.models import Intervention, InterventionSupplyItem
+from etools.applications.partners.models import Intervention, InterventionSupplyItem, InterventionReview, \
+    PRCOfficerInterventionReview
 from etools.applications.partners.tasks import sync_partner_to_prp
 
 
@@ -20,3 +21,12 @@ def calc_totals_on_delete(instance, **kwargs):
         pass
     else:
         intervention.planned_budget.calc_totals()
+
+
+@receiver(m2m_changed, sender=InterventionReview.prc_officers.through)
+def create_review_for_prc_officer(sender, instance, action, reverse, pk_set, *args, **kwargs):
+    if action == 'post_add':
+        for pk in pk_set:
+            PRCOfficerInterventionReview.objects.get_or_create(user_id=pk, overall_review=instance)
+    elif action == 'post_remove':
+        PRCOfficerInterventionReview.objects.filter(user_id__in=pk_set, overall_review=instance).delete()

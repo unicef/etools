@@ -44,6 +44,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,cancel_reason,Field Monitor,,*,edit,TRUE
 ,report_reject_reason,Field Monitor,,*,edit,TRUE
 ,reject_reason,All Users,is_ma_related_user,*,edit,TRUE
+,prc_reviews,All Users,,*,edit,TRUE
 
 
 ,location,All Users,,*,required,TRUE
