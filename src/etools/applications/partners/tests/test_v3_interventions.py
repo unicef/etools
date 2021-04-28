@@ -8,6 +8,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
 from django.test import SimpleTestCase
 from django.urls import reverse
+from django.utils import timezone
 
 from rest_framework import status
 from unicef_locations.tests.factories import LocationFactory
@@ -1273,28 +1274,87 @@ class TestInterventionReview(BaseInterventionActionTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_patch(self):
+    def test_patch_without_review_type(self):
         self.intervention.partner_accepted = True
         self.intervention.unicef_accepted = True
         self.intervention.date_sent_to_partner = datetime.date.today()
         self.intervention.save()
 
+        response = self.forced_auth_req("patch", self.url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
+        self.assertIn("Review type not selected", response.data)
+
+    def test_review_validation(self):
+        self.intervention.partner_accepted = True
+        self.intervention.unicef_accepted = True
+        self.intervention.date_sent_to_partner = datetime.date.today()
+        self.intervention.save()
+
+        response = self.forced_auth_req("patch", self.url, user=self.user, data={'review_type': 'test'})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
+        self.assertIn('"test" is not a valid choice.', response.data['review_type'])
+
+    def test_patch(self):
+        self.intervention.partner_accepted = True
+        self.intervention.unicef_accepted = True
+        self.intervention.date_sent_to_partner = datetime.date.today()
+        self.intervention.save()
+        self.assertNotEqual(self.intervention.reviews.last().review_type, 'prc')
+
         # unicef reviews
         mock_send = mock.Mock(return_value=self.mock_email)
         with mock.patch(self.notify_path, mock_send):
-            response = self.forced_auth_req("patch", self.url, user=self.user)
+            response = self.forced_auth_req("patch", self.url, user=self.user, data={'review_type': 'prc'})
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         mock_send.assert_called()
         self.intervention.refresh_from_db()
         self.assertEqual(self.intervention.status, Intervention.REVIEW)
+        review = self.intervention.reviews.last()
+        self.assertEqual(review.review_type, 'prc')
+        self.assertEqual(review.submitted_by, self.user)
+        self.assertEqual(review.submitted_date, timezone.now().date())
 
         # unicef attempt to review again
         mock_send = mock.Mock()
         with mock.patch(self.notify_path, mock_send):
-            response = self.forced_auth_req("patch", self.url, user=self.user)
+            response = self.forced_auth_req("patch", self.url, user=self.user, data={'review_type': 'prc'})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("PD is already in Review status.", response.data)
         mock_send.assert_not_called()
+
+
+class TestInterventionReviewReject(BaseInterventionActionTestCase):
+    def setUp(self):
+        super().setUp()
+        self.url = reverse(
+            'pmp_v3:intervention-reject-review',
+            args=[self.intervention.pk],
+        )
+
+    def test_not_found(self):
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-review', args=[404]),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_partner_no_access(self):
+        response = self.forced_auth_req("patch", self.url, user=self.partner_user)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_patch(self):
+        self.intervention.partner_accepted = True
+        self.intervention.unicef_accepted = True
+        self.intervention.date_sent_to_partner = datetime.date.today()
+        self.intervention.status = Intervention.REVIEW
+        self.intervention.save()
+        self.assertEqual(self.intervention.reviews.count(), 1)
+
+        response = self.forced_auth_req("patch", self.url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(self.intervention.reviews.count(), 2)
+        self.assertFalse(self.intervention.reviews.first().overall_approval)
 
 
 class TestInterventionReviews(BaseInterventionTestCase):
@@ -1325,27 +1385,15 @@ class TestInterventionReviews(BaseInterventionTestCase):
         self.assertIn('id', response.data[0])
 
     def test_post(self):
-        review_qs = InterventionReview.objects.filter(
-            intervention=self.intervention,
-        )
-        count = review_qs.count()
         response = self.forced_auth_req(
             "post",
             reverse(
                 "pmp_v3:intervention-reviews",
                 args=[self.intervention.pk],
             ),
-            data={
-                "overall_approval": True,
-            },
+            data={},
         )
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertTrue(response.data["overall_approval"])
-        self.assertEqual(review_qs.count(), count + 1)
-        review = review_qs.first()
-        self.assertEqual(review.pk, response.data["id"])
-        self.assertEqual(review.intervention, self.intervention)
-        self.assertTrue(review.overall_approval)
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
     def test_get(self):
         review = InterventionReviewFactory(intervention=self.intervention)
@@ -1362,7 +1410,7 @@ class TestInterventionReviews(BaseInterventionTestCase):
     def test_patch(self):
         review = InterventionReviewFactory(
             intervention=self.intervention,
-            overall_approval=True,
+            overall_comment='first',
         )
         response = self.forced_auth_req(
             "patch",
@@ -1371,14 +1419,14 @@ class TestInterventionReviews(BaseInterventionTestCase):
                 args=[self.intervention.pk, review.pk],
             ),
             data={
-                "overall_approval": False,
+                "overall_comment": "second",
             },
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["id"], review.pk)
-        self.assertFalse(response.data["overall_approval"])
+        self.assertEqual(response.data["overall_comment"], "second")
         review.refresh_from_db()
-        self.assertFalse(review.overall_approval)
+        self.assertEqual(review.overall_comment, "second")
 
 
 class TestInterventionCancel(BaseInterventionActionTestCase):

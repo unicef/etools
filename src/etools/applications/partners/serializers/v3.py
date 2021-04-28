@@ -39,7 +39,39 @@ class InterventionLowerResultBaseSerializer(serializers.ModelSerializer):
 class InterventionReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = InterventionReview
-        fields = "__all__"
+        fields = (
+            'id',
+            'amendment',
+            'review_type',
+            'submitted_by',
+            'submitted_date',
+
+            'meeting_date',
+            'prc_officers',
+            'overall_approver',
+
+            'answer_1',
+            'answer_2',
+            'overall_comment',
+            'overall_approval',
+        )
+        read_only_fields = (
+            'amendment', 'review_type', 'submitted_by', 'overall_approval',
+        )
+
+    def update(self, instance, validated_data):
+        self._update_prc_officers(instance, validated_data)
+        return super().update(instance, validated_data)
+
+    def _update_prc_officers(self, instance, validated_data):
+        new_prc_officers = validated_data.pop('prc_officers', None)
+        if new_prc_officers is None:
+            return
+
+        original_prc_officers = instance.prc_officers.values_list('id', flat=True)
+        diff = set(original_prc_officers) - set(new_prc_officers)
+        instance.prc_officers.add(*new_prc_officers)
+        instance.prc_officers.remove(*diff)
 
 
 class PRCOfficerInterventionReviewSerializer(serializers.ModelSerializer):

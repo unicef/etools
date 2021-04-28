@@ -284,7 +284,7 @@ class PMPReviewMixin(DetailedInterventionResponseMixin, PMPBaseViewMixin):
         return super().get_serializer(*args, **kwargs)
 
 
-class PMPReviewView(PMPReviewMixin, ListCreateAPIView):
+class PMPReviewView(PMPReviewMixin, ListAPIView):
     lookup_url_kwarg = "intervention_pk"
     lookup_field = "intervention_id"
 

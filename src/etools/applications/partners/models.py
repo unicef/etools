@@ -1642,9 +1642,10 @@ def side_effect_two(i, old_instance=None, user=None):
     pass
 
 
-def update_review_submitted_date(i, old_instance=None, user=None):
+def update_review_info(i, old_instance=None, user=None):
     review = i.reviews.order_by('-created').last()
-    review.review_submitted_date = timezone.now().date()
+    review.submitted_date = timezone.now().date()
+    review.submitted_by = user
     review.save()
 
 
@@ -1684,7 +1685,7 @@ class Intervention(TimeStampedModel):
         ENDED: [CLOSED]
     }
     TRANSITION_SIDE_EFFECTS = {
-        REVIEW: [update_review_submitted_date],
+        REVIEW: [update_review_info],
         SIGNATURE: [],
         SIGNED: [side_effect_one, side_effect_two],
         ACTIVE: [],
@@ -2785,9 +2786,18 @@ class InterventionReview(InterventionReviewQuestionnaire, TimeStampedModel):
         max_length=50,
         verbose_name=_('Types'),
         default=NA,
-        choices=REVIEW_TYPES)
+        choices=REVIEW_TYPES
+    )
 
-    review_submitted_date = models.DateField(blank=True, null=True, verbose_name=_('Review Submitted Date'))
+    submitted_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name=_('Submitted By'),
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name='+',
+    )
+    submitted_date = models.DateField(blank=True, null=True, verbose_name=_('Submitted Date'))
 
     meeting_date = models.DateField(blank=True, null=True, verbose_name=_('Meeting Date'))
     prc_officers = models.ManyToManyField(

@@ -13,7 +13,7 @@ from etools.applications.partners.models import (
     Intervention,
     InterventionManagementBudget,
     InterventionRisk,
-    InterventionSupplyItem,
+    InterventionSupplyItem, InterventionReview,
 )
 from etools.applications.partners.permissions import (
     InterventionPermissions,
@@ -515,3 +515,9 @@ class InterventionListSerializer(InterventionV2ListSerializer):
         )
         # remove old legacy field to avoid inconvenience
         fields = tuple(f for f in fields if f != 'country_programme')
+
+
+class InterventionReviewActionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InterventionReview
+        fields = ('id', 'review_type')

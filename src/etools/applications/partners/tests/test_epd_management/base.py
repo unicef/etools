@@ -2,6 +2,7 @@ from copy import copy
 from datetime import date
 
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.utils import timezone
 
 from factory import fuzzy
 
@@ -73,6 +74,11 @@ class BaseTestCase(BaseTenantTestCase):
         )
         self.review_intervention = InterventionFactory(**review_fields)
         ReportingRequirementFactory(intervention=self.review_intervention)
+        review = self.review_intervention.reviews.last()
+        review.submitted_date = timezone.now().date()
+        review.submitted_by = UserFactory()
+        review.review_type = 'prc'
+        review.save()
         self.review_intervention.unicef_focal_points.add(UserFactory())
         self.review_intervention.sections.add(SectionFactory())
         self.review_intervention.offices.add(OfficeFactory())

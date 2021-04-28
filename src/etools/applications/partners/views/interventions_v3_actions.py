@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.http import HttpResponseForbidden
 from django.urls import reverse
 from django.utils import timezone
@@ -6,8 +7,9 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from unicef_notification.utils import send_notification_with_template
 
-from etools.applications.partners.models import Intervention
-from etools.applications.partners.serializers.interventions_v3 import InterventionDetailSerializer
+from etools.applications.partners.models import Intervention, InterventionReview
+from etools.applications.partners.serializers.interventions_v3 import InterventionDetailSerializer, \
+    InterventionReviewActionSerializer
 from etools.applications.partners.views.interventions_v3 import InterventionDetailAPIView, PMPInterventionMixin
 
 
@@ -125,6 +127,7 @@ class PMPInterventionAcceptReviewView(PMPInterventionActionView):
 
 
 class PMPInterventionRejectReviewView(PMPInterventionActionView):
+    @transaction.atomic
     def update(self, request, *args, **kwargs):
         if self.is_partner_staff():
             return HttpResponseForbidden()
@@ -134,6 +137,7 @@ class PMPInterventionRejectReviewView(PMPInterventionActionView):
         request.data.clear()
         request.data.update({"status": Intervention.DRAFT})
         request.data.update({"unicef_accepted": False})
+        InterventionReview.objects.create(intervention=pd)
 
         response = super().update(request, *args, **kwargs)
 
@@ -142,12 +146,19 @@ class PMPInterventionRejectReviewView(PMPInterventionActionView):
 
 
 class PMPInterventionReviewView(PMPInterventionActionView):
+    @transaction.atomic
     def update(self, request, *args, **kwargs):
         if self.is_partner_staff():
             return HttpResponseForbidden()
         pd = self.get_object()
         if pd.status == Intervention.REVIEW:
             raise ValidationError("PD is already in Review status.")
+
+        review = pd.reviews.order_by('-created').last()
+        serializer = InterventionReviewActionSerializer(instance=review, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
         request.data.clear()
         request.data.update({"status": Intervention.REVIEW})
 
