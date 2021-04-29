@@ -18,6 +18,7 @@ from model_utils.models import TimeStampedModel
 from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation, CurrencyField
 from unicef_locations.models import Location
+from unicef_notification.utils import send_notification_with_template
 
 from etools.applications.core.permissions import import_permissions
 from etools.applications.funds.models import FundsReservationHeader
@@ -35,6 +36,7 @@ from etools.applications.t2f.models import Travel, TravelActivity, TravelType
 from etools.applications.tpm.models import TPMActivity, TPMVisit
 from etools.applications.users.models import Country
 from etools.libraries.djangolib.models import MaxDistinct, StringConcat
+from etools.libraries.djangolib.utils import get_environment
 from etools.libraries.pythonlib.datetime import get_current_year, get_quarter
 from etools.libraries.pythonlib.encoders import CustomJSONEncoder
 
@@ -2836,8 +2838,19 @@ class InterventionReviewNotification(TimeStampedModel):
         self.send_notification()
 
     def send_notification(self):
-        # todo
-        pass
+        context = {
+            'environment': get_environment(),
+            'intervention_number': self.review.intervention.reference_number,
+            'meeting_date': self.review.meeting_date.strftime('%d-%m-%Y'),
+            'user_name': self.user.get_full_name(),
+            'url': '{}{}'.format(settings.HOST, self.review.intervention.get_object_url())
+        }
+
+        send_notification_with_template(
+            recipients=[self.user.email],
+            template_name='partners/intervention/prc_review_notification',
+            context=context,
+        )
 
     @classmethod
     def notify_officers_for_review(cls, review: InterventionReview):

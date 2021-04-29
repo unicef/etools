@@ -1,9 +1,10 @@
 from copy import copy
 
 from django.db import transaction
+from django.utils.translation import ugettext_lazy as _
 
 from easy_pdf.rendering import render_to_pdf_response
-from rest_framework import status, mixins
+from rest_framework import status
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import (
     CreateAPIView,
@@ -295,7 +296,11 @@ class PMPReviewDetailView(PMPReviewMixin, RetrieveUpdateAPIView):
 
 class PMPReviewNotifyView(PMPReviewMixin, GenericAPIView):
     def post(self, request, *args, **kwargs):
-        InterventionReviewNotification.notify_officers_for_review(self.get_object())
+        review = self.get_object()
+        if not review.meeting_date:
+            return Response([_('Meeting date is not available.')], status=status.HTTP_400_BAD_REQUEST)
+
+        InterventionReviewNotification.notify_officers_for_review(review)
         return Response({})
 
 

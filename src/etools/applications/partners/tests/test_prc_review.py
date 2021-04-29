@@ -46,6 +46,7 @@ class ReviewInterventionMixin:
         ReportingRequirementFactory(intervention=self.review_intervention)
         self.review = self.review_intervention.reviews.last()
         self.review.submitted_date = timezone.now().date()
+        self.review.meeting_date = timezone.now().date()
         self.review.submitted_by = UserFactory()
         self.review.review_type = 'prc'
         self.review.save()
@@ -87,16 +88,17 @@ class OverallReviewTestCase(ReviewInterventionMixin, BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    @patch('etools.applications.partners.models.InterventionReviewNotification.send_notification')
+    @patch('etools.applications.partners.models.send_notification_with_template')
     def test_send_notification(self, notify_mock):
         self.review.prc_officers.add(UserFactory())
 
         def _notify_users():
-            self.forced_auth_req(
+            response = self.forced_auth_req(
                 'post',
                 reverse('pmp_v3:intervention-reviews-notify', args=[self.review_intervention.pk, self.review.pk]),
                 self.prc_secretary
             )
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         _notify_users()
         notify_mock.assert_called()
