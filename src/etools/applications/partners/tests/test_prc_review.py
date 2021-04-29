@@ -1,17 +1,100 @@
+from datetime import date
+
 from django.urls import reverse
+from django.utils import timezone
+from factory import fuzzy
 from rest_framework import status
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
-from etools.applications.partners.tests.factories import InterventionFactory
+from etools.applications.partners.models import Intervention
+from etools.applications.partners.permissions import UNICEF_USER, PRC_SECRETARY
+from etools.applications.partners.tests.factories import InterventionFactory, PartnerFactory, PartnerStaffFactory
+from etools.applications.reports.tests.factories import CountryProgrammeFactory, ReportingRequirementFactory, \
+    SectionFactory, OfficeFactory
 from etools.applications.users.tests.factories import UserFactory
 
 
-class PRCReviewTestCase(BaseTenantTestCase):
+class ReviewInterventionMixin:
+    def setUp(self):
+        super().setUp()
+        self.partner = PartnerFactory(vendor_number=fuzzy.FuzzyText(length=20).fuzz())
+        self.partner_authorized_officer = UserFactory(is_staff=False, groups__data=[])
+        partner_authorized_officer_staff = PartnerStaffFactory(
+            partner=self.partner, email=self.partner_authorized_officer.email, user=self.partner_authorized_officer
+        )
+        self.partner_focal_point = UserFactory(is_staff=False, groups__data=[])
+        partner_focal_point_staff = PartnerStaffFactory(
+            partner=self.partner, email=self.partner_focal_point.email, user=self.partner_focal_point
+        )
+        country_programme = CountryProgrammeFactory()
+        review_fields = dict(
+            agreement__partner=self.partner,
+            status=Intervention.REVIEW,
+            partner_authorized_officer_signatory=partner_authorized_officer_staff,
+            country_programme=country_programme,
+            start=date(year=1970, month=2, day=1),
+            end=date(year=1970, month=3, day=1),
+            date_sent_to_partner=timezone.now().date(),
+            agreement__country_programme=country_programme,
+            cash_transfer_modalities=[Intervention.CASH_TRANSFER_DIRECT],
+            budget_owner=UserFactory(),
+            partner_accepted=True,
+            unicef_accepted=True,
+        )
+        self.review_intervention = InterventionFactory(**review_fields)
+        ReportingRequirementFactory(intervention=self.review_intervention)
+        self.review = self.review_intervention.reviews.last()
+        self.review.submitted_date = timezone.now().date()
+        self.review.submitted_by = UserFactory()
+        self.review.review_type = 'prc'
+        self.review.save()
+        self.review_intervention.unicef_focal_points.add(UserFactory())
+        self.review_intervention.sections.add(SectionFactory())
+        self.review_intervention.offices.add(OfficeFactory())
+        self.review_intervention.partner_focal_points.add(partner_focal_point_staff)
+
+
+class OverallReviewTestCase(ReviewInterventionMixin, BaseTenantTestCase):
     # user click button, info saved to intervention review (review type, etc)
-    # secretary fill officers
     # secretary send notifications btn
     #   no new notification if already sent today (user added)
-    # secretary fill officers
+    def setUp(self):
+        super().setUp()
+        self.prc_secretary = UserFactory(is_staff=True, groups__data=[UNICEF_USER, PRC_SECRETARY])
+        self.url = reverse('pmp_v3:intervention-reviews-detail', args=[self.review_intervention.pk, self.review.pk])
+
+    def test_officers_update(self):
+        first_officer = UserFactory()
+        second_officer = UserFactory()
+        third_officer = UserFactory()
+        self.review.prc_officers.add(first_officer, second_officer)
+        response = self.forced_auth_req(
+            'patch', self.url, self.prc_secretary,
+            data={'prc_officers': [first_officer.id, third_officer.id]},
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            list(sorted(response.data['prc_officers'])),
+            [first_officer.id, third_officer.id],
+        )
+        self.assertEqual(
+            list(sorted(self.review.prc_officers.values_list('id', flat=True))),
+            [first_officer.id, third_officer.id],
+        )
+
+    def test_review_update_other_user(self):
+        response = self.forced_auth_req(
+            'patch', self.url, UserFactory(is_staff=True, groups__data=[UNICEF_USER]),
+            data={'prc_officers': []},
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_send_notification(self):
+        # todo
+        pass
+
+
+class PRCReviewTestCase(ReviewInterventionMixin, BaseTenantTestCase):
     # prc officers reject PRC
     # prc officers approve PRC
     # prc officers fill review
@@ -22,14 +105,15 @@ class PRCReviewTestCase(BaseTenantTestCase):
 
     def setUp(self):
         super().setUp()
-        self.intervention = InterventionFactory()
-        self.review = self.intervention.reviews.first()
-        self.list_url = reverse('pmp_v3:intervention-officers-review-list', args=[self.intervention.pk, self.review.pk])
+        self.list_url = reverse(
+            'pmp_v3:intervention-officers-review-list',
+            args=[self.review_intervention.pk, self.review.pk],
+        )
 
     def get_detail_url(self, prc_member):
         return reverse(
             'pmp_v3:intervention-officers-review-detail',
-            args=[self.intervention.pk, self.review.pk, prc_member.pk]
+            args=[self.review_intervention.pk, self.review.pk, prc_member.pk]
         )
 
     def test_prc_review_created(self):
@@ -70,7 +154,6 @@ class PRCReviewTestCase(BaseTenantTestCase):
         prc_member = UserFactory(is_staff=True)
         another_prc_member = UserFactory(is_staff=True)
         self.review.prc_officers.add(prc_member, another_prc_member)
-        prc_review = self.review.prc_reviews.get(user=prc_member)
         response = self.forced_auth_req(
             'patch', self.get_detail_url(prc_member), another_prc_member,
             data={'overall_comment': 'ok'},

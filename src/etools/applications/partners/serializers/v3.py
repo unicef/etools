@@ -68,7 +68,7 @@ class InterventionReviewSerializer(serializers.ModelSerializer):
         if new_prc_officers is None:
             return
 
-        original_prc_officers = instance.prc_officers.values_list('id', flat=True)
+        original_prc_officers = instance.prc_officers.all()
         diff = set(original_prc_officers) - set(new_prc_officers)
         instance.prc_officers.add(*new_prc_officers)
         instance.prc_officers.remove(*diff)
@@ -88,7 +88,6 @@ class PRCOfficerInterventionReviewSerializer(serializers.ModelSerializer):
             'overall_comment',
             'overall_approval',
         )
-        read_only_fields = ('overall_approval',)
 
 
 class PartnerInterventionLowerResultSerializer(InterventionLowerResultBaseSerializer):

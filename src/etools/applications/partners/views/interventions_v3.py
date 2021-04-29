@@ -327,8 +327,6 @@ class PMPOfficerReviewDetailView(PMPOfficerReviewBaseView, UpdateAPIView):
     lookup_field = 'user_id'
     lookup_url_kwarg = 'user_pk'
 
-    # todo: approve/reject actions which will edit overall_approval and set date
-
 
 class PMPInterventionSupplyItemMixin(
         DetailedInterventionResponseMixin,
