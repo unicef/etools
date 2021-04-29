@@ -2207,6 +2207,10 @@ class Intervention(TimeStampedModel):
         return self.total_unicef_cash + self.total_in_kind_amount
 
     @cached_property
+    def review(self):
+        return self.reviews.order_by('-id').last()
+
+    @cached_property
     def all_lower_results(self):
         # todo: it'd be nice to be able to do this as a queryset but that may not be possible
         # with prefetch_related

@@ -138,6 +138,13 @@ class InterventionPermissions(PMPPermissions):
         if staff_member and staff_member.id in partner_focal_points:
             self.user_groups.extend(['Partner User', 'Partner Focal Point'])
 
+        review = self.instance.review
+        if self.user.id == review.overall_approver_id:
+            self.user_groups.append('Overall Approver')
+
+        if self.instance.review.prc_reviews.filter(overall_review=review, user=self.user).exists():
+            self.user_groups.append('PRC Officer')
+
         self.user_groups = list(set(self.user_groups))
 
         self.condition_map = {

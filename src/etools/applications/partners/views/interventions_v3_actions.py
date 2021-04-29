@@ -100,6 +100,9 @@ class PMPInterventionAcceptReviewView(PMPInterventionActionView):
             request.data.update({"unicef_accepted": True})
         request.data.update({"status": Intervention.REVIEW})
 
+        pd.review.overall_approval = True
+        pd.review.save()
+
         response = super().update(request, *args, **kwargs)
 
         if response.status_code == 200:
@@ -137,6 +140,9 @@ class PMPInterventionRejectReviewView(PMPInterventionActionView):
         request.data.clear()
         request.data.update({"status": Intervention.DRAFT})
         request.data.update({"unicef_accepted": False})
+
+        pd.review.overall_approval = False
+        pd.review.save()
         InterventionReview.objects.create(intervention=pd)
 
         response = super().update(request, *args, **kwargs)

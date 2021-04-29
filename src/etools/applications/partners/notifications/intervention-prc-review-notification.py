@@ -1,11 +1,11 @@
 name = 'partners/intervention/prc_review_notification'
 defaults = {
     'description': 'Sent manually by PRC secretary from intervention review tab.',
-    'subject': 'PD/SSFA {{intervention_number}} PRC Review Available',
+    'subject': 'PD/SSFA {{intervention_number}} Available For Review',
     'content': """
     Dear Colleague,
 
-    Programme Document / SSFA {{ intervention_number }} will be reviewed on meeting at {{ meeting date }}.
+    Please review Programme Document / SSFA {{ intervention_number }} before {{ meeting date }}.
 
     Please follow the link below to check details.
 

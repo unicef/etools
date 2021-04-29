@@ -15,45 +15,74 @@ from etools.applications.reports.tests.factories import CountryProgrammeFactory,
 from etools.applications.users.tests.factories import UserFactory
 
 
-class ReviewInterventionMixin:
+class BaseInterventionMixin:
     def setUp(self):
         super().setUp()
+        self.country_programme = CountryProgrammeFactory()
         self.partner = PartnerFactory(vendor_number=fuzzy.FuzzyText(length=20).fuzz())
         self.partner_authorized_officer = UserFactory(is_staff=False, groups__data=[])
-        partner_authorized_officer_staff = PartnerStaffFactory(
+        self.partner_authorized_officer_staff = PartnerStaffFactory(
             partner=self.partner, email=self.partner_authorized_officer.email, user=self.partner_authorized_officer
         )
         self.partner_focal_point = UserFactory(is_staff=False, groups__data=[])
-        partner_focal_point_staff = PartnerStaffFactory(
+        self.partner_focal_point_staff = PartnerStaffFactory(
             partner=self.partner, email=self.partner_focal_point.email, user=self.partner_focal_point
         )
-        country_programme = CountryProgrammeFactory()
-        review_fields = dict(
+
+
+class DevelopInterventionMixin(BaseInterventionMixin):
+    def setUp(self):
+        super().setUp()
+        self.develop_intervention = InterventionFactory(
+            agreement__partner=self.partner,
+            status=Intervention.DRAFT,
+            partner_authorized_officer_signatory=self.partner_authorized_officer_staff,
+            country_programme=self.country_programme,
+            start=date(year=1970, month=2, day=1),
+            end=date(year=1970, month=3, day=1),
+            agreement__country_programme=self.country_programme,
+            cash_transfer_modalities=[Intervention.CASH_TRANSFER_DIRECT],
+            budget_owner=UserFactory(),
+        )
+        self.develop_intervention.partner_focal_points.add(self.partner_focal_point_staff)
+
+
+class ReviewInterventionMixin(BaseInterventionMixin):
+    def setUp(self):
+        super().setUp()
+        self.review_intervention = InterventionFactory(
             agreement__partner=self.partner,
             status=Intervention.REVIEW,
-            partner_authorized_officer_signatory=partner_authorized_officer_staff,
-            country_programme=country_programme,
+            partner_authorized_officer_signatory=self.partner_authorized_officer_staff,
+            country_programme=self.country_programme,
             start=date(year=1970, month=2, day=1),
             end=date(year=1970, month=3, day=1),
             date_sent_to_partner=timezone.now().date(),
-            agreement__country_programme=country_programme,
+            agreement__country_programme=self.country_programme,
             cash_transfer_modalities=[Intervention.CASH_TRANSFER_DIRECT],
             budget_owner=UserFactory(),
             partner_accepted=True,
             unicef_accepted=True,
         )
-        self.review_intervention = InterventionFactory(**review_fields)
         ReportingRequirementFactory(intervention=self.review_intervention)
         self.review = self.review_intervention.reviews.last()
         self.review.submitted_date = timezone.now().date()
         self.review.meeting_date = timezone.now().date()
         self.review.submitted_by = UserFactory()
         self.review.review_type = 'prc'
+        self.review.overall_approver = UserFactory(is_staff=True, groups__data=[UNICEF_USER])
         self.review.save()
         self.review_intervention.unicef_focal_points.add(UserFactory())
         self.review_intervention.sections.add(SectionFactory())
         self.review_intervention.offices.add(OfficeFactory())
-        self.review_intervention.partner_focal_points.add(partner_focal_point_staff)
+        self.review_intervention.partner_focal_points.add(self.partner_focal_point_staff)
+
+
+class TestPermissionsMixin:
+    def get_permissions(self, intervention, user):
+        response = self.forced_auth_req('get', reverse('pmp_v3:intervention-detail', args=[intervention.pk]), user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        return response.data['permissions']
 
 
 class OverallReviewTestCase(ReviewInterventionMixin, BaseTenantTestCase):
@@ -177,3 +206,84 @@ class PRCReviewTestCase(ReviewInterventionMixin, BaseTenantTestCase):
             data={'overall_comment': 'ok'},
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
+
+
+class DevelopPermissionsTestCase(TestPermissionsMixin, DevelopInterventionMixin, BaseTenantTestCase):
+    def test_unicef_user_permissions(self):
+        user = UserFactory(is_staff=True, groups__data=[UNICEF_USER])
+        permissions = self.get_permissions(self.develop_intervention, user)
+        self.assertFalse(permissions['edit']['reviews'])
+        self.assertFalse(permissions['edit']['prc_reviews'])
+        self.assertFalse(permissions['view']['reviews'])
+        self.assertFalse(permissions['view']['prc_reviews'])
+
+    def test_partner_user_permissions(self):
+        response = self.forced_auth_req(
+            'get', reverse('pmp_v3:intervention-detail', args=[self.develop_intervention.pk]),
+            self.partner_focal_point,
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_secretary_permissions(self):
+        user = UserFactory(is_staff=True, groups__data=[UNICEF_USER, PRC_SECRETARY])
+        permissions = self.get_permissions(self.develop_intervention, user)
+        self.assertFalse(permissions['edit']['reviews'])
+        self.assertFalse(permissions['edit']['prc_reviews'])
+        self.assertFalse(permissions['view']['reviews'])
+        self.assertFalse(permissions['view']['prc_reviews'])
+
+
+class DevelopSentToPartnerPermissionsTestCase(TestPermissionsMixin, DevelopInterventionMixin, BaseTenantTestCase):
+    def setUp(self):
+        super().setUp()
+        self.develop_intervention.date_sent_to_partner=timezone.now().date()
+        self.develop_intervention.save()
+
+
+    def test_partner_user_permissions(self):
+        permissions = self.get_permissions(self.develop_intervention, self.partner_focal_point)
+        self.assertFalse(permissions['edit']['reviews'])
+        self.assertFalse(permissions['edit']['prc_reviews'])
+        self.assertFalse(permissions['view']['reviews'])
+        self.assertFalse(permissions['view']['prc_reviews'])
+
+
+class ReviewPermissionsTestCase(TestPermissionsMixin, ReviewInterventionMixin, BaseTenantTestCase):
+    def test_unicef_user_permissions(self):
+        user = UserFactory(is_staff=True, groups__data=[UNICEF_USER])
+        permissions = self.get_permissions(self.review_intervention, user)
+        self.assertFalse(permissions['edit']['reviews'])
+        self.assertFalse(permissions['edit']['prc_reviews'])
+        self.assertTrue(permissions['view']['reviews'])
+        self.assertTrue(permissions['view']['prc_reviews'])
+
+    def test_partner_user_permissions(self):
+        permissions = self.get_permissions(self.review_intervention, self.partner_focal_point)
+        self.assertFalse(permissions['edit']['reviews'])
+        self.assertFalse(permissions['edit']['prc_reviews'])
+        self.assertFalse(permissions['view']['reviews'])
+        self.assertFalse(permissions['view']['prc_reviews'])
+
+    def test_secretary_permissions(self):
+        user = UserFactory(is_staff=True, groups__data=[UNICEF_USER, PRC_SECRETARY])
+        permissions = self.get_permissions(self.review_intervention, user)
+        self.assertTrue(permissions['edit']['reviews'])
+        self.assertFalse(permissions['edit']['prc_reviews'])
+        self.assertTrue(permissions['view']['reviews'])
+        self.assertTrue(permissions['view']['prc_reviews'])
+
+    def test_overall_approver_permissions(self):
+        permissions = self.get_permissions(self.review_intervention, self.review.overall_approver)
+        self.assertTrue(permissions['edit']['reviews'])
+        self.assertFalse(permissions['edit']['prc_reviews'])
+        self.assertTrue(permissions['view']['reviews'])
+        self.assertTrue(permissions['view']['prc_reviews'])
+
+    def test_prc_reviewer_permissions(self):
+        user = UserFactory(is_staff=True, groups__data=[UNICEF_USER])
+        self.review.prc_officers.add(user)
+        permissions = self.get_permissions(self.review_intervention, user)
+        self.assertFalse(permissions['edit']['reviews'])
+        self.assertTrue(permissions['edit']['prc_reviews'])
+        self.assertTrue(permissions['view']['reviews'])
+        self.assertTrue(permissions['view']['prc_reviews'])
