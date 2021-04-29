@@ -3,7 +3,7 @@ from copy import copy
 from django.db import transaction
 
 from easy_pdf.rendering import render_to_pdf_response
-from rest_framework import status
+from rest_framework import status, mixins
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import (
     CreateAPIView,
@@ -11,7 +11,7 @@ from rest_framework.generics import (
     ListCreateAPIView,
     RetrieveAPIView,
     RetrieveUpdateAPIView,
-    RetrieveUpdateDestroyAPIView, ListAPIView, UpdateAPIView,
+    RetrieveUpdateDestroyAPIView, ListAPIView, UpdateAPIView, GenericAPIView,
 )
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -26,7 +26,7 @@ from etools.applications.partners.models import (
     InterventionManagementBudget,
     InterventionReview,
     InterventionRisk,
-    InterventionSupplyItem, PRCOfficerInterventionReview,
+    InterventionSupplyItem, PRCOfficerInterventionReview, InterventionReviewNotification,
 )
 from etools.applications.partners.permissions import (
     intervention_field_is_editable_permission,
@@ -291,6 +291,12 @@ class PMPReviewView(PMPReviewMixin, ListAPIView):
 
 class PMPReviewDetailView(PMPReviewMixin, RetrieveUpdateAPIView):
     pass
+
+
+class PMPReviewNotifyView(PMPReviewMixin, GenericAPIView):
+    def post(self, request, *args, **kwargs):
+        InterventionReviewNotification.notify_officers_for_review(self.get_object())
+        return Response({})
 
 
 class PMPOfficerReviewBaseView(DetailedInterventionResponseMixin, PMPBaseViewMixin):

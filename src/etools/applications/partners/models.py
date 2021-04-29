@@ -2819,6 +2819,40 @@ class InterventionReview(InterventionReviewQuestionnaire, TimeStampedModel):
         ordering = ["-created"]
 
 
+class InterventionReviewNotification(TimeStampedModel):
+    review = models.ForeignKey(InterventionReview, related_name='prc_notifications', on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name=_('User'),
+        related_name='prc_notifications',
+        on_delete=models.CASCADE,
+    )
+
+    class Meta:
+        ordering = ('review', '-created')
+
+    def save(self, **kwargs):
+        super().save(**kwargs)
+        self.send_notification()
+
+    def send_notification(self):
+        # todo
+        pass
+
+    @classmethod
+    def notify_officers_for_review(cls, review: InterventionReview):
+        notified_users = cls.objects.filter(
+            review=review,
+            created__gt=timezone.now() - datetime.timedelta(days=1),
+        ).values_list('user_id', flat=True)
+
+        for user in review.prc_officers.all():
+            if user.id in notified_users:
+                continue
+
+            cls.objects.create(review=review, user=user)
+
+
 class PRCOfficerInterventionReview(InterventionReviewQuestionnaire, TimeStampedModel):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,

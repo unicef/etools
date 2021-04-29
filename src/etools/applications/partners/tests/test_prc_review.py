@@ -1,4 +1,5 @@
 from datetime import date
+from unittest.mock import patch
 
 from django.urls import reverse
 from django.utils import timezone
@@ -55,9 +56,6 @@ class ReviewInterventionMixin:
 
 
 class OverallReviewTestCase(ReviewInterventionMixin, BaseTenantTestCase):
-    # user click button, info saved to intervention review (review type, etc)
-    # secretary send notifications btn
-    #   no new notification if already sent today (user added)
     def setUp(self):
         super().setUp()
         self.prc_secretary = UserFactory(is_staff=True, groups__data=[UNICEF_USER, PRC_SECRETARY])
@@ -89,9 +87,27 @@ class OverallReviewTestCase(ReviewInterventionMixin, BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_send_notification(self):
-        # todo
-        pass
+    @patch('etools.applications.partners.models.InterventionReviewNotification.send_notification')
+    def test_send_notification(self, notify_mock):
+        self.review.prc_officers.add(UserFactory())
+
+        def _notify_users():
+            self.forced_auth_req(
+                'post',
+                reverse('pmp_v3:intervention-reviews-notify', args=[self.review_intervention.pk, self.review.pk]),
+                self.prc_secretary
+            )
+
+        _notify_users()
+        notify_mock.assert_called()
+
+        notify_mock.reset_mock()
+        _notify_users()
+        notify_mock.assert_not_called()
+
+        self.review.prc_officers.add(UserFactory())
+        _notify_users()
+        notify_mock.assert_called()
 
 
 class PRCReviewTestCase(ReviewInterventionMixin, BaseTenantTestCase):
