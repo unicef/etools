@@ -36,7 +36,7 @@ class OverallViewTestCase(BaseTenantTestCase):
         cls.failed_activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.cancelled)
 
     def test_response(self):
-        with self.assertNumQueries(1):
+        with self.assertNumQueries(2):
             response = self.forced_auth_req(
                 'get',
                 reverse('field_monitoring_analyze:overall'),
