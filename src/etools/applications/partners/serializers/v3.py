@@ -3,7 +3,6 @@ from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from unicef_restlib.fields import SeparatedReadWriteField
-from unicef_restlib.serializers import UserContextSerializerMixin
 
 from etools.applications.partners.models import InterventionResultLink, InterventionReview, PRCOfficerInterventionReview
 from etools.applications.reports.models import LowerResult, Result, ResultType
@@ -37,6 +36,9 @@ class InterventionLowerResultBaseSerializer(serializers.ModelSerializer):
 
 
 class InterventionReviewSerializer(serializers.ModelSerializer):
+    submitted_by = MinimalUserSerializer(read_only=True)
+    overall_approver = SeparatedReadWriteField(read_field=MinimalUserSerializer())
+
     class Meta:
         model = InterventionReview
         fields = (
@@ -56,7 +58,7 @@ class InterventionReviewSerializer(serializers.ModelSerializer):
             'overall_approval',
         )
         read_only_fields = (
-            'amendment', 'review_type', 'submitted_by', 'overall_approval',
+            'amendment', 'review_type', 'overall_approval',
         )
 
     def update(self, instance, validated_data):
