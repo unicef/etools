@@ -1,3 +1,4 @@
+from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
@@ -89,7 +90,20 @@ class PRCOfficerInterventionReviewSerializer(serializers.ModelSerializer):
             # todo
             'overall_comment',
             'overall_approval',
+            'started_date',
+            'submitted_date',
         )
+        read_only_fields = (
+            'started_date',
+            'submitted_date',
+        )
+
+    def update(self, instance, validated_data):
+        if not instance.started_date:
+            validated_data['started_date'] = timezone.now().date()
+        if 'overall_approval' in validated_data:
+            validated_data['submitted_date'] = timezone.now().date()
+        return super().update(instance, validated_data)
 
 
 class PartnerInterventionLowerResultSerializer(InterventionLowerResultBaseSerializer):

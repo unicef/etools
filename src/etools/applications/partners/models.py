@@ -2879,6 +2879,8 @@ class PRCOfficerInterventionReview(InterventionReviewQuestionnaire, TimeStampedM
     )
 
     overall_review = models.ForeignKey(InterventionReview, on_delete=models.CASCADE, related_name='prc_reviews')
+    started_date = models.DateField(null=True, blank=True)
+    submitted_date = models.DateField(null=True, blank=True)
 
     class Meta:
         ordering = ['-created']
