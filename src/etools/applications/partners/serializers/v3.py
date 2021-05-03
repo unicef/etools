@@ -101,7 +101,7 @@ class PRCOfficerInterventionReviewSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         if not instance.started_date:
             validated_data['started_date'] = timezone.now().date()
-        if 'overall_approval' in validated_data:
+        if validated_data.get('overall_approval') is not None:
             validated_data['submitted_date'] = timezone.now().date()
         return super().update(instance, validated_data)
 

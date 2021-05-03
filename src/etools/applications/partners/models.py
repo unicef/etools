@@ -2753,7 +2753,7 @@ class InterventionReviewQuestionnaire(models.Model):
     # to be refined
 
     overall_comment = models.TextField(blank=True)
-    overall_approval = models.BooleanField(default=False)
+    overall_approval = models.NullBooleanField()
 
     class Meta:
         abstract = True
