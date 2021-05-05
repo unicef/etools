@@ -56,6 +56,7 @@ class InterventionReviewSerializer(serializers.ModelSerializer):
             'answer_1',
             'answer_2',
             'overall_comment',
+            'actions_list',
             'overall_approval',
         )
         read_only_fields = (

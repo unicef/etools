@@ -207,6 +207,25 @@ class PRCReviewTestCase(ReviewInterventionMixin, BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
 
+    def test_review_action_available(self):
+        prc_member = UserFactory(is_staff=True)
+        self.review.prc_officers.add(prc_member)
+        response = self.forced_auth_req(
+            'get', reverse('pmp_v3:intervention-detail', args=[self.review_intervention.pk]), prc_member,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertIn('prc_review', response.data['available_actions'])
+
+    def test_review_action_not_available_after_submit(self):
+        prc_member = UserFactory(is_staff=True)
+        self.review.prc_officers.add(prc_member)
+        self.review.prc_reviews.filter(user=prc_member).update(overall_approval=True)
+        response = self.forced_auth_req(
+            'get', reverse('pmp_v3:intervention-detail', args=[self.review_intervention.pk]), prc_member,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertNotIn('prc_review', response.data['available_actions'])
+
 
 class DevelopPermissionsTestCase(TestPermissionsMixin, DevelopInterventionMixin, BaseTenantTestCase):
     def test_unicef_user_permissions(self):

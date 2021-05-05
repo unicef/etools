@@ -278,6 +278,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "send_to_unicef",
             "send_to_partner",
             "accept",
+            "prc_review",
             "review",
             "sign",
             "reject_review",
@@ -310,6 +311,12 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             if obj.status == obj.REVIEW:
                 available_actions.append("sign")
                 available_actions.append("reject_review")
+
+        # PD is in review and user prc review not started
+        if obj.status == obj.REVIEW and obj.review.prc_reviews.filter(
+            user=user, overall_approval__isnull=True
+        ).exists():
+            available_actions.append("prc_review")
 
         # if NOT in Development status then we're done
         if obj.status != obj.DRAFT:

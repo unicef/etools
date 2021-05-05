@@ -2451,7 +2451,7 @@ class Intervention(TimeStampedModel):
         if not oldself:
             self.management_budgets = InterventionManagementBudget.objects.create(intervention=self)
             self.planned_budget = InterventionBudget.objects.create(intervention=self)
-            self.review = InterventionReview.objects.create(intervention=self)
+            InterventionReview.objects.create(intervention=self, review_type=InterventionReview.NA)
 
 
 class InterventionAmendment(TimeStampedModel):
@@ -2794,6 +2794,7 @@ class InterventionReview(InterventionReviewQuestionnaire, TimeStampedModel):
         default=NA,
         choices=REVIEW_TYPES
     )
+    actions_list = models.TextField(verbose_name=_('Actions List'), blank=True)
 
     submitted_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
