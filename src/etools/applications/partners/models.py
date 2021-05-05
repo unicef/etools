@@ -1693,8 +1693,8 @@ class Intervention(TimeStampedModel):
     }
     TRANSITION_SIDE_EFFECTS = {
         REVIEW: [update_review_started_date],
-        SIGNATURE: [],
-        SIGNED: [update_review_info, side_effect_one, side_effect_two],
+        SIGNATURE: [update_review_info],
+        SIGNED: [side_effect_one, side_effect_two],
         ACTIVE: [],
         SUSPENDED: [],
         ENDED: [],

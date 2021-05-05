@@ -1693,6 +1693,9 @@ class TestInterventionSignature(BaseInterventionActionTestCase):
         mock_send.assert_called()
         self.intervention.refresh_from_db()
         self.assertEqual(self.intervention.status, Intervention.SIGNATURE)
+        review = self.intervention.review
+        self.assertEqual(review.submitted_by, self.user)
+        self.assertEqual(review.submitted_date, timezone.now().date())
 
         # unicef attempt to signature again
         mock_send = mock.Mock()
