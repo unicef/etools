@@ -53,8 +53,15 @@ class InterventionReviewSerializer(serializers.ModelSerializer):
             'prc_officers',
             'overall_approver',
 
-            'answer_1',
-            'answer_2',
+            'relationship_is_represented',
+            'partner_comparative_advantage',
+            'relationships_are_positive',
+            'pd_is_relevant',
+            'pd_is_guided',
+            'ges_considered',
+            'budget_is_aligned',
+            'supply_issues_considered',
+
             'overall_comment',
             'actions_list',
             'overall_approval',
@@ -86,9 +93,16 @@ class PRCOfficerInterventionReviewSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'user',
-            'answer_1',
-            'answer_2',
-            # todo
+
+            'relationship_is_represented',
+            'partner_comparative_advantage',
+            'relationships_are_positive',
+            'pd_is_relevant',
+            'pd_is_guided',
+            'ges_considered',
+            'budget_is_aligned',
+            'supply_issues_considered',
+
             'overall_comment',
             'overall_approval',
             'started_date',

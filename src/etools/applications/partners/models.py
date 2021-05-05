@@ -2748,9 +2748,61 @@ class InterventionBudget(TimeStampedModel):
 
 
 class InterventionReviewQuestionnaire(models.Model):
-    answer_1 = models.CharField(blank=True, max_length=100)
-    answer_2 = models.CharField(blank=True, max_length=100)
-    # to be refined
+    # answer fields to be renamed when questionnaire will be available
+    ANSWERS = Choices(
+        ('',  _('Not decided yet')),
+        ('a', _('Yes, strongly agree')),
+        ('b', _('Yes, agree')),
+        ('c', _('No, disagree')),
+        ('d', _('No, strongly disagree')),
+    )
+
+    relationship_is_represented = models.CharField(
+        blank=True, max_length=10,
+        verbose_name=_('The proposed relationship is best represented and regulated by partnership '
+                       '(as opposed to procurement), with both UNICEF and the CSO '
+                       'making clear contributions to the PD/SPD'),
+        choices=ANSWERS,
+    )
+    partner_comparative_advantage = models.CharField(
+        blank=True, max_length=100,
+        verbose_name=_('The partner selection evidences the CSO’s comparative advantage '
+                       'and value for money in relation to the planned results'),
+        choices=ANSWERS,
+    )
+    relationships_are_positive = models.CharField(
+        blank=True, max_length=100,
+        verbose_name=_('Previous UNICEF/UN relationships with the proposed CSO have been positive'),
+        choices=ANSWERS,
+    )
+    pd_is_relevant = models.CharField(
+        blank=True, max_length=100,
+        verbose_name=_('The proposed PD/SPD is relevant to achieving results in the country programme document, '
+                       'the relevant sector workplan and or humanitarian response plan'),
+        choices=ANSWERS,
+    )
+    pd_is_guided = models.CharField(
+        blank=True, max_length=100,
+        verbose_name=_('The results framework of the proposed PD/SPD has been guided '
+                       'by M&E feedback during the drafting process'),
+        choices=ANSWERS,
+    )
+    ges_considered = models.CharField(
+        blank=True, max_length=100,
+        verbose_name=_('Gender, equity and sustainability have been considered in the programme design process'),
+        choices=ANSWERS,
+    )
+    budget_is_aligned = models.CharField(
+        blank=True, max_length=100,
+        verbose_name=_('The budget of the proposed PD/SPD is aligned with the principles of value for money '
+                       'with the effective and efficient programme management costs adhering to office defined limits'),
+        choices=ANSWERS,
+    )
+    supply_issues_considered = models.CharField(
+        blank=True, max_length=100,
+        verbose_name=_('The relevant supply issues have been duly considered'),
+        choices=ANSWERS,
+    )
 
     overall_comment = models.TextField(blank=True)
     overall_approval = models.NullBooleanField()
