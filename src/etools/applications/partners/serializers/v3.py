@@ -46,6 +46,7 @@ class InterventionReviewSerializer(serializers.ModelSerializer):
             'id',
             'amendment',
             'review_type',
+            'started_date',
             'submitted_by',
             'submitted_date',
 

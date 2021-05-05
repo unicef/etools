@@ -149,6 +149,7 @@ class PRCReviewTestCase(ReviewInterventionMixin, BaseTenantTestCase):
     # secretary/overall approver fill final review
     # secretary/overall approver action recommend for signature
     # secretary/overall approver action reject PRC
+    # submitted by/date set on signature
 
     def setUp(self):
         super().setUp()

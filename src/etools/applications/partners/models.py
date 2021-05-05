@@ -1644,8 +1644,13 @@ def side_effect_two(i, old_instance=None, user=None):
     pass
 
 
+def update_review_started_date(i, old_instance=None, user=None):
+    review = i.review
+    review.started_date = timezone.now().date()
+    review.save()
+
 def update_review_info(i, old_instance=None, user=None):
-    review = i.reviews.order_by('-created').last()
+    review = i.review
     review.submitted_date = timezone.now().date()
     review.submitted_by = user
     review.save()
@@ -1687,9 +1692,9 @@ class Intervention(TimeStampedModel):
         ENDED: [CLOSED]
     }
     TRANSITION_SIDE_EFFECTS = {
-        REVIEW: [update_review_info],
+        REVIEW: [update_review_started_date],
         SIGNATURE: [],
-        SIGNED: [side_effect_one, side_effect_two],
+        SIGNED: [update_review_info, side_effect_one, side_effect_two],
         ACTIVE: [],
         SUSPENDED: [],
         ENDED: [],
@@ -2848,6 +2853,7 @@ class InterventionReview(InterventionReviewQuestionnaire, TimeStampedModel):
     )
     actions_list = models.TextField(verbose_name=_('Actions List'), blank=True)
 
+    started_date = models.DateField(blank=True, null=True, verbose_name=_('Date Review Started'))
     submitted_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         verbose_name=_('Submitted By'),
@@ -2932,8 +2938,8 @@ class PRCOfficerInterventionReview(InterventionReviewQuestionnaire, TimeStampedM
     )
 
     overall_review = models.ForeignKey(InterventionReview, on_delete=models.CASCADE, related_name='prc_reviews')
-    started_date = models.DateField(null=True, blank=True)
-    submitted_date = models.DateField(null=True, blank=True)
+    started_date = models.DateField(null=True, blank=True, verbose_name=_('Date Review Started'))
+    submitted_date = models.DateField(null=True, blank=True, verbose_name=_('Date Review Submitted'))
 
     class Meta:
         ordering = ['-created']

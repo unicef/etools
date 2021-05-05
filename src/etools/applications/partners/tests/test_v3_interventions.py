@@ -1311,8 +1311,7 @@ class TestInterventionReview(BaseInterventionActionTestCase):
         self.assertEqual(self.intervention.status, Intervention.REVIEW)
         review = self.intervention.reviews.last()
         self.assertEqual(review.review_type, 'prc')
-        self.assertEqual(review.submitted_by, self.user)
-        self.assertEqual(review.submitted_date, timezone.now().date())
+        self.assertEqual(review.started_date, timezone.now().date())
 
         # unicef attempt to review again
         mock_send = mock.Mock()
