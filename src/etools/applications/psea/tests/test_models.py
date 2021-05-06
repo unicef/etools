@@ -191,6 +191,8 @@ class TestAssessment(BaseTenantTestCase):
             "overall_rating": assessment.overall_rating_display,
             "assessment_date": str(assessment.assessment_date),
             "assessor": str(assessment.assessor),
+            'assessment_ingo_reason': None,
+            'assessment_type': 'UNICEF Assessment 2020',
         })
 
     def test_get_reference_number(self):
@@ -236,6 +238,8 @@ class TestAssessmentActionPoint(BaseTenantTestCase):
             "focal_points": ", ".join(f"{fp.get_full_name()} ({fp.email})" for fp in assessment.focal_points.all()),
             "assessment_date": str(assessment.assessment_date),
             "assessor": str(assessment.assessor),
+            'assessment_ingo_reason': None,
+            'assessment_type': 'UNICEF Assessment 2020',
         })
 
 

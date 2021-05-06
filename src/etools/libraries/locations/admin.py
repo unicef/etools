@@ -7,6 +7,7 @@ from unicef_locations.models import CartoDBTable, Location, LocationRemapHistory
 
 from etools.libraries.locations.tasks import (
     cleanup_obsolete_locations,
+    notify_import_site_completed,
     update_sites_from_cartodb,
     validate_locations_in_use,
 )
@@ -34,7 +35,10 @@ class EtoolsCartoDBTableAdmin(CartoDBTableAdmin):
 
         # clean up locations from bottom to top, it's easier to validate parents this way
         for table in reversed(carto_tables):
-            task_list += [cleanup_obsolete_locations.si(table)]
+            task_list.extend([
+                cleanup_obsolete_locations.si(table),
+                notify_import_site_completed.si(table, request.user.pk)
+            ])
 
         if task_list:
             # Trying to force the tasks to execute in correct sequence

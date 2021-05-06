@@ -14,6 +14,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from unicef_attachments.models import Attachment
 from unicef_rest_export.renderers import ExportCSVRenderer, ExportOpenXMLRenderer
 from unicef_rest_export.views import ExportMixin
@@ -26,6 +27,7 @@ from etools.applications.action_points.conditions import (
     ActionPointAuthorCondition,
 )
 from etools.applications.audit.models import UNICEFAuditFocalPoint
+from etools.applications.partners.views.v2 import choices_to_json_ready
 from etools.applications.permissions2.conditions import ObjectStatusCondition
 from etools.applications.permissions2.drf_permissions import NestedPermission
 from etools.applications.permissions2.metadata import PermissionBasedMetadata
@@ -48,6 +50,22 @@ from etools.applications.psea.serializers import (
     IndicatorSerializer,
 )
 from etools.applications.psea.validation import AssessmentValid
+
+
+class PSEAStaticDropdownsListAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        """Return All Static values used for dropdowns in the frontend"""
+
+        return Response(
+            {
+                'ratings': choices_to_json_ready(Assessment.RATING),
+                'types': choices_to_json_ready(Assessment.ASSESSMENT_TYPES),
+                'ingo_reasons': choices_to_json_ready(Assessment.INGO_REASONS),
+            },
+            status=status.HTTP_200_OK
+        )
 
 
 class AssessmentViewSet(
@@ -77,6 +95,11 @@ class AssessmentViewSet(
             'assessor__user__last_name__icontains',
         ]),
         ('partner', 'partner_id__in'),
+        ('sea_risk_rating', {
+            'high': [('overall_rating__gte', 0), ('overall_rating__lte', 8)],
+            'moderate': [('overall_rating__gte', 9), ('overall_rating__lte', 14)],
+            'low': [('overall_rating__gte', 15), ],
+        }),
         ('status', 'status__in'),
         ('unicef_focal_point', 'focal_points__pk__in'),
         ('assessment_date__lt', 'assessment_date__lt'),

@@ -29,7 +29,7 @@ def handle_record(record):
 
     record_dict = {
         'Username*': record.get('userPrincipalName', '-'),
-        'Email*': record.get('mail', '-').lower(),
+        'Email*': record['mail'].lower() if record.get('mail', None) else '',
         'Name*': record.get('givenName', '-'),
         'Surname*': record.get('surname', '-'),
         'Type*': record.get('userType', '-'),
@@ -38,7 +38,8 @@ def handle_record(record):
         'Phone': record.get('businessPhones', '-'),
         'Mobile': record.get('mobilePhone', '-'),
         'Department': record.get('department', '-'),
-        'Country Code [Business Area Code]': record.get('extension_f4805b4021f643d0aa596e1367d432f1_extensionAttribute1', '-'),
+        'Country Code [Business Area Code]': record.get(
+            'extension_f4805b4021f643d0aa596e1367d432f1_extensionAttribute1', '-'),
         'Country': record.get('country', '-'),
         'Index Number': record.get('extension_f4805b4021f643d0aa596e1367d432f1_extensionAttribute2', '-'),
         'Nationality': record.get('extension_f4805b4021f643d0aa596e1367d432f1_extensionAttribute3', '-'),

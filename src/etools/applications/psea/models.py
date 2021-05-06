@@ -102,6 +102,37 @@ class Assessment(TimeStampedModel):
         STATUS_FINAL: [assessment_final],
     }
 
+    LOW_RATING = "Low"
+    MODERATE_RATING = "Moderate"
+    HIGH_RATING = "High"
+    RATING = {
+        LOW_RATING: LOW_RATING,
+        MODERATE_RATING: MODERATE_RATING,
+        HIGH_RATING: HIGH_RATING
+    }
+
+    UNICEF_2020 = 'unicef_2020'
+    UN_COMMON_OTHER = 'un_common_other'
+    UN_COMMON_UNICEF = 'un_common_unicef'
+
+    ASSESSMENT_TYPES = (
+        (UNICEF_2020, _("UNICEF Assessment 2020")),
+        (UN_COMMON_OTHER, _("Assessment- Other UN")),
+        (UN_COMMON_UNICEF, _("Assessment- UNICEF")),
+    )
+
+    DECENTRALIZED = 'decentralized'
+    SEA_ALLEGATION = 'sea_allegation'
+    GLOBAL_POLICY_IMPLEMENTED = 'global_policy_implemented'
+    HIGH_RISK_CONTEXT = 'high_risk_context'
+
+    INGO_REASONS = (
+        (DECENTRALIZED, _("Decentralization of INGO")),
+        (SEA_ALLEGATION, _("SEA allegation")),
+        (GLOBAL_POLICY_IMPLEMENTED, _("Global policy not being implemented at country-level")),
+        (HIGH_RISK_CONTEXT, _("High risk context")),
+    )
+
     reference_number = models.CharField(
         max_length=100,
         verbose_name=_("Reference Number"),
@@ -119,6 +150,8 @@ class Assessment(TimeStampedModel):
         null=True,
         blank=True,
     )
+    assessment_type = models.CharField(max_length=16, choices=ASSESSMENT_TYPES, default=UNICEF_2020)
+    assessment_ingo_reason = models.CharField(max_length=16, choices=INGO_REASONS, blank=True, null=True)
     status = FSMField(
         verbose_name=_('Status'),
         max_length=30,
@@ -171,11 +204,11 @@ class Assessment(TimeStampedModel):
         if not self.overall_rating:
             display = ""
         elif self.overall_rating <= 8:
-            display = "High"
+            display = Assessment.HIGH_RATING
         elif 8 < self.overall_rating <= 14:
-            display = "Moderate"
+            display = Assessment.MODERATE_RATING
         elif self.overall_rating >= 15:
-            display = "Low"
+            display = Assessment.LOW_RATING
         return display
 
     def get_assessor_recipients(self):
@@ -237,6 +270,8 @@ class Assessment(TimeStampedModel):
             "url": self.get_object_url(user=user),
             "overall_rating": self.overall_rating_display,
             "assessment_date": str(self.assessment_date),
+            "assessment_type": self.get_assessment_type_display(),
+            "assessment_ingo_reason": self.get_assessment_ingo_reason_display(),
             "assessor": str(self.assessor),
             "focal_points": ", ".join(f"{fp.get_full_name()} ({fp.email})" for fp in self.focal_points.all())
         }
