@@ -23,8 +23,11 @@ from etools.applications.partners.views.interventions_v3 import (
     PMPInterventionSupplyItemListCreateView,
     PMPInterventionSupplyItemRetrieveUpdateView,
     PMPInterventionSupplyItemUploadView,
+    PMPOfficerReviewDetailView,
+    PMPOfficerReviewListView,
     PMPReviewDetailView,
-    PMPReviewView, PMPOfficerReviewListView, PMPOfficerReviewDetailView, PMPReviewNotifyView,
+    PMPReviewNotifyView,
+    PMPReviewView,
 )
 from etools.applications.partners.views.interventions_v3_actions import (
     PMPInterventionAcceptReviewView,

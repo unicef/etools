@@ -138,12 +138,9 @@ def transition_to_suspended(i):
 
 
 def transition_to_review(i):
-    from etools.applications.partners.models import InterventionReview
-
     # todo: uncomment and fix tests
     # if not (i.partner_accepted and i.unicef_accepted):
     #     raise StateValidationError([_('Unicef and Partner both need to accept')])
-
     # todo: see comment from state_review_valid
     # if i.reviews.order_by('-created').last().review_type == InterventionReview.NA:
     #     raise StateValidationError([_('Review type not selected')])
@@ -325,7 +322,7 @@ def all_activities_have_timeframes(i):
 
 
 def review_was_accepted(i):
-    r = i.reviews.first()
+    r = i.review
     return r.overall_approval if r else False
 
 

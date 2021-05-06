@@ -8,8 +8,10 @@ from rest_framework.response import Response
 from unicef_notification.utils import send_notification_with_template
 
 from etools.applications.partners.models import Intervention, InterventionReview
-from etools.applications.partners.serializers.interventions_v3 import InterventionDetailSerializer, \
-    InterventionReviewActionSerializer
+from etools.applications.partners.serializers.interventions_v3 import (
+    InterventionDetailSerializer,
+    InterventionReviewActionSerializer,
+)
 from etools.applications.partners.views.interventions_v3 import InterventionDetailAPIView, PMPInterventionMixin
 
 
@@ -100,9 +102,6 @@ class PMPInterventionAcceptReviewView(PMPInterventionActionView):
             request.data.update({"unicef_accepted": True})
         request.data.update({"status": Intervention.REVIEW})
 
-        pd.review.overall_approval = True
-        pd.review.save()
-
         response = super().update(request, *args, **kwargs)
 
         if response.status_code == 200:
@@ -137,6 +136,9 @@ class PMPInterventionRejectReviewView(PMPInterventionActionView):
         pd = self.get_object()
         if pd.status != Intervention.REVIEW:
             raise ValidationError("PD needs to be in Review state")
+        if pd.review.overall_approver_id != request.user.pk:
+            raise ValidationError("Only overall approver can reject review.")
+
         request.data.clear()
         request.data.update({"status": Intervention.DRAFT})
         request.data.update({"unicef_accepted": False})
@@ -344,6 +346,12 @@ class PMPInterventionSignatureView(PMPInterventionActionView):
         pd = self.get_object()
         if pd.status == Intervention.SIGNATURE:
             raise ValidationError("PD is already in Signature status.")
+        if pd.review.overall_approver_id != request.user.pk:
+            raise ValidationError("Only overall approver can accept review.")
+
+        pd.review.overall_approval = True
+        pd.review.save()
+
         request.data.clear()
         request.data.update({"status": Intervention.SIGNATURE})
 

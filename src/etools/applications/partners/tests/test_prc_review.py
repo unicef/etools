@@ -3,15 +3,20 @@ from unittest.mock import patch
 
 from django.urls import reverse
 from django.utils import timezone
+
 from factory import fuzzy
 from rest_framework import status
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import Intervention
-from etools.applications.partners.permissions import UNICEF_USER, PRC_SECRETARY
+from etools.applications.partners.permissions import PRC_SECRETARY, UNICEF_USER
 from etools.applications.partners.tests.factories import InterventionFactory, PartnerFactory, PartnerStaffFactory
-from etools.applications.reports.tests.factories import CountryProgrammeFactory, ReportingRequirementFactory, \
-    SectionFactory, OfficeFactory
+from etools.applications.reports.tests.factories import (
+    CountryProgrammeFactory,
+    OfficeFactory,
+    ReportingRequirementFactory,
+    SectionFactory,
+)
 from etools.applications.users.tests.factories import UserFactory
 
 
@@ -256,9 +261,8 @@ class DevelopPermissionsTestCase(TestPermissionsMixin, DevelopInterventionMixin,
 class DevelopSentToPartnerPermissionsTestCase(TestPermissionsMixin, DevelopInterventionMixin, BaseTenantTestCase):
     def setUp(self):
         super().setUp()
-        self.develop_intervention.date_sent_to_partner=timezone.now().date()
+        self.develop_intervention.date_sent_to_partner = timezone.now().date()
         self.develop_intervention.save()
-
 
     def test_partner_user_permissions(self):
         permissions = self.get_permissions(self.develop_intervention, self.partner_focal_point)

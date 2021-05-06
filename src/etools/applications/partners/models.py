@@ -1644,16 +1644,16 @@ def side_effect_two(i, old_instance=None, user=None):
     pass
 
 
-def update_review_started_date(i, old_instance=None, user=None):
-    review = i.review
-    review.started_date = timezone.now().date()
-    review.save()
+def update_review_started_info(i, old_instance=None, user=None):
+    i.review.started_date = timezone.now().date()
+    i.review.started_by = user
+    i.review.save()
+
 
 def update_review_info(i, old_instance=None, user=None):
-    review = i.review
-    review.submitted_date = timezone.now().date()
-    review.submitted_by = user
-    review.save()
+    i.review.submitted_date = timezone.now().date()
+    i.review.submitted_by = user
+    i.review.save()
 
 
 def get_default_cash_transfer_modalities():
@@ -1692,7 +1692,7 @@ class Intervention(TimeStampedModel):
         ENDED: [CLOSED]
     }
     TRANSITION_SIDE_EFFECTS = {
-        REVIEW: [update_review_started_date],
+        REVIEW: [update_review_started_info],
         SIGNATURE: [update_review_info],
         SIGNED: [side_effect_one, side_effect_two],
         ACTIVE: [],
@@ -2755,7 +2755,7 @@ class InterventionBudget(TimeStampedModel):
 class InterventionReviewQuestionnaire(models.Model):
     # answer fields to be renamed when questionnaire will be available
     ANSWERS = Choices(
-        ('',  _('Not decided yet')),
+        ('', _('Not decided yet')),
         ('a', _('Yes, strongly agree')),
         ('b', _('Yes, agree')),
         ('c', _('No, disagree')),

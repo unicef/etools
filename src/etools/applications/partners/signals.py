@@ -1,9 +1,13 @@
 from django.db import connection
-from django.db.models.signals import post_delete, post_save, m2m_changed
+from django.db.models.signals import m2m_changed, post_delete, post_save
 from django.dispatch import receiver
 
-from etools.applications.partners.models import Intervention, InterventionSupplyItem, InterventionReview, \
-    PRCOfficerInterventionReview
+from etools.applications.partners.models import (
+    Intervention,
+    InterventionReview,
+    InterventionSupplyItem,
+    PRCOfficerInterventionReview,
+)
 from etools.applications.partners.tasks import sync_partner_to_prp
 
 

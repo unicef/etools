@@ -103,6 +103,8 @@ class BaseTestCase(BaseTenantTestCase):
         self.signature_intervention.sections.add(SectionFactory())
         self.signature_intervention.offices.add(OfficeFactory())
         self.signature_intervention.partner_focal_points.add(partner_focal_point_staff)
+        self.signature_intervention.review.overall_approval = True
+        self.signature_intervention.review.save()
 
         ended_fields = copy(signature_fields)
         ended_fields.update(**dict(
