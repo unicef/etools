@@ -162,6 +162,8 @@ class AssessmentDetailSerializer(AssessmentSerializer):
 class AssessmentExportSerializer(AssessmentSerializer):
     focal_points = serializers.SerializerMethodField()
     overall_rating_display = serializers.ReadOnlyField(label='SEA Risk Rating')
+    assessment_type = serializers.ReadOnlyField(source='get_assessment_type_display')
+    assessment_ingo_reason = serializers.ReadOnlyField(label='get_assessment_ingo_reason_display')
 
     cs1 = serializers.SerializerMethodField()
     cs2 = serializers.SerializerMethodField()
@@ -202,6 +204,8 @@ class AssessmentExportSerializer(AssessmentSerializer):
             "status",
             "rating",
             "overall_rating_display",
+            "assessment_type",
+            "assessment_ingo_reason",
             "assessor",
             "focal_points",
             "cs1",
