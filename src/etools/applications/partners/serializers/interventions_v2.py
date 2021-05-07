@@ -86,12 +86,27 @@ class InterventionAmendmentCUSerializer(AttachmentSerializerMixin, serializers.M
 
     class Meta:
         model = InterventionAmendment
-        fields = "__all__"
+        fields = (
+            'id',
+            'amendment_number',
+            'signed_amendment_file',
+            'signed_amendment_attachment',
+            'internal_prc_review',
+            'created',
+            'modified',
+            'kind',
+            'types',
+            'other_description',
+            'signed_date',
+            'signed_amendment',
+            'intervention',
+            'amended_intervention',
+        )
         validators = [
             UniqueTogetherValidator(
                 queryset=InterventionAmendment.objects.all(),
-                fields=["intervention", "signed_date"],
-                message=_("There is already an amendment with this signed date."),
+                fields=["intervention", "signed_date", "kind"],
+                message=_("There is already an amendment of same kind with this signed date."),
             )
         ]
 
@@ -102,8 +117,8 @@ class InterventionAmendmentCUSerializer(AttachmentSerializerMixin, serializers.M
             raise ValidationError("Date cannot be in the future!")
 
         if 'intervention' in data:
-            if data['intervention'].in_amendment is True:
-                raise ValidationError("Cannot add a new amendment while another amendment is in progress.")
+            if data['intervention'].amendments.filter(is_active=True, kind=data['kind']).exists():
+                raise ValidationError("Cannot add a new amendment while another amendment of same kind is in progress.")
             if data['intervention'].agreement.partner.blocked is True:
                 raise ValidationError("Cannot add a new amendment while the partner is blocked in Vision.")
 

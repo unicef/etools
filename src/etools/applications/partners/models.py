@@ -1,11 +1,15 @@
+import copy
 import datetime
 import decimal
 import json
 
 from django.conf import settings
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import ArrayField, JSONField
 from django.db import connection, IntegrityError, models, transaction
 from django.db.models import Case, CharField, Count, F, Max, Min, OuterRef, Q, Subquery, Sum, When
+from django.db.models.fields.files import FieldFile
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.functional import cached_property
@@ -30,7 +34,8 @@ from etools.applications.partners.validation.agreements import (
     agreement_transition_to_signed_valid,
     agreements_illegal_transition,
 )
-from etools.applications.reports.models import CountryProgramme, Indicator, Office, Result, Section
+from etools.applications.reports.models import CountryProgramme, Indicator, Office, Result, Section, LowerResult, \
+    InterventionTimeFrame, InterventionActivity
 from etools.applications.t2f.models import Travel, TravelActivity, TravelType
 from etools.applications.tpm.models import TPMActivity, TPMVisit
 from etools.applications.users.models import Country
@@ -2441,6 +2446,102 @@ class Intervention(TimeStampedModel):
             self.review = InterventionReview.objects.create(intervention=self)
 
 
+def copy_m2m_relations(instance, instance_copy, relations, objects_map):
+    for m2m_relation in relations:
+        m2m_instances = getattr(instance, m2m_relation).all()
+        objects_map[m2m_relation] = [i.pk for i in m2m_instances]
+        getattr(instance_copy, m2m_relation).add(*m2m_instances)
+
+
+def copy_simple_fields(instance, instance_copy, fields_map, exclude=None):
+    exclude = exclude or []
+    for field in instance._meta.get_fields():
+        field_is_simple = not (field.many_to_many or field.many_to_one or field.one_to_many or field.one_to_one)
+        if field.name not in exclude and field.concrete and field_is_simple and not field.auto_created:
+            value = getattr(instance, field.name)
+            setattr(instance_copy, field.name, value)
+
+            if isinstance(value, datetime.datetime):
+                value = value.isoformat()
+            if isinstance(value, datetime.date):
+                value = value.isoformat()
+            elif isinstance(value, decimal.Decimal):
+                value = value.to_eng_string()
+            elif isinstance(value, FieldFile):
+                value = value.name
+            fields_map[field.name] = value
+
+
+def copy_one_to_many(instance, instance_copy, related_name, fields_map, relations_to_copy, exclude_fields, kwargs):
+    related_field = [f for f in instance._meta.get_fields() if f.name == related_name][0]
+
+    for item in getattr(instance, related_name).all():
+        local_kwargs = copy.deepcopy(kwargs)
+        if type(item) not in local_kwargs:
+            local_kwargs[type(item)] = {}
+        local_kwargs[type(item)][related_field.field.name] = instance_copy
+
+        item_copy, copy_map = copy_instance(item, relations_to_copy, exclude_fields, local_kwargs)
+        fields_map.append(copy_map)
+
+
+def copy_instance(instance, relations_to_copy, exclude_fields, kwargs):
+    # todo: allow recursive copy
+    related_fields_to_copy = relations_to_copy.get(type(instance), [])
+    fields_to_exclude = exclude_fields.get(type(instance), [])
+
+    instance_copy = type(instance)(**kwargs.get(type(instance), {}))
+    copy_map = {
+        'original_pk': instance.pk,
+    }
+    copy_simple_fields(instance, instance_copy, copy_map, exclude=fields_to_exclude)
+
+    for field in instance._meta.get_fields():
+        if field.name in fields_to_exclude or field.name not in related_fields_to_copy:
+            continue
+
+        if field.many_to_one:
+            print(f'many_to_one {field.name}')
+            value = getattr(instance, field.name)
+            setattr(instance_copy, field.name, value)
+            copy_map[field.name] = value.pk
+
+    instance_copy.save()
+    copy_map['copy_pk'] = instance_copy.pk
+
+    for field in instance._meta.get_fields():
+        if field.name in fields_to_exclude or field.name not in related_fields_to_copy:
+            continue
+
+        if field.one_to_one:
+            print(f'one_to_one {field.name}')
+
+            # todo: implement copy if object not available
+            # todo: not only simple fields can be required
+            copy_map[field.name] = {}
+            related_instance_copy = getattr(instance_copy, field.name)
+            copy_simple_fields(getattr(instance, field.name), related_instance_copy, copy_map[field.name])
+            related_instance_copy.save()
+
+        if field.one_to_many:
+            print(f'one_to_many {field.name}')
+            copy_map[field.name] = []
+            copy_one_to_many(instance, instance_copy, field.name, copy_map[field.name], relations_to_copy, exclude_fields, kwargs)
+
+        if field.many_to_many:
+            print(f'many_to_many {field.name}')
+            copy_m2m_relations(instance, instance_copy, [field.name], copy_map)
+
+    # todo: one_to_one -> full copy related instance (if exists get current one)
+    # todo: many_to_one -> set field if in relations to copy
+    # todo: one_to_many -> copy_one_to_many if in relations to copy
+    # todo: many_to_many -> copy_m2m_relations
+    # todo: additional actions may be required, for example in case of foreign keys
+    return instance_copy, copy_map
+
+    # for field in instance._meta.get_fields():
+
+
 class InterventionAmendment(TimeStampedModel):
     """
     Represents an amendment for the partner intervention.
@@ -2472,12 +2573,31 @@ class InterventionAmendment(TimeStampedModel):
         (BUDGET, 'Budget'),
     ]
 
+    KIND_NORMAL = 'normal'
+    KIND_CONTINGENCY = 'contingency'
+
+    AMENDMENT_KINDS = Choices(
+        (KIND_NORMAL, _('Normal')),
+        (KIND_CONTINGENCY, _('Contingency')),
+    )
+
     intervention = models.ForeignKey(
         Intervention,
         verbose_name=_("Reference Number"),
         related_name='amendments',
         on_delete=models.CASCADE,
     )
+
+    kind = models.CharField(
+        max_length=20,
+        verbose_name=_('Kind'),
+        choices=AMENDMENT_KINDS,
+        default=KIND_NORMAL,
+    )
+
+    # todo: create data migration
+    # todo: set false on merge
+    is_active = models.BooleanField(default=True)
 
     types = ArrayField(models.CharField(
         max_length=50,
@@ -2516,6 +2636,14 @@ class InterventionAmendment(TimeStampedModel):
         code='partners_intervention_amendment_internal_prc_review',
         blank=True,
     )
+    amended_intervention = models.OneToOneField(
+        Intervention,
+        verbose_name=_("Amended Intervention"),
+        related_name='amendment',
+        blank=True, null=True,
+        on_delete=models.SET_NULL,
+    )
+    related_objects_map = JSONField(blank=True, default=dict)
 
     tracker = FieldTracker()
 
@@ -2537,6 +2665,9 @@ class InterventionAmendment(TimeStampedModel):
             self.amendment_number = self.compute_reference_number()
             self.intervention.in_amendment = True
             self.intervention.save(amendment_number=self.amendment_number)
+            self._copy_intervention()
+            print(self.related_objects_map)
+
         return super().save(**kwargs)
 
     def __str__(self):
@@ -2548,6 +2679,182 @@ class InterventionAmendment(TimeStampedModel):
     class Meta:
         verbose_name = _('Amendment')
         verbose_name_plural = _('Intervention amendments')
+
+    def _copy_intervention(self):
+        # intervention_data = {
+        #     field: value
+        #     for field, value in Intervention.objects.get(id=self.intervention_id).__dict__.items()
+        #     if not field.startswith('_')
+        # }
+        # del intervention_data['id']
+        # del intervention_data['number']
+
+        # self.related_objects_map = {
+        #     'result_links': [],
+        #     'supply_items': [],
+        #     'risks': [],
+        #     'planned_budget': {},
+        #     'management_budgets': {},
+        # }
+
+        self.amended_intervention, self.related_objects_map = copy_instance(
+            self.intervention,
+            {
+                Intervention: [
+                    # one to many
+                    'result_links',
+                    'supply_items',
+                    'risks',
+
+                    # 1 to 1
+                    'planned_budget',
+                    'management_budgets',
+
+                    # many to one
+                    'agreement',
+                    'budget_owner',
+
+                    # many to many
+                    'country_programmes', 'unicef_focal_points', 'partner_focal_points',
+                    'sections', 'offices', 'flat_locations'
+                ],
+                InterventionResultLink: [
+                    # one to many
+                    'll_results',
+
+                    # many to many
+                    'ram_indicators',
+                ],
+                LowerResult: [
+                    # one to many
+                    'activities',
+                ]
+            },
+            {
+                Intervention: ['number', 'status'],
+            },
+            {
+                Intervention: {
+                    'status': Intervention.DRAFT,
+                }
+            }
+        )
+
+        for result_link in self.related_objects_map.get('result_links', []):
+            for lower_result in result_link.get('ll_results', []):
+                for activity_data in lower_result.get('activities', []):
+                    activity = InterventionActivity.objects.get(pk=activity_data['original_pk'])
+                    activity_copy = InterventionActivity.objects.get(pk=activity_data['copy_pk'])
+                    quarters = list(activity.time_frames.values_list('quarter', flat=True))
+                    activity_copy.time_frames.add(*self.amended_intervention.quarters.filter(quarter__in=quarters))
+                    activity_data['quarters'] = quarters
+
+        # amended_intervention = Intervention()
+        # copy_simple_fields(
+        #     self.intervention, amended_intervention,
+        #     fields_map=self.related_objects_map, exclude=['number', 'status']
+        # )
+        # amended_intervention.status = Intervention.DRAFT
+        # amended_intervention.agreement = self.intervention.agreement
+        # self.related_objects_map['agreement'] = amended_intervention.agreement.pk
+        # amended_intervention.budget_owner = self.intervention.budget_owner
+        # self.related_objects_map['budget_owner'] = amended_intervention.budget_owner.pk
+        # amended_intervention.save()
+        #
+        # self.amended_intervention = amended_intervention
+
+        # copy_m2m_relations(
+        #     self.intervention, self.amended_intervention,
+        #     [
+        #         'country_programmes', 'unicef_focal_points', 'partner_focal_points',
+        #         'sections', 'offices', 'flat_locations'
+        #      ],
+        #     self.related_objects_map
+        # )
+
+        # # planned budget
+        # copy_simple_fields(
+        #     self.intervention.planned_budget, amended_intervention.planned_budget,
+        #     self.related_objects_map['planned_budget'],
+        # )
+        # amended_intervention.planned_budget.save()
+        #
+        # # management budget
+        # copy_simple_fields(
+        #     self.intervention.management_budgets, amended_intervention.management_budgets,
+        #     self.related_objects_map['management_budgets'],
+        # )
+        # amended_intervention.management_budgets.save()
+        #
+        # copy_one_to_many(self.intervention, self.amended_intervention, 'supply_items', self.related_objects_map)
+        # copy_one_to_many(self.intervention, self.amended_intervention, 'risks', self.related_objects_map)
+
+        # for supply_item in self.intervention.supply_items.all():
+        #     supply_item_copy = InterventionSupplyItem(intervention=self.amended_intervention)
+        #     copy_map = {
+        #         'original_pk': supply_item.pk,
+        #     }
+        #     copy_simple_fields(supply_item, supply_item_copy, fields_map=copy_map)
+        #     supply_item_copy.save()
+        #     copy_map['copy_pk'] = supply_item_copy.pk
+        #     self.related_objects_map['supply_items'].append(copy_map)
+
+        # for risk in self.intervention.risks.all():
+        #     risk_copy = InterventionRisk(intervention=self.amended_intervention)
+        #     copy_map = {
+        #         'original_pk': risk.pk,
+        #     }
+        #     copy_simple_fields(risk, risk_copy, fields_map=copy_map)
+        #     risk_copy.save()
+        #     copy_map['copy_pk'] = risk_copy.pk
+        #     self.related_objects_map['risks'].append(copy_map)
+
+        # for result_link in self.intervention.result_links.all():
+        #     result_link_copy = InterventionResultLink.objects.create(
+        #         intervention=self.amended_intervention,
+        #         cp_output=result_link.cp_output
+        #     )
+        #     result_link_copy.ram_indicators.add(*result_link.ram_indicators.all())
+        #     copy_map = {
+        #         'original_pk': result_link.pk,
+        #         'copy_pk': result_link_copy.pk,
+        #         'ram_indicators': [i.pk for i in result_link.ram_indicators.all()],
+        #         'll_results': [],
+        #     }
+        #     for ll_result in result_link.ll_results.all():
+        #         ll_result_copy = LowerResult.objects.create(
+        #             result_link=result_link_copy,
+        #             name=ll_result.name,
+        #             code=ll_result.code,
+        #         )
+        #         result_copy_map = {
+        #             'original_pk': ll_result.pk,
+        #             'copy_pk': ll_result_copy.pk,
+        #             'activities': []
+        #         }
+        #         for activity in ll_result.activities.all():
+        #             activity_copy = InterventionActivity.objects.create(
+        #                 result=ll_result_copy,
+        #                 name=activity.name,
+        #                 context_details=activity.context_details,
+        #                 unicef_cash=activity.unicef_cash,
+        #                 cso_cash=activity.cso_cash,
+        #             )
+        #             quarters = list(activity.time_frames.values_list('quarter', flat=True))
+        #             activity_copy.time_frames.add(*self.amended_intervention.quarters.filter(quarter__in=quarters))
+        #             activity_copy_map = {
+        #                 'original_pk': activity.pk,
+        #                 'copy_pk': activity_copy.pk,
+        #                 'quarters': quarters,
+        #             }
+        #             result_copy_map['activities'].append(activity_copy_map)
+        #         #       ? copy applied_indicators (AppliedIndicator)
+        #         copy_map['ll_results'].append(result_copy_map)
+        #     self.related_objects_map['result_links'].append(copy_map)
+
+    def merge_amendment(self, amendment):
+        # todo
+        pass
 
 
 class InterventionPlannedVisits(TimeStampedModel):
