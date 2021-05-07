@@ -438,8 +438,18 @@ def update_model_locations(remapped_locations, model, related_object, related_pr
                         ThroughModel.objects.filter(**filter_args).delete()
 
         # update through table only after it was cleaned up from duplicates
+        print(ThroughModel)
         for new_loc, old_loc in remapped_locations:
-            ThroughModel.objects.filter(location=old_loc).update(location=new_loc)
+            for m2m in ThroughModel.objects.filter(location=old_loc):
+
+                try:
+                    print(11, new_loc)
+                    m2m.location=new_loc
+                    m2m.save()
+                except IntegrityError as e:
+                    print(22, e)
+                    breakpoint()
+                    m2m.delete()
 
 
 def save_location_remap_history(remapped_location_pairs):
