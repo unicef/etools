@@ -10,6 +10,9 @@ defaults = {
     Vendor Number: {{ partner_vendor_number }}
 
     Vendor Name: {{ partner_name }}
+    PSEA Assessment Type: {{ assessment_type }}
+
+    Reason for country-level INGO assessment (if different from INGO parent): {{ assessment_ingo_reason }}
 
     SEA Risk Rating: {{ overall_rating }}
 
@@ -33,6 +36,10 @@ defaults = {
     Vendor Number: {{ partner_vendor_number }} <br /><br />
 
     Vendor Name: {{ partner_name }} <br /><br />
+
+    PSEA Assessment Type: {{ assessment_type }} <br /><br />
+
+    Reason for country-level INGO assessment (if different from INGO parent): {{ assessment_ingo_reason }} <br /><br />
 
     SEA Risk Rating: {{ overall_rating }} <br /><br />
 

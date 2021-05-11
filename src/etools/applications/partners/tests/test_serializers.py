@@ -706,7 +706,7 @@ class TestPartnerOrganizationDetailSerializer(BaseTenantTestCase):
             'vendor_number', 'vision_synced', 'planned_visits', 'manually_blocked', 'flags', 'partner_type_slug',
             'outstanding_dct_amount_6_to_9_months_usd', 'outstanding_dct_amount_more_than_9_months_usd',
             'psea_assessment_date', 'sea_risk_rating_name', 'highest_risk_rating_name',
-            'highest_risk_rating_type',
+            'highest_risk_rating_type', 'lead_office', 'lead_section'
         ])
 
         self.assertCountEqual(data['planned_engagement'].keys(), [

@@ -1,4 +1,5 @@
 import datetime
+import json
 from unittest.mock import Mock, patch
 
 from django.contrib.contenttypes.models import ContentType
@@ -34,6 +35,23 @@ from etools.applications.psea.tests.factories import (
 )
 from etools.applications.reports.tests.factories import SectionFactory
 from etools.applications.users.tests.factories import GroupFactory, UserFactory
+
+
+class TestPSEAStaticDropdownsListApiView(BaseTenantTestCase):
+    """exercise PmpStaticDropdownsListApiView"""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = UserFactory(is_staff=True)
+        cls.url = reverse("psea:psea-static-list")
+
+    def test_static(self):
+
+        response = self.forced_auth_req('get', self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_json = json.loads(response.rendered_content)
+        self.assertIsInstance(response_json, dict)
+        self.assertEqual(sorted(response_json.keys()), ['ingo_reasons', 'ratings', 'types'])
 
 
 class TestAssessmentViewSet(BaseTenantTestCase):
