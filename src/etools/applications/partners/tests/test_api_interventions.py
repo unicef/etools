@@ -1854,7 +1854,8 @@ class TestInterventionAmendmentCreateAPIView(BaseTenantTestCase):
             data={
                 "signed_amendment": self.uploaded_file,
                 'signed_date': tomorrow,
-                'types': [InterventionAmendment.DATES, ]
+                'types': [InterventionAmendment.DATES, ],
+                'kind': InterventionAmendment.KIND_NORMAL,
             },
             request_format='multipart',
         )

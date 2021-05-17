@@ -16,6 +16,7 @@ from etools.libraries.pythonlib.collections import HashableDict
 # Initially, this is only being used for PRP-related endpoints.
 
 
+UNICEF_USER = 'UNICEF User'
 READ_ONLY_API_GROUP_NAME = 'Read-Only API'
 SENIOR_MANAGEMENT_GROUP = 'Senior Management Team'
 PARTNERSHIP_MANAGER_GROUP = 'Partnership Manager'

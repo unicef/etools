@@ -86,6 +86,7 @@ class TestAmendmentsManagement(BaseTestCase):
                 'other_description': 'test',
                 'signed_amendment_attachment': self.example_attachment.pk,
                 'signed_date': '1970-01-01',
+                'kind': InterventionAmendment.KIND_NORMAL,
             },
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
