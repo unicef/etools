@@ -117,8 +117,8 @@ class Assessment(TimeStampedModel):
 
     ASSESSMENT_TYPES = (
         (UNICEF_2020, _("UNICEF Assessment 2020")),
-        (UN_COMMON_OTHER, _("Assessment- Other UN")),
-        (UN_COMMON_UNICEF, _("Assessment- UNICEF")),
+        (UN_COMMON_OTHER, _("UN Common Assessment- Other UN")),
+        (UN_COMMON_UNICEF, _("UN Common Assessment- UNICEF")),
     )
 
     DECENTRALIZED = 'decentralized'
