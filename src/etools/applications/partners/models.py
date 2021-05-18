@@ -1656,6 +1656,13 @@ def side_effect_two(i, old_instance=None, user=None):
     pass
 
 
+def merge_if_amendment(i, old_instance, user=None):
+    if not i.is_amendment:
+        return
+
+    i.amendment.merge_amendment()
+
+
 def get_default_cash_transfer_modalities():
     return [Intervention.CASH_TRANSFER_DIRECT]
 
@@ -1694,7 +1701,7 @@ class Intervention(TimeStampedModel):
     TRANSITION_SIDE_EFFECTS = {
         REVIEW: [],
         SIGNATURE: [],
-        SIGNED: [side_effect_one, side_effect_two],
+        SIGNED: [side_effect_one, side_effect_two, merge_if_amendment],
         ACTIVE: [],
         SUSPENDED: [],
         ENDED: [],
@@ -1702,7 +1709,6 @@ class Intervention(TimeStampedModel):
         TERMINATED: []
     }
 
-    CANCELLED = 'cancelled'
     INTERVENTION_STATUS = (
         (DRAFT, "Development"),
         (REVIEW, "Review"),
@@ -1964,6 +1970,11 @@ class Intervention(TimeStampedModel):
     )
     in_amendment = models.BooleanField(
         verbose_name=_("Amendment Open"),
+        default=False,
+    )
+    # todo: make data migration
+    is_amendment = models.BooleanField(
+        verbose_name=_("Is Amendment"),
         default=False,
     )
 
@@ -2611,7 +2622,7 @@ class InterventionAmendment(TimeStampedModel):
                     activity_copy.time_frames.add(*self.amended_intervention.quarters.filter(quarter__in=quarters))
                     activity_data['quarters'] = quarters
 
-    def _merge_amendment(self):
+    def merge_amendment(self):
         merge_instance(
             self.intervention,
             self.amended_intervention,
@@ -2619,7 +2630,16 @@ class InterventionAmendment(TimeStampedModel):
             INTERVENTION_AMENDMENT_RELATED_FIELDS,
             INTERVENTION_AMENDMENT_IGNORED_FIELDS,
         )
-        self.amended_intervention.delete()
+        # todo: merge quarters manually
+
+        amended_intervention = self.amended_intervention
+
+        self.amended_intervention = None
+        self.is_active = False
+        self.save()
+
+        # delete should be postponed at least to finish request properly
+        # amended_intervention.delete()
 
 
 class InterventionPlannedVisits(TimeStampedModel):

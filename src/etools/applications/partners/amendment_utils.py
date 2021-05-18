@@ -91,9 +91,10 @@ def copy_one_to_many(instance, instance_copy, related_name, fields_map, relation
 
 def copy_instance(instance, relations_to_copy, exclude_fields, defaults):
     related_fields_to_copy = relations_to_copy.get(instance._meta.label, [])
-    fields_to_exclude = exclude_fields.get(instance._meta.label, [])
+    instance_defaults = defaults.get(instance._meta.label, {})
+    fields_to_exclude = exclude_fields.get(instance._meta.label, []) + list(instance_defaults.keys())
 
-    instance_copy = type(instance)(**defaults.get(instance._meta.label, {}))
+    instance_copy = type(instance)(**instance_defaults)
     copy_map = {
         'original_pk': instance.pk,
     }
@@ -230,6 +231,8 @@ INTERVENTION_AMENDMENT_RELATED_FIELDS = {
         'result_links',
         'supply_items',
         'risks',
+        'reporting_requirements',
+        # 'signed_pd_attachment',  # todo: copy generics
 
         # 1 to 1
         'planned_budget',
@@ -238,6 +241,7 @@ INTERVENTION_AMENDMENT_RELATED_FIELDS = {
         # many to one
         'agreement',
         'budget_owner',
+        'partner_authorized_officer_signatory',
 
         # many to many
         'country_programmes', 'unicef_focal_points', 'partner_focal_points',
@@ -256,12 +260,14 @@ INTERVENTION_AMENDMENT_RELATED_FIELDS = {
     ]
 }
 INTERVENTION_AMENDMENT_IGNORED_FIELDS = {
-    'partners.Intervention': ['number', 'status', 'created', 'modified'],
+    'partners.Intervention': ['number', 'created', 'modified'],
     'partners.InterventionBudget': ['created', 'modified'],
     'partners.InterventionManagementBudget': ['created', 'modified'],
+    'reports.ReportingRequirement': ['created', 'modified'],
 }
 INTERVENTION_AMENDMENT_DEFAULTS = {
     'partners.Intervention': {
         'status': 'draft',
+        'is_amendment': True,
     }
 }

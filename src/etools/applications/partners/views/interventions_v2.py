@@ -85,7 +85,7 @@ from etools.applications.users.models import Country
 
 class InterventionListBaseView(ValidatorViewMixin, ListCreateAPIView):
     def get_queryset(self):
-        qs = Intervention.objects.frs_qs()
+        qs = Intervention.objects.filter(is_amendment=False).frs_qs()
         return qs
 
 
