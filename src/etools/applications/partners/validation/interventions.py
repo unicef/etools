@@ -141,7 +141,7 @@ def transition_to_review(i):
     if not (i.partner_accepted and i.unicef_accepted):
         raise TransitionError([_('Unicef and Partner both need to accept')])
 
-    if not i.review:
+    if not i.review or (i.review and i.review.overall_approval is not None):
         raise TransitionError([_('Intervention Review is missing.')])
 
     return True
@@ -390,6 +390,8 @@ class InterventionValid(CompleteValidation):
             raise StateValidationError([_('All activities must have at least one time frame')])
         if not all_pd_outputs_are_associated(intervention):
             raise StateValidationError([_('All PD Outputs need to be associated to a CP Output')])
+        if not intervention.review or (intervention.review and intervention.review.overall_approval is not None):
+            raise StateValidationError([_('Intervention Review is missing.')])
         return True
 
     def state_signature_valid(self, intervention, user=None):

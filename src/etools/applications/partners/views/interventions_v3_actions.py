@@ -90,44 +90,6 @@ class PMPInterventionAcceptView(PMPInterventionActionView):
         return response
 
 
-class PMPInterventionAcceptReviewView(PMPInterventionActionView):
-    def update(self, request, *args, **kwargs):
-        if self.is_partner_staff():
-            return HttpResponseForbidden()
-        pd = self.get_object()
-        if pd.status == Intervention.REVIEW:
-            raise ValidationError("PD is already in Review status.")
-        request.data.clear()
-        if not pd.unicef_accepted:
-            request.data.update({"unicef_accepted": True})
-        request.data.update({"status": Intervention.REVIEW})
-
-        response = super().update(request, *args, **kwargs)
-
-        if response.status_code == 200:
-            # send notification
-            recipients = [
-                u.email for u in pd.partner_focal_points.all()
-            ] + [
-                u.email for u in pd.unicef_focal_points.all()
-            ]
-            context = {
-                "reference_number": pd.reference_number,
-                "partner_name": str(pd.agreement.partner),
-                "pd_link": reverse(
-                    "pmp_v3:intervention-detail",
-                    args=[pd.pk]
-                ),
-            }
-            send_notification_with_template(
-                recipients=recipients,
-                template_name='partners/intervention/unicef_accepted_reviewed',
-                context=context
-            )
-
-        return response
-
-
 class PMPInterventionRejectReviewView(PMPInterventionActionView):
     @transaction.atomic
     def update(self, request, *args, **kwargs):

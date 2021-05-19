@@ -30,7 +30,6 @@ from etools.applications.partners.views.interventions_v3 import (
     PMPReviewView,
 )
 from etools.applications.partners.views.interventions_v3_actions import (
-    PMPInterventionAcceptReviewView,
     PMPInterventionAcceptView,
     PMPInterventionCancelView,
     PMPInterventionRejectReviewView,
@@ -98,13 +97,6 @@ urlpatterns = [
         'interventions/<int:pk>/review/',
         view=PMPInterventionReviewView.as_view(http_method_names=['patch']),
         name='intervention-review',
-    ),
-    path(
-        'interventions/<int:pk>/accept_review/',
-        view=PMPInterventionAcceptReviewView.as_view(
-            http_method_names=['patch'],
-        ),
-        name='intervention-accept-review',
     ),
     path(
         'interventions/<int:pk>/reject_review/',

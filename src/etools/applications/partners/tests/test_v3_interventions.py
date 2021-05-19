@@ -1257,58 +1257,34 @@ class TestInterventionAccept(BaseInterventionActionTestCase):
         self.intervention.refresh_from_db()
         self.assertEqual(self.intervention.status, Intervention.DRAFT)
 
-
-class TestInterventionAcceptReview(BaseInterventionActionTestCase):
-    def setUp(self):
-        super().setUp()
-        self.url = reverse(
-            'pmp_v3:intervention-accept-review',
-            args=[self.intervention.pk],
-        )
-
-    def test_not_found(self):
-        response = self.forced_auth_req(
-            "patch",
-            reverse('pmp_v3:intervention-accept-review', args=[404]),
-            user=self.user,
-        )
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-
-    def test_partner_no_access(self):
-        intervention = InterventionFactory()
-        response = self.forced_auth_req(
-            "patch",
-            reverse(
-                'pmp_v3:intervention-accept-review',
-                args=[intervention.pk],
-            ),
-            user=self.partner_user,
-        )
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
-    def test_patch(self):
+    def test_accept_after_reject(self):
         self.intervention.partner_accepted = True
-        self.intervention.unicef_accepted = True
-        self.intervention.date_sent_to_partner = datetime.date.today()
+        self.intervention.unicef_accepted = False
+        self.intervention.unicef_court = True
+        self.intervention.date_sent_to_partner = timezone.now().date()
         self.intervention.save()
-        InterventionReviewFactory(intervention=self.intervention, review_type='non-prc')
 
-        # unicef accepts
-        mock_send = mock.Mock(return_value=self.mock_email)
-        with mock.patch(self.notify_path, mock_send):
-            response = self.forced_auth_req("patch", self.url, user=self.user)
+        result_link = InterventionResultLinkFactory(
+            intervention=self.intervention,
+            cp_output__result_type__name=ResultType.OUTPUT,
+        )
+        pd_output = LowerResultFactory(result_link=result_link)
+        activity = InterventionActivityFactory(result=pd_output)
+        activity.time_frames.add(self.intervention.quarters.first())
+
+        InterventionReviewFactory(
+            intervention=self.intervention, review_type='non-prc',
+            overall_approver=self.user, overall_approval=False
+        )
+        self.assertEqual(self.intervention.reviews.count(), 1)
+
+        response = self.forced_auth_req("patch", self.url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
-        mock_send.assert_called()
-        self.intervention.refresh_from_db()
-        self.assertEqual(self.intervention.status, Intervention.REVIEW)
 
-        # unicef attempt to accept and review again
-        mock_send = mock.Mock()
-        with mock.patch(self.notify_path, mock_send):
-            response = self.forced_auth_req("patch", self.url, user=self.user)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("PD is already in Review status.", response.data)
-        mock_send.assert_not_called()
+        self.intervention.refresh_from_db()
+        self.assertTrue(self.intervention.partner_accepted)
+        self.assertTrue(self.intervention.unicef_accepted)
+        self.assertEqual(self.intervention.status, Intervention.DRAFT)
 
 
 class TestInterventionReview(BaseInterventionActionTestCase):
