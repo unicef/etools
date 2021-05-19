@@ -74,7 +74,7 @@ class BaseTestCase(BaseTenantTestCase):
         )
         self.review_intervention = InterventionFactory(**review_fields)
         ReportingRequirementFactory(intervention=self.review_intervention)
-        review = InterventionReviewFactory(intervention=self.review_intervention)
+        review = InterventionReviewFactory(intervention=self.review_intervention, overall_approval=None)
         review.submitted_date = timezone.now().date()
         review.submitted_by = UserFactory()
         review.review_type = 'prc'
