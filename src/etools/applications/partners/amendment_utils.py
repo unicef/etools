@@ -254,7 +254,7 @@ INTERVENTION_AMENDMENT_RELATED_FIELDS = {
         # many to many
         'ram_indicators',
     ],
-    'partners.LowerResult': [
+    'reports.LowerResult': [
         # one to many
         'activities',
     ]

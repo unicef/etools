@@ -9,13 +9,21 @@ from rest_framework import status
 
 from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
-from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
 from etools.applications.partners.models import Intervention, InterventionAmendment
 from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, UNICEF_USER
-from etools.applications.partners.tests.factories import AgreementFactory, InterventionFactory, PartnerFactory, \
-    InterventionReviewFactory, PartnerStaffFactory
-from etools.applications.reports.tests.factories import ReportingRequirementFactory, SectionFactory, OfficeFactory, \
-    CountryProgrammeFactory
+from etools.applications.partners.tests.factories import (
+    AgreementFactory,
+    InterventionFactory,
+    InterventionReviewFactory,
+    PartnerFactory,
+    PartnerStaffFactory,
+)
+from etools.applications.reports.tests.factories import (
+    CountryProgrammeFactory,
+    OfficeFactory,
+    ReportingRequirementFactory,
+    SectionFactory,
+)
 from etools.applications.users.tests.factories import UserFactory
 
 

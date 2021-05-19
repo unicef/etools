@@ -2630,9 +2630,19 @@ class InterventionAmendment(TimeStampedModel):
             INTERVENTION_AMENDMENT_RELATED_FIELDS,
             INTERVENTION_AMENDMENT_IGNORED_FIELDS,
         )
-        # todo: merge quarters manually
 
-        amended_intervention = self.amended_intervention
+        for result_link in self.related_objects_map.get('result_links', []):
+            for lower_result in result_link.get('ll_results', []):
+                for activity_data in lower_result.get('activities', []):
+                    activity = InterventionActivity.objects.get(pk=activity_data['original_pk'])
+                    activity_copy = InterventionActivity.objects.get(pk=activity_data['copy_pk'])
+                    quarters = list(activity_copy.time_frames.values_list('quarter', flat=True))
+                    activity.time_frames.clear()
+                    activity.time_frames.add(*self.intervention.quarters.filter(quarter__in=quarters))
+
+        # todo: save signature dates/documents/people to amendment
+
+        # amended_intervention = self.amended_intervention
 
         self.amended_intervention = None
         self.is_active = False
