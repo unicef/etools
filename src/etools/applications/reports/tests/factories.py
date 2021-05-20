@@ -165,6 +165,9 @@ class InterventionActivityFactory(factory.django.DjangoModelFactory):
 class InterventionActivityItemFactory(factory.django.DjangoModelFactory):
     activity = factory.SubFactory(InterventionActivityFactory)
     name = fuzzy.FuzzyText()
+    unit = fuzzy.FuzzyText()
+    no_units = fuzzy.FuzzyInteger(10)
+    unit_price = fuzzy.FuzzyDecimal(1000)
     unicef_cash = fuzzy.FuzzyDecimal(1000)
     cso_cash = fuzzy.FuzzyDecimal(1000)
 

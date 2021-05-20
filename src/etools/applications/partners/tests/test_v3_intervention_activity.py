@@ -84,10 +84,12 @@ class TestFunctionality(BaseTestCase):
                 'items': [
                     {
                         'name': 'first_item',
+                        'unit': 'item', 'no_units': 1, 'unit_price': '7.0',
                         'unicef_cash': '3.0', 'cso_cash': '4.0',
                     },
                     {
                         'name': 'second_item',
+                        'unit': 'item', 'no_units': 1, 'unit_price': '2.0',
                         'unicef_cash': '0.0', 'cso_cash': '2.0',
                     }
                 ],
@@ -99,8 +101,15 @@ class TestFunctionality(BaseTestCase):
         self.assertEqual(response.data['partner_percentage'], '66.67')
 
     def test_set_items(self):
-        item_to_remove = InterventionActivityItemFactory(activity=self.activity)
-        item_to_update = InterventionActivityItemFactory(activity=self.activity, name='old')
+        item_to_remove = InterventionActivityItemFactory(
+            activity=self.activity,
+            no_units=1, unit_price=42, unicef_cash=22, cso_cash=20,
+        )
+        item_to_update = InterventionActivityItemFactory(
+            activity=self.activity,
+            no_units=1, unit_price=42, unicef_cash=22, cso_cash=20,
+            name='old',
+        )
         self.assertEqual(self.activity.items.count(), 2)
 
         response = self.forced_auth_req(
@@ -111,6 +120,7 @@ class TestFunctionality(BaseTestCase):
                     {'id': item_to_update.id, 'name': 'new'},
                     {
                         'name': 'first_item',
+                        'unit': 'item', 'no_units': 1, 'unit_price': '3.0',
                         'unicef_cash': '1.0', 'cso_cash': '2.0',
                     }
                 ],
@@ -121,6 +131,26 @@ class TestFunctionality(BaseTestCase):
         self.assertEqual(self.activity.items.count(), 2)
         self.assertEqual(len(response.data['items']), 2)
         self.assertEqual(InterventionActivityItem.objects.filter(id=item_to_remove.id).exists(), False)
+
+    def test_budget_validation(self):
+        item_to_update = InterventionActivityItemFactory(
+            activity=self.activity,
+            no_units=1, unit_price=42, unicef_cash=22, cso_cash=20,
+        )
+
+        response = self.forced_auth_req(
+            'patch', self.detail_url,
+            user=self.user,
+            data={
+                'items': [{'id': item_to_update.id, 'no_units': 2}],
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
+        self.assertIn(
+            'Invalid budget data. Total cash should be equal to items number * price per item.',
+            response.data['items'][0]['non_field_errors'],
+        )
 
     def test_set_time_frames(self):
         item_to_remove = InterventionTimeFrame.objects.get(
