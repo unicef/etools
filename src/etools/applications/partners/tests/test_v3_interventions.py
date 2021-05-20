@@ -61,7 +61,6 @@ class URLsTestCase(URLAssertionMixin, SimpleTestCase):
             ('intervention-detail', '1/', {'pk': 1}),
             ('intervention-accept', '1/accept/', {'pk': 1}),
             ('intervention-review', '1/review/', {'pk': 1}),
-            ('intervention-accept-review', '1/accept_review/', {'pk': 1}),
             ('intervention-send-partner', '1/send_to_partner/', {'pk': 1}),
             ('intervention-send-unicef', '1/send_to_unicef/', {'pk': 1}),
             ('intervention-budget', '1/budget/', {'intervention_pk': 1}),
@@ -1190,6 +1189,7 @@ class TestInterventionAccept(BaseInterventionActionTestCase):
 
     def test_accept(self):
         self.intervention.date_sent_to_partner = datetime.date.today()
+        self.intervention.submission_date = None
         self.intervention.save()
 
         # unicef accepts
@@ -1202,6 +1202,7 @@ class TestInterventionAccept(BaseInterventionActionTestCase):
         mock_send.assert_called()
         self.intervention.refresh_from_db()
         self.assertTrue(self.intervention.unicef_accepted)
+        self.assertIsNone(self.intervention.submission_date)
 
         # unicef attempt to accept again
         mock_send = mock.Mock()
@@ -1230,6 +1231,7 @@ class TestInterventionAccept(BaseInterventionActionTestCase):
         mock_send.assert_called()
         self.intervention.refresh_from_db()
         self.assertTrue(self.intervention.partner_accepted)
+        self.assertIsNotNone(self.intervention.submission_date)
 
         mock_send = mock.Mock()
         with mock.patch(self.notify_path, mock_send):
@@ -1335,6 +1337,15 @@ class TestInterventionReview(BaseInterventionActionTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
         self.assertIn('"no-review" is not a valid choice.', response.data['review_type'])
 
+    def test_accept_required(self):
+        self.intervention.partner_accepted = False
+        self.intervention.unicef_accepted = False
+        self.intervention.date_sent_to_partner = datetime.date.today()
+        self.intervention.save()
+
+        response = self.forced_auth_req("patch", self.url, user=self.user, data={'review_type': 'prc'})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
+
     def test_patch(self):
         self.intervention.partner_accepted = True
         self.intervention.unicef_accepted = True
@@ -1433,6 +1444,8 @@ class TestInterventionReviewReject(BaseInterventionActionTestCase):
         self.assertFalse(review.overall_approval)
         self.assertFalse(self.intervention.unicef_accepted)
         self.assertFalse(self.intervention.partner_accepted)
+        self.assertEqual(self.intervention.review.submitted_by, self.user)
+        self.assertEqual(self.intervention.review.submitted_date, timezone.now().date())
 
 
 class TestInterventionReviews(BaseInterventionTestCase):
@@ -1742,6 +1755,8 @@ class TestInterventionSignature(BaseInterventionActionTestCase):
             'pmp_v3:intervention-signature',
             args=[self.intervention.pk],
         )
+        self.intervention.status = Intervention.REVIEW
+        self.intervention.save()
 
     def test_not_found(self):
         response = self.forced_auth_req(

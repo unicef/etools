@@ -52,6 +52,13 @@ class PMPInterventionAcceptView(PMPInterventionActionView):
             # When accepting on behalf of the partner since there is no further action, it will automatically
             # be sent to unicef
             request.data.update({"partner_accepted": True, "unicef_court": True})
+
+            # if pd was created by unicef and sent to partner, submission date will be empty, so set it
+            if not pd.submission_date:
+                request.data.update({
+                    "submission_date": timezone.now().strftime("%Y-%m-%d"),
+                })
+
             recipients = [u.email for u in pd.unicef_focal_points.all()]
             template_name = 'partners/intervention/partner_accepted'
         else:

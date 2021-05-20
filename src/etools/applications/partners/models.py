@@ -1654,9 +1654,10 @@ def side_effect_two(i, old_instance=None, user=None):
 
 
 def update_review_info(i, old_instance=None, user=None):
-    i.review.submitted_date = timezone.now().date()
-    i.review.submitted_by = user
-    i.review.save()
+    if old_instance and old_instance.status == Intervention.REVIEW:
+        i.review.submitted_date = timezone.now().date()
+        i.review.submitted_by = user
+        i.review.save()
 
 
 def get_default_cash_transfer_modalities():
@@ -1688,13 +1689,14 @@ class Intervention(TimeStampedModel):
     TERMINATED = 'terminated'
 
     AUTO_TRANSITIONS = {
-        DRAFT: [REVIEW],
+        DRAFT: [],
         SIGNATURE: [SIGNED],
         SIGNED: [ACTIVE, TERMINATED],
         ACTIVE: [ENDED, TERMINATED],
         ENDED: [CLOSED]
     }
     TRANSITION_SIDE_EFFECTS = {
+        DRAFT: [update_review_info],
         REVIEW: [],
         SIGNATURE: [update_review_info],
         SIGNED: [side_effect_one, side_effect_two],
@@ -1705,7 +1707,6 @@ class Intervention(TimeStampedModel):
         TERMINATED: []
     }
 
-    CANCELLED = 'cancelled'
     INTERVENTION_STATUS = (
         (DRAFT, "Development"),
         (REVIEW, "Review"),
