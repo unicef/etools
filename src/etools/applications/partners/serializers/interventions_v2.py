@@ -59,8 +59,10 @@ class InterventionBudgetCUSerializer(serializers.ModelSerializer):
             "partner_contribution_local",
             "unicef_cash_local",
             "in_kind_amount_local",
+            "partner_supply_local",
             "currency",
             "programme_effectiveness",
+            "total_partner_contribution_local",
             "total_local",
             "partner_contribution_percent",
             "total_unicef_contribution_local",
@@ -73,6 +75,8 @@ class InterventionBudgetCUSerializer(serializers.ModelSerializer):
             "total_cash_local",
             "programme_effectiveness",
             "total_unicef_cash_local_wo_hq",
+            "partner_supply_local",
+            "total_partner_contribution_local",
         )
 
 

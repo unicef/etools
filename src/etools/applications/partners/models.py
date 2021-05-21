@@ -2632,6 +2632,15 @@ class InterventionBudget(TimeStampedModel):
     # sum of all activity/management budget cso/partner values
     partner_contribution_local = models.DecimalField(max_digits=20, decimal_places=2, default=0,
                                                      verbose_name=_('Partner Contribution Local'))
+    # sum of partner supply items (InterventionSupplyItem)
+    partner_supply_local = models.DecimalField(
+        max_digits=20, decimal_places=2, default=0,
+        verbose_name=_('Partner Supplies Local')
+    )
+    total_partner_contribution_local = models.DecimalField(
+        max_digits=20, decimal_places=2, default=0,
+        verbose_name=_('Total Partner Contribution')
+    )
     # sum of all activity/management budget unicef values
     total_unicef_cash_local_wo_hq = models.DecimalField(
         max_digits=20, decimal_places=2, default=0,
@@ -2644,7 +2653,7 @@ class InterventionBudget(TimeStampedModel):
     # unicef cash including headquarters contribution
     unicef_cash_local = models.DecimalField(max_digits=20, decimal_places=2, default=0,
                                             verbose_name=_('Unicef Cash Local'))
-    # sum of all supply items (InterventionSupplyItem)
+    # sum of unicef supply items (InterventionSupplyItem)
     in_kind_amount_local = models.DecimalField(
         max_digits=20, decimal_places=2, default=0,
         verbose_name=_('UNICEF Supplies Local')
@@ -2667,7 +2676,7 @@ class InterventionBudget(TimeStampedModel):
     def partner_contribution_percent(self):
         if self.total_local == 0:
             return 0
-        return self.partner_contribution_local / self.total_local * 100
+        return self.total_partner_contribution_local / self.total_local * 100
 
     def total_unicef_contribution(self):
         return self.unicef_cash + self.in_kind_amount
@@ -2676,7 +2685,7 @@ class InterventionBudget(TimeStampedModel):
         return self.unicef_cash_local + self.in_kind_amount_local
 
     def total_cash_local(self):
-        return self.partner_contribution_local + self.unicef_cash_local
+        return self.total_partner_contribution_local + self.unicef_cash_local
 
     @transaction.atomic
     def save(self, **kwargs):
@@ -2729,11 +2738,16 @@ class InterventionBudget(TimeStampedModel):
 
         # in kind totals
         self.in_kind_amount_local = 0
+        self.partner_supply_local = 0
         for item in self.intervention.supply_items.all():
-            self.in_kind_amount_local += item.total_price
+            if item.provided_by == InterventionSupplyItem.PROVIDED_BY_UNICEF:
+                self.in_kind_amount_local += item.total_price
+            else:
+                self.partner_supply_local += item.total_price
 
         self.total = self.total_unicef_contribution() + self.partner_contribution
-        self.total_local = self.total_unicef_contribution_local() + self.partner_contribution_local
+        self.total_partner_contribution_local = self.partner_contribution_local + self.partner_supply_local
+        self.total_local = self.total_unicef_contribution_local() + self.total_partner_contribution_local
         if self.total_local:
             self.programme_effectiveness = programme_effectiveness / self.total_local * 100
         else:
@@ -3037,6 +3051,13 @@ class InterventionManagementBudget(TimeStampedModel):
 
 
 class InterventionSupplyItem(TimeStampedModel):
+    PROVIDED_BY_UNICEF = 'unicef'
+    PROVIDED_BY_PARTNER = 'partner'
+    PROVIDED_BY_CHOICES = Choices(
+        (PROVIDED_BY_UNICEF, _('UNICEF')),
+        (PROVIDED_BY_PARTNER, _('Partner')),
+    )
+
     intervention = models.ForeignKey(
         Intervention,
         verbose_name=_("Intervention"),
@@ -3076,6 +3097,12 @@ class InterventionSupplyItem(TimeStampedModel):
     other_mentions = models.TextField(
         verbose_name=_("Other Mentions"),
         blank=True,
+    )
+    provided_by = models.CharField(
+        max_length=10,
+        choices=PROVIDED_BY_CHOICES,
+        default=PROVIDED_BY_UNICEF,
+        verbose_name=_('Provided By'),
     )
     unicef_product_number = models.CharField(
         verbose_name=_("UNICEF Product Number"),

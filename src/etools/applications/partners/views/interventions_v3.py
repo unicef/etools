@@ -299,6 +299,10 @@ class PMPInterventionSupplyItemMixin(
 ):
     queryset = InterventionSupplyItem.objects
     serializer_class = InterventionSupplyItemSerializer
+    permission_classes = [
+        IsAuthenticated,
+        IsReadAction | (IsEditAction & intervention_field_is_editable_permission('supply_items'))
+    ]
 
     def get_partner_staff_qs(self, qs):
         return qs.filter(
@@ -306,14 +310,17 @@ class PMPInterventionSupplyItemMixin(
             intervention__date_sent_to_partner__isnull=False,
         ).distinct()
 
-    def get_queryset(self):
-        qs = super().get_queryset()
+    def get_queryset(self, **kwargs):
+        qs = super().get_queryset(**kwargs)
         return qs.filter(
             intervention=self.get_pd(self.kwargs.get("intervention_pk")),
         )
 
     def get_intervention(self) -> Intervention:
         return self.get_pd(self.kwargs.get("intervention_pk"))
+
+    def get_root_object(self):
+        return self.get_intervention()
 
 
 class PMPInterventionSupplyItemListCreateView(
@@ -365,6 +372,7 @@ class PMPInterventionSupplyItemUploadView(
                 intervention=intervention,
                 title=title,
                 unit_price=unit_price,
+                provided_by=InterventionSupplyItem.PROVIDED_BY_UNICEF,
             )
             if supply_qs.exists():
                 item = supply_qs.get()
@@ -377,6 +385,7 @@ class PMPInterventionSupplyItemUploadView(
                     unit_number=unit_number,
                     unit_price=unit_price,
                     unicef_product_number=product_number,
+                    provided_by=InterventionSupplyItem.PROVIDED_BY_UNICEF,
                 )
         # make sure we get the correct totals
         intervention.refresh_from_db()
