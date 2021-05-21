@@ -5,6 +5,16 @@ import decimal
 from django.db.models.fields.files import FieldFile
 
 
+class MergeError(Exception):
+    def __init__(self, instance, field):
+        self.instance = instance
+        self.field = field
+
+    def __str__(self):
+        return f"{self.field} of {self.instance} was changed during amendment process. " \
+               f"Please re-create amendment from updated instance."
+
+
 def copy_m2m_relations(instance, instance_copy, relations, objects_map):
     for m2m_relation in relations:
         m2m_instances = getattr(instance, m2m_relation).all()
@@ -67,8 +77,7 @@ def merge_simple_fields(instance, instance_copy, fields_map, exclude=None):
 
             if current_value != original_value:
                 # value changed in both objects, cannot be merged automatically
-                raise ValueError(f'field {field.name} was changed in both instances of {instance._meta.model_name}. '
-                                 f'was {original_value}, now {current_value} and {modified_value}')
+                raise MergeError(instance, field.name)
 
             setattr(instance, field.name, modified_value)
 
@@ -170,8 +179,7 @@ def merge_instance(instance, instance_copy, fields_map, relations_to_copy, exclu
 
             if current_value != original_value:
                 # value changed in both objects, cannot be merged automatically
-                raise ValueError(f'field {field.name} was changed in both instances of {instance._meta.model_name}. '
-                                 f'was {original_value}, now {current_value} and {modified_value}')
+                raise MergeError(instance, field.name)
 
             setattr(instance, field.name, modified_value)
 
@@ -261,9 +269,20 @@ INTERVENTION_AMENDMENT_RELATED_FIELDS = {
 }
 INTERVENTION_AMENDMENT_IGNORED_FIELDS = {
     'partners.Intervention': ['number', 'created', 'modified'],
-    'partners.InterventionBudget': ['created', 'modified'],
+    'partners.InterventionBudget': [
+        'created', 'modified',
+        # auto calculated fields
+        'partner_contribution_local',
+        'total_unicef_cash_local_wo_hq',
+        'unicef_cash_local',
+        'in_kind_amount_local',
+        'total',
+        'total_local',
+        'programme_effectiveness',
+    ],
     'partners.InterventionManagementBudget': ['created', 'modified'],
     'reports.ReportingRequirement': ['created', 'modified'],
+    'partners.InterventionSupplyItem': ['total_price'],
 }
 INTERVENTION_AMENDMENT_DEFAULTS = {
     'partners.Intervention': {

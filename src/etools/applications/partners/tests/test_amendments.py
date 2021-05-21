@@ -1,15 +1,17 @@
 import datetime
 
-from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils import timezone
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.partners.amendment_utils import MergeError
 from etools.applications.partners.models import Intervention, InterventionAmendment
 from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, UNICEF_USER
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
+    InterventionAmendmentFactory,
     InterventionFactory,
     InterventionResultLinkFactory,
+    InterventionSupplyItemFactory,
     PartnerFactory,
 )
 from etools.applications.reports.models import ResultType
@@ -17,6 +19,7 @@ from etools.applications.reports.tests.factories import (
     InterventionActivityFactory,
     LowerResultFactory,
     ReportingRequirementFactory,
+    SectionFactory,
 )
 from etools.applications.users.tests.factories import UserFactory
 
@@ -58,21 +61,38 @@ class AmendmentTestCase(BaseTenantTestCase):
         self.pd_output = LowerResultFactory(result_link=self.result_link)
         self.activity = InterventionActivityFactory(result=self.pd_output)
 
-        self.amendment_defaults = dict(
-            intervention=self.active_intervention,
-            types=[InterventionAmendment.TYPE_ADMIN_ERROR],
-            signed_date=timezone.now().date() - datetime.timedelta(days=1),
-            signed_amendment=SimpleUploadedFile('hello_world.txt', 'hello world!'.encode('utf-8'))
+    def test_field_copy(self):
+        amendment = InterventionAmendmentFactory(intervention=self.active_intervention)
+        self.assertIsNotNone(amendment.amended_intervention)
+        self.assertEqual(amendment.intervention.title, amendment.amended_intervention.title)
+
+    def test_m2m_merge(self):
+        first_section = SectionFactory()
+        second_section = SectionFactory()
+        third_section = SectionFactory()
+
+        self.active_intervention.sections.add(first_section, second_section)
+
+        amendment = InterventionAmendmentFactory(intervention=self.active_intervention)
+
+        self.assertListEqual(
+            list(amendment.amended_intervention.sections.values_list('id', flat=True)),
+            [first_section.id, second_section.id],
         )
 
-    def test_start_amendment(self):
-        amendment = InterventionAmendment.objects.create(**self.amendment_defaults)
-        self.assertIsNotNone(amendment.amended_intervention)
-        self.assertEqual(amendment.intervention.signed_date, amendment.amended_intervention.signed_date)
+        amendment.amended_intervention.sections.remove(second_section)
+        amendment.amended_intervention.sections.add(third_section)
+
+        amendment.merge_amendment()
+
+        self.assertListEqual(
+            list(self.active_intervention.sections.values_list('id', flat=True)),
+            [first_section.id, third_section.id],
+        )
 
     def test_quarters_update(self):
         self.activity.time_frames.add(*self.active_intervention.quarters.filter(quarter__in=[1, 3]))
-        amendment = InterventionAmendment.objects.create(**self.amendment_defaults)
+        amendment = InterventionAmendmentFactory(intervention=self.active_intervention)
 
         activity = amendment.intervention.result_links.first().ll_results.first().activities.first()
         activity_copy = amendment.amended_intervention.result_links.first().ll_results.first().activities.first()
@@ -83,3 +103,94 @@ class AmendmentTestCase(BaseTenantTestCase):
         amendment.merge_amendment()
 
         self.assertListEqual(list(activity.time_frames.values_list('quarter', flat=True)), [2, 3, 4])
+
+    def test_update_multiple_amendments(self):
+        normal_amendment = InterventionAmendmentFactory(
+            intervention=self.active_intervention,
+            kind=InterventionAmendment.KIND_NORMAL,
+        )
+        contingency_amendment = InterventionAmendmentFactory(
+            intervention=self.active_intervention,
+            kind=InterventionAmendment.KIND_CONTINGENCY,
+        )
+
+        normal_amendment.amended_intervention.start = timezone.now().date() - datetime.timedelta(days=3)
+        normal_amendment.amended_intervention.save()
+
+        contingency_amendment.amended_intervention.end = timezone.now().date() + datetime.timedelta(days=369)
+        contingency_amendment.amended_intervention.save()
+
+        normal_amendment.merge_amendment()
+        contingency_amendment.merge_amendment()
+
+        self.active_intervention.refresh_from_db()
+        self.assertEqual(self.active_intervention.start, timezone.now().date() - datetime.timedelta(days=3))
+        self.assertEqual(self.active_intervention.end, timezone.now().date() + datetime.timedelta(days=369))
+
+    def test_update_multiple_amendments_one_field(self):
+        normal_amendment = InterventionAmendmentFactory(
+            intervention=self.active_intervention,
+            kind=InterventionAmendment.KIND_NORMAL,
+        )
+        contingency_amendment = InterventionAmendmentFactory(
+            intervention=self.active_intervention,
+            kind=InterventionAmendment.KIND_CONTINGENCY,
+        )
+
+        normal_amendment.amended_intervention.start = timezone.now().date() - datetime.timedelta(days=3)
+        normal_amendment.amended_intervention.save()
+
+        contingency_amendment.amended_intervention.start = timezone.now().date() - datetime.timedelta(days=4)
+        contingency_amendment.amended_intervention.save()
+
+        normal_amendment.merge_amendment()
+
+        with self.assertRaises(MergeError):
+            contingency_amendment.merge_amendment()
+
+    def test_budget_calculated_fields(self):
+        # since we ignore those fields during copy process, we need to make sure they will match after merge
+        self.activity.unicef_cash = 2
+        self.activity.cso_cash = 3
+        self.activity.save()
+
+        self.active_intervention.hq_support_cost = 7
+        self.active_intervention.save()
+
+        self.active_intervention.management_budgets.act1_unicef = 100
+        self.active_intervention.management_budgets.act1_partner = 200
+        self.active_intervention.management_budgets.act2_unicef = 300
+        self.active_intervention.management_budgets.act2_partner = 400
+        self.active_intervention.management_budgets.act3_unicef = 500
+        self.active_intervention.management_budgets.act3_partner = 600
+        self.active_intervention.management_budgets.save()
+
+        self.active_intervention.planned_budget.total_hq_cash_local = 60
+        self.active_intervention.planned_budget.save()
+
+        InterventionSupplyItemFactory(intervention=self.active_intervention, unit_number=10, unit_price=3)
+
+        amendment = InterventionAmendmentFactory(
+            intervention=self.active_intervention,
+            kind=InterventionAmendment.KIND_NORMAL,
+        )
+
+        budget = amendment.amended_intervention.planned_budget
+
+        self.assertEqual(budget.partner_contribution_local, 1203)
+        self.assertEqual(budget.total_unicef_cash_local_wo_hq, 902)
+        self.assertEqual(budget.total_hq_cash_local, 60)
+        self.assertEqual(budget.unicef_cash_local, 902 + 60)
+        self.assertEqual(budget.in_kind_amount_local, 30)
+        self.assertEqual(budget.in_kind_amount_local, 30)
+        self.assertEqual(budget.total_local, 1203 + 902 + 60 + 30)
+        self.assertEqual(
+            budget.programme_effectiveness,
+            ((1200 + 900) / budget.total_local * 100),
+        )
+        self.assertEqual(
+            "{:0.2f}".format(budget.partner_contribution_percent),
+            "{:0.2f}".format(1203 / (1203 + 902 + 60 + 30) * 100),
+        )
+        self.assertEqual(budget.total_cash_local(), 1203 + 902 + 60)
+        self.assertEqual(budget.total_unicef_contribution_local(), 902 + 60 + 30)
