@@ -1,0 +1,2 @@
+class InvalidRemap(BaseException):
+    pass
