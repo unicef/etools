@@ -34,7 +34,7 @@ from etools.applications.travel.serializers import (
 from etools.applications.travel.validation import TripValid
 
 
-class ItineraryViewSet(
+class TripViewSet(
         SafeTenantViewSetMixin,
         ValidatorViewMixin,
         QueryStringFilterMixin,
@@ -159,16 +159,16 @@ class ItineraryViewSet(
             ).data
         )
 
-    def _set_status(self, request, itinerary_status):
+    def _set_status(self, request, trip_status):
         self.serializer_class = TripStatusSerializer
         status = {
-            "status": itinerary_status,
+            "status": trip_status,
         }
         comment = request.data.get("comment")
         if comment:
             status["comment"] = comment
         request.data.clear()
-        request.data.update({"status": itinerary_status})
+        request.data.update({"status": trip_status})
         request.data.update(
             {"status_history": [status]},
         )
@@ -288,18 +288,18 @@ class ItineraryItemViewSet(
             return {}
 
         return {
-            'itinerary': parent
+            'trip': parent
         }
 
     def get_object(self):
         queryset = self.get_queryset()
         return get_object_or_404(
             queryset,
-            itinerary__pk=self.kwargs.get("nested_1_pk"),
+            trip__pk=self.kwargs.get("nested_1_pk"),
         )
 
 
-class ItineraryAttachmentsViewSet(
+class TripAttachmentsViewSet(
         SafeTenantViewSetMixin,
         mixins.ListModelMixin,
         mixins.CreateModelMixin,
@@ -367,14 +367,14 @@ class ActivityViewSet(
             return {}
 
         return {
-            'itinerary': parent
+            'trip': parent
         }
 
     def get_object(self):
         queryset = self.get_queryset()
         return get_object_or_404(
             queryset,
-            itinerary__pk=self.kwargs.get("nested_1_pk"),
+            trip__pk=self.kwargs.get("nested_1_pk"),
         )
 
 
@@ -412,7 +412,7 @@ class ReportAttachmentsViewSet(
     def get_parent_object(self):
         return get_object_or_404(
             Report,
-            itinerary__pk=self.kwargs.get("nested_1_pk"),
+            trip__pk=self.kwargs.get("nested_1_pk"),
         )
 
     def get_parent_filter(self):
