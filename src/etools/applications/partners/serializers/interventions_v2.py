@@ -78,7 +78,6 @@ class InterventionBudgetCUSerializer(serializers.ModelSerializer):
 
 class InterventionAmendmentCUSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
     amendment_number = serializers.CharField(read_only=True)
-    signed_amendment_file = serializers.FileField(source="signed_amendment", read_only=True)
     signed_amendment_attachment = AttachmentSingleFileField(
         override="signed_amendment"
     )
@@ -86,10 +85,10 @@ class InterventionAmendmentCUSerializer(AttachmentSerializerMixin, serializers.M
 
     class Meta:
         model = InterventionAmendment
+        # todo: add new fields
         fields = (
             'id',
             'amendment_number',
-            'signed_amendment_file',
             'signed_amendment_attachment',
             'internal_prc_review',
             'created',
@@ -98,7 +97,6 @@ class InterventionAmendmentCUSerializer(AttachmentSerializerMixin, serializers.M
             'types',
             'other_description',
             'signed_date',
-            'signed_amendment',
             'intervention',
             'amended_intervention',
         )

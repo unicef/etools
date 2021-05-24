@@ -2545,10 +2545,35 @@ class InterventionAmendment(TimeStampedModel):
         verbose_name=_("Number"),
         default=0,
     )
-    signed_amendment = models.FileField(
-        verbose_name=_("Amendment Document"),
-        max_length=1024,
-        upload_to=get_intervention_amendment_file_path
+
+    # signatures
+    signed_by_unicef_date = models.DateField(
+        verbose_name=_("Signed by UNICEF Date"),
+        null=True,
+        blank=True,
+    )
+    signed_by_partner_date = models.DateField(
+        verbose_name=_("Signed by Partner Date"),
+        null=True,
+        blank=True,
+    )
+    # partnership managers
+    unicef_signatory = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name=_("Signed by UNICEF"),
+        related_name='++',
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+    )
+    # part of the Agreement authorized officers
+    partner_authorized_officer_signatory = models.ForeignKey(
+        PartnerStaffMember,
+        verbose_name=_("Signed by Partner"),
+        related_name='+',
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
     )
     signed_amendment_attachment = CodedGenericRelation(
         Attachment,
@@ -2556,6 +2581,7 @@ class InterventionAmendment(TimeStampedModel):
         code='partners_intervention_amendment_signed',
         blank=True,
     )
+
     internal_prc_review = CodedGenericRelation(
         Attachment,
         verbose_name=_('Internal PRC Review'),
@@ -2640,7 +2666,19 @@ class InterventionAmendment(TimeStampedModel):
                     activity.time_frames.clear()
                     activity.time_frames.add(*self.intervention.quarters.filter(quarter__in=quarters))
 
-        # todo: save signature dates/documents/people to amendment
+        # copy signatures to amendment
+        pd_attachment = self.amended_intervention.signed_pd_attachment.first()
+        if pd_attachment:
+            pd_attachment.code = 'partners_intervention_amendment_signed'
+            pd_attachment.content_object = self
+            pd_attachment.save()
+
+        self.signed_by_unicef_date = self.amended_intervention.signed_by_unicef_date
+        self.signed_by_partner_date = self.amended_intervention.signed_by_partner_date
+        self.unicef_signatory = self.amended_intervention.unicef_signatory
+        self.partner_authorized_officer_signatory = self.amended_intervention.partner_authorized_officer_signatory
+
+        self.amended_intervention.reviews.update(intervention=self.intervention)
 
         # amended_intervention = self.amended_intervention
 

@@ -16,7 +16,7 @@ from etools.applications.partners.tests.factories import (
     InterventionFactory,
     InterventionReviewFactory,
     PartnerFactory,
-    PartnerStaffFactory,
+    PartnerStaffFactory, InterventionAmendmentFactory,
 )
 from etools.applications.reports.tests.factories import (
     CountryProgrammeFactory,
@@ -188,3 +188,13 @@ class TestInterventionAmendments(BaseTenantTestCase):
 
         intervention.refresh_from_db()
         self.assertEqual(intervention.start, timezone.now().date() + datetime.timedelta(days=2))
+
+    def test_permissions_fields_hidden(self):
+        amendment = InterventionAmendmentFactory(intervention=self.active_intervention)
+        response = self.forced_auth_req('get', reverse('pmp_v3:intervention-detail', args=[amendment.amended_intervention.pk]), self.unicef_staff)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(response.data['permissions']['view']['partner_focal_points'])
+        self.assertFalse(response.data['permissions']['view']['unicef_focal_points'])
+        self.assertFalse(response.data['permissions']['view']['planned_visits'])
+        self.assertFalse(response.data['permissions']['view']['frs'])
+        self.assertFalse(response.data['permissions']['view']['attachments'])

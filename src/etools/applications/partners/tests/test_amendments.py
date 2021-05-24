@@ -2,6 +2,7 @@ import datetime
 
 from django.utils import timezone
 
+from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.amendment_utils import MergeError
 from etools.applications.partners.models import Intervention, InterventionAmendment
@@ -12,7 +13,7 @@ from etools.applications.partners.tests.factories import (
     InterventionFactory,
     InterventionResultLinkFactory,
     InterventionSupplyItemFactory,
-    PartnerFactory,
+    PartnerFactory, PartnerStaffFactory,
 )
 from etools.applications.reports.models import ResultType
 from etools.applications.reports.tests.factories import (
@@ -53,6 +54,10 @@ class AmendmentTestCase(BaseTenantTestCase):
             partner_authorized_officer_signatory=self.partner1.staff_members.all().first()
         )
         ReportingRequirementFactory(intervention=self.active_intervention)
+        self.signed_pd_document = AttachmentFactory(
+            code='partners_intervention_signed_pd',
+            content_object=self.active_intervention,
+        )
 
         self.result_link = InterventionResultLinkFactory(
             intervention=self.active_intervention,
@@ -194,3 +199,38 @@ class AmendmentTestCase(BaseTenantTestCase):
         )
         self.assertEqual(budget.total_cash_local(), 1203 + 902 + 60)
         self.assertEqual(budget.total_unicef_contribution_local(), 902 + 60 + 30)
+
+    def test_signatures_copy(self):
+        amendment = InterventionAmendmentFactory(intervention=self.active_intervention)
+        amended_intervention = amendment.amended_intervention
+
+        # signature fields are not copied
+        self.assertIsNone(amended_intervention.signed_by_unicef_date)
+        self.assertIsNone(amended_intervention.signed_by_partner_date)
+        self.assertIsNone(amended_intervention.unicef_signatory)
+        self.assertIsNone(amended_intervention.partner_authorized_officer_signatory)
+
+        today = timezone.now().date()
+        amended_intervention.signed_by_unicef_date = today
+        amended_intervention.signed_by_partner_date = today
+        amended_intervention.unicef_signatory = UserFactory(is_staff=True, groups__data=[UNICEF_USER])
+        amended_intervention.partner_authorized_officer_signatory = PartnerStaffFactory(partner=self.partner1)
+        new_signed_document = AttachmentFactory(
+            code='partners_intervention_signed_pd',
+            content_object=amendment.amended_intervention,
+        )
+
+        amendment.merge_amendment()
+
+        # original signatures still untouched by merge
+        self.assertNotEqual(amendment.signed_by_unicef_date, self.active_intervention.signed_by_unicef_date)
+        self.assertNotEqual(amendment.signed_by_partner_date, self.active_intervention.signed_by_partner_date)
+        self.assertNotEqual(amendment.unicef_signatory, self.active_intervention.unicef_signatory)
+        self.assertNotEqual(amendment.partner_authorized_officer_signatory, self.active_intervention.partner_authorized_officer_signatory)
+
+        # but were moved to amendment
+        self.assertEqual(amendment.signed_by_unicef_date, amended_intervention.signed_by_unicef_date)
+        self.assertEqual(amendment.signed_by_partner_date, amended_intervention.signed_by_partner_date)
+        self.assertEqual(amendment.unicef_signatory.id, amended_intervention.unicef_signatory_id)
+        self.assertEqual(amendment.partner_authorized_officer_signatory.id, amended_intervention.partner_authorized_officer_signatory_id)
+        self.assertEqual(amendment.signed_amendment_attachment.first(), new_signed_document)

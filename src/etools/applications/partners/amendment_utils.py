@@ -249,7 +249,6 @@ INTERVENTION_AMENDMENT_RELATED_FIELDS = {
         # many to one
         'agreement',
         'budget_owner',
-        'partner_authorized_officer_signatory',
 
         # many to many
         'country_programmes', 'unicef_focal_points', 'partner_focal_points',
@@ -268,7 +267,13 @@ INTERVENTION_AMENDMENT_RELATED_FIELDS = {
     ]
 }
 INTERVENTION_AMENDMENT_IGNORED_FIELDS = {
-    'partners.Intervention': ['number', 'created', 'modified'],
+    'partners.Intervention': [
+        'created', 'modified',
+        'number',
+        # signatures
+        'signed_by_unicef_date',
+        'signed_by_partner_date',
+    ],
     'partners.InterventionBudget': [
         'created', 'modified',
         # auto calculated fields
