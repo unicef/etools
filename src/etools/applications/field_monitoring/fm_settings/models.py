@@ -204,12 +204,12 @@ class LocationSite(TimeStampedModel):
 
     @staticmethod
     def get_parent_location(point):
-        locations = Location.objects.filter(geom__contains=point)
+        locations = Location.objects.filter(geom__contains=point, is_active=True)
         if locations:
             matched_locations = list(filter(lambda l: l.is_leaf_node(), locations)) or locations
             location = min(matched_locations, key=lambda l: l.geom.length)
         else:
-            location = Location.objects.filter(gateway__admin_level=0).first()
+            location = Location.objects.filter(gateway__admin_level=0, is_active=True).first()
 
         return location
 
