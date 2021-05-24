@@ -1,0 +1,39 @@
+{% extends "easy_pdf/base.html" %}
+{% load etools %}
+
+{% block content %}
+    <div id="content">
+        <div id="title">
+            <div><b>Reference Number: </b>{{ obj.reference_number }}</div>
+            <div><b>Vendor Number: </b>{{obj.partner.vendor_number}}</div>
+            <div><b>Name of the partner:</b> {{obj.partner.name }}</div>
+            <div><b>Total Score: </b>{{ obj.rating }}</div>
+            <div><b>Risk Rating: </b>{{ obj.overall_rating_display }}</div>
+        </div>
+        {% if qs %}
+            <table border="1" cellpadding="3">
+                <tr>
+                    <th><b>Core Standard Number</b></th>
+                    <th><b>Core Standard Rating</b></th>
+                    <th><b>Core Standard Comments</b></th>
+                    <th><b>Core Standard Proof of Evidence</b></th>
+                    <th><b>Hyperlink to documents</b></th>
+                </tr>
+                {% for item in qs %}
+                <tr style="vertical-align: top;">
+                    <td>{{item.indicator.pk}}</td>
+                    <td>{{item.rating}}</td>
+                    <td>{{item.comments}}</td>
+                    <td>{% for evidence in item.evidences.all %} {{evidence}} {% endfor %}</td>
+                    <td>
+                        {% for attachment in item.attachments.all %}
+                        {% call_method request 'build_absolute_uri' attachment.file.url %}
+                        {% endfor %}
+                    </td>
+
+                </tr>
+                {% endfor %}
+            </table>
+        {% endif %}
+    </div>
+{% endblock %}
