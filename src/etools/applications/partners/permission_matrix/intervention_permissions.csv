@@ -9,7 +9,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.2.8,amendments,Partner User,partner_court,Draft,Edit,TRUE
 3.2.8,amendments,Partnership Manager,not_in_amendment_mode,Signed,Edit,TRUE
 3.2.9,amendments,Partnership Manager,not_in_amendment_mode,Active,Edit,TRUE
-3.3.1,attachments,*,,*,View,TRUE
+3.3.1,attachments,*,is_not_amendment,*,View,TRUE
 3.3.7,attachments,Partnership Manager,,Draft,Edit,TRUE
 3.3.7,attachments,Partner User,,Draft,Edit,TRUE
 3.3.7,attachments,Senior Management Team,,Draft,Edit,TRUE
@@ -87,6 +87,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.2.5,partner_authorized_officer_signatory,*,,*,View,TRUE
 3.2.7,partner_authorized_officer_signatory,Partner User,,Signature,Edit,TRUE
 3.2.7,partner_authorized_officer_signatory,*,,Draft,Required,FALSE
+3.2.8,partner_focal_points,*,is_not_amendment,*,View,TRUE
 3.2.8,partner_focal_points,*,,Closed,Edit,FALSE
 3.3.1,partner_focal_points,*,,Draft,Required,FALSE
 3.3.2,pd_outputs,*,,*,View,TRUE
@@ -95,7 +96,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.3.3,planned_budget,Partnership Manager,,Draft,Edit,TRUE
 3.3.5,planned_budget,Partnership Manager,,Signed,Edit,TRUE
 3.9.11,planned_budget,Partnership Manager,user_adds_amendment,*,Edit,TRUE
-3.9.11,planned_visits,UNICEF User,,*,View,TRUE
+3.9.11,planned_visits,UNICEF User,is_not_amendment,*,View,TRUE
 3.9.11,planned_visits,Partnership Manager,,*,Edit,TRUE
 3.9.5,prc_review_attachment,*,,*,View,TRUE
 3.9.6,prc_review_attachment,Partnership Manager,,Review,Edit,TRUE
@@ -162,6 +163,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,title,Partnership Manager,unicef_court,Draft,Edit,TRUE
 ,title,Partner User,partner_court,Draft,Edit,TRUE
 ,title,*,,*,Required,TRUE
+,unicef_focal_points,*,is_not_amendment,*,View,TRUE
 ,unicef_focal_points,Partnership Manager,,*,Edit,TRUE
 ,unicef_focal_points,Partnership Manager,user_adds_amendment,*,Edit,TRUE
 ,unicef_focal_points,*,,Draft,Required,FALSE
