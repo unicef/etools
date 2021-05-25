@@ -13,7 +13,8 @@ from etools.applications.partners.tests.factories import (
     InterventionFactory,
     InterventionResultLinkFactory,
     InterventionSupplyItemFactory,
-    PartnerFactory, PartnerStaffFactory,
+    PartnerFactory,
+    PartnerStaffFactory,
 )
 from etools.applications.reports.models import ResultType
 from etools.applications.reports.tests.factories import (

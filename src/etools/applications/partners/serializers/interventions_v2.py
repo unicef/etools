@@ -26,7 +26,7 @@ from etools.applications.partners.models import (
     InterventionPlannedVisits,
     InterventionReportingPeriod,
     InterventionResultLink,
-    PartnerType,
+    PartnerType, PartnerStaffMember,
 )
 from etools.applications.partners.permissions import InterventionPermissions
 from etools.applications.partners.utils import get_quarters_range
@@ -40,6 +40,7 @@ from etools.applications.reports.serializers.v2 import (
     RAMIndicatorSerializer,
     ReportingRequirementSerializer,
 )
+from etools.applications.users.serializers import MinimalUserSerializer
 from etools.libraries.pythonlib.hash import h11
 
 
@@ -76,20 +77,26 @@ class InterventionBudgetCUSerializer(serializers.ModelSerializer):
         )
 
 
+class PartnerStaffMemberUserSerializer(serializers.ModelSerializer):
+    user = MinimalUserSerializer()
+
+    class Meta:
+        model = PartnerStaffMember
+        fields = "__all__"
+
+
 class InterventionAmendmentCUSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
     amendment_number = serializers.CharField(read_only=True)
-    signed_amendment_attachment = AttachmentSingleFileField(
-        override="signed_amendment"
-    )
+    signed_amendment_attachment = AttachmentSingleFileField(read_only=True)
     internal_prc_review = AttachmentSingleFileField(required=False)
+    unicef_signatory = MinimalUserSerializer()
+    partner_authorized_officer_signatory = PartnerStaffMemberUserSerializer()
 
     class Meta:
         model = InterventionAmendment
-        # todo: add new fields
         fields = (
             'id',
             'amendment_number',
-            'signed_amendment_attachment',
             'internal_prc_review',
             'created',
             'modified',
@@ -99,6 +106,13 @@ class InterventionAmendmentCUSerializer(AttachmentSerializerMixin, serializers.M
             'signed_date',
             'intervention',
             'amended_intervention',
+            'is_active',
+            # signatures
+            'signed_by_unicef_date',
+            'signed_by_partner_date',
+            'unicef_signatory',
+            'partner_authorized_officer_signatory',
+            'signed_amendment_attachment',
         )
         validators = [
             UniqueTogetherValidator(

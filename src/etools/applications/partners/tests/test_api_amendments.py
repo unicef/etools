@@ -13,10 +13,11 @@ from etools.applications.partners.models import Intervention, InterventionAmendm
 from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, UNICEF_USER
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
+    InterventionAmendmentFactory,
     InterventionFactory,
     InterventionReviewFactory,
     PartnerFactory,
-    PartnerStaffFactory, InterventionAmendmentFactory,
+    PartnerStaffFactory,
 )
 from etools.applications.reports.tests.factories import (
     CountryProgrammeFactory,
