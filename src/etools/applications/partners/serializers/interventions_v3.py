@@ -441,6 +441,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "id",
             "implementation_strategy",
             "in_amendment",
+            "is_amendment",
             "ip_program_contribution",
             "location_names",
             "location_p_codes",
