@@ -111,6 +111,7 @@ class PMPInterventionRejectReviewView(PMPInterventionActionView):
             raise ValidationError("Only overall approver can reject review.")
 
         pd.review.overall_approval = False
+        pd.review.submitted_date = timezone.now().date()
         pd.review.submitted_by = request.user
         pd.review.save()
 
@@ -329,6 +330,8 @@ class PMPInterventionSignatureView(PMPInterventionActionView):
             raise ValidationError("Only overall approver can accept review.")
 
         pd.review.overall_approval = True
+        pd.review.submitted_date = timezone.now().date()
+        pd.review.submitted_by = request.user
         pd.review.save()
 
         request.data.clear()

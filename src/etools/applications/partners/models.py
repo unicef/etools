@@ -1653,13 +1653,6 @@ def side_effect_two(i, old_instance=None, user=None):
     pass
 
 
-def update_review_info(i, old_instance=None, user=None):
-    if old_instance and old_instance.status == Intervention.REVIEW:
-        i.review.submitted_date = timezone.now().date()
-        i.review.submitted_by = user
-        i.review.save()
-
-
 def get_default_cash_transfer_modalities():
     return [Intervention.CASH_TRANSFER_DIRECT]
 
@@ -1696,9 +1689,9 @@ class Intervention(TimeStampedModel):
         ENDED: [CLOSED]
     }
     TRANSITION_SIDE_EFFECTS = {
-        DRAFT: [update_review_info],
+        DRAFT: [],
         REVIEW: [],
-        SIGNATURE: [update_review_info],
+        SIGNATURE: [],
         SIGNED: [side_effect_one, side_effect_two],
         ACTIVE: [],
         SUSPENDED: [],
@@ -2822,7 +2815,7 @@ class InterventionReviewQuestionnaire(models.Model):
 class InterventionReview(InterventionReviewQuestionnaire, TimeStampedModel):
     PRC = 'prc'
     NPRC = 'non-prc'
-    NORW = 'no-review'
+    NORV = 'no-review'
 
     INTERVENTION_REVIEW_TYPES = Choices(
         (PRC, 'PRC Review'),
@@ -2832,7 +2825,7 @@ class InterventionReview(InterventionReviewQuestionnaire, TimeStampedModel):
     ALL_REVIEW_TYPES = Choices(
         *(
             INTERVENTION_REVIEW_TYPES +
-            ((NORW, 'No Review Required'),)
+            ((NORV, 'No Review Required'),)
         )
     )
 

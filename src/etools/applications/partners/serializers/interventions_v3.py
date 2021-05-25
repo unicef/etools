@@ -325,7 +325,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
         if obj.status == obj.REVIEW and obj.review and obj.review.prc_reviews.filter(
             user=user, overall_approval__isnull=True
         ).exists():
-            available_actions.append("prc_review")
+            available_actions.append("individual_review")
 
         # if NOT in Development status then we're done
         if obj.status != obj.DRAFT:
