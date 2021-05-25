@@ -2521,8 +2521,6 @@ class InterventionAmendment(TimeStampedModel):
         default=KIND_NORMAL,
     )
 
-    # todo: create data migration
-    # todo: set false on merge
     is_active = models.BooleanField(default=True)
 
     types = ArrayField(models.CharField(
@@ -2618,6 +2616,9 @@ class InterventionAmendment(TimeStampedModel):
             self.intervention.in_amendment = True
             self.intervention.save(amendment_number=self.amendment_number)
             self._copy_intervention()
+
+        if self.signed_by_unicef_date and self.signed_by_partner_date:
+            self.signed_date = max(self.signed_by_unicef_date, self.signed_by_partner_date)
 
         return super().save(**kwargs)
 
