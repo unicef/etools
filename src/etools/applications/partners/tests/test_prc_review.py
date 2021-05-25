@@ -228,7 +228,7 @@ class PRCReviewTestCase(ReviewInterventionMixin, BaseTenantTestCase):
             'get', reverse('pmp_v3:intervention-detail', args=[self.review_intervention.pk]), prc_member,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
-        self.assertIn('prc_review', response.data['available_actions'])
+        self.assertIn('individual_review', response.data['available_actions'])
 
     def test_review_action_not_available_after_submit(self):
         prc_member = UserFactory(is_staff=True)
@@ -238,7 +238,7 @@ class PRCReviewTestCase(ReviewInterventionMixin, BaseTenantTestCase):
             'get', reverse('pmp_v3:intervention-detail', args=[self.review_intervention.pk]), prc_member,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
-        self.assertNotIn('prc_review', response.data['available_actions'])
+        self.assertNotIn('individual_review', response.data['available_actions'])
 
 
 class DevelopPermissionsTestCase(TestPermissionsMixin, DevelopInterventionMixin, BaseTenantTestCase):

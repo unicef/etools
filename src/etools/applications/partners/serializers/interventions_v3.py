@@ -285,7 +285,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "send_to_unicef",
             "send_to_partner",
             "accept",
-            "prc_review",
+            "individual_review",
             "review",
             "sign",
             "reject_review",

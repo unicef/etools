@@ -2210,7 +2210,7 @@ class Intervention(TimeStampedModel):
 
     @cached_property
     def review(self):
-        return self.reviews.order_by('id').last()
+        return self.reviews.order_by('created').last()
 
     @cached_property
     def all_lower_results(self):
