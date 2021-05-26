@@ -72,8 +72,6 @@ class TestInterventionAmendments(BaseTenantTestCase):
             UserFactory(is_staff=True, groups__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
             data={
                 'types': [InterventionAmendment.TYPE_CHANGE],
-                'signed_amendment': SimpleUploadedFile('hello_world.txt', 'hello world!'.encode('utf-8')),
-                'signed_date': (timezone.now() - datetime.timedelta(days=1)).strftime('%Y-%m-%d'),
                 'kind': InterventionAmendment.KIND_NORMAL,
             },
             request_format='multipart',
@@ -86,8 +84,6 @@ class TestInterventionAmendments(BaseTenantTestCase):
             UserFactory(is_staff=True, groups__data=['UNICEF User', 'Partnership Manager']),
             data={
                 'types': [InterventionAmendment.TYPE_CHANGE],
-                'signed_amendment': SimpleUploadedFile('hello_world.txt', 'hello world!'.encode('utf-8')),
-                'signed_date': (timezone.now() - datetime.timedelta(days=1)).strftime('%Y-%m-%d'),
                 'kind': InterventionAmendment.KIND_CONTINGENCY,
             },
             request_format='multipart',
@@ -100,8 +96,6 @@ class TestInterventionAmendments(BaseTenantTestCase):
             UserFactory(is_staff=True, groups__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
             data={
                 'types': [InterventionAmendment.TYPE_CHANGE],
-                'signed_amendment': SimpleUploadedFile('hello_world.txt', 'hello world!'.encode('utf-8')),
-                'signed_date': (timezone.now() - datetime.timedelta(days=1)).strftime('%Y-%m-%d'),
                 'kind': InterventionAmendment.KIND_CONTINGENCY,
             },
             request_format='multipart',
@@ -115,6 +109,7 @@ class TestInterventionAmendments(BaseTenantTestCase):
             partner_authorized_officer_signatory=PartnerStaffFactory(
                 partner=self.partner, user__is_staff=False, user__groups__data=[]
             ),
+            unicef_signatory=UserFactory(),
             country_programme=country_programme,
             submission_date=timezone.now().date(),
             start=timezone.now().date() + datetime.timedelta(days=1),
@@ -143,8 +138,6 @@ class TestInterventionAmendments(BaseTenantTestCase):
         amendment = InterventionAmendment.objects.create(
             intervention=intervention,
             types=[InterventionAmendment.TYPE_ADMIN_ERROR],
-            signed_date=timezone.now().date() - datetime.timedelta(days=1),
-            signed_amendment=SimpleUploadedFile('hello_world.txt', 'hello world!'.encode('utf-8'))
         )
         amended_intervention = amendment.amended_intervention
 
@@ -167,7 +160,12 @@ class TestInterventionAmendments(BaseTenantTestCase):
         amended_intervention.save()
         InterventionReviewFactory(intervention=amended_intervention, overall_approval=True)
 
-        # todo: make this in copy_instance
+        # sign amended intervention
+        amended_intervention.signed_by_partner_date = intervention.signed_by_partner_date
+        amended_intervention.signed_by_unicef_date = intervention.signed_by_unicef_date
+        amended_intervention.partner_authorized_officer_signatory = intervention.partner_authorized_officer_signatory
+        amended_intervention.unicef_signatory = intervention.unicef_signatory
+        amended_intervention.save()
         AttachmentFactory(
             code='partners_intervention_signed_pd',
             file="sample1.pdf",

@@ -89,8 +89,8 @@ class InterventionAmendmentCUSerializer(AttachmentSerializerMixin, serializers.M
     amendment_number = serializers.CharField(read_only=True)
     signed_amendment_attachment = AttachmentSingleFileField(read_only=True)
     internal_prc_review = AttachmentSingleFileField(required=False)
-    unicef_signatory = MinimalUserSerializer()
-    partner_authorized_officer_signatory = PartnerStaffMemberUserSerializer()
+    unicef_signatory = MinimalUserSerializer(read_only=True)
+    partner_authorized_officer_signatory = PartnerStaffMemberUserSerializer(read_only=True)
 
     class Meta:
         model = InterventionAmendment
@@ -116,11 +116,14 @@ class InterventionAmendmentCUSerializer(AttachmentSerializerMixin, serializers.M
         )
         validators = [
             UniqueTogetherValidator(
-                queryset=InterventionAmendment.objects.all(),
-                fields=["intervention", "signed_date", "kind"],
-                message=_("There is already an amendment of same kind with this signed date."),
+                queryset=InterventionAmendment.objects.filter(is_active=True),
+                fields=["intervention", "kind"],
+                message=_("Cannot add a new amendment while another amendment of same kind is in progress."),
             )
         ]
+        extra_kwargs = {
+            'is_active': {'read_only': True},
+        }
 
     def validate(self, data):
         data = super().validate(data)
@@ -129,8 +132,6 @@ class InterventionAmendmentCUSerializer(AttachmentSerializerMixin, serializers.M
             raise ValidationError("Date cannot be in the future!")
 
         if 'intervention' in data:
-            if data['intervention'].amendments.filter(is_active=True, kind=data['kind']).exists():
-                raise ValidationError("Cannot add a new amendment while another amendment of same kind is in progress.")
             if data['intervention'].agreement.partner.blocked is True:
                 raise ValidationError("Cannot add a new amendment while the partner is blocked in Vision.")
 

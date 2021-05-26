@@ -2538,6 +2538,7 @@ class InterventionAmendment(TimeStampedModel):
     signed_date = models.DateField(
         verbose_name=_("Signed Date"),
         null=True,
+        blank=True,
     )
     amendment_number = models.IntegerField(
         verbose_name=_("Number"),
@@ -2616,9 +2617,6 @@ class InterventionAmendment(TimeStampedModel):
             self.intervention.in_amendment = True
             self.intervention.save(amendment_number=self.amendment_number)
             self._copy_intervention()
-
-        if self.signed_by_unicef_date and self.signed_by_partner_date:
-            self.signed_date = max(self.signed_by_unicef_date, self.signed_by_partner_date)
 
         return super().save(**kwargs)
 

@@ -169,7 +169,9 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,unicef_focal_points,*,,Draft,Required,FALSE
 ,unicef_signatory,*,,*,View,TRUE
 ,unicef_signatory,Partnership Manager,,Signature,Edit,TRUE
-,unicef_signatory,*,,*,Required,FALSE
+,unicef_signatory,*,,Draft,Required,FALSE
+,unicef_signatory,*,,Review,Required,FALSE
+,unicef_signatory,*,,Signature,Required,FALSE
 ,unicef_accepted,*,,Draft,Edit,TRUE
 ,unicef_accepted,*,,Draft,Required,FALSE
 ,partner_accepted,*,,Draft,Required,FALSE
