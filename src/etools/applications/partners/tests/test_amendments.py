@@ -227,11 +227,117 @@ class AmendmentTestCase(BaseTenantTestCase):
         self.assertNotEqual(amendment.signed_by_unicef_date, self.active_intervention.signed_by_unicef_date)
         self.assertNotEqual(amendment.signed_by_partner_date, self.active_intervention.signed_by_partner_date)
         self.assertNotEqual(amendment.unicef_signatory, self.active_intervention.unicef_signatory)
-        self.assertNotEqual(amendment.partner_authorized_officer_signatory, self.active_intervention.partner_authorized_officer_signatory)
+        self.assertNotEqual(amendment.partner_authorized_officer_signatory,
+                            self.active_intervention.partner_authorized_officer_signatory)
 
         # but were moved to amendment
         self.assertEqual(amendment.signed_by_unicef_date, amended_intervention.signed_by_unicef_date)
         self.assertEqual(amendment.signed_by_partner_date, amended_intervention.signed_by_partner_date)
         self.assertEqual(amendment.unicef_signatory.id, amended_intervention.unicef_signatory_id)
-        self.assertEqual(amendment.partner_authorized_officer_signatory.id, amended_intervention.partner_authorized_officer_signatory_id)
+        self.assertEqual(amendment.partner_authorized_officer_signatory.id,
+                         amended_intervention.partner_authorized_officer_signatory_id)
         self.assertEqual(amendment.signed_amendment_attachment.first(), new_signed_document)
+
+    def test_calculate_difference_simple_field(self):
+        amendment = InterventionAmendmentFactory(
+            intervention=self.active_intervention,
+            kind=InterventionAmendment.KIND_NORMAL,
+        )
+
+        amendment.amended_intervention.start = timezone.now().date() - datetime.timedelta(days=3)
+        amendment.amended_intervention.save()
+
+        difference = amendment.get_difference()
+
+        self.assertDictEqual(
+            difference,
+            {
+                'start': {
+                    'type': 'simple',
+                    'diff': (self.active_intervention.start, amendment.amended_intervention.start),
+                },
+            },
+        )
+
+    def test_calculate_difference_one_to_one_field(self):
+        amendment = InterventionAmendmentFactory(
+            intervention=self.active_intervention,
+            kind=InterventionAmendment.KIND_NORMAL,
+        )
+
+        amendment.amended_intervention.management_budgets.act1_unicef = 42
+        amendment.amended_intervention.save()
+
+        difference = amendment.get_difference()
+
+        self.assertDictEqual(
+            difference,
+            {
+                'management_budgets': {
+                    'type': 'one_to_one',
+                    'diff': {
+                        'act1_unicef': {
+                            'type': 'simple',
+                            'diff': (self.active_intervention.management_budgets.act1_unicef, 42),
+                        }
+                    },
+                },
+            },
+        )
+
+    def test_calculate_difference_many_to_one_field(self):
+        amendment = InterventionAmendmentFactory(
+            intervention=self.active_intervention,
+            kind=InterventionAmendment.KIND_NORMAL,
+        )
+
+        amendment.amended_intervention.agreement = AgreementFactory(
+            partner=self.partner1,
+            status='active',
+            signed_by_unicef_date=datetime.date.today(),
+            signed_by_partner_date=datetime.date.today()
+        )
+        amendment.amended_intervention.save()
+
+        difference = amendment.get_difference()
+
+        self.assertDictEqual(
+            difference,
+            {
+                'agreement': {
+                    'type': 'many_to_one',
+                    'diff': (self.active_intervention.agreement, amendment.amended_intervention.agreement),
+                },
+            },
+        )
+
+    def test_calculate_difference_many_to_many_field(self):
+        first_section = SectionFactory()
+        second_section = SectionFactory()
+        third_section = SectionFactory()
+
+        self.active_intervention.sections.add(first_section, third_section)
+
+        amendment = InterventionAmendmentFactory(
+            intervention=self.active_intervention,
+            kind=InterventionAmendment.KIND_NORMAL,
+        )
+
+        amendment.amended_intervention.sections.add(second_section)
+        amendment.amended_intervention.sections.remove(third_section)
+
+        difference = amendment.get_difference()
+
+        self.assertDictEqual(
+            difference,
+            {
+                'sections': {
+                    'type': 'many_to_many',
+                    'diff': {
+                        'original': [first_section.id, third_section.id],
+                        'add': [second_section.id],
+                        'remove': [third_section.id],
+                    },
+                },
+            },
+        )

@@ -2,6 +2,7 @@ import copy
 import datetime
 import decimal
 
+from django.db.models import DateTimeField, DateField, DecimalField, FileField
 from django.db.models.fields.files import FieldFile
 
 
@@ -30,14 +31,16 @@ def copy_simple_fields(instance, instance_copy, fields_map, exclude=None):
             value = getattr(instance, field.name)
             setattr(instance_copy, field.name, value)
 
-            if isinstance(value, datetime.datetime):
-                value = value.isoformat()
-            elif isinstance(value, datetime.date):
-                value = value.isoformat()
-            elif isinstance(value, decimal.Decimal):
-                value = value.to_eng_string()
-            elif isinstance(value, FieldFile):
-                value = value.name
+            if value is not None:
+                if isinstance(field, DateTimeField):
+                    value = value.isoformat()
+                elif isinstance(field, DateField):
+                    value = value.isoformat()
+                elif isinstance(field, DecimalField) and isinstance(value, decimal.Decimal):
+                    # decimal field can contain float from default
+                    value = value.to_eng_string()
+                elif isinstance(field, FileField):
+                    value = value.name
             fields_map[field.name] = value
 
 
@@ -54,18 +57,18 @@ def merge_simple_fields(instance, instance_copy, fields_map, exclude=None):
             current_value = getattr(instance, field.name)
             modified_value = getattr(instance_copy, field.name)
 
-            # todo: field type should be checked better, not value
             if original_value:
-                if isinstance(current_value, datetime.datetime):
+                if isinstance(field, DateTimeField):
                     original_value = datetime.datetime.fromisoformat(original_value)
-                elif isinstance(current_value, datetime.date):
-                    original_value = datetime.date.fromisoformat(original_value)
-                elif isinstance(current_value, decimal.Decimal):
+                elif isinstance(field, DateField):
+                    try:
+                        original_value = datetime.date.fromisoformat(original_value)
+                    except ValueError:
+                        original_value = datetime.datetime.fromisoformat(original_value).date()
+                elif isinstance(field, DecimalField):
                     original_value = decimal.Decimal(original_value)
-                elif isinstance(current_value, FieldFile):
-                    # todo: compare code should be modified also
-                    # original_value = original_value.name
-                    continue
+                elif isinstance(field, FileField):
+                    original_value = FieldFile(instance, field, original_value)
 
             if original_value == modified_value:
                 # nothing changed
@@ -81,7 +84,6 @@ def merge_simple_fields(instance, instance_copy, fields_map, exclude=None):
 
             setattr(instance, field.name, modified_value)
 
-        # todo: figure out best place for saving
         instance.save()
 
 
@@ -132,8 +134,13 @@ def copy_instance(instance, relations_to_copy, exclude_fields, defaults):
             # todo: not only simple fields can be required
             copy_map[field.name] = {}
             related_instance_copy = getattr(instance_copy, field.name)
-            # todo: use exclude
-            copy_simple_fields(getattr(instance, field.name), related_instance_copy, copy_map[field.name])
+            fields_to_exclude = exclude_fields.get(related_instance_copy._meta.label, [])
+            copy_simple_fields(
+                getattr(instance, field.name),
+                related_instance_copy,
+                copy_map[field.name],
+                exclude=fields_to_exclude,
+            )
             related_instance_copy.save()
 
         if field.one_to_many:
@@ -209,6 +216,7 @@ def merge_instance(instance, instance_copy, fields_map, relations_to_copy, exclu
                 related_instance = field.related_model.objects.filter(pk=related_instance_data['original_pk']).first()
                 related_instance_copy = field.related_model.objects.filter(pk=related_instance_data['copy_pk']).first()
                 if related_instance_copy:
+                    # todo
                     if not related_instance:
                         # created
                         pass
@@ -233,6 +241,149 @@ def merge_instance(instance, instance_copy, fields_map, relations_to_copy, exclu
             getattr(instance, field.name).remove(*removed_links)
 
 
+def calculate_simple_fields_difference(instance, instance_copy, fields_map, exclude=None):
+    changes_map = {}
+    exclude = exclude or []
+    for field in instance._meta.get_fields():
+        field_is_simple = not (field.many_to_many or field.many_to_one or field.one_to_many or field.one_to_one)
+        if field.name not in exclude and field.concrete and field_is_simple and not field.auto_created:
+            if field.name not in fields_map:
+                # field added after amendment created
+                continue
+
+            original_value = fields_map[field.name]
+            current_value = getattr(instance, field.name)
+            modified_value = getattr(instance_copy, field.name)
+
+            if original_value:
+                if isinstance(field, DateTimeField):
+                    original_value = datetime.datetime.fromisoformat(original_value)
+                elif isinstance(field, DateField):
+                    try:
+                        original_value = datetime.date.fromisoformat(original_value)
+                    except ValueError:
+                        original_value = datetime.datetime.fromisoformat(original_value).date()
+                elif isinstance(field, DecimalField):
+                    original_value = decimal.Decimal(original_value)
+                elif isinstance(field, FileField):
+                    original_value = FieldFile(instance, field, original_value)
+
+            if original_value == modified_value:
+                # nothing changed
+                continue
+
+            if modified_value == current_value:
+                # same field changes already performed
+                continue
+
+            if current_value != original_value:
+                # value changed in both objects, cannot be merged automatically
+                raise MergeError(instance, field.name)
+
+            changes_map[field.name] = {'type': 'simple', 'diff': (original_value, modified_value)}
+
+    return changes_map
+
+
+def calculate_difference(instance, instance_copy, fields_map, relations_to_copy, exclude_fields):
+    related_fields_to_copy = relations_to_copy.get(instance._meta.label, [])
+    fields_to_exclude = exclude_fields.get(instance._meta.label, [])
+
+    changes_map = calculate_simple_fields_difference(instance, instance_copy, fields_map, exclude=fields_to_exclude)
+
+    for field in instance._meta.get_fields():
+        if field.name not in fields_map:
+            # field added after amendment
+            continue
+
+        if field.many_to_one:
+            value = fields_map[field.name]
+            if value:
+                original_value = field.related_model.objects.get(pk=value)
+            else:
+                original_value = None
+
+            modified_value = getattr(instance_copy, field.name)
+            current_value = getattr(instance, field.name)
+            if original_value == modified_value:
+                # nothing changed
+                continue
+
+            if modified_value == current_value:
+                # same field changes already performed
+                continue
+
+            if current_value != original_value:
+                # value changed in both objects, cannot be merged automatically
+                raise MergeError(instance, field.name)
+
+            changes_map[field.name] = {
+                'type': 'many_to_one',
+                'diff': (original_value, modified_value),
+            }
+
+    for field in instance._meta.get_fields():
+        if field.name in fields_to_exclude or field.name not in related_fields_to_copy:
+            continue
+
+        if field.one_to_one:
+            # todo: if one of related objects is missing, raise error
+
+            related_instance = getattr(instance, field.name)
+            related_instance_copy = getattr(instance_copy, field.name)
+            related_changes_map = calculate_simple_fields_difference(
+                related_instance,
+                related_instance_copy,
+                fields_map[field.name],
+                exclude=exclude_fields.get(instance._meta.label, [])
+            )
+            if related_changes_map:
+                changes_map[field.name] = {'type': 'one_to_one', 'diff': related_changes_map}
+
+    #     if field.one_to_many:
+    #         if field.name not in fields_map:
+    #             continue
+    #
+    #         for related_instance_data in fields_map[field.name]:
+    #             related_instance = field.related_model.objects.filter(pk=related_instance_data['original_pk']).first()
+    #             related_instance_copy = field.related_model.objects.filter(pk=related_instance_data['copy_pk']).first()
+    #             if related_instance_copy:
+    #                 if not related_instance:
+    #                     # created
+    #                     pass
+    #                 else:
+    #                     # update instance
+    #                     pass
+    #             elif related_instance:
+    #                 # deleted
+    #                 pass
+
+        if field.many_to_many:
+            if field.name not in fields_map:
+                continue
+
+            original_value = fields_map[field.name]
+            modified_value = getattr(instance_copy, field.name).values_list('pk', flat=True)
+
+            # no checks at this moment, so m2m fields can be edited in multiple amendments
+            new_links = set(modified_value) - set(original_value)
+            removed_links = set(original_value) - set(modified_value)
+
+            if not (new_links or removed_links):
+                continue
+
+            changes_map[field.name] = {
+                'type': 'many_to_many',
+                'diff': {
+                    'original': original_value,
+                    'add': list(new_links),
+                    'remove': list(removed_links),
+                }
+            }
+
+    return changes_map
+
+
 INTERVENTION_AMENDMENT_RELATED_FIELDS = {
     'partners.Intervention': [
         # one to many
@@ -240,7 +391,6 @@ INTERVENTION_AMENDMENT_RELATED_FIELDS = {
         'supply_items',
         'risks',
         'reporting_requirements',
-        # 'signed_pd_attachment',  # todo: copy generics
 
         # 1 to 1
         'planned_budget',

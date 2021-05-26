@@ -27,6 +27,7 @@ from etools.applications.partners.amendment_utils import (
     INTERVENTION_AMENDMENT_IGNORED_FIELDS,
     INTERVENTION_AMENDMENT_RELATED_FIELDS,
     merge_instance,
+    calculate_difference,
 )
 from etools.applications.partners.validation import (
     agreements as agreement_validation,
@@ -1972,7 +1973,6 @@ class Intervention(TimeStampedModel):
         verbose_name=_("Amendment Open"),
         default=False,
     )
-    # todo: make data migration
     is_amendment = models.BooleanField(
         verbose_name=_("Is Amendment"),
         default=False,
@@ -2595,6 +2595,7 @@ class InterventionAmendment(TimeStampedModel):
         on_delete=models.SET_NULL,
     )
     related_objects_map = JSONField(blank=True, default=dict)
+    difference = JSONField(blank=True, default=dict)
 
     tracker = FieldTracker()
 
@@ -2687,6 +2688,15 @@ class InterventionAmendment(TimeStampedModel):
 
         # delete should be postponed at least to finish request properly
         # amended_intervention.delete()
+
+    def get_difference(self):
+        return calculate_difference(
+            self.intervention,
+            self.amended_intervention,
+            self.related_objects_map,
+            INTERVENTION_AMENDMENT_RELATED_FIELDS,
+            INTERVENTION_AMENDMENT_IGNORED_FIELDS,
+        )
 
 
 class InterventionPlannedVisits(TimeStampedModel):
