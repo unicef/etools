@@ -17,7 +17,7 @@ from etools.applications.core.permissions import import_permissions
 from etools.applications.core.urlresolvers import build_frontend_url
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.partners.models import PartnerOrganization
-from etools.applications.reports.models import Section
+from etools.applications.reports.models import Office, Section
 from etools.applications.travel.validation import (
     trip_approved,
     trip_illegal_transition,
@@ -104,8 +104,18 @@ class Trip(TimeStampedModel):
         code='travel_docs',
         blank=True,
     )
-    # office =
-    # section =
+    office = models.ForeignKey(
+        Office,
+        verbose_name=_("Office"),
+        on_delete=models.DO_NOTHING,
+        related_name="trips",
+    )
+    section = models.ForeignKey(
+        Section,
+        verbose_name=_("Section"),
+        on_delete=models.DO_NOTHING,
+        related_name="trips",
+    )
 
     class Meta:
         verbose_name = _('Trip')
@@ -437,26 +447,32 @@ class Activity(TimeStampedModel):
     )
     section = models.ForeignKey(
         Section,
-        on_delete=models.CASCADE,
+        on_delete=models.DO_NOTHING,
         related_name="trip_activities",
         null=True,
         blank=True
     )
     monitoring_activity = models.ForeignKey(
         MonitoringActivity,
-        on_delete=models.CASCADE,
+        on_delete=models.DO_NOTHING,
         related_name="trip_activities",
         null=True,
         blank=True
     )
     partner = models.ForeignKey(
         PartnerOrganization,
-        on_delete=models.CASCADE,
+        on_delete=models.DO_NOTHING,
         related_name="trip_activities",
         null=True,
         blank=True
     )
-    # location
+    location = models.ForeignKey(
+        Location,
+        on_delete=models.DO_NOTHING,
+        related_name="trip_activities",
+        null=True,
+        blank=True
+    )
 
     class Meta:
         verbose_name = _("Activity")
