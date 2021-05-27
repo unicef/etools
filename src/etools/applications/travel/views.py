@@ -18,18 +18,23 @@ from unicef_rest_export.views import ExportMixin
 from unicef_restlib.pagination import DynamicPageNumberPagination
 from unicef_restlib.views import NestedViewSetMixin, QueryStringFilterMixin, SafeTenantViewSetMixin
 
+from etools.applications.core.mixins import GetSerializerClassMixin
+from etools.applications.field_monitoring.permissions import IsEditAction, IsReadAction
 from etools.applications.permissions2.views import PermissionContextMixin, PermittedSerializerMixin
 from etools.applications.travel.models import Activity, Trip, ItineraryItem, Report
+from etools.applications.travel.permissions import trip_field_is_editable_permission
 from etools.applications.travel.serializers import (
-    ActivitySerializer,
+    ActivityDetailSerializer,
+    ActivityDetailUpdateSerializer,
     TripAttachmentSerializer,
     TripExportSerializer,
     ItineraryItemSerializer,
+    ItineraryItemUpdateSerializer,
     TripSerializer,
     TripStatusHistorySerializer,
     TripStatusSerializer,
     ReportAttachmentSerializer,
-    ReportSerializer,
+    ReportSerializer, ActivityUpdateSerializer,
 )
 from etools.applications.travel.validation import TripValid
 
@@ -270,6 +275,7 @@ class TripViewSet(
 
 
 class ItineraryItemViewSet(
+        GetSerializerClassMixin,
         SafeTenantViewSetMixin,
         mixins.ListModelMixin,
         mixins.CreateModelMixin,
@@ -278,9 +284,23 @@ class ItineraryItemViewSet(
         mixins.DestroyModelMixin,
         viewsets.GenericViewSet,
 ):
-    permission_classes = [IsAuthenticated, ]
+    permission_classes = [IsAuthenticated,
+                          IsReadAction | (IsEditAction & trip_field_is_editable_permission('itinerary_items'))]
     queryset = ItineraryItem.objects.all()
     serializer_class = ItineraryItemSerializer
+
+    serializer_action_map = {
+        "partial_update": ItineraryItemUpdateSerializer,
+        "create": ItineraryItemUpdateSerializer
+    }
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        return qs.filter(trip__pk=self.kwargs.get("nested_1_pk"))
+
+    def get_root_object(self):
+        """ returns parent object: method needed for the trip_field_is_editable_permission permissions class """
+        return self.get_object().trip
 
     def get_parent_filter(self):
         parent = self.get_parent_object()
@@ -290,13 +310,6 @@ class ItineraryItemViewSet(
         return {
             'trip': parent
         }
-
-    def get_object(self):
-        queryset = self.get_queryset()
-        return get_object_or_404(
-            queryset,
-            trip__pk=self.kwargs.get("nested_1_pk"),
-        )
 
 
 class TripAttachmentsViewSet(
@@ -348,6 +361,7 @@ class TripAttachmentsViewSet(
 
 
 class ActivityViewSet(
+        GetSerializerClassMixin,
         SafeTenantViewSetMixin,
         mixins.ListModelMixin,
         mixins.CreateModelMixin,
@@ -357,9 +371,22 @@ class ActivityViewSet(
         PermissionContextMixin,
         viewsets.GenericViewSet,
 ):
-    permission_classes = [IsAuthenticated, ]
+    permission_classes = [IsAuthenticated,
+                          IsReadAction | (IsEditAction & trip_field_is_editable_permission('itinerary_items'))]
     queryset = Activity.objects.all()
-    serializer_class = ActivitySerializer
+    serializer_class = ActivityDetailSerializer
+    serializer_action_map = {
+        "partial_update": ActivityDetailUpdateSerializer,
+        "create": ActivityDetailUpdateSerializer
+    }
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        return qs.filter(trip__pk=self.kwargs.get("nested_1_pk"))
+
+    def get_root_object(self):
+        """ returns parent object: method needed for the trip_field_is_editable_permission permissions class """
+        return self.get_object().trip
 
     def get_parent_filter(self):
         parent = self.get_parent_object()
@@ -369,13 +396,6 @@ class ActivityViewSet(
         return {
             'trip': parent
         }
-
-    def get_object(self):
-        queryset = self.get_queryset()
-        return get_object_or_404(
-            queryset,
-            trip__pk=self.kwargs.get("nested_1_pk"),
-        )
 
 
 class ReportViewSet(

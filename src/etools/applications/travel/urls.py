@@ -15,9 +15,9 @@ root_api.register(
 
 itinerary_item_api = NestedComplexRouter(root_api, r'trip')
 itinerary_item_api.register(
-    r'item',
+    r'itinerary_item',
     views.ItineraryItemViewSet,
-    basename='item',
+    basename='itinerary_item',
 )
 
 trip_attachments_api = NestedComplexRouter(root_api, r'trip')

@@ -104,6 +104,8 @@ class Trip(TimeStampedModel):
         code='travel_docs',
         blank=True,
     )
+    # office =
+    # section =
 
     class Meta:
         verbose_name = _('Trip')
@@ -350,7 +352,7 @@ class ItineraryItem(TimeStampedModel):
         Trip,
         verbose_name=_("Trip"),
         on_delete=models.CASCADE,
-        related_name="items",
+        related_name="itinerary_items",
     )
     start_date = models.DateField(
         verbose_name=_('Start Date'),
@@ -410,7 +412,7 @@ class Activity(TimeStampedModel):
     TYPE_STAFF_DEVELOPMENT = 'Staff Development'
     TYPE_STAFF_ENTITLEMENT = 'Staff Entitlement'
     TYPE_CHOICES = (
-        (TYPE_PROGRAMME_MONITORING, 'Programmatic Visit'),
+        (TYPE_PROGRAMME_MONITORING, 'Monitoring Activity'),
         (TYPE_TECHNICAL_SUPPORT, 'Technical Support'),
         (TYPE_MEETING, 'Meeting'),
         (TYPE_STAFF_DEVELOPMENT, 'Staff Development'),
@@ -436,28 +438,30 @@ class Activity(TimeStampedModel):
     section = models.ForeignKey(
         Section,
         on_delete=models.CASCADE,
-        related_name="trips",
+        related_name="trip_activities",
         null=True,
         blank=True
     )
     monitoring_activity = models.ForeignKey(
         MonitoringActivity,
         on_delete=models.CASCADE,
-        related_name="trips",
+        related_name="trip_activities",
         null=True,
         blank=True
     )
     partner = models.ForeignKey(
         PartnerOrganization,
         on_delete=models.CASCADE,
-        related_name="trips",
+        related_name="trip_activities",
         null=True,
         blank=True
     )
+    # location
 
     class Meta:
         verbose_name = _("Activity")
         verbose_name_plural = _("Activities")
+        ordering = ["-activity_date"]
 
     def __str__(self):
         return f"{self.get_activity_type_display()} - {self.activity_date}"

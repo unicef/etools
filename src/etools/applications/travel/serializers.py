@@ -7,6 +7,8 @@ from rest_framework import serializers
 from unicef_attachments.fields import FileTypeModelChoiceField
 from unicef_attachments.models import Attachment, FileType
 
+from unicef_restlib.fields import SeparatedReadWriteField
+
 from etools.applications.travel.models import (
     Activity,
     Trip,
@@ -62,8 +64,44 @@ class TripAttachmentSerializer(serializers.ModelSerializer):
         return ""
 
 
+class ActivityBaseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Activity
+        fields = "__all__"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if hasattr(self, "initial_data"):
+            self.initial_data["trip"] = self._context.get(
+                "request"
+            ).parser_context["kwargs"].get("nested_1_pk")
+
+
+class ActivityDetailSerializer(ActivityBaseSerializer):
+    pass
+
+
+class ItineraryItemBaseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ItineraryItem
+        fields = "__all__"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if hasattr(self, "initial_data"):
+            self.initial_data["trip"] = self._context.get(
+                "request"
+            ).parser_context["kwargs"].get("nested_1_pk")
+
+
+class ItineraryItemSerializer(ItineraryItemBaseSerializer):
+    pass
+
+
 class TripSerializer(BaseTripSerializer):
     attachments = TripAttachmentSerializer(many=True, required=False)
+    itinerary_items = ItineraryItemSerializer(many=True, required=False)
+    activities = ActivityDetailSerializer(many=True, required=False)
     status_list = serializers.SerializerMethodField()
     rejected_comment = serializers.SerializerMethodField()
     available_actions = serializers.SerializerMethodField()
@@ -149,6 +187,18 @@ class TripSerializer(BaseTripSerializer):
         return available_actions
 
 
+class ActivityDetailUpdateSerializer(ActivityBaseSerializer):
+    trip = SeparatedReadWriteField(
+        read_field=TripSerializer(),
+    )
+
+
+class ItineraryItemUpdateSerializer(ItineraryItemBaseSerializer):
+    trip = SeparatedReadWriteField(
+        read_field=TripSerializer(),
+    )
+
+
 class TripExportSerializer(TripSerializer):
     itinerary_items = serializers.SerializerMethodField()
     activities = serializers.SerializerMethodField()
@@ -204,30 +254,11 @@ class TripStatusHistorySerializer(serializers.ModelSerializer):
         return data
 
 
-class ItineraryItemSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ItineraryItem
-        fields = "__all__"
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if hasattr(self, "initial_data"):
-            self.initial_data["trip"] = self._context.get(
-                "request"
-            ).parser_context["kwargs"].get("nested_1_pk")
-
-
-class ActivitySerializer(serializers.ModelSerializer):
+class ActivityUpdateSerializer(serializers.ModelSerializer):
+    trip = TripSerializer()
     class Meta:
         model = Activity
         fields = "__all__"
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if hasattr(self, "initial_data"):
-            self.initial_data["trip"] = self._context.get(
-                "request"
-            ).parser_context["kwargs"].get("nested_1_pk")
 
 
 class ReportAttachmentSerializer(serializers.ModelSerializer):
