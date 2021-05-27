@@ -341,3 +341,20 @@ class AmendmentTestCase(BaseTenantTestCase):
                 },
             },
         )
+
+    def test_calculate_difference_one_to_many_field(self):
+        amendment = InterventionAmendmentFactory(intervention=self.active_intervention)
+        result = amendment.amended_intervention.result_links.first().ll_results.first()
+        result_old_name = result.name
+        result.name = 'Updated Name'
+        result.save()
+
+        difference = amendment.get_difference()
+        self.assertEqual(
+            difference['result_links']['diff']['update'][0]['diff']['ll_results']['diff']['update'][0]['diff']['name']['diff'][0],
+            result_old_name
+        )
+        self.assertEqual(
+            difference['result_links']['diff']['update'][0]['diff']['ll_results']['diff']['update'][0]['diff']['name']['diff'][1],
+            'Updated Name'
+        )
