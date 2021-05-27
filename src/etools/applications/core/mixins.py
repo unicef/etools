@@ -53,10 +53,7 @@ class ExportSerializerMixin:
 class GetSerializerClassMixin(object):
 
     def get_serializer_class(self):
-        print(self.action)
         try:
-            print("asda")
             return self.serializer_action_map[self.action]
         except (KeyError, AttributeError):
-            print("Exception")
             return super().get_serializer_class()

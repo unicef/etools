@@ -300,7 +300,7 @@ class ItineraryItemViewSet(
 
     def get_root_object(self):
         """ returns parent object: method needed for the trip_field_is_editable_permission permissions class """
-        return self.get_object().trip
+        return Trip.objects.get(pk=self.kwargs.get("nested_1_pk"))
 
     def get_parent_filter(self):
         parent = self.get_parent_object()
@@ -386,7 +386,7 @@ class ActivityViewSet(
 
     def get_root_object(self):
         """ returns parent object: method needed for the trip_field_is_editable_permission permissions class """
-        return self.get_object().trip
+        return Trip.objects.get(pk=self.kwargs.get("nested_1_pk"))
 
     def get_parent_filter(self):
         parent = self.get_parent_object()
