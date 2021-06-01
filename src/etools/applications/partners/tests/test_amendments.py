@@ -358,3 +358,17 @@ class AmendmentTestCase(BaseTenantTestCase):
             difference['result_links']['diff']['update'][0]['diff']['ll_results']['diff']['update'][0]['diff']['name']['diff'][1],
             'Updated Name'
         )
+
+    def test_update_difference_on_merge(self):
+        amendment = InterventionAmendmentFactory(
+            intervention=self.active_intervention,
+            kind=InterventionAmendment.KIND_NORMAL,
+        )
+
+        self.assertDictEqual(amendment.difference, {})
+        amendment.amended_intervention.title = 'updated title'
+        amendment.amended_intervention.save()
+
+        amendment.merge_amendment()
+
+        self.assertIn('title', amendment.difference)

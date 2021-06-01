@@ -2646,6 +2646,8 @@ class InterventionAmendment(TimeStampedModel):
                     activity_data['quarters'] = quarters
 
     def merge_amendment(self):
+        self.difference = self.get_difference()
+
         merge_instance(
             self.intervention,
             self.amended_intervention,
