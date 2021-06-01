@@ -261,11 +261,13 @@ def calculate_simple_fields_difference(instance, instance_copy, fields_map, excl
                 # field added after amendment created
                 continue
 
+            original_value_serialized = fields_map[field.name]
             original_value = fields_map[field.name]
             current_value = getattr(instance, field.name)
             modified_value = getattr(instance_copy, field.name)
+            modified_value_serialized = None
 
-            if original_value:
+            if original_value is not None:
                 if isinstance(field, DateTimeField):
                     original_value = datetime.datetime.fromisoformat(original_value)
                 elif isinstance(field, DateField):
@@ -277,6 +279,17 @@ def calculate_simple_fields_difference(instance, instance_copy, fields_map, excl
                     original_value = decimal.Decimal(original_value)
                 elif isinstance(field, FileField):
                     original_value = FieldFile(instance, field, original_value)
+
+            if modified_value is not None:
+                if isinstance(field, DateTimeField):
+                    modified_value_serialized = modified_value.isoformat()
+                elif isinstance(field, DateField):
+                    modified_value_serialized = modified_value.isoformat()
+                elif isinstance(field, DecimalField) and isinstance(modified_value, decimal.Decimal):
+                    # decimal field can contain float from default
+                    modified_value_serialized = modified_value.to_eng_string()
+                elif isinstance(field, FileField):
+                    modified_value_serialized = modified_value.name
 
             if original_value == modified_value:
                 # nothing changed
@@ -290,7 +303,7 @@ def calculate_simple_fields_difference(instance, instance_copy, fields_map, excl
                 # value changed in both objects, cannot be merged automatically
                 raise MergeError(instance, field.name)
 
-            changes_map[field.name] = {'type': 'simple', 'diff': (original_value, modified_value)}
+            changes_map[field.name] = {'type': 'simple', 'diff': (original_value_serialized, modified_value_serialized)}
 
     return changes_map
 

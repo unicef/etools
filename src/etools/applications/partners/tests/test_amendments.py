@@ -1,4 +1,5 @@
 import datetime
+from decimal import Decimal
 
 from django.utils import timezone
 
@@ -365,6 +366,9 @@ class AmendmentTestCase(BaseTenantTestCase):
             kind=InterventionAmendment.KIND_NORMAL,
         )
 
+        amendment.amended_intervention.management_budgets.act1_unicef = Decimal("42.0")
+        amendment.amended_intervention.save()
+
         self.assertDictEqual(amendment.difference, {})
         amendment.amended_intervention.title = 'updated title'
         amendment.amended_intervention.save()
@@ -372,3 +376,4 @@ class AmendmentTestCase(BaseTenantTestCase):
         amendment.merge_amendment()
 
         self.assertIn('title', amendment.difference)
+        self.assertIn('management_budgets', amendment.difference)
