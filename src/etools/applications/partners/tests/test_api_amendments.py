@@ -1,6 +1,5 @@
 import datetime
 
-from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
 from django.urls import reverse
 from django.utils import timezone
@@ -184,6 +183,15 @@ class TestInterventionAmendments(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         amended_intervention.refresh_from_db()
         self.assertEqual('signed', response.data['status'])
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse('pmp_v3:intervention-amendment-merge', args=[amended_intervention.pk]),
+            intervention.budget_owner,
+            data={}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['id'], intervention.id)
 
         intervention.refresh_from_db()
         self.assertEqual(intervention.start, timezone.now().date() + datetime.timedelta(days=2))

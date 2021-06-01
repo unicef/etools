@@ -411,6 +411,8 @@ class InterventionValid(CompleteValidation):
     def state_active_valid(self, intervention, user=None):
         self.check_required_fields(intervention)
         self.check_rigid_fields(intervention, related=True)
+        if intervention.is_amendment:
+            raise StateValidationError([_('Only original PD can be active')])
         if not all_activities_have_timeframes(intervention):
             raise StateValidationError([_('All activities must have at least one time frame')])
         if not all_pd_outputs_are_associated(intervention):

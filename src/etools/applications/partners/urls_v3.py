@@ -27,6 +27,7 @@ from etools.applications.partners.views.interventions_v3 import (
     PMPReviewView,
 )
 from etools.applications.partners.views.interventions_v3_actions import (
+    PMPAmendedInterventionMerge,
     PMPInterventionAcceptReviewView,
     PMPInterventionAcceptView,
     PMPInterventionCancelView,
@@ -139,6 +140,11 @@ urlpatterns = [
         'interventions/<int:pk>/unlock/',
         view=PMPInterventionUnlockView.as_view(http_method_names=['patch']),
         name='intervention-unlock',
+    ),
+    path(
+        'interventions/<int:pk>/amendment_merge/',
+        view=PMPAmendedInterventionMerge.as_view(http_method_names=['patch']),
+        name='intervention-amendment-merge',
     ),
     path(
         'interventions/<int:intervention_pk>/pd-outputs/',

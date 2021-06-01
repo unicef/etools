@@ -26,7 +26,8 @@ from etools.applications.partners.models import (
     InterventionPlannedVisits,
     InterventionReportingPeriod,
     InterventionResultLink,
-    PartnerType, PartnerStaffMember,
+    PartnerStaffMember,
+    PartnerType,
 )
 from etools.applications.partners.permissions import InterventionPermissions
 from etools.applications.partners.utils import get_quarters_range

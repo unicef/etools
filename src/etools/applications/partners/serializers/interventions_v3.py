@@ -289,6 +289,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "download_comments",
             "export",
             "generate_pdf",
+            "amendment_merge",
         ]
         available_actions = [
             "download_comments",
@@ -310,6 +311,9 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             if obj.status == obj.REVIEW:
                 available_actions.append("sign")
                 available_actions.append("reject_review")
+
+        if obj.is_amendment and obj.status == obj.SIGNED and obj.budget_owner == user:
+            available_actions.append("amendment_merge")
 
         # if NOT in Development status then we're done
         if obj.status != obj.DRAFT:

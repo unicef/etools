@@ -22,12 +22,12 @@ from unicef_locations.models import Location
 from etools.applications.core.permissions import import_permissions
 from etools.applications.funds.models import FundsReservationHeader
 from etools.applications.partners.amendment_utils import (
+    calculate_difference,
     copy_instance,
     INTERVENTION_AMENDMENT_DEFAULTS,
     INTERVENTION_AMENDMENT_IGNORED_FIELDS,
     INTERVENTION_AMENDMENT_RELATED_FIELDS,
     merge_instance,
-    calculate_difference,
 )
 from etools.applications.partners.validation import (
     agreements as agreement_validation,
@@ -1657,13 +1657,6 @@ def side_effect_two(i, old_instance=None, user=None):
     pass
 
 
-def merge_if_amendment(i, old_instance, user=None):
-    if not i.is_amendment:
-        return
-
-    i.amendment.merge_amendment()
-
-
 def get_default_cash_transfer_modalities():
     return [Intervention.CASH_TRANSFER_DIRECT]
 
@@ -1702,7 +1695,7 @@ class Intervention(TimeStampedModel):
     TRANSITION_SIDE_EFFECTS = {
         REVIEW: [],
         SIGNATURE: [],
-        SIGNED: [side_effect_one, side_effect_two, merge_if_amendment],
+        SIGNED: [side_effect_one, side_effect_two],
         ACTIVE: [],
         SUSPENDED: [],
         ENDED: [],
@@ -1969,10 +1962,14 @@ class Intervention(TimeStampedModel):
         null=True,
         blank=True,
     )
+
+    # legacy field
     in_amendment = models.BooleanField(
         verbose_name=_("Amendment Open"),
         default=False,
     )
+
+    # distinguish whether intervention is amendment copy
     is_amendment = models.BooleanField(
         verbose_name=_("Is Amendment"),
         default=False,
@@ -2680,14 +2677,13 @@ class InterventionAmendment(TimeStampedModel):
 
         self.amended_intervention.reviews.update(intervention=self.intervention)
 
-        # amended_intervention = self.amended_intervention
+        amended_intervention = self.amended_intervention
 
         self.amended_intervention = None
         self.is_active = False
         self.save()
 
-        # delete should be postponed at least to finish request properly
-        # amended_intervention.delete()
+        amended_intervention.delete()
 
     def get_difference(self):
         return calculate_difference(

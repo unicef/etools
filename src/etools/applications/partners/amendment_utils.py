@@ -2,7 +2,7 @@ import copy
 import datetime
 import decimal
 
-from django.db.models import DateTimeField, DateField, DecimalField, FileField
+from django.db.models import DateField, DateTimeField, DecimalField, FileField
 from django.db.models.fields.files import FieldFile
 
 
@@ -383,10 +383,10 @@ def calculate_difference(instance, instance_copy, fields_map, relations_to_copy,
                                 'diff': related_object_changes_map
                             })
                 elif related_instance:
-                        related_changes_map['diff']['remove'].append({
-                            'pk': related_instance.pk,
-                            'name': str(related_instance)
-                        })
+                    related_changes_map['diff']['remove'].append({
+                        'pk': related_instance.pk,
+                        'name': str(related_instance)
+                    })
 
             if related_changes_map['diff']['create'] or related_changes_map['diff']['remove'] or related_changes_map['diff']['update']:
                 changes_map[field.name] = related_changes_map
