@@ -7,6 +7,7 @@ import celery
 from carto.exceptions import CartoException
 from carto.sql import SQLClient
 from celery.utils.log import get_task_logger
+from tenant_schemas_celery.app import get_schema_name_from_task
 from unicef_locations.auth import LocationsCartoNoAuthClient
 from unicef_locations.models import CartoDBTable, Location, LocationRemapHistory
 from unicef_notification.utils import send_notification_with_template
@@ -30,7 +31,7 @@ logger = get_task_logger(__name__)
 @celery.current_app.task(bind=True)
 def validate_locations_in_use(self, carto_table_pk):
     carto_table = CartoDBTable.objects.get(pk=carto_table_pk)
-    country = Country.objects.get(schema_name=self.request.headers.get('_schema_name', None))
+    country = Country.objects.get(schema_name=get_schema_name_from_task(self, dict))
     log, _ = get_vision_logger_domain_model().objects.get_or_create(
         handler_name=f'LocationsHandler ({carto_table.location_type.admin_level})',
         business_area_code=getattr(country, 'business_area_code', ''),
@@ -89,7 +90,7 @@ def validate_locations_in_use(self, carto_table_pk):
 def update_sites_from_cartodb(self, carto_table_pk):
 
     carto_table = CartoDBTable.objects.get(pk=carto_table_pk)
-    country = Country.objects.get(schema_name=self.request.headers.get('_schema_name', None))
+    country = Country.objects.get(schema_name=get_schema_name_from_task(self, dict))
     log, _ = get_vision_logger_domain_model().objects.get_or_create(
         handler_name=f'LocationsHandler ({carto_table.location_type.admin_level})',
         business_area_code=getattr(country, 'business_area_code', ''),
@@ -251,7 +252,7 @@ def update_sites_from_cartodb(self, carto_table_pk):
 @celery.current_app.task(bind=True)
 def cleanup_obsolete_locations(self, carto_table_pk):
     carto_table = CartoDBTable.objects.get(pk=carto_table_pk)
-    country = Country.objects.get(schema_name=self.request.headers.get('_schema_name', None))
+    country = Country.objects.get(schema_name=get_schema_name_from_task(self, dict))
     log, _ = get_vision_logger_domain_model().objects.get_or_create(
         handler_name=f'LocationsHandler ({carto_table.location_type.admin_level})',
         business_area_code=getattr(country, 'business_area_code', ''),
