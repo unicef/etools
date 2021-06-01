@@ -125,6 +125,7 @@ class InterventionAmendmentCUSerializer(AttachmentSerializerMixin, serializers.M
         ]
         extra_kwargs = {
             'is_active': {'read_only': True},
+            'difference': {'read_only': True},
         }
 
     def validate(self, data):
