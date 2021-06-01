@@ -1362,7 +1362,6 @@ class TestInterventionReview(BaseInterventionActionTestCase):
         self.assertEqual(self.intervention.status, Intervention.REVIEW)
         review = self.intervention.reviews.last()
         self.assertEqual(review.review_type, 'prc')
-        self.assertEqual(review.started_date, timezone.now().date())
 
         # unicef attempt to review again
         mock_send = mock.Mock()
@@ -1444,8 +1443,7 @@ class TestInterventionReviewReject(BaseInterventionActionTestCase):
         self.assertFalse(review.overall_approval)
         self.assertFalse(self.intervention.unicef_accepted)
         self.assertFalse(self.intervention.partner_accepted)
-        self.assertEqual(self.intervention.review.submitted_by, self.user)
-        self.assertEqual(self.intervention.review.submitted_date, timezone.now().date())
+        self.assertEqual(self.intervention.review.review_date, timezone.now().date())
 
 
 class TestInterventionReviews(BaseInterventionTestCase):
@@ -1798,8 +1796,7 @@ class TestInterventionSignature(BaseInterventionActionTestCase):
         mock_send.assert_called()
         intervention = Intervention.objects.get(pk=self.intervention.pk)
         self.assertEqual(intervention.status, Intervention.SIGNATURE)
-        self.assertEqual(intervention.review.submitted_by, self.user)
-        self.assertEqual(intervention.review.submitted_date, timezone.now().date())
+        self.assertEqual(intervention.review.review_date, timezone.now().date())
 
         # unicef attempt to signature again
         mock_send = mock.Mock()

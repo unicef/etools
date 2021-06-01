@@ -37,8 +37,8 @@ class InterventionLowerResultBaseSerializer(serializers.ModelSerializer):
 
 
 class InterventionReviewSerializer(serializers.ModelSerializer):
-    started_by = MinimalUserSerializer(read_only=True)
-    submitted_by = MinimalUserSerializer(read_only=True)
+    created_date = serializers.DateField(read_only=True)
+    created_by = MinimalUserSerializer(read_only=True)
     overall_approver = SeparatedReadWriteField(read_field=MinimalUserSerializer())
 
     class Meta:
@@ -47,10 +47,9 @@ class InterventionReviewSerializer(serializers.ModelSerializer):
             'id',
             'amendment',
             'review_type',
-            'started_date',
-            'started_by',
-            'submitted_by',
-            'submitted_date',
+            'created_date',
+            'created_by',
+            'review_date',
 
             'meeting_date',
             'prc_officers',
@@ -70,7 +69,7 @@ class InterventionReviewSerializer(serializers.ModelSerializer):
             'overall_approval',
         )
         read_only_fields = (
-            'amendment', 'review_type', 'overall_approval',
+            'amendment', 'review_type', 'overall_approval', 'review_date'
         )
 
     def update(self, instance, validated_data):
@@ -108,19 +107,15 @@ class PRCOfficerInterventionReviewSerializer(serializers.ModelSerializer):
 
             'overall_comment',
             'overall_approval',
-            'started_date',
-            'submitted_date',
+            'review_date',
         )
         read_only_fields = (
-            'started_date',
-            'submitted_date',
+            'review_date',
         )
 
     def update(self, instance, validated_data):
-        if not instance.started_date:
-            validated_data['started_date'] = timezone.now().date()
         if validated_data.get('overall_approval') is not None:
-            validated_data['submitted_date'] = timezone.now().date()
+            validated_data['review_date'] = timezone.now().date()
         return super().update(instance, validated_data)
 
 

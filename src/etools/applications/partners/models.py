@@ -2853,24 +2853,15 @@ class InterventionReview(InterventionReviewQuestionnaire, TimeStampedModel):
     )
     actions_list = models.TextField(verbose_name=_('Actions List'), blank=True)
 
-    started_date = models.DateField(blank=True, null=True, verbose_name=_('Date Review Started'))
-    started_by = models.ForeignKey(
+    created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        verbose_name=_('Started By'),
+        verbose_name=_('PRC Submitted By'),
         blank=True,
         null=True,
         on_delete=models.CASCADE,
         related_name='+',
     )
-    submitted_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        verbose_name=_('Submitted By'),
-        blank=True,
-        null=True,
-        on_delete=models.CASCADE,
-        related_name='+',
-    )
-    submitted_date = models.DateField(blank=True, null=True, verbose_name=_('Submitted Date'))
+    review_date = models.DateField(blank=True, null=True, verbose_name=_('Review Date'))
 
     meeting_date = models.DateField(blank=True, null=True, verbose_name=_('Meeting Date'))
     prc_officers = models.ManyToManyField(
@@ -2890,6 +2881,10 @@ class InterventionReview(InterventionReviewQuestionnaire, TimeStampedModel):
 
     class Meta:
         ordering = ["-created"]
+
+    @property
+    def created_date(self):
+        return self.created.date()
 
 
 class InterventionReviewNotification(TimeStampedModel):
@@ -2946,8 +2941,7 @@ class PRCOfficerInterventionReview(InterventionReviewQuestionnaire, TimeStampedM
     )
 
     overall_review = models.ForeignKey(InterventionReview, on_delete=models.CASCADE, related_name='prc_reviews')
-    started_date = models.DateField(null=True, blank=True, verbose_name=_('Date Review Started'))
-    submitted_date = models.DateField(null=True, blank=True, verbose_name=_('Date Review Submitted'))
+    review_date = models.DateField(null=True, blank=True, verbose_name=_('Review Date'))
 
     class Meta:
         ordering = ['-created']
