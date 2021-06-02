@@ -2606,7 +2606,6 @@ class InterventionAmendment(TimeStampedModel):
         # set
         if self.pk is None:
             self.amendment_number = self.compute_reference_number()
-            self.intervention.in_amendment = True
             self.intervention.save(amendment_number=self.amendment_number)
             self._copy_intervention()
 
