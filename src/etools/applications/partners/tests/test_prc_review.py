@@ -79,7 +79,7 @@ class ReviewInterventionMixin(BaseInterventionMixin):
             intervention=self.review_intervention,
             review_date=timezone.now().date(),
             meeting_date=timezone.now().date(),
-            created_by=UserFactory(),
+            submitted_by=UserFactory(),
             review_type='prc',
             overall_approver=UserFactory(is_staff=True, groups__data=[UNICEF_USER]),
         )
@@ -109,7 +109,7 @@ class OverallReviewTestCase(ReviewInterventionMixin, BaseTenantTestCase):
             self.prc_secretary
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn('created_by', response.data)
+        self.assertIn('submitted_by', response.data)
 
     def test_officers_update(self):
         first_officer = UserFactory()

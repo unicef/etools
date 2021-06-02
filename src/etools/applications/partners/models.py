@@ -2853,7 +2853,7 @@ class InterventionReview(InterventionReviewQuestionnaire, TimeStampedModel):
     )
     actions_list = models.TextField(verbose_name=_('Actions List'), blank=True)
 
-    created_by = models.ForeignKey(
+    submitted_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         verbose_name=_('PRC Submitted By'),
         blank=True,

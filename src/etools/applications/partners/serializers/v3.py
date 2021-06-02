@@ -38,7 +38,7 @@ class InterventionLowerResultBaseSerializer(serializers.ModelSerializer):
 
 class InterventionReviewSerializer(serializers.ModelSerializer):
     created_date = serializers.DateField(read_only=True)
-    created_by = MinimalUserSerializer(read_only=True)
+    submitted_by = MinimalUserSerializer(read_only=True)
     overall_approver = SeparatedReadWriteField(read_field=MinimalUserSerializer())
 
     class Meta:
@@ -48,7 +48,7 @@ class InterventionReviewSerializer(serializers.ModelSerializer):
             'amendment',
             'review_type',
             'created_date',
-            'created_by',
+            'submitted_by',
             'review_date',
 
             'meeting_date',

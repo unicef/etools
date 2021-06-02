@@ -140,7 +140,7 @@ class PMPInterventionReviewView(PMPInterventionActionView):
         serializer.is_valid(raise_exception=True)
         serializer.save(
             intervention=pd,
-            created_by=request.user
+            submitted_by=request.user
         )
 
         request.data.clear()
