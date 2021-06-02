@@ -201,6 +201,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     unicef_focal_points = MinimalUserSerializer(many=True)
     partner_focal_points = PartnerStaffMemberUserSerializer(many=True)
     partner_authorized_officer_signatory = PartnerStaffMemberUserSerializer()
+    original_intervention = serializers.SerializerMethodField()
 
     def get_location_p_codes(self, obj):
         return [location.p_code for location in obj.flat_locations.all()]
@@ -313,7 +314,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
                 available_actions.append("sign")
                 available_actions.append("reject_review")
 
-        if obj.is_amendment and obj.status == obj.SIGNED and obj.budget_owner == user:
+        if obj.in_amendment and obj.status == obj.SIGNED and obj.budget_owner == user:
             available_actions.append("amendment_merge")
 
         # if NOT in Development status then we're done
@@ -396,7 +397,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
         ]
 
     def get_original_intervention(self, obj):
-        if obj.is_amendment:
+        if obj.in_amendment:
             try:
                 return obj.amendment.intervention_id
             except InterventionAmendment.DoesNotExist:
@@ -454,7 +455,6 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "id",
             "implementation_strategy",
             "in_amendment",
-            "is_amendment",
             "ip_program_contribution",
             "location_names",
             "location_p_codes",

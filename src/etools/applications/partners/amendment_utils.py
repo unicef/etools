@@ -490,6 +490,6 @@ INTERVENTION_AMENDMENT_IGNORED_FIELDS = {
 INTERVENTION_AMENDMENT_DEFAULTS = {
     'partners.Intervention': {
         'status': 'draft',
-        'is_amendment': True,
+        'in_amendment': True,
     }
 }

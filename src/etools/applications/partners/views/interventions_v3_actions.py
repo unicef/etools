@@ -472,7 +472,7 @@ class PMPAmendedInterventionMerge(InterventionDetailAPIView):
 
     def update(self, request, *args, **kwargs):
         pd = self.get_object()
-        if not pd.is_amendment:
+        if not pd.in_amendment:
             raise ValidationError('Only amended interventions can be merged')
         if not pd.status == Intervention.SIGNED:
             raise ValidationError('Amendment cannot be merged yet')

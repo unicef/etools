@@ -1963,15 +1963,9 @@ class Intervention(TimeStampedModel):
         blank=True,
     )
 
-    # legacy field
+    # will be true for amended copies
     in_amendment = models.BooleanField(
         verbose_name=_("Amendment Open"),
-        default=False,
-    )
-
-    # distinguish whether intervention is amendment copy
-    is_amendment = models.BooleanField(
-        verbose_name=_("Is Amendment"),
         default=False,
     )
 
