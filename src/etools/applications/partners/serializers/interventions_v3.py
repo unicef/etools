@@ -11,6 +11,7 @@ from unicef_attachments.fields import AttachmentSingleFileField
 from etools.applications.partners.models import (
     FileType,
     Intervention,
+    InterventionAmendment,
     InterventionManagementBudget,
     InterventionRisk,
     InterventionSupplyItem,
@@ -394,6 +395,14 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             for i, quarter in enumerate(get_quarters_range(obj.start, obj.end))
         ]
 
+    def get_original_intervention(self, obj):
+        if obj.is_amendment:
+            try:
+                return obj.amendment.intervention_id
+            except InterventionAmendment.DoesNotExist:
+                return None
+        return None
+
     class Meta:
         model = Intervention
         fields = (
@@ -503,6 +512,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "unicef_court",
             "unicef_focal_points",
             "unicef_signatory",
+            "original_intervention",
         )
 
 
