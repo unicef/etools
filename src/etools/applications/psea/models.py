@@ -268,12 +268,13 @@ class Assessment(TimeStampedModel):
             "partner_name": self.partner.name,
             "partner_vendor_number": self.partner.vendor_number,
             "url": self.get_object_url(user=user),
+            'reference_number': self.get_reference_number(),
             "overall_rating": self.overall_rating_display,
             "assessment_date": str(self.assessment_date),
             "assessment_type": self.get_assessment_type_display(),
             "assessment_ingo_reason": self.get_assessment_ingo_reason_display(),
             "assessor": str(self.assessor),
-            "focal_points": ", ".join(f"{fp.get_full_name()} ({fp.email})" for fp in self.focal_points.all())
+            "focal_points": ", ".join(f"{fp.get_full_name()} ({fp.email})" for fp in self.focal_points.all()),
         }
         if self.status == self.STATUS_REJECTED:
             context["rejected_comment"] = self.get_rejected_comment()
