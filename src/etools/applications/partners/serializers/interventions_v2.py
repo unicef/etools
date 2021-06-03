@@ -128,11 +128,18 @@ class InterventionAmendmentCUSerializer(AttachmentSerializerMixin, serializers.M
             'difference': {'read_only': True},
         }
 
+    def validate_signed_by_unicef_date(self, value):
+        if value and value > date.today():
+            raise ValidationError("Date cannot be in the future!")
+        return value
+
+    def validate_signed_by_partner_date(self, value):
+        if value and value > date.today():
+            raise ValidationError("Date cannot be in the future!")
+        return value
+
     def validate(self, data):
         data = super().validate(data)
-
-        if 'signed_date' in data and data['signed_date'] > date.today():
-            raise ValidationError("Date cannot be in the future!")
 
         if 'intervention' in data:
             if data['intervention'].agreement.partner.blocked is True:

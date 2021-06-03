@@ -1223,12 +1223,9 @@ class TestInterventionViews(BaseTenantTestCase):
         )
         self.result = InterventionResultLinkFactory(intervention=self.intervention_obj,
                                                     cp_output__result_type=output_type)
-        amendment = "amendment.pdf"
         self.amendment = InterventionAmendment.objects.create(
             intervention=self.intervention_obj,
             types=[InterventionAmendment.RESULTS],
-            signed_date=datetime.date.today(),
-            signed_amendment=amendment
         )
 
         self.intervention_obj.status = Intervention.DRAFT

@@ -2458,6 +2458,13 @@ class Intervention(TimeStampedModel):
             self.planned_budget = InterventionBudget.objects.create(intervention=self)
             self.review = InterventionReview.objects.create(intervention=self)
 
+    def has_active_amendment(self, kind=None):
+        active_amendments = self.amendments.filter(is_active=True)
+        if kind:
+            active_amendments = active_amendments.filter(kind=kind)
+
+        return active_amendments.exists()
+
 
 class InterventionAmendment(TimeStampedModel):
     """
@@ -2531,9 +2538,17 @@ class InterventionAmendment(TimeStampedModel):
         null=True,
         blank=True,
     )
-    amendment_number = models.IntegerField(
+    amendment_number = models.CharField(
         verbose_name=_("Number"),
-        default=0,
+        max_length=15,
+    )
+
+    # legacy field
+    signed_amendment = models.FileField(
+        verbose_name=_("Amendment Document"),
+        max_length=1024,
+        upload_to=get_intervention_amendment_file_path,
+        blank=True,
     )
 
     # signatures
@@ -2591,9 +2606,10 @@ class InterventionAmendment(TimeStampedModel):
     tracker = FieldTracker()
 
     def compute_reference_number(self):
-        return self.intervention.amendments.filter(
-            signed_date__isnull=False
-        ).count() + 1
+        number = str(self.intervention.amendments.filter(kind=self.kind).count() + 1)
+        if self.kind == self.KIND_CONTINGENCY:
+            number = 'Contingency/' + number
+        return number
 
     @transaction.atomic
     def save(self, **kwargs):
@@ -2628,6 +2644,8 @@ class InterventionAmendment(TimeStampedModel):
             INTERVENTION_AMENDMENT_IGNORED_FIELDS,
             INTERVENTION_AMENDMENT_DEFAULTS,
         )
+        self.amended_intervention.title = '[Amended] ' + self.intervention.title
+        self.amended_intervention.save()
 
         for result_link in self.related_objects_map.get('result_links', []):
             for lower_result in result_link.get('ll_results', []):

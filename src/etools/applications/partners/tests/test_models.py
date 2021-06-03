@@ -668,11 +668,9 @@ class TestInterventionModel(BaseTenantTestCase):
         permissions = models.Intervention.permission_structure()
         self.assertTrue(isinstance(permissions, dict))
         self.assertEqual(permissions["amendments"], {
-            'view': {'true': [{'group': '*', 'condition': '', 'status': '*'}]},
+            'view': {'true': [{'group': '*', 'condition': 'not_in_amendment_mode', 'status': '*'}]},
             'edit': {
                 'true': [
-                    {'status': 'draft', 'group': 'Partnership Manager', 'condition': 'unicef_court'},
-                    {'status': 'draft', 'group': 'Partner User', 'condition': 'partner_court'},
                     {'status': 'signed', 'group': 'Partnership Manager', 'condition': 'not_in_amendment_mode'},
                     {'status': 'active', 'group': 'Partnership Manager', 'condition': 'not_in_amendment_mode'},
                 ]
@@ -1433,7 +1431,7 @@ class TestInterventionAmendment(BaseTenantTestCase):
     def test_compute_reference_number_no_amendments(self):
         intervention = InterventionFactory()
         ia = models.InterventionAmendment(intervention=intervention)
-        self.assertEqual(ia.compute_reference_number(), 1)
+        self.assertEqual(ia.compute_reference_number(), '1')
 
     def test_compute_reference_number(self):
         intervention = InterventionFactory()
@@ -1442,7 +1440,7 @@ class TestInterventionAmendment(BaseTenantTestCase):
             signed_date=datetime.date.today()
         )
         ia = models.InterventionAmendment(intervention=intervention)
-        self.assertEqual(ia.compute_reference_number(), 2)
+        self.assertEqual(ia.compute_reference_number(), '2')
 
 
 class TestInterventionResultLink(BaseTenantTestCase):

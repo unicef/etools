@@ -96,6 +96,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
             "activity",
             "agreement",
             "agreement_id",
+            "amendment",
             "amendments",
             "attachments",
             "budget_owner",
@@ -1884,7 +1885,8 @@ class TestInterventionAmendmentCreateAPIView(BaseTenantTestCase):
             data={
                 "signed_amendment_attachment": attachment_amendment.pk,
                 'signed_date': date,
-                'types': [InterventionAmendment.DATES, ]
+                'types': [InterventionAmendment.DATES, ],
+                'kind': InterventionAmendment.KIND_NORMAL,
             },
         )
 
@@ -2017,8 +2019,6 @@ class TestInterventionAmendmentDeleteView(BaseTenantTestCase):
         cls.amendment = InterventionAmendmentFactory(
             intervention=cls.intervention,
             types=[InterventionAmendment.RESULTS],
-            signed_date=datetime.date.today(),
-            signed_amendment="random_amendment.pdf"
         )
         cls.url = reverse(
             "partners_api:intervention-amendments-del",

@@ -159,7 +159,6 @@ class InterventionPermissions(PMPPermissions):
             'partner_court': not self.instance.unicef_court and unlocked(self.instance),
             'unlocked': unlocked(self.instance),
             'is_spd': self.instance.document_type == self.instance.SPD,
-            'is_not_amendment': not self.instance.in_amendment,
         }
 
     # override get_permissions to enable us to prevent old interventions from being blocked on transitions

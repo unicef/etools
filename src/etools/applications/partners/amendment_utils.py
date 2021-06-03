@@ -103,7 +103,7 @@ def copy_one_to_many(instance, instance_copy, related_name, fields_map, relation
 def copy_instance(instance, relations_to_copy, exclude_fields, defaults):
     related_fields_to_copy = relations_to_copy.get(instance._meta.label, [])
     instance_defaults = defaults.get(instance._meta.label, {})
-    fields_to_exclude = exclude_fields.get(instance._meta.label, []) + list(instance_defaults.keys())
+    fields_to_exclude = exclude_fields.get(instance._meta.label, [])
 
     instance_copy = type(instance)(**instance_defaults)
     copy_map = {
@@ -212,30 +212,37 @@ def merge_instance(instance, instance_copy, fields_map, relations_to_copy, exclu
             if field.name not in fields_map:
                 continue
 
+            copied_instances = []
             for related_instance_data in fields_map[field.name]:
                 related_instance = field.related_model.objects.filter(pk=related_instance_data['original_pk']).first()
                 related_instance_copy = field.related_model.objects.filter(pk=related_instance_data['copy_pk']).first()
+                copied_instances.append(related_instance_data['copy_pk'])
                 if related_instance_copy:
                     if not related_instance:
-                        related_field = [f for f in instance._meta.get_fields() if f.name == field.name][0]
-
-                        # todo: allow custom defaults here
-                        local_kwargs = {
-                            related_instance_copy._meta.label: {
-                                related_field.field.name: instance
-                            }
-                        }
-
-                        copy_instance(related_instance_copy, relations_to_copy, exclude_fields, local_kwargs)
+                        # original object already deleted
+                        continue
                     else:
-                        merge_simple_fields(
+                        merge_instance(
                             related_instance,
                             related_instance_copy,
-                            fields_map[field.name],
-                            exclude=exclude_fields.get(instance._meta.label, [])
+                            related_instance_data,
+                            relations_to_copy,
+                            exclude_fields
                         )
                 elif related_instance:
                     related_instance.delete()
+
+            related_field = [f for f in instance._meta.get_fields() if f.name == field.name][0]
+            local_kwargs = {
+                field.related_model._meta.label: {
+                    related_field.field.name: instance
+                }
+            }
+            related_instances = field.related_model.objects.filter(
+                **{f'{related_field.field.name}__pk': instance_copy.pk}
+            )
+            for related_instance_copy in related_instances.exclude(pk__in=copied_instances):
+                copy_instance(related_instance_copy, relations_to_copy, exclude_fields, local_kwargs)
 
         if field.many_to_many:
             if field.name not in fields_map:
@@ -265,7 +272,7 @@ def calculate_simple_fields_difference(instance, instance_copy, fields_map, excl
             original_value = fields_map[field.name]
             current_value = getattr(instance, field.name)
             modified_value = getattr(instance_copy, field.name)
-            modified_value_serialized = None
+            modified_value_serialized = modified_value
 
             if original_value is not None:
                 if isinstance(field, DateTimeField):
@@ -342,7 +349,10 @@ def calculate_difference(instance, instance_copy, fields_map, relations_to_copy,
 
             changes_map[field.name] = {
                 'type': 'many_to_one',
-                'diff': (original_value, modified_value),
+                'diff': (
+                    {'pk': original_value.pk, 'name': str(original_value)},
+                    {'pk': modified_value.pk, 'name': str(modified_value)},
+                ),
             }
 
     for field in instance._meta.get_fields():
@@ -376,32 +386,48 @@ def calculate_difference(instance, instance_copy, fields_map, relations_to_copy,
                 }
             }
 
+            copied_instances = []
             for related_instance_data in fields_map[field.name]:
                 related_instance = field.related_model.objects.filter(pk=related_instance_data['original_pk']).first()
                 related_instance_copy = field.related_model.objects.filter(pk=related_instance_data['copy_pk']).first()
+                copied_instances.append(related_instance_data['copy_pk'])
+
+                if not related_instance:
+                    # original object already deleted
+                    continue
+
                 if related_instance_copy:
-                    if not related_instance:
-                        related_changes_map['diff']['create'].append({
-                            'pk': related_instance_copy.pk,
-                            'name': str(related_instance_copy),
+                    related_object_changes_map = calculate_difference(
+                        related_instance, related_instance_copy, related_instance_data, relations_to_copy,
+                        exclude_fields=exclude_fields
+                    )
+                    if related_object_changes_map:
+                        related_changes_map['diff']['update'].append({
+                            'pk': related_instance.pk,
+                            'name': str(related_instance),
+                            'diff': related_object_changes_map
                         })
-                    else:
-                        related_object_changes_map = calculate_difference(
-                            related_instance, related_instance_copy, related_instance_data, relations_to_copy, exclude_fields=exclude_fields
-                        )
-                        if related_object_changes_map:
-                            related_changes_map['diff']['update'].append({
-                                'pk': related_instance.pk,
-                                'name': str(related_instance),
-                                'diff': related_object_changes_map
-                            })
-                elif related_instance:
+                else:
                     related_changes_map['diff']['remove'].append({
                         'pk': related_instance.pk,
                         'name': str(related_instance)
                     })
 
-            if related_changes_map['diff']['create'] or related_changes_map['diff']['remove'] or related_changes_map['diff']['update']:
+            related_field = [f for f in instance_copy._meta.get_fields() if f.name == field.name][0]
+            related_instances = field.related_model.objects.filter(
+                **{f'{related_field.field.name}__pk': instance_copy.pk}
+            )
+            for related_instance_copy in related_instances.exclude(pk__in=copied_instances):
+                related_changes_map['diff']['create'].append({
+                    'pk': related_instance_copy.pk,
+                    'name': str(related_instance_copy),
+                })
+
+            if any([
+                related_changes_map['diff']['create'],
+                related_changes_map['diff']['remove'],
+                related_changes_map['diff']['update'],
+            ]):
                 changes_map[field.name] = related_changes_map
 
         if field.many_to_many:
@@ -456,6 +482,9 @@ INTERVENTION_AMENDMENT_RELATED_FIELDS = {
 
         # many to many
         'ram_indicators',
+
+        # one to one
+        'cp_output',
     ],
     'reports.LowerResult': [
         # one to many
@@ -465,7 +494,8 @@ INTERVENTION_AMENDMENT_RELATED_FIELDS = {
 INTERVENTION_AMENDMENT_IGNORED_FIELDS = {
     'partners.Intervention': [
         'created', 'modified',
-        'number',
+        'number', 'status', 'in_amendment',
+        'title',
         # signatures
         'signed_by_unicef_date',
         'signed_by_partner_date',

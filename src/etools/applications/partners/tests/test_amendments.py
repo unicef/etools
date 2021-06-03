@@ -6,7 +6,7 @@ from django.utils import timezone
 from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.amendment_utils import MergeError
-from etools.applications.partners.models import Intervention, InterventionAmendment
+from etools.applications.partners.models import Intervention, InterventionAmendment, InterventionResultLink
 from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, UNICEF_USER
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
@@ -22,6 +22,7 @@ from etools.applications.reports.tests.factories import (
     InterventionActivityFactory,
     LowerResultFactory,
     ReportingRequirementFactory,
+    ResultFactory,
     SectionFactory,
 )
 from etools.applications.users.tests.factories import UserFactory
@@ -71,7 +72,37 @@ class AmendmentTestCase(BaseTenantTestCase):
     def test_field_copy(self):
         amendment = InterventionAmendmentFactory(intervention=self.active_intervention)
         self.assertIsNotNone(amendment.amended_intervention)
-        self.assertEqual(amendment.intervention.title, amendment.amended_intervention.title)
+        self.assertEqual(amendment.intervention.end, amendment.amended_intervention.end)
+
+    def test_one_to_many_merge(self):
+        first = InterventionResultLinkFactory(intervention=self.active_intervention)
+        second = InterventionResultLinkFactory(intervention=self.active_intervention)
+
+        amendment = InterventionAmendmentFactory(intervention=self.active_intervention)
+
+        InterventionResultLink.objects.get(
+            intervention=amendment.amended_intervention, cp_output=first.cp_output
+        ).delete()
+
+        second_copy = InterventionResultLink.objects.get(
+            intervention=amendment.amended_intervention, cp_output=second.cp_output
+        )
+        second_copy.cp_output = ResultFactory()
+        second_copy.save()
+
+        third_amended = InterventionResultLinkFactory(intervention=amendment.amended_intervention)
+
+        amendment.merge_amendment()
+
+        # first deleted, second modified, third created
+        self.assertFalse(InterventionResultLink.objects.filter(pk=first.pk).exists())
+        second.refresh_from_db()
+        self.assertEqual(second.cp_output, second_copy.cp_output)
+        self.assertTrue(
+            InterventionResultLink.objects.filter(
+                intervention=self.active_intervention, cp_output=third_amended.cp_output,
+            ).exists()
+        )
 
     def test_m2m_merge(self):
         first_section = SectionFactory()
@@ -255,7 +286,10 @@ class AmendmentTestCase(BaseTenantTestCase):
             {
                 'start': {
                     'type': 'simple',
-                    'diff': (self.active_intervention.start, amendment.amended_intervention.start),
+                    'diff': (
+                        self.active_intervention.start.strftime("%Y-%m-%d"),
+                        amendment.amended_intervention.start.strftime("%Y-%m-%d")
+                    ),
                 },
             },
         )
@@ -307,7 +341,15 @@ class AmendmentTestCase(BaseTenantTestCase):
             {
                 'agreement': {
                     'type': 'many_to_one',
-                    'diff': (self.active_intervention.agreement, amendment.amended_intervention.agreement),
+                    'diff': (
+                        {
+                            'pk': self.active_intervention.agreement.pk,
+                            'name': str(self.active_intervention.agreement),
+                        }, {
+                            'pk': amendment.amended_intervention.agreement.pk,
+                            'name': str(amendment.amended_intervention.agreement)
+                        }
+                    ),
                 },
             },
         )
@@ -352,12 +394,31 @@ class AmendmentTestCase(BaseTenantTestCase):
 
         difference = amendment.get_difference()
         self.assertEqual(
-            difference['result_links']['diff']['update'][0]['diff']['ll_results']['diff']['update'][0]['diff']['name']['diff'][0],
+            difference['result_links']['diff']['update'][0]['diff']['ll_results']['diff']['update'][0]['diff']['name'][
+                'diff'][0],
             result_old_name
         )
         self.assertEqual(
-            difference['result_links']['diff']['update'][0]['diff']['ll_results']['diff']['update'][0]['diff']['name']['diff'][1],
+            difference['result_links']['diff']['update'][0]['diff']['ll_results']['diff']['update'][0]['diff']['name'][
+                'diff'][1],
             'Updated Name'
+        )
+
+    def test_calculate_difference_one_to_many_field_create(self):
+        amendment = InterventionAmendmentFactory(intervention=self.active_intervention)
+        new_result_link = InterventionResultLinkFactory(intervention=amendment.amended_intervention)
+
+        difference = amendment.get_difference()
+        self.assertEqual(difference['result_links']['diff']['create'][0]['pk'], new_result_link.pk)
+
+    def test_calculate_difference_one_to_many_field_delete(self):
+        amendment = InterventionAmendmentFactory(intervention=self.active_intervention)
+        amendment.amended_intervention.result_links.first().delete()
+
+        difference = amendment.get_difference()
+        self.assertEqual(
+            difference['result_links']['diff']['remove'][0]['pk'],
+            self.active_intervention.result_links.first().pk,
         )
 
     def test_update_difference_on_merge(self):
@@ -370,10 +431,10 @@ class AmendmentTestCase(BaseTenantTestCase):
         amendment.amended_intervention.save()
 
         self.assertDictEqual(amendment.difference, {})
-        amendment.amended_intervention.title = 'updated title'
+        amendment.amended_intervention.end += datetime.timedelta(days=1)
         amendment.amended_intervention.save()
 
         amendment.merge_amendment()
 
-        self.assertIn('title', amendment.difference)
+        self.assertIn('end', amendment.difference)
         self.assertIn('management_budgets', amendment.difference)
