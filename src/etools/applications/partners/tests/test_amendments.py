@@ -378,8 +378,8 @@ class AmendmentTestCase(BaseTenantTestCase):
                     'type': 'many_to_many',
                     'diff': {
                         'original': [first_section.id, third_section.id],
-                        'add': [second_section.id],
-                        'remove': [third_section.id],
+                        'add': [{'pk': second_section.id, 'name': str(second_section)}],
+                        'remove': [{'pk': third_section.id, 'name': str(third_section)}],
                     },
                 },
             },

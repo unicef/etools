@@ -2,7 +2,7 @@ from django.db import connection
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
-from etools.applications.partners.models import Intervention, InterventionSupplyItem
+from etools.applications.partners.models import Intervention, InterventionBudget, InterventionSupplyItem
 from etools.applications.partners.tasks import sync_partner_to_prp
 
 
@@ -19,4 +19,7 @@ def calc_totals_on_delete(instance, **kwargs):
     except Intervention.DoesNotExist:
         pass
     else:
-        intervention.planned_budget.calc_totals()
+        try:
+            intervention.planned_budget.calc_totals()
+        except InterventionBudget.DoesNotExist:
+            pass

@@ -16,10 +16,14 @@ class MergeError(Exception):
                f"Please re-create amendment from updated instance."
 
 
+def serialize_instance(instance):
+    return {'pk': instance.pk, 'name': str(instance)}
+
+
 def copy_m2m_relations(instance, instance_copy, relations, objects_map):
     for m2m_relation in relations:
         m2m_instances = getattr(instance, m2m_relation).all()
-        objects_map[m2m_relation] = [i.pk for i in m2m_instances]
+        objects_map[m2m_relation] = [serialize_instance(i) for i in m2m_instances]
         getattr(instance_copy, m2m_relation).add(*m2m_instances)
 
 
@@ -248,7 +252,7 @@ def merge_instance(instance, instance_copy, fields_map, relations_to_copy, exclu
             if field.name not in fields_map:
                 continue
 
-            original_value = fields_map[field.name]
+            original_value = [i['pk'] for i in fields_map[field.name]]
             modified_value = getattr(instance_copy, field.name).values_list('pk', flat=True)
 
             # no checks at this moment, so m2m fields can be edited in multiple amendments
@@ -350,8 +354,8 @@ def calculate_difference(instance, instance_copy, fields_map, relations_to_copy,
             changes_map[field.name] = {
                 'type': 'many_to_one',
                 'diff': (
-                    {'pk': original_value.pk, 'name': str(original_value)},
-                    {'pk': modified_value.pk, 'name': str(modified_value)},
+                    serialize_instance(original_value),
+                    serialize_instance(modified_value),
                 ),
             }
 
@@ -408,20 +412,14 @@ def calculate_difference(instance, instance_copy, fields_map, relations_to_copy,
                             'diff': related_object_changes_map
                         })
                 else:
-                    related_changes_map['diff']['remove'].append({
-                        'pk': related_instance.pk,
-                        'name': str(related_instance)
-                    })
+                    related_changes_map['diff']['remove'].append(serialize_instance(related_instance))
 
             related_field = [f for f in instance_copy._meta.get_fields() if f.name == field.name][0]
             related_instances = field.related_model.objects.filter(
                 **{f'{related_field.field.name}__pk': instance_copy.pk}
             )
             for related_instance_copy in related_instances.exclude(pk__in=copied_instances):
-                related_changes_map['diff']['create'].append({
-                    'pk': related_instance_copy.pk,
-                    'name': str(related_instance_copy),
-                })
+                related_changes_map['diff']['create'].append(serialize_instance(related_instance_copy))
 
             if any([
                 related_changes_map['diff']['create'],
@@ -434,12 +432,20 @@ def calculate_difference(instance, instance_copy, fields_map, relations_to_copy,
             if field.name not in fields_map:
                 continue
 
-            original_value = fields_map[field.name]
-            modified_value = getattr(instance_copy, field.name).values_list('pk', flat=True)
+            original_serialized_objects = fields_map[field.name]
+            original_value = [i['pk'] for i in original_serialized_objects]
+            modified_serialized_objects = [serialize_instance(i) for i in getattr(instance_copy, field.name).all()]
+            modified_value = [obj['pk'] for obj in modified_serialized_objects]
 
             # no checks at this moment, so m2m fields can be edited in multiple amendments
-            new_links = set(modified_value) - set(original_value)
-            removed_links = set(original_value) - set(modified_value)
+            new_links = [
+                obj for obj in modified_serialized_objects
+                if obj['pk'] in (set(modified_value) - set(original_value))
+            ]
+            removed_links = [
+                obj for obj in original_serialized_objects
+                if obj['pk'] in (set(original_value) - set(modified_value))
+            ]
 
             if not (new_links or removed_links):
                 continue
@@ -489,13 +495,24 @@ INTERVENTION_AMENDMENT_RELATED_FIELDS = {
     'reports.LowerResult': [
         # one to many
         'activities',
-    ]
+        'applied_indicators',
+    ],
+    'reports.AppliedIndicator': [
+        # many to one
+        'indicator',
+        'section',
+
+        # many to many
+        'disaggregation',
+        'locations',
+    ],
 }
 INTERVENTION_AMENDMENT_IGNORED_FIELDS = {
     'partners.Intervention': [
         'created', 'modified',
         'number', 'status', 'in_amendment',
         'title',
+
         # signatures
         'signed_by_unicef_date',
         'signed_by_partner_date',
@@ -512,8 +529,10 @@ INTERVENTION_AMENDMENT_IGNORED_FIELDS = {
         'programme_effectiveness',
     ],
     'partners.InterventionManagementBudget': ['created', 'modified'],
-    'reports.ReportingRequirement': ['created', 'modified'],
     'partners.InterventionResultLink': ['created', 'modified'],
+    'reports.ReportingRequirement': ['created', 'modified'],
+    'reports.InterventionActivity': ['created', 'modified'],
+    'reports.AppliedIndicator': ['created', 'modified'],
     'reports.LowerResult': ['created', 'modified'],
     'partners.InterventionSupplyItem': ['total_price'],
 }

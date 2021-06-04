@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.http import HttpResponseForbidden
 from django.urls import reverse
 from django.utils import timezone
@@ -470,6 +471,7 @@ class PMPAmendedInterventionMerge(InterventionDetailAPIView):
         user_group_permission(PARTNERSHIP_MANAGER_GROUP) | IsInterventionBudgetOwnerPermission,
     )
 
+    @transaction.atomic
     def update(self, request, *args, **kwargs):
         pd = self.get_object()
         if not pd.in_amendment:
