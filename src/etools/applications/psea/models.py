@@ -151,7 +151,7 @@ class Assessment(TimeStampedModel):
         blank=True,
     )
     assessment_type = models.CharField(max_length=16, choices=ASSESSMENT_TYPES, default=UNICEF_2020)
-    assessment_ingo_reason = models.CharField(max_length=16, choices=INGO_REASONS, blank=True, null=True)
+    assessment_ingo_reason = models.CharField(max_length=32, choices=INGO_REASONS, blank=True, null=True)
     status = FSMField(
         verbose_name=_('Status'),
         max_length=30,
