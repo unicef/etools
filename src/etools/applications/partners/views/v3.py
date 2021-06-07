@@ -213,7 +213,7 @@ class PMPDropdownsListApiView(APIView):
                 sort_choices=False,
             ),
             'review_types': choices_to_json_ready(
-                InterventionReview.REVIEW_TYPES,
+                InterventionReview.ALL_REVIEW_TYPES,
                 sort_choices=False,
             ),
         }
