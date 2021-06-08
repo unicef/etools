@@ -144,7 +144,6 @@ class TestInterventionsAPI(BaseTenantTestCase):
             "reporting_periods",
             "reporting_requirements",
             "result_links",
-            "reviews",
             "risks",
             "sections",
             "sections_present",

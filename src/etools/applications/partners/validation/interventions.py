@@ -138,7 +138,6 @@ def transition_to_suspended(i):
 
 
 def transition_to_review(i):
-    # TODO add validation rules/criteria
     return True
 
 
@@ -316,7 +315,7 @@ def all_activities_have_timeframes(i):
 
 
 def review_was_accepted(i):
-    r = i.reviews.first()
+    r = i.review
     return r.overall_approval if r else False
 
 
