@@ -27,7 +27,7 @@
                     <td>{% for evidence in item.evidences.all %} {{evidence}} {% endfor %}</td>
                     <td>
                         {% for attachment in item.attachments.all %}
-                        {% call_method request 'build_absolute_uri' attachment.file.url %}
+                        {{request.get_host}}{% url 'attachments:file' attachment.pk %}
                         {% endfor %}
                     </td>
 

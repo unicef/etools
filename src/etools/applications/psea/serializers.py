@@ -1,7 +1,9 @@
 from copy import copy
+from urllib.parse import urljoin
 
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
+from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
@@ -268,7 +270,10 @@ class AssessmentDetailExportSerializer(serializers.ModelSerializer):
 
     def get_attachments(self, obj):
         request = self.context['request']
-        return ", ".join([request.build_absolute_uri(att.file.url) for att in obj.attachments.all() if att.file])
+        return ", ".join(urljoin(
+            "https://{}".format(request.get_host()),
+            reverse('attachments:file', kwargs={'pk': att.pk})
+        ) for att in obj.attachments.all())
 
 
 class AssessmentStatusSerializer(AssessmentSerializer):
