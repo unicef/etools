@@ -13,6 +13,7 @@ from etools.applications.partners.models import (
     Intervention,
     InterventionAmendment,
     InterventionManagementBudget,
+    InterventionReview,
     InterventionRisk,
     InterventionSupplyItem,
 )
@@ -272,6 +273,12 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             profile__country=self.context['request'].user.profile.country
         ).exists()
 
+    def _is_overall_approver(self, obj, user):
+        if not obj.review:
+            return False
+
+        return obj.review.overall_approver_id == user.pk
+
     def _is_partner_user(self, obj, user):
         return user.email in [o.email for o in obj.partner_focal_points.all()]
 
@@ -280,6 +287,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "send_to_unicef",
             "send_to_partner",
             "accept",
+            "individual_review",
             "review",
             "sign",
             "reject_review",
@@ -310,9 +318,17 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
                     available_actions.append("suspend")
             if obj.status == obj.SUSPENDED:
                 available_actions.append("unsuspend")
-            if obj.status == obj.REVIEW:
-                available_actions.append("sign")
-                available_actions.append("reject_review")
+
+        # only overall approver can approve or reject review
+        if obj.status == obj.REVIEW and self._is_overall_approver(obj, user):
+            available_actions.append("sign")
+            available_actions.append("reject_review")
+
+        # PD is in review and user prc review not started
+        if obj.status == obj.REVIEW and obj.review and obj.review.prc_reviews.filter(
+            user=user, overall_approval__isnull=True
+        ).exists():
+            available_actions.append("individual_review")
 
         if obj.in_amendment and obj.status == obj.SIGNED and obj.budget_owner == user:
             available_actions.append("amendment_merge")
@@ -530,3 +546,11 @@ class InterventionListSerializer(InterventionV2ListSerializer):
         )
         # remove old legacy field to avoid inconvenience
         fields = tuple(f for f in fields if f != 'country_programme')
+
+
+class InterventionReviewActionSerializer(serializers.ModelSerializer):
+    review_type = serializers.ChoiceField(required=True, choices=InterventionReview.INTERVENTION_REVIEW_TYPES)
+
+    class Meta:
+        model = InterventionReview
+        fields = ('id', 'review_type')

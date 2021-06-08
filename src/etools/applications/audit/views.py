@@ -1,15 +1,17 @@
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
+from django.db import transaction
 from django.db.models import Prefetch
 from django.http import Http404
 from django.utils import timezone
+from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
 
 from django_filters.rest_framework import DjangoFilterBackend
 from easy_pdf.rendering import render_to_pdf_response
 from rest_framework import generics, mixins, viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import NotFound
+from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
@@ -512,8 +514,32 @@ class AuditorStaffMembersViewSet(
         instance.user.groups.add(Auditor.as_group())
         instance.user.profile.save()
 
+    @transaction.atomic
     def perform_update(self, serializer):
         self.check_serializer_permissions(serializer, edit=True)
+
+        if 'email' in serializer.validated_data['user']:
+            hidden_staff = AuditorStaffMember.objects.filter(
+                user__email=serializer.validated_data['user']['email'], hidden=True).first()
+            if hidden_staff:
+                if hidden_staff.auditor_firm != self.get_parent_object():
+                    raise ValidationError(f'User already associated with {hidden_staff.auditor_firm}')
+                else:
+                    hidden_staff.hidden = False
+                    timestamp = str(now())
+                    hidden_staff.history.append(
+                        f'requestor:{self.request.user.username},hidden:{hidden_staff.hidden},timestamp:{timestamp}'
+                    )
+                    hidden_staff.save()
+                    deactivated_user = hidden_staff.user
+                    deactivated_user.is_active = True
+                    deactivated_user.save()
+                    deleted_profile = hidden_staff.user.profile
+                    deleted_profile.countries_available.add(self.request.tenant)
+                    if not deleted_profile.country:
+                        deleted_profile.country = self.request.tenant
+                    deleted_profile.save()
+                return
 
         super().perform_update(serializer)
         instance = serializer.save(auditor_firm=self.get_parent_object())
@@ -524,7 +550,11 @@ class AuditorStaffMembersViewSet(
 
     def perform_destroy(self, instance):
         # deactivate staff member & user
+        timestamp = str(now())
         instance.hidden = True
+        instance.history.append(
+            f'requestor:{self.request.user.username},hidden:{instance.hidden},timestamp:{timestamp}'
+        )
         instance.save()
         if not instance.user.is_unicef_user():
             instance.user.is_active = False

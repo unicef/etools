@@ -18,6 +18,7 @@ from model_utils.models import TimeStampedModel
 from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation, CurrencyField
 from unicef_locations.models import Location
+from unicef_notification.utils import send_notification_with_template
 
 from etools.applications.core.permissions import import_permissions
 from etools.applications.funds.models import FundsReservationHeader
@@ -52,6 +53,7 @@ from etools.applications.t2f.models import Travel, TravelActivity, TravelType
 from etools.applications.tpm.models import TPMActivity, TPMVisit
 from etools.applications.users.models import Country
 from etools.libraries.djangolib.models import MaxDistinct, StringConcat
+from etools.libraries.djangolib.utils import get_environment
 from etools.libraries.pythonlib.datetime import get_current_year, get_quarter
 from etools.libraries.pythonlib.encoders import CustomJSONEncoder
 
@@ -546,6 +548,10 @@ class PartnerOrganization(TimeStampedModel):
         blank=True,
         default='',
     )
+    lead_office = models.ForeignKey(Office, verbose_name=_("Lead Office"),
+                                    blank=True, null=True, on_delete=models.SET_NULL)
+    lead_section = models.ForeignKey(Section, verbose_name=_("Lead Section"),
+                                     blank=True, null=True, on_delete=models.SET_NULL)
 
     tracker = FieldTracker()
     objects = PartnerOrganizationQuerySet.as_manager()
@@ -626,44 +632,49 @@ class PartnerOrganization(TimeStampedModel):
     @cached_property
     def min_req_programme_visits(self):
         programme_visits = 0
-        ct = self.net_ct_cy or 0  # Must be integer, but net_ct_cy could be None
+        if self.partner_type not in [PartnerType.BILATERAL_MULTILATERAL, PartnerType.UN_AGENCY]:
+            ct = self.net_ct_cy or 0  # Must be integer, but net_ct_cy could be None
 
-        if ct <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL:
-            programme_visits = 0
-        elif PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL < ct <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL2:
-            programme_visits = 1
-        elif PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL2 < ct <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL3:
-            if self.highest_risk_rating_name in [PartnerOrganization.RATING_HIGH,
-                                                 PartnerOrganization.RATING_HIGH_RISK_ASSUMED,
-                                                 PartnerOrganization.RATING_SIGNIFICANT]:
-                programme_visits = 3
-            elif self.highest_risk_rating_name in [PartnerOrganization.RATING_MEDIUM, ]:
-                programme_visits = 2
-            elif self.highest_risk_rating_name in [PartnerOrganization.RATING_LOW,
-                                                   PartnerOrganization.RATING_LOW_RISK_ASSUMED]:
+            if ct <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL:
+                programme_visits = 0
+            elif PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL < ct <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL2:
                 programme_visits = 1
-        else:
-            if self.highest_risk_rating_name in [PartnerOrganization.RATING_HIGH,
-                                                 PartnerOrganization.RATING_HIGH_RISK_ASSUMED,
-                                                 PartnerOrganization.RATING_SIGNIFICANT]:
-                programme_visits = 4
-            elif self.highest_risk_rating_name in [PartnerOrganization.RATING_MEDIUM, ]:
-                programme_visits = 3
-            elif self.highest_risk_rating_name in [PartnerOrganization.RATING_LOW,
-                                                   PartnerOrganization.RATING_LOW_RISK_ASSUMED]:
-                programme_visits = 2
+            elif PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL2 < ct <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL3:
+                if self.highest_risk_rating_name in [PartnerOrganization.RATING_HIGH,
+                                                     PartnerOrganization.RATING_HIGH_RISK_ASSUMED,
+                                                     PartnerOrganization.RATING_SIGNIFICANT]:
+                    programme_visits = 3
+                elif self.highest_risk_rating_name in [PartnerOrganization.RATING_MEDIUM, ]:
+                    programme_visits = 2
+                elif self.highest_risk_rating_name in [PartnerOrganization.RATING_LOW,
+                                                       PartnerOrganization.RATING_LOW_RISK_ASSUMED]:
+                    programme_visits = 1
+            else:
+                if self.highest_risk_rating_name in [PartnerOrganization.RATING_HIGH,
+                                                     PartnerOrganization.RATING_HIGH_RISK_ASSUMED,
+                                                     PartnerOrganization.RATING_SIGNIFICANT]:
+                    programme_visits = 4
+                elif self.highest_risk_rating_name in [PartnerOrganization.RATING_MEDIUM, ]:
+                    programme_visits = 3
+                elif self.highest_risk_rating_name in [PartnerOrganization.RATING_LOW,
+                                                       PartnerOrganization.RATING_LOW_RISK_ASSUMED]:
+                    programme_visits = 2
         return programme_visits
 
     @cached_property
     def min_req_spot_checks(self):
         # reported_cy can be None
         reported_cy = self.reported_cy or 0
+        if self.partner_type in [PartnerType.BILATERAL_MULTILATERAL, PartnerType.UN_AGENCY]:
+            return 0
         if self.type_of_assessment == 'Low Risk Assumed' or reported_cy <= PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL:
             return 0
         return 1
 
     @cached_property
     def min_req_audits(self):
+        if self.partner_type in [PartnerType.BILATERAL_MULTILATERAL, PartnerType.UN_AGENCY]:
+            return 0
         return self.planned_engagement.required_audit if getattr(self, 'planned_engagement', None) else 0
 
     @cached_property
@@ -1688,13 +1699,14 @@ class Intervention(TimeStampedModel):
     TERMINATED = 'terminated'
 
     AUTO_TRANSITIONS = {
-        DRAFT: [REVIEW],
+        DRAFT: [],
         SIGNATURE: [SIGNED],
         SIGNED: [ACTIVE, TERMINATED],
         ACTIVE: [ENDED, TERMINATED],
         ENDED: [CLOSED]
     }
     TRANSITION_SIDE_EFFECTS = {
+        DRAFT: [],
         REVIEW: [],
         SIGNATURE: [],
         SIGNED: [side_effect_one, side_effect_two],
@@ -2218,6 +2230,10 @@ class Intervention(TimeStampedModel):
         return self.total_unicef_cash + self.total_in_kind_amount
 
     @cached_property
+    def review(self):
+        return self.reviews.order_by('created').last()
+
+    @cached_property
     def all_lower_results(self):
         # todo: it'd be nice to be able to do this as a queryset but that may not be possible
         # with prefetch_related
@@ -2458,7 +2474,6 @@ class Intervention(TimeStampedModel):
         if not oldself:
             self.management_budgets = InterventionManagementBudget.objects.create(intervention=self)
             self.planned_budget = InterventionBudget.objects.create(intervention=self)
-            self.review = InterventionReview.objects.create(intervention=self)
 
     def has_active_amendment(self, kind=None):
         active_amendments = self.amendments.filter(is_active=True)
@@ -2879,15 +2894,85 @@ class InterventionBudget(TimeStampedModel):
             self.save()
 
 
-class InterventionReview(TimeStampedModel):
+class InterventionReviewQuestionnaire(models.Model):
+    # answer fields to be renamed when questionnaire will be available
+    ANSWERS = Choices(
+        ('', _('Not decided yet')),
+        ('a', _('Yes, strongly agree')),
+        ('b', _('Yes, agree')),
+        ('c', _('No, disagree')),
+        ('d', _('No, strongly disagree')),
+    )
+
+    relationship_is_represented = models.CharField(
+        blank=True, max_length=10,
+        verbose_name=_('The proposed relationship is best represented and regulated by partnership '
+                       '(as opposed to procurement), with both UNICEF and the CSO '
+                       'making clear contributions to the PD/SPD'),
+        choices=ANSWERS,
+    )
+    partner_comparative_advantage = models.CharField(
+        blank=True, max_length=100,
+        verbose_name=_('The partner selection evidences the CSO’s comparative advantage '
+                       'and value for money in relation to the planned results'),
+        choices=ANSWERS,
+    )
+    relationships_are_positive = models.CharField(
+        blank=True, max_length=100,
+        verbose_name=_('Previous UNICEF/UN relationships with the proposed CSO have been positive'),
+        choices=ANSWERS,
+    )
+    pd_is_relevant = models.CharField(
+        blank=True, max_length=100,
+        verbose_name=_('The proposed PD/SPD is relevant to achieving results in the country programme document, '
+                       'the relevant sector workplan and or humanitarian response plan'),
+        choices=ANSWERS,
+    )
+    pd_is_guided = models.CharField(
+        blank=True, max_length=100,
+        verbose_name=_('The results framework of the proposed PD/SPD has been guided '
+                       'by M&E feedback during the drafting process'),
+        choices=ANSWERS,
+    )
+    ges_considered = models.CharField(
+        blank=True, max_length=100,
+        verbose_name=_('Gender, equity and sustainability have been considered in the programme design process'),
+        choices=ANSWERS,
+    )
+    budget_is_aligned = models.CharField(
+        blank=True, max_length=100,
+        verbose_name=_('The budget of the proposed PD/SPD is aligned with the principles of value for money '
+                       'with the effective and efficient programme management costs adhering to office defined limits'),
+        choices=ANSWERS,
+    )
+    supply_issues_considered = models.CharField(
+        blank=True, max_length=100,
+        verbose_name=_('The relevant supply issues have been duly considered'),
+        choices=ANSWERS,
+    )
+
+    overall_comment = models.TextField(blank=True)
+    overall_approval = models.NullBooleanField()
+
+    class Meta:
+        abstract = True
+
+
+class InterventionReview(InterventionReviewQuestionnaire, TimeStampedModel):
     PRC = 'prc'
     NPRC = 'non-prc'
-    NORW = 'no-review'
+    NORV = 'no-review'
 
-    REVIEW_TYPES = Choices(
+    INTERVENTION_REVIEW_TYPES = Choices(
         (PRC, 'PRC Review'),
         (NPRC, 'Non-PRC Review'),
-        (NORW, 'No Review Required'),
+    )
+    # no review is available only for amendment
+    ALL_REVIEW_TYPES = Choices(
+        *(
+            INTERVENTION_REVIEW_TYPES +
+            ((NORV, 'No Review Required'),)
+        )
     )
 
     intervention = models.ForeignKey(
@@ -2909,13 +2994,103 @@ class InterventionReview(TimeStampedModel):
     review_type = models.CharField(
         max_length=50,
         verbose_name=_('Types'),
-        default=PRC,
-        choices=REVIEW_TYPES)
+        blank=True,
+        choices=ALL_REVIEW_TYPES
+    )
+    actions_list = models.TextField(verbose_name=_('Actions List'), blank=True)
 
-    overall_approval = models.BooleanField(default=False)
+    submitted_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name=_('PRC Submitted By'),
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name='+',
+    )
+    review_date = models.DateField(blank=True, null=True, verbose_name=_('Review Date'))
+
+    meeting_date = models.DateField(blank=True, null=True, verbose_name=_('Meeting Date'))
+    prc_officers = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        verbose_name=_('PRC Officers'),
+        blank=True,
+        related_name='+',
+    )
+    overall_approver = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name=_('Overall Approver'),
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name='+',
+    )
 
     class Meta:
         ordering = ["-created"]
+
+    @property
+    def created_date(self):
+        return self.created.date()
+
+
+class InterventionReviewNotification(TimeStampedModel):
+    review = models.ForeignKey(InterventionReview, related_name='prc_notifications', on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name=_('User'),
+        related_name='prc_notifications',
+        on_delete=models.CASCADE,
+    )
+
+    class Meta:
+        ordering = ('review', '-created')
+
+    def save(self, **kwargs):
+        super().save(**kwargs)
+        self.send_notification()
+
+    def send_notification(self):
+        context = {
+            'environment': get_environment(),
+            'intervention_number': self.review.intervention.reference_number,
+            'meeting_date': self.review.meeting_date.strftime('%d-%m-%Y'),
+            'user_name': self.user.get_full_name(),
+            'url': '{}{}'.format(settings.HOST, self.review.intervention.get_object_url())
+        }
+
+        send_notification_with_template(
+            recipients=[self.user.email],
+            template_name='partners/intervention/prc_review_notification',
+            context=context,
+        )
+
+    @classmethod
+    def notify_officers_for_review(cls, review: InterventionReview):
+        notified_users = cls.objects.filter(
+            review=review,
+            created__gt=timezone.now() - datetime.timedelta(days=1),
+        ).values_list('user_id', flat=True)
+
+        for user in review.prc_officers.all():
+            if user.id in notified_users:
+                continue
+
+            cls.objects.create(review=review, user=user)
+
+
+class PRCOfficerInterventionReview(InterventionReviewQuestionnaire, TimeStampedModel):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name=_('User'),
+        related_name='prc_reviews',
+        on_delete=models.CASCADE,
+    )
+
+    overall_review = models.ForeignKey(InterventionReview, on_delete=models.CASCADE, related_name='prc_reviews')
+    review_date = models.DateField(null=True, blank=True, verbose_name=_('Review Date'))
+
+    class Meta:
+        ordering = ['-created']
 
 
 class FileType(models.Model):

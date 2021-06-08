@@ -9,6 +9,9 @@ Field no,Verbose Name,Field Name,Group,Condition,Status,Action,Allowed
 1.2.3,Assessment Date,assessment_date,,user belongs,in_progress,Edit,TRUE
 1.2.4,Assessment Date,assessment_date,,user belongs,submitted,Edit,TRUE
 1.2.4,Assessment Date,assessment_date,,user belongs,rejected,Edit,TRUE
+1.2.5,Assessment Type,assessment_type,UNICEF Audit Focal Point,,draft,Required,False
+1.2.5,Assessment Type,assessment_type,UNICEF Audit Focal Point,,draft,Edit,TRUE
+1.2.6,Assessment INGO Reason,assessment_ingo_reason,UNICEF Audit Focal Point,,draft,Edit,TRUE
 1.3.1,Assessor,assessor,UNICEF Audit Focal Point,,draft,Edit,TRUE
 1.4.1,Answers,answers,,is assessor,in_progress,Edit,TRUE
 1.4.2,Answers,answers,,is assessor,rejected,Edit,TRUE

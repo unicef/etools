@@ -12,6 +12,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,end_date,Field Monitor,,checklist,edit,TRUE
 ,end_date,Field Monitor,,review,edit,TRUE
 ,field_office,Field Monitor,,draft,edit,TRUE
+,offices,Field Monitor,,draft,edit,TRUE
 ,monitor_type,Field Monitor,,draft,edit,TRUE
 ,monitor_type,Field Monitor,,checklist,edit,TRUE
 ,monitor_type,Field Monitor,,review,edit,TRUE
@@ -60,6 +61,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,start_date,All Users,,*,view,TRUE
 ,end_date,All Users,,*,view,TRUE
 ,field_office,All Users,,*,view,TRUE
+,offices,All Users,,*,view,TRUE
 ,monitor_type,All Users,,*,view,TRUE
 ,person_responsible,All Users,,*,view,TRUE
 ,sections,All Users,,*,view,TRUE
