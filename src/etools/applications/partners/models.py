@@ -24,8 +24,10 @@ from etools.applications.funds.models import FundsReservationHeader
 from etools.applications.partners.amendment_utils import (
     calculate_difference,
     copy_instance,
+    INTERVENTION_AMENDMENT_COPY_POST_EFFECTS,
     INTERVENTION_AMENDMENT_DEFAULTS,
     INTERVENTION_AMENDMENT_IGNORED_FIELDS,
+    INTERVENTION_AMENDMENT_MERGE_POST_EFFECTS,
     INTERVENTION_AMENDMENT_RELATED_FIELDS,
     merge_instance,
 )
@@ -2643,18 +2645,10 @@ class InterventionAmendment(TimeStampedModel):
             INTERVENTION_AMENDMENT_RELATED_FIELDS,
             INTERVENTION_AMENDMENT_IGNORED_FIELDS,
             INTERVENTION_AMENDMENT_DEFAULTS,
+            INTERVENTION_AMENDMENT_COPY_POST_EFFECTS,
         )
         self.amended_intervention.title = '[Amended] ' + self.intervention.title
         self.amended_intervention.save()
-
-        for result_link in self.related_objects_map.get('result_links', []):
-            for lower_result in result_link.get('ll_results', []):
-                for activity_data in lower_result.get('activities', []):
-                    activity = InterventionActivity.objects.get(pk=activity_data['original_pk'])
-                    activity_copy = InterventionActivity.objects.get(pk=activity_data['copy_pk'])
-                    quarters = list(activity.time_frames.values_list('quarter', flat=True))
-                    activity_copy.time_frames.add(*self.amended_intervention.quarters.filter(quarter__in=quarters))
-                    activity_data['quarters'] = quarters
 
     def merge_amendment(self):
         self.difference = self.get_difference()
@@ -2665,21 +2659,9 @@ class InterventionAmendment(TimeStampedModel):
             self.related_objects_map,
             INTERVENTION_AMENDMENT_RELATED_FIELDS,
             INTERVENTION_AMENDMENT_IGNORED_FIELDS,
+            INTERVENTION_AMENDMENT_COPY_POST_EFFECTS,
+            INTERVENTION_AMENDMENT_MERGE_POST_EFFECTS,
         )
-
-        # todo: if activity added, quarters will not be copied
-        for result_link in self.related_objects_map.get('result_links', []):
-            for lower_result in result_link.get('ll_results', []):
-                for activity_data in lower_result.get('activities', []):
-                    try:
-                        activity = InterventionActivity.objects.get(pk=activity_data['original_pk'])
-                        activity_copy = InterventionActivity.objects.get(pk=activity_data['copy_pk'])
-                    except InterventionActivity.DoesNotExist:
-                        continue
-
-                    quarters = list(activity_copy.time_frames.values_list('quarter', flat=True))
-                    activity.time_frames.clear()
-                    activity.time_frames.add(*self.intervention.quarters.filter(quarter__in=quarters))
 
         # copy signatures to amendment
         pd_attachment = self.amended_intervention.signed_pd_attachment.first()

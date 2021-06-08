@@ -17,7 +17,7 @@ from etools.applications.partners.tests.factories import (
     PartnerFactory,
     PartnerStaffFactory,
 )
-from etools.applications.reports.models import ResultType
+from etools.applications.reports.models import InterventionActivity, ResultType
 from etools.applications.reports.tests.factories import (
     InterventionActivityFactory,
     LowerResultFactory,
@@ -138,9 +138,21 @@ class AmendmentTestCase(BaseTenantTestCase):
         activity_copy.time_frames.remove(*amendment.amended_intervention.quarters.filter(quarter=1))
         activity_copy.time_frames.add(*amendment.amended_intervention.quarters.filter(quarter__in=[2, 4]))
 
+        new_activity = InterventionActivityFactory(
+            result__result_link=InterventionResultLinkFactory(intervention=amendment.amended_intervention),
+        )
+        new_activity.time_frames.add(amendment.amended_intervention.quarters.first())
+
         amendment.merge_amendment()
 
         self.assertListEqual(list(activity.time_frames.values_list('quarter', flat=True)), [2, 3, 4])
+        self.assertEqual(
+            InterventionActivity.objects.filter(
+                result__result_link__intervention=amendment.intervention,
+                name=new_activity.name,
+            ).get().time_frames.values_list('quarter', flat=True).count(),
+            1,
+        )
 
     def test_update_multiple_amendments(self):
         normal_amendment = InterventionAmendmentFactory(

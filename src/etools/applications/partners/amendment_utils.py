@@ -91,23 +91,27 @@ def merge_simple_fields(instance, instance_copy, fields_map, exclude=None):
         instance.save()
 
 
-def copy_one_to_many(instance, instance_copy, related_name, fields_map, relations_to_copy, exclude_fields, kwargs):
+def copy_one_to_many(
+    instance, instance_copy, related_name, fields_map,
+    relations_to_copy, exclude_fields, defaults, post_effects,
+):
     related_field = [f for f in instance._meta.get_fields() if f.name == related_name][0]
 
     for item in getattr(instance, related_name).all():
-        local_kwargs = copy.deepcopy(kwargs)
+        local_kwargs = copy.deepcopy(defaults)
         if item._meta.label not in local_kwargs:
             local_kwargs[item._meta.label] = {}
         local_kwargs[item._meta.label][related_field.field.name] = instance_copy
 
-        item_copy, copy_map = copy_instance(item, relations_to_copy, exclude_fields, local_kwargs)
+        item_copy, copy_map = copy_instance(item, relations_to_copy, exclude_fields, local_kwargs, post_effects)
         fields_map.append(copy_map)
 
 
-def copy_instance(instance, relations_to_copy, exclude_fields, defaults):
+def copy_instance(instance, relations_to_copy, exclude_fields, defaults, post_effects):
     related_fields_to_copy = relations_to_copy.get(instance._meta.label, [])
     instance_defaults = defaults.get(instance._meta.label, {})
     fields_to_exclude = exclude_fields.get(instance._meta.label, [])
+    local_post_effects = post_effects.get(instance._meta.label, [])
 
     instance_copy = type(instance)(**instance_defaults)
     copy_map = {
@@ -135,7 +139,7 @@ def copy_instance(instance, relations_to_copy, exclude_fields, defaults):
         if field.one_to_one:
             # full copy related instance (if exists use current one)
             # todo: implement copy if object not available
-            # todo: not only simple fields can be required
+            # todo: not only simple fields can be required, replace with copy_instance
             copy_map[field.name] = {}
             related_instance_copy = getattr(instance_copy, field.name)
             fields_to_exclude = exclude_fields.get(related_instance_copy._meta.label, [])
@@ -151,16 +155,22 @@ def copy_instance(instance, relations_to_copy, exclude_fields, defaults):
             # copy all related instances
             copy_map[field.name] = []
             copy_one_to_many(instance, instance_copy, field.name, copy_map[field.name], relations_to_copy,
-                             exclude_fields, defaults)
+                             exclude_fields, defaults, post_effects)
 
         if field.many_to_many:
             # link all related instances with copy
             copy_m2m_relations(instance, instance_copy, [field.name], copy_map)
 
+    for post_effect in local_post_effects:
+        post_effect(instance, instance_copy, copy_map)
+
     return instance_copy, copy_map
 
 
-def merge_instance(instance, instance_copy, fields_map, relations_to_copy, exclude_fields):
+def merge_instance(
+    instance, instance_copy, fields_map, relations_to_copy, exclude_fields,
+    copy_post_effects, merge_post_effects,
+):
     related_fields_to_copy = relations_to_copy.get(instance._meta.label, [])
     fields_to_exclude = exclude_fields.get(instance._meta.label, [])
 
@@ -202,6 +212,7 @@ def merge_instance(instance, instance_copy, fields_map, relations_to_copy, exclu
 
         if field.one_to_one:
             # todo: if one of related objects is missing, raise error
+            # todo: perform in depth merge instead of simple fields
 
             related_instance = getattr(instance, field.name)
             related_instance_copy = getattr(instance_copy, field.name)
@@ -231,7 +242,9 @@ def merge_instance(instance, instance_copy, fields_map, relations_to_copy, exclu
                             related_instance_copy,
                             related_instance_data,
                             relations_to_copy,
-                            exclude_fields
+                            exclude_fields,
+                            copy_post_effects,
+                            merge_post_effects,
                         )
                 elif related_instance:
                     related_instance.delete()
@@ -246,7 +259,7 @@ def merge_instance(instance, instance_copy, fields_map, relations_to_copy, exclu
                 **{f'{related_field.field.name}__pk': instance_copy.pk}
             )
             for related_instance_copy in related_instances.exclude(pk__in=copied_instances):
-                copy_instance(related_instance_copy, relations_to_copy, exclude_fields, local_kwargs)
+                copy_instance(related_instance_copy, relations_to_copy, exclude_fields, local_kwargs, copy_post_effects)
 
         if field.many_to_many:
             if field.name not in fields_map:
@@ -260,6 +273,9 @@ def merge_instance(instance, instance_copy, fields_map, relations_to_copy, exclu
             removed_links = set(original_value) - set(modified_value)
             getattr(instance, field.name).add(*new_links)
             getattr(instance, field.name).remove(*removed_links)
+
+    for merge_post_effect in merge_post_effects.get(instance._meta.label, []):
+        merge_post_effect(instance, instance_copy, fields_map)
 
 
 def calculate_simple_fields_difference(instance, instance_copy, fields_map, exclude=None):
@@ -512,6 +528,8 @@ INTERVENTION_AMENDMENT_IGNORED_FIELDS = {
         'created', 'modified',
         'number', 'status', 'in_amendment',
         'title',
+        'partner_accepted',
+        'unicef_accepted',
 
         # signatures
         'signed_by_unicef_date',
@@ -540,5 +558,31 @@ INTERVENTION_AMENDMENT_DEFAULTS = {
     'partners.Intervention': {
         'status': 'draft',
         'in_amendment': True,
+        'partner_accepted': False,
+        'unicef_accepted': False,
     }
+}
+
+
+def copy_activity_quarters(activity, activity_copy, fields_map):
+    quarters = list(activity.time_frames.values_list('quarter', flat=True))
+    activity_copy.time_frames.add(*activity_copy.result.result_link.intervention.quarters.filter(quarter__in=quarters))
+    fields_map['quarters'] = quarters
+
+
+def merge_activity_quarters(activity, activity_copy, fields_map):
+    quarters = list(activity_copy.time_frames.values_list('quarter', flat=True))
+    activity.time_frames.clear()
+    activity.time_frames.add(*activity.result.result_link.intervention.quarters.filter(quarter__in=quarters))
+
+
+INTERVENTION_AMENDMENT_MERGE_POST_EFFECTS = {
+    'reports.InterventionActivity': [
+        merge_activity_quarters,
+    ],
+}
+INTERVENTION_AMENDMENT_COPY_POST_EFFECTS = {
+    'reports.InterventionActivity': [
+        copy_activity_quarters,
+    ],
 }
