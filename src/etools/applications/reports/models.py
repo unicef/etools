@@ -1,6 +1,7 @@
 from datetime import date
 
 from django.contrib.postgres.fields import JSONField
+from django.core.validators import MinValueValidator
 from django.db import models, transaction
 from django.db.models import Sum
 from django.utils.functional import cached_property
@@ -961,6 +962,21 @@ class InterventionActivityItem(TimeStampedModel):
     name = models.CharField(
         verbose_name=_("Name"),
         max_length=150,
+    )
+    unit = models.CharField(
+        verbose_name=_("Unit"),
+        max_length=150,
+    )
+    unit_price = models.DecimalField(
+        verbose_name=_("Unit Price"),
+        decimal_places=2,
+        max_digits=20,
+    )
+    no_units = models.DecimalField(
+        verbose_name=_("Units Number"),
+        decimal_places=1,
+        max_digits=20,
+        validators=[MinValueValidator(0)],
     )
     unicef_cash = models.DecimalField(
         verbose_name=_("UNICEF Cash"),
