@@ -57,6 +57,7 @@ class InterventionSupplyItemSerializer(serializers.ModelSerializer):
             "total_price",
             "other_mentions",
             "unicef_product_number",
+            "provided_by",
         )
 
     def create(self, validated_data):
