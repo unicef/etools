@@ -972,9 +972,11 @@ class InterventionActivityItem(TimeStampedModel):
         decimal_places=2,
         max_digits=20,
     )
-    no_units = models.IntegerField(
+    no_units = models.DecimalField(
         verbose_name=_("Units Number"),
-        validators=[MinValueValidator(1)],
+        decimal_places=1,
+        max_digits=20,
+        validators=[MinValueValidator(0)],
     )
     unicef_cash = models.DecimalField(
         verbose_name=_("UNICEF Cash"),

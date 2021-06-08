@@ -91,14 +91,19 @@ class TestFunctionality(BaseTestCase):
                         'name': 'second_item',
                         'unit': 'item', 'no_units': 1, 'unit_price': '2.0',
                         'unicef_cash': '0.0', 'cso_cash': '2.0',
+                    },
+                    {
+                        'name': 'third_item',
+                        'unit': 'item', 'no_units': '0.1', 'unit_price': '2.0',
+                        'unicef_cash': '0.0', 'cso_cash': '0.2',
                     }
                 ],
             }
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertEqual(response.data['unicef_cash'], '3.00')
-        self.assertEqual(response.data['cso_cash'], '6.00')
-        self.assertEqual(response.data['partner_percentage'], '66.67')
+        self.assertEqual(response.data['cso_cash'], '6.20')
+        self.assertEqual(response.data['partner_percentage'], '67.39')  # cso_cash / (unicef_cash + cso_cash)
 
     def test_set_items(self):
         item_to_remove = InterventionActivityItemFactory(
