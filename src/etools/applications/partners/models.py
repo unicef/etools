@@ -44,7 +44,6 @@ from etools.applications.partners.validation.agreements import (
 from etools.applications.reports.models import (
     CountryProgramme,
     Indicator,
-    InterventionActivity,
     Office,
     Result,
     Section,
