@@ -41,13 +41,7 @@ from etools.applications.partners.validation.agreements import (
     agreement_transition_to_signed_valid,
     agreements_illegal_transition,
 )
-from etools.applications.reports.models import (
-    CountryProgramme,
-    Indicator,
-    Office,
-    Result,
-    Section,
-)
+from etools.applications.reports.models import CountryProgramme, Indicator, Office, Result, Section
 from etools.applications.t2f.models import Travel, TravelActivity, TravelType
 from etools.applications.tpm.models import TPMActivity, TPMVisit
 from etools.applications.users.models import Country
