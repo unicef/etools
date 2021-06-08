@@ -2685,7 +2685,7 @@ class InterventionBudget(TimeStampedModel):
         return self.unicef_cash_local + self.in_kind_amount_local
 
     def total_cash_local(self):
-        return self.total_partner_contribution_local + self.unicef_cash_local
+        return self.partner_contribution_local + self.unicef_cash_local
 
     @transaction.atomic
     def save(self, **kwargs):
