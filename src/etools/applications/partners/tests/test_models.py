@@ -668,7 +668,7 @@ class TestInterventionModel(BaseTenantTestCase):
         permissions = models.Intervention.permission_structure()
         self.assertTrue(isinstance(permissions, dict))
         self.assertEqual(permissions["amendments"], {
-            'view': {'true': [{'group': '*', 'condition': 'not_in_amendment_mode', 'status': '*'}]},
+            'view': {'true': [{'group': 'UNICEF User', 'condition': 'not_in_amendment_mode', 'status': '*'}]},
             'edit': {
                 'true': [
                     {'status': 'signed', 'group': 'Partnership Manager', 'condition': 'not_in_amendment_mode'},

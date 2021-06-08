@@ -310,12 +310,14 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
 
         # Partnership Manager
         if self._is_partnership_manager():
-            if obj.status in [obj.DRAFT, obj.REVIEW, obj.SIGNATURE]:
-                available_actions.append("cancel")
-            elif obj.status not in [obj.ENDED, obj.CLOSED, obj.TERMINATED]:
-                available_actions.append("terminate")
-                if obj.status not in [obj.SUSPENDED]:
-                    available_actions.append("suspend")
+            # amendments should be deleted instead of moving to cancelled/terminated
+            if not obj.in_amendment:
+                if obj.status in [obj.DRAFT, obj.REVIEW, obj.SIGNATURE]:
+                    available_actions.append("cancel")
+                elif obj.status not in [obj.ENDED, obj.CLOSED, obj.TERMINATED]:
+                    available_actions.append("terminate")
+                    if obj.status not in [obj.SUSPENDED]:
+                        available_actions.append("suspend")
             if obj.status == obj.SUSPENDED:
                 available_actions.append("unsuspend")
 

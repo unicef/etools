@@ -1,11 +1,14 @@
 import datetime
+from unittest import skip
 
 from django.core.management import call_command
 from django.urls import reverse
 from django.utils import timezone
 
 from rest_framework import status
+from rest_framework.exceptions import ErrorDetail
 
+from etools.applications.attachments.models import AttachmentFlat
 from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import Intervention, InterventionAmendment
@@ -62,6 +65,130 @@ class TestInterventionAmendments(BaseTenantTestCase):
             partner_authorized_officer_signatory=self.partner.staff_members.all().first()
         )
         ReportingRequirementFactory(intervention=self.active_intervention)
+
+    def test_no_permission_user_forbidden(self):
+        '''Ensure a non-staff user gets the 403 smackdown'''
+        response = self.forced_auth_req(
+            'post',
+            reverse('partners_api:intervention-amendments-add', args=[self.active_intervention.pk]),
+            UserFactory(), data={}, request_format='multipart',
+        )
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_unauthenticated_user_forbidden(self):
+        '''Ensure an unauthenticated user gets the 403 smackdown'''
+        self.user = None
+        response = self.forced_auth_req(
+            'post',
+            reverse('partners_api:intervention-amendments-add', args=[self.active_intervention.pk]),
+            None, data={}, request_format='multipart',
+        )
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_group_permission_partnership_member(self):
+        '''Ensure group membership is sufficient for create;'''
+        response = self.forced_auth_req(
+            'post',
+            reverse('partners_api:intervention-amendments-add', args=[self.active_intervention.pk]),
+            UserFactory(is_staff=True), data={}, request_format='multipart',
+        )
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_create_amendment_invalid_type(self):
+        response = self.forced_auth_req(
+            'post',
+            reverse('partners_api:intervention-amendments-add', args=[self.active_intervention.pk]),
+            UserFactory(is_staff=True, groups__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
+            data={
+                'types': ['invalid_choice'],
+                'kind': InterventionAmendment.KIND_NORMAL,
+            },
+            request_format='multipart',
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(response.data['types'],
+                          {0: [ErrorDetail(string='"invalid_choice" is not a valid choice.', code='invalid_choice')]})
+
+    def test_create_amendment_other_type_no_description(self):
+        response = self.forced_auth_req(
+            'post',
+            reverse('partners_api:intervention-amendments-add', args=[self.active_intervention.pk]),
+            UserFactory(is_staff=True, groups__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
+            data={
+                'types': [InterventionAmendment.OTHER],
+                'kind': InterventionAmendment.KIND_NORMAL,
+            },
+            request_format='multipart',
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(
+            response.data['non_field_errors'], [ErrorDetail(
+                string="Other description required, if type 'Other' selected.",
+                code='invalid'
+            )]
+        )
+
+    @skip("todo: save implement prc review process on merge")
+    def test_create_amendment_with_internal_prc_review(self):
+        attachment = AttachmentFactory(
+            file="test_file.pdf",
+            file_type=None,
+            code="",
+        )
+        flat_qs = AttachmentFlat.objects.filter(attachment=attachment)
+        assert flat_qs.exists()
+        flat = flat_qs.first()
+        assert not flat.partner
+        self.assertIsNone(attachment.file_type)
+        self.assertIsNone(attachment.content_object)
+        self.assertFalse(attachment.code)
+        response = self.forced_auth_req(
+            'post',
+            reverse('partners_api:intervention-amendments-add', args=[self.active_intervention.pk]),
+            UserFactory(is_staff=True, groups__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
+            data={
+                'types': [InterventionAmendment.TYPE_CHANGE],
+                'kind': InterventionAmendment.KIND_NORMAL,
+                'internal_prc_review': attachment.pk,
+            },
+            request_format='multipart',
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        self.assertEquals(response.data['intervention'], self.active_intervention.pk)
+        attachment.refresh_from_db()
+        self.assertEqual(
+            attachment.file_type.code,
+            "partners_intervention_amendment_internal_prc_review"
+        )
+        self.assertEqual(attachment.object_id, response.data["id"])
+        self.assertEqual(
+            attachment.code,
+            "partners_intervention_amendment_internal_prc_review"
+        )
+
+        # check denormalization
+        flat = flat_qs.first()
+        assert flat.partner
+        assert flat.pd_ssfa
+        assert flat.pd_ssfa_number
+
+    def test_create_amendment_with_internal_prc_review_none(self):
+        response = self.forced_auth_req(
+            'post',
+            reverse('partners_api:intervention-amendments-add', args=[self.active_intervention.pk]),
+            UserFactory(is_staff=True, groups__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
+            data={
+                'types': [InterventionAmendment.TYPE_CHANGE],
+                'kind': InterventionAmendment.KIND_NORMAL,
+            },
+            request_format='multipart',
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        self.assertEquals(response.data['intervention'], self.active_intervention.pk)
 
     def test_start_amendment(self):
         intervention = InterventionFactory()
@@ -124,7 +251,7 @@ class TestInterventionAmendments(BaseTenantTestCase):
         )
         intervention.planned_budget.total_hq_cash_local = 10
         intervention.planned_budget.save()
-        # FundsReservationHeaderFactory(intervention=intervention, currency="USD") # frs code is unique
+        # FundsReservationHeaderFactory(intervention=intervention, currency='USD') # frs code is unique
         ReportingRequirementFactory(intervention=intervention)
         intervention.unicef_focal_points.add(UserFactory())
         intervention.sections.add(SectionFactory())
@@ -157,7 +284,10 @@ class TestInterventionAmendments(BaseTenantTestCase):
         amended_intervention.partner_accepted = True
         amended_intervention.status = Intervention.REVIEW
         amended_intervention.save()
-        InterventionReviewFactory(intervention=amended_intervention, overall_approval=True)
+        review = InterventionReviewFactory(
+            intervention=amended_intervention, overall_approval=True,
+            overall_approver=UserFactory(is_staff=True, groups__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
+        )
 
         # sign amended intervention
         amended_intervention.signed_by_partner_date = intervention.signed_by_partner_date
@@ -167,7 +297,7 @@ class TestInterventionAmendments(BaseTenantTestCase):
         amended_intervention.save()
         AttachmentFactory(
             code='partners_intervention_signed_pd',
-            file="sample1.pdf",
+            file='sample1.pdf',
             content_object=amended_intervention
         )
 
@@ -177,7 +307,7 @@ class TestInterventionAmendments(BaseTenantTestCase):
         response = self.forced_auth_req(
             'patch',
             reverse('pmp_v3:intervention-signature', args=[amended_intervention.pk]),
-            UserFactory(is_staff=True, groups__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
+            review.overall_approver,
             data={}
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
@@ -205,3 +335,51 @@ class TestInterventionAmendments(BaseTenantTestCase):
         self.assertFalse(response.data['permissions']['view']['planned_visits'])
         self.assertFalse(response.data['permissions']['view']['frs'])
         self.assertFalse(response.data['permissions']['view']['attachments'])
+
+
+class TestInterventionAmendmentDeleteView(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.intervention = InterventionFactory(status=Intervention.DRAFT)
+
+    def setUp(self):
+        super().setUp()
+        self.amendment = InterventionAmendmentFactory(
+            intervention=self.intervention,
+            types=[InterventionAmendment.RESULTS],
+        )
+        self.url = reverse(
+            "partners_api:intervention-amendments-del",
+            args=[self.amendment.pk]
+        )
+
+    def test_delete(self):
+        response = self.forced_auth_req(
+            'delete',
+            self.url,
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(InterventionAmendment.objects.filter(pk=self.amendment.pk).exists())
+        self.assertFalse(Intervention.objects.filter(pk=self.amendment.amended_intervention.pk).exists())
+
+    def test_delete_invalid(self):
+        self.intervention.status = Intervention.ACTIVE
+        self.intervention.save()
+        response = self.forced_auth_req(
+            'delete',
+            self.url,
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, ["You do not have permissions to delete an amendment"])
+
+    def test_intervention_amendments_delete(self):
+        response = self.forced_auth_req(
+            'delete',
+            reverse("partners_api:intervention-amendments-del", args=[404]),
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)

@@ -2644,6 +2644,10 @@ class InterventionAmendment(TimeStampedModel):
 
         return super().save(**kwargs)
 
+    def delete(self, **kwargs):
+        self.amended_intervention.delete()
+        super().delete(**kwargs)
+
     def __str__(self):
         return '{}:- {}'.format(
             self.amendment_number,
