@@ -278,6 +278,7 @@ class InterventionAdmin(
         'flat_locations',
         'partner_authorized_officer_signatory',
         'unicef_signatory',
+        'budget_owner',
         'unicef_focal_points',
         'partner_focal_points',
     ]
