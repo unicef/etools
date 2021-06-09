@@ -541,6 +541,8 @@ INTERVENTION_AMENDMENT_IGNORED_FIELDS = {
         'partner_contribution_local',
         'total_unicef_cash_local_wo_hq',
         'unicef_cash_local',
+        'partner_supply_local',
+        'total_partner_contribution_local',
         'in_kind_amount_local',
         'total',
         'total_local',
