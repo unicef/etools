@@ -697,10 +697,8 @@ class TestSupplyItem(BaseInterventionTestCase):
         )
         self.partner_focal_point = UserFactory(is_staff=False, groups__data=[])
         partner_focal_point_staff = PartnerStaffFactory(
-            partner=self.partner, email=self.partner_focal_point.email
+            partner=self.partner, email=self.partner_focal_point.email, user=self.partner_focal_point,
         )
-        self.partner_focal_point.profile.partner_staff_member = partner_focal_point_staff.id
-        self.partner_focal_point.profile.save()
 
         self.intervention.partner_focal_points.add(partner_focal_point_staff)
 
@@ -762,6 +760,32 @@ class TestSupplyItem(BaseInterventionTestCase):
         self.assertEqual(item.intervention, self.intervention)
         self.assertIsNone(item.result)
         self.assertEqual(item.unicef_product_number, "ACME-123")
+        supply_item = InterventionSupplyItem.objects.get(id=response.data["id"])
+        self.assertEqual(supply_item.provided_by, InterventionSupplyItem.PROVIDED_BY_UNICEF)
+
+    def test_post_as_partner(self):
+        self.intervention.unicef_court = False
+        self.intervention.save()
+
+        response = self.forced_auth_req(
+            "post",
+            reverse(
+                "pmp_v3:intervention-supply-item",
+                args=[self.intervention.pk],
+            ),
+            user=self.partner_focal_point,
+            data={
+                "title": "New Supply Item",
+                "unit_number": 10,
+                "unit_price": 2,
+                "unicef_product_number": "ACME-123",
+                "provided_by": "partner",
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data["provided_by"], "partner")
+        supply_item = InterventionSupplyItem.objects.get(id=response.data["id"])
+        self.assertEqual(supply_item.provided_by, InterventionSupplyItem.PROVIDED_BY_PARTNER)
 
     def test_post_with_cp_output(self):
         item_qs = InterventionSupplyItem.objects.filter(
@@ -867,7 +891,7 @@ class TestSupplyItem(BaseInterventionTestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_delete_as_partner_user(self):
-        self.intervention.unicef_court = True
+        self.intervention.unicef_court = False
         self.intervention.save()
 
         item = InterventionSupplyItemFactory(intervention=self.intervention)
@@ -880,6 +904,21 @@ class TestSupplyItem(BaseInterventionTestCase):
             user=self.partner_focal_point
         )
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_delete_as_partner_user_unicef_court(self):
+        self.intervention.unicef_court = True
+        self.intervention.save()
+
+        item = InterventionSupplyItemFactory(intervention=self.intervention)
+        response = self.forced_auth_req(
+            "delete",
+            reverse(
+                "pmp_v3:intervention-supply-item-detail",
+                args=[self.intervention.pk, item.pk],
+            ),
+            user=self.partner_focal_point
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_budget_update_on_delete(self):
         budget = self.intervention.planned_budget

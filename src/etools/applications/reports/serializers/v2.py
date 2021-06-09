@@ -463,6 +463,10 @@ class OfficeSerializer(serializers.ModelSerializer):
 
 
 class InterventionActivityItemSerializer(serializers.ModelSerializer):
+    default_error_messages = {
+        'invalid_budget': _('Invalid budget data. Total cash should be equal to items number * price per item.')
+    }
+
     id = serializers.IntegerField(required=False)
 
     class Meta:
@@ -470,9 +474,29 @@ class InterventionActivityItemSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'name',
+            'unit',
+            'unit_price',
+            'no_units',
             'unicef_cash',
             'cso_cash',
         )
+
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+
+        instance = None
+        if 'id' in attrs:
+            instance = self.Meta.model.objects.filter(id=attrs['id']).first()
+
+        unit_price = attrs.get('unit_price', instance.unit_price if instance else None)
+        no_units = attrs.get('no_units', instance.no_units if instance else None)
+        unicef_cash = attrs.get('unicef_cash', instance.unicef_cash if instance else None)
+        cso_cash = attrs.get('cso_cash', instance.cso_cash if instance else None)
+
+        if unit_price * no_units != unicef_cash + cso_cash:
+            self.fail('invalid_budget')
+
+        return attrs
 
 
 class InterventionTimeFrameSerializer(serializers.ModelSerializer):

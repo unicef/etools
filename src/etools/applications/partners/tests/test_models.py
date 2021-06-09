@@ -18,6 +18,7 @@ from etools.applications.audit.tests.factories import AuditFactory, SpecialAudit
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
 from etools.applications.partners import models
+from etools.applications.partners.models import InterventionSupplyItem
 from etools.applications.partners.tests.factories import (
     AgreementAmendmentFactory,
     AgreementFactory,
@@ -1584,6 +1585,12 @@ class TestInterventionBudget(BaseTenantTestCase):
             unit_number=10,
             unit_price=3,
         )
+        InterventionSupplyItemFactory(
+            intervention=intervention,
+            unit_number=10,
+            unit_price=4,
+            provided_by=InterventionSupplyItem.PROVIDED_BY_PARTNER
+        )
 
         mgmt_budget.act1_unicef = 100
         mgmt_budget.act1_partner = 200
@@ -1598,13 +1605,16 @@ class TestInterventionBudget(BaseTenantTestCase):
         self.assertEqual(budget.total_hq_cash_local, 60)
         self.assertEqual(budget.unicef_cash_local, 900 + 60)
         self.assertEqual(budget.in_kind_amount_local, 30)
+        self.assertEqual(budget.partner_supply_local, 40)
+        self.assertEqual(budget.total_partner_contribution_local, 1240)
+        self.assertEqual(budget.total_local, 1200 + 900 + 60 + 40 + 30)
         self.assertEqual(
             budget.programme_effectiveness,
             ((1200 + 900) / budget.total_local * 100),
         )
         self.assertEqual(
             "{:0.2f}".format(budget.partner_contribution_percent),
-            "{:0.2f}".format(1200 / (1200 + 900 + 60 + 30) * 100),
+            "{:0.2f}".format((1200 + 40) / (1200 + 900 + 60 + 30 + 40) * 100),
         )
         self.assertEqual(budget.total_cash_local(), 1200 + 900 + 60)
         self.assertEqual(budget.total_unicef_contribution_local(), 900 + 60 + 30)
