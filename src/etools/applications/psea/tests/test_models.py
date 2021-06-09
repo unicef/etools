@@ -181,7 +181,7 @@ class TestAssessment(BaseTenantTestCase):
 
     def test_get_mail_context(self):
         user = UserFactory()
-        assessment = AssessmentFactory()
+        assessment = AssessmentFactory(reference_number='TST/2021PSEA')
         AssessorFactory(assessment=assessment)
         self.assertEqual(assessment.get_mail_context(user), {
             "partner_name": assessment.partner.name,
@@ -193,6 +193,7 @@ class TestAssessment(BaseTenantTestCase):
             "assessor": str(assessment.assessor),
             'assessment_ingo_reason': None,
             'assessment_type': 'UNICEF Assessment 2020',
+            'reference_number': 'TST/2021PSEA{}'.format(assessment.pk),
         })
 
     def test_get_reference_number(self):
@@ -240,6 +241,7 @@ class TestAssessmentActionPoint(BaseTenantTestCase):
             "assessor": str(assessment.assessor),
             'assessment_ingo_reason': None,
             'assessment_type': 'UNICEF Assessment 2020',
+            'reference_number': 'TST/2021PSEA{}'.format(assessment.pk),
         })
 
 
