@@ -69,7 +69,7 @@ class InterventionReviewSerializer(serializers.ModelSerializer):
             'overall_approval',
         )
         read_only_fields = (
-            'amendment', 'review_type', 'overall_approval', 'review_date'
+            'amendment', 'review_type', 'overall_approval',
         )
 
     def update(self, instance, validated_data):
