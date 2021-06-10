@@ -1,6 +1,14 @@
 from django.contrib import admin
 
-from etools.applications.psea.models import Answer, Assessment, AssessmentActionPoint, Assessor, Evidence, Indicator, Rating
+from etools.applications.psea.models import (
+    Answer,
+    Assessment,
+    AssessmentActionPoint,
+    Assessor,
+    Evidence,
+    Indicator,
+    Rating,
+)
 
 
 @admin.register(Assessment)
