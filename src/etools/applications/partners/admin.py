@@ -46,6 +46,12 @@ class InterventionReviewInlineAdmin((admin.TabularInline)):
     model = InterventionReview
     extra = 0
 
+    raw_id_fields = [
+        "prc_officers",
+        "submitted_by",
+        "overall_approver"
+    ]
+
 
 class AttachmentSingleInline(AttachmentSingleInline):
     def get_queryset(self, request):
