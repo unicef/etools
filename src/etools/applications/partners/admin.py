@@ -83,7 +83,6 @@ class InterventionAmendmentsAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
     model = InterventionAmendment
     readonly_fields = [
         'amendment_number',
-        'signed_amendment',
     ]
     list_display = (
         'intervention',

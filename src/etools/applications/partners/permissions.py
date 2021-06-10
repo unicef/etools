@@ -167,7 +167,7 @@ class InterventionPermissions(PMPPermissions):
             'unicef_court': self.instance.unicef_court and unlocked(self.instance),
             'partner_court': not self.instance.unicef_court and unlocked(self.instance),
             'unlocked': unlocked(self.instance),
-            'is_spd': self.instance.document_type == self.instance.SPD
+            'is_spd': self.instance.document_type == self.instance.SPD,
         }
 
     # override get_permissions to enable us to prevent old interventions from being blocked on transitions
@@ -541,3 +541,8 @@ class UserBelongsToObjectPermission(BasePermission):
             return False
 
         return obj.user == request.user
+
+
+class IsInterventionBudgetOwnerPermission(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        return obj.budget_owner and obj.budget_owner == request.user

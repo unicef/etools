@@ -22,6 +22,16 @@ from unicef_notification.utils import send_notification_with_template
 
 from etools.applications.core.permissions import import_permissions
 from etools.applications.funds.models import FundsReservationHeader
+from etools.applications.partners.amendment_utils import (
+    calculate_difference,
+    copy_instance,
+    INTERVENTION_AMENDMENT_COPY_POST_EFFECTS,
+    INTERVENTION_AMENDMENT_DEFAULTS,
+    INTERVENTION_AMENDMENT_IGNORED_FIELDS,
+    INTERVENTION_AMENDMENT_MERGE_POST_EFFECTS,
+    INTERVENTION_AMENDMENT_RELATED_FIELDS,
+    merge_instance,
+)
 from etools.applications.partners.validation import (
     agreements as agreement_validation,
     interventions as intervention_validation,
@@ -1959,6 +1969,8 @@ class Intervention(TimeStampedModel):
         null=True,
         blank=True,
     )
+
+    # will be true for amended copies
     in_amendment = models.BooleanField(
         verbose_name=_("Amendment Open"),
         default=False,
@@ -2102,6 +2114,8 @@ class Intervention(TimeStampedModel):
         null=True,
         default=dict,
     )
+
+    # todo: filter out amended interventions from list api's
 
     class Meta:
         ordering = ['-created']
@@ -2454,6 +2468,13 @@ class Intervention(TimeStampedModel):
             self.management_budgets = InterventionManagementBudget.objects.create(intervention=self)
             self.planned_budget = InterventionBudget.objects.create(intervention=self)
 
+    def has_active_amendment(self, kind=None):
+        active_amendments = self.amendments.filter(is_active=True)
+        if kind:
+            active_amendments = active_amendments.filter(kind=kind)
+
+        return active_amendments.exists()
+
 
 class InterventionAmendment(TimeStampedModel):
     """
@@ -2486,12 +2507,29 @@ class InterventionAmendment(TimeStampedModel):
         (BUDGET, 'Budget'),
     ]
 
+    KIND_NORMAL = 'normal'
+    KIND_CONTINGENCY = 'contingency'
+
+    AMENDMENT_KINDS = Choices(
+        (KIND_NORMAL, _('Normal')),
+        (KIND_CONTINGENCY, _('Contingency')),
+    )
+
     intervention = models.ForeignKey(
         Intervention,
         verbose_name=_("Reference Number"),
         related_name='amendments',
         on_delete=models.CASCADE,
     )
+
+    kind = models.CharField(
+        max_length=20,
+        verbose_name=_('Kind'),
+        choices=AMENDMENT_KINDS,
+        default=KIND_NORMAL,
+    )
+
+    is_active = models.BooleanField(default=True)
 
     types = ArrayField(models.CharField(
         max_length=50,
@@ -2508,15 +2546,49 @@ class InterventionAmendment(TimeStampedModel):
     signed_date = models.DateField(
         verbose_name=_("Signed Date"),
         null=True,
+        blank=True,
     )
-    amendment_number = models.IntegerField(
+    amendment_number = models.CharField(
         verbose_name=_("Number"),
-        default=0,
+        max_length=15,
     )
+
+    # legacy field
     signed_amendment = models.FileField(
         verbose_name=_("Amendment Document"),
         max_length=1024,
-        upload_to=get_intervention_amendment_file_path
+        upload_to=get_intervention_amendment_file_path,
+        blank=True,
+    )
+
+    # signatures
+    signed_by_unicef_date = models.DateField(
+        verbose_name=_("Signed by UNICEF Date"),
+        null=True,
+        blank=True,
+    )
+    signed_by_partner_date = models.DateField(
+        verbose_name=_("Signed by Partner Date"),
+        null=True,
+        blank=True,
+    )
+    # partnership managers
+    unicef_signatory = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name=_("Signed by UNICEF"),
+        related_name='++',
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+    )
+    # part of the Agreement authorized officers
+    partner_authorized_officer_signatory = models.ForeignKey(
+        PartnerStaffMember,
+        verbose_name=_("Signed by Partner"),
+        related_name='+',
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
     )
     signed_amendment_attachment = CodedGenericRelation(
         Attachment,
@@ -2524,19 +2596,30 @@ class InterventionAmendment(TimeStampedModel):
         code='partners_intervention_amendment_signed',
         blank=True,
     )
+
     internal_prc_review = CodedGenericRelation(
         Attachment,
         verbose_name=_('Internal PRC Review'),
         code='partners_intervention_amendment_internal_prc_review',
         blank=True,
     )
+    amended_intervention = models.OneToOneField(
+        Intervention,
+        verbose_name=_("Amended Intervention"),
+        related_name='amendment',
+        blank=True, null=True,
+        on_delete=models.SET_NULL,
+    )
+    related_objects_map = JSONField(blank=True, default=dict)
+    difference = JSONField(blank=True, default=dict)
 
     tracker = FieldTracker()
 
     def compute_reference_number(self):
-        return self.intervention.amendments.filter(
-            signed_date__isnull=False
-        ).count() + 1
+        number = str(self.intervention.amendments.filter(kind=self.kind).count() + 1)
+        if self.kind == self.KIND_CONTINGENCY:
+            number = 'Contingency/' + number
+        return number
 
     @transaction.atomic
     def save(self, **kwargs):
@@ -2549,9 +2632,14 @@ class InterventionAmendment(TimeStampedModel):
         # set
         if self.pk is None:
             self.amendment_number = self.compute_reference_number()
-            self.intervention.in_amendment = True
             self.intervention.save(amendment_number=self.amendment_number)
+            self._copy_intervention()
+
         return super().save(**kwargs)
+
+    def delete(self, **kwargs):
+        self.amended_intervention.delete()
+        super().delete(**kwargs)
 
     def __str__(self):
         return '{}:- {}'.format(
@@ -2562,6 +2650,61 @@ class InterventionAmendment(TimeStampedModel):
     class Meta:
         verbose_name = _('Amendment')
         verbose_name_plural = _('Intervention amendments')
+
+    def _copy_intervention(self):
+        self.amended_intervention, self.related_objects_map = copy_instance(
+            self.intervention,
+            INTERVENTION_AMENDMENT_RELATED_FIELDS,
+            INTERVENTION_AMENDMENT_IGNORED_FIELDS,
+            INTERVENTION_AMENDMENT_DEFAULTS,
+            INTERVENTION_AMENDMENT_COPY_POST_EFFECTS,
+        )
+        self.amended_intervention.title = '[Amended] ' + self.intervention.title
+        self.amended_intervention.save()
+
+    def merge_amendment(self):
+        self.difference = self.get_difference()
+
+        merge_instance(
+            self.intervention,
+            self.amended_intervention,
+            self.related_objects_map,
+            INTERVENTION_AMENDMENT_RELATED_FIELDS,
+            INTERVENTION_AMENDMENT_IGNORED_FIELDS,
+            INTERVENTION_AMENDMENT_COPY_POST_EFFECTS,
+            INTERVENTION_AMENDMENT_MERGE_POST_EFFECTS,
+        )
+
+        # copy signatures to amendment
+        pd_attachment = self.amended_intervention.signed_pd_attachment.first()
+        if pd_attachment:
+            pd_attachment.code = 'partners_intervention_amendment_signed'
+            pd_attachment.content_object = self
+            pd_attachment.save()
+
+        self.signed_by_unicef_date = self.amended_intervention.signed_by_unicef_date
+        self.signed_by_partner_date = self.amended_intervention.signed_by_partner_date
+        self.unicef_signatory = self.amended_intervention.unicef_signatory
+        self.partner_authorized_officer_signatory = self.amended_intervention.partner_authorized_officer_signatory
+
+        self.amended_intervention.reviews.update(intervention=self.intervention)
+
+        amended_intervention = self.amended_intervention
+
+        self.amended_intervention = None
+        self.is_active = False
+        self.save()
+
+        amended_intervention.delete()
+
+    def get_difference(self):
+        return calculate_difference(
+            self.intervention,
+            self.amended_intervention,
+            self.related_objects_map,
+            INTERVENTION_AMENDMENT_RELATED_FIELDS,
+            INTERVENTION_AMENDMENT_IGNORED_FIELDS,
+        )
 
 
 class InterventionPlannedVisits(TimeStampedModel):
