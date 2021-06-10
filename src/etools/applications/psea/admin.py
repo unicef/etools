@@ -33,10 +33,12 @@ class IndicatorAdmin(admin.ModelAdmin):
     list_display = ('subject', 'active')
     list_filter = ('active',)
 
+
 @admin.register(Rating)
 class RatingAdmin(admin.ModelAdmin):
     list_display = ('label', 'weight', 'active')
     list_filter = ('active',)
+
 
 @admin.register(Assessor)
 class AssessorAdmin(admin.ModelAdmin):
