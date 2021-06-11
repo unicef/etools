@@ -1,6 +1,13 @@
 from django.contrib import admin
+from django.utils.translation import gettext_lazy as _
 
+from etools.applications.partners.admin import AttachmentSingleInline
 from etools.applications.psea.models import Answer, Assessment, AssessmentActionPoint, Assessor, Evidence, Indicator
+
+
+class NFRAttachmentInline(AttachmentSingleInline):
+    verbose_name_plural = _("NFR Attachment")
+    code = 'psea_nfr_attachment'
 
 
 @admin.register(Assessment)
@@ -13,6 +20,10 @@ class AssessmentAdmin(admin.ModelAdmin):
     def get_status(self, obj):
         return obj.status
     get_status.short_description = "Status"
+
+    inlines = (
+        NFRAttachmentInline,
+    )
 
 
 @admin.register(Answer)

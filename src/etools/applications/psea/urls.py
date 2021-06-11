@@ -17,6 +17,7 @@ root_api.register(r'indicator', views.IndicatorViewSet, basename='indicator')
 
 assessor_api = NestedComplexRouter(root_api, r'assessment')
 assessor_api.register(r'assessor', views.AssessorViewSet, basename='assessor')
+assessor_api.register(r'attachments', views.NFRAttachmentViewSet, basename='nfr-attachments')
 
 action_points_api = NestedComplexRouter(
     root_api,

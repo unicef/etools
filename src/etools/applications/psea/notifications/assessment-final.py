@@ -20,6 +20,10 @@ defaults = {
 
     UNICEF Focal Points: {{ focal_points }}
 
+    {% if nfr_attachment $}
+    NFR Attachment: {{ nfr_attachment }}
+    {% endif $}
+
     Please update the Vendor Master Data in VISION accordingly
 
     Please note that this is an automated email and the mailbox is not monitored. Please do not reply to it.
@@ -46,6 +50,10 @@ defaults = {
     Date of Assessment: {{ assessment_date }}  <br /><br />
 
     UNICEF Focal Points: {{ focal_points }} <br /><br />
+
+    {% if nfr_attachment $}
+    NFR Attachment: {{ nfr_attachment }} <br /><br />
+    {% endif $}
 
     Please update the Vendor Master Data in VISION accordingly  <br />
     Please note that this is an automated email and the mailbox is not monitored. Please do not reply to it.

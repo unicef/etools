@@ -27,6 +27,7 @@ from etools.applications.action_points.conditions import (
     ActionPointAssigneeCondition,
     ActionPointAuthorCondition,
 )
+from etools.applications.attachments.views import CodedAttachmentViewSet
 from etools.applications.audit.models import UNICEFAuditFocalPoint
 from etools.applications.partners.views.v2 import choices_to_json_ready
 from etools.applications.permissions2.conditions import ObjectStatusCondition
@@ -50,6 +51,7 @@ from etools.applications.psea.serializers import (
     AssessmentStatusSerializer,
     AssessorSerializer,
     IndicatorSerializer,
+    NFRAttachmentSerializer,
 )
 from etools.applications.psea.validation import AssessmentValid
 
@@ -241,7 +243,7 @@ class AssessmentViewSet(
             ).data
         )
 
-    def _set_status(self, request, assessment_status):
+    def _set_status(self, request, assessment_status, **kwargs):
         self.serializer_class = AssessmentStatusSerializer
         status = {
             "status": assessment_status,
@@ -250,6 +252,8 @@ class AssessmentViewSet(
         if comment:
             status["comment"] = comment
         request.data.clear()
+        if 'nfr_attachment' in kwargs:
+            request.data.update({"nfr_attachment": kwargs.get('nfr_attachment')})
         request.data.update({"status": assessment_status})
         request.data.update(
             {"status_history": [status]},
@@ -270,7 +274,7 @@ class AssessmentViewSet(
 
     @action(detail=True, methods=["patch"])
     def finalize(self, request, pk=None):
-        return self._set_status(request, Assessment.STATUS_FINAL)
+        return self._set_status(request, Assessment.STATUS_FINAL, **request.data)
 
     @action(detail=True, methods=["patch"])
     def cancel(self, request, pk=None):
@@ -470,6 +474,12 @@ class AssessorViewSet(
             )
         else:
             return Response(serializer.data)
+
+
+class NFRAttachmentViewSet(CodedAttachmentViewSet):
+    serializer_class = NFRAttachmentSerializer
+    content_model = Assessment
+    code = 'nfr_attachment'
 
 
 class IndicatorViewSet(
