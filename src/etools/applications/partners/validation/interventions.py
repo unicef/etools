@@ -25,6 +25,8 @@ def transition_ok(i):
 
 
 def transition_to_closed(i):
+    from etools.applications.partners.models import InterventionAmendment
+
     # unicef/etools-issues:820
     # TODO: this is required to go around the caching of intervention.total_frs where self.frs.all() is called
     # TODO: find a sol for invalidating the cache on related .all() -has to do with prefetch_related in the validator
@@ -93,7 +95,7 @@ def transition_to_closed(i):
 
     # TODO: figure out Action Point Validation once the spec is completed
 
-    if i.in_amendment is True:
+    if i.has_active_amendment(InterventionAmendment.KIND_NORMAL):
         raise TransitionError([_('Cannot Transition status while adding an amendment')])
 
     if i.agreement.partner.blocked:
@@ -104,17 +106,21 @@ def transition_to_closed(i):
 
 
 def transition_to_terminated(i):
+    from etools.applications.partners.models import InterventionAmendment
+
     if not i.termination_doc_attachment.exists():
         raise TransitionError([_('Cannot Transition without termination doc attached')])
-    if i.in_amendment is True:
+    if i.has_active_amendment(InterventionAmendment.KIND_NORMAL):
         raise TransitionError([_('Cannot Transition status while adding an amendment')])
     return True
 
 
 def transition_to_ended(i):
+    from etools.applications.partners.models import InterventionAmendment
+
     if i.termination_doc_attachment.exists():
         raise TransitionError([_('Cannot Transition to ended if termination_doc attached')])
-    if i.in_amendment is True:
+    if i.has_active_amendment(InterventionAmendment.KIND_NORMAL):
         raise TransitionError([_('Cannot Transition status while adding an amendment')])
 
     if i.agreement.partner.blocked:
@@ -126,7 +132,9 @@ def transition_to_ended(i):
 
 
 def transition_to_suspended(i):
-    if i.in_amendment is True:
+    from etools.applications.partners.models import InterventionAmendment
+
+    if i.has_active_amendment(InterventionAmendment.KIND_NORMAL):
         raise TransitionError([_('Cannot Transition status while adding an amendment')])
 
     if i.agreement.partner.blocked:
@@ -154,8 +162,9 @@ def transition_to_signature(i):
 
 
 def transition_to_signed(i):
-    from etools.applications.partners.models import Agreement
-    if i.in_amendment is True:
+    from etools.applications.partners.models import Agreement, InterventionAmendment
+
+    if i.has_active_amendment(InterventionAmendment.KIND_NORMAL):
         raise TransitionError([_('Cannot Transition status while adding an amendment')])
 
     if i.document_type in [i.PD, i.SPD] and i.agreement.status in [Agreement.SUSPENDED, Agreement.TERMINATED,
@@ -163,9 +172,6 @@ def transition_to_signed(i):
         raise TransitionError([_('The PCA related to this record is Draft, Suspended or Terminated. '
                                  'This Programme Document will not change status until the related PCA '
                                  'is in Signed status')])
-
-    if i.in_amendment is True:
-        raise TransitionError([_('Cannot Transition status while adding an amendment')])
 
     if i.agreement.partner.blocked:
         raise TransitionError([
@@ -412,6 +418,8 @@ class InterventionValid(CompleteValidation):
     def state_active_valid(self, intervention, user=None):
         self.check_required_fields(intervention)
         self.check_rigid_fields(intervention, related=True)
+        if intervention.in_amendment:
+            raise StateValidationError([_('Only original PD can be active')])
         if not all_activities_have_timeframes(intervention):
             raise StateValidationError([_('All activities must have at least one time frame')])
         if not all_pd_outputs_are_associated(intervention):

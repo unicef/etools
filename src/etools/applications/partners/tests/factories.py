@@ -146,7 +146,6 @@ class InterventionAmendmentFactory(factory.django.DjangoModelFactory):
     other_description = fuzzy.FuzzyText(length=50)
     amendment_number = fuzzy.FuzzyInteger(1000)
     signed_date = datetime.date.today()
-    signed_amendment = factory.django.FileField(filename='test_file.pdf')
 
 
 class InterventionAttachmentFactory(factory.django.DjangoModelFactory):

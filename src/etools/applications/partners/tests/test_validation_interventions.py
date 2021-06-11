@@ -378,7 +378,7 @@ class TestTransitionToSuspended(BaseTenantTestCase):
             )
             self.assertTrue(transition_to_suspended(intervention))
 
-            intervention.in_amendment = True
+            InterventionAmendmentFactory(intervention=intervention)
             with self.assertRaises(TransitionError):
                 transition_to_suspended(intervention)
 
@@ -412,7 +412,7 @@ class TestTransitionToTerminated(BaseTenantTestCase):
             intervention.termination_doc_attachment.add(a)
             self.assertTrue(transition_to_terminated(intervention))
 
-            intervention.in_amendment = True
+            InterventionAmendmentFactory(intervention=intervention)
             with self.assertRaises(TransitionError):
                 transition_to_terminated(intervention)
 

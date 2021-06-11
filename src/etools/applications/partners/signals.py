@@ -4,6 +4,7 @@ from django.dispatch import receiver
 
 from etools.applications.partners.models import (
     Intervention,
+    InterventionBudget,
     InterventionReview,
     InterventionSupplyItem,
     PRCOfficerInterventionReview,
@@ -24,7 +25,10 @@ def calc_totals_on_delete(instance, **kwargs):
     except Intervention.DoesNotExist:
         pass
     else:
-        intervention.planned_budget.calc_totals()
+        try:
+            intervention.planned_budget.calc_totals()
+        except InterventionBudget.DoesNotExist:
+            pass
 
 
 @receiver(m2m_changed, sender=InterventionReview.prc_officers.through)
