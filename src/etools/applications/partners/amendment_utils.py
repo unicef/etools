@@ -469,7 +469,7 @@ def calculate_difference(instance, instance_copy, fields_map, relations_to_copy,
             changes_map[field.name] = {
                 'type': 'many_to_many',
                 'diff': {
-                    'original': original_value,
+                    'original': original_serialized_objects,
                     'add': list(new_links),
                     'remove': list(removed_links),
                 }
