@@ -7,6 +7,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from unicef_notification.utils import send_notification_with_template
 
+from etools.applications.partners.amendment_utils import MergeError
 from etools.applications.partners.models import Intervention, InterventionAmendment
 from etools.applications.partners.permissions import (
     IsInterventionBudgetOwnerPermission,
@@ -488,7 +489,13 @@ class PMPAmendedInterventionMerge(InterventionDetailAPIView):
         except InterventionAmendment.DoesNotExist:
             raise ValidationError('Amendment does not exist for this pd')
 
-        amendment.merge_amendment()
+        try:
+            amendment.merge_amendment()
+        except MergeError as ex:
+            raise ValidationError(
+                f'Merge Error: Amended field was already changed ({ex.field} at {ex.instance}). '
+                'This can be caused by parallel merged amendment. Amendment should be re-created.'
+            )
 
         return Response(
             InterventionDetailSerializer(
