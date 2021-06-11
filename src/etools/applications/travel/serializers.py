@@ -22,8 +22,6 @@ from etools.applications.users.serializers_v3 import MinimalUserSerializer
 
 class BaseTripSerializer(serializers.ModelSerializer):
     permissions = serializers.SerializerMethodField(read_only=True)
-    supervisor = MinimalUserSerializer()
-    traveller = MinimalUserSerializer()
 
     class Meta:
         model = Trip
@@ -109,7 +107,6 @@ class ActivityBaseSerializer(serializers.ModelSerializer):
 class ActivityDetailSerializer(ActivityBaseSerializer):
     pass
 
-
 class ItineraryItemBaseSerializer(serializers.ModelSerializer):
     class Meta:
         model = ItineraryItem
@@ -127,10 +124,18 @@ class ItineraryItemSerializer(ItineraryItemBaseSerializer):
     pass
 
 
+class TripCreateUpdateSerializer(BaseTripSerializer):
+    class Meta(BaseTripSerializer.Meta):
+        fields = '__all__'
+        read_only_fields = ["reference_number", "status"]
+
+
 class TripSerializer(BaseTripSerializer):
     attachments = TripAttachmentSerializer(many=True, required=False)
     itinerary_items = ItineraryItemSerializer(many=True, required=False)
     activities = ActivityDetailSerializer(many=True, required=False)
+    supervisor = MinimalUserSerializer()
+    traveller = MinimalUserSerializer()
     status_list = serializers.SerializerMethodField()
     rejected_comment = serializers.SerializerMethodField()
     available_actions = serializers.SerializerMethodField()
@@ -216,11 +221,10 @@ class TripSerializer(BaseTripSerializer):
         return available_actions
 
 
-class ActivityDetailUpdateSerializer(ActivityBaseSerializer):
+class ActivityCreateUpdateSerializer(ActivityBaseSerializer):
     trip = SeparatedReadWriteField(
         read_field=TripSerializer(),
     )
-
 
 class ItineraryItemUpdateSerializer(ItineraryItemBaseSerializer):
     trip = SeparatedReadWriteField(
@@ -281,13 +285,6 @@ class TripStatusHistorySerializer(serializers.ModelSerializer):
                     _("Comment is required when rejecting."),
                 )
         return data
-
-
-class ActivityUpdateSerializer(serializers.ModelSerializer):
-    trip = TripSerializer()
-    class Meta:
-        model = Activity
-        fields = "__all__"
 
 
 class ReportAttachmentSerializer(serializers.ModelSerializer):

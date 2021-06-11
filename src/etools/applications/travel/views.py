@@ -21,13 +21,14 @@ from unicef_restlib.views import NestedViewSetMixin, QueryStringFilterMixin, Saf
 
 from etools.applications.core.mixins import GetSerializerClassMixin
 from etools.applications.field_monitoring.permissions import IsEditAction, IsReadAction
+from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.partners.views.v2 import choices_to_json_ready
 from etools.applications.permissions2.views import PermissionContextMixin, PermittedSerializerMixin
 from etools.applications.travel.models import Activity, Trip, ItineraryItem, Report
 from etools.applications.travel.permissions import trip_field_is_editable_permission
 from etools.applications.travel.serializers import (
     ActivityDetailSerializer,
-    ActivityDetailUpdateSerializer,
+    ActivityCreateUpdateSerializer,
     TripAttachmentSerializer,
     TripExportSerializer,
     ItineraryItemSerializer,
@@ -36,7 +37,7 @@ from etools.applications.travel.serializers import (
     TripStatusHistorySerializer,
     TripStatusSerializer,
     ReportAttachmentSerializer,
-    ReportSerializer, ActivityUpdateSerializer,
+    ReportSerializer, TripCreateUpdateSerializer,
 )
 from etools.applications.travel.validation import TripValid
 
@@ -105,6 +106,7 @@ class TripViewSet(
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
+        self.serializer_class = TripCreateUpdateSerializer
         related_fields = []
         nested_related_names = []
         serializer = self.my_create(
@@ -136,6 +138,7 @@ class TripViewSet(
 
     @transaction.atomic
     def update(self, request, *args, **kwargs):
+        self.serializer_class = TripCreateUpdateSerializer
         related_fields = ["status_history"]
         nested_related_names = []
 
@@ -378,9 +381,39 @@ class ActivityViewSet(
     queryset = Activity.objects.all()
     serializer_class = ActivityDetailSerializer
     serializer_action_map = {
-        "partial_update": ActivityDetailUpdateSerializer,
-        "create": ActivityDetailUpdateSerializer
+        "partial_update": ActivityCreateUpdateSerializer,
+        "create": ActivityCreateUpdateSerializer
     }
+
+    def update_ma_date(self, serializer):
+        try:
+            ma = MonitoringActivity.objects.get(id=serializer.initial_data['monitoring_activity'])
+        except MonitoringActivity.DoesNotExist():
+            raise ValidationError(_("Monitoring Activity not found"))
+        serializer.initial_data['activity_date'] = ma.start_date
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.initial_data['activity_type'] == Activity.TYPE_PROGRAMME_MONITORING:
+            self.update_ma_date(serializer)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        if serializer.initial_data['activity_type'] == Activity.TYPE_PROGRAMME_MONITORING:
+            self.update_ma_date(serializer)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        if getattr(instance, '_prefetched_objects_cache', None):
+            # If 'prefetch_related' has been applied to a queryset, we need to
+            # forcibly invalidate the prefetch cache on the instance.
+            instance._prefetched_objects_cache = {}
+        return Response(serializer.data)
 
     def get_queryset(self):
         qs = super().get_queryset()
