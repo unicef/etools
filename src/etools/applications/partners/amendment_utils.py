@@ -554,7 +554,8 @@ INTERVENTION_AMENDMENT_IGNORED_FIELDS = {
     'reports.InterventionActivity': ['created', 'modified'],
     'reports.AppliedIndicator': ['created', 'modified'],
     'reports.LowerResult': ['created', 'modified'],
-    'partners.InterventionSupplyItem': ['total_price'],
+    'partners.InterventionRisk': ['created', 'modified'],
+    'partners.InterventionSupplyItem': ['created', 'modified', 'total_price'],
 }
 INTERVENTION_AMENDMENT_DEFAULTS = {
     'partners.Intervention': {

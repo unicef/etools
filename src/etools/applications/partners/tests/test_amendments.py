@@ -13,6 +13,7 @@ from etools.applications.partners.tests.factories import (
     InterventionAmendmentFactory,
     InterventionFactory,
     InterventionResultLinkFactory,
+    InterventionRiskFactory,
     InterventionSupplyItemFactory,
     PartnerFactory,
     PartnerStaffFactory,
@@ -450,3 +451,37 @@ class AmendmentTestCase(BaseTenantTestCase):
 
         self.assertIn('end', amendment.difference)
         self.assertIn('management_budgets', amendment.difference)
+
+    def test_update_intervention_risk(self):
+        original_risk = InterventionRiskFactory(intervention=self.active_intervention)
+        amendment = InterventionAmendmentFactory(
+            intervention=self.active_intervention,
+            kind=InterventionAmendment.KIND_NORMAL,
+        )
+
+        risk = amendment.amended_intervention.risks.first()
+        risk.mitigation_measures = "mitigation_measures"
+        risk.save()
+
+        amendment.merge_amendment()
+
+        self.assertIn('risks', amendment.difference)
+        original_risk.refresh_from_db()
+        self.assertEqual(original_risk.mitigation_measures, risk.mitigation_measures)
+
+    def test_update_intervention_supply_item(self):
+        original_supply_item = InterventionSupplyItemFactory(intervention=self.active_intervention)
+        amendment = InterventionAmendmentFactory(
+            intervention=self.active_intervention,
+            kind=InterventionAmendment.KIND_NORMAL,
+        )
+
+        supply_item = amendment.amended_intervention.supply_items.first()
+        supply_item.title = "new title"
+        supply_item.save()
+
+        amendment.merge_amendment()
+
+        self.assertIn('supply_items', amendment.difference)
+        original_supply_item.refresh_from_db()
+        self.assertEqual(original_supply_item.title, supply_item.title)
