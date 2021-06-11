@@ -17,10 +17,13 @@ from etools.applications.travel.models import (
     Report,
 )
 from etools.applications.travel.permissions import TripPermissions
+from etools.applications.users.serializers_v3 import MinimalUserSerializer
 
 
 class BaseTripSerializer(serializers.ModelSerializer):
     permissions = serializers.SerializerMethodField(read_only=True)
+    supervisor = MinimalUserSerializer()
+    traveller = MinimalUserSerializer()
 
     class Meta:
         model = Trip
