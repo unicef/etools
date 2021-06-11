@@ -1,9 +1,11 @@
+from django.conf.urls import url
 from django.urls import include, path
 
 from rest_framework_nested import routers
 from unicef_restlib.routers import NestedComplexRouter
 
 from etools.applications.travel import views
+from etools.applications.travel.views import TravelStaticDropdownsListAPIView
 
 root_api = routers.SimpleRouter()
 
@@ -57,4 +59,7 @@ urlpatterns = [
     path('', include(activity_api.urls)),
     path('', include(report_api.urls)),
     path('', include(report_attachments_api.urls)),
+    url(r'^static-data/$',
+        view=TravelStaticDropdownsListAPIView.as_view(http_method_names=['get']),
+        name='travel-static-data'),
 ]

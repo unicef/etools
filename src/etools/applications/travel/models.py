@@ -358,6 +358,13 @@ class Trip(TimeStampedModel):
 
 
 class ItineraryItem(TimeStampedModel):
+    METHOD_BUS = 'bus'
+    METHOD_CAR = 'car'
+    METHOD_CHOICES = Choices(
+        (METHOD_BUS, _('Bus')),
+        (METHOD_CAR, _('Car'))
+    )
+
     trip = models.ForeignKey(
         Trip,
         verbose_name=_("Trip"),

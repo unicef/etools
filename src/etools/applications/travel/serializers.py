@@ -68,6 +68,32 @@ class TripAttachmentSerializer(serializers.ModelSerializer):
 
 
 class ActivityBaseSerializer(serializers.ModelSerializer):
+    partner_name = serializers.SerializerMethodField()
+    location_name = serializers.SerializerMethodField()
+    monitoring_activity_name = serializers.SerializerMethodField()
+
+    def get_partner_name(self, obj):
+        if obj.partner:
+            return obj.partner.name
+        return ''
+
+    def get_monitoring_activity_name(self, obj):
+        ma = obj.monitoring_activity
+        if ma:
+            return ma.number
+        return ''
+
+    def get_location_name(self, obj):
+        loc = obj.location
+        if not loc:
+            return ''
+
+        return '{} [{} - {}]'.format(
+            loc.name,
+            loc.gateway.name,
+            loc.p_code
+        )
+
     class Meta:
         model = Activity
         fields = "__all__"

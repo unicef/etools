@@ -12,6 +12,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from unicef_attachments.models import Attachment
 from unicef_rest_export.renderers import ExportCSVRenderer, ExportOpenXMLRenderer
 from unicef_rest_export.views import ExportMixin
@@ -20,6 +21,7 @@ from unicef_restlib.views import NestedViewSetMixin, QueryStringFilterMixin, Saf
 
 from etools.applications.core.mixins import GetSerializerClassMixin
 from etools.applications.field_monitoring.permissions import IsEditAction, IsReadAction
+from etools.applications.partners.views.v2 import choices_to_json_ready
 from etools.applications.permissions2.views import PermissionContextMixin, PermittedSerializerMixin
 from etools.applications.travel.models import Activity, Trip, ItineraryItem, Report
 from etools.applications.travel.permissions import trip_field_is_editable_permission
@@ -458,3 +460,23 @@ class ReportAttachmentsViewSet(
 
     def perform_update(self, serializer):
         serializer.save(content_object=self.get_parent_object())
+
+
+class TravelStaticDropdownsListAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        """
+        Return All Static values used for dropdowns in the frontend
+        """
+
+        activity_types = choices_to_json_ready(Activity.TYPE_CHOICES)
+        travel_methods = choices_to_json_ready(ItineraryItem.METHOD_CHOICES)
+
+        return Response(
+            {
+                'activity_types': activity_types,
+                'travel_methods': travel_methods
+            },
+            status=status.HTTP_200_OK
+        )
