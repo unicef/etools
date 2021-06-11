@@ -88,7 +88,7 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
         pd = InterventionFactory(budget_owner=self.unicef_user)
         self.assertEqual(pd.status, pd.DRAFT)
         available_actions = self.unicef_serializer.get_available_actions(pd)
-        expected_actions = self.default_actions + ["accept"]
+        expected_actions = self.default_actions + ["accept", "accept_on_behalf_of_partner"]
         self.assertEqual(sorted(available_actions), sorted(expected_actions))
 
     def test_available_actions_management_cancel(self):

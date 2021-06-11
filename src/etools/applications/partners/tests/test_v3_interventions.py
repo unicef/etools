@@ -1332,6 +1332,8 @@ class TestInterventionAccept(BaseInterventionActionTestCase):
 class TestInterventionAcceptBehalfOfPartner(BaseInterventionActionTestCase):
     def setUp(self):
         super().setUp()
+        self.intervention.date_sent_to_partner = timezone.now().date()
+        self.intervention.save()
         self.url = reverse(
             'pmp_v3:intervention-accept-behalf-of-partner',
             args=[self.intervention.pk],
@@ -1347,7 +1349,8 @@ class TestInterventionAcceptBehalfOfPartner(BaseInterventionActionTestCase):
 
     def test_partner_no_access(self):
         response = self.forced_auth_req("patch", self.url, user=self.partner_user)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Only focal points can accept", response.data)
 
     @patch("post_office.mail.send")
     def test_accept_on_behalf_of_partner(self, mock_email):
