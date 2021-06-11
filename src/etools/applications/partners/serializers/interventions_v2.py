@@ -26,6 +26,7 @@ from etools.applications.partners.models import (
     InterventionPlannedVisits,
     InterventionReportingPeriod,
     InterventionResultLink,
+    PartnerStaffMember,
     PartnerType,
 )
 from etools.applications.partners.permissions import InterventionPermissions
@@ -40,6 +41,7 @@ from etools.applications.reports.serializers.v2 import (
     RAMIndicatorSerializer,
     ReportingRequirementSerializer,
 )
+from etools.applications.users.serializers import MinimalUserSerializer
 from etools.libraries.pythonlib.hash import h11
 
 
@@ -80,34 +82,70 @@ class InterventionBudgetCUSerializer(serializers.ModelSerializer):
         )
 
 
+class PartnerStaffMemberUserSerializer(serializers.ModelSerializer):
+    user = MinimalUserSerializer()
+
+    class Meta:
+        model = PartnerStaffMember
+        fields = "__all__"
+
+
 class InterventionAmendmentCUSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
     amendment_number = serializers.CharField(read_only=True)
-    signed_amendment_file = serializers.FileField(source="signed_amendment", read_only=True)
-    signed_amendment_attachment = AttachmentSingleFileField(
-        override="signed_amendment"
-    )
+    signed_amendment_attachment = AttachmentSingleFileField(read_only=True)
     internal_prc_review = AttachmentSingleFileField(required=False)
+    unicef_signatory = MinimalUserSerializer(read_only=True)
+    partner_authorized_officer_signatory = PartnerStaffMemberUserSerializer(read_only=True)
 
     class Meta:
         model = InterventionAmendment
-        fields = "__all__"
+        fields = (
+            'id',
+            'amendment_number',
+            'internal_prc_review',
+            'created',
+            'modified',
+            'kind',
+            'types',
+            'other_description',
+            'signed_date',
+            'intervention',
+            'amended_intervention',
+            'is_active',
+            # signatures
+            'signed_by_unicef_date',
+            'signed_by_partner_date',
+            'unicef_signatory',
+            'partner_authorized_officer_signatory',
+            'signed_amendment_attachment',
+            'difference',
+        )
         validators = [
             UniqueTogetherValidator(
-                queryset=InterventionAmendment.objects.all(),
-                fields=["intervention", "signed_date"],
-                message=_("There is already an amendment with this signed date."),
+                queryset=InterventionAmendment.objects.filter(is_active=True),
+                fields=["intervention", "kind"],
+                message=_("Cannot add a new amendment while another amendment of same kind is in progress."),
             )
         ]
+        extra_kwargs = {
+            'is_active': {'read_only': True},
+            'difference': {'read_only': True},
+        }
+
+    def validate_signed_by_unicef_date(self, value):
+        if value and value > date.today():
+            raise ValidationError("Date cannot be in the future!")
+        return value
+
+    def validate_signed_by_partner_date(self, value):
+        if value and value > date.today():
+            raise ValidationError("Date cannot be in the future!")
+        return value
 
     def validate(self, data):
         data = super().validate(data)
 
-        if 'signed_date' in data and data['signed_date'] > date.today():
-            raise ValidationError("Date cannot be in the future!")
-
         if 'intervention' in data:
-            if data['intervention'].in_amendment is True:
-                raise ValidationError("Cannot add a new amendment while another amendment is in progress.")
             if data['intervention'].agreement.partner.blocked is True:
                 raise ValidationError("Cannot add a new amendment while the partner is blocked in Vision.")
 

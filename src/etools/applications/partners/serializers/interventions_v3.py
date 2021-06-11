@@ -11,6 +11,7 @@ from unicef_attachments.fields import AttachmentSingleFileField
 from etools.applications.partners.models import (
     FileType,
     Intervention,
+    InterventionAmendment,
     InterventionManagementBudget,
     InterventionReview,
     InterventionRisk,
@@ -202,6 +203,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     unicef_focal_points = MinimalUserSerializer(many=True)
     partner_focal_points = PartnerStaffMemberUserSerializer(many=True)
     partner_authorized_officer_signatory = PartnerStaffMemberUserSerializer()
+    original_intervention = serializers.SerializerMethodField()
 
     def get_location_p_codes(self, obj):
         return [location.p_code for location in obj.flat_locations.all()]
@@ -298,6 +300,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "download_comments",
             "export",
             "generate_pdf",
+            "amendment_merge",
         ]
         available_actions = [
             "download_comments",
@@ -308,12 +311,14 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
 
         # Partnership Manager
         if self._is_partnership_manager():
-            if obj.status in [obj.DRAFT, obj.REVIEW, obj.SIGNATURE]:
-                available_actions.append("cancel")
-            elif obj.status not in [obj.ENDED, obj.CLOSED, obj.TERMINATED]:
-                available_actions.append("terminate")
-                if obj.status not in [obj.SUSPENDED]:
-                    available_actions.append("suspend")
+            # amendments should be deleted instead of moving to cancelled/terminated
+            if not obj.in_amendment:
+                if obj.status in [obj.DRAFT, obj.REVIEW, obj.SIGNATURE]:
+                    available_actions.append("cancel")
+                elif obj.status not in [obj.ENDED, obj.CLOSED, obj.TERMINATED]:
+                    available_actions.append("terminate")
+                    if obj.status not in [obj.SUSPENDED]:
+                        available_actions.append("suspend")
             if obj.status == obj.SUSPENDED:
                 available_actions.append("unsuspend")
 
@@ -327,6 +332,9 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             user=user, overall_approval__isnull=True
         ).exists():
             available_actions.append("individual_review")
+
+        if obj.in_amendment and obj.status == obj.SIGNED and obj.budget_owner == user:
+            available_actions.append("amendment_merge")
 
         # if NOT in Development status then we're done
         if obj.status != obj.DRAFT:
@@ -406,6 +414,14 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             }
             for i, quarter in enumerate(get_quarters_range(obj.start, obj.end))
         ]
+
+    def get_original_intervention(self, obj):
+        if obj.in_amendment:
+            try:
+                return obj.amendment.intervention_id
+            except InterventionAmendment.DoesNotExist:
+                return None
+        return None
 
     class Meta:
         model = Intervention
@@ -515,6 +531,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "unicef_court",
             "unicef_focal_points",
             "unicef_signatory",
+            "original_intervention",
         )
 
 

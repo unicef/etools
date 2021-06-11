@@ -108,6 +108,7 @@ class BaseTestCase(BaseTenantTestCase):
 
         ended_fields = copy(signature_fields)
         ended_fields.update(**dict(
+            unicef_signatory=UserFactory(),
             status=Intervention.ENDED,
         ))
         self.ended_intervention = InterventionFactory(**ended_fields)

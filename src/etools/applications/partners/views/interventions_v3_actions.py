@@ -7,7 +7,12 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from unicef_notification.utils import send_notification_with_template
 
-from etools.applications.partners.models import Intervention
+from etools.applications.partners.models import Intervention, InterventionAmendment
+from etools.applications.partners.permissions import (
+    IsInterventionBudgetOwnerPermission,
+    PARTNERSHIP_MANAGER_GROUP,
+    user_group_permission,
+)
 from etools.applications.partners.serializers.interventions_v3 import (
     InterventionDetailSerializer,
     InterventionReviewActionSerializer,
@@ -464,3 +469,30 @@ class PMPInterventionSendToUNICEFView(PMPInterventionActionView):
             )
 
         return response
+
+
+class PMPAmendedInterventionMerge(InterventionDetailAPIView):
+    permission_classes = (
+        user_group_permission(PARTNERSHIP_MANAGER_GROUP) | IsInterventionBudgetOwnerPermission,
+    )
+
+    @transaction.atomic
+    def update(self, request, *args, **kwargs):
+        pd = self.get_object()
+        if not pd.in_amendment:
+            raise ValidationError('Only amended interventions can be merged')
+        if not pd.status == Intervention.SIGNED:
+            raise ValidationError('Amendment cannot be merged yet')
+        try:
+            amendment = pd.amendment
+        except InterventionAmendment.DoesNotExist:
+            raise ValidationError('Amendment does not exist for this pd')
+
+        amendment.merge_amendment()
+
+        return Response(
+            InterventionDetailSerializer(
+                amendment.intervention,
+                context=self.get_serializer_context(),
+            ).data
+        )

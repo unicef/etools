@@ -15,26 +15,70 @@ from etools.applications.reports.serializers.exports import IndicatorExportFlatS
 
 class InterventionAmendmentExportSerializer(InterventionAmendmentCUSerializer):
     types = TypeArrayField(label=_("Types"))
-    signed_amendment_attachment = internal_prc_review = None
 
     class Meta:
         model = InterventionAmendment
-        fields = "__all__"
+        fields = (
+            'id',
+            'amendment_number',
+            # 'internal_prc_review',
+            'created',
+            'modified',
+            'kind',
+            'types',
+            'other_description',
+            'signed_date',
+            'intervention',
+            'is_active',
+            # signatures
+            'signed_by_unicef_date',
+            'signed_by_partner_date',
+            'unicef_signatory',
+            'partner_authorized_officer_signatory',
+            'signed_amendment_attachment',
+            'difference',
+        )
 
 
 class InterventionAmendmentExportFlatSerializer(
-        ExportSerializerMixin,
-        InterventionAmendmentExportSerializer
+    ExportSerializerMixin,
+    InterventionAmendmentExportSerializer
 ):
     intervention = serializers.CharField(
         label=_("Reference Number"),
         source="intervention.number",
     )
-    signed_amendment_attachment = internal_prc_review = None
+    unicef_signatory = serializers.SerializerMethodField()
+    partner_authorized_officer_signatory = serializers.SerializerMethodField()
 
     class Meta:
         model = InterventionAmendment
-        fields = "__all__"
+        fields = [
+            'id',
+            'amendment_number',
+            # 'internal_prc_review',
+            'created',
+            'modified',
+            'kind',
+            'types',
+            'other_description',
+            'signed_date',
+            'intervention',
+            'is_active',
+            # signatures
+            'signed_by_unicef_date',
+            'signed_by_partner_date',
+            'unicef_signatory',
+            'partner_authorized_officer_signatory',
+            'signed_amendment_attachment',
+            'difference',
+        ]
+
+    def get_unicef_signatory(self, obj):
+        return obj.unicef_signatory.email if obj.unicef_signatory else ""
+
+    def get_partner_authorized_officer_signatory(self, obj):
+        return obj.partner_authorized_officer_signatory.user.email if obj.partner_authorized_officer_signatory else ""
 
 
 class InterventionResultExportSerializer(InterventionResultSerializer):
