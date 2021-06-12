@@ -69,10 +69,22 @@ class ActivityBaseSerializer(serializers.ModelSerializer):
     partner_name = serializers.SerializerMethodField()
     location_name = serializers.SerializerMethodField()
     monitoring_activity_name = serializers.SerializerMethodField()
+    section_name = serializers.SerializerMethodField()
 
     def get_partner_name(self, obj):
         if obj.partner:
             return obj.partner.name
+        elif obj.monitoring_activity:
+            return ', '.join([p.short_name or p.name for p in obj.monitoring_activity.partners.all()]) \
+                if obj.monitoring_activity.partners.exists() else ''
+        return ''
+
+    def get_section_name(self, obj):
+        if obj.section:
+            return obj.section.name
+        elif obj.monitoring_activity:
+            return ', '.join([s.name for s in obj.monitoring_activity.sections.all()]) \
+                if obj.monitoring_activity.sections.exists() else ''
         return ''
 
     def get_monitoring_activity_name(self, obj):
@@ -82,15 +94,11 @@ class ActivityBaseSerializer(serializers.ModelSerializer):
         return ''
 
     def get_location_name(self, obj):
-        loc = obj.location
-        if not loc:
-            return ''
-
-        return '{} [{} - {}]'.format(
-            loc.name,
-            loc.gateway.name,
-            loc.p_code
-        )
+        if obj.monitoring_activity:
+            return obj.monitoring_activity.destination_str
+        elif obj.location:
+            return str(obj.location)
+        return ''
 
     class Meta:
         model = Activity
@@ -105,6 +113,7 @@ class ActivityBaseSerializer(serializers.ModelSerializer):
 
 
 class ActivityDetailSerializer(ActivityBaseSerializer):
+
     pass
 
 class ItineraryItemBaseSerializer(serializers.ModelSerializer):

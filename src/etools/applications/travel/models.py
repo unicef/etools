@@ -512,12 +512,15 @@ class Activity(TimeStampedModel):
         super().save(**kwargs)
         if self.monitoring_activity:
             ma = self.monitoring_activity
-            ItineraryItem.objects.create(
+            ItineraryItem.objects.update_or_create(
                 trip=self.trip,
-                destination=ma.destination_str,
-                start_date=ma.start_date,
-                end_date=ma.end_date,
-                monitoring_activity=ma
+                monitoring_activity=ma,
+                defaults={
+                    "destination": ma.destination_str,
+                    "start_date": ma.start_date,
+                    "end_date": ma.end_date,
+                    "monitoring_activity": ma
+                }
             )
 
     @transaction.atomic
