@@ -226,10 +226,32 @@ class ActivityCreateUpdateSerializer(ActivityBaseSerializer):
         read_field=TripSerializer(),
     )
 
+
 class ItineraryItemUpdateSerializer(ItineraryItemBaseSerializer):
     trip = SeparatedReadWriteField(
         read_field=TripSerializer(),
     )
+
+    def validate(self, data):
+        """
+        Check that dates are not modified if monitoring_activity is present
+        """
+        # we only need to check on update since items are automatically created
+        if self.instance:
+            if self.instance.monitoring_activity:
+                ma = self.instance.monitoring_activity
+                if data["monitoring_activity"] and data["monitoring_activity"] != ma:
+                    raise serializers.ValidationError(_("Monitoring Activity cannot be updated"))
+                if data["start_date"] and data["start_date"] != ma.start_date:
+                    # TODO: is this needed? Maybe the user has their own travel plans outside of the dates of the ma
+                    pass
+                if data["end_date"] and data["end_date"] != ma.end_date:
+                    # TODO: is this needed? Maybe the user has their own travel plans outside of the dates of the ma
+                    pass
+                if data["destination"] and data["destination"] != ma.destination_str:
+                    raise serializers.ValidationError(_("Destination cannot be edited as this item relates to a "
+                                                        "Monitoring Activity, please update the record in FM module"))
+        return data
 
 
 class TripExportSerializer(TripSerializer):

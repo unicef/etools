@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
-from django.db import connection, models
+from django.db import connection, models, transaction
 from django.db.models import Q
 from django.db.models.base import ModelBase
 from django.utils.translation import gettext_lazy as _
@@ -244,6 +244,7 @@ class MonitoringActivity(
     def __str__(self):
         return self.reference_number
 
+    @transaction.atomic()
     def save(self, **kwargs):
         super().save(**kwargs)
 
@@ -255,6 +256,16 @@ class MonitoringActivity(
             )
             super().save(update_fields=['number'])
 
+        if self.trip_itinerary_items.exists():
+            for item in self.trip_itinerary_items.all():
+                item.update_values_from_ma(self)
+                item.save()
+                
+        if self.trip_activities.exists():
+            for ta in self.trip_activities.all():
+                ta.activity_date = self.start_date
+                ta.save()
+
     @property
     def reference_number(self):
         return self.number
@@ -263,6 +274,10 @@ class MonitoringActivity(
     def permission_structure(cls):
         permissions = import_permissions(cls.__name__)
         return permissions
+
+    @property
+    def destination_str(self):
+        return str(self.location_site) if self.location_site else str(self.location)
 
     def check_if_rejected(self, old_instance):
         # if rejected send notice

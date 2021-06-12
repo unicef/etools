@@ -1,7 +1,8 @@
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
-from django.db import connection, models
+from django.contrib.postgres.fields import ArrayField
+from django.db import connection, models, transaction
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
@@ -391,10 +392,27 @@ class ItineraryItem(TimeStampedModel):
         verbose_name=_("Destination"),
         blank=True,
     )
+    monitoring_activity = models.ForeignKey(
+        MonitoringActivity,
+        on_delete=models.CASCADE,
+        related_name='trip_itinerary_items',
+        null=True,
+        blank=True
+    )
 
     class Meta:
         verbose_name = "Itinerary Item"
         verbose_name_plural = "Itinerary Items"
+
+    def update_values_from_ma(self, ma=None):
+        if not ma:
+            if not self.monitoring_activity:
+                raise Exception("trying to update values for an item without a monitoring activity")
+            ma = self.monitoring_activity
+
+        self.destination = ma.destination_str
+        self.start_date = ma.start_date
+        self.end_date = ma.end_date
 
     def __str__(self):
         return f"{self.trip} Item {self.start_date} - {self.end_date}"
@@ -488,6 +506,26 @@ class Activity(TimeStampedModel):
 
     def __str__(self):
         return f"{self.get_activity_type_display()} - {self.activity_date}"
+
+    @transaction.atomic
+    def save(self, **kwargs):
+        super().save(**kwargs)
+        if self.monitoring_activity:
+            ma = self.monitoring_activity
+            ItineraryItem.objects.create(
+                trip=self.trip,
+                destination=ma.destination_str,
+                start_date=ma.start_date,
+                end_date=ma.end_date,
+                monitoring_activity=ma
+            )
+
+    @transaction.atomic
+    def delete(self):
+        if self.monitoring_activity:
+            ma = self.monitoring_activity
+            ItineraryItem.objects.filter(trip=self.trip, monitoring_activity=ma).delete()
+        super().delete()
 
 
 class Report(TimeStampedModel):
