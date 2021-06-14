@@ -256,7 +256,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         goto('submitted', visit_lead, mail_count=len(PME.as_group().user_set.filter(
             profile__country=connection.tenant,
         )))
-        goto('completed', self.fm_user)
+        goto('completed', self.pme)
 
     def test_sections_are_displayed_correctly(self):
         activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.draft, sections=[SectionFactory()])
