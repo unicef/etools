@@ -8,5 +8,5 @@ def user_is_field_monitor_permission(activity, user):
     return False
 
 
-def user_is_person_responsible_permission(activity, user):
-    return user == activity.person_responsible
+def user_is_visit_lead_permission(activity, user):
+    return user == activity.visit_lead

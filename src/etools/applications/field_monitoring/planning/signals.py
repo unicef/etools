@@ -22,7 +22,7 @@ def update_blueprints_visibility_on_team_members_change(sender, instance, action
 
 
 @receiver(post_save, sender=MonitoringActivity)
-def update_blueprints_visibility_on_person_responsible_changed(instance, created, **kwargs):
+def update_blueprints_visibility_on_visit_lead_changed(instance, created, **kwargs):
     if instance.status == MonitoringActivity.STATUSES.data_collection \
-            and instance.person_responsible_tracker.changed():
+            and instance.visit_lead_tracker.changed():
         MonitoringActivityOfflineSynchronizer(instance).update_data_collectors_list()

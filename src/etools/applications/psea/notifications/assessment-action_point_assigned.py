@@ -3,10 +3,10 @@ from unicef_notification.utils import strip_text
 name = 'psea/assessment/action_point_assigned'
 defaults = {
     'description': 'PSEA Assessment action point was assigned',
-    'subject': '[eTools] ACTION POINT ASSIGNED to {{ action_point.person_responsible }}',
+    'subject': '[eTools] ACTION POINT ASSIGNED to {{ action_point.visit_lead }}',
 
     'content': strip_text("""
-    Dear {{ action_point.person_responsible }},
+    Dear {{ action_point.visit_lead }},
 
     {{ action_point.assigned_by }} has assigned you an action point.
 
@@ -21,7 +21,7 @@ defaults = {
     {% extends "email-templates/base" %}
 
     {% block content %}
-    Dear {{ action_point.person_responsible }},<br/><br/>
+    Dear {{ action_point.visit_lead }},<br/><br/>
 
     {{ action_point.assigned_by }} has assigned you an action point. <br/><br/>
 
