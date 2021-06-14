@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 import argparse
-from datetime import datetime
 import logging
 import os
-import requests
 import sys
+from datetime import datetime
+
+import requests
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

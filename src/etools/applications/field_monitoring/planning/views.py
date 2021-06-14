@@ -27,8 +27,8 @@ from etools.applications.field_monitoring.permissions import (
     IsFieldMonitor,
     IsListAction,
     IsObjectAction,
-    IsVisitLead,
     IsReadAction,
+    IsVisitLead,
 )
 from etools.applications.field_monitoring.planning.activity_validation.validator import ActivityValid
 from etools.applications.field_monitoring.planning.filters import (

@@ -23,6 +23,7 @@ from etools.applications.field_monitoring.fm_settings.models import LocationSite
 from etools.applications.field_monitoring.planning.mixins import ProtectUnknownTransitionsMeta
 from etools.applications.field_monitoring.planning.transitions.permissions import (
     user_is_field_monitor_permission,
+    user_is_pme_permission,
     user_is_visit_lead_permission,
 )
 from etools.applications.partners.models import Intervention, PartnerOrganization
@@ -199,8 +200,8 @@ class MonitoringActivity(
     team_members = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True, verbose_name=_('Team Members'),
                                           related_name='monitoring_activities')
     visit_lead = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True,
-                                           verbose_name=_('Person Responsible'), related_name='+',
-                                           on_delete=models.SET_NULL)
+                                   verbose_name=_('Person Responsible'), related_name='+',
+                                   on_delete=models.SET_NULL)
 
     field_office = models.ForeignKey('reports.Office', blank=True, null=True, verbose_name=_('Field Office'),
                                      on_delete=models.CASCADE)
@@ -487,12 +488,12 @@ class MonitoringActivity(
         pass
 
     @transition(field=status, source=STATUSES.submitted, target=STATUSES.completed,
-                permission=user_is_field_monitor_permission)
+                permission=user_is_pme_permission)
     def complete(self):
         pass
 
     @transition(field=status, source=STATUSES.submitted, target=STATUSES.report_finalization,
-                permission=user_is_field_monitor_permission)
+                permission=user_is_pme_permission)
     def reject_report(self):
         pass
 
