@@ -105,6 +105,11 @@ class Trip(TimeStampedModel):
         code='travel_docs',
         blank=True,
     )
+    additional_notes = models.TextField(
+        verbose_name=_("Description"),
+        blank=True,
+        null=True
+    )
     office = models.ForeignKey(
         Office,
         verbose_name=_("Office"),

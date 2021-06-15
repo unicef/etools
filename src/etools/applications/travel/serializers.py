@@ -166,7 +166,8 @@ class TripCreateUpdateSerializer(BaseTripSerializer):
         instance.save()
         if attachment_data is not None:
             self._add_attachments(instance, attachment_data)
-        return instance
+
+        return super().update(instance, validated_data)
 
     class Meta(BaseTripSerializer.Meta):
         fields = '__all__'
