@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.postgres.fields import ArrayField
+from django.contrib.postgres.fields import ArrayField, JSONField
 from django.db import connection, models, transaction
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
@@ -117,6 +117,9 @@ class Trip(TimeStampedModel):
         on_delete=models.DO_NOTHING,
         related_name="trips",
     )
+    # stores information about the visit that will be displayed to the user,
+    # the keys are interpretable error codes, that can be generated based on specific logic.
+    user_info_text = JSONField(verbose_name="User Information Text", default=dict)
 
     class Meta:
         verbose_name = _('Trip')
@@ -137,6 +140,25 @@ class Trip(TimeStampedModel):
             year=timezone.now().year,
             num=self.pk,
         )
+
+    def dismiss_infotext(self, code):
+        self.user_info_text.pop(code)
+
+    def update_ma_deleted_infotext(self, ma):
+        # code is composed TYPE|ACTION|IDs[..]
+        code = f"MA|X|{ma.id}"
+        self.user_info_text[code] = "A monitoring activity previously selected has been deleted from the" \
+                                    " Field Monitoring Module, please review your Travel Activities"
+
+    def update_ma_traveler_excluded_infotext(self, ma, act):
+        code = f"MA|E|{ma.id}|{act.id}"
+        self.user_info_text[code] = f"The monitoring activity {ma.number} has been updated to exclude the current" \
+                                    f" trip traveller, please verify and update your Travel Activities accordingly"
+
+    def update_ma_traveler_excluded_infotext(self, ma, act):
+        code = f"MA|D|{ma.id}|{act.id}"
+        self.user_info_text[code] = f"The monitoring activity {ma.number} has been updated and dates have changed" \
+                                    f" please verify and update your Travel Activities and Itinerary accordingly"
 
     def get_object_url(self, **kwargs):
         return build_frontend_url(

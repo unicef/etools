@@ -263,8 +263,24 @@ class MonitoringActivity(
                 
         if self.trip_activities.exists():
             for ta in self.trip_activities.all():
-                ta.activity_date = self.start_date
-                ta.save()
+                if ta.trip.status not in [ta.trip.STATUS_APPROVED, ta.trip.STATUS_COMPLETED, ta.trip.STATUS_CANCELLED] \
+                        and ta.trip.traveller not in self.team_members.all() and \
+                        ta.trip.traveller != self.person_responsible:
+                    ta.trip.update_ma_traveler_excluded_infotext(self, ta)
+                    ta.trip.save()
+                if ta.activity_date != self.start_date:
+                    ta.trip.update_ma_dates_changed_infotext(self, ta)
+                    ta.trip.save()
+                    ta.activity_date = self.start_date
+                    ta.save()
+
+    @transaction.atomic()
+    def delete(self, *args, **kwargs):
+        if self.trip_activities.exists():
+            for ta in self.trip_activities.all():
+                ta.trip.update_ma_deleted_infotext(self)
+                ta.trip.save()
+        super().delete(**kwargs)
 
     @property
     def reference_number(self):
