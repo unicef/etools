@@ -223,44 +223,50 @@ class AssessmentExportSerializer(AssessmentSerializer):
 
 
 class AssessmentDetailExportSerializer(serializers.ModelSerializer):
-    id = serializers.ReadOnlyField(source='assessment.id')
-    reference_number = serializers.ReadOnlyField(source='assessment.reference_number')
-    assessment_date = serializers.ReadOnlyField(source='assessment.assessment_date')
+    # id = serializers.ReadOnlyField(source='assessment.id')
+    # reference_number = serializers.ReadOnlyField(source='assessment.reference_number')
+    # assessment_date = serializers.ReadOnlyField(source='assessment.assessment_date')
     partner_name = serializers.ReadOnlyField(source='assessment.partner.name')
     vendor_number = serializers.ReadOnlyField(source='assessment.partner.vendor_number')
-    status = serializers.ReadOnlyField(source='assessment.status')
-    rating = serializers.ReadOnlyField(source='assessment.rating')
-    overall_rating_display = serializers.ReadOnlyField(source='assessment.overall_rating_display', label='SEA Risk Rating')
-    assessment_type = serializers.ReadOnlyField(source='assessment.get_assessment_type_display')
-    assessment_ingo_reason = serializers.ReadOnlyField(source='assessment.get_assessment_ingo_reason_display')
-    assessor = serializers.ReadOnlyField(source='assessment.assessor')
-    focal_points = serializers.SerializerMethodField()
-    cs = serializers.ReadOnlyField(source='indicator.pk')
-    cs_rating = serializers.ReadOnlyField(source='indicator.rating.label')
-    evidences = serializers.SerializerMethodField()
-    attachments = serializers.SerializerMethodField()
+    # status = serializers.ReadOnlyField(source='assessment.status')
+    total_score = serializers.ReadOnlyField(source='assessment.rating')
+    overall_rating_display = serializers.ReadOnlyField(source='assessment.overall_rating_display', label='Risk Rating')
+    # assessment_type = serializers.ReadOnlyField(source='assessment.get_assessment_type_display')
+    # assessment_ingo_reason = serializers.ReadOnlyField(source='assessment.get_assessment_ingo_reason_display')
+    # assessor = serializers.ReadOnlyField(source='assessment.assessor')
+    # focal_points = serializers.SerializerMethodField()
+    # rating = serializers.ReadOnlyField(source='indicator.rating')
+    cs = serializers.SerializerMethodField(label='Core standard number')
+    core_standard_rating = serializers.ReadOnlyField(source='rating')
+    comments = serializers.ReadOnlyField(label='Core standard comments')
+    evidences = serializers.SerializerMethodField(label='Core standard proof of evidence')
+    attachments = serializers.SerializerMethodField(label='Hyperlink to documents')
 
     class Meta(AssessmentSerializer.Meta):
         model = Answer
         fields = [
-            "id",
-            "reference_number",
-            "assessment_date",
-            "partner_name",
+            # "id",
+            # "reference_number",
+            # "status",
+            # "assessment_date",
             "vendor_number",
-            "status",
-            "rating",
+            "partner_name",
+            # "overall_rating",
+            "total_score",
             "overall_rating_display",
-            "assessment_type",
-            "assessment_ingo_reason",
-            "assessor",
-            "focal_points",
+            # "assessment_type",
+            # "assessment_ingo_reason",
+            # "assessor",
+            # "focal_points",
             "cs",
-            "cs_rating",
+            "core_standard_rating",
             "comments",
             "evidences",
             "attachments",
         ]
+
+    def get_cs(self, obj):
+        return f'CS{obj.indicator.pk}'
 
     def get_focal_points(self, obj):
         return ", ".join([str(u) for u in obj.assessment.focal_points.all()])
