@@ -155,7 +155,7 @@ class Trip(TimeStampedModel):
         self.user_info_text[code] = f"The monitoring activity {ma.number} has been updated to exclude the current" \
                                     f" trip traveller, please verify and update your Travel Activities accordingly"
 
-    def update_ma_traveler_excluded_infotext(self, ma, act):
+    def update_ma_dates_changed_infotext(self, ma, act):
         code = f"MA|D|{ma.id}|{act.id}"
         self.user_info_text[code] = f"The monitoring activity {ma.number} has been updated and dates have changed" \
                                     f" please verify and update your Travel Activities and Itinerary accordingly"
