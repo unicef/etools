@@ -520,5 +520,16 @@
             "code": "psea_answer",
             "group": ["psea_answer"]
         }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 61,
+        "fields": {
+            "order": 0,
+            "label": "Generic Trip Attachment",
+            "name": "generic_trip_attachment",
+            "code": "travel_docs",
+            "group": ["travel"]
+        }
     }
 ]

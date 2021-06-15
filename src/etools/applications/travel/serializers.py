@@ -116,6 +116,7 @@ class ActivityDetailSerializer(ActivityBaseSerializer):
 
     pass
 
+
 class ItineraryItemBaseSerializer(serializers.ModelSerializer):
     class Meta:
         model = ItineraryItem
@@ -134,6 +135,39 @@ class ItineraryItemSerializer(ItineraryItemBaseSerializer):
 
 
 class TripCreateUpdateSerializer(BaseTripSerializer):
+    attachments = TripAttachmentSerializer(many=True, required=False)
+
+    def _add_attachments(self, trip, attachment_data):
+        print("setting attachments")
+        content_type = ContentType.objects.get_for_model(Trip)
+        file_type = FileType.objects.get(name="generic_trip_attachment")
+        current = list(Attachment.objects.filter(
+            object_id=trip.pk,
+            content_type=content_type,
+        ).all())
+        used = []
+        for attachment in attachment_data:
+            for initial in self.initial_data.get("attachments"):
+                pk = initial["id"]
+                if pk not in used:
+                    attachment = Attachment.objects.filter(pk=pk).update(
+                        file_type=file_type,
+                        code="travel_docs",
+                        object_id=trip.pk,
+                        content_type=content_type,
+                    )
+                    used.append(pk)
+                    break
+
+    def update(self, instance, validated_data):
+        attachment_data = None
+        if "attachments" in validated_data:
+            attachment_data = validated_data.pop("attachments")
+        instance.save()
+        if attachment_data is not None:
+            self._add_attachments(instance, attachment_data)
+        return instance
+
     class Meta(BaseTripSerializer.Meta):
         fields = '__all__'
         read_only_fields = ["reference_number", "status"]
