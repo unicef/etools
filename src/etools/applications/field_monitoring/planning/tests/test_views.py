@@ -116,6 +116,16 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
 
         self._test_list(self.unicef_user, [activity], data={'search': activity.reference_number})
 
+    def test_filter_by_visit_lead(self):
+        activity1 = MonitoringActivityFactory(monitor_type='staff', visit_lead=UserFactory())
+        activity2 = MonitoringActivityFactory(monitor_type='staff', visit_lead=UserFactory())
+        MonitoringActivityFactory(monitor_type='staff', visit_lead=UserFactory())
+
+        self._test_list(
+            self.unicef_user, [activity1, activity2],
+            data={'visit_lead__in': f'{activity1.visit_lead.pk},{activity2.visit_lead.pk}'}
+        )
+
     def test_details(self):
         activity = MonitoringActivityFactory(monitor_type='staff', team_members=[UserFactory(unicef_user=True)])
 
