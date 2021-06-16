@@ -21,7 +21,12 @@ from etools.applications.users.serializers_v3 import MinimalUserSerializer
 
 
 class BaseTripSerializer(serializers.ModelSerializer):
+    report = serializers.IntegerField(read_only=True)
     permissions = serializers.SerializerMethodField(read_only=True)
+    user_info_text_list = serializers.SerializerMethodField()
+
+    def get_user_info_text_list(self, obj):
+        return [{'code:': i[0], 'message': i[1]} for i in obj.user_info_text.items()]
 
     class Meta:
         model = Trip
