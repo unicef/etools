@@ -13,18 +13,22 @@
         {% if qs %}
             <table border="1" cellpadding="3">
                 <tr>
-                    <th><b>Core Standard Number</b></th>
-                    <th><b>Core Standard Rating</b></th>
-                    <th><b>Core Standard Comments</b></th>
-                    <th><b>Core Standard Proof of Evidence</b></th>
-                    <th><b>Hyperlink to documents</b></th>
+                    <th style="width: 5%;"><b>Core Standard Number</b></th>
+                    <th style="width: 15%;"><b>Core Standard Rating</b></th>
+                    <th style="width: 35%;"><b>Core Standard Comments</b></th>
+                    <th style="width: 20%;"><b>Core Standard Proof of Evidence</b></th>
+                    <th style="width: 25%;"><b>Hyperlink to documents</b></th>
                 </tr>
                 {% for item in qs %}
                 <tr style="vertical-align: top;">
                     <td>{{item.indicator.pk}}</td>
                     <td>{{item.rating}}</td>
                     <td>{{item.comments}}</td>
-                    <td>{% for evidence in item.evidences.all %} {{evidence}} {% endfor %}</td>
+                    <td>
+                        {% for evidence in item.evidences.all %}
+                            {{evidence}} <br>
+                        {% endfor %}
+                    </td>
                     <td>
                         {% for attachment in item.attachments.all %}
                         {{request.get_host}}{% url 'attachments:file' attachment.pk %}
