@@ -185,6 +185,24 @@ class TripViewSet(
         return self.update(request, partial=True)
 
     @action(detail=True, methods=["patch"])
+    def dismiss_infotext(self, request, pk=None):
+        self.serializer_class = TripStatusSerializer
+        trip = self.get_object()
+
+        try:
+            trip.user_info_text.pop(request.data.get('code'))
+        except KeyError:
+            raise ValidationError("Message could not be found!")
+
+        trip.save()
+        return Response(
+            TripSerializer(
+                trip,
+                context=self.get_serializer_context(),
+            ).data
+        )
+
+    @action(detail=True, methods=["patch"])
     def revise(self, request, pk=None):
         return self._set_status(request, Trip.STATUS_DRAFT)
 

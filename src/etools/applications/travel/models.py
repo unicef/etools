@@ -196,7 +196,9 @@ class Trip(TimeStampedModel):
         if not self.reference_number:
             self.reference_number = self.get_reference_number()
             self.save()
-        if not self.report:
+        try:
+            self.report
+        except Report.DoesNotExist:
             Report.objects.create(trip=self)
 
     @transition(
