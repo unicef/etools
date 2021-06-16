@@ -5,7 +5,7 @@ from django.utils import timezone
 
 from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
-from etools.applications.partners.amendment_utils import MergeError
+from etools.applications.partners.amendment_utils import INTERVENTION_AMENDMENT_RELATED_FIELDS, MergeError
 from etools.applications.partners.models import Intervention, InterventionAmendment, InterventionResultLink
 from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, UNICEF_USER
 from etools.applications.partners.tests.factories import (
@@ -13,6 +13,7 @@ from etools.applications.partners.tests.factories import (
     InterventionAmendmentFactory,
     InterventionFactory,
     InterventionResultLinkFactory,
+    InterventionRiskFactory,
     InterventionSupplyItemFactory,
     PartnerFactory,
     PartnerStaffFactory,
@@ -20,6 +21,7 @@ from etools.applications.partners.tests.factories import (
 from etools.applications.reports.models import InterventionActivity, ResultType
 from etools.applications.reports.tests.factories import (
     InterventionActivityFactory,
+    InterventionActivityItemFactory,
     LowerResultFactory,
     ReportingRequirementFactory,
     ResultFactory,
@@ -152,6 +154,24 @@ class AmendmentTestCase(BaseTenantTestCase):
                 name=new_activity.name,
             ).get().time_frames.values_list('quarter', flat=True).count(),
             1,
+        )
+
+    def test_activity_items_copy(self):
+        original_item = InterventionActivityItemFactory(activity=self.activity)
+        amendment = InterventionAmendmentFactory(intervention=self.active_intervention)
+
+        item = amendment.amended_intervention.result_links.first().ll_results.first().activities.first().items.first()
+        self.assertIsNotNone(item)
+        item.name = 'new name'
+        item.save()
+
+        amendment.merge_amendment()
+        original_item.refresh_from_db()
+        self.assertEqual(original_item.name, item.name)
+        self.assertIn(
+            'name',
+            amendment.difference['result_links']['diff']['update'][0]['diff']['ll_results']['diff']['update'][0]
+            ['diff']['activities']['diff']['update'][0]['diff']['items']['diff']['update'][0]['diff']
         )
 
     def test_update_multiple_amendments(self):
@@ -389,7 +409,10 @@ class AmendmentTestCase(BaseTenantTestCase):
                 'sections': {
                     'type': 'many_to_many',
                     'diff': {
-                        'original': [first_section.id, third_section.id],
+                        'original': [
+                            {'pk': first_section.id, 'name': str(first_section)},
+                            {'pk': third_section.id, 'name': str(third_section)},
+                        ],
                         'add': [{'pk': second_section.id, 'name': str(second_section)}],
                         'remove': [{'pk': third_section.id, 'name': str(third_section)}],
                     },
@@ -450,3 +473,95 @@ class AmendmentTestCase(BaseTenantTestCase):
 
         self.assertIn('end', amendment.difference)
         self.assertIn('management_budgets', amendment.difference)
+
+    def test_update_intervention_risk(self):
+        original_risk = InterventionRiskFactory(intervention=self.active_intervention)
+        amendment = InterventionAmendmentFactory(
+            intervention=self.active_intervention,
+            kind=InterventionAmendment.KIND_NORMAL,
+        )
+
+        risk = amendment.amended_intervention.risks.first()
+        risk.mitigation_measures = "mitigation_measures"
+        risk.save()
+
+        amendment.merge_amendment()
+
+        self.assertIn('risks', amendment.difference)
+        original_risk.refresh_from_db()
+        self.assertEqual(original_risk.mitigation_measures, risk.mitigation_measures)
+
+    def test_update_intervention_supply_item(self):
+        original_supply_item = InterventionSupplyItemFactory(intervention=self.active_intervention)
+        amendment = InterventionAmendmentFactory(
+            intervention=self.active_intervention,
+            kind=InterventionAmendment.KIND_NORMAL,
+        )
+
+        supply_item = amendment.amended_intervention.supply_items.first()
+        supply_item.title = "new title"
+        supply_item.save()
+
+        amendment.merge_amendment()
+
+        self.assertIn('supply_items', amendment.difference)
+        original_supply_item.refresh_from_db()
+        self.assertEqual(original_supply_item.title, supply_item.title)
+
+    def _check_related_fields(self, model_class, ignored_relations):
+        related_fields = INTERVENTION_AMENDMENT_RELATED_FIELDS.get(model_class._meta.label, [])
+        full_relations_list = related_fields + ignored_relations.get(model_class._meta.label, [])
+        for field in model_class._meta.get_fields():
+            field_is_simple = not (field.many_to_many or field.many_to_one or field.one_to_many or field.one_to_one)
+            if field_is_simple:
+                continue
+
+            self.assertIn(
+                field.name, full_relations_list,
+                f'Related field {field.name} should be either presented in INTERVENTION_AMENDMENT_RELATED_FIELDS '
+                f'with label {model_class._meta.label} to be copied into amendment or added to ignored fields in test'
+            )
+            if field.name not in related_fields:
+                continue
+
+            if field.one_to_many:
+                self._check_related_fields(field.related_model, ignored_relations)
+
+    def test_related_fields(self):
+        # basically there should be reverse relations to parent model and fields you're confident about to being ignored
+        ignored_fields = {
+            'partners.Intervention': [
+                'frs',
+                'special_reporting_requirements',
+                'quarters',
+                'amendments',
+                'amendment',
+                'planned_visits',
+                'reviews',
+                'attachments',
+                'reporting_periods',
+                'activity',
+                'travel_activities',
+                'engagement',
+                'actionpoint',
+                'monitoring_activities',
+                'country_programme',
+                'unicef_signatory',
+                'partner_authorized_officer_signatory',
+                'prc_review_attachment',
+                'signed_pd_attachment',
+                'activation_letter_attachment',
+                'termination_doc_attachment',
+            ],
+            'reports.ReportingRequirement': ['intervention'],
+            'reports.AppliedIndicator': ['lower_result'],
+            # time_frames are being copied separately as quarters
+            'reports.InterventionActivity': ['result', 'time_frames'],
+            'reports.LowerResult': ['result_link'],
+            # interventionsupplyitem is secondary relation. will be copied as partners.InterventionSupplyItem.result
+            'partners.InterventionResultLink': ['intervention', 'interventionsupplyitem'],
+            'partners.InterventionRisk': ['intervention'],
+            'partners.InterventionSupplyItem': ['intervention'],
+            'reports.InterventionActivityItem': ['activity'],
+        }
+        self._check_related_fields(Intervention, ignored_fields)

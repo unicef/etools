@@ -30,6 +30,7 @@ from etools.applications.partners.filters import (
     InterventionFilter,
     InterventionResultLinkFilter,
     PartnerScopeFilter,
+    ShowAmendmentsFilter,
 )
 from etools.applications.partners.models import (
     Agreement,
@@ -96,7 +97,7 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
     """
     serializer_class = InterventionListSerializer
     permission_classes = (PartnershipManagerPermission,)
-    filter_backends = (PartnerScopeFilter,)
+    filter_backends = (PartnerScopeFilter, ShowAmendmentsFilter)
     renderer_classes = (
         JSONRenderer,
         InterventionCSVRenderer,

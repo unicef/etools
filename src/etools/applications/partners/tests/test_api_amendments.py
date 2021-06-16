@@ -62,7 +62,8 @@ class TestInterventionAmendments(BaseTenantTestCase):
             signed_by_unicef_date=today - datetime.timedelta(days=1),
             signed_by_partner_date=today - datetime.timedelta(days=1),
             unicef_signatory=self.unicef_staff,
-            partner_authorized_officer_signatory=self.partner.staff_members.all().first()
+            partner_authorized_officer_signatory=self.partner.staff_members.all().first(),
+            budget_owner=self.pme,
         )
         ReportingRequirementFactory(intervention=self.active_intervention)
 
@@ -326,9 +327,35 @@ class TestInterventionAmendments(BaseTenantTestCase):
         intervention.refresh_from_db()
         self.assertEqual(intervention.start, timezone.now().date() + datetime.timedelta(days=2))
 
+    def test_merge_error(self):
+        first_amendment = InterventionAmendmentFactory(
+            intervention=self.active_intervention, kind=InterventionAmendment.KIND_NORMAL,
+        )
+        second_amendment = InterventionAmendmentFactory(
+            intervention=self.active_intervention, kind=InterventionAmendment.KIND_CONTINGENCY,
+        )
+        second_amendment.amended_intervention.start = timezone.now().date() - datetime.timedelta(days=15)
+        second_amendment.amended_intervention.save()
+        second_amendment.merge_amendment()
+
+        first_amendment.amended_intervention.start = timezone.now().date() - datetime.timedelta(days=14)
+        first_amendment.amended_intervention.status = Intervention.SIGNED
+        first_amendment.amended_intervention.save()
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse('pmp_v3:intervention-amendment-merge', args=[first_amendment.amended_intervention.pk]),
+            self.active_intervention.budget_owner,
+            data={}
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('Merge Error', response.data[0])
+
     def test_permissions_fields_hidden(self):
         amendment = InterventionAmendmentFactory(intervention=self.active_intervention)
-        response = self.forced_auth_req('get', reverse('pmp_v3:intervention-detail', args=[amendment.amended_intervention.pk]), self.unicef_staff)
+        response = self.forced_auth_req(
+            'get', reverse('pmp_v3:intervention-detail', args=[amendment.amended_intervention.pk]), self.unicef_staff
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertFalse(response.data['permissions']['view']['partner_focal_points'])
         self.assertFalse(response.data['permissions']['view']['unicef_focal_points'])

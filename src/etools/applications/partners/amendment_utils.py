@@ -12,8 +12,8 @@ class MergeError(Exception):
         self.field = field
 
     def __str__(self):
-        return f"{self.field} of {self.instance} was changed during amendment process. " \
-               f"Please re-create amendment from updated instance."
+        return f"{self.field} of {self.instance} ({type(self.instance).__name__}) was changed " \
+               f"during amendment process. Please re-create amendment from updated instance."
 
 
 def serialize_instance(instance):
@@ -469,7 +469,7 @@ def calculate_difference(instance, instance_copy, fields_map, relations_to_copy,
             changes_map[field.name] = {
                 'type': 'many_to_many',
                 'diff': {
-                    'original': original_value,
+                    'original': original_serialized_objects,
                     'add': list(new_links),
                     'remove': list(removed_links),
                 }
@@ -522,6 +522,14 @@ INTERVENTION_AMENDMENT_RELATED_FIELDS = {
         'disaggregation',
         'locations',
     ],
+    'partners.InterventionSupplyItem': [
+        # many to one
+        'result',
+    ],
+    'reports.InterventionActivity': [
+        # one to many
+        'items',
+    ]
 }
 INTERVENTION_AMENDMENT_IGNORED_FIELDS = {
     'partners.Intervention': [
@@ -554,7 +562,9 @@ INTERVENTION_AMENDMENT_IGNORED_FIELDS = {
     'reports.InterventionActivity': ['created', 'modified'],
     'reports.AppliedIndicator': ['created', 'modified'],
     'reports.LowerResult': ['created', 'modified'],
-    'partners.InterventionSupplyItem': ['total_price'],
+    'partners.InterventionRisk': ['created', 'modified'],
+    'partners.InterventionSupplyItem': ['created', 'modified', 'total_price'],
+    'reports.InterventionActivityItem': ['created', 'modified'],
 }
 INTERVENTION_AMENDMENT_DEFAULTS = {
     'partners.Intervention': {
@@ -588,3 +598,4 @@ INTERVENTION_AMENDMENT_COPY_POST_EFFECTS = {
         copy_activity_quarters,
     ],
 }
+# todo: fields copied/merged in custom post effects will not be displayed in difference, similar logic should be added

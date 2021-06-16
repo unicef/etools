@@ -3291,7 +3291,7 @@ class InterventionRisk(TimeStampedModel):
         ordering = ('id',)
 
     def __str__(self):
-        return "{} {}".format(self.intervention, self.get_risk_display())
+        return "{} {}".format(self.intervention, self.get_risk_type_display())
 
 
 class InterventionManagementBudget(TimeStampedModel):
