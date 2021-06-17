@@ -288,7 +288,6 @@ class TripSerializer(BaseTripSerializer):
             status_list = [
                 obj.STATUS_DRAFT,
                 obj.STATUS_REJECTED,
-                obj.STATUS_SUBMISSION_REVIEW,
                 obj.STATUS_SUBMITTED,
                 obj.STATUS_APPROVED,
                 obj.STATUS_REVIEW,
@@ -297,13 +296,11 @@ class TripSerializer(BaseTripSerializer):
         elif obj.status == obj.STATUS_CANCELLED:
             status_list = [
                 obj.STATUS_DRAFT,
-                obj.STATUS_SUBMISSION_REVIEW,
                 obj.STATUS_CANCELLED,
             ]
         else:
             status_list = [
                 obj.STATUS_DRAFT,
-                obj.STATUS_SUBMISSION_REVIEW,
                 obj.STATUS_SUBMITTED,
                 obj.STATUS_APPROVED,
                 obj.STATUS_REVIEW,
@@ -335,11 +332,12 @@ class TripSerializer(BaseTripSerializer):
         if user == obj.traveller:
             if obj.status in [obj.STATUS_DRAFT]:
                 available_actions.append(
-                    ACTION_MAP.get(obj.STATUS_SUBMISSION_REVIEW),
+                    # ACTION_MAP.get(obj.STATUS_SUBMISSION_REVIEW),  - Skipping this status for now
+                    ACTION_MAP.get(obj.STATUS_SUBMITTED),
                 )
-            if obj.status in [obj.STATUS_SUBMISSION_REVIEW]:
-                available_actions.append(ACTION_MAP.get(obj.STATUS_DRAFT))
-                available_actions.append(ACTION_MAP.get(obj.STATUS_SUBMITTED))
+            # if obj.status in [obj.STATUS_SUBMISSION_REVIEW]:
+            #     available_actions.append(ACTION_MAP.get(obj.STATUS_DRAFT))
+            #     available_actions.append(ACTION_MAP.get(obj.STATUS_SUBMITTED))
             if obj.status in [obj.STATUS_APPROVED]:
                 available_actions.append(ACTION_MAP.get(obj.STATUS_REVIEW))
             if obj.status in [obj.STATUS_APPROVED, obj.STATUS_REVIEW]:

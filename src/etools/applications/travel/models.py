@@ -211,7 +211,7 @@ class Trip(TimeStampedModel):
 
     @transition(
         field=status,
-        source=[STATUS_SUBMISSION_REVIEW],
+        source=[STATUS_DRAFT, STATUS_SUBMISSION_REVIEW],
         target=[STATUS_SUBMITTED],
     )
     def transition_to_submitted(self):
@@ -298,7 +298,6 @@ class Trip(TimeStampedModel):
     @transition(
         field=status,
         source=[
-            STATUS_DRAFT,
             STATUS_APPROVED,
             STATUS_REVIEW,
             STATUS_COMPLETED,
