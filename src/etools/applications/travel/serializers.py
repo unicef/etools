@@ -451,6 +451,3 @@ class TripStatusHistorySerializer(serializers.ModelSerializer):
                     _("Comment is required when rejecting."),
                 )
         return data
-
-
-

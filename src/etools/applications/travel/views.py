@@ -24,21 +24,26 @@ from etools.applications.field_monitoring.permissions import IsEditAction, IsRea
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.partners.views.v2 import choices_to_json_ready
 from etools.applications.permissions2.views import PermissionContextMixin, PermittedSerializerMixin
-from etools.applications.travel.models import Activity, Trip, ItineraryItem, Report
-from etools.applications.travel.permissions import trip_field_is_editable_permission, UserIsStaffPermission, \
-    TripPermissions
+from etools.applications.travel.models import Activity, ItineraryItem, Report, Trip
+from etools.applications.travel.permissions import (
+    trip_field_is_editable_permission,
+    TripPermissions,
+    UserIsStaffPermission,
+)
 from etools.applications.travel.serializers import (
-    ActivityDetailSerializer,
     ActivityCreateUpdateSerializer,
-    TripAttachmentSerializer,
-    TripExportSerializer,
+    ActivityDetailSerializer,
     ItineraryItemSerializer,
     ItineraryItemUpdateSerializer,
+    ReportAttachmentSerializer,
+    ReportSerializer,
+    TripAttachmentSerializer,
+    TripCreateUpdateSerializer,
+    TripCreateUpdateStatusSerializer,
+    TripExportSerializer,
     TripSerializer,
     TripStatusHistorySerializer,
     TripStatusSerializer,
-    ReportAttachmentSerializer,
-    ReportSerializer, TripCreateUpdateSerializer, TripCreateUpdateStatusSerializer,
 )
 from etools.applications.travel.validation import TripValid
 

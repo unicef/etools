@@ -153,17 +153,17 @@ class Trip(TimeStampedModel):
         # code is composed TYPE|ACTION|IDs[..]
         code = f"MA|X|{ma.id}"
         self.user_info_text[code] = "A monitoring activity previously selected has been deleted from the" \
-                                    " Field Monitoring Module, please review your Travel Activities"
+            " Field Monitoring Module, please review your Travel Activities"
 
     def update_ma_traveler_excluded_infotext(self, ma, act):
         code = f"MA|E|{ma.id}|{act.id}"
         self.user_info_text[code] = f"The monitoring activity {ma.number} has been updated to exclude the current" \
-                                    f" trip traveller, please verify and update your Travel Activities accordingly"
+            f" trip traveller, please verify and update your Travel Activities accordingly"
 
     def update_ma_dates_changed_infotext(self, ma, act):
         code = f"MA|D|{ma.id}|{act.id}"
         self.user_info_text[code] = f"The monitoring activity {ma.number} has been updated and dates have changed" \
-                                    f" please verify and update your Travel Activities and Itinerary accordingly"
+            f" please verify and update your Travel Activities and Itinerary accordingly"
 
     def get_object_url(self, **kwargs):
         return build_frontend_url(
