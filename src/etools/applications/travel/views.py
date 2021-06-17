@@ -170,25 +170,23 @@ class TripViewSet(
         )
 
     def _set_status(self, request, trip_status):
-        self.serializer_class = TripStatusSerializer
-        status = {
+        # self.serializer_class = TripStatusSerializer
+        update_data = {
             "status": trip_status,
         }
         comment = request.data.get("comment")
         if comment:
-            status["comment"] = comment
+            update_data["comment"] = comment
         request.data.clear()
-        request.data.update({"status": trip_status})
+        request.data.update(**update_data)
         request.data.update(
-            {"status_history": [status]},
+            {"status_history": [update_data]},
         )
         return self.update(request, partial=True)
 
     @action(detail=True, methods=["patch"])
     def dismiss_infotext(self, request, pk=None):
-        self.serializer_class = TripStatusSerializer
         trip = self.get_object()
-
         try:
             trip.user_info_text.pop(request.data.get('code'))
         except KeyError:

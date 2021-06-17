@@ -1,6 +1,6 @@
 from unicef_notification.utils import strip_text
 
-name = 'travel/itinerary/subreview'
+name = 'travel/trip/subreview'
 defaults = {
     'description': 'Email sent to supervisor when Travel itinerary ready for submission review.',
     'subject': 'Travel Trip ({{ itinerary.reference_number }}) Submission Review',

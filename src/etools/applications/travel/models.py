@@ -124,11 +124,11 @@ class Trip(TimeStampedModel):
     )
     # stores information about the visit that will be displayed to the user,
     # the keys are interpretable error codes, that can be generated based on specific logic.
-    user_info_text = JSONField(verbose_name="User Information Text", default=dict)
+    user_info_text = JSONField(verbose_name="User Information Text", default=dict, blank=True)
 
     class Meta:
         verbose_name = _('Trip')
-        verbose_name_plural = _('Itineraries')
+        verbose_name_plural = _('Trips')
         ordering = ("-start_date",)
 
     @classmethod

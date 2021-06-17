@@ -4,6 +4,7 @@ from etools.applications.travel.models import Activity, Trip, Report
 
 
 class ActivityInline(admin.TabularInline):
+    raw_id_fields = ["location", "partner"]
     model = Activity
 
 
@@ -22,6 +23,7 @@ class TripAdmin(admin.ModelAdmin):
     )
     list_filter = ('reference_number', 'status',)
     search_fields = ('reference_number', 'traveller__email',)
+    raw_id_fields = ["traveller", "supervisor"]
     inlines = [
         ActivityInline,
         ReportInline,

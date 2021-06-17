@@ -116,7 +116,7 @@ class BaseTripSerializer(serializers.ModelSerializer):
     user_info_text_list = serializers.SerializerMethodField()
 
     def get_user_info_text_list(self, obj):
-        return [{'code:': i[0], 'message': i[1]} for i in obj.user_info_text.items()]
+        return [{'code': i[0], 'message': i[1]} for i in obj.user_info_text.items()]
 
     class Meta:
         model = Trip
@@ -266,7 +266,7 @@ class TripCreateUpdateSerializer(BaseTripSerializer):
 
     class Meta(BaseTripSerializer.Meta):
         fields = '__all__'
-        read_only_fields = ["reference_number", "status"]
+        read_only_fields = ["reference_number"]
 
 
 class TripSerializer(BaseTripSerializer):
