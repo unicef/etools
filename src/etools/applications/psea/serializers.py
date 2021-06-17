@@ -7,11 +7,13 @@ from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
-from unicef_attachments.fields import FileTypeModelChoiceField
+from unicef_attachments.fields import AttachmentSingleFileField, FileTypeModelChoiceField
 from unicef_attachments.models import Attachment, FileType
+from unicef_attachments.serializers import AttachmentSerializerMixin
 from unicef_restlib.fields import SeparatedReadWriteField
 
 from etools.applications.action_points.serializers import ActionPointBaseSerializer, HistorySerializer
+from etools.applications.attachments.serializers import CodedAttachmentSerializer
 from etools.applications.audit.models import UNICEFAuditFocalPoint
 from etools.applications.audit.purchase_order.models import PurchaseOrder
 from etools.applications.partners.serializers.partner_organization_v2 import (
@@ -58,7 +60,12 @@ class BaseAssessmentSerializer(serializers.ModelSerializer):
         return permissions.get_permissions()
 
 
-class AssessmentSerializer(BaseAssessmentSerializer):
+class NFRAttachmentSerializer(CodedAttachmentSerializer):
+    file_group = "psea"
+    code = 'psea_nfr_attachment'
+
+
+class AssessmentSerializer(AttachmentSerializerMixin, BaseAssessmentSerializer):
     overall_rating = serializers.SerializerMethodField()
     assessor = serializers.SerializerMethodField()
     partner_name = serializers.CharField(source="partner.name", read_only=True)
@@ -70,6 +77,7 @@ class AssessmentSerializer(BaseAssessmentSerializer):
         allow_null=True,
         required=False,
     )
+    nfr_attachment = AttachmentSingleFileField()
 
     class Meta(BaseAssessmentSerializer.Meta):
         fields = '__all__'
