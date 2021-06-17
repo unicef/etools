@@ -37,7 +37,7 @@ from etools.applications.travel.serializers import (
     TripStatusHistorySerializer,
     TripStatusSerializer,
     ReportAttachmentSerializer,
-    ReportSerializer, TripCreateUpdateSerializer,
+    ReportSerializer, TripCreateUpdateSerializer, TripCreateUpdateStatusSerializer,
 )
 from etools.applications.travel.validation import TripValid
 
@@ -138,7 +138,8 @@ class TripViewSet(
 
     @transaction.atomic
     def update(self, request, *args, **kwargs):
-        self.serializer_class = TripCreateUpdateSerializer
+        if not kwargs.get("custom_serializer_class"):
+            self.serializer_class = TripCreateUpdateSerializer
         related_fields = ["status_history"]
         nested_related_names = []
 
@@ -170,7 +171,7 @@ class TripViewSet(
         )
 
     def _set_status(self, request, trip_status):
-        # self.serializer_class = TripStatusSerializer
+        self.serializer_class = TripCreateUpdateStatusSerializer
         update_data = {
             "status": trip_status,
         }
@@ -182,7 +183,7 @@ class TripViewSet(
         request.data.update(
             {"status_history": [update_data]},
         )
-        return self.update(request, partial=True)
+        return self.update(request, partial=True, custom_serializer_class=True)
 
     @action(detail=True, methods=["patch"])
     def dismiss_infotext(self, request, pk=None):

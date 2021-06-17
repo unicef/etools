@@ -230,6 +230,7 @@ class ItineraryItemSerializer(ItineraryItemBaseSerializer):
 
 
 class TripCreateUpdateSerializer(BaseTripSerializer):
+    # status = serializers.CharField(required=False)
     attachments = TripAttachmentSerializer(many=True, required=False)
 
     def _add_attachments(self, trip, attachment_data):
@@ -265,6 +266,12 @@ class TripCreateUpdateSerializer(BaseTripSerializer):
         return super().update(instance, validated_data)
 
     class Meta(BaseTripSerializer.Meta):
+        fields = '__all__'
+        read_only_fields = ["reference_number", "status"]
+
+
+class TripCreateUpdateStatusSerializer(TripCreateUpdateSerializer):
+    class Meta(TripCreateUpdateSerializer.Meta):
         fields = '__all__'
         read_only_fields = ["reference_number"]
 
