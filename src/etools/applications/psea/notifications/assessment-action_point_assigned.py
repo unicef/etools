@@ -12,7 +12,7 @@ defaults = {
 
     PSEA Assessment Reference Number: {{ action_point.reference_number }}
     Due Date: {{ action_point.due_date }}
-    Link: {{ action_point.psea_assessment.url }}
+    Link: {{ action_point.object_url }}
 
     Thank you.
     """),
@@ -27,7 +27,7 @@ defaults = {
 
     PSEA Assessment Reference Number: {{ action_point.reference_number }}<br />
     Due Date: {{ action_point.due_date }}<br/>
-    Link: <a href="{{ action_point.psea_assessment.url }}">click here</a><br/><br/>
+    Link: <a href="{{ action_point.object_url }}">click here</a><br/><br/>
 
     Thank you.
     {% endblock %}
