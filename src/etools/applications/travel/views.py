@@ -25,7 +25,8 @@ from etools.applications.field_monitoring.planning.models import MonitoringActiv
 from etools.applications.partners.views.v2 import choices_to_json_ready
 from etools.applications.permissions2.views import PermissionContextMixin, PermittedSerializerMixin
 from etools.applications.travel.models import Activity, Trip, ItineraryItem, Report
-from etools.applications.travel.permissions import trip_field_is_editable_permission
+from etools.applications.travel.permissions import trip_field_is_editable_permission, UserIsStaffPermission, \
+    TripPermissions
 from etools.applications.travel.serializers import (
     ActivityDetailSerializer,
     ActivityCreateUpdateSerializer,
@@ -55,7 +56,7 @@ class TripViewSet(
         viewsets.GenericViewSet,
 ):
     pagination_class = DynamicPageNumberPagination
-    permission_classes = [IsAuthenticated, ]
+    permission_classes = [IsAuthenticated, UserIsStaffPermission]
 
     queryset = Trip.objects.all()
     serializer_class = TripSerializer
@@ -185,7 +186,9 @@ class TripViewSet(
         )
         return self.update(request, partial=True, custom_serializer_class=True)
 
-    @action(detail=True, methods=["patch"])
+    @action(detail=True, methods=["patch"], permission_classes=[IsAuthenticated,
+                                                                UserIsStaffPermission,
+                                                                trip_field_is_editable_permission("user_info_text")])
     def dismiss_infotext(self, request, pk=None):
         trip = self.get_object()
         try:

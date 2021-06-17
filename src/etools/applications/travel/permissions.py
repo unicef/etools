@@ -3,6 +3,11 @@ from rest_framework.permissions import BasePermission
 from etools.applications.partners.permissions import PMPPermissions
 
 
+class UserIsStaffPermission(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.is_staff
+
+
 class TripPermissions(PMPPermissions):
     MODEL_NAME = 'travel.Trip'
     EXTRA_FIELDS = []

@@ -1,5 +1,7 @@
 Field no,Verbose Name,Field Name,Group,Condition,Status,Action,Allowed
 1.1.1,Traveller,traveller,,,draft,Edit,TRUE
+1.1.1,,user_info_text,Traveller,,*,Edit,TRUE
+1.1.1,,user_info_text,Travel Focal Point,,*,Edit,TRUE
 1.1.1,Supervisor,supervisor,,,draft,Edit,TRUE
 1.1.1,Title,title,,,draft,Edit,TRUE
 1.1.1,Description,description,,,draft,Edit,TRUE
