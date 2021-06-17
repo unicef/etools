@@ -1997,6 +1997,10 @@ class Intervention(TimeStampedModel):
         verbose_name=("Partner Accepted"),
         default=False,
     )
+    accepted_on_behalf_of_partner = models.BooleanField(
+        verbose_name=("Accepted on behalf of Partner"),
+        default=False,
+    )
     cfei_number = models.CharField(
         verbose_name=_("UNPP Number"),
         max_length=150,

@@ -1271,6 +1271,7 @@ class TestInterventionAccept(BaseInterventionActionTestCase):
         mock_send.assert_called()
         self.intervention.refresh_from_db()
         self.assertTrue(self.intervention.partner_accepted)
+        self.assertFalse(self.intervention.accepted_on_behalf_of_partner)
         self.assertIsNotNone(self.intervention.submission_date)
 
         mock_send = mock.Mock()
@@ -1380,6 +1381,7 @@ class TestInterventionAcceptBehalfOfPartner(BaseInterventionActionTestCase):
         self.assertEqual(self.intervention.unicef_court, True)
         self.assertEqual(self.intervention.partner_accepted, True)
         self.assertEqual(self.intervention.unicef_accepted, True)
+        self.assertEqual(self.intervention.accepted_on_behalf_of_partner, True)
 
     def test_accept_partner_court(self):
         self.intervention.unicef_accepted = False

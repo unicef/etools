@@ -115,7 +115,11 @@ class PMPInterventionAcceptOnBehalfOfPartner(PMPInterventionActionView):
         if pd.partner_accepted:
             raise ValidationError("Partner has already accepted this PD.")
 
-        request.data.update({"partner_accepted": True, "unicef_court": True})
+        request.data.update({
+            "partner_accepted": True,
+            "unicef_court": True,
+            "accepted_on_behalf_of_partner": True,
+        })
 
         if not pd.submission_date and 'submission_date' not in request.data:
             request.data.update({
