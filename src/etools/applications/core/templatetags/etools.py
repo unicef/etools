@@ -49,3 +49,9 @@ def tenant_model_filter(context, app):
 def tenant_app_filter(app):
     tenant_app_labels = [tenant_app.split('.')[-1] for tenant_app in settings.TENANT_APPS]
     return app['app_label'] in tenant_app_labels
+
+
+@register.simple_tag
+def call_method(obj, method_name, *args):
+    method = getattr(obj, method_name)
+    return method(*args)
