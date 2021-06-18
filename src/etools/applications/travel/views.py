@@ -350,20 +350,24 @@ class ItineraryItemViewSet(
 
 class TripAttachmentsViewSet(
         SafeTenantViewSetMixin,
-        mixins.ListModelMixin,
-        mixins.CreateModelMixin,
-        mixins.RetrieveModelMixin,
-        mixins.UpdateModelMixin,
         mixins.DestroyModelMixin,
         NestedViewSetMixin,
         viewsets.GenericViewSet,
 ):
     serializer_class = TripAttachmentSerializer
     queryset = Attachment.objects.all()
-    permission_classes = [IsAuthenticated, ]
+    permission_classes = [IsAuthenticated,
+                          UserIsStaffPermission,
+                          trip_field_is_editable_permission('attachments')]
 
     def get_view_name(self):
         return _('Related Documents')
+
+    def get_root_object(self):
+        return get_object_or_404(
+            Trip,
+            pk=self.kwargs.get("nested_1_pk"),
+        )
 
     def get_parent_object(self):
         return get_object_or_404(
@@ -385,15 +389,6 @@ class TripAttachmentsViewSet(
         if pk:
             return self.queryset.get(pk=pk)
         return super().get_object()
-
-    def perform_create(self, serializer):
-        serializer.instance = self.get_object(
-            pk=serializer.initial_data.get("id")
-        )
-        serializer.save(content_object=self.get_parent_object())
-
-    def perform_update(self, serializer):
-        serializer.save(content_object=self.get_parent_object())
 
 
 class ActivityViewSet(
@@ -480,17 +475,15 @@ class ReportViewSet(
 
 class ReportAttachmentsViewSet(
         SafeTenantViewSetMixin,
-        mixins.ListModelMixin,
-        mixins.CreateModelMixin,
-        mixins.RetrieveModelMixin,
-        mixins.UpdateModelMixin,
         mixins.DestroyModelMixin,
         NestedViewSetMixin,
         viewsets.GenericViewSet,
 ):
     serializer_class = ReportAttachmentSerializer
     queryset = Attachment.objects.all()
-    permission_classes = [IsAuthenticated, ]
+    permission_classes = [IsAuthenticated,
+                          UserIsStaffPermission,
+                          trip_field_is_editable_permission('report')]
 
     def get_view_name(self):
         return _('Related Documents')
@@ -499,6 +492,12 @@ class ReportAttachmentsViewSet(
         return get_object_or_404(
             Report,
             trip__pk=self.kwargs.get("nested_1_pk"),
+        )
+
+    def get_root_object(self):
+        return get_object_or_404(
+            Trip,
+            pk=self.kwargs.get("nested_1_pk"),
         )
 
     def get_parent_filter(self):
