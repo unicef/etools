@@ -1,6 +1,7 @@
 import datetime
 from decimal import Decimal
 from unittest import mock, skip
+from unittest.mock import patch
 
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.models import ContentType
@@ -1294,6 +1295,7 @@ class TestInterventionAccept(BaseInterventionActionTestCase):
         mock_send.assert_called()
         self.intervention.refresh_from_db()
         self.assertTrue(self.intervention.partner_accepted)
+        self.assertFalse(self.intervention.accepted_on_behalf_of_partner)
         self.assertIsNotNone(self.intervention.submission_date)
 
         mock_send = mock.Mock()
@@ -1350,6 +1352,80 @@ class TestInterventionAccept(BaseInterventionActionTestCase):
         self.assertTrue(self.intervention.partner_accepted)
         self.assertTrue(self.intervention.unicef_accepted)
         self.assertEqual(self.intervention.status, Intervention.DRAFT)
+
+
+class TestInterventionAcceptBehalfOfPartner(BaseInterventionActionTestCase):
+    def setUp(self):
+        super().setUp()
+        self.intervention.date_sent_to_partner = timezone.now().date()
+        self.intervention.save()
+        self.url = reverse(
+            'pmp_v3:intervention-accept-behalf-of-partner',
+            args=[self.intervention.pk],
+        )
+
+    def test_not_found(self):
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-accept-behalf-of-partner', args=[404]),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_partner_no_access(self):
+        response = self.forced_auth_req("patch", self.url, user=self.partner_user)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Only focal points can accept", response.data)
+
+    @patch("post_office.mail.send")
+    def test_accept_on_behalf_of_partner(self, mock_email):
+        mock_email.return_value = EmailFactory()
+
+        self.intervention.unicef_accepted = True
+        self.intervention.partner_accepted = False
+        self.intervention.unicef_court = True
+        self.intervention.save()
+        self.intervention.partner_focal_points.add(*[PartnerStaffFactory(partner=self.partner) for _i in range(5)])
+        self.intervention.unicef_focal_points.add(*[UserFactory(is_staff=True) for _i in range(5)])
+
+        response = self.forced_auth_req(
+            "patch",
+            self.url,
+            user=self.user,
+            data={'submission_date': timezone.now().date() - datetime.timedelta(days=1)}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.intervention.refresh_from_db()
+        self.assertEqual(mock_email.call_count, 1)
+        self.assertEqual(self.intervention.partner_focal_points.count(), 6)
+        self.assertEqual(self.intervention.unicef_focal_points.count(), 6)
+        self.assertEqual(len(mock_email.call_args[1]['recipients']), 5 + 6)
+        self.assertNotIn(self.user.email, mock_email.call_args[1]['recipients'])
+        self.assertEqual(self.intervention.status, Intervention.DRAFT)
+        self.assertEqual(self.intervention.unicef_court, True)
+        self.assertEqual(self.intervention.partner_accepted, True)
+        self.assertEqual(self.intervention.unicef_accepted, True)
+        self.assertEqual(self.intervention.accepted_on_behalf_of_partner, True)
+
+    def test_accept_partner_court(self):
+        self.intervention.unicef_accepted = False
+        self.intervention.partner_accepted = False
+        self.intervention.unicef_court = False
+        self.intervention.submission_date = None
+        self.intervention.save()
+
+        response = self.forced_auth_req(
+            "patch",
+            self.url,
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.intervention.refresh_from_db()
+        self.assertEqual(self.intervention.status, Intervention.DRAFT)
+        self.assertEqual(self.intervention.unicef_court, True)
+        self.assertEqual(self.intervention.partner_accepted, True)
+        self.assertEqual(self.intervention.unicef_accepted, False)
+        self.assertEqual(self.intervention.submission_date, timezone.now().date())
 
 
 class TestInterventionReview(BaseInterventionActionTestCase):

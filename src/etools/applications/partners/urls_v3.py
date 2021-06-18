@@ -31,6 +31,7 @@ from etools.applications.partners.views.interventions_v3 import (
 )
 from etools.applications.partners.views.interventions_v3_actions import (
     PMPAmendedInterventionMerge,
+    PMPInterventionAcceptOnBehalfOfPartner,
     PMPInterventionAcceptView,
     PMPInterventionCancelView,
     PMPInterventionRejectReviewView,
@@ -93,6 +94,11 @@ urlpatterns = [
         'interventions/<int:pk>/accept/',
         view=PMPInterventionAcceptView.as_view(http_method_names=['patch']),
         name='intervention-accept',
+    ),
+    path(
+        'interventions/<int:pk>/accept_on_behalf_of_partner/',
+        view=PMPInterventionAcceptOnBehalfOfPartner.as_view(http_method_names=['patch']),
+        name='intervention-accept-behalf-of-partner',
     ),
     path(
         'interventions/<int:pk>/review/',

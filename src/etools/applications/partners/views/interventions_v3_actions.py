@@ -103,6 +103,58 @@ class PMPInterventionAcceptView(PMPInterventionActionView):
         return response
 
 
+class PMPInterventionAcceptOnBehalfOfPartner(PMPInterventionActionView):
+    def update(self, request, *args, **kwargs):
+        pd = self.get_object()
+        request.data.clear()
+        if pd.status not in [Intervention.DRAFT]:
+            raise ValidationError("Action is not allowed")
+
+        if self.request.user not in pd.unicef_focal_points.all():
+            raise ValidationError("Only focal points can accept")
+
+        if pd.partner_accepted:
+            raise ValidationError("Partner has already accepted this PD.")
+
+        request.data.update({
+            "partner_accepted": True,
+            "unicef_court": True,
+            "accepted_on_behalf_of_partner": True,
+        })
+
+        if not pd.submission_date and 'submission_date' not in request.data:
+            request.data.update({
+                "submission_date": timezone.now().strftime("%Y-%m-%d"),
+            })
+
+        recipients = set(
+            [u.email for u in pd.partner_focal_points.all()] +
+            [u.email for u in pd.unicef_focal_points.all()]
+        )
+        recipients.remove(self.request.user.email)
+        template_name = 'partners/intervention/unicef_accepted_behalf_of_partner'
+
+        response = super().update(request, *args, **kwargs)
+
+        if response.status_code == 200:
+            # send notification
+            context = {
+                "reference_number": pd.reference_number,
+                "partner_name": str(pd.agreement.partner),
+                "pd_link": reverse(
+                    "pmp_v3:intervention-detail",
+                    args=[pd.pk]
+                ),
+            }
+            send_notification_with_template(
+                recipients=list(recipients),
+                template_name=template_name,
+                context=context
+            )
+
+        return response
+
+
 class PMPInterventionRejectReviewView(PMPInterventionActionView):
     @transaction.atomic
     def update(self, request, *args, **kwargs):

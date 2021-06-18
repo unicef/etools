@@ -89,6 +89,7 @@ class TestInterventionsSwagger(BaseTenantTestCase):
 class TestInterventionsAPI(BaseTenantTestCase):
     EDITABLE_FIELDS = {
         'draft': [
+            "accepted_on_behalf_of_partner",
             "actionpoint",
             "activity",
             "agreement",
