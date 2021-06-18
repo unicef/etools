@@ -525,6 +525,10 @@ class PartnerOrganization(TimeStampedModel):
         blank=True,
         default='',
     )
+    lead_office = models.ForeignKey(Office, verbose_name=_("Lead Office"),
+                                    blank=True, null=True, on_delete=models.SET_NULL)
+    lead_section = models.ForeignKey(Section, verbose_name=_("Lead Section"),
+                                     blank=True, null=True, on_delete=models.SET_NULL)
 
     tracker = FieldTracker()
     objects = PartnerOrganizationQuerySet.as_manager()

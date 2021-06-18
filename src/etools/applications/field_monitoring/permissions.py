@@ -81,20 +81,12 @@ class IsActivityTeamMember(BasePermission):
         return True
 
 
-class IsPersonResponsible(BasePermission):
+class IsVisitLead(BasePermission):
     def has_permission(self, request, view):
         return True
 
     def has_object_permission(self, request, view, obj):
-        return request.user == obj.person_responsible
-
-
-class IsActivityPersonResponsible(BasePermission):
-    def has_permission(self, request, view):
-        return request.user == view.get_root_object().person_responsible
-
-    def has_object_permission(self, request, view, obj):
-        return True
+        return request.user == obj.visit_lead
 
 
 def activity_field_is_editable_permission(field):

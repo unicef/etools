@@ -520,6 +520,8 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
                 (('name', 'vision_synced',),
                  ('short_name', 'alternate_name',),
                  ('partner_type', 'cso_type',),
+                 'lead_office',
+                 'lead_section',
                  'shared_with',
                  'vendor_number',
                  'rating',
