@@ -13,7 +13,6 @@ from unicef_attachments.serializers import AttachmentSerializerMixin
 from unicef_restlib.fields import SeparatedReadWriteField
 
 from etools.applications.action_points.serializers import ActionPointBaseSerializer, HistorySerializer
-from etools.applications.attachments.serializers import CodedAttachmentSerializer
 from etools.applications.audit.models import UNICEFAuditFocalPoint
 from etools.applications.audit.purchase_order.models import PurchaseOrder
 from etools.applications.partners.serializers.partner_organization_v2 import (
@@ -58,11 +57,6 @@ class BaseAssessmentSerializer(serializers.ModelSerializer):
             ps,
         )
         return permissions.get_permissions()
-
-
-class NFRAttachmentSerializer(CodedAttachmentSerializer):
-    file_group = "psea"
-    code = 'psea_nfr_attachment'
 
 
 class AssessmentSerializer(AttachmentSerializerMixin, BaseAssessmentSerializer):

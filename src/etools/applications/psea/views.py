@@ -27,7 +27,6 @@ from etools.applications.action_points.conditions import (
     ActionPointAssigneeCondition,
     ActionPointAuthorCondition,
 )
-from etools.applications.attachments.views import CodedAttachmentViewSet
 from etools.applications.audit.models import UNICEFAuditFocalPoint
 from etools.applications.partners.views.v2 import choices_to_json_ready
 from etools.applications.permissions2.conditions import ObjectStatusCondition
@@ -51,7 +50,6 @@ from etools.applications.psea.serializers import (
     AssessmentStatusSerializer,
     AssessorSerializer,
     IndicatorSerializer,
-    NFRAttachmentSerializer,
 )
 from etools.applications.psea.validation import AssessmentValid
 
@@ -474,12 +472,6 @@ class AssessorViewSet(
             )
         else:
             return Response(serializer.data)
-
-
-class NFRAttachmentViewSet(CodedAttachmentViewSet):
-    serializer_class = NFRAttachmentSerializer
-    content_model = Assessment
-    code = 'nfr_attachment'
 
 
 class IndicatorViewSet(
