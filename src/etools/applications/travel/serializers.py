@@ -22,10 +22,6 @@ from etools.applications.users.serializers_v3 import MinimalUserSerializer
 
 class ReportAttachmentSerializer(serializers.ModelSerializer):
     url = serializers.SerializerMethodField()
-    file_type = FileTypeModelChoiceField(
-        label=_("Document Type"),
-        queryset=FileType.objects.filter(code="travel_report_docs"),
-    )
 
     class Meta:
         model = Attachment
@@ -52,61 +48,41 @@ class ReportSerializer(serializers.ModelSerializer):
         model = Report
         fields = '__all__'
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if hasattr(self, "initial_data"):
-            self.initial_data["trip"] = self._context.get(
-                "request"
-            ).parser_context["kwargs"].get("nested_1_pk")
+    def _add_attachments(self, report, attachment_data):
 
-    def _set_attachments(self, report, attachment_data):
         content_type = ContentType.objects.get_for_model(Report)
-        current = list(Attachment.objects.filter(
-            object_id=report.pk,
-            content_type=content_type,
-        ).all())
+        file_type = FileType.objects.get(name="generic_trip_attachment")
         used = []
         for attachment in attachment_data:
-            for initial in self.initial_data.get("attachments"):
-                pk = initial["id"]
-                current = [a for a in current if a.pk != pk]
-                file_type = initial.get("file_type")
-                if pk not in used and file_type == attachment["file_type"].pk:
-                    attachment = Attachment.objects.filter(pk=pk).update(
-                        file_type=attachment["file_type"],
-                        code="travel_report_docs",
-                        object_id=report.pk,
-                        content_type=content_type,
-                    )
-                    used.append(pk)
-                    break
-        for attachment in current:
-            attachment.delete()
+            pk = attachment["id"]
+            if pk not in used:
+                Attachment.objects.filter(pk=pk).update(
+                    file_type=file_type,
+                    code="travel_report_docs",
+                    object_id=report.pk,
+                    content_type=content_type,
+                )
+                used.append(pk)
 
     def create(self, validated_data):
-        attachment_data = None
-        if "attachments" in validated_data:
-            attachment_data = validated_data.pop("attachments")
+        attachment_data = self.context.get("attachments", None)
 
         report = Report.objects.create(**validated_data)
 
         if attachment_data is not None:
-            self._set_attachments(report, attachment_data)
+            self._add_attachments(report, attachment_data)
         return report
 
     def update(self, instance, validated_data):
-        attachment_data = None
-        if "attachments" in validated_data:
-            attachment_data = validated_data.pop("attachments")
-
+        attachment_data = self.context.get("attachments", None)
         instance.narrative = validated_data.get(
             "narrative",
             instance.narrative,
         )
         instance.save()
-
         if attachment_data is not None:
-            self._set_attachments(instance, attachment_data)
+            self._add_attachments(instance, attachment_data)
+
         return instance
 
 
@@ -234,7 +210,6 @@ class TripCreateUpdateSerializer(BaseTripSerializer):
     attachments = TripAttachmentSerializer(many=True, required=False)
 
     def _add_attachments(self, trip, attachment_data):
-        print("setting attachments")
         content_type = ContentType.objects.get_for_model(Trip)
         file_type = FileType.objects.get(name="generic_trip_attachment")
         current = list(Attachment.objects.filter(

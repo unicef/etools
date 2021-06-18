@@ -27,7 +27,6 @@ from etools.applications.permissions2.views import PermissionContextMixin, Permi
 from etools.applications.travel.models import Activity, ItineraryItem, Report, Trip
 from etools.applications.travel.permissions import (
     trip_field_is_editable_permission,
-    TripPermissions,
     UserIsStaffPermission,
 )
 from etools.applications.travel.serializers import (
@@ -43,7 +42,6 @@ from etools.applications.travel.serializers import (
     TripExportSerializer,
     TripSerializer,
     TripStatusHistorySerializer,
-    TripStatusSerializer,
 )
 from etools.applications.travel.validation import TripValid
 
@@ -83,6 +81,7 @@ class TripViewSet(
 
     SERIALIZER_MAP = {
         "status_history": TripStatusHistorySerializer,
+        "report": ReportSerializer
     }
 
     def parse_sort_params(self):
@@ -146,8 +145,8 @@ class TripViewSet(
     def update(self, request, *args, **kwargs):
         if not kwargs.get("custom_serializer_class"):
             self.serializer_class = TripCreateUpdateSerializer
-        related_fields = ["status_history"]
-        nested_related_names = []
+        related_fields = ["status_history", "report"]
+        nested_related_names = ["attachments"]
 
         instance, old_instance, __ = self.my_update(
             request,
