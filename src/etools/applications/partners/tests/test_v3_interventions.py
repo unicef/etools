@@ -25,6 +25,7 @@ from etools.applications.partners.permissions import PRC_SECRETARY
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
     FileTypeFactory,
+    InterventionAmendmentFactory,
     InterventionAttachmentFactory,
     InterventionFactory,
     InterventionResultLinkFactory,
@@ -148,6 +149,29 @@ class TestList(BaseInterventionTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]["id"], intervention.pk)
+
+    def test_intervention_list_without_show_amendments_flag(self):
+        InterventionAmendmentFactory()
+        response = self.forced_auth_req(
+            'get',
+            reverse('pmp_v3:intervention-list'),
+            user=self.user,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+
+    def test_intervention_list_with_show_amendments_flag(self):
+        InterventionAmendmentFactory()
+        response = self.forced_auth_req(
+            'get',
+            reverse('pmp_v3:intervention-list'),
+            user=self.user,
+            data={'show_amendments': True}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
 
     def test_not_authenticated(self):
         response = self.forced_auth_req(
