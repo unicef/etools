@@ -7,8 +7,9 @@ from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
-from unicef_attachments.fields import FileTypeModelChoiceField
+from unicef_attachments.fields import AttachmentSingleFileField, FileTypeModelChoiceField
 from unicef_attachments.models import Attachment, FileType
+from unicef_attachments.serializers import AttachmentSerializerMixin
 from unicef_restlib.fields import SeparatedReadWriteField
 
 from etools.applications.action_points.serializers import ActionPointBaseSerializer, HistorySerializer
@@ -58,7 +59,7 @@ class BaseAssessmentSerializer(serializers.ModelSerializer):
         return permissions.get_permissions()
 
 
-class AssessmentSerializer(BaseAssessmentSerializer):
+class AssessmentSerializer(AttachmentSerializerMixin, BaseAssessmentSerializer):
     overall_rating = serializers.SerializerMethodField()
     assessor = serializers.SerializerMethodField()
     partner_name = serializers.CharField(source="partner.name", read_only=True)
@@ -70,6 +71,7 @@ class AssessmentSerializer(BaseAssessmentSerializer):
         allow_null=True,
         required=False,
     )
+    nfr_attachment = AttachmentSingleFileField()
 
     class Meta(BaseAssessmentSerializer.Meta):
         fields = '__all__'

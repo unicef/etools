@@ -241,7 +241,7 @@ class AssessmentViewSet(
             ).data
         )
 
-    def _set_status(self, request, assessment_status):
+    def _set_status(self, request, assessment_status, **kwargs):
         self.serializer_class = AssessmentStatusSerializer
         status = {
             "status": assessment_status,
@@ -250,6 +250,8 @@ class AssessmentViewSet(
         if comment:
             status["comment"] = comment
         request.data.clear()
+        if 'nfr_attachment' in kwargs:
+            request.data.update({"nfr_attachment": kwargs.get('nfr_attachment')})
         request.data.update({"status": assessment_status})
         request.data.update(
             {"status_history": [status]},
@@ -270,7 +272,7 @@ class AssessmentViewSet(
 
     @action(detail=True, methods=["patch"])
     def finalize(self, request, pk=None):
-        return self._set_status(request, Assessment.STATUS_FINAL)
+        return self._set_status(request, Assessment.STATUS_FINAL, **request.data)
 
     @action(detail=True, methods=["patch"])
     def cancel(self, request, pk=None):
