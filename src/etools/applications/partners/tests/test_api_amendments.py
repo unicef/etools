@@ -44,11 +44,13 @@ class TestInterventionAmendments(BaseTenantTestCase):
         self.pme = UserFactory(is_staff=True, groups__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP])
 
         self.partner = PartnerFactory(name='Partner')
+        year_ago = datetime.date.today() - datetime.timedelta(days=365)
         self.active_agreement = AgreementFactory(
             partner=self.partner,
             status='active',
-            signed_by_unicef_date=datetime.date.today(),
-            signed_by_partner_date=datetime.date.today()
+            signed_by_unicef_date=year_ago,
+            signed_by_partner_date=year_ago,
+            start=year_ago,
         )
 
         self.active_intervention = InterventionFactory(
@@ -65,6 +67,10 @@ class TestInterventionAmendments(BaseTenantTestCase):
             partner_authorized_officer_signatory=self.partner.staff_members.all().first(),
             budget_owner=self.pme,
         )
+        self.active_intervention.partner_focal_points.add(self.partner.staff_members.all().first())
+        self.active_intervention.unicef_focal_points.add(self.unicef_staff)
+        self.active_intervention.offices.add(OfficeFactory())
+        self.active_intervention.sections.add(SectionFactory())
         ReportingRequirementFactory(intervention=self.active_intervention)
 
     def test_no_permission_user_forbidden(self):
@@ -362,6 +368,19 @@ class TestInterventionAmendments(BaseTenantTestCase):
         self.assertFalse(response.data['permissions']['view']['planned_visits'])
         self.assertFalse(response.data['permissions']['view']['frs'])
         self.assertFalse(response.data['permissions']['view']['attachments'])
+
+    def test_amendment_prc_no_review_type(self):
+        amendment = InterventionAmendmentFactory(intervention=self.active_intervention)
+        amendment.amended_intervention.unicef_accepted = True
+        amendment.amended_intervention.partner_accepted = True
+        amendment.amended_intervention.save()
+        response = self.forced_auth_req(
+            "patch", reverse('pmp_v3:intervention-review', args=[amendment.amended_intervention.pk]),
+            user=self.unicef_staff, data={'review_type': 'no-review'}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        amendment.amended_intervention.refresh_from_db()
+        self.assertEqual(amendment.amended_intervention.status, Intervention.SIGNATURE)
 
 
 class TestInterventionAmendmentDeleteView(BaseTenantTestCase):

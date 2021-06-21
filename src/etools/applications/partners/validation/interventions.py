@@ -321,7 +321,12 @@ def all_activities_have_timeframes(i):
 
 
 def review_was_accepted(i):
+    from etools.applications.partners.models import InterventionReview
+
     r = i.review
+    if r.review_type == InterventionReview.NORV:
+        return True
+
     return r.overall_approval if r else False
 
 
