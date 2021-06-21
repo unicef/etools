@@ -30,6 +30,10 @@ logger = get_task_logger(__name__)
 
 @celery.current_app.task(bind=True)
 def validate_locations_in_use(self, carto_table_pk):
+    """
+    check locations in use
+    returns error if there are referenced to unmapped locations
+    """
     carto_table = CartoDBTable.objects.get(pk=carto_table_pk)
     country = Country.objects.get(schema_name=get_schema_name_from_task(self, dict))
     log, _ = get_vision_logger_domain_model().objects.get_or_create(
@@ -39,15 +43,11 @@ def validate_locations_in_use(self, carto_table_pk):
 
     )
     log.details = self.__class__.__name__
-
-    database_pcodes = []
-    rows = Location.objects.all_locations().filter(gateway=carto_table.location_type).values('p_code')
-    log.total_records = rows.count()
-    for row in rows:
-        database_pcodes.append(row['p_code'])
-
     auth_client = LocationsCartoNoAuthClient(base_url="https://{}.carto.com/".format(carto_table.domain))
     sql_client = SQLClient(auth_client)
+
+    database_pcodes = Location.objects.all_locations().filter(gateway=carto_table.location_type).values_list('p_code', flat=True)
+    log.total_records = database_pcodes.count()
 
     try:
         qry = sql_client.send('select array_agg({}) AS aggregated_pcodes from {}'.format(
@@ -88,7 +88,9 @@ def validate_locations_in_use(self, carto_table_pk):
 
 @celery.current_app.task(bind=True)  # noqa: ignore=C901
 def update_sites_from_cartodb(self, carto_table_pk):
+    """
 
+    """
     carto_table = CartoDBTable.objects.get(pk=carto_table_pk)
     country = Country.objects.get(schema_name=get_schema_name_from_task(self, dict))
     log, _ = get_vision_logger_domain_model().objects.get_or_create(
@@ -105,9 +107,9 @@ def update_sites_from_cartodb(self, carto_table_pk):
 
     try:
         # query cartodb for the locations with geometries
-        carto_succesfully_queried, rows = get_cartodb_locations(sql_client, carto_table)
+        rows = get_cartodb_locations(sql_client, carto_table)
 
-        if not carto_succesfully_queried:
+        if not rows:
             return results
     except CartoException:  # pragma: no-cover
         message = "CartoDB exception occured"
@@ -117,12 +119,9 @@ def update_sites_from_cartodb(self, carto_table_pk):
     else:
         # validations
         # get the list of the existing Pcodes and previous Pcodes from the database
-        database_pcodes = []
-        lrows = Location.objects.filter(gateway=carto_table.location_type).values('p_code')
-        log.total_records = lrows.count()
-        for row in lrows:
-            database_pcodes.append(row['p_code'])
-
+        rows = Location.objects.filter(gateway=carto_table.location_type).values('p_code')
+        log.total_records = rows.count()
+        database_pcodes = [row['p_code'] for row in rows]
         # get the list of the new Pcodes from the Carto data
         new_carto_pcodes = [str(row[carto_table.pcode_col]) for row in rows]
 
@@ -199,13 +198,9 @@ def update_sites_from_cartodb(self, carto_table_pk):
                             try:
                                 parent_instance = Location.objects.get(p_code=parent_code)
                             except Location.MultipleObjectsReturned:
-                                msg = "Multiple locations found for parent code: {}".format(
-                                    parent_code
-                                )
+                                msg = "Multiple locations found for parent code: {}".format(parent_code)
                             except Location.DoesNotExist:
-                                msg = "No locations found for parent code: {}".format(
-                                    parent_code
-                                )
+                                msg = "No locations found for parent code: {}".format(parent_code)
                             except Exception as exp:
                                 msg = force_text(exp)
 
@@ -260,11 +255,9 @@ def cleanup_obsolete_locations(self, carto_table_pk):
     )
     log.details = self.__class__.__name__
 
-    database_pcodes = []
-    rows = Location.objects.all_locations().filter(gateway=carto_table.location_type).values('p_code')
-    log.total_processed = rows.count()
-    for row in rows:
-        database_pcodes.append(row['p_code'])
+    database_pcodes = Location.objects.all_locations().filter(
+        gateway=carto_table.location_type).values_list('p_code', flat=True)
+    log.total_processed = database_pcodes.count()
 
     auth_client = LocationsCartoNoAuthClient(base_url="https://{}.carto.com/".format(carto_table.domain))
     sql_client = SQLClient(auth_client)

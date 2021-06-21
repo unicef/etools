@@ -18,6 +18,9 @@ logger = get_task_logger(__name__)
 
 
 def get_cartodb_locations(sql_client, carto_table):
+    """
+    returns locations referenced by cartodb_table
+    """
 
     rows = []
     cartodb_id_col = 'cartodb_id'
@@ -25,15 +28,14 @@ def get_cartodb_locations(sql_client, carto_table):
         query_row_count = sql_client.send('select count(*) from {}'.format(carto_table.table_name))
         row_count = query_row_count['rows'][0]['count']
 
-        # do not spam Carto with requests, wait 1 second
-        time.sleep(1)
+        time.sleep(0.1)  # do not spam Carto with requests, wait 1 second
         query_max_id = sql_client.send('select MAX({}) from {}'.format(cartodb_id_col, carto_table.table_name))
         max_id = query_max_id['rows'][0]['max']
     except CartoException:  # pragma: no-cover
         logger.exception("Cannot fetch pagination prequisites from CartoDB for table {}".format(
             carto_table.table_name
         ))
-        return False, []
+        return []
 
     offset = 0
     limit = 100
@@ -41,7 +43,7 @@ def get_cartodb_locations(sql_client, carto_table):
     # failsafe in the case when cartodb id's are too much off compared to the nr. of records
     if max_id > (5 * row_count):
         limit = max_id + 1
-        logger.warning("The CartoDB primary key seemf off, pagination is not possible")
+        logger.warning("The CartoDB primary key seems off, pagination is not possible")
 
     if carto_table.parent_code_col and carto_table.parent:
         qry = 'select st_AsGeoJSON(the_geom) as the_geom, {}, {}, {} from {}'.format(
@@ -68,8 +70,7 @@ def get_cartodb_locations(sql_client, carto_table):
             carto_table.table_name
         ))
 
-        # do not spam Carto with requests, wait 1 second
-        time.sleep(1)
+        time.sleep(0.1)  # do not spam Carto with requests, wait 1 second
         try:
             sites = sql_client.send(paged_qry)
         except CartoException:  # pragma: no-cover
@@ -80,18 +81,18 @@ def get_cartodb_locations(sql_client, carto_table):
                 offset += limit
             else:
                 # can not continue if we have missing pages..
-                return False, []
+                return []
         else:
             if 'error' in sites:
                 # it seems we can have both valid results and error messages in the same CartoDB response
                 # When this occurs, we receive truncated locations, interrupt the import due to incomplete data
                 logger.exception("CartoDB API error received: {}".format(sites['error']))
-                return False, []
+                return []
             else:
                 rows += sites['rows']
                 offset += limit
 
-    return True, rows
+    return rows
 
 
 def retry_failed_query(sql_client, failed_query, offset):
@@ -122,6 +123,9 @@ def retry_failed_query(sql_client, failed_query, offset):
 
 
 def validate_remap_table(database_pcodes, new_carto_pcodes, carto_table, sql_client):  # pragma: no-cover
+    """
+
+    """
     remapped_pcode_pairs = []
     remap_old_pcodes = []
     remap_new_pcodes = []
@@ -212,6 +216,7 @@ def duplicate_pcodes_exist(database_pcodes, new_carto_pcodes, remap_old_pcodes, 
 
 def get_location_ids_in_use(location_ids):
     """
+    gets list of locations referenced in eTools models
     :param location_ids: list of location ids to check
     :return location_ids_in_use: the input reduced to locations in use
     """
@@ -460,15 +465,15 @@ def save_location_remap_history(remapped_location_pairs):
     for new_loc, old_loc in remapped_locations:
         multiples[new_loc].append(old_loc)
 
-    for model, related_object, related_property in [(AppliedIndicator, "appliedindicator", "locations"),
-                                                    (TravelActivity, "travelactivity", "locations"),
-                                                    (Activity, "activity", "locations"),
-                                                    (Intervention, "intervention", "flat_locations")]:
-        update_model_locations(remapped_locations, model, related_object, related_property, multiples)
-
-    # action points
-    for new_loc, old_loc in remapped_locations:
-        ActionPoint.objects.filter(location=old_loc).update(location=new_loc)
+    # for model, related_object, related_property in [(AppliedIndicator, "appliedindicator", "locations"),
+    #                                                 (TravelActivity, "travelactivity", "locations"),
+    #                                                 (Activity, "activity", "locations"),
+    #                                                 (Intervention, "intervention", "flat_locations")]:
+    #     update_model_locations(remapped_locations, model, related_object, related_property, multiples)
+    #
+    # # action points
+    # for new_loc, old_loc in remapped_locations:
+    #     ActionPoint.objects.filter(location=old_loc).update(location=new_loc)
 
     for new_loc, old_loc in remapped_locations:
         LocationRemapHistory.objects.create(
