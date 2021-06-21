@@ -20,6 +20,7 @@ from etools.applications.partners.tests.factories import (
 )
 from etools.applications.reports.models import InterventionActivity, ResultType
 from etools.applications.reports.tests.factories import (
+    AppliedIndicatorFactory,
     InterventionActivityFactory,
     InterventionActivityItemFactory,
     LowerResultFactory,
@@ -172,6 +173,31 @@ class AmendmentTestCase(BaseTenantTestCase):
             'name',
             amendment.difference['result_links']['diff']['update'][0]['diff']['ll_results']['diff']['update'][0]
             ['diff']['activities']['diff']['update'][0]['diff']['items']['diff']['update'][0]['diff']
+        )
+
+    def test_special_amended_name(self):
+        InterventionActivityItemFactory(activity=self.activity)
+        amendment = InterventionAmendmentFactory(intervention=self.active_intervention)
+
+        item = amendment.amended_intervention.result_links.first().ll_results.first().activities.first().items.first()
+        item.name = 'new name'
+        item.save()
+
+        indicator = AppliedIndicatorFactory(
+            lower_result=amendment.amended_intervention.result_links.first().ll_results.first(),
+        )
+
+        amendment.merge_amendment()
+
+        self.assertEqual(
+            self.activity.get_amended_name(),
+            amendment.difference['result_links']['diff']['update'][0]['diff']['ll_results']['diff']['update'][0]
+            ['diff']['activities']['diff']['update'][0]['name']
+        )
+        self.assertEqual(
+            indicator.get_amended_name(),
+            amendment.difference['result_links']['diff']['update'][0]['diff']['ll_results']['diff']['update'][0]
+            ['diff']['applied_indicators']['diff']['create'][0]['name']
         )
 
     def test_update_multiple_amendments(self):

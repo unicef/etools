@@ -17,7 +17,12 @@ class MergeError(Exception):
 
 
 def serialize_instance(instance):
-    return {'pk': instance.pk, 'name': str(instance)}
+    if hasattr(instance, 'get_amended_name'):
+        name = instance.get_amended_name()
+    else:
+        name = str(instance)
+
+    return {'pk': instance.pk, 'name': name}
 
 
 def copy_m2m_relations(instance, instance_copy, relations, objects_map):
@@ -422,11 +427,9 @@ def calculate_difference(instance, instance_copy, fields_map, relations_to_copy,
                         exclude_fields=exclude_fields
                     )
                     if related_object_changes_map:
-                        related_changes_map['diff']['update'].append({
-                            'pk': related_instance.pk,
-                            'name': str(related_instance),
-                            'diff': related_object_changes_map
-                        })
+                        data = serialize_instance(related_instance)
+                        data['diff'] = related_object_changes_map
+                        related_changes_map['diff']['update'].append(data)
                 else:
                     related_changes_map['diff']['remove'].append(serialize_instance(related_instance))
 
