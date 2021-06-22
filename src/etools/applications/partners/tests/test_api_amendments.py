@@ -18,6 +18,7 @@ from etools.applications.partners.tests.factories import (
     InterventionAmendmentFactory,
     InterventionFactory,
     InterventionReviewFactory,
+    InterventionSupplyItemFactory,
     PartnerFactory,
     PartnerStaffFactory,
 )
@@ -374,6 +375,9 @@ class TestInterventionAmendments(BaseTenantTestCase):
         amendment.amended_intervention.unicef_accepted = True
         amendment.amended_intervention.partner_accepted = True
         amendment.amended_intervention.save()
+        InterventionSupplyItemFactory(intervention=amendment.amended_intervention)
+
+        self.assertEqual({}, amendment.difference)
         response = self.forced_auth_req(
             "patch", reverse('pmp_v3:intervention-review', args=[amendment.amended_intervention.pk]),
             user=self.unicef_staff, data={'review_type': 'no-review'}
@@ -381,6 +385,10 @@ class TestInterventionAmendments(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         amendment.amended_intervention.refresh_from_db()
         self.assertEqual(amendment.amended_intervention.status, Intervention.SIGNATURE)
+
+        # check difference updated on review
+        amendment.refresh_from_db()
+        self.assertNotEqual({}, amendment.difference)
 
 
 class TestInterventionAmendmentDeleteView(BaseTenantTestCase):

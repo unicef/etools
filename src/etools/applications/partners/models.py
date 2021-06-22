@@ -1655,15 +1655,6 @@ class InterventionManager(models.Manager):
         return qs
 
 
-def update_amendment_difference(i, old_instance=None, user=None):
-    if not i.in_amendment:
-        return
-
-    amendment = i.amendment
-    amendment.difference = amendment.get_difference()
-    amendment.save()
-
-
 def side_effect_one(i, old_instance=None, user=None):
     pass
 
@@ -1710,7 +1701,7 @@ class Intervention(TimeStampedModel):
     }
     TRANSITION_SIDE_EFFECTS = {
         DRAFT: [],
-        REVIEW: [update_amendment_difference],
+        REVIEW: [],
         SIGNATURE: [],
         SIGNED: [side_effect_one, side_effect_two],
         ACTIVE: [],
@@ -2677,8 +2668,6 @@ class InterventionAmendment(TimeStampedModel):
         self.amended_intervention.save()
 
     def merge_amendment(self):
-        self.difference = self.get_difference()
-
         merge_instance(
             self.intervention,
             self.amended_intervention,
