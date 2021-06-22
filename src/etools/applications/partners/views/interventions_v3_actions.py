@@ -212,9 +212,14 @@ class PMPInterventionReviewView(PMPInterventionActionView):
         response = super().update(request, *args, **kwargs)
 
         # difference should be updated only after everything is saved
-        amendment = pd.amendment
-        amendment.difference = amendment.get_difference()
-        amendment.save()
+
+        if pd.in_amendment:
+            try:
+                amendment = pd.amendment
+                amendment.difference = amendment.get_difference()
+                amendment.save()
+            except InterventionAmendment.DoesNotExist:
+                pass
 
         if response.status_code == 200:
             # send notification

@@ -166,6 +166,7 @@ class AmendmentTestCase(BaseTenantTestCase):
         item.name = 'new name'
         item.save()
 
+        amendment.difference = amendment.get_difference()
         amendment.merge_amendment()
         original_item.refresh_from_db()
         self.assertEqual(original_item.name, item.name)
@@ -187,6 +188,7 @@ class AmendmentTestCase(BaseTenantTestCase):
             lower_result=amendment.amended_intervention.result_links.first().ll_results.first(),
         )
 
+        amendment.difference = amendment.get_difference()
         amendment.merge_amendment()
 
         self.assertEqual(
@@ -495,6 +497,7 @@ class AmendmentTestCase(BaseTenantTestCase):
         amendment.amended_intervention.end += datetime.timedelta(days=1)
         amendment.amended_intervention.save()
 
+        amendment.difference = amendment.get_difference()
         amendment.merge_amendment()
 
         self.assertIn('end', amendment.difference)
@@ -511,6 +514,7 @@ class AmendmentTestCase(BaseTenantTestCase):
         risk.mitigation_measures = "mitigation_measures"
         risk.save()
 
+        amendment.difference = amendment.get_difference()
         amendment.merge_amendment()
 
         self.assertIn('risks', amendment.difference)
@@ -528,6 +532,7 @@ class AmendmentTestCase(BaseTenantTestCase):
         supply_item.title = "new title"
         supply_item.save()
 
+        amendment.difference = amendment.get_difference()
         amendment.merge_amendment()
 
         self.assertIn('supply_items', amendment.difference)
