@@ -561,3 +561,11 @@ class InterventionReviewActionSerializer(serializers.ModelSerializer):
     class Meta:
         model = InterventionReview
         fields = ('id', 'review_type')
+
+
+class AmendedInterventionReviewActionSerializer(serializers.ModelSerializer):
+    review_type = serializers.ChoiceField(required=True, choices=InterventionReview.ALL_REVIEW_TYPES)
+
+    class Meta:
+        model = InterventionReview
+        fields = ('id', 'review_type')
