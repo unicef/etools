@@ -23,7 +23,7 @@ class MonitoringActivitiesFilterSet(filters.FilterSet):
             'monitor_type': ['exact'],
             'tpm_partner': ['exact', 'in'],
             'team_members': ['in'],
-            'person_responsible': ['exact', 'in'],
+            'visit_lead': ['exact', 'in'],
             'location': ['exact', 'in'],
             'location_site': ['exact', 'in'],
             'partners': ['in'],

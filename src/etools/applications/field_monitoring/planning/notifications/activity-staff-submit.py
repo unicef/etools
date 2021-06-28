@@ -3,12 +3,12 @@ from unicef_notification.utils import strip_text
 name = 'fm/activity/staff-submit'
 defaults = {
     'description': 'FM Activity submitted by Staff. PME should be notified.',
-    'subject': '[FM Portal] {{ activity.person_responsible }} has submitted the final report for {{ activity.reference_number }}',
+    'subject': '[FM Portal] {{ activity.visit_lead }} has submitted the final report for {{ activity.reference_number }}',
 
     'content': strip_text("""
     Dear colleague,
 
-    {{ activity.person_responsible }} has submitted the final report for the Monitoring/Verification visit.
+    {{ activity.visit_lead }} has submitted the final report for the Monitoring/Verification visit.
 
     Please click {{ activity.object_url }} to view the final report url to activity and take the appropriate action.
 
@@ -21,7 +21,7 @@ defaults = {
     {% block content %}
     Dear colleague,<br/>
     <br/>
-    {{ activity.person_responsible }} has submitted the final report for the Monitoring/Verification visit.<br/>
+    {{ activity.visit_lead }} has submitted the final report for the Monitoring/Verification visit.<br/>
     <br/>
     Please click <a href="{{ activity.object_url }}">{{ activity.object_url }}</a> to view the final report url to activity and take the appropriate action.<br/>
     <br/>

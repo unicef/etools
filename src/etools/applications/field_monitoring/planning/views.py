@@ -27,8 +27,8 @@ from etools.applications.field_monitoring.permissions import (
     IsFieldMonitor,
     IsListAction,
     IsObjectAction,
-    IsPersonResponsible,
     IsReadAction,
+    IsVisitLead,
 )
 from etools.applications.field_monitoring.planning.activity_validation.validator import ActivityValid
 from etools.applications.field_monitoring.planning.filters import (
@@ -141,7 +141,7 @@ class MonitoringActivitiesViewSet(
     Retrieve and Update Agreement.
     """
     queryset = MonitoringActivity.objects.annotate(checklists_count=Count('checklists')).select_related(
-        'tpm_partner', 'person_responsible', 'location__gateway', 'location_site',
+        'tpm_partner', 'visit_lead', 'location__gateway', 'location_site',
     ).prefetch_related(
         'team_members', 'partners', 'interventions', 'cp_outputs'
     ).order_by("-id")
@@ -152,7 +152,7 @@ class MonitoringActivitiesViewSet(
     permission_classes = FMBaseViewSet.permission_classes + [
         IsReadAction |
         (IsEditAction & IsListAction & IsFieldMonitor) |
-        (IsEditAction & (IsObjectAction & (IsFieldMonitor | IsPersonResponsible)))
+        (IsEditAction & (IsObjectAction & (IsFieldMonitor | IsVisitLead)))
     ]
     filter_backends = (DjangoFilterBackend, ReferenceNumberOrderingFilter, OrderingFilter, SearchFilter)
     filter_class = MonitoringActivitiesFilterSet
@@ -169,7 +169,7 @@ class MonitoringActivitiesViewSet(
             # we should hide activities before assignment
             # if reject reason available activity should be visible (draft + reject_reason = rejected)
             queryset = queryset.filter(
-                Q(person_responsible=self.request.user) | Q(team_members=self.request.user),
+                Q(visit_lead=self.request.user) | Q(team_members=self.request.user),
                 Q(status__in=MonitoringActivity.TPM_AVAILABLE_STATUSES) | ~Q(reject_reason=''),
             )
 
