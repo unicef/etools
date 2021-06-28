@@ -12,6 +12,7 @@ from unicef_attachments.fields import AttachmentSingleFileField
 from unicef_attachments.serializers import AttachmentSerializerMixin
 from unicef_snapshot.serializers import SnapshotModelSerializer
 
+from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.partners.models import (
     Agreement,
     Assessment,
@@ -388,6 +389,17 @@ class PartnerPlannedVisitsSerializer(serializers.ModelSerializer):
         return super().is_valid(**kwargs)
 
 
+class HactExcludedActivitiesList(serializers.Field):
+    def to_internal_value(self, data):
+        if not data:
+            return []
+
+        return MonitoringActivity.objects.filter(id__in=data)
+
+    def to_representation(self, data):
+        return list(self.parent.instance.hact_excluded_activities.values_list('id', flat=True))
+
+
 class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
 
     staff_members = PartnerStaffMemberDetailSerializer(many=True, read_only=True)
@@ -404,6 +416,7 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
     sea_risk_rating_name = serializers.CharField(label="psea_risk_rating")
     highest_risk_rating_type = serializers.CharField(label="highest_risk_type")
     highest_risk_rating_name = serializers.CharField(label="highest_risk_rating")
+    hact_excluded_activities = HactExcludedActivitiesList()
 
     def get_hact_values(self, obj):
         return json.loads(obj.hact_values) if isinstance(obj.hact_values, str) else obj.hact_values
@@ -459,6 +472,7 @@ class PartnerOrganizationCreateUpdateSerializer(SnapshotModelSerializer):
     hidden = serializers.BooleanField(read_only=True)
     planned_visits = PartnerPlannedVisitsSerializer(many=True, read_only=True, required=False)
     core_values_assessments = CoreValuesAssessmentSerializer(many=True, read_only=True, required=False)
+    hact_excluded_activities = HactExcludedActivitiesList(required=False)
 
     def get_hact_values(self, obj):
         return json.loads(obj.hact_values) if isinstance(obj.hact_values, str) else obj.hact_values

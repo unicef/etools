@@ -530,6 +530,12 @@ class PartnerOrganization(TimeStampedModel):
     lead_section = models.ForeignKey(Section, verbose_name=_("Lead Section"),
                                      blank=True, null=True, on_delete=models.SET_NULL)
 
+    hact_excluded_activities = models.ManyToManyField(
+        'field_monitoring_planning.MonitoringActivity',
+        verbose_name=_('Activities to not count as HACT'),
+        blank=True,
+    )
+
     tracker = FieldTracker()
     objects = PartnerOrganizationQuerySet.as_manager()
 
@@ -757,9 +763,14 @@ class PartnerOrganization(TimeStampedModel):
 
             # field monitoring activities qualify as programmatic visits if during a monitoring activity the hact
             # question was answered with an overall rating and the visit is completed
-            fmvqs = ActivityQuestion.objects.filter(question__is_hact=True, partner=self,
-                                                    overall_finding__value__isnull=False,
-                                                    monitoring_activity__status="completed")
+            excluded_activities = self.hact_excluded_activities.values_list('id')
+            fmvqs = ActivityQuestion.objects.filter(
+                question__is_hact=True, partner=self,
+                overall_finding__value__isnull=False,
+                monitoring_activity__status="completed",
+            ).exclude(
+                monitoring_activity_id__in=excluded_activities,
+            )
             fmvq1 = fmvqs.filter(monitoring_activity__end_date__quarter=1).count()
             fmvq2 = fmvqs.filter(monitoring_activity__end_date__quarter=2).count()
             fmvq3 = fmvqs.filter(monitoring_activity__end_date__quarter=3).count()

@@ -14,6 +14,7 @@ from unicef_snapshot.models import Activity
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.core.tests.mixins import URLAssertionMixin
+from etools.applications.field_monitoring.planning.tests.factories import MonitoringActivityFactory
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
 from etools.applications.partners.models import (
     Agreement,
@@ -534,6 +535,38 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
             'The email for the partner contact is used by another partner contact. '
             'Email has to be unique to proceed {}'.format(user.email),
             response.data['staff_members']['active'],
+        )
+
+    def test_get_partner_excluded_monitoring_activities(self):
+        activity = MonitoringActivityFactory(partners=[self.partner])
+        self.partner.hact_excluded_activities.add(activity)
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            user=self.unicef_staff
+        )
+        self.assertEqual(response.data['hact_excluded_activities'], [activity.id])
+
+    def test_update_partner_excluded_monitoring_activities(self):
+        activity_original = MonitoringActivityFactory(partners=[self.partner])
+        self.partner.hact_excluded_activities.set([activity_original])
+        activity_new = MonitoringActivityFactory(partners=[self.partner])
+        self.assertEqual(
+            list(self.partner.hact_excluded_activities.values_list('id', flat=True)),
+            [activity_original.id],
+        )
+        response = self.forced_auth_req(
+            'patch',
+            self.url,
+            user=self.unicef_staff,
+            data={
+                'hact_excluded_activities': [activity_new.id],
+            }
+        )
+        self.assertEqual(response.data['hact_excluded_activities'], [activity_new.id])
+        self.assertEqual(
+            list(self.partner.hact_excluded_activities.values_list('id', flat=True)),
+            [activity_new.id],
         )
 
 
