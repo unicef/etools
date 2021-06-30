@@ -2,6 +2,7 @@ from django.core.management import call_command
 from django.db import connection
 from django.test import override_settings
 
+import simplejson
 from mock import patch
 from rest_framework import status
 
@@ -279,6 +280,60 @@ class MonitoringActivityOfflineBlueprintsSyncTestCase(APIViewSetTestCase, BaseTe
         add_mock.reset_mock()
         self._test_update(self.fm_user, activity, {'status': 'assigned'})
         add_mock.assert_not_called()
+
+    @override_settings(ETOOLS_OFFLINE_API='http://example.com/b/api/remote/blueprint/', SENTRY_DSN='https://test.dns')
+    @patch('sentry_sdk.api.Hub.current.capture_exception')
+    @patch('etools.applications.field_monitoring.data_collection.offline.synchronizer.OfflineCollect.add')
+    def test_add_offline_backend_unavailable(self, add_mock, capture_event_mock):
+        def communication_failure(*args, **kwargs):
+            return 502, simplejson.loads(
+                '<html>\r\n<head><title>502 Bad Gateway</title></head>\r\n<body bgcolor="white">\r\n<center>'
+                '<h1>502 Bad Gateway</h1></center>\r\n<hr><center>nginx/1.13.12</center>\r\n</body>\r\n</html>\r\n'
+            )
+
+        add_mock.side_effect = communication_failure
+
+        activity = MonitoringActivityFactory(status='pre_assigned', partners=[PartnerFactory()])
+        ActivityQuestionFactory(monitoring_activity=activity, is_enabled=True, question__methods=[MethodFactory()])
+
+        self._test_update(self.fm_user, activity, {'status': 'assigned'})
+        capture_event_mock.assert_called()
+
+    @override_settings(ETOOLS_OFFLINE_API='http://example.com/b/api/remote/blueprint/', SENTRY_DSN='https://test.dns')
+    @patch('sentry_sdk.api.Hub.current.capture_exception')
+    @patch('etools.applications.field_monitoring.data_collection.offline.synchronizer.OfflineCollect.update')
+    def test_update_offline_backend_unavailable(self, update_mock, capture_event_mock):
+        def communication_failure(*args, **kwargs):
+            return 502, simplejson.loads(
+                '<html>\r\n<head><title>502 Bad Gateway</title></head>\r\n<body bgcolor="white">\r\n<center>'
+                '<h1>502 Bad Gateway</h1></center>\r\n<hr><center>nginx/1.13.12</center>\r\n</body>\r\n</html>\r\n'
+            )
+
+        update_mock.side_effect = communication_failure
+
+        activity = MonitoringActivityFactory(status='data_collection', partners=[PartnerFactory()])
+        ActivityQuestionFactory(monitoring_activity=activity, is_enabled=True, question__methods=[MethodFactory()])
+
+        activity.team_members.remove(activity.team_members.first())
+        capture_event_mock.assert_called()
+
+    @override_settings(ETOOLS_OFFLINE_API='http://example.com/b/api/remote/blueprint/', SENTRY_DSN='https://test.dns')
+    @patch('sentry_sdk.api.Hub.current.capture_exception')
+    @patch('etools.applications.field_monitoring.data_collection.offline.synchronizer.OfflineCollect.delete')
+    def test_delete_offline_backend_unavailable(self, delete_mock, capture_event_mock):
+        def communication_failure(*args, **kwargs):
+            return 502, simplejson.loads(
+                '<html>\r\n<head><title>502 Bad Gateway</title></head>\r\n<body bgcolor="white">\r\n<center>'
+                '<h1>502 Bad Gateway</h1></center>\r\n<hr><center>nginx/1.13.12</center>\r\n</body>\r\n</html>\r\n'
+            )
+
+        delete_mock.side_effect = communication_failure
+
+        activity = MonitoringActivityFactory(status='data_collection', partners=[PartnerFactory()])
+        ActivityQuestionFactory(monitoring_activity=activity, is_enabled=True, question__methods=[MethodFactory()])
+
+        self._test_update(self.fm_user, activity, {'status': 'cancelled', 'cancel_reason': 'For testing purposes'})
+        capture_event_mock.assert_called()
 
 
 class MonitoringActivityOfflineValuesTestCase(APIViewSetTestCase, BaseTenantTestCase):
