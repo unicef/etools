@@ -235,6 +235,8 @@ class MonitoringActivity(
     report_reject_reason = models.TextField(verbose_name=_('Report rejection reason'), blank=True)
     cancel_reason = models.TextField(verbose_name=_('Cancellation reason'), blank=True)
 
+    is_hact = models.BooleanField(default=False)
+
     visit_lead_tracker = FieldTracker(fields=['visit_lead'])
 
     class Meta:
@@ -568,3 +570,15 @@ class MonitoringActivityActionPoint(ActionPoint):
         if self.monitoring_activity:
             context['monitoring_activity'] = self.monitoring_activity.get_mail_context(user=user)
         return context
+
+
+class MonitoringActivityGroup(models.Model):
+    partner = models.ForeignKey(
+        'partners.PartnerOrganization',
+        on_delete=models.CASCADE,
+        related_name='monitoring_activity_groups',
+    )
+    monitoring_activities = models.ManyToManyField(MonitoringActivity, related_name='groups')
+
+    def __str__(self):
+        return f'{self.partner} Monitoring Activities Group'

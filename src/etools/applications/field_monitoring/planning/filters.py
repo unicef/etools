@@ -34,6 +34,7 @@ class MonitoringActivitiesFilterSet(filters.FilterSet):
             'status': ['exact', 'in'],
             'offices': ['exact', 'in'],
             'sections': ['in'],
+            'is_hact': ['exact'],
         }
 
 

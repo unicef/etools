@@ -3,6 +3,7 @@ from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
+from model_utils import FieldTracker
 from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation
 
@@ -97,6 +98,8 @@ class ActivityQuestionOverallFinding(models.Model):
                                              verbose_name=_('Activity'), on_delete=models.CASCADE)
     value = JSONField(null=True, blank=True, verbose_name=_('Value'))
 
+    value_tracker = FieldTracker(fields=['value'])
+
     class Meta:
         verbose_name = _('Overall Activity Question Finding')
         verbose_name_plural = _('Overall Activity Question Findings')
@@ -104,6 +107,17 @@ class ActivityQuestionOverallFinding(models.Model):
 
     def __str__(self):
         return '{} - {}'.format(self.activity_question, self.value)
+
+    def save(self, **kwargs):
+        previous_value = self.value_tracker.previous('value')
+        super().save(**kwargs)
+        # field monitoring activities qualify as programmatic visits if during a monitoring activity the hact
+        # question was answered with an overall rating
+        if self.value is not None and previous_value is None:
+            monitoring_activity = self.activity_question.monitoring_activity
+            if not monitoring_activity.is_hact:
+                monitoring_activity.is_hact = True
+                monitoring_activity.save(update_fields=['is_hact'])
 
 
 class ChecklistOverallFinding(QuestionTargetMixin, models.Model):
