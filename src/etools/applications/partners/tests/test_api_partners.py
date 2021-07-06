@@ -560,6 +560,20 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
         )
         self.assertEqual(response.data['monitoring_activity_groups'], [[activity1.id, activity2.id], [activity3.id]])
 
+    def test_add_partner_monitoring_activity_groups(self):
+        activity1 = MonitoringActivityFactory(partners=[self.partner], status='completed', is_hact=True)
+        activity2 = MonitoringActivityFactory(partners=[self.partner], status='completed', is_hact=True)
+
+        response = self.forced_auth_req(
+            'patch',
+            self.url,
+            user=self.unicef_staff,
+            data={
+                'monitoring_activity_groups': [[activity1.id, activity2.id]],
+            }
+        )
+        self.assertEqual(len(response.data['monitoring_activity_groups']), 1)
+
     def test_update_partner_monitoring_activity_groups(self):
         activity1 = MonitoringActivityFactory(partners=[self.partner], status='completed', is_hact=True)
         activity2 = MonitoringActivityFactory(partners=[self.partner], status='completed', is_hact=True)

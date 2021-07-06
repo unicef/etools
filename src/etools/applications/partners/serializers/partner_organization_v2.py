@@ -531,10 +531,11 @@ class PartnerOrganizationCreateUpdateSerializer(SnapshotModelSerializer):
         for i in range(len(groups)):
             if i >= len(instance_groups):
                 group_object = MonitoringActivityGroup.objects.create(partner=instance)
+                instance_activities = []
             else:
                 group_object = instance_groups[i]
+                instance_activities = instance_groups[i].monitoring_activities.all()
 
-            instance_activities = instance_groups[i].monitoring_activities.all()
             if set(instance_activities).difference(set(groups[i])):
                 updated = True
 
