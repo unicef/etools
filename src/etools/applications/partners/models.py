@@ -1694,6 +1694,7 @@ class Intervention(TimeStampedModel):
 
     AUTO_TRANSITIONS = {
         DRAFT: [],
+        REVIEW: [SIGNATURE],
         SIGNATURE: [SIGNED],
         SIGNED: [ACTIVE, TERMINATED],
         ACTIVE: [ENDED, TERMINATED],
@@ -2668,8 +2669,6 @@ class InterventionAmendment(TimeStampedModel):
         self.amended_intervention.save()
 
     def merge_amendment(self):
-        self.difference = self.get_difference()
-
         merge_instance(
             self.intervention,
             self.amended_intervention,
