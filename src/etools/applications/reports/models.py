@@ -675,6 +675,21 @@ class AppliedIndicator(TimeStampedModel):
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
 
+    def get_amended_name(self):
+        baseline_display = self.baseline_display
+        if baseline_display[1] == '-':
+            baseline = baseline_display[0]
+        else:
+            baseline = '/'.join(baseline_display)
+
+        target_display = self.target_display
+        if target_display[1] == '-':
+            target = target_display[0]
+        else:
+            target = '/'.join(target_display)
+
+        return f'{self.indicator}: {baseline} - {target}'
+
 
 class Indicator(TimeStampedModel):
     """
@@ -950,6 +965,9 @@ class InterventionActivity(TimeStampedModel):
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
         self.result.result_link.intervention.planned_budget.calc_totals()
+
+    def get_amended_name(self):
+        return f'{self.result} {self.name} (Total: {self.total}, UNICEF: {self.unicef_cash}, Partner: {self.cso_cash})'
 
 
 class InterventionActivityItem(TimeStampedModel):
