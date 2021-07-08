@@ -5,6 +5,7 @@ from factory import fuzzy
 
 from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.partners import models
+from etools.applications.partners.models import InterventionManagementBudgetItem
 from etools.applications.reports.tests.factories import CountryProgrammeFactory, ResultFactory
 from etools.applications.users.tests.factories import UserFactory
 
@@ -262,3 +263,12 @@ class InterventionRiskFactory(factory.django.DjangoModelFactory):
     intervention = factory.SubFactory(InterventionFactory)
     risk_type = fuzzy.FuzzyChoice(choices=dict(models.InterventionRisk.RISK_TYPE_CHOICES).keys())
     mitigation_measures = fuzzy.FuzzyText()
+
+
+class InterventionManagementBudgetItemFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.InterventionManagementBudgetItem
+
+    budget = factory.SubFactory(InterventionManagementBudgetFactory)
+    name = factory.fuzzy.FuzzyText(length=100)
+    kind = factory.fuzzy.FuzzyChoice(dict(InterventionManagementBudgetItem.KIND_CHOICES).keys())

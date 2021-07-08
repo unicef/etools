@@ -107,13 +107,35 @@ def copy_one_to_many(
         fields_map.append(copy_map)
 
 
-def copy_instance(instance, relations_to_copy, exclude_fields, defaults, post_effects):
+def copy_one_to_one(
+    instance, instance_copy, related_name, fields_map,
+    relations_to_copy, exclude_fields, defaults, post_effects,
+):
+    related_field = [f for f in instance._meta.get_fields() if f.name == related_name][0]
+
+    item = getattr(instance, related_name)
+    item_copy = getattr(instance_copy, related_name)
+    local_kwargs = copy.deepcopy(defaults)
+    if item._meta.label not in local_kwargs:
+        local_kwargs[item._meta.label] = {}
+    local_kwargs[item._meta.label][related_field.field.name] = instance_copy
+
+    item_copy, copy_map = copy_instance(
+        item, relations_to_copy, exclude_fields, local_kwargs, post_effects,
+        instance_copy=item_copy,
+    )
+    fields_map.update(copy_map)
+
+
+def copy_instance(instance, relations_to_copy, exclude_fields, defaults, post_effects, instance_copy=None):
     related_fields_to_copy = relations_to_copy.get(instance._meta.label, [])
     instance_defaults = defaults.get(instance._meta.label, {})
     fields_to_exclude = exclude_fields.get(instance._meta.label, [])
     local_post_effects = post_effects.get(instance._meta.label, [])
 
-    instance_copy = type(instance)(**instance_defaults)
+    if not instance_copy:
+        instance_copy = type(instance)(**instance_defaults)
+
     copy_map = {
         'original_pk': instance.pk,
     }
@@ -137,19 +159,9 @@ def copy_instance(instance, relations_to_copy, exclude_fields, defaults, post_ef
             continue
 
         if field.one_to_one:
-            # full copy related instance (if exists use current one)
-            # todo: implement copy if object not available
-            # todo: not only simple fields can be required, replace with copy_instance
             copy_map[field.name] = {}
-            related_instance_copy = getattr(instance_copy, field.name)
-            fields_to_exclude = exclude_fields.get(related_instance_copy._meta.label, [])
-            copy_simple_fields(
-                getattr(instance, field.name),
-                related_instance_copy,
-                copy_map[field.name],
-                exclude=fields_to_exclude,
-            )
-            related_instance_copy.save()
+            copy_one_to_one(instance, instance_copy, field.name, copy_map[field.name], relations_to_copy,
+                            exclude_fields, defaults, post_effects)
 
         if field.one_to_many:
             # copy all related instances
@@ -211,16 +223,16 @@ def merge_instance(
             continue
 
         if field.one_to_one:
-            # todo: if one of related objects is missing, raise error
-            # todo: perform in depth merge instead of simple fields
-
             related_instance = getattr(instance, field.name)
             related_instance_copy = getattr(instance_copy, field.name)
-            merge_simple_fields(
+            merge_instance(
                 related_instance,
                 related_instance_copy,
                 fields_map[field.name],
-                exclude=exclude_fields.get(instance._meta.label, [])
+                relations_to_copy,
+                exclude_fields,
+                copy_post_effects,
+                merge_post_effects,
             )
 
         if field.one_to_many:
@@ -384,14 +396,13 @@ def calculate_difference(instance, instance_copy, fields_map, relations_to_copy,
 
             related_instance = getattr(instance, field.name)
             related_instance_copy = getattr(instance_copy, field.name)
-            related_changes_map = calculate_simple_fields_difference(
-                related_instance,
-                related_instance_copy,
-                fields_map[field.name],
-                exclude=exclude_fields.get(instance._meta.label, [])
+            related_object_changes_map = calculate_difference(
+                related_instance, related_instance_copy, fields_map[field.name], relations_to_copy,
+                exclude_fields=exclude_fields
             )
-            if related_changes_map:
-                changes_map[field.name] = {'type': 'one_to_one', 'diff': related_changes_map}
+
+            if related_object_changes_map:
+                changes_map[field.name] = {'type': 'one_to_one', 'diff': related_object_changes_map}
 
         if field.one_to_many:
             if field.name not in fields_map:
@@ -529,7 +540,11 @@ INTERVENTION_AMENDMENT_RELATED_FIELDS = {
     'reports.InterventionActivity': [
         # one to many
         'items',
-    ]
+    ],
+    'partners.InterventionManagementBudget': [
+        # one to many
+        'items',
+    ],
 }
 INTERVENTION_AMENDMENT_IGNORED_FIELDS = {
     'partners.Intervention': [

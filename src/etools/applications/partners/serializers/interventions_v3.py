@@ -3,6 +3,7 @@ import csv
 import decimal
 
 from django.contrib.auth import get_user_model
+from django.db import transaction
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -13,6 +14,7 @@ from etools.applications.partners.models import (
     Intervention,
     InterventionAmendment,
     InterventionManagementBudget,
+    InterventionManagementBudgetItem,
     InterventionReview,
     InterventionRisk,
     InterventionSupplyItem,
@@ -121,7 +123,16 @@ class InterventionSupplyItemUploadSerializer(serializers.Serializer):
         return data
 
 
+class InterventionManagementBudgetItemSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(required=False)
+
+    class Meta:
+        model = InterventionManagementBudgetItem
+        fields = ('id', 'kind', 'name', 'unicef_cash', 'cso_cash')
+
+
 class InterventionManagementBudgetSerializer(serializers.ModelSerializer):
+    items = InterventionManagementBudgetItemSerializer(many=True, required=False)
     act1_total = serializers.SerializerMethodField()
     act2_total = serializers.SerializerMethodField()
     act3_total = serializers.SerializerMethodField()
@@ -132,6 +143,7 @@ class InterventionManagementBudgetSerializer(serializers.ModelSerializer):
     class Meta:
         model = InterventionManagementBudget
         fields = (
+            "items",
             "act1_unicef",
             "act1_partner",
             "act1_total",
@@ -154,6 +166,44 @@ class InterventionManagementBudgetSerializer(serializers.ModelSerializer):
 
     def get_act3_total(self, obj):
         return str(obj.act3_unicef + obj.act3_partner)
+
+    @transaction.atomic
+    def create(self, validated_data):
+        items = validated_data.pop('items', None)
+        instance = super().create(validated_data)
+        self.set_items(instance, items)
+        return instance
+
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        items = validated_data.pop('items', None)
+        instance = super().update(instance, validated_data)
+        self.set_items(instance, items)
+        return instance
+
+    def set_items(self, instance, items):
+        if items is None:
+            return
+
+        updated_pks = []
+        for i, item in enumerate(items):
+            item_instance = instance.items.filter(pk=item.get('id')).first()
+            if item_instance:
+                serializer = InterventionManagementBudgetItemSerializer(
+                    data=item, instance=item_instance, partial=self.partial,
+                )
+            else:
+                serializer = InterventionManagementBudgetItemSerializer(data=item)
+            if not serializer.is_valid():
+                raise ValidationError({'items': {i: serializer.errors}})
+
+            updated_pks.append(serializer.save(budget=instance).pk)
+
+        # cleanup, remove unused options
+        instance.items.exclude(pk__in=updated_pks).delete()
+
+        # doing update in serializer instead of post_save to avoid big number of budget re-calculations
+        instance.update_cash()
 
 
 class InterventionDetailSerializer(serializers.ModelSerializer):

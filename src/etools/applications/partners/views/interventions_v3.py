@@ -247,7 +247,7 @@ class InterventionPDOutputsDetailUpdateView(InterventionPDOutputsViewMixin, Retr
 class PMPInterventionManagementBudgetRetrieveUpdateView(
     DetailedInterventionResponseMixin, PMPInterventionMixin, RetrieveUpdateAPIView
 ):
-    queryset = InterventionManagementBudget.objects
+    queryset = InterventionManagementBudget.objects.prefetch_related('items')
     serializer_class = InterventionManagementBudgetSerializer
 
     def get_intervention(self):
