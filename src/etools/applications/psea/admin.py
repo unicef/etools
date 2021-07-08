@@ -1,6 +1,13 @@
 from django.contrib import admin
+from django.utils.translation import gettext_lazy as _
 
-from etools.applications.psea.models import Answer, Assessment, Evidence, Indicator
+from etools.applications.partners.admin import AttachmentSingleInline
+from etools.applications.psea.models import Answer, Assessment, AssessmentActionPoint, Assessor, Evidence, Indicator
+
+
+class NFRAttachmentInline(AttachmentSingleInline):
+    verbose_name_plural = _("NFR Attachment")
+    code = 'psea_nfr_attachment'
 
 
 @admin.register(Assessment)
@@ -13,6 +20,10 @@ class AssessmentAdmin(admin.ModelAdmin):
     def get_status(self, obj):
         return obj.status
     get_status.short_description = "Status"
+
+    inlines = (
+        NFRAttachmentInline,
+    )
 
 
 @admin.register(Answer)
@@ -32,3 +43,22 @@ class EvidenceAdmin(admin.ModelAdmin):
 class IndicatorAdmin(admin.ModelAdmin):
     list_display = ('subject', 'active')
     list_filter = ('active',)
+
+
+@admin.register(Assessor)
+class AssessorAdmin(admin.ModelAdmin):
+    list_display = ('assessment', 'assessor_type', 'user', 'auditor_firm')
+    search_fields = ('assessment__reference_number', )
+    list_filter = ('assessor_type', )
+    raw_id_fields = ('user', 'assessment', 'auditor_firm', 'auditor_firm_staff')
+
+
+@admin.register(AssessmentActionPoint)
+class AssessmentActionPointAdmin(admin.ModelAdmin):
+    readonly_fields = ['status']
+    search_fields = ('author__username', 'assigned_to__username',)
+    list_display = (
+        'psea_assessment', 'author', 'assigned_to', 'due_date', 'status',
+    )
+    raw_id_fields = ('section', 'office', 'location', 'cp_output', 'partner', 'intervention', 'tpm_activity',
+                     'psea_assessment', 'travel_activity', 'engagement', 'author', 'assigned_by', 'assigned_to')

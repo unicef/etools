@@ -16,9 +16,9 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,monitor_type,Field Monitor,,draft,edit,TRUE
 ,monitor_type,Field Monitor,,checklist,edit,TRUE
 ,monitor_type,Field Monitor,,review,edit,TRUE
-,person_responsible,Field Monitor,,draft,edit,TRUE
-,person_responsible,Field Monitor,,checklist,edit,TRUE
-,person_responsible,Field Monitor,,review,edit,TRUE
+,visit_lead,Field Monitor,,draft,edit,TRUE
+,visit_lead,Field Monitor,,checklist,edit,TRUE
+,visit_lead,Field Monitor,,review,edit,TRUE
 ,sections,Field Monitor,,draft,edit,TRUE
 ,tpm_partner,Field Monitor,,draft,edit,TRUE
 ,tpm_partner,Field Monitor,,checklist,edit,TRUE
@@ -33,7 +33,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,cp_outputs,Field Monitor,,draft,edit,TRUE
 ,activity_question_set,Field Monitor,,checklist,edit,TRUE
 ,started_checklist_set,All Users,is_ma_related_user,data_collection,edit,TRUE
-,activity_overall_finding,All Users,is_person_responsible,report_finalization,edit,TRUE
+,activity_overall_finding,All Users,is_visit_lead,report_finalization,edit,TRUE
 ,attachments,Field Monitor,,draft,edit,TRUE
 ,attachments,Field Monitor,,checklist,edit,TRUE
 ,attachments,Field Monitor,,review,edit,TRUE
@@ -50,8 +50,8 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,location_site,All Users,,*,required,FALSE
 ,start_date,All Users,,assigned,required,TRUE
 ,end_date,All Users,,assigned,required,TRUE
-,person_responsible,All Users,,assigned,required,TRUE
-,person_responsible,All Users,,data_collection,required,TRUE
+,visit_lead,All Users,,assigned,required,TRUE
+,visit_lead,All Users,,data_collection,required,TRUE
 ,team_members,All Users,,assigned,required,TRUE
 ,team_members,All Users,,data_collection,required,TRUE
 
@@ -63,7 +63,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,field_office,All Users,,*,view,TRUE
 ,offices,All Users,,*,view,TRUE
 ,monitor_type,All Users,,*,view,TRUE
-,person_responsible,All Users,,*,view,TRUE
+,visit_lead,All Users,,*,view,TRUE
 ,sections,All Users,,*,view,TRUE
 ,tpm_partner,All Users,,*,view,TRUE
 ,team_members,All Users,,*,view,TRUE

@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.db import connection, models
 from django.db.models import Sum
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
@@ -105,6 +106,33 @@ class Assessment(TimeStampedModel):
     LOW_RATING = "Low"
     MODERATE_RATING = "Moderate"
     HIGH_RATING = "High"
+    RATING = {
+        LOW_RATING: LOW_RATING,
+        MODERATE_RATING: MODERATE_RATING,
+        HIGH_RATING: HIGH_RATING
+    }
+
+    UNICEF_2020 = 'unicef_2020'
+    UN_COMMON_OTHER = 'un_common_other'
+    UN_COMMON_UNICEF = 'un_common_unicef'
+
+    ASSESSMENT_TYPES = (
+        (UNICEF_2020, _("UNICEF Assessment 2020")),
+        (UN_COMMON_OTHER, _("UN Common Assessment- Other UN")),
+        (UN_COMMON_UNICEF, _("UN Common Assessment- UNICEF")),
+    )
+
+    DECENTRALIZED = 'decentralized'
+    SEA_ALLEGATION = 'sea_allegation'
+    GLOBAL_POLICY_IMPLEMENTED = 'global_policy_implemented'
+    HIGH_RISK_CONTEXT = 'high_risk_context'
+
+    INGO_REASONS = (
+        (DECENTRALIZED, _("Decentralization of INGO")),
+        (SEA_ALLEGATION, _("SEA allegation")),
+        (GLOBAL_POLICY_IMPLEMENTED, _("Global policy not being implemented at country-level")),
+        (HIGH_RISK_CONTEXT, _("High risk context")),
+    )
 
     reference_number = models.CharField(
         max_length=100,
@@ -123,6 +151,8 @@ class Assessment(TimeStampedModel):
         null=True,
         blank=True,
     )
+    assessment_type = models.CharField(max_length=16, choices=ASSESSMENT_TYPES, default=UNICEF_2020)
+    assessment_ingo_reason = models.CharField(max_length=32, choices=INGO_REASONS, blank=True, null=True)
     status = FSMField(
         verbose_name=_('Status'),
         max_length=30,
@@ -134,6 +164,12 @@ class Assessment(TimeStampedModel):
         blank=True,
         verbose_name=_('UNICEF Focal Points'),
         related_name="pse_assessment_focal_point",
+    )
+    nfr_attachment = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('NFR Attachment'),
+        code='psea_nfr_attachment',
+        blank=True,
     )
 
     class Meta:
@@ -235,14 +271,21 @@ class Assessment(TimeStampedModel):
         return self.user_is_assessor(user)
 
     def get_mail_context(self, user):
+        nfr_attachment = self.nfr_attachment.first()
+        if nfr_attachment:
+            nfr_attachment = settings.HOST + reverse('attachments:file', kwargs={'pk': nfr_attachment.pk})
         context = {
             "partner_name": self.partner.name,
             "partner_vendor_number": self.partner.vendor_number,
             "url": self.get_object_url(user=user),
+            'reference_number': self.get_reference_number(),
             "overall_rating": self.overall_rating_display,
             "assessment_date": str(self.assessment_date),
+            "assessment_type": self.get_assessment_type_display(),
+            "assessment_ingo_reason": self.get_assessment_ingo_reason_display(),
             "assessor": str(self.assessor),
-            "focal_points": ", ".join(f"{fp.get_full_name()} ({fp.email})" for fp in self.focal_points.all())
+            "focal_points": ", ".join(f"{fp.get_full_name()} ({fp.email})" for fp in self.focal_points.all()),
+            "nfr_attachment": nfr_attachment
         }
         if self.status == self.STATUS_REJECTED:
             context["rejected_comment"] = self.get_rejected_comment()

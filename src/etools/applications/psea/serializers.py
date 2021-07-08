@@ -1,12 +1,15 @@
 from copy import copy
+from urllib.parse import urljoin
 
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
+from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
-from unicef_attachments.fields import FileTypeModelChoiceField
+from unicef_attachments.fields import AttachmentSingleFileField, FileTypeModelChoiceField
 from unicef_attachments.models import Attachment, FileType
+from unicef_attachments.serializers import AttachmentSerializerMixin
 from unicef_restlib.fields import SeparatedReadWriteField
 
 from etools.applications.action_points.serializers import ActionPointBaseSerializer, HistorySerializer
@@ -56,7 +59,7 @@ class BaseAssessmentSerializer(serializers.ModelSerializer):
         return permissions.get_permissions()
 
 
-class AssessmentSerializer(BaseAssessmentSerializer):
+class AssessmentSerializer(AttachmentSerializerMixin, BaseAssessmentSerializer):
     overall_rating = serializers.SerializerMethodField()
     assessor = serializers.SerializerMethodField()
     partner_name = serializers.CharField(source="partner.name", read_only=True)
@@ -68,6 +71,7 @@ class AssessmentSerializer(BaseAssessmentSerializer):
         allow_null=True,
         required=False,
     )
+    nfr_attachment = AttachmentSingleFileField()
 
     class Meta(BaseAssessmentSerializer.Meta):
         fields = '__all__'
@@ -162,6 +166,8 @@ class AssessmentDetailSerializer(AssessmentSerializer):
 class AssessmentExportSerializer(AssessmentSerializer):
     focal_points = serializers.SerializerMethodField()
     overall_rating_display = serializers.ReadOnlyField(label='SEA Risk Rating')
+    assessment_type = serializers.ReadOnlyField(source='get_assessment_type_display')
+    assessment_ingo_reason = serializers.ReadOnlyField(source='get_assessment_ingo_reason_display')
 
     cs1 = serializers.SerializerMethodField()
     cs2 = serializers.SerializerMethodField()
@@ -202,6 +208,8 @@ class AssessmentExportSerializer(AssessmentSerializer):
             "status",
             "rating",
             "overall_rating_display",
+            "assessment_type",
+            "assessment_ingo_reason",
             "assessor",
             "focal_points",
             "cs1",
@@ -214,6 +222,66 @@ class AssessmentExportSerializer(AssessmentSerializer):
 
     def get_focal_points(self, obj):
         return ", ".join([str(u) for u in obj.focal_points.all()])
+
+
+class AssessmentDetailExportSerializer(serializers.ModelSerializer):
+    # id = serializers.ReadOnlyField(source='assessment.id')
+    # reference_number = serializers.ReadOnlyField(source='assessment.reference_number')
+    # assessment_date = serializers.ReadOnlyField(source='assessment.assessment_date')
+    partner_name = serializers.ReadOnlyField(source='assessment.partner.name')
+    vendor_number = serializers.ReadOnlyField(source='assessment.partner.vendor_number')
+    # status = serializers.ReadOnlyField(source='assessment.status')
+    total_score = serializers.ReadOnlyField(source='assessment.rating')
+    overall_rating_display = serializers.ReadOnlyField(source='assessment.overall_rating_display', label='Risk Rating')
+    # assessment_type = serializers.ReadOnlyField(source='assessment.get_assessment_type_display')
+    # assessment_ingo_reason = serializers.ReadOnlyField(source='assessment.get_assessment_ingo_reason_display')
+    # assessor = serializers.ReadOnlyField(source='assessment.assessor')
+    # focal_points = serializers.SerializerMethodField()
+    # rating = serializers.ReadOnlyField(source='indicator.rating')
+    cs = serializers.SerializerMethodField(label='Core standard number')
+    core_standard_rating = serializers.ReadOnlyField(source='rating')
+    comments = serializers.ReadOnlyField(label='Core standard comments')
+    evidences = serializers.SerializerMethodField(label='Core standard proof of evidence')
+    attachments = serializers.SerializerMethodField(label='Hyperlink to documents')
+
+    class Meta(AssessmentSerializer.Meta):
+        model = Answer
+        fields = [
+            # "id",
+            # "reference_number",
+            # "status",
+            # "assessment_date",
+            "vendor_number",
+            "partner_name",
+            # "overall_rating",
+            "total_score",
+            "overall_rating_display",
+            # "assessment_type",
+            # "assessment_ingo_reason",
+            # "assessor",
+            # "focal_points",
+            "cs",
+            "core_standard_rating",
+            "comments",
+            "evidences",
+            "attachments",
+        ]
+
+    def get_cs(self, obj):
+        return f'CS{obj.indicator.pk}'
+
+    def get_focal_points(self, obj):
+        return ", ".join([str(u) for u in obj.assessment.focal_points.all()])
+
+    def get_evidences(self, obj):
+        return ", ".join([str(u) for u in obj.evidences.all()])
+
+    def get_attachments(self, obj):
+        request = self.context['request']
+        return ", ".join(urljoin(
+            "https://{}".format(request.get_host()),
+            reverse('attachments:file', kwargs={'pk': att.pk})
+        ) for att in obj.attachments.all())
 
 
 class AssessmentStatusSerializer(AssessmentSerializer):

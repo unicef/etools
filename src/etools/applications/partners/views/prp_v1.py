@@ -84,6 +84,8 @@ class PRPInterventionListAPIView(QueryStringFilterMixin, ListAPIView):
     )
 
     filters = (
+        ('id', 'id'),
+        ('number', 'number'),
         ('country_programme', 'agreement__country_programme'),
         ('section', 'sections__pk'),
         ('status', 'status'),
