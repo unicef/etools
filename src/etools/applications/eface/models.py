@@ -1,0 +1,206 @@
+from django.db import models
+from django.db.models.base import ModelBase
+from django.utils import timezone
+from django.utils.translation import ugettext_lazy as _
+
+from django_fsm import FSMField, transition
+from model_utils import Choices
+from model_utils.fields import MonitorField
+from model_utils.models import TimeStampedModel
+from unicef_djangolib.fields import CurrencyField
+
+from etools.applications.field_monitoring.planning.mixins import ProtectUnknownTransitionsMeta
+from etools.libraries.djangolib.models import SoftDeleteMixin
+
+
+def update_transaction_reject_date(i, old_instance=None, user=None):
+    if old_instance.status == EFaceForm.STATUSES.unicef_approved:
+        i.date_transaction_rejected = timezone.now().date()
+
+
+class EFaceFormMeta(ProtectUnknownTransitionsMeta, ModelBase):
+    pass
+
+
+class EFaceForm(
+    SoftDeleteMixin,
+    TimeStampedModel,
+    metaclass=EFaceFormMeta
+):
+    """
+    programme code & title
+    project code & title
+
+    responsible officers
+        The focal points from the intervention will most likely be the responsible officers. skip for now
+    """
+    REQUEST_TYPE_CHOICES = (
+        ('dct', _('Direct Cash Transfer')),
+        ('rmb', _('Reimbursement')),
+        ('dp', _('Direct Payment')),
+    )
+
+    STATUSES = Choices(
+        ('draft', _('Draft')),
+        ('submitted', _('Submitted')),
+        ('unicef_approved', _('UNICEF Approved')),
+        ('finalized', _('Finalized')),
+        ('cancelled', _('Cancelled')),
+    )
+    TRANSITION_SIDE_EFFECTS = {
+        STATUSES.draft: [update_transaction_reject_date],
+        # todo(future): synchronize to vision on unicef approve
+        # todo(future): get updates from vision on transaction approve/reject
+    }
+    AUTO_TRANSITIONS = {}
+
+    reference_number_year = models.IntegerField()
+    reference_number = models.CharField(
+        verbose_name=_('Reference Number'),
+        max_length=64,
+        blank=True,
+        null=True,
+        unique=True,
+    )
+
+    title = models.CharField(max_length=255)
+    country = models.ForeignKey('users.Country', verbose_name=_('Country'), on_delete=models.PROTECT)
+    intervention = models.ForeignKey('partners.Intervention', verbose_name=_('Intervention'), on_delete=models.PROTECT)
+    currency = CurrencyField(verbose_name=_('Currency'), null=False, default='')
+
+    request_type = models.CharField(choices=REQUEST_TYPE_CHOICES, max_length=3)
+
+    # certification
+    request_represents_expenditures = models.BooleanField(default=False)
+    expenditures_disbursed = models.BooleanField(default=False)
+
+    notes = models.TextField(blank=True)
+
+    # submitted_by = models.ForeignKey() # partner user or unicef?
+
+    authorized_amount_date = models.DateField(blank=True, null=True)
+    requested_amount_date = models.DateField(blank=True, null=True)
+
+    status = FSMField(verbose_name=_('Status'), max_length=20, choices=STATUSES, default=STATUSES.draft)
+
+    # status dates
+    date_submitted = MonitorField(monitor='status', when=STATUSES.submitted, blank=True, null=True)
+    date_unicef_approved = MonitorField(monitor='status', when=STATUSES.unicef_approved, blank=True, null=True)
+    date_transaction_rejected = models.DateField(blank=True, null=True)
+    date_finalized = MonitorField(monitor='status', when=STATUSES.finalized, blank=True, null=True)
+    date_cancelled = MonitorField(monitor='status', when=STATUSES.cancelled, blank=True, null=True)
+
+    rejection_reason = models.TextField(blank=True)
+    transaction_rejection_reason = models.TextField(blank=True)
+    cancel_reason = models.TextField(blank=True)
+
+    def get_reference_number(self):
+        number = '{country}/{type}{year}{id}'.format(
+            country=self.country.country_short_code or '',
+            type=self.request_type,
+            year=self.reference_number_year,
+            id=self.id
+        )
+        return number
+
+    def save(self, **kwargs):
+        if not self.reference_number_year:
+            self.reference_number_year = timezone.now().year
+
+        if not self.reference_number:
+            # to create a reference number we need a pk
+            super().save()
+            self.reference_number = self.get_reference_number()
+
+        super().save()
+
+    # todo: permissions - partner only
+    @transition(field=status, source=STATUSES.draft, target=STATUSES.submitted)
+    def submit(self):
+        pass
+
+    # todo: permissions - programme officer only
+    @transition(field=status, source=STATUSES.submitted, target=STATUSES.unicef_approved)
+    def approve(self):
+        pass
+
+    # todo: permissions - programme officer only
+    @transition(field=status, source=STATUSES.submitted, target=STATUSES.draft)
+    def reject(self):
+        pass
+
+    # todo: permissions - vision only; for poc manual transition will be available by programme officer
+    @transition(field=status, source=STATUSES.unicef_approved, target=STATUSES.finalized)
+    def transaction_approve(self):
+        pass
+
+    # todo: permissions - vision only; for poc manual transition will be available by programme officer
+    @transition(field=status, source=STATUSES.unicef_approved, target=STATUSES.draft)
+    def transaction_reject(self):
+        pass
+
+    # todo: permissions - programme officer only
+    @transition(
+        field=status,
+        source=[
+            STATUSES.draft,
+            STATUSES.submitted,
+            STATUSES.unicef_approved,  # not sure about approved status because object will be synchronized to vision
+        ],
+        target=STATUSES.cancelled
+    )
+    def cancel(self):
+        pass
+
+
+class FormActivity(models.Model):
+    form = models.ForeignKey(EFaceForm, on_delete=models.CASCADE)
+
+    description = models.TextField()
+    coding = models.CharField(max_length=100, blank=True)
+
+    reporting_authorized_amount = models.DecimalField(
+        max_digits=20,
+        decimal_places=2,
+        default=0,
+        verbose_name=_('Reporting - Authorized Amount')
+    )
+    reporting_actual_project_expenditure = models.DecimalField(
+        max_digits=20,
+        decimal_places=2,
+        default=0,
+        verbose_name=_('Reporting - Actual Project Expenditure')
+    )
+    reporting_expenditures_accepted_by_agency = models.DecimalField(
+        max_digits=20,
+        decimal_places=2,
+        default=0,
+        verbose_name=_('Reporting - Expenditures Accepted by Agency')
+    )
+    reporting_balance = models.DecimalField(
+        max_digits=20,
+        decimal_places=2,
+        default=0,
+        verbose_name=_('Reporting - Balance')
+    )
+    requested_amount = models.DecimalField(
+        max_digits=20,
+        decimal_places=2,
+        default=0,
+        verbose_name=_('Requests - Amount')
+    )
+    requested_authorized_amount = models.DecimalField(
+        max_digits=20,
+        decimal_places=2,
+        default=0,
+        verbose_name=_('Requests - Authorized Amount')
+    )
+    requested_outstanding_authorized_amount = models.DecimalField(
+        max_digits=20,
+        decimal_places=2,
+        default=0,
+        verbose_name=_('Requests Outstanding Authorized Amount')
+    )
+
+    def __str__(self):
+        return f'{self.form} - {self.description}'
