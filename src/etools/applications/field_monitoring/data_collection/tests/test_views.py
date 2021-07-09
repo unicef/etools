@@ -639,19 +639,6 @@ class TestActivityFindingsView(ChecklistDataCollectionTestMixin, APIViewSetTestC
     def test_update_fm_user(self):
         self._test_update(self.fm_user, self.overall_finding, {}, expected_status=status.HTTP_403_FORBIDDEN)
 
-    def test_update_activity_hact_on_save(self):
-        self.overall_finding.activity_question.question.is_hact = True
-        self.overall_finding.activity_question.question.save()
-        self.overall_finding.value = None
-        self.overall_finding.save()
-        self.assertFalse(self.activity.is_hact)
-        self._test_update(self.visit_lead, self.overall_finding, {
-            'narrative_finding': 'some test text',
-            'value': 'yes',
-        })
-        self.activity.refresh_from_db()
-        self.assertTrue(self.activity.is_hact)
-
 
 class TestActivityChecklistOverallAttachments(ChecklistDataCollectionTestMixin, APIViewSetTestCase):
     base_view = 'field_monitoring_data_collection:activity-checklists-attachments'

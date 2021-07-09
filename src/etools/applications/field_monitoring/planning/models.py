@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import connection, models
-from django.db.models import Q
+from django.db.models import Exists, OuterRef, Q
 from django.db.models.base import ModelBase
 from django.utils.translation import gettext_lazy as _
 
@@ -100,6 +100,34 @@ class QuestionTemplate(QuestionTargetMixin, models.Model):
 
     def __str__(self):
         return 'Question Template for {}'.format(self.related_to)
+
+
+class MonitoringActivitiesQuerySet(models.QuerySet):
+    def filter_hact_for_partner(self, partner_id: int):
+        from etools.applications.field_monitoring.data_collection.models import (
+            ActivityOverallFinding,
+            ActivityQuestionOverallFinding,
+        )
+
+        question_sq = ActivityQuestionOverallFinding.objects.filter(
+            activity_question__monitoring_activity_id=OuterRef('id'),
+            activity_question__question__is_hact=True,
+            activity_question__question__level='partner',
+            value__isnull=False,
+        )
+        finding_sq = ActivityOverallFinding.objects.filter(
+            ~Q(narrative_finding=''),
+            monitoring_activity_id=OuterRef('id'),
+            partner_id=partner_id,
+        )
+
+        return self.annotate(
+            is_hact=Exists(question_sq),
+            has_finding_for_partner=Exists(finding_sq),
+        ).filter(
+            is_hact=True,
+            has_finding_for_partner=True,
+        )
 
 
 class MonitoringActivityMeta(ProtectUnknownTransitionsMeta, ModelBase):
@@ -235,9 +263,9 @@ class MonitoringActivity(
     report_reject_reason = models.TextField(verbose_name=_('Report rejection reason'), blank=True)
     cancel_reason = models.TextField(verbose_name=_('Cancellation reason'), blank=True)
 
-    is_hact = models.BooleanField(default=False)
-
     visit_lead_tracker = FieldTracker(fields=['visit_lead'])
+
+    objects = models.Manager.from_queryset(MonitoringActivitiesQuerySet)()
 
     class Meta:
         verbose_name = _('Monitoring Activity')

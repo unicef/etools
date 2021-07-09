@@ -404,7 +404,7 @@ class MonitoringActivityGroupSerializer(serializers.Field):
 
         activities = {
             activity.id: activity
-            for activity in MonitoringActivity.objects.filter(id__in=itertools.chain(*data), is_hact=True)
+            for activity in MonitoringActivity.objects.filter(id__in=itertools.chain(*data))
         }
 
         result = []

@@ -14,6 +14,11 @@ from unicef_snapshot.models import Activity
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.core.tests.mixins import URLAssertionMixin
+from etools.applications.field_monitoring.data_collection.models import (
+    ActivityOverallFinding,
+    ActivityQuestionOverallFinding,
+)
+from etools.applications.field_monitoring.data_collection.tests.factories import ActivityQuestionFactory
 from etools.applications.field_monitoring.planning.tests.factories import (
     MonitoringActivityFactory,
     MonitoringActivityGroupFactory,
@@ -561,8 +566,8 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
         self.assertEqual(response.data['monitoring_activity_groups'], [[activity1.id, activity2.id], [activity3.id]])
 
     def test_add_partner_monitoring_activity_groups(self):
-        activity1 = MonitoringActivityFactory(partners=[self.partner], status='completed', is_hact=True)
-        activity2 = MonitoringActivityFactory(partners=[self.partner], status='completed', is_hact=True)
+        activity1 = MonitoringActivityFactory(partners=[self.partner], status='completed')
+        activity2 = MonitoringActivityFactory(partners=[self.partner], status='completed')
 
         response = self.forced_auth_req(
             'patch',
@@ -575,13 +580,31 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
         self.assertEqual(len(response.data['monitoring_activity_groups']), 1)
 
     def test_update_partner_monitoring_activity_groups(self):
-        activity1 = MonitoringActivityFactory(partners=[self.partner], status='completed', is_hact=True)
-        activity2 = MonitoringActivityFactory(partners=[self.partner], status='completed', is_hact=True)
-        activity3 = MonitoringActivityFactory(partners=[self.partner], status='completed', is_hact=True)
-        activity4 = MonitoringActivityFactory(partners=[self.partner], status='completed', is_hact=True)
-        # two below should be ignored, one is not hact, one is not completed
-        MonitoringActivityFactory(partners=[self.partner], is_hact=True)
-        MonitoringActivityFactory(partners=[self.partner], status='completed')
+        activity1 = MonitoringActivityFactory(partners=[self.partner], status='completed')
+        activity2 = MonitoringActivityFactory(partners=[self.partner], status='completed')
+        activity3 = MonitoringActivityFactory(partners=[self.partner], status='completed')
+        activity4 = MonitoringActivityFactory(partners=[self.partner], status='completed')
+        MonitoringActivityFactory(partners=[self.partner])
+        ActivityQuestionOverallFinding.objects.create(
+            activity_question=ActivityQuestionFactory(
+                question__is_hact=True,
+                question__level='partner',
+                monitoring_activity=activity1,
+            ),
+            value='ok',
+        )
+        ActivityOverallFinding.objects.create(partner=self.partner, narrative_finding='test',
+                                              monitoring_activity=activity1)
+        ActivityQuestionOverallFinding.objects.create(
+            activity_question=ActivityQuestionFactory(
+                question__is_hact=True,
+                question__level='partner',
+                monitoring_activity=activity3,
+            ),
+            value='ok',
+        )
+        ActivityOverallFinding.objects.create(partner=self.partner, narrative_finding='test',
+                                              monitoring_activity=activity3)
 
         MonitoringActivityGroupFactory(
             partner=self.partner,
