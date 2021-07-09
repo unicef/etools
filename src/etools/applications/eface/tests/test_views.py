@@ -1,6 +1,6 @@
 from etools.applications.eface.tests.factories import EFaceFormFactory, FormActivityFactory
 from etools.applications.field_monitoring.tests.base import APIViewSetTestCase
-from etools.applications.partners.tests.factories import PartnerStaffFactory
+from etools.applications.partners.tests.factories import PartnerStaffFactory, InterventionFactory
 from etools.applications.users.tests.factories import UserFactory
 
 
@@ -38,6 +38,52 @@ class TestFormsView(APIViewSetTestCase):
         self.assertEqual(response.data['title'], 'new')
         form.refresh_from_db()
         self.assertEqual(form.title, 'new')
+
+    def test_create(self):
+        staff_member = PartnerStaffFactory()
+        self._test_create(
+            staff_member.user,
+            {
+                'intervention': InterventionFactory(agreement__partner=staff_member.partner).pk,
+                'title': 'test',
+                'request_type': 'dct',
+            }
+        )
+
+    def test_flow(self):
+        form = EFaceFormFactory()
+        staff_member = PartnerStaffFactory()
+        form.intervention.partner_focal_points.add(staff_member)
+
+        def goto(next_status, user, extra_data=None):
+            data = {
+                'status': next_status
+            }
+            if extra_data:
+                data.update(extra_data)
+
+            return self._test_update(user, form, data)
+
+        response = goto('submitted', staff_member.user)
+        self.assertEqual(response.data['status'], 'submitted')
+        response = goto('draft', self.unicef_user)
+        self.assertEqual(response.data['status'], 'draft')
+        response = goto('submitted', staff_member.user)
+        self.assertEqual(response.data['status'], 'submitted')
+        response = goto('unicef_approved', self.unicef_user)
+        self.assertEqual(response.data['status'], 'unicef_approved')
+        response = goto('draft', self.unicef_user)
+        self.assertEqual(response.data['status'], 'draft')
+        response = goto('submitted', staff_member.user)
+        self.assertEqual(response.data['status'], 'submitted')
+        response = goto('unicef_approved', self.unicef_user)
+        self.assertEqual(response.data['status'], 'unicef_approved')
+        response = goto('finalized', self.unicef_user)
+        self.assertEqual(response.data['status'], 'finalized')
+
+    def test_bad_transition(self):
+        form = EFaceFormFactory()
+        self._test_update(self.unicef_user, form, {'status': 'finalized'}, expected_status=400)
 
 
 class TestFormActivitiesView(APIViewSetTestCase):

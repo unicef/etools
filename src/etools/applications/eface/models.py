@@ -1,4 +1,4 @@
-from django.db import models
+from django.db import models, connection
 from django.db.models.base import ModelBase
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
@@ -9,12 +9,13 @@ from model_utils.fields import MonitorField
 from model_utils.models import TimeStampedModel
 from unicef_djangolib.fields import CurrencyField
 
+from etools.applications.core.permissions import import_permissions
 from etools.applications.field_monitoring.planning.mixins import ProtectUnknownTransitionsMeta
 from etools.libraries.djangolib.models import SoftDeleteMixin
 
 
 def update_transaction_reject_date(i, old_instance=None, user=None):
-    if old_instance.status == EFaceForm.STATUSES.unicef_approved:
+    if old_instance and old_instance.status == EFaceForm.STATUSES.unicef_approved:
         i.date_transaction_rejected = timezone.now().date()
 
 
@@ -64,7 +65,6 @@ class EFaceForm(
     )
 
     title = models.CharField(max_length=255)
-    country = models.ForeignKey('users.Country', verbose_name=_('Country'), on_delete=models.PROTECT)
     intervention = models.ForeignKey('partners.Intervention', verbose_name=_('Intervention'), on_delete=models.PROTECT)
     currency = CurrencyField(verbose_name=_('Currency'), null=False, default='')
 
@@ -96,7 +96,7 @@ class EFaceForm(
 
     def get_reference_number(self):
         number = '{country}/{type}{year}{id}'.format(
-            country=self.country.country_short_code or '',
+            country=connection.tenant.country_short_code or '',
             type=self.request_type,
             year=self.reference_number_year,
             id=self.id
@@ -113,6 +113,11 @@ class EFaceForm(
             self.reference_number = self.get_reference_number()
 
         super().save()
+
+    @classmethod
+    def permission_structure(cls):
+        permissions = import_permissions(cls.__name__)
+        return permissions
 
     # todo: permissions - partner only
     @transition(field=status, source=STATUSES.draft, target=STATUSES.submitted)

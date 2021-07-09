@@ -1,14 +1,48 @@
 from rest_framework import serializers
 
 from etools.applications.eface.models import EFaceForm, FormActivity
+from etools.applications.eface.validation.permissions import EFaceFormPermissions
 
 
 class EFaceFormSerializer(serializers.ModelSerializer):
     actions_available = serializers.SerializerMethodField()
+    permissions = serializers.SerializerMethodField()
 
     class Meta:
         model = EFaceForm
-        fields = '__all__'  # todo: replace with fields list
+        fields = (
+            'id',
+            'reference_number',
+            'title',
+            'intervention',
+            'currency',
+            'request_type',
+            'request_represents_expenditures',
+            'expenditures_disbursed',
+            'notes',
+            'authorized_amount_date',
+            'requested_amount_date',
+            'date_submitted',
+            'date_unicef_approved',
+            'date_transaction_rejected',
+            'date_finalized',
+            'date_cancelled',
+            'rejection_reason',
+            'transaction_rejection_reason',
+            'cancel_reason',
+            'actions_available',
+            'permissions',
+        )
+
+    def get_permissions(self, obj):
+        user = self.context['request'].user
+        ps = EFaceForm.permission_structure()
+        permissions = EFaceFormPermissions(
+            user=user,
+            instance=self.instance,
+            permission_structure=ps,
+        )
+        return permissions.get_permissions()
 
     def get_actions_available(self, obj):
         default_ordering = [
