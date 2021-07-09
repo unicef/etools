@@ -12,6 +12,8 @@ from etools.applications.reports.models import (
     DisaggregationValue,
     Indicator,
     IndicatorBlueprint,
+    InterventionActivity,
+    InterventionActivityItem,
     LowerResult,
     Office,
     Result,
@@ -224,6 +226,17 @@ class UserTenantProfileAdmin(admin.ModelAdmin):
     list_display = ("id", "profile", "office")
 
 
+class InterventionActivityItemAdminInline(admin.TabularInline):
+    model = InterventionActivityItem
+
+
+class InterventionActivityAdmin(admin.ModelAdmin):
+    list_display = ('id', 'result', 'name')
+    list_select_related = ('result',)
+    search_fields = ('name', 'code')
+    inlines = (InterventionActivityItemAdminInline,)
+
+
 admin.site.register(Result, ResultAdmin)
 admin.site.register(CountryProgramme)
 admin.site.register(Section, SectionAdmin)
@@ -238,3 +251,4 @@ admin.site.register(Disaggregation)
 admin.site.register(DisaggregationValue, DisaggregationValueAdmin)
 admin.site.register(Office)
 admin.site.register(UserTenantProfile, UserTenantProfileAdmin)
+admin.site.register(InterventionActivity, InterventionActivityAdmin)

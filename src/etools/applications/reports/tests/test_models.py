@@ -1,16 +1,27 @@
-
 import datetime
 
 from django.test import SimpleTestCase
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import Agreement
-from etools.applications.partners.tests.factories import AgreementFactory
-from etools.applications.reports.models import CountryProgramme, Indicator, IndicatorBlueprint, Quarter
+from etools.applications.partners.tests.factories import (
+    AgreementFactory,
+    InterventionFactory,
+    InterventionResultLinkFactory,
+)
+from etools.applications.reports.models import (
+    CountryProgramme,
+    Indicator,
+    IndicatorBlueprint,
+    InterventionTimeFrame,
+    Quarter,
+)
 from etools.applications.reports.tests.factories import (
     CountryProgrammeFactory,
     IndicatorBlueprintFactory,
     IndicatorFactory,
+    InterventionActivityFactory,
+    InterventionActivityItemFactory,
     LowerResultFactory,
     QuarterFactory,
     ResultFactory,
@@ -93,18 +104,18 @@ class TestQuarter(BaseTenantTestCase):
 
 
 class TestCountryProgramme(BaseTenantTestCase):
-    @classmethod
-    def setUpTestData(cls):
+    def setUp(self):
+        super().setUp()
         today = datetime.date.today()
-        cls.programme_active = CountryProgrammeFactory(
+        self.programme_active = CountryProgrammeFactory(
             from_date=today - datetime.timedelta(days=1),
             to_date=today + datetime.timedelta(days=1),
         )
-        cls.programme_past = CountryProgrammeFactory(
+        self.programme_past = CountryProgrammeFactory(
             from_date=datetime.date(2001, 1, 1),
             to_date=datetime.date(2001, 12, 31),
         )
-        cls.programme_future = CountryProgrammeFactory(
+        self.programme_future = CountryProgrammeFactory(
             from_date=today + datetime.timedelta(days=2 * 30),
             to_date=today + datetime.timedelta(days=6 * 30),
         )
@@ -223,6 +234,18 @@ class TestResult(BaseTenantTestCase):
         self.assertFalse(result.valid_entry())
 
 
+class TestLowerResult(BaseTenantTestCase):
+    def test_total(self):
+        ll = LowerResultFactory(result_link=InterventionResultLinkFactory())
+
+        # empty
+        self.assertEqual(ll.total(), 0)
+
+        # add activities
+        InterventionActivityFactory(result=ll, unicef_cash=10, cso_cash=20)
+        self.assertEqual(ll.total(), 30)
+
+
 class TestIndicatorBlueprint(BaseTenantTestCase):
     def test_save_empty(self):
         """If code is empty ensure it is set to None"""
@@ -249,3 +272,93 @@ class TestIndicator(BaseTenantTestCase):
         indicator = Indicator(name="Indicator", code="C123")
         indicator.save()
         self.assertEqual(indicator.code, "C123")
+
+
+class TestInterventionActivity(BaseTenantTestCase):
+    def test_delete(self):
+        intervention = InterventionFactory()
+        budget = intervention.planned_budget
+
+        link = InterventionResultLinkFactory(intervention=intervention)
+        lower_result = LowerResultFactory(result_link=link)
+        for __ in range(3):
+            activity = InterventionActivityFactory(
+                result=lower_result,
+                unicef_cash=101,
+                cso_cash=202,
+            )
+
+        self.assertEqual(budget.total_cash_local(), 909)
+
+        activity.delete()
+
+        budget.refresh_from_db()
+        self.assertEqual(budget.total_cash_local(), 606)
+
+
+class TestInterventionActivityItem(BaseTenantTestCase):
+    def test_delete(self):
+        intervention = InterventionFactory()
+        link = InterventionResultLinkFactory(intervention=intervention)
+        lower_result = LowerResultFactory(result_link=link)
+        activity = InterventionActivityFactory(result=lower_result)
+        for __ in range(3):
+            item = InterventionActivityItemFactory(
+                activity=activity,
+                unicef_cash=20,
+                cso_cash=10,
+            )
+
+        activity.refresh_from_db()
+        self.assertEqual(activity.unicef_cash, 60)
+        self.assertEqual(activity.cso_cash, 30)
+
+        item.delete()
+
+        activity.refresh_from_db()
+        self.assertEqual(activity.unicef_cash, 40)
+        self.assertEqual(activity.cso_cash, 20)
+
+
+class TestInterventionTimeFrame(BaseTenantTestCase):
+    def test_intervention_save_no_changes(self):
+        intervention = InterventionFactory(
+            start=datetime.date(year=1980, month=1, day=1),
+            end=datetime.date(year=1980, month=12, day=31),
+        )
+        self.assertEqual(intervention.quarters.count(), 4)
+        intervention.save()
+        self.assertEqual(intervention.quarters.count(), 4)
+
+    def test_time_frame_removed_on_dates_change(self):
+        intervention = InterventionFactory(
+            start=datetime.date(year=1980, month=1, day=1),
+            end=datetime.date(year=1980, month=12, day=31),
+        )
+        item_to_keep = InterventionTimeFrame.objects.get(
+            intervention=intervention,
+            start_date=datetime.date(year=1980, month=4, day=1),
+            end_date=datetime.date(year=1980, month=6, day=30)
+        )
+        item_to_remove = InterventionTimeFrame.objects.get(
+            intervention=intervention,
+            start_date=datetime.date(year=1980, month=10, day=1),
+            end_date=datetime.date(year=1980, month=12, day=31)
+        )
+        intervention.start = datetime.date(year=1979, month=6, day=1)
+        intervention.end = datetime.date(year=1980, month=3, day=1)
+        intervention.save()
+        item_to_keep.refresh_from_db()
+        self.assertEqual(item_to_keep.start_date, datetime.date(year=1979, month=9, day=1))
+        self.assertEqual(item_to_keep.end_date, datetime.date(year=1979, month=11, day=30))
+        self.assertEqual(intervention.quarters.filter(id=item_to_remove.id).exists(), False)
+
+    def test_time_frame_created_on_dates_change(self):
+        intervention = InterventionFactory(
+            start=datetime.date(year=1980, month=1, day=1),
+            end=datetime.date(year=1980, month=12, day=31),
+        )
+        self.assertEqual(intervention.quarters.count(), 4)
+        intervention.end = datetime.date(year=1981, month=3, day=31)
+        intervention.save()
+        self.assertEqual(intervention.quarters.count(), 5)

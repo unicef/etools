@@ -34,11 +34,23 @@ from etools.applications.partners.models import (  # TODO intervention sector lo
     InterventionBudget,
     InterventionPlannedVisits,
     InterventionResultLink,
+    InterventionReview,
     PartnerOrganization,
     PartnerStaffMember,
     PlannedEngagement,
 )
 from etools.applications.partners.tasks import sync_partner
+
+
+class InterventionReviewInlineAdmin((admin.TabularInline)):
+    model = InterventionReview
+    extra = 0
+
+    raw_id_fields = [
+        "prc_officers",
+        "submitted_by",
+        "overall_approver"
+    ]
 
 
 class AttachmentSingleInline(AttachmentSingleInline):
@@ -77,7 +89,6 @@ class InterventionAmendmentsAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
     model = InterventionAmendment
     readonly_fields = [
         'amendment_number',
-        'signed_amendment',
     ]
     list_display = (
         'intervention',
@@ -272,6 +283,7 @@ class InterventionAdmin(
         'flat_locations',
         'partner_authorized_officer_signatory',
         'unicef_signatory',
+        'budget_owner',
         'unicef_focal_points',
         'partner_focal_points',
     ]
@@ -307,7 +319,7 @@ class InterventionAdmin(
                     'reference_number_year',
                     'title',
                     'status',
-                    'country_programme',
+                    'country_programmes',
                     'submission_date',
                     'sections',
                     'flat_locations',
@@ -329,6 +341,27 @@ class InterventionAdmin(
                  'activation_letter',
                  ),
         }),
+        (_('ePD'), {
+            'fields': (
+                'unicef_court',
+                'date_sent_to_partner',
+                ('unicef_accepted', 'partner_accepted'),
+                'cfei_number',
+                'context',
+                'implementation_strategy',
+                ('gender_rating', 'gender_narrative'),
+                ('equity_rating', 'equity_narrative'),
+                ('sustainability_rating', 'sustainability_narrative'),
+                'budget_owner',
+                'hq_support_cost',
+                'cash_transfer_modalities',
+                'unicef_review_type',
+                'capacity_development',
+                'other_info',
+                'other_partners_involved',
+                'technical_guidance',
+            )
+        }),
     )
 
     inlines = (
@@ -337,6 +370,7 @@ class InterventionAdmin(
         PRCReviewAttachmentInline,
         SignedPDAttachmentInline,
         InterventionPlannedVisitsInline,
+        InterventionReviewInlineAdmin,
     )
 
     def created_date(self, obj):
@@ -407,6 +441,7 @@ class AssessmentAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
 class PartnerStaffMemberAdmin(SnapshotModelAdmin):
     model = PartnerStaffMember
     form = PartnerStaffMemberForm
+    raw_id_fields = ("partner", "user",)
 
     # display_staff_member_name() is used only in list_display. It could be replaced by this simple lambda --
     #     lambda instance: str(instance)
@@ -421,11 +456,13 @@ class PartnerStaffMemberAdmin(SnapshotModelAdmin):
         display_staff_member_name,
         'title',
         'email',
+        'user',
     )
     search_fields = (
         'first_name',
         'last_name',
-        'email'
+        'email',
+        'user',
     )
     inlines = [
         ActivityInline,

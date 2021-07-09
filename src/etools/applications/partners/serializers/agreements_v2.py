@@ -36,6 +36,7 @@ class AgreementAmendmentListSerializer(serializers.ModelSerializer):
 
 class AgreementListSerializer(serializers.ModelSerializer):
     partner_name = serializers.CharField(source='partner.name', read_only=True)
+    authorized_officers = PartnerStaffMemberNestedSerializer(many=True, read_only=True)
     agreement_number_status = serializers.SerializerMethodField()
 
     class Meta:
@@ -43,6 +44,7 @@ class AgreementListSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "partner",
+            "authorized_officers",
             "country_programme",
             "agreement_number",
             "partner_name",

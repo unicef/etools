@@ -54,7 +54,7 @@ class TestGetInterventionContext(BaseTenantTestCase):
 
     def setUp(self):
         super().setUp()
-        self.intervention = InterventionFactory()
+        self.intervention = InterventionFactory(start=None, end=None)
         self.focal_point_user = UserFactory()
 
     def test_simple_intervention(self):

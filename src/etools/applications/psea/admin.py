@@ -2,7 +2,15 @@ from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 
 from etools.applications.partners.admin import AttachmentSingleInline
-from etools.applications.psea.models import Answer, Assessment, AssessmentActionPoint, Assessor, Evidence, Indicator
+from etools.applications.psea.models import (
+    Answer,
+    Assessment,
+    AssessmentActionPoint,
+    Assessor,
+    Evidence,
+    Indicator,
+    Rating,
+)
 
 
 class NFRAttachmentInline(AttachmentSingleInline):
@@ -42,6 +50,12 @@ class EvidenceAdmin(admin.ModelAdmin):
 @admin.register(Indicator)
 class IndicatorAdmin(admin.ModelAdmin):
     list_display = ('subject', 'active')
+    list_filter = ('active',)
+
+
+@admin.register(Rating)
+class RatingAdmin(admin.ModelAdmin):
+    list_display = ('label', 'weight', 'active')
     list_filter = ('active',)
 
 

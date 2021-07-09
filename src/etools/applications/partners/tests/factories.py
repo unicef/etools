@@ -1,4 +1,3 @@
-
 import datetime
 
 import factory
@@ -114,6 +113,23 @@ class InterventionFactory(factory.django.DjangoModelFactory):
     title = factory.Sequence(lambda n: 'Intervention Title {}'.format(n))
     submission_date = datetime.datetime.today()
     reference_number_year = datetime.date.today().year
+    start = datetime.date.today()
+    end = datetime.date.today() + datetime.timedelta(days=365)
+    equity_narrative = "equity_narrative"
+    context = "context"
+    gender_narrative = "gender_narrative"
+    implementation_strategy = "implementation_strategy"
+    ip_program_contribution = "ip_program_contribution"
+    sustainability_narrative = "sustainability_narrative"
+    # date_sent_to_partner = datetime.date.today()
+
+    @factory.post_generation
+    def country_programmes(self, create, extracted, **kwargs):
+        if create and self.country_programme:
+            self.country_programmes.add(self.country_programme)
+
+        if extracted:
+            self.country_programmes.add(*extracted)
 
 
 class InterventionAmendmentFactory(factory.django.DjangoModelFactory):
@@ -130,7 +146,6 @@ class InterventionAmendmentFactory(factory.django.DjangoModelFactory):
     other_description = fuzzy.FuzzyText(length=50)
     amendment_number = fuzzy.FuzzyInteger(1000)
     signed_date = datetime.date.today()
-    signed_amendment = factory.django.FileField(filename='test_file.pdf')
 
 
 class InterventionAttachmentFactory(factory.django.DjangoModelFactory):
@@ -153,6 +168,14 @@ class InterventionBudgetFactory(factory.django.DjangoModelFactory):
     partner_contribution_local = 20.00
     in_kind_amount = 10.00
     in_kind_amount_local = 10.00
+
+
+class InterventionReviewFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.InterventionReview
+
+    intervention = factory.SubFactory(InterventionFactory)
+    overall_approval = True
 
 
 class InterventionReportingPeriodFactory(factory.django.DjangoModelFactory):
@@ -215,3 +238,27 @@ class PartnerPlannedVisitsFactory(factory.django.DjangoModelFactory):
 
     partner = factory.SubFactory(PartnerFactory)
     year = datetime.date.today().year
+
+
+class InterventionManagementBudgetFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.InterventionManagementBudget
+        django_get_or_create = ("intervention",)
+
+    intervention = factory.SubFactory(InterventionFactory)
+
+
+class InterventionSupplyItemFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.InterventionSupplyItem
+
+    intervention = factory.SubFactory(InterventionFactory)
+
+
+class InterventionRiskFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.InterventionRisk
+
+    intervention = factory.SubFactory(InterventionFactory)
+    risk_type = fuzzy.FuzzyChoice(choices=dict(models.InterventionRisk.RISK_TYPE_CHOICES).keys())
+    mitigation_measures = fuzzy.FuzzyText()

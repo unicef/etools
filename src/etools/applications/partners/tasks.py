@@ -4,28 +4,31 @@ import itertools
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import connection, transaction
-from django.db.models import F, Sum
+from django.db.models import F, Prefetch, Sum
 
 from celery.utils.log import get_task_logger
-from django_tenants.utils import schema_context
+from django_tenants.utils import get_tenant_model, schema_context
 from unicef_notification.utils import send_notification_with_template
 from unicef_vision.exceptions import VisionException
 from unicef_vision.utils import get_data_from_insight
 
-from etools.applications.partners.models import Agreement, Intervention, PartnerOrganization
+from etools.applications.partners.models import Agreement, Intervention, PartnerOrganization, PartnerStaffMember
+from etools.applications.partners.prp_api import PRPAPI
+from etools.applications.partners.serializers.prp_v1 import PRPPartnerOrganizationWithStaffMembersSerializer
 from etools.applications.partners.utils import (
     copy_all_attachments,
     send_intervention_draft_notification,
     send_intervention_past_start_notification,
     send_pca_missing_notifications,
     send_pca_required_notifications,
+    sync_partner_staff_member,
 )
 from etools.applications.partners.validation.agreements import AgreementValid
 from etools.applications.partners.validation.interventions import InterventionValid
 from etools.applications.users.models import Country
 from etools.config.celery import app
 from etools.libraries.djangolib.utils import get_environment
-from etools.libraries.tenant_support.utils import run_on_all_tenants
+from etools.libraries.tenant_support.utils import every_country, run_on_all_tenants
 
 logger = get_task_logger(__name__)
 
@@ -294,6 +297,45 @@ def check_intervention_past_start():
 
 
 @app.task
+def sync_partner_to_prp(tenant: str, partner_id: int):
+    tenant = get_tenant_model().objects.get(name=tenant)
+    connection.set_tenant(tenant)
+
+    partner = PartnerOrganization.objects.filter(id=partner_id).prefetch_related(
+        Prefetch('staff_members', PartnerStaffMember.objects.filter(active=True))
+    ).get()
+    partner_data = PRPPartnerOrganizationWithStaffMembersSerializer(instance=partner).data
+    PRPAPI().send_partner_data(tenant.business_area_code, partner_data)
+
+
+@app.task
+def sync_partners_staff_members_from_prp():
+    api = PRPAPI()
+
+    # remember where every particular partner is located for easier search
+    partners_tenants_mapping = {}
+    with every_country() as c:
+        for country in c:
+            connection.set_tenant(country)
+            for partner in PartnerOrganization.objects.all():
+                partners_tenants_mapping[(str(partner.id), partner.vendor_number)] = country
+
+    for partner_data in PRPAPI().get_partners_list():
+        key = (partner_data.external_id, partner_data.unicef_vendor_number)
+        partner_tenant = partners_tenants_mapping.get(key)
+        if not partner_tenant:
+            continue
+
+        connection.set_tenant(partner_tenant)
+        partner = PartnerOrganization.objects.get(
+            id=partner_data.external_id,
+            vendor_number=partner_data.unicef_vendor_number
+        )
+
+        for staff_member_data in api.get_partner_staff_members(partner_data.id):
+            sync_partner_staff_member(partner, staff_member_data)
+
+
 def sync_partner(vendor_number=None, country=None):
     from etools.applications.partners.synchronizers import PartnerSynchronizer
     try:
