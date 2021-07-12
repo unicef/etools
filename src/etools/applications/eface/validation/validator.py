@@ -39,12 +39,22 @@ class EFaceFormValid(CompleteValidation):
         self.check_rigid_fields(instance, related=True)
         return True
 
-    def state_unicef_approved_valid(self, instance, user=None):
+    def state_rejected_valid(self, instance, user=None):
         self.check_required_fields(instance)
         self.check_rigid_fields(instance, related=True)
         return True
 
-    def state_finalized_valid(self, instance, user=None):
+    def state_pending_valid(self, instance, user=None):
+        self.check_required_fields(instance)
+        self.check_rigid_fields(instance, related=True)
+        return True
+
+    def state_approved_valid(self, instance, user=None):
+        self.check_required_fields(instance)
+        self.check_rigid_fields(instance, related=True)
+        return True
+
+    def state_closed_valid(self, instance, user=None):
         self.check_required_fields(instance)
         self.check_rigid_fields(instance, related=True)
         return True

@@ -36,9 +36,10 @@ class EFaceFormListSerializer(serializers.ModelSerializer):
             'authorized_amount_date',
             'requested_amount_date',
             'date_submitted',
-            'date_unicef_approved',
-            'date_transaction_rejected',
-            'date_finalized',
+            'date_rejected',
+            'date_pending',
+            'date_approved',
+            'date_closed',
             'date_cancelled',
             'rejection_reason',
             'transaction_rejection_reason',
@@ -87,24 +88,26 @@ class EFaceFormSerializer(EFaceFormListSerializer):
         if obj.status == EFaceForm.STATUSES.draft:
             if self._is_partner_user(obj, user):
                 available_actions.append('submit')
+                available_actions.append('cancel')
+            if self._is_programme_officer(obj, user):
+                available_actions.append('cancel')
 
         if obj.status == EFaceForm.STATUSES.submitted:
             if self._is_programme_officer(obj, user):
-                available_actions.append('approve')
+                available_actions.append('send_to_vision')
                 available_actions.append('reject')
 
         # temporary actions
-        if obj.status == EFaceForm.STATUSES.unicef_approved:
+        if obj.status == EFaceForm.STATUSES.pending:
             if self._is_programme_officer(obj, user):
                 available_actions.append('transaction_approve')
                 available_actions.append('transaction_reject')
 
         if obj.status in [
             EFaceForm.STATUSES.draft,
-            EFaceForm.STATUSES.submitted,
-            EFaceForm.STATUSES.unicef_approved,
+            EFaceForm.STATUSES.rejected,
         ]:
-            if self._is_programme_officer(obj, user):
+            if self._is_programme_officer(obj, user) or self._is_partner_user(obj, user):
                 available_actions.append('cancel')
 
         return [action for action in default_ordering if action in available_actions]

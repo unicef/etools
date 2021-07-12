@@ -10,6 +10,10 @@ from model_utils.models import TimeStampedModel
 from unicef_djangolib.fields import CurrencyField
 
 from etools.applications.core.permissions import import_permissions
+from etools.applications.eface.transition_permissions import (
+    user_is_partner_focal_point_permission,
+    user_is_programme_officer_permission,
+)
 from etools.applications.field_monitoring.planning.mixins import ProtectUnknownTransitionsMeta
 from etools.libraries.djangolib.models import SoftDeleteMixin
 
@@ -44,14 +48,13 @@ class EFaceForm(
     STATUSES = Choices(
         ('draft', _('Draft')),
         ('submitted', _('Submitted')),
-        ('unicef_approved', _('UNICEF Approved')),
-        ('finalized', _('Finalized')),
+        ('rejected', _('Rejected')),
+        ('pending', _('Pending (in vision)')),
+        ('approved', _('Approved')),
+        ('closed', _('Closed (rejected)')),
         ('cancelled', _('Cancelled')),
     )
     TRANSITION_SIDE_EFFECTS = {
-        STATUSES.draft: [update_transaction_reject_date],
-        # todo(future): synchronize to vision on unicef approve
-        # todo(future): get updates from vision on transaction approve/reject
     }
     AUTO_TRANSITIONS = {}
 
@@ -85,9 +88,10 @@ class EFaceForm(
 
     # status dates
     date_submitted = MonitorField(monitor='status', when=STATUSES.submitted, blank=True, null=True)
-    date_unicef_approved = MonitorField(monitor='status', when=STATUSES.unicef_approved, blank=True, null=True)
-    date_transaction_rejected = models.DateField(blank=True, null=True)
-    date_finalized = MonitorField(monitor='status', when=STATUSES.finalized, blank=True, null=True)
+    date_rejected = MonitorField(monitor='status', when=STATUSES.rejected, blank=True, null=True)
+    date_pending = MonitorField(monitor='status', when=STATUSES.pending, blank=True, null=True)
+    date_approved = MonitorField(monitor='status', when=STATUSES.approved, blank=True, null=True)
+    date_closed = MonitorField(monitor='status', when=STATUSES.closed, blank=True, null=True)
     date_cancelled = MonitorField(monitor='status', when=STATUSES.cancelled, blank=True, null=True)
 
     rejection_reason = models.TextField(blank=True)
@@ -119,40 +123,51 @@ class EFaceForm(
         permissions = import_permissions(cls.__name__)
         return permissions
 
-    # todo: permissions - partner only
-    @transition(field=status, source=STATUSES.draft, target=STATUSES.submitted)
+    @transition(
+        field=status, source=[STATUSES.draft, STATUSES.rejected], target=STATUSES.submitted,
+        permission=user_is_partner_focal_point_permission,
+    )
     def submit(self):
         pass
 
-    # todo: permissions - programme officer only
-    @transition(field=status, source=STATUSES.submitted, target=STATUSES.unicef_approved)
-    def approve(self):
+    @transition(
+        field=status, source=STATUSES.submitted, target=STATUSES.pending,
+        permission=user_is_programme_officer_permission,
+    )
+    def send_to_vision(self):
         pass
 
-    # todo: permissions - programme officer only
-    @transition(field=status, source=STATUSES.submitted, target=STATUSES.draft)
+    @transition(
+        field=status, source=STATUSES.submitted, target=STATUSES.rejected,
+        permission=user_is_programme_officer_permission,
+    )
     def reject(self):
         pass
 
     # todo: permissions - vision only; for poc manual transition will be available by programme officer
-    @transition(field=status, source=STATUSES.unicef_approved, target=STATUSES.finalized)
+    @transition(
+        field=status, source=STATUSES.pending, target=STATUSES.approved,
+        permission=user_is_programme_officer_permission,
+    )
     def transaction_approve(self):
         pass
 
     # todo: permissions - vision only; for poc manual transition will be available by programme officer
-    @transition(field=status, source=STATUSES.unicef_approved, target=STATUSES.draft)
+    @transition(
+        field=status, source=STATUSES.pending, target=STATUSES.closed,
+        permission=user_is_programme_officer_permission,
+    )
     def transaction_reject(self):
         pass
 
-    # todo: permissions - programme officer only
     @transition(
         field=status,
         source=[
             STATUSES.draft,
-            STATUSES.submitted,
-            STATUSES.unicef_approved,  # not sure about approved status because object will be synchronized to vision
+            STATUSES.rejected,
         ],
-        target=STATUSES.cancelled
+        target=STATUSES.cancelled,
+        permission=user_is_programme_officer_permission,
     )
     def cancel(self):
         pass

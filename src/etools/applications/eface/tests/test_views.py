@@ -72,6 +72,7 @@ class TestFormsView(APIViewSetTestCase):
         form = EFaceFormFactory()
         staff_member = PartnerStaffFactory()
         form.intervention.partner_focal_points.add(staff_member)
+        form.intervention.unicef_focal_points.add(self.unicef_user)
 
         def goto(next_status, user, extra_data=None):
             data = {
@@ -84,20 +85,14 @@ class TestFormsView(APIViewSetTestCase):
 
         response = goto('submitted', staff_member.user)
         self.assertEqual(response.data['status'], 'submitted')
-        response = goto('draft', self.unicef_user)
-        self.assertEqual(response.data['status'], 'draft')
+        response = goto('rejected', self.unicef_user)
+        self.assertEqual(response.data['status'], 'rejected')
         response = goto('submitted', staff_member.user)
         self.assertEqual(response.data['status'], 'submitted')
-        response = goto('unicef_approved', self.unicef_user)
-        self.assertEqual(response.data['status'], 'unicef_approved')
-        response = goto('draft', self.unicef_user)
-        self.assertEqual(response.data['status'], 'draft')
-        response = goto('submitted', staff_member.user)
-        self.assertEqual(response.data['status'], 'submitted')
-        response = goto('unicef_approved', self.unicef_user)
-        self.assertEqual(response.data['status'], 'unicef_approved')
-        response = goto('finalized', self.unicef_user)
-        self.assertEqual(response.data['status'], 'finalized')
+        response = goto('pending', self.unicef_user)
+        self.assertEqual(response.data['status'], 'pending')
+        response = goto('approved', self.unicef_user)
+        self.assertEqual(response.data['status'], 'approved')
 
     def test_bad_transition(self):
         form = EFaceFormFactory()
