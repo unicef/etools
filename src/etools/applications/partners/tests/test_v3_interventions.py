@@ -763,14 +763,17 @@ class TestManagementBudget(BaseInterventionTestCase):
                 'items': [
                     {
                         'name': 'first_item', 'kind': 'operational',
+                        'unit': 'item', 'no_units': '1.0', 'unit_price': '7.0',
                         'unicef_cash': '3.0', 'cso_cash': '4.0',
                     },
                     {
                         'name': 'second_item', 'kind': 'planning',
+                        'unit': 'item', 'no_units': '1.0', 'unit_price': '2.0',
                         'unicef_cash': '0.0', 'cso_cash': '2.0',
                     },
                     {
                         'name': 'third_item', 'kind': 'operational',
+                        'unit': 'item', 'no_units': '1.0', 'unit_price': '0.2',
                         'unicef_cash': '0.0', 'cso_cash': '0.2',
                     }
                 ],
@@ -809,6 +812,7 @@ class TestManagementBudget(BaseInterventionTestCase):
                     {'id': item_to_update.id, 'name': 'new'},
                     {
                         'name': 'first_item', 'kind': 'operational',
+                        'unit': 'test', 'no_units': '1.0', 'unit_price': '3.0',
                         'unicef_cash': '1.0', 'cso_cash': '2.0',
                     }
                 ],
