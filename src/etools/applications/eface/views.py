@@ -12,7 +12,7 @@ from unicef_restlib.views import MultiSerializerViewSetMixin, NestedViewSetMixin
 
 from etools.applications.eface.filters import EFaceFormFilterSet
 from etools.applications.eface.models import EFaceForm, FormActivity
-from etools.applications.eface.serializers import EFaceFormSerializer, FormActivitySerializer
+from etools.applications.eface.serializers import EFaceFormListSerializer, EFaceFormSerializer, FormActivitySerializer
 from etools.applications.eface.validation.validator import EFaceFormValid
 
 
@@ -41,6 +41,9 @@ class EFaceFormsViewSet(
     )
     search_fields = ('reference_number',)
     pagination_class = DynamicPageNumberPagination
+    serializer_action_classes = {
+        'list': EFaceFormListSerializer,
+    }
 
     def get_queryset(self):
         queryset = super().get_queryset()

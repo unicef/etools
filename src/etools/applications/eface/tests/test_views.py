@@ -1,6 +1,14 @@
+from rest_framework import status
+
 from etools.applications.eface.tests.factories import EFaceFormFactory, FormActivityFactory
 from etools.applications.field_monitoring.tests.base import APIViewSetTestCase
-from etools.applications.partners.tests.factories import PartnerStaffFactory, InterventionFactory
+from etools.applications.partners.tests.factories import (
+    InterventionFactory,
+    InterventionResultLinkFactory,
+    PartnerStaffFactory,
+)
+from etools.applications.reports.models import ResultType
+from etools.applications.reports.tests.factories import InterventionActivityFactory, ResultFactory
 from etools.applications.users.tests.factories import UserFactory
 
 
@@ -26,9 +34,19 @@ class TestFormsView(APIViewSetTestCase):
         form1.intervention.partner_focal_points.add(staff_member)
         self._test_list(staff_member.user, [form1])
 
-    def test_detail(self):
+    def test_detail_pd_activities_presented(self):
         form = EFaceFormFactory()
-        self._test_retrieve(self.unicef_user, form)
+        activity = InterventionActivityFactory(
+            result__result_link=InterventionResultLinkFactory(
+                intervention=form.intervention,
+                cp_output=ResultFactory(result_type__name=ResultType.OUTPUT),
+            ),
+        )
+        response = self._test_retrieve(self.unicef_user, form)
+        self.assertEqual(
+            response.data['intervention']['result_links'][0]['ll_results'][0]['activities'][0]['id'],
+            activity.id
+        )
 
     def test_update(self):
         form = EFaceFormFactory()
@@ -98,6 +116,29 @@ class TestFormActivitiesView(APIViewSetTestCase):
         cls.unicef_user = UserFactory()
         cls.form = EFaceFormFactory()
 
+    def test_create(self):
+        staff_member = PartnerStaffFactory()
+        self.form.intervention.partner_focal_points.add(staff_member)
+        self._test_create(
+            staff_member.user,
+            {
+                'kind': 'custom',
+                'description': 'test',
+            }
+        )
+
+    def test_create_activity_required(self):
+        staff_member = PartnerStaffFactory()
+        self.form.intervention.partner_focal_points.add(staff_member)
+        self._test_create(
+            staff_member.user,
+            {
+                'kind': 'activity',
+            },
+            expected_status=status.HTTP_400_BAD_REQUEST,
+            field_errors=['non_field_errors']
+        )
+
     def test_list(self):
         activities = [FormActivityFactory(form=self.form), FormActivityFactory(form=self.form)]
         FormActivityFactory()
@@ -106,7 +147,7 @@ class TestFormActivitiesView(APIViewSetTestCase):
     def test_update(self):
         activity = FormActivityFactory(form=self.form)
         staff_member = PartnerStaffFactory()
-        activity.form.intervention.partner_focal_points.add(staff_member)
+        self.form.intervention.partner_focal_points.add(staff_member)
         response = self._test_update(staff_member.user, activity, {'description': 'new'})
         self.assertEqual(response.data['description'], 'new')
         activity.refresh_from_db()
@@ -115,5 +156,5 @@ class TestFormActivitiesView(APIViewSetTestCase):
     def test_delete(self):
         activity = FormActivityFactory(form=self.form)
         staff_member = PartnerStaffFactory()
-        activity.form.intervention.partner_focal_points.add(staff_member)
+        self.form.intervention.partner_focal_points.add(staff_member)
         self._test_destroy(staff_member.user, activity)

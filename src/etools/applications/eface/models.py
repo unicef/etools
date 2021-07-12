@@ -1,4 +1,4 @@
-from django.db import models, connection
+from django.db import connection, models
 from django.db.models.base import ModelBase
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
@@ -159,9 +159,27 @@ class EFaceForm(
 
 
 class FormActivity(models.Model):
-    form = models.ForeignKey(EFaceForm, on_delete=models.CASCADE)
+    KIND_CHOICES = Choices(
+        ('activity', _('Activity')),
+        ('eepm', _('EEPM')),
+        ('custom', _('Custom')),
+    )
+    EEPM_CHOICES = Choices(
+        ('in_country', _('In-country management and support staff prorated to their contribution to the programme '
+                         '(representation, planning, coordination, logistics, administration, finance)')),
+        ('operational', _('Operational costs prorated to their contribution to the programme '
+                          '(office space, equipment, office supplies, maintenance)')),
+        ('planning', _('Planning, monitoring, evaluation and communication, '
+                       'prorated to their contribution to the programme (venue, travels, etc.)')),
+    )
 
-    description = models.TextField()
+    form = models.ForeignKey(EFaceForm, on_delete=models.CASCADE)
+    kind = models.CharField(choices=KIND_CHOICES, max_length=8)
+
+    pd_activity = models.ForeignKey('reports.InterventionActivity', blank=True, null=True, on_delete=models.SET_NULL)
+    eepm_kind = models.CharField(choices=EEPM_CHOICES, max_length=15, blank=True)
+    description = models.TextField(blank=True)
+
     coding = models.CharField(max_length=100, blank=True)
 
     reporting_authorized_amount = models.DecimalField(

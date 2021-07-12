@@ -1,21 +1,34 @@
+from django.utils.translation import ugettext_lazy as _
+
 from rest_framework import serializers
+from unicef_restlib.fields import SeparatedReadWriteField
 
 from etools.applications.eface.models import EFaceForm, FormActivity
 from etools.applications.eface.validation.permissions import EFaceFormPermissions
+from etools.applications.partners.serializers.interventions_v3 import InterventionDetailSerializer
 
 
-class EFaceFormSerializer(serializers.ModelSerializer):
-    actions_available = serializers.SerializerMethodField()
-    permissions = serializers.SerializerMethodField()
+class CustomInterventionDetailSerializer(InterventionDetailSerializer):
+    # hack to exclude extra fields
+    permissions = None
+    available_actions = None
 
+    class Meta(InterventionDetailSerializer.Meta):
+        fields = [
+            field for field in InterventionDetailSerializer.Meta.fields
+            if field not in ['permissions', 'available_actions']
+        ]
+
+
+class EFaceFormListSerializer(serializers.ModelSerializer):
     class Meta:
         model = EFaceForm
         fields = (
             'id',
             'reference_number',
             'title',
+            'status',
             'intervention',
-            'currency',
             'request_type',
             'request_represents_expenditures',
             'expenditures_disbursed',
@@ -30,6 +43,16 @@ class EFaceFormSerializer(serializers.ModelSerializer):
             'rejection_reason',
             'transaction_rejection_reason',
             'cancel_reason',
+        )
+
+
+class EFaceFormSerializer(EFaceFormListSerializer):
+    actions_available = serializers.SerializerMethodField()
+    permissions = serializers.SerializerMethodField()
+    intervention = SeparatedReadWriteField(read_field=CustomInterventionDetailSerializer())
+
+    class Meta(EFaceFormListSerializer.Meta):
+        fields = EFaceFormListSerializer.Meta.fields + (
             'actions_available',
             'permissions',
         )
@@ -97,10 +120,19 @@ class EFaceFormSerializer(serializers.ModelSerializer):
 
 
 class FormActivitySerializer(serializers.ModelSerializer):
+    default_error_messages = {
+        'pd_activity_required': _('PD Activity is required'),
+        'eepm_kind_required': _('EEPM kind is required'),
+        'description_required': _('Description is required'),
+    }
+
     class Meta:
         model = FormActivity
         fields = (
             'id',
+            'kind',
+            'pd_activity',
+            'eepm_kind',
             'description',
             'coding',
             'reporting_authorized_amount',
@@ -111,3 +143,19 @@ class FormActivitySerializer(serializers.ModelSerializer):
             'requested_authorized_amount',
             'requested_outstanding_authorized_amount',
         )
+
+    def validate(self, validated_data):
+        validated_data = super().validate(validated_data)
+        if 'kind' in validated_data:
+            kind = validated_data['kind']
+            if kind == FormActivity.KIND_CHOICES.activity:
+                if 'pd_activity' not in validated_data:
+                    self.fail('pd_activity_required')
+            elif kind == FormActivity.KIND_CHOICES.eepm:
+                if 'eepm_kind' not in validated_data:
+                    self.fail('eepm_kind_required')
+            elif kind == FormActivity.KIND_CHOICES.custom:
+                if 'description' not in validated_data:
+                    self.fail('description_required')
+
+        return validated_data
