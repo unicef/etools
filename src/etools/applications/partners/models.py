@@ -4,6 +4,7 @@ import json
 
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField, JSONField
+from django.core.validators import MinValueValidator
 from django.db import connection, IntegrityError, models, transaction
 from django.db.models import Case, CharField, Count, F, Max, Min, OuterRef, Q, Subquery, Sum, When
 from django.urls import reverse
@@ -3464,7 +3465,25 @@ class InterventionManagementBudgetItem(models.Model):
         InterventionManagementBudget, verbose_name=_('Budget'),
         related_name='items', on_delete=models.CASCADE,
     )
-    name = models.CharField(max_length=255, verbose_name=_('Name'))
+    name = models.CharField(
+        verbose_name=_("Name"),
+        max_length=255,
+    )
+    unit = models.CharField(
+        verbose_name=_("Unit"),
+        max_length=150,
+    )
+    unit_price = models.DecimalField(
+        verbose_name=_("Unit Price"),
+        decimal_places=2,
+        max_digits=20,
+    )
+    no_units = models.DecimalField(
+        verbose_name=_("Units Number"),
+        decimal_places=1,
+        max_digits=20,
+        validators=[MinValueValidator(0)],
+    )
     kind = models.CharField(choices=KIND_CHOICES, verbose_name=_('Kind'), max_length=15)
     unicef_cash = models.DecimalField(
         verbose_name=_("UNICEF Cash Local"),

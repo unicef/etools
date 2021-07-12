@@ -128,7 +128,11 @@ class InterventionManagementBudgetItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = InterventionManagementBudgetItem
-        fields = ('id', 'kind', 'name', 'unicef_cash', 'cso_cash')
+        fields = (
+            'id', 'kind', 'name',
+            'unit', 'unit_price', 'no_units',
+            'unicef_cash', 'cso_cash'
+        )
 
 
 class InterventionManagementBudgetSerializer(serializers.ModelSerializer):
