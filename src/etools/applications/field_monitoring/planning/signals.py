@@ -5,7 +5,11 @@ from etools.applications.field_monitoring.data_collection.offline.synchronizer i
     MonitoringActivityOfflineSynchronizer,
 )
 from etools.applications.field_monitoring.fm_settings.models import Question
-from etools.applications.field_monitoring.planning.models import MonitoringActivity, QuestionTemplate
+from etools.applications.field_monitoring.planning.models import (
+    MonitoringActivity,
+    MonitoringActivityActionPoint,
+    QuestionTemplate,
+)
 
 
 @receiver(post_save, sender=Question)
@@ -26,3 +30,9 @@ def update_blueprints_visibility_on_visit_lead_changed(instance, created, **kwar
     if instance.status == MonitoringActivity.STATUSES.data_collection \
             and instance.visit_lead_tracker.changed():
         MonitoringActivityOfflineSynchronizer(instance).update_data_collectors_list()
+
+
+@receiver(post_save, sender=MonitoringActivityActionPoint)
+def action_point_updated_receiver(instance, created, **kwargs):
+    if created:
+        instance.send_email(instance.assigned_to, 'fm/action_point_assigned', cc=[instance.assigned_by.email])
