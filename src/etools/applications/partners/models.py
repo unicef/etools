@@ -4,6 +4,7 @@ import json
 
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField, JSONField
+from django.core.validators import MinValueValidator
 from django.db import connection, IntegrityError, models, transaction
 from django.db.models import Case, CharField, Count, F, Max, Min, OuterRef, Q, Subquery, Sum, When
 from django.urls import reverse
@@ -1606,6 +1607,7 @@ class InterventionManager(models.Manager):
             'result_links__ll_results__applied_indicators__indicator',
             'result_links__ll_results__applied_indicators__disaggregation',
             'result_links__ll_results__applied_indicators__locations',
+            'management_budgets__items',
             'flat_locations',
             'supply_items',
         )
@@ -3360,6 +3362,20 @@ class InterventionManagementBudget(TimeStampedModel):
         if not create:
             self.intervention.planned_budget.calc_totals()
 
+    def update_cash(self):
+        aggregated_items = self.items.values('kind').annotate(unicef_cash=Sum('unicef_cash'), cso_cash=Sum('cso_cash'))
+        for item in aggregated_items:
+            if item['kind'] == InterventionManagementBudgetItem.KIND_CHOICES.in_country:
+                self.act1_unicef = item['unicef_cash']
+                self.act1_partner = item['cso_cash']
+            elif item['kind'] == InterventionManagementBudgetItem.KIND_CHOICES.operational:
+                self.act2_unicef = item['unicef_cash']
+                self.act2_partner = item['cso_cash']
+            elif item['kind'] == InterventionManagementBudgetItem.KIND_CHOICES.planning:
+                self.act3_unicef = item['unicef_cash']
+                self.act3_partner = item['cso_cash']
+        self.save()
+
 
 class InterventionSupplyItem(TimeStampedModel):
     PROVIDED_BY_UNICEF = 'unicef'
@@ -3433,3 +3449,54 @@ class InterventionSupplyItem(TimeStampedModel):
     def delete(self, **kwargs):
         super().delete(**kwargs)
         self.intervention.planned_budget.calc_totals()
+
+
+class InterventionManagementBudgetItem(models.Model):
+    KIND_CHOICES = Choices(
+        ('in_country', _('In-country management and support staff prorated to their contribution to the programme '
+                         '(representation, planning, coordination, logistics, administration, finance)')),
+        ('operational', _('Operational costs prorated to their contribution to the programme '
+                          '(office space, equipment, office supplies, maintenance)')),
+        ('planning', _('Planning, monitoring, evaluation and communication, '
+                       'prorated to their contribution to the programme (venue, travels, etc.)')),
+    )
+
+    budget = models.ForeignKey(
+        InterventionManagementBudget, verbose_name=_('Budget'),
+        related_name='items', on_delete=models.CASCADE,
+    )
+    name = models.CharField(
+        verbose_name=_("Name"),
+        max_length=255,
+    )
+    unit = models.CharField(
+        verbose_name=_("Unit"),
+        max_length=150,
+    )
+    unit_price = models.DecimalField(
+        verbose_name=_("Unit Price"),
+        decimal_places=2,
+        max_digits=20,
+    )
+    no_units = models.DecimalField(
+        verbose_name=_("Units Number"),
+        decimal_places=1,
+        max_digits=20,
+        validators=[MinValueValidator(0)],
+    )
+    kind = models.CharField(choices=KIND_CHOICES, verbose_name=_('Kind'), max_length=15)
+    unicef_cash = models.DecimalField(
+        verbose_name=_("UNICEF Cash Local"),
+        decimal_places=2,
+        max_digits=20,
+        default=0,
+    )
+    cso_cash = models.DecimalField(
+        verbose_name=_("CSO Cash Local"),
+        decimal_places=2,
+        max_digits=20,
+        default=0,
+    )
+
+    def __str__(self):
+        return f'{self.get_kind_display()} - UNICEF: {self.unicef_cash}, CSO: {self.cso_cash}'

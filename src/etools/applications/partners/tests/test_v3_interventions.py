@@ -20,7 +20,12 @@ from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.core.tests.factories import EmailFactory
 from etools.applications.core.tests.mixins import URLAssertionMixin
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory, FundsReservationItemFactory
-from etools.applications.partners.models import Intervention, InterventionReview, InterventionSupplyItem
+from etools.applications.partners.models import (
+    Intervention,
+    InterventionManagementBudgetItem,
+    InterventionReview,
+    InterventionSupplyItem,
+)
 from etools.applications.partners.permissions import PRC_SECRETARY
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
@@ -28,6 +33,7 @@ from etools.applications.partners.tests.factories import (
     InterventionAmendmentFactory,
     InterventionAttachmentFactory,
     InterventionFactory,
+    InterventionManagementBudgetItemFactory,
     InterventionResultLinkFactory,
     InterventionReviewFactory,
     InterventionSupplyItemFactory,
@@ -375,6 +381,19 @@ class TestDetail(BaseInterventionTestCase):
         self.assertIn("sign", response.data["available_actions"])
         self.assertIn("reject_review", response.data["available_actions"])
 
+    def test_num_queries(self):
+        [InterventionManagementBudgetItemFactory(budget=self.intervention.management_budgets) for _i in range(10)]
+
+        # there is a lot of queries, but no duplicates caused by budget items
+        with self.assertNumQueries(45):
+            response = self.forced_auth_req(
+                "get",
+                reverse('pmp_v3:intervention-detail', args=[self.intervention.pk]),
+                user=self.user
+            )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('items', response.data['management_budgets'])
+
 
 class TestCreate(BaseInterventionTestCase):
     def test_post(self):
@@ -701,6 +720,109 @@ class TestManagementBudget(BaseInterventionTestCase):
         data = response.data
         self.assertEqual(data["act1_unicef"], "1000.00")
         self.assertIn('intervention', response.data)
+
+    def test_set_cash_values_directly(self):
+        intervention = InterventionFactory()
+        response = self.forced_auth_req(
+            'patch',
+            reverse(
+                "pmp_v3:intervention-budget",
+                args=[intervention.pk],
+            ),
+            user=self.user,
+            data={
+                'act1_unicef': 1,
+                'act1_partner': 2,
+                'act2_unicef': 3,
+                'act2_partner': 4,
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['act1_unicef'], '1.00')
+        self.assertEqual(response.data['act1_partner'], '2.00')
+        self.assertEqual(response.data['act1_total'], '3.00')
+        self.assertEqual(response.data['act2_unicef'], '3.00')
+        self.assertEqual(response.data['act2_partner'], '4.00')
+        self.assertEqual(response.data['act2_total'], '7.00')
+
+    def test_set_cash_values_from_items(self):
+        intervention = InterventionFactory()
+        InterventionManagementBudgetItemFactory(budget=intervention.management_budgets, unicef_cash=8)
+        response = self.forced_auth_req(
+            'patch',
+            reverse(
+                "pmp_v3:intervention-budget",
+                args=[intervention.pk],
+            ),
+            user=self.user,
+            data={
+                'act1_unicef': 1,
+                'act1_partner': 2,
+                'act2_unicef': 3,
+                'act2_partner': 4,
+                'items': [
+                    {
+                        'name': 'first_item', 'kind': 'operational',
+                        'unit': 'item', 'no_units': '1.0', 'unit_price': '7.0',
+                        'unicef_cash': '3.0', 'cso_cash': '4.0',
+                    },
+                    {
+                        'name': 'second_item', 'kind': 'planning',
+                        'unit': 'item', 'no_units': '1.0', 'unit_price': '2.0',
+                        'unicef_cash': '0.0', 'cso_cash': '2.0',
+                    },
+                    {
+                        'name': 'third_item', 'kind': 'operational',
+                        'unit': 'item', 'no_units': '1.0', 'unit_price': '0.2',
+                        'unicef_cash': '0.0', 'cso_cash': '0.2',
+                    }
+                ],
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['act1_unicef'], '1.00')
+        self.assertEqual(response.data['act1_partner'], '2.00')
+        self.assertEqual(response.data['act2_unicef'], '3.00')
+        self.assertEqual(response.data['act2_partner'], '4.20')
+        self.assertEqual(response.data['act3_unicef'], '0.00')
+        self.assertEqual(response.data['act3_partner'], '2.00')
+
+    def test_set_items(self):
+        intervention = InterventionFactory()
+        item_to_remove = InterventionManagementBudgetItemFactory(
+            budget=intervention.management_budgets,
+            unicef_cash=22, cso_cash=20,
+        )
+        item_to_update = InterventionManagementBudgetItemFactory(
+            budget=intervention.management_budgets,
+            unicef_cash=22, cso_cash=20,
+            name='old',
+        )
+        self.assertEqual(intervention.management_budgets.items.count(), 2)
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse(
+                "pmp_v3:intervention-budget",
+                args=[intervention.pk],
+            ),
+            user=self.user,
+            data={
+                'items': [
+                    {'id': item_to_update.id, 'name': 'new'},
+                    {
+                        'name': 'first_item', 'kind': 'operational',
+                        'unit': 'test', 'no_units': '1.0', 'unit_price': '3.0',
+                        'unicef_cash': '1.0', 'cso_cash': '2.0',
+                    }
+                ],
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(intervention.management_budgets.items.count(), 2)
+        self.assertEqual(len(response.data['items']), 2)
+        self.assertEqual(InterventionManagementBudgetItem.objects.filter(id=item_to_remove.id).exists(), False)
 
 
 class TestSupplyItem(BaseInterventionTestCase):
