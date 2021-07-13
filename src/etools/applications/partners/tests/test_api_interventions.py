@@ -110,6 +110,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
             "created",
             "date_sent_to_partner",
             "document_type",
+            "efaceform",
             "end",
             "engagement",
             "equity_narrative",

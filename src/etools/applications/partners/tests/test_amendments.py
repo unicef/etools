@@ -562,6 +562,7 @@ class AmendmentTestCase(BaseTenantTestCase):
         # basically there should be reverse relations to parent model and fields you're confident about to being ignored
         ignored_fields = {
             'partners.Intervention': [
+                'efaceform',
                 'frs',
                 'special_reporting_requirements',
                 'quarters',
@@ -587,7 +588,7 @@ class AmendmentTestCase(BaseTenantTestCase):
             'reports.ReportingRequirement': ['intervention'],
             'reports.AppliedIndicator': ['lower_result'],
             # time_frames are being copied separately as quarters
-            'reports.InterventionActivity': ['result', 'time_frames'],
+            'reports.InterventionActivity': ['result', 'time_frames', 'formactivity'],
             'reports.LowerResult': ['result_link'],
             # interventionsupplyitem is secondary relation. will be copied as partners.InterventionSupplyItem.result
             'partners.InterventionResultLink': ['intervention', 'interventionsupplyitem'],
