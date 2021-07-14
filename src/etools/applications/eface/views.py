@@ -12,8 +12,15 @@ from unicef_restlib.views import MultiSerializerViewSetMixin, NestedViewSetMixin
 
 from etools.applications.eface.filters import EFaceFormFilterSet
 from etools.applications.eface.models import EFaceForm, FormActivity
+from etools.applications.eface.permissions import (
+    eface_form_field_is_editable_permission,
+    IsPartnerFocalPointPermission,
+    IsUNICEFFocalPointPermission,
+)
 from etools.applications.eface.serializers import EFaceFormListSerializer, EFaceFormSerializer, FormActivitySerializer
 from etools.applications.eface.validation.validator import EFaceFormValid
+from etools.applications.field_monitoring.permissions import IsEditAction, IsListAction, IsObjectAction, IsReadAction
+from etools.applications.partners.permissions import UserIsPartnerStaffMemberPermission
 
 
 class EFaceBaseViewSet(
@@ -44,6 +51,11 @@ class EFaceFormsViewSet(
     serializer_action_classes = {
         'list': EFaceFormListSerializer,
     }
+    permission_classes = EFaceBaseViewSet.permission_classes + [
+        IsReadAction |
+        (IsEditAction & IsListAction & UserIsPartnerStaffMemberPermission) |
+        (IsEditAction & (IsObjectAction & (IsPartnerFocalPointPermission | IsUNICEFFocalPointPermission)))
+    ]
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -102,6 +114,9 @@ class EFaceFormActivitiesViewSet(
 ):
     queryset = FormActivity.objects.all().order_by('id')
     serializer_class = FormActivitySerializer
+    permission_classes = EFaceBaseViewSet.permission_classes + [
+        IsReadAction | (IsEditAction & eface_form_field_is_editable_permission('activities'))
+    ]
 
     def perform_create(self, serializer):
         serializer.save(form=self.get_parent_object())

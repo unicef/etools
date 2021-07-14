@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import connection, models
 from django.db.models.base import ModelBase
 from django.utils import timezone
@@ -7,7 +8,6 @@ from django_fsm import FSMField, transition
 from model_utils import Choices
 from model_utils.fields import MonitorField
 from model_utils.models import TimeStampedModel
-from unicef_djangolib.fields import CurrencyField
 
 from etools.applications.core.permissions import import_permissions
 from etools.applications.eface.transition_permissions import (
@@ -16,11 +16,6 @@ from etools.applications.eface.transition_permissions import (
 )
 from etools.applications.field_monitoring.planning.mixins import ProtectUnknownTransitionsMeta
 from etools.libraries.djangolib.models import SoftDeleteMixin
-
-
-def update_transaction_reject_date(i, old_instance=None, user=None):
-    if old_instance and old_instance.status == EFaceForm.STATUSES.unicef_approved:
-        i.date_transaction_rejected = timezone.now().date()
 
 
 class EFaceFormMeta(ProtectUnknownTransitionsMeta, ModelBase):
@@ -69,7 +64,6 @@ class EFaceForm(
 
     title = models.CharField(max_length=255)
     intervention = models.ForeignKey('partners.Intervention', verbose_name=_('Intervention'), on_delete=models.PROTECT)
-    currency = CurrencyField(verbose_name=_('Currency'), null=False, default='')
 
     request_type = models.CharField(choices=REQUEST_TYPE_CHOICES, max_length=3)
 
@@ -79,7 +73,8 @@ class EFaceForm(
 
     notes = models.TextField(blank=True)
 
-    # submitted_by = models.ForeignKey() # partner user or unicef?
+    submitted_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, blank=True, null=True)
+    submitted_by_unicef_date = models.DateField(blank=True, null=True)
 
     authorized_amount_date = models.DateField(blank=True, null=True)
     requested_amount_date = models.DateField(blank=True, null=True)
@@ -188,7 +183,7 @@ class FormActivity(models.Model):
                        'prorated to their contribution to the programme (venue, travels, etc.)')),
     )
 
-    form = models.ForeignKey(EFaceForm, on_delete=models.CASCADE)
+    form = models.ForeignKey(EFaceForm, on_delete=models.CASCADE, related_name='activities')
     kind = models.CharField(choices=KIND_CHOICES, max_length=8)
 
     pd_activity = models.ForeignKey('reports.InterventionActivity', blank=True, null=True, on_delete=models.SET_NULL)
@@ -242,3 +237,12 @@ class FormActivity(models.Model):
 
     def __str__(self):
         return f'{self.form} - {self.description}'
+
+    def save(self, **kwargs):
+        if self.reporting_authorized_amount and self.reporting_expenditures_accepted_by_agency:
+            self.reporting_balance = self.reporting_authorized_amount - self.reporting_expenditures_accepted_by_agency
+
+            if self.requested_authorized_amount:
+                self.requested_outstanding_authorized_amount = self.reporting_balance + self.requested_authorized_amount
+
+        super().save(**kwargs)

@@ -1,0 +1,23 @@
+Field no,Field Name,Group,Condition,Status,Action,Allowed
+,intervention,Partner Focal Point,,draft,edit,TRUE
+,request_type,Partner Focal Point,,draft,edit,TRUE
+,title,Partner Focal Point,,draft,edit,TRUE
+,title,Partner Focal Point,,rejected,edit,TRUE
+,authorized_amount_date,Partner Focal Point,,draft,edit,TRUE
+,requested_amount_date,Partner Focal Point,,rejected,edit,TRUE
+,authorized_amount_date,Partner Focal Point,,draft,edit,TRUE
+,requested_amount_date,Partner Focal Point,,rejected,edit,TRUE
+,activities,Partner Focal Point,,draft,edit,TRUE
+,activities,Partner Focal Point,,rejected,edit,TRUE
+
+,activities_reporting_expenditures_accepted_by_agency,UNICEF Focal Point,,pending,edit,TRUE
+,activities_requested_authorized_amount,UNICEF Focal Point,,pending,edit,TRUE
+,request_represents_expenditures,UNICEF Focal Point,,pending,edit,TRUE
+,expenditures_disbursed,UNICEF Focal Point,,pending,edit,TRUE
+,notes,UNICEF Focal Point,,pending,edit,TRUE
+,submitted_by,UNICEF Focal Point,,pending,edit,TRUE
+,submitted_by_unicef_date,UNICEF Focal Point,,pending,edit,TRUE
+
+,rejection_reason,Partner Focal Point,,*,edit,TRUE
+,transaction_rejection_reason,Partner Focal Point,,*,edit,TRUE
+,cancel_reason,Partner Focal Point,,*,edit,TRUE

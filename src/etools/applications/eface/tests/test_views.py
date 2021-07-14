@@ -96,6 +96,7 @@ class TestFormsView(APIViewSetTestCase):
 
     def test_bad_transition(self):
         form = EFaceFormFactory()
+        form.intervention.unicef_focal_points.add(self.unicef_user)
         self._test_update(self.unicef_user, form, {'status': 'finalized'}, expected_status=400)
 
 

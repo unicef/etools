@@ -6,6 +6,7 @@ from unicef_restlib.fields import SeparatedReadWriteField
 from etools.applications.eface.models import EFaceForm, FormActivity
 from etools.applications.eface.validation.permissions import EFaceFormPermissions
 from etools.applications.partners.serializers.interventions_v3 import InterventionDetailSerializer
+from etools.applications.users.serializers_v3 import MinimalUserSerializer
 
 
 class CustomInterventionDetailSerializer(InterventionDetailSerializer):
@@ -33,6 +34,8 @@ class EFaceFormListSerializer(serializers.ModelSerializer):
             'request_represents_expenditures',
             'expenditures_disbursed',
             'notes',
+            'submitted_by',
+            'submitted_by_unicef_date',
             'authorized_amount_date',
             'requested_amount_date',
             'date_submitted',
@@ -51,6 +54,7 @@ class EFaceFormSerializer(EFaceFormListSerializer):
     actions_available = serializers.SerializerMethodField()
     permissions = serializers.SerializerMethodField()
     intervention = SeparatedReadWriteField(read_field=CustomInterventionDetailSerializer())
+    submitted_by = SeparatedReadWriteField(read_field=MinimalUserSerializer())
 
     class Meta(EFaceFormListSerializer.Meta):
         fields = EFaceFormListSerializer.Meta.fields + (
@@ -144,6 +148,10 @@ class FormActivitySerializer(serializers.ModelSerializer):
             'reporting_balance',
             'requested_amount',
             'requested_authorized_amount',
+            'requested_outstanding_authorized_amount',
+        )
+        read_only_fields = (
+            'reporting_balance',
             'requested_outstanding_authorized_amount',
         )
 
