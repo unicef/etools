@@ -1,6 +1,11 @@
 from django.contrib import admin
 
-from etools.applications.field_monitoring.planning.models import MonitoringActivity, QuestionTemplate, YearPlan
+from etools.applications.field_monitoring.planning.models import (
+    MonitoringActivity,
+    MonitoringActivityGroup,
+    QuestionTemplate,
+    YearPlan,
+)
 
 
 @admin.register(YearPlan)
@@ -21,8 +26,20 @@ class QuestionTemplateAdmin(admin.ModelAdmin):
 @admin.register(MonitoringActivity)
 class MonitoringActivityAdmin(admin.ModelAdmin):
     list_display = (
-        'reference_number', 'monitor_type', 'tpm_partner', 'person_responsible',
+        'reference_number', 'monitor_type', 'tpm_partner', 'visit_lead',
         'location', 'location_site', 'start_date', 'end_date', 'status'
     )
-    list_select_related = ('tpm_partner', 'person_responsible', 'location', 'location_site')
+    list_select_related = ('tpm_partner', 'visit_lead', 'location', 'location_site')
     list_filter = ('monitor_type', 'status')
+
+
+@admin.register(MonitoringActivityGroup)
+class MonitoringActivityGroupAdmin(admin.ModelAdmin):
+    list_display = ('partner', 'get_monitoring_activities')
+    list_select_related = ('partner',)
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).prefetch_related('monitoring_activities')
+
+    def get_monitoring_activities(self, obj):
+        return ', '.join(a.number for a in obj.monitoring_activities)
