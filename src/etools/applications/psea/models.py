@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.db import connection, models
 from django.db.models import Sum
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
@@ -164,6 +165,12 @@ class Assessment(TimeStampedModel):
         verbose_name=_('UNICEF Focal Points'),
         related_name="pse_assessment_focal_point",
     )
+    nfr_attachment = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('NFR Attachment'),
+        code='psea_nfr_attachment',
+        blank=True,
+    )
 
     class Meta:
         verbose_name = _('Assessment')
@@ -264,6 +271,9 @@ class Assessment(TimeStampedModel):
         return self.user_is_assessor(user)
 
     def get_mail_context(self, user):
+        nfr_attachment = self.nfr_attachment.first()
+        if nfr_attachment:
+            nfr_attachment = settings.HOST + reverse('attachments:file', kwargs={'pk': nfr_attachment.pk})
         context = {
             "partner_name": self.partner.name,
             "partner_vendor_number": self.partner.vendor_number,
@@ -275,6 +285,7 @@ class Assessment(TimeStampedModel):
             "assessment_ingo_reason": self.get_assessment_ingo_reason_display(),
             "assessor": str(self.assessor),
             "focal_points": ", ".join(f"{fp.get_full_name()} ({fp.email})" for fp in self.focal_points.all()),
+            "nfr_attachment": nfr_attachment
         }
         if self.status == self.STATUS_REJECTED:
             context["rejected_comment"] = self.get_rejected_comment()

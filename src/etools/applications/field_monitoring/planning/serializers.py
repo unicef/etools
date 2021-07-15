@@ -110,7 +110,7 @@ class MonitoringActivityLightSerializer(serializers.ModelSerializer):
     location = SeparatedReadWriteField(read_field=LocationSerializer())
     location_site = SeparatedReadWriteField(read_field=LocationSiteSerializer())
 
-    person_responsible = SeparatedReadWriteField(read_field=MinimalUserSerializer())
+    visit_lead = SeparatedReadWriteField(read_field=MinimalUserSerializer())
     team_members = SeparatedReadWriteField(read_field=MinimalUserSerializer(many=True))
 
     partners = SeparatedReadWriteField(read_field=MinimalPartnerOrganizationListSerializer(many=True))
@@ -125,7 +125,7 @@ class MonitoringActivityLightSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'reference_number',
             'monitor_type', 'tpm_partner',
-            'person_responsible', 'team_members',
+            'visit_lead', 'team_members',
             'location', 'location_site',
             'partners', 'interventions', 'cp_outputs',
             'start_date', 'end_date',

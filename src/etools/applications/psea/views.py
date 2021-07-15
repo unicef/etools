@@ -7,6 +7,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from django_filters.rest_framework import DjangoFilterBackend
+from easy_pdf.rendering import render_to_pdf_response
 from etools_validator.mixins import ValidatorViewMixin
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
@@ -41,6 +42,7 @@ from etools.applications.psea.serializers import (
     AnswerSerializer,
     AssessmentActionPointExportSerializer,
     AssessmentActionPointSerializer,
+    AssessmentDetailExportSerializer,
     AssessmentDetailSerializer,
     AssessmentExportSerializer,
     AssessmentSerializer,
@@ -239,7 +241,7 @@ class AssessmentViewSet(
             ).data
         )
 
-    def _set_status(self, request, assessment_status):
+    def _set_status(self, request, assessment_status, **kwargs):
         self.serializer_class = AssessmentStatusSerializer
         status = {
             "status": assessment_status,
@@ -248,6 +250,8 @@ class AssessmentViewSet(
         if comment:
             status["comment"] = comment
         request.data.clear()
+        if 'nfr_attachment' in kwargs:
+            request.data.update({"nfr_attachment": kwargs.get('nfr_attachment')})
         request.data.update({"status": assessment_status})
         request.data.update(
             {"status_history": [status]},
@@ -268,7 +272,7 @@ class AssessmentViewSet(
 
     @action(detail=True, methods=["patch"])
     def finalize(self, request, pk=None):
-        return self._set_status(request, Assessment.STATUS_FINAL)
+        return self._set_status(request, Assessment.STATUS_FINAL, **request.data)
 
     @action(detail=True, methods=["patch"])
     def cancel(self, request, pk=None):
@@ -301,13 +305,32 @@ class AssessmentViewSet(
         renderer_classes=(ExportOpenXMLRenderer,),
     )
     def single_export_xlsx(self, request, *args, **kwargs):
-        self.serializer_class = AssessmentExportSerializer
-        serializer = self.get_serializer([self.get_object()], many=True)
+
+        qs = Answer.objects.filter(assessment=self.get_object()).prefetch_related('evidences', 'attachments').order_by(
+            'indicator__pk')
+        if qs.exists():
+            self.serializer_class = AssessmentDetailExportSerializer
+            serializer = self.get_serializer(qs, many=True)
+        else:
+            self.serializer_class = AssessmentExportSerializer
+            serializer = self.get_serializer([self.get_object()], many=True)
         return Response(serializer.data, headers={
             'Content-Disposition': 'attachment;filename={}_{}.xlsx'.format(
                 self.get_object().reference_number, timezone.now().date()
             )
         })
+
+    @action(
+        detail=True,
+        methods=['get'],
+        url_path='export/pdf',
+    )
+    def single_export_pdf(self, request, *args, **kwargs):
+        qs = Answer.objects.filter(assessment=self.get_object()).prefetch_related('evidences', 'attachments').order_by(
+            'indicator__pk')
+        ctx = {'obj': self.get_object(), 'qs': qs, 'request': request, 'pagesize': "A4 landscape"}
+        return render_to_pdf_response(
+            request=self.request, template='psea_pdf.html', context=ctx, filename='export.pdf')
 
     @action(
         detail=False,
@@ -332,8 +355,14 @@ class AssessmentViewSet(
         renderer_classes=(ExportCSVRenderer,),
     )
     def single_export_csv(self, request, *args, **kwargs):
-        self.serializer_class = AssessmentExportSerializer
-        serializer = self.get_serializer([self.get_object()], many=True)
+        qs = Answer.objects.filter(assessment=self.get_object()).prefetch_related('evidences', 'attachments').order_by(
+            'indicator__pk')
+        if qs.exists():
+            self.serializer_class = AssessmentDetailExportSerializer
+            serializer = self.get_serializer(qs, many=True)
+        else:
+            self.serializer_class = AssessmentExportSerializer
+            serializer = self.get_serializer([self.get_object()], many=True)
         return Response(serializer.data, headers={
             'Content-Disposition': 'attachment;filename={}_{}.csv'.format(
                 self.get_object().reference_number, timezone.now().date()

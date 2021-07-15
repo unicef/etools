@@ -527,7 +527,7 @@ class DisaggregationValue(TimeStampedModel):
         verbose_name=_('Disaggregation'),
         on_delete=models.CASCADE,
     )
-    value = models.CharField(max_length=15, verbose_name=_('Value'))
+    value = models.CharField(max_length=20, verbose_name=_('Value'))
     active = models.BooleanField(default=False, verbose_name=_('Active'))
 
     def __str__(self):

@@ -455,7 +455,7 @@ class InterventionResultNestedSerializer(serializers.ModelSerializer):
     ll_results = LowerResultWithActivitiesSerializer(many=True, read_only=True)
 
     def get_ram_indicator_names(self, obj):
-        return [i.name for i in obj.ram_indicators.all()]
+        return [i.light_repr for i in obj.ram_indicators.all()]
 
     class Meta:
         model = InterventionResultLink

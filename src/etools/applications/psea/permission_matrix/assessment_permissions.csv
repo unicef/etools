@@ -25,3 +25,5 @@ Field no,Verbose Name,Field Name,Group,Condition,Status,Action,Allowed
 1.4.4,Overall rating,overall_rating,,,submitted,Required,TRUE
 1.4.5,Overall rating,overall_rating,,,final,Required,TRUE
 1.5.0,Info Card,info_card,,,final,Edit,FALSE
+1.8.0,NFR Attachment,nrf_attachment,UNICEF Audit Focal Point,,draft,Required,False
+1.8.0,NFR Attachment,nrf_attachment,UNICEF Audit Focal Point,,draft,Edit,TRUE
