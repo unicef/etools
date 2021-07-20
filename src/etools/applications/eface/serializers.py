@@ -50,16 +50,64 @@ class EFaceFormListSerializer(serializers.ModelSerializer):
         )
 
 
+class FormActivitySerializer(serializers.ModelSerializer):
+    default_error_messages = {
+        'pd_activity_required': _('PD Activity is required'),
+        'eepm_kind_required': _('EEPM kind is required'),
+        'description_required': _('Description is required'),
+    }
+
+    class Meta:
+        model = FormActivity
+        fields = (
+            'id',
+            'kind',
+            'pd_activity',
+            'eepm_kind',
+            'description',
+            'coding',
+            'reporting_authorized_amount',
+            'reporting_actual_project_expenditure',
+            'reporting_expenditures_accepted_by_agency',
+            'reporting_balance',
+            'requested_amount',
+            'requested_authorized_amount',
+            'requested_outstanding_authorized_amount',
+        )
+        read_only_fields = (
+            'reporting_balance',
+            'requested_outstanding_authorized_amount',
+        )
+
+    def validate(self, validated_data):
+        validated_data = super().validate(validated_data)
+        if 'kind' in validated_data:
+            kind = validated_data['kind']
+            if kind == FormActivity.KIND_CHOICES.activity:
+                if 'pd_activity' not in validated_data:
+                    self.fail('pd_activity_required')
+            elif kind == FormActivity.KIND_CHOICES.eepm:
+                if 'eepm_kind' not in validated_data:
+                    self.fail('eepm_kind_required')
+            elif kind == FormActivity.KIND_CHOICES.custom:
+                if 'description' not in validated_data:
+                    self.fail('description_required')
+
+        return validated_data
+
+
 class EFaceFormSerializer(EFaceFormListSerializer):
     actions_available = serializers.SerializerMethodField()
     permissions = serializers.SerializerMethodField()
     intervention = SeparatedReadWriteField(read_field=CustomInterventionDetailSerializer())
     submitted_by = SeparatedReadWriteField(read_field=MinimalUserSerializer())
+    activities = FormActivitySerializer(many=True)
 
     class Meta(EFaceFormListSerializer.Meta):
         fields = EFaceFormListSerializer.Meta.fields + (
             'actions_available',
             'permissions',
+            'activities',
         )
 
     def get_permissions(self, obj):
@@ -124,49 +172,3 @@ class EFaceFormSerializer(EFaceFormListSerializer):
     # todo: make cached
     def _is_programme_officer(self, obj, user):
         return obj.intervention.unicef_focal_points.filter(email=user.email).exists()
-
-
-class FormActivitySerializer(serializers.ModelSerializer):
-    default_error_messages = {
-        'pd_activity_required': _('PD Activity is required'),
-        'eepm_kind_required': _('EEPM kind is required'),
-        'description_required': _('Description is required'),
-    }
-
-    class Meta:
-        model = FormActivity
-        fields = (
-            'id',
-            'kind',
-            'pd_activity',
-            'eepm_kind',
-            'description',
-            'coding',
-            'reporting_authorized_amount',
-            'reporting_actual_project_expenditure',
-            'reporting_expenditures_accepted_by_agency',
-            'reporting_balance',
-            'requested_amount',
-            'requested_authorized_amount',
-            'requested_outstanding_authorized_amount',
-        )
-        read_only_fields = (
-            'reporting_balance',
-            'requested_outstanding_authorized_amount',
-        )
-
-    def validate(self, validated_data):
-        validated_data = super().validate(validated_data)
-        if 'kind' in validated_data:
-            kind = validated_data['kind']
-            if kind == FormActivity.KIND_CHOICES.activity:
-                if 'pd_activity' not in validated_data:
-                    self.fail('pd_activity_required')
-            elif kind == FormActivity.KIND_CHOICES.eepm:
-                if 'eepm_kind' not in validated_data:
-                    self.fail('eepm_kind_required')
-            elif kind == FormActivity.KIND_CHOICES.custom:
-                if 'description' not in validated_data:
-                    self.fail('description_required')
-
-        return validated_data

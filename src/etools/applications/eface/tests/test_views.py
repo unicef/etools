@@ -48,6 +48,13 @@ class TestFormsView(APIViewSetTestCase):
             activity.id
         )
 
+    def test_detail_activities_presented(self):
+        form = EFaceFormFactory()
+        activity = FormActivityFactory(form=form)
+        response = self._test_retrieve(self.unicef_user, form)
+        self.assertIn('activities', response.data)
+        self.assertEqual(activity.id, response.data['activities'][0]['id'])
+
     def test_update(self):
         form = EFaceFormFactory()
         staff_member = PartnerStaffFactory()
