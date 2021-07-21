@@ -181,7 +181,7 @@ class Migration(migrations.Migration):
                 ('contingency_pd', models.BooleanField(default=False, verbose_name='Contingency PD')),
                 ('population_focus', models.CharField(blank=True, max_length=130, null=True, verbose_name='Population Focus')),
                 ('in_amendment', models.BooleanField(default=False, verbose_name='Amendment Open')),
-                ('metadata', django.contrib.postgres.fields.jsonb.JSONField(
+                ('metadata', models.JSONField(
                     blank=True, default=dict, null=True, verbose_name='Metadata')),
             ],
             options={
@@ -366,7 +366,7 @@ class Migration(migrations.Migration):
                                                     help_text='Liquidations 1 Oct - 30 Sep', max_digits=12, null=True, verbose_name='Liquidation')),
                 ('total_ct_ytd', models.DecimalField(blank=True, decimal_places=2, help_text='Cash Transfers Jan - Dec',
                                                      max_digits=12, null=True, verbose_name='Cash Transfer Jan - Dec')),
-                ('hact_values', django.contrib.postgres.fields.jsonb.JSONField(blank=True,
+                ('hact_values', models.JSONField(blank=True,
                                                                                default=etools.applications.partners.models.hact_default, null=True, verbose_name='HACT')),
                 ('basis_for_risk_rating', models.CharField(blank=True,
                                                            max_length=50, null=True, verbose_name='Basis for Risk Rating')),

@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractBaseUser, Group, PermissionsMixin, UserManager
-from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -154,7 +153,7 @@ class Country(TenantMixin):
 
     # TODO: rename the related name as it's inappropriate for relating offices to countries.. should be office_countries
     offices = models.ManyToManyField('Office', related_name='offices', verbose_name=_('Offices'), blank=True)
-    custom_dashboards = JSONField(verbose_name=_('Custom Dashboards'), default=custom_dashboards_default)
+    custom_dashboards = models.JSONField(verbose_name=_('Custom Dashboards'), default=custom_dashboards_default)
 
     def __str__(self):
         return self.name
