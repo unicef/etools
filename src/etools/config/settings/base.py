@@ -287,6 +287,8 @@ HOST = get_from_secrets_or_env('DJANGO_ALLOWED_HOST', 'http://localhost:8082')
 
 LOGIN_URL = LOGOUT_REDIRECT_URL = get_from_secrets_or_env('LOGIN_URL', '/landing/')
 
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+
 # CONTRIB: GIS (GeoDjango)
 POSTGIS_VERSION = (2, 1)
 
