@@ -1,6 +1,5 @@
 from datetime import date
 
-from django.contrib.postgres.fields import JSONField
 from django.db import models, transaction
 from django.utils.functional import cached_property
 from django.utils.translation import gettext as _
@@ -618,8 +617,8 @@ class AppliedIndicator(TimeStampedModel):
         blank=True,
     )
 
-    target = JSONField(default=indicator_default_dict)
-    baseline = JSONField(default=indicator_default_dict, null=True)
+    target = models.JSONField(default=indicator_default_dict)
+    baseline = models.JSONField(default=indicator_default_dict, null=True)
 
     assumptions = models.TextField(
         verbose_name=_("Assumptions"),

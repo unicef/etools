@@ -2,7 +2,6 @@ import json
 from datetime import date, datetime
 from decimal import Decimal
 
-from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.db.models import Count, Q, Sum
 from django.db.models.functions import Coalesce
@@ -23,7 +22,7 @@ class HactHistory(TimeStampedModel):
         on_delete=models.CASCADE,
     )
     year = models.IntegerField(default=get_current_year, verbose_name=_('Year'))
-    partner_values = JSONField(null=True, blank=True, verbose_name=_('Partner Values'))
+    partner_values = models.JSONField(null=True, blank=True, verbose_name=_('Partner Values'))
 
     class Meta:
         unique_together = ('partner', 'year')
@@ -33,7 +32,7 @@ class HactHistory(TimeStampedModel):
 class AggregateHact(TimeStampedModel):
 
     year = models.IntegerField(default=get_current_year, unique=True, verbose_name=_('Year'))
-    partner_values = JSONField(null=True, blank=True, verbose_name=_('Partner Values'))
+    partner_values = models.JSONField(null=True, blank=True, verbose_name=_('Partner Values'))
 
     class Meta:
         verbose_name_plural = _('Aggregate hact')
