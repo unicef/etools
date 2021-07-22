@@ -162,7 +162,11 @@ class EFaceFormSerializer(EFaceFormListSerializer):
     permissions = serializers.SerializerMethodField()
     intervention = SeparatedReadWriteField(read_field=CustomInterventionDetailSerializer())
     submitted_by = SeparatedReadWriteField(read_field=FormUserSerializer())
-    activities = FormActivitySerializer(many=True, required=False)
+    activities = SeparatedReadWriteField(
+        read_field=FormActivitySerializer(many=True),
+        write_field=serializers.JSONField(),  # we validate activities later, so use just simple json field
+        required=False,
+    )
 
     class Meta(EFaceFormListSerializer.Meta):
         fields = EFaceFormListSerializer.Meta.fields + (

@@ -138,11 +138,23 @@ class TestFormsView(APIViewSetTestCase):
                     {
                         'id': activity.id,
                         'description': 'new',
+                    },
+                    {
+                        'kind': 'activity',
+                        'pd_activity': InterventionActivityFactory(
+                            result__result_link=InterventionResultLinkFactory(
+                                intervention=form.intervention,
+                                cp_output=ResultFactory(result_type__name=ResultType.OUTPUT),
+                            ),
+                        ).id,
                     }
                 ],
             }
         )
         activity.refresh_from_db()
         self.assertEqual(activity.description, 'new')
-        self.assertEqual(len(response.data['activities']), 2)
-        self.assertEqual(form.activities.count(), 2)
+        self.assertEqual(len(response.data['activities']), 3)
+        self.assertEqual(form.activities.count(), 3)
+
+        third_activity = form.activities.filter(kind='activity').first()
+        self.assertIsNotNone(third_activity.pd_activity)
