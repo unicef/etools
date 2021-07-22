@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import connection, models
+from django.db.models import Sum
 from django.db.models.base import ModelBase
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
@@ -76,8 +77,10 @@ class EFaceForm(
     submitted_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, blank=True, null=True)
     submitted_by_unicef_date = models.DateField(blank=True, null=True)
 
-    authorized_amount_date = models.DateField(blank=True, null=True)
-    requested_amount_date = models.DateField(blank=True, null=True)
+    authorized_amount_date_start = models.DateField(blank=True, null=True)
+    authorized_amount_date_end = models.DateField(blank=True, null=True)
+    requested_amount_date_start = models.DateField(blank=True, null=True)
+    requested_amount_date_end = models.DateField(blank=True, null=True)
 
     status = FSMField(verbose_name=_('Status'), max_length=20, choices=STATUSES, default=STATUSES.draft)
 
@@ -92,6 +95,50 @@ class EFaceForm(
     rejection_reason = models.TextField(blank=True)
     transaction_rejection_reason = models.TextField(blank=True)
     cancel_reason = models.TextField(blank=True)
+
+    # activity totals
+    reporting_authorized_amount = models.DecimalField(
+        max_digits=20,
+        decimal_places=2,
+        default=0,
+        verbose_name=_('Reporting - Authorized Amount')
+    )
+    reporting_actual_project_expenditure = models.DecimalField(
+        max_digits=20,
+        decimal_places=2,
+        default=0,
+        verbose_name=_('Reporting - Actual Project Expenditure')
+    )
+    reporting_expenditures_accepted_by_agency = models.DecimalField(
+        max_digits=20,
+        decimal_places=2,
+        default=0,
+        verbose_name=_('Reporting - Expenditures Accepted by Agency')
+    )
+    reporting_balance = models.DecimalField(
+        max_digits=20,
+        decimal_places=2,
+        default=0,
+        verbose_name=_('Reporting - Balance')
+    )
+    requested_amount = models.DecimalField(
+        max_digits=20,
+        decimal_places=2,
+        default=0,
+        verbose_name=_('Requests - Amount')
+    )
+    requested_authorized_amount = models.DecimalField(
+        max_digits=20,
+        decimal_places=2,
+        default=0,
+        verbose_name=_('Requests - Authorized Amount')
+    )
+    requested_outstanding_authorized_amount = models.DecimalField(
+        max_digits=20,
+        decimal_places=2,
+        default=0,
+        verbose_name=_('Requests Outstanding Authorized Amount')
+    )
 
     def get_reference_number(self):
         number = '{country}/{type}{year}{id}'.format(
@@ -111,7 +158,27 @@ class EFaceForm(
             super().save()
             self.reference_number = self.get_reference_number()
 
+        self.update_totals()
+
         super().save()
+
+    def update_totals(self):
+        aggregates = self.activities.aggregate(
+            reporting_authorized_amount=Sum('reporting_authorized_amount'),
+            reporting_actual_project_expenditure=Sum('reporting_actual_project_expenditure'),
+            reporting_expenditures_accepted_by_agency=Sum('reporting_expenditures_accepted_by_agency'),
+            reporting_balance=Sum('reporting_balance'),
+            requested_amount=Sum('requested_amount'),
+            requested_authorized_amount=Sum('requested_authorized_amount'),
+            requested_outstanding_authorized_amount=Sum('requested_outstanding_authorized_amount'),
+        )
+        self.reporting_authorized_amount = aggregates['reporting_authorized_amount'] or 0
+        self.reporting_actual_project_expenditure = aggregates['reporting_actual_project_expenditure'] or 0
+        self.reporting_expenditures_accepted_by_agency = aggregates['reporting_expenditures_accepted_by_agency'] or 0
+        self.reporting_balance = aggregates['reporting_balance'] or 0
+        self.requested_amount = aggregates['requested_amount'] or 0
+        self.requested_authorized_amount = aggregates['requested_authorized_amount'] or 0
+        self.requested_outstanding_authorized_amount = aggregates['requested_outstanding_authorized_amount'] or 0
 
     @classmethod
     def permission_structure(cls):

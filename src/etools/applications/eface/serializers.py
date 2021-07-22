@@ -1,3 +1,5 @@
+import datetime
+
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
@@ -21,7 +23,36 @@ class CustomInterventionDetailSerializer(InterventionDetailSerializer):
         ]
 
 
+class MonthYearDateField(serializers.Field):
+    default_error_messages = {
+        'unknown_type': _('Unknown input type. String required.'),
+        'invalid': _('Date has wrong format. Required format: mm/yyyy.'),
+    }
+
+    def to_internal_value(self, data):
+        if isinstance(data, datetime.date):
+            return data
+
+        if not isinstance(data, str):
+            self.fail('unknown_type')
+
+        try:
+            value = datetime.datetime.strptime(data, '%m%Y')
+        except ValueError:
+            self.fail('invalid')
+
+        return value.replace(day=1).date()
+
+    def to_representation(self, value):
+        return value.strftime('%m%Y')
+
+
 class EFaceFormListSerializer(serializers.ModelSerializer):
+    authorized_amount_date_start = MonthYearDateField(required=False)
+    authorized_amount_date_end = MonthYearDateField(required=False)
+    requested_amount_date_start = MonthYearDateField(required=False)
+    requested_amount_date_end = MonthYearDateField(required=False)
+
     class Meta:
         model = EFaceForm
         fields = (
@@ -36,8 +67,10 @@ class EFaceFormListSerializer(serializers.ModelSerializer):
             'notes',
             'submitted_by',
             'submitted_by_unicef_date',
-            'authorized_amount_date',
-            'requested_amount_date',
+            'authorized_amount_date_start',
+            'authorized_amount_date_end',
+            'requested_amount_date_start',
+            'requested_amount_date_end',
             'date_submitted',
             'date_rejected',
             'date_pending',
@@ -47,6 +80,22 @@ class EFaceFormListSerializer(serializers.ModelSerializer):
             'rejection_reason',
             'transaction_rejection_reason',
             'cancel_reason',
+            'reporting_authorized_amount',
+            'reporting_actual_project_expenditure',
+            'reporting_expenditures_accepted_by_agency',
+            'reporting_balance',
+            'requested_amount',
+            'requested_authorized_amount',
+            'requested_outstanding_authorized_amount',
+        )
+        read_only_fields = (
+            'reporting_authorized_amount',
+            'reporting_actual_project_expenditure',
+            'reporting_expenditures_accepted_by_agency',
+            'reporting_balance',
+            'requested_amount',
+            'requested_authorized_amount',
+            'requested_outstanding_authorized_amount',
         )
 
 

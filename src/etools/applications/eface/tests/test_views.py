@@ -1,3 +1,5 @@
+from django.utils import timezone
+
 from rest_framework import status
 
 from etools.applications.eface.tests.factories import EFaceFormFactory, FormActivityFactory
@@ -105,6 +107,16 @@ class TestFormsView(APIViewSetTestCase):
         form = EFaceFormFactory()
         form.intervention.unicef_focal_points.add(self.unicef_user)
         self._test_update(self.unicef_user, form, {'status': 'finalized'}, expected_status=400)
+
+    def test_month_year_input(self):
+        form = EFaceFormFactory()
+        staff_member = PartnerStaffFactory()
+        form.intervention.partner_focal_points.add(staff_member)
+        now = timezone.now().date()
+        response = self._test_update(staff_member.user, form, {'authorized_amount_date_start': now.strftime('%m%Y')})
+        self.assertEqual(response.data['authorized_amount_date_start'], now.strftime('%m%Y'))
+        form.refresh_from_db()
+        self.assertEqual(form.authorized_amount_date_start, now.replace(day=1))
 
 
 class TestFormActivitiesView(APIViewSetTestCase):
