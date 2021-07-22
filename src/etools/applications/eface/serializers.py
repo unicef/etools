@@ -1,8 +1,10 @@
 import datetime
 
+from django.db import transaction
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 from unicef_restlib.fields import SeparatedReadWriteField
 
 from etools.applications.eface.models import EFaceForm, FormActivity
@@ -105,6 +107,7 @@ class FormActivitySerializer(serializers.ModelSerializer):
         'eepm_kind_required': _('EEPM kind is required'),
         'description_required': _('Description is required'),
     }
+    id = serializers.IntegerField(required=False)
 
     class Meta:
         model = FormActivity
@@ -150,7 +153,7 @@ class EFaceFormSerializer(EFaceFormListSerializer):
     permissions = serializers.SerializerMethodField()
     intervention = SeparatedReadWriteField(read_field=CustomInterventionDetailSerializer())
     submitted_by = SeparatedReadWriteField(read_field=MinimalUserSerializer())
-    activities = FormActivitySerializer(many=True)
+    activities = FormActivitySerializer(many=True, required=False)
 
     class Meta(EFaceFormListSerializer.Meta):
         fields = EFaceFormListSerializer.Meta.fields + (
@@ -221,3 +224,40 @@ class EFaceFormSerializer(EFaceFormListSerializer):
     # todo: make cached
     def _is_programme_officer(self, obj, user):
         return obj.intervention.unicef_focal_points.filter(email=user.email).exists()
+
+    def set_activities(self, instance, activities):
+        if activities is None:
+            return
+
+        updated_pks = []
+        for i, item in enumerate(activities):
+            item_instance = FormActivity.objects.filter(pk=item.get('id')).first()
+            if item_instance:
+                serializer = FormActivitySerializer(data=item, instance=item_instance, partial=self.partial)
+            else:
+                serializer = FormActivitySerializer(data=item)
+            if not serializer.is_valid():
+                raise ValidationError({'activities': {i: serializer.errors}})
+
+            updated_pks.append(serializer.save(form=instance).pk)
+
+        # cleanup, remove unused options
+        removed_activities = instance.activities.exclude(pk__in=updated_pks).delete()
+
+        # calculate totals if something changed
+        if removed_activities or updated_pks:
+            instance.update_totals()
+
+    @transaction.atomic
+    def create(self, validated_data):
+        activities = validated_data.pop('activities', None)
+        instance = super().create(validated_data)
+        self.set_activities(instance, activities)
+        return instance
+
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        activities = validated_data.pop('activities', None)
+        instance = super().update(instance, validated_data)
+        self.set_activities(instance, activities)
+        return instance

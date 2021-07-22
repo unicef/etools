@@ -158,8 +158,6 @@ class EFaceForm(
             super().save()
             self.reference_number = self.get_reference_number()
 
-        self.update_totals()
-
         super().save()
 
     def update_totals(self):
@@ -179,6 +177,7 @@ class EFaceForm(
         self.requested_amount = aggregates['requested_amount'] or 0
         self.requested_authorized_amount = aggregates['requested_authorized_amount'] or 0
         self.requested_outstanding_authorized_amount = aggregates['requested_outstanding_authorized_amount'] or 0
+        self.save()
 
     @classmethod
     def permission_structure(cls):

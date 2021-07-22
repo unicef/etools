@@ -1,7 +1,5 @@
 from django.utils import timezone
 
-from rest_framework import status
-
 from etools.applications.eface.tests.factories import EFaceFormFactory, FormActivityFactory
 from etools.applications.field_monitoring.tests.base import APIViewSetTestCase
 from etools.applications.partners.tests.factories import (
@@ -118,58 +116,27 @@ class TestFormsView(APIViewSetTestCase):
         form.refresh_from_db()
         self.assertEqual(form.authorized_amount_date_start, now.replace(day=1))
 
-
-class TestFormActivitiesView(APIViewSetTestCase):
-    base_view = 'eface_v1:form_activities'
-
-    def get_list_args(self):
-        return [self.form.pk]
-
-    @classmethod
-    def setUpTestData(cls):
-        super().setUpTestData()
-        cls.unicef_user = UserFactory()
-        cls.form = EFaceFormFactory()
-
-    def test_create(self):
+    def test_change_activities(self):
+        form = EFaceFormFactory()
         staff_member = PartnerStaffFactory()
-        self.form.intervention.partner_focal_points.add(staff_member)
-        self._test_create(
-            staff_member.user,
+        form.intervention.partner_focal_points.add(staff_member)
+        activity = FormActivityFactory(form=form, kind='custom')
+        response = self._test_update(
+            staff_member.user, form,
             {
-                'kind': 'custom',
-                'description': 'test',
+                'activities': [
+                    {
+                        'kind': 'custom',
+                        'description': 'test',
+                    },
+                    {
+                        'id': activity.id,
+                        'description': 'new',
+                    }
+                ],
             }
         )
-
-    def test_create_activity_required(self):
-        staff_member = PartnerStaffFactory()
-        self.form.intervention.partner_focal_points.add(staff_member)
-        self._test_create(
-            staff_member.user,
-            {
-                'kind': 'activity',
-            },
-            expected_status=status.HTTP_400_BAD_REQUEST,
-            field_errors=['non_field_errors']
-        )
-
-    def test_list(self):
-        activities = [FormActivityFactory(form=self.form), FormActivityFactory(form=self.form)]
-        FormActivityFactory()
-        self._test_list(self.unicef_user, activities)
-
-    def test_update(self):
-        activity = FormActivityFactory(form=self.form)
-        staff_member = PartnerStaffFactory()
-        self.form.intervention.partner_focal_points.add(staff_member)
-        response = self._test_update(staff_member.user, activity, {'description': 'new'})
-        self.assertEqual(response.data['description'], 'new')
         activity.refresh_from_db()
         self.assertEqual(activity.description, 'new')
-
-    def test_delete(self):
-        activity = FormActivityFactory(form=self.form)
-        staff_member = PartnerStaffFactory()
-        self.form.intervention.partner_focal_points.add(staff_member)
-        self._test_destroy(staff_member.user, activity)
+        self.assertEqual(len(response.data['activities']), 2)
+        self.assertEqual(form.activities.count(), 2)

@@ -8,16 +8,12 @@ from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from unicef_restlib.pagination import DynamicPageNumberPagination
-from unicef_restlib.views import MultiSerializerViewSetMixin, NestedViewSetMixin, SafeTenantViewSetMixin
+from unicef_restlib.views import MultiSerializerViewSetMixin, SafeTenantViewSetMixin
 
 from etools.applications.eface.filters import EFaceFormFilterSet
-from etools.applications.eface.models import EFaceForm, FormActivity
-from etools.applications.eface.permissions import (
-    eface_form_field_is_editable_permission,
-    IsPartnerFocalPointPermission,
-    IsUNICEFFocalPointPermission,
-)
-from etools.applications.eface.serializers import EFaceFormListSerializer, EFaceFormSerializer, FormActivitySerializer
+from etools.applications.eface.models import EFaceForm
+from etools.applications.eface.permissions import IsPartnerFocalPointPermission, IsUNICEFFocalPointPermission
+from etools.applications.eface.serializers import EFaceFormListSerializer, EFaceFormSerializer
 from etools.applications.eface.validation.validator import EFaceFormValid
 from etools.applications.field_monitoring.permissions import IsEditAction, IsListAction, IsObjectAction, IsReadAction
 from etools.applications.partners.permissions import UserIsPartnerStaffMemberPermission
@@ -105,18 +101,3 @@ class EFaceFormsViewSet(
             raise ValidationError(validator.errors)
 
         return Response(self.get_serializer_class()(instance, context=self.get_serializer_context()).data)
-
-
-class EFaceFormActivitiesViewSet(
-    EFaceBaseViewSet,
-    NestedViewSetMixin,
-    viewsets.ModelViewSet,
-):
-    queryset = FormActivity.objects.all().order_by('id')
-    serializer_class = FormActivitySerializer
-    permission_classes = EFaceBaseViewSet.permission_classes + [
-        IsReadAction | (IsEditAction & eface_form_field_is_editable_permission('activities'))
-    ]
-
-    def perform_create(self, serializer):
-        serializer.save(form=self.get_parent_object())
