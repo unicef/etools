@@ -55,6 +55,12 @@ class TestFormsView(APIViewSetTestCase):
         self.assertIn('activities', response.data)
         self.assertEqual(activity.id, response.data['activities'][0]['id'])
 
+    def test_detail_user_title_presented(self):
+        submitted_by = UserFactory()
+        form = EFaceFormFactory(submitted_by=submitted_by)
+        response = self._test_retrieve(self.unicef_user, form)
+        self.assertEqual(response.data['submitted_by']['title'], submitted_by.profile.job_title)
+
     def test_update(self):
         form = EFaceFormFactory()
         staff_member = PartnerStaffFactory()

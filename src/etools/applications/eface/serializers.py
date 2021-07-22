@@ -49,6 +49,15 @@ class MonthYearDateField(serializers.Field):
         return value.strftime('%m/%Y')
 
 
+class FormUserSerializer(MinimalUserSerializer):
+    title = serializers.CharField(source='profile.job_title')
+
+    class Meta(MinimalUserSerializer.Meta):
+        fields = MinimalUserSerializer.Meta.fields + (
+            'title',
+        )
+
+
 class EFaceFormListSerializer(serializers.ModelSerializer):
     authorized_amount_date_start = MonthYearDateField(required=False)
     authorized_amount_date_end = MonthYearDateField(required=False)
@@ -152,7 +161,7 @@ class EFaceFormSerializer(EFaceFormListSerializer):
     actions_available = serializers.SerializerMethodField()
     permissions = serializers.SerializerMethodField()
     intervention = SeparatedReadWriteField(read_field=CustomInterventionDetailSerializer())
-    submitted_by = SeparatedReadWriteField(read_field=MinimalUserSerializer())
+    submitted_by = SeparatedReadWriteField(read_field=FormUserSerializer())
     activities = FormActivitySerializer(many=True, required=False)
 
     class Meta(EFaceFormListSerializer.Meta):
