@@ -37,14 +37,14 @@ class MonthYearDateField(serializers.Field):
             self.fail('unknown_type')
 
         try:
-            value = datetime.datetime.strptime(data, '%m%Y')
+            value = datetime.datetime.strptime(data, '%m/%Y')
         except ValueError:
             self.fail('invalid')
 
         return value.replace(day=1).date()
 
     def to_representation(self, value):
-        return value.strftime('%m%Y')
+        return value.strftime('%m/%Y')
 
 
 class EFaceFormListSerializer(serializers.ModelSerializer):

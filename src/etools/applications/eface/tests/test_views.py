@@ -113,8 +113,8 @@ class TestFormsView(APIViewSetTestCase):
         staff_member = PartnerStaffFactory()
         form.intervention.partner_focal_points.add(staff_member)
         now = timezone.now().date()
-        response = self._test_update(staff_member.user, form, {'authorized_amount_date_start': now.strftime('%m%Y')})
-        self.assertEqual(response.data['authorized_amount_date_start'], now.strftime('%m%Y'))
+        response = self._test_update(staff_member.user, form, {'authorized_amount_date_start': now.strftime('%m/%Y')})
+        self.assertEqual(response.data['authorized_amount_date_start'], now.strftime('%m/%Y'))
         form.refresh_from_db()
         self.assertEqual(form.authorized_amount_date_start, now.replace(day=1))
 
