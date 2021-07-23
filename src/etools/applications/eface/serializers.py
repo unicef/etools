@@ -164,8 +164,7 @@ class EFaceFormSerializer(EFaceFormListSerializer):
     submitted_by = SeparatedReadWriteField(read_field=FormUserSerializer())
     activities = SeparatedReadWriteField(
         read_field=FormActivitySerializer(many=True),
-        write_field=serializers.JSONField(),  # we validate activities later, so use just simple json field
-        required=False,
+        write_field=serializers.JSONField(required=False),  # we validate activities later
     )
 
     class Meta(EFaceFormListSerializer.Meta):
