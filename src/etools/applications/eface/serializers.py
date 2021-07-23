@@ -187,10 +187,10 @@ class EFaceFormSerializer(EFaceFormListSerializer):
     def get_actions_available(self, obj):
         default_ordering = [
             'submit',
-            'approve',
+            'send_to_vision',
             'reject',
             'transaction_approve',
-            'transaction_approve',
+            'transaction_reject',
             'cancel',
         ]
         available_actions = [
