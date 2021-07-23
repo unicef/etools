@@ -18,6 +18,6 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,submitted_by,UNICEF Focal Point,,pending,edit,TRUE
 ,submitted_by_unicef_date,UNICEF Focal Point,,pending,edit,TRUE
 
-,rejection_reason,Partner Focal Point,,*,edit,TRUE
-,transaction_rejection_reason,Partner Focal Point,,*,edit,TRUE
+,rejection_reason,UNICEF Focal Point,,*,edit,TRUE
+,transaction_rejection_reason,UNICEF Focal Point,,*,edit,TRUE
 ,cancel_reason,Partner Focal Point,,*,edit,TRUE
