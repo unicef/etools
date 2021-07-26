@@ -13,7 +13,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.3.7,attachments,Senior Management Team,,Draft,Edit,TRUE
 3.3.2,attachments,Representative Office,,Draft,Edit,TRUE
 3.3.2,budget_owner,Partnership Manager,,Draft,Edit,TRUE
-3.3.2,budget_owner,*,,Draft,Required,FALSE
+3.3.2,budget_owner,*,unicef_not_accepted,Draft,Required,FALSE
 3.3.3,capacity_development,Partnership Manager,unicef_court,Draft,Edit,TRUE
 3.3.3,capacity_development,Partner User,partner_court,Draft,Edit,TRUE
 3.3.3,cash_transfer_modalities,*,,*,View,TRUE
@@ -36,7 +36,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.9.3,end,Partnership Manager,,Signed,Edit,TRUE
 3.9.3,end,Partnership Manager,termination_doc_attached,Active,Edit,TRUE
 3.9.5,end,Partnership Manager,user_adds_amendment,*,Edit,TRUE
-3.9.4,end,*,,Draft,Required,FALSE
+3.9.4,end,*,unicef_not_accepted,Draft,Required,FALSE
 3.9.5,end,*,contingency on,Signed,Required,FALSE
 3.9.5,equity_narrative,Partnership Manager,unicef_court,Draft,Edit,TRUE
 3.9.12,equity_narrative,Partner User,partner_court,Draft,Edit,TRUE
@@ -77,17 +77,17 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.7,offices,Partnership Manager,,Review,Edit,TRUE
 3.7,offices,Partnership Manager,,Signature,Edit,TRUE
 3.5,offices,Partnership Manager,user_adds_amendment,*,Edit,TRUE
-3.6,offices,*,,Draft,Required,FALSE
+3.6,offices,*,unicef_not_accepted,Draft,Required,FALSE
 3.6,other_info,Partnership Manager,unicef_court,Draft,Edit,TRUE
 3.2.2,other_info,Partner User,partner_court,Draft,Edit,TRUE
 3.2.3,other_partners_involved,Partnership Manager,unicef_court,Draft,Edit,TRUE
 3.2.4,other_partners_involved,Partner User,partner_court,Draft,Edit,TRUE
 3.2.5,partner_authorized_officer_signatory,*,,*,View,TRUE
 3.2.7,partner_authorized_officer_signatory,Partner User,,Signature,Edit,TRUE
-3.2.7,partner_authorized_officer_signatory,*,,Draft,Required,FALSE
+3.2.7,partner_authorized_officer_signatory,*,unicef_not_accepted,Draft,Required,FALSE
 3.2.8,partner_focal_points,*,not_in_amendment_mode,*,View,TRUE
 3.2.8,partner_focal_points,*,,Closed,Edit,FALSE
-3.3.1,partner_focal_points,*,,Draft,Required,FALSE
+3.3.1,partner_focal_points,*,unicef_not_accepted,Draft,Required,FALSE
 3.3.2,pd_outputs,*,,*,View,TRUE
 3.3.3,pd_outputs,Partnership Manager,unicef_court,Draft,Edit,TRUE
 3.3.2,pd_outputs,Partner User,partner_court,Draft,Edit,TRUE
@@ -102,7 +102,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.9.8,prc_review_document,Partnership Manager,,Review,Edit,TRUE
 3.10.1,reference_number_year,UNICEF User,,*,View,TRUE
 3.13.1,reference_number_year,UNICEF User,not_ssfa,Draft,Edit,TRUE
-3.13.1,reference_number_year,*,not_ssfa,Draft,Required,FALSE
+3.13.1,reference_number_year,*,not_ssfa+unicef_not_accepted,Draft,Required,FALSE
 3.13.1,reporting_requirements,Partnership Manager,unicef_court,Draft,Edit,TRUE
 3.13.1,reporting_requirements,Partner User,partner_court,Draft,Edit,TRUE
 3.13.1,reporting_requirements,Partnership Manager,contingency on,Signed,Edit,TRUE
@@ -110,7 +110,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.13.1,reporting_requirements,Partnership Manager,termination_doc_attached,Active,Edit,TRUE
 3.13.1,reporting_requirements,Partnership Manager,termination_doc_attached,Signed,Edit,TRUE
 3.13.1,reporting_requirements,UNICEF User,prp_server_on,*,View,TRUE
-3.13.1,reporting_requirements,*,,Draft,Required,FALSE
+3.13.1,reporting_requirements,*,unicef_not_accepted,Draft,Required,FALSE
 ,result_links,Partner User,partner_court,Draft,Edit,TRUE
 3.13.1,result_links,Partnership Manager,unicef_court,Draft,Edit,TRUE
 3.13.1,result_links,Partnership Manager,contingency on,Signed,Edit,TRUE
@@ -126,27 +126,27 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,sections,Partnership Manager,,Signature,Edit,TRUE
 ,sections,Partnership Manager,user_adds_amendment,*,Edit,TRUE
 ,sections_present,UNICEF User,,*,Edit,TRUE
-,sections_present,*,,Draft,Required,FALSE
+,sections_present,*,unicef_not_accepted,Draft,Required,FALSE
 ,signed_by_partner_date,*,,*,View,TRUE
 ,signed_by_partner_date,Partner User,,Signature,Edit,TRUE
-,signed_by_partner_date,*,,Draft,Required,FALSE
+,signed_by_partner_date,*,unicef_not_accepted,Draft,Required,FALSE
 ,signed_by_unicef_date,*,,*,View,TRUE
 ,signed_by_unicef_date,Partnership Manager,,Signature,Edit,TRUE
-,signed_by_unicef_date,*,,Draft,Required,FALSE
+,signed_by_unicef_date,*,unicef_not_accepted,Draft,Required,FALSE
 ,signed_pd_attachment,*,,*,View,TRUE
 ,signed_pd_attachment,Partnership Manager,,Signature,Edit,TRUE
-,signed_pd_attachment,*,,Draft,Required,FALSE
+,signed_pd_attachment,*,unicef_not_accepted,Draft,Required,FALSE
 ,signed_pd_document,*,,*,View,TRUE
 ,signed_pd_document,Partnership Manager,,Signature,Edit,TRUE
 ,start,Partnership Manager,unicef_court,Draft,Edit,TRUE
 ,start,Partner User,partner_court,Draft,Edit,TRUE
 ,start,Partnership Manager,,Signed,Edit,TRUE
-,start,*,,Draft,Required,FALSE
+,start,*,unicef_not_accepted,Draft,Required,FALSE
 ,start,*,contingency on,Signed,Required,FALSE
 ,submission_date,*,,*,View,TRUE
 ,submission_date,Partnership Manager,,Draft,Edit,TRUE
 ,submission_date,Partner User,,Draft,Edit,TRUE
-,submission_date,*,,Draft,Required,FALSE
+,submission_date,*,unicef_not_accepted,Draft,Required,FALSE
 ,submission_date_prc,*,,*,View,TRUE
 ,submission_date_prc,Partnership Manager,,Review,Edit,TRUE
 ,supply_items,Partnership Manager,unicef_court,Draft,Edit,TRUE
@@ -164,7 +164,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,unicef_focal_points,*,not_in_amendment_mode,*,View,TRUE
 ,unicef_focal_points,Partnership Manager,,*,Edit,TRUE
 ,unicef_focal_points,Partnership Manager,user_adds_amendment,*,Edit,TRUE
-,unicef_focal_points,*,,Draft,Required,FALSE
+,unicef_focal_points,*,unicef_not_accepted,Draft,Required,FALSE
 ,unicef_signatory,*,,*,View,TRUE
 ,unicef_signatory,Partnership Manager,,Signature,Edit,TRUE
 ,unicef_signatory,*,,Draft,Required,FALSE
@@ -184,15 +184,15 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,signed_by_partner_date,*,,Review,Required,FALSE
 ,signed_by_unicef_date,*,,Review,Required,FALSE
 ,signed_pd_attachment,*,,Review,Required,FALSE
-,date_sent_to_partner,*,,Draft,Required,FALSE
-,context,*,,Draft,Required,FALSE
-,implementation_strategy,*,,Draft,Required,FALSE
-,gender_rating,*,,Draft,Required,FALSE
-,gender_narrative,*,,Draft,Required,FALSE
-,equity_rating,*,,Draft,Required,FALSE
-,equity_narrative,*,,Draft,Required,FALSE
-,sustainability_rating,*,,Draft,Required,FALSE
-,sustainability_narrative,*,,Draft,Required,FALSE
+,date_sent_to_partner,*,unicef_not_accepted,Draft,Required,FALSE
+,context,*,unicef_not_accepted,Draft,Required,FALSE
+,implementation_strategy,*,unicef_not_accepted,Draft,Required,FALSE
+,gender_rating,*,unicef_not_accepted,Draft,Required,FALSE
+,gender_narrative,*,unicef_not_accepted,Draft,Required,FALSE
+,equity_rating,*,unicef_not_accepted,Draft,Required,FALSE
+,equity_narrative,*,unicef_not_accepted,Draft,Required,FALSE
+,sustainability_rating,*,unicef_not_accepted,Draft,Required,FALSE
+,sustainability_narrative,*,unicef_not_accepted,Draft,Required,FALSE
 ,sustainability_rating,*,is_spd,Review,Required,FALSE
 ,sustainability_narrative,*,is_spd,Review,Required,FALSE
 ,sustainability_rating,*,is_spd,Signature,Required,FALSE
@@ -211,9 +211,9 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,sustainability_narrative,*,is_spd,Terminated,Required,FALSE
 ,sustainability_rating,*,is_spd,Cancelled,Required,FALSE
 ,sustainability_narrative,*,is_spd,Cancelled,Required,FALSE
-,hq_support_cost,*,,Draft,Required,FALSE
-,ip_program_contribution,*,,Draft,Required,FALSE
-,cash_transfer_modalities,*,,Draft,Required,FALSE
+,hq_support_cost,*,unicef_not_accepted,Draft,Required,FALSE
+,ip_program_contribution,*,unicef_not_accepted,Draft,Required,FALSE
+,cash_transfer_modalities,*,unicef_not_accepted,Draft,Required,FALSE
 ,cancel_justification,*,,Cancelled,Required,TRUE
 3.9.5,end,*,contingency on,Review,Required,FALSE
 3.9.5,end,*,contingency on,Signature,Required,FALSE

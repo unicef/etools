@@ -127,6 +127,12 @@ class InterventionPermissions(PMPPermissions):
         def unlocked(instance):
             return not instance.locked
 
+        def unicef_not_accepted(instance):
+            return not instance.unicef_accepted
+
+        def not_ssfa(instance):
+            return instance.document_type != instance.SSFA
+
         staff_member = self.user.get_partner_staff_member()
 
         # focal points are prefetched, so just cast to array to collect ids
@@ -153,7 +159,7 @@ class InterventionPermissions(PMPPermissions):
             'condition2': self.user in self.instance.partner_focal_points.all(),
             'contingency on': self.instance.contingency_pd is True,
             'not_in_amendment_mode': not user_added_amendment(self.instance),
-            'not_ssfa': self.instance.document_type != self.instance.SSFA,
+            'not_ssfa': not_ssfa(self.instance),
             'user_adds_amendment': user_added_amendment(self.instance),
             'prp_mode_on': not prp_mode_off(),
             'prp_mode_on+contingency_on': not prp_mode_off() and self.instance.contingency_pd,
@@ -168,6 +174,8 @@ class InterventionPermissions(PMPPermissions):
             'partner_court': not self.instance.unicef_court and unlocked(self.instance),
             'unlocked': unlocked(self.instance),
             'is_spd': self.instance.document_type == self.instance.SPD,
+            'unicef_not_accepted': unicef_not_accepted(self.instance),
+            'not_ssfa+unicef_not_accepted': not_ssfa(self.instance) and unicef_not_accepted(self.instance),
         }
 
     # override get_permissions to enable us to prevent old interventions from being blocked on transitions

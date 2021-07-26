@@ -384,6 +384,11 @@ class InterventionValid(CompleteValidation):
     def state_draft_valid(self, intervention, user=None):
         self.check_required_fields(intervention)
         self.check_rigid_fields(intervention, related=True)
+        if intervention.unicef_accepted:
+            if not all_activities_have_timeframes(intervention):
+                raise StateValidationError([_('All activities must have at least one time frame')])
+            if not all_pd_outputs_are_associated(intervention):
+                raise StateValidationError([_('All PD Outputs need to be associated to a CP Output')])
         return True
 
     def state_review_valid(self, intervention, user=None):
