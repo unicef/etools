@@ -6,12 +6,18 @@ from django.utils import timezone
 from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.amendment_utils import INTERVENTION_AMENDMENT_RELATED_FIELDS, MergeError
-from etools.applications.partners.models import Intervention, InterventionAmendment, InterventionResultLink
+from etools.applications.partners.models import (
+    Intervention,
+    InterventionAmendment,
+    InterventionManagementBudgetItem,
+    InterventionResultLink,
+)
 from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, UNICEF_USER
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
     InterventionAmendmentFactory,
     InterventionFactory,
+    InterventionManagementBudgetItemFactory,
     InterventionResultLinkFactory,
     InterventionRiskFactory,
     InterventionSupplyItemFactory,
@@ -330,6 +336,16 @@ class AmendmentTestCase(BaseTenantTestCase):
                          amended_intervention.partner_authorized_officer_signatory_id)
         self.assertEqual(amendment.signed_amendment_attachment.first(), new_signed_document)
 
+    def test_budget_items_copy(self):
+        InterventionManagementBudgetItemFactory(
+            budget=self.active_intervention.management_budgets, unicef_cash=0, cso_cash=42,
+            kind=InterventionManagementBudgetItem.KIND_CHOICES.in_country,
+        )
+        self.active_intervention.management_budgets.update_cash()
+        amendment = InterventionAmendmentFactory(intervention=self.active_intervention)
+        self.assertEqual(amendment.amended_intervention.management_budgets.items.count(), 1)
+        self.assertEqual(amendment.amended_intervention.management_budgets.act1_partner, 42)
+
     def test_calculate_difference_simple_field(self):
         amendment = InterventionAmendmentFactory(
             intervention=self.active_intervention,
@@ -484,6 +500,22 @@ class AmendmentTestCase(BaseTenantTestCase):
             self.active_intervention.result_links.first().pk,
         )
 
+    def test_calculate_difference_budget_items(self):
+        item = InterventionManagementBudgetItemFactory(
+            budget=self.active_intervention.management_budgets, unicef_cash=0, cso_cash=42,
+            kind=InterventionManagementBudgetItem.KIND_CHOICES.in_country,
+        )
+        self.active_intervention.management_budgets.update_cash()
+        amendment = InterventionAmendmentFactory(intervention=self.active_intervention)
+        item_copy = amendment.amended_intervention.management_budgets.items.first()
+        item_copy.unicef_cash = 4
+        item_copy.save()
+        amendment.amended_intervention.management_budgets.update_cash()
+        difference = amendment.get_difference()
+        item_difference = difference['management_budgets']['diff']['items']['diff']['update'][0]
+        self.assertEqual(item_difference['pk'], item.pk)
+        self.assertEqual(item_difference['diff']['unicef_cash']['diff'], ('0.00', '4.00'))
+
     def test_update_difference_on_merge(self):
         amendment = InterventionAmendmentFactory(
             intervention=self.active_intervention,
@@ -539,6 +571,26 @@ class AmendmentTestCase(BaseTenantTestCase):
         original_supply_item.refresh_from_db()
         self.assertEqual(original_supply_item.title, supply_item.title)
 
+    def test_update_budget_items(self):
+        item = InterventionManagementBudgetItemFactory(
+            budget=self.active_intervention.management_budgets, unicef_cash=0, cso_cash=42,
+            kind=InterventionManagementBudgetItem.KIND_CHOICES.in_country,
+        )
+        self.active_intervention.management_budgets.update_cash()
+        amendment = InterventionAmendmentFactory(intervention=self.active_intervention)
+        item_copy = amendment.amended_intervention.management_budgets.items.first()
+        item_copy.unicef_cash = Decimal(4)
+        item_copy.save()
+        amendment.amended_intervention.management_budgets.update_cash()
+
+        item.refresh_from_db()
+        self.assertNotEqual(item.unicef_cash, item_copy.unicef_cash)
+
+        amendment.merge_amendment()
+
+        item.refresh_from_db()
+        self.assertEqual(item.unicef_cash, item_copy.unicef_cash)
+
     def _check_related_fields(self, model_class, ignored_relations):
         related_fields = INTERVENTION_AMENDMENT_RELATED_FIELDS.get(model_class._meta.label, [])
         full_relations_list = related_fields + ignored_relations.get(model_class._meta.label, [])
@@ -555,7 +607,7 @@ class AmendmentTestCase(BaseTenantTestCase):
             if field.name not in related_fields:
                 continue
 
-            if field.one_to_many:
+            if field.one_to_many or field.one_to_one:
                 self._check_related_fields(field.related_model, ignored_relations)
 
     def test_related_fields(self):
@@ -595,5 +647,8 @@ class AmendmentTestCase(BaseTenantTestCase):
             'partners.InterventionRisk': ['intervention'],
             'partners.InterventionSupplyItem': ['intervention'],
             'reports.InterventionActivityItem': ['activity'],
+            'partners.InterventionBudget': ['intervention'],
+            'partners.InterventionManagementBudget': ['intervention'],
+            'partners.InterventionManagementBudgetItem': ['budget'],
         }
         self._check_related_fields(Intervention, ignored_fields)

@@ -32,6 +32,8 @@ from etools.applications.partners.models import (  # TODO intervention sector lo
     InterventionAmendment,
     InterventionAttachment,
     InterventionBudget,
+    InterventionManagementBudget,
+    InterventionManagementBudgetItem,
     InterventionPlannedVisits,
     InterventionResultLink,
     InterventionReview,
@@ -779,6 +781,16 @@ class FileTypeAdmin(admin.ModelAdmin):
         return request.user.is_superuser or request.user.groups.filter(name='Country Office Administrator').exists()
 
 
+class InterventionManagementBudgetItemAdmin(admin.StackedInline):
+    model = InterventionManagementBudgetItem
+
+
+class InterventionManagementBudgetAdmin(admin.ModelAdmin):
+    list_display = ('intervention',)
+    list_select_related = ('intervention',)
+    inlines = (InterventionManagementBudgetItemAdmin,)
+
+
 admin.site.register(PartnerOrganization, PartnerAdmin)
 admin.site.register(Assessment, AssessmentAdmin)
 admin.site.register(PartnerStaffMember, PartnerStaffMemberAdmin)
@@ -793,5 +805,6 @@ admin.site.register(InterventionResultLink, InterventionResultsLinkAdmin)
 admin.site.register(InterventionBudget, InterventionBudgetAdmin)
 admin.site.register(InterventionPlannedVisits, InterventionPlannedVisitsAdmin)
 admin.site.register(InterventionAttachment, InterventionAttachmentAdmin)
+admin.site.register(InterventionManagementBudget, InterventionManagementBudgetAdmin)
 
 admin.site.register(FileType, FileTypeAdmin)

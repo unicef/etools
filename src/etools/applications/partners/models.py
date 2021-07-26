@@ -4,6 +4,7 @@ import json
 
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField, JSONField
+from django.core.validators import MinValueValidator
 from django.db import connection, IntegrityError, models, transaction
 from django.db.models import Case, CharField, Count, F, Max, Min, OuterRef, Q, Subquery, Sum, When
 from django.urls import reverse
@@ -733,7 +734,7 @@ class PartnerOrganization(TimeStampedModel):
         :return: all completed programmatic visits
         """
         # Avoid circular imports
-        from etools.applications.field_monitoring.data_collection.models import ActivityQuestion
+        from etools.applications.field_monitoring.planning.models import MonitoringActivity, MonitoringActivityGroup
 
         hact = self.get_hact_json()
 
@@ -771,22 +772,40 @@ class PartnerOrganization(TimeStampedModel):
 
             tpm_total = tpmv1 + tpmv2 + tpmv3 + tpmv4
 
+            fmvgs = MonitoringActivityGroup.objects.filter(
+                partner=self,
+                monitoring_activities__status="completed",
+            ).annotate(
+                end_date=Max('monitoring_activities__end_date'),
+            ).distinct()
+            fmgv1 = fmvgs.filter(end_date__quarter=1).count()
+            fmgv2 = fmvgs.filter(end_date__quarter=2).count()
+            fmgv3 = fmvgs.filter(end_date__quarter=3).count()
+            fmgv4 = fmvgs.filter(end_date__quarter=4).count()
+            fmgv_total = fmgv1 + fmgv2 + fmgv3 + fmgv4
+
             # field monitoring activities qualify as programmatic visits if during a monitoring activity the hact
             # question was answered with an overall rating and the visit is completed
-            fmvqs = ActivityQuestion.objects.filter(question__is_hact=True, partner=self,
-                                                    overall_finding__value__isnull=False,
-                                                    monitoring_activity__status="completed")
-            fmvq1 = fmvqs.filter(monitoring_activity__end_date__quarter=1).count()
-            fmvq2 = fmvqs.filter(monitoring_activity__end_date__quarter=2).count()
-            fmvq3 = fmvqs.filter(monitoring_activity__end_date__quarter=3).count()
-            fmvq4 = fmvqs.filter(monitoring_activity__end_date__quarter=4).count()
+            grouped_activities = MonitoringActivityGroup.objects.filter(
+                partner=self
+            ).values_list('monitoring_activities__id', flat=True)
+            fmvqs = MonitoringActivity.objects.filter(
+                partners=self, status="completed",
+                end_date__year=datetime.datetime.now().year,
+            ).filter_hact_for_partner(self.id).exclude(
+                id__in=grouped_activities,
+            )
+            fmvq1 = fmvqs.filter(end_date__quarter=1).count()
+            fmvq2 = fmvqs.filter(end_date__quarter=2).count()
+            fmvq3 = fmvqs.filter(end_date__quarter=3).count()
+            fmvq4 = fmvqs.filter(end_date__quarter=4).count()
             fmv_total = fmvq1 + fmvq2 + fmvq3 + fmvq4
 
-            hact['programmatic_visits']['completed']['q1'] = pvq1 + tpmv1 + fmvq1
-            hact['programmatic_visits']['completed']['q2'] = pvq2 + tpmv2 + fmvq2
-            hact['programmatic_visits']['completed']['q3'] = pvq3 + tpmv3 + fmvq3
-            hact['programmatic_visits']['completed']['q4'] = pvq4 + tpmv4 + fmvq4
-            hact['programmatic_visits']['completed']['total'] = pv + tpm_total + fmv_total
+            hact['programmatic_visits']['completed']['q1'] = pvq1 + tpmv1 + fmgv1 + fmvq1
+            hact['programmatic_visits']['completed']['q2'] = pvq2 + tpmv2 + fmgv2 + fmvq2
+            hact['programmatic_visits']['completed']['q3'] = pvq3 + tpmv3 + fmgv3 + fmvq3
+            hact['programmatic_visits']['completed']['q4'] = pvq4 + tpmv4 + fmgv4 + fmvq4
+            hact['programmatic_visits']['completed']['total'] = pv + tpm_total + fmgv_total + fmv_total
 
         self.hact_values = hact
         self.save()
@@ -1606,6 +1625,7 @@ class InterventionManager(models.Manager):
             'result_links__ll_results__applied_indicators__indicator',
             'result_links__ll_results__applied_indicators__disaggregation',
             'result_links__ll_results__applied_indicators__locations',
+            'management_budgets__items',
             'flat_locations',
             'supply_items',
         )
@@ -3360,6 +3380,20 @@ class InterventionManagementBudget(TimeStampedModel):
         if not create:
             self.intervention.planned_budget.calc_totals()
 
+    def update_cash(self):
+        aggregated_items = self.items.values('kind').annotate(unicef_cash=Sum('unicef_cash'), cso_cash=Sum('cso_cash'))
+        for item in aggregated_items:
+            if item['kind'] == InterventionManagementBudgetItem.KIND_CHOICES.in_country:
+                self.act1_unicef = item['unicef_cash']
+                self.act1_partner = item['cso_cash']
+            elif item['kind'] == InterventionManagementBudgetItem.KIND_CHOICES.operational:
+                self.act2_unicef = item['unicef_cash']
+                self.act2_partner = item['cso_cash']
+            elif item['kind'] == InterventionManagementBudgetItem.KIND_CHOICES.planning:
+                self.act3_unicef = item['unicef_cash']
+                self.act3_partner = item['cso_cash']
+        self.save()
+
 
 class InterventionSupplyItem(TimeStampedModel):
     PROVIDED_BY_UNICEF = 'unicef'
@@ -3433,3 +3467,54 @@ class InterventionSupplyItem(TimeStampedModel):
     def delete(self, **kwargs):
         super().delete(**kwargs)
         self.intervention.planned_budget.calc_totals()
+
+
+class InterventionManagementBudgetItem(models.Model):
+    KIND_CHOICES = Choices(
+        ('in_country', _('In-country management and support staff prorated to their contribution to the programme '
+                         '(representation, planning, coordination, logistics, administration, finance)')),
+        ('operational', _('Operational costs prorated to their contribution to the programme '
+                          '(office space, equipment, office supplies, maintenance)')),
+        ('planning', _('Planning, monitoring, evaluation and communication, '
+                       'prorated to their contribution to the programme (venue, travels, etc.)')),
+    )
+
+    budget = models.ForeignKey(
+        InterventionManagementBudget, verbose_name=_('Budget'),
+        related_name='items', on_delete=models.CASCADE,
+    )
+    name = models.CharField(
+        verbose_name=_("Name"),
+        max_length=255,
+    )
+    unit = models.CharField(
+        verbose_name=_("Unit"),
+        max_length=150,
+    )
+    unit_price = models.DecimalField(
+        verbose_name=_("Unit Price"),
+        decimal_places=2,
+        max_digits=20,
+    )
+    no_units = models.DecimalField(
+        verbose_name=_("Units Number"),
+        decimal_places=1,
+        max_digits=20,
+        validators=[MinValueValidator(0)],
+    )
+    kind = models.CharField(choices=KIND_CHOICES, verbose_name=_('Kind'), max_length=15)
+    unicef_cash = models.DecimalField(
+        verbose_name=_("UNICEF Cash Local"),
+        decimal_places=2,
+        max_digits=20,
+        default=0,
+    )
+    cso_cash = models.DecimalField(
+        verbose_name=_("CSO Cash Local"),
+        decimal_places=2,
+        max_digits=20,
+        default=0,
+    )
+
+    def __str__(self):
+        return f'{self.get_kind_display()} - UNICEF: {self.unicef_cash}, CSO: {self.cso_cash}'

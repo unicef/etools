@@ -33,6 +33,7 @@ from etools.applications.field_monitoring.permissions import (
 from etools.applications.field_monitoring.planning.activity_validation.validator import ActivityValid
 from etools.applications.field_monitoring.planning.filters import (
     CPOutputsFilterSet,
+    HactForPartnerFilter,
     InterventionsFilterSet,
     MonitoringActivitiesFilterSet,
     ReferenceNumberOrderingFilter,
@@ -154,7 +155,10 @@ class MonitoringActivitiesViewSet(
         (IsEditAction & IsListAction & IsFieldMonitor) |
         (IsEditAction & (IsObjectAction & (IsFieldMonitor | IsVisitLead)))
     ]
-    filter_backends = (DjangoFilterBackend, ReferenceNumberOrderingFilter, OrderingFilter, SearchFilter)
+    filter_backends = (
+        DjangoFilterBackend, ReferenceNumberOrderingFilter,
+        OrderingFilter, SearchFilter, HactForPartnerFilter,
+    )
     filter_class = MonitoringActivitiesFilterSet
     ordering_fields = (
         'start_date', 'end_date', 'location', 'location_site', 'monitor_type', 'checklists_count', 'status'
