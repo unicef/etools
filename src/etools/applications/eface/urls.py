@@ -6,6 +6,7 @@ from etools.applications.eface import views
 
 root_api = routers.SimpleRouter()
 root_api.register(r'forms', views.EFaceFormsViewSet, basename='forms')
+root_api.register(r'users', views.UsersViewSet, basename='users')
 
 app_name = 'eface_v1'
 urlpatterns = [

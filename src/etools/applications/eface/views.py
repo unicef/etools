@@ -1,8 +1,9 @@
+from django.contrib.auth import get_user_model
 from django.db import transaction
 
 from django_filters.rest_framework import DjangoFilterBackend
 from etools_validator.mixins import ValidatorViewMixin
-from rest_framework import status, viewsets
+from rest_framework import mixins, status, viewsets
 from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAuthenticated
@@ -13,10 +14,10 @@ from unicef_restlib.views import MultiSerializerViewSetMixin, SafeTenantViewSetM
 from etools.applications.eface.filters import EFaceFormFilterSet
 from etools.applications.eface.models import EFaceForm
 from etools.applications.eface.permissions import IsPartnerFocalPointPermission, IsUNICEFFocalPointPermission
-from etools.applications.eface.serializers import EFaceFormListSerializer, EFaceFormSerializer
+from etools.applications.eface.serializers import EFaceFormListSerializer, EFaceFormSerializer, FormUserSerializer
 from etools.applications.eface.validation.validator import EFaceFormValid
 from etools.applications.field_monitoring.permissions import IsEditAction, IsListAction, IsObjectAction, IsReadAction
-from etools.applications.partners.permissions import UserIsPartnerStaffMemberPermission
+from etools.applications.partners.permissions import UserIsPartnerStaffMemberPermission, UserIsStaffPermission
 
 
 class EFaceBaseViewSet(
@@ -101,3 +102,17 @@ class EFaceFormsViewSet(
             raise ValidationError(validator.errors)
 
         return Response(self.get_serializer_class()(instance, context=self.get_serializer_context()).data)
+
+
+class UsersViewSet(EFaceBaseViewSet, mixins.ListModelMixin, viewsets.GenericViewSet):
+    queryset = get_user_model().objects.all()
+    serializer_class = FormUserSerializer
+    permission_classes = EFaceBaseViewSet.permission_classes + [UserIsStaffPermission]
+
+    def get_queryset(self, pk=None):
+        qs = super().get_queryset()
+
+        return qs.filter(
+            profile__country=self.request.user.profile.country,
+            is_staff=True,
+        ).prefetch_related('profile').order_by("first_name")

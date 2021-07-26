@@ -1,5 +1,7 @@
 from django.utils import timezone
 
+from rest_framework import status
+
 from etools.applications.eface.tests.factories import EFaceFormFactory, FormActivityFactory
 from etools.applications.field_monitoring.tests.base import APIViewSetTestCase
 from etools.applications.partners.tests.factories import (
@@ -158,3 +160,16 @@ class TestFormsView(APIViewSetTestCase):
 
         third_activity = form.activities.filter(kind='activity').first()
         self.assertIsNotNone(third_activity.pd_activity)
+
+
+class UsersAPITestCase(APIViewSetTestCase):
+    base_view = 'eface_v1:users'
+
+    def test_list(self):
+        user1 = UserFactory(is_staff=True)
+        user = UserFactory(is_staff=True)
+        UserFactory()
+        self._test_list(user, [user1, user])
+
+    def test_not_staff(self):
+        self._test_list(UserFactory(is_staff=False), expected_status=status.HTTP_403_FORBIDDEN)
