@@ -337,6 +337,9 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     def _is_partner_user(self, obj, user):
         return user.email in [o.email for o in obj.partner_focal_points.all()]
 
+    def _is_unicef_focal_point(self, obj, user):
+        return user.email in [o.email for o in obj.unicef_focal_points.all()]
+
     def get_available_actions(self, obj):
         default_ordering = [
             "send_to_unicef",
@@ -368,14 +371,17 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
         if self._is_partnership_manager():
             # amendments should be deleted instead of moving to cancelled/terminated
             if not obj.in_amendment:
-                if obj.status in [obj.DRAFT, obj.REVIEW, obj.SIGNATURE]:
-                    available_actions.append("cancel")
-                elif obj.status not in [obj.ENDED, obj.CLOSED, obj.TERMINATED]:
+                if obj.status in [obj.SIGNED, obj.ACTIVE, obj.IMPLEMENTED, obj.SUSPENDED]:
                     available_actions.append("terminate")
                     if obj.status not in [obj.SUSPENDED]:
                         available_actions.append("suspend")
             if obj.status == obj.SUSPENDED:
                 available_actions.append("unsuspend")
+
+        status_is_cancellable = obj.status in [obj.DRAFT, obj.REVIEW, obj.SIGNATURE]
+        budget_owner_or_focal_point = obj.budget_owner == user or self._is_unicef_focal_point(obj, user)
+        if not obj.in_amendment and status_is_cancellable and budget_owner_or_focal_point:
+            available_actions.append("cancel")
 
         # only overall approver can approve or reject review
         if obj.status == obj.REVIEW and self._is_overall_approver(obj, user):
