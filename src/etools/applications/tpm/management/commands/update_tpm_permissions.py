@@ -7,6 +7,7 @@ from etools.applications.action_points.conditions import (
     ActionPointAuthorCondition,
 )
 from etools.applications.action_points.models import ActionPoint
+from etools.applications.audit.models import Auditor
 from etools.applications.permissions2.conditions import GroupCondition, NewObjectCondition, ObjectStatusCondition
 from etools.applications.permissions2.models import Permission
 from etools.applications.permissions2.utils import get_model_target
@@ -104,6 +105,7 @@ class Command(BaseCommand):
     focal_point = 'focal_point'
     unicef_user = 'unicef_user'
     pme = 'pme'
+    auditor = 'auditor'
     third_party_monitor = 'third_party_monitor'
     third_party_focal_point = 'third_party_focal_point'
 
@@ -118,6 +120,8 @@ class Command(BaseCommand):
 
         focal_point: [GroupCondition.predicate_template.format(group=UNICEFUser.name),
                       TPMVisitUNICEFFocalPointCondition.predicate],
+
+        auditor: [GroupCondition.predicate_template.format(group=Auditor.name), ],
 
         third_party_monitor: [GroupCondition.predicate_template.format(group=ThirdPartyMonitor.name),
                               TPMStaffMemberCondition.predicate],
@@ -221,7 +225,7 @@ class Command(BaseCommand):
     def assign_permissions(self):
         # common permissions
         # everybody can view partner details, pme can edit
-        self.add_permissions([self.unicef_user, self.third_party_monitor], 'view', self.tpm_partner)
+        self.add_permissions([self.unicef_user, self.third_party_monitor, self.auditor], 'view', self.tpm_partner)
         self.add_permissions(self.pme, 'edit', self.tpm_partner)
 
         # unicef users can view all, tpm can view list fields

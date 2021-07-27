@@ -31,6 +31,7 @@ class MonitoringActivityAdmin(admin.ModelAdmin):
     )
     list_select_related = ('tpm_partner', 'visit_lead', 'location', 'location_site')
     list_filter = ('monitor_type', 'status')
+    raw_id_fields = ('partners', 'interventions', 'cp_outputs', 'visit_lead', 'location', 'team_members')
 
 
 @admin.register(MonitoringActivityGroup)

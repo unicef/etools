@@ -21,6 +21,7 @@ from etools.applications.action_points.conditions import (
     ActionPointAssigneeCondition,
     ActionPointAuthorCondition,
 )
+from etools.applications.audit.models import Auditor
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.permissions2.conditions import ObjectStatusCondition
@@ -130,7 +131,7 @@ class TPMPartnerViewSet(
         if UNICEFUser.as_group() in user_groups or PME.as_group() in user_groups:
             # no need to filter queryset
             pass
-        elif ThirdPartyMonitor.as_group() in user_groups:
+        elif user_groups.filter(pk__in=[ThirdPartyMonitor.as_group().pk, Auditor.as_group().pk]):
             queryset = queryset.filter(staff_members__user=self.request.user)
         else:
             queryset = queryset.none()
@@ -139,9 +140,8 @@ class TPMPartnerViewSet(
 
     def get_permission_context(self):
         context = super().get_permission_context()
-
-        if ThirdPartyMonitor.as_group() in self.request.user.groups.all() and \
-           hasattr(self.request.user, 'tpmpartners_tpmpartnerstaffmember'):
+        if self.request.user.groups.filter(pk__in=[ThirdPartyMonitor.as_group().pk, Auditor.as_group().pk]) and \
+                hasattr(self.request.user, 'tpmpartners_tpmpartnerstaffmember'):
             context += [
                 TPMStaffMemberCondition(
                     self.request.user.tpmpartners_tpmpartnerstaffmember.tpm_partner,
