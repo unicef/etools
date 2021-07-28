@@ -41,7 +41,7 @@ class PMPAgreementListCreateAPIView(
             query_params = self.request.query_params
             if "format" in query_params.keys():
                 if query_params.get("format") in ['csv', 'csv_flat']:
-                    return self.get_serializer(query_params.get("format"))
+                    return AgreementListSerializer
         elif self.request.method == "POST":
             return AgreementCreateUpdateSerializer
         return AgreementListSerializer
