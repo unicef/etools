@@ -5,6 +5,12 @@ from etools_validator.validation import CompleteValidation
 from etools.applications.eface.validation.permissions import EFaceFormPermissions
 
 
+def cancel_reason_provided(form):
+    if not form.cancel_reason:
+        raise StateValidationError([_('Cancellation reason should be provided.')])
+    return True
+
+
 class EFaceFormValid(CompleteValidation):
     VALIDATION_CLASS = 'eface.EFaceForm'
     BASIC_VALIDATIONS = []
@@ -60,5 +66,5 @@ class EFaceFormValid(CompleteValidation):
         return True
 
     def state_cancelled_valid(self, instance, user=None):
-        # cancel_reason_provided(instance)
+        cancel_reason_provided(instance)
         return True

@@ -228,7 +228,7 @@ class EFaceForm(
             STATUSES.rejected,
         ],
         target=STATUSES.cancelled,
-        permission=user_is_programme_officer_permission,
+        permission=user_is_partner_focal_point_permission,
     )
     def cancel(self):
         pass

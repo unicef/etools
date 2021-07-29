@@ -109,6 +109,14 @@ class TestFormsView(APIViewSetTestCase):
         response = goto('approved', self.unicef_user)
         self.assertEqual(response.data['status'], 'approved')
 
+    def test_cancel(self):
+        form = EFaceFormFactory()
+        staff_member = PartnerStaffFactory()
+        form.intervention.partner_focal_points.add(staff_member)
+        form.intervention.unicef_focal_points.add(self.unicef_user)
+        response = self._test_update(staff_member.user, form, {'status': 'cancelled', 'cancel_reason': 'test'})
+        self.assertEqual(response.data['status'], 'cancelled')
+
     def test_bad_transition(self):
         form = EFaceFormFactory()
         form.intervention.unicef_focal_points.add(self.unicef_user)
