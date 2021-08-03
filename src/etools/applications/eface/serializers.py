@@ -63,6 +63,7 @@ class EFaceFormListSerializer(serializers.ModelSerializer):
     authorized_amount_date_end = MonthYearDateField(required=False)
     requested_amount_date_start = MonthYearDateField(required=False)
     requested_amount_date_end = MonthYearDateField(required=False)
+    intervention_reference_number = serializers.ReadOnlyField(source='intervention.reference_number')
 
     class Meta:
         model = EFaceForm
@@ -71,6 +72,7 @@ class EFaceFormListSerializer(serializers.ModelSerializer):
             'reference_number',
             'status',
             'intervention',
+            'intervention_reference_number',
             'currency',
             'request_type',
             'request_represents_expenditures',
