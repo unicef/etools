@@ -1,8 +1,8 @@
 Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,intervention,Partner Focal Point,,draft,edit,TRUE
 ,request_type,Partner Focal Point,,draft,edit,TRUE
-,title,Partner Focal Point,,draft,edit,TRUE
-,title,Partner Focal Point,,rejected,edit,TRUE
+,currency,Partner Focal Point,,draft,edit,TRUE
+,currency,Partner Focal Point,,rejected,edit,TRUE
 ,authorized_amount_date,Partner Focal Point,,draft,edit,TRUE
 ,requested_amount_date,Partner Focal Point,,rejected,edit,TRUE
 ,authorized_amount_date,Partner Focal Point,,draft,edit,TRUE

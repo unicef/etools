@@ -9,6 +9,6 @@ class FormActivityAdmin(admin.StackedInline):
 
 @admin.register(EFaceForm)
 class EFaceFormAdmin(admin.ModelAdmin):
-    list_display = ('reference_number', 'title', 'request_type', 'status')
+    list_display = ('reference_number', 'request_type', 'status')
     list_filter = ('status',)
     search_fields = ('reference_number',)

@@ -69,9 +69,9 @@ class EFaceFormListSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'reference_number',
-            'title',
             'status',
             'intervention',
+            'currency',
             'request_type',
             'request_represents_expenditures',
             'expenditures_disbursed',

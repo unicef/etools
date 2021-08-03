@@ -8,7 +8,6 @@ class EFaceFormFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = EFaceForm
 
-    title = factory.fuzzy.FuzzyText(length=100)
     intervention = factory.SubFactory(InterventionFactory)
     request_type = factory.fuzzy.FuzzyChoice(dict(EFaceForm.REQUEST_TYPE_CHOICES).keys())
 

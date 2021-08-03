@@ -67,10 +67,10 @@ class TestFormsView(APIViewSetTestCase):
         form = EFaceFormFactory()
         staff_member = PartnerStaffFactory()
         form.intervention.partner_focal_points.add(staff_member)
-        response = self._test_update(staff_member.user, form, {'title': 'new'})
-        self.assertEqual(response.data['title'], 'new')
+        response = self._test_update(staff_member.user, form, {'currency': 'AUD'})
+        self.assertEqual(response.data['currency'], 'AUD')
         form.refresh_from_db()
-        self.assertEqual(form.title, 'new')
+        self.assertEqual(form.currency, 'AUD')
 
     def test_create(self):
         staff_member = PartnerStaffFactory()
@@ -78,7 +78,6 @@ class TestFormsView(APIViewSetTestCase):
             staff_member.user,
             {
                 'intervention': InterventionFactory(agreement__partner=staff_member.partner).pk,
-                'title': 'test',
                 'request_type': 'dct',
             }
         )

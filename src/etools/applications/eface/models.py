@@ -9,6 +9,7 @@ from django_fsm import FSMField, transition
 from model_utils import Choices
 from model_utils.fields import MonitorField
 from model_utils.models import TimeStampedModel
+from unicef_djangolib.fields import CurrencyField
 
 from etools.applications.core.permissions import import_permissions
 from etools.applications.eface.transition_permissions import (
@@ -63,8 +64,8 @@ class EFaceForm(
         unique=True,
     )
 
-    title = models.CharField(max_length=255)
     intervention = models.ForeignKey('partners.Intervention', verbose_name=_('Intervention'), on_delete=models.PROTECT)
+    currency = CurrencyField(verbose_name=_('Currency'), null=False, default='')
 
     request_type = models.CharField(choices=REQUEST_TYPE_CHOICES, max_length=3)
 
@@ -152,6 +153,9 @@ class EFaceForm(
     def save(self, **kwargs):
         if not self.reference_number_year:
             self.reference_number_year = timezone.now().year
+
+        if not self.currency:
+            self.currency = self.intervention.planned_budget.currency
 
         if not self.reference_number:
             # to create a reference number we need a pk
