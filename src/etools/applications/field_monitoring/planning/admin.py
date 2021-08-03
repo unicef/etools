@@ -1,7 +1,9 @@
 from django.contrib import admin
 
+from etools.applications.action_points.admin import ActionPointAdmin
 from etools.applications.field_monitoring.planning.models import (
     MonitoringActivity,
+    MonitoringActivityActionPoint,
     MonitoringActivityGroup,
     QuestionTemplate,
     YearPlan,
@@ -43,3 +45,8 @@ class MonitoringActivityGroupAdmin(admin.ModelAdmin):
 
     def get_monitoring_activities(self, obj):
         return ', '.join(a.number for a in obj.monitoring_activities)
+
+
+@admin.register(MonitoringActivityActionPoint)
+class MonitoringActivityActionPointAdmin(ActionPointAdmin):
+    list_display = ('monitoring_activity', ) + ActionPointAdmin.list_display
