@@ -353,14 +353,12 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "unsuspend",
             "terminate",
             "download_comments",
-            "export",
-            "generate_pdf",
+            "export_results",
             "amendment_merge",
         ]
         available_actions = [
             "download_comments",
-            "export",
-            "generate_pdf",
+            "export_results",
         ]
         user = self.context['request'].user
 
