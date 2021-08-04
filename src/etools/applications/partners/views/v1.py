@@ -88,7 +88,7 @@ class PCAPDFView(LoginRequiredMixin, PDFTemplateView):
             tax_number_5 = response["ROWSET"]["ROW"]['TAX_NUMBER_5']
         for b in banks_records:
             if isinstance(b, dict):
-                b["BANK_ADDRESS"] = ', '.join(b[key] for key in ['STREET', 'CITY'] if key in b)
+                b["BANK_ADDRESS"] = ', '.join(b[key] for key in ['STREET', 'CITY'] if key in b and b[key])
                 b["ACCT_HOLDER"] = b["ACCT_HOLDER"] if "ACCT_HOLDER" in b else ""
                 # TODO: fix currency field name when we have it
                 b["BANK_ACCOUNT_CURRENCY"] = b["BANK_ACCOUNT_CURRENCY"] if "BANK_ACCOUNT_CURRENCY" in b else ""

@@ -474,6 +474,8 @@ class TestProgrammeSynchronizer(BaseTenantTestCase):
         self.data["OUTPUT_END_DATE"] = "OP_END"
         self.data["HUMANITARIAN_MARKER_CODE"] = "HUMANITARIAN_MARKER_CODE"
         self.data["HUMANITARIAN_MARKER_NAME"] = "HUMANITARIAN_MARKER_NAME"
+        self.data["PROGRAMME_AREA_CODE"] = "PROGRAMME_AREA_CODE"
+        self.data["PROGRAMME_AREA_NAME"] = "PROGRAMME_AREA_NAME"
         records = [self.data]
         result = self.adapter._clean_records(records)
         self.assertEqual(result, {
@@ -490,6 +492,8 @@ class TestProgrammeSynchronizer(BaseTenantTestCase):
                 "from_date": "OP_START",
                 'humanitarian_marker_code': 'HUMANITARIAN_MARKER_CODE',
                 'humanitarian_marker_name': 'HUMANITARIAN_MARKER_NAME',
+                'programme_area_code': 'PROGRAMME_AREA_CODE',
+                'programme_area_name': 'PROGRAMME_AREA_NAME',
                 "to_date": "OP_END",
             }},
             "activities": {}
