@@ -521,6 +521,10 @@ class TestCreate(BaseInterventionTestCase):
 
 
 class TestUpdate(BaseInterventionTestCase):
+    def setUp(self):
+        super().setUp()
+        call_command("update_notifications")
+
     def test_patch_currency(self):
         intervention = InterventionFactory()
         budget = intervention.planned_budget
@@ -600,6 +604,41 @@ class TestUpdate(BaseInterventionTestCase):
         budget.refresh_from_db()
         self.assertEqual(budget.total_hq_cash_local, 10)
         self.assertEqual(budget.unicef_cash_local, 50)
+
+    def test_fields_required_on_unicef_accept(self):
+        intervention = InterventionFactory(
+            ip_program_contribution=None,
+            status=Intervention.DRAFT,
+            unicef_accepted=False,
+            partner_accepted=False,
+            agreement__partner=self.partner,
+            date_sent_to_partner=timezone.now(),
+        )
+        intervention.unicef_focal_points.add(self.user)
+        staff_member = PartnerStaffFactory(partner=self.partner)
+        intervention.partner_focal_points.add(staff_member)
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+            user=self.user,
+            data={}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        intervention.unicef_court = False
+        intervention.save()
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-accept', args=[intervention.pk]),
+            user=staff_member.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-accept', args=[intervention.pk]),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
+        self.assertIn('Required fields not completed in draft', response.data[0])
 
 
 class TestDelete(BaseInterventionTestCase):
