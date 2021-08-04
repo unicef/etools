@@ -244,6 +244,18 @@ class Result(MPTTModel):
         null=True,
         blank=True,
     )
+    programme_area_code = models.CharField(
+        verbose_name=_("Programme Area Code"),
+        max_length=16,
+        null=True,
+        blank=True,
+    )
+    programme_area_name = models.CharField(
+        verbose_name=_("Programme Area Name"),
+        max_length=255,
+        null=True,
+        blank=True,
+    )
     gic_code = models.CharField(
         verbose_name=_("GIC Code"),
         max_length=8,

@@ -243,6 +243,8 @@ class ProgrammeSynchronizer(VisionDataTenantSynchronizer):
         ("OUTPUT_END_DATE", "to_date"),
         ("HUMANITARIAN_MARKER_CODE", "humanitarian_marker_code"),
         ("HUMANITARIAN_MARKER_NAME", "humanitarian_marker_name"),
+        ("PROGRAMME_AREA_CODE", "programme_area_code"),
+        ("PROGRAMME_AREA_NAME", "programme_area_name"),
     )
     ACTIVITY_MAP = (
         ("ACTIVITY_WBS", "wbs"),
