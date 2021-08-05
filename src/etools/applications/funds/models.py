@@ -255,7 +255,7 @@ class FundsReservationItem(TimeStampedModel):
     line_item_text = models.CharField(
         verbose_name=_("Description"),
         max_length=255,
-        default='',
+        null=True,
         blank=True,
     )
 
