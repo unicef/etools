@@ -23,7 +23,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='interventionamendment',
             name='difference',
-            field=django.contrib.postgres.fields.jsonb.JSONField(blank=True, default=dict),
+            field=models.JSONField(blank=True, default=dict),
         ),
         migrations.AddField(
             model_name='interventionamendment',
@@ -43,7 +43,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='interventionamendment',
             name='related_objects_map',
-            field=django.contrib.postgres.fields.jsonb.JSONField(blank=True, default=dict),
+            field=models.JSONField(blank=True, default=dict),
         ),
         migrations.AddField(
             model_name='interventionamendment',
