@@ -1,0 +1,166 @@
+{% extends "easy_pdf/base.html" %}
+{% load humanize %}
+
+{% block style_base %}
+    {% comment %}
+        See DEFAULT_CSS in https://github.com/chrisglass/xhtml2pdf/blob/master/xhtml2pdf/default.py
+        for base style.
+    {% endcomment %}
+
+    {% block layout_style %}
+        <style type="text/css">
+            @page {
+                size: {{ pagesize|default:"letter" }};
+                margin-left: 2.0cm;
+                margin-right: 2.0cm;
+                margin-top: 2.4cm;
+                margin-bottom: 1.8cm;
+                @frame header {
+                    -pdf-frame-content: header_content;
+                    margin-top: 1cm;
+                    margin-right: 2.0cm;
+                    margin-bottom: 0.3cm;
+                    padding-bottom: 3cm;
+                    margin-left: 0cm;
+                    background-color: #0099ff;
+                    height: 2cm;
+                }
+                @frame footer_frame {
+                    /* Static frame */
+                    -pdf-frame-content:footer_content;
+                    left: 50pt; width: 512pt; top: 772pt; height: 20pt;
+                }
+            }
+        </style>
+    {% endblock %}
+    {% block extra_style %}
+        <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+        <style type="text/css">
+            .details div {
+            {#            background-color: #f1f1f1;#} border-radius: 25px;
+                border: 2px solid #f1f1f1;
+                padding: 20px;
+                width: 200px;
+                height: 150px;
+            }
+            /*https://github.com/xhtml2pdf/xhtml2pdf/issues/129*/
+            /*times new roman*/
+            @font-face {
+                font-family: "Times_New_Roman";
+                src: url("{{font_path}}times_new_roman/Times_New_Roman.ttf");
+            }
+            @font-face {
+                font-family: "Times_New_Roman_Italic";
+                src: url("{{font_path}}times_new_roman/Times_New_Roman_Italic.ttf");
+            }
+            @font-face {
+                font-family: "Times_New_Roman_Bold";
+                src: url("{{font_path}}times_new_roman/Times_New_Roman_Bold.ttf");
+            }
+            @font-face {
+                font-family: "Times_New_Roman_Bold_Italic";
+                src: url("{{font_path}}times_new_roman/Times_New_Roman_Bold_Italic.ttf");
+            }
+            ul {
+                list-style-type: none;
+            }
+            /*fonts*/
+            #header_content {
+                font-family: "Times_New_Roman";
+                font-size: 12pt;
+            }
+            #content {
+                font-family: "Times_New_Roman";
+                font-size: 12pt;
+            }
+            /*bold fix*/
+            #header_content b, #content b, #header_content strong, #content strong {
+                font-family: "Times_New_Roman_bold";
+            }
+            /*italic fix*/
+            #header_content i, #content i {
+                font-family: "Times_New_Roman_italic";
+            }
+            /*TODO: does not seem to work, investigate why.*/
+            /*italic bold. no observed occurences in the template.*/
+            #header_content b i, #content b i, #header_content strong i, #content strong i,
+            #header_content i b, #content i b, #header_content i strong, #content i strong {
+                font-family: "Times_New_Roman_Bold_Italic";
+            }
+
+            .page-break {
+                page-break-after: always;
+            }
+            .keep-with-next {
+                -pdf-keep-with-next: true;
+            }
+            .small-indent {
+                text-indent: 0.8cm;
+            }
+            .padded-indent {
+                padding-left: 2.8cm;
+                margin-left: 2.8cm;
+            }
+            .indented {}
+            .list-style-type-letter {
+                list-style-type: lower-alpha;
+            }
+            .list-style-type-roman {
+                list-style-type: lower-roman;
+            }
+
+            table {
+                line-height: 140%;
+                margin-top: 20px;
+                margin-bottom: 10px;
+            }
+            table.bordered {
+                border: 0.1pt solid #999999;
+            }
+            tr, td, th { border: none; }
+            th {
+                font-size: 12pt;
+                padding: 5px 0 0 0;
+                line-height: 1;
+                font-weight: bold;
+            }
+            th.bordered {
+                border: 0.1pt solid #999999;
+            }
+            td {
+                font-size: 12pt;
+                vertical-align: middle;
+                padding: 5px 0 0 0;
+            }
+            td.bordered {
+                border: 0.1pt solid #999999;
+            }
+            td:last-child { padding-bottom: 0; }
+            td:first-child {
+                padding-right: 0px;
+                padding-left: 0px;
+            }
+            .capitalize{text-transform: capitalize;}
+            .uppercase{text-transform: uppercase;}
+        </style>
+    {% endblock %}
+{% endblock %}
+
+{% block content %}
+{% if error %}
+    PDF could not be generated properly: <br> {{ error }}
+{% else %}
+    <div id="header_content" style="text-align: right">
+        <u>Reference Number: {{ pd.number }}</u>
+    </div>
+    <div id="content">
+        <div id="title" style="text-align: center; padding-top: 0px">
+            <div style="font-size: 16pt;padding-top: 18px;"><b>PD Details</b></div>
+        </div>
+    </div>
+    <div id="footer_content" style="text-align: right">
+      <pdf:pagenumber>
+        {#        of <pdf:pagecount>#}
+    </div>
+{% endif %}
+{% endblock %}

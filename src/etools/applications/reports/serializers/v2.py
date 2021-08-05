@@ -12,6 +12,9 @@ from etools.applications.reports.models import (
     DisaggregationValue,
     Indicator,
     IndicatorBlueprint,
+    InterventionActivity,
+    InterventionActivityItem,
+    InterventionTimeFrame,
     LowerResult,
     Office,
     ReportingRequirement,
@@ -280,7 +283,16 @@ class LowerResultSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = LowerResult
-        fields = '__all__'
+        fields = [
+            "id",
+            "name",
+            "code",
+            "result_link",
+            "total",
+            "applied_indicators",
+            "created",
+            "modified",
+        ]
 
 
 class LowerResultCUSerializer(serializers.ModelSerializer):
@@ -448,3 +460,142 @@ class OfficeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Office
         fields = "__all__"
+
+
+class InterventionActivityItemSerializer(serializers.ModelSerializer):
+    default_error_messages = {
+        'invalid_budget': _('Invalid budget data. Total cash should be equal to items number * price per item.')
+    }
+
+    id = serializers.IntegerField(required=False)
+
+    class Meta:
+        model = InterventionActivityItem
+        fields = (
+            'id',
+            'name',
+            'unit',
+            'unit_price',
+            'no_units',
+            'unicef_cash',
+            'cso_cash',
+        )
+
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+
+        instance = None
+        if 'id' in attrs:
+            instance = self.Meta.model.objects.filter(id=attrs['id']).first()
+
+        unit_price = attrs.get('unit_price', instance.unit_price if instance else None)
+        no_units = attrs.get('no_units', instance.no_units if instance else None)
+        unicef_cash = attrs.get('unicef_cash', instance.unicef_cash if instance else None)
+        cso_cash = attrs.get('cso_cash', instance.cso_cash if instance else None)
+
+        if unit_price * no_units != unicef_cash + cso_cash:
+            self.fail('invalid_budget')
+
+        return attrs
+
+
+class InterventionTimeFrameSerializer(serializers.ModelSerializer):
+    name = serializers.SerializerMethodField()
+    start = serializers.DateField(source='start_date')
+    end = serializers.DateField(source='end_date')
+
+    class Meta:
+        model = InterventionTimeFrame
+        fields = ('id', 'name', 'start', 'end',)
+
+    def get_name(self, obj: InterventionTimeFrame):
+        return 'Q{}'.format(obj.quarter)
+
+
+class InterventionActivityDetailSerializer(serializers.ModelSerializer):
+    items = InterventionActivityItemSerializer(many=True, required=False)
+    partner_percentage = serializers.DecimalField(max_digits=5, decimal_places=2, read_only=True)
+
+    class Meta:
+        model = InterventionActivity
+        fields = (
+            'id',
+            'name',
+            'context_details',
+            'unicef_cash',
+            'cso_cash',
+            'items',
+            'time_frames',
+            'partner_percentage',
+        )
+
+    def __init__(self, *args, **kwargs):
+        self.intervention = kwargs.pop('intervention')
+        super().__init__(*args, **kwargs)
+
+    @transaction.atomic
+    def create(self, validated_data):
+        options = validated_data.pop('items', None)
+        time_frames = validated_data.pop('time_frames', None)
+        instance = super().create(validated_data)
+        self.set_items(instance, options)
+        self.set_time_frames(instance, time_frames)
+        return instance
+
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        options = validated_data.pop('items', None)
+        time_frames = validated_data.pop('time_frames', None)
+        instance = super().update(instance, validated_data)
+        self.set_items(instance, options)
+        self.set_time_frames(instance, time_frames)
+        return instance
+
+    def set_items(self, instance, items):
+        if items is None:
+            return
+
+        updated_pks = []
+        for i, item in enumerate(items):
+            item_instance = InterventionActivityItem.objects.filter(pk=item.get('id')).first()
+            if item_instance:
+                serializer = InterventionActivityItemSerializer(data=item, instance=item_instance, partial=self.partial)
+            else:
+                serializer = InterventionActivityItemSerializer(data=item)
+            if not serializer.is_valid():
+                raise ValidationError({'items': {i: serializer.errors}})
+
+            updated_pks.append(serializer.save(activity=instance).pk)
+
+        # cleanup, remove unused options
+        removed_items = instance.items.exclude(pk__in=updated_pks).delete()
+        if removed_items:
+            # if items are removed, cash also should be recalculated
+            instance.update_cash()
+
+    def set_time_frames(self, instance, time_frames):
+        if time_frames is None:
+            return
+
+        new_time_frames = self.intervention.quarters.filter(id__in=[t.id for t in time_frames])
+        instance.time_frames.clear()
+        instance.time_frames.add(*new_time_frames)
+
+
+class InterventionActivitySerializer(serializers.ModelSerializer):
+    partner_percentage = serializers.DecimalField(max_digits=5, decimal_places=2, read_only=True)
+
+    class Meta:
+        model = InterventionActivity
+        fields = (
+            'id', 'name', 'context_details',
+            'unicef_cash', 'cso_cash', 'partner_percentage',
+            'time_frames',
+        )
+
+
+class LowerResultWithActivitiesSerializer(LowerResultSerializer):
+    activities = InterventionActivitySerializer(read_only=True, many=True)
+
+    class Meta(LowerResultSerializer.Meta):
+        fields = LowerResultSerializer.Meta.fields + ["activities"]

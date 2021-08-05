@@ -24,10 +24,25 @@ AP_ALLOWED_COUNTRIES = [
 class MinimalUserSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='get_full_name', read_only=True)
     email = serializers.EmailField(validators=[EmailValidator()])
+    phone = serializers.SerializerMethodField()
 
     class Meta:
         model = get_user_model()
-        fields = ('id', 'name', 'first_name', 'middle_name', 'last_name', 'username', 'email', )
+        fields = (
+            'id',
+            'name',
+            'first_name',
+            'middle_name',
+            'last_name',
+            'username',
+            'email',
+            'phone',
+        )
+
+    def get_phone(self, obj):
+        if obj.profile:
+            return obj.profile.phone_number
+        return None
 
 
 # used for user detail view
