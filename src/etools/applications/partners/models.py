@@ -2635,8 +2635,8 @@ class InterventionAmendment(TimeStampedModel):
         blank=True, null=True,
         on_delete=models.SET_NULL,
     )
-    related_objects_map = JSONField(blank=True, default=dict)
-    difference = JSONField(blank=True, default=dict)
+    related_objects_map = models.JSONField(blank=True, default=dict)
+    difference = models.JSONField(blank=True, default=dict)
 
     tracker = FieldTracker()
 
