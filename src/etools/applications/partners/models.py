@@ -3,7 +3,7 @@ import decimal
 import json
 
 from django.conf import settings
-from django.contrib.postgres.fields import ArrayField, JSONField
+from django.contrib.postgres.fields import ArrayField
 from django.db import connection, IntegrityError, models, transaction
 from django.db.models import Case, CharField, Count, F, Max, Min, OuterRef, Q, Subquery, Sum, When
 from django.urls import reverse
@@ -498,7 +498,7 @@ class PartnerOrganization(TimeStampedModel):
         verbose_name=_('Outstanding DCT more than 9 months')
     )
 
-    hact_values = JSONField(blank=True, null=True, default=hact_default, verbose_name='HACT')
+    hact_values = models.JSONField(blank=True, null=True, default=hact_default, verbose_name='HACT')
     basis_for_risk_rating = models.CharField(
         verbose_name=_("Basis for Risk Rating"), max_length=50, default='', blank=True)
     psea_assessment_date = models.DateTimeField(
@@ -1925,7 +1925,7 @@ class Intervention(TimeStampedModel):
 
     # Flag if this has been migrated to a status that is not correct
     # previous status
-    metadata = JSONField(
+    metadata = models.JSONField(
         verbose_name=_("Metadata"),
         blank=True,
         null=True,
