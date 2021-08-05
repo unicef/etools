@@ -184,6 +184,7 @@ SHARED_APPS = (
     'easy_pdf',
     'ordered_model',
     'social_django',
+    'admin_extra_urls',
     'etools.applications.vision',
     'etools.applications.publics',
     'etools.applications.users',
