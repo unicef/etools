@@ -210,6 +210,10 @@ class EFaceFormSerializer(EFaceFormListSerializer):
             if self._is_programme_officer(obj, user):
                 available_actions.append('cancel')
 
+        if obj.status == EFaceForm.STATUSES.rejected:
+            if self._is_programme_officer(obj, user):
+                available_actions.append('submit')
+
         if obj.status == EFaceForm.STATUSES.submitted:
             if self._is_programme_officer(obj, user):
                 available_actions.append('send_to_vision')
