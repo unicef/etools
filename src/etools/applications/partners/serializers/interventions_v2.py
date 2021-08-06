@@ -358,6 +358,7 @@ class MinimalInterventionListSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'title',
+            'number',
         )
 
 

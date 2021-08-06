@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 
+from etools.applications.action_points.admin import ActionPointAdmin
 from etools.applications.partners.admin import AttachmentSingleInline
 from etools.applications.psea.models import (
     Answer,
@@ -68,11 +69,5 @@ class AssessorAdmin(admin.ModelAdmin):
 
 
 @admin.register(AssessmentActionPoint)
-class AssessmentActionPointAdmin(admin.ModelAdmin):
-    readonly_fields = ['status']
-    search_fields = ('author__username', 'assigned_to__username',)
-    list_display = (
-        'psea_assessment', 'author', 'assigned_to', 'due_date', 'status',
-    )
-    raw_id_fields = ('section', 'office', 'location', 'cp_output', 'partner', 'intervention', 'tpm_activity',
-                     'psea_assessment', 'travel_activity', 'engagement', 'author', 'assigned_by', 'assigned_to')
+class AssessmentActionPointAdmin(ActionPointAdmin):
+    list_display = ('psea_assessment', ) + ActionPointAdmin.list_display
