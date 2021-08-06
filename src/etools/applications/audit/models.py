@@ -1,7 +1,7 @@
 from decimal import DivisionByZero, InvalidOperation
 
 from django.contrib.auth import get_user_model
-from django.contrib.postgres.fields import ArrayField, JSONField
+from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
 from django.db import connection, models
 from django.db.transaction import atomic
@@ -395,7 +395,7 @@ class Risk(models.Model):
         on_delete=models.CASCADE,
     )
     value = models.SmallIntegerField(choices=VALUES, null=True, blank=True, verbose_name=_('Value'))
-    extra = JSONField(blank=True, null=True, verbose_name=_('Extra'))
+    extra = models.JSONField(blank=True, null=True, verbose_name=_('Extra'))
 
     def __str__(self):
         return 'Risk at {}, {}'.format(self.engagement, self.value)
