@@ -413,39 +413,34 @@ TENANT_DOMAIN_MODEL = "core.Domain"
 # https://django-tenant-schemas.readthedocs.io/en/latest/use.html#performance-considerations
 TENANT_LIMIT_SET_CALLS = True
 
-# django-rest-framework-jwt: http://getblimp.github.io/django-rest-framework-jwt/
-JWT_AUTH = {
-    'JWT_ENCODE_HANDLER':
-    'rest_framework_jwt.utils.jwt_encode_handler',
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': datetime.timedelta(minutes=480),
+    'REFRESH_TOKEN_LIFETIME': datetime.timedelta(days=1),
+    'ROTATE_REFRESH_TOKENS': False,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'UPDATE_LAST_LOGIN': False,
 
-    'JWT_DECODE_HANDLER':
-    'rest_framework_jwt.utils.jwt_decode_handler',
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY,
+    'VERIFYING_KEY': None,
+    'AUDIENCE': None,
+    'ISSUER': None,
+    'LEEWAY': 1000,
 
-    'JWT_PAYLOAD_HANDLER':
-    'rest_framework_jwt.utils.jwt_payload_handler',
+    'AUTH_HEADER_TYPES': ('JWT',),
+    'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
+    'USER_ID_FIELD': 'pk',
+    'USER_ID_CLAIM': 'user_id',
 
-    'JWT_PAYLOAD_GET_USER_ID_HANDLER':
-    'rest_framework_jwt.utils.jwt_get_user_id_from_payload_handler',
+    'AUTH_TOKEN_CLASSES': ('etools.applications.core.simplejwt.LeewayAccessToken',),
+    'TOKEN_TYPE_CLAIM': 'token_type',
+    'JTI_CLAIM': 'jti',
 
-    'JWT_PAYLOAD_GET_USERNAME_HANDLER':
-    'rest_framework_jwt.utils.jwt_get_username_from_payload_handler',
-
-    'JWT_RESPONSE_PAYLOAD_HANDLER':
-    'rest_framework_jwt.utils.jwt_response_payload_handler',
-
-    'JWT_ALGORITHM': 'HS256',
-    'JWT_VERIFY': True,
-    'JWT_VERIFY_EXPIRATION': True,
-    'JWT_LEEWAY': 30,
-    'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=30000),
-    'JWT_AUDIENCE': None,
-    'JWT_ISSUER': None,
-
-    'JWT_ALLOW_REFRESH': False,
-    'JWT_REFRESH_EXPIRATION_DELTA': datetime.timedelta(days=7),
-
-    'JWT_AUTH_HEADER_PREFIX': 'JWT',
+    'SLIDING_TOKEN_REFRESH_EXP_CLAIM': 'refresh_exp',
+    'SLIDING_TOKEN_LIFETIME': datetime.timedelta(minutes=5),
+    'SLIDING_TOKEN_REFRESH_LIFETIME': datetime.timedelta(days=1),
 }
+LEEWAY = 1000
 
 SENTRY_DSN = get_from_secrets_or_env('SENTRY_DSN')  # noqa: F405
 
@@ -519,7 +514,6 @@ SOCIAL_AUTH_PROTECTED_USER_FIELDS = ['email']
 # In case we decide to whitelist:
 # SOCIAL_AUTH_WHITELISTED_DOMAINS = ['unicef.org', 'google.com', 'ravdev.com']
 LOGIN_ERROR_URL = "/workspace_inactive"
-JWT_LEEWAY = 1000
 
 SOCIAL_PASSWORD_RESET_POLICY = os.getenv('AZURE_B2C_PASS_RESET_POLICY', "B2C_1_PasswordResetPolicy")
 SOCIAL_AUTH_PIPELINE = (

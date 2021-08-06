@@ -5,11 +5,12 @@ from django.shortcuts import redirect
 from django.urls import reverse
 from django.views.generic import RedirectView
 
-from rest_framework.permissions import IsAuthenticated
+import jwt
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework_jwt.serializers import jwt_encode_handler, jwt_payload_handler
-from rest_framework_jwt.views import jwt_response_payload_handler
+from rest_framework_simplejwt.tokens import RefreshToken
+
+from etools.applications.core.permissions import IsUNICEFUser
 
 
 class MainView(RedirectView):
@@ -23,15 +24,32 @@ class MainView(RedirectView):
 
 
 class IssueJWTRedirectView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = (IsUNICEFUser, )
 
     def get(self, request):
         user = self.request.user
-        payload = jwt_payload_handler(user)
-        token = jwt_encode_handler(payload)
-        response_data = jwt_response_payload_handler(token, user, request)
 
-        return Response(data=response_data)
+        refresh = RefreshToken.for_user(user)
+        access = str(refresh.access_token)
+
+        decoded_token = jwt.decode(access,
+                                   settings.SIMPLE_JWT['SIGNING_KEY'],
+                                   [settings.SIMPLE_JWT['ALGORITHM']],
+                                   )
+
+        decoded_token.update({
+            'groups': list(user.groups.values_list('name', flat=True)),
+            'username': user.username,
+            'email': user.email,
+        })
+
+        encoded = jwt.encode(
+            decoded_token,
+            settings.SIMPLE_JWT['SIGNING_KEY'],
+            algorithm=settings.SIMPLE_JWT['ALGORITHM']
+        )
+
+        return Response(data={'token': encoded})
 
 
 def logout_view(request):
