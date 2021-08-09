@@ -8,6 +8,8 @@ from etools_validator.utils import check_required_fields, check_rigid_fields
 from etools_validator.validation import CompleteValidation
 
 from etools.applications.partners.permissions import InterventionPermissions
+from etools.applications.partners.validation.exceptions import DetailedStateValidationError
+from etools.applications.partners.validation.validation import DetailedErrorValidationMixin
 from etools.applications.reports.models import AppliedIndicator, InterventionActivity
 
 logger = logging.getLogger('partners.interventions.validation')
@@ -330,7 +332,7 @@ def review_was_accepted(i):
     return r.overall_approval if r else False
 
 
-class InterventionValid(CompleteValidation):
+class InterventionValid(DetailedErrorValidationMixin, CompleteValidation):
     VALIDATION_CLASS = 'partners.Intervention'
     # validations that will be checked on every object... these functions only take the new instance
     BASIC_VALIDATIONS = [
@@ -369,8 +371,11 @@ class InterventionValid(CompleteValidation):
         required_fields = [f for f in self.permissions['required'] if self.permissions['required'][f] is True]
         required_valid, fields = check_required_fields(intervention, required_fields)
         if not required_valid:
-            raise StateValidationError(['Required fields not completed in {}: {}'.format(
-                intervention.status, ', '.join(f for f in fields))])
+            raise DetailedStateValidationError(
+                'required_in_status',
+                'Required fields not completed in {}: {}'.format(intervention.status, ', '.join(f for f in fields)),
+                {'fields': fields, 'status': intervention.status},
+            )
 
     def check_rigid_fields(self, intervention, related=False):
         # this can be set if running in a task and old_instance is not set

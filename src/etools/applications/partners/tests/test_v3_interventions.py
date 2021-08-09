@@ -638,7 +638,7 @@ class TestUpdate(BaseInterventionTestCase):
             user=self.user,
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
-        self.assertIn('Required fields not completed in draft', response.data[0])
+        self.assertIn('Required fields not completed in draft', response.data[0]['description'])
 
 
 class TestDelete(BaseInterventionTestCase):
