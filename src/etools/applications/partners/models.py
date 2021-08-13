@@ -2411,15 +2411,35 @@ class Intervention(TimeStampedModel):
 
     @property
     def reference_number(self):
+        """
+        if intervention is in amendment, replace id part from reference number to original one
+        and add postfix to keep it unique
+        """
+        if self.in_amendment:
+            try:
+                document_id = self.amendment.intervention_id
+                amendment_relative_number = self.amendment.amendment_number
+            except InterventionAmendment.DoesNotExist:
+                document_id = self.id
+                amendment_relative_number = None
+        else:
+            document_id = self.id
+            amendment_relative_number = None
+
         if self.document_type != Intervention.SSFA:
-            number = '{agreement}/{type}{year}{id}'.format(
+            reference_number = '{agreement}/{type}{year}{id}'.format(
                 agreement=self.agreement.base_number,
                 type=self.document_type,
                 year=self.reference_number_year,
-                id=self.id
+                id=document_id
             )
-            return number
-        return self.agreement.base_number
+        else:
+            reference_number = self.agreement.base_number
+
+        if amendment_relative_number:
+            reference_number += '-' + amendment_relative_number
+
+        return reference_number
 
     def update_reference_number(self, amendment_number=None):
         if amendment_number:
@@ -2642,9 +2662,11 @@ class InterventionAmendment(TimeStampedModel):
 
     def compute_reference_number(self):
         number = str(self.intervention.amendments.filter(kind=self.kind).count() + 1)
-        if self.kind == self.KIND_CONTINGENCY:
-            number = 'Contingency/' + number
-        return number
+        code = {
+            self.KIND_NORMAL: 'amd',
+            self.KIND_CONTINGENCY: 'camd',
+        }[self.kind]
+        return f'{code}/{number}'
 
     @transaction.atomic
     def save(self, **kwargs):
@@ -2653,14 +2675,17 @@ class InterventionAmendment(TimeStampedModel):
         # TODO: validation don't allow save on objects that have attached
         # signed amendment but don't have a signed date
 
-        # check if temporary number is needed or amendment number needs to be
-        # set
-        if self.pk is None:
+        new_amendment = self.pk is None
+        if new_amendment:
             self.amendment_number = self.compute_reference_number()
-            self.intervention.save(amendment_number=self.amendment_number)
             self._copy_intervention()
 
-        return super().save(**kwargs)
+        super().save(**kwargs)
+
+        if new_amendment:
+            # re-calculate intervention reference number when amendment relation is available
+            self.amended_intervention.update_reference_number()
+            self.amended_intervention.save()
 
     def delete(self, **kwargs):
         self.amended_intervention.delete()
@@ -2717,6 +2742,8 @@ class InterventionAmendment(TimeStampedModel):
         self.amended_intervention = None
         self.is_active = False
         self.save()
+
+        self.intervention.save(amendment_number=self.intervention.amendments.filter(is_active=False).count())
 
         amended_intervention.delete()
 
