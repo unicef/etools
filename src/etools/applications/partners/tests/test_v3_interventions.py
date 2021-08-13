@@ -253,6 +253,29 @@ class TestList(BaseInterventionTestCase):
         self.assertNotIn('country_programme', intervention_data)
         self.assertEqual([country_programme.id], intervention_data['country_programmes'])
 
+    def test_intervention_list_filter_by_budget_owner(self):
+        first_budget_owner = UserFactory()
+        second_budget_owner = UserFactory()
+        interventions = [
+            InterventionFactory(budget_owner=first_budget_owner).id,
+            InterventionFactory(budget_owner=second_budget_owner).id,
+        ]
+        InterventionFactory()
+        InterventionFactory()
+        response = self.forced_auth_req(
+            'get',
+            reverse('pmp_v3:intervention-list'),
+            user=self.user,
+            QUERY_STRING=f'budget_owner__in={first_budget_owner.id},{second_budget_owner.id}'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+        self.assertCountEqual(
+            [i['id'] for i in response.data],
+            interventions,
+        )
+
 
 class TestDetail(BaseInterventionTestCase):
     def setUp(self):
