@@ -71,9 +71,9 @@ class YearPlan(TimeStampedModel):
 class QuestionTargetMixin(models.Model):
     partner = models.ForeignKey(PartnerOrganization, blank=True, null=True, verbose_name=_('Partner'),
                                 on_delete=models.CASCADE, related_name='+')
-    cp_output = models.ForeignKey(Result, blank=True, null=True, verbose_name=_('Partner'),
+    cp_output = models.ForeignKey(Result, blank=True, null=True, verbose_name=_('CP Output'),
                                   on_delete=models.CASCADE, related_name='+')
-    intervention = models.ForeignKey(Intervention, blank=True, null=True, verbose_name=_('Partner'),
+    intervention = models.ForeignKey(Intervention, blank=True, null=True, verbose_name=_('Intervention'),
                                      on_delete=models.CASCADE, related_name='+')
 
     @property
