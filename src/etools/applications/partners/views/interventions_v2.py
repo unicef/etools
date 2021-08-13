@@ -123,6 +123,7 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
         ('contingency_pd', 'contingency_pd'),
         ('grants', 'frs__fr_items__grant_number__icontains'),
         ('donors', 'frs__fr_items__donor__icontains'),
+        ('budget_owner__in', 'budget_owner__in')
     )
 
     SERIALIZER_MAP = {
