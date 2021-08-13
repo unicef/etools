@@ -388,6 +388,7 @@ class InterventionExportSerializer(serializers.ModelSerializer):
             "total_attachments",
             "cp_outputs",
             "url",
+            "cfei_number",
         )
 
     def get_unicef_signatory(self, obj):

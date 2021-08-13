@@ -232,6 +232,7 @@ class InterventionCSVRenderer(r.CSVRenderer):
         "submission_date_prc", "review_date_prc", "partner_authorized_officer_signatory", "signed_by_partner_date",
         "unicef_signatory", "signed_by_unicef_date", "days_from_submission_to_signed", "days_from_review_to_signed",
         "amendment_sum", "last_amendment_date", "attachment_type", "total_attachments", "cp_outputs", "url",
+        "cfei_number",
     ]
 
     labels = {
@@ -283,6 +284,7 @@ class InterventionCSVRenderer(r.CSVRenderer):
         "total_attachments": "# of attachments",
         "cp_outputs": "CP Outputs",
         "url": "URL",
+        "cfei_number": "UNPP Number",
     }
 
 

@@ -153,6 +153,7 @@ class TestModelExport(BaseTenantTestCase):
             "# of attachments",
             "CP Outputs",
             "URL",
+            "UNPP Number",
         ])
 
         self.assertEqual(dataset[0], (
@@ -209,6 +210,7 @@ class TestModelExport(BaseTenantTestCase):
             str(self.intervention.attachments.count()),
             '',
             'https://testserver/pmp/interventions/{}/details/'.format(self.intervention.id),
+            '',
         ))
 
     def test_v3_intervention_export_api(self):
