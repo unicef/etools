@@ -123,6 +123,12 @@ class PMPInterventionAcceptOnBehalfOfPartner(PMPInterventionActionView):
             "accepted_on_behalf_of_partner": True,
         })
 
+        if not pd.date_sent_to_partner:
+            # if document accepted before it was sent to partner
+            request.data.update({
+                "date_sent_to_partner": timezone.now().date(),
+            })
+
         if not pd.submission_date and 'submission_date' not in request.data:
             request.data.update({
                 "submission_date": timezone.now().strftime("%Y-%m-%d"),
