@@ -1,8 +1,8 @@
 import datetime
+from functools import lru_cache
 
 from django.apps import apps
-from django.utils.lru_cache import lru_cache
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from etools_validator.utils import check_rigid_related
 from rest_framework import permissions
@@ -16,10 +16,12 @@ from etools.libraries.pythonlib.collections import HashableDict
 # Initially, this is only being used for PRP-related endpoints.
 
 
+UNICEF_USER = 'UNICEF User'
 READ_ONLY_API_GROUP_NAME = 'Read-Only API'
 SENIOR_MANAGEMENT_GROUP = 'Senior Management Team'
 PARTNERSHIP_MANAGER_GROUP = 'Partnership Manager'
 REPRESENTATIVE_OFFICE_GROUP = 'Representative Office'
+PRC_SECRETARY = 'PRC Secretary'
 
 
 class PMPPermissions:
@@ -96,7 +98,7 @@ class PMPPermissions:
 class InterventionPermissions(PMPPermissions):
 
     MODEL_NAME = 'partners.Intervention'
-    EXTRA_FIELDS = ['sections_present', 'pd_outputs', 'final_partnership_review']
+    EXTRA_FIELDS = ['sections_present', 'pd_outputs', 'final_partnership_review', 'prc_reviews']
 
     def __init__(self, **kwargs):
         """
@@ -125,6 +127,12 @@ class InterventionPermissions(PMPPermissions):
         def unlocked(instance):
             return not instance.locked
 
+        def unicef_not_accepted(instance):
+            return not instance.unicef_accepted
+
+        def not_ssfa(instance):
+            return instance.document_type != instance.SSFA
+
         staff_member = self.user.get_partner_staff_member()
 
         # focal points are prefetched, so just cast to array to collect ids
@@ -136,6 +144,14 @@ class InterventionPermissions(PMPPermissions):
         if staff_member and staff_member.id in partner_focal_points:
             self.user_groups.extend(['Partner User', 'Partner Focal Point'])
 
+        review = self.instance.review
+        if review:
+            if self.user.id == review.overall_approver_id:
+                self.user_groups.append('Overall Approver')
+
+            if review.prc_reviews.filter(overall_review=review, user=self.user).exists():
+                self.user_groups.append('PRC Officer')
+
         self.user_groups = list(set(self.user_groups))
 
         self.condition_map = {
@@ -143,7 +159,7 @@ class InterventionPermissions(PMPPermissions):
             'condition2': self.user in self.instance.partner_focal_points.all(),
             'contingency on': self.instance.contingency_pd is True,
             'not_in_amendment_mode': not user_added_amendment(self.instance),
-            'not_ssfa': self.instance.document_type != self.instance.SSFA,
+            'not_ssfa': not_ssfa(self.instance),
             'user_adds_amendment': user_added_amendment(self.instance),
             'prp_mode_on': not prp_mode_off(),
             'prp_mode_on+contingency_on': not prp_mode_off() and self.instance.contingency_pd,
@@ -157,7 +173,9 @@ class InterventionPermissions(PMPPermissions):
             'unicef_court': self.instance.unicef_court and unlocked(self.instance),
             'partner_court': not self.instance.unicef_court and unlocked(self.instance),
             'unlocked': unlocked(self.instance),
-            'is_spd': self.instance.document_type == self.instance.SPD
+            'is_spd': self.instance.document_type == self.instance.SPD,
+            'unicef_not_accepted': unicef_not_accepted(self.instance),
+            'not_ssfa+unicef_not_accepted': not_ssfa(self.instance) and unicef_not_accepted(self.instance),
         }
 
     # override get_permissions to enable us to prevent old interventions from being blocked on transitions
@@ -267,7 +285,7 @@ class PartnershipManagerPermission(permissions.BasePermission):
       - user must be (in 'Partnership Manager' group) OR
                      (listed as a partner staff member on the object)
     """
-    message = 'Accessing this item is not allowed.'
+    message = _('Accessing this item is not allowed.')
 
     def _has_access_permissions(self, user, obj):
         """True if --
@@ -303,7 +321,7 @@ class PartnershipManagerPermission(permissions.BasePermission):
 
 
 class PartnershipManagerRepPermission(permissions.BasePermission):
-    message = 'Accessing this item is not allowed.'
+    message = _('Accessing this item is not allowed.')
 
     def _has_access_permissions(self, user, object):
         if user.is_staff or object.partner.user_is_staff_member(user):
@@ -523,3 +541,16 @@ PMPAgreementPermission = (
         )
     ))
 )
+
+
+class UserBelongsToObjectPermission(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        if not hasattr(obj, 'user'):
+            return False
+
+        return obj.user == request.user
+
+
+class IsInterventionBudgetOwnerPermission(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        return obj.budget_owner and obj.budget_owner == request.user

@@ -1,4 +1,4 @@
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from rest_framework import serializers
 
@@ -15,26 +15,70 @@ from etools.applications.reports.serializers.exports import IndicatorExportFlatS
 
 class InterventionAmendmentExportSerializer(InterventionAmendmentCUSerializer):
     types = TypeArrayField(label=_("Types"))
-    signed_amendment_attachment = internal_prc_review = None
 
     class Meta:
         model = InterventionAmendment
-        fields = "__all__"
+        fields = (
+            'id',
+            'amendment_number',
+            # 'internal_prc_review',
+            'created',
+            'modified',
+            'kind',
+            'types',
+            'other_description',
+            'signed_date',
+            'intervention',
+            'is_active',
+            # signatures
+            'signed_by_unicef_date',
+            'signed_by_partner_date',
+            'unicef_signatory',
+            'partner_authorized_officer_signatory',
+            'signed_amendment_attachment',
+            'difference',
+        )
 
 
 class InterventionAmendmentExportFlatSerializer(
-        ExportSerializerMixin,
-        InterventionAmendmentExportSerializer
+    ExportSerializerMixin,
+    InterventionAmendmentExportSerializer
 ):
     intervention = serializers.CharField(
         label=_("Reference Number"),
         source="intervention.number",
     )
-    signed_amendment_attachment = internal_prc_review = None
+    unicef_signatory = serializers.SerializerMethodField()
+    partner_authorized_officer_signatory = serializers.SerializerMethodField()
 
     class Meta:
         model = InterventionAmendment
-        fields = "__all__"
+        fields = [
+            'id',
+            'amendment_number',
+            # 'internal_prc_review',
+            'created',
+            'modified',
+            'kind',
+            'types',
+            'other_description',
+            'signed_date',
+            'intervention',
+            'is_active',
+            # signatures
+            'signed_by_unicef_date',
+            'signed_by_partner_date',
+            'unicef_signatory',
+            'partner_authorized_officer_signatory',
+            'signed_amendment_attachment',
+            'difference',
+        ]
+
+    def get_unicef_signatory(self, obj):
+        return obj.unicef_signatory.email if obj.unicef_signatory else ""
+
+    def get_partner_authorized_officer_signatory(self, obj):
+        return obj.partner_authorized_officer_signatory.user.email if obj.partner_authorized_officer_signatory else ""
 
 
 class InterventionResultExportSerializer(InterventionResultSerializer):
@@ -387,7 +431,8 @@ class InterventionExportSerializer(serializers.ModelSerializer):
         return ', '.join([pf.get_full_name() for pf in obj.unicef_focal_points.all()])
 
     def get_cp_outputs(self, obj):
-        return ', '.join([rs.cp_output.name for rs in obj.result_links.all()])
+        # cp output can be not specified for interventions in development
+        return ', '.join([rs.cp_output.name for rs in obj.result_links.all() if rs.cp_output])
 
     def fr_currencies_ok(self, obj):
         return obj.frs__currency__count == 1 if obj.frs__currency__count else None

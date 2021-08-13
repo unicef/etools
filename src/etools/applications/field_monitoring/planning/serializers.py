@@ -1,6 +1,6 @@
 from copy import copy
 
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
 from unicef_attachments.fields import FileTypeModelChoiceField
@@ -110,12 +110,13 @@ class MonitoringActivityLightSerializer(serializers.ModelSerializer):
     location = SeparatedReadWriteField(read_field=LocationSerializer())
     location_site = SeparatedReadWriteField(read_field=LocationSiteSerializer())
 
-    person_responsible = SeparatedReadWriteField(read_field=MinimalUserSerializer())
+    visit_lead = SeparatedReadWriteField(read_field=MinimalUserSerializer())
     team_members = SeparatedReadWriteField(read_field=MinimalUserSerializer(many=True))
 
     partners = SeparatedReadWriteField(read_field=MinimalPartnerOrganizationListSerializer(many=True))
     interventions = SeparatedReadWriteField(read_field=FMInterventionListSerializer(many=True))
     cp_outputs = SeparatedReadWriteField(read_field=MinimalOutputListSerializer(many=True))
+    sections = SeparatedReadWriteField(read_field=SectionSerializer(many=True), required=False)
 
     checklists_count = serializers.ReadOnlyField()
 
@@ -124,25 +125,25 @@ class MonitoringActivityLightSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'reference_number',
             'monitor_type', 'tpm_partner',
-            'person_responsible', 'team_members',
+            'visit_lead', 'team_members',
             'location', 'location_site',
             'partners', 'interventions', 'cp_outputs',
             'start_date', 'end_date',
             'checklists_count',
             'reject_reason', 'report_reject_reason', 'cancel_reason',
             'status',
+            'sections',
         )
 
 
 class MonitoringActivitySerializer(UserContextSerializerMixin, MonitoringActivityLightSerializer):
     permissions = serializers.SerializerMethodField(read_only=True)
     transitions = serializers.SerializerMethodField(read_only=True)
-    field_office = SeparatedReadWriteField(read_field=OfficeSerializer())
-    sections = SeparatedReadWriteField(read_field=SectionSerializer(many=True), required=False)
+    offices = SeparatedReadWriteField(read_field=OfficeSerializer(many=True), required=False)
 
     class Meta(MonitoringActivityLightSerializer.Meta):
         fields = MonitoringActivityLightSerializer.Meta.fields + (
-            'field_office', 'sections', 'permissions', 'transitions',
+            'offices', 'permissions', 'transitions',
         )
 
     def get_permissions(self, obj):

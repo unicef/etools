@@ -2,7 +2,6 @@
 
 import datetime
 
-import django.contrib.postgres.fields.jsonb
 import django.db.models.deletion
 import django.db.models.manager
 from django.db import migrations, models
@@ -133,7 +132,7 @@ class Migration(migrations.Migration):
                 ('status', models.CharField(blank=True, choices=[('uploaded', 'Uploaded'), ('processing', 'Processing'), (
                     'failed', 'Failed'), ('done', 'Done')], max_length=64, null=True, verbose_name='Status')),
                 ('upload_date', models.DateTimeField(auto_now_add=True, verbose_name='Upload Date')),
-                ('errors', django.contrib.postgres.fields.jsonb.JSONField(
+                ('errors', models.JSONField(
                     blank=True, default=dict, null=True, verbose_name='Errors')),
             ],
         ),

@@ -3,6 +3,7 @@ import csv
 import decimal
 
 from django.contrib.auth import get_user_model
+from django.db import transaction
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -11,7 +12,10 @@ from unicef_attachments.fields import AttachmentSingleFileField
 from etools.applications.partners.models import (
     FileType,
     Intervention,
+    InterventionAmendment,
     InterventionManagementBudget,
+    InterventionManagementBudgetItem,
+    InterventionReview,
     InterventionRisk,
     InterventionSupplyItem,
 )
@@ -56,6 +60,7 @@ class InterventionSupplyItemSerializer(serializers.ModelSerializer):
             "total_price",
             "other_mentions",
             "unicef_product_number",
+            "provided_by",
         )
 
     def create(self, validated_data):
@@ -118,7 +123,20 @@ class InterventionSupplyItemUploadSerializer(serializers.Serializer):
         return data
 
 
+class InterventionManagementBudgetItemSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(required=False)
+
+    class Meta:
+        model = InterventionManagementBudgetItem
+        fields = (
+            'id', 'kind', 'name',
+            'unit', 'unit_price', 'no_units',
+            'unicef_cash', 'cso_cash'
+        )
+
+
 class InterventionManagementBudgetSerializer(serializers.ModelSerializer):
+    items = InterventionManagementBudgetItemSerializer(many=True, required=False)
     act1_total = serializers.SerializerMethodField()
     act2_total = serializers.SerializerMethodField()
     act3_total = serializers.SerializerMethodField()
@@ -129,6 +147,7 @@ class InterventionManagementBudgetSerializer(serializers.ModelSerializer):
     class Meta:
         model = InterventionManagementBudget
         fields = (
+            "items",
             "act1_unicef",
             "act1_partner",
             "act1_total",
@@ -151,6 +170,44 @@ class InterventionManagementBudgetSerializer(serializers.ModelSerializer):
 
     def get_act3_total(self, obj):
         return str(obj.act3_unicef + obj.act3_partner)
+
+    @transaction.atomic
+    def create(self, validated_data):
+        items = validated_data.pop('items', None)
+        instance = super().create(validated_data)
+        self.set_items(instance, items)
+        return instance
+
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        items = validated_data.pop('items', None)
+        instance = super().update(instance, validated_data)
+        self.set_items(instance, items)
+        return instance
+
+    def set_items(self, instance, items):
+        if items is None:
+            return
+
+        updated_pks = []
+        for i, item in enumerate(items):
+            item_instance = instance.items.filter(pk=item.get('id')).first()
+            if item_instance:
+                serializer = InterventionManagementBudgetItemSerializer(
+                    data=item, instance=item_instance, partial=self.partial,
+                )
+            else:
+                serializer = InterventionManagementBudgetItemSerializer(data=item)
+            if not serializer.is_valid():
+                raise ValidationError({'items': {i: serializer.errors}})
+
+            updated_pks.append(serializer.save(budget=instance).pk)
+
+        # cleanup, remove unused options
+        instance.items.exclude(pk__in=updated_pks).delete()
+
+        # doing update in serializer instead of post_save to avoid big number of budget re-calculations
+        instance.update_cash()
 
 
 class InterventionDetailSerializer(serializers.ModelSerializer):
@@ -200,6 +257,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     unicef_focal_points = MinimalUserSerializer(many=True)
     partner_focal_points = PartnerStaffMemberUserSerializer(many=True)
     partner_authorized_officer_signatory = PartnerStaffMemberUserSerializer()
+    original_intervention = serializers.SerializerMethodField()
 
     def get_location_p_codes(self, obj):
         return [location.p_code for location in obj.flat_locations.all()]
@@ -270,37 +328,79 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             profile__country=self.context['request'].user.profile.country
         ).exists()
 
+    def _is_overall_approver(self, obj, user):
+        if not obj.review:
+            return False
+
+        return obj.review.overall_approver_id == user.pk
+
     def _is_partner_user(self, obj, user):
         return user.email in [o.email for o in obj.partner_focal_points.all()]
 
+    def _is_unicef_focal_point(self, obj, user):
+        return user.email in [o.email for o in obj.unicef_focal_points.all()]
+
     def get_available_actions(self, obj):
-        default_ordering = ["send_to_unicef", "send_to_partner",
-                            "accept", "review", "sign", "reject_review", "unlock", "cancel", "suspend", "unsuspend"
-                            "terminate", "download_comments", "export", "generate_pdf"]
+        default_ordering = [
+            "send_to_unicef",
+            "send_to_partner",
+            "accept",
+            "accept_on_behalf_of_partner",
+            "individual_review",
+            "review",
+            "sign",
+            "reject_review",
+            "unlock",
+            "cancel",
+            "suspend",
+            "unsuspend",
+            "terminate",
+            "download_comments",
+            "export_results",
+            "amendment_merge",
+        ]
         available_actions = [
             "download_comments",
-            "export",
-            "generate_pdf",
+            "export_results",
         ]
         user = self.context['request'].user
 
         # Partnership Manager
         if self._is_partnership_manager():
-            if obj.status in [obj.DRAFT, obj.REVIEW, obj.SIGNATURE]:
-                available_actions.append("cancel")
-            elif obj.status not in [obj.ENDED, obj.CLOSED, obj.TERMINATED]:
-                available_actions.append("terminate")
-                if obj.status not in [obj.SUSPENDED]:
-                    available_actions.append("suspend")
+            # amendments should be deleted instead of moving to cancelled/terminated
+            if not obj.in_amendment:
+                if obj.status in [obj.SIGNED, obj.ACTIVE, obj.IMPLEMENTED, obj.SUSPENDED]:
+                    available_actions.append("terminate")
+                    if obj.status not in [obj.SUSPENDED]:
+                        available_actions.append("suspend")
             if obj.status == obj.SUSPENDED:
                 available_actions.append("unsuspend")
-            if obj.status == obj.REVIEW:
-                available_actions.append("sign")
-                available_actions.append("reject_review")
+
+        status_is_cancellable = obj.status in [obj.DRAFT, obj.REVIEW, obj.SIGNATURE]
+        budget_owner_or_focal_point = obj.budget_owner == user or self._is_unicef_focal_point(obj, user)
+        if not obj.in_amendment and status_is_cancellable and budget_owner_or_focal_point:
+            available_actions.append("cancel")
+
+        # only overall approver can approve or reject review
+        if obj.status == obj.REVIEW and self._is_overall_approver(obj, user):
+            available_actions.append("sign")
+            available_actions.append("reject_review")
+
+        # PD is in review and user prc review not started
+        if obj.status == obj.REVIEW and obj.review and obj.review.prc_reviews.filter(
+            user=user, overall_approval__isnull=True
+        ).exists():
+            available_actions.append("individual_review")
+
+        if obj.in_amendment and obj.status == obj.SIGNED and obj.budget_owner == user:
+            available_actions.append("amendment_merge")
 
         # if NOT in Development status then we're done
         if obj.status != obj.DRAFT:
             return [action for action in default_ordering if action in available_actions]
+
+        if obj.budget_owner == user and not obj.partner_accepted:
+            available_actions.append("accept_on_behalf_of_partner")
 
         # PD is assigned to UNICEF
         if obj.unicef_court:
@@ -376,6 +476,14 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             }
             for i, quarter in enumerate(get_quarters_range(obj.start, obj.end))
         ]
+
+    def get_original_intervention(self, obj):
+        if obj.in_amendment:
+            try:
+                return obj.amendment.intervention_id
+            except InterventionAmendment.DoesNotExist:
+                return None
+        return None
 
     class Meta:
         model = Intervention
@@ -485,6 +593,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "unicef_court",
             "unicef_focal_points",
             "unicef_signatory",
+            "original_intervention",
         )
 
 
@@ -502,3 +611,19 @@ class InterventionListSerializer(InterventionV2ListSerializer):
         )
         # remove old legacy field to avoid inconvenience
         fields = tuple(f for f in fields if f != 'country_programme')
+
+
+class InterventionReviewActionSerializer(serializers.ModelSerializer):
+    review_type = serializers.ChoiceField(required=True, choices=InterventionReview.INTERVENTION_REVIEW_TYPES)
+
+    class Meta:
+        model = InterventionReview
+        fields = ('id', 'review_type')
+
+
+class AmendedInterventionReviewActionSerializer(serializers.ModelSerializer):
+    review_type = serializers.ChoiceField(required=True, choices=InterventionReview.ALL_REVIEW_TYPES)
+
+    class Meta:
+        model = InterventionReview
+        fields = ('id', 'review_type')

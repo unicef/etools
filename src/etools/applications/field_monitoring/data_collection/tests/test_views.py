@@ -257,12 +257,12 @@ class DataCollectionTestMixin(FMBaseTestCaseMixin):
         super().setUpTestData()
 
         cls.team_member = UserFactory(unicef_user=True)
-        cls.person_responsible = UserFactory(unicef_user=True)
+        cls.visit_lead = UserFactory(unicef_user=True)
 
         partner = PartnerFactory()
         cls.activity = MonitoringActivityFactory(
             status='data_collection',
-            person_responsible=cls.person_responsible,
+            visit_lead=cls.visit_lead,
             team_members=[cls.team_member],
             partners=[partner],
             questions__count=2,
@@ -319,8 +319,8 @@ class TestChecklistsView(DataCollectionTestMixin, APIViewSetTestCase):
 
         self._test_create(self.team_member, {'method': MethodFactory(use_information_source=False).pk})
 
-    def test_start_person_responsible(self):
-        self._test_create(self.person_responsible, {
+    def test_start_visit_lead(self):
+        self._test_create(self.visit_lead, {
             'method': MethodFactory().pk,
             'information_source': 'teacher'
         })
@@ -339,21 +339,21 @@ class TestChecklistsView(DataCollectionTestMixin, APIViewSetTestCase):
         checklist = StartedChecklistFactory(monitoring_activity=self.activity)
         self._test_destroy(self.unicef_user, checklist, expected_status=status.HTTP_403_FORBIDDEN)
 
-    def test_remove_person_responsible(self):
+    def test_remove_visit_lead(self):
         checklist = StartedChecklistFactory(monitoring_activity=self.activity)
-        self._test_destroy(self.person_responsible, checklist)
+        self._test_destroy(self.visit_lead, checklist)
 
     def test_remove_team_member(self):
         checklist = StartedChecklistFactory(monitoring_activity=self.activity)
         self._test_destroy(self.team_member, checklist)
 
     def test_remove_protected_in_finalize_report(self):
-        person_responsible = UserFactory(unicef_user=True)
-        activity = MonitoringActivityFactory(status='report_finalization', person_responsible=person_responsible)
+        visit_lead = UserFactory(unicef_user=True)
+        activity = MonitoringActivityFactory(status='report_finalization', visit_lead=visit_lead)
         original_activity, self.activity = self.activity, activity
 
         checklist = StartedChecklistFactory(monitoring_activity=activity)
-        self._test_destroy(person_responsible, checklist, expected_status=status.HTTP_403_FORBIDDEN)
+        self._test_destroy(visit_lead, checklist, expected_status=status.HTTP_403_FORBIDDEN)
 
         self.activity = original_activity
 
@@ -368,7 +368,7 @@ class TestChecklistOverallFindingsView(ChecklistDataCollectionTestMixin, APIView
         return [self.activity.pk, self.started_checklist.id]
 
     def test_list(self):
-        with self.assertNumQueries(8):
+        with self.assertNumQueries(6):
             self._test_list(self.unicef_user, self.started_checklist.overall_findings.all())
 
     def test_update_unicef(self):
@@ -379,8 +379,8 @@ class TestChecklistOverallFindingsView(ChecklistDataCollectionTestMixin, APIView
             'narrative_finding': 'some test text'
         })
 
-    def test_update_person_responsible(self):
-        self._test_update(self.person_responsible, self.overall_finding, {
+    def test_update_visit_lead(self):
+        self._test_update(self.visit_lead, self.overall_finding, {
             'narrative_finding': 'some test text'
         })
 
@@ -525,8 +525,8 @@ class TestChecklistFindingsView(ChecklistDataCollectionTestMixin, APIViewSetTest
             'value': 'text value'
         })
 
-    def test_update_person_responsible(self):
-        self._test_update(self.person_responsible, self.finding, {
+    def test_update_visit_lead(self):
+        self._test_update(self.visit_lead, self.finding, {
             'value': 'text value'
         })
 
@@ -555,7 +555,7 @@ class TestActivityOverallFindingsView(ChecklistDataCollectionTestMixin, APIViewS
 
         AttachmentFactory(content_object=checklist.overall_findings.first())
 
-        with self.assertNumQueries(11):
+        with self.assertNumQueries(9):
             response = self._test_list(self.unicef_user, [self.overall_finding])
         self.assertIn('attachments', response.data['results'][0])
         self.assertNotEqual(response.data['results'][0]['attachments'], [])
@@ -569,8 +569,8 @@ class TestActivityOverallFindingsView(ChecklistDataCollectionTestMixin, APIViewS
     def test_update_team_member(self):
         self._test_update(self.team_member, self.overall_finding, {}, expected_status=status.HTTP_403_FORBIDDEN)
 
-    def test_update_person_responsible(self):
-        response = self._test_update(self.person_responsible, self.overall_finding, {
+    def test_update_visit_lead(self):
+        response = self._test_update(self.visit_lead, self.overall_finding, {
             'narrative_finding': 'some test text',
             'on_track': True
         })
@@ -623,14 +623,14 @@ class TestActivityFindingsView(ChecklistDataCollectionTestMixin, APIViewSetTestC
     def test_update_team_member(self):
         self._test_update(self.team_member, self.overall_finding, {}, expected_status=status.HTTP_403_FORBIDDEN)
 
-    def test_update_person_responsible(self):
-        self._test_update(self.person_responsible, self.overall_finding, {
+    def test_update_visit_lead(self):
+        self._test_update(self.visit_lead, self.overall_finding, {
             'value': 'text value'
         })
 
     def test_bulk_update(self):
         response = self.make_list_request(
-            self.person_responsible,
+            self.visit_lead,
             method='patch',
             data=[{'id': self.overall_finding.pk, 'value': 'text value'}]
         )
@@ -660,7 +660,7 @@ class TestActivityChecklistOverallAttachments(ChecklistDataCollectionTestMixin, 
         AttachmentFactory(content_object=self.activity.overall_findings.first())
         checklist_overall_attachment = AttachmentFactory(content_object=self.started_checklist.overall_findings.first())
 
-        with self.assertNumQueries(9):
+        with self.assertNumQueries(7):
             self._test_list(self.unicef_user, expected_objects=[checklist_overall_attachment])
 
     def test_file_types(self):

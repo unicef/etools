@@ -23,11 +23,15 @@ from etools.applications.partners.views.interventions_v3 import (
     PMPInterventionSupplyItemListCreateView,
     PMPInterventionSupplyItemRetrieveUpdateView,
     PMPInterventionSupplyItemUploadView,
+    PMPOfficerReviewDetailView,
+    PMPOfficerReviewListView,
     PMPReviewDetailView,
+    PMPReviewNotifyView,
     PMPReviewView,
 )
 from etools.applications.partners.views.interventions_v3_actions import (
-    PMPInterventionAcceptReviewView,
+    PMPAmendedInterventionMerge,
+    PMPInterventionAcceptOnBehalfOfPartner,
     PMPInterventionAcceptView,
     PMPInterventionCancelView,
     PMPInterventionRejectReviewView,
@@ -35,8 +39,10 @@ from etools.applications.partners.views.interventions_v3_actions import (
     PMPInterventionSendToPartnerView,
     PMPInterventionSendToUNICEFView,
     PMPInterventionSignatureView,
+    PMPInterventionSuspendView,
     PMPInterventionTerminateView,
     PMPInterventionUnlockView,
+    PMPInterventionUnsuspendView,
 )
 from etools.applications.partners.views.partner_organization_v3 import (
     PMPPartnerOrganizationListAPIView,
@@ -90,16 +96,14 @@ urlpatterns = [
         name='intervention-accept',
     ),
     path(
+        'interventions/<int:pk>/accept_on_behalf_of_partner/',
+        view=PMPInterventionAcceptOnBehalfOfPartner.as_view(http_method_names=['patch']),
+        name='intervention-accept-behalf-of-partner',
+    ),
+    path(
         'interventions/<int:pk>/review/',
         view=PMPInterventionReviewView.as_view(http_method_names=['patch']),
         name='intervention-review',
-    ),
-    path(
-        'interventions/<int:pk>/accept_review/',
-        view=PMPInterventionAcceptReviewView.as_view(
-            http_method_names=['patch'],
-        ),
-        name='intervention-accept-review',
     ),
     path(
         'interventions/<int:pk>/reject_review/',
@@ -119,6 +123,16 @@ urlpatterns = [
         name='intervention-terminate',
     ),
     path(
+        'interventions/<int:pk>/suspend/',
+        view=PMPInterventionSuspendView.as_view(http_method_names=['patch']),
+        name='intervention-suspend',
+    ),
+    path(
+        'interventions/<int:pk>/unsuspend/',
+        view=PMPInterventionUnsuspendView.as_view(http_method_names=['patch']),
+        name='intervention-unsuspend',
+    ),
+    path(
         'interventions/<int:pk>/sign/',
         view=PMPInterventionSignatureView.as_view(http_method_names=['patch']),
         name='intervention-signature',
@@ -127,6 +141,11 @@ urlpatterns = [
         'interventions/<int:pk>/unlock/',
         view=PMPInterventionUnlockView.as_view(http_method_names=['patch']),
         name='intervention-unlock',
+    ),
+    path(
+        'interventions/<int:pk>/amendment_merge/',
+        view=PMPAmendedInterventionMerge.as_view(http_method_names=['patch']),
+        name='intervention-amendment-merge',
     ),
     path(
         'interventions/<int:intervention_pk>/pd-outputs/',
@@ -191,6 +210,21 @@ urlpatterns = [
         'interventions/<int:intervention_pk>/reviews/<int:pk>/',
         view=PMPReviewDetailView.as_view(),
         name='intervention-reviews-detail',
+    ),
+    path(
+        'interventions/<int:intervention_pk>/reviews/<int:pk>/notify/',
+        view=PMPReviewNotifyView.as_view(),
+        name='intervention-reviews-notify',
+    ),
+    path(
+        'interventions/<int:intervention_pk>/reviews/<int:review_pk>/officers-reviews/',
+        view=PMPOfficerReviewListView.as_view(),
+        name='intervention-officers-review-list',
+    ),
+    path(
+        'interventions/<int:intervention_pk>/reviews/<int:review_pk>/officers-reviews/<int:user_pk>/',
+        view=PMPOfficerReviewDetailView.as_view(),
+        name='intervention-officers-review-detail',
     ),
     path(
         'interventions/<int:intervention_pk>/pd-outputs/<int:output_pk>/activities/',

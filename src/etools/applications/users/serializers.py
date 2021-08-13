@@ -248,4 +248,5 @@ class CountrySerializer(SimpleUserSerializer):
             'business_area_code',
             'country_short_code',
             'iso3_code',
+            'schema_name',
         )
