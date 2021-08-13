@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.db.models import Count, Prefetch, Q
 from django.http import Http404
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from django_filters.rest_framework import DjangoFilterBackend
 from easy_pdf.rendering import render_to_pdf_response
@@ -27,12 +27,13 @@ from etools.applications.field_monitoring.permissions import (
     IsFieldMonitor,
     IsListAction,
     IsObjectAction,
-    IsPersonResponsible,
     IsReadAction,
+    IsVisitLead,
 )
 from etools.applications.field_monitoring.planning.activity_validation.validator import ActivityValid
 from etools.applications.field_monitoring.planning.filters import (
     CPOutputsFilterSet,
+    HactForPartnerFilter,
     InterventionsFilterSet,
     MonitoringActivitiesFilterSet,
     ReferenceNumberOrderingFilter,
@@ -141,7 +142,7 @@ class MonitoringActivitiesViewSet(
     Retrieve and Update Agreement.
     """
     queryset = MonitoringActivity.objects.annotate(checklists_count=Count('checklists')).select_related(
-        'tpm_partner', 'person_responsible', 'location__gateway', 'location_site',
+        'tpm_partner', 'visit_lead', 'location__gateway', 'location_site',
     ).prefetch_related(
         'team_members', 'partners', 'interventions', 'cp_outputs'
     ).order_by("-id")
@@ -152,9 +153,12 @@ class MonitoringActivitiesViewSet(
     permission_classes = FMBaseViewSet.permission_classes + [
         IsReadAction |
         (IsEditAction & IsListAction & IsFieldMonitor) |
-        (IsEditAction & (IsObjectAction & (IsFieldMonitor | IsPersonResponsible)))
+        (IsEditAction & (IsObjectAction & (IsFieldMonitor | IsVisitLead)))
     ]
-    filter_backends = (DjangoFilterBackend, ReferenceNumberOrderingFilter, OrderingFilter, SearchFilter)
+    filter_backends = (
+        DjangoFilterBackend, ReferenceNumberOrderingFilter,
+        OrderingFilter, SearchFilter, HactForPartnerFilter,
+    )
     filter_class = MonitoringActivitiesFilterSet
     ordering_fields = (
         'start_date', 'end_date', 'location', 'location_site', 'monitor_type', 'checklists_count', 'status'
@@ -169,7 +173,7 @@ class MonitoringActivitiesViewSet(
             # we should hide activities before assignment
             # if reject reason available activity should be visible (draft + reject_reason = rejected)
             queryset = queryset.filter(
-                Q(person_responsible=self.request.user) | Q(team_members=self.request.user),
+                Q(visit_lead=self.request.user) | Q(team_members=self.request.user),
                 Q(status__in=MonitoringActivity.TPM_AVAILABLE_STATUSES) | ~Q(reject_reason=''),
             )
 

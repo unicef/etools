@@ -88,15 +88,22 @@ class CoverageGeographicView(ListAPIView):
     def get_queryset(self):
         queryset = super().get_queryset()
 
-        activities_filter = _completed_activities_filter
+        activities_filter = Q(
+            status=MonitoringActivity.STATUSES.completed,
+            location__lft__gte=OuterRef('lft'),
+            location__lft__lte=OuterRef('rght'),
+            location__tree_id=OuterRef('tree_id'),
+        )
+
         if 'sections__in' in self.request.query_params:
             activities_filter = activities_filter & Q(
-                monitoring_activities__sections__in=self.request.query_params['sections__in'].split(',')
+                sections__in=self.request.query_params['sections__in'].split(',')
             )
 
         queryset = queryset.annotate(
-            completed_visits=Count('monitoring_activities', filter=activities_filter, distinct=True),
+            completed_visits=SubQueryCount(MonitoringActivity.objects.filter(activities_filter).distinct('id')),
         )
+
         return queryset
 
 

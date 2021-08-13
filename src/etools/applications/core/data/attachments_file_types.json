@@ -520,5 +520,16 @@
             "code": "psea_answer",
             "group": ["psea_answer"]
         }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 62,
+        "fields": {
+            "order": 0,
+            "label": "PSEA NFR Attachment",
+            "name": "psea_nfr_attachment",
+            "code": "psea_nfr_attachment",
+            "group": ["psea"]
+        }
     }
 ]

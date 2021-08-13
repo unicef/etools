@@ -6,7 +6,8 @@ from etools.applications.core.renderers import FriendlyCSVRenderer
 class PartnerOrganizationCSVRenderer(r.CSVRenderer):
     header = ['vendor_number', 'organization_full_name',
               'short_name', 'alternate_name', 'partner_type', 'shared_with', 'address',
-              'phone_number', 'email_address', 'risk_rating', 'date_last_assessment_against_core_values',
+              'phone_number', 'email_address', 'risk_rating', 'sea_risk_rating_nm', 'psea_assessment_date',
+              'highest_risk_rating_type', 'highest_risk_rating_name', 'date_last_assessment_against_core_values',
               'actual_cash_transfer_for_cp', 'actual_cash_transfer_for_current_year', 'marked_for_deletion', 'blocked',
               'type_of_assessment', 'date_assessed', 'assessments', 'staff_members', 'url', 'planned_visits', ]
 
@@ -20,7 +21,7 @@ class PartnerOrganizationCSVRenderer(r.CSVRenderer):
         'address': 'Address',
         'phone_number': 'Phone Number',
         'email_address': 'Email Address',
-        'risk_rating': 'Risk Rating',
+        'risk_rating': 'HACT Risk Rating',
         'date_last_assessment_against_core_values': 'Date Last Assessed Against Core Values',
         'actual_cash_transfer_for_cp': 'Actual Cash Transfer for CP (USD)',
         'actual_cash_transfer_for_current_year': 'Actual Cash Transfer for Current Year (USD)',
@@ -231,6 +232,7 @@ class InterventionCSVRenderer(r.CSVRenderer):
         "submission_date_prc", "review_date_prc", "partner_authorized_officer_signatory", "signed_by_partner_date",
         "unicef_signatory", "signed_by_unicef_date", "days_from_submission_to_signed", "days_from_review_to_signed",
         "amendment_sum", "last_amendment_date", "attachment_type", "total_attachments", "cp_outputs", "url",
+        "cfei_number",
     ]
 
     labels = {
@@ -282,6 +284,7 @@ class InterventionCSVRenderer(r.CSVRenderer):
         "total_attachments": "# of attachments",
         "cp_outputs": "CP Outputs",
         "url": "URL",
+        "cfei_number": "UNPP Number",
     }
 
 

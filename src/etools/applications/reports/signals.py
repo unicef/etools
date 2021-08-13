@@ -1,7 +1,7 @@
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
-from etools.applications.partners.models import Intervention
+from etools.applications.partners.models import Intervention, InterventionBudget
 from etools.applications.partners.utils import get_quarters_range
 from etools.applications.reports.models import (
     InterventionActivity,
@@ -49,7 +49,10 @@ def calc_totals_on_delete(instance, **kwargs):
     except LowerResult.DoesNotExist:
         pass
     else:
-        result.result_link.intervention.planned_budget.calc_totals()
+        try:
+            result.result_link.intervention.planned_budget.calc_totals()
+        except InterventionBudget.DoesNotExist:
+            pass
 
 
 @receiver(post_delete, sender=InterventionActivityItem)

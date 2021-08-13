@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.http import HttpResponseForbidden
 from django.urls import reverse
 from django.utils import timezone
@@ -6,8 +7,18 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from unicef_notification.utils import send_notification_with_template
 
-from etools.applications.partners.models import Intervention
-from etools.applications.partners.serializers.interventions_v3 import InterventionDetailSerializer
+from etools.applications.partners.amendment_utils import MergeError
+from etools.applications.partners.models import Intervention, InterventionAmendment, InterventionReview
+from etools.applications.partners.permissions import (
+    IsInterventionBudgetOwnerPermission,
+    PARTNERSHIP_MANAGER_GROUP,
+    user_group_permission,
+)
+from etools.applications.partners.serializers.interventions_v3 import (
+    AmendedInterventionReviewActionSerializer,
+    InterventionDetailSerializer,
+    InterventionReviewActionSerializer,
+)
 from etools.applications.partners.views.interventions_v3 import InterventionDetailAPIView, PMPInterventionMixin
 
 
@@ -48,6 +59,13 @@ class PMPInterventionAcceptView(PMPInterventionActionView):
             # When accepting on behalf of the partner since there is no further action, it will automatically
             # be sent to unicef
             request.data.update({"partner_accepted": True, "unicef_court": True})
+
+            # if pd was created by unicef and sent to partner, submission date will be empty, so set it
+            if not pd.submission_date:
+                request.data.update({
+                    "submission_date": timezone.now().strftime("%Y-%m-%d"),
+                })
+
             recipients = [u.email for u in pd.unicef_focal_points.all()]
             template_name = 'partners/intervention/partner_accepted'
         else:
@@ -86,27 +104,41 @@ class PMPInterventionAcceptView(PMPInterventionActionView):
         return response
 
 
-class PMPInterventionAcceptReviewView(PMPInterventionActionView):
+class PMPInterventionAcceptOnBehalfOfPartner(PMPInterventionActionView):
     def update(self, request, *args, **kwargs):
-        if self.is_partner_staff():
-            return HttpResponseForbidden()
         pd = self.get_object()
-        if pd.status == Intervention.REVIEW:
-            raise ValidationError("PD is already in Review status.")
         request.data.clear()
-        if not pd.unicef_accepted:
-            request.data.update({"unicef_accepted": True})
-        request.data.update({"status": Intervention.REVIEW})
+        if pd.status not in [Intervention.DRAFT]:
+            raise ValidationError("Action is not allowed")
+
+        if self.request.user not in pd.unicef_focal_points.all():
+            raise ValidationError("Only focal points can accept")
+
+        if pd.partner_accepted:
+            raise ValidationError("Partner has already accepted this PD.")
+
+        request.data.update({
+            "partner_accepted": True,
+            "unicef_court": True,
+            "accepted_on_behalf_of_partner": True,
+        })
+
+        if not pd.submission_date and 'submission_date' not in request.data:
+            request.data.update({
+                "submission_date": timezone.now().strftime("%Y-%m-%d"),
+            })
+
+        recipients = set(
+            [u.email for u in pd.partner_focal_points.all()] +
+            [u.email for u in pd.unicef_focal_points.all()]
+        )
+        recipients.remove(self.request.user.email)
+        template_name = 'partners/intervention/unicef_accepted_behalf_of_partner'
 
         response = super().update(request, *args, **kwargs)
 
         if response.status_code == 200:
             # send notification
-            recipients = [
-                u.email for u in pd.partner_focal_points.all()
-            ] + [
-                u.email for u in pd.unicef_focal_points.all()
-            ]
             context = {
                 "reference_number": pd.reference_number,
                 "partner_name": str(pd.agreement.partner),
@@ -116,8 +148,8 @@ class PMPInterventionAcceptReviewView(PMPInterventionActionView):
                 ),
             }
             send_notification_with_template(
-                recipients=recipients,
-                template_name='partners/intervention/unicef_accepted_reviewed',
+                recipients=list(recipients),
+                template_name=template_name,
                 context=context
             )
 
@@ -125,15 +157,29 @@ class PMPInterventionAcceptReviewView(PMPInterventionActionView):
 
 
 class PMPInterventionRejectReviewView(PMPInterventionActionView):
+    @transaction.atomic
     def update(self, request, *args, **kwargs):
         if self.is_partner_staff():
             return HttpResponseForbidden()
         pd = self.get_object()
         if pd.status != Intervention.REVIEW:
             raise ValidationError("PD needs to be in Review state")
+        if not pd.review:
+            raise ValidationError("PD review is missing")
+        if pd.review.overall_approver_id != request.user.pk:
+            raise ValidationError("Only overall approver can reject review.")
+
+        pd.review.overall_approval = False
+        if not pd.review.review_date:
+            pd.review.review_date = timezone.now().date()
+        pd.review.save()
+
         request.data.clear()
-        request.data.update({"status": Intervention.DRAFT})
-        request.data.update({"unicef_accepted": False})
+        request.data.update({
+            "status": Intervention.DRAFT,
+            "unicef_accepted": False,
+            "partner_accepted": False,
+        })
 
         response = super().update(request, *args, **kwargs)
 
@@ -142,16 +188,42 @@ class PMPInterventionRejectReviewView(PMPInterventionActionView):
 
 
 class PMPInterventionReviewView(PMPInterventionActionView):
+    @transaction.atomic
     def update(self, request, *args, **kwargs):
         if self.is_partner_staff():
             return HttpResponseForbidden()
         pd = self.get_object()
         if pd.status == Intervention.REVIEW:
             raise ValidationError("PD is already in Review status.")
+
+        if pd.in_amendment:
+            serializer = AmendedInterventionReviewActionSerializer(data=request.data)
+        else:
+            serializer = InterventionReviewActionSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        review = serializer.save(
+            intervention=pd,
+            submitted_by=request.user
+        )
+
         request.data.clear()
         request.data.update({"status": Intervention.REVIEW})
 
+        if review.review_type == InterventionReview.PRC and not pd.submission_date_prc:
+            # save date when first prc review submitted
+            request.data["submission_date_prc"] = timezone.now().date()
+
         response = super().update(request, *args, **kwargs)
+
+        # difference should be updated only after everything is saved
+
+        if pd.in_amendment:
+            try:
+                amendment = pd.amendment
+                amendment.difference = amendment.get_difference()
+                amendment.save()
+            except InterventionAmendment.DoesNotExist:
+                pass
 
         if response.status_code == 200:
             # send notification
@@ -160,6 +232,7 @@ class PMPInterventionReviewView(PMPInterventionActionView):
             ] + [
                 u.email for u in pd.unicef_focal_points.all()
             ]
+            # context should be valid for both templates mentioned below
             context = {
                 "reference_number": pd.reference_number,
                 "partner_name": str(pd.agreement.partner),
@@ -168,9 +241,16 @@ class PMPInterventionReviewView(PMPInterventionActionView):
                     args=[pd.pk]
                 ),
             }
+
+            # if review is not required (no-review), intervention will be transitioned to signature status
+            if pd.status == Intervention.SIGNATURE:
+                template_name = 'partners/intervention/unicef_signature'
+            else:
+                template_name = 'partners/intervention/unicef_reviewed'
+
             send_notification_with_template(
                 recipients=recipients,
-                template_name='partners/intervention/unicef_reviewed',
+                template_name=template_name,
                 context=context
             )
 
@@ -327,8 +407,20 @@ class PMPInterventionSignatureView(PMPInterventionActionView):
         pd = self.get_object()
         if pd.status == Intervention.SIGNATURE:
             raise ValidationError("PD is already in Signature status.")
+        if not pd.review:
+            raise ValidationError("PD review is missing")
+        if pd.review.overall_approver_id != request.user.pk:
+            raise ValidationError("Only overall approver can accept review.")
+
+        pd.review.overall_approval = True
+        if not pd.review.review_date:
+            pd.review.review_date = timezone.now().date()
+        pd.review.save()
+
         request.data.clear()
         request.data.update({"status": Intervention.SIGNATURE})
+        if pd.review.review_type == InterventionReview.PRC:
+            request.data["review_date_prc"] = timezone.now().date()
 
         response = super().update(request, *args, **kwargs)
 
@@ -458,3 +550,36 @@ class PMPInterventionSendToUNICEFView(PMPInterventionActionView):
             )
 
         return response
+
+
+class PMPAmendedInterventionMerge(InterventionDetailAPIView):
+    permission_classes = (
+        user_group_permission(PARTNERSHIP_MANAGER_GROUP) | IsInterventionBudgetOwnerPermission,
+    )
+
+    @transaction.atomic
+    def update(self, request, *args, **kwargs):
+        pd = self.get_object()
+        if not pd.in_amendment:
+            raise ValidationError('Only amended interventions can be merged')
+        if not pd.status == Intervention.SIGNED:
+            raise ValidationError('Amendment cannot be merged yet')
+        try:
+            amendment = pd.amendment
+        except InterventionAmendment.DoesNotExist:
+            raise ValidationError('Amendment does not exist for this pd')
+
+        try:
+            amendment.merge_amendment()
+        except MergeError as ex:
+            raise ValidationError(
+                f'Merge Error: Amended field was already changed ({ex.field} at {ex.instance}). '
+                'This can be caused by parallel merged amendment. Amendment should be re-created.'
+            )
+
+        return Response(
+            InterventionDetailSerializer(
+                amendment.intervention,
+                context=self.get_serializer_context(),
+            ).data
+        )

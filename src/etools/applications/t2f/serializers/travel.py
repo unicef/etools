@@ -8,7 +8,7 @@ from django.db.models.fields.related import ManyToManyField
 from django.db.models.query_utils import Q
 from django.utils.functional import cached_property
 from django.utils.itercompat import is_iterable
-from django.utils.translation import ugettext
+from django.utils.translation import gettext as _
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -235,8 +235,8 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
                     travel_q &= ~Q(id=self.instance.id)
 
                 if Travel.objects.filter(travel_q).exists():
-                    raise ValidationError(ugettext('You have an existing trip with overlapping dates. '
-                                                   'Please adjust your trip accordingly.'))
+                    raise ValidationError(_('You have an existing trip with overlapping dates. '
+                                            'Please adjust your trip accordingly.'))
 
         return super().validate(attrs)
 

@@ -17,8 +17,14 @@ from etools.applications.attachments.tests.factories import (
     AttachmentLinkFactory,
 )
 from etools.applications.core.tests.cases import BaseTenantTestCase
-from etools.applications.field_monitoring.data_collection.models import ActivityOverallFinding
-from etools.applications.field_monitoring.data_collection.tests.factories import StartedChecklistFactory
+from etools.applications.field_monitoring.data_collection.models import (
+    ActivityOverallFinding,
+    ActivityQuestionOverallFinding,
+)
+from etools.applications.field_monitoring.data_collection.tests.factories import (
+    ActivityQuestionFactory,
+    StartedChecklistFactory,
+)
 from etools.applications.field_monitoring.fm_settings.models import Question
 from etools.applications.field_monitoring.fm_settings.tests.factories import QuestionFactory
 from etools.applications.field_monitoring.planning.models import MonitoringActivity, YearPlan
@@ -107,7 +113,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             MonitoringActivityFactory(monitor_type='staff'),
         ]
 
-        with self.assertNumQueries(7):
+        with self.assertNumQueries(10):
             self._test_list(self.unicef_user, activities, data={'page': 1, 'page_size': 10})
 
     def test_search_by_ref_number(self):
@@ -115,6 +121,33 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         MonitoringActivityFactory(monitor_type='staff')
 
         self._test_list(self.unicef_user, [activity], data={'search': activity.reference_number})
+
+    def test_filter_by_visit_lead(self):
+        activity1 = MonitoringActivityFactory(monitor_type='staff', visit_lead=UserFactory())
+        activity2 = MonitoringActivityFactory(monitor_type='staff', visit_lead=UserFactory())
+        MonitoringActivityFactory(monitor_type='staff', visit_lead=UserFactory())
+
+        self._test_list(
+            self.unicef_user, [activity1, activity2],
+            data={'visit_lead__in': f'{activity1.visit_lead.pk},{activity2.visit_lead.pk}'}
+        )
+
+    def test_filter_by_partner_hact(self):
+        partner = PartnerFactory()
+        activity1 = MonitoringActivityFactory(partners=[partner])
+        MonitoringActivityFactory(partners=[partner])
+        MonitoringActivityFactory(partners=[partner])
+        ActivityQuestionOverallFinding.objects.create(
+            activity_question=ActivityQuestionFactory(
+                question__is_hact=True,
+                question__level='partner',
+                monitoring_activity=activity1,
+            ),
+            value='ok',
+        )
+        ActivityOverallFinding.objects.create(partner=partner, narrative_finding='test',
+                                              monitoring_activity=activity1)
+        self._test_list(self.unicef_user, [activity1], data={'hact_for_partner': partner.id})
 
     def test_details(self):
         activity = MonitoringActivityFactory(monitor_type='staff', team_members=[UserFactory(unicef_user=True)])
@@ -191,7 +224,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             tpm_partner=tpm_partner,
             status=MonitoringActivity.STATUSES.review,
             team_members=team_members,
-            person_responsible=UserFactory(unicef_user=True),
+            visit_lead=UserFactory(unicef_user=True),
         )
 
         response = self._test_update(self.fm_user, activity, data={'status': 'assigned'})
@@ -222,7 +255,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             partners=[PartnerFactory()], sections=[SectionFactory()]
         )
 
-        person_responsible = UserFactory(unicef_user=True)
+        visit_lead = UserFactory(unicef_user=True)
 
         question = QuestionFactory(level=Question.LEVELS.partner, sections=activity.sections.all(), is_active=True)
         QuestionTemplateFactory(question=question)
@@ -243,20 +276,20 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         goto('draft', self.fm_user)
         goto('checklist', self.fm_user)
         goto('review', self.fm_user,
-             {'person_responsible': person_responsible.id, 'team_members': [UserFactory(unicef_user=True).id]})
+             {'visit_lead': visit_lead.id, 'team_members': [UserFactory(unicef_user=True).id]})
         goto('checklist', self.fm_user)
         goto('review', self.fm_user)
         goto('assigned', self.fm_user)
 
         StartedChecklistFactory(monitoring_activity=activity)
-        goto('report_finalization', person_responsible)
+        goto('report_finalization', visit_lead)
         ActivityOverallFinding.objects.create(monitoring_activity=activity, narrative_finding='test')
-        goto('data_collection', person_responsible)
-        goto('report_finalization', person_responsible)
-        goto('submitted', person_responsible, mail_count=len(PME.as_group().user_set.filter(
+        goto('data_collection', visit_lead)
+        goto('report_finalization', visit_lead)
+        goto('submitted', visit_lead, mail_count=len(PME.as_group().user_set.filter(
             profile__country=connection.tenant,
         )))
-        goto('completed', self.fm_user)
+        goto('completed', self.pme)
 
     def test_sections_are_displayed_correctly(self):
         activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.draft, sections=[SectionFactory()])
@@ -265,17 +298,17 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         self.assertIsNotNone(response.data['sections'][0]['name'])
 
     def test_reject_reason_required(self):
-        person_responsible = UserFactory(unicef_user=True)
+        visit_lead = UserFactory(unicef_user=True)
         activity = MonitoringActivityFactory(monitor_type='staff', status='assigned',
-                                             person_responsible=person_responsible)
+                                             visit_lead=visit_lead)
 
-        self._test_update(person_responsible, activity, {'status': 'draft'},
+        self._test_update(visit_lead, activity, {'status': 'draft'},
                           expected_status=status.HTTP_400_BAD_REQUEST)
-        self._test_update(person_responsible, activity, {'status': 'draft', 'reject_reason': 'just because'})
+        self._test_update(visit_lead, activity, {'status': 'draft', 'reject_reason': 'just because'})
 
     def test_cancel_reason_required(self):
         activity = MonitoringActivityFactory(monitor_type='staff', status='assigned',
-                                             person_responsible=self.unicef_user)
+                                             visit_lead=self.unicef_user)
 
         self._test_update(self.fm_user, activity, {'status': 'cancelled'},
                           expected_status=status.HTTP_400_BAD_REQUEST)
@@ -284,7 +317,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
     @skip("TODO: fix this test")
     def test_report_reject_reason_required(self):
         activity = MonitoringActivityFactory(monitor_type='staff', status='submitted',
-                                             person_responsible=UserFactory(unicef_user=True),
+                                             visit_lead=UserFactory(unicef_user=True),
                                              team_members=[UserFactory(unicef_user=True)])
 
         self._test_update(self.fm_user, activity, {'status': 'report_finalization'},
@@ -294,13 +327,13 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
 
     def test_reject_as_tpm(self):
         tpm_partner = SimpleTPMPartnerFactory()
-        person_responsible = TPMUserFactory(tpm_partner=tpm_partner)
+        visit_lead = TPMUserFactory(tpm_partner=tpm_partner)
         activity = MonitoringActivityFactory(
             monitor_type='tpm', status='assigned',
-            tpm_partner=tpm_partner, person_responsible=person_responsible, team_members=[person_responsible],
+            tpm_partner=tpm_partner, visit_lead=visit_lead, team_members=[visit_lead],
         )
 
-        self._test_update(person_responsible, activity, {'status': 'draft', 'reject_reason': 'just because'})
+        self._test_update(visit_lead, activity, {'status': 'draft', 'reject_reason': 'just because'})
         self.assertEqual(len(mail.outbox), 1)
 
     def test_draft_status_permissions(self):
@@ -311,7 +344,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
 
         self.assertTrue(permissions['edit']['sections'])
         self.assertTrue(permissions['edit']['team_members'])
-        self.assertTrue(permissions['edit']['person_responsible'])
+        self.assertTrue(permissions['edit']['visit_lead'])
         self.assertTrue(permissions['edit']['interventions'])
         self.assertFalse(permissions['edit']['activity_question_set'])
         self.assertFalse(permissions['view']['additional_info'])
@@ -324,7 +357,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
 
         self.assertFalse(permissions['edit']['sections'])
         self.assertTrue(permissions['edit']['team_members'])
-        self.assertTrue(permissions['edit']['person_responsible'])
+        self.assertTrue(permissions['edit']['visit_lead'])
         self.assertTrue(permissions['edit']['activity_question_set'])
         self.assertFalse(permissions['view']['activity_question_set_review'])
         self.assertTrue(permissions['view']['additional_info'])
@@ -339,36 +372,35 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         self.assertTrue(permissions['view']['activity_question_set_review'])
         self.assertTrue(permissions['view']['additional_info'])
 
-    def test_field_office_update(self):
-        activity = MonitoringActivityFactory(monitor_type='staff', status='draft', field_office=None)
-        self.assertIsNone(activity.field_office)
-        response = self._test_update(self.fm_user, activity, {'field_office': OfficeFactory().id})
-        self.assertIsNotNone(response.data['field_office'])
+    def test_offices_update(self):
+        activity = MonitoringActivityFactory(monitor_type='staff', status='draft')
+        activity.offices.set([])
+        self.assertEqual(activity.offices.count(), 0)
+        response = self._test_update(self.fm_user, activity, {'offices': [OfficeFactory().id, ]})
+        self.assertIsNotNone(response.data['offices'])
         activity.refresh_from_db()
-        self.assertIsNotNone(activity.field_office)
+        self.assertNotEquals(activity.offices.count(), 0)
 
         permissions = response.data['permissions']
-        self.assertTrue(permissions['view']['field_office'])
-        self.assertTrue(permissions['edit']['field_office'])
+        self.assertTrue(permissions['view']['offices'])
+        self.assertTrue(permissions['edit']['offices'])
 
-    def test_field_office_not_editable_in_checklist(self):
+    def test_offices_not_editable_in_checklist(self):
         activity = MonitoringActivityFactory(monitor_type='staff', status='checklist')
         response = self._test_retrieve(self.fm_user, activity)
         permissions = response.data['permissions']
-        self.assertTrue(permissions['view']['field_office'])
-        self.assertFalse(permissions['edit']['field_office'])
+        self.assertTrue(permissions['view']['offices'])
+        self.assertFalse(permissions['edit']['offices'])
 
-    def test_filter_by_field_office(self):
+    def test_filter_by_offices(self):
         MonitoringActivityFactory(monitor_type='staff', status='draft')
-        activity1 = MonitoringActivityFactory(monitor_type='staff', status='draft')
-        activity2 = MonitoringActivityFactory(monitor_type='staff', status='draft')
-        self._test_list(
-            self.fm_user, [activity1],
-            data={'field_office': str(activity1.field_office.id)},
-        )
+        o1 = OfficeFactory()
+        o2 = OfficeFactory()
+        activity1 = MonitoringActivityFactory(monitor_type='staff', status='draft', offices=(o1, ))
+        activity2 = MonitoringActivityFactory(monitor_type='staff', status='draft', offices=(o2, ))
         self._test_list(
             self.fm_user, [activity1, activity2],
-            data={'field_office__in': f'{activity1.field_office.id},{activity2.field_office.id}'},
+            data={'offices__in': f'{activity1.offices.first().id},{activity2.offices.first().id}'},
         )
 
     def test_filter_by_section(self):
@@ -731,7 +763,7 @@ class MonitoringActivityActionPointsViewTestCase(FMBaseTestCaseMixin, APIViewSet
         action_points = MonitoringActivityActionPointFactory.create_batch(size=10, monitoring_activity=self.activity)
         MonitoringActivityActionPointFactory()
 
-        with self.assertNumQueries(14):  # prefetched 13 queries
+        with self.assertNumQueries(15):  # prefetched 13 queries
             self._test_list(self.unicef_user, action_points)
 
     def test_create(self):

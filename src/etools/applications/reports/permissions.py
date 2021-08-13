@@ -1,3 +1,5 @@
+from django.utils.translation import gettext as _
+
 from rest_framework import permissions
 
 from etools.libraries.djangolib.utils import is_user_in_groups
@@ -12,7 +14,7 @@ class PMEPermission(permissions.BasePermission):
     - For update/delete views --
       - user must be 'PME' group
     """
-    message = 'Accessing this item is not allowed.'
+    message = _('Accessing this item is not allowed.')
 
     def _has_write_permissions(self, user):
         """True if --

@@ -18,6 +18,7 @@ from etools.applications.audit.tests.factories import AuditFactory, SpecialAudit
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
 from etools.applications.partners import models
+from etools.applications.partners.models import InterventionSupplyItem
 from etools.applications.partners.tests.factories import (
     AgreementAmendmentFactory,
     AgreementFactory,
@@ -267,16 +268,19 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
         self.assertFalse(self.partner_organization.expiring_assessment_flag)
 
     def test_approaching_threshold_flag_true(self):
-        self.partner_organization.rating = models.PartnerOrganization.RATING_NOT_REQUIRED
+        self.partner_organization.highest_risk_rating_name = models.PartnerOrganization.RATING_NOT_REQUIRED
+        self.partner_organization.rating = models.PartnerOrganization.RATING_LOW_RISK_ASSUMED
         self.assertTrue(self.partner_organization.approaching_threshold_flag)
 
     def test_approaching_threshold_flag_false(self):
-        self.partner_organization.rating = models.PartnerOrganization.RATING_NOT_REQUIRED
+        self.partner_organization.highest_risk_rating_name = models.PartnerOrganization.RATING_NOT_REQUIRED
+        self.partner_organization.rating = models.PartnerOrganization.RATING_LOW
         self.partner_organization.total_ct_ytd = models.PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL - 1
         self.assertFalse(self.partner_organization.approaching_threshold_flag)
 
     def test_approaching_threshold_flag_false_moderate(self):
-        self.partner_organization.rating = models. PartnerOrganization.RATING_MEDIUM
+        self.partner_organization.highest_risk_rating_name = models.PartnerOrganization.RATING_MEDIUM
+        self.partner_organization.rating = models.PartnerOrganization.RATING_HIGH
         self.assertFalse(self.partner_organization.approaching_threshold_flag)
 
     def test_hact_min_requirements_ct_under_25k(self):
@@ -309,64 +313,58 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
     def test_hact_min_requirements_ct_between_100k_and_500k_high(self):
         self.partner_organization.net_ct_cy = 490000.00
         self.partner_organization.reported_cy = 490000.00
-        self.partner_organization.rating = models.PartnerOrganization.RATING_HIGH
-        # The following logic is overridden with the COVID adaptations in the guidance
-        # self.assert_min_requirements(3, 1)
-        self.assert_min_requirements(1, 1)
+        self.partner_organization.highest_risk_rating_name = models.PartnerOrganization.RATING_HIGH_RISK_ASSUMED
+        self.partner_organization.rating = models.PartnerOrganization.RATING_MEDIUM
+        self.assert_min_requirements(3, 1)
 
     def test_hact_min_requirements_ct_between_100k_and_500k_significant(self):
         self.partner_organization.net_ct_cy = 490000.00
         self.partner_organization.reported_cy = 490000.00
-        self.partner_organization.rating = models.PartnerOrganization.RATING_SIGNIFICANT
-        # The following logic is overridden with the COVID adaptations in the guidance
-        # self.assert_min_requirements(3, 1)
-        self.assert_min_requirements(1, 1)
+        self.partner_organization.highest_risk_rating_name = models.PartnerOrganization.RATING_SIGNIFICANT
+        self.partner_organization.rating = models.PartnerOrganization.RATING_MEDIUM
+        self.assert_min_requirements(3, 1)
 
     def test_hact_min_requirements_ct_between_100k_and_500k_moderate(self):
         self.partner_organization.net_ct_cy = 490000.00
         self.partner_organization.reported_cy = 490000.00
-        self.partner_organization.rating = models.PartnerOrganization.RATING_MEDIUM
-        # The following logic is overridden with the COVID adaptations in the guidance
-        # self.assert_min_requirements(2, 1)
-        self.assert_min_requirements(1, 1)
+        self.partner_organization.highest_risk_rating_name = models.PartnerOrganization.RATING_MEDIUM
+        self.partner_organization.rating = models.PartnerOrganization.RATING_LOW
+        self.assert_min_requirements(2, 1)
 
     def test_hact_min_requirements_ct_between_100k_and_500k_low(self):
         self.partner_organization.net_ct_cy = 490000.00
         self.partner_organization.reported_cy = 490000.00
-        self.partner_organization.rating = models.PartnerOrganization.RATING_LOW
+        self.partner_organization.highest_risk_rating_name = models.PartnerOrganization.RATING_LOW
+        self.partner_organization.rating = models.PartnerOrganization.RATING_HIGH
         self.assert_min_requirements(1, 1)
 
     def test_hact_min_requirements_ct_over_500k_high(self):
         self.partner_organization.net_ct_cy = 510000.00
         self.partner_organization.reported_cy = 510000.00
-        self.partner_organization.rating = models.PartnerOrganization.RATING_HIGH
-        # The following logic is overridden with the COVID adaptations in the guidance
-        # self.assert_min_requirements(4, 1)
-        self.assert_min_requirements(1, 1)
+        self.partner_organization.highest_risk_rating_name = models.PartnerOrganization.RATING_HIGH
+        self.partner_organization.rating = models.PartnerOrganization.RATING_MEDIUM
+        self.assert_min_requirements(4, 1)
 
     def test_hact_min_requirements_ct_over_500k_significant(self):
         self.partner_organization.net_ct_cy = 510000.00
         self.partner_organization.reported_cy = 510000.00
-        self.partner_organization.rating = models.PartnerOrganization.RATING_SIGNIFICANT
-        # The following logic is overridden with the COVID adaptations in the guidance
-        # self.assert_min_requirements(4, 1)
-        self.assert_min_requirements(1, 1)
+        self.partner_organization.highest_risk_rating_name = models.PartnerOrganization.RATING_SIGNIFICANT
+        self.partner_organization.rating = models.PartnerOrganization.RATING_LOW
+        self.assert_min_requirements(4, 1)
 
     def test_hact_min_requirements_ct_over_500k_moderate(self):
         self.partner_organization.net_ct_cy = 510000.00
         self.partner_organization.reported_cy = 510000.00
-        self.partner_organization.rating = models.PartnerOrganization.RATING_MEDIUM
-        # The following logic is overridden with the COVID adaptations in the guidance
-        # self.assert_min_requirements(3, 1)
-        self.assert_min_requirements(1, 1)
+        self.partner_organization.highest_risk_rating_name = models.PartnerOrganization.RATING_MEDIUM
+        self.partner_organization.rating = models.PartnerOrganization.RATING_LOW
+        self.assert_min_requirements(3, 1)
 
     def test_hact_min_requirements_ct_over_500k_low(self):
         self.partner_organization.net_ct_cy = 510000.00
         self.partner_organization.reported_cy = 510000.00
-        self.partner_organization.rating = models.PartnerOrganization.RATING_LOW
-        # The following logic is overridden with the COVID adaptations in the guidance
-        # self.assert_min_requirements(2, 1)
-        self.assert_min_requirements(1, 1)
+        self.partner_organization.highest_risk_rating_name = models.PartnerOrganization.RATING_LOW_RISK_ASSUMED
+        self.partner_organization.rating = models.PartnerOrganization.RATING_MEDIUM
+        self.assert_min_requirements(2, 1)
 
     def test_planned_visits_gov(self):
         self.partner_organization.partner_type = models.PartnerType.GOVERNMENT
@@ -671,11 +669,9 @@ class TestInterventionModel(BaseTenantTestCase):
         permissions = models.Intervention.permission_structure()
         self.assertTrue(isinstance(permissions, dict))
         self.assertEqual(permissions["amendments"], {
-            'view': {'true': [{'group': '*', 'condition': '', 'status': '*'}]},
+            'view': {'true': [{'group': 'UNICEF User', 'condition': 'not_in_amendment_mode', 'status': '*'}]},
             'edit': {
                 'true': [
-                    {'status': 'draft', 'group': 'Partnership Manager', 'condition': 'unicef_court'},
-                    {'status': 'draft', 'group': 'Partner User', 'condition': 'partner_court'},
                     {'status': 'signed', 'group': 'Partnership Manager', 'condition': 'not_in_amendment_mode'},
                     {'status': 'active', 'group': 'Partnership Manager', 'condition': 'not_in_amendment_mode'},
                 ]
@@ -1436,7 +1432,7 @@ class TestInterventionAmendment(BaseTenantTestCase):
     def test_compute_reference_number_no_amendments(self):
         intervention = InterventionFactory()
         ia = models.InterventionAmendment(intervention=intervention)
-        self.assertEqual(ia.compute_reference_number(), 1)
+        self.assertEqual(ia.compute_reference_number(), '1')
 
     def test_compute_reference_number(self):
         intervention = InterventionFactory()
@@ -1445,7 +1441,7 @@ class TestInterventionAmendment(BaseTenantTestCase):
             signed_date=datetime.date.today()
         )
         ia = models.InterventionAmendment(intervention=intervention)
-        self.assertEqual(ia.compute_reference_number(), 2)
+        self.assertEqual(ia.compute_reference_number(), '2')
 
 
 class TestInterventionResultLink(BaseTenantTestCase):
@@ -1575,18 +1571,25 @@ class TestInterventionBudget(BaseTenantTestCase):
         self.assertEqual(budget.total_cash_local(), 616 + 323)
 
     def test_calc_totals_management_budget(self):
-        intervention = InterventionFactory()
+        intervention = InterventionFactory(hq_support_cost=7)
         budget = intervention.planned_budget
         mgmt_budget = intervention.management_budgets
 
         budget.partner_contribution_local = 10
         budget.unicef_cash_local = 20
+        budget.total_hq_cash_local = 60
         budget.save()
 
         InterventionSupplyItemFactory(
             intervention=intervention,
             unit_number=10,
             unit_price=3,
+        )
+        InterventionSupplyItemFactory(
+            intervention=intervention,
+            unit_number=10,
+            unit_price=4,
+            provided_by=InterventionSupplyItem.PROVIDED_BY_PARTNER
         )
 
         mgmt_budget.act1_unicef = 100
@@ -1598,17 +1601,23 @@ class TestInterventionBudget(BaseTenantTestCase):
         mgmt_budget.save()
 
         self.assertEqual(budget.partner_contribution_local, 1200)
-        self.assertEqual(budget.unicef_cash_local, 900)
+        self.assertEqual(budget.total_unicef_cash_local_wo_hq, 900)
+        self.assertEqual(budget.total_hq_cash_local, 60)
+        self.assertEqual(budget.unicef_cash_local, 900 + 60)
         self.assertEqual(budget.in_kind_amount_local, 30)
+        self.assertEqual(budget.partner_supply_local, 40)
+        self.assertEqual(budget.total_partner_contribution_local, 1240)
+        self.assertEqual(budget.total_local, 1200 + 900 + 60 + 40 + 30)
         self.assertEqual(
             budget.programme_effectiveness,
             ((1200 + 900) / budget.total_local * 100),
         )
         self.assertEqual(
             "{:0.2f}".format(budget.partner_contribution_percent),
-            "{:0.2f}".format(1200 / (1200 + 900 + 30) * 100),
+            "{:0.2f}".format((1200 + 40) / (1200 + 900 + 60 + 30 + 40) * 100),
         )
-        self.assertEqual(budget.total_cash_local(), 1200 + 900)
+        self.assertEqual(budget.total_cash_local(), 1200 + 900 + 60)
+        self.assertEqual(budget.total_unicef_contribution_local(), 900 + 60 + 30)
 
     def test_calc_totals_supply_items(self):
         intervention = InterventionFactory()

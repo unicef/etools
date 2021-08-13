@@ -7,6 +7,7 @@ from django.db import connection
 from django.urls import reverse
 
 from etools_offline import OfflineCollect
+from sentry_sdk import capture_exception
 from simplejson import JSONDecodeError
 
 from etools.applications.environment.helpers import tenant_switch_is_active
@@ -31,7 +32,7 @@ class MonitoringActivityOfflineSynchronizer:
         self.enabled = not tenant_switch_is_active('fm_offline_sync_disabled') and settings.ETOOLS_OFFLINE_API
 
     def _get_data_collectors(self) -> List[str]:
-        data_collectors = [self.activity.person_responsible.email]
+        data_collectors = [self.activity.visit_lead.email]
         data_collectors += list(self.activity.team_members.values_list('email', flat=True))
         return data_collectors
 
@@ -46,33 +47,39 @@ class MonitoringActivityOfflineSynchronizer:
 
         for method in self.activity.methods:
             blueprint = get_blueprint_for_activity_and_method(self.activity, method)
-            OfflineCollect().add(data={
-                "is_active": True,
-                "code": blueprint.code,
-                "form_title": blueprint.title,
-                "form_instructions": json.dumps(blueprint.to_dict(), indent=2),
-                "accessible_by": self._get_data_collectors(),
-                "api_response_url": urljoin(
-                    host,
-                    '{}?workspace={}'.format(
-                        reverse(
-                            'field_monitoring_data_collection:activities-offline',
-                            args=[self.activity.id, method.id]
-                        ),
-                        connection.tenant.schema_name or ''
+            try:
+                OfflineCollect().add(data={
+                    "is_active": True,
+                    "code": blueprint.code,
+                    "form_title": blueprint.title,
+                    "form_instructions": json.dumps(blueprint.to_dict(), indent=2),
+                    "accessible_by": self._get_data_collectors(),
+                    "api_response_url": urljoin(
+                        host,
+                        '{}?workspace={}'.format(
+                            reverse(
+                                'field_monitoring_data_collection:activities-offline',
+                                args=[self.activity.id, method.id]
+                            ),
+                            connection.tenant.schema_name or ''
+                        )
                     )
-                )
-            })
+                })
+            except JSONDecodeError:
+                capture_exception()
 
     def update_data_collectors_list(self) -> None:
         if not self.enabled:
             return
 
         for method in self.activity.methods:
-            OfflineCollect().update(
-                get_blueprint_code(self.activity, method),
-                accessible_by=self._get_data_collectors()
-            )
+            try:
+                OfflineCollect().update(
+                    get_blueprint_code(self.activity, method),
+                    accessible_by=self._get_data_collectors()
+                )
+            except JSONDecodeError:
+                capture_exception()
 
     def close_blueprints(self) -> None:
         if not self.enabled:
@@ -85,4 +92,4 @@ class MonitoringActivityOfflineSynchronizer:
             try:
                 OfflineCollect().delete(code)
             except JSONDecodeError:
-                pass
+                capture_exception()

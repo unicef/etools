@@ -593,6 +593,12 @@
                         <td class="bordered" style="width: 45%;">Bank Contact Person</td>
                         <td class="bordered">{{ bank_detail.bank_contact_person }}</td>
                     </tr>
+                    {% if bank_detail.tax_number_5 %}
+                    <tr>
+                        <td class="bordered" style="width: 45%;">Hawala Banking Details</td>
+                        <td class="bordered">{{ bank_detail.tax_number_5 }}</td>
+                    </tr>
+                    {% endif %}
                 </table>
                 {% endfor %}
 
