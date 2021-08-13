@@ -1,11 +1,11 @@
 name = 'partners/intervention/past-start'
 defaults = {
     'description': 'Intervention past start date.',
-    'subject': 'eTools PD/HPD/SSFA Past Start Notification',
+    'subject': 'eTools PD/SPD Past Start Notification',
     'content': """
     Dear Colleague,
 
-    You are the focal point for the Programme Document / SSFA {{ reference_number }} {{ title }}.
+    You are the focal point for the Programme Document / SPD {{ reference_number }} {{ title }}.
 
     Please note that the start date of your document has passed, but as yet no FR information has been entered into eTools.
 

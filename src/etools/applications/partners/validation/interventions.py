@@ -271,7 +271,7 @@ def sections_valid(i):
     if not ind_sections.issubset(intervention_sections):
         draft_status_err = ' without deleting the indicators first' if i.status == i.DRAFT else ''
         raise BasicValidationError(_('The following sections have been selected on '
-                                     'the PD/SSFA indicators and cannot be removed{}: '.format(draft_status_err)) +
+                                     'the PD/SPD indicators and cannot be removed{}: '.format(draft_status_err)) +
                                    ', '.join([s.name for s in ind_sections - intervention_sections]))
     return True
 
@@ -285,7 +285,7 @@ def locations_valid(i):
     intervention_locations = set(i.flat_locations.all())
     if not ind_locations.issubset(intervention_locations):
         raise BasicValidationError(_('The following locations have been selected on '
-                                     'the PD/SSFA indicators and cannot be removed'
+                                     'the PD/SPD indicators and cannot be removed'
                                      ' without removing them from the indicators first: ') +
                                    ', '.join([str(loc) for loc in ind_locations - intervention_locations]))
     return True
@@ -357,10 +357,10 @@ class InterventionValid(CompleteValidation):
         'start_date_signed_valid': 'The start date cannot be before the later of signature dates.',
         'start_date_related_agreement_valid': 'PD start date cannot be earlier than the Start Date of the related PCA',
         'rigid_in_amendment_flag': 'Amendment Flag cannot be turned on without adding an amendment',
-        'sections_valid': "The sections selected on the PD/SSFA are not a subset of all sections selected "
-                          "for this PD/SSFA's indicators",
-        'locations_valid': "The locations selected on the PD/SSFA are not a subset of all locations selected "
-                          "for this PD/SSFA's indicators",
+        'sections_valid': "The sections selected on the PD/SPD are not a subset of all sections selected "
+                          "for this PD/SPD's indicators",
+        'locations_valid': "The locations selected on the PD/SPD are not a subset of all locations selected "
+                          "for this PD/SPD's indicators",
     }
 
     PERMISSIONS_CLASS = InterventionPermissions

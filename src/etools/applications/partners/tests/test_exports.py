@@ -130,7 +130,7 @@ class TestModelExport(BaseTenantTestCase):
             "Total CSO Contribution",
             "UNICEF Cash",
             "UNICEF Supply",
-            "Total PD/SSFA Budget",
+            "Total PD/SPD Budget",
             "FR Number(s)",
             "FR Currency",
             "FR Posting Date",

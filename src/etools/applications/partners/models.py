@@ -1845,7 +1845,7 @@ class Intervention(TimeStampedModel):
         verbose_name=_("Document Submission Date by CSO"),
         null=True,
         blank=True,
-        help_text='The date the partner submitted complete PD/SSFA documents to Unicef',
+        help_text='The date the partner submitted complete PD/SPD documents to Unicef',
     )
     submission_date_prc = models.DateField(
         verbose_name=_('Submission Date to PRC'),
