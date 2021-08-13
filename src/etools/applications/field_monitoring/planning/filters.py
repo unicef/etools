@@ -14,6 +14,8 @@ class MonitoringActivitiesFilterSet(filters.FilterSet):
     partners__in = M2MInFilter(field_name="partners")
     interventions__in = M2MInFilter(field_name="interventions")
     cp_outputs__in = M2MInFilter(field_name="cp_outputs")
+    sections__in = M2MInFilter(field_name="sections")
+    offices__in = M2MInFilter(field_name="offices")
 
     class Meta:
         model = MonitoringActivity
@@ -21,7 +23,7 @@ class MonitoringActivitiesFilterSet(filters.FilterSet):
             'monitor_type': ['exact'],
             'tpm_partner': ['exact', 'in'],
             'team_members': ['in'],
-            'person_responsible': ['exact', 'in'],
+            'visit_lead': ['exact', 'in'],
             'location': ['exact', 'in'],
             'location_site': ['exact', 'in'],
             'partners': ['in'],
@@ -30,7 +32,8 @@ class MonitoringActivitiesFilterSet(filters.FilterSet):
             'start_date': ['gte', 'lte'],
             'end_date': ['gte', 'lte'],
             'status': ['exact', 'in'],
-            'field_office': ['exact', 'in'],
+            'offices': ['exact', 'in'],
+            'sections': ['in'],
         }
 
 
@@ -85,3 +88,12 @@ class InterventionsFilterSet(filters.FilterSet):
     class Meta:
         model = Intervention
         fields = ['partners__in', 'cp_outputs__in']
+
+
+class HactForPartnerFilter(BaseFilterBackend):
+    def filter_queryset(self, request, queryset, view):
+        hact_for_partner = request.query_params.get('hact_for_partner', '')
+        if not hact_for_partner:
+            return queryset
+
+        return queryset.filter_hact_for_partner(hact_for_partner)

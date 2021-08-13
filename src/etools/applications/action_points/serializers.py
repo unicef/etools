@@ -1,5 +1,5 @@
 from django.utils import timezone
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from django_comments.models import Comment
 from rest_framework import serializers
@@ -12,7 +12,7 @@ from unicef_snapshot.serializers import SnapshotModelSerializer
 from etools.applications.action_points.categories.models import Category
 from etools.applications.action_points.categories.serializers import CategorySerializer
 from etools.applications.action_points.models import ActionPoint
-from etools.applications.partners.serializers.interventions_v2 import BaseInterventionListSerializer
+from etools.applications.partners.serializers.interventions_v2 import MinimalInterventionListSerializer
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
 from etools.applications.reports.serializers.v1 import ResultSerializer, SectionSerializer
@@ -73,7 +73,7 @@ class ActionPointListSerializer(PermissionsBasedSerializerMixin, ActionPointBase
         read_field=MinimalPartnerOrganizationListSerializer(read_only=True, label=_('Partner')),
     )
     intervention = SeparatedReadWriteField(
-        read_field=BaseInterventionListSerializer(read_only=True, label=_('PD/SSFA')),
+        read_field=MinimalInterventionListSerializer(read_only=True, label=_('PD/SSFA')),
         required=False,
     )
 

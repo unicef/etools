@@ -6,7 +6,8 @@ from etools.applications.core.renderers import FriendlyCSVRenderer
 class PartnerOrganizationCSVRenderer(r.CSVRenderer):
     header = ['vendor_number', 'organization_full_name',
               'short_name', 'alternate_name', 'partner_type', 'shared_with', 'address',
-              'phone_number', 'email_address', 'risk_rating', 'date_last_assessment_against_core_values',
+              'phone_number', 'email_address', 'risk_rating', 'sea_risk_rating_nm', 'psea_assessment_date',
+              'highest_risk_rating_type', 'highest_risk_rating_name', 'date_last_assessment_against_core_values',
               'actual_cash_transfer_for_cp', 'actual_cash_transfer_for_current_year', 'marked_for_deletion', 'blocked',
               'type_of_assessment', 'date_assessed', 'assessments', 'staff_members', 'url', 'planned_visits', ]
 
@@ -20,7 +21,7 @@ class PartnerOrganizationCSVRenderer(r.CSVRenderer):
         'address': 'Address',
         'phone_number': 'Phone Number',
         'email_address': 'Email Address',
-        'risk_rating': 'Risk Rating',
+        'risk_rating': 'HACT Risk Rating',
         'date_last_assessment_against_core_values': 'Date Last Assessed Against Core Values',
         'actual_cash_transfer_for_cp': 'Actual Cash Transfer for CP (USD)',
         'actual_cash_transfer_for_current_year': 'Actual Cash Transfer for Current Year (USD)',
@@ -223,7 +224,7 @@ class AgreementCSVRenderer(r.CSVRenderer):
 
 class InterventionCSVRenderer(r.CSVRenderer):
     header = [
-        "partner_name", "vendor_number", "status", "partner_type", "cso_type", "agreement_number", "country_programme",
+        "partner_name", "vendor_number", "status", "partner_type", "cso_type", "agreement_number", "country_programmes",
         "document_type", "number", "title", "start", "end", "offices", "sectors", "locations", "contingency_pd",
         "intervention_clusters", "unicef_focal_points", "partner_focal_points", "budget_currency", "cso_contribution",
         "unicef_budget", "unicef_supply", "total_planned_budget", "fr_numbers", "fr_currency", "fr_posting_date",
@@ -240,7 +241,7 @@ class InterventionCSVRenderer(r.CSVRenderer):
         "partner_type": "Partner Type",
         "cso_type": "CSO Type",
         "agreement_number": "Agreement",
-        "country_programme": "Country Programme",
+        "country_programmes": "Country Programme",
         "document_type": "Document Type",
         "number": "Reference Number",
         "title": "Document Title",

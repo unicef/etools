@@ -4,6 +4,7 @@ from django.test import override_settings, SimpleTestCase
 from django.urls import reverse
 
 from rest_framework import status
+from tablib import Dataset
 from unicef_snapshot.models import Activity
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
@@ -34,12 +35,19 @@ class BaseAgreementTestCase(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.pme_user = UserFactory(is_staff=True)
         cls.pme_user.groups.add(GroupFactory())
+        cls.partner_user = UserFactory(is_staff=False)
         cls.partner = PartnerFactory(
             partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION,
         )
-        cls.partner_staff = PartnerStaffFactory(partner=cls.partner)
-        cls.partner_user = cls.partner_staff.user
+        cls.partner_staff = PartnerStaffFactory(
+            partner=cls.partner,
+            user=cls.partner_user,
+        )
         cls.country_programme = CountryProgrammeFactory()
+        cls.agreement = AgreementFactory(partner=cls.partner)
+        cls.agreement.authorized_officers.add(cls.partner_staff)
+        for __ in range(10):
+            AgreementFactory()
 
 
 class TestList(BaseAgreementTestCase):
@@ -52,25 +60,26 @@ class TestList(BaseAgreementTestCase):
             user=self.pme_user,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(len(response.data) > 0)
         self.assertEqual(len(response.data), agreement_qs.count())
 
     def test_get_by_partner(self):
-        agreement_qs = Agreement.objects
+        agreement_qs = Agreement.objects.filter(partner=self.partner)
         response = self.forced_auth_req(
             "get",
             reverse("pmp_v3:agreement-list"),
             user=self.partner_user,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(len(response.data) > 0)
         self.assertEqual(len(response.data), agreement_qs.count())
 
     def test_get_by_partner_not_related(self):
-        user = UserFactory(is_staff=False)
-        user.groups.add(GroupFactory(name="Partnership Manager"))
+        staff = PartnerStaffFactory()
         response = self.forced_auth_req(
             "get",
             reverse("pmp_v3:agreement-list"),
-            user=user,
+            user=staff.user,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, [])
@@ -89,6 +98,39 @@ class TestList(BaseAgreementTestCase):
         self.assertEqual(len(response.data), agreement_qs.count())
         for data in response.data:
             self.assertEqual(data["partner"], self.partner.pk)
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_export_csv(self):
+        AgreementFactory()
+        response = self.forced_auth_req(
+            "get",
+            reverse("pmp_v3:agreement-list"),
+            user=self.pme_user,
+            data={"format": "csv"}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        dataset = Dataset().load(response.content.decode('utf-8'), "csv")
+        self.assertEqual(dataset.height, Agreement.objects.count())
+        self.assertEqual(
+            dataset._get_headers(),
+            [
+                'Reference Number',
+                'Status',
+                'Partner Name',
+                'partner_number',
+                'Agreement Type',
+                'Start Date',
+                'End Date',
+                'partner_manager_name',
+                'Signed By Partner Date',
+                'signed_by_name',
+                'Signed By UNICEF Date',
+                'staff_members',
+                'amendments',
+                'url',
+                'Special Conditions PCA',
+            ]
+        )
 
 
 class TestCreate(BaseAgreementTestCase):

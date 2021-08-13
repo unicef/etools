@@ -26,7 +26,8 @@ class TestAggregateHact(BaseTenantTestCase):
             name="Partner Name",
             partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION,
             shared_with=[PartnerOrganization.AGENCY_CHOICES.UN],
-            rating=PartnerOrganization.RATING_HIGH,
+            rating=PartnerOrganization.RATING_LOW,
+            highest_risk_rating_name=PartnerOrganization.RATING_HIGH,
             total_ct_cp=200.0,
             total_ct_cy=400.0,
             net_ct_cy=110000.0,
@@ -37,7 +38,8 @@ class TestAggregateHact(BaseTenantTestCase):
             name="Partner Name",
             partner_type=PartnerType.GOVERNMENT,
             shared_with=[PartnerOrganization.AGENCY_CHOICES.UNHCR],
-            rating=PartnerOrganization.RATING_LOW,
+            rating=PartnerOrganization.RATING_HIGH,
+            highest_risk_rating_name=PartnerOrganization.RATING_LOW,
             total_ct_cp=200.0,
             total_ct_cy=2200.0,
             net_ct_cy=510000.0,
@@ -125,11 +127,7 @@ class TestAggregateHact(BaseTenantTestCase):
         assurance_activities = self.aggregate_hact.get_assurance_activities()
         self.assertEqual(len(list(assurance_activities.keys())), 6)
         self.assertEqual(assurance_activities['programmatic_visits']['completed'], 0)
-
-        # The following logic is overridden with the COVID adaptations in the guidance
-        # self.assertEqual(assurance_activities['programmatic_visits']['min_required'], 5)
-        self.assertEqual(assurance_activities['programmatic_visits']['min_required'], 2)
-
+        self.assertEqual(assurance_activities['programmatic_visits']['min_required'], 5)
         self.assertEqual(assurance_activities['spot_checks']['completed'], 0)
         self.assertEqual(assurance_activities['spot_checks']['required'], 6)
         self.assertEqual(assurance_activities['scheduled_audit'], 1)

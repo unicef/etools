@@ -1,12 +1,11 @@
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.gis.db.models import PointField
-from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Prefetch, QuerySet
 from django.utils.text import slugify
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from model_utils import Choices, FieldTracker
 from model_utils.models import TimeStampedModel
@@ -153,7 +152,7 @@ class Option(models.Model):
     label = models.CharField(max_length=50, verbose_name=_('Label'))
     # TODO: remove json field usage and replace with Charfield as this is only used without a structure:
     # eg: value = 1, value = "Characters", value = True -> used only for automatic typecasting and cand be confusing
-    value = JSONField(verbose_name=_('Value'), blank=True, null=True)
+    value = models.JSONField(verbose_name=_('Value'), blank=True, null=True)
 
     class Meta:
         verbose_name = _('Option')
@@ -204,12 +203,12 @@ class LocationSite(TimeStampedModel):
 
     @staticmethod
     def get_parent_location(point):
-        matched_locations = Location.objects.filter(geom__contains=point)
-        if not matched_locations:
-            location = Location.objects.filter(gateway__admin_level=0).first()
+        locations = Location.objects.filter(geom__contains=point, is_active=True)
+        if locations:
+            matched_locations = list(filter(lambda l: l.is_leaf_node(), locations)) or locations
+            location = min(matched_locations, key=lambda l: l.geom.length)
         else:
-            leafs = filter(lambda l: l.is_leaf_node(), matched_locations)
-            location = min(leafs, key=lambda l: l.geom.length)
+            location = Location.objects.filter(gateway__admin_level=0, is_active=True).first()
 
         return location
 

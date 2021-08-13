@@ -21,6 +21,7 @@ from etools.applications.partners.models import (
     FileType,
     Intervention,
     InterventionAmendment,
+    InterventionReview,
     InterventionRisk,
     PartnerOrganization,
     PartnerType,
@@ -209,6 +210,10 @@ class PMPDropdownsListApiView(APIView):
             ),
             'cash_transfer_modalities': choices_to_json_ready(
                 Intervention.CASH_TRANSFER_CHOICES,
+                sort_choices=False,
+            ),
+            'review_types': choices_to_json_ready(
+                InterventionReview.ALL_REVIEW_TYPES,
                 sort_choices=False,
             ),
         }
