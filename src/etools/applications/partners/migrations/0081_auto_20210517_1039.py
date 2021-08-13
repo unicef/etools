@@ -103,7 +103,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='interventionreview',
             name='overall_approval',
-            field=models.NullBooleanField(),
+            field=models.BooleanField(null=True, blank=True),
         ),
         migrations.AlterField(
             model_name='interventionreview',
@@ -125,7 +125,7 @@ class Migration(migrations.Migration):
                 ('budget_is_aligned', models.CharField(blank=True, choices=[('', 'Not decided yet'), ('a', 'Yes, strongly agree'), ('b', 'Yes, agree'), ('c', 'No, disagree'), ('d', 'No, strongly disagree')], max_length=100, verbose_name='The budget of the proposed PD/SPD is aligned with the principles of value for money with the effective and efficient programme management costs adhering to office defined limits')),
                 ('supply_issues_considered', models.CharField(blank=True, choices=[('', 'Not decided yet'), ('a', 'Yes, strongly agree'), ('b', 'Yes, agree'), ('c', 'No, disagree'), ('d', 'No, strongly disagree')], max_length=100, verbose_name='The relevant supply issues have been duly considered')),
                 ('overall_comment', models.TextField(blank=True)),
-                ('overall_approval', models.NullBooleanField()),
+                ('overall_approval', models.BooleanField(null=True, blank=True)),
                 ('started_date', models.DateField(blank=True, null=True, verbose_name='Date Review Started')),
                 ('submitted_date', models.DateField(blank=True, null=True, verbose_name='Date Review Submitted')),
                 ('overall_review', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='prc_reviews', to='partners.InterventionReview')),

@@ -2986,7 +2986,7 @@ class InterventionReviewQuestionnaire(models.Model):
     )
 
     overall_comment = models.TextField(blank=True)
-    overall_approval = models.NullBooleanField()
+    overall_approval = models.BooleanField(null=True, blank=True)
 
     class Meta:
         abstract = True
