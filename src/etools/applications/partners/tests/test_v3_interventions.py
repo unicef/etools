@@ -1673,6 +1673,7 @@ class TestInterventionReview(BaseInterventionActionTestCase):
         self.intervention.partner_accepted = True
         self.intervention.unicef_accepted = True
         self.intervention.date_sent_to_partner = datetime.date.today()
+        self.intervention.submission_date_prc = None
         self.intervention.save()
 
         # unicef reviews
@@ -1683,6 +1684,7 @@ class TestInterventionReview(BaseInterventionActionTestCase):
         mock_send.assert_called()
         self.intervention.refresh_from_db()
         self.assertEqual(self.intervention.status, Intervention.REVIEW)
+        self.assertEqual(self.intervention.submission_date_prc, datetime.date.today())
         review = self.intervention.reviews.last()
         self.assertEqual(review.review_type, 'prc')
 
@@ -2110,16 +2112,22 @@ class TestInterventionSignature(BaseInterventionActionTestCase):
     def test_patch(self):
         # unicef signature
         self.intervention.date_sent_to_partner = datetime.date.today()
+        self.intervention.review_date_prc = None
         self.intervention.save()
-        InterventionReviewFactory(intervention=self.intervention, overall_approver=self.user)
+        InterventionReviewFactory(
+            intervention=self.intervention,
+            overall_approver=self.user,
+            review_type=InterventionReview.PRC,
+        )
         mock_send = mock.Mock(return_value=self.mock_email)
         with mock.patch(self.notify_path, mock_send):
             response = self.forced_auth_req("patch", self.url, user=self.user)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         mock_send.assert_called()
         intervention = Intervention.objects.get(pk=self.intervention.pk)
         self.assertEqual(intervention.status, Intervention.SIGNATURE)
         self.assertEqual(intervention.review.review_date, timezone.now().date())
+        self.assertEqual(intervention.review_date_prc, timezone.now().date())
 
         # unicef attempt to signature again
         mock_send = mock.Mock()
@@ -2128,6 +2136,13 @@ class TestInterventionSignature(BaseInterventionActionTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("PD is already in Signature status.", response.data)
         mock_send.assert_not_called()
+
+    def test_days_from_review_to_signed(self):
+        now = timezone.now().date()
+        self.intervention.review_date_prc = now - datetime.timedelta(weeks=3)
+        self.intervention.signed_by_partner_date = now - datetime.timedelta(weeks=2)
+        self.intervention.signed_by_unicef_date = now - datetime.timedelta(weeks=1)
+        self.assertEqual(self.intervention.days_from_review_to_signed, 10)
 
 
 class TestInterventionUnlock(BaseInterventionActionTestCase):
