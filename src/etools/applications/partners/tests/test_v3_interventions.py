@@ -404,6 +404,18 @@ class TestDetail(BaseInterventionTestCase):
         self.assertIn("sign", response.data["available_actions"])
         self.assertIn("reject_review", response.data["available_actions"])
 
+    def test_empty_actions_while_cancelled(self):
+        self.intervention.status = Intervention.CANCELLED
+        self.intervention.budget_owner = self.user
+        self.intervention.save()
+        response = self.forced_auth_req(
+            "get",
+            reverse('pmp_v3:intervention-detail', args=[self.intervention.pk]),
+            user=self.user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertListEqual(['download_comments', 'export_results'], response.data["available_actions"])
+
     def test_num_queries(self):
         [InterventionManagementBudgetItemFactory(budget=self.intervention.management_budgets) for _i in range(10)]
 
