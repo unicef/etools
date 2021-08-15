@@ -10,33 +10,21 @@ from celery import chain
 from unicef_locations.admin import CartoDBTableAdmin
 from unicef_locations.auth import LocationsCartoNoAuthClient
 from unicef_locations.models import CartoDBTable, LocationRemapHistory
+from unicef_locations.utils import get_remapping
 
-from etools.libraries.locations.helpers import get_remapping
 from etools.libraries.locations.tasks import import_locations, notify_import_site_completed
 
 
-class EtoolsCartoDBTableAdmin(ExtraUrlMixin, CartoDBTableAdmin):
+class EtoolsCartoDBTableAdmin(CartoDBTableAdmin):
 
     @button(css_class="btn-warning auto-disable")
-    def import_sites_v2(self, request, pk):
+    def import_sites(self, request, pk):
         chain([
             import_locations.si(pk),
             notify_import_site_completed.si(pk, request.user.pk)
         ]).delay()
 
         messages.info(request, 'Import Scheduled')
-
-    @button(css_class="btn-warning auto-disable")
-    def show_remap_table(self, request, pk):
-        carto_table = CartoDBTable.objects.get(pk=pk)
-        sql_client = SQLClient(LocationsCartoNoAuthClient(base_url=f"https://{carto_table.domain}.carto.com/"))
-        old2new, to_deactivate = get_remapping(sql_client, carto_table)
-        template = loader.get_template('admin/location_remap.html')
-        context = {
-            'old2new': old2new,
-            'to_deactivate': to_deactivate
-        }
-        return HttpResponse(template.render(context, request))
 
 
 class RemapAdmin(admin.ModelAdmin):
