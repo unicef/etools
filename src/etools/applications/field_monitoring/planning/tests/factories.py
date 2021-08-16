@@ -7,8 +7,14 @@ from unicef_locations.tests.factories import LocationFactory
 from etools.applications.action_points.categories.models import Category
 from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.field_monitoring.fm_settings.tests.factories import QuestionFactory
-from etools.applications.field_monitoring.planning.models import MonitoringActivity, QuestionTemplate, YearPlan
+from etools.applications.field_monitoring.planning.models import (
+    MonitoringActivity,
+    MonitoringActivityGroup,
+    QuestionTemplate,
+    YearPlan,
+)
 from etools.applications.field_monitoring.tests.factories import UserFactory
+from etools.applications.partners.tests.factories import PartnerFactory
 from etools.libraries.tests.factories import StatusFactoryMetaClass
 
 
@@ -99,7 +105,7 @@ class ReviewActivityFactory(ChecklistActivityFactory):
 
 
 class PreAssignedActivityFactory(ReviewActivityFactory):
-    person_responsible = factory.SubFactory(UserFactory, unicef_user=True)
+    visit_lead = factory.SubFactory(UserFactory, unicef_user=True)
     team_members__count = 2
 
 
@@ -153,3 +159,19 @@ class QuestionTemplateFactory(factory.django.DjangoModelFactory):
 class MonitoringActivityActionPointFactory(ActionPointFactory):
     monitoring_activity = factory.SubFactory(MonitoringActivityFactory, status='completed')
     category__module = Category.MODULE_CHOICES.fm
+
+
+class MonitoringActivityGroupFactory(factory.django.DjangoModelFactory):
+    partner = factory.SubFactory(PartnerFactory)
+
+    class Meta:
+        model = MonitoringActivityGroup
+
+    @factory.post_generation
+    def monitoring_activities(self, create, extracted, **kwargs):
+        if not create:
+            return
+
+        if extracted:
+            for activity in extracted:
+                self.monitoring_activities.add(activity)

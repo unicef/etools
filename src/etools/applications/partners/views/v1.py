@@ -55,9 +55,13 @@ class PCAPDFView(LoginRequiredMixin, PDFTemplateView):
         if not self.agreement.authorized_officers.exists():
             return {"error": 'Partner Organization has no "Authorized Officers selected" selected'}
 
-        valid_response, response = get_data_from_insight('partners/?vendor={vendor_code}',
-                                                         {"vendor_code": self.agreement.partner.vendor_number})
+        url = 'partners/?vendor={vendor_code}'
+        data = {"vendor_code": self.agreement.partner.vendor_number}
+        if settings.INSIGHT_BANK_KEY:
+            url += '&key={key}'
+            data["key"] = settings.INSIGHT_BANK_KEY
 
+        valid_response, response = get_data_from_insight(url, data)
         if not valid_response:
             return {"error": response}
         try:
@@ -74,15 +78,22 @@ class PCAPDFView(LoginRequiredMixin, PDFTemplateView):
             ('routing_details', "SWIFT_CODE"),
             ('account_number', "BANK_ACCOUNT_NO"),
             ('account_currency', "BANK_ACCOUNT_CURRENCY"),
+            ('tax_number_5', "TAX_NUMBER_5"),
         ]
         Bank = namedtuple('Bank', ' '.join([i[0] for i in bank_key_values]))
         bank_objects = []
+
+        tax_number_5 = None
+        if self.request.tenant.business_area_code == '3920' and response["ROWSET"]["ROW"]['TAX_NUMBER_5']:
+            tax_number_5 = response["ROWSET"]["ROW"]['TAX_NUMBER_5']
         for b in banks_records:
             if isinstance(b, dict):
-                b["BANK_ADDRESS"] = ', '.join(b[key] for key in ['STREET', 'CITY'] if key in b)
+                b["BANK_ADDRESS"] = ', '.join(b[key] for key in ['STREET', 'CITY'] if key in b and b[key])
                 b["ACCT_HOLDER"] = b["ACCT_HOLDER"] if "ACCT_HOLDER" in b else ""
                 # TODO: fix currency field name when we have it
                 b["BANK_ACCOUNT_CURRENCY"] = b["BANK_ACCOUNT_CURRENCY"] if "BANK_ACCOUNT_CURRENCY" in b else ""
+                b["TAX_NUMBER_5"] = tax_number_5
+
                 bank_objects.append(Bank(*[b[i[1]] for i in bank_key_values]))
 
         officers_list = []

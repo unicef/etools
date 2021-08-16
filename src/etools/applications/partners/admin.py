@@ -1,6 +1,3 @@
-from functools import update_wrapper
-
-from django.conf.urls import url
 from django.contrib import admin
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
@@ -10,6 +7,8 @@ from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
+from admin_extra_urls.decorators import button
+from admin_extra_urls.mixins import ExtraUrlMixin
 from import_export.admin import ExportMixin
 from unicef_attachments.admin import AttachmentSingleInline
 from unicef_attachments.models import Attachment
@@ -460,9 +459,8 @@ class CoreValueAssessmentInline(admin.StackedInline):
     extra = 0
 
 
-class PartnerAdmin(ExportMixin, admin.ModelAdmin):
+class PartnerAdmin(ExtraUrlMixin, ExportMixin, admin.ModelAdmin):
     form = PartnersAdminForm
-    change_form_template = 'admin/partners/partnerorganization/change_form.html'
     resource_class = PartnerExport
     search_fields = (
         'name',
@@ -520,6 +518,8 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
                 (('name', 'vision_synced',),
                  ('short_name', 'alternate_name',),
                  ('partner_type', 'cso_type',),
+                 'lead_office',
+                 'lead_section',
                  'shared_with',
                  'vendor_number',
                  'rating',
@@ -581,24 +581,20 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
     def has_module_permission(self, request):
         return request.user.is_superuser or request.user.groups.filter(name='Country Office Administrator').exists()
 
-    def get_urls(self):
-        urls = super().get_urls()
-
-        def wrap(view):
-            def wrapper(*args, **kwargs):
-                return self.admin_site.admin_view(view)(*args, **kwargs)
-
-            return update_wrapper(wrapper, view)
-
-        custom_urls = [
-            url(r'^(?P<pk>\d+)/sync_partner/$', wrap(self.sync_partner),
-                name='partnerorganization_sync_partner'),
-        ]
-        return custom_urls + urls
-
+    @button()
     def sync_partner(self, request, pk):
         sync_partner(PartnerOrganization.objects.get(id=pk).vendor_number, request.user.profile.country)
         return HttpResponseRedirect(reverse('admin:partners_partnerorganization_change', args=[pk]))
+
+    @button()
+    def update_hact(self, request, pk):
+        obj = self.get_object(request, pk)
+        obj.planned_visits_to_hact()
+        obj.programmatic_visits()
+        obj.spot_checks()
+        obj.audits_completed()
+        obj.hact_support()
+        obj.update_min_requirements()
 
 
 class PlannedEngagementAdmin(admin.ModelAdmin):

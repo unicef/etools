@@ -7,6 +7,7 @@ from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
+from rest_framework_gis.fields import GeometryField
 from unicef_attachments.fields import FileTypeModelChoiceField
 from unicef_attachments.models import FileType
 from unicef_attachments.serializers import BaseAttachmentSerializer
@@ -129,6 +130,7 @@ class LocationSiteLightSerializer(serializers.ModelSerializer):
         (True, _('Active')),
         (False, _('Inactive')),
     ), label=_('Status'), required=False)
+    point = GeometryField(precision=5)
 
     class Meta:
         model = LocationSite

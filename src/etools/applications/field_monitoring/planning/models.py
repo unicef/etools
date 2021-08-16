@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import connection, models
-from django.db.models import Q
+from django.db.models import Exists, OuterRef, Q
 from django.db.models.base import ModelBase
 from django.utils.translation import gettext_lazy as _
 
@@ -23,7 +23,8 @@ from etools.applications.field_monitoring.fm_settings.models import LocationSite
 from etools.applications.field_monitoring.planning.mixins import ProtectUnknownTransitionsMeta
 from etools.applications.field_monitoring.planning.transitions.permissions import (
     user_is_field_monitor_permission,
-    user_is_person_responsible_permission,
+    user_is_pme_permission,
+    user_is_visit_lead_permission,
 )
 from etools.applications.partners.models import Intervention, PartnerOrganization
 from etools.applications.reports.models import Result, Section
@@ -70,9 +71,9 @@ class YearPlan(TimeStampedModel):
 class QuestionTargetMixin(models.Model):
     partner = models.ForeignKey(PartnerOrganization, blank=True, null=True, verbose_name=_('Partner'),
                                 on_delete=models.CASCADE, related_name='+')
-    cp_output = models.ForeignKey(Result, blank=True, null=True, verbose_name=_('Partner'),
+    cp_output = models.ForeignKey(Result, blank=True, null=True, verbose_name=_('CP Output'),
                                   on_delete=models.CASCADE, related_name='+')
-    intervention = models.ForeignKey(Intervention, blank=True, null=True, verbose_name=_('Partner'),
+    intervention = models.ForeignKey(Intervention, blank=True, null=True, verbose_name=_('Intervention'),
                                      on_delete=models.CASCADE, related_name='+')
 
     @property
@@ -99,6 +100,34 @@ class QuestionTemplate(QuestionTargetMixin, models.Model):
 
     def __str__(self):
         return 'Question Template for {}'.format(self.related_to)
+
+
+class MonitoringActivitiesQuerySet(models.QuerySet):
+    def filter_hact_for_partner(self, partner_id: int):
+        from etools.applications.field_monitoring.data_collection.models import (
+            ActivityOverallFinding,
+            ActivityQuestionOverallFinding,
+        )
+
+        question_sq = ActivityQuestionOverallFinding.objects.filter(
+            activity_question__monitoring_activity_id=OuterRef('id'),
+            activity_question__question__is_hact=True,
+            activity_question__question__level='partner',
+            value__isnull=False,
+        )
+        finding_sq = ActivityOverallFinding.objects.filter(
+            ~Q(narrative_finding=''),
+            monitoring_activity_id=OuterRef('id'),
+            partner_id=partner_id,
+        )
+
+        return self.annotate(
+            is_hact=Exists(question_sq),
+            has_finding_for_partner=Exists(finding_sq),
+        ).filter(
+            is_hact=True,
+            has_finding_for_partner=True,
+        )
 
 
 class MonitoringActivityMeta(ProtectUnknownTransitionsMeta, ModelBase):
@@ -198,9 +227,9 @@ class MonitoringActivity(
                                     on_delete=models.CASCADE)
     team_members = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True, verbose_name=_('Team Members'),
                                           related_name='monitoring_activities')
-    person_responsible = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True,
-                                           verbose_name=_('Person Responsible'), related_name='+',
-                                           on_delete=models.SET_NULL)
+    visit_lead = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True,
+                                   verbose_name=_('Person Responsible'), related_name='+',
+                                   on_delete=models.SET_NULL)
 
     field_office = models.ForeignKey('reports.Office', blank=True, null=True, verbose_name=_('Field Office'),
                                      on_delete=models.CASCADE)
@@ -234,7 +263,9 @@ class MonitoringActivity(
     report_reject_reason = models.TextField(verbose_name=_('Report rejection reason'), blank=True)
     cancel_reason = models.TextField(verbose_name=_('Cancellation reason'), blank=True)
 
-    person_responsible_tracker = FieldTracker(fields=['person_responsible'])
+    visit_lead_tracker = FieldTracker(fields=['visit_lead'])
+
+    objects = models.Manager.from_queryset(MonitoringActivitiesQuerySet)()
 
     class Meta:
         verbose_name = _('Monitoring Activity')
@@ -377,7 +408,7 @@ class MonitoringActivity(
 
         context = {
             'object_url': object_url,
-            'person_responsible': self.person_responsible.get_full_name(),
+            'visit_lead': self.visit_lead.get_full_name(),
             'reference_number': self.number,
             'location_name': self.location.name,
             'vendor_name': self.tpm_partner.name if self.tpm_partner else None,
@@ -434,19 +465,19 @@ class MonitoringActivity(
         pass
 
     @transition(field=status, source=STATUSES.assigned, target=STATUSES.data_collection,
-                permission=user_is_person_responsible_permission)
+                permission=user_is_visit_lead_permission)
     def accept(self):
         pass
 
     def auto_accept_staff_activity(self, old_instance):
         # send email to users assigned to fm activity
         recipients = set(
-            list(self.team_members.all()) + [self.person_responsible]
+            list(self.team_members.all()) + [self.visit_lead]
         )
         # check if it was rejected otherwise send assign message
         if old_instance and old_instance.status == self.STATUSES.submitted:
             email_template = "fm/activity/staff-reject"
-            recipients = [self.person_responsible]
+            recipients = [self.visit_lead]
         elif self.monitor_type == self.MONITOR_TYPE_CHOICES.staff:
             email_template = 'fm/activity/staff-assign'
         else:
@@ -467,32 +498,32 @@ class MonitoringActivity(
             self.init_offline_blueprints()
 
     @transition(field=status, source=STATUSES.assigned, target=STATUSES.draft,
-                permission=user_is_person_responsible_permission)
+                permission=user_is_visit_lead_permission)
     def reject(self):
         pass
 
     @transition(field=status, source=STATUSES.data_collection, target=STATUSES.report_finalization,
-                permission=user_is_person_responsible_permission)
+                permission=user_is_visit_lead_permission)
     def mark_data_collected(self):
         pass
 
     @transition(field=status, source=STATUSES.report_finalization, target=STATUSES.data_collection,
-                permission=user_is_person_responsible_permission)
+                permission=user_is_visit_lead_permission)
     def revert_data_collected(self):
         pass
 
     @transition(field=status, source=STATUSES.report_finalization, target=STATUSES.submitted,
-                permission=user_is_person_responsible_permission)
+                permission=user_is_visit_lead_permission)
     def submit_report(self):
         pass
 
     @transition(field=status, source=STATUSES.submitted, target=STATUSES.completed,
-                permission=user_is_field_monitor_permission)
+                permission=user_is_pme_permission)
     def complete(self):
         pass
 
     @transition(field=status, source=STATUSES.submitted, target=STATUSES.report_finalization,
-                permission=user_is_field_monitor_permission)
+                permission=user_is_pme_permission)
     def reject_report(self):
         pass
 
@@ -567,3 +598,15 @@ class MonitoringActivityActionPoint(ActionPoint):
         if self.monitoring_activity:
             context['monitoring_activity'] = self.monitoring_activity.get_mail_context(user=user)
         return context
+
+
+class MonitoringActivityGroup(models.Model):
+    partner = models.ForeignKey(
+        'partners.PartnerOrganization',
+        on_delete=models.CASCADE,
+        related_name='monitoring_activity_groups',
+    )
+    monitoring_activities = models.ManyToManyField(MonitoringActivity, related_name='groups')
+
+    def __str__(self):
+        return f'{self.partner} Monitoring Activities Group'

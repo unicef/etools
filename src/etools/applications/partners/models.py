@@ -3,7 +3,7 @@ import decimal
 import json
 
 from django.conf import settings
-from django.contrib.postgres.fields import ArrayField, JSONField
+from django.contrib.postgres.fields import ArrayField
 from django.db import connection, IntegrityError, models, transaction
 from django.db.models import Case, CharField, Count, F, Max, Min, OuterRef, Q, Subquery, Sum, When
 from django.urls import reverse
@@ -498,7 +498,7 @@ class PartnerOrganization(TimeStampedModel):
         verbose_name=_('Outstanding DCT more than 9 months')
     )
 
-    hact_values = JSONField(blank=True, null=True, default=hact_default, verbose_name='HACT')
+    hact_values = models.JSONField(blank=True, null=True, default=hact_default, verbose_name='HACT')
     basis_for_risk_rating = models.CharField(
         verbose_name=_("Basis for Risk Rating"), max_length=50, default='', blank=True)
     psea_assessment_date = models.DateTimeField(
@@ -525,6 +525,10 @@ class PartnerOrganization(TimeStampedModel):
         blank=True,
         default='',
     )
+    lead_office = models.ForeignKey(Office, verbose_name=_("Lead Office"),
+                                    blank=True, null=True, on_delete=models.SET_NULL)
+    lead_section = models.ForeignKey(Section, verbose_name=_("Lead Section"),
+                                     blank=True, null=True, on_delete=models.SET_NULL)
 
     tracker = FieldTracker()
     objects = PartnerOrganizationQuerySet.as_manager()
@@ -605,44 +609,49 @@ class PartnerOrganization(TimeStampedModel):
     @cached_property
     def min_req_programme_visits(self):
         programme_visits = 0
-        ct = self.net_ct_cy or 0  # Must be integer, but net_ct_cy could be None
+        if self.partner_type not in [PartnerType.BILATERAL_MULTILATERAL, PartnerType.UN_AGENCY]:
+            ct = self.net_ct_cy or 0  # Must be integer, but net_ct_cy could be None
 
-        if ct <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL:
-            programme_visits = 0
-        elif PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL < ct <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL2:
-            programme_visits = 1
-        elif PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL2 < ct <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL3:
-            if self.highest_risk_rating_name in [PartnerOrganization.RATING_HIGH,
-                                                 PartnerOrganization.RATING_HIGH_RISK_ASSUMED,
-                                                 PartnerOrganization.RATING_SIGNIFICANT]:
-                programme_visits = 3
-            elif self.highest_risk_rating_name in [PartnerOrganization.RATING_MEDIUM, ]:
-                programme_visits = 2
-            elif self.highest_risk_rating_name in [PartnerOrganization.RATING_LOW,
-                                                   PartnerOrganization.RATING_LOW_RISK_ASSUMED]:
+            if ct <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL:
+                programme_visits = 0
+            elif PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL < ct <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL2:
                 programme_visits = 1
-        else:
-            if self.highest_risk_rating_name in [PartnerOrganization.RATING_HIGH,
-                                                 PartnerOrganization.RATING_HIGH_RISK_ASSUMED,
-                                                 PartnerOrganization.RATING_SIGNIFICANT]:
-                programme_visits = 4
-            elif self.highest_risk_rating_name in [PartnerOrganization.RATING_MEDIUM, ]:
-                programme_visits = 3
-            elif self.highest_risk_rating_name in [PartnerOrganization.RATING_LOW,
-                                                   PartnerOrganization.RATING_LOW_RISK_ASSUMED]:
-                programme_visits = 2
+            elif PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL2 < ct <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL3:
+                if self.highest_risk_rating_name in [PartnerOrganization.RATING_HIGH,
+                                                     PartnerOrganization.RATING_HIGH_RISK_ASSUMED,
+                                                     PartnerOrganization.RATING_SIGNIFICANT]:
+                    programme_visits = 3
+                elif self.highest_risk_rating_name in [PartnerOrganization.RATING_MEDIUM, ]:
+                    programme_visits = 2
+                elif self.highest_risk_rating_name in [PartnerOrganization.RATING_LOW,
+                                                       PartnerOrganization.RATING_LOW_RISK_ASSUMED]:
+                    programme_visits = 1
+            else:
+                if self.highest_risk_rating_name in [PartnerOrganization.RATING_HIGH,
+                                                     PartnerOrganization.RATING_HIGH_RISK_ASSUMED,
+                                                     PartnerOrganization.RATING_SIGNIFICANT]:
+                    programme_visits = 4
+                elif self.highest_risk_rating_name in [PartnerOrganization.RATING_MEDIUM, ]:
+                    programme_visits = 3
+                elif self.highest_risk_rating_name in [PartnerOrganization.RATING_LOW,
+                                                       PartnerOrganization.RATING_LOW_RISK_ASSUMED]:
+                    programme_visits = 2
         return programme_visits
 
     @cached_property
     def min_req_spot_checks(self):
         # reported_cy can be None
         reported_cy = self.reported_cy or 0
+        if self.partner_type in [PartnerType.BILATERAL_MULTILATERAL, PartnerType.UN_AGENCY]:
+            return 0
         if self.type_of_assessment == 'Low Risk Assumed' or reported_cy <= PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL:
             return 0
         return 1
 
     @cached_property
     def min_req_audits(self):
+        if self.partner_type in [PartnerType.BILATERAL_MULTILATERAL, PartnerType.UN_AGENCY]:
+            return 0
         return self.planned_engagement.required_audit if getattr(self, 'planned_engagement', None) else 0
 
     @cached_property
@@ -708,7 +717,7 @@ class PartnerOrganization(TimeStampedModel):
         :return: all completed programmatic visits
         """
         # Avoid circular imports
-        from etools.applications.field_monitoring.data_collection.models import ActivityQuestion
+        from etools.applications.field_monitoring.planning.models import MonitoringActivity, MonitoringActivityGroup
 
         hact = self.get_hact_json()
 
@@ -746,22 +755,40 @@ class PartnerOrganization(TimeStampedModel):
 
             tpm_total = tpmv1 + tpmv2 + tpmv3 + tpmv4
 
+            fmvgs = MonitoringActivityGroup.objects.filter(
+                partner=self,
+                monitoring_activities__status="completed",
+            ).annotate(
+                end_date=Max('monitoring_activities__end_date'),
+            ).distinct()
+            fmgv1 = fmvgs.filter(end_date__quarter=1).count()
+            fmgv2 = fmvgs.filter(end_date__quarter=2).count()
+            fmgv3 = fmvgs.filter(end_date__quarter=3).count()
+            fmgv4 = fmvgs.filter(end_date__quarter=4).count()
+            fmgv_total = fmgv1 + fmgv2 + fmgv3 + fmgv4
+
             # field monitoring activities qualify as programmatic visits if during a monitoring activity the hact
             # question was answered with an overall rating and the visit is completed
-            fmvqs = ActivityQuestion.objects.filter(question__is_hact=True, partner=self,
-                                                    overall_finding__value__isnull=False,
-                                                    monitoring_activity__status="completed")
-            fmvq1 = fmvqs.filter(monitoring_activity__end_date__quarter=1).count()
-            fmvq2 = fmvqs.filter(monitoring_activity__end_date__quarter=2).count()
-            fmvq3 = fmvqs.filter(monitoring_activity__end_date__quarter=3).count()
-            fmvq4 = fmvqs.filter(monitoring_activity__end_date__quarter=4).count()
+            grouped_activities = MonitoringActivityGroup.objects.filter(
+                partner=self
+            ).values_list('monitoring_activities__id', flat=True)
+            fmvqs = MonitoringActivity.objects.filter(
+                partners=self, status="completed",
+                end_date__year=datetime.datetime.now().year,
+            ).filter_hact_for_partner(self.id).exclude(
+                id__in=grouped_activities,
+            )
+            fmvq1 = fmvqs.filter(end_date__quarter=1).count()
+            fmvq2 = fmvqs.filter(end_date__quarter=2).count()
+            fmvq3 = fmvqs.filter(end_date__quarter=3).count()
+            fmvq4 = fmvqs.filter(end_date__quarter=4).count()
             fmv_total = fmvq1 + fmvq2 + fmvq3 + fmvq4
 
-            hact['programmatic_visits']['completed']['q1'] = pvq1 + tpmv1 + fmvq1
-            hact['programmatic_visits']['completed']['q2'] = pvq2 + tpmv2 + fmvq2
-            hact['programmatic_visits']['completed']['q3'] = pvq3 + tpmv3 + fmvq3
-            hact['programmatic_visits']['completed']['q4'] = pvq4 + tpmv4 + fmvq4
-            hact['programmatic_visits']['completed']['total'] = pv + tpm_total + fmv_total
+            hact['programmatic_visits']['completed']['q1'] = pvq1 + tpmv1 + fmgv1 + fmvq1
+            hact['programmatic_visits']['completed']['q2'] = pvq2 + tpmv2 + fmgv2 + fmvq2
+            hact['programmatic_visits']['completed']['q3'] = pvq3 + tpmv3 + fmgv3 + fmvq3
+            hact['programmatic_visits']['completed']['q4'] = pvq4 + tpmv4 + fmgv4 + fmvq4
+            hact['programmatic_visits']['completed']['total'] = pv + tpm_total + fmgv_total + fmv_total
 
         self.hact_values = hact
         self.save()
@@ -1898,7 +1925,7 @@ class Intervention(TimeStampedModel):
 
     # Flag if this has been migrated to a status that is not correct
     # previous status
-    metadata = JSONField(
+    metadata = models.JSONField(
         verbose_name=_("Metadata"),
         blank=True,
         null=True,
