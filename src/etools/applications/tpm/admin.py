@@ -1,5 +1,6 @@
 from django.contrib import admin
 
+from etools.applications.action_points.admin import ActionPointAdmin
 from etools.applications.tpm import forms, models
 
 
@@ -66,11 +67,6 @@ class TPMVisitAdmin(admin.ModelAdmin):
 
 
 @admin.register(models.TPMActionPoint)
-class TPMActionPointAdmin(admin.ModelAdmin):
+class TPMActionPointAdmin(ActionPointAdmin):
     form = forms.TPMActionPointForm
-
-    readonly_fields = ['status']
-    search_fields = ('author__username', 'assigned_to__username',)
-    list_display = [
-        'author', 'assigned_to', 'tpm_activity', 'due_date', 'status',
-    ]
+    list_display = ('tpm_activity', ) + ActionPointAdmin.list_display

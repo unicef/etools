@@ -184,6 +184,7 @@ SHARED_APPS = (
     'easy_pdf',
     'ordered_model',
     'social_django',
+    'admin_extra_urls',
     'etools.applications.vision',
     'etools.applications.publics',
     'etools.applications.users',
@@ -286,6 +287,8 @@ LOGIN_REDIRECT_URL = '/'
 HOST = get_from_secrets_or_env('DJANGO_ALLOWED_HOST', 'http://localhost:8082')
 
 LOGIN_URL = LOGOUT_REDIRECT_URL = get_from_secrets_or_env('LOGIN_URL', '/landing/')
+
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 # CONTRIB: GIS (GeoDjango)
 POSTGIS_VERSION = (2, 1)
@@ -557,7 +560,7 @@ ATTACHMENT_DENORMALIZE_FUNC = "etools.applications.attachments.utils.denormalize
 ATTACHMENT_PERMISSIONS = "etools.applications.attachments.permissions.IsInSchema"
 
 GEOS_LIBRARY_PATH = os.getenv('GEOS_LIBRARY_PATH', '/usr/lib/libgeos_c.so.1')  # default path
-GDAL_LIBRARY_PATH = os.getenv('GDAL_LIBRARY_PATH', '/usr/lib/libgdal.so.26')  # default path
+GDAL_LIBRARY_PATH = os.getenv('GDAL_LIBRARY_PATH', '/usr/lib/libgdal.so.28')  # default path
 
 SHELL_PLUS_PRE_IMPORTS = (
     ('etools.applications.core.util_scripts', '*'),

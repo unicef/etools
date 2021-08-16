@@ -144,9 +144,9 @@ class Travel(models.Model):
     end_date = models.DateField(null=True, blank=True, verbose_name=_('End Date'))
     purpose = models.CharField(max_length=500, default='', blank=True, verbose_name=_('Purpose'))
     additional_note = models.TextField(default='', blank=True, verbose_name=_('Additional Note'))
-    international_travel = models.NullBooleanField(default=False, null=True, blank=True,
-                                                   verbose_name=_('International Travel'))
-    ta_required = models.NullBooleanField(default=True, null=True, blank=True, verbose_name=_('TA Required'))
+    international_travel = models.BooleanField(default=False, null=True, blank=True,
+                                               verbose_name=_('International Travel'))
+    ta_required = models.BooleanField(default=True, null=True, blank=True, verbose_name=_('TA Required'))
     reference_number = models.CharField(max_length=12, default=make_travel_reference_number, unique=True,
                                         verbose_name=_('Reference Number'))
     hidden = models.BooleanField(default=False, verbose_name=_('Hidden'))
