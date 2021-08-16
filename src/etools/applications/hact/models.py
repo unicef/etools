@@ -12,6 +12,7 @@ from model_utils.models import TimeStampedModel
 from etools.applications.audit.models import Audit, Engagement, MicroAssessment, SpecialAudit, SpotCheck
 from etools.applications.partners.models import PartnerOrganization, PartnerType
 from etools.libraries.pythonlib.datetime import get_current_year
+from etools.libraries.pythonlib.encoders import CustomJSONEncoder
 
 
 class HactHistory(TimeStampedModel):
@@ -31,7 +32,7 @@ class HactHistory(TimeStampedModel):
 class AggregateHact(TimeStampedModel):
 
     year = models.IntegerField(default=get_current_year, unique=True, verbose_name=_('Year'))
-    partner_values = models.JSONField(null=True, blank=True, verbose_name=_('Partner Values'))
+    partner_values = models.JSONField(null=True, blank=True, verbose_name=_('Partner Values'), encoder=CustomJSONEncoder)
 
     class Meta:
         verbose_name_plural = _('Aggregate hact')
