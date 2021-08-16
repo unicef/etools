@@ -3,13 +3,16 @@ from datetime import date
 
 from django.utils.translation import gettext as _
 
-from etools_validator.exceptions import BasicValidationError, StateValidationError, TransitionError
+from etools_validator.exceptions import (
+    BasicValidationError,
+    DetailedStateValidationError,
+    StateValidationError,
+    TransitionError,
+)
 from etools_validator.utils import check_required_fields, check_rigid_fields
 from etools_validator.validation import CompleteValidation
 
 from etools.applications.partners.permissions import InterventionPermissions
-from etools.applications.partners.validation.exceptions import DetailedStateValidationError
-from etools.applications.partners.validation.validation import DetailedErrorValidationMixin
 from etools.applications.reports.models import AppliedIndicator, InterventionActivity
 
 logger = logging.getLogger('partners.interventions.validation')
@@ -332,7 +335,7 @@ def review_was_accepted(i):
     return r.overall_approval if r else False
 
 
-class InterventionValid(DetailedErrorValidationMixin, CompleteValidation):
+class InterventionValid(CompleteValidation):
     VALIDATION_CLASS = 'partners.Intervention'
     # validations that will be checked on every object... these functions only take the new instance
     BASIC_VALIDATIONS = [
