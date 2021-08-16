@@ -3,7 +3,7 @@ import decimal
 import json
 
 from django.conf import settings
-from django.contrib.postgres.fields import ArrayField, JSONField
+from django.contrib.postgres.fields import ArrayField
 from django.core.validators import MinValueValidator
 from django.db import connection, IntegrityError, models, transaction
 from django.db.models import Case, CharField, Count, F, Max, Min, OuterRef, Q, Subquery, Sum, When
@@ -515,7 +515,7 @@ class PartnerOrganization(TimeStampedModel):
         verbose_name=_('Outstanding DCT more than 9 months')
     )
 
-    hact_values = JSONField(blank=True, null=True, default=hact_default, verbose_name='HACT')
+    hact_values = models.JSONField(blank=True, null=True, default=hact_default, verbose_name='HACT')
     basis_for_risk_rating = models.CharField(
         verbose_name=_("Basis for Risk Rating"), max_length=50, default='', blank=True)
     psea_assessment_date = models.DateTimeField(
@@ -1845,7 +1845,7 @@ class Intervention(TimeStampedModel):
         verbose_name=_("Document Submission Date by CSO"),
         null=True,
         blank=True,
-        help_text='The date the partner submitted complete PD/SSFA documents to Unicef',
+        help_text='The date the partner submitted complete PD/SPD documents to Unicef',
     )
     submission_date_prc = models.DateField(
         verbose_name=_('Submission Date to PRC'),
@@ -2133,7 +2133,7 @@ class Intervention(TimeStampedModel):
 
     # Flag if this has been migrated to a status that is not correct
     # previous status
-    metadata = JSONField(
+    metadata = models.JSONField(
         verbose_name=_("Metadata"),
         blank=True,
         null=True,
@@ -2635,8 +2635,8 @@ class InterventionAmendment(TimeStampedModel):
         blank=True, null=True,
         on_delete=models.SET_NULL,
     )
-    related_objects_map = JSONField(blank=True, default=dict)
-    difference = JSONField(blank=True, default=dict)
+    related_objects_map = models.JSONField(blank=True, default=dict)
+    difference = models.JSONField(blank=True, default=dict)
 
     tracker = FieldTracker()
 
@@ -2986,7 +2986,7 @@ class InterventionReviewQuestionnaire(models.Model):
     )
 
     overall_comment = models.TextField(blank=True)
-    overall_approval = models.NullBooleanField()
+    overall_approval = models.BooleanField(null=True, blank=True)
 
     class Meta:
         abstract = True

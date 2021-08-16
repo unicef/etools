@@ -132,7 +132,7 @@
         "pk": 22,
         "fields": {
             "order": 9,
-            "label": "Signed PD/SSFA",
+            "label": "Signed PD/SPD",
             "name": "signed_pd/ssfa",
             "code": "tpm",
             "group": ["tpm"]

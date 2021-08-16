@@ -17,10 +17,10 @@ FILE_TYPES_MAPPING = [
     ("partners_assessment_report", "Assessment Report", "assessment_report", 0),
     ("partners_agreement_amendment", "Agreement Amendment", "agreement_signed_amendment", 0),
     ("partners_intervention_prc_review", "PRC Review", "intervention_prc_review", 0),
-    ("partners_intervention_signed_pd", "Signed PD/SSFA", "intervention_signed_pd", 0),
+    ("partners_intervention_signed_pd", "Signed PD/SPD", "intervention_signed_pd", 0),
     ("partners_intervention_activation_letter", "PD Activation Letter", "activation_letter", 0),
     ("partners_intervention_termination_doc", "PD Termination Document", "termination_doc", 0),
-    ("partners_intervention_amendment_signed", "PD/SSFA Amendment", "intervention_amendment_signed", 0),
+    ("partners_intervention_amendment_signed", "PD/SPD Amendment", "intervention_amendment_signed", 0),
     ("partners_intervention_attachment", "Intervention Attachment", "intervention_attachment", 0),
     ("t2f_travel_attachment", "Travel Attachment", "t2f_travel_attachment", 0),
 ]

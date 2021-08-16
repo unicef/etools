@@ -549,7 +549,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
         self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response['frs'],
                          ['One or more of the FRs selected is related '
-                          'to a different PD/SSFA, {}'.format(self.fr_1.fr_number)])
+                          'to a different PD/SPD, {}'.format(self.fr_1.fr_number)])
         self.assertFalse(Activity.objects.exists())
 
     def test_add_same_frs_twice_on_pd(self):

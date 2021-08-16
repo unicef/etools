@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from unicef_notification.utils import send_notification_with_template
 
 from etools.applications.partners.amendment_utils import MergeError
-from etools.applications.partners.models import Intervention, InterventionAmendment
+from etools.applications.partners.models import Intervention, InterventionAmendment, InterventionReview
 from etools.applications.partners.permissions import (
     IsInterventionBudgetOwnerPermission,
     PARTNERSHIP_MANAGER_GROUP,
@@ -201,13 +201,17 @@ class PMPInterventionReviewView(PMPInterventionActionView):
         else:
             serializer = InterventionReviewActionSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save(
+        review = serializer.save(
             intervention=pd,
             submitted_by=request.user
         )
 
         request.data.clear()
         request.data.update({"status": Intervention.REVIEW})
+
+        if review.review_type == InterventionReview.PRC and not pd.submission_date_prc:
+            # save date when first prc review submitted
+            request.data["submission_date_prc"] = timezone.now().date()
 
         response = super().update(request, *args, **kwargs)
 
@@ -415,6 +419,8 @@ class PMPInterventionSignatureView(PMPInterventionActionView):
 
         request.data.clear()
         request.data.update({"status": Intervention.SIGNATURE})
+        if pd.review.review_type == InterventionReview.PRC:
+            request.data["review_date_prc"] = timezone.now().date()
 
         response = super().update(request, *args, **kwargs)
 

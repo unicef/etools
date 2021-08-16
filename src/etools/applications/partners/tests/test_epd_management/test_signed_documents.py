@@ -18,11 +18,7 @@ class TestSignedDocumentsManagement(APIViewSetTestCase, BaseTestCase):
         self.draft_unicef_data = {
             'submission_date': '1970-01-01',
         }
-        self.review_unicef_data = {
-            'review_date_prc': '1970-01-01',
-            'submission_date_prc': '1970-01-01',
-            'prc_review_attachment': AttachmentFactory(file=SimpleUploadedFile('hello_world.txt', b'hello world!')).pk,
-        }
+        self.review_unicef_data = {}
         self.signature_unicef_data = {
             'signed_by_unicef_date': '1970-01-02',
             'unicef_signatory': UserFactory().id,

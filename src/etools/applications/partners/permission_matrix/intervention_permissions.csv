@@ -117,7 +117,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.13.1,result_links,Partnership Manager,user_adds_amendment,*,Edit,TRUE
 ,result_links,UNICEF User,prp_mode_on,*,View,TRUE
 ,review_date_prc,*,,*,View,TRUE
-,review_date_prc,Partnership Manager,,Review,Edit,TRUE
+,review_date_prc,Partnership Manager,,Signature,Edit,TRUE
 ,risks,*,,*,View,TRUE
 ,risks,Partnership Manager,unicef_court,Draft,Edit,TRUE
 ,risks,Partner User,partner_court,Draft,Edit,TRUE

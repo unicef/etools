@@ -560,6 +560,10 @@ INTERVENTION_AMENDMENT_IGNORED_FIELDS = {
         # signatures
         'signed_by_unicef_date',
         'signed_by_partner_date',
+
+        # timing
+        'submission_date_prc',
+        'review_date_prc',
     ],
     'partners.InterventionBudget': [
         'created', 'modified',
