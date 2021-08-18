@@ -1,16 +1,10 @@
 from django.contrib import messages
 from django.contrib.gis import admin
-from django.http import HttpResponse
-from django.template import loader
 
 from admin_extra_urls.decorators import button
-from admin_extra_urls.mixins import ExtraUrlMixin
-from carto.sql import SQLClient
 from celery import chain
 from unicef_locations.admin import CartoDBTableAdmin
-from unicef_locations.auth import LocationsCartoNoAuthClient
 from unicef_locations.models import CartoDBTable, LocationRemapHistory
-from unicef_locations.utils import get_remapping
 
 from etools.libraries.locations.tasks import import_locations, notify_import_site_completed
 
