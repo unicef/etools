@@ -62,13 +62,8 @@ if not get_from_secrets_or_env('DISABLE_JWT_LOGIN', False):
     certificate = load_pem_x509_certificate(public_key_bytes, default_backend())
     JWT_PUBLIC_KEY = certificate.public_key()
 
-    JWT_AUTH.update({  # noqa: F405
-        'JWT_SECRET_KEY': SECRET_KEY,
-        'JWT_PUBLIC_KEY': JWT_PUBLIC_KEY,
-        'JWT_PRIVATE_KEY': JWT_PRIVATE_KEY,
-        'JWT_ALGORITHM': 'RS256',
-        'JWT_LEEWAY': 60,
-        'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=3000),  # noqa: F405
-        'JWT_AUDIENCE': 'https://etools.unicef.org/',
-        'JWT_PAYLOAD_HANDLER': 'etools.applications.core.auth.custom_jwt_payload_handler'
+    SIMPLE_JWT.update({  # noqa: F405
+        'VERIFYING_KEY': JWT_PUBLIC_KEY,
+        'AUDIENCE': 'https://etools.unicef.org/',
+        'ALGORITHM': 'RS256',
     })
