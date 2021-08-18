@@ -498,7 +498,7 @@ class PartnerOrganization(TimeStampedModel):
         verbose_name=_('Outstanding DCT more than 9 months')
     )
 
-    hact_values = models.JSONField(blank=True, null=True, default=hact_default, verbose_name='HACT')
+    hact_values = models.JSONField(blank=True, null=True, default=hact_default, verbose_name='HACT', encoder=CustomJSONEncoder)
     basis_for_risk_rating = models.CharField(
         verbose_name=_("Basis for Risk Rating"), max_length=50, default='', blank=True)
     psea_assessment_date = models.DateTimeField(
@@ -866,7 +866,7 @@ class PartnerOrganization(TimeStampedModel):
         hact['outstanding_findings'] = sum([
             audit.pending_unsupported_amount for audit in audits if audit.pending_unsupported_amount])
         hact['assurance_coverage'] = self.assurance_coverage
-        self.hact_values = json.dumps(hact, cls=CustomJSONEncoder)
+        self.hact_values = hact
         self.save()
 
     def update_min_requirements(self):
@@ -877,7 +877,7 @@ class PartnerOrganization(TimeStampedModel):
                 hact[hact_eng]['minimum_requirements'] = self.hact_min_requirements[hact_eng]
                 updated.append(hact_eng)
         if updated:
-            self.hact_values = json.dumps(hact, cls=CustomJSONEncoder)
+            self.hact_values = hact
             self.save()
             return updated
 

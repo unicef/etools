@@ -473,7 +473,11 @@ class PartnerOrganizationAddView(CreateAPIView):
 
         valid_response, response = get_data_from_insight('partners/?vendor={vendor_code}',
                                                          {"vendor_code": vendor})
-        if not valid_response and "ROWSET" not in response:
+
+        if valid_response and "ROWSET" not in response:
+            return Response({"error": "The vendor number could not be found in Insight"}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not valid_response or "ROWSET" not in response:
             return Response({"error": response}, status=status.HTTP_400_BAD_REQUEST)
 
         partner_resp = response["ROWSET"]["ROW"]

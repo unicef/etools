@@ -1,4 +1,3 @@
-import json
 from datetime import datetime
 
 from django.core.management import BaseCommand
@@ -8,7 +7,6 @@ from etools.applications.core.util_scripts import set_country
 from etools.applications.hact.models import HactHistory
 from etools.applications.partners.models import hact_default, PartnerOrganization, PlannedEngagement
 from etools.applications.users.models import Country
-from etools.libraries.pythonlib.encoders import CustomJSONEncoder
 
 
 class Command(BaseCommand):
@@ -80,7 +78,7 @@ class Command(BaseCommand):
             ('Audit Completed', self.get_or_empty(partner_hact, ['audits', 'completed'])),
             ('Audit Outstanding Findings', self.get_or_empty(partner_hact, ['outstanding_findings', ])),
         ]
-        hact_history.partner_values = json.dumps(partner_values, cls=CustomJSONEncoder)
+        hact_history.partner_values = partner_values
         hact_history.save()
 
     @transaction.atomic
