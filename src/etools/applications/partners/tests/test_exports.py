@@ -235,7 +235,7 @@ class TestModelExport(BaseTenantTestCase):
             "Partner Type",
             "CSO Type",
             "Agreement",
-            "country_programme",
+            "Country Programmes",
             "Document Type",
             "Reference Number",
             "Document Title",
@@ -252,7 +252,7 @@ class TestModelExport(BaseTenantTestCase):
             "Total CSO Contribution",
             "UNICEF Cash",
             "UNICEF Supply",
-            "Total PD/SSFA Budget",
+            "Total PD/SPD Budget",
             "FR Number(s)",
             "FR Currency",
             "FR Posting Date",
@@ -275,6 +275,7 @@ class TestModelExport(BaseTenantTestCase):
             "# of attachments",
             "CP Outputs",
             "URL",
+            "UNPP Number",
         ])
 
         self.assertEqual(dataset[0], (
@@ -331,6 +332,7 @@ class TestModelExport(BaseTenantTestCase):
             str(self.intervention.attachments.count()),
             finalized_result_link.cp_output.name,
             'https://testserver/pmp/interventions/{}/details/'.format(self.intervention.id),
+            '',
         ))
 
     def test_agreement_export_api(self):
