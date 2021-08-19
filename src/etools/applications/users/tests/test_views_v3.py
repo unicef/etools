@@ -86,6 +86,12 @@ class TestUsersListAPIView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)
 
+    def test_forced_pagination(self):
+        [UserFactory(is_staff=True) for _i in range(15)]
+        response = self.forced_auth_req('get', self.url, user=self.unicef_staff, data={'page': 1})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 10)
+
     def test_users_api_list_values(self):
         response = self.forced_auth_req(
             'get',
