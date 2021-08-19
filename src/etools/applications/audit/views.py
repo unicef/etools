@@ -130,14 +130,14 @@ class AuditUsersViewSet(generics.ListAPIView):
     serializer_class = AuditUserSerializer
 
     def get_serializer_class(self):
-        if self.request.data.get('verbosity') == 'minimal':
+        if self.request.query_params.get('verbosity') == 'minimal':
             return MinimalUserSerializer
         return super().get_serializer_class()
 
     def get_queryset(self):
         queryset = super().get_queryset()
 
-        if self.request.data.get('verbosity', 'full') != 'minimal':
+        if self.request.query_params.get('verbosity', 'full') != 'minimal':
             queryset = queryset.select_related('profile', 'purchase_order_auditorstaffmember__auditor_firm')
 
         return queryset
