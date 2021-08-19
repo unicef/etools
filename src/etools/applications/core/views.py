@@ -33,8 +33,9 @@ class IssueJWTRedirectView(APIView):
         access = str(refresh.access_token)
 
         decoded_token = jwt.decode(access,
-                                   settings.SIMPLE_JWT['SIGNING_KEY'],
+                                   settings.SIMPLE_JWT['VERIFYING_KEY'],
                                    [settings.SIMPLE_JWT['ALGORITHM']],
+                                   audience=settings.SIMPLE_JWT['AUDIENCE']
                                    )
 
         decoded_token.update({

@@ -63,6 +63,7 @@ if not get_from_secrets_or_env('DISABLE_JWT_LOGIN', False):
     JWT_PUBLIC_KEY = certificate.public_key()
 
     SIMPLE_JWT.update({  # noqa: F405
+        'SIGNING_KEY': JWT_PRIVATE_KEY,
         'VERIFYING_KEY': JWT_PUBLIC_KEY,
         'AUDIENCE': 'https://etools.unicef.org/',
         'ALGORITHM': 'RS256',
