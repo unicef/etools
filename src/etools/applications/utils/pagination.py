@@ -5,7 +5,7 @@ class AppendablePageNumberPagination(PageNumberPagination):
     """
     Don't use pagination by default (if page parameter is not presented), but allow it to be enabled if required
     """
-    page_size = 10
+    page_size = 30
     page_size_query_param = 'page_size'
     max_page_size = 1000
 
