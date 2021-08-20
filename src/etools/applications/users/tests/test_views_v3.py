@@ -90,7 +90,7 @@ class TestUsersListAPIView(BaseTenantTestCase):
         [UserFactory(is_staff=True) for _i in range(15)]
         response = self.forced_auth_req('get', self.url, user=self.unicef_staff, data={'page': 1})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data['results']), 30)
+        self.assertEqual(len(response.data['results']), 15)
 
     def test_forced_pagination_custom_page_size(self):
         [UserFactory(is_staff=True) for _i in range(15)]
