@@ -73,6 +73,7 @@ from etools.applications.partners.serializers.partner_organization_v2 import (
 from etools.applications.partners.synchronizers import PartnerSynchronizer
 from etools.applications.partners.views.helpers import set_tenant_or_fail
 from etools.applications.t2f.models import Travel, TravelActivity, TravelType
+from etools.applications.utils.pagination import AppendablePageNumberPagination
 from etools.libraries.djangolib.models import StringConcat
 from etools.libraries.djangolib.views import ExternalModuleFilterMixin
 
@@ -105,6 +106,7 @@ class PartnerOrganizationListAPIView(ExternalModuleFilterMixin, QueryStringFilte
         'tpm': ['activity__tpmactivity__tpm_visit__tpm_partner__staff_members__user', ],
         'psea': ['psea_assessment__assessor__auditor_firm_staff__user', 'psea_assessment__assessor__user']
     }
+    pagination_class = AppendablePageNumberPagination
 
     def get_serializer_class(self, format=None):
         """
