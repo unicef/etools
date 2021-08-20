@@ -1,0 +1,23 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+
+<h3> Remapping</h3>
+<table><tr><th>Old</th><th>New</th></tr>
+
+    {% for old, new in old2new.items %}
+    <tr>
+        <td>{{old}}</td>
+        <td>{{new}}</td>
+    </tr>
+{% endfor %}
+</table>
+<br>
+<h3> Deactivating/Deleting:</h3>
+<ul>
+    {% for item in to_deactivate %}
+        <li> {{item}}</li>
+    {% endfor %}
+</ul>
+
+{% endblock %}}
