@@ -44,7 +44,7 @@ class eToolsLocationSynchronizer(LocationSynchronizer):
                 site.save()
 
         # update monitoring activities
-        for activity in MonitoringActivity.objects.filter(location_site__isnull=True):
+        for activity in MonitoringActivity.objects.filter(location_site__isnull=False):
             if activity.site.parent != activity.location:
                 activity.location = activity.site.parent
                 activity.save()
