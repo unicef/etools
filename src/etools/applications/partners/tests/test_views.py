@@ -376,7 +376,7 @@ class TestAPIPartnerOrganizationListView(BaseTenantTestCase):
         [PartnerFactory() for _i in range(15)]
         response = self.forced_auth_req('get', self.url, data={'page': 1})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data['results']), 15)
+        self.assertEqual(len(response.data['results']), 16)
 
 
 class TestPartnerOrganizationListViewForCSV(BaseTenantTestCase):
