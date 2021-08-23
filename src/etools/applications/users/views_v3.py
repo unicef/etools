@@ -19,6 +19,7 @@ from etools.applications.users.serializers_v3 import (
     MinimalUserSerializer,
     ProfileRetrieveUpdateSerializer,
 )
+from etools.applications.utils.pagination import AppendablePageNumberPagination
 
 logger = logging.getLogger(__name__)
 
@@ -65,6 +66,7 @@ class UsersListAPIView(QueryStringFilterMixin, ListAPIView):
     queryset = get_user_model().objects.all()
     serializer_class = MinimalUserSerializer
     permission_classes = (IsAdminUser, )
+    pagination_class = AppendablePageNumberPagination
 
     filters = (
         ('group', 'groups__name__in'),

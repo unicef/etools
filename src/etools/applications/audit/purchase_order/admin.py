@@ -1,9 +1,9 @@
-from functools import update_wrapper
-
-from django.conf.urls import url
 from django.contrib import admin
 from django.http.response import HttpResponseRedirect
 from django.urls import reverse
+
+from admin_extra_urls.decorators import button
+from admin_extra_urls.mixins import ExtraUrlMixin
 
 from etools.applications.audit.purchase_order.models import (
     AuditorFirm,
@@ -40,8 +40,7 @@ class PurchaseOrderItemAdmin(admin.TabularInline):
 
 
 @admin.register(PurchaseOrder)
-class PurchaseOrderAdmin(admin.ModelAdmin):
-    change_form_template = 'admin/purchase_order/change_form.html'
+class PurchaseOrderAdmin(ExtraUrlMixin, admin.ModelAdmin):
     list_display = [
         'order_number', 'auditor_firm', 'contract_start_date',
         'contract_end_date',
@@ -52,19 +51,7 @@ class PurchaseOrderAdmin(admin.ModelAdmin):
     search_fields = ['order_number', 'auditor_firm__name', ]
     inlines = [PurchaseOrderItemAdmin]
 
-    def get_urls(self):
-        urls = super().get_urls()
-
-        def wrap(view):
-            def wrapper(*args, **kwargs):
-                return self.admin_site.admin_view(view)(*args, **kwargs)
-            return update_wrapper(wrapper, view)
-
-        custom_urls = [
-            url(r'^(?P<pk>\d+)/sync_purchase_order/$', wrap(self.sync_purchase_order), name='purchase_order_sync_purchase_order'),
-        ]
-        return custom_urls + urls
-
+    @button()
     def sync_purchase_order(self, request, pk):
         sync_purchase_order(PurchaseOrder.objects.get(id=pk).order_number)
         return HttpResponseRedirect(reverse('admin:purchase_order_purchaseorder_change', args=[pk]))

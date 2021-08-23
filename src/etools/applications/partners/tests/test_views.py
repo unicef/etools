@@ -371,6 +371,13 @@ class TestAPIPartnerOrganizationListView(BaseTenantTestCase):
         response = self.forced_auth_req('get', self.url, data={"values": "banana"})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_switchable_pagination(self):
+        [PartnerFactory() for _i in range(15)]
+        response = self.forced_auth_req('get', self.url, data={'page': 1})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 16)
+
 
 class TestPartnerOrganizationListViewForCSV(BaseTenantTestCase):
     """Exercise the CSV-generating portion of the list view for PartnerOrganization.
@@ -1264,7 +1271,7 @@ class TestInterventionViews(BaseTenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(list(response.data[0].keys()), ["id", "title"])
+        self.assertEqual(list(response.data[0].keys()), ["id", "title", "number"])
 
     def test_intervention_create(self):
         data = {

@@ -1,5 +1,4 @@
 from django.conf import settings
-from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -81,7 +80,7 @@ class Finding(models.Model):
                                           on_delete=models.CASCADE)
     activity_question = models.ForeignKey(ActivityQuestion, related_name='findings',
                                           verbose_name=_('Activity Question'), on_delete=models.CASCADE)
-    value = JSONField(null=True, blank=True, verbose_name=_('Value'))
+    value = models.JSONField(null=True, blank=True, verbose_name=_('Value'))
 
     class Meta:
         verbose_name = _('Checklist Finding')
@@ -95,7 +94,7 @@ class Finding(models.Model):
 class ActivityQuestionOverallFinding(models.Model):
     activity_question = models.OneToOneField(ActivityQuestion, related_name='overall_finding',
                                              verbose_name=_('Activity'), on_delete=models.CASCADE)
-    value = JSONField(null=True, blank=True, verbose_name=_('Value'))
+    value = models.JSONField(null=True, blank=True, verbose_name=_('Value'))
 
     class Meta:
         verbose_name = _('Overall Activity Question Finding')
@@ -125,7 +124,7 @@ class ActivityOverallFinding(QuestionTargetMixin, models.Model):
     monitoring_activity = models.ForeignKey(MonitoringActivity, related_name='overall_findings',
                                             verbose_name=_('Activity'), on_delete=models.CASCADE)
     narrative_finding = models.TextField(blank=True, verbose_name=_('Narrative Finding'))
-    on_track = models.NullBooleanField()
+    on_track = models.BooleanField(null=True, blank=True)
 
     class Meta:
         verbose_name = _('Activity Overall Finding')

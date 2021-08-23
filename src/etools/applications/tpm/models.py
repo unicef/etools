@@ -471,8 +471,8 @@ class TPMActionPoint(ActionPoint):
     objects = TPMActionPointManager()
 
     class Meta(ActionPoint.Meta):
-        verbose_name = _('Engagement Action Point')
-        verbose_name_plural = _('Engagement Action Points')
+        verbose_name = _('TPM Action Point')
+        verbose_name_plural = _('TPM Action Points')
         proxy = True
 
     def get_mail_context(self, user=None):

@@ -54,7 +54,14 @@ class CountrySerializer(serializers.ModelSerializer):
             'longitude',
             'initial_zoom',
             'local_currency',
+            'custom_dashboards',
         )
+
+
+class DashboardCountrySerializer(CountrySerializer):
+
+    class Meta(CountrySerializer.Meta):
+        fields = CountrySerializer.Meta.fields + ('custom_dashboards', )
 
 
 class CountryDetailSerializer(serializers.ModelSerializer):
@@ -93,7 +100,7 @@ class ProfileRetrieveUpdateSerializer(serializers.ModelSerializer):
     email = serializers.CharField(source='user.email', read_only=True)
     is_staff = serializers.CharField(source='user.is_staff', read_only=True)
     is_active = serializers.CharField(source='user.is_active', read_only=True)
-    country = CountrySerializer(read_only=True)
+    country = DashboardCountrySerializer(read_only=True)
     show_ap = serializers.SerializerMethodField()
     is_unicef_user = serializers.SerializerMethodField()
 
