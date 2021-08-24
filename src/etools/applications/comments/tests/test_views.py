@@ -159,6 +159,6 @@ class TestCommentsViewSet(APIViewSetTestCase, BaseTenantTestCase):
         CommentFactory(user=self.unicef_user, instance_related=self.example_intervention, users_related=[UserFactory()])
         response = self.make_request_to_viewset(self.unicef_user, method='get', action='export_csv')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn(response._headers['content-disposition'][0], 'Content-Disposition')
+        self.assertIn('Content-Disposition', response.headers)
         self.assertEqual(len(response.data), 1)
         self.assertEqual(len(response.data[0]), 8)

@@ -10,12 +10,19 @@ defaults = {
     Vendor Number: {{ partner_vendor_number }}
 
     Vendor Name: {{ partner_name }}
+    PSEA Assessment Type: {{ assessment_type }}
+
+    Reason for country-level INGO assessment (if different from INGO parent): {{ assessment_ingo_reason }}
 
     SEA Risk Rating: {{ overall_rating }}
 
     Date of Assessment: {{ assessment_date }}
 
     UNICEF Focal Points: {{ focal_points }}
+
+    {% if nfr_attachment $}
+        NFR Attachment: {{ nfr_attachment }}
+    {% endif $}
 
     Please update the Vendor Master Data in VISION accordingly
 
@@ -34,11 +41,19 @@ defaults = {
 
     Vendor Name: {{ partner_name }} <br /><br />
 
+    PSEA Assessment Type: {{ assessment_type }} <br /><br />
+
+    Reason for country-level INGO assessment (if different from INGO parent): {{ assessment_ingo_reason }} <br /><br />
+
     SEA Risk Rating: {{ overall_rating }} <br /><br />
 
     Date of Assessment: {{ assessment_date }}  <br /><br />
 
     UNICEF Focal Points: {{ focal_points }} <br /><br />
+
+    {% if nfr_attachment $}
+        NFR Attachment: {{ nfr_attachment }} <br /><br />
+    {% endif $}
 
     Please update the Vendor Master Data in VISION accordingly  <br />
     Please note that this is an automated email and the mailbox is not monitored. Please do not reply to it.

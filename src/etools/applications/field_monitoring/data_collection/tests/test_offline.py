@@ -2,6 +2,7 @@ from django.core.management import call_command
 from django.db import connection
 from django.test import override_settings
 
+import simplejson
 from mock import patch
 from rest_framework import status
 
@@ -29,12 +30,12 @@ class ChecklistBlueprintViewTestCase(APIViewSetTestCase, BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.team_member = UserFactory(unicef_user=True)
-        cls.person_responsible = UserFactory(unicef_user=True)
+        cls.visit_lead = UserFactory(unicef_user=True)
 
         partner = PartnerFactory()
         cls.activity = MonitoringActivityFactory(
             status='data_collection',
-            person_responsible=cls.person_responsible,
+            visit_lead=cls.visit_lead,
             team_members=[cls.team_member],
             partners=[partner],
         )
@@ -161,16 +162,16 @@ class MonitoringActivityOfflineBlueprintsSyncTestCase(APIViewSetTestCase, BaseTe
     @patch('etools.applications.field_monitoring.data_collection.offline.synchronizer.OfflineCollect.add')
     def test_blueprints_sent_on_tpm_data_collection(self, add_mock):
         tpm_partner = TPMPartnerFactory()
-        person_responsible = TPMPartnerStaffMemberFactory(tpm_partner=tpm_partner).user
+        visit_lead = TPMPartnerStaffMemberFactory(tpm_partner=tpm_partner).user
         activity = MonitoringActivityFactory(
             status='assigned', partners=[PartnerFactory()], monitor_type='tpm', tpm_partner=tpm_partner,
-            person_responsible=person_responsible, team_members=[person_responsible]
+            visit_lead=visit_lead, team_members=[visit_lead]
         )
         ActivityQuestionFactory(monitoring_activity=activity, is_enabled=True, question__methods=[MethodFactory()])
 
         add_mock.reset_mock()
         self._test_update(
-            activity.person_responsible, activity,
+            activity.visit_lead, activity,
             {'status': 'data_collection'}
         )
         add_mock.assert_called()
@@ -219,12 +220,12 @@ class MonitoringActivityOfflineBlueprintsSyncTestCase(APIViewSetTestCase, BaseTe
 
     @override_settings(ETOOLS_OFFLINE_API='http://example.com/b/api/remote/blueprint/')
     @patch('etools.applications.field_monitoring.data_collection.offline.synchronizer.OfflineCollect.update')
-    def test_blueprint_updated_on_person_responsible_change(self, update_mock):
+    def test_blueprint_updated_on_visit_lead_change(self, update_mock):
         activity = MonitoringActivityFactory(status='data_collection', partners=[PartnerFactory()])
         ActivityQuestionFactory(monitoring_activity=activity, is_enabled=True, question__methods=[MethodFactory()])
 
         update_mock.reset_mock()
-        activity.person_responsible = UserFactory()
+        activity.visit_lead = UserFactory()
         activity.save()
         update_mock.assert_called()
 
@@ -267,7 +268,7 @@ class MonitoringActivityOfflineBlueprintsSyncTestCase(APIViewSetTestCase, BaseTe
         StartedChecklistFactory(monitoring_activity=activity, method=method)
 
         delete_mock.reset_mock()
-        self._test_update(activity.person_responsible, activity, {'status': 'report_finalization'})
+        self._test_update(activity.visit_lead, activity, {'status': 'report_finalization'})
         delete_mock.assert_called()
 
     @override_settings(ETOOLS_OFFLINE_API='')
@@ -279,6 +280,60 @@ class MonitoringActivityOfflineBlueprintsSyncTestCase(APIViewSetTestCase, BaseTe
         add_mock.reset_mock()
         self._test_update(self.fm_user, activity, {'status': 'assigned'})
         add_mock.assert_not_called()
+
+    @override_settings(ETOOLS_OFFLINE_API='http://example.com/b/api/remote/blueprint/', SENTRY_DSN='https://test.dns')
+    @patch('sentry_sdk.api.Hub.current.capture_exception')
+    @patch('etools.applications.field_monitoring.data_collection.offline.synchronizer.OfflineCollect.add')
+    def test_add_offline_backend_unavailable(self, add_mock, capture_event_mock):
+        def communication_failure(*args, **kwargs):
+            return 502, simplejson.loads(
+                '<html>\r\n<head><title>502 Bad Gateway</title></head>\r\n<body bgcolor="white">\r\n<center>'
+                '<h1>502 Bad Gateway</h1></center>\r\n<hr><center>nginx/1.13.12</center>\r\n</body>\r\n</html>\r\n'
+            )
+
+        add_mock.side_effect = communication_failure
+
+        activity = MonitoringActivityFactory(status='pre_assigned', partners=[PartnerFactory()])
+        ActivityQuestionFactory(monitoring_activity=activity, is_enabled=True, question__methods=[MethodFactory()])
+
+        self._test_update(self.fm_user, activity, {'status': 'assigned'})
+        capture_event_mock.assert_called()
+
+    @override_settings(ETOOLS_OFFLINE_API='http://example.com/b/api/remote/blueprint/', SENTRY_DSN='https://test.dns')
+    @patch('sentry_sdk.api.Hub.current.capture_exception')
+    @patch('etools.applications.field_monitoring.data_collection.offline.synchronizer.OfflineCollect.update')
+    def test_update_offline_backend_unavailable(self, update_mock, capture_event_mock):
+        def communication_failure(*args, **kwargs):
+            return 502, simplejson.loads(
+                '<html>\r\n<head><title>502 Bad Gateway</title></head>\r\n<body bgcolor="white">\r\n<center>'
+                '<h1>502 Bad Gateway</h1></center>\r\n<hr><center>nginx/1.13.12</center>\r\n</body>\r\n</html>\r\n'
+            )
+
+        update_mock.side_effect = communication_failure
+
+        activity = MonitoringActivityFactory(status='data_collection', partners=[PartnerFactory()])
+        ActivityQuestionFactory(monitoring_activity=activity, is_enabled=True, question__methods=[MethodFactory()])
+
+        activity.team_members.remove(activity.team_members.first())
+        capture_event_mock.assert_called()
+
+    @override_settings(ETOOLS_OFFLINE_API='http://example.com/b/api/remote/blueprint/', SENTRY_DSN='https://test.dns')
+    @patch('sentry_sdk.api.Hub.current.capture_exception')
+    @patch('etools.applications.field_monitoring.data_collection.offline.synchronizer.OfflineCollect.delete')
+    def test_delete_offline_backend_unavailable(self, delete_mock, capture_event_mock):
+        def communication_failure(*args, **kwargs):
+            return 502, simplejson.loads(
+                '<html>\r\n<head><title>502 Bad Gateway</title></head>\r\n<body bgcolor="white">\r\n<center>'
+                '<h1>502 Bad Gateway</h1></center>\r\n<hr><center>nginx/1.13.12</center>\r\n</body>\r\n</html>\r\n'
+            )
+
+        delete_mock.side_effect = communication_failure
+
+        activity = MonitoringActivityFactory(status='data_collection', partners=[PartnerFactory()])
+        ActivityQuestionFactory(monitoring_activity=activity, is_enabled=True, question__methods=[MethodFactory()])
+
+        self._test_update(self.fm_user, activity, {'status': 'cancelled', 'cancel_reason': 'For testing purposes'})
+        capture_event_mock.assert_called()
 
 
 class MonitoringActivityOfflineValuesTestCase(APIViewSetTestCase, BaseTenantTestCase):
@@ -296,7 +351,7 @@ class MonitoringActivityOfflineValuesTestCase(APIViewSetTestCase, BaseTenantTest
             question__methods=[cls.method], question__answer_type='text'
         )
 
-        cls.user = cls.activity.person_responsible
+        cls.user = cls.activity.visit_lead
 
     def get_detail_args(self, instance):
         return [instance.pk, self.method.pk]

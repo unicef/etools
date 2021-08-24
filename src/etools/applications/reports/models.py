@@ -1,10 +1,10 @@
 from datetime import date
 
-from django.contrib.postgres.fields import JSONField
+from django.core.validators import MinValueValidator
 from django.db import models, transaction
 from django.db.models import Sum
 from django.utils.functional import cached_property
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from model_utils.fields import AutoCreatedField, AutoLastModifiedField
 from model_utils.models import TimeStampedModel
@@ -242,6 +242,18 @@ class Result(MPTTModel):
     vision_id = models.CharField(
         verbose_name=_("VISION ID"),
         max_length=10,
+        null=True,
+        blank=True,
+    )
+    programme_area_code = models.CharField(
+        verbose_name=_("Programme Area Code"),
+        max_length=16,
+        null=True,
+        blank=True,
+    )
+    programme_area_name = models.CharField(
+        verbose_name=_("Programme Area Name"),
+        max_length=255,
         null=True,
         blank=True,
     )
@@ -526,7 +538,7 @@ class DisaggregationValue(TimeStampedModel):
         verbose_name=_('Disaggregation'),
         on_delete=models.CASCADE,
     )
-    value = models.CharField(max_length=15, verbose_name=_('Value'))
+    value = models.CharField(max_length=20, verbose_name=_('Value'))
     active = models.BooleanField(default=False, verbose_name=_('Active'))
 
     def __str__(self):
@@ -610,8 +622,8 @@ class AppliedIndicator(TimeStampedModel):
         blank=True,
     )
 
-    target = JSONField(default=indicator_default_dict)
-    baseline = JSONField(default=indicator_default_dict, null=True)
+    target = models.JSONField(default=indicator_default_dict)
+    baseline = models.JSONField(default=indicator_default_dict, null=True)
 
     assumptions = models.TextField(
         verbose_name=_("Assumptions"),
@@ -673,6 +685,21 @@ class AppliedIndicator(TimeStampedModel):
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
+
+    def get_amended_name(self):
+        baseline_display = self.baseline_display
+        if baseline_display[1] == '-':
+            baseline = baseline_display[0]
+        else:
+            baseline = '/'.join(baseline_display)
+
+        target_display = self.target_display
+        if target_display[1] == '-':
+            target = target_display[0]
+        else:
+            target = '/'.join(target_display)
+
+        return f'{self.indicator}: {baseline} - {target}'
 
 
 class Indicator(TimeStampedModel):
@@ -819,7 +846,7 @@ class ReportingRequirement(TimeStampedModel):
 
     def __str__(self):
         return "{} ({}) {}".format(
-            self.get_report_type_display,
+            self.get_report_type_display(),
             self.report_type,
             self.due_date
         )
@@ -950,6 +977,9 @@ class InterventionActivity(TimeStampedModel):
         super().save(*args, **kwargs)
         self.result.result_link.intervention.planned_budget.calc_totals()
 
+    def get_amended_name(self):
+        return f'{self.result} {self.name} (Total: {self.total}, UNICEF: {self.unicef_cash}, Partner: {self.cso_cash})'
+
 
 class InterventionActivityItem(TimeStampedModel):
     activity = models.ForeignKey(
@@ -961,6 +991,21 @@ class InterventionActivityItem(TimeStampedModel):
     name = models.CharField(
         verbose_name=_("Name"),
         max_length=150,
+    )
+    unit = models.CharField(
+        verbose_name=_("Unit"),
+        max_length=150,
+    )
+    unit_price = models.DecimalField(
+        verbose_name=_("Unit Price"),
+        decimal_places=2,
+        max_digits=20,
+    )
+    no_units = models.DecimalField(
+        verbose_name=_("Units Number"),
+        decimal_places=1,
+        max_digits=20,
+        validators=[MinValueValidator(0)],
     )
     unicef_cash = models.DecimalField(
         verbose_name=_("UNICEF Cash"),

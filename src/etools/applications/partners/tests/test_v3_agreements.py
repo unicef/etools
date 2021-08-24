@@ -4,6 +4,7 @@ from django.test import override_settings, SimpleTestCase
 from django.urls import reverse
 
 from rest_framework import status
+from tablib import Dataset
 from unicef_snapshot.models import Activity
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
@@ -97,6 +98,39 @@ class TestList(BaseAgreementTestCase):
         self.assertEqual(len(response.data), agreement_qs.count())
         for data in response.data:
             self.assertEqual(data["partner"], self.partner.pk)
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_export_csv(self):
+        AgreementFactory()
+        response = self.forced_auth_req(
+            "get",
+            reverse("pmp_v3:agreement-list"),
+            user=self.pme_user,
+            data={"format": "csv"}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        dataset = Dataset().load(response.content.decode('utf-8'), "csv")
+        self.assertEqual(dataset.height, Agreement.objects.count())
+        self.assertEqual(
+            dataset._get_headers(),
+            [
+                'Reference Number',
+                'Status',
+                'Partner Name',
+                'partner_number',
+                'Agreement Type',
+                'Start Date',
+                'End Date',
+                'partner_manager_name',
+                'Signed By Partner Date',
+                'signed_by_name',
+                'Signed By UNICEF Date',
+                'staff_members',
+                'amendments',
+                'url',
+                'Special Conditions PCA',
+            ]
+        )
 
 
 class TestCreate(BaseAgreementTestCase):

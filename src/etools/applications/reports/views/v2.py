@@ -6,7 +6,7 @@ import operator
 from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
@@ -320,6 +320,7 @@ class AppliedIndicatorLocationExportView(QueryStringFilterMixin, ListAPIView):
             'ind_means_of_verification': 'Means of verification',
             'ind_ram_indicators': 'RAM indicators',
             'ind_location': 'Location',
+            'int_cfei_number': 'UNPP Number',
         }
 
         today = '{:%Y_%m_%d}'.format(datetime.date.today())
@@ -344,7 +345,8 @@ class AppliedIndicatorLocationExportView(QueryStringFilterMixin, ListAPIView):
                 'int_end_date': intervention.end,
                 'country_programme': str(intervention.agreement.country_programme),
                 'int_ref': intervention.number.replace(',', '-'),
-                'int_locations': ','.join([location.name for location in intervention.flat_locations.all()])
+                'int_locations': ','.join([location.name for location in intervention.flat_locations.all()]),
+                'int_cfei_number': str(intervention.cfei_number),
             }
 
             indicators = self.get_indicators(intervention)

@@ -30,6 +30,7 @@ from etools.applications.partners.filters import (
     InterventionFilter,
     InterventionResultLinkFilter,
     PartnerScopeFilter,
+    ShowAmendmentsFilter,
 )
 from etools.applications.partners.models import (
     Agreement,
@@ -96,7 +97,7 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
     """
     serializer_class = InterventionListSerializer
     permission_classes = (PartnershipManagerPermission,)
-    filter_backends = (PartnerScopeFilter,)
+    filter_backends = (PartnerScopeFilter, ShowAmendmentsFilter)
     renderer_classes = (
         JSONRenderer,
         InterventionCSVRenderer,
@@ -120,6 +121,9 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
         ('office', 'offices__in'),
         ('location', 'result_links__ll_results__applied_indicators__locations__name__icontains'),
         ('contingency_pd', 'contingency_pd'),
+        ('grants', 'frs__fr_items__grant_number__icontains'),
+        ('donors', 'frs__fr_items__donor__icontains'),
+        ('budget_owner__in', 'budget_owner__in')
     )
 
     SERIALIZER_MAP = {

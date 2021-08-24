@@ -28,8 +28,7 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
         super().setUp()
         self.default_actions = sorted([
             "download_comments",
-            "export",
-            "generate_pdf",
+            "export_results",
         ])
 
     def test_available_actions_not_draft(self):
@@ -88,17 +87,35 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
         pd = InterventionFactory(budget_owner=self.unicef_user)
         self.assertEqual(pd.status, pd.DRAFT)
         available_actions = self.unicef_serializer.get_available_actions(pd)
-        expected_actions = self.default_actions + ["accept"]
+        expected_actions = self.default_actions + ["accept", "accept_on_behalf_of_partner", "cancel"]
         self.assertEqual(sorted(available_actions), sorted(expected_actions))
 
-    def test_available_actions_management_cancel(self):
+    def test_available_actions_management(self):
         pd = InterventionFactory()
         self.unicef_user.groups.add(
             GroupFactory(name=PARTNERSHIP_MANAGER_GROUP),
         )
         self.assertEqual(pd.status, pd.DRAFT)
         available_actions = self.unicef_serializer.get_available_actions(pd)
-        expected_actions = self.default_actions + ["cancel"]
+        expected_actions = self.default_actions
+        self.assertEqual(sorted(available_actions), sorted(expected_actions))
+
+    def test_available_actions_focal_point_cancel(self):
+        pd = InterventionFactory()
+        pd.unicef_focal_points.add(self.unicef_user)
+        self.assertEqual(pd.status, pd.DRAFT)
+        available_actions = self.unicef_serializer.get_available_actions(pd)
+        expected_actions = self.default_actions + ['send_to_partner', 'cancel']
+        self.assertEqual(sorted(available_actions), sorted(expected_actions))
+
+    def test_available_actions_management_unsuspend(self):
+        pd = InterventionFactory(status=Intervention.SUSPENDED)
+        self.unicef_user.groups.add(
+            GroupFactory(name=PARTNERSHIP_MANAGER_GROUP),
+        )
+        self.assertEqual(pd.status, pd.SUSPENDED)
+        available_actions = self.unicef_serializer.get_available_actions(pd)
+        expected_actions = self.default_actions + ["terminate", "unsuspend"]
         self.assertEqual(sorted(available_actions), sorted(expected_actions))
 
     def test_available_actions_management_terminate(self):
@@ -108,7 +125,7 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
         )
         self.assertEqual(pd.status, pd.ACTIVE)
         available_actions = self.unicef_serializer.get_available_actions(pd)
-        expected_actions = self.default_actions + ["suspend"]
+        expected_actions = self.default_actions + ["suspend", "terminate"]
         self.assertEqual(sorted(available_actions), sorted(expected_actions))
 
         # not available if closed

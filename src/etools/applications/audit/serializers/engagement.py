@@ -1,6 +1,6 @@
 from copy import copy
 
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from rest_framework import serializers
 from unicef_attachments.fields import AttachmentSingleFileField, FileTypeModelChoiceField
@@ -124,7 +124,7 @@ class EngagementActionPointSerializer(PermissionsBasedSerializerMixin, ActionPoi
 
     partner = MinimalPartnerOrganizationListSerializer(read_only=True, label=_('Related Partner'))
     intervention = SeparatedReadWriteField(
-        label=_('Related PD/SSFA'), read_field=BaseInterventionListSerializer(), required=False,
+        label=_('Related PD/SPD'), read_field=BaseInterventionListSerializer(), required=False,
     )
 
     section = SeparatedReadWriteField(

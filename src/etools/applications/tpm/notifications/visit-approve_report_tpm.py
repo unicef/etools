@@ -12,7 +12,7 @@ defaults = {
     Please refer below for additional information.
 
     {% for activity in visit.tpm_activities %}
-    PD/SSFA/ToR: {{ activity.intervention}}
+    PD/SPD/ToR: {{ activity.intervention}}
     CP Output: {{ activity.cp_output }}
     Location: {{ activity.locations }}
     Section: {{ activity.section }}
@@ -35,7 +35,7 @@ defaults = {
     Please refer below for additional information.<br/>
     <br/>
     {% for activity in visit.tpm_activities %}
-    <b>PD/SSFA/ToR</b>: {{ activity.intervention }}<br/>
+    <b>PD/SPD/ToR</b>: {{ activity.intervention }}<br/>
     <b>CP Output</b> {{ activity.cp_output|default:"unassigned" }}<br/>
     <b>Locations</b>: {{ activity.locations }}</br>
     <b>Section</b>: {{ activity.section }}<br/><br/>

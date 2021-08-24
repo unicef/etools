@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from rest_framework.exceptions import ValidationError
 from rest_framework.validators import UniqueValidator
@@ -35,7 +35,7 @@ class EmailValidator(UniqueValidator):
             message="This user already exists in the system.",
         )
 
-    def __call__(self, value):
+    def __call__(self, value, serializer_field):
         if value != value.lower():
             raise ValidationError(_("Email needs to be lower case."))
-        super().__call__(value)
+        super().__call__(value, serializer_field)

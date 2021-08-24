@@ -243,6 +243,8 @@ class ProgrammeSynchronizer(VisionDataTenantSynchronizer):
         ("OUTPUT_END_DATE", "to_date"),
         ("HUMANITARIAN_MARKER_CODE", "humanitarian_marker_code"),
         ("HUMANITARIAN_MARKER_NAME", "humanitarian_marker_name"),
+        ("PROGRAMME_AREA_CODE", "programme_area_code"),
+        ("PROGRAMME_AREA_NAME", "programme_area_name"),
     )
     ACTIVITY_MAP = (
         ("ACTIVITY_WBS", "wbs"),
@@ -316,7 +318,6 @@ class RAMSynchronizer(VisionDataTenantSynchronizer):
         "INDICATOR_CODE",
         "WBS_ELEMENT_CODE",
         "INDICATOR_BASELINE",
-        "INDICATOR_TARGET",
     )
 
     def _save_records(self, records):
@@ -326,7 +327,8 @@ class RAMSynchronizer(VisionDataTenantSynchronizer):
     def _filter_records(self, records):
         def is_valid_record(record):
             for key in self.REQUIRED_KEYS:
-                if key not in record:
+                # previous API wasn't returning keys with null value
+                if key not in record or not record[key]:
                     return False
             if record['INDICATOR_DESCRIPTION'] in ['', None] or record["INDICATOR_CODE"] in ['undefined', '', None]:
                 return False
@@ -342,9 +344,9 @@ class RAMSynchronizer(VisionDataTenantSynchronizer):
             code = str(r['INDICATOR_CODE'])
             mapped_records[code] = {
                 'name': r['INDICATOR_DESCRIPTION'][:1024],
-                'baseline': r['INDICATOR_BASELINE'][:255],
+                'baseline': r['INDICATOR_BASELINE'][:255] if r['INDICATOR_BASELINE'] else '',
                 'code': code,
-                'target': r['INDICATOR_TARGET'][:255],
+                'target': r['INDICATOR_TARGET'][:255] if r['INDICATOR_TARGET'] else '',
                 'ram_indicator': True,
                 'result__wbs': '/'.join([a[0:4], a[4:6], a[6:8], a[8:11], a[11:14]])
             }

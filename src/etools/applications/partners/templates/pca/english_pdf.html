@@ -572,6 +572,12 @@
                         <td class="bordered" style="width: 45%;">Bank Contact Person</td>
                         <td class="bordered">{{ bank_detail.bank_contact_person }}</td>
                     </tr>
+                    {% if bank_detail.tax_number_5 %}
+                    <tr>
+                        <td class="bordered" style="width: 45%;">Hawala Banking Details</td>
+                        <td class="bordered">{{ bank_detail.tax_number_5 }}</td>
+                    </tr>
+                    {% endif %}
                 </table>
                 {% endfor %}
 
@@ -1237,7 +1243,7 @@
                     been conducted by competent national authorities. In the event that competent national authorities are
                     conducting or have conducted the investigation, IP shall assist UNICEF and take all necessary steps,
                     to the extent legally possible, for UNICEF to obtain information on the status and outcome of the
-                    investigation, including disclosure of a copy of the relevant investigation report.
+                    investigation.
                 </div>
                 <!-- p15 -->
                 <li><b>ASSURANCE ACTIVITIES:</b></li>

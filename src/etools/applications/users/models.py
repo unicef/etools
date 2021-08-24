@@ -10,7 +10,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import connection, models
 from django.db.models.signals import post_save
 from django.utils.functional import cached_property
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from django_tenants.models import TenantMixin
 from django_tenants.utils import get_public_schema_name, tenant_context
@@ -105,6 +105,10 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
         super().save(*args, **kwargs)
 
 
+def custom_dashboards_default():
+    return dict(bi_url='')
+
+
 class Country(TenantMixin):
     """
     Tenant Schema
@@ -149,6 +153,7 @@ class Country(TenantMixin):
 
     # TODO: rename the related name as it's inappropriate for relating offices to countries.. should be office_countries
     offices = models.ManyToManyField('Office', related_name='offices', verbose_name=_('Offices'), blank=True)
+    custom_dashboards = models.JSONField(verbose_name=_('Custom Dashboards'), default=custom_dashboards_default)
 
     def __str__(self):
         return self.name

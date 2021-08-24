@@ -1,7 +1,7 @@
 import logging
 from datetime import date
 
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from etools_validator.exceptions import BasicValidationError, StateValidationError, TransitionError
 from etools_validator.utils import check_required_fields, check_rigid_fields
@@ -25,6 +25,8 @@ def transition_ok(i):
 
 
 def transition_to_closed(i):
+    from etools.applications.partners.models import InterventionAmendment
+
     # unicef/etools-issues:820
     # TODO: this is required to go around the caching of intervention.total_frs where self.frs.all() is called
     # TODO: find a sol for invalidating the cache on related .all() -has to do with prefetch_related in the validator
@@ -93,7 +95,7 @@ def transition_to_closed(i):
 
     # TODO: figure out Action Point Validation once the spec is completed
 
-    if i.in_amendment is True:
+    if i.has_active_amendment(InterventionAmendment.KIND_NORMAL):
         raise TransitionError([_('Cannot Transition status while adding an amendment')])
 
     if i.agreement.partner.blocked:
@@ -104,17 +106,21 @@ def transition_to_closed(i):
 
 
 def transition_to_terminated(i):
+    from etools.applications.partners.models import InterventionAmendment
+
     if not i.termination_doc_attachment.exists():
         raise TransitionError([_('Cannot Transition without termination doc attached')])
-    if i.in_amendment is True:
+    if i.has_active_amendment(InterventionAmendment.KIND_NORMAL):
         raise TransitionError([_('Cannot Transition status while adding an amendment')])
     return True
 
 
 def transition_to_ended(i):
+    from etools.applications.partners.models import InterventionAmendment
+
     if i.termination_doc_attachment.exists():
         raise TransitionError([_('Cannot Transition to ended if termination_doc attached')])
-    if i.in_amendment is True:
+    if i.has_active_amendment(InterventionAmendment.KIND_NORMAL):
         raise TransitionError([_('Cannot Transition status while adding an amendment')])
 
     if i.agreement.partner.blocked:
@@ -126,7 +132,9 @@ def transition_to_ended(i):
 
 
 def transition_to_suspended(i):
-    if i.in_amendment is True:
+    from etools.applications.partners.models import InterventionAmendment
+
+    if i.has_active_amendment(InterventionAmendment.KIND_NORMAL):
         raise TransitionError([_('Cannot Transition status while adding an amendment')])
 
     if i.agreement.partner.blocked:
@@ -138,7 +146,6 @@ def transition_to_suspended(i):
 
 
 def transition_to_review(i):
-    # TODO add validation rules/criteria
     return True
 
 
@@ -155,8 +162,9 @@ def transition_to_signature(i):
 
 
 def transition_to_signed(i):
-    from etools.applications.partners.models import Agreement
-    if i.in_amendment is True:
+    from etools.applications.partners.models import Agreement, InterventionAmendment
+
+    if i.has_active_amendment(InterventionAmendment.KIND_NORMAL):
         raise TransitionError([_('Cannot Transition status while adding an amendment')])
 
     if i.document_type in [i.PD, i.SPD] and i.agreement.status in [Agreement.SUSPENDED, Agreement.TERMINATED,
@@ -164,9 +172,6 @@ def transition_to_signed(i):
         raise TransitionError([_('The PCA related to this record is Draft, Suspended or Terminated. '
                                  'This Programme Document will not change status until the related PCA '
                                  'is in Signed status')])
-
-    if i.in_amendment is True:
-        raise TransitionError([_('Cannot Transition status while adding an amendment')])
 
     if i.agreement.partner.blocked:
         raise TransitionError([
@@ -266,7 +271,7 @@ def sections_valid(i):
     if not ind_sections.issubset(intervention_sections):
         draft_status_err = ' without deleting the indicators first' if i.status == i.DRAFT else ''
         raise BasicValidationError(_('The following sections have been selected on '
-                                     'the PD/SSFA indicators and cannot be removed{}: '.format(draft_status_err)) +
+                                     'the PD/SPD indicators and cannot be removed{}: '.format(draft_status_err)) +
                                    ', '.join([s.name for s in ind_sections - intervention_sections]))
     return True
 
@@ -280,7 +285,7 @@ def locations_valid(i):
     intervention_locations = set(i.flat_locations.all())
     if not ind_locations.issubset(intervention_locations):
         raise BasicValidationError(_('The following locations have been selected on '
-                                     'the PD/SSFA indicators and cannot be removed'
+                                     'the PD/SPD indicators and cannot be removed'
                                      ' without removing them from the indicators first: ') +
                                    ', '.join([str(loc) for loc in ind_locations - intervention_locations]))
     return True
@@ -316,7 +321,12 @@ def all_activities_have_timeframes(i):
 
 
 def review_was_accepted(i):
-    r = i.reviews.first()
+    from etools.applications.partners.models import InterventionReview
+
+    r = i.review
+    if r.review_type == InterventionReview.NORV:
+        return True
+
     return r.overall_approval if r else False
 
 
@@ -347,10 +357,10 @@ class InterventionValid(CompleteValidation):
         'start_date_signed_valid': 'The start date cannot be before the later of signature dates.',
         'start_date_related_agreement_valid': 'PD start date cannot be earlier than the Start Date of the related PCA',
         'rigid_in_amendment_flag': 'Amendment Flag cannot be turned on without adding an amendment',
-        'sections_valid': "The sections selected on the PD/SSFA are not a subset of all sections selected "
-                          "for this PD/SSFA's indicators",
-        'locations_valid': "The locations selected on the PD/SSFA are not a subset of all locations selected "
-                          "for this PD/SSFA's indicators",
+        'sections_valid': "The sections selected on the PD/SPD are not a subset of all sections selected "
+                          "for this PD/SPD's indicators",
+        'locations_valid': "The locations selected on the PD/SPD are not a subset of all locations selected "
+                          "for this PD/SPD's indicators",
     }
 
     PERMISSIONS_CLASS = InterventionPermissions
@@ -374,6 +384,11 @@ class InterventionValid(CompleteValidation):
     def state_draft_valid(self, intervention, user=None):
         self.check_required_fields(intervention)
         self.check_rigid_fields(intervention, related=True)
+        if intervention.unicef_accepted:
+            if not all_activities_have_timeframes(intervention):
+                raise StateValidationError([_('All activities must have at least one time frame')])
+            if not all_pd_outputs_are_associated(intervention):
+                raise StateValidationError([_('All PD Outputs need to be associated to a CP Output')])
         return True
 
     def state_review_valid(self, intervention, user=None):
@@ -413,6 +428,8 @@ class InterventionValid(CompleteValidation):
     def state_active_valid(self, intervention, user=None):
         self.check_required_fields(intervention)
         self.check_rigid_fields(intervention, related=True)
+        if intervention.in_amendment:
+            raise StateValidationError([_('Only original PD can be active')])
         if not all_activities_have_timeframes(intervention):
             raise StateValidationError([_('All activities must have at least one time frame')])
         if not all_pd_outputs_are_associated(intervention):

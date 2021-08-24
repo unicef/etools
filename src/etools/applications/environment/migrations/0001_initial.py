@@ -30,7 +30,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(help_text='The human/computer readable name.',
                                           max_length=100, unique=True, verbose_name='Name')),
-                ('everyone', models.NullBooleanField(
+                ('everyone', models.BooleanField(blank=True, null=True,
                     help_text='Flip this flag on (Yes) or off (No) for everyone, overriding all other settings. Leave as Unknown to use normally.', verbose_name='Everyone')),
                 ('percent', models.DecimalField(blank=True, decimal_places=1,
                                                 help_text='A number between 0.0 and 99.9 to indicate a percentage of users for whom this flag will be active.', max_digits=3, null=True, verbose_name='Percent')),
