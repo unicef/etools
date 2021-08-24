@@ -3,24 +3,36 @@ import decimal
 import json
 
 from django.conf import settings
-from django.contrib.postgres.fields import ArrayField, JSONField
-from django.db import connection, models, transaction
+from django.contrib.postgres.fields import ArrayField
+from django.core.validators import MinValueValidator
+from django.db import connection, IntegrityError, models, transaction
 from django.db.models import Case, CharField, Count, F, Max, Min, OuterRef, Q, Subquery, Sum, When
-from django.db.models.signals import post_save, pre_delete
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.functional import cached_property
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from django_fsm import FSMField, transition
+from django_tenants.utils import get_public_schema_name
 from model_utils import Choices, FieldTracker
 from model_utils.models import TimeStampedModel
 from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation, CurrencyField
 from unicef_locations.models import Location
+from unicef_notification.utils import send_notification_with_template
 
 from etools.applications.core.permissions import import_permissions
 from etools.applications.funds.models import FundsReservationHeader
+from etools.applications.partners.amendment_utils import (
+    calculate_difference,
+    copy_instance,
+    INTERVENTION_AMENDMENT_COPY_POST_EFFECTS,
+    INTERVENTION_AMENDMENT_DEFAULTS,
+    INTERVENTION_AMENDMENT_IGNORED_FIELDS,
+    INTERVENTION_AMENDMENT_MERGE_POST_EFFECTS,
+    INTERVENTION_AMENDMENT_RELATED_FIELDS,
+    merge_instance,
+)
 from etools.applications.partners.validation import (
     agreements as agreement_validation,
     interventions as intervention_validation,
@@ -33,7 +45,9 @@ from etools.applications.partners.validation.agreements import (
 from etools.applications.reports.models import CountryProgramme, Indicator, Office, Result, Section
 from etools.applications.t2f.models import Travel, TravelActivity, TravelType
 from etools.applications.tpm.models import TPMActivity, TPMVisit
+from etools.applications.users.models import Country
 from etools.libraries.djangolib.models import MaxDistinct, StringConcat
+from etools.libraries.djangolib.utils import get_environment
 from etools.libraries.pythonlib.datetime import get_current_year, get_quarter
 from etools.libraries.pythonlib.encoders import CustomJSONEncoder
 
@@ -252,6 +266,16 @@ class PartnerOrganization(TimeStampedModel):
         (RATING_NOT_REQUIRED, 'Not Required'),
     )
 
+    RATING_HIGH_RISK_ASSUMED = 'High Risk Assumed'
+    RATING_LOW_RISK_ASSUMED = 'Low Risk Assumed'
+    RATING_NOT_ASSESSED = 'Not Assessed'
+
+    PSEA_RISK_RATING = RISK_RATINGS + (
+        (RATING_HIGH_RISK_ASSUMED, RATING_HIGH_RISK_ASSUMED),
+        (RATING_LOW_RISK_ASSUMED, RATING_LOW_RISK_ASSUMED),
+        (RATING_NOT_ASSESSED, RATING_NOT_ASSESSED),
+    )
+
     MICRO_ASSESSMENT = 'MICRO ASSESSMENT'
     HIGH_RISK_ASSUMED = 'HIGH RISK ASSUMED'
     LOW_RISK_ASSUMED = 'LOW RISK ASSUMED'
@@ -296,11 +320,15 @@ class PartnerOrganization(TimeStampedModel):
         ('WHO', 'WHO')
     )
 
+    CSO_TYPE_INTERNATIONAL = 'International'
+    CSO_TYPE_NATIONAL = 'National'
+    CSO_TYPE_COMMUNITY = 'Community Based Organization'
+    CSO_TYPE_ACADEMIC = 'Academic Institution'
     CSO_TYPES = Choices(
-        'International',
-        'National',
-        'Community Based Organization',
-        'Academic Institution',
+        CSO_TYPE_INTERNATIONAL,
+        CSO_TYPE_NATIONAL,
+        CSO_TYPE_COMMUNITY,
+        CSO_TYPE_ACADEMIC,
     )
 
     ASSURANCE_VOID = 'void'
@@ -487,7 +515,7 @@ class PartnerOrganization(TimeStampedModel):
         verbose_name=_('Outstanding DCT more than 9 months')
     )
 
-    hact_values = JSONField(blank=True, null=True, default=hact_default, verbose_name='HACT')
+    hact_values = models.JSONField(blank=True, null=True, default=hact_default, verbose_name='HACT')
     basis_for_risk_rating = models.CharField(
         verbose_name=_("Basis for Risk Rating"), max_length=50, default='', blank=True)
     psea_assessment_date = models.DateTimeField(
@@ -510,9 +538,14 @@ class PartnerOrganization(TimeStampedModel):
     highest_risk_rating_name = models.CharField(
         max_length=150,
         verbose_name=_("Highest Risk Rating Name"),
+        choices=PSEA_RISK_RATING,
         blank=True,
         default='',
     )
+    lead_office = models.ForeignKey(Office, verbose_name=_("Lead Office"),
+                                    blank=True, null=True, on_delete=models.SET_NULL)
+    lead_section = models.ForeignKey(Section, verbose_name=_("Lead Section"),
+                                     blank=True, null=True, on_delete=models.SET_NULL)
 
     tracker = FieldTracker()
     objects = PartnerOrganizationQuerySet.as_manager()
@@ -579,7 +612,7 @@ class PartnerOrganization(TimeStampedModel):
     @cached_property
     def approaching_threshold_flag(self):
         total_ct_ytd = self.total_ct_ytd or 0
-        not_required = self.rating == PartnerOrganization.RATING_NOT_REQUIRED
+        not_required = self.highest_risk_rating_name == PartnerOrganization.RATING_NOT_REQUIRED
         ct_year_overflow = total_ct_ytd > PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL
         return not_required and ct_year_overflow
 
@@ -593,38 +626,49 @@ class PartnerOrganization(TimeStampedModel):
     @cached_property
     def min_req_programme_visits(self):
         programme_visits = 0
-        ct = self.net_ct_cy or 0  # Must be integer, but net_ct_cy could be None
+        if self.partner_type not in [PartnerType.BILATERAL_MULTILATERAL, PartnerType.UN_AGENCY]:
+            ct = self.net_ct_cy or 0  # Must be integer, but net_ct_cy could be None
 
-        if ct <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL:
-            programme_visits = 0
-        elif PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL < ct <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL2:
-            programme_visits = 1
-        elif PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL2 < ct <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL3:
-            if self.rating in [PartnerOrganization.RATING_HIGH, PartnerOrganization.RATING_SIGNIFICANT]:
-                programme_visits = 3
-            elif self.rating in [PartnerOrganization.RATING_MEDIUM, ]:
-                programme_visits = 2
-            elif self.rating in [PartnerOrganization.RATING_LOW, ]:
+            if ct <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL:
+                programme_visits = 0
+            elif PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL < ct <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL2:
                 programme_visits = 1
-        else:
-            if self.rating in [PartnerOrganization.RATING_HIGH, PartnerOrganization.RATING_SIGNIFICANT]:
-                programme_visits = 4
-            elif self.rating in [PartnerOrganization.RATING_MEDIUM, ]:
-                programme_visits = 3
-            elif self.rating in [PartnerOrganization.RATING_LOW, ]:
-                programme_visits = 2
+            elif PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL2 < ct <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL3:
+                if self.highest_risk_rating_name in [PartnerOrganization.RATING_HIGH,
+                                                     PartnerOrganization.RATING_HIGH_RISK_ASSUMED,
+                                                     PartnerOrganization.RATING_SIGNIFICANT]:
+                    programme_visits = 3
+                elif self.highest_risk_rating_name in [PartnerOrganization.RATING_MEDIUM, ]:
+                    programme_visits = 2
+                elif self.highest_risk_rating_name in [PartnerOrganization.RATING_LOW,
+                                                       PartnerOrganization.RATING_LOW_RISK_ASSUMED]:
+                    programme_visits = 1
+            else:
+                if self.highest_risk_rating_name in [PartnerOrganization.RATING_HIGH,
+                                                     PartnerOrganization.RATING_HIGH_RISK_ASSUMED,
+                                                     PartnerOrganization.RATING_SIGNIFICANT]:
+                    programme_visits = 4
+                elif self.highest_risk_rating_name in [PartnerOrganization.RATING_MEDIUM, ]:
+                    programme_visits = 3
+                elif self.highest_risk_rating_name in [PartnerOrganization.RATING_LOW,
+                                                       PartnerOrganization.RATING_LOW_RISK_ASSUMED]:
+                    programme_visits = 2
         return programme_visits
 
     @cached_property
     def min_req_spot_checks(self):
         # reported_cy can be None
         reported_cy = self.reported_cy or 0
+        if self.partner_type in [PartnerType.BILATERAL_MULTILATERAL, PartnerType.UN_AGENCY]:
+            return 0
         if self.type_of_assessment == 'Low Risk Assumed' or reported_cy <= PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL:
             return 0
         return 1
 
     @cached_property
     def min_req_audits(self):
+        if self.partner_type in [PartnerType.BILATERAL_MULTILATERAL, PartnerType.UN_AGENCY]:
+            return 0
         return self.planned_engagement.required_audit if getattr(self, 'planned_engagement', None) else 0
 
     @cached_property
@@ -690,7 +734,7 @@ class PartnerOrganization(TimeStampedModel):
         :return: all completed programmatic visits
         """
         # Avoid circular imports
-        from etools.applications.field_monitoring.data_collection.models import ActivityQuestion
+        from etools.applications.field_monitoring.planning.models import MonitoringActivity, MonitoringActivityGroup
 
         hact = self.get_hact_json()
 
@@ -728,22 +772,40 @@ class PartnerOrganization(TimeStampedModel):
 
             tpm_total = tpmv1 + tpmv2 + tpmv3 + tpmv4
 
+            fmvgs = MonitoringActivityGroup.objects.filter(
+                partner=self,
+                monitoring_activities__status="completed",
+            ).annotate(
+                end_date=Max('monitoring_activities__end_date'),
+            ).distinct()
+            fmgv1 = fmvgs.filter(end_date__quarter=1).count()
+            fmgv2 = fmvgs.filter(end_date__quarter=2).count()
+            fmgv3 = fmvgs.filter(end_date__quarter=3).count()
+            fmgv4 = fmvgs.filter(end_date__quarter=4).count()
+            fmgv_total = fmgv1 + fmgv2 + fmgv3 + fmgv4
+
             # field monitoring activities qualify as programmatic visits if during a monitoring activity the hact
             # question was answered with an overall rating and the visit is completed
-            fmvqs = ActivityQuestion.objects.filter(question__is_hact=True, partner=self,
-                                                    overall_finding__value__isnull=False,
-                                                    monitoring_activity__status="completed")
-            fmvq1 = fmvqs.filter(monitoring_activity__end_date__quarter=1).count()
-            fmvq2 = fmvqs.filter(monitoring_activity__end_date__quarter=2).count()
-            fmvq3 = fmvqs.filter(monitoring_activity__end_date__quarter=3).count()
-            fmvq4 = fmvqs.filter(monitoring_activity__end_date__quarter=4).count()
+            grouped_activities = MonitoringActivityGroup.objects.filter(
+                partner=self
+            ).values_list('monitoring_activities__id', flat=True)
+            fmvqs = MonitoringActivity.objects.filter(
+                partners=self, status="completed",
+                end_date__year=datetime.datetime.now().year,
+            ).filter_hact_for_partner(self.id).exclude(
+                id__in=grouped_activities,
+            )
+            fmvq1 = fmvqs.filter(end_date__quarter=1).count()
+            fmvq2 = fmvqs.filter(end_date__quarter=2).count()
+            fmvq3 = fmvqs.filter(end_date__quarter=3).count()
+            fmvq4 = fmvqs.filter(end_date__quarter=4).count()
             fmv_total = fmvq1 + fmvq2 + fmvq3 + fmvq4
 
-            hact['programmatic_visits']['completed']['q1'] = pvq1 + tpmv1 + fmvq1
-            hact['programmatic_visits']['completed']['q2'] = pvq2 + tpmv2 + fmvq2
-            hact['programmatic_visits']['completed']['q3'] = pvq3 + tpmv3 + fmvq3
-            hact['programmatic_visits']['completed']['q4'] = pvq4 + tpmv4 + fmvq4
-            hact['programmatic_visits']['completed']['total'] = pv + tpm_total + fmv_total
+            hact['programmatic_visits']['completed']['q1'] = pvq1 + tpmv1 + fmgv1 + fmvq1
+            hact['programmatic_visits']['completed']['q2'] = pvq2 + tpmv2 + fmgv2 + fmvq2
+            hact['programmatic_visits']['completed']['q3'] = pvq3 + tpmv3 + fmgv3 + fmvq3
+            hact['programmatic_visits']['completed']['q4'] = pvq4 + tpmv4 + fmgv4 + fmvq4
+            hact['programmatic_visits']['completed']['total'] = pv + tpm_total + fmgv_total + fmv_total
 
         self.hact_values = hact
         self.save()
@@ -840,6 +902,13 @@ class PartnerOrganization(TimeStampedModel):
         admin_url_name = 'admin:partners_partnerorganization_change'
         return reverse(admin_url_name, args=(self.id,))
 
+    def user_is_staff_member(self, user):
+        staff_member = user.get_partner_staff_member()
+        if not staff_member:
+            return False
+
+        return staff_member.id in self.staff_members.values_list('id', flat=True)
+
 
 class CoreValuesAssessment(TimeStampedModel):
     partner = models.ForeignKey(PartnerOrganization, verbose_name=_("Partner"), related_name='core_values_assessments',
@@ -877,6 +946,14 @@ class PartnerStaffMember(TimeStampedModel):
         verbose_name=_("Partner"),
         related_name='staff_members',
         on_delete=models.CASCADE,
+    )
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        verbose_name=_("User"),
+        related_name='partner_staff_member',
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
     )
     title = models.CharField(
         verbose_name=_("Title"),
@@ -918,24 +995,36 @@ class PartnerStaffMember(TimeStampedModel):
             self.partner.name
         )
 
-    # TODO: instead of signals we need this transactional
-    def reactivate_signal(self):
-        # sends a signal to activate the user
-        post_save.send(PartnerStaffMember, instance=self, created=True)
-
-    def deactivate_signal(self):
-        # sends a signal to deactivate user and remove partnerstaffmember link
-        pre_delete.send(PartnerStaffMember, instance=self)
-
+    @transaction.atomic
     def save(self, **kwargs):
-        # if the instance exists and active was changed, re-associate user
-        if self.pk:
-            # get the instance that exists in the db to compare active states
-            existing_instance = PartnerStaffMember.objects.get(pk=self.pk)
-            if existing_instance.active and not self.active:
-                self.deactivate_signal()
-            elif not existing_instance.active and self.active:
-                self.reactivate_signal()
+        """
+        core ideas:
+        1. user with profile should exists on create if staff member activation status is being changed
+        2. only one user staff member can be active through all tenants
+        """
+
+        # make sure no other partner staff records exist with matching email
+        if not self.pk and self.user:
+            if bool(self.user.get_staff_member_country()):
+                raise IntegrityError(
+                    "Partner Staff Member record already exists with matching email.",
+                )
+
+        if self.user and self.tracker.has_changed('active'):
+            if self.active:
+                # staff is activated
+                self.user.profile.countries_available.add(connection.tenant)
+                self.user.profile.country = connection.tenant
+                self.user.profile.save()
+            else:
+                # staff is deactivated
+                self.user.profile.countries_available.remove(connection.tenant)
+                # using first() here because public schema unavailable during testing
+                self.user.profile.country = Country.objects.filter(schema_name=get_public_schema_name()).first()
+                self.user.profile.save()
+
+            self.user.is_active = self.active
+            self.user.save()
 
         return super().save(**kwargs)
 
@@ -1325,7 +1414,7 @@ class Agreement(TimeStampedModel):
                 self.status in [Agreement.SUSPENDED, Agreement.TERMINATED]:
 
             interventions = self.interventions.filter(
-                document_type__in=[Intervention.PD, Intervention.SHPD]
+                document_type__in=[Intervention.PD, Intervention.SPD]
             )
             for item in interventions:
                 if item.status not in [Intervention.DRAFT,
@@ -1522,6 +1611,7 @@ class InterventionManager(models.Manager):
             'offices',
             'planned_budget',
             'sections',
+            'country_programmes',
         )
 
     def detail_qs(self):
@@ -1535,7 +1625,9 @@ class InterventionManager(models.Manager):
             'result_links__ll_results__applied_indicators__indicator',
             'result_links__ll_results__applied_indicators__disaggregation',
             'result_links__ll_results__applied_indicators__locations',
+            'management_budgets__items',
             'flat_locations',
+            'supply_items',
         )
         return qs
 
@@ -1591,6 +1683,10 @@ def side_effect_two(i, old_instance=None, user=None):
     pass
 
 
+def get_default_cash_transfer_modalities():
+    return [Intervention.CASH_TRANSFER_DIRECT]
+
+
 class Intervention(TimeStampedModel):
     """
     Represents a partner intervention.
@@ -1604,21 +1700,29 @@ class Intervention(TimeStampedModel):
     """
 
     DRAFT = 'draft'
+    REVIEW = 'review'
+    SIGNATURE = 'signature'
     SIGNED = 'signed'
     ACTIVE = 'active'
     ENDED = 'ended'
+    CANCELLED = 'cancelled'
     IMPLEMENTED = 'implemented'
     CLOSED = 'closed'
     SUSPENDED = 'suspended'
     TERMINATED = 'terminated'
 
     AUTO_TRANSITIONS = {
-        DRAFT: [SIGNED],
+        DRAFT: [],
+        REVIEW: [SIGNATURE],
+        SIGNATURE: [SIGNED],
         SIGNED: [ACTIVE, TERMINATED],
         ACTIVE: [ENDED, TERMINATED],
         ENDED: [CLOSED]
     }
     TRANSITION_SIDE_EFFECTS = {
+        DRAFT: [],
+        REVIEW: [],
+        SIGNATURE: [],
         SIGNED: [side_effect_one, side_effect_two],
         ACTIVE: [],
         SUSPENDED: [],
@@ -1627,23 +1731,25 @@ class Intervention(TimeStampedModel):
         TERMINATED: []
     }
 
-    CANCELLED = 'cancelled'
     INTERVENTION_STATUS = (
         (DRAFT, "Development"),
+        (REVIEW, "Review"),
+        (SIGNATURE, "Signature"),
         (SIGNED, 'Signed'),
         (ACTIVE, "Active"),
+        (CANCELLED, "Cancelled"),
         (ENDED, "Ended"),
         (CLOSED, "Closed"),
         (SUSPENDED, "Suspended"),
         (TERMINATED, "Terminated"),
     )
     PD = 'PD'
-    SHPD = 'HPD'
+    SPD = 'SPD'
     SSFA = 'SSFA'
     INTERVENTION_TYPES = (
         (PD, 'Programme Document'),
-        (SHPD, 'Humanitarian Programme Document'),
-        (SSFA, 'SSFA'),
+        (SPD, 'Simplified Programme Document'),
+        # (SSFA, 'SSFA'),
     )
 
     RATING_NONE = "none"
@@ -1690,12 +1796,21 @@ class Intervention(TimeStampedModel):
         on_delete=models.CASCADE,
     )
     # Even though CP is defined at the Agreement Level, for a particular intervention this can be different.
+    # TODO remove country_programme field, replaced with country_programmes
+    # after ePD has been released to production
     country_programme = models.ForeignKey(
         CountryProgramme,
         verbose_name=_("Country Programme"),
-        related_name='interventions',
+        # related_name='interventions',
         blank=True, null=True,
         on_delete=models.DO_NOTHING,
+        help_text='Which Country Programme does this Intervention belong to?',
+    )
+    country_programmes = models.ManyToManyField(
+        CountryProgramme,
+        verbose_name=_("Country Programmes"),
+        related_name='interventions',
+        blank=True,
         help_text='Which Country Programme does this Intervention belong to?',
     )
     number = models.CharField(
@@ -1730,7 +1845,7 @@ class Intervention(TimeStampedModel):
         verbose_name=_("Document Submission Date by CSO"),
         null=True,
         blank=True,
-        help_text='The date the partner submitted complete PD/SSFA documents to Unicef',
+        help_text='The date the partner submitted complete PD/SPD documents to Unicef',
     )
     submission_date_prc = models.DateField(
         verbose_name=_('Submission Date to PRC'),
@@ -1739,6 +1854,11 @@ class Intervention(TimeStampedModel):
         blank=True,
     )
     reference_number_year = models.IntegerField(null=True)
+    date_partnership_review_performed = models.DateField(
+        verbose_name=_('Date Final Partnership Review Performed'),
+        null=True,
+        blank=True,
+    )
     review_date_prc = models.DateField(
         verbose_name=_('Review Date by PRC'),
         help_text='The date the PRC reviewed the partnership',
@@ -1870,6 +1990,8 @@ class Intervention(TimeStampedModel):
         null=True,
         blank=True,
     )
+
+    # will be true for amended copies
     in_amendment = models.BooleanField(
         verbose_name=_("Amendment Open"),
         default=False,
@@ -1896,19 +2018,26 @@ class Intervention(TimeStampedModel):
         verbose_name=("Partner Accepted"),
         default=False,
     )
+    accepted_on_behalf_of_partner = models.BooleanField(
+        verbose_name=("Accepted on behalf of Partner"),
+        default=False,
+    )
     cfei_number = models.CharField(
         verbose_name=_("UNPP Number"),
         max_length=150,
         blank=True,
+        null=True,
         default="",
     )
     context = models.TextField(
         verbose_name=_("Context"),
         blank=True,
+        null=True,
     )
     implementation_strategy = models.TextField(
         verbose_name=_("Implementation Strategy"),
         blank=True,
+        null=True,
     )
     gender_rating = models.CharField(
         verbose_name=_("Gender Rating"),
@@ -1919,6 +2048,7 @@ class Intervention(TimeStampedModel):
     gender_narrative = models.TextField(
         verbose_name=_("Gender Narrative"),
         blank=True,
+        null=True,
     )
     equity_rating = models.CharField(
         verbose_name=_("Equity Rating"),
@@ -1929,6 +2059,7 @@ class Intervention(TimeStampedModel):
     equity_narrative = models.TextField(
         verbose_name=_("Equity Narrative"),
         blank=True,
+        null=True,
     )
     sustainability_rating = models.CharField(
         verbose_name=_("Sustainability Rating"),
@@ -1939,10 +2070,12 @@ class Intervention(TimeStampedModel):
     sustainability_narrative = models.TextField(
         verbose_name=_("Sustainability Narrative"),
         blank=True,
+        null=True,
     )
     ip_program_contribution = models.TextField(
         verbose_name=_("Partner Non-Financial Contribution to Programme"),
         blank=True,
+        null=True,
     )
     budget_owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -1958,11 +2091,13 @@ class Intervention(TimeStampedModel):
         decimal_places=1,
         default=0.0,
     )
-    cash_transfer_modalities = models.CharField(
-        verbose_name=_("Cash Transfer Modalities"),
-        max_length=50,
-        choices=CASH_TRANSFER_CHOICES,
-        default=CASH_TRANSFER_DIRECT,
+    cash_transfer_modalities = ArrayField(
+        models.CharField(
+            verbose_name=_("Cash Transfer Modalities"),
+            max_length=50,
+            choices=CASH_TRANSFER_CHOICES,
+        ),
+        default=get_default_cash_transfer_modalities,
     )
     unicef_review_type = models.CharField(
         verbose_name=_("UNICEF Review Type"),
@@ -1973,28 +2108,39 @@ class Intervention(TimeStampedModel):
     capacity_development = models.TextField(
         verbose_name=_("Capacity Development"),
         blank=True,
+        null=True,
     )
     other_info = models.TextField(
         verbose_name=_("Other Info"),
         blank=True,
+        null=True,
     )
     other_partners_involved = models.TextField(
         verbose_name=_("Other Partners Involved"),
         blank=True,
+        null=True,
     )
     technical_guidance = models.TextField(
         verbose_name=_("Technical Guidance"),
         blank=True,
+        null=True,
+    )
+    cancel_justification = models.TextField(
+        verbose_name=_("Cancel Justification"),
+        blank=True,
+        null=True,
     )
 
     # Flag if this has been migrated to a status that is not correct
     # previous status
-    metadata = JSONField(
+    metadata = models.JSONField(
         verbose_name=_("Metadata"),
         blank=True,
         null=True,
         default=dict,
     )
+
+    # todo: filter out amended interventions from list api's
 
     class Meta:
         ordering = ['-created']
@@ -2026,6 +2172,13 @@ class Intervention(TimeStampedModel):
     @property
     def submitted_to_prc(self):
         return True if any([self.submission_date_prc, self.review_date_prc, self.prc_review_document]) else False
+
+    @property
+    def locked(self):
+        # an Intervention is "locked" for editing if any of the parties accepted the current version
+        # in order for editing to continue the "acceptance" needs to be lifted so that it can be re-acknowledged
+        # and accepted again after the edits were done.
+        return self.partner_accepted or self.unicef_accepted
 
     @property
     def days_from_review_to_signed(self):
@@ -2076,15 +2229,15 @@ class Intervention(TimeStampedModel):
 
     @cached_property
     def total_partner_contribution(self):
-        return self.planned_budget.partner_contribution_local if hasattr(self, 'planned_budget') else 0
+        return self.planned_budget.partner_contribution_local
 
     @cached_property
     def total_unicef_cash(self):
-        return self.planned_budget.unicef_cash_local if hasattr(self, 'planned_budget') else 0
+        return self.planned_budget.unicef_cash_local
 
     @cached_property
     def total_in_kind_amount(self):
-        return self.planned_budget.in_kind_amount_local if hasattr(self, 'planned_budget') else 0
+        return self.planned_budget.in_kind_amount_local
 
     @cached_property
     def total_budget(self):
@@ -2093,6 +2246,10 @@ class Intervention(TimeStampedModel):
     @cached_property
     def total_unicef_budget(self):
         return self.total_unicef_cash + self.total_in_kind_amount
+
+    @cached_property
+    def review(self):
+        return self.reviews.order_by('created').last()
 
     @cached_property
     def all_lower_results(self):
@@ -2154,6 +2311,11 @@ class Intervention(TimeStampedModel):
         else:
             return datetime.date.today().year
 
+    @property
+    def final_partnership_review(self):
+        # to be used only to track changes in validator mixin
+        return self.attachments.filter(type__name=FileType.FINAL_PARTNERSHIP_REVIEW, active=True)
+
     def illegal_transitions(self):
         return False
 
@@ -2165,7 +2327,21 @@ class Intervention(TimeStampedModel):
         pass
 
     @transition(field=status,
-                source=[DRAFT, SUSPENDED, SIGNED],
+                source=[DRAFT],
+                target=[REVIEW],
+                conditions=[intervention_validation.transition_to_review])
+    def transtion_to_review(self):
+        pass
+
+    @transition(field=status,
+                source=[REVIEW],
+                target=[SIGNATURE],
+                conditions=[intervention_validation.transition_to_signature])
+    def transition_to_signature(self):
+        pass
+
+    @transition(field=status,
+                source=[SUSPENDED, SIGNED],
                 target=[ACTIVE],
                 conditions=[intervention_validation.transition_to_active],
                 permission=intervention_validation.partnership_manager_only)
@@ -2173,10 +2349,32 @@ class Intervention(TimeStampedModel):
         pass
 
     @transition(field=status,
-                source=[DRAFT, SUSPENDED],
+                source=[REVIEW, SIGNATURE, SUSPENDED],
                 target=[SIGNED],
                 conditions=[intervention_validation.transition_to_signed])
     def transition_to_signed(self):
+        pass
+
+    @transition(field=status,
+                source=[DRAFT, REVIEW, SIGNATURE],
+                target=[CANCELLED],
+                conditions=[intervention_validation.transition_to_cancelled])
+    def transition_to_cancelled(self):
+        pass
+
+    @transition(field=status,
+                source=[
+                    SIGNED,
+                    ACTIVE,
+                    ENDED,
+                    IMPLEMENTED,
+                    CLOSED,
+                    SUSPENDED,
+                    TERMINATED,
+                ],
+                target=[CANCELLED],
+                conditions=[illegal_transitions])
+    def transition_to_cancelled_illegal(self):
         pass
 
     @transition(field=status,
@@ -2260,6 +2458,12 @@ class Intervention(TimeStampedModel):
 
     @transaction.atomic
     def save(self, force_insert=False, save_from_agreement=False, **kwargs):
+        # automatically set hq_support_cost to 7% for INGOs
+        if not self.pk:
+            if self.agreement.partner.cso_type == PartnerOrganization.CSO_TYPE_INTERNATIONAL:
+                if not self.hq_support_cost:
+                    self.hq_support_cost = 7.0
+
         # check status auto updates
         # TODO: move this outside of save in the future to properly check transitions
         # self.check_status_auto_updates()
@@ -2284,6 +2488,17 @@ class Intervention(TimeStampedModel):
             self.update_ssfa_properties()
 
         super().save()
+
+        if not oldself:
+            self.management_budgets = InterventionManagementBudget.objects.create(intervention=self)
+            self.planned_budget = InterventionBudget.objects.create(intervention=self)
+
+    def has_active_amendment(self, kind=None):
+        active_amendments = self.amendments.filter(is_active=True)
+        if kind:
+            active_amendments = active_amendments.filter(kind=kind)
+
+        return active_amendments.exists()
 
 
 class InterventionAmendment(TimeStampedModel):
@@ -2317,12 +2532,29 @@ class InterventionAmendment(TimeStampedModel):
         (BUDGET, 'Budget'),
     ]
 
+    KIND_NORMAL = 'normal'
+    KIND_CONTINGENCY = 'contingency'
+
+    AMENDMENT_KINDS = Choices(
+        (KIND_NORMAL, _('Normal')),
+        (KIND_CONTINGENCY, _('Contingency')),
+    )
+
     intervention = models.ForeignKey(
         Intervention,
         verbose_name=_("Reference Number"),
         related_name='amendments',
         on_delete=models.CASCADE,
     )
+
+    kind = models.CharField(
+        max_length=20,
+        verbose_name=_('Kind'),
+        choices=AMENDMENT_KINDS,
+        default=KIND_NORMAL,
+    )
+
+    is_active = models.BooleanField(default=True)
 
     types = ArrayField(models.CharField(
         max_length=50,
@@ -2339,15 +2571,49 @@ class InterventionAmendment(TimeStampedModel):
     signed_date = models.DateField(
         verbose_name=_("Signed Date"),
         null=True,
+        blank=True,
     )
-    amendment_number = models.IntegerField(
+    amendment_number = models.CharField(
         verbose_name=_("Number"),
-        default=0,
+        max_length=15,
     )
+
+    # legacy field
     signed_amendment = models.FileField(
         verbose_name=_("Amendment Document"),
         max_length=1024,
-        upload_to=get_intervention_amendment_file_path
+        upload_to=get_intervention_amendment_file_path,
+        blank=True,
+    )
+
+    # signatures
+    signed_by_unicef_date = models.DateField(
+        verbose_name=_("Signed by UNICEF Date"),
+        null=True,
+        blank=True,
+    )
+    signed_by_partner_date = models.DateField(
+        verbose_name=_("Signed by Partner Date"),
+        null=True,
+        blank=True,
+    )
+    # partnership managers
+    unicef_signatory = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name=_("Signed by UNICEF"),
+        related_name='++',
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+    )
+    # part of the Agreement authorized officers
+    partner_authorized_officer_signatory = models.ForeignKey(
+        PartnerStaffMember,
+        verbose_name=_("Signed by Partner"),
+        related_name='+',
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
     )
     signed_amendment_attachment = CodedGenericRelation(
         Attachment,
@@ -2355,19 +2621,30 @@ class InterventionAmendment(TimeStampedModel):
         code='partners_intervention_amendment_signed',
         blank=True,
     )
+
     internal_prc_review = CodedGenericRelation(
         Attachment,
         verbose_name=_('Internal PRC Review'),
         code='partners_intervention_amendment_internal_prc_review',
         blank=True,
     )
+    amended_intervention = models.OneToOneField(
+        Intervention,
+        verbose_name=_("Amended Intervention"),
+        related_name='amendment',
+        blank=True, null=True,
+        on_delete=models.SET_NULL,
+    )
+    related_objects_map = models.JSONField(blank=True, default=dict)
+    difference = models.JSONField(blank=True, default=dict)
 
     tracker = FieldTracker()
 
     def compute_reference_number(self):
-        return self.intervention.amendments.filter(
-            signed_date__isnull=False
-        ).count() + 1
+        number = str(self.intervention.amendments.filter(kind=self.kind).count() + 1)
+        if self.kind == self.KIND_CONTINGENCY:
+            number = 'Contingency/' + number
+        return number
 
     @transaction.atomic
     def save(self, **kwargs):
@@ -2380,9 +2657,14 @@ class InterventionAmendment(TimeStampedModel):
         # set
         if self.pk is None:
             self.amendment_number = self.compute_reference_number()
-            self.intervention.in_amendment = True
             self.intervention.save(amendment_number=self.amendment_number)
+            self._copy_intervention()
+
         return super().save(**kwargs)
+
+    def delete(self, **kwargs):
+        self.amended_intervention.delete()
+        super().delete(**kwargs)
 
     def __str__(self):
         return '{}:- {}'.format(
@@ -2393,6 +2675,59 @@ class InterventionAmendment(TimeStampedModel):
     class Meta:
         verbose_name = _('Amendment')
         verbose_name_plural = _('Intervention amendments')
+
+    def _copy_intervention(self):
+        self.amended_intervention, self.related_objects_map = copy_instance(
+            self.intervention,
+            INTERVENTION_AMENDMENT_RELATED_FIELDS,
+            INTERVENTION_AMENDMENT_IGNORED_FIELDS,
+            INTERVENTION_AMENDMENT_DEFAULTS,
+            INTERVENTION_AMENDMENT_COPY_POST_EFFECTS,
+        )
+        self.amended_intervention.title = '[Amended] ' + self.intervention.title
+        self.amended_intervention.save()
+
+    def merge_amendment(self):
+        merge_instance(
+            self.intervention,
+            self.amended_intervention,
+            self.related_objects_map,
+            INTERVENTION_AMENDMENT_RELATED_FIELDS,
+            INTERVENTION_AMENDMENT_IGNORED_FIELDS,
+            INTERVENTION_AMENDMENT_COPY_POST_EFFECTS,
+            INTERVENTION_AMENDMENT_MERGE_POST_EFFECTS,
+        )
+
+        # copy signatures to amendment
+        pd_attachment = self.amended_intervention.signed_pd_attachment.first()
+        if pd_attachment:
+            pd_attachment.code = 'partners_intervention_amendment_signed'
+            pd_attachment.content_object = self
+            pd_attachment.save()
+
+        self.signed_by_unicef_date = self.amended_intervention.signed_by_unicef_date
+        self.signed_by_partner_date = self.amended_intervention.signed_by_partner_date
+        self.unicef_signatory = self.amended_intervention.unicef_signatory
+        self.partner_authorized_officer_signatory = self.amended_intervention.partner_authorized_officer_signatory
+
+        self.amended_intervention.reviews.update(intervention=self.intervention)
+
+        amended_intervention = self.amended_intervention
+
+        self.amended_intervention = None
+        self.is_active = False
+        self.save()
+
+        amended_intervention.delete()
+
+    def get_difference(self):
+        return calculate_difference(
+            self.intervention,
+            self.amended_intervention,
+            self.related_objects_map,
+            INTERVENTION_AMENDMENT_RELATED_FIELDS,
+            INTERVENTION_AMENDMENT_IGNORED_FIELDS,
+        )
 
 
 class InterventionPlannedVisits(TimeStampedModel):
@@ -2436,6 +2771,12 @@ class InterventionResultLink(TimeStampedModel):
             self.intervention, self.cp_output
         )
 
+    def total(self):
+        results = self.ll_results.aggregate(
+            total=Sum("activities__unicef_cash") + Sum("activities__cso_cash"),
+        )
+        return results["total"] if results["total"] is not None else 0
+
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
 
@@ -2447,6 +2788,7 @@ class InterventionBudget(TimeStampedModel):
     intervention = models.OneToOneField(Intervention, related_name='planned_budget', null=True, blank=True,
                                         verbose_name=_('Intervention'), on_delete=models.CASCADE)
 
+    # legacy values
     partner_contribution = models.DecimalField(max_digits=20, decimal_places=2, default=0,
                                                verbose_name=_('Partner Contribution'))
     unicef_cash = models.DecimalField(max_digits=20, decimal_places=2, default=0, verbose_name=_('Unicef Cash'))
@@ -2458,21 +2800,54 @@ class InterventionBudget(TimeStampedModel):
     )
     total = models.DecimalField(max_digits=20, decimal_places=2, verbose_name=_('Total'))
 
+    # sum of all activity/management budget cso/partner values
     partner_contribution_local = models.DecimalField(max_digits=20, decimal_places=2, default=0,
                                                      verbose_name=_('Partner Contribution Local'))
+    # sum of partner supply items (InterventionSupplyItem)
+    partner_supply_local = models.DecimalField(
+        max_digits=20, decimal_places=2, default=0,
+        verbose_name=_('Partner Supplies Local')
+    )
+    total_partner_contribution_local = models.DecimalField(
+        max_digits=20, decimal_places=2, default=0,
+        verbose_name=_('Total Partner Contribution')
+    )
+    # sum of all activity/management budget unicef values
+    total_unicef_cash_local_wo_hq = models.DecimalField(
+        max_digits=20, decimal_places=2, default=0,
+        verbose_name=_('Total HQ Cash Local')
+    )
+    total_hq_cash_local = models.DecimalField(
+        max_digits=20, decimal_places=2, default=0,
+        verbose_name=_('Total HQ Cash Local')
+    )
+    # unicef cash including headquarters contribution
     unicef_cash_local = models.DecimalField(max_digits=20, decimal_places=2, default=0,
                                             verbose_name=_('Unicef Cash Local'))
+    # sum of unicef supply items (InterventionSupplyItem)
     in_kind_amount_local = models.DecimalField(
         max_digits=20, decimal_places=2, default=0,
         verbose_name=_('UNICEF Supplies Local')
     )
     currency = CurrencyField(verbose_name=_('Currency'), null=False, default='')
     total_local = models.DecimalField(max_digits=20, decimal_places=2, verbose_name=_('Total Local'))
+    programme_effectiveness = models.DecimalField(
+        max_digits=20,
+        decimal_places=2,
+        verbose_name=_("Programme Effectiveness (%)"),
+        default=0,
+    )
 
     tracker = FieldTracker()
 
     class Meta:
         verbose_name_plural = _('Intervention budget')
+
+    @property
+    def partner_contribution_percent(self):
+        if self.total_local == 0:
+            return 0
+        return self.total_partner_contribution_local / self.total_local * 100
 
     def total_unicef_contribution(self):
         return self.unicef_cash + self.in_kind_amount
@@ -2480,13 +2855,23 @@ class InterventionBudget(TimeStampedModel):
     def total_unicef_contribution_local(self):
         return self.unicef_cash_local + self.in_kind_amount_local
 
+    def total_cash_local(self):
+        return self.partner_contribution_local + self.unicef_cash_local
+
     @transaction.atomic
     def save(self, **kwargs):
         """
         Calculate total budget on save
         """
-        self.total = self.total_unicef_contribution() + self.partner_contribution
-        self.total_local = self.total_unicef_contribution_local() + self.partner_contribution_local
+        self.calc_totals(save=False)
+
+        # attempt to set default currency
+        if not self.currency:
+            try:
+                self.currency = connection.tenant.local_currency.code
+            except AttributeError:
+                self.currency = "USD"
+
         super().save(**kwargs)
 
     def __str__(self):
@@ -2496,6 +2881,250 @@ class InterventionBudget(TimeStampedModel):
             self.intervention,
             total_local
         )
+
+    def calc_totals(self, save=True):
+        # partner and unicef totals
+
+        def init_totals():
+            self.partner_contribution_local = 0
+            self.total_unicef_cash_local_wo_hq = 0
+
+        init = False
+        for link in self.intervention.result_links.all():
+            for result in link.ll_results.all():
+                for activity in result.activities.all():
+                    if not init:
+                        init_totals()
+                        init = True
+                    self.partner_contribution_local += activity.cso_cash
+                    self.total_unicef_cash_local_wo_hq += activity.unicef_cash
+
+        programme_effectiveness = 0
+        if not init:
+            init_totals()
+        programme_effectiveness += self.intervention.management_budgets.total
+        self.partner_contribution_local += self.intervention.management_budgets.partner_total
+        self.total_unicef_cash_local_wo_hq += self.intervention.management_budgets.unicef_total
+        self.unicef_cash_local = self.total_unicef_cash_local_wo_hq + self.total_hq_cash_local
+
+        # in kind totals
+        self.in_kind_amount_local = 0
+        self.partner_supply_local = 0
+        for item in self.intervention.supply_items.all():
+            if item.provided_by == InterventionSupplyItem.PROVIDED_BY_UNICEF:
+                self.in_kind_amount_local += item.total_price
+            else:
+                self.partner_supply_local += item.total_price
+
+        self.total = self.total_unicef_contribution() + self.partner_contribution
+        self.total_partner_contribution_local = self.partner_contribution_local + self.partner_supply_local
+        self.total_local = self.total_unicef_contribution_local() + self.total_partner_contribution_local
+        if self.total_local:
+            self.programme_effectiveness = programme_effectiveness / self.total_local * 100
+        else:
+            self.programme_effectiveness = 0
+
+        if save:
+            self.save()
+
+
+class InterventionReviewQuestionnaire(models.Model):
+    # answer fields to be renamed when questionnaire will be available
+    ANSWERS = Choices(
+        ('', _('Not decided yet')),
+        ('a', _('Yes, strongly agree')),
+        ('b', _('Yes, agree')),
+        ('c', _('No, disagree')),
+        ('d', _('No, strongly disagree')),
+    )
+
+    relationship_is_represented = models.CharField(
+        blank=True, max_length=10,
+        verbose_name=_('The proposed relationship is best represented and regulated by partnership '
+                       '(as opposed to procurement), with both UNICEF and the CSO '
+                       'making clear contributions to the PD/SPD'),
+        choices=ANSWERS,
+    )
+    partner_comparative_advantage = models.CharField(
+        blank=True, max_length=100,
+        verbose_name=_('The partner selection evidences the CSO’s comparative advantage '
+                       'and value for money in relation to the planned results'),
+        choices=ANSWERS,
+    )
+    relationships_are_positive = models.CharField(
+        blank=True, max_length=100,
+        verbose_name=_('Previous UNICEF/UN relationships with the proposed CSO have been positive'),
+        choices=ANSWERS,
+    )
+    pd_is_relevant = models.CharField(
+        blank=True, max_length=100,
+        verbose_name=_('The proposed PD/SPD is relevant to achieving results in the country programme document, '
+                       'the relevant sector workplan and or humanitarian response plan'),
+        choices=ANSWERS,
+    )
+    pd_is_guided = models.CharField(
+        blank=True, max_length=100,
+        verbose_name=_('The results framework of the proposed PD/SPD has been guided '
+                       'by M&E feedback during the drafting process'),
+        choices=ANSWERS,
+    )
+    ges_considered = models.CharField(
+        blank=True, max_length=100,
+        verbose_name=_('Gender, equity and sustainability have been considered in the programme design process'),
+        choices=ANSWERS,
+    )
+    budget_is_aligned = models.CharField(
+        blank=True, max_length=100,
+        verbose_name=_('The budget of the proposed PD/SPD is aligned with the principles of value for money '
+                       'with the effective and efficient programme management costs adhering to office defined limits'),
+        choices=ANSWERS,
+    )
+    supply_issues_considered = models.CharField(
+        blank=True, max_length=100,
+        verbose_name=_('The relevant supply issues have been duly considered'),
+        choices=ANSWERS,
+    )
+
+    overall_comment = models.TextField(blank=True)
+    overall_approval = models.BooleanField(null=True, blank=True)
+
+    class Meta:
+        abstract = True
+
+
+class InterventionReview(InterventionReviewQuestionnaire, TimeStampedModel):
+    PRC = 'prc'
+    NPRC = 'non-prc'
+    NORV = 'no-review'
+
+    INTERVENTION_REVIEW_TYPES = Choices(
+        (PRC, 'PRC Review'),
+        (NPRC, 'Non-PRC Review'),
+    )
+    # no review is available only for amendment
+    ALL_REVIEW_TYPES = Choices(
+        *(
+            INTERVENTION_REVIEW_TYPES +
+            ((NORV, 'No Review Required'),)
+        )
+    )
+
+    intervention = models.ForeignKey(
+        Intervention,
+        verbose_name=_("Intervention"),
+        related_name='reviews',
+        on_delete=models.CASCADE,
+    )
+
+    amendment = models.ForeignKey(
+        InterventionAmendment,
+        null=True,
+        blank=True,
+        verbose_name=_("Amendment"),
+        related_name='reviews',
+        on_delete=models.CASCADE,
+    )
+
+    review_type = models.CharField(
+        max_length=50,
+        verbose_name=_('Types'),
+        blank=True,
+        choices=ALL_REVIEW_TYPES
+    )
+    actions_list = models.TextField(verbose_name=_('Actions List'), blank=True)
+
+    submitted_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name=_('PRC Submitted By'),
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name='+',
+    )
+    review_date = models.DateField(blank=True, null=True, verbose_name=_('Review Date'))
+
+    meeting_date = models.DateField(blank=True, null=True, verbose_name=_('Meeting Date'))
+    prc_officers = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        verbose_name=_('PRC Officers'),
+        blank=True,
+        related_name='+',
+    )
+    overall_approver = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name=_('Overall Approver'),
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name='+',
+    )
+
+    class Meta:
+        ordering = ["-created"]
+
+    @property
+    def created_date(self):
+        return self.created.date()
+
+
+class InterventionReviewNotification(TimeStampedModel):
+    review = models.ForeignKey(InterventionReview, related_name='prc_notifications', on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name=_('User'),
+        related_name='prc_notifications',
+        on_delete=models.CASCADE,
+    )
+
+    class Meta:
+        ordering = ('review', '-created')
+
+    def save(self, **kwargs):
+        super().save(**kwargs)
+        self.send_notification()
+
+    def send_notification(self):
+        context = {
+            'environment': get_environment(),
+            'intervention_number': self.review.intervention.reference_number,
+            'meeting_date': self.review.meeting_date.strftime('%d-%m-%Y'),
+            'user_name': self.user.get_full_name(),
+            'url': '{}{}'.format(settings.HOST, self.review.intervention.get_object_url())
+        }
+
+        send_notification_with_template(
+            recipients=[self.user.email],
+            template_name='partners/intervention/prc_review_notification',
+            context=context,
+        )
+
+    @classmethod
+    def notify_officers_for_review(cls, review: InterventionReview):
+        notified_users = cls.objects.filter(
+            review=review,
+            created__gt=timezone.now() - datetime.timedelta(days=1),
+        ).values_list('user_id', flat=True)
+
+        for user in review.prc_officers.all():
+            if user.id in notified_users:
+                continue
+
+            cls.objects.create(review=review, user=user)
+
+
+class PRCOfficerInterventionReview(InterventionReviewQuestionnaire, TimeStampedModel):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name=_('User'),
+        related_name='prc_reviews',
+        on_delete=models.CASCADE,
+    )
+
+    overall_review = models.ForeignKey(InterventionReview, on_delete=models.CASCADE, related_name='prc_reviews')
+    review_date = models.DateField(null=True, blank=True, verbose_name=_('Review Date'))
+
+    class Meta:
+        ordering = ['-created']
 
 
 class FileType(models.Model):
@@ -2681,12 +3310,15 @@ class InterventionRisk(TimeStampedModel):
     )
     mitigation_measures = models.TextField()
 
+    class Meta:
+        ordering = ('id',)
+
     def __str__(self):
-        return "{} {}".format(self.intervention, self.get_risk_display())
+        return "{} {}".format(self.intervention, self.get_risk_type_display())
 
 
 class InterventionManagementBudget(TimeStampedModel):
-    intervention = models.ForeignKey(
+    intervention = models.OneToOneField(
         Intervention,
         verbose_name=_("Intervention"),
         related_name="management_budgets",
@@ -2696,47 +3328,81 @@ class InterventionManagementBudget(TimeStampedModel):
         verbose_name=_("UNICEF contribution for In-country management and support staff prorated to their contribution to the programme (representation, planning, coordination, logistics, administration, finance)"),
         decimal_places=2,
         max_digits=20,
-        blank=True,
-        null=True,
+        default=0,
     )
     act1_partner = models.DecimalField(
         verbose_name=_("Partner contribution for In-country management and support staff prorated to their contribution to the programme (representation, planning, coordination, logistics, administration, finance)"),
         decimal_places=2,
         max_digits=20,
-        blank=True,
-        null=True,
+        default=0,
     )
     act2_unicef = models.DecimalField(
         verbose_name=_("UNICEF contribution for Operational costs prorated to their contribution to the programme (office space, equipment, office supplies, maintenance)"),
         decimal_places=2,
         max_digits=20,
-        blank=True,
-        null=True,
+        default=0,
     )
     act2_partner = models.DecimalField(
         verbose_name=_("Partner contribution for Operational costs prorated to their contribution to the programme (office space, equipment, office supplies, maintenance)"),
         decimal_places=2,
         max_digits=20,
-        blank=True,
-        null=True,
+        default=0,
     )
     act3_unicef = models.DecimalField(
         verbose_name=_("UNICEF contribution for Planning, monitoring, evaluation and communication, prorated to their contribution to the programme (venue, travels, etc.)"),
         decimal_places=2,
         max_digits=20,
-        blank=True,
-        null=True,
+        default=0,
     )
     act3_partner = models.DecimalField(
         verbose_name=_("Partner contribution for Planning, monitoring, evaluation and communication, prorated to their contribution to the programme (venue, travels, etc.)"),
         decimal_places=2,
         max_digits=20,
-        blank=True,
-        null=True,
+        default=0,
     )
+
+    @property
+    def partner_total(self):
+        return self.act1_partner + self.act2_partner + self.act3_partner
+
+    @property
+    def unicef_total(self):
+        return self.act1_unicef + self.act2_unicef + self.act3_unicef
+
+    @property
+    def total(self):
+        return self.partner_total + self.unicef_total
+
+    def save(self, *args, **kwargs):
+        create = not self.pk
+        super().save(*args, **kwargs)
+        # planned budget is not created yet, so just skip; totals will be updated during planned budget creation
+        if not create:
+            self.intervention.planned_budget.calc_totals()
+
+    def update_cash(self):
+        aggregated_items = self.items.values('kind').annotate(unicef_cash=Sum('unicef_cash'), cso_cash=Sum('cso_cash'))
+        for item in aggregated_items:
+            if item['kind'] == InterventionManagementBudgetItem.KIND_CHOICES.in_country:
+                self.act1_unicef = item['unicef_cash']
+                self.act1_partner = item['cso_cash']
+            elif item['kind'] == InterventionManagementBudgetItem.KIND_CHOICES.operational:
+                self.act2_unicef = item['unicef_cash']
+                self.act2_partner = item['cso_cash']
+            elif item['kind'] == InterventionManagementBudgetItem.KIND_CHOICES.planning:
+                self.act3_unicef = item['unicef_cash']
+                self.act3_partner = item['cso_cash']
+        self.save()
 
 
 class InterventionSupplyItem(TimeStampedModel):
+    PROVIDED_BY_UNICEF = 'unicef'
+    PROVIDED_BY_PARTNER = 'partner'
+    PROVIDED_BY_CHOICES = Choices(
+        (PROVIDED_BY_UNICEF, _('UNICEF')),
+        (PROVIDED_BY_PARTNER, _('Partner')),
+    )
+
     intervention = models.ForeignKey(
         Intervention,
         verbose_name=_("Intervention"),
@@ -2763,7 +3429,8 @@ class InterventionSupplyItem(TimeStampedModel):
         InterventionResultLink,
         verbose_name=_("Result"),
         on_delete=models.CASCADE,
-        default=0,
+        null=True,
+        blank=True,
     )
     total_price = models.DecimalField(
         verbose_name=_("Total Price"),
@@ -2776,6 +3443,18 @@ class InterventionSupplyItem(TimeStampedModel):
         verbose_name=_("Other Mentions"),
         blank=True,
     )
+    provided_by = models.CharField(
+        max_length=10,
+        choices=PROVIDED_BY_CHOICES,
+        default=PROVIDED_BY_UNICEF,
+        verbose_name=_('Provided By'),
+    )
+    unicef_product_number = models.CharField(
+        verbose_name=_("UNICEF Product Number"),
+        max_length=150,
+        blank=True,
+        default="",
+    )
 
     def __str__(self):
         return "{} {}".format(self.intervention, self.title)
@@ -2783,3 +3462,59 @@ class InterventionSupplyItem(TimeStampedModel):
     def save(self, *args, **kwargs):
         self.total_price = self.unit_number * self.unit_price
         super().save()
+        self.intervention.planned_budget.calc_totals()
+
+    def delete(self, **kwargs):
+        super().delete(**kwargs)
+        self.intervention.planned_budget.calc_totals()
+
+
+class InterventionManagementBudgetItem(models.Model):
+    KIND_CHOICES = Choices(
+        ('in_country', _('In-country management and support staff prorated to their contribution to the programme '
+                         '(representation, planning, coordination, logistics, administration, finance)')),
+        ('operational', _('Operational costs prorated to their contribution to the programme '
+                          '(office space, equipment, office supplies, maintenance)')),
+        ('planning', _('Planning, monitoring, evaluation and communication, '
+                       'prorated to their contribution to the programme (venue, travels, etc.)')),
+    )
+
+    budget = models.ForeignKey(
+        InterventionManagementBudget, verbose_name=_('Budget'),
+        related_name='items', on_delete=models.CASCADE,
+    )
+    name = models.CharField(
+        verbose_name=_("Name"),
+        max_length=255,
+    )
+    unit = models.CharField(
+        verbose_name=_("Unit"),
+        max_length=150,
+    )
+    unit_price = models.DecimalField(
+        verbose_name=_("Unit Price"),
+        decimal_places=2,
+        max_digits=20,
+    )
+    no_units = models.DecimalField(
+        verbose_name=_("Units Number"),
+        decimal_places=1,
+        max_digits=20,
+        validators=[MinValueValidator(0)],
+    )
+    kind = models.CharField(choices=KIND_CHOICES, verbose_name=_('Kind'), max_length=15)
+    unicef_cash = models.DecimalField(
+        verbose_name=_("UNICEF Cash Local"),
+        decimal_places=2,
+        max_digits=20,
+        default=0,
+    )
+    cso_cash = models.DecimalField(
+        verbose_name=_("CSO Cash Local"),
+        decimal_places=2,
+        max_digits=20,
+        default=0,
+    )
+
+    def __str__(self):
+        return f'{self.get_kind_display()} - UNICEF: {self.unicef_cash}, CSO: {self.cso_cash}'

@@ -1,7 +1,7 @@
 import datetime
 import html
 import logging
-from typing import List, Tuple
+import typing
 
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
@@ -228,7 +228,7 @@ def copy_interventions(**kwargs):
     pd_file_type, _ = FileType.objects.get_or_create(
         code=pd_code,
         defaults={
-            "label": "Signed PD/SSFA",
+            "label": "Signed PD/SPD",
             "name": "intervention_signed_pd",
             "order": 0,
         }
@@ -315,7 +315,7 @@ def copy_intervention_amendments(**kwargs):
     file_type, _ = FileType.objects.get_or_create(
         code=code,
         defaults={
-            "label": "PD/SSFA Amendment",
+            "label": "PD/SPD Amendment",
             "name": "intervention_amendment_signed",
             "order": 0,
         }
@@ -523,7 +523,7 @@ def send_agreement_suspended_notification(agreement, user):
 
 
 def send_intervention_draft_notification():
-    """Send an email to PD/SHPD/SSFA's focal point(s) if in draft status"""
+    """Send an email to PD/SPD's focal point(s) if in draft status"""
     sdate_diff = make_aware(datetime.datetime.combine(now(), datetime.time.min) - datetime.timedelta(days=7))
     for intervention in Intervention.objects.filter(
             status=Intervention.DRAFT,
@@ -544,7 +544,7 @@ def send_intervention_draft_notification():
 
 
 def send_intervention_past_start_notification():
-    """Send an email to PD/SHPD/SSFA's focal point(s) if signed
+    """Send an email to PD/SPD's focal point(s) if signed
     and start date is past with no FR added"""
     intervention_qs = Intervention.objects.filter(
         status=Intervention.SIGNED,
@@ -571,7 +571,7 @@ def send_intervention_past_start_notification():
 
 
 def send_intervention_amendment_added_notification(intervention):
-    """Send an email to PD/SHPD/SSFA's focal point(s) if intervention amendment is added"""
+    """Send an email to PD/SPD's focal point(s) if intervention amendment is added"""
     recipients = [
         fp.email for fp in intervention.partner_focal_points.all()
         if fp.email
@@ -592,23 +592,6 @@ def send_intervention_amendment_added_notification(intervention):
 
 
 def sync_partner_staff_member(partner: PartnerOrganization, staff_member_data: PRPPartnerUserResponse):
-    staff_member_update_fields = {
-        'title': staff_member_data.title, 'active': staff_member_data.is_active,
-        'first_name': staff_member_data.first_name, 'last_name': staff_member_data.last_name,
-        'phone': staff_member_data.phone_number,
-    }
-    staff_member, staff_member_created = PartnerStaffMember.objects.get_or_create(
-        partner=partner, email__iexact=staff_member_data.email,
-        defaults={
-            'email': staff_member_data.email, 'partner': partner,
-            **staff_member_update_fields
-        }
-    )
-    if not staff_member_created:
-        for key, value in staff_member_update_fields.items():
-            setattr(staff_member, key, value)
-        staff_member.save()
-
     user_update_fields = {
         'is_active': staff_member_data.is_active,
         'first_name': staff_member_data.first_name, 'last_name': staff_member_data.last_name,
@@ -625,31 +608,47 @@ def sync_partner_staff_member(partner: PartnerOrganization, staff_member_data: P
     profile = user.profile
     profile.job_title = staff_member_data.title
     profile.phone_number = staff_member_data.phone_number
-    profile.partner_staff_member = staff_member.id
     profile.country = profile.country or connection.tenant
     profile.save()
     profile.countries_available.add(connection.tenant)
 
+    staff_member_update_fields = {
+        'user': user,
+        'title': staff_member_data.title, 'active': staff_member_data.is_active,
+        'first_name': staff_member_data.first_name, 'last_name': staff_member_data.last_name,
+        'phone': staff_member_data.phone_number,
+    }
+    staff_member, staff_member_created = PartnerStaffMember.objects.get_or_create(
+        partner=partner, email__iexact=staff_member_data.email,
+        defaults={
+            'email': staff_member_data.email, 'partner': partner,
+            **staff_member_update_fields
+        }
+    )
+    if not staff_member_created:
+        for key, value in staff_member_update_fields.items():
+            setattr(staff_member, key, value)
+        staff_member.save()
 
-def get_quarters_range(start: datetime.date, end: datetime.date) -> List[Tuple[datetime.date, datetime.date]]:
+
+class Quarter(typing.NamedTuple):
+    quarter: int
+    start: datetime.date
+    end: datetime.date
+
+
+def get_quarters_range(start: datetime.date, end: datetime.date) -> typing.List[Quarter]:
     """first date included, last excluded for every period in range"""
     if not start or not end:
         return []
 
     quarters = []
+    i = 0
     while start < end:
-        period_end = min(start + relativedelta(months=3), end)
-        quarters.append((start, period_end))
-        start = period_end
+        quarter_end = start + relativedelta(months=3) - relativedelta(days=1)
+        period_end = min(quarter_end, end)
+        quarters.append(Quarter(i + 1, start, period_end))
+        start = quarter_end + relativedelta(days=1)
+        i += 1
 
     return quarters
-
-
-def get_quarter_index(
-    start: datetime.date, end: datetime.date,
-    quarter_start: datetime.date, quarter_end: datetime.date
-) -> int:
-    for i, quarter in enumerate(get_quarters_range(start, end)):
-        if quarter[0] <= quarter_start <= quarter[1] and quarter[0] <= quarter_end <= quarter[1]:
-            return i
-    return -1

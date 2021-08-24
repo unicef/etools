@@ -1,7 +1,7 @@
 import csv
-import xml.etree.ElementTree as ET
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
+from xml.etree import ElementTree as ET
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.transaction import atomic
@@ -14,7 +14,6 @@ from etools.applications.publics.models import (
     Country,
     Currency,
     DSARate,
-    DSARateUpload,
     DSARegion,
     ExchangeRate,
     TravelAgent,
@@ -243,25 +242,3 @@ class DSARateUploader:
                                            room_rate=row['Room_Percentage'])
 
         DSARegion.objects.filter(id__in=regions_to_delete).delete()
-
-
-@app.task
-def upload_dsa_rates(dsa_rate_upload_id):
-    dsa_rate_upload = DSARateUpload.objects.get(id=dsa_rate_upload_id)
-    dsa_rate_upload.status = DSARateUpload.PROCESSING
-    dsa_rate_upload.save()
-
-    try:
-        uploader = DSARateUploader(dsa_rate_upload)
-        uploader.update_dsa_regions()
-    except Exception as e:
-        dsa_rate_upload.errors = {e.__class__.__name__: force_text(e)}
-        dsa_rate_upload.status = DSARateUpload.FAILED
-    else:
-        if uploader.errors:
-            dsa_rate_upload.errors = uploader.errors
-            dsa_rate_upload.status = DSARateUpload.FAILED
-        else:
-            dsa_rate_upload.errors = uploader.warnings
-            dsa_rate_upload.status = DSARateUpload.DONE
-    dsa_rate_upload.save()

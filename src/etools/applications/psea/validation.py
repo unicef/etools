@@ -126,7 +126,7 @@ def assessment_assigned_reassessment(assessment, old_instance=None, user=None):
     previous_assessment = Assessment.objects.exclude(pk=assessment.pk).\
         filter(partner=partner, assessment_date__gt=one_year_ago,
                status=assessment.STATUS_FINAL).order_by("-assessment_date").first()
-    if previous_assessment is not None and previous_assessment.overall_rating_display == "High":
+    if previous_assessment and previous_assessment.overall_rating_display:
         for answer in previous_assessment.answers.filter(indicator__active=True):
             attachment_qs = answer.attachments.all()
             evidences_qs = answer.evidences.all()

@@ -1,21 +1,24 @@
 import copy
 import datetime
+from decimal import Decimal
 from unittest import skip
+from unittest.mock import Mock, patch
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
+from django.db import connection
 from django.test import SimpleTestCase
 from django.urls import reverse
 from django.utils import timezone
 
 from freezegun import freeze_time
-from mock import Mock, patch
 
 from etools.applications.audit.models import Engagement
 from etools.applications.audit.tests.factories import AuditFactory, SpecialAuditFactory, SpotCheckFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
 from etools.applications.partners import models
+from etools.applications.partners.models import InterventionSupplyItem
 from etools.applications.partners.tests.factories import (
     AgreementAmendmentFactory,
     AgreementFactory,
@@ -28,15 +31,18 @@ from etools.applications.partners.tests.factories import (
     InterventionPlannedVisitsFactory,
     InterventionReportingPeriodFactory,
     InterventionResultLinkFactory,
+    InterventionSupplyItemFactory,
     PartnerFactory,
     PartnerPlannedVisitsFactory,
     PartnerStaffFactory,
     PlannedEngagementFactory,
     WorkspaceFileTypeFactory,
 )
+from etools.applications.publics.tests.factories import PublicsCurrencyFactory
 from etools.applications.reports.tests.factories import (
     AppliedIndicatorFactory,
     CountryProgrammeFactory,
+    InterventionActivityFactory,
     LowerResultFactory,
     ResultFactory,
 )
@@ -164,26 +170,15 @@ class TestHACTCalculations(BaseTenantTestCase):
         cls.intervention = InterventionFactory(
             status='active'
         )
-        current_cp = CountryProgrammeFactory(
+        CountryProgrammeFactory(
             name='Current Country Programme',
             from_date=datetime.date(year, 1, 1),
             to_date=datetime.date(year + 1, 12, 31)
         )
-        InterventionBudgetFactory(
-            intervention=cls.intervention,
-            partner_contribution=10000,
-            unicef_cash=60000,
-            in_kind_amount=5000
-        )
-
-        tz = timezone.get_default_timezone()
-
-        start = datetime.datetime.combine(current_cp.from_date, datetime.time(0, 0, 1, tzinfo=tz))
-        end = current_cp.from_date + datetime.timedelta(days=200)
-        end = datetime.datetime.combine(end, datetime.time(23, 59, 59, tzinfo=tz))
-        start = current_cp.from_date + datetime.timedelta(days=200)
-        start = datetime.datetime.combine(start, datetime.time(0, 0, 1, tzinfo=tz))
-        end = datetime.datetime.combine(current_cp.to_date, datetime.time(23, 59, 59, tzinfo=tz))
+        cls.intervention.planned_budget.partner_contribution = 10000
+        cls.intervention.planned_budget.unicef_cash = 60000
+        cls.intervention.planned_budget.in_kind_amount = 5000
+        cls.intervention.planned_budget.save()
 
 
 class TestPartnerOrganizationModel(BaseTenantTestCase):
@@ -273,16 +268,19 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
         self.assertFalse(self.partner_organization.expiring_assessment_flag)
 
     def test_approaching_threshold_flag_true(self):
-        self.partner_organization.rating = models.PartnerOrganization.RATING_NOT_REQUIRED
+        self.partner_organization.highest_risk_rating_name = models.PartnerOrganization.RATING_NOT_REQUIRED
+        self.partner_organization.rating = models.PartnerOrganization.RATING_LOW_RISK_ASSUMED
         self.assertTrue(self.partner_organization.approaching_threshold_flag)
 
     def test_approaching_threshold_flag_false(self):
-        self.partner_organization.rating = models.PartnerOrganization.RATING_NOT_REQUIRED
+        self.partner_organization.highest_risk_rating_name = models.PartnerOrganization.RATING_NOT_REQUIRED
+        self.partner_organization.rating = models.PartnerOrganization.RATING_LOW
         self.partner_organization.total_ct_ytd = models.PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL - 1
         self.assertFalse(self.partner_organization.approaching_threshold_flag)
 
     def test_approaching_threshold_flag_false_moderate(self):
-        self.partner_organization.rating = models. PartnerOrganization.RATING_MEDIUM
+        self.partner_organization.highest_risk_rating_name = models.PartnerOrganization.RATING_MEDIUM
+        self.partner_organization.rating = models.PartnerOrganization.RATING_HIGH
         self.assertFalse(self.partner_organization.approaching_threshold_flag)
 
     def test_hact_min_requirements_ct_under_25k(self):
@@ -315,49 +313,57 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
     def test_hact_min_requirements_ct_between_100k_and_500k_high(self):
         self.partner_organization.net_ct_cy = 490000.00
         self.partner_organization.reported_cy = 490000.00
-        self.partner_organization.rating = models.PartnerOrganization.RATING_HIGH
+        self.partner_organization.highest_risk_rating_name = models.PartnerOrganization.RATING_HIGH_RISK_ASSUMED
+        self.partner_organization.rating = models.PartnerOrganization.RATING_MEDIUM
         self.assert_min_requirements(3, 1)
 
     def test_hact_min_requirements_ct_between_100k_and_500k_significant(self):
         self.partner_organization.net_ct_cy = 490000.00
         self.partner_organization.reported_cy = 490000.00
-        self.partner_organization.rating = models.PartnerOrganization.RATING_SIGNIFICANT
+        self.partner_organization.highest_risk_rating_name = models.PartnerOrganization.RATING_SIGNIFICANT
+        self.partner_organization.rating = models.PartnerOrganization.RATING_MEDIUM
         self.assert_min_requirements(3, 1)
 
     def test_hact_min_requirements_ct_between_100k_and_500k_moderate(self):
         self.partner_organization.net_ct_cy = 490000.00
         self.partner_organization.reported_cy = 490000.00
-        self.partner_organization.rating = models.PartnerOrganization.RATING_MEDIUM
+        self.partner_organization.highest_risk_rating_name = models.PartnerOrganization.RATING_MEDIUM
+        self.partner_organization.rating = models.PartnerOrganization.RATING_LOW
         self.assert_min_requirements(2, 1)
 
     def test_hact_min_requirements_ct_between_100k_and_500k_low(self):
         self.partner_organization.net_ct_cy = 490000.00
         self.partner_organization.reported_cy = 490000.00
-        self.partner_organization.rating = models.PartnerOrganization.RATING_LOW
+        self.partner_organization.highest_risk_rating_name = models.PartnerOrganization.RATING_LOW
+        self.partner_organization.rating = models.PartnerOrganization.RATING_HIGH
         self.assert_min_requirements(1, 1)
 
     def test_hact_min_requirements_ct_over_500k_high(self):
         self.partner_organization.net_ct_cy = 510000.00
         self.partner_organization.reported_cy = 510000.00
-        self.partner_organization.rating = models.PartnerOrganization.RATING_HIGH
+        self.partner_organization.highest_risk_rating_name = models.PartnerOrganization.RATING_HIGH
+        self.partner_organization.rating = models.PartnerOrganization.RATING_MEDIUM
         self.assert_min_requirements(4, 1)
 
     def test_hact_min_requirements_ct_over_500k_significant(self):
         self.partner_organization.net_ct_cy = 510000.00
         self.partner_organization.reported_cy = 510000.00
-        self.partner_organization.rating = models.PartnerOrganization.RATING_SIGNIFICANT
+        self.partner_organization.highest_risk_rating_name = models.PartnerOrganization.RATING_SIGNIFICANT
+        self.partner_organization.rating = models.PartnerOrganization.RATING_LOW
         self.assert_min_requirements(4, 1)
 
     def test_hact_min_requirements_ct_over_500k_moderate(self):
         self.partner_organization.net_ct_cy = 510000.00
         self.partner_organization.reported_cy = 510000.00
-        self.partner_organization.rating = models.PartnerOrganization.RATING_MEDIUM
+        self.partner_organization.highest_risk_rating_name = models.PartnerOrganization.RATING_MEDIUM
+        self.partner_organization.rating = models.PartnerOrganization.RATING_LOW
         self.assert_min_requirements(3, 1)
 
     def test_hact_min_requirements_ct_over_500k_low(self):
         self.partner_organization.net_ct_cy = 510000.00
         self.partner_organization.reported_cy = 510000.00
-        self.partner_organization.rating = models.PartnerOrganization.RATING_LOW
+        self.partner_organization.highest_risk_rating_name = models.PartnerOrganization.RATING_LOW_RISK_ASSUMED
+        self.partner_organization.rating = models.PartnerOrganization.RATING_MEDIUM
         self.assert_min_requirements(2, 1)
 
     def test_planned_visits_gov(self):
@@ -663,9 +669,9 @@ class TestInterventionModel(BaseTenantTestCase):
         permissions = models.Intervention.permission_structure()
         self.assertTrue(isinstance(permissions, dict))
         self.assertEqual(permissions["amendments"], {
+            'view': {'true': [{'group': 'UNICEF User', 'condition': 'not_in_amendment_mode', 'status': '*'}]},
             'edit': {
                 'true': [
-                    {'status': 'draft', 'group': 'Partnership Manager', 'condition': ''},
                     {'status': 'signed', 'group': 'Partnership Manager', 'condition': 'not_in_amendment_mode'},
                     {'status': 'active', 'group': 'Partnership Manager', 'condition': 'not_in_amendment_mode'},
                 ]
@@ -759,10 +765,8 @@ class TestInterventionModel(BaseTenantTestCase):
     @skip("fr_currency property on intervention is being deprecated")
     def test_default_budget_currency(self):
         intervention = InterventionFactory()
-        InterventionBudgetFactory(
-            currency="USD",
-            intervention=intervention
-        )
+        intervention.planned_budget.currency = "USD"
+        intervention.planned_budget.save()
         self.assertEqual(intervention.default_budget_currency, "USD")
 
     @skip("fr_currency property on intervention is being deprecated")
@@ -784,60 +788,42 @@ class TestInterventionModel(BaseTenantTestCase):
         self.assertEqual(int(self.intervention.total_budget), 0)
         self.assertEqual(int(self.intervention.total_unicef_budget), 0)
 
-    def test_total_unicef_cash(self):
-        InterventionBudgetFactory(
-            intervention=self.intervention,
-            unicef_cash=100000,
-            unicef_cash_local=10,
-            partner_contribution=200,
-            partner_contribution_local=20,
-            in_kind_amount_local=10,
+    def _prepare_budgets(self):
+        self.intervention.management_budgets.act1_unicef = 5
+        self.intervention.management_budgets.act2_unicef = 5
+        self.intervention.management_budgets.act1_partner = 5
+        self.intervention.management_budgets.act3_partner = 15
+        self.intervention.management_budgets.save()
+        InterventionActivityFactory(
+            unicef_cash=2, cso_cash=3, result__result_link=InterventionResultLinkFactory(intervention=self.intervention)
         )
-        self.assertEqual(int(self.intervention.total_unicef_cash), 10)
+        InterventionSupplyItemFactory(intervention=self.intervention, unit_number=5, unit_price=2)
+        InterventionSupplyItemFactory(intervention=self.intervention, unit_number=1, unit_price=4)
+
+    def test_total_unicef_cash(self):
+        self._prepare_budgets()
+        # 2 (activity.unicef_cash) + sum of unicef act from management budgets (5 + 5)
+        self.assertEqual(int(self.intervention.total_unicef_cash), 12)
 
     def test_total_partner_contribution(self):
-        InterventionBudgetFactory(
-            intervention=self.intervention,
-            unicef_cash=100000,
-            unicef_cash_local=10,
-            partner_contribution=200,
-            partner_contribution_local=20,
-            in_kind_amount_local=10,
-        )
-        self.assertEqual(int(self.intervention.total_partner_contribution), 20)
-
-    def test_total_budget(self):
-        InterventionBudgetFactory(
-            intervention=self.intervention,
-            unicef_cash=100000,
-            unicef_cash_local=10,
-            partner_contribution=200,
-            partner_contribution_local=20,
-            in_kind_amount_local=10,
-        )
-        self.assertEqual(int(self.intervention.total_budget), 40)
+        self._prepare_budgets()
+        # 3 (activity.cso_cash) + sum of partner act from management budgets (5 + 15)
+        self.assertEqual(int(self.intervention.total_partner_contribution), 23)
 
     def test_total_in_kind_amount(self):
-        InterventionBudgetFactory(
-            intervention=self.intervention,
-            unicef_cash=100000,
-            unicef_cash_local=10,
-            partner_contribution=200,
-            in_kind_amount=3300,
-            in_kind_amount_local=10,
-        )
-        self.assertEqual(int(self.intervention.total_in_kind_amount), 10)
+        self._prepare_budgets()
+        # 5*2 + 1*4 (sum of items total price)
+        self.assertEqual(int(self.intervention.total_in_kind_amount), 14)
+
+    def test_total_budget(self):
+        self._prepare_budgets()
+        # 12 (total_unicef_cash) + 23 (total_partner_contribution) + 14 (total_in_kind_amount)
+        self.assertEqual(int(self.intervention.total_budget), 49)
 
     def test_total_unicef_budget(self):
-        InterventionBudgetFactory(
-            intervention=self.intervention,
-            unicef_cash=100000,
-            unicef_cash_local=10,
-            partner_contribution=200,
-            in_kind_amount=2000,
-            in_kind_amount_local=10,
-        )
-        self.assertEqual(int(self.intervention.total_unicef_budget), 20)
+        self._prepare_budgets()
+        # 12 (total_unicef_cash) + 14 (total_in_kind_amount)
+        self.assertEqual(int(self.intervention.total_unicef_budget), 26)
 
     def test_year(self):
         """Exercise the year property"""
@@ -1108,6 +1094,47 @@ class TestInterventionModel(BaseTenantTestCase):
         self.assertEqual(intervention.status, models.Intervention.CLOSED)
         self.assertEqual(agreement.status, models.Agreement.ENDED)
 
+    def test_planned_budget(self):
+        currency = "PEN"
+        budget_qs = models.InterventionBudget.objects.filter(
+            currency=currency,
+        )
+        self.assertFalse(budget_qs.exists())
+        country = connection.tenant
+        country.local_currency = PublicsCurrencyFactory(code=currency)
+        country.local_currency.save()
+        mock_tenant = Mock(tenant=country)
+        with patch("etools.applications.partners.models.connection", mock_tenant):
+            InterventionFactory()
+        self.assertTrue(budget_qs.exists())
+
+    def test_hq_support_cost(self):
+        partner = PartnerFactory(
+            cso_type=models.PartnerOrganization.CSO_TYPE_COMMUNITY,
+        )
+        intervention = InterventionFactory(agreement__partner=partner)
+        self.assertEqual(intervention.hq_support_cost, 0.0)
+
+        # INGO type
+        partner = PartnerFactory(
+            cso_type=models.PartnerOrganization.CSO_TYPE_INTERNATIONAL,
+        )
+        intervention = InterventionFactory(agreement__partner=partner)
+        self.assertEqual(intervention.hq_support_cost, 7.0)
+
+        # INGO set value
+        intervention = InterventionFactory(
+            agreement__partner=partner,
+            hq_support_cost=5.0,
+        )
+        self.assertEqual(intervention.hq_support_cost, 5.0)
+
+        # update value
+        intervention.hq_support_cost = 2.0
+        intervention.save()
+        intervention.refresh_from_db()
+        self.assertEqual(intervention.hq_support_cost, 2.0)
+
 
 class TestGetFilePaths(BaseTenantTestCase):
     def test_get_agreement_path(self):
@@ -1261,12 +1288,15 @@ class TestPartnerStaffMember(BaseTenantTestCase):
         staff = PartnerStaffFactory(
             partner=partner,
         )
+        staff.user.profile.countries_available.add(connection.tenant)
         self.assertTrue(staff.active)
-        mock_send = Mock()
-        with patch("etools.applications.partners.models.pre_delete.send", mock_send):
-            staff.active = False
-            staff.save()
-        self.assertEqual(mock_send.call_count, 1)
+
+        staff.active = False
+        staff.save()
+
+        self.assertEqual(staff.user.is_active, False)
+        self.assertEqual(staff.user.profile.country, None)
+        self.assertEqual(staff.user.profile.countries_available.filter(id=connection.tenant.id).exists(), False)
 
     def test_save_update_reactivate(self):
         partner = PartnerFactory()
@@ -1274,12 +1304,15 @@ class TestPartnerStaffMember(BaseTenantTestCase):
             partner=partner,
             active=False,
         )
+        staff.user.profile.countries_available.remove(connection.tenant)
         self.assertFalse(staff.active)
-        mock_send = Mock()
-        with patch("etools.applications.partners.models.post_save.send", mock_send):
-            staff.active = True
-            staff.save()
-        self.assertEqual(mock_send.call_count, 2)
+
+        staff.active = True
+        staff.save()
+
+        self.assertEqual(staff.user.is_active, True)
+        self.assertEqual(staff.user.profile.country, connection.tenant)
+        self.assertEqual(staff.user.profile.countries_available.filter(id=connection.tenant.id).exists(), True)
 
 
 class TestAssessment(BaseTenantTestCase):
@@ -1399,7 +1432,7 @@ class TestInterventionAmendment(BaseTenantTestCase):
     def test_compute_reference_number_no_amendments(self):
         intervention = InterventionFactory()
         ia = models.InterventionAmendment(intervention=intervention)
-        self.assertEqual(ia.compute_reference_number(), 1)
+        self.assertEqual(ia.compute_reference_number(), '1')
 
     def test_compute_reference_number(self):
         intervention = InterventionFactory()
@@ -1408,7 +1441,7 @@ class TestInterventionAmendment(BaseTenantTestCase):
             signed_date=datetime.date.today()
         )
         ia = models.InterventionAmendment(intervention=intervention)
-        self.assertEqual(ia.compute_reference_number(), 2)
+        self.assertEqual(ia.compute_reference_number(), '2')
 
 
 class TestInterventionResultLink(BaseTenantTestCase):
@@ -1429,18 +1462,227 @@ class TestInterventionResultLink(BaseTenantTestCase):
             "{} {}".format(intervention_str, result_str)
         )
 
+    def test_total(self):
+        intervention = InterventionFactory()
+        result = ResultFactory(
+            name="Name",
+            code="Code"
+        )
+        link = InterventionResultLinkFactory(
+            intervention=intervention,
+            cp_output=result,
+        )
+
+        # empty
+        self.assertEqual(link.total(), 0)
+
+        # lower results
+        ll = LowerResultFactory(result_link=link)
+        InterventionActivityFactory(result=ll, unicef_cash=10, cso_cash=20)
+        self.assertEqual(link.total(), 30)
+
 
 class TestInterventionBudget(BaseTenantTestCase):
     def test_str(self):
         intervention = InterventionFactory()
         intervention_str = str(intervention)
-        budget = InterventionBudgetFactory(
-            intervention=intervention,
-            unicef_cash_local=10.00,
-            in_kind_amount_local=5.00,
-            partner_contribution_local=20.00,
+
+        mgmt_budget = intervention.management_budgets
+        mgmt_budget.act1_unicef = 10
+        mgmt_budget.act1_partner = 5
+        mgmt_budget.act2_partner = 15
+        mgmt_budget.save()
+
+        InterventionSupplyItemFactory(intervention=intervention, unit_number=1, unit_price=5)
+
+        self.assertEqual(intervention.planned_budget.unicef_cash_local, 10)
+        self.assertEqual(intervention.planned_budget.in_kind_amount_local, 5)
+        self.assertEqual(intervention.planned_budget.partner_contribution_local, 20)
+        self.assertEqual(str(intervention.planned_budget), "{}: 35.00".format(intervention_str))
+        self.assertEqual(
+            intervention.planned_budget.total_cash_local(),
+            20 + 10,
         )
-        self.assertEqual(str(budget), "{}: 35.00".format(intervention_str))
+
+    def test_default_currency(self):
+        # no default currency
+        intervention_1 = InterventionFactory()
+        self.assertEqual(intervention_1.planned_budget.currency, "USD")
+
+        # with default currency
+        currency = "ZAR"
+        country = connection.tenant
+        country.local_currency = PublicsCurrencyFactory(code=currency)
+        country.local_currency.save()
+        mock_tenant = Mock(tenant=country)
+        with patch("etools.applications.partners.models.connection", mock_tenant):
+            intervention = InterventionFactory()
+        self.assertEqual(intervention.planned_budget.currency, currency)
+
+    def test_calc_totals_no_assoc(self):
+        intervention = InterventionFactory()
+        mgmt_budget = intervention.management_budgets
+        budget = intervention.planned_budget
+
+        mgmt_budget.act1_unicef = 20
+        mgmt_budget.act1_partner = 10
+        mgmt_budget.save()
+
+        InterventionSupplyItemFactory(intervention=intervention, unit_number=6, unit_price=5)
+
+        self.assertEqual(budget.partner_contribution_local, 10)
+        self.assertEqual(budget.unicef_cash_local, 20)
+        self.assertEqual(budget.in_kind_amount_local, 30)
+        self.assertEqual(budget.programme_effectiveness, 50)  # = mgmt_budget.total
+        self.assertEqual(
+            "{:0.2f}".format(budget.partner_contribution_percent),
+            "{:0.2f}".format(10 / (10 + 20 + 30) * 100),
+        )
+        self.assertEqual(budget.total_cash_local(), 10 + 20)
+
+    def test_calc_totals_results(self):
+        intervention = InterventionFactory()
+        mgmt_budget = intervention.management_budgets
+        budget = intervention.planned_budget
+
+        mgmt_budget.act1_unicef = 20
+        mgmt_budget.act1_partner = 10
+        mgmt_budget.save()
+
+        InterventionSupplyItemFactory(intervention=intervention, unit_number=6, unit_price=5)
+
+        link = InterventionResultLinkFactory(intervention=budget.intervention)
+        lower_result = LowerResultFactory(result_link=link)
+        for __ in range(3):
+            InterventionActivityFactory(
+                result=lower_result,
+                unicef_cash=101,
+                cso_cash=202,
+            )
+
+        self.assertEqual(budget.partner_contribution_local, 202 * 3 + 10)  # 616
+        self.assertEqual(budget.unicef_cash_local, 101 * 3 + 20)  # 323
+        self.assertEqual(budget.in_kind_amount_local, 30)
+        self.assertEqual(budget.programme_effectiveness, Decimal(30) / (616 + 323 + 30) * 100)
+        self.assertEqual(
+            "{:0.2f}".format(budget.partner_contribution_percent),
+            "{:0.2f}".format((616 / (616 + 323 + 30) * 100)),
+        )
+        self.assertEqual(budget.total_cash_local(), 616 + 323)
+
+    def test_calc_totals_management_budget(self):
+        intervention = InterventionFactory(hq_support_cost=7)
+        budget = intervention.planned_budget
+        mgmt_budget = intervention.management_budgets
+
+        budget.partner_contribution_local = 10
+        budget.unicef_cash_local = 20
+        budget.total_hq_cash_local = 60
+        budget.save()
+
+        InterventionSupplyItemFactory(
+            intervention=intervention,
+            unit_number=10,
+            unit_price=3,
+        )
+        InterventionSupplyItemFactory(
+            intervention=intervention,
+            unit_number=10,
+            unit_price=4,
+            provided_by=InterventionSupplyItem.PROVIDED_BY_PARTNER
+        )
+
+        mgmt_budget.act1_unicef = 100
+        mgmt_budget.act1_partner = 200
+        mgmt_budget.act2_unicef = 300
+        mgmt_budget.act2_partner = 400
+        mgmt_budget.act3_unicef = 500
+        mgmt_budget.act3_partner = 600
+        mgmt_budget.save()
+
+        self.assertEqual(budget.partner_contribution_local, 1200)
+        self.assertEqual(budget.total_unicef_cash_local_wo_hq, 900)
+        self.assertEqual(budget.total_hq_cash_local, 60)
+        self.assertEqual(budget.unicef_cash_local, 900 + 60)
+        self.assertEqual(budget.in_kind_amount_local, 30)
+        self.assertEqual(budget.partner_supply_local, 40)
+        self.assertEqual(budget.total_partner_contribution_local, 1240)
+        self.assertEqual(budget.total_local, 1200 + 900 + 60 + 40 + 30)
+        self.assertEqual(
+            budget.programme_effectiveness,
+            ((1200 + 900) / budget.total_local * 100),
+        )
+        self.assertEqual(
+            "{:0.2f}".format(budget.partner_contribution_percent),
+            "{:0.2f}".format((1200 + 40) / (1200 + 900 + 60 + 30 + 40) * 100),
+        )
+        self.assertEqual(budget.total_cash_local(), 1200 + 900 + 60)
+        self.assertEqual(budget.total_unicef_contribution_local(), 900 + 60 + 30)
+
+    def test_calc_totals_supply_items(self):
+        intervention = InterventionFactory()
+        budget = intervention.planned_budget
+
+        for __ in range(3):
+            InterventionSupplyItemFactory(
+                intervention=intervention,
+                unit_number=1,
+                unit_price=2,
+            )
+
+        mgmt_budget = intervention.management_budgets
+        mgmt_budget.act1_unicef = 10
+        mgmt_budget.act1_partner = 5
+        mgmt_budget.act2_unicef = 10
+        mgmt_budget.act2_partner = 5
+        mgmt_budget.save()
+
+        self.assertEqual(budget.partner_contribution_local, 10)
+        self.assertEqual(budget.unicef_cash_local, 20)
+        self.assertEqual(budget.in_kind_amount_local, 6)
+        # programme_effectiveness (mgmt_budget.total = 30) / total_local (unicef_contrib + cso_contrib = 36.00) * 100
+        self.assertEqual(budget.programme_effectiveness, Decimal('83.33333333333333333333333333'))
+        self.assertEqual(
+            "{:0.2f}".format(budget.partner_contribution_percent),
+            "{:0.2f}".format(10 / (10 + 20 + 6) * 100),
+        )
+        self.assertEqual(budget.total_cash_local(), 10 + 20)
+
+
+class TestInterventionManagementBudget(BaseTenantTestCase):
+    def test_totals(self):
+        intervention = InterventionFactory()
+        budget = intervention.management_budgets
+        budget.act1_unicef = 100
+        budget.act1_partner = 200
+        budget.act2_unicef = 300
+        budget.act2_partner = 400
+        budget.act3_unicef = 500
+        budget.act3_partner = 600
+        budget.save()
+        self.assertEqual(budget.partner_total, 1200)
+        self.assertEqual(budget.unicef_total, 900)
+        self.assertEqual(budget.total, 2100)
+
+
+class TestInterventionSupplyItem(BaseTenantTestCase):
+    def test_delete(self):
+        intervention = InterventionFactory()
+        budget = intervention.planned_budget
+
+        for __ in range(3):
+            item = InterventionSupplyItemFactory(
+                intervention=intervention,
+                unit_number=1,
+                unit_price=2,
+            )
+
+        self.assertEqual(budget.in_kind_amount_local, 6)
+
+        item.delete()
+
+        budget.refresh_from_db()
+        self.assertEqual(budget.in_kind_amount_local, 4)
 
 
 class TestFileType(BaseTenantTestCase):

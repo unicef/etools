@@ -1,12 +1,11 @@
 from django.db import transaction
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from unicef_rest_export.serializers import ExportSerializer
 
 from etools.applications.partners.models import Intervention
-from etools.applications.partners.utils import get_quarter_index, get_quarters_range
 from etools.applications.reports.models import (
     AppliedIndicator,
     Disaggregation,
@@ -15,7 +14,7 @@ from etools.applications.reports.models import (
     IndicatorBlueprint,
     InterventionActivity,
     InterventionActivityItem,
-    InterventionActivityTimeFrame,
+    InterventionTimeFrame,
     LowerResult,
     Office,
     ReportingRequirement,
@@ -172,7 +171,7 @@ class AppliedIndicatorSerializer(serializers.ModelSerializer):
                and not (status in [Intervention.DRAFT, Intervention.SIGNED] or
                         (status == Intervention.ACTIVE and in_amendment)):
                 raise ValidationError(_(
-                    'You cannot change the Indicator Target Denominator if PD/SSFA is '
+                    'You cannot change the Indicator Target Denominator if PD/SPD is '
                     'not in status Draft or Signed'
                 ))
             if attrs['target']['d'] != self.instance.target_display[1] and not (
@@ -185,7 +184,7 @@ class AppliedIndicatorSerializer(serializers.ModelSerializer):
                     )
             ):
                 raise ValidationError(_(
-                    'You cannot change the Indicator Target Denominator if PD/SSFA is '
+                    'You cannot change the Indicator Target Denominator if PD/SPD is '
                     'not in status Draft or Signed'
                 ))
 
@@ -284,7 +283,16 @@ class LowerResultSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = LowerResult
-        fields = '__all__'
+        fields = [
+            "id",
+            "name",
+            "code",
+            "result_link",
+            "total",
+            "applied_indicators",
+            "created",
+            "modified",
+        ]
 
 
 class LowerResultCUSerializer(serializers.ModelSerializer):
@@ -455,6 +463,10 @@ class OfficeSerializer(serializers.ModelSerializer):
 
 
 class InterventionActivityItemSerializer(serializers.ModelSerializer):
+    default_error_messages = {
+        'invalid_budget': _('Invalid budget data. Total cash should be equal to items number * price per item.')
+    }
+
     id = serializers.IntegerField(required=False)
 
     class Meta:
@@ -462,62 +474,47 @@ class InterventionActivityItemSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'name',
-            'other_details',
+            'unit',
+            'unit_price',
+            'no_units',
             'unicef_cash',
             'cso_cash',
-            'unicef_supplies',
-            'cso_supplies',
         )
 
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
 
-class InterventionActivityTimeFrameSerializer(serializers.ModelSerializer):
+        instance = None
+        if 'id' in attrs:
+            instance = self.Meta.model.objects.filter(id=attrs['id']).first()
+
+        unit_price = attrs.get('unit_price', instance.unit_price if instance else None)
+        no_units = attrs.get('no_units', instance.no_units if instance else None)
+        unicef_cash = attrs.get('unicef_cash', instance.unicef_cash if instance else None)
+        cso_cash = attrs.get('cso_cash', instance.cso_cash if instance else None)
+
+        if unit_price * no_units != unicef_cash + cso_cash:
+            self.fail('invalid_budget')
+
+        return attrs
+
+
+class InterventionTimeFrameSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField()
-    enabled = serializers.BooleanField(write_only=True)
-    start = serializers.DateField(source='start_date', read_only=True)
-    end = serializers.DateField(source='end_date', read_only=True)
+    start = serializers.DateField(source='start_date')
+    end = serializers.DateField(source='end_date')
 
     class Meta:
-        model = InterventionActivityTimeFrame
-        fields = ('name', 'start', 'end', 'enabled',)
+        model = InterventionTimeFrame
+        fields = ('id', 'name', 'start', 'end',)
 
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        data['enabled'] = bool(instance.pk)
-        return data
-
-    def get_name(self, obj: InterventionActivityTimeFrame):
-        if isinstance(self.root.instance, Intervention):
-            intervention = self.root.instance
-        else:
-            intervention = self.root.intervention
-
-        index = get_quarter_index(intervention.start, intervention.end, obj.start_date, obj.end_date)
-        return 'Q{}'.format(index + 1)
-
-
-class InterventionActivityTimeFrameListSerializer(serializers.ListSerializer):
-    child = InterventionActivityTimeFrameSerializer()
-
-    def to_representation(self, data):
-        if isinstance(self.root.instance, Intervention):
-            intervention = self.root.instance
-        else:
-            intervention = self.root.intervention
-
-        quarters = get_quarters_range(intervention.start, intervention.end)
-        existing_quarters = {(t.start_date, t.end_date): t for t in data.all()}
-        return [
-            self.child.to_representation(
-                existing_quarters[q] if q in existing_quarters.keys()
-                else InterventionActivityTimeFrame(start_date=q[0], end_date=q[1])
-            )
-            for q in quarters
-        ]
+    def get_name(self, obj: InterventionTimeFrame):
+        return 'Q{}'.format(obj.quarter)
 
 
 class InterventionActivityDetailSerializer(serializers.ModelSerializer):
     items = InterventionActivityItemSerializer(many=True, required=False)
-    time_frames = InterventionActivityTimeFrameListSerializer(required=False)
+    partner_percentage = serializers.DecimalField(max_digits=5, decimal_places=2, read_only=True)
 
     class Meta:
         model = InterventionActivity
@@ -527,10 +524,9 @@ class InterventionActivityDetailSerializer(serializers.ModelSerializer):
             'context_details',
             'unicef_cash',
             'cso_cash',
-            'unicef_supplies',
-            'cso_supplies',
             'items',
             'time_frames',
+            'partner_percentage',
         )
 
     def __init__(self, *args, **kwargs):
@@ -572,34 +568,28 @@ class InterventionActivityDetailSerializer(serializers.ModelSerializer):
             updated_pks.append(serializer.save(activity=instance).pk)
 
         # cleanup, remove unused options
-        instance.items.exclude(pk__in=updated_pks).delete()
+        removed_items = instance.items.exclude(pk__in=updated_pks).delete()
+        if removed_items:
+            # if items are removed, cash also should be recalculated
+            instance.update_cash()
 
     def set_time_frames(self, instance, time_frames):
         if time_frames is None:
             return
 
-        intervention_quarters = get_quarters_range(self.intervention.start, self.intervention.end)
-        if len(time_frames) != len(intervention_quarters):
-            raise ValidationError({'time_frames': [_("Provided periods count doesn't match the original.")]})
-
-        for time_frame, quarter in zip(time_frames, intervention_quarters):
-            if time_frame['enabled']:
-                InterventionActivityTimeFrame.objects.get_or_create(
-                    activity=instance, start_date=quarter[0], end_date=quarter[1]
-                )
-            else:
-                instance.time_frames.filter(start_date=quarter[0], end_date=quarter[1]).delete()
+        new_time_frames = self.intervention.quarters.filter(id__in=[t.id for t in time_frames])
+        instance.time_frames.clear()
+        instance.time_frames.add(*new_time_frames)
 
 
 class InterventionActivitySerializer(serializers.ModelSerializer):
-    time_frames = InterventionActivityTimeFrameSerializer(many=True)
+    partner_percentage = serializers.DecimalField(max_digits=5, decimal_places=2, read_only=True)
 
     class Meta:
         model = InterventionActivity
         fields = (
             'id', 'name', 'context_details',
-            'unicef_cash', 'cso_cash',
-            'unicef_supplies', 'cso_supplies',
+            'unicef_cash', 'cso_cash', 'partner_percentage',
             'time_frames',
         )
 
@@ -608,4 +598,4 @@ class LowerResultWithActivitiesSerializer(LowerResultSerializer):
     activities = InterventionActivitySerializer(read_only=True, many=True)
 
     class Meta(LowerResultSerializer.Meta):
-        pass
+        fields = LowerResultSerializer.Meta.fields + ["activities"]

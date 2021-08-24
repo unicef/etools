@@ -181,16 +181,20 @@ class TestAssessment(BaseTenantTestCase):
 
     def test_get_mail_context(self):
         user = UserFactory()
-        assessment = AssessmentFactory()
+        assessment = AssessmentFactory(reference_number='TST/2021PSEA')
         AssessorFactory(assessment=assessment)
         self.assertEqual(assessment.get_mail_context(user), {
             "partner_name": assessment.partner.name,
             "partner_vendor_number": assessment.partner.vendor_number,
             "url": assessment.get_object_url(user=user),
             "focal_points": ", ".join(f"{fp.get_full_name()} ({fp.email})" for fp in assessment.focal_points.all()),
+            'nfr_attachment': None,
             "overall_rating": assessment.overall_rating_display,
             "assessment_date": str(assessment.assessment_date),
             "assessor": str(assessment.assessor),
+            'assessment_ingo_reason': None,
+            'assessment_type': 'UNICEF Assessment 2020',
+            'reference_number': 'TST/2021PSEA{}'.format(assessment.pk),
         })
 
     def test_get_reference_number(self):
@@ -233,9 +237,13 @@ class TestAssessmentActionPoint(BaseTenantTestCase):
             "partner_vendor_number": assessment.partner.vendor_number,
             "url": assessment.get_object_url(user=user),
             "overall_rating": assessment.overall_rating_display,
+            'nfr_attachment': None,
             "focal_points": ", ".join(f"{fp.get_full_name()} ({fp.email})" for fp in assessment.focal_points.all()),
             "assessment_date": str(assessment.assessment_date),
             "assessor": str(assessment.assessor),
+            'assessment_ingo_reason': None,
+            'assessment_type': 'UNICEF Assessment 2020',
+            'reference_number': 'TST/2021PSEA{}'.format(assessment.pk),
         })
 
 

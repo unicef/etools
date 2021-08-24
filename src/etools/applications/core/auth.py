@@ -70,7 +70,7 @@ def create_user(strategy, details, backend, user=None, *args, **kwargs):
     }
 
 
-def user_details(strategy, details, user=None, *args, **kwargs):
+def user_details(strategy, details, backend, user=None, *args, **kwargs):
     # This is where we update the user
     # see what the property to map by is here
     if user:
@@ -97,10 +97,11 @@ def user_details(strategy, details, user=None, *args, **kwargs):
         #         user.profile.country = country
         #         user.profile.save()
 
-    return social_core_user.user_details(strategy, details, user, *args, **kwargs)
+    return social_core_user.user_details(strategy, details, backend, user, *args, **kwargs)
 
 
 class CustomAzureADBBCOAuth2(AzureADB2COAuth2):
+    BASE_URL = 'https://{tenant_id}.b2clogin.com/{tenant_id}.onmicrosoft.com'
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -128,13 +129,12 @@ class CustomSocialAuthExceptionMiddleware(SocialAuthExceptionMiddleware):
             if 'AADB2C90118' in error_description:
                 auth_class = CustomAzureADBBCOAuth2()
                 redirect_home = auth_class.get_redirect_uri()
-                redirect_url = 'https://login.microsoftonline.com/' + \
-                               settings.TENANT_ID + \
-                               "/oauth2/v2.0/authorize?p=" + \
-                               settings.SOCIAL_PASSWORD_RESET_POLICY + \
-                               "&client_id=" + settings.KEY + \
-                               "&nonce=defaultNonce&redirect_uri=" + redirect_home + \
-                               "&scope=openid+email&response_type=code"
+                redirect_url = auth_class.base_url + '/oauth2/v2.0/' + \
+                    'authorize?p=' + settings.SOCIAL_PASSWORD_RESET_POLICY + \
+                    '&client_id=' + settings.KEY + \
+                    '&nonce=defaultNonce&redirect_uri=' + redirect_home + \
+                    '&scope=openid+email&response_type=code'
+
                 return redirect_url
 
         # TODO: In case of password reset the state can't be verified figure out a way to log the user in after reset

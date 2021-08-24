@@ -7,13 +7,18 @@ from unicef_locations.tests.factories import LocationFactory
 from etools.applications.action_points.categories.models import Category
 from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.field_monitoring.fm_settings.tests.factories import QuestionFactory
-from etools.applications.field_monitoring.planning.models import MonitoringActivity, QuestionTemplate, YearPlan
+from etools.applications.field_monitoring.planning.models import (
+    MonitoringActivity,
+    MonitoringActivityGroup,
+    QuestionTemplate,
+    YearPlan,
+)
 from etools.applications.field_monitoring.tests.factories import UserFactory
-from etools.applications.users.tests.factories import OfficeFactory
+from etools.applications.partners.tests.factories import PartnerFactory
 from etools.libraries.tests.factories import StatusFactoryMetaClass
 
 
-class YearPlanFactory(factory.DjangoModelFactory):
+class YearPlanFactory(factory.django.DjangoModelFactory):
     year = date.today().year
 
     prioritization_criteria = fuzzy.FuzzyText()
@@ -27,7 +32,7 @@ class YearPlanFactory(factory.DjangoModelFactory):
         django_get_or_create = ('year',)
 
 
-class BaseMonitoringActivityFactory(factory.DjangoModelFactory):
+class BaseMonitoringActivityFactory(factory.django.DjangoModelFactory):
     monitor_type = 'staff'
     location = factory.SubFactory(LocationFactory)
 
@@ -50,6 +55,11 @@ class BaseMonitoringActivityFactory(factory.DjangoModelFactory):
     def sections(self, created, extracted, **kwargs):
         if extracted:
             self.sections.add(*extracted)
+
+    @factory.post_generation
+    def offices(self, created, extracted, **kwargs):
+        if extracted:
+            self.offices.add(*extracted)
 
     @factory.post_generation
     def partners(self, created, extracted, **kwargs):
@@ -95,9 +105,8 @@ class ReviewActivityFactory(ChecklistActivityFactory):
 
 
 class PreAssignedActivityFactory(ReviewActivityFactory):
-    person_responsible = factory.SubFactory(UserFactory, unicef_user=True)
+    visit_lead = factory.SubFactory(UserFactory, unicef_user=True)
     team_members__count = 2
-    field_office = factory.SubFactory(OfficeFactory)
 
 
 class AssignedActivityFactory(PreAssignedActivityFactory):
@@ -139,7 +148,7 @@ class MonitoringActivityFactory(BaseMonitoringActivityFactory, metaclass=StatusF
     }
 
 
-class QuestionTemplateFactory(factory.DjangoModelFactory):
+class QuestionTemplateFactory(factory.django.DjangoModelFactory):
     question = factory.SubFactory(QuestionFactory)
     specific_details = fuzzy.FuzzyText()
 
@@ -150,3 +159,19 @@ class QuestionTemplateFactory(factory.DjangoModelFactory):
 class MonitoringActivityActionPointFactory(ActionPointFactory):
     monitoring_activity = factory.SubFactory(MonitoringActivityFactory, status='completed')
     category__module = Category.MODULE_CHOICES.fm
+
+
+class MonitoringActivityGroupFactory(factory.django.DjangoModelFactory):
+    partner = factory.SubFactory(PartnerFactory)
+
+    class Meta:
+        model = MonitoringActivityGroup
+
+    @factory.post_generation
+    def monitoring_activities(self, create, extracted, **kwargs):
+        if not create:
+            return
+
+        if extracted:
+            for activity in extracted:
+                self.monitoring_activities.add(activity)

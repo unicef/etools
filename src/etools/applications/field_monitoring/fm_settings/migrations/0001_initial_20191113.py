@@ -2,7 +2,6 @@
 
 from django.conf import settings
 import django.contrib.gis.db.models.fields
-import django.contrib.postgres.fields.jsonb
 from django.db import migrations, models
 import django.db.models.deletion
 import django.utils.timezone
@@ -100,7 +99,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('label', models.CharField(max_length=50, verbose_name='Label')),
-                ('value', django.contrib.postgres.fields.jsonb.JSONField(blank=True, null=True, verbose_name='Value')),
+                ('value', models.JSONField(blank=True, null=True, verbose_name='Value')),
                 ('question', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='options',
                                                to='field_monitoring_settings.Question', verbose_name='Question')),
             ],

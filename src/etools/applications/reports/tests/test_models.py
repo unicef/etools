@@ -1,4 +1,3 @@
-
 import datetime
 
 from django.test import SimpleTestCase
@@ -14,7 +13,7 @@ from etools.applications.reports.models import (
     CountryProgramme,
     Indicator,
     IndicatorBlueprint,
-    InterventionActivityTimeFrame,
+    InterventionTimeFrame,
     Quarter,
 )
 from etools.applications.reports.tests.factories import (
@@ -22,7 +21,7 @@ from etools.applications.reports.tests.factories import (
     IndicatorBlueprintFactory,
     IndicatorFactory,
     InterventionActivityFactory,
-    InterventionActivityTimeFrameFactory,
+    InterventionActivityItemFactory,
     LowerResultFactory,
     QuarterFactory,
     ResultFactory,
@@ -235,6 +234,18 @@ class TestResult(BaseTenantTestCase):
         self.assertFalse(result.valid_entry())
 
 
+class TestLowerResult(BaseTenantTestCase):
+    def test_total(self):
+        ll = LowerResultFactory(result_link=InterventionResultLinkFactory())
+
+        # empty
+        self.assertEqual(ll.total(), 0)
+
+        # add activities
+        InterventionActivityFactory(result=ll, unicef_cash=10, cso_cash=20)
+        self.assertEqual(ll.total(), 30)
+
+
 class TestIndicatorBlueprint(BaseTenantTestCase):
     def test_save_empty(self):
         """If code is empty ensure it is set to None"""
@@ -263,44 +274,91 @@ class TestIndicator(BaseTenantTestCase):
         self.assertEqual(indicator.code, "C123")
 
 
+class TestInterventionActivity(BaseTenantTestCase):
+    def test_delete(self):
+        intervention = InterventionFactory()
+        budget = intervention.planned_budget
+
+        link = InterventionResultLinkFactory(intervention=intervention)
+        lower_result = LowerResultFactory(result_link=link)
+        for __ in range(3):
+            activity = InterventionActivityFactory(
+                result=lower_result,
+                unicef_cash=101,
+                cso_cash=202,
+            )
+
+        self.assertEqual(budget.total_cash_local(), 909)
+
+        activity.delete()
+
+        budget.refresh_from_db()
+        self.assertEqual(budget.total_cash_local(), 606)
+
+
+class TestInterventionActivityItem(BaseTenantTestCase):
+    def test_delete(self):
+        intervention = InterventionFactory()
+        link = InterventionResultLinkFactory(intervention=intervention)
+        lower_result = LowerResultFactory(result_link=link)
+        activity = InterventionActivityFactory(result=lower_result)
+        for __ in range(3):
+            item = InterventionActivityItemFactory(
+                activity=activity,
+                unicef_cash=20,
+                cso_cash=10,
+            )
+
+        activity.refresh_from_db()
+        self.assertEqual(activity.unicef_cash, 60)
+        self.assertEqual(activity.cso_cash, 30)
+
+        item.delete()
+
+        activity.refresh_from_db()
+        self.assertEqual(activity.unicef_cash, 40)
+        self.assertEqual(activity.cso_cash, 20)
+
+
 class TestInterventionTimeFrame(BaseTenantTestCase):
-    def setUp(self):
-        super().setUp()
-        self.intervention = InterventionFactory(
+    def test_intervention_save_no_changes(self):
+        intervention = InterventionFactory(
             start=datetime.date(year=1980, month=1, day=1),
             end=datetime.date(year=1980, month=12, day=31),
         )
+        self.assertEqual(intervention.quarters.count(), 4)
+        intervention.save()
+        self.assertEqual(intervention.quarters.count(), 4)
 
-        self.result_link = InterventionResultLinkFactory(intervention=self.intervention)
-        self.pd_output = LowerResultFactory(result_link=self.result_link)
-
-        self.activity = InterventionActivityFactory(result=self.pd_output)
-
-    def test_intervention_save_no_changes(self):
-        item_to_keep = InterventionActivityTimeFrameFactory(
-            activity=self.activity,
-            start_date=datetime.date(year=1980, month=4, day=1),
-            end_date=datetime.date(year=1980, month=7, day=1)
+    def test_time_frame_removed_on_dates_change(self):
+        intervention = InterventionFactory(
+            start=datetime.date(year=1980, month=1, day=1),
+            end=datetime.date(year=1980, month=12, day=31),
         )
-        self.assertEqual(self.activity.time_frames.count(), 1)
-        self.intervention.save()
-        self.assertTrue(InterventionActivityTimeFrame.objects.filter(pk=item_to_keep.pk).exists())
-
-    def test_time_frame_moved_on_start_change(self):
-        item_to_keep = InterventionActivityTimeFrameFactory(
-            activity=self.activity,
+        item_to_keep = InterventionTimeFrame.objects.get(
+            intervention=intervention,
             start_date=datetime.date(year=1980, month=4, day=1),
-            end_date=datetime.date(year=1980, month=7, day=1)
+            end_date=datetime.date(year=1980, month=6, day=30)
         )
-        item_to_remove = InterventionActivityTimeFrameFactory(
-            activity=self.activity,
+        item_to_remove = InterventionTimeFrame.objects.get(
+            intervention=intervention,
             start_date=datetime.date(year=1980, month=10, day=1),
             end_date=datetime.date(year=1980, month=12, day=31)
         )
-        self.intervention.start = datetime.date(year=1979, month=6, day=1)
-        self.intervention.end = datetime.date(year=1980, month=3, day=1)
-        self.intervention.save()
+        intervention.start = datetime.date(year=1979, month=6, day=1)
+        intervention.end = datetime.date(year=1980, month=3, day=1)
+        intervention.save()
         item_to_keep.refresh_from_db()
         self.assertEqual(item_to_keep.start_date, datetime.date(year=1979, month=9, day=1))
-        self.assertEqual(item_to_keep.end_date, datetime.date(year=1979, month=12, day=1))
-        self.assertEqual(self.activity.time_frames.filter(id=item_to_remove.id).exists(), False)
+        self.assertEqual(item_to_keep.end_date, datetime.date(year=1979, month=11, day=30))
+        self.assertEqual(intervention.quarters.filter(id=item_to_remove.id).exists(), False)
+
+    def test_time_frame_created_on_dates_change(self):
+        intervention = InterventionFactory(
+            start=datetime.date(year=1980, month=1, day=1),
+            end=datetime.date(year=1980, month=12, day=31),
+        )
+        self.assertEqual(intervention.quarters.count(), 4)
+        intervention.end = datetime.date(year=1981, month=3, day=31)
+        intervention.save()
+        self.assertEqual(intervention.quarters.count(), 5)

@@ -4,6 +4,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
 from django.urls import reverse
 
+from rest_framework.exceptions import ValidationError
 from unicef_attachments.models import AttachmentLink
 
 from etools.applications.field_monitoring.data_collection.models import (
@@ -79,7 +80,12 @@ def update_checklist(checklist: StartedChecklist, value: dict) -> StartedCheckli
     blueprint = get_blueprint_for_activity_and_method(checklist.monitoring_activity, checklist.method)
     validated_value = blueprint.validate(value)
 
-    checklist.information_source = validated_value.get('information_source', {}).get('name', '')
+    information_source = validated_value.get('information_source', {}).get('name', '')
+    if len(information_source) > 100:
+        raise ValidationError({
+            "information_source": "Ensure this field has no more than 100 characters.",
+        })
+    checklist.information_source = information_source
     checklist.save()
 
     _save_values_to_checklist(validated_value, checklist)

@@ -2,7 +2,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
 from django.http import Http404
 from django.utils import timezone
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from django_filters.rest_framework import DjangoFilterBackend
 from easy_pdf.rendering import render_to_pdf_response
@@ -78,7 +78,7 @@ from etools.applications.tpm.serializers.visit import (
     TPMVisitSerializer,
 )
 from etools.applications.tpm.tpmpartners.models import TPMPartner, TPMPartnerStaffMember
-from etools.applications.tpm.tpmpartners.synchronizers import TPMPartnerManualSynchronizer
+from etools.applications.tpm.tpmpartners.synchronizers import TPMPartnerSynchronizer
 
 
 class BaseTPMViewSet(
@@ -167,10 +167,7 @@ class TPMPartnerViewSet(
         instance = queryset.filter(vendor_number=kwargs.get('vendor_number')).first()
 
         if not instance:
-            handler = TPMPartnerManualSynchronizer(
-                business_area_code=request.user.profile.country.business_area_code,
-                object_number=kwargs.get('vendor_number')
-            )
+            handler = TPMPartnerSynchronizer(vendor=kwargs.get('vendor_number'))
             handler.sync()
             instance = queryset.filter(vendor_number=kwargs.get('vendor_number')).first()
 

@@ -5,10 +5,11 @@ from django.db.models import signals
 import factory
 from factory.fuzzy import FuzzyText
 
-from etools.applications.core.tests.cases import SCHEMA_NAME
 from etools.applications.publics.tests.factories import PublicsCurrencyFactory
 from etools.applications.reports.tests.factories import OfficeFactory, UserTenantProfileFactory
 from etools.applications.users import models
+
+SCHEMA_NAME = 'test'
 
 
 class GroupFactory(factory.django.DjangoModelFactory):
@@ -38,7 +39,6 @@ class ProfileFactory(factory.django.DjangoModelFactory):
     country = factory.SubFactory(CountryFactory)
     job_title = 'Chief Tester'
     phone_number = '0123456789'
-    partner_staff_member = None
     # We pass in profile=None to prevent UserFactory from creating another profile
     # (this disables the RelatedFactory)
     user = factory.SubFactory('etools.applications.users.tests.factories.UserFactory', profile=None)
@@ -70,6 +70,8 @@ class UserFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = get_user_model()
 
+    first_name = FuzzyText()
+    last_name = FuzzyText()
     username = FuzzyText()
     email = factory.Sequence(lambda n: "user{}@example.com".format(n))
     password = factory.PostGenerationMethodCall('set_password', 'test')

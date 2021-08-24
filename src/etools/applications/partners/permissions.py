@@ -1,8 +1,8 @@
 import datetime
+from functools import lru_cache
 
 from django.apps import apps
-from django.utils.lru_cache import lru_cache
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from etools_validator.utils import check_rigid_related
 from rest_framework import permissions
@@ -16,7 +16,12 @@ from etools.libraries.pythonlib.collections import HashableDict
 # Initially, this is only being used for PRP-related endpoints.
 
 
+UNICEF_USER = 'UNICEF User'
 READ_ONLY_API_GROUP_NAME = 'Read-Only API'
+SENIOR_MANAGEMENT_GROUP = 'Senior Management Team'
+PARTNERSHIP_MANAGER_GROUP = 'Partnership Manager'
+REPRESENTATIVE_OFFICE_GROUP = 'Representative Office'
+PRC_SECRETARY = 'PRC Secretary'
 
 
 class PMPPermissions:
@@ -45,7 +50,10 @@ class PMPPermissions:
             if self.instance.status != condition_group['status']:
                 return False
         if condition_group['group'] and condition_group['group'] != '*':
-            if condition_group['group'] not in self.user_groups:
+            groups = condition_group['group'].split("|")
+
+            # If none of the groups defined match any of the groups in the user groups
+            if not set(groups).intersection(set(self.user_groups)):
                 return False
         if condition_group['condition'] and condition_group['condition'] != '*':
             # use the following commented line in case we want to not use a condition mapper and interpret the
@@ -90,7 +98,7 @@ class PMPPermissions:
 class InterventionPermissions(PMPPermissions):
 
     MODEL_NAME = 'partners.Intervention'
-    EXTRA_FIELDS = ['sections_present', 'pd_outputs']
+    EXTRA_FIELDS = ['sections_present', 'pd_outputs', 'final_partnership_review', 'prc_reviews']
 
     def __init__(self, **kwargs):
         """
@@ -116,16 +124,33 @@ class InterventionPermissions(PMPPermissions):
         def prp_server_on():
             return tenant_switch_is_active("prp_server_on")
 
-        user_profile = self.user.profile
-        partner_staff_member_id = user_profile.partner_staff_member
+        def unlocked(instance):
+            return not instance.locked
+
+        def unicef_not_accepted(instance):
+            return not instance.unicef_accepted
+
+        def not_ssfa(instance):
+            return instance.document_type != instance.SSFA
+
+        staff_member = self.user.get_partner_staff_member()
+
         # focal points are prefetched, so just cast to array to collect ids
         partner_focal_points = [fp.id for fp in self.instance.partner_focal_points.all()]
 
-        if partner_staff_member_id == self.instance.partner_authorized_officer_signatory_id:
+        if staff_member and staff_member.id == self.instance.partner_authorized_officer_signatory_id:
             self.user_groups.extend(['Partner User', 'Partner Signer'])
 
-        if partner_staff_member_id in partner_focal_points:
+        if staff_member and staff_member.id in partner_focal_points:
             self.user_groups.extend(['Partner User', 'Partner Focal Point'])
+
+        review = self.instance.review
+        if review:
+            if self.user.id == review.overall_approver_id:
+                self.user_groups.append('Overall Approver')
+
+            if review.prc_reviews.filter(overall_review=review, user=self.user).exists():
+                self.user_groups.append('PRC Officer')
 
         self.user_groups = list(set(self.user_groups))
 
@@ -134,18 +159,73 @@ class InterventionPermissions(PMPPermissions):
             'condition2': self.user in self.instance.partner_focal_points.all(),
             'contingency on': self.instance.contingency_pd is True,
             'not_in_amendment_mode': not user_added_amendment(self.instance),
-            'not_ssfa': self.instance.document_type != self.instance.SSFA,
+            'not_ssfa': not_ssfa(self.instance),
             'user_adds_amendment': user_added_amendment(self.instance),
             'prp_mode_on': not prp_mode_off(),
             'prp_mode_on+contingency_on': not prp_mode_off() and self.instance.contingency_pd,
+            'prp_mode_on+unicef_court': not prp_mode_off() and self.instance.unicef_court,
+            'prp_mode_on+partner_court': not prp_mode_off() and not self.instance.unicef_court,
             'prp_mode_off': prp_mode_off(),
             'prp_server_on': prp_server_on(),
             'user_adds_amendment+prp_mode_on': user_added_amendment(self.instance) and not prp_mode_off(),
             'termination_doc_attached': self.instance.termination_doc_attachment.exists(),
             'not_ended': self.instance.end >= datetime.datetime.now().date() if self.instance.end else False,
-            'unicef_court': self.instance.unicef_court,
-            'partner_court': not self.instance.unicef_court,
+            'unicef_court': self.instance.unicef_court and unlocked(self.instance),
+            'partner_court': not self.instance.unicef_court and unlocked(self.instance),
+            'unlocked': unlocked(self.instance),
+            'is_spd': self.instance.document_type == self.instance.SPD,
+            'unicef_not_accepted': unicef_not_accepted(self.instance),
+            'not_ssfa+unicef_not_accepted': not_ssfa(self.instance) and unicef_not_accepted(self.instance),
         }
+
+    # override get_permissions to enable us to prevent old interventions from being blocked on transitions
+    def get_permissions(self):
+        def intervention_is_v1():
+            if self.instance.status in [self.instance.DRAFT]:
+                return False
+            return self.instance.start < datetime.date(year=2020, month=10, day=1) if self.instance.start else False
+
+        # TODO: Remove this method when there are no active legacy programme documents
+        list_of_new_fields = ["budget_owner",
+                              "humanitarian_flag",
+                              "unicef_court",
+                              "date_sent_to_partner",
+                              "unicef_accepted",
+                              "partner_accepted",
+                              "context",
+                              "implementation_strategy",
+                              "gender_rating",
+                              "gender_narrative",
+                              "equity_rating",
+                              "equity_narrative",
+                              "sustainability_rating",
+                              "sustainability_narrative",
+                              "ip_program_contribution",
+                              "budget_owner",
+                              "hq_support_cost",
+                              "cash_transfer_modalities",
+                              "unicef_review_type",
+                              "capacity_development",
+                              "other_info",
+                              "other_partners_involved",
+                              "technical_guidance",
+                              "cancel_justification",
+                              "population_focus"]
+        ps = self.permission_structure
+        my_permissions = {}
+        for action in self.possible_actions:
+            my_permissions[action] = {}
+            for field in self.all_model_fields:
+                if action == "required" and field in list_of_new_fields and intervention_is_v1():
+                    my_permissions[action][field] = False
+                elif field in ps:
+                    if not ps[field][action]['true'] and not ps[field][action]['false']:
+                        my_permissions[action][field] = self.actions_default_permissions[action]
+                    else:
+                        my_permissions[action][field] = self.get_field_permissions(action, ps[field])
+                else:
+                    my_permissions[action][field] = self.actions_default_permissions[action]
+        return my_permissions
 
 
 class AgreementPermissions(PMPPermissions):
@@ -205,7 +285,7 @@ class PartnershipManagerPermission(permissions.BasePermission):
       - user must be (in 'Partnership Manager' group) OR
                      (listed as a partner staff member on the object)
     """
-    message = 'Accessing this item is not allowed.'
+    message = _('Accessing this item is not allowed.')
 
     def _has_access_permissions(self, user, obj):
         """True if --
@@ -213,12 +293,11 @@ class PartnershipManagerPermission(permissions.BasePermission):
               - user is 'Partnership Manager' group member OR
               - user is listed as a partner staff member on the object, assuming the object has a partner attribute
         """
-        has_access = user.is_staff or is_user_in_groups(user, ['Partnership Manager'])
+        has_access = user.is_staff or is_user_in_groups(user, [PARTNERSHIP_MANAGER_GROUP])
+        if has_access:
+            return True
 
-        has_access = has_access or \
-            (hasattr(obj, 'partner') and
-             user.profile.partner_staff_member in obj.partner.staff_members.values_list('id', flat=True))
-
+        has_access = hasattr(obj, 'partner') and obj.partner.user_is_staff_member(user)
         return has_access
 
     def has_permission(self, request, view):
@@ -227,9 +306,9 @@ class PartnershipManagerPermission(permissions.BasePermission):
         """
         if request.method in permissions.SAFE_METHODS:
             # Check permissions for read-only request
-            return request.user.is_staff or is_user_in_groups(request.user, ['Partnership Manager'])
+            return request.user.is_staff or is_user_in_groups(request.user, [PARTNERSHIP_MANAGER_GROUP])
         else:
-            return is_user_in_groups(request.user, ['Partnership Manager'])
+            return is_user_in_groups(request.user, [PARTNERSHIP_MANAGER_GROUP])
 
     def has_object_permission(self, request, view, obj):
         if request.method in permissions.SAFE_METHODS:
@@ -238,16 +317,14 @@ class PartnershipManagerPermission(permissions.BasePermission):
         else:
             # Check permissions for write request
             return self._has_access_permissions(request.user, obj) and \
-                is_user_in_groups(request.user, ['Partnership Manager'])
+                is_user_in_groups(request.user, [PARTNERSHIP_MANAGER_GROUP])
 
 
 class PartnershipManagerRepPermission(permissions.BasePermission):
-    message = 'Accessing this item is not allowed.'
+    message = _('Accessing this item is not allowed.')
 
     def _has_access_permissions(self, user, object):
-        if user.is_staff or \
-                user.profile.partner_staff_member in \
-                object.partner.staff_members.values_list('id', flat=True):
+        if user.is_staff or object.partner.user_is_staff_member(user):
             return True
 
     def has_object_permission(self, request, view, obj):
@@ -259,9 +336,9 @@ class PartnershipManagerRepPermission(permissions.BasePermission):
             return self._has_access_permissions(request.user, obj) and is_user_in_groups(
                 request.user,
                 [
-                    'Partnership Manager',
-                    'Senior Management Team',
-                    'Representative Office'
+                    PARTNERSHIP_MANAGER_GROUP,
+                    SENIOR_MANAGEMENT_GROUP,
+                    REPRESENTATIVE_OFFICE_GROUP,
                 ]
             )
 
@@ -270,9 +347,7 @@ class PartnershipSeniorManagerPermission(permissions.BasePermission):
     message = _('Accessing this item is not allowed.')
 
     def _has_access_permissions(self, user, object):
-        if user.is_staff or \
-                user.profile.partner_staff_member in \
-                object.partner.staff_members.values_list('id', flat=True):
+        if user.is_staff or object.partner.user_is_staff_member(user):
             return True
 
     def has_object_permission(self, request, view, obj):
@@ -283,7 +358,7 @@ class PartnershipSeniorManagerPermission(permissions.BasePermission):
             # Check permissions for write request
             return self._has_access_permissions(request.user, obj) and is_user_in_groups(
                 request.user,
-                ['Partnership Manager', 'Senior Management Team']
+                [PARTNERSHIP_MANAGER_GROUP, SENIOR_MANAGEMENT_GROUP]
             )
 
 
@@ -361,7 +436,121 @@ def intervention_field_is_editable_permission(field):
             )
             return permissions.get_permissions()['edit'].get(field)
 
-        def has_object_permission(self, request, view, obj):
-            return True
-
     return FieldPermission
+
+
+def view_action_permission(*actions):
+    class ViewActionPermission(BasePermission):
+        def has_permission(self, request, view):
+            return request.method.upper() in actions
+
+    return ViewActionPermission
+
+
+def user_group_permission(*groups):
+    class UserGroupPermission(BasePermission):
+        def has_permission(self, request, view):
+            return request.user.is_authenticated and is_user_in_groups(request.user, groups)
+
+    return UserGroupPermission
+
+
+class UserIsPartnerStaffMemberPermission(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.get_partner_staff_member()
+
+
+class UserIsNotPartnerStaffMemberPermission(BasePermission):
+    def has_permission(self, request, view):
+        return not request.user.get_partner_staff_member()
+
+
+class UserIsObjectPartnerStaffMember(UserIsPartnerStaffMemberPermission):
+    def has_object_permission(self, request, view, obj):
+        if not hasattr(obj, 'partner'):
+            return False
+
+        return obj.partner.user_is_staff_member(request.user)
+
+
+class UserIsStaffPermission(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.is_staff
+
+
+class IsSafeMethodPermission(BasePermission):
+    def has_permission(self, request, view):
+        return request.method in permissions.SAFE_METHODS
+
+
+class IsUnsafeMethodPermission(BasePermission):
+    def has_permission(self, request, view):
+        return request.method not in permissions.SAFE_METHODS
+
+
+"""
+PartnershipManagerPermission is too broad, so we can't just add partners and be sure it wouldn't have side effects.
+Rewritten using smaller permissions from comment describing how it should work.
+
+Applies general and object-based permissions.
+
+- For list views --
+  - user must be staff or in 'Partnership Manager' group
+
+- For create views --
+  - user must be in 'Partnership Manager' group
+
+- For retrieve views --
+  - user must be (staff or in 'Partnership Manager' group) OR
+                 (staff or listed as a partner staff member on the object)
+    # equals to: staff or in 'Partnership Manager' group or listed as a partner staff member on the object
+
+- For update/delete views --
+  - user must be (in 'Partnership Manager' group) OR
+                 (listed as a partner staff member on the object)
+"""
+PartnershipManagerRefinedPermission = (
+    view_action_permission('OPTIONS') |
+    (view_action_permission('GET') & (UserIsStaffPermission | user_group_permission(PARTNERSHIP_MANAGER_GROUP))) |
+    (view_action_permission('POST') & user_group_permission(PARTNERSHIP_MANAGER_GROUP)) |
+    (
+        view_action_permission('GET') &
+        (UserIsStaffPermission | user_group_permission(PARTNERSHIP_MANAGER_GROUP) | UserIsObjectPartnerStaffMember)
+    ) |
+    (
+        view_action_permission('PUT', 'PATCH', 'DELETE') &
+        (user_group_permission(PARTNERSHIP_MANAGER_GROUP) | UserIsObjectPartnerStaffMember)
+    )
+)
+
+# allow partners to load list ONLY for interventions to keep everything
+# else working right as before; at least for now
+PMPInterventionPermission = (
+    PartnershipManagerRefinedPermission | (view_action_permission('GET') & UserIsPartnerStaffMemberPermission)
+)
+
+# allow partners to load list ONLY for agreements to keep everything
+# else working right as before; at least for now
+PMPAgreementPermission = (
+    (view_action_permission('POST') & (
+        UserIsStaffPermission | user_group_permission('Partnership Manager')
+    )) |
+    (view_action_permission('GET') & (
+        UserIsPartnerStaffMemberPermission | (
+            UserIsStaffPermission | user_group_permission('Partnership Manager')
+        )
+    ))
+)
+
+
+class UserBelongsToObjectPermission(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        if not hasattr(obj, 'user'):
+            return False
+
+        return obj.user == request.user
+
+
+class IsInterventionBudgetOwnerPermission(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        return obj.budget_owner and obj.budget_owner == request.user

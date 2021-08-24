@@ -1,15 +1,16 @@
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from operator import itemgetter
 
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, QuerySet
 from django.utils.functional import cached_property
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from rest_framework import serializers
 from rest_framework.serializers import ValidationError
 from rest_framework.validators import UniqueTogetherValidator
 from unicef_attachments.fields import AttachmentSingleFileField
+from unicef_attachments.models import Attachment
 from unicef_attachments.serializers import AttachmentSerializerMixin
 from unicef_locations.serializers import LocationSerializer
 from unicef_snapshot.serializers import SnapshotModelSerializer
@@ -17,6 +18,7 @@ from unicef_snapshot.serializers import SnapshotModelSerializer
 from etools.applications.funds.models import FundsCommitmentItem, FundsReservationHeader
 from etools.applications.funds.serializers import FRHeaderSerializer, FRsSerializer
 from etools.applications.partners.models import (
+    FileType,
     Intervention,
     InterventionAmendment,
     InterventionAttachment,
@@ -24,16 +26,12 @@ from etools.applications.partners.models import (
     InterventionPlannedVisits,
     InterventionReportingPeriod,
     InterventionResultLink,
+    PartnerStaffMember,
     PartnerType,
 )
 from etools.applications.partners.permissions import InterventionPermissions
 from etools.applications.partners.utils import get_quarters_range
-from etools.applications.reports.models import (
-    AppliedIndicator,
-    InterventionActivityTimeFrame,
-    LowerResult,
-    ReportingRequirement,
-)
+from etools.applications.reports.models import AppliedIndicator, LowerResult, ReportingRequirement
 from etools.applications.reports.serializers.v2 import (
     AppliedIndicatorBasicSerializer,
     IndicatorSerializer,
@@ -43,6 +41,7 @@ from etools.applications.reports.serializers.v2 import (
     RAMIndicatorSerializer,
     ReportingRequirementSerializer,
 )
+from etools.applications.users.serializers import MinimalUserSerializer
 from etools.libraries.pythonlib.hash import h11
 
 
@@ -50,6 +49,9 @@ class InterventionBudgetCUSerializer(serializers.ModelSerializer):
     partner_contribution_local = serializers.DecimalField(max_digits=20, decimal_places=2)
     unicef_cash_local = serializers.DecimalField(max_digits=20, decimal_places=2)
     in_kind_amount_local = serializers.DecimalField(max_digits=20, decimal_places=2)
+    total_unicef_contribution_local = serializers.DecimalField(max_digits=20, decimal_places=2)
+    total_cash_local = serializers.DecimalField(max_digits=20, decimal_places=2)
+    total_local = serializers.DecimalField(max_digits=20, decimal_places=2)
 
     class Meta:
         model = InterventionBudget
@@ -59,38 +61,91 @@ class InterventionBudgetCUSerializer(serializers.ModelSerializer):
             "partner_contribution_local",
             "unicef_cash_local",
             "in_kind_amount_local",
-            'currency'
+            "partner_supply_local",
+            "currency",
+            "programme_effectiveness",
+            "total_partner_contribution_local",
+            "total_local",
+            "partner_contribution_percent",
+            "total_unicef_contribution_local",
+            "total_cash_local",
+            "total_unicef_cash_local_wo_hq",
+            "total_hq_cash_local",
         )
+        read_only_fields = (
+            "total_local",
+            "total_cash_local",
+            "programme_effectiveness",
+            "total_unicef_cash_local_wo_hq",
+            "partner_supply_local",
+            "total_partner_contribution_local",
+        )
+
+
+class PartnerStaffMemberUserSerializer(serializers.ModelSerializer):
+    user = MinimalUserSerializer()
+
+    class Meta:
+        model = PartnerStaffMember
+        fields = "__all__"
 
 
 class InterventionAmendmentCUSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
     amendment_number = serializers.CharField(read_only=True)
-    signed_amendment_file = serializers.FileField(source="signed_amendment", read_only=True)
-    signed_amendment_attachment = AttachmentSingleFileField(
-        override="signed_amendment"
-    )
+    signed_amendment_attachment = AttachmentSingleFileField(read_only=True)
     internal_prc_review = AttachmentSingleFileField(required=False)
+    unicef_signatory = MinimalUserSerializer(read_only=True)
+    partner_authorized_officer_signatory = PartnerStaffMemberUserSerializer(read_only=True)
 
     class Meta:
         model = InterventionAmendment
-        fields = "__all__"
+        fields = (
+            'id',
+            'amendment_number',
+            'internal_prc_review',
+            'created',
+            'modified',
+            'kind',
+            'types',
+            'other_description',
+            'signed_date',
+            'intervention',
+            'amended_intervention',
+            'is_active',
+            # signatures
+            'signed_by_unicef_date',
+            'signed_by_partner_date',
+            'unicef_signatory',
+            'partner_authorized_officer_signatory',
+            'signed_amendment_attachment',
+            'difference',
+        )
         validators = [
             UniqueTogetherValidator(
-                queryset=InterventionAmendment.objects.all(),
-                fields=["intervention", "signed_date"],
-                message=_("There is already an amendment with this signed date."),
+                queryset=InterventionAmendment.objects.filter(is_active=True),
+                fields=["intervention", "kind"],
+                message=_("Cannot add a new amendment while another amendment of same kind is in progress."),
             )
         ]
+        extra_kwargs = {
+            'is_active': {'read_only': True},
+            'difference': {'read_only': True},
+        }
+
+    def validate_signed_by_unicef_date(self, value):
+        if value and value > date.today():
+            raise ValidationError("Date cannot be in the future!")
+        return value
+
+    def validate_signed_by_partner_date(self, value):
+        if value and value > date.today():
+            raise ValidationError("Date cannot be in the future!")
+        return value
 
     def validate(self, data):
         data = super().validate(data)
 
-        if 'signed_date' in data and data['signed_date'] > date.today():
-            raise ValidationError("Date cannot be in the future!")
-
         if 'intervention' in data:
-            if data['intervention'].in_amendment is True:
-                raise ValidationError("Cannot add a new amendment while another amendment is in progress.")
             if data['intervention'].agreement.partner.blocked is True:
                 raise ValidationError("Cannot add a new amendment while the partner is blocked in Vision.")
 
@@ -181,7 +236,7 @@ class BaseInterventionListSerializer(serializers.ModelSerializer):
         return [o.name for o in obj.offices.all()]
 
     def get_cp_outputs(self, obj):
-        return [rl.cp_output.id for rl in obj.result_links.all()]
+        return [rl.cp_output.id for rl in obj.result_links.all() if rl.cp_output]
 
     def get_section_names(self, obj):
         return [section.name for section in obj.sections.all()]
@@ -277,6 +332,7 @@ class InterventionListSerializer(BaseInterventionListSerializer):
             'date_sent_to_partner',
             'unicef_accepted',
             'partner_accepted',
+            'submission_date',
             'cfei_number',
             'context',
             'implementation_strategy',
@@ -291,6 +347,7 @@ class InterventionListSerializer(BaseInterventionListSerializer):
             'hq_support_cost',
             'cash_transfer_modalities',
             'unicef_review_type',
+            'cfei_number',
         )
 
 
@@ -301,6 +358,7 @@ class MinimalInterventionListSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'title',
+            'number',
         )
 
 
@@ -352,21 +410,65 @@ class InterventionAttachmentSerializer(AttachmentSerializerMixin, serializers.Mo
         )
 
 
+class SingleInterventionAttachmentField(serializers.Field):
+    def __init__(self, *args, type_name: str = None, read_field: serializers.ModelSerializer = None, **kwargs):
+        self.type_name = type_name
+        self.read_field = read_field
+        super().__init__(*args, **kwargs)
+
+    def get_file_type(self) -> FileType:
+        return FileType.objects.get(name=self.type_name)
+
+    def get_intervention_attachment(self, intervention: Intervention) -> InterventionAttachment:
+        return intervention.attachments.filter(type=self.get_file_type()).first()
+
+    def to_internal_value(self, data: int) -> Attachment:
+        return Attachment.objects.filter(pk=data).first()
+
+    def to_representation(self, value: QuerySet) -> [dict]:
+        value = value.first()
+        if not value:
+            return None
+
+        return self.read_field.to_representation(instance=value)
+
+    def set_attachment(self, intervention: Intervention, attachment: Attachment) -> InterventionAttachment:
+        existing_attachment = self.get_intervention_attachment(intervention)
+        if existing_attachment:
+            existing_attachment.delete()
+
+        intervention_attachment = InterventionAttachment.objects.create(
+            intervention=intervention,
+            type=self.get_file_type(),
+            attachment=attachment.file,
+        )
+
+        attachment.code = 'partners_intervention_attachment'
+        attachment.content_object = intervention_attachment
+        attachment.save()
+
+        return intervention_attachment
+
+
 class InterventionResultNestedSerializer(serializers.ModelSerializer):
     cp_output_name = serializers.CharField(source="cp_output.output_name", read_only=True)
     ram_indicator_names = serializers.SerializerMethodField(read_only=True)
     ll_results = LowerResultWithActivitiesSerializer(many=True, read_only=True)
 
     def get_ram_indicator_names(self, obj):
-        return [i.name for i in obj.ram_indicators.all()]
+        return [i.light_repr for i in obj.ram_indicators.all()]
 
     class Meta:
         model = InterventionResultLink
         fields = (
-            'id', 'intervention',
-            'cp_output', 'cp_output_name',
-            'ram_indicators', 'ram_indicator_names',
-            'll_results'
+            'id',
+            'intervention',
+            'cp_output',
+            'cp_output_name',
+            'ram_indicators',
+            'ram_indicator_names',
+            'll_results',
+            'total',
         )
 
 
@@ -563,6 +665,11 @@ class InterventionCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotMode
         queryset=FundsReservationHeader.objects.prefetch_related('intervention').all(),
         required=False,
     )
+    final_partnership_review = SingleInterventionAttachmentField(
+        type_name=FileType.FINAL_PARTNERSHIP_REVIEW,
+        read_field=InterventionAttachmentSerializer(),
+        required=False,
+    )
 
     class Meta:
         model = Intervention
@@ -578,7 +685,7 @@ class InterventionCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotMode
         for fr in frs:
             if fr.intervention:
                 if (self.instance is None) or (not self.instance.id) or (fr.intervention.id != self.instance.id):
-                    raise ValidationError(['One or more of the FRs selected is related to a different PD/SSFA,'
+                    raise ValidationError(['One or more of the FRs selected is related to a different PD/SPD,'
                                            ' {}'.format(fr.fr_number)])
             else:
                 pass
@@ -590,6 +697,24 @@ class InterventionCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotMode
                 #                                     ' {}'.format(fr.fr_number)})
         return frs
 
+    def _validate_character_limitation(self, value, limit=5000):
+        if value and len(value) > limit:
+            raise serializers.ValidationError(
+                "This field is limited to {} or less characters.".format(
+                    limit,
+                ),
+            )
+        return value
+
+    def validate_context(self, value):
+        return self._validate_character_limitation(value)
+
+    def validate_implementation_strategy(self, value):
+        return self._validate_character_limitation(value)
+
+    def validate_ip_program_contribution(self, value):
+        return self._validate_character_limitation(value)
+
     def validate(self, attrs):
         validated_data = super().validate(attrs)
         if self.instance and ('start' in validated_data or 'end' in validated_data):
@@ -598,14 +723,19 @@ class InterventionCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotMode
             old_quarters = get_quarters_range(self.instance.start, self.instance.end)
             new_quarters = get_quarters_range(start, end)
 
-            if len(old_quarters) > len(new_quarters):
-                if InterventionActivityTimeFrame.objects.filter(
-                    activity__result__result_link__intervention=self.instance,
-                    start_date__gte=old_quarters[len(new_quarters)][0]
+            if old_quarters and len(old_quarters) > len(new_quarters):
+                if new_quarters:
+                    last_quarter = new_quarters[-1].quarter
+                else:
+                    last_quarter = 0
+
+                if self.instance.quarters.filter(
+                    quarter__gt=last_quarter,
+                    activities__isnull=False,
                 ).exists():
                     names_to_be_removed = ', '.join([
-                        'Q{}'.format(i + 1)
-                        for i in range(len(old_quarters), len(new_quarters))
+                        'Q{}'.format(q.quarter)
+                        for q in old_quarters[len(new_quarters):]
                     ])
                     error_text = _('Please adjust activities to not use the quarters to be removed ({}).').format(
                         names_to_be_removed
@@ -617,7 +747,13 @@ class InterventionCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotMode
 
     @transaction.atomic
     def update(self, instance, validated_data):
+        final_partnership_review = validated_data.pop('final_partnership_review', None)
+
         updated = super().update(instance, validated_data)
+
+        if final_partnership_review:
+            self.get_fields()['final_partnership_review'].set_attachment(instance, final_partnership_review)
+
         return updated
 
 
@@ -747,6 +883,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "id",
             "in_amendment",
             "location_names",
+            "cfei_number",
             "location_p_codes",
             "locations",
             "modified",
@@ -870,6 +1007,7 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
 
     def _validate_qpr(self, requirements):
         self._validate_start_date(requirements)
+        self._validate_end_date(requirements)
         self._validate_date_intervals(requirements)
 
     def _validate_hr(self, requirements):
@@ -886,6 +1024,7 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
             )
 
         self._validate_start_date(requirements)
+        self._validate_end_date(requirements)
         self._validate_date_intervals(requirements)
 
     def _validate_start_date(self, requirements):
@@ -896,6 +1035,18 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
                 "reporting_requirements": {
                     "start_date": _(
                         "Start date needs to be on or after PD start date."
+                    )
+                }
+            })
+
+    def _validate_end_date(self, requirements):
+        # Ensure that the last reporting requirement start date
+        # is on or before PD end date
+        if requirements[-1]["end_date"] > self.intervention.end:
+            raise serializers.ValidationError({
+                "reporting_requirements": {
+                    "end_date": _(
+                        "End date needs to be on or before PD end date."
                     )
                 }
             })
@@ -913,8 +1064,7 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
                 })
 
             if i > 0:
-                if (requirements[i]["start_date"] - requirements[i - 1]["end_date"]).days > 1 or \
-                        (requirements[i]["start_date"] < requirements[i - 1]["end_date"]):
+                if requirements[i]["start_date"] != requirements[i - 1]["end_date"] + timedelta(days=1):
                     raise serializers.ValidationError({
                         "reporting_requirements": {
                             "start_date": _(
@@ -1062,7 +1212,7 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
                 if r['start_date'] <= today and not self._past_records_editable and\
                         not current_reqs_dict.get(h11(self._get_hash_key_string(r))):
                     raise ValidationError("A record that starts in the passed cannot"
-                                          " be modified on a non-draft PD/SSFA")
+                                          " be modified on a non-draft PD/SPD")
                 ReportingRequirement.objects.filter(pk=pk).update(**r)
             else:
                 ReportingRequirement.objects.create(**r)

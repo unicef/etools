@@ -2,6 +2,7 @@ import json
 from collections import namedtuple
 
 from django.db import connection
+from django.test import override_settings
 from django.utils import timezone
 
 from mock import patch
@@ -16,7 +17,7 @@ from etools.applications.users.tests.factories import UserFactory
 class TestInterventionPartnerSyncSignal(BaseTenantTestCase):
     @patch('etools.applications.partners.signals.sync_partner_to_prp.delay')
     def test_intervention_sync_called(self, sync_task_mock):
-        intervention = InterventionFactory()
+        intervention = InterventionFactory(date_sent_to_partner=None)
         sync_task_mock.assert_not_called()
 
         intervention.date_sent_to_partner = timezone.now()
@@ -25,10 +26,10 @@ class TestInterventionPartnerSyncSignal(BaseTenantTestCase):
 
     @patch('etools.applications.partners.signals.sync_partner_to_prp.delay')
     def test_intervention_sync_not_called_on_save(self, sync_task_mock):
-        intervention = InterventionFactory()
+        intervention = InterventionFactory(date_sent_to_partner=None)
         sync_task_mock.assert_not_called()
 
-        intervention.start = timezone.now()
+        intervention.start = timezone.now().date()
         intervention.save()
         sync_task_mock.assert_not_called()
 
@@ -39,12 +40,13 @@ class TestInterventionPartnerSyncSignal(BaseTenantTestCase):
 
 
 class TestInterventionPartnerSyncTask(BaseTenantTestCase):
+    @override_settings(PRP_API_ENDPOINT='http://example.com/api/')
     @patch(
         'etools.applications.partners.prp_api.requests.post',
         return_value=namedtuple('Response', ['status_code', 'text'])(200, '{}')
     )
     def test_request_to_prp_sent(self, request_mock):
-        intervention = InterventionFactory()
+        intervention = InterventionFactory(date_sent_to_partner=None)
         request_mock.assert_not_called()
 
         sync_partner_to_prp(connection.tenant.name, intervention.agreement.partner_id)
@@ -52,12 +54,13 @@ class TestInterventionPartnerSyncTask(BaseTenantTestCase):
 
 
 class TestPartnerStaffMembersImportTask(BaseTenantTestCase):
+    @override_settings(PRP_API_ENDPOINT='http://example.com/api/')
     @patch(
         'etools.applications.partners.prp_api.requests.post',
         return_value=namedtuple('Response', ['status_code', 'text'])(200, '{}')
     )
     def test_request_to_prp_sent(self, request_mock):
-        intervention = InterventionFactory()
+        intervention = InterventionFactory(date_sent_to_partner=None)
         request_mock.assert_not_called()
 
         sync_partner_to_prp(connection.tenant.name, intervention.agreement.partner_id)
@@ -66,8 +69,8 @@ class TestPartnerStaffMembersImportTask(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.partner = PartnerFactory(staff_members=[])
-        cls.staff_member = PartnerStaffFactory(partner=cls.partner)
-        cls.staff_member_user = UserFactory(profile__partner_staff_member=cls.staff_member.id)
+        cls.staff_member_user = UserFactory()
+        cls.staff_member = PartnerStaffFactory(partner=cls.partner, user=cls.staff_member_user)
 
         cls.prp_partners_export_response_data = {
             'count': 2,
@@ -109,6 +112,7 @@ class TestPartnerStaffMembersImportTask(BaseTenantTestCase):
                 return namedtuple('Response', ['status_code', 'text'])(404, '{}')
         cls.get_prp_export_response = get_prp_export_response
 
+    @override_settings(PRP_API_ENDPOINT='http://example.com/api/')
     @patch('etools.applications.partners.prp_api.requests.get')
     def test_sync(self, request_mock):
         self.assertEqual(self.partner.staff_members.count(), 1)

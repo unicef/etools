@@ -90,8 +90,8 @@ class Migration(migrations.Migration):
             fields=[
             ],
             options={
-                'verbose_name': 'Engagement Action Point',
-                'verbose_name_plural': 'Engagement Action Points',
+                'verbose_name': 'TPM Action Point',
+                'verbose_name_plural': 'TPM Action Points',
                 'abstract': False,
                 'proxy': True,
             },

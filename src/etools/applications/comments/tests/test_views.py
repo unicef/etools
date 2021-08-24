@@ -33,6 +33,7 @@ class TestCommentsViewSet(APIViewSetTestCase, BaseTenantTestCase):
             sorted([obj['id'] for obj in response.data]),
             sorted([obj.pk for obj in valid_comments]),
         )
+        self.assertIn('created', response.data[0])
 
     def test_anonymous(self):
         self._test_list(AnonymousUser(), [], expected_status=status.HTTP_403_FORBIDDEN)
@@ -153,3 +154,11 @@ class TestCommentsViewSet(APIViewSetTestCase, BaseTenantTestCase):
                                                 instance=comment, action='delete')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('has answers', response.data['non_field_errors'][0])
+
+    def test_export_csv(self):
+        CommentFactory(user=self.unicef_user, instance_related=self.example_intervention, users_related=[UserFactory()])
+        response = self.make_request_to_viewset(self.unicef_user, method='get', action='export_csv')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('Content-Disposition', response.headers)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(len(response.data[0]), 8)

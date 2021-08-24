@@ -24,12 +24,13 @@ class QuarterFactory(factory.django.DjangoModelFactory):
     end_date = datetime.datetime(datetime.date.today().year, 3, 31, tzinfo=timezone.get_default_timezone())
 
 
-class CountryProgrammeFactory(factory.DjangoModelFactory):
+class CountryProgrammeFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.CountryProgramme
+        django_get_or_create = ('wbs',)
 
     name = factory.Sequence(lambda n: 'Country Programme {}'.format(n))
-    wbs = factory.Sequence(lambda n: '0000/A0/{:02d}'.format(n))
+    wbs = factory.Sequence(lambda n: '{:04d}/A0/01'.format(n))
     from_date = datetime.date(datetime.date.today().year, 1, 1)
     to_date = datetime.date(datetime.date.today().year, 12, 31)
 
@@ -156,8 +157,6 @@ class InterventionActivityFactory(factory.django.DjangoModelFactory):
     context_details = fuzzy.FuzzyText()
     unicef_cash = fuzzy.FuzzyDecimal(1000)
     cso_cash = fuzzy.FuzzyDecimal(1000)
-    unicef_supplies = fuzzy.FuzzyDecimal(1000)
-    cso_supplies = fuzzy.FuzzyDecimal(1000)
 
     class Meta:
         model = models.InterventionActivity
@@ -166,20 +165,19 @@ class InterventionActivityFactory(factory.django.DjangoModelFactory):
 class InterventionActivityItemFactory(factory.django.DjangoModelFactory):
     activity = factory.SubFactory(InterventionActivityFactory)
     name = fuzzy.FuzzyText()
-    other_details = fuzzy.FuzzyText()
+    unit = fuzzy.FuzzyText()
+    no_units = fuzzy.FuzzyInteger(10)
+    unit_price = fuzzy.FuzzyDecimal(1000)
     unicef_cash = fuzzy.FuzzyDecimal(1000)
     cso_cash = fuzzy.FuzzyDecimal(1000)
-    unicef_supplies = fuzzy.FuzzyDecimal(1000)
-    cso_supplies = fuzzy.FuzzyDecimal(1000)
 
     class Meta:
         model = models.InterventionActivityItem
 
 
-class InterventionActivityTimeFrameFactory(factory.DjangoModelFactory):
-    activity = factory.SubFactory(InterventionActivityFactory)
+class InterventionTimeFrameFactory(factory.django.DjangoModelFactory):
     start_date = fuzzy.FuzzyDate(datetime.date(year=1970, month=1, day=1))
     end_date = factory.LazyAttribute(lambda s: fuzzy.FuzzyDate(s.start_date).fuzz())
 
     class Meta:
-        model = models.InterventionActivityTimeFrame
+        model = models.InterventionTimeFrame

@@ -1,13 +1,13 @@
 from decimal import DivisionByZero, InvalidOperation
 
 from django.contrib.auth import get_user_model
-from django.contrib.postgres.fields import ArrayField, JSONField
+from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
 from django.db import connection, models
 from django.db.transaction import atomic
 from django.utils import timezone
 from django.utils.encoding import force_text
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from django_fsm import FSMField, transition
 from model_utils import Choices, FieldTracker
@@ -170,6 +170,7 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
 
     active_pd = models.ManyToManyField('partners.Intervention', verbose_name=_('Active PDs'), blank=True)
 
+    # TODO: clarify this.. do we even need this
     authorized_officers = models.ManyToManyField(
         PartnerStaffMember, verbose_name=_('Authorized Officers'), blank=True, related_name="engagement_authorizations"
     )
@@ -394,7 +395,7 @@ class Risk(models.Model):
         on_delete=models.CASCADE,
     )
     value = models.SmallIntegerField(choices=VALUES, null=True, blank=True, verbose_name=_('Value'))
-    extra = JSONField(blank=True, null=True, verbose_name=_('Extra'))
+    extra = models.JSONField(blank=True, null=True, verbose_name=_('Extra'))
 
     def __str__(self):
         return 'Risk at {}, {}'.format(self.engagement, self.value)

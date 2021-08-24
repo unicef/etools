@@ -1,10 +1,14 @@
+from functools import update_wrapper
+
+from django.conf.urls import url
 from django.contrib import admin
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.forms import SelectMultiple
+from django.http.response import HttpResponseRedirect
 from django.urls import reverse
 from django.utils.safestring import mark_safe
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from import_export.admin import ExportMixin
 from unicef_attachments.admin import AttachmentSingleInline
@@ -28,12 +32,27 @@ from etools.applications.partners.models import (  # TODO intervention sector lo
     InterventionAmendment,
     InterventionAttachment,
     InterventionBudget,
+    InterventionManagementBudget,
+    InterventionManagementBudgetItem,
     InterventionPlannedVisits,
     InterventionResultLink,
+    InterventionReview,
     PartnerOrganization,
     PartnerStaffMember,
     PlannedEngagement,
 )
+from etools.applications.partners.tasks import sync_partner
+
+
+class InterventionReviewInlineAdmin((admin.TabularInline)):
+    model = InterventionReview
+    extra = 0
+
+    raw_id_fields = [
+        "prc_officers",
+        "submitted_by",
+        "overall_approver"
+    ]
 
 
 class AttachmentSingleInline(AttachmentSingleInline):
@@ -72,7 +91,6 @@ class InterventionAmendmentsAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
     model = InterventionAmendment
     readonly_fields = [
         'amendment_number',
-        'signed_amendment',
     ]
     list_display = (
         'intervention',
@@ -267,6 +285,7 @@ class InterventionAdmin(
         'flat_locations',
         'partner_authorized_officer_signatory',
         'unicef_signatory',
+        'budget_owner',
         'unicef_focal_points',
         'partner_focal_points',
     ]
@@ -302,7 +321,7 @@ class InterventionAdmin(
                     'reference_number_year',
                     'title',
                     'status',
-                    'country_programme',
+                    'country_programmes',
                     'submission_date',
                     'sections',
                     'flat_locations',
@@ -353,6 +372,7 @@ class InterventionAdmin(
         PRCReviewAttachmentInline,
         SignedPDAttachmentInline,
         InterventionPlannedVisitsInline,
+        InterventionReviewInlineAdmin,
     )
 
     def created_date(self, obj):
@@ -423,6 +443,7 @@ class AssessmentAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
 class PartnerStaffMemberAdmin(SnapshotModelAdmin):
     model = PartnerStaffMember
     form = PartnerStaffMemberForm
+    raw_id_fields = ("partner", "user",)
 
     # display_staff_member_name() is used only in list_display. It could be replaced by this simple lambda --
     #     lambda instance: str(instance)
@@ -437,11 +458,13 @@ class PartnerStaffMemberAdmin(SnapshotModelAdmin):
         display_staff_member_name,
         'title',
         'email',
+        'user',
     )
     search_fields = (
         'first_name',
         'last_name',
-        'email'
+        'email',
+        'user',
     )
     inlines = [
         ActivityInline,
@@ -478,6 +501,7 @@ class CoreValueAssessmentInline(admin.StackedInline):
 
 class PartnerAdmin(ExportMixin, admin.ModelAdmin):
     form = PartnersAdminForm
+    change_form_template = 'admin/partners/partnerorganization/change_form.html'
     resource_class = PartnerExport
     search_fields = (
         'name',
@@ -493,6 +517,8 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
         'vendor_number',
         'partner_type',
         'rating',
+        'highest_risk_rating_name',
+        'highest_risk_rating_type',
         'type_of_assessment',
         'email',
         'phone_number',
@@ -533,6 +559,8 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
                 (('name', 'vision_synced',),
                  ('short_name', 'alternate_name',),
                  ('partner_type', 'cso_type',),
+                 'lead_office',
+                 'lead_section',
                  'shared_with',
                  'vendor_number',
                  'rating',
@@ -593,6 +621,25 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
 
     def has_module_permission(self, request):
         return request.user.is_superuser or request.user.groups.filter(name='Country Office Administrator').exists()
+
+    def get_urls(self):
+        urls = super().get_urls()
+
+        def wrap(view):
+            def wrapper(*args, **kwargs):
+                return self.admin_site.admin_view(view)(*args, **kwargs)
+
+            return update_wrapper(wrapper, view)
+
+        custom_urls = [
+            url(r'^(?P<pk>\d+)/sync_partner/$', wrap(self.sync_partner),
+                name='partnerorganization_sync_partner'),
+        ]
+        return custom_urls + urls
+
+    def sync_partner(self, request, pk):
+        sync_partner(PartnerOrganization.objects.get(id=pk).vendor_number, request.user.profile.country)
+        return HttpResponseRedirect(reverse('admin:partners_partnerorganization_change', args=[pk]))
 
 
 class PlannedEngagementAdmin(admin.ModelAdmin):
@@ -734,6 +781,16 @@ class FileTypeAdmin(admin.ModelAdmin):
         return request.user.is_superuser or request.user.groups.filter(name='Country Office Administrator').exists()
 
 
+class InterventionManagementBudgetItemAdmin(admin.StackedInline):
+    model = InterventionManagementBudgetItem
+
+
+class InterventionManagementBudgetAdmin(admin.ModelAdmin):
+    list_display = ('intervention',)
+    list_select_related = ('intervention',)
+    inlines = (InterventionManagementBudgetItemAdmin,)
+
+
 admin.site.register(PartnerOrganization, PartnerAdmin)
 admin.site.register(Assessment, AssessmentAdmin)
 admin.site.register(PartnerStaffMember, PartnerStaffMemberAdmin)
@@ -748,5 +805,6 @@ admin.site.register(InterventionResultLink, InterventionResultsLinkAdmin)
 admin.site.register(InterventionBudget, InterventionBudgetAdmin)
 admin.site.register(InterventionPlannedVisits, InterventionPlannedVisitsAdmin)
 admin.site.register(InterventionAttachment, InterventionAttachmentAdmin)
+admin.site.register(InterventionManagementBudget, InterventionManagementBudgetAdmin)
 
 admin.site.register(FileType, FileTypeAdmin)

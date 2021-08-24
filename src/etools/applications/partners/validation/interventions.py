@@ -1,14 +1,14 @@
 import logging
 from datetime import date
 
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from etools_validator.exceptions import BasicValidationError, StateValidationError, TransitionError
 from etools_validator.utils import check_required_fields, check_rigid_fields
 from etools_validator.validation import CompleteValidation
 
 from etools.applications.partners.permissions import InterventionPermissions
-from etools.applications.reports.models import AppliedIndicator
+from etools.applications.reports.models import AppliedIndicator, InterventionActivity
 
 logger = logging.getLogger('partners.interventions.validation')
 
@@ -25,6 +25,8 @@ def transition_ok(i):
 
 
 def transition_to_closed(i):
+    from etools.applications.partners.models import InterventionAmendment
+
     # unicef/etools-issues:820
     # TODO: this is required to go around the caching of intervention.total_frs where self.frs.all() is called
     # TODO: find a sol for invalidating the cache on related .all() -has to do with prefetch_related in the validator
@@ -87,14 +89,13 @@ def transition_to_closed(i):
 
     # If total_actual_amt_usd >100,000 then attachments has to include
     # at least 1 record with type: "Final Partnership Review"
-    if i.total_frs['total_actual_amt_usd'] >= 100000:
-        if i.attachments.filter(type__name='Final Partnership Review').count() < 1:
-            raise TransitionError([_('Total amount transferred greater than 100,000 and no Final Partnership Review '
-                                     'was attached')])
+    if i.total_frs['total_actual_amt_usd'] >= 100000 and not i.final_partnership_review.exists():
+        raise TransitionError([_('Total amount transferred greater than 100,000 and no Final Partnership Review '
+                                 'was attached')])
 
     # TODO: figure out Action Point Validation once the spec is completed
 
-    if i.in_amendment is True:
+    if i.has_active_amendment(InterventionAmendment.KIND_NORMAL):
         raise TransitionError([_('Cannot Transition status while adding an amendment')])
 
     if i.agreement.partner.blocked:
@@ -105,17 +106,21 @@ def transition_to_closed(i):
 
 
 def transition_to_terminated(i):
+    from etools.applications.partners.models import InterventionAmendment
+
     if not i.termination_doc_attachment.exists():
         raise TransitionError([_('Cannot Transition without termination doc attached')])
-    if i.in_amendment is True:
+    if i.has_active_amendment(InterventionAmendment.KIND_NORMAL):
         raise TransitionError([_('Cannot Transition status while adding an amendment')])
     return True
 
 
 def transition_to_ended(i):
+    from etools.applications.partners.models import InterventionAmendment
+
     if i.termination_doc_attachment.exists():
         raise TransitionError([_('Cannot Transition to ended if termination_doc attached')])
-    if i.in_amendment is True:
+    if i.has_active_amendment(InterventionAmendment.KIND_NORMAL):
         raise TransitionError([_('Cannot Transition status while adding an amendment')])
 
     if i.agreement.partner.blocked:
@@ -127,7 +132,9 @@ def transition_to_ended(i):
 
 
 def transition_to_suspended(i):
-    if i.in_amendment is True:
+    from etools.applications.partners.models import InterventionAmendment
+
+    if i.has_active_amendment(InterventionAmendment.KIND_NORMAL):
         raise TransitionError([_('Cannot Transition status while adding an amendment')])
 
     if i.agreement.partner.blocked:
@@ -138,19 +145,33 @@ def transition_to_suspended(i):
     return True
 
 
+def transition_to_review(i):
+    return True
+
+
+def transition_to_cancelled(i):
+    if not i.cancel_justification:
+        raise TransitionError([_('Justification required for cancellation')])
+    return True
+
+
+def transition_to_signature(i):
+    # TODO ensure final partnership review document is set
+    # this field is part of PR 2769
+    return True
+
+
 def transition_to_signed(i):
-    from etools.applications.partners.models import Agreement
-    if i.in_amendment is True:
+    from etools.applications.partners.models import Agreement, InterventionAmendment
+
+    if i.has_active_amendment(InterventionAmendment.KIND_NORMAL):
         raise TransitionError([_('Cannot Transition status while adding an amendment')])
 
-    if i.document_type in [i.PD, i.SHPD] and i.agreement.status in [Agreement.SUSPENDED, Agreement.TERMINATED,
-                                                                    Agreement.DRAFT]:
+    if i.document_type in [i.PD, i.SPD] and i.agreement.status in [Agreement.SUSPENDED, Agreement.TERMINATED,
+                                                                   Agreement.DRAFT]:
         raise TransitionError([_('The PCA related to this record is Draft, Suspended or Terminated. '
                                  'This Programme Document will not change status until the related PCA '
                                  'is in Signed status')])
-
-    if i.in_amendment is True:
-        raise TransitionError([_('Cannot Transition status while adding an amendment')])
 
     if i.agreement.partner.blocked:
         raise TransitionError([
@@ -168,7 +189,7 @@ def transition_to_active(i):
         raise TransitionError([_('Cannot Transition to ended if termination_doc attached')])
 
     # Validation id 1 -> if intervention is PD make sure the agreement is in active status
-    if i.document_type in [i.PD, i.SHPD] and i.agreement.status != i.agreement.SIGNED:
+    if i.document_type in [i.PD, i.SPD] and i.agreement.status != i.agreement.SIGNED:
         raise TransitionError([
             _('PD cannot be activated if the associated Agreement is not active')
         ])
@@ -198,7 +219,7 @@ def start_date_signed_valid(i):
 
 def start_date_related_agreement_valid(i):
     # i = intervention
-    if i.document_type in [i.PD, i.SHPD] and not i.contingency_pd and i.start and i.agreement.start and \
+    if i.document_type in [i.PD, i.SPD] and not i.contingency_pd and i.start and i.agreement.start and \
             (i.signed_pd_document or i.signed_pd_attachment) and i.start < i.agreement.start:
         return False
     return True
@@ -217,7 +238,7 @@ def document_type_pca_valid(i):
     """
         Checks if pd has an agreement of type PCA
     """
-    if i.document_type in [i.PD, i.SHPD] and i.agreement.agreement_type != i.agreement.PCA:
+    if i.document_type in [i.PD, i.SPD] and i.agreement.agreement_type != i.agreement.PCA:
         return False
     return True
 
@@ -250,7 +271,7 @@ def sections_valid(i):
     if not ind_sections.issubset(intervention_sections):
         draft_status_err = ' without deleting the indicators first' if i.status == i.DRAFT else ''
         raise BasicValidationError(_('The following sections have been selected on '
-                                     'the PD/SSFA indicators and cannot be removed{}: '.format(draft_status_err)) +
+                                     'the PD/SPD indicators and cannot be removed{}: '.format(draft_status_err)) +
                                    ', '.join([s.name for s in ind_sections - intervention_sections]))
     return True
 
@@ -264,19 +285,49 @@ def locations_valid(i):
     intervention_locations = set(i.flat_locations.all())
     if not ind_locations.issubset(intervention_locations):
         raise BasicValidationError(_('The following locations have been selected on '
-                                     'the PD/SSFA indicators and cannot be removed'
+                                     'the PD/SPD indicators and cannot be removed'
                                      ' without removing them from the indicators first: ') +
                                    ', '.join([str(loc) for loc in ind_locations - intervention_locations]))
     return True
 
 
 def cp_structure_valid(i):
-    if i.country_programme and i.agreement.agreement_type == i.agreement.PCA \
-            and i.country_programme != i.agreement.country_programme:
-        raise BasicValidationError(_('The Country Programme selected on this PD is not the same as the '
-                                     'Country Programme selected on the Agreement, '
-                                     'please select "{}"'.format(i.agreement.country_programme)))
+    if i.agreement.agreement_type == i.agreement.PCA:
+        invalid = False
+        if i.country_programme:
+            if i.country_programme != i.agreement.country_programme:
+                invalid = True
+        if i.country_programmes.count():
+            if i.agreement.country_programme not in i.country_programmes.all():
+                invalid = True
+
+        if invalid:
+            raise BasicValidationError(
+                _('The Country Programme selected on this PD is not the same '
+                  'as the Country Programme selected on the Agreement, '
+                  'please select "{}"'.format(i.agreement.country_programme)),
+            )
     return True
+
+
+def all_pd_outputs_are_associated(i):
+    return not i.result_links.filter(cp_output__isnull=True).exists()
+
+
+def all_activities_have_timeframes(i):
+    return not InterventionActivity.objects.\
+        filter(result__result_link__intervention=i).\
+        filter(time_frames__isnull=True).exists()
+
+
+def review_was_accepted(i):
+    from etools.applications.partners.models import InterventionReview
+
+    r = i.review
+    if r.review_type == InterventionReview.NORV:
+        return True
+
+    return r.overall_approval if r else False
 
 
 class InterventionValid(CompleteValidation):
@@ -306,10 +357,10 @@ class InterventionValid(CompleteValidation):
         'start_date_signed_valid': 'The start date cannot be before the later of signature dates.',
         'start_date_related_agreement_valid': 'PD start date cannot be earlier than the Start Date of the related PCA',
         'rigid_in_amendment_flag': 'Amendment Flag cannot be turned on without adding an amendment',
-        'sections_valid': "The sections selected on the PD/SSFA are not a subset of all sections selected "
-                          "for this PD/SSFA's indicators",
-        'locations_valid': "The locations selected on the PD/SSFA are not a subset of all locations selected "
-                          "for this PD/SSFA's indicators",
+        'sections_valid': "The sections selected on the PD/SPD are not a subset of all sections selected "
+                          "for this PD/SPD's indicators",
+        'locations_valid': "The locations selected on the PD/SPD are not a subset of all locations selected "
+                          "for this PD/SPD's indicators",
     }
 
     PERMISSIONS_CLASS = InterventionPermissions
@@ -333,11 +384,38 @@ class InterventionValid(CompleteValidation):
     def state_draft_valid(self, intervention, user=None):
         self.check_required_fields(intervention)
         self.check_rigid_fields(intervention, related=True)
+        if intervention.unicef_accepted:
+            if not all_activities_have_timeframes(intervention):
+                raise StateValidationError([_('All activities must have at least one time frame')])
+            if not all_pd_outputs_are_associated(intervention):
+                raise StateValidationError([_('All PD Outputs need to be associated to a CP Output')])
+        return True
+
+    def state_review_valid(self, intervention, user=None):
+        self.check_required_fields(intervention)
+        self.check_rigid_fields(intervention, related=True)
+        if not (intervention.partner_accepted and intervention.unicef_accepted):
+            raise StateValidationError([_('Unicef and Partner both need to accept')])
+        if not all_activities_have_timeframes(intervention):
+            raise StateValidationError([_('All activities must have at least one time frame')])
+        if not all_pd_outputs_are_associated(intervention):
+            raise StateValidationError([_('All PD Outputs need to be associated to a CP Output')])
+        return True
+
+    def state_signature_valid(self, intervention, user=None):
+        self.check_required_fields(intervention)
+        self.check_rigid_fields(intervention, related=True)
+        if not review_was_accepted(intervention):
+            raise StateValidationError([_('Review needs to be approved')])
         return True
 
     def state_signed_valid(self, intervention, user=None):
         self.check_required_fields(intervention)
         self.check_rigid_fields(intervention, related=True)
+        if not all_activities_have_timeframes(intervention):
+            raise StateValidationError([_('All activities must have at least one time frame')])
+        if not all_pd_outputs_are_associated(intervention):
+            raise StateValidationError([_('All PD Outputs need to be associated to a CP Output')])
         if intervention.contingency_pd is False and intervention.total_unicef_budget == 0:
             raise StateValidationError([_('UNICEF Cash $ or UNICEF Supplies $ should not be 0')])
         return True
@@ -350,7 +428,12 @@ class InterventionValid(CompleteValidation):
     def state_active_valid(self, intervention, user=None):
         self.check_required_fields(intervention)
         self.check_rigid_fields(intervention, related=True)
-
+        if intervention.in_amendment:
+            raise StateValidationError([_('Only original PD can be active')])
+        if not all_activities_have_timeframes(intervention):
+            raise StateValidationError([_('All activities must have at least one time frame')])
+        if not all_pd_outputs_are_associated(intervention):
+            raise StateValidationError([_('All PD Outputs need to be associated to a CP Output')])
         today = date.today()
         if not (intervention.start <= today):
             raise StateValidationError([_('Today is not after the start date')])
@@ -361,6 +444,10 @@ class InterventionValid(CompleteValidation):
     def state_ended_valid(self, intervention, user=None):
         self.check_required_fields(intervention)
         self.check_rigid_fields(intervention, related=True)
+        if not all_activities_have_timeframes(intervention):
+            raise StateValidationError([_('All activities must have at least one time frame')])
+        if not all_pd_outputs_are_associated(intervention):
+            raise StateValidationError([_('All PD Outputs need to be associated to a CP Output')])
 
         today = date.today()
         if not today > intervention.end:

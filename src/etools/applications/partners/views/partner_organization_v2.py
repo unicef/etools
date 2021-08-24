@@ -338,7 +338,7 @@ class PartnerOrganizationDashboardAPIView(ExportModelMixin, QueryStringFilterMix
     def _add_active_pd_for_non_signed_pca(self, serializer):
         # TODO add tests
         flagged_interventions = Intervention.objects.filter(
-            document_type__in=[Intervention.PD, Intervention.SHPD],
+            document_type__in=[Intervention.PD, Intervention.SPD],
             status__in=[Intervention.ACTIVE, Intervention.SIGNED]).values_list('pk', flat=True)
         qs = PartnerOrganization.objects.filter(
             agreements__interventions__in=flagged_interventions).exclude(
@@ -471,9 +471,9 @@ class PartnerOrganizationAddView(CreateAPIView):
             return Response({"error": "No vendor number provided for Partner Organization"},
                             status=status.HTTP_400_BAD_REQUEST)
 
-        valid_response, response = get_data_from_insight('GetPartnerDetailsInfo_json/{vendor_code}',
+        valid_response, response = get_data_from_insight('partners/?vendor={vendor_code}',
                                                          {"vendor_code": vendor})
-        if not valid_response:
+        if not valid_response and "ROWSET" not in response:
             return Response({"error": response}, status=status.HTTP_400_BAD_REQUEST)
 
         partner_resp = response["ROWSET"]["ROW"]
@@ -489,7 +489,6 @@ class PartnerOrganizationAddView(CreateAPIView):
         if not partner_sync._filter_records([partner_resp]):
             return Response({"error": 'Partner skipped because one or more of the required fields are missing'},
                             status=status.HTTP_400_BAD_REQUEST)
-
         partner_sync._partner_save(partner_resp, full_sync=False)
 
         partner = PartnerOrganization.objects.get(
@@ -499,6 +498,7 @@ class PartnerOrganizationAddView(CreateAPIView):
 
 
 class PartnerOrganizationDeleteView(DestroyAPIView):
+    # todo: permission_classes are ignored here. see comments in InterventionAmendmentDeleteView.delete
     permission_classes = (PartnershipManagerRepPermission,)
 
     def delete(self, request, *args, **kwargs):

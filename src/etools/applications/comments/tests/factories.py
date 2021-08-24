@@ -5,7 +5,7 @@ from etools.applications.comments.models import Comment
 from etools.applications.users.tests.factories import UserFactory
 
 
-class CommentFactory(factory.DjangoModelFactory):
+class CommentFactory(factory.django.DjangoModelFactory):
     user = factory.SubFactory(UserFactory)
     state = Comment.STATES.active
     instance_related = None

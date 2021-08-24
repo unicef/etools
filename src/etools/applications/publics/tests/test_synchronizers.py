@@ -1,6 +1,8 @@
 
 import json
 
+from mock import Mock, patch
+
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.publics import synchronizers
 from etools.applications.publics.models import (
@@ -19,6 +21,7 @@ class TestCurrencySynchronizer(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.country = Country.objects.first()
 
+    @patch("etools.applications.vision.synchronizers.get_public_schema_name", Mock(return_value="test"))
     def setUp(self):
         self.data = {
             "CURRENCY_NAME": "United States",
@@ -28,7 +31,7 @@ class TestCurrencySynchronizer(BaseTenantTestCase):
             "VALID_FROM": "1-Jan-16",
             "VALID_TO": "31-Dec-17",
         }
-        self.adapter = synchronizers.CurrencySynchronizer(self.country.business_area_code)
+        self.adapter = synchronizers.CurrencySynchronizer()
 
     def test_convert_records(self):
         self.assertEqual(
@@ -51,6 +54,7 @@ class TestTravelAgenciesSynchronizer(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.country = Country.objects.first()
 
+    @patch("etools.applications.vision.synchronizers.get_public_schema_name", Mock(return_value="test"))
     def setUp(self):
         self.data = {
             "VENDOR_NAME": "ACME Inc.",
@@ -58,7 +62,7 @@ class TestTravelAgenciesSynchronizer(BaseTenantTestCase):
             "VENDOR_CITY": "New York",
             "VENDOR_CTRY_CODE": "USD",
         }
-        self.adapter = synchronizers.TravelAgenciesSynchronizer(self.country.business_area_code)
+        self.adapter = synchronizers.TravelAgenciesSynchronizer()
 
     def test_convert_records(self):
         self.assertEqual(

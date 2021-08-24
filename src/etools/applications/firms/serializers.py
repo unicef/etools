@@ -1,12 +1,11 @@
 from django.contrib.auth import get_user_model
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
-from rest_framework.validators import UniqueValidator
 from unicef_restlib.serializers import WritableNestedSerializerMixin
 
 from etools.applications.users.models import UserProfile
-from etools.libraries.djangolib.validators import uppercase_forbidden_validator
+from etools.applications.users.validators import EmailValidator
 
 
 class UserProfileSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
@@ -23,13 +22,12 @@ class UserProfileSerializer(WritableNestedSerializerMixin, serializers.ModelSeri
         }
 
 
-class UserSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
+class UserSerializer(
+        WritableNestedSerializerMixin,
+        serializers.ModelSerializer,
+):
     profile = UserProfileSerializer(required=False)
-    email = serializers.EmailField(
-        label=_('E-mail Address'),
-        validators=[UniqueValidator(queryset=get_user_model().objects.all(),
-                                    message='This user already exists in the system'),
-                    uppercase_forbidden_validator])
+    email = serializers.EmailField(validators=[EmailValidator()])
 
     class Meta(WritableNestedSerializerMixin.Meta):
         model = get_user_model()

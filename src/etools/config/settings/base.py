@@ -284,8 +284,11 @@ AUTHENTICATION_BACKENDS = (
 AUTH_USER_MODEL = 'users.User'
 LOGIN_REDIRECT_URL = '/'
 
-HOST = get_from_secrets_or_env('DJANGO_ALLOWED_HOST', 'http://localhost:8000/')
+HOST = get_from_secrets_or_env('DJANGO_ALLOWED_HOST', 'http://localhost:8082')
+
 LOGIN_URL = LOGOUT_REDIRECT_URL = get_from_secrets_or_env('LOGIN_URL', '/landing/')
+
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 # CONTRIB: GIS (GeoDjango)
 POSTGIS_VERSION = (2, 1)
@@ -476,10 +479,10 @@ SLACK_URL = get_from_secrets_or_env('SLACK_URL')
 
 TASK_ADMIN_USER = get_from_secrets_or_env('TASK_ADMIN_USER', 'etools_task_admin@unicef.org')
 
-VISION_LOGGER_MODEL = "vision.VisionSyncLog"
-VISION_URL = get_from_secrets_or_env('VISION_URL', 'http://invalid_vision_url')
-VISION_USER = get_from_secrets_or_env('VISION_USER', 'invalid_vision_user')
-VISION_PASSWORD = get_from_secrets_or_env('VISION_PASSWORD', 'invalid_vision_password')
+INSIGHT_LOGGER_MODEL = "vision.VisionSyncLog"
+INSIGHT_SUB_KEY = get_from_secrets_or_env('INSIGHT_SUB_KEY', 'invalid_key')
+INSIGHT_URL = get_from_secrets_or_env('INSIGHT_URL', 'http://invalid_vision_url')
+INSIGHT_BANK_KEY = get_from_secrets_or_env('INSIGHT_BANK_KEY', None)
 
 
 # ALLOW BASIC AUTH FOR DEMO SITE
@@ -508,7 +511,7 @@ SOCIAL_AUTH_SANITIZE_REDIRECTS = False
 SOCIAL_AUTH_POSTGRES_JSONFIELD = True
 POLICY = os.getenv('AZURE_B2C_POLICY_NAME', "b2c_1A_UNICEF_PARTNERS_signup_signin")
 
-TENANT_ID = os.getenv('AZURE_B2C_TENANT', 'unicefpartners.onmicrosoft.com')
+TENANT_ID = os.getenv('AZURE_B2C_TENANT', 'unicefpartners')
 SCOPE = ['openid', 'email']
 IGNORE_DEFAULT_SCOPE = True
 SOCIAL_AUTH_USERNAME_IS_FULL_EMAIL = True
@@ -557,7 +560,7 @@ ATTACHMENT_DENORMALIZE_FUNC = "etools.applications.attachments.utils.denormalize
 ATTACHMENT_PERMISSIONS = "etools.applications.attachments.permissions.IsInSchema"
 
 GEOS_LIBRARY_PATH = os.getenv('GEOS_LIBRARY_PATH', '/usr/lib/libgeos_c.so.1')  # default path
-GDAL_LIBRARY_PATH = os.getenv('GDAL_LIBRARY_PATH', '/usr/lib/libgdal.so.26')  # default path
+GDAL_LIBRARY_PATH = os.getenv('GDAL_LIBRARY_PATH', '/usr/lib/libgdal.so.28')  # default path
 
 SHELL_PLUS_PRE_IMPORTS = (
     ('etools.applications.core.util_scripts', '*'),
@@ -569,7 +572,7 @@ PSEA_ASSESSMENT_FINAL_RECIPIENTS = get_from_secrets_or_env(
     '',
 ).split(',')
 
-VISION_REQUESTS_TIMEOUT = get_from_secrets_or_env('VISION_REQUESTS_TIMEOUT', 400)  # in seconds
+INSIGHT_REQUESTS_TIMEOUT = get_from_secrets_or_env('INSIGHT_REQUESTS_TIMEOUT', 400)  # in seconds
 
 # Etools offline collect
 # https://github.com/unicef/etools-offline-collect/blob/develop/client/README.md
@@ -579,6 +582,6 @@ ETOOLS_OFFLINE_TASK_APP = "etools.config.celery.get_task_app"
 
 # PRP Integration
 # https://github.com/unicef/etools-partner-reporting-portal
-PRP_API_ENDPOINT = get_from_secrets_or_env('PRP_API_ENDPOINT', "http://172.18.0.1:8083/api")
+PRP_API_ENDPOINT = get_from_secrets_or_env('PRP_API_ENDPOINT', '')  # example: http://172.18.0.1:8083/api
 PRP_API_USER = get_from_secrets_or_env('PRP_API_USER', '')
 PRP_API_PASSWORD = get_from_secrets_or_env('PRP_API_PASSWORD', '')

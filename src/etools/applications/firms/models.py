@@ -1,6 +1,7 @@
 from django.conf import settings
+from django.contrib.postgres.fields import ArrayField
 from django.db import models
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from model_utils.models import TimeStampedModel
 
@@ -77,13 +78,14 @@ class BaseFirm(TimeStampedModel, models.Model):
         return self.vendor_number,
 
 
-class BaseStaffMember(ModelHavingTenantRelationsMixin, models.Model):
+class BaseStaffMember(ModelHavingTenantRelationsMixin, TimeStampedModel):
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         verbose_name=_('User'),
         related_name='%(app_label)s_%(class)s',
         on_delete=models.CASCADE
     )
+    history = ArrayField(models.CharField(max_length=128, verbose_name=_("History")), default=list, blank=True)
 
     class Meta:
         abstract = True

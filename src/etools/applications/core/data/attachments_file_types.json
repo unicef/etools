@@ -132,7 +132,7 @@
         "pk": 22,
         "fields": {
             "order": 9,
-            "label": "Signed PD/SSFA",
+            "label": "Signed PD/SPD",
             "name": "signed_pd/ssfa",
             "code": "tpm",
             "group": ["tpm"]
@@ -519,6 +519,17 @@
             "name": "psea_awareness_raising_plan",
             "code": "psea_answer",
             "group": ["psea_answer"]
+        }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 62,
+        "fields": {
+            "order": 0,
+            "label": "PSEA NFR Attachment",
+            "name": "psea_nfr_attachment",
+            "code": "psea_nfr_attachment",
+            "group": ["psea"]
         }
     }
 ]

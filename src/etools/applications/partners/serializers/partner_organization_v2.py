@@ -1,7 +1,9 @@
 import datetime
+import itertools
 import json
 
 from django.contrib.auth import get_user_model
+from django.db import connection
 from django.db.models import Q
 from django.utils import timezone
 
@@ -11,6 +13,7 @@ from unicef_attachments.fields import AttachmentSingleFileField
 from unicef_attachments.serializers import AttachmentSerializerMixin
 from unicef_snapshot.serializers import SnapshotModelSerializer
 
+from etools.applications.field_monitoring.planning.models import MonitoringActivity, MonitoringActivityGroup
 from etools.applications.partners.models import (
     Agreement,
     Assessment,
@@ -26,6 +29,7 @@ from etools.applications.partners.serializers.interventions_v2 import (
     InterventionListSerializer,
     InterventionMonitorSerializer,
 )
+from etools.applications.users.serializers import MinimalUserSerializer
 
 
 class CoreValuesAssessmentSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
@@ -39,6 +43,7 @@ class CoreValuesAssessmentSerializer(AttachmentSerializerMixin, serializers.Mode
 
 
 class PartnerStaffMemberCreateSerializer(serializers.ModelSerializer):
+    # legacy serializer; not actually being used for creating
 
     class Meta:
         model = PartnerStaffMember
@@ -56,11 +61,15 @@ class PartnerStaffMemberCreateSerializer(serializers.ModelSerializer):
             raise ValidationError({'active': 'New Staff Member needs to be active at the moment of creation'})
         try:
             existing_user = User.objects.filter(Q(username=email) | Q(email=email)).get()
-            if existing_user.profile.partner_staff_member:
-                raise ValidationError("The email {} for the partner contact is used by another partner contact. "
-                                      "Email has to be unique to proceed.".format(email))
         except User.DoesNotExist:
             pass
+        else:
+            if bool(existing_user.staff_member_country()):
+                raise ValidationError(
+                    "The email {} for the partner contact is used by another "
+                    "partner contact. Email has to be unique to "
+                    "proceed.".format(email)
+                )
 
         return data
 
@@ -106,49 +115,94 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = PartnerStaffMember
         fields = "__all__"
+        read_only_fields = ['user', ]
 
     def validate(self, data):
         data = super().validate(data)
         email = data.get('email', "")
-        active = data.get('active', "")
+        active = data.get('active')
         User = get_user_model()
 
-        try:
-            existing_user = User.objects.get(email=email)
-        except User.DoesNotExist:
-            # this is a new user
-            existing_user = None
+        if not self.instance:
+            if email != email.lower():
+                raise ValidationError(
+                    {"email": "Email cannot have uppercase characters."},
+                )
 
-        if existing_user and not self.instance and existing_user.profile.partner_staff_member:
-            raise ValidationError(
-                {'active': 'The email for the partner contact is used by another partner contact. Email has to be '
-                           'unique to proceed {}'.format(email)})
+            try:
+                user = User.objects.get(email=email)
+            except User.DoesNotExist:
+                pass
+
+            else:
+                if user.is_unicef_user():
+                    raise ValidationError('Unable to associate staff member to UNICEF user')
+
+                if bool(user.get_staff_member_country()):
+                    raise ValidationError(
+                        {
+                            'active': 'The email for the partner contact is used by another partner contact. '
+                                      'Email has to be unique to proceed {}'.format(email)
+                        }
+                    )
+
+                data['user'] = user
         else:
-            staff_member_qs = PartnerStaffMember.objects.filter(email=email)
-            if not self.instance and staff_member_qs.exists():
-                raise ValidationError({"email": "Email address in use already."})
-
-        # make sure email addresses are not editable after creation.. user must be removed and re-added
-        if self.instance:
+            # make sure email addresses are not editable after creation.. user must be removed and re-added
             if email != self.instance.email:
                 raise ValidationError(
-                    "User emails cannot be changed, please remove the user and add another one: {}".format(email))
+                    {
+                        "email": "User emails cannot be changed, please remove"
+                        " the user and add another one: {}".format(email)
+                    }
+                )
 
             # when adding the active tag to a previously untagged user
-            # make sure this user has not already been associated with another partnership.
-            # TODO: Users should have a json field with country partnerhip pairs not just partnerships
-            if active and not self.instance.active and \
-                    existing_user and existing_user.profile.partner_staff_member and \
-                    existing_user.profile.partner_staff_member != self.instance.pk:
-                raise ValidationError(
-                    {'active':
-                     'The Partner Staff member you are trying to activate is associated with a different partnership'}
-                )
+            if active and not self.instance.active:
+                # make sure this user has not already been associated with another partnership.
+                try:
+                    user = User.objects.get(email=email)
+                except User.DoesNotExist:
+                    pass
+                else:
+                    psm_country = user.get_staff_member_country()
+                    if psm_country and psm_country != connection.tenant:
+                        raise ValidationError({
+                            'active': 'The Partner Staff member you are trying to activate is associated '
+                                      'with a different Partner Organization'
+                        })
+
+            # disabled is unavailable if user already synced to PRP to avoid data inconsistencies
+            if self.instance.active and not active:
+                if Intervention.objects.filter(
+                    Q(date_sent_to_partner__isnull=False, agreement__partner__staff_members=self.instance) |
+                    Q(
+                        ~Q(status=Intervention.DRAFT),
+                        Q(partner_focal_points=self.instance) | Q(partner_authorized_officer_signatory=self.instance),
+                    ),
+                ).exists():
+                    raise ValidationError({'active': 'User already synced to PRP and cannot be disabled. '
+                                                     'Please instruct the partner to disable from PRP'})
 
         return data
 
+    def create(self, validated_data):
+        User = get_user_model()
+        if 'user' not in validated_data:
+            validated_data['user'] = User.objects.create(
+                first_name=validated_data.get('first_name'),
+                last_name=validated_data.get('first_name'),
+                username=validated_data['email'],
+                email=validated_data['email'],
+                is_staff=False,
+                is_active=True,
+            )
+
+        return super().create(validated_data)
+
     def update(self, instance, validated_data):
         instance = super().update(instance, validated_data)
+
         # if inactive, remove from DRAFT Agreements and PDs
         if not instance.active:
             agreement_qs = instance.agreement_authorizations.filter(
@@ -162,10 +216,19 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
             )
             for pd in pd_qs.all():
                 pd.partner_focal_points.remove(instance)
+
         return instance
 
 
 class PartnerStaffMemberDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PartnerStaffMember
+        fields = "__all__"
+
+
+class PartnerStaffMemberUserSerializer(serializers.ModelSerializer):
+    user = MinimalUserSerializer()
+
     class Meta:
         model = PartnerStaffMember
         fields = "__all__"
@@ -336,6 +399,41 @@ class PartnerPlannedVisitsSerializer(serializers.ModelSerializer):
         return super().is_valid(**kwargs)
 
 
+class MonitoringActivityGroupSerializer(serializers.Field):
+    default_error_messages = {
+        'bad_value': 'List was expected, {type} provided',
+    }
+
+    def to_internal_value(self, data):
+        if not data:
+            return data
+
+        if not isinstance(data, list):
+            self.fail('bad_value', type=type(data))
+
+        activities = {
+            activity.id: activity
+            for activity in MonitoringActivity.objects.filter(id__in=itertools.chain(*data))
+        }
+
+        result = []
+        for group in data:
+            result.append([activities[activity] for activity in group])
+        result = list(filter(lambda x: x, result))
+
+        return result
+
+    def to_representation(self, data):
+        group_objects = list(
+            self.parent.instance.monitoring_activity_groups.values_list('id', 'monitoring_activities__id')
+        )
+        groups = {group_id: [] for group_id in sorted(set(group[0] for group in group_objects))}
+        for group in group_objects:
+            groups[group[0]].append(group[1])
+
+        return list(groups.values())
+
+
 class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
 
     staff_members = PartnerStaffMemberDetailSerializer(many=True, read_only=True)
@@ -352,6 +450,7 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
     sea_risk_rating_name = serializers.CharField(label="psea_risk_rating")
     highest_risk_rating_type = serializers.CharField(label="highest_risk_type")
     highest_risk_rating_name = serializers.CharField(label="highest_risk_rating")
+    monitoring_activity_groups = MonitoringActivityGroupSerializer()
 
     def get_hact_values(self, obj):
         return json.loads(obj.hact_values) if isinstance(obj.hact_values, str) else obj.hact_values
@@ -407,6 +506,7 @@ class PartnerOrganizationCreateUpdateSerializer(SnapshotModelSerializer):
     hidden = serializers.BooleanField(read_only=True)
     planned_visits = PartnerPlannedVisitsSerializer(many=True, read_only=True, required=False)
     core_values_assessments = CoreValuesAssessmentSerializer(many=True, read_only=True, required=False)
+    monitoring_activity_groups = MonitoringActivityGroupSerializer(required=False)
 
     def get_hact_values(self, obj):
         return json.loads(obj.hact_values) if isinstance(obj.hact_values, str) else obj.hact_values
@@ -432,6 +532,43 @@ class PartnerOrganizationCreateUpdateSerializer(SnapshotModelSerializer):
             })
 
         return data
+
+    def save_monitoring_activity_groups(self, instance, groups):
+        instance_groups = list(instance.monitoring_activity_groups.prefetch_related('monitoring_activities'))
+        updated = False
+
+        for i in range(len(groups)):
+            if i >= len(instance_groups):
+                group_object = MonitoringActivityGroup.objects.create(partner=instance)
+                instance_activities = []
+            else:
+                group_object = instance_groups[i]
+                instance_activities = instance_groups[i].monitoring_activities.all()
+
+            if set(instance_activities).difference(set(groups[i])):
+                updated = True
+
+            group_object.monitoring_activities.set(groups[i])
+
+        if len(instance_groups) > len(groups):
+            updated = True
+
+            for i in range(len(groups), len(instance_groups)):
+                instance_groups[i].delete()
+
+        return updated
+
+    def update(self, instance, validated_data):
+        monitoring_activity_groups = validated_data.pop('monitoring_activity_groups', None)
+
+        instance = super().update(instance, validated_data)
+
+        if monitoring_activity_groups is not None:
+            groups_updated = self.save_monitoring_activity_groups(instance, monitoring_activity_groups)
+            if groups_updated:
+                instance.programmatic_visits()
+
+        return instance
 
     class Meta:
         model = PartnerOrganization

@@ -1,7 +1,10 @@
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
+from django.core.exceptions import ValidationError
 from django.test import SimpleTestCase
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.partners.permissions import PRC_SECRETARY
 from etools.applications.reports.tests.factories import OfficeFactory
 from etools.applications.users import models
 from etools.applications.users.tests.factories import CountryFactory, ProfileFactory, UserFactory
@@ -113,6 +116,15 @@ class TestUserModel(BaseTenantTestCase):
         user = UserFactory(email='unicef@macioce.org')
         self.assertFalse(user.is_unicef_user())
 
+    def test_save(self):
+        user = UserFactory()
+        user.email = "normal@example.com"
+        user.save()
+
+        # with email with upper case characters
+        user.email = "NotNormal@example.com"
+        self.assertRaises(ValidationError, user.save)
+
 
 class TestStrUnicode(SimpleTestCase):
     """Ensure calling str() on model instances returns the right text."""
@@ -151,3 +163,8 @@ class TestStrUnicode(SimpleTestCase):
         instance = models.UserProfile()
         instance.user = user
         self.assertEqual(str(instance), 'User profile for Sventoslav\u016d')
+
+
+class TestGroups(BaseTenantTestCase):
+    def test_prc_secretary_available(self):
+        self.assertTrue(Group.objects.filter(name=PRC_SECRETARY).exists())

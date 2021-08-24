@@ -13,7 +13,7 @@ _FUZZY_START_DATE = TZ.localize(datetime.now() - timedelta(days=5))
 _FUZZY_END_DATE = TZ.localize(datetime.now() + timedelta(days=5))
 
 
-class PublicsBusinessRegionFactory(factory.DjangoModelFactory):
+class PublicsBusinessRegionFactory(factory.django.DjangoModelFactory):
     name = fuzzy.FuzzyText(length=8)
     code = fuzzy.FuzzyText(length=2)
 
@@ -21,7 +21,7 @@ class PublicsBusinessRegionFactory(factory.DjangoModelFactory):
         model = models.BusinessRegion
 
 
-class PublicsBusinessAreaFactory(factory.DjangoModelFactory):
+class PublicsBusinessAreaFactory(factory.django.DjangoModelFactory):
     name = fuzzy.FuzzyText(length=8)
     code = fuzzy.FuzzyText(length=8)
     region = factory.SubFactory(PublicsBusinessRegionFactory)
@@ -30,7 +30,7 @@ class PublicsBusinessAreaFactory(factory.DjangoModelFactory):
         model = models.BusinessArea
 
 
-class ExchangeRateFactory(factory.DjangoModelFactory):
+class ExchangeRateFactory(factory.django.DjangoModelFactory):
     valid_from = fuzzy.FuzzyDate(_FUZZY_START_DATE.date(), _FUZZY_END_DATE.date())
     valid_to = fuzzy.FuzzyDate(_FUZZY_START_DATE.date(), _FUZZY_END_DATE.date())
     x_rate = fuzzy.FuzzyDecimal(0.5, 400)
@@ -39,7 +39,7 @@ class ExchangeRateFactory(factory.DjangoModelFactory):
         model = models.ExchangeRate
 
 
-class PublicsCurrencyFactory(factory.DjangoModelFactory):
+class PublicsCurrencyFactory(factory.django.DjangoModelFactory):
     name = factory.Sequence(lambda n: 'Currency {}'.format(n))
     code = fuzzy.FuzzyText(length=5, chars='ABCDEFGHIJKLMNOPQRSTUVWYXZ')
     exchange_rates = factory.RelatedFactory(ExchangeRateFactory, 'currency')
@@ -48,7 +48,7 @@ class PublicsCurrencyFactory(factory.DjangoModelFactory):
         model = models.Currency
 
 
-class PublicsCountryFactory(factory.DjangoModelFactory):
+class PublicsCountryFactory(factory.django.DjangoModelFactory):
     name = fuzzy.FuzzyText(length=32)
     long_name = fuzzy.FuzzyText(length=32)
     iso_2 = fuzzy.FuzzyText(length=2)
@@ -63,7 +63,7 @@ class PublicsCountryFactory(factory.DjangoModelFactory):
         model = models.Country
 
 
-class PublicsTravelExpenseTypeFactory(factory.DjangoModelFactory):
+class PublicsTravelExpenseTypeFactory(factory.django.DjangoModelFactory):
     title = fuzzy.FuzzyText(length=12)
     vendor_number = fuzzy.FuzzyText(length=12)
 
@@ -71,7 +71,7 @@ class PublicsTravelExpenseTypeFactory(factory.DjangoModelFactory):
         model = models.TravelExpenseType
 
 
-class TravelAgentFactory(factory.DjangoModelFactory):
+class TravelAgentFactory(factory.django.DjangoModelFactory):
     name = fuzzy.FuzzyText(length=12)
     code = fuzzy.FuzzyText(length=12)
     country = factory.SubFactory(PublicsCountryFactory)
@@ -81,7 +81,7 @@ class TravelAgentFactory(factory.DjangoModelFactory):
         model = models.TravelAgent
 
 
-class PublicsAirlineCompanyFactory(factory.DjangoModelFactory):
+class PublicsAirlineCompanyFactory(factory.django.DjangoModelFactory):
     name = fuzzy.FuzzyText(length=32)
     code = factory.Sequence(lambda n: n)
     iata = fuzzy.FuzzyText(length=3, chars='ABCDEFGHIJKLMNOPQRSTUVWYXZ')
@@ -92,7 +92,7 @@ class PublicsAirlineCompanyFactory(factory.DjangoModelFactory):
         model = models.AirlineCompany
 
 
-class PublicsDSARegionFactory(factory.DjangoModelFactory):
+class PublicsDSARegionFactory(factory.django.DjangoModelFactory):
     country = factory.SubFactory(PublicsCountryFactory)
     area_name = fuzzy.FuzzyText(length=32)
     area_code = fuzzy.FuzzyText(length=3)
@@ -108,7 +108,7 @@ class PublicsDSARegionFactory(factory.DjangoModelFactory):
             PublicsDSARateFactory(region=self)
 
 
-class PublicsDSARateFactory(factory.DjangoModelFactory):
+class PublicsDSARateFactory(factory.django.DjangoModelFactory):
     region = factory.SubFactory(PublicsDSARegionFactory)
     effective_from_date = datetime.now()
 
