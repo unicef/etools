@@ -73,9 +73,4 @@ class Command(BaseCommand):
             'enabled': False,
             'crontab': first_day_of_the_month})
 
-        PeriodicTask.objects.get_or_create(name='Transition active PD to new CP', defaults={
-            'task': 'reports.tasks.transfer_active_pds_to_new_cp',
-            'enabled': False,
-            'crontab': midnight})
-
         logger.info('Init Celery command finished')

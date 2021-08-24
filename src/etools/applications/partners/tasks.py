@@ -7,6 +7,7 @@ from django.db import connection, transaction
 from django.db.models import F, Prefetch, Sum
 
 from celery.utils.log import get_task_logger
+from django.utils import timezone
 from django_tenants.utils import get_tenant_model, schema_context
 from unicef_notification.utils import send_notification_with_template
 from unicef_vision.exceptions import VisionException
@@ -334,6 +335,48 @@ def sync_partners_staff_members_from_prp():
 
         for staff_member_data in api.get_partner_staff_members(partner_data.id):
             sync_partner_staff_member(partner, staff_member_data)
+
+
+@app.task
+def transfer_active_pds_to_new_cp():
+    today = timezone.now().date()
+
+    original_tenant = connection.tenant
+    try:
+        for country in Country.objects.exclude(name='Global'):
+            connection.set_tenant(country)
+
+            # exclude by id because of m2m filter
+            outdated_active_pds = Intervention.objects.filter(
+                status__in=[
+                    Intervention.DRAFT,
+                    Intervention.SIGNED,
+                    Intervention.ACTIVE,
+                ],
+                end__gt=today,
+            ).exclude(
+                pk__in=Intervention.objects.filter(
+                    end__gt=today,
+                    country_programmes__invalid=False,
+                    country_programmes__to_date__gt=today,
+                ).values_list('id', flat=True)
+            ).prefetch_related(
+                'agreement__partner'
+            )
+
+            for pd in outdated_active_pds:
+                partner = pd.agreement.partner
+                active_pca = partner.agreements.filter(
+                    country_programme__to_date__gt=today,
+                    country_programme__invalid=False
+                ).first()
+                if not active_pca:
+                    continue
+
+                pd.country_programmes.add(active_pca.country_programme)
+                pd.save()
+    finally:
+        connection.set_tenant(original_tenant)
 
 
 def sync_partner(vendor_number=None, country=None):
