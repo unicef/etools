@@ -5,9 +5,9 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import connection, transaction
 from django.db.models import F, Prefetch, Sum
+from django.utils import timezone
 
 from celery.utils.log import get_task_logger
-from django.utils import timezone
 from django_tenants.utils import get_tenant_model, schema_context
 from unicef_notification.utils import send_notification_with_template
 from unicef_vision.exceptions import VisionException
