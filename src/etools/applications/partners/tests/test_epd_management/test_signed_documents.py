@@ -18,11 +18,7 @@ class TestSignedDocumentsManagement(APIViewSetTestCase, BaseTestCase):
         self.draft_unicef_data = {
             'submission_date': '1970-01-01',
         }
-        self.review_unicef_data = {
-            'review_date_prc': '1970-01-01',
-            'submission_date_prc': '1970-01-01',
-            'prc_review_attachment': AttachmentFactory(file=SimpleUploadedFile('hello_world.txt', b'hello world!')).pk,
-        }
+        self.review_unicef_data = {}
         self.signature_unicef_data = {
             'signed_by_unicef_date': '1970-01-02',
             'unicef_signatory': UserFactory().id,
@@ -62,7 +58,7 @@ class TestSignedDocumentsManagement(APIViewSetTestCase, BaseTestCase):
             self.assertEqual(response.data['permissions']['view'][field], True, field)
             self.assertEqual(response.data['permissions']['edit'][field], True, field)
 
-        for field in dict(**self.draft_unicef_data, **self.review_unicef_data, **self.signature_partner_data).keys():
+        for field in dict(**self.draft_unicef_data, **self.review_unicef_data).keys():
             self.assertEqual(response.data['permissions']['view'][field], True, field)
             self.assertEqual(response.data['permissions']['edit'][field], False, field)
 
@@ -126,12 +122,14 @@ class TestSignedDocumentsManagement(APIViewSetTestCase, BaseTestCase):
         self._test_update_fields(
             self.partnership_manager, self.signature_intervention,
             restricted_fields=dict(
-                **self.draft_unicef_data, **self.review_unicef_data, **self.signature_partner_data
+                **self.draft_unicef_data, **self.review_unicef_data
             ),
             allowed_fields=self.signature_unicef_data
         )
 
     def test_partner_update_draft(self):
+        for k in self.draft_unicef_data:
+            self.all_data.pop(k)
         self._test_update_fields(self.partner_focal_point, self.draft_intervention, restricted_fields=self.all_data)
 
     def test_partner_update_review(self):

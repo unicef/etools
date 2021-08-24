@@ -1,6 +1,7 @@
 from copy import copy
 
 from django.db import transaction
+from django.utils.translation import ugettext_lazy as _
 
 from easy_pdf.rendering import render_to_pdf_response
 from rest_framework import status
@@ -8,10 +9,13 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.generics import (
     CreateAPIView,
     DestroyAPIView,
+    GenericAPIView,
+    ListAPIView,
     ListCreateAPIView,
     RetrieveAPIView,
     RetrieveUpdateAPIView,
     RetrieveUpdateDestroyAPIView,
+    UpdateAPIView,
 )
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -24,13 +28,17 @@ from etools.applications.partners.models import (
     Intervention,
     InterventionAttachment,
     InterventionManagementBudget,
+    InterventionReview,
+    InterventionReviewNotification,
     InterventionRisk,
     InterventionSupplyItem,
+    PRCOfficerInterventionReview,
 )
 from etools.applications.partners.permissions import (
     intervention_field_is_editable_permission,
-    PartnershipManagerPermission,
     PMPInterventionPermission,
+    UserBelongsToObjectPermission,
+    UserIsStaffPermission,
 )
 from etools.applications.partners.serializers.exports.interventions import (
     InterventionExportFlatSerializer,
@@ -51,7 +59,9 @@ from etools.applications.partners.serializers.interventions_v3 import (
     PMPInterventionAttachmentSerializer,
 )
 from etools.applications.partners.serializers.v3 import (
+    InterventionReviewSerializer,
     PartnerInterventionLowerResultSerializer,
+    PRCOfficerInterventionReviewSerializer,
     UNICEFInterventionLowerResultSerializer,
 )
 from etools.applications.partners.views.interventions_v2 import (
@@ -180,7 +190,7 @@ class PMPInterventionRetrieveUpdateView(PMPInterventionMixin, InterventionDetail
 
 class PMPInterventionPDFView(PMPInterventionMixin, RetrieveAPIView):
     queryset = Intervention.objects.detail_qs().all()
-    permission_classes = (PartnershipManagerPermission,)
+    permission_classes = (PMPInterventionPermission,)
 
     def get_pdf_filename(self):
         return str(self.pd)
@@ -229,13 +239,18 @@ class InterventionPDOutputsListCreateView(InterventionPDOutputsViewMixin, ListCr
 
 
 class InterventionPDOutputsDetailUpdateView(InterventionPDOutputsViewMixin, RetrieveUpdateDestroyAPIView):
-    pass
+    def perform_destroy(self, instance):
+        # do cleanup if pd output is still not associated to cp output
+        result_link = instance.result_link
+        instance.delete()
+        if result_link.cp_output is None:
+            result_link.delete()
 
 
 class PMPInterventionManagementBudgetRetrieveUpdateView(
     DetailedInterventionResponseMixin, PMPInterventionMixin, RetrieveUpdateAPIView
 ):
-    queryset = InterventionManagementBudget.objects
+    queryset = InterventionManagementBudget.objects.prefetch_related('items')
     serializer_class = InterventionManagementBudgetSerializer
 
     def get_intervention(self):
@@ -253,12 +268,98 @@ class PMPInterventionManagementBudgetRetrieveUpdateView(
         return super().get_serializer(*args, **kwargs)
 
 
+class PMPReviewMixin(DetailedInterventionResponseMixin, PMPBaseViewMixin):
+    queryset = InterventionReview.objects.all()
+    permission_classes = [
+        IsAuthenticated,
+        IsReadAction | (IsEditAction & intervention_field_is_editable_permission('reviews'))
+    ]
+    serializer_class = InterventionReviewSerializer
+
+    def get_root_object(self):
+        return Intervention.objects.get(pk=self.kwargs["intervention_pk"])
+
+    def get_intervention(self) -> Intervention:
+        return self.get_root_object()
+
+    def get_queryset(self):
+        qs = super().get_queryset().filter(
+            intervention__pk=self.kwargs["intervention_pk"],
+        )
+        if self.is_partner_staff():
+            return qs.none()
+        return qs
+
+    def get_serializer(self, *args, **kwargs):
+        if "data" in kwargs:
+            kwargs["data"]["intervention"] = self.get_root_object().pk
+        return super().get_serializer(*args, **kwargs)
+
+
+class PMPReviewView(PMPReviewMixin, ListAPIView):
+    lookup_url_kwarg = "intervention_pk"
+    lookup_field = "intervention_id"
+
+
+class PMPReviewDetailView(PMPReviewMixin, RetrieveUpdateAPIView):
+    pass
+
+
+class PMPReviewNotifyView(PMPReviewMixin, GenericAPIView):
+    def post(self, request, *args, **kwargs):
+        review = self.get_object()
+        if not review.meeting_date:
+            return Response([_('Meeting date is not available.')], status=status.HTTP_400_BAD_REQUEST)
+
+        InterventionReviewNotification.notify_officers_for_review(review)
+        return Response({})
+
+
+class PMPOfficerReviewBaseView(DetailedInterventionResponseMixin, PMPBaseViewMixin):
+    queryset = PRCOfficerInterventionReview.objects.prefetch_related('user').all()
+    serializer_class = PRCOfficerInterventionReviewSerializer
+
+    def get_root_object(self):
+        return Intervention.objects.get(pk=self.kwargs['intervention_pk'])
+
+    def get_intervention(self) -> Intervention:
+        return self.get_root_object()
+
+    def get_queryset(self):
+        qs = super().get_queryset().filter(
+            overall_review_id=self.kwargs['review_pk'],
+            overall_review__intervention_id=self.kwargs['intervention_pk'],
+        )
+        if self.is_partner_staff():
+            return qs.none()
+        return qs
+
+
+class PMPOfficerReviewListView(PMPOfficerReviewBaseView, ListAPIView):
+    permission_classes = [IsAuthenticated, UserIsStaffPermission]
+
+
+class PMPOfficerReviewDetailView(PMPOfficerReviewBaseView, UpdateAPIView):
+    permission_classes = [
+        IsAuthenticated,
+        UserIsStaffPermission,
+        intervention_field_is_editable_permission('prc_reviews'),
+        UserBelongsToObjectPermission,
+    ]
+    lookup_field = 'user_id'
+    lookup_url_kwarg = 'user_pk'
+
+
 class PMPInterventionSupplyItemMixin(
         DetailedInterventionResponseMixin,
         PMPInterventionMixin,
 ):
     queryset = InterventionSupplyItem.objects
     serializer_class = InterventionSupplyItemSerializer
+    permission_classes = [
+        IsAuthenticated,
+        IsReadAction | (IsEditAction & intervention_field_is_editable_permission('supply_items'))
+    ]
 
     def get_partner_staff_qs(self, qs):
         return qs.filter(
@@ -266,14 +367,17 @@ class PMPInterventionSupplyItemMixin(
             intervention__date_sent_to_partner__isnull=False,
         ).distinct()
 
-    def get_queryset(self):
-        qs = super().get_queryset()
+    def get_queryset(self, **kwargs):
+        qs = super().get_queryset(**kwargs)
         return qs.filter(
             intervention=self.get_pd(self.kwargs.get("intervention_pk")),
         )
 
     def get_intervention(self) -> Intervention:
         return self.get_pd(self.kwargs.get("intervention_pk"))
+
+    def get_root_object(self):
+        return self.get_intervention()
 
 
 class PMPInterventionSupplyItemListCreateView(
@@ -325,6 +429,7 @@ class PMPInterventionSupplyItemUploadView(
                 intervention=intervention,
                 title=title,
                 unit_price=unit_price,
+                provided_by=InterventionSupplyItem.PROVIDED_BY_UNICEF,
             )
             if supply_qs.exists():
                 item = supply_qs.get()
@@ -337,6 +442,7 @@ class PMPInterventionSupplyItemUploadView(
                     unit_number=unit_number,
                     unit_price=unit_price,
                     unicef_product_number=product_number,
+                    provided_by=InterventionSupplyItem.PROVIDED_BY_UNICEF,
                 )
         # make sure we get the correct totals
         intervention.refresh_from_db()

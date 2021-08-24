@@ -5,7 +5,8 @@ import operator
 
 from django.db.models import Q
 from django.http import HttpResponse
-from django.utils.translation import ugettext as _
+from django.shortcuts import get_object_or_404
+from django.utils.translation import gettext as _
 
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
@@ -223,7 +224,13 @@ class LowerResultsDeleteView(DestroyAPIView):
             request.user in lower_result.result_link.intervention.unicef_focal_points.all() or \
             request.user.groups.filter(name__in=['Partnership Manager',
                                                  SENIOR_MANAGEMENT_GROUP]).exists():
+
+            # do cleanup if pd output is still not associated to cp output
+            result_link = lower_result.result_link
             lower_result.delete()
+            if result_link.cp_output is None:
+                result_link.delete()
+
             return Response(status=status.HTTP_204_NO_CONTENT)
         else:
             raise ValidationError("You do not have permissions to delete a lower result")
@@ -313,6 +320,7 @@ class AppliedIndicatorLocationExportView(QueryStringFilterMixin, ListAPIView):
             'ind_means_of_verification': 'Means of verification',
             'ind_ram_indicators': 'RAM indicators',
             'ind_location': 'Location',
+            'int_cfei_number': 'UNPP Number',
         }
 
         today = '{:%Y_%m_%d}'.format(datetime.date.today())
@@ -337,7 +345,8 @@ class AppliedIndicatorLocationExportView(QueryStringFilterMixin, ListAPIView):
                 'int_end_date': intervention.end,
                 'country_programme': str(intervention.agreement.country_programme),
                 'int_ref': intervention.number.replace(',', '-'),
-                'int_locations': ','.join([location.name for location in intervention.flat_locations.all()])
+                'int_locations': ','.join([location.name for location in intervention.flat_locations.all()]),
+                'int_cfei_number': str(intervention.cfei_number),
             }
 
             indicators = self.get_indicators(intervention)
@@ -477,10 +486,11 @@ class ResultFrameworkView(ExportView):
     permission_classes = (PartnershipManagerPermission, )
     renderer_classes = (ResultFrameworkRenderer, )
 
+    def get_intervention(self):
+        return get_object_or_404(Intervention.objects, pk=self.kwargs.get("pk"))
+
     def get_queryset(self, format=None):
-        qs = InterventionResultLink.objects.filter(
-            intervention=self.kwargs.get("pk")
-        )
+        qs = InterventionResultLink.objects.filter(intervention=self.get_intervention())
         data = []
         for result_link in qs:
             data.append(result_link)
@@ -496,9 +506,8 @@ class ResultFrameworkView(ExportView):
             **kwargs,
         )
         if response.accepted_renderer.format == "docx_table":
-            intervention = self.get_queryset()[0].intervention
             response["content-disposition"] = "attachment; filename={}_results.docx".format(
-                intervention.reference_number
+                self.get_intervention().reference_number
             )
         return response
 

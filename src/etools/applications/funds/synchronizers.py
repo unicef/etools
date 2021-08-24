@@ -52,7 +52,6 @@ class FundReservationsSynchronizer(VisionDataTenantSynchronizer):
         "FUND",
         "OVERALL_AMOUNT",
         "OVERALL_AMOUNT_DC",
-        "FR_LINE_ITEM_TEXT",
         "DUE_DATE",
         "FR_OVERALL_AMOUNT",
         "CURRENT_FR_AMOUNT",

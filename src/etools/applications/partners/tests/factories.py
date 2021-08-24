@@ -5,6 +5,7 @@ from factory import fuzzy
 
 from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.partners import models
+from etools.applications.partners.models import InterventionManagementBudgetItem
 from etools.applications.reports.tests.factories import CountryProgrammeFactory, ResultFactory
 from etools.applications.users.tests.factories import UserFactory
 
@@ -115,6 +116,21 @@ class InterventionFactory(factory.django.DjangoModelFactory):
     reference_number_year = datetime.date.today().year
     start = datetime.date.today()
     end = datetime.date.today() + datetime.timedelta(days=365)
+    equity_narrative = "equity_narrative"
+    context = "context"
+    gender_narrative = "gender_narrative"
+    implementation_strategy = "implementation_strategy"
+    ip_program_contribution = "ip_program_contribution"
+    sustainability_narrative = "sustainability_narrative"
+    # date_sent_to_partner = datetime.date.today()
+
+    @factory.post_generation
+    def country_programmes(self, create, extracted, **kwargs):
+        if create and self.country_programme:
+            self.country_programmes.add(self.country_programme)
+
+        if extracted:
+            self.country_programmes.add(*extracted)
 
 
 class InterventionAmendmentFactory(factory.django.DjangoModelFactory):
@@ -131,7 +147,6 @@ class InterventionAmendmentFactory(factory.django.DjangoModelFactory):
     other_description = fuzzy.FuzzyText(length=50)
     amendment_number = fuzzy.FuzzyInteger(1000)
     signed_date = datetime.date.today()
-    signed_amendment = factory.django.FileField(filename='test_file.pdf')
 
 
 class InterventionAttachmentFactory(factory.django.DjangoModelFactory):
@@ -154,6 +169,14 @@ class InterventionBudgetFactory(factory.django.DjangoModelFactory):
     partner_contribution_local = 20.00
     in_kind_amount = 10.00
     in_kind_amount_local = 10.00
+
+
+class InterventionReviewFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.InterventionReview
+
+    intervention = factory.SubFactory(InterventionFactory)
+    overall_approval = True
 
 
 class InterventionReportingPeriodFactory(factory.django.DjangoModelFactory):
@@ -240,3 +263,15 @@ class InterventionRiskFactory(factory.django.DjangoModelFactory):
     intervention = factory.SubFactory(InterventionFactory)
     risk_type = fuzzy.FuzzyChoice(choices=dict(models.InterventionRisk.RISK_TYPE_CHOICES).keys())
     mitigation_measures = fuzzy.FuzzyText()
+
+
+class InterventionManagementBudgetItemFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.InterventionManagementBudgetItem
+
+    budget = factory.SubFactory(InterventionManagementBudgetFactory)
+    name = factory.fuzzy.FuzzyText(length=100)
+    kind = factory.fuzzy.FuzzyChoice(dict(InterventionManagementBudgetItem.KIND_CHOICES).keys())
+    unit = factory.fuzzy.FuzzyText()
+    unit_price = factory.fuzzy.FuzzyDecimal(1)
+    no_units = factory.fuzzy.FuzzyDecimal(0.1)

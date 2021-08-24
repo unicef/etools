@@ -532,6 +532,12 @@ http://www.unicef.org/about/partnerships/files/9_Annex_J_FACE.xlsx
                         <td style="width: 33%;">مسؤول الاتصال في البنك</td>
                         <td>{{ bank_detail.bank_contact_person }}</td>
                     </tr>
+                    {% if bank_detail.tax_number_5 %}
+                    <tr>
+                        <td class="bordered" style="width: 45%;">Hawala التفاصيل المصرفية</td>
+                        <td class="bordered">{{ bank_detail.tax_number_5 }}</td>
+                    </tr>
+                    {% endif %}
                 </table>
                 {% endfor %}
 

@@ -20,7 +20,7 @@ class PMPAgreementViewMixin(
         ExternalModuleFilterMixin,
 ):
     module2filters = {
-        "pmp": ["authorized_officers__user"],
+        "pmp": ["partner__staff_members__user"],
     }
 
     def get_queryset(self, format=None):
@@ -41,7 +41,7 @@ class PMPAgreementListCreateAPIView(
             query_params = self.request.query_params
             if "format" in query_params.keys():
                 if query_params.get("format") in ['csv', 'csv_flat']:
-                    return self.get_serializer(query_params.get("format"))
+                    return AgreementListSerializer
         elif self.request.method == "POST":
             return AgreementCreateUpdateSerializer
         return AgreementListSerializer

@@ -24,10 +24,25 @@ AP_ALLOWED_COUNTRIES = [
 class MinimalUserSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='get_full_name', read_only=True)
     email = serializers.EmailField(validators=[EmailValidator()])
+    phone = serializers.SerializerMethodField()
 
     class Meta:
         model = get_user_model()
-        fields = ('id', 'name', 'first_name', 'middle_name', 'last_name', 'username', 'email', )
+        fields = (
+            'id',
+            'name',
+            'first_name',
+            'middle_name',
+            'last_name',
+            'username',
+            'email',
+            'phone',
+        )
+
+    def get_phone(self, obj):
+        if obj.profile:
+            return obj.profile.phone_number
+        return None
 
 
 # used for user detail view
@@ -54,7 +69,14 @@ class CountrySerializer(serializers.ModelSerializer):
             'longitude',
             'initial_zoom',
             'local_currency',
+            'custom_dashboards',
         )
+
+
+class DashboardCountrySerializer(CountrySerializer):
+
+    class Meta(CountrySerializer.Meta):
+        fields = CountrySerializer.Meta.fields + ('custom_dashboards', )
 
 
 class CountryDetailSerializer(serializers.ModelSerializer):
@@ -93,7 +115,7 @@ class ProfileRetrieveUpdateSerializer(serializers.ModelSerializer):
     email = serializers.CharField(source='user.email', read_only=True)
     is_staff = serializers.CharField(source='user.is_staff', read_only=True)
     is_active = serializers.CharField(source='user.is_active', read_only=True)
-    country = CountrySerializer(read_only=True)
+    country = DashboardCountrySerializer(read_only=True)
     show_ap = serializers.SerializerMethodField()
     is_unicef_user = serializers.SerializerMethodField()
 

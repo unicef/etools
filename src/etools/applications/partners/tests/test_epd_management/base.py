@@ -2,6 +2,7 @@ from copy import copy
 from datetime import date
 
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.utils import timezone
 
 from factory import fuzzy
 
@@ -9,7 +10,12 @@ from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
 from etools.applications.partners.models import Intervention
-from etools.applications.partners.tests.factories import InterventionFactory, PartnerFactory, PartnerStaffFactory
+from etools.applications.partners.tests.factories import (
+    InterventionFactory,
+    InterventionReviewFactory,
+    PartnerFactory,
+    PartnerStaffFactory,
+)
 from etools.applications.reports.tests.factories import (
     CountryProgrammeFactory,
     OfficeFactory,
@@ -68,6 +74,11 @@ class BaseTestCase(BaseTenantTestCase):
         )
         self.review_intervention = InterventionFactory(**review_fields)
         ReportingRequirementFactory(intervention=self.review_intervention)
+        review = InterventionReviewFactory(intervention=self.review_intervention, overall_approval=None)
+        review.submitted_date = timezone.now().date()
+        review.submitted_by = UserFactory()
+        review.review_type = 'prc'
+        review.save()
         self.review_intervention.unicef_focal_points.add(UserFactory())
         self.review_intervention.sections.add(SectionFactory())
         self.review_intervention.offices.add(OfficeFactory())
@@ -80,6 +91,7 @@ class BaseTestCase(BaseTenantTestCase):
             signed_by_unicef_date=date(year=1970, month=1, day=1),
         ))
         self.signature_intervention = InterventionFactory(**signature_fields)
+        InterventionReviewFactory(intervention=self.signature_intervention)
         ReportingRequirementFactory(intervention=self.signature_intervention)
         FundsReservationHeaderFactory(intervention=self.signature_intervention)
         AttachmentFactory(
@@ -91,9 +103,12 @@ class BaseTestCase(BaseTenantTestCase):
         self.signature_intervention.sections.add(SectionFactory())
         self.signature_intervention.offices.add(OfficeFactory())
         self.signature_intervention.partner_focal_points.add(partner_focal_point_staff)
+        self.signature_intervention.review.overall_approval = True
+        self.signature_intervention.review.save()
 
         ended_fields = copy(signature_fields)
         ended_fields.update(**dict(
+            unicef_signatory=UserFactory(),
             status=Intervention.ENDED,
         ))
         self.ended_intervention = InterventionFactory(**ended_fields)

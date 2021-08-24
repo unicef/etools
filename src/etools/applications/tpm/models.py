@@ -5,7 +5,7 @@ from django.db import connection, models
 from django.utils import timezone
 from django.utils.encoding import force_text
 from django.utils.functional import cached_property
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from django_fsm import FSMField, transition
 from model_utils import Choices, FieldTracker
@@ -471,8 +471,8 @@ class TPMActionPoint(ActionPoint):
     objects = TPMActionPointManager()
 
     class Meta(ActionPoint.Meta):
-        verbose_name = _('Engagement Action Point')
-        verbose_name_plural = _('Engagement Action Points')
+        verbose_name = _('TPM Action Point')
+        verbose_name_plural = _('TPM Action Points')
         proxy = True
 
     def get_mail_context(self, user=None):

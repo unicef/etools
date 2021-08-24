@@ -1,9 +1,10 @@
-from django.urls import include, path
+from django.urls import include, path, re_path
 
 from rest_framework_nested import routers
 from unicef_restlib.routers import NestedComplexRouter
 
 from etools.applications.psea import views
+from etools.applications.psea.views import PSEAStaticDropdownsListAPIView
 
 root_api = routers.SimpleRouter()
 
@@ -46,6 +47,9 @@ attachments_api.register(
 
 app_name = 'psea'
 urlpatterns = [
+    re_path(r'^static/$',
+            PSEAStaticDropdownsListAPIView.as_view(http_method_names=['get']),
+            name='psea-static-list'),
     path('', include(root_api.urls)),
     path('', include(action_points_api.urls)),
     path('', include(assessor_api.urls)),

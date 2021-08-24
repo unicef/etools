@@ -2,7 +2,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import connection, models
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from django_fsm import FSMField, transition
 from model_utils import Choices, FieldTracker
@@ -70,7 +70,7 @@ class ActionPoint(TimeStampedModel):
                                 on_delete=models.CASCADE)
     cp_output = models.ForeignKey('reports.Result', verbose_name=_('CP Output'), blank=True, null=True,
                                   on_delete=models.CASCADE)
-    intervention = models.ForeignKey('partners.Intervention', verbose_name=_('PD/SSFA'), blank=True, null=True,
+    intervention = models.ForeignKey('partners.Intervention', verbose_name=_('PD/SPD'), blank=True, null=True,
                                      on_delete=models.CASCADE)
     engagement = models.ForeignKey('audit.Engagement', verbose_name=_('Engagement'), blank=True, null=True,
                                    related_name='action_points', on_delete=models.CASCADE)
