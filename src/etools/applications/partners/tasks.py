@@ -409,6 +409,7 @@ def _set_intervention_expired(country_name):
             country_name,
         ),
     )
+    today = timezone.now().date()
     pd_qs = Intervention.objects.filter(
         contingency_pd=True,
         status__in=[
@@ -416,7 +417,14 @@ def _set_intervention_expired(country_name):
             Intervention.SIGNATURE,
             Intervention.SIGNED,
         ],
-        agreement__country_programme__to_date__lt=datetime.date.today(),
+        end__gte=today,
+    ).exclude(
+        pk__in=Intervention.objects.filter(
+            contingency_pd=True,
+            end__gte=today,
+            country_programmes__invalid=False,
+            country_programmes__to_date__gte=today,
+        ).values_list('id', flat=True)
     )
     for pd in pd_qs:
         pd.status = Intervention.EXPIRED
