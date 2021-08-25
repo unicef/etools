@@ -173,7 +173,7 @@ class TestAppliedIndicatorSerializer(BaseTenantTestCase):
             serializer.errors, {
                 "non_field_errors": [
                     "You cannot change the Indicator Target Denominator if "
-                    "PD/SSFA is not in status Draft or Signed"
+                    "PD/SPD is not in status Draft or Signed"
                 ]
             }
         )
@@ -259,7 +259,7 @@ class TestAppliedIndicatorSerializer(BaseTenantTestCase):
         self.assertEqual(
             serializer.errors, {
                 "non_field_errors": [
-                    'You cannot change the Indicator Target Denominator if PD/SSFA is not in status Draft or Signed'
+                    'You cannot change the Indicator Target Denominator if PD/SPD is not in status Draft or Signed'
                 ]
             }
         )
@@ -329,7 +329,7 @@ class TestAppliedIndicatorSerializer(BaseTenantTestCase):
         self.assertEqual(
             serializer.errors, {
                 "non_field_errors": [
-                    'You cannot change the Indicator Target Denominator if PD/SSFA is not in status Draft or Signed'
+                    'You cannot change the Indicator Target Denominator if PD/SPD is not in status Draft or Signed'
                 ]
             }
         )

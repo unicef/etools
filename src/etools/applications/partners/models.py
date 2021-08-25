@@ -515,7 +515,7 @@ class PartnerOrganization(TimeStampedModel):
         verbose_name=_('Outstanding DCT more than 9 months')
     )
 
-    hact_values = models.JSONField(blank=True, null=True, default=hact_default, verbose_name='HACT')
+    hact_values = models.JSONField(blank=True, null=True, default=hact_default, verbose_name='HACT', encoder=CustomJSONEncoder)
     basis_for_risk_rating = models.CharField(
         verbose_name=_("Basis for Risk Rating"), max_length=50, default='', blank=True)
     psea_assessment_date = models.DateTimeField(
@@ -883,7 +883,7 @@ class PartnerOrganization(TimeStampedModel):
         hact['outstanding_findings'] = sum([
             audit.pending_unsupported_amount for audit in audits if audit.pending_unsupported_amount])
         hact['assurance_coverage'] = self.assurance_coverage
-        self.hact_values = json.dumps(hact, cls=CustomJSONEncoder)
+        self.hact_values = hact
         self.save()
 
     def update_min_requirements(self):
@@ -894,7 +894,7 @@ class PartnerOrganization(TimeStampedModel):
                 hact[hact_eng]['minimum_requirements'] = self.hact_min_requirements[hact_eng]
                 updated.append(hact_eng)
         if updated:
-            self.hact_values = json.dumps(hact, cls=CustomJSONEncoder)
+            self.hact_values = hact
             self.save()
             return updated
 
@@ -1845,7 +1845,7 @@ class Intervention(TimeStampedModel):
         verbose_name=_("Document Submission Date by CSO"),
         null=True,
         blank=True,
-        help_text='The date the partner submitted complete PD/SSFA documents to Unicef',
+        help_text='The date the partner submitted complete PD/SPD documents to Unicef',
     )
     submission_date_prc = models.DateField(
         verbose_name=_('Submission Date to PRC'),
@@ -3013,7 +3013,7 @@ class InterventionReviewQuestionnaire(models.Model):
     )
 
     overall_comment = models.TextField(blank=True)
-    overall_approval = models.NullBooleanField()
+    overall_approval = models.BooleanField(null=True, blank=True)
 
     class Meta:
         abstract = True
