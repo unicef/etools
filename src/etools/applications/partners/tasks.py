@@ -26,6 +26,7 @@ from etools.applications.partners.utils import (
 )
 from etools.applications.partners.validation.agreements import AgreementValid
 from etools.applications.partners.validation.interventions import InterventionValid
+from etools.applications.reports.models import CountryProgramme
 from etools.applications.users.models import Country
 from etools.config.celery import app
 from etools.libraries.djangolib.utils import get_environment
@@ -365,15 +366,11 @@ def transfer_active_pds_to_new_cp():
             )
 
             for pd in outdated_active_pds:
-                partner = pd.agreement.partner
-                active_pca = partner.agreements.filter(
-                    country_programme__to_date__gt=today,
-                    country_programme__invalid=False
-                ).first()
-                if not active_pca:
+                active_cp = CountryProgramme.objects.filter(invalid=False, to_date__gt=today).first()
+                if not active_cp:
                     continue
 
-                pd.country_programmes.add(active_pca.country_programme)
+                pd.country_programmes.add(active_cp)
                 pd.save()
     finally:
         connection.set_tenant(original_tenant)

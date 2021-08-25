@@ -1085,9 +1085,6 @@ class ActivePDTransferToNewCPTestCase(BaseTenantTestCase):
             to_date=self.today + timedelta(days=10),
         )
 
-    def _init_new_agreement(self):
-        self.new_agreement = AgreementFactory(partner=self.partner, country_programme=self.active_cp)
-
     def test_transfer_without_active_cp(self):
         pd = InterventionFactory(
             agreement=self.old_agreement,
@@ -1096,21 +1093,6 @@ class ActivePDTransferToNewCPTestCase(BaseTenantTestCase):
             end=self.today + timedelta(days=4),
             country_programmes=[self.old_cp],
         )
-
-        transfer_active_pds_to_new_cp()
-
-        pd.refresh_from_db()
-        self.assertListEqual(list(pd.country_programmes.all()), [self.old_cp])
-
-    def test_transfer_without_new_pca(self):
-        pd = InterventionFactory(
-            agreement=self.old_agreement,
-            status=Intervention.ACTIVE,
-            start=self.today - timedelta(days=4),
-            end=self.today + timedelta(days=4),
-            country_programmes=[self.old_cp],
-        )
-        self._init_new_cp()
 
         transfer_active_pds_to_new_cp()
 
@@ -1126,14 +1108,13 @@ class ActivePDTransferToNewCPTestCase(BaseTenantTestCase):
             country_programmes=[self.old_cp],
         )
         self._init_new_cp()
-        self._init_new_agreement()
 
         transfer_active_pds_to_new_cp()
 
         pd.refresh_from_db()
         self.assertListEqual(list(pd.country_programmes.all()), [self.old_cp, self.active_cp])
 
-    def test_skip_transfer_if_one_programme_is_active(self):
+    def test_skip_transfer_if_one_programme_already_active(self):
         second_active_cp = CountryProgrammeFactory(
             from_date=self.today - timedelta(days=1),
             to_date=self.today + timedelta(days=10),
@@ -1147,7 +1128,6 @@ class ActivePDTransferToNewCPTestCase(BaseTenantTestCase):
             country_programmes=[self.old_cp, second_active_cp],
         )
         self._init_new_cp()
-        self._init_new_agreement()
 
         transfer_active_pds_to_new_cp()
 
