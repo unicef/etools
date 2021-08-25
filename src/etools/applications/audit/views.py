@@ -99,6 +99,7 @@ from etools.applications.permissions2.conditions import ObjectStatusCondition
 from etools.applications.permissions2.drf_permissions import get_permission_for_targets, NestedPermission
 from etools.applications.permissions2.metadata import BaseMetadata, PermissionBasedMetadata
 from etools.applications.permissions2.views import PermittedFSMActionMixin, PermittedSerializerMixin
+from etools.applications.users.serializers_v3 import MinimalUserSerializer
 
 
 class BaseAuditViewSet(
@@ -127,6 +128,19 @@ class AuditUsersViewSet(generics.ListAPIView):
     search_fields = ('email',)
     queryset = get_user_model().objects.all()
     serializer_class = AuditUserSerializer
+
+    def get_serializer_class(self):
+        if self.request.query_params.get('verbosity') == 'minimal':
+            return MinimalUserSerializer
+        return super().get_serializer_class()
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        if self.request.query_params.get('verbosity', 'full') != 'minimal':
+            queryset = queryset.select_related('profile', 'purchase_order_auditorstaffmember__auditor_firm')
+
+        return queryset
 
 
 class AuditorFirmViewSet(
