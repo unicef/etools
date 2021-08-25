@@ -351,22 +351,24 @@ def transfer_active_pds_to_new_cp():
             outdated_active_pds = Intervention.objects.filter(
                 status__in=[
                     Intervention.DRAFT,
+                    Intervention.REVIEW,
+                    Intervention.SIGNATURE,
                     Intervention.SIGNED,
                     Intervention.ACTIVE,
                 ],
-                end__gt=today,
+                end__gte=today,
             ).exclude(
                 pk__in=Intervention.objects.filter(
-                    end__gt=today,
+                    end__gte=today,
                     country_programmes__invalid=False,
-                    country_programmes__to_date__gt=today,
+                    country_programmes__to_date__gte=today,
                 ).values_list('id', flat=True)
             ).prefetch_related(
                 'agreement__partner'
             )
 
             for pd in outdated_active_pds:
-                active_cp = CountryProgramme.objects.filter(invalid=False, to_date__gt=today).first()
+                active_cp = CountryProgramme.objects.filter(invalid=False, to_date__gte=today).first()
                 if not active_cp:
                     continue
 
