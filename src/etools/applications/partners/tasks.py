@@ -421,3 +421,11 @@ def _set_intervention_expired(country_name):
     for pd in pd_qs:
         pd.status = Intervention.EXPIRED
         pd.save()
+
+
+@app.task
+def fix_inactual_interventions():
+    # call two tasks above one after another to avoid problems with parallel execution
+    # because both of them handle similar cases yet in different way
+    transfer_active_pds_to_new_cp()
+    intervention_expired()
