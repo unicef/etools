@@ -1,13 +1,13 @@
 import datetime
 import json
 import random
+from unittest.mock import Mock, patch
 
 from django.contrib.contenttypes.models import ContentType
 from django.core.management import call_command
 from django.urls import reverse
 
 from factory import fuzzy
-from mock import Mock, patch
 from rest_framework import status
 from unicef_attachments.models import Attachment
 
@@ -971,6 +971,31 @@ class TestAuditorFirmViewSet(AuditTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         self.assertIsNone(response.data[0]['auditor_firm'])
+
+    def test_users_list_queries(self):
+        [UserFactory() for _i in range(10)]
+
+        with self.assertNumQueries(1):
+            response = self.forced_auth_req(
+                'get',
+                '/api/audit/audit-firms/users/',
+                user=self.unicef_user,
+            )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('auditor_firm', response.data[0])
+
+    def test_users_list_queries_verbosity_minimal(self):
+        [UserFactory() for _i in range(10)]
+
+        with self.assertNumQueries(1):
+            response = self.forced_auth_req(
+                'get',
+                '/api/audit/audit-firms/users/',
+                user=self.unicef_user,
+                data={'verbosity': 'minimal'}
+            )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertNotIn('auditor_firm', response.data[0])
 
 
 class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):

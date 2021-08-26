@@ -1,8 +1,7 @@
 from unittest import skip
+from unittest.mock import patch
 
 from django.test import TestCase
-
-from mock import patch
 
 from etools.libraries.azure_graph_api.tasks import sync_all_users, sync_delta_users, sync_user
 
