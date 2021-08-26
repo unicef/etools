@@ -1,9 +1,9 @@
+from unittest.mock import Mock
+
 from django.apps import apps
 from django.db import connection
 from django.test import TestCase
 from django.test.utils import override_settings
-
-from mock import Mock
 
 from etools.applications.environment.apps import EnvironmentConfig
 from etools.applications.environment.helpers import tenant_flag_is_active, tenant_switch_is_active

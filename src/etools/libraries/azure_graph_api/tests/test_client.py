@@ -1,9 +1,10 @@
+from unittest.mock import patch
+
 from django.conf import settings
 from django.test import TestCase
 
 import responses
 from azure.common import AzureHttpError
-from mock import patch
 
 from etools.libraries.azure_graph_api.client import azure_sync_users, get_token
 
