@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "86acfbcb328431098b4b29ac973f4d27b9b369565b6c232b005259be6ffa736d"
+            "sha256": "10d25b6a24c5c0c6d56c0b6484c5f1d5a7b17a9aafce99148320e05acc92588b"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -223,7 +223,6 @@
                 "sha256:1bb3032db185915b62d7c6209c5a8792be6a32ab2fedacc84e01b52c51aa3e69",
                 "sha256:a352e7e428770286cc899e2542b6cdaedb2b4953ff269a210103ec58f6198a61"
             ],
-            "markers": "python_version >= '3.0'",
             "version": "==0.7.1"
         },
         "diff-match-patch": {
@@ -491,14 +490,6 @@
             "index": "pypi",
             "version": "==0.17"
         },
-        "djangorestframework-jwt": {
-            "hashes": [
-                "sha256:5efe33032f3a4518a300dc51a51c92145ad95fb6f4b272e5aa24701db67936a7",
-                "sha256:ab15dfbbe535eede8e2e53adaf52ef0cf018ee27dbfad10cbc4cbec2ab63d38c"
-            ],
-            "index": "pypi",
-            "version": "==1.11.0"
-        },
         "djangorestframework-recursive": {
             "hashes": [
                 "sha256:e4e51b26b7ee3c9f9b838885d638b91293e7c66e85b5955f278a6e10eb34ce7c",
@@ -506,6 +497,14 @@
             ],
             "index": "pypi",
             "version": "==0.1.2"
+        },
+        "djangorestframework-simplejwt": {
+            "hashes": [
+                "sha256:153c973c5c154baf566be431de8527c2bd62557fde7373ebcb0f02b73b28e07a",
+                "sha256:6f09f97cb015265e85d1d02dc6bfc299c72c231eecbe261c5bee5c6b2867f2b4"
+            ],
+            "index": "pypi",
+            "version": "==4.8"
         },
         "djangorestframework-xml": {
             "hashes": [
@@ -901,10 +900,10 @@
         },
         "pyjwt": {
             "hashes": [
-                "sha256:5c6eca3c2940464d106b99ba83b00c6add741c9becaec087fb7ccdefea71350e",
-                "sha256:8d59a976fb773f3e6a39c85636357c4f0e242707394cadadd9814f5cbaa20e96"
+                "sha256:934d73fbba91b0483d3857d1aff50e96b2a892384ee2c17417ed3203f173fca1",
+                "sha256:fba44e7898bbca160a2b2b501f492824fc8382485d3a6f11ba5d0c1937ce6130"
             ],
-            "version": "==1.7.1"
+            "version": "==2.1.0"
         },
         "pypdf2": {
             "hashes": [
@@ -956,7 +955,6 @@
                 "sha256:33fbf6928f401e0b790151ed2b5290b02545e8775f982485205a066f874aaeaf",
                 "sha256:6626f771e0417486701e0b4daff762e7212e820ca5b29fcc0d05f6f8736dfa6b"
             ],
-            "markers": "python_version >= '3.0'",
             "version": "==3.2.0"
         },
         "pytz": {
@@ -1131,12 +1129,11 @@
                 "azuread"
             ],
             "hashes": [
-                "sha256:a4b972b6250d7a32940aec2972e33ebc645de91b2153d18dcd3e38fb74271042",
-                "sha256:aaec7f1e1a9bb61d0467d05c8cfe8dd55402f39229716b933e3dc29eb5f1e61a",
-                "sha256:b3aa96be236e59842ae45a5a51fe75c97814087ab5ba3092e80b41cb3dcdd8af"
+                "sha256:5ab43b3b15dce5f059db69cc3082c216574739f0edbc98629c8c6e8769c67eb4",
+                "sha256:983b53167ac56e7ba4909db555602a6e7a98c97ca47183bb222eb85ba627bf2b"
             ],
             "index": "pypi",
-            "version": "==3.4.0"
+            "version": "==4.1.0"
         },
         "sqlparse": {
             "hashes": [
@@ -1237,11 +1234,11 @@
         },
         "unicef-locations": {
             "hashes": [
-                "sha256:43bb9ec6ef015d78805ff5a6b76ec0e7eff3e1dc3c27b64de169593ed39e3957",
-                "sha256:a13104b3959d3d56347abcf154cd2bdabc49eedb998c5cf92ba50e25ceb6b35b"
+                "sha256:61363692737bbecb3d50efd03d61ab86746a2876a366241c5a354548951040ee",
+                "sha256:a83898767dacc675dc2bd9dc31be029346e1ae9f13dce925f1de6202c5768887"
             ],
             "index": "pypi",
-            "version": "==1.9"
+            "version": "==3.0"
         },
         "unicef-notification": {
             "hashes": [
@@ -1267,10 +1264,11 @@
         },
         "unicef-snapshot": {
             "hashes": [
-                "sha256:32824f491f0ab8fc07e053337337557f5b543e05915f411a1e7e9077138c937b"
+                "sha256:1740c75736d3d921d9cea57c127b02be99bfc37efbf69115f1df81d5c371ec3e",
+                "sha256:5645e3c887b108450b138ca87be3c73c45477611660e5056f0ea4b70202734bc"
             ],
             "index": "pypi",
-            "version": "==0.2.3"
+            "version": "==1.1"
         },
         "unicef-vision": {
             "hashes": [
