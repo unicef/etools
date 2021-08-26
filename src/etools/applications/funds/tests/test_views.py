@@ -116,7 +116,7 @@ class TestFRHeaderView(BaseTenantTestCase):
         self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(result['error'], 'One or more of the FRs are used by another PD/SPD or '
                                           'could not be found in eTools.')
-    # TODO: add tests to cover, frs correctly brought in from mock. with correct vendor numbers, FR missing from vision,
+    # TODO: add tests to cover, frs correctly brought in from unittest.mock. with correct vendor numbers, FR missing from vision,
     # FR with multiple line items, and FR with only one line item.
 
     @VCR.use_cassette(str(Path(__file__).parent / 'vcr_cassettes/fund_reservation.yml'))

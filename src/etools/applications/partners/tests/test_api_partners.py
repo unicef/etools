@@ -1,12 +1,12 @@
 import datetime
 import json
 from decimal import Decimal
+from unittest.mock import Mock, patch
 
 from django.db import connection
 from django.test import override_settings, SimpleTestCase
 from django.urls import reverse
 
-from mock import Mock, patch
 from rest_framework import status
 from rest_framework.exceptions import ErrorDetail
 from unicef_snapshot.models import Activity
