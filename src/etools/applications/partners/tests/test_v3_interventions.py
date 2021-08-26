@@ -58,6 +58,8 @@ from etools.applications.reports.tests.factories import (
 )
 from etools.applications.users.tests.factories import GroupFactory, UserFactory
 
+PRP_PARTNER_SYNC = "etools.applications.partners.signals.sync_partner_to_prp"
+
 
 class URLsTestCase(URLAssertionMixin, SimpleTestCase):
     """Simple test case to verify URL reversal"""
@@ -232,6 +234,38 @@ class TestList(BaseInterventionTestCase):
             reverse('pmp_v3:intervention-list'),
             user=self.user,
             data={"search": cfei_number[:-5]}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+
+    def test_filter_sent_to_partner(self):
+        for __ in range(3):
+            intervention = InterventionFactory()
+        response = self.forced_auth_req(
+            "get",
+            reverse('pmp_v3:intervention-list'),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 3)
+
+        # set sent_to_partner filter
+        with mock.patch(PRP_PARTNER_SYNC, mock.Mock()):
+            intervention.date_sent_to_partner = datetime.date.today()
+            intervention.save()
+
+        self.assertEqual(
+            Intervention.objects.filter(
+                date_sent_to_partner__isnull=False,
+            ).count(),
+            1,
+        )
+
+        response = self.forced_auth_req(
+            "get",
+            reverse('pmp_v3:intervention-list'),
+            user=self.user,
+            data={"sent_to_partner": True}
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
@@ -648,6 +682,9 @@ class TestUpdate(BaseInterventionTestCase):
             partner_accepted=False,
             agreement__partner=self.partner,
             date_sent_to_partner=timezone.now(),
+            partner_authorized_officer_signatory=None,
+            signed_by_partner_date=None,
+            signed_by_unicef_date=None,
         )
         intervention.unicef_focal_points.add(self.user)
         staff_member = PartnerStaffFactory(partner=self.partner)
@@ -674,6 +711,13 @@ class TestUpdate(BaseInterventionTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
         self.assertIn('Required fields not completed in draft', response.data[0])
+
+        # check signature fields are not required in this case
+        for field in [
+            'signed_pd_attachment', 'date_sent_to_partner', 'signed_by_unicef_date',
+            'signed_by_partner_date', 'partner_authorized_officer_signatory',
+        ]:
+            self.assertNotIn(field, response.data[0])
 
 
 class TestDelete(BaseInterventionTestCase):

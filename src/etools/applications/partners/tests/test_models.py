@@ -1432,7 +1432,7 @@ class TestInterventionAmendment(BaseTenantTestCase):
     def test_compute_reference_number_no_amendments(self):
         intervention = InterventionFactory()
         ia = models.InterventionAmendment(intervention=intervention)
-        self.assertEqual(ia.compute_reference_number(), '1')
+        self.assertEqual(ia.compute_reference_number(), 'amd/1')
 
     def test_compute_reference_number(self):
         intervention = InterventionFactory()
@@ -1441,7 +1441,7 @@ class TestInterventionAmendment(BaseTenantTestCase):
             signed_date=datetime.date.today()
         )
         ia = models.InterventionAmendment(intervention=intervention)
-        self.assertEqual(ia.compute_reference_number(), '2')
+        self.assertEqual(ia.compute_reference_number(), 'amd/2')
 
 
 class TestInterventionResultLink(BaseTenantTestCase):
