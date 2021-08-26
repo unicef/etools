@@ -1,7 +1,8 @@
+from unittest.mock import Mock, patch
+
 from django.test import Client
 from django.urls import reverse
 
-from mock import Mock, patch
 from rest_framework import status
 
 from etools.applications.core.tests.cases import BaseTenantTestCase

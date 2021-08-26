@@ -1,11 +1,10 @@
 import json
 from collections import namedtuple
+from unittest.mock import patch
 
 from django.db import connection
 from django.test import override_settings
 from django.utils import timezone
-
-from mock import patch
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import PartnerStaffMember

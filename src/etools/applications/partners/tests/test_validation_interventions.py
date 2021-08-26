@@ -1,8 +1,8 @@
 import datetime
 from unittest import skip
+from unittest.mock import Mock, patch
 
 from etools_validator.exceptions import BasicValidationError, StateValidationError, TransitionError
-from mock import Mock, patch
 
 from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
