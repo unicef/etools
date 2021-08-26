@@ -347,6 +347,10 @@ def transfer_active_pds_to_new_cp():
         for country in Country.objects.exclude(name='Global'):
             connection.set_tenant(country)
 
+            active_cp = CountryProgramme.objects.filter(invalid=False, to_date__gte=today).first()
+            if not active_cp:
+                continue
+
             # exclude by id because of m2m filter
             outdated_active_pds = Intervention.objects.filter(
                 status__in=[
@@ -368,12 +372,7 @@ def transfer_active_pds_to_new_cp():
             )
 
             for pd in outdated_active_pds:
-                active_cp = CountryProgramme.objects.filter(invalid=False, to_date__gte=today).first()
-                if not active_cp:
-                    continue
-
                 pd.country_programmes.add(active_cp)
-                pd.save()
     finally:
         connection.set_tenant(original_tenant)
 
