@@ -103,11 +103,11 @@ class GisLocationsGeomListViewset(ListAPIView):
         country_id = request.query_params.get('country_id')
 
         if loc_status == 'active':
-            location_queryset = Location.objects
+            location_queryset = Location.objects.filter(is_active=True)
         elif loc_status == 'archived':
-            location_queryset = Location.objects.archived_locations()
+            location_queryset = Location.objects.filter(is_active=False)
         else:
-            location_queryset = Location.objects.all_locations()
+            location_queryset = Location.objects.all()
 
         if not country_id:
             return Response(status=400, data={'error': 'Country id is required'})
@@ -201,7 +201,7 @@ class GisLocationsGeomDetailsViewset(RetrieveAPIView):
         if pcode is not None or id is not None:
             try:
                 lookup = {'p_code': pcode} if id is None else {'pk': id}
-                location = Location.objects.all_locations().get(**lookup)
+                location = Location.objects.get(**lookup)
             except Location.DoesNotExist:
                 return Response(status=400, data={'error': 'Location not found'})
             else:
