@@ -1,6 +1,3 @@
-from functools import update_wrapper
-
-from django.conf.urls import url
 from django.contrib import admin, messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
@@ -9,6 +6,8 @@ from django.http.response import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 
+from admin_extra_urls.decorators import button
+from admin_extra_urls.mixins import ExtraUrlMixin
 from django_tenants.admin import TenantAdminMixin
 from django_tenants.utils import get_public_schema_name
 
@@ -175,9 +174,7 @@ class ProfileAdmin(admin.ModelAdmin):
         obj.save()
 
 
-class UserAdminPlus(UserAdmin):
-
-    change_form_template = 'admin/users/user/change_form.html'
+class UserAdminPlus(ExtraUrlMixin, UserAdmin):
     inlines = [ProfileInline]
     readonly_fields = ('date_joined',)
 
@@ -193,19 +190,7 @@ class UserAdminPlus(UserAdmin):
         'country',
     ]
 
-    def get_urls(self):
-        urls = super().get_urls()
-
-        def wrap(view):
-            def wrapper(*args, **kwargs):
-                return self.admin_site.admin_view(view)(*args, **kwargs)
-            return update_wrapper(wrapper, view)
-
-        custom_urls = [
-            url(r'^(?P<pk>\d+)/sync_user/$', wrap(self.sync_user), name='users_sync_user'),
-        ]
-        return custom_urls + urls
-
+    @button()
     def sync_user(self, request, pk):
         user = get_object_or_404(get_user_model(), pk=pk)
         sync_user.delay(user.username)
@@ -252,8 +237,7 @@ class UserAdminPlus(UserAdmin):
         return fields
 
 
-class CountryAdmin(TenantAdminMixin, admin.ModelAdmin):
-    change_form_template = 'admin/users/country/change_form.html'
+class CountryAdmin(ExtraUrlMixin, TenantAdminMixin, admin.ModelAdmin):
 
     def has_add_permission(self, request):
         return False
@@ -273,30 +257,11 @@ class CountryAdmin(TenantAdminMixin, admin.ModelAdmin):
         'offices',
     )
 
-    def get_urls(self):
-        urls = super().get_urls()
-
-        def wrap(view):
-            def wrapper(*args, **kwargs):
-                return self.admin_site.admin_view(view)(*args, **kwargs)
-            return update_wrapper(wrapper, view)
-
-        custom_urls = [
-            url(r'^(?P<pk>\d+)/sync_fc/$', wrap(self.sync_fund_commitment), name='users_country_fund_commitment'),
-            url(r'^(?P<pk>\d+)/sync_fr/$', wrap(self.sync_fund_reservation), name='users_country_fund_reservation'),
-            url(r'^(?P<pk>\d+)/sync_delegated_fr/$', wrap(self.sync_fund_reservation_delegated),
-                name='users_country_fund_reservation_delegated'),
-            url(r'^(?P<pk>\d+)/sync_partners/$', wrap(self.sync_partners), name='users_country_partners'),
-            url(r'^(?P<pk>\d+)/sync_programme/$', wrap(self.sync_programme), name='users_country_programme'),
-            url(r'^(?P<pk>\d+)/sync_ram/$', wrap(self.sync_ram), name='users_country_ram'),
-            url(r'^(?P<pk>\d+)/sync_dct/$', wrap(self.sync_dct), name='users_country_dct'),
-            url(r'^(?P<pk>\d+)/update_hact/$', wrap(self.update_hact), name='users_country_update_hact'),
-        ]
-        return custom_urls + urls
-
+    @button()
     def sync_fund_commitment(self, request, pk):
         return self.execute_sync(pk, 'fund_commitment', request)
 
+    @button()
     def sync_fund_reservation_delegated(self, request, pk):
         country = Country.objects.get(pk=pk)
         if country.schema_name == get_public_schema_name():
@@ -306,18 +271,23 @@ class CountryAdmin(TenantAdminMixin, admin.ModelAdmin):
         messages.info(request, "Task fund reservation delegated scheduled")
         return HttpResponseRedirect(reverse('admin:users_country_change', args=[country.pk]))
 
+    @button()
     def sync_fund_reservation(self, request, pk):
         return self.execute_sync(pk, 'fund_reservation', request)
 
+    @button()
     def sync_partners(self, request, pk):
         return self.execute_sync(pk, 'partner', request)
 
+    @button()
     def sync_programme(self, request, pk):
         return self.execute_sync(pk, 'programme', request)
 
+    @button()
     def sync_ram(self, request, pk):
         return self.execute_sync(pk, 'ram', request)
 
+    @button()
     def sync_dct(self, request, pk):
         return self.execute_sync(pk, 'dct', request)
 
@@ -331,6 +301,7 @@ class CountryAdmin(TenantAdminMixin, admin.ModelAdmin):
         messages.info(request, f"Task {synchronizer} scheduled")
         return HttpResponseRedirect(reverse('admin:users_country_change', args=[country.pk]))
 
+    @button()
     def update_hact(self, request, pk):
         country = Country.objects.get(pk=pk)
         if country.schema_name == get_public_schema_name():

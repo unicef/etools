@@ -128,7 +128,7 @@ class LocationSitesViewSet(FMBaseViewSet, viewsets.ModelViewSet):
 
 class LocationsCountryView(views.APIView):
     def get(self, request, *args, **kwargs):
-        country = get_object_or_404(Location, gateway__admin_level=0)
+        country = get_object_or_404(Location, gateway__admin_level=0, is_active=True)
         return Response(data=LocationFullSerializer(instance=country).data)
 
 
