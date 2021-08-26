@@ -1,48 +1,24 @@
+from django.contrib import messages
 from django.contrib.gis import admin
-from django.db import transaction
 
+from admin_extra_urls.decorators import button
 from celery import chain
 from unicef_locations.admin import CartoDBTableAdmin
-from unicef_locations.models import CartoDBTable, Location, LocationRemapHistory
+from unicef_locations.models import CartoDBTable, LocationRemapHistory
 
-from etools.libraries.locations.tasks import (
-    cleanup_obsolete_locations,
-    notify_import_site_completed,
-    update_sites_from_cartodb,
-    validate_locations_in_use,
-)
+from etools.libraries.locations.tasks import import_locations, notify_import_site_completed
 
 
 class EtoolsCartoDBTableAdmin(CartoDBTableAdmin):
 
-    def import_sites(self, request, queryset):
-        # ensure the location tree is valid before we import/update the data
-        with transaction.atomic():
-            Location.objects.all_locations().select_for_update().only('id')
-            Location.objects.rebuild()
+    @button(css_class="btn-warning auto-disable")
+    def import_sites(self, request, pk):
+        chain([
+            import_locations.si(pk),
+            notify_import_site_completed.si(pk, request.user.pk)
+        ]).delay()
 
-        task_list = []
-
-        # import locations from top to bottom
-        queryset = sorted(queryset, key=lambda l: (l.tree_id, l.lft, l.pk))
-        carto_tables = [qry.pk for qry in queryset]
-
-        for table in carto_tables:
-            task_list += [
-                validate_locations_in_use.si(table),
-                update_sites_from_cartodb.si(table),
-            ]
-
-        # clean up locations from bottom to top, it's easier to validate parents this way
-        for table in reversed(carto_tables):
-            task_list.extend([
-                cleanup_obsolete_locations.si(table),
-                notify_import_site_completed.si(table, request.user.pk)
-            ])
-
-        if task_list:
-            # Trying to force the tasks to execute in correct sequence
-            chain(task_list).delay()
+        messages.info(request, 'Import Scheduled')
 
 
 class RemapAdmin(admin.ModelAdmin):
