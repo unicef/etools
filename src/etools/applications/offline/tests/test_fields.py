@@ -1,9 +1,9 @@
 from typing import Dict, List, Set
+from unittest.mock import patch
 
 from django.core.exceptions import ImproperlyConfigured
 from django.test import TestCase
 
-from mock import patch
 from unicef_attachments.models import Attachment
 
 from etools.applications.attachments.tests.factories import AttachmentFactory
