@@ -1,7 +1,8 @@
+from unittest.mock import patch
+
 from django.urls import reverse
 
 from django_tenants.test.client import TenantClient
-from mock import patch
 from rest_framework import status
 from unicef_locations.tests.factories import LocationFactory
 

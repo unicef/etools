@@ -515,7 +515,7 @@ class PartnerOrganization(TimeStampedModel):
         verbose_name=_('Outstanding DCT more than 9 months')
     )
 
-    hact_values = models.JSONField(blank=True, null=True, default=hact_default, verbose_name='HACT')
+    hact_values = models.JSONField(blank=True, null=True, default=hact_default, verbose_name='HACT', encoder=CustomJSONEncoder)
     basis_for_risk_rating = models.CharField(
         verbose_name=_("Basis for Risk Rating"), max_length=50, default='', blank=True)
     psea_assessment_date = models.DateTimeField(
@@ -883,7 +883,7 @@ class PartnerOrganization(TimeStampedModel):
         hact['outstanding_findings'] = sum([
             audit.pending_unsupported_amount for audit in audits if audit.pending_unsupported_amount])
         hact['assurance_coverage'] = self.assurance_coverage
-        self.hact_values = json.dumps(hact, cls=CustomJSONEncoder)
+        self.hact_values = hact
         self.save()
 
     def update_min_requirements(self):
@@ -894,7 +894,7 @@ class PartnerOrganization(TimeStampedModel):
                 hact[hact_eng]['minimum_requirements'] = self.hact_min_requirements[hact_eng]
                 updated.append(hact_eng)
         if updated:
-            self.hact_values = json.dumps(hact, cls=CustomJSONEncoder)
+            self.hact_values = hact
             self.save()
             return updated
 
@@ -1845,7 +1845,7 @@ class Intervention(TimeStampedModel):
         verbose_name=_("Document Submission Date by CSO"),
         null=True,
         blank=True,
-        help_text='The date the partner submitted complete PD/SSFA documents to Unicef',
+        help_text='The date the partner submitted complete PD/SPD documents to Unicef',
     )
     submission_date_prc = models.DateField(
         verbose_name=_('Submission Date to PRC'),
@@ -2411,15 +2411,35 @@ class Intervention(TimeStampedModel):
 
     @property
     def reference_number(self):
+        """
+        if intervention is in amendment, replace id part from reference number to original one
+        and add postfix to keep it unique
+        """
+        if self.in_amendment:
+            try:
+                document_id = self.amendment.intervention_id
+                amendment_relative_number = self.amendment.amendment_number
+            except InterventionAmendment.DoesNotExist:
+                document_id = self.id
+                amendment_relative_number = None
+        else:
+            document_id = self.id
+            amendment_relative_number = None
+
         if self.document_type != Intervention.SSFA:
-            number = '{agreement}/{type}{year}{id}'.format(
+            reference_number = '{agreement}/{type}{year}{id}'.format(
                 agreement=self.agreement.base_number,
                 type=self.document_type,
                 year=self.reference_number_year,
-                id=self.id
+                id=document_id
             )
-            return number
-        return self.agreement.base_number
+        else:
+            reference_number = self.agreement.base_number
+
+        if amendment_relative_number:
+            reference_number += '-' + amendment_relative_number
+
+        return reference_number
 
     def update_reference_number(self, amendment_number=None):
         if amendment_number:
@@ -2642,9 +2662,11 @@ class InterventionAmendment(TimeStampedModel):
 
     def compute_reference_number(self):
         number = str(self.intervention.amendments.filter(kind=self.kind).count() + 1)
-        if self.kind == self.KIND_CONTINGENCY:
-            number = 'Contingency/' + number
-        return number
+        code = {
+            self.KIND_NORMAL: 'amd',
+            self.KIND_CONTINGENCY: 'camd',
+        }[self.kind]
+        return f'{code}/{number}'
 
     @transaction.atomic
     def save(self, **kwargs):
@@ -2653,14 +2675,17 @@ class InterventionAmendment(TimeStampedModel):
         # TODO: validation don't allow save on objects that have attached
         # signed amendment but don't have a signed date
 
-        # check if temporary number is needed or amendment number needs to be
-        # set
-        if self.pk is None:
+        new_amendment = self.pk is None
+        if new_amendment:
             self.amendment_number = self.compute_reference_number()
-            self.intervention.save(amendment_number=self.amendment_number)
             self._copy_intervention()
 
-        return super().save(**kwargs)
+        super().save(**kwargs)
+
+        if new_amendment:
+            # re-calculate intervention reference number when amendment relation is available
+            self.amended_intervention.update_reference_number()
+            self.amended_intervention.save()
 
     def delete(self, **kwargs):
         self.amended_intervention.delete()
@@ -2717,6 +2742,8 @@ class InterventionAmendment(TimeStampedModel):
         self.amended_intervention = None
         self.is_active = False
         self.save()
+
+        self.intervention.save(amendment_number=self.intervention.amendments.filter(is_active=False).count())
 
         amended_intervention.delete()
 
@@ -2986,7 +3013,7 @@ class InterventionReviewQuestionnaire(models.Model):
     )
 
     overall_comment = models.TextField(blank=True)
-    overall_approval = models.NullBooleanField()
+    overall_approval = models.BooleanField(null=True, blank=True)
 
     class Meta:
         abstract = True

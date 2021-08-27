@@ -4,6 +4,8 @@ import csv
 from django.conf import settings
 from django.core.cache import cache
 
+from rest_framework.permissions import IsAuthenticated
+
 from etools.libraries.pythonlib.collections import Vividict
 
 
@@ -92,3 +94,9 @@ def import_permissions(model_name):
         cache.set(cache_key, response)
 
     return response
+
+
+class IsUNICEFUser(IsAuthenticated):
+
+    def has_permission(self, request, view):
+        return super().has_permission(request, view) and request.user.groups.filter(name='UNICEF User').exists()

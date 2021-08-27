@@ -300,7 +300,7 @@ class InterventionExportSerializer(serializers.ModelSerializer):
         decimal_places=2,
     )
     total_planned_budget = serializers.DecimalField(
-        label=_("Total PD/SSFA Budget"),
+        label=_("Total PD/SPD Budget"),
         source='total_budget',
         read_only=True,
         max_digits=20,
@@ -388,6 +388,7 @@ class InterventionExportSerializer(serializers.ModelSerializer):
             "total_attachments",
             "cp_outputs",
             "url",
+            "cfei_number",
         )
 
     def get_unicef_signatory(self, obj):
@@ -430,7 +431,8 @@ class InterventionExportSerializer(serializers.ModelSerializer):
         return ', '.join([pf.get_full_name() for pf in obj.unicef_focal_points.all()])
 
     def get_cp_outputs(self, obj):
-        return ', '.join([rs.cp_output.name for rs in obj.result_links.all()])
+        # cp output can be not specified for interventions in development
+        return ', '.join([rs.cp_output.name for rs in obj.result_links.all() if rs.cp_output])
 
     def fr_currencies_ok(self, obj):
         return obj.frs__currency__count == 1 if obj.frs__currency__count else None

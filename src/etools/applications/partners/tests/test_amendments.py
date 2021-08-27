@@ -591,6 +591,46 @@ class AmendmentTestCase(BaseTenantTestCase):
         item.refresh_from_db()
         self.assertEqual(item.unicef_cash, item_copy.unicef_cash)
 
+    def test_reference_number_update(self):
+        intervention = self.active_intervention
+        reference_number = intervention.number
+        normal_amendment = InterventionAmendmentFactory(
+            intervention=self.active_intervention,
+            kind=InterventionAmendment.KIND_NORMAL,
+        )
+        contingency_amendment = InterventionAmendmentFactory(
+            intervention=self.active_intervention,
+            kind=InterventionAmendment.KIND_CONTINGENCY,
+        )
+        self.assertEqual(
+            normal_amendment.amended_intervention.number, reference_number + '-amd/1'
+        )
+        self.assertEqual(
+            contingency_amendment.amended_intervention.number, reference_number + '-camd/1'
+        )
+        contingency_amendment.merge_amendment()
+        intervention.refresh_from_db()
+        self.assertEqual(
+            intervention.number, reference_number + '-1'
+        )
+        contingency_amendment_1 = InterventionAmendmentFactory(
+            intervention=self.active_intervention,
+            kind=InterventionAmendment.KIND_CONTINGENCY,
+        )
+        self.assertEqual(
+            contingency_amendment_1.amended_intervention.number, reference_number + '-camd/2'
+        )
+        contingency_amendment_1.merge_amendment()
+        intervention.refresh_from_db()
+        self.assertEqual(
+            intervention.number, reference_number + '-2'
+        )
+        normal_amendment.merge_amendment()
+        intervention.refresh_from_db()
+        self.assertEqual(
+            intervention.number, reference_number + '-3'
+        )
+
     def _check_related_fields(self, model_class, ignored_relations):
         related_fields = INTERVENTION_AMENDMENT_RELATED_FIELDS.get(model_class._meta.label, [])
         full_relations_list = related_fields + ignored_relations.get(model_class._meta.label, [])

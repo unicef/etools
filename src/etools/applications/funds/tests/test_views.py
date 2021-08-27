@@ -114,9 +114,9 @@ class TestFRHeaderView(BaseTenantTestCase):
         data = {'values': ','.join(['another bad value', 'im a bad value', ])}
         status_code, result = self.run_request(data)
         self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(result['error'], 'One or more of the FRs are used by another PD/SSFA or '
+        self.assertEqual(result['error'], 'One or more of the FRs are used by another PD/SPD or '
                                           'could not be found in eTools.')
-    # TODO: add tests to cover, frs correctly brought in from mock. with correct vendor numbers, FR missing from vision,
+    # TODO: add tests to cover, frs correctly brought in from unittest.mock. with correct vendor numbers, FR missing from vision,
     # FR with multiple line items, and FR with only one line item.
 
     @VCR.use_cassette(str(Path(__file__).parent / 'vcr_cassettes/fund_reservation.yml'))
@@ -128,7 +128,7 @@ class TestFRHeaderView(BaseTenantTestCase):
                 'intervention': new_intervention.pk}
         status_code, result = self.run_request(data)
         self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(result['error'], f'FR #{self.fr_1} is already being used by PD/SSFA ref [{self.intervention}]')
+        self.assertEqual(result['error'], f'FR #{self.fr_1} is already being used by PD/SPD ref [{self.intervention}]')
 
     @VCR.use_cassette(str(Path(__file__).parent / 'vcr_cassettes/fund_reservation.yml'))
     def test_get_success_sync_vision(self):
@@ -149,7 +149,7 @@ class TestFRHeaderView(BaseTenantTestCase):
         status_code, result = self.run_request(data)
         self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(result['error'],
-                         'FR #{} is already being used by PD/SSFA ref [{}]'.format(fth_value, other_intervention))
+                         'FR #{} is already being used by PD/SPD ref [{}]'.format(fth_value, other_intervention))
 
     def test_get_success_with_expired_fr(self):
         self.fr_1.end_date = timezone.now().date() - timedelta(days=1)
@@ -165,7 +165,7 @@ class TestFRHeaderView(BaseTenantTestCase):
         status_code, result = self.run_request(data)
         self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(result['error'],
-                         'One or more of the FRs are used by another PD/SSFA '
+                         'One or more of the FRs are used by another PD/SPD '
                          'or could not be found in eTools.')
 
     def test_get_with_intervention_fr(self):

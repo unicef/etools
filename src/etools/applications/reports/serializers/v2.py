@@ -171,7 +171,7 @@ class AppliedIndicatorSerializer(serializers.ModelSerializer):
                and not (status in [Intervention.DRAFT, Intervention.SIGNED] or
                         (status == Intervention.ACTIVE and in_amendment)):
                 raise ValidationError(_(
-                    'You cannot change the Indicator Target Denominator if PD/SSFA is '
+                    'You cannot change the Indicator Target Denominator if PD/SPD is '
                     'not in status Draft or Signed'
                 ))
             if attrs['target']['d'] != self.instance.target_display[1] and not (
@@ -184,7 +184,7 @@ class AppliedIndicatorSerializer(serializers.ModelSerializer):
                     )
             ):
                 raise ValidationError(_(
-                    'You cannot change the Indicator Target Denominator if PD/SSFA is '
+                    'You cannot change the Indicator Target Denominator if PD/SPD is '
                     'not in status Draft or Signed'
                 ))
 

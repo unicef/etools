@@ -8,7 +8,7 @@ from django.db.models import OuterRef, Q, Subquery
 from rest_framework import mixins, status, viewsets
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import ListAPIView, RetrieveAPIView
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from unicef_restlib.views import QueryStringFilterMixin, SafeTenantViewSetMixin
 
@@ -21,6 +21,7 @@ from etools.applications.users.serializers_v3 import (
     MinimalUserSerializer,
     ProfileRetrieveUpdateSerializer,
 )
+from etools.applications.utils.pagination import AppendablePageNumberPagination
 
 logger = logging.getLogger(__name__)
 
@@ -66,6 +67,8 @@ class UsersListAPIView(PMPBaseViewMixin, QueryStringFilterMixin, ListAPIView):
     model = get_user_model()
     queryset = get_user_model().objects.all()
     serializer_class = MinimalUserSerializer
+    permission_classes = (IsAuthenticated, )
+    pagination_class = AppendablePageNumberPagination
 
     filters = (
         ('group', 'groups__name__in'),
