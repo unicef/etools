@@ -67,7 +67,7 @@ class UsersListAPIView(QueryStringFilterMixin, ListAPIView):
     serializer_class = MinimalUserSerializer
     permission_classes = (IsAdminUser, )
     pagination_class = AppendablePageNumberPagination
-    search_terms = ('email__icontains',)
+    search_terms = ('email__icontains', 'first_name__icontains', 'middle_name__icontains', 'last_name__icontains')
 
     filters = (
         ('group', 'groups__name__in'),
