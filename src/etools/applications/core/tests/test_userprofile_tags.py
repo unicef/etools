@@ -1,4 +1,4 @@
-from mock import Mock
+from unittest.mock import Mock
 
 from etools.applications.core.templatetags.etools import show_country_select
 from etools.applications.core.tests.cases import BaseTenantTestCase

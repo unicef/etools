@@ -1,4 +1,4 @@
-from mock import Mock, patch
+from unittest.mock import Mock, patch
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.hact.models import AggregateHact

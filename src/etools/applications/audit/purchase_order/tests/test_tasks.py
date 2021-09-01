@@ -1,5 +1,5 @@
 
-from mock import Mock, patch
+from unittest.mock import Mock, patch
 
 from etools.applications.audit.purchase_order.tasks import update_purchase_orders
 from etools.applications.core.tests.cases import BaseTenantTestCase
