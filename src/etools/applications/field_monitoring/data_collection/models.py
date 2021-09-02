@@ -92,6 +92,12 @@ class Finding(models.Model):
 
 
 class ActivityQuestionOverallFinding(models.Model):
+    """
+        This model refers to the answer provided for a question during the 'summary analysis'
+        in the case where the related activity_question.question is marked as 'is_hact' then this, answer not being
+        null, reflects that the related monitoring activity (activity_question.monitoring_activity) will count as a
+        programmatic visit for the partner
+    """
     activity_question = models.OneToOneField(ActivityQuestion, related_name='overall_finding',
                                              verbose_name=_('Activity'), on_delete=models.CASCADE)
     value = models.JSONField(null=True, blank=True, verbose_name=_('Value'))
