@@ -104,10 +104,7 @@ class QuestionTemplate(QuestionTargetMixin, models.Model):
 
 class MonitoringActivitiesQuerySet(models.QuerySet):
     def filter_hact_for_partner(self, partner_id: int):
-        from etools.applications.field_monitoring.data_collection.models import (
-            ActivityOverallFinding,
-            ActivityQuestionOverallFinding,
-        )
+        from etools.applications.field_monitoring.data_collection.models import ActivityQuestionOverallFinding
 
         question_sq = ActivityQuestionOverallFinding.objects.filter(
             activity_question__monitoring_activity_id=OuterRef('id'),
