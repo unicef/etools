@@ -565,9 +565,31 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
         )
         self.assertEqual(response.data['monitoring_activity_groups'], [[activity1.id, activity2.id], [activity3.id]])
 
+    def _add_hact_finding_for_activity(self, activity):
+        ActivityQuestionOverallFinding.objects.create(
+            activity_question=ActivityQuestionFactory(
+                monitoring_activity=activity,
+                question__is_hact=True,
+                question__level='partner',
+            ),
+            value=True
+        )
+        ActivityOverallFinding.objects.create(
+            narrative_finding='ok',
+            monitoring_activity=activity,
+            partner=self.partner,
+        )
+
     def test_add_partner_monitoring_activity_groups(self):
-        activity1 = MonitoringActivityFactory(partners=[self.partner], status='completed')
-        activity2 = MonitoringActivityFactory(partners=[self.partner], status='completed')
+        today = datetime.date.today()
+        activity1 = MonitoringActivityFactory(partners=[self.partner], end_date=today, status='completed')
+        activity2 = MonitoringActivityFactory(partners=[self.partner], end_date=today, status='completed')
+        self._add_hact_finding_for_activity(activity1)
+        self._add_hact_finding_for_activity(activity2)
+
+        self.partner.programmatic_visits()
+        response = self.forced_auth_req('get', self.url, user=self.unicef_staff)
+        self.assertEqual(response.data['hact_values']['programmatic_visits']['completed'][get_quarter()], 2)
 
         response = self.forced_auth_req(
             'patch',
@@ -578,33 +600,66 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
             }
         )
         self.assertEqual(len(response.data['monitoring_activity_groups']), 1)
+        self.assertCountEqual(response.data['monitoring_activity_groups'][0], [activity1.id, activity2.id])
+        self.assertEqual(response.data['hact_values']['programmatic_visits']['completed'][get_quarter()], 1)
+
+    def test_add_partner_monitoring_activity_into_group(self):
+        today = datetime.date.today()
+        activity1 = MonitoringActivityFactory(partners=[self.partner], end_date=today, status='completed')
+        activity2 = MonitoringActivityFactory(partners=[self.partner], end_date=today, status='completed')
+        activity3 = MonitoringActivityFactory(partners=[self.partner], end_date=today, status='completed')
+        self._add_hact_finding_for_activity(activity1)
+        self._add_hact_finding_for_activity(activity2)
+        self._add_hact_finding_for_activity(activity3)
+
+        MonitoringActivityGroupFactory(partner=self.partner, monitoring_activities=[activity1, activity2])
+
+        self.partner.programmatic_visits()
+        response = self.forced_auth_req('get', self.url, user=self.unicef_staff)
+        self.assertEqual(response.data['hact_values']['programmatic_visits']['completed'][get_quarter()], 2)
+
+        response = self.forced_auth_req(
+            'patch',
+            self.url,
+            user=self.unicef_staff,
+            data={
+                'monitoring_activity_groups': [[activity1.id, activity2.id, activity3.id]],
+            }
+        )
+        self.assertEqual(len(response.data['monitoring_activity_groups']), 1)
+        self.assertCountEqual(response.data['monitoring_activity_groups'][0],
+                              [activity1.id, activity2.id, activity3.id])
+        self.assertEqual(response.data['hact_values']['programmatic_visits']['completed'][get_quarter()], 1)
+
+    def test_add_partner_monitoring_activity_groups_not_completed_or_not_hact(self):
+        activity1 = MonitoringActivityFactory(partners=[self.partner], status='completed')
+        activity2 = MonitoringActivityFactory(partners=[self.partner], status='report_finalization')
+        activity3 = MonitoringActivityFactory(partners=[self.partner], status='completed')
+        self._add_hact_finding_for_activity(activity1)
+        self._add_hact_finding_for_activity(activity2)
+
+        response = self.forced_auth_req(
+            'patch',
+            self.url,
+            user=self.unicef_staff,
+            data={
+                'monitoring_activity_groups': [[activity1.id, activity2.id, activity3.id]],
+            }
+        )
+        self.assertEqual(len(response.data['monitoring_activity_groups']), 1)
+        self.assertEqual(response.data['monitoring_activity_groups'], [[activity1.id]])
 
     def test_update_partner_monitoring_activity_groups(self):
-        activity1 = MonitoringActivityFactory(partners=[self.partner], status='completed')
-        activity2 = MonitoringActivityFactory(partners=[self.partner], status='completed')
-        activity3 = MonitoringActivityFactory(partners=[self.partner], status='completed')
-        activity4 = MonitoringActivityFactory(partners=[self.partner], status='completed')
+        today = datetime.date.today()
+        activity1 = MonitoringActivityFactory(partners=[self.partner], end_date=today, status='completed')
+        activity2 = MonitoringActivityFactory(partners=[self.partner], end_date=today, status='completed')
+        activity3 = MonitoringActivityFactory(partners=[self.partner], end_date=today, status='completed')
+        activity4 = MonitoringActivityFactory(partners=[self.partner], end_date=today, status='completed')
+        self._add_hact_finding_for_activity(activity1)
+        self._add_hact_finding_for_activity(activity2)
+        self._add_hact_finding_for_activity(activity3)
+        self._add_hact_finding_for_activity(activity4)
         MonitoringActivityFactory(partners=[self.partner])
-        ActivityQuestionOverallFinding.objects.create(
-            activity_question=ActivityQuestionFactory(
-                question__is_hact=True,
-                question__level='partner',
-                monitoring_activity=activity1,
-            ),
-            value='ok',
-        )
-        ActivityOverallFinding.objects.create(partner=self.partner, narrative_finding='test',
-                                              monitoring_activity=activity1)
-        ActivityQuestionOverallFinding.objects.create(
-            activity_question=ActivityQuestionFactory(
-                question__is_hact=True,
-                question__level='partner',
-                monitoring_activity=activity3,
-            ),
-            value='ok',
-        )
-        ActivityOverallFinding.objects.create(partner=self.partner, narrative_finding='test',
-                                              monitoring_activity=activity3)
 
         MonitoringActivityGroupFactory(
             partner=self.partner,
@@ -616,7 +671,8 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
         )
         self.partner.programmatic_visits()
         # 2 groups
-        self.assertEqual(self.partner.hact_values['programmatic_visits']['completed'][get_quarter()], 2)
+        response = self.forced_auth_req('get', self.url, user=self.unicef_staff)
+        self.assertEqual(response.data['hact_values']['programmatic_visits']['completed'][get_quarter()], 2)
 
         response = self.forced_auth_req(
             'patch',
@@ -631,7 +687,7 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
         self.assertEqual(self.partner.monitoring_activity_groups.count(), 1)
         self.partner.refresh_from_db()
         # 1 group + 2 ungrouped
-        self.assertEqual(self.partner.hact_values['programmatic_visits']['completed'][get_quarter()], 3)
+        self.assertEqual(response.data['hact_values']['programmatic_visits']['completed'][get_quarter()], 3)
 
 
 class TestPartnerOrganizationHactAPIView(BaseTenantTestCase):
