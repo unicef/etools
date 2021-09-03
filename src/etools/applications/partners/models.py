@@ -781,7 +781,7 @@ class PartnerOrganization(TimeStampedModel):
                 partner=self
             ).values_list('monitoring_activities__id', flat=True)
             fmvqs = MonitoringActivity.objects.filter(
-                partners=self, status="completed",
+                partners=self,
                 end_date__year=datetime.datetime.now().year,
             ).filter_hact_for_partner(self.id).exclude(
                 id__in=grouped_activities,
