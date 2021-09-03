@@ -26,7 +26,7 @@ class TenantFlag(BaseModel):
         'The human/computer readable name.'))
     countries = models.ManyToManyField(Country, blank=True, verbose_name=_('Countries'), help_text=(
         'Activate this flag for these countries.'))
-    everyone = models.NullBooleanField(blank=True, verbose_name=_('Everyone'), help_text=(
+    everyone = models.BooleanField(blank=True, null=True, verbose_name=_('Everyone'), help_text=(
         'Flip this flag on (Yes) or off (No) for everyone, overriding all '
         'other settings. Leave as Unknown to use normally.'))
     percent = models.DecimalField(max_digits=3, decimal_places=1, null=True, blank=True, verbose_name=_('Percent'),

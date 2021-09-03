@@ -1,7 +1,6 @@
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.gis.db.models import PointField
-from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Prefetch, QuerySet
@@ -153,7 +152,7 @@ class Option(models.Model):
     label = models.CharField(max_length=50, verbose_name=_('Label'))
     # TODO: remove json field usage and replace with Charfield as this is only used without a structure:
     # eg: value = 1, value = "Characters", value = True -> used only for automatic typecasting and cand be confusing
-    value = JSONField(verbose_name=_('Value'), blank=True, null=True)
+    value = models.JSONField(verbose_name=_('Value'), blank=True, null=True)
 
     class Meta:
         verbose_name = _('Option')

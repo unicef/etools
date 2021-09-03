@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import connection, models
-from django.db.models import Q
+from django.db.models import Exists, OuterRef, Q
 from django.db.models.base import ModelBase
 from django.utils.translation import gettext_lazy as _
 
@@ -71,9 +71,9 @@ class YearPlan(TimeStampedModel):
 class QuestionTargetMixin(models.Model):
     partner = models.ForeignKey(PartnerOrganization, blank=True, null=True, verbose_name=_('Partner'),
                                 on_delete=models.CASCADE, related_name='+')
-    cp_output = models.ForeignKey(Result, blank=True, null=True, verbose_name=_('Partner'),
+    cp_output = models.ForeignKey(Result, blank=True, null=True, verbose_name=_('CP Output'),
                                   on_delete=models.CASCADE, related_name='+')
-    intervention = models.ForeignKey(Intervention, blank=True, null=True, verbose_name=_('Partner'),
+    intervention = models.ForeignKey(Intervention, blank=True, null=True, verbose_name=_('Intervention'),
                                      on_delete=models.CASCADE, related_name='+')
 
     @property
@@ -100,6 +100,35 @@ class QuestionTemplate(QuestionTargetMixin, models.Model):
 
     def __str__(self):
         return 'Question Template for {}'.format(self.related_to)
+
+
+class MonitoringActivitiesQuerySet(models.QuerySet):
+    def filter_hact_for_partner(self, partner_id: int):
+        from etools.applications.field_monitoring.data_collection.models import (
+            ActivityOverallFinding,
+            ActivityQuestionOverallFinding,
+        )
+
+        question_sq = ActivityQuestionOverallFinding.objects.filter(
+            activity_question__monitoring_activity_id=OuterRef('id'),
+            activity_question__question__is_hact=True,
+            activity_question__question__level='partner',
+            value__isnull=False,
+        )
+        finding_sq = ActivityOverallFinding.objects.filter(
+            ~Q(narrative_finding=''),
+            monitoring_activity_id=OuterRef('id'),
+            partner_id=partner_id,
+        )
+
+        return self.annotate(
+            is_hact=Exists(question_sq),
+            has_finding_for_partner=Exists(finding_sq),
+        ).filter(
+            status=MonitoringActivity.STATUS_COMPLETED,
+            is_hact=True,
+            has_finding_for_partner=True,
+        )
 
 
 class MonitoringActivityMeta(ProtectUnknownTransitionsMeta, ModelBase):
@@ -236,6 +265,8 @@ class MonitoringActivity(
     cancel_reason = models.TextField(verbose_name=_('Cancellation reason'), blank=True)
 
     visit_lead_tracker = FieldTracker(fields=['visit_lead'])
+
+    objects = models.Manager.from_queryset(MonitoringActivitiesQuerySet)()
 
     class Meta:
         verbose_name = _('Monitoring Activity')
@@ -568,3 +599,15 @@ class MonitoringActivityActionPoint(ActionPoint):
         if self.monitoring_activity:
             context['monitoring_activity'] = self.monitoring_activity.get_mail_context(user=user)
         return context
+
+
+class MonitoringActivityGroup(models.Model):
+    partner = models.ForeignKey(
+        'partners.PartnerOrganization',
+        on_delete=models.CASCADE,
+        related_name='monitoring_activity_groups',
+    )
+    monitoring_activities = models.ManyToManyField(MonitoringActivity, related_name='groups')
+
+    def __str__(self):
+        return f'{self.partner} Monitoring Activities Group'

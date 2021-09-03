@@ -1,4 +1,5 @@
 import datetime
+import itertools
 import json
 
 from django.contrib.auth import get_user_model
@@ -12,6 +13,7 @@ from unicef_attachments.fields import AttachmentSingleFileField
 from unicef_attachments.serializers import AttachmentSerializerMixin
 from unicef_snapshot.serializers import SnapshotModelSerializer
 
+from etools.applications.field_monitoring.planning.models import MonitoringActivity, MonitoringActivityGroup
 from etools.applications.partners.models import (
     Agreement,
     Assessment,
@@ -388,6 +390,46 @@ class PartnerPlannedVisitsSerializer(serializers.ModelSerializer):
         return super().is_valid(**kwargs)
 
 
+class MonitoringActivityGroupSerializer(serializers.Field):
+    default_error_messages = {
+        'bad_value': 'List was expected, {type} provided',
+    }
+
+    def to_internal_value(self, data):
+        if not data:
+            return data
+
+        if not isinstance(data, list):
+            self.fail('bad_value', type=type(data))
+
+        if not hasattr(self.root, 'instance'):
+            return []
+
+        partner = self.root.instance
+        hact_activities = MonitoringActivity.objects.filter(partners=partner).filter_hact_for_partner(partner.id)
+        activities = {
+            activity.id: activity
+            for activity in hact_activities.filter(id__in=itertools.chain(*data))
+        }
+
+        result = []
+        for group in data:
+            result.append([activities[activity] for activity in group if activity in activities])
+        result = list(filter(lambda x: x, result))
+
+        return result
+
+    def to_representation(self, data):
+        group_objects = list(
+            self.parent.instance.monitoring_activity_groups.values_list('id', 'monitoring_activities__id')
+        )
+        groups = {group_id: [] for group_id in sorted(set(group[0] for group in group_objects))}
+        for group in group_objects:
+            groups[group[0]].append(group[1])
+
+        return list(groups.values())
+
+
 class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
 
     staff_members = PartnerStaffMemberDetailSerializer(many=True, read_only=True)
@@ -404,6 +446,7 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
     sea_risk_rating_name = serializers.CharField(label="psea_risk_rating")
     highest_risk_rating_type = serializers.CharField(label="highest_risk_type")
     highest_risk_rating_name = serializers.CharField(label="highest_risk_rating")
+    monitoring_activity_groups = MonitoringActivityGroupSerializer()
 
     def get_hact_values(self, obj):
         return json.loads(obj.hact_values) if isinstance(obj.hact_values, str) else obj.hact_values
@@ -459,6 +502,7 @@ class PartnerOrganizationCreateUpdateSerializer(SnapshotModelSerializer):
     hidden = serializers.BooleanField(read_only=True)
     planned_visits = PartnerPlannedVisitsSerializer(many=True, read_only=True, required=False)
     core_values_assessments = CoreValuesAssessmentSerializer(many=True, read_only=True, required=False)
+    monitoring_activity_groups = MonitoringActivityGroupSerializer(required=False)
 
     def get_hact_values(self, obj):
         return json.loads(obj.hact_values) if isinstance(obj.hact_values, str) else obj.hact_values
@@ -484,6 +528,43 @@ class PartnerOrganizationCreateUpdateSerializer(SnapshotModelSerializer):
             })
 
         return data
+
+    def save_monitoring_activity_groups(self, instance, groups):
+        instance_groups = list(instance.monitoring_activity_groups.prefetch_related('monitoring_activities'))
+        updated = False
+
+        for i in range(len(groups)):
+            if i >= len(instance_groups):
+                group_object = MonitoringActivityGroup.objects.create(partner=instance)
+                instance_activities = []
+            else:
+                group_object = instance_groups[i]
+                instance_activities = instance_groups[i].monitoring_activities.all()
+
+            if set(instance_activities).symmetric_difference(set(groups[i])):
+                updated = True
+
+            group_object.monitoring_activities.set(groups[i])
+
+        if len(instance_groups) > len(groups):
+            updated = True
+
+            for i in range(len(groups), len(instance_groups)):
+                instance_groups[i].delete()
+
+        return updated
+
+    def update(self, instance, validated_data):
+        monitoring_activity_groups = validated_data.pop('monitoring_activity_groups', None)
+
+        instance = super().update(instance, validated_data)
+
+        if monitoring_activity_groups is not None:
+            groups_updated = self.save_monitoring_activity_groups(instance, monitoring_activity_groups)
+            if groups_updated:
+                instance.programmatic_visits()
+
+        return instance
 
     class Meta:
         model = PartnerOrganization

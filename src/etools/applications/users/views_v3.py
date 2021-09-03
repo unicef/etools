@@ -19,6 +19,7 @@ from etools.applications.users.serializers_v3 import (
     MinimalUserSerializer,
     ProfileRetrieveUpdateSerializer,
 )
+from etools.applications.utils.pagination import AppendablePageNumberPagination
 
 logger = logging.getLogger(__name__)
 
@@ -62,9 +63,11 @@ class UsersListAPIView(QueryStringFilterMixin, ListAPIView):
     Country is determined by the currently logged in user.
     """
     model = get_user_model()
-    queryset = get_user_model().objects.all()
+    queryset = get_user_model().objects.all().select_related('profile')
     serializer_class = MinimalUserSerializer
     permission_classes = (IsAdminUser, )
+    pagination_class = AppendablePageNumberPagination
+    search_terms = ('email__icontains', 'first_name__icontains', 'middle_name__icontains', 'last_name__icontains')
 
     filters = (
         ('group', 'groups__name__in'),
