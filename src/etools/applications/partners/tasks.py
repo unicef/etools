@@ -391,3 +391,40 @@ def sync_partner(vendor_number=None, country=None):
     except VisionException:
         logger.exception("{} sync failed".format(PartnerSynchronizer.__name__))
     logger.info('Partner {} synced successfully.'.format(vendor_number))
+
+
+@app.task
+def intervention_expired():
+    for country in Country.objects.exclude(name='Global').all():
+        connection.set_tenant(country)
+        _set_intervention_expired(country.name)
+
+
+def _set_intervention_expired(country_name):
+    # Check and transition to 'Expired' any contingency PD that has not
+    # been activated and the CP for which was created has now expired
+    logger.info(
+        'Starting intervention expirations for country {}'.format(
+            country_name,
+        ),
+    )
+    today = timezone.now().date()
+    pd_qs = Intervention.objects.filter(
+        contingency_pd=True,
+        status__in=[
+            Intervention.REVIEW,
+            Intervention.SIGNATURE,
+            Intervention.SIGNED,
+        ],
+        end__gte=today,
+    ).exclude(
+        pk__in=Intervention.objects.filter(
+            contingency_pd=True,
+            end__gte=today,
+            country_programmes__invalid=False,
+            country_programmes__to_date__gte=today,
+        ).values_list('id', flat=True)
+    )
+    for pd in pd_qs:
+        pd.status = Intervention.EXPIRED
+        pd.save()

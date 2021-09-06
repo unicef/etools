@@ -610,6 +610,13 @@ class PartnerOrganization(TimeStampedModel):
         return False
 
     @cached_property
+    def expiring_psea_assessment_flag(self):
+        if self.psea_assessment_date:
+            psea_assessment_age = datetime.date.today().year - self.psea_assessment_date.year
+            return psea_assessment_age >= PartnerOrganization.EXPIRING_ASSESSMENT_LIMIT_YEAR
+        return False
+
+    @cached_property
     def approaching_threshold_flag(self):
         total_ct_ytd = self.total_ct_ytd or 0
         not_required = self.highest_risk_rating_name == PartnerOrganization.RATING_NOT_REQUIRED
@@ -620,7 +627,8 @@ class PartnerOrganization(TimeStampedModel):
     def flags(self):
         return {
             'expiring_assessment_flag': self.expiring_assessment_flag,
-            'approaching_threshold_flag': self.approaching_threshold_flag
+            'approaching_threshold_flag': self.approaching_threshold_flag,
+            'expiring_psea_assessment_flag': self.expiring_psea_assessment_flag,
         }
 
     @cached_property
@@ -1710,6 +1718,7 @@ class Intervention(TimeStampedModel):
     CLOSED = 'closed'
     SUSPENDED = 'suspended'
     TERMINATED = 'terminated'
+    EXPIRED = 'expired'
 
     AUTO_TRANSITIONS = {
         DRAFT: [],
@@ -1742,6 +1751,7 @@ class Intervention(TimeStampedModel):
         (CLOSED, "Closed"),
         (SUSPENDED, "Suspended"),
         (TERMINATED, "Terminated"),
+        (EXPIRED, "Expired"),
     )
     PD = 'PD'
     SPD = 'SPD'
