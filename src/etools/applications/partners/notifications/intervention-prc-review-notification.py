@@ -5,7 +5,7 @@ defaults = {
     'content': """
     Dear Colleague,
 
-    Please review Programme Document / SSFA {{ intervention_number }} before {{ meeting date }}.
+    Please review Programme Document / SSFA {{ intervention_number }} before {{ meeting_date }}.
 
     Please follow the link below to check details.
 
