@@ -411,14 +411,19 @@ class MonitoringActivityGroupSerializer(serializers.Field):
         if not isinstance(data, list):
             self.fail('bad_value', type=type(data))
 
+        if not hasattr(self.root, 'instance'):
+            return []
+
+        partner = self.root.instance
+        hact_activities = MonitoringActivity.objects.filter(partners=partner).filter_hact_for_partner(partner.id)
         activities = {
             activity.id: activity
-            for activity in MonitoringActivity.objects.filter(id__in=itertools.chain(*data))
+            for activity in hact_activities.filter(id__in=itertools.chain(*data))
         }
 
         result = []
         for group in data:
-            result.append([activities[activity] for activity in group])
+            result.append([activities[activity] for activity in group if activity in activities])
         result = list(filter(lambda x: x, result))
 
         return result
@@ -545,7 +550,7 @@ class PartnerOrganizationCreateUpdateSerializer(SnapshotModelSerializer):
                 group_object = instance_groups[i]
                 instance_activities = instance_groups[i].monitoring_activities.all()
 
-            if set(instance_activities).difference(set(groups[i])):
+            if set(instance_activities).symmetric_difference(set(groups[i])):
                 updated = True
 
             group_object.monitoring_activities.set(groups[i])
