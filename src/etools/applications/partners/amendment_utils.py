@@ -624,10 +624,19 @@ def render_quarters_difference(activity, activity_copy, fields_map, difference):
         }
 
 
+# choices_key it's the key where choices can be found in Dropdowns api (PMPDropdownsListApiView)
 def transform_to_choices_list(field_name, choices_key):
     def transform_field(instance, instance_copy, fields_map, difference):
         if field_name in difference:
             difference[field_name]['type'] = 'list[choices]'
+            difference[field_name]['choices_key'] = choices_key
+    return transform_field
+
+
+def transform_to_choices(field_name, choices_key):
+    def transform_field(instance, instance_copy, fields_map, difference):
+        if field_name in difference:
+            difference[field_name]['type'] = 'choices'
             difference[field_name]['choices_key'] = choices_key
     return transform_field
 
@@ -648,5 +657,15 @@ INTERVENTION_AMENDMENT_DIFF_POST_EFFECTS = {
     ],
     'partners.Intervention': [
         transform_to_choices_list('cash_transfer_modalities', 'cash_transfer_modalities'),
-    ]
+        transform_to_choices('document_type', 'intervention_doc_type'),
+        transform_to_choices('gender_rating', 'gender_rating'),
+        transform_to_choices('equity_rating', 'equity_rating'),
+        transform_to_choices('sustainability_rating', 'sustainability_rating'),
+    ],
+    'partners.InterventionRisk': [
+        transform_to_choices('risk_type', 'risk_types'),
+    ],
+    'partners.InterventionSupplyItem': [
+        transform_to_choices('provided_by', 'supply_item_provided_by'),
+    ],
 }
