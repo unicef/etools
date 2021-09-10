@@ -63,7 +63,8 @@ class AmendmentTestCase(BaseTenantTestCase):
             signed_by_unicef_date=today - datetime.timedelta(days=1),
             signed_by_partner_date=today - datetime.timedelta(days=1),
             unicef_signatory=self.unicef_staff,
-            partner_authorized_officer_signatory=self.partner1.staff_members.all().first()
+            partner_authorized_officer_signatory=self.partner1.staff_members.all().first(),
+            cash_transfer_modalities=[Intervention.CASH_TRANSFER_DIRECT],
         )
         ReportingRequirementFactory(intervention=self.active_intervention)
         self.signed_pd_document = AttachmentFactory(
@@ -152,6 +153,8 @@ class AmendmentTestCase(BaseTenantTestCase):
         )
         new_activity.time_frames.add(amendment.amended_intervention.quarters.first())
 
+        difference = amendment.get_difference()
+
         amendment.merge_amendment()
 
         self.assertListEqual(list(activity.time_frames.values_list('quarter', flat=True)), [2, 3, 4])
@@ -162,6 +165,10 @@ class AmendmentTestCase(BaseTenantTestCase):
             ).get().time_frames.values_list('quarter', flat=True).count(),
             1,
         )
+
+        quarters_difference = difference['result_links']['diff']['update'][0]['diff']['ll_results']['diff']['update']
+        quarters_difference = quarters_difference[0]['diff']['activities']['diff']['update'][0]['diff']['quarters']
+        self.assertDictEqual(quarters_difference, {'diff': ([1, 3], [2, 3, 4]), 'type': 'simple'})
 
     def test_activity_items_copy(self):
         original_item = InterventionActivityItemFactory(activity=self.activity)
@@ -370,6 +377,31 @@ class AmendmentTestCase(BaseTenantTestCase):
             },
         )
 
+    def test_calculate_difference_cash_transfer_modalities_choices(self):
+        amendment = InterventionAmendmentFactory(
+            intervention=self.active_intervention,
+            kind=InterventionAmendment.KIND_NORMAL,
+        )
+
+        amendment.amended_intervention.cash_transfer_modalities = [Intervention.CASH_TRANSFER_PAYMENT]
+        amendment.amended_intervention.save()
+
+        difference = amendment.get_difference()
+
+        self.assertDictEqual(
+            difference,
+            {
+                'cash_transfer_modalities': {
+                    'type': 'list[choices]',
+                    'diff': (
+                        [Intervention.CASH_TRANSFER_DIRECT],
+                        [Intervention.CASH_TRANSFER_PAYMENT],
+                    ),
+                    'choices_key': 'cash_transfer_modalities',
+                },
+            },
+        )
+
     def test_calculate_difference_one_to_one_field(self):
         amendment = InterventionAmendmentFactory(
             intervention=self.active_intervention,
@@ -570,6 +602,20 @@ class AmendmentTestCase(BaseTenantTestCase):
         self.assertIn('supply_items', amendment.difference)
         original_supply_item.refresh_from_db()
         self.assertEqual(original_supply_item.title, supply_item.title)
+
+    def test_create_intervention_supply_item(self):
+        supply_items_count_original = self.active_intervention.supply_items.count()
+        amendment = InterventionAmendmentFactory(
+            intervention=self.active_intervention,
+            kind=InterventionAmendment.KIND_NORMAL,
+        )
+        InterventionSupplyItemFactory(intervention=amendment.amended_intervention)
+
+        amendment.difference = amendment.get_difference()
+        amendment.merge_amendment()
+
+        self.assertIn('supply_items', amendment.difference)
+        self.assertEqual(self.active_intervention.supply_items.count(), supply_items_count_original + 1)
 
     def test_update_budget_items(self):
         item = InterventionManagementBudgetItemFactory(
