@@ -130,8 +130,24 @@ class InterventionPermissions(PMPPermissions):
         def unicef_not_accepted(instance):
             return not instance.unicef_accepted
 
+        def unicef_not_accepted_contingency(instance):
+            """ field not required to accept if contingency is on"""
+            return instance.contingency_pd or not instance.unicef_accepted
+
+        def is_spd_non_hum(instance):
+            # TODO: in the future we might want to add a money condition here (100k is the current limit)
+            return instance.document_type == instance.SPD and not instance.humanitarian_flag
+
+        def unicef_not_accepted_spd_non_hum(instance):
+            """ field not required to accept if pd is not non-humanitarian spd"""
+            # TODO: in the future we might want to add a money condition here (100k is the current limit)
+            return is_spd_non_hum(instance) or not instance.unicef_accepted
+
+        def not_spd(instance):
+            return not instance.document_type == instance.SPD
+
         def not_ssfa(instance):
-            return instance.document_type != instance.SSFA
+            return not is_spd_non_hum(instance)
 
         staff_member = self.user.get_partner_staff_member()
 
@@ -174,7 +190,11 @@ class InterventionPermissions(PMPPermissions):
             'partner_court': not self.instance.unicef_court and unlocked(self.instance),
             'unlocked': unlocked(self.instance),
             'is_spd': self.instance.document_type == self.instance.SPD,
+            'is_spd_non_hum': is_spd_non_hum(self.instance),
             'unicef_not_accepted': unicef_not_accepted(self.instance),
+            'unicef_not_accepted_contingency': unicef_not_accepted_contingency(self.instance),
+            'unicef_not_accepted_spd': not_spd(self.instance) or unicef_not_accepted(self.instance),
+            'unicef_not_accepted_spd_non_hum': unicef_not_accepted_spd_non_hum(self.instance),
             'not_ssfa+unicef_not_accepted': not_ssfa(self.instance) and unicef_not_accepted(self.instance),
         }
 
