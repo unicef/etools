@@ -399,7 +399,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
         if obj.status != obj.DRAFT:
             return [action for action in default_ordering if action in available_actions]
 
-        if obj.budget_owner == user and not obj.partner_accepted:
+        if not obj.partner_accepted and user in obj.unicef_users_involved:
             available_actions.append("accept_on_behalf_of_partner")
 
         # PD is assigned to UNICEF

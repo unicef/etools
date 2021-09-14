@@ -2237,6 +2237,14 @@ class Intervention(TimeStampedModel):
         # /assets/partner/intervention_permission.csv
         return True if len(self.combined_sections) > 0 else None
 
+    @property
+    def unicef_users_involved(self):
+        users = list(self.unicef_focal_points.all()) or []
+        if self.budget_owner and self.budget_owner not in users:
+            users.add(self.budget_owner)
+        print(users)
+        return users
+
     @cached_property
     def total_partner_contribution(self):
         return self.planned_budget.partner_contribution_local
