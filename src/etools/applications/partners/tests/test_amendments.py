@@ -542,7 +542,7 @@ class AmendmentTestCase(BaseTenantTestCase):
             kind=InterventionAmendment.KIND_NORMAL,
         )
 
-        risk = amendment.amended_intervention.risks.first()
+        risk = amendment.amended_intervention.risks.get(mitigation_measures=original_risk.mitigation_measures)
         risk.mitigation_measures = "mitigation_measures"
         risk.save()
 

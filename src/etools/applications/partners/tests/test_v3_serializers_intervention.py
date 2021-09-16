@@ -105,7 +105,7 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
         pd.unicef_focal_points.add(self.unicef_user)
         self.assertEqual(pd.status, pd.DRAFT)
         available_actions = self.unicef_serializer.get_available_actions(pd)
-        expected_actions = self.default_actions + ['send_to_partner', 'cancel']
+        expected_actions = self.default_actions + ['accept_on_behalf_of_partner', 'send_to_partner', 'cancel']
         self.assertEqual(sorted(available_actions), sorted(expected_actions))
 
     def test_available_actions_management_unsuspend(self):
@@ -145,6 +145,7 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
         self.assertEqual(pd.status, pd.DRAFT)
         available_actions = self.unicef_serializer.get_available_actions(pd)
         expected_actions = self.default_actions + [
+            "accept_on_behalf_of_partner",
             "cancel",
             "send_to_partner",
         ]
