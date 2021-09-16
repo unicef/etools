@@ -75,6 +75,9 @@ class TestStrUnicode(SimpleTestCase):
         instance = LowerResultFactory.build(name='\xccsland', code='xyz')
         self.assertEqual(str(instance), 'xyz: \xccsland')
 
+        instance = LowerResultFactory.build(name='\xccsland', code=None)
+        self.assertEqual(str(instance), '\xccsland')
+
     def test_unit(self):
         instance = UnitFactory.build(type='xyz')
         self.assertTrue(str(instance).endswith('xyz'))
