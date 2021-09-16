@@ -376,6 +376,9 @@ class LowerResult(TimeStampedModel):
     code = models.CharField(verbose_name=_("Code"), max_length=50, blank=True, null=True)
 
     def __str__(self):
+        if not self.code:
+            return self.name
+
         return '{}: {}'.format(
             self.code,
             self.name
