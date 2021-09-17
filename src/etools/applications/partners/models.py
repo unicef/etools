@@ -2242,7 +2242,6 @@ class Intervention(TimeStampedModel):
         users = list(self.unicef_focal_points.all()) or []
         if self.budget_owner and self.budget_owner not in users:
             users.append(self.budget_owner)
-        print(users)
         return users
 
     @cached_property
