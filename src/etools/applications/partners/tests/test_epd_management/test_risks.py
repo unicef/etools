@@ -75,7 +75,7 @@ class TestRisksManagement(BaseTestCase):
 
     # check functionality
     def test_add(self):
-        self.assertEqual(self.draft_intervention.risks.count(), 0)
+        self.assertEqual(self.draft_intervention.risks.count(), 1)
         response = self.forced_auth_req(
             'patch',
             reverse('pmp_v3:intervention-detail', args=[self.draft_intervention.pk]),
@@ -85,8 +85,8 @@ class TestRisksManagement(BaseTestCase):
             }
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
-        self.assertEqual(response.data['risks'][0]['risk_type'], InterventionRisk.RISK_TYPE_FINANCIAL)
-        self.assertEqual(self.draft_intervention.risks.count(), 1)
+        self.assertEqual(response.data['risks'][1]['risk_type'], InterventionRisk.RISK_TYPE_FINANCIAL)
+        self.assertEqual(self.draft_intervention.risks.count(), 2)
 
     def test_update(self):
         risk = InterventionRiskFactory(
@@ -104,7 +104,7 @@ class TestRisksManagement(BaseTestCase):
             }
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
-        self.assertEqual(response.data['risks'][0]['risk_type'], InterventionRisk.RISK_TYPE_OPERATIONAL)
+        self.assertEqual(response.data['risks'][1]['risk_type'], InterventionRisk.RISK_TYPE_OPERATIONAL)
 
     def test_destroy(self):
         risk = InterventionRiskFactory(
@@ -118,7 +118,7 @@ class TestRisksManagement(BaseTestCase):
             data={}
         )
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT, response.data)
-        self.assertEqual(self.draft_intervention.risks.count(), 0)
+        self.assertEqual(self.draft_intervention.risks.count(), 1)
 
     # check permissions matrix is honored; editable only in draft
     def test_add_for_ended_intervention(self):
@@ -162,7 +162,7 @@ class TestRisksManagement(BaseTestCase):
     def test_add_as_partner_user_partner_court(self):
         self.draft_intervention.unicef_court = False
         self.draft_intervention.save()
-        self.assertEqual(self.draft_intervention.risks.count(), 0)
+        self.assertEqual(self.draft_intervention.risks.count(), 1)
         response = self.forced_auth_req(
             'patch',
             reverse('pmp_v3:intervention-detail', args=[self.draft_intervention.pk]),
@@ -172,5 +172,5 @@ class TestRisksManagement(BaseTestCase):
             }
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
-        self.assertEqual(response.data['risks'][0]['risk_type'], InterventionRisk.RISK_TYPE_FINANCIAL)
-        self.assertEqual(self.draft_intervention.risks.count(), 1)
+        self.assertEqual(response.data['risks'][1]['risk_type'], InterventionRisk.RISK_TYPE_FINANCIAL)
+        self.assertEqual(self.draft_intervention.risks.count(), 2)

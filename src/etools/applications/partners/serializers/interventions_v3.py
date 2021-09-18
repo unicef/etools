@@ -399,7 +399,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
         if obj.status != obj.DRAFT:
             return [action for action in default_ordering if action in available_actions]
 
-        if obj.budget_owner == user and not obj.partner_accepted:
+        if not obj.partner_accepted and user in obj.unicef_users_involved:
             available_actions.append("accept_on_behalf_of_partner")
 
         # PD is assigned to UNICEF
@@ -432,39 +432,35 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
         return [action for action in default_ordering if action in available_actions]
 
     def get_status_list(self, obj):
+        pre_signed_statuses = [
+            obj.DRAFT,
+            obj.REVIEW,
+            obj.SIGNATURE,
+            obj.SIGNED
+        ]
+        post_signed_statuses = [
+            obj.DRAFT,
+            obj.SIGNED,
+            obj.ACTIVE,
+            obj.ENDED,
+            obj.CLOSED,
+        ]
         if obj.status == obj.SUSPENDED:
-            status_list = [
-                obj.DRAFT,
-                obj.REVIEW,
-                obj.SIGNATURE,
-                obj.SIGNED,
-                obj.SUSPENDED,
-                obj.ACTIVE,
-                obj.ENDED,
-                obj.CLOSED,
-            ]
+            status_list = [obj.SUSPENDED]
+
         elif obj.status == obj.TERMINATED:
             status_list = [
-                obj.DRAFT,
-                obj.REVIEW,
-                obj.SIGNATURE,
-                obj.SIGNED,
                 obj.TERMINATED,
             ]
         elif obj.status == obj.CANCELLED:
             status_list = [
                 obj.CANCELLED,
             ]
+        elif obj.status not in [obj.SIGNED, obj.ACTIVE, obj.ENDED, obj.CLOSED]:
+            status_list = pre_signed_statuses
         else:
-            status_list = [
-                obj.DRAFT,
-                obj.REVIEW,
-                obj.SIGNATURE,
-                obj.SIGNED,
-                obj.ACTIVE,
-                obj.ENDED,
-                obj.CLOSED,
-            ]
+            status_list = post_signed_statuses
+
         return [s for s in obj.INTERVENTION_STATUS if s[0] in status_list]
 
     def get_quarters(self, obj: Intervention):
