@@ -596,6 +596,7 @@ class TestUpdate(BaseInterventionTestCase):
 
     def test_patch_currency(self):
         intervention = InterventionFactory()
+        intervention.unicef_focal_points.add(self.user)
         budget = intervention.planned_budget
         self.assertNotEqual(budget.currency, "PEN")
 
@@ -646,6 +647,7 @@ class TestUpdate(BaseInterventionTestCase):
 
     def test_update_hq_cash_local(self):
         intervention = InterventionFactory()
+        intervention.unicef_focal_points.add(self.user)
         budget = intervention.planned_budget
 
         InterventionActivityFactory(
@@ -948,6 +950,7 @@ class TestSupplyItem(BaseInterventionTestCase):
         super().setUp()
         self.partner = PartnerFactory()
         self.intervention = InterventionFactory(date_sent_to_partner=datetime.date.today(), agreement__partner=self.partner)
+        self.intervention.unicef_focal_points.add(self.user)
         self.supply_items_file = SimpleUploadedFile(
             'my_list.csv',
             u'''"Product Number","Product Title","Product Description","Unit of Measure",Quantity,"Indicative Price","Total Price"\n
@@ -1300,6 +1303,7 @@ class TestSupplyItem(BaseInterventionTestCase):
 class TestInterventionUpdate(BaseInterventionTestCase):
     def _test_patch(self, mapping):
         intervention = InterventionFactory()
+        intervention.unicef_focal_points.add(self.user)
         data = {}
         for field, value in mapping:
             self.assertNotEqual(getattr(intervention, field), value)
@@ -1317,6 +1321,7 @@ class TestInterventionUpdate(BaseInterventionTestCase):
 
     def test_partner_details(self):
         intervention = InterventionFactory()
+        intervention.unicef_focal_points.add(self.user)
         agreement = AgreementFactory()
         focal_1 = PartnerStaffFactory()
         focal_2 = PartnerStaffFactory()
@@ -1353,7 +1358,7 @@ class TestInterventionUpdate(BaseInterventionTestCase):
             data={
                 "agreement": agreement.pk,
                 "document_type": Intervention.PD,
-                "unicef_focal_points": [focal_1.pk, focal_2.pk],
+                "unicef_focal_points": [focal_1.pk, focal_2.pk, self.user.pk],
                 "budget_owner": budget_owner.pk,
                 "offices": [office.pk],
                 "sections": [section.pk],
@@ -1368,7 +1373,7 @@ class TestInterventionUpdate(BaseInterventionTestCase):
         self.assertEqual(intervention.budget_owner, budget_owner)
         self.assertListEqual(
             sorted([i.pk for i in intervention.unicef_focal_points.all()]),
-            sorted([focal_1.pk, focal_2.pk]),
+            sorted([focal_1.pk, focal_2.pk, self.user.pk]),
         )
 
     def test_document(self):
@@ -1382,6 +1387,7 @@ class TestInterventionUpdate(BaseInterventionTestCase):
 
     def test_location(self):
         intervention = InterventionFactory()
+        intervention.unicef_focal_points.add(self.user)
         self.assertEqual(list(intervention.flat_locations.all()), [])
         loc1 = LocationFactory()
         loc2 = LocationFactory()
@@ -2409,6 +2415,7 @@ class TestTimeframesValidation(BaseInterventionTestCase):
             start=datetime.date(year=1970, month=1, day=1),
             end=datetime.date(year=1970, month=12, day=31),
         )
+        self.intervention.unicef_focal_points.add(self.user)
         self.result_link = InterventionResultLinkFactory(
             cp_output__result_type__name=ResultType.OUTPUT,
             intervention=self.intervention
@@ -2473,6 +2480,7 @@ class TestInterventionAttachments(BaseTenantTestCase):
         self.partnership_manager = UserFactory(is_staff=True, groups__data=['Partnership Manager', 'UNICEF User'])
         self.example_attachment = AttachmentFactory(file="test_file.pdf", file_type=None, code="", )
         self.list_url = reverse('pmp_v3:intervention-attachment-list', args=[self.intervention.id])
+        self.intervention.unicef_focal_points.add(self.partnership_manager)
 
     def test_list(self):
         response = self.forced_auth_req(
@@ -2547,6 +2555,7 @@ class TestPMPInterventionIndicatorsUpdateView(BaseTenantTestCase):
             is_staff=True,
             groups__data=['Partnership Manager', 'UNICEF User'],
         )
+        self.intervention.unicef_focal_points.add(self.partnership_manager)
 
     def test_permission(self):
         response = self.forced_auth_req(
