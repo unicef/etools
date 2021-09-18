@@ -233,7 +233,9 @@ class InterventionPermissions(PMPPermissions):
                               "other_partners_involved",
                               "technical_guidance",
                               "cancel_justification",
-                              "population_focus"]
+                              "population_focus",
+                              "risks",
+                              "sites"]
         ps = self.permission_structure
         my_permissions = {}
         for action in self.possible_actions:
