@@ -1635,6 +1635,7 @@ class InterventionManager(models.Manager):
             'result_links__ll_results__applied_indicators__locations',
             'management_budgets__items',
             'flat_locations',
+            'sites',
             'supply_items',
         )
         return qs
