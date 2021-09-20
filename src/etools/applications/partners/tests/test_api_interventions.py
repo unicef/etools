@@ -146,6 +146,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
             "sections",
             "sections_present",
             "special_reporting_requirements",
+            "sites",
             "start",
             "status",
             "submission_date",

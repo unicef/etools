@@ -1635,6 +1635,7 @@ class InterventionManager(models.Manager):
             'result_links__ll_results__applied_indicators__locations',
             'management_budgets__items',
             'flat_locations',
+            'sites',
             'supply_items',
         )
         return qs
@@ -1993,6 +1994,11 @@ class Intervention(TimeStampedModel):
     )
     flat_locations = models.ManyToManyField(Location, related_name="intervention_flat_locations", blank=True,
                                             verbose_name=_('Locations'))
+
+    sites = models.ManyToManyField('field_monitoring_settings.LocationSite',
+                                   related_name='interventions',
+                                   blank=True,
+                                   verbose_name=_('Sites'))
 
     population_focus = models.CharField(
         verbose_name=_("Population Focus"),
