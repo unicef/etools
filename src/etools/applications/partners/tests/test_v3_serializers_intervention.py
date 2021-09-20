@@ -105,7 +105,7 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
         pd.unicef_focal_points.add(self.unicef_user)
         self.assertEqual(pd.status, pd.DRAFT)
         available_actions = self.unicef_serializer.get_available_actions(pd)
-        expected_actions = self.default_actions + ['send_to_partner', 'cancel']
+        expected_actions = self.default_actions + ['accept_on_behalf_of_partner', 'send_to_partner', 'cancel']
         self.assertEqual(sorted(available_actions), sorted(expected_actions))
 
     def test_available_actions_management_unsuspend(self):
@@ -145,6 +145,7 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
         self.assertEqual(pd.status, pd.DRAFT)
         available_actions = self.unicef_serializer.get_available_actions(pd)
         expected_actions = self.default_actions + [
+            "accept_on_behalf_of_partner",
             "cancel",
             "send_to_partner",
         ]
@@ -176,33 +177,19 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
             Intervention.REVIEW,
             Intervention.SIGNATURE,
             Intervention.SIGNED,
-            Intervention.ACTIVE,
-            Intervention.ENDED,
-            Intervention.CLOSED,
         ]))
 
     def test_status_list_suspended(self):
         pd = InterventionFactory(status=Intervention.SUSPENDED)
         status_list = self.unicef_serializer.get_status_list(pd)
         self.assertEqual(sorted(status_list), self._expected_status_list([
-            Intervention.DRAFT,
-            Intervention.REVIEW,
-            Intervention.SIGNATURE,
-            Intervention.SIGNED,
             Intervention.SUSPENDED,
-            Intervention.ACTIVE,
-            Intervention.ENDED,
-            Intervention.CLOSED,
         ]))
 
     def test_status_list_terminated(self):
         pd = InterventionFactory(status=Intervention.TERMINATED)
         status_list = self.unicef_serializer.get_status_list(pd)
         self.assertEqual(sorted(status_list), self._expected_status_list([
-            Intervention.DRAFT,
-            Intervention.REVIEW,
-            Intervention.SIGNATURE,
-            Intervention.SIGNED,
             Intervention.TERMINATED,
         ]))
 
