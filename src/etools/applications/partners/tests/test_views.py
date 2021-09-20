@@ -1122,7 +1122,8 @@ class TestInterventionViews(BaseTenantTestCase):
             "end": (timezone.now().date() + datetime.timedelta(days=31)).isoformat(),
             "unicef_budget": 0,
             "agreement": self.agreement.id,
-            "reference_number_year": datetime.date.today().year
+            "reference_number_year": datetime.date.today().year,
+            "unicef_focal_points": [self.partnership_manager_user.id]
         }
         response = self.forced_auth_req(
             'post',
@@ -1133,6 +1134,7 @@ class TestInterventionViews(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
 
         self.intervention = response.data
+
         self.section = SectionFactory()
 
         self.fund_commitment_header = FundsCommitmentHeader.objects.create(
@@ -1544,6 +1546,7 @@ class TestInterventionViews(BaseTenantTestCase):
 
     def test_intervention_update_planned_visits_year_change(self):
         intervention = InterventionFactory()
+        intervention.unicef_focal_points.add(self.partnership_manager_user)
         visit = InterventionPlannedVisitsFactory(intervention=intervention)
         visit_qs = InterventionPlannedVisits.objects.filter(
             intervention=intervention,

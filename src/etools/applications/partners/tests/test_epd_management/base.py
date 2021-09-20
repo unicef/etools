@@ -55,6 +55,7 @@ class BaseTestCase(BaseTenantTestCase):
             date_sent_to_partner=date.today(),
         )
         self.draft_intervention.unicef_focal_points.add(UserFactory())
+        self.draft_intervention.unicef_focal_points.add(self.partnership_manager)
         self.draft_intervention.partner_focal_points.add(partner_focal_point_staff)
 
         country_programme = CountryProgrammeFactory()
@@ -79,7 +80,7 @@ class BaseTestCase(BaseTenantTestCase):
         review.submitted_by = UserFactory()
         review.review_type = 'prc'
         review.save()
-        self.review_intervention.unicef_focal_points.add(UserFactory())
+        self.review_intervention.unicef_focal_points.add(self.partnership_manager)
         self.review_intervention.sections.add(SectionFactory())
         self.review_intervention.offices.add(OfficeFactory())
         self.review_intervention.partner_focal_points.add(partner_focal_point_staff)
@@ -99,7 +100,7 @@ class BaseTestCase(BaseTenantTestCase):
             code='partners_intervention_signed_pd',
             content_object=self.signature_intervention,
         )
-        self.signature_intervention.unicef_focal_points.add(UserFactory())
+        self.signature_intervention.unicef_focal_points.add(self.partnership_manager)
         self.signature_intervention.sections.add(SectionFactory())
         self.signature_intervention.offices.add(OfficeFactory())
         self.signature_intervention.partner_focal_points.add(partner_focal_point_staff)
@@ -126,7 +127,7 @@ class BaseTestCase(BaseTenantTestCase):
             code='partners_intervention_signed_pd',
             content_object=self.ended_intervention,
         )
-        self.ended_intervention.unicef_focal_points.add(UserFactory())
+        self.ended_intervention.unicef_focal_points.add(self.partnership_manager)
         self.ended_intervention.sections.add(SectionFactory())
         self.ended_intervention.offices.add(OfficeFactory())
         self.ended_intervention.partner_focal_points.add(partner_focal_point_staff)
