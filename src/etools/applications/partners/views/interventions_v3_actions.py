@@ -111,7 +111,7 @@ class PMPInterventionAcceptOnBehalfOfPartner(PMPInterventionActionView):
         if pd.status not in [Intervention.DRAFT]:
             raise ValidationError("Action is not allowed")
 
-        if self.request.user not in pd.unicef_focal_points.all():
+        if self.request.user not in pd.unicef_users_involved:
             raise ValidationError("Only focal points can accept")
 
         if pd.partner_accepted:

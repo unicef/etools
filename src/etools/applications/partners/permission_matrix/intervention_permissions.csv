@@ -17,6 +17,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.3.3,capacity_development,Partnership Manager,unicef_court,Draft,Edit,TRUE
 3.3.3,capacity_development,Partner User,partner_court,Draft,Edit,TRUE
 3.3.3,cash_transfer_modalities,*,,*,View,TRUE
+3.3.3,cash_transfer_modalities,Partnership Manager,contingency on,Review,Edit,TRUE
 3.3.3,cash_transfer_modalities,Partnership Manager,,Draft,Edit,TRUE
 3.3.5,cfei_number,*,,*,View,TRUE
 3.3.5,cfei_number,Partnership Manager,,Draft,Edit,TRUE
@@ -36,12 +37,8 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.9.3,end,Partnership Manager,,Signed,Edit,TRUE
 3.9.3,end,Partnership Manager,termination_doc_attached,Active,Edit,TRUE
 3.9.5,end,Partnership Manager,user_adds_amendment,*,Edit,TRUE
-3.9.4,end,*,unicef_not_accepted,Draft,Required,FALSE
+3.9.4,end,*,unicef_not_accepted_contingency,Draft,Required,FALSE
 3.9.5,end,*,contingency on,Signed,Required,FALSE
-3.9.5,equity_narrative,Partnership Manager,unicef_court,Draft,Edit,TRUE
-3.9.12,equity_narrative,Partner User,partner_court,Draft,Edit,TRUE
-3.9.11,equity_rating,Partnership Manager,unicef_court,Draft,Edit,TRUE
-3.9.12,equity_rating,Partner User,partner_court,Draft,Edit,TRUE
 3.9.5,final_partnership_review,UNICEF User,,*,View,TRUE
 3.9.5,final_partnership_review,Partnership Manager,,Ended,Edit,TRUE
 3.9.5,date_partnership_review_performed,UNICEF User,,*,View,TRUE
@@ -55,15 +52,34 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.9.8,frs,Partnership Manager,,Draft,Edit,TRUE
 3.10.1,frs,Partnership Manager,,Review,Edit,TRUE
 3.10.1,frs,Partnership Manager,,Signature,Edit,TRUE
-3.10.1,frs,*,not_in_amendment_mode,Signed,Required,TRUE
-3.10.1,gender_narrative,Partnership Manager,unicef_court,Draft,Edit,TRUE
-3.12,gender_narrative,Partner User,partner_court,Draft,Edit,TRUE
-3.12,gender_rating,Partnership Manager,unicef_court,Draft,Edit,TRUE
-3.12,gender_rating,Partner User,partner_court,Draft,Edit,TRUE
+3.10.1,frs,Partnership Manager,,Signed,Edit,TRUE
+3.10.1,frs,*,not_in_amendment_mode,Active,Required,TRUE
+3.10.1,frs,*,not_in_amendment_mode,Ended,Required,TRUE
+3.10.1,frs,*,,Implemented,Required,TRUE
+3.10.1,frs,*,,Closed,Required,TRUE
+0,equity_narrative,Partnership Manager,unicef_court,Draft,Edit,TRUE
+0,equity_narrative,Partner User,partner_court,Draft,Edit,TRUE
+0,equity_narrative,Partnership Manager,contingency on,Signed,Edit,TRUE
+0,equity_rating,Partnership Manager,unicef_court,Draft,Edit,TRUE
+0,equity_rating,Partner User,partner_court,Draft,Edit,TRUE
+0,equity_rating,Partnership Manager,contingency on,Signed,Edit,TRUE
+0,gender_narrative,Partnership Manager,unicef_court,Draft,Edit,TRUE
+0,gender_narrative,Partner User,partner_court,Draft,Edit,TRUE
+0,gender_narrative,Partnership Manager,contingency on,Signed,Edit,TRUE
+0,gender_rating,Partnership Manager,unicef_court,Draft,Edit,TRUE
+0,gender_rating,Partner User,partner_court,Draft,Edit,TRUE
+0,gender_rating,Partnership Manager,contingency on,Signed,Edit,TRUE
+0,sustainability_narrative,Partnership Manager,unicef_court,Draft,Edit,TRUE
+0,sustainability_narrative,Partner User,partner_court,Draft,Edit,TRUE
+0,sustainability_narrative,Partnership Manager,contingency on,Signed,Edit,TRUE
+0,sustainability_rating,Partnership Manager,unicef_court,Draft,Edit,TRUE
+0,sustainability_rating,Partner User,partner_court,Draft,Edit,TRUE
+0,sustainability_rating,Partnership Manager,contingency on,Signed,Edit,TRUE
 3.12,hq_support_cost,*,,*,View,TRUE
 3.12,hq_support_cost,Partnership Manager,,Draft,Edit,TRUE
 3.12.6,implementation_strategy,Partnership Manager,unicef_court,Draft,Edit,TRUE
 3.12.6,implementation_strategy,Partner User,partner_court,Draft,Edit,TRUE
+3.12.6,implementation_strategy,Partnership Manager,contingency on,Signed,Edit,TRUE
 3.2.5,in_amendment,Partnership Manager,,Signed,Edit,TRUE
 3.2.7,in_amendment,Partnership Manager,,Active,Edit,TRUE
 3.2.8,ip_program_contribution,Partnership Manager,unicef_court,Draft,Edit,TRUE
@@ -141,7 +157,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,start,Partnership Manager,unicef_court,Draft,Edit,TRUE
 ,start,Partner User,partner_court,Draft,Edit,TRUE
 ,start,Partnership Manager,,Signed,Edit,TRUE
-,start,*,unicef_not_accepted,Draft,Required,FALSE
+,start,*,unicef_not_accepted_contingency,Draft,Required,FALSE
 ,start,*,contingency on,Signed,Required,FALSE
 ,submission_date,*,,*,View,TRUE
 ,submission_date,Partnership Manager,,Draft,Edit,TRUE
@@ -151,10 +167,6 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,submission_date_prc,Partnership Manager,,Review,Edit,TRUE
 ,supply_items,Partnership Manager,unicef_court,Draft,Edit,TRUE
 ,supply_items,Partner User,partner_court,Draft,Edit,TRUE
-,sustainability_narrative,Partnership Manager,unicef_court,Draft,Edit,TRUE
-,sustainability_narrative,Partner User,partner_court,Draft,Edit,TRUE
-,sustainability_rating,Partnership Manager,unicef_court,Draft,Edit,TRUE
-,sustainability_rating,Partner User,partner_court,Draft,Edit,TRUE
 ,technical_guidance,Partnership Manager,unicef_court,Draft,Edit,TRUE
 ,technical_guidance,Partner User,partner_court,Draft,Edit,TRUE
 ,termination_doc_attachment,*,,Terminated,Required,TRUE
@@ -186,34 +198,85 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,signed_pd_attachment,*,,Review,Required,FALSE
 ,date_sent_to_partner,*,,Draft,Required,FALSE
 ,context,*,unicef_not_accepted,Draft,Required,FALSE
-,implementation_strategy,*,unicef_not_accepted,Draft,Required,FALSE
-,gender_rating,*,unicef_not_accepted,Draft,Required,FALSE
-,gender_narrative,*,unicef_not_accepted,Draft,Required,FALSE
-,equity_rating,*,unicef_not_accepted,Draft,Required,FALSE
-,equity_narrative,*,unicef_not_accepted,Draft,Required,FALSE
-,sustainability_rating,*,unicef_not_accepted,Draft,Required,FALSE
-,sustainability_narrative,*,unicef_not_accepted,Draft,Required,FALSE
-,sustainability_rating,*,is_spd,Review,Required,FALSE
-,sustainability_narrative,*,is_spd,Review,Required,FALSE
-,sustainability_rating,*,is_spd,Signature,Required,FALSE
-,sustainability_narrative,*,is_spd,Signature,Required,FALSE
-,sustainability_rating,*,is_spd,Signed,Required,FALSE
-,sustainability_narrative,*,is_spd,Signed,Required,FALSE
-,sustainability_narrative,*,is_spd,Active,Required,FALSE
-,sustainability_rating,*,is_spd,Active,Required,FALSE
-,sustainability_narrative,*,is_spd,Ended,Required,FALSE
-,sustainability_rating,*,is_spd,Ended,Required,FALSE
-,sustainability_narrative,*,is_spd,Closed,Required,FALSE
-,sustainability_rating,*,is_spd,Closed,Required,FALSE
-,sustainability_rating,*,is_spd,Suspended,Required,FALSE
-,sustainability_narrative,*,is_spd,Suspended,Required,FALSE
-,sustainability_rating,*,is_spd,Terminated,Required,FALSE
-,sustainability_narrative,*,is_spd,Terminated,Required,FALSE
-,sustainability_rating,*,is_spd,Cancelled,Required,FALSE
-,sustainability_narrative,*,is_spd,Cancelled,Required,FALSE
+,implementation_strategy,*,unicef_not_accepted_contingency,Draft,Required,FALSE
+,implementation_strategy,*,contingency on,Review,Required,FALSE
+,implementation_strategy,*,contingency on,Signature,Required,FALSE
+,implementation_strategy,*,contingency on,Signed,Required,FALSE
+,sustainability_narrative,*,unicef_not_accepted_spd_non_hum,Draft,Required,FALSE
+,sustainability_narrative,*,is_spd_non_hum,Review,Required,FALSE
+,sustainability_narrative,*,is_spd_non_hum,Signature,Required,FALSE
+,sustainability_narrative,*,is_spd_non_hum,Signed,Required,FALSE
+,sustainability_narrative,*,is_spd_non_hum,Active,Required,FALSE
+,sustainability_narrative,*,is_spd_non_hum,Ended,Required,FALSE
+,sustainability_narrative,*,is_spd_non_hum,Closed,Required,FALSE
+,sustainability_narrative,*,is_spd_non_hum,Suspended,Required,FALSE
+,sustainability_narrative,*,is_spd_non_hum,Terminated,Required,FALSE
+,sustainability_narrative,*,is_spd_non_hum,Cancelled,Required,FALSE
+,sustainability_rating,*,unicef_not_accepted_spd_non_hum,Draft,Required,FALSE
+,sustainability_rating,*,is_spd_non_hum,Review,Required,FALSE
+,sustainability_rating,*,is_spd_non_hum,Signature,Required,FALSE
+,sustainability_rating,*,is_spd_non_hum,Signed,Required,FALSE
+,sustainability_rating,*,is_spd_non_hum,Active,Required,FALSE
+,sustainability_rating,*,is_spd_non_hum,Ended,Required,FALSE
+,sustainability_rating,*,is_spd_non_hum,Closed,Required,FALSE
+,sustainability_rating,*,is_spd_non_hum,Suspended,Required,FALSE
+,sustainability_rating,*,is_spd_non_hum,Terminated,Required,FALSE
+,sustainability_rating,*,is_spd_non_hum,Cancelled,Required,FALSE
+,gender_narrative,*,unicef_not_accepted_spd_non_hum,Draft,Required,FALSE
+,gender_narrative,*,is_spd_non_hum,Review,Required,FALSE
+,gender_narrative,*,is_spd_non_hum,Signature,Required,FALSE
+,gender_narrative,*,is_spd_non_hum,Signed,Required,FALSE
+,gender_narrative,*,is_spd_non_hum,Active,Required,FALSE
+,gender_narrative,*,is_spd_non_hum,Ended,Required,FALSE
+,gender_narrative,*,is_spd_non_hum,Closed,Required,FALSE
+,gender_narrative,*,is_spd_non_hum,Suspended,Required,FALSE
+,gender_narrative,*,is_spd_non_hum,Terminated,Required,FALSE
+,gender_narrative,*,is_spd_non_hum,Cancelled,Required,FALSE
+,gender_rating,*,unicef_not_accepted_spd_non_hum,Draft,Required,FALSE
+,gender_rating,*,is_spd_non_hum,Review,Required,FALSE
+,gender_rating,*,is_spd_non_hum,Signature,Required,FALSE
+,gender_rating,*,is_spd_non_hum,Signed,Required,FALSE
+,gender_rating,*,is_spd_non_hum,Active,Required,FALSE
+,gender_rating,*,is_spd_non_hum,Ended,Required,FALSE
+,gender_rating,*,is_spd_non_hum,Closed,Required,FALSE
+,gender_rating,*,is_spd_non_hum,Suspended,Required,FALSE
+,gender_rating,*,is_spd_non_hum,Terminated,Required,FALSE
+,gender_rating,*,is_spd_non_hum,Cancelled,Required,FALSE
+,equity_narrative,*,unicef_not_accepted_spd_non_hum,Draft,Required,FALSE
+,equity_narrative,*,is_spd_non_hum,Review,Required,FALSE
+,equity_narrative,*,is_spd_non_hum,Signature,Required,FALSE
+,equity_narrative,*,is_spd_non_hum,Signed,Required,FALSE
+,equity_narrative,*,is_spd_non_hum,Active,Required,FALSE
+,equity_narrative,*,is_spd_non_hum,Ended,Required,FALSE
+,equity_narrative,*,is_spd_non_hum,Closed,Required,FALSE
+,equity_narrative,*,is_spd_non_hum,Suspended,Required,FALSE
+,equity_narrative,*,is_spd_non_hum,Terminated,Required,FALSE
+,equity_narrative,*,is_spd_non_hum,Cancelled,Required,FALSE
+,equity_rating,*,unicef_not_accepted_spd_non_hum,Draft,Required,FALSE
+,equity_rating,*,is_spd_non_hum,Review,Required,FALSE
+,equity_rating,*,is_spd_non_hum,Signature,Required,FALSE
+,equity_rating,*,is_spd_non_hum,Signed,Required,FALSE
+,equity_rating,*,is_spd_non_hum,Active,Required,FALSE
+,equity_rating,*,is_spd_non_hum,Ended,Required,FALSE
+,equity_rating,*,is_spd_non_hum,Closed,Required,FALSE
+,equity_rating,*,is_spd_non_hum,Suspended,Required,FALSE
+,equity_rating,*,is_spd_non_hum,Terminated,Required,FALSE
+,equity_rating,*,is_spd_non_hum,Cancelled,Required,FALSE
+,risks,*,unicef_not_accepted_spd_non_hum,Draft,Required,FALSE
+,risks,*,is_spd_non_hum,Review,Required,FALSE
+,risks,*,is_spd_non_hum,Signature,Required,FALSE
+,risks,*,is_spd_non_hum,Signed,Required,FALSE
+,risks,*,is_spd_non_hum,Active,Required,FALSE
+,risks,*,is_spd_non_hum,Ended,Required,FALSE
+,risks,*,is_spd_non_hum,Closed,Required,FALSE
+,risks,*,is_spd_non_hum,Suspended,Required,FALSE
+,risks,*,is_spd_non_hum,Terminated,Required,FALSE
+,risks,*,is_spd_non_hum,Cancelled,Required,FALSE
 ,hq_support_cost,*,unicef_not_accepted,Draft,Required,FALSE
-,ip_program_contribution,*,unicef_not_accepted,Draft,Required,FALSE
-,cash_transfer_modalities,*,unicef_not_accepted,Draft,Required,FALSE
+,ip_program_contribution,*,unicef_not_accepted_spd,Draft,Required,FALSE
+,cash_transfer_modalities,*,contingency on,Signed,Required,FALSE
+,cash_transfer_modalities,*,contingency on,Review,Required,FALSE
+,cash_transfer_modalities,*,unicef_not_accepted_contingency,Draft,Required,FALSE
 ,cancel_justification,*,,Cancelled,Required,TRUE
 3.9.5,end,*,contingency on,Review,Required,FALSE
 3.9.5,end,*,contingency on,Signature,Required,FALSE

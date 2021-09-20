@@ -1792,7 +1792,7 @@ class Intervention(TimeStampedModel):
         (REVIEW_TYPE_NON_PRC, "Non-PRC"),
     )
 
-    tracker = FieldTracker()
+    tracker = FieldTracker(["date_sent_to_partner", "start", "end"])
     objects = InterventionManager()
 
     document_type = models.CharField(
@@ -2237,6 +2237,13 @@ class Intervention(TimeStampedModel):
         # for permissions validation. the name of this def needs to remain the same as defined in the permission matrix.
         # /assets/partner/intervention_permission.csv
         return True if len(self.combined_sections) > 0 else None
+
+    @property
+    def unicef_users_involved(self):
+        users = list(self.unicef_focal_points.all()) or []
+        if self.budget_owner and self.budget_owner not in users:
+            users.append(self.budget_owner)
+        return users
 
     @cached_property
     def total_partner_contribution(self):
