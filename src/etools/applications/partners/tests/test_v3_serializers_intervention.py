@@ -29,6 +29,7 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
         self.default_actions = sorted([
             "download_comments",
             "export_results",
+            "export_pdf",
         ])
 
     def test_available_actions_not_draft(self):
