@@ -147,6 +147,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
             "sections",
             "sections_present",
             "special_reporting_requirements",
+            "sites",
             "start",
             "status",
             "submission_date",
@@ -1414,11 +1415,12 @@ class BaseAPIInterventionIndicatorsCreateMixin:
 
     def test_group_permission_non_staff(self):
         """Ensure group membership is sufficient for create; even non-staff group members can create"""
-        user = UserFactory()
+        user = UserFactory(is_staff=True)
         response = self._make_request(user)
         self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
 
         _add_user_to_partnership_manager_group(user)
+        self.lower_result.result_link.intervention.unicef_focal_points.add(user)
 
         # Now the request should succeed.
         response = self._make_request(user)
@@ -1428,8 +1430,9 @@ class BaseAPIInterventionIndicatorsCreateMixin:
         """Ensure a different indicator blueprint can be associated with the same lower_result, but
         the same indicator can't be added twice.
         """
-        user = UserFactory()
+        user = UserFactory(is_staff=True)
         _add_user_to_partnership_manager_group(user)
+        self.lower_result.result_link.intervention.unicef_focal_points.add(user)
         data = self.data.copy()
         data['indicator'] = {'title': 'another indicator blueprint'}
         response = self._make_request(user, data)
