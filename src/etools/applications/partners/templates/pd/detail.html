@@ -132,11 +132,11 @@
         </tr>
         <tr>
           <td class="b-gray w-p20">Organization Name</td>
-          <td>{{ pd.partner.title }}</td>
+          <td>{{ pd.agreement.partner.name }}</td>
         </tr>
         <tr>
           <td class="b-gray w-p20">Programme Title</td>
-          <td></td>
+          <td>{{ pd.title }}</td>
         </tr>
         <tr>
           <td class="b-gray w-p20">Planned duration</td>
@@ -235,6 +235,7 @@
         <tbody>
       </table>
 
+      <pdf:nextpage />
       <table class="all-cells-border mt-20">
         <tbody>
         <tr>
@@ -451,8 +452,7 @@
         </tr>
         <tr>
           <td class="b-gray w-p20">Activation Protocol</td>
-{#          <td>{{ pd.activation_protocol }}</td>#}
-          <td></td>
+          <td>{{ pd.activation_protocol }}</td>
         </tr>
         <tbody>
       </table>
@@ -478,7 +478,7 @@
       </table>
     </div>
     <div id="footer_content" style="text-align: right">
-      <pdf:pagenumber>
+      <pdf:pagenumber/>
     </div>
   {% endif %}
 {% endblock %}

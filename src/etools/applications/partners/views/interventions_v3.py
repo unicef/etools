@@ -205,7 +205,7 @@ class PMPInterventionPDFView(PMPInterventionMixin, RetrieveAPIView):
         data = {
             "pd": pd,
             "pd_offices": [o.name for o in pd.offices.all()],
-            "pd_locations": [l.name for l in pd.flat_locations.all()],
+            "pd_locations": [location.name for location in pd.flat_locations.all()],
             "font_path": font_path,
         }
 
