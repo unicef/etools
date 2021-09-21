@@ -2543,6 +2543,10 @@ class Intervention(TimeStampedModel):
 
         return active_amendments.exists()
 
+    def get_cash_transfer_modalities_display(self):
+        choices = dict(self.CASH_TRANSFER_CHOICES)
+        return ', '.join(choices.get(m, 'Unknown') for m in self.cash_transfer_modalities)
+
 
 class InterventionAmendment(TimeStampedModel):
     """

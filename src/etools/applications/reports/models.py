@@ -983,6 +983,9 @@ class InterventionActivity(TimeStampedModel):
     def get_amended_name(self):
         return f'{self.result} {self.name} (Total: {self.total}, UNICEF: {self.unicef_cash}, Partner: {self.cso_cash})'
 
+    def get_time_frames_display(self):
+        return ', '.join([f'{tf.start_date.year} Q{tf.quarter}' for tf in self.time_frames.all()])
+
 
 class InterventionActivityItem(TimeStampedModel):
     activity = models.ForeignKey(

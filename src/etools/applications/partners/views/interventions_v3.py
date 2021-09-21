@@ -1,5 +1,6 @@
 from copy import copy
 
+from django.conf import settings
 from django.db import transaction
 from django.utils.translation import ugettext_lazy as _
 
@@ -197,8 +198,15 @@ class PMPInterventionPDFView(PMPInterventionMixin, RetrieveAPIView):
 
     def get(self, request, *args, **kwargs):
         pd = self.get_pd_or_404(self.kwargs.get("pk"))
+        # re-fetch to get prefetched detail queries
+        pd = self.get_queryset().get(pk=pd.pk)
+        font_path = settings.PACKAGE_ROOT + '/assets/fonts/'
+
         data = {
-            "pd": self.get_queryset().get(pk=pd.pk),
+            "pd": pd,
+            "pd_offices": [o.name for o in pd.offices.all()],
+            "pd_locations": [l.name for l in pd.flat_locations.all()],
+            "font_path": font_path,
         }
 
         return render_to_pdf_response(request, "pd/detail.html", data)
