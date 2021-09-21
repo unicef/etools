@@ -160,6 +160,9 @@ class InterventionPermissions(PMPPermissions):
         if staff_member and staff_member.id in partner_focal_points:
             self.user_groups.extend(['Partner User', 'Partner Focal Point'])
 
+        if self.user.is_staff and self.user in self.instance.unicef_focal_points.all():
+            self.user_groups.append("Unicef Focal Point")
+
         review = self.instance.review
         if review:
             if self.user.id == review.overall_approver_id:
@@ -230,7 +233,9 @@ class InterventionPermissions(PMPPermissions):
                               "other_partners_involved",
                               "technical_guidance",
                               "cancel_justification",
-                              "population_focus"]
+                              "population_focus",
+                              "risks",
+                              "sites"]
         ps = self.permission_structure
         my_permissions = {}
         for action in self.possible_actions:
