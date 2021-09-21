@@ -28,6 +28,7 @@ from etools.applications.partners.amendment_utils import (
     copy_instance,
     INTERVENTION_AMENDMENT_COPY_POST_EFFECTS,
     INTERVENTION_AMENDMENT_DEFAULTS,
+    INTERVENTION_AMENDMENT_DIFF_POST_EFFECTS,
     INTERVENTION_AMENDMENT_IGNORED_FIELDS,
     INTERVENTION_AMENDMENT_MERGE_POST_EFFECTS,
     INTERVENTION_AMENDMENT_RELATED_FIELDS,
@@ -1966,6 +1967,10 @@ class Intervention(TimeStampedModel):
         blank=True,
         null=True
     )
+    activation_protocol = models.TextField(
+        verbose_name=_('Activation Protocol'),
+        blank=True, null=True,
+    )
     termination_doc = models.FileField(
         verbose_name=_("Termination document for PDs"),
         max_length=1024,
@@ -2781,6 +2786,7 @@ class InterventionAmendment(TimeStampedModel):
             self.related_objects_map,
             INTERVENTION_AMENDMENT_RELATED_FIELDS,
             INTERVENTION_AMENDMENT_IGNORED_FIELDS,
+            INTERVENTION_AMENDMENT_DIFF_POST_EFFECTS,
         )
 
 
