@@ -476,6 +476,7 @@ class TestCreate(BaseInterventionTestCase):
             "cfei_number": "321",
             "budget_owner": self.user.pk,
             "phone": self.user.profile.phone_number,
+            "activation_protocol": "test",
         }
         response = self.forced_auth_req(
             "post",

@@ -2,6 +2,8 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.2.2,activation_letter,Partnership Manager,contingency on,Signed,Edit,TRUE
 3.2.3,activation_letter_attachment,Partnership Manager,contingency on,Signed,Edit,TRUE
 3.2.4,activation_letter_attachment,*,contingency on,Active,Required,TRUE
+,activation_protocol,Partnership Manager,,Draft,Edit,TRUE
+,activation_protocol,*,contingency on,*,Required,TRUE
 3.2.4,agreement,Partnership Manager,unlocked,Draft,Edit,TRUE
 3.2.5,agreement,*,,*,Required,TRUE
 3.2.7,amendments,UNICEF User,not_in_amendment_mode,*,View,TRUE
