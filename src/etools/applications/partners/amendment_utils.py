@@ -513,7 +513,7 @@ INTERVENTION_AMENDMENT_RELATED_FIELDS = {
         'budget_owner',
 
         # many to many
-        'country_programmes', 'unicef_focal_points', 'partner_focal_points',
+        'country_programmes', 'unicef_focal_points', 'partner_focal_points', 'sites',
         'sections', 'offices', 'flat_locations'
     ],
     'partners.InterventionResultLink': [
@@ -559,6 +559,7 @@ INTERVENTION_AMENDMENT_IGNORED_FIELDS = {
         'number', 'status', 'in_amendment',
         'title',
         'partner_accepted',
+        'sites',
         'unicef_accepted',
 
         # signatures

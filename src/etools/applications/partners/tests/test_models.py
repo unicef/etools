@@ -672,8 +672,8 @@ class TestInterventionModel(BaseTenantTestCase):
             'view': {'true': [{'group': 'UNICEF User', 'condition': 'not_in_amendment_mode', 'status': '*'}]},
             'edit': {
                 'true': [
-                    {'status': 'signed', 'group': 'Partnership Manager', 'condition': 'not_in_amendment_mode'},
-                    {'status': 'active', 'group': 'Partnership Manager', 'condition': 'not_in_amendment_mode'},
+                    {'status': 'signed', 'group': 'Unicef Focal Point', 'condition': 'not_in_amendment_mode'},
+                    {'status': 'active', 'group': 'Unicef Focal Point', 'condition': 'not_in_amendment_mode'},
                 ]
             }
         })
