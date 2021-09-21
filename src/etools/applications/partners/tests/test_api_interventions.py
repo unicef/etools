@@ -91,6 +91,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
         'draft': [
             "accepted_on_behalf_of_partner",
             "actionpoint",
+            "activation_protocol",
             "activity",
             "agreement",
             "agreement_id",
@@ -280,6 +281,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
             "contingency_pd": True,
             "agreement": self.agreement.id,
             "reference_number_year": datetime.date.today().year,
+            "activation_protocol": "test",
         }
         status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
 
@@ -311,6 +313,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
             "contingency_pd": True,
             "agreement": self.agreement.pk,
             "reference_number_year": datetime.date.today().year,
+            "activation_protocol": "test",
 
         }
         status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
@@ -359,7 +362,8 @@ class TestInterventionsAPI(BaseTenantTestCase):
             "agreement": self.agreement.pk,
             "prc_review_attachment": attachment_prc.pk,
             "signed_pd_attachment": attachment_pd.pk,
-            "reference_number_year": datetime.date.today().year
+            "reference_number_year": datetime.date.today().year,
+            "activation_protocol": "test",
         }
         status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
         self.assertEqual(status_code, status.HTTP_201_CREATED)

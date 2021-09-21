@@ -488,6 +488,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
         fields = (
             "activation_letter_attachment",
             "activation_letter_file",
+            "activation_protocol",
             # "actual_amount",
             "agreement",
             "amendments",

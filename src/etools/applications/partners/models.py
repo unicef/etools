@@ -1967,6 +1967,10 @@ class Intervention(TimeStampedModel):
         blank=True,
         null=True
     )
+    activation_protocol = models.TextField(
+        verbose_name=_('Activation Protocol'),
+        blank=True, null=True,
+    )
     termination_doc = models.FileField(
         verbose_name=_("Termination document for PDs"),
         max_length=1024,
