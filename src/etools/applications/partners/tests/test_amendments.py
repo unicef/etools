@@ -604,18 +604,32 @@ class AmendmentTestCase(BaseTenantTestCase):
         self.assertEqual(original_supply_item.title, supply_item.title)
 
     def test_create_intervention_supply_item(self):
+        # on amendment merge it's possible to clean extra supply items due to result links from amended intervention
+        result_link = InterventionResultLinkFactory(intervention=self.active_intervention)
+        original_supply_item = InterventionSupplyItemFactory(
+            intervention=self.active_intervention, title='original',
+            result=result_link,
+        )
         supply_items_count_original = self.active_intervention.supply_items.count()
         amendment = InterventionAmendmentFactory(
             intervention=self.active_intervention,
             kind=InterventionAmendment.KIND_NORMAL,
         )
         InterventionSupplyItemFactory(intervention=amendment.amended_intervention)
+        InterventionSupplyItemFactory(
+            intervention=amendment.amended_intervention,
+            result=InterventionResultLink.objects.get(
+                intervention=amendment.amended_intervention, cp_output=result_link.cp_output
+            ),
+        )
 
         amendment.difference = amendment.get_difference()
         amendment.merge_amendment()
 
         self.assertIn('supply_items', amendment.difference)
-        self.assertEqual(self.active_intervention.supply_items.count(), supply_items_count_original + 1)
+        self.assertEqual(self.active_intervention.supply_items.count(), supply_items_count_original + 2)
+        self.assertTrue(self.active_intervention.supply_items.filter(pk=original_supply_item.pk).exists())
+        self.assertEqual(self.active_intervention.supply_items.filter(result__cp_output=result_link.cp_output).count(), 2)
 
     def test_update_budget_items(self):
         item = InterventionManagementBudgetItemFactory(

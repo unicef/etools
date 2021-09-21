@@ -589,7 +589,7 @@ INTERVENTION_AMENDMENT_IGNORED_FIELDS = {
     'reports.AppliedIndicator': ['created', 'modified'],
     'reports.LowerResult': ['created', 'modified'],
     'partners.InterventionRisk': ['created', 'modified'],
-    'partners.InterventionSupplyItem': ['created', 'modified', 'total_price'],
+    'partners.InterventionSupplyItem': ['created', 'modified', 'total_price', 'result'],
     'reports.InterventionActivityItem': ['created', 'modified'],
 }
 INTERVENTION_AMENDMENT_DEFAULTS = {
@@ -602,6 +602,7 @@ INTERVENTION_AMENDMENT_DEFAULTS = {
 }
 
 
+# activity quarters
 def copy_activity_quarters(activity, activity_copy, fields_map):
     quarters = list(activity.time_frames.values_list('quarter', flat=True))
     activity_copy.time_frames.add(*activity_copy.result.result_link.intervention.quarters.filter(quarter__in=quarters))
@@ -621,6 +622,43 @@ def render_quarters_difference(activity, activity_copy, fields_map, difference):
         difference['quarters'] = {
             'type': 'simple',
             'diff': (old_quarters, new_quarters)
+        }
+
+
+# supply items results
+def copy_supply_item_result(item, item_copy, fields_map):
+    result = item.result
+    if result:
+        item_copy.result = item.result.__class__.objects.filter(
+            intervention=item_copy.intervention,
+            cp_output=result.cp_output,
+        ).first()
+        item_copy.save()
+    fields_map['result__cp_output'] = serialize_instance(result.cp_output) if result else None
+
+
+def merge_supply_item_result(item, item_copy, fields_map):
+    result = item_copy.result
+    if result:
+        item.result = item_copy.result.__class__.objects.filter(
+            intervention=item.intervention,
+            cp_output=result.cp_output,
+        ).first()
+    else:
+        item.result = None
+    item.save()
+
+
+def render_supply_item_result_difference(item, item_copy, fields_map, difference):
+    old_output = getattr(item.result, 'cp_output', None)
+    new_output = getattr(item_copy.result, 'cp_output', None)
+    if old_output != new_output:
+        difference['result__cp_output'] = {
+            'type': 'simple',
+            'diff': (
+                str(old_output) if old_output else None,
+                str(new_output) if new_output else None
+            )
         }
 
 
@@ -645,10 +683,16 @@ INTERVENTION_AMENDMENT_MERGE_POST_EFFECTS = {
     'reports.InterventionActivity': [
         merge_activity_quarters,
     ],
+    'partners.InterventionSupplyItem': [
+        merge_supply_item_result,
+    ],
 }
 INTERVENTION_AMENDMENT_COPY_POST_EFFECTS = {
     'reports.InterventionActivity': [
         copy_activity_quarters,
+    ],
+    'partners.InterventionSupplyItem': [
+        copy_supply_item_result,
     ],
 }
 INTERVENTION_AMENDMENT_DIFF_POST_EFFECTS = {
@@ -666,6 +710,7 @@ INTERVENTION_AMENDMENT_DIFF_POST_EFFECTS = {
         transform_to_choices('risk_type', 'risk_types'),
     ],
     'partners.InterventionSupplyItem': [
+        render_supply_item_result_difference,
         transform_to_choices('provided_by', 'supply_item_provided_by'),
     ],
 }

@@ -36,6 +36,7 @@ from etools.applications.partners.models import (  # TODO intervention sector lo
     InterventionPlannedVisits,
     InterventionResultLink,
     InterventionReview,
+    InterventionSupplyItem,
     PartnerOrganization,
     PartnerStaffMember,
     PlannedEngagement,
@@ -785,6 +786,13 @@ class InterventionManagementBudgetAdmin(admin.ModelAdmin):
     inlines = (InterventionManagementBudgetItemAdmin,)
 
 
+class InterventionSupplyItemAdmin(admin.ModelAdmin):
+    list_display = ('intervention', 'title', 'unit_number', 'unit_price', 'provided_by')
+    list_select_related = ('intervention',)
+    list_filter = ('provided_by',)
+    search_fields = ('title',)
+
+
 admin.site.register(PartnerOrganization, PartnerAdmin)
 admin.site.register(Assessment, AssessmentAdmin)
 admin.site.register(PartnerStaffMember, PartnerStaffMemberAdmin)
@@ -800,5 +808,6 @@ admin.site.register(InterventionBudget, InterventionBudgetAdmin)
 admin.site.register(InterventionPlannedVisits, InterventionPlannedVisitsAdmin)
 admin.site.register(InterventionAttachment, InterventionAttachmentAdmin)
 admin.site.register(InterventionManagementBudget, InterventionManagementBudgetAdmin)
+admin.site.register(InterventionSupplyItem, InterventionSupplyItemAdmin)
 
 admin.site.register(FileType, FileTypeAdmin)
