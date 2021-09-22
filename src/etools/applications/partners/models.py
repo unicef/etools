@@ -2375,6 +2375,9 @@ class InterventionResultLink(TimeStampedModel):
 
     tracker = FieldTracker()
 
+    class Meta:
+        unique_together = ['intervention', 'cp_output']
+
     def __str__(self):
         return '{} {}'.format(
             self.intervention, self.cp_output
