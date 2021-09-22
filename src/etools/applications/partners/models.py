@@ -1793,7 +1793,7 @@ class Intervention(TimeStampedModel):
         (REVIEW_TYPE_NON_PRC, "Non-PRC"),
     )
 
-    tracker = FieldTracker(["date_sent_to_partner", "start", "end"])
+    tracker = FieldTracker(["date_sent_to_partner", "start", "end", "budget_owner"])
     objects = InterventionManager()
 
     document_type = models.CharField(
