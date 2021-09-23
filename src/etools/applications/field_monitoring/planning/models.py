@@ -126,7 +126,7 @@ class MonitoringActivitiesQuerySet(models.QuerySet):
         ).filter(
             status=MonitoringActivity.STATUS_COMPLETED,
             is_hact=True,
-            has_finding_for_partner=True,
+            # has_finding_for_partner=True,
         )
 
 
