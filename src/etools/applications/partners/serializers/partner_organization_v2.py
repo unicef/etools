@@ -417,8 +417,6 @@ class MonitoringActivityGroupSerializer(serializers.Field):
             result.append([activities[activity] for activity in group if activity in activities])
         result = list(filter(lambda x: x, result))
 
-        print(result)
-
         return result
 
     def to_representation(self, data):
