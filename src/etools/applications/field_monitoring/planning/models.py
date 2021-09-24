@@ -124,6 +124,7 @@ class MonitoringActivitiesQuerySet(models.QuerySet):
             is_hact=Exists(question_sq),
             # has_finding_for_partner=Exists(finding_sq),
         ).filter(
+            partners=partner_id,
             status=MonitoringActivity.STATUS_COMPLETED,
             is_hact=True,
             # has_finding_for_partner=True,
