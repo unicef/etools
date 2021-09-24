@@ -490,6 +490,9 @@ class PartnerOrganizationAddView(CreateAPIView):
                             status=status.HTTP_400_BAD_REQUEST)
 
         country = request.user.profile.country
+        if not country.business_area_code:
+            return Response({"error": "no business area code"}, status=status.HTTP_400_BAD_REQUEST)
+
         partner_sync = PartnerSynchronizer(business_area_code=country.business_area_code)
 
         if not partner_sync._filter_records([partner_resp]):
