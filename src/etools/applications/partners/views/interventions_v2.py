@@ -308,7 +308,8 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
             raise ValidationError(validator.errors)
 
         if tenant_switch_is_active('intervention_amendment_notifications_on') and \
-                old_instance and not instance.in_amendment and old_instance.in_amendment:
+                old_instance and not instance.in_amendment and old_instance.in_amendment and \
+                instance.amendments.exists():
             send_intervention_amendment_added_notification(instance)
 
         if getattr(instance, '_prefetched_objects_cache', None):
