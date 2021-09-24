@@ -78,7 +78,9 @@ class GraphHactExportView(DetailView):
     def get(self, request, *args, **kwargs):
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = f'attachment; filename="{self.filename}.csv"'
-        partner_values = json.loads(self.get_object().partner_values)
+        partner_values = self.get_object().partner_values
+        if not isinstance(partner_values, dict):
+            partner_values = json.loads(partner_values)
         export_values = (
             ('Assessment and Assurance Activities', 'Programmatic Visits: Completed',
              partner_values['assurance_activities']['programmatic_visits']['completed']),
