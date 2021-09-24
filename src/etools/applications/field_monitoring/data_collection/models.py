@@ -14,6 +14,11 @@ class ActivityQuestion(QuestionTargetMixin, models.Model):
                                             on_delete=models.CASCADE)
     question = models.ForeignKey(Question, related_name='activity_questions', verbose_name=_('Question'),
                                  on_delete=models.CASCADE)
+
+    """copy important fields from question to safely allow future question edits"""
+    text = models.TextField(verbose_name=_('Question Text'))
+    is_hact = models.BooleanField(default=False, verbose_name=_('Count as HACT'))
+
     specific_details = models.TextField(verbose_name=_('Specific Details To Probe'), blank=True)
     is_enabled = models.BooleanField(verbose_name=_('Enabled'), default=True)
 

@@ -108,7 +108,7 @@ class MonitoringActivitiesQuerySet(models.QuerySet):
 
         question_sq = ActivityQuestionOverallFinding.objects.filter(
             activity_question__monitoring_activity_id=OuterRef('id'),
-            activity_question__question__is_hact=True,
+            activity_question__is_hact=True,
             activity_question__question__level='partner',
             value__isnull=False,
         )
@@ -352,6 +352,7 @@ class MonitoringActivity(
                 for target_question in target_questions:
                     activity_question = ActivityQuestion(
                         question=target_question, monitoring_activity=self,
+                        text=target_question.text, is_hact=target_question.is_hact,
                         is_enabled=target_question.template.is_active if target_question.template else False
                     )
 
