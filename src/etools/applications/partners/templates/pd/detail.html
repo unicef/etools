@@ -239,51 +239,63 @@
       <table class="all-cells-border mt-20">
         <tbody>
           <tr>
-            <td colspan="6" class="b-navy">Workplan Result</td>
+            <td colspan="8" class="b-navy">Workplan Result</td>
           </tr>
           <tr>
-            <td class="b-gray w-p25">Result statement</td>
-            <td class="b-gray w-p39">Performance indicator/s</td>
-            <td class="b-gray w-p13">Location</td>
-            <td class="b-gray w-p13">Baseline</td>
-            <td class="b-gray w-p13">Target</td>
-            <td class="b-gray w-p22">Means of Verification</td>
+            <td class="b-gray w-p20">Result statement</td>
+            <td class="b-gray w-p20">Performance indicator/s</td>
+            <td class="b-gray w-p10">Location</td>
+            <td class="b-gray w-p10">Baseline</td>
+            <td class="b-gray w-p10">Target</td>
+            <td class="b-gray w-p10">Means of Verification</td>
+            <td class="b-gray w-p10">Section/Cluster</td>
+            <td class="b-gray w-p10">Disaggregation</td>
           </tr>
           {% for result_link in pd.result_links.all %}
             <tr>
-              <td class="b-yellow w-p25">{{ result_link.cp_output.name }}</td>
-              <td class="b-yellow w-p39">
+              <td class="b-yellow w-p20">{{ result_link.cp_output.name }}</td>
+              <td class="b-yellow w-p20">
                 {% for indicator in result_link.ram_indicators.all %}
                   <span>{{ indicator.name }}</span><br/>
                 {% endfor %}
               </td>
-              <td class="b-gray w-p13"></td>
-              <td class="b-gray w-p13"></td>
-              <td class="b-gray w-p13"></td>
-              <td class="b-gray w-p22"></td>
+              <td class="b-gray w-p10"></td>
+              <td class="b-gray w-p10"></td>
+              <td class="b-gray w-p10"></td>
+              <td class="b-gray w-p10"></td>
+              <td class="b-gray w-p10"></td>
+              <td class="b-gray w-p10"></td>
             </tr>
             {% for pd_output in result_link.ll_results.all %}
               {% for indicator in pd_output.applied_indicators.all %}
                 <tr>
-                  <td class="w-p25">{{ pd_output.name }}</td>
-                  <td class="w-p39">{{ indicator.indicator.title }}</td>
-                  <td class="w-p13">
+                  <td class="w-p20">{{ pd_output.name }}</td>
+                  <td class="w-p20">{{ indicator.indicator.title }}</td>
+                  <td class="w-p10">
                     {% for location in indicator.locations.all %}
                       <span>{{ location.name }}</span><br/>
                     {% endfor %}
                   </td>
-                  <td class="w-p13">{{ indicator.baseline_display_string }}</td>
-                  <td class="w-p13">{{ indicator.target_display_string }}</td>
-                  <td class="w-p22">{{ indicator.means_of_verification }}</td>
+                  <td class="w-p10">{{ indicator.baseline_display_string }}</td>
+                  <td class="w-p10">{{ indicator.target_display_string }}</td>
+                  <td class="w-p10">{{ indicator.means_of_verification }}</td>
+                  <td class="w-p10">{{ indicator.section.name }}</td>
+                  <td class="w-p10">
+                    {% for disaggregation in indicator.disaggregation.all %}
+                      <span>{{ disaggregation.name }}</span><br/>
+                    {% endfor %}
+                  </td>
                 </tr>
               {% empty %}
                 <tr>
-                  <td class="w-p25">{{ pd_output.name }}</td>
-                  <td class="w-p39"></td>
-                  <td class="w-p13"></td>
-                  <td class="w-p13"></td>
-                  <td class="w-p13"></td>
-                  <td class="w-p22"></td>
+                  <td class="w-p20">{{ pd_output.name }}</td>
+                  <td class="w-p20"></td>
+                  <td class="w-p10"></td>
+                  <td class="w-p10"></td>
+                  <td class="w-p10"></td>
+                  <td class="w-p10"></td>
+                  <td class="w-p10"></td>
+                  <td class="w-p10"></td>
                 </tr>
               {% endfor %}
             {% endfor %}
