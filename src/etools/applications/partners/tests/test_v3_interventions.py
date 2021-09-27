@@ -448,7 +448,7 @@ class TestDetail(BaseInterventionTestCase):
             user=self.user
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertListEqual(['download_comments', 'export_results'], response.data["available_actions"])
+        self.assertListEqual(['download_comments', 'export_results', 'export_pdf'], response.data["available_actions"])
 
     def test_num_queries(self):
         [InterventionManagementBudgetItemFactory(budget=self.intervention.management_budgets) for _i in range(10)]
