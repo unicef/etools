@@ -208,16 +208,6 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,implementation_strategy,*,contingency on,Review,Required,FALSE
 ,implementation_strategy,*,contingency on,Signature,Required,FALSE
 ,implementation_strategy,*,contingency on,Signed,Required,FALSE
-,sustainability_narrative,*,unicef_not_accepted_spd_non_hum,Draft,Required,FALSE
-,sustainability_narrative,*,is_spd_non_hum,Review,Required,FALSE
-,sustainability_narrative,*,is_spd_non_hum,Signature,Required,FALSE
-,sustainability_narrative,*,is_spd_non_hum,Signed,Required,FALSE
-,sustainability_narrative,*,is_spd_non_hum,Active,Required,FALSE
-,sustainability_narrative,*,is_spd_non_hum,Ended,Required,FALSE
-,sustainability_narrative,*,is_spd_non_hum,Closed,Required,FALSE
-,sustainability_narrative,*,is_spd_non_hum,Suspended,Required,FALSE
-,sustainability_narrative,*,is_spd_non_hum,Terminated,Required,FALSE
-,sustainability_narrative,*,is_spd_non_hum,Cancelled,Required,FALSE
 ,sustainability_rating,*,unicef_not_accepted_spd_non_hum,Draft,Required,FALSE
 ,sustainability_rating,*,is_spd_non_hum,Review,Required,FALSE
 ,sustainability_rating,*,is_spd_non_hum,Signature,Required,FALSE
@@ -228,16 +218,6 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,sustainability_rating,*,is_spd_non_hum,Suspended,Required,FALSE
 ,sustainability_rating,*,is_spd_non_hum,Terminated,Required,FALSE
 ,sustainability_rating,*,is_spd_non_hum,Cancelled,Required,FALSE
-,gender_narrative,*,unicef_not_accepted_spd_non_hum,Draft,Required,FALSE
-,gender_narrative,*,is_spd_non_hum,Review,Required,FALSE
-,gender_narrative,*,is_spd_non_hum,Signature,Required,FALSE
-,gender_narrative,*,is_spd_non_hum,Signed,Required,FALSE
-,gender_narrative,*,is_spd_non_hum,Active,Required,FALSE
-,gender_narrative,*,is_spd_non_hum,Ended,Required,FALSE
-,gender_narrative,*,is_spd_non_hum,Closed,Required,FALSE
-,gender_narrative,*,is_spd_non_hum,Suspended,Required,FALSE
-,gender_narrative,*,is_spd_non_hum,Terminated,Required,FALSE
-,gender_narrative,*,is_spd_non_hum,Cancelled,Required,FALSE
 ,gender_rating,*,unicef_not_accepted_spd_non_hum,Draft,Required,FALSE
 ,gender_rating,*,is_spd_non_hum,Review,Required,FALSE
 ,gender_rating,*,is_spd_non_hum,Signature,Required,FALSE
@@ -248,16 +228,6 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,gender_rating,*,is_spd_non_hum,Suspended,Required,FALSE
 ,gender_rating,*,is_spd_non_hum,Terminated,Required,FALSE
 ,gender_rating,*,is_spd_non_hum,Cancelled,Required,FALSE
-,equity_narrative,*,unicef_not_accepted_spd_non_hum,Draft,Required,FALSE
-,equity_narrative,*,is_spd_non_hum,Review,Required,FALSE
-,equity_narrative,*,is_spd_non_hum,Signature,Required,FALSE
-,equity_narrative,*,is_spd_non_hum,Signed,Required,FALSE
-,equity_narrative,*,is_spd_non_hum,Active,Required,FALSE
-,equity_narrative,*,is_spd_non_hum,Ended,Required,FALSE
-,equity_narrative,*,is_spd_non_hum,Closed,Required,FALSE
-,equity_narrative,*,is_spd_non_hum,Suspended,Required,FALSE
-,equity_narrative,*,is_spd_non_hum,Terminated,Required,FALSE
-,equity_narrative,*,is_spd_non_hum,Cancelled,Required,FALSE
 ,equity_rating,*,unicef_not_accepted_spd_non_hum,Draft,Required,FALSE
 ,equity_rating,*,is_spd_non_hum,Review,Required,FALSE
 ,equity_rating,*,is_spd_non_hum,Signature,Required,FALSE
@@ -268,16 +238,6 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,equity_rating,*,is_spd_non_hum,Suspended,Required,FALSE
 ,equity_rating,*,is_spd_non_hum,Terminated,Required,FALSE
 ,equity_rating,*,is_spd_non_hum,Cancelled,Required,FALSE
-,risks,*,unicef_not_accepted_spd_non_hum,Draft,Required,FALSE
-,risks,*,is_spd_non_hum,Review,Required,FALSE
-,risks,*,is_spd_non_hum,Signature,Required,FALSE
-,risks,*,is_spd_non_hum,Signed,Required,FALSE
-,risks,*,is_spd_non_hum,Active,Required,FALSE
-,risks,*,is_spd_non_hum,Ended,Required,FALSE
-,risks,*,is_spd_non_hum,Closed,Required,FALSE
-,risks,*,is_spd_non_hum,Suspended,Required,FALSE
-,risks,*,is_spd_non_hum,Terminated,Required,FALSE
-,risks,*,is_spd_non_hum,Cancelled,Required,FALSE
 ,hq_support_cost,*,unicef_not_accepted,Draft,Required,FALSE
 ,ip_program_contribution,*,unicef_not_accepted_spd,Draft,Required,FALSE
 ,cash_transfer_modalities,*,contingency on,Signed,Required,FALSE
