@@ -44,7 +44,9 @@ class ActivityQuestionSerializer(serializers.ModelSerializer):
     class Meta:
         model = ActivityQuestion
         fields = (
-            'id', 'question', 'is_enabled', 'specific_details',
+            'id', 'question',
+            'text', 'is_hact',
+            'is_enabled', 'specific_details',
             'partner', 'intervention', 'cp_output',
         )
 
