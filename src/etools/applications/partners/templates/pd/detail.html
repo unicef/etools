@@ -319,7 +319,7 @@
           {% for result_link in pd.result_links.all %}
             {% for ll_result in result_link.ll_results.all %}
               <tr>
-                <td class="b-yellow">Prog. Output 1:</td>
+                <td class="b-yellow">Prog. Output</td>
                 <td class="b-yellow" colspan="6">
                   {{ result_link.cp_output.name }}
                   <br>
@@ -332,8 +332,8 @@
               </tr>
               {% for activity in ll_result.activities.all %}
                 <tr>
+                  <td>Prog. Activity</td>
                   <td>{{ activity.name }}</td>
-                  <td>Activity statement</td>
                   <td colspan="5">{{ activity.get_time_frames_display }}</td>
                   <td>{{ activity.cso_cash|add:activity.unicef_cash }}</td>
                   <td>{{ activity.cso_cash }}</td>
