@@ -415,7 +415,7 @@ class MonitoringActivityGroupSerializer(serializers.Field):
             return []
 
         partner = self.root.instance
-        hact_activities = MonitoringActivity.objects.filter(partners=partner).filter_hact_for_partner(partner.id)
+        hact_activities = MonitoringActivity.objects.filter_hact_for_partner(partner.id)
         activities = {
             activity.id: activity
             for activity in hact_activities.filter(id__in=itertools.chain(*data))

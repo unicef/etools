@@ -495,6 +495,13 @@ class InterventionResultLinkSimpleCUSerializer(serializers.ModelSerializer):
     class Meta:
         model = InterventionResultLink
         fields = "__all__"
+        validators = [
+            UniqueTogetherValidator(
+                queryset=InterventionResultLink.objects.all(),
+                fields=["intervention", "cp_output"],
+                message=_("Invalid CP Output provided.")
+            )
+        ]
 
 
 class InterventionResultCUSerializer(serializers.ModelSerializer):

@@ -104,30 +104,30 @@ class QuestionTemplate(QuestionTargetMixin, models.Model):
 
 class MonitoringActivitiesQuerySet(models.QuerySet):
     def filter_hact_for_partner(self, partner_id: int):
-        from etools.applications.field_monitoring.data_collection.models import (
-            ActivityOverallFinding,
-            ActivityQuestionOverallFinding,
-        )
+        from etools.applications.field_monitoring.data_collection.models import ActivityQuestionOverallFinding
 
         question_sq = ActivityQuestionOverallFinding.objects.filter(
             activity_question__monitoring_activity_id=OuterRef('id'),
-            activity_question__question__is_hact=True,
+            activity_question__is_hact=True,
             activity_question__question__level='partner',
             value__isnull=False,
         )
-        finding_sq = ActivityOverallFinding.objects.filter(
-            ~Q(narrative_finding=''),
-            monitoring_activity_id=OuterRef('id'),
-            partner_id=partner_id,
-        )
+        # an overall finding for the partner is not requried for hact, leaving the code in for now in case
+        # the business owners want to change
+        # finding_sq = ActivityOverallFinding.objects.filter(
+        #     ~Q(narrative_finding=''),
+        #     monitoring_activity_id=OuterRef('id'),
+        #     partner_id=partner_id,
+        # )
 
         return self.annotate(
             is_hact=Exists(question_sq),
-            has_finding_for_partner=Exists(finding_sq),
+            # has_finding_for_partner=Exists(finding_sq),
         ).filter(
+            partners=partner_id,
             status=MonitoringActivity.STATUS_COMPLETED,
             is_hact=True,
-            has_finding_for_partner=True,
+            # has_finding_for_partner=True,
         )
 
 
@@ -353,6 +353,7 @@ class MonitoringActivity(
                 for target_question in target_questions:
                     activity_question = ActivityQuestion(
                         question=target_question, monitoring_activity=self,
+                        text=target_question.text, is_hact=target_question.is_hact,
                         is_enabled=target_question.template.is_active if target_question.template else False
                     )
 
