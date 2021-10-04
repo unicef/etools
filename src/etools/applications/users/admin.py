@@ -258,10 +258,6 @@ class CountryAdmin(ExtraUrlMixin, TenantAdminMixin, admin.ModelAdmin):
     )
 
     @button()
-    def sync_fund_commitment(self, request, pk):
-        return self.execute_sync(pk, 'fund_commitment', request)
-
-    @button()
     def sync_fund_reservation_delegated(self, request, pk):
         country = Country.objects.get(pk=pk)
         if country.schema_name == get_public_schema_name():
