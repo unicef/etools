@@ -699,7 +699,7 @@ class InterventionXLSRenderer:
         worksheet.merge_cells(start_row=worksheet.max_row, start_column=2, end_row=worksheet.max_row, end_column=3)
         worksheet.merge_cells(start_row=worksheet.max_row, start_column=5, end_row=worksheet.max_row, end_column=6)
         worksheet.append(['Date', self.intervention.signed_by_partner_date, '',
-                     'Date', self.intervention.signed_by_unicef_date, ''])
+                          'Date', self.intervention.signed_by_unicef_date, ''])
         worksheet.merge_cells(start_row=worksheet.max_row, start_column=2, end_row=worksheet.max_row, end_column=3)
         worksheet.merge_cells(start_row=worksheet.max_row, start_column=5, end_row=worksheet.max_row, end_column=6)
         self.apply_styles_to_cells(worksheet, worksheet.max_row - 2, 1, worksheet.max_row, 1, [self.fill_gray])
