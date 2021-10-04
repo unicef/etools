@@ -216,7 +216,7 @@ class PMPInterventionPDFView(PMPInterventionMixin, RetrieveAPIView):
 
 class PMPInterventionXLSView(PMPInterventionMixin, RetrieveAPIView):
     queryset = Intervention.objects.detail_qs().all()
-    permission_classes = (PMPInterventionPermission,)
+    permission_classes = (IsAuthenticated, PMPInterventionPermission,)
 
     def get(self, request, *args, **kwargs):
         pd = self.get_pd_or_404(self.kwargs.get("pk"))
