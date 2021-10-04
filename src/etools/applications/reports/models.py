@@ -394,6 +394,18 @@ class LowerResult(TimeStampedModel):
         )
         return results["total"] if results["total"] is not None else 0
 
+    def total_cso(self):
+        results = self.activities.aggregate(
+            total=Sum("cso_cash"),
+        )
+        return results["total"] if results["total"] is not None else 0
+
+    def total_unicef(self):
+        results = self.activities.aggregate(
+            total=Sum("unicef_cash"),
+        )
+        return results["total"] if results["total"] is not None else 0
+
 
 class Unit(models.Model):
     """
