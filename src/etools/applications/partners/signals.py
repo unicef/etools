@@ -42,7 +42,8 @@ def create_review_for_prc_officer(sender, instance, action, reverse, pk_set, *ar
 
 @receiver(m2m_changed, sender=Intervention.unicef_focal_points.through)
 def sync_unicef_focal_points_to_amendment(sender, instance: Intervention, action, reverse, pk_set, *args, **kwargs):
-    active_amendments = instance.amendments.filter(is_active=True)
+    # TODO: migrate legacy records to have amendments is_active False
+    active_amendments = instance.amendments.filter(is_active=True, amended_intervention__isnull=False)
 
     for amendment in active_amendments:
         if action == 'post_add':
