@@ -960,7 +960,7 @@ class TestSupplyItem(BaseInterventionTestCase):
             S9935082,"Arabic Teacher's Kit","Arabic Teacher's Kit",EA,1,46.48,46.48\n
             S9935081,"Arabic Student Kit Grade 5-8","Arabic Student Kit for Grades 5 to 8.",EA,1,97.12,97.12\n
             S9903001,"AWD Kit  Periphery kit  Logistics Part","AWD Kit  Periphery kit  Logistics Part",EA,1,1059.82,1059.82\n
-            "Disclaimer : This list is not for online ordering of products but only to help staff and partners in preparing their requirements. Prices are only indicative and may vary once the final transaction is placed with UNICEF. Freight and handling charges are not included intothe price."\n
+            ",Disclaimer : This list is not for online ordering of products but only to help staff and partners in preparing their requirements. Prices are only indicative and may vary once the final transaction is placed with UNICEF. Freight and handling charges are not included intothe price."\n
             '''.encode('utf-8'),
             content_type="multipart/form-data",
         )
