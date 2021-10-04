@@ -30,6 +30,7 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
             "download_comments",
             "export_results",
             "export_pdf",
+            "export_xls",
         ])
 
     def test_available_actions_not_draft(self):

@@ -360,12 +360,14 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "download_comments",
             "export_results",
             "export_pdf",
+            "export_xls",
             "amendment_merge",
         ]
         available_actions = [
             "download_comments",
             "export_results",
             "export_pdf",
+            "export_xls",
         ]
         user = self.context['request'].user
 
