@@ -306,113 +306,93 @@
       <table class="all-cells-border mt-20">
         <tbody>
           <tr>
-            <td colspan="11" class="b-navy">Workplan Budget</td>
+            <td colspan="6" class="b-navy">Workplan Budget</td>
           </tr>
           <tr>
-            <td class="b-gray w-p10">Result Level</td>
+            <td class="b-gray w-p20">Result Level</td>
             <td class="b-gray w-p30">Result/activity</td>
-            <td class="b-gray w-p20" colspan="5">Timeframe</td>
-            <td class="b-gray w-p8">Total (CSO + UNICEF currency)</td>
-            <td class="b-gray w-p8">CSO contribution</td>
-            <td colspan="2" class="b-gray">UNICEF contribution</td>
+            <td class="b-gray w-p20">Timeframe</td>
+            <td class="b-gray w-p10">Total (CSO + UNICEF currency)</td>
+            <td class="b-gray w-p10">CSO contribution</td>
+            <td class="b-gray w-p10">UNICEF contribution</td>
           </tr>
           {% for result_link in pd.result_links.all %}
             {% for ll_result in result_link.ll_results.all %}
               <tr>
                 <td class="b-yellow">Prog. Output</td>
-                <td class="b-yellow" colspan="6">
+                <td class="b-yellow">
                   {{ result_link.cp_output.name }}
                   <br>
                   {{ ll_result.name }}
                 </td>
-                <td class="b-yellow">Sub-total output 1</td>
-                <td class="b-yellow">Sub-total output 1</td>
-                <td class="b-yellow w-p8">Sub-total output 1</td>
-                <td class="b-yellow w-p8">Sub-total output 1</td>
+                <td class="b-yellow"></td>
+                <td class="b-yellow"></td>
+                <td class="b-yellow"></td>
+                <td class="b-yellow"></td>
               </tr>
               {% for activity in ll_result.activities.all %}
                 <tr>
                   <td>Prog. Activity</td>
                   <td>{{ activity.name }}</td>
-                  <td colspan="5">{{ activity.get_time_frames_display }}</td>
+                  <td>{{ activity.get_time_frames_display }}</td>
                   <td>{{ activity.cso_cash|add:activity.unicef_cash }}</td>
                   <td>{{ activity.cso_cash }}</td>
-                  <td>{{ activity.unicef_cash }}</td>
                   <td>{{ activity.unicef_cash }}</td>
                 </tr>
               {% endfor %}
             {% endfor %}
           {% endfor %}
           <tr>
-            <td colspan="7" class="b-blue">Sub-total for the outputs</td>
-            <td></td>
+            <td colspan="3" class="b-blue">Sub-total for the outputs</td>
             <td></td>
             <td></td>
             <td></td>
           </tr>
           <tr>
             <td class="b-yellow">Prog. Output</td>
-            <td colspan="6" class="b-yellow">Effective and efficient programme management</td>
+            <td colspan="2" class="b-yellow">Effective and efficient programme management</td>
             <td class="b-yellow">{{ pd.management_budgets.total }}</td>
             <td class="b-yellow">{{ pd.management_budgets.partner_total }}</td>
-            <td class="b-yellow">{{ pd.management_budgets.unicef_total }}</td>
             <td class="b-yellow">{{ pd.management_budgets.unicef_total }}</td>
           </tr>
           <tr>
             <td class="b-gray">Act 4.1</td>
-            <td>In-country management & support</td>
-            <td colspan="5"></td>
+            <td colspan="2">In-country management & support</td>
             <td>{{ pd.management_budgets.act1_total }}</td>
             <td>{{ pd.management_budgets.act1_partner }}</td>
-            <td>{{ pd.management_budgets.act1_unicef }}</td>
             <td>{{ pd.management_budgets.act1_unicef }}</td>
           </tr>
           <tr>
             <td class="b-gray">Act 4.2</td>
-            <td>Operational costs</td>
-            <td class="w-p4"></td>
-            <td class="w-p4"></td>
-            <td class="w-p4"></td>
-            <td class="w-p4"></td>
-            <td class="w-p4"></td>
+            <td colspan="2">Operational costs</td>
             <td>{{ pd.management_budgets.act2_total }}</td>
             <td>{{ pd.management_budgets.act2_partner }}</td>
-            <td>{{ pd.management_budgets.act2_unicef }}</td>
             <td>{{ pd.management_budgets.act2_unicef }}</td>
           </tr>
           <tr>
             <td class="b-gray">Act 4.3</td>
-            <td>Planning, monitoring, evaluation, and communication</td>
-            <td class="w-p4"></td>
-            <td class="w-p4"></td>
-            <td class="w-p4"></td>
-            <td class="w-p4"></td>
-            <td class="w-p4"></td>
+            <td colspan="2">Planning, monitoring, evaluation, and communication</td>
             <td>{{ pd.management_budgets.act3_total }}</td>
             <td>{{ pd.management_budgets.act3_partner }}</td>
             <td>{{ pd.management_budgets.act3_unicef }}</td>
-            <td>{{ pd.management_budgets.act3_unicef }}</td>
           </tr>
           <tr>
-            <td colspan="7" class="b-blue">Sub-total for programme costs</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-          </tr>
-          <tr>
-            <td colspan="7" class="b-blue">HQ support costs</td>
-            <td></td>
+            <td colspan="3" class="b-blue">Sub-total for programme costs</td>
             <td></td>
             <td></td>
             <td></td>
           </tr>
           <tr>
-            <td colspan="7" class="b-blue">Total Cash budget</td>
+            <td colspan="3" class="b-blue">HQ support costs</td>
+            <td>Applicable {{ pd.hq_support_cost }}%</td>
             <td></td>
             <td></td>
-            <td></td>
-            <td></td>
+          </tr>
+          <tr>
+            <td colspan="3" class="b-blue">Total Cash budget</td>
+            <td>{{ pd.planned_budget.total_local }}</td>
+            <td>{{ pd.planned_budget.partner_contribution_local }}</td>
+            <td>{{ pd.planned_budget.unicef_cash_local }}</td>
           </tr>
         <tbody>
       </table>
