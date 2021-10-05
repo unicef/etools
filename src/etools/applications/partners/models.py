@@ -28,6 +28,7 @@ from etools.applications.partners.amendment_utils import (
     copy_instance,
     INTERVENTION_AMENDMENT_COPY_POST_EFFECTS,
     INTERVENTION_AMENDMENT_DEFAULTS,
+    INTERVENTION_AMENDMENT_DIFF_POST_EFFECTS,
     INTERVENTION_AMENDMENT_IGNORED_FIELDS,
     INTERVENTION_AMENDMENT_MERGE_POST_EFFECTS,
     INTERVENTION_AMENDMENT_RELATED_FIELDS,
@@ -798,7 +799,6 @@ class PartnerOrganization(TimeStampedModel):
                 partner=self
             ).values_list('monitoring_activities__id', flat=True)
             fmvqs = MonitoringActivity.objects.filter(
-                partners=self,
                 end_date__year=datetime.datetime.now().year,
             ).filter_hact_for_partner(self.id).exclude(
                 id__in=grouped_activities,
@@ -1635,6 +1635,7 @@ class InterventionManager(models.Manager):
             'result_links__ll_results__applied_indicators__locations',
             'management_budgets__items',
             'flat_locations',
+            'sites',
             'supply_items',
         )
         return qs
@@ -1791,7 +1792,7 @@ class Intervention(TimeStampedModel):
         (REVIEW_TYPE_NON_PRC, "Non-PRC"),
     )
 
-    tracker = FieldTracker(["date_sent_to_partner", "start", "end"])
+    tracker = FieldTracker(["date_sent_to_partner", "start", "end", "budget_owner"])
     objects = InterventionManager()
 
     document_type = models.CharField(
@@ -1965,6 +1966,10 @@ class Intervention(TimeStampedModel):
         blank=True,
         null=True
     )
+    activation_protocol = models.TextField(
+        verbose_name=_('Activation Protocol'),
+        blank=True, null=True,
+    )
     termination_doc = models.FileField(
         verbose_name=_("Termination document for PDs"),
         max_length=1024,
@@ -1993,6 +1998,11 @@ class Intervention(TimeStampedModel):
     )
     flat_locations = models.ManyToManyField(Location, related_name="intervention_flat_locations", blank=True,
                                             verbose_name=_('Locations'))
+
+    sites = models.ManyToManyField('field_monitoring_settings.LocationSite',
+                                   related_name='interventions',
+                                   blank=True,
+                                   verbose_name=_('Sites'))
 
     population_focus = models.CharField(
         verbose_name=_("Population Focus"),
@@ -2537,6 +2547,10 @@ class Intervention(TimeStampedModel):
 
         return active_amendments.exists()
 
+    def get_cash_transfer_modalities_display(self):
+        choices = dict(self.CASH_TRANSFER_CHOICES)
+        return ', '.join(choices.get(m, 'Unknown') for m in self.cash_transfer_modalities)
+
 
 class InterventionAmendment(TimeStampedModel):
     """
@@ -2771,6 +2785,7 @@ class InterventionAmendment(TimeStampedModel):
             self.related_objects_map,
             INTERVENTION_AMENDMENT_RELATED_FIELDS,
             INTERVENTION_AMENDMENT_IGNORED_FIELDS,
+            INTERVENTION_AMENDMENT_DIFF_POST_EFFECTS,
         )
 
 

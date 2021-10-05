@@ -8,6 +8,8 @@ from etools.applications.field_monitoring.tests.factories import UserFactory
 
 class ActivityQuestionFactory(factory.django.DjangoModelFactory):
     question = factory.SubFactory(QuestionFactory)
+    text = factory.LazyAttribute(lambda aq: aq.question.text)
+    is_hact = factory.LazyAttribute(lambda aq: aq.question.is_hact)
     monitoring_activity = factory.SubFactory(MonitoringActivityFactory)
 
     specific_details = factory.fuzzy.FuzzyText()

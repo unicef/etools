@@ -33,6 +33,7 @@ class TestInterventionLowerResultsViewBase(BaseTenantTestCase):
             user=self.partner_focal_point,
         )
         self.intervention.partner_focal_points.add(self.staff_member)
+        self.intervention.unicef_focal_points.add(self.user)
 
         self.partner_staff_member = PartnerStaffFactory(partner=self.intervention.agreement.partner).user
 

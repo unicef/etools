@@ -394,6 +394,18 @@ class LowerResult(TimeStampedModel):
         )
         return results["total"] if results["total"] is not None else 0
 
+    def total_cso(self):
+        results = self.activities.aggregate(
+            total=Sum("cso_cash"),
+        )
+        return results["total"] if results["total"] is not None else 0
+
+    def total_unicef(self):
+        results = self.activities.aggregate(
+            total=Sum("unicef_cash"),
+        )
+        return results["total"] if results["total"] is not None else 0
+
 
 class Unit(models.Model):
     """
@@ -674,6 +686,14 @@ class AppliedIndicator(TimeStampedModel):
         return numerator, denominator
 
     @cached_property
+    def target_display_string(self):
+        if self.target_display[1] == '-':
+            target = self.target_display[0]
+        else:
+            target = '/'.join(self.target_display)
+        return target
+
+    @cached_property
     def baseline_display(self):
         ind_type = self.indicator.display_type
         numerator = self.baseline.get('v', self.baseline)
@@ -681,6 +701,14 @@ class AppliedIndicator(TimeStampedModel):
         if ind_type == IndicatorBlueprint.RATIO:
             denominator = self.baseline.get('d', '')
         return numerator, denominator
+
+    @cached_property
+    def baseline_display_string(self):
+        if self.baseline_display[1] == '-':
+            baseline = self.baseline_display[0]
+        else:
+            baseline = '/'.join(self.baseline_display)
+        return baseline
 
     class Meta:
         unique_together = (("indicator", "lower_result"),)
@@ -690,19 +718,7 @@ class AppliedIndicator(TimeStampedModel):
         super().save(*args, **kwargs)
 
     def get_amended_name(self):
-        baseline_display = self.baseline_display
-        if baseline_display[1] == '-':
-            baseline = baseline_display[0]
-        else:
-            baseline = '/'.join(baseline_display)
-
-        target_display = self.target_display
-        if target_display[1] == '-':
-            target = target_display[0]
-        else:
-            target = '/'.join(target_display)
-
-        return f'{self.indicator}: {baseline} - {target}'
+        return f'{self.indicator}: {self.baseline_display_string} - {self.target_display_string}'
 
 
 class Indicator(TimeStampedModel):
@@ -982,6 +998,9 @@ class InterventionActivity(TimeStampedModel):
 
     def get_amended_name(self):
         return f'{self.result} {self.name} (Total: {self.total}, UNICEF: {self.unicef_cash}, Partner: {self.cso_cash})'
+
+    def get_time_frames_display(self):
+        return ', '.join([f'{tf.start_date.year} Q{tf.quarter}' for tf in self.time_frames.all()])
 
 
 class InterventionActivityItem(TimeStampedModel):

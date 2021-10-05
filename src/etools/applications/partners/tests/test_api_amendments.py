@@ -261,7 +261,8 @@ class TestInterventionAmendments(BaseTenantTestCase):
         intervention.planned_budget.save()
         # FundsReservationHeaderFactory(intervention=intervention, currency='USD') # frs code is unique
         ReportingRequirementFactory(intervention=intervention)
-        intervention.unicef_focal_points.add(UserFactory())
+        unicef_user = UserFactory(is_staff=True, groups__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP])
+        intervention.unicef_focal_points.add(unicef_user)
         intervention.sections.add(SectionFactory())
         intervention.offices.add(OfficeFactory())
         intervention.partner_focal_points.add(PartnerStaffFactory(
@@ -278,7 +279,7 @@ class TestInterventionAmendments(BaseTenantTestCase):
         response = self.forced_auth_req(
             'patch',
             reverse('pmp_v3:intervention-detail', args=[amended_intervention.pk]),
-            UserFactory(is_staff=True, groups__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
+            unicef_user,
             data={
                 'start': timezone.now().date() + datetime.timedelta(days=2),
             },

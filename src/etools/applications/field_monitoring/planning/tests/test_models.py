@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import date, timedelta
 
 from dateutil.utils import today
 from factory import fuzzy
@@ -15,6 +15,7 @@ from etools.applications.field_monitoring.planning.activity_validation.validator
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.field_monitoring.planning.tests.factories import (
     MonitoringActivityFactory,
+    MonitoringActivityGroupFactory,
     QuestionTemplateFactory,
 )
 from etools.applications.field_monitoring.tests.factories import UserFactory
@@ -26,6 +27,7 @@ from etools.applications.partners.tests.factories import (
 from etools.applications.reports.models import CountryProgramme, ResultType
 from etools.applications.reports.tests.factories import CountryProgrammeFactory, ResultFactory, SectionFactory
 from etools.applications.tpm.tests.factories import TPMPartnerFactory, TPMPartnerStaffMemberFactory
+from etools.libraries.pythonlib.datetime import get_quarter
 
 
 class TestMonitoringActivityValidations(BaseTenantTestCase):
@@ -206,3 +208,61 @@ class TestMonitoringActivityQuestionsFlow(BaseTenantTestCase):
             3
         )
         self.assertFalse(ActivityQuestionOverallFinding.objects.filter(activity_question=disabled_question).exists())
+
+
+class TestMonitoringActivityGroups(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.partner = PartnerFactory()
+
+    def _add_hact_finding_for_activity(self, activity):
+        ActivityQuestionOverallFinding.objects.create(
+            activity_question=ActivityQuestionFactory(
+                monitoring_activity=activity,
+                question__is_hact=True,
+                question__level='partner',
+            ),
+            value=True
+        )
+        ActivityOverallFinding.objects.create(
+            narrative_finding='ok',
+            monitoring_activity=activity,
+            partner=self.partner,
+        )
+
+    def test_hact_values_not_changed_on_fm_question_deactivate(self):
+        today = date.today()
+        activity1 = MonitoringActivityFactory(partners=[self.partner], end_date=today,
+                                              status='completed')
+        activity2 = MonitoringActivityFactory(partners=[self.partner], end_date=today,
+                                              status='completed')
+        activity3 = MonitoringActivityFactory(partners=[self.partner], end_date=today,
+                                              status='completed')
+        activity4 = MonitoringActivityFactory(partners=[self.partner], end_date=today,
+                                              status='completed')
+        self._add_hact_finding_for_activity(activity1)
+        self._add_hact_finding_for_activity(activity2)
+        self._add_hact_finding_for_activity(activity3)
+        self._add_hact_finding_for_activity(activity4)
+        MonitoringActivityFactory(partners=[self.partner])
+
+        MonitoringActivityGroupFactory(
+            partner=self.partner,
+            monitoring_activities=[activity1, activity2]
+        )
+        self.partner.programmatic_visits()
+
+        old_hact = self.partner.get_hact_json()
+        # 1 group and two activities
+        self.assertEqual(old_hact['programmatic_visits']['completed'][get_quarter()], 3)
+
+        for activity in [activity1, activity2, activity3, activity4]:
+            for question in activity.questions.all():
+                question.question.is_hact = False
+                question.question.save()
+
+        # values should be unchanged
+        self.partner.programmatic_visits()
+        new_hact = self.partner.get_hact_json()
+        self.assertEqual(new_hact['programmatic_visits']['completed'][get_quarter()], 3)

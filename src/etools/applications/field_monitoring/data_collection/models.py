@@ -14,6 +14,11 @@ class ActivityQuestion(QuestionTargetMixin, models.Model):
                                             on_delete=models.CASCADE)
     question = models.ForeignKey(Question, related_name='activity_questions', verbose_name=_('Question'),
                                  on_delete=models.CASCADE)
+
+    """copy important fields from question to safely allow future question edits"""
+    text = models.TextField(verbose_name=_('Question Text'))
+    is_hact = models.BooleanField(default=False, verbose_name=_('Count as HACT'))
+
     specific_details = models.TextField(verbose_name=_('Specific Details To Probe'), blank=True)
     is_enabled = models.BooleanField(verbose_name=_('Enabled'), default=True)
 
@@ -92,6 +97,12 @@ class Finding(models.Model):
 
 
 class ActivityQuestionOverallFinding(models.Model):
+    """
+        This model refers to the answer provided for a question during the 'summary analysis'
+        in the case where the related activity_question.question is marked as 'is_hact' then this, answer not being
+        null, reflects that the related monitoring activity (activity_question.monitoring_activity) will count as a
+        programmatic visit for the partner
+    """
     activity_question = models.OneToOneField(ActivityQuestion, related_name='overall_finding',
                                              verbose_name=_('Activity'), on_delete=models.CASCADE)
     value = models.JSONField(null=True, blank=True, verbose_name=_('Value'))

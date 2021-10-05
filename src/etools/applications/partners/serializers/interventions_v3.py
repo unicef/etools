@@ -9,6 +9,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from unicef_attachments.fields import AttachmentSingleFileField
 
+from etools.applications.field_monitoring.fm_settings.serializers import LocationSiteSerializer
 from etools.applications.partners.models import (
     FileType,
     Intervention,
@@ -79,7 +80,8 @@ class InterventionSupplyItemUploadSerializer(serializers.Serializer):
             if row.get(column):
                 row[column] = row[column].strip()
 
-        if row.get("Product Number", "").startswith("\"Disclaimer"):
+        # dont parse disclaimer line
+        if 'disclaimer' in ''.join(map(str, row.values())).lower():
             return False
 
         # skip if row is empty
@@ -241,6 +243,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     section_names = serializers.SerializerMethodField(read_only=True)
     signed_pd_attachment = AttachmentSingleFileField(read_only=True)
     signed_pd_document_file = serializers.FileField(source='signed_pd_document', read_only=True)
+    sites = LocationSiteSerializer(many=True)
     submitted_to_prc = serializers.ReadOnlyField()
     termination_doc_attachment = AttachmentSingleFileField(read_only=True)
     termination_doc_file = serializers.FileField(source='termination_doc', read_only=True)
@@ -357,11 +360,13 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "terminate",
             "download_comments",
             "export_results",
+            "export_pdf",
             "amendment_merge",
         ]
         available_actions = [
             "download_comments",
             "export_results",
+            "export_pdf",
         ]
         user = self.context['request'].user
 
@@ -486,6 +491,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
         fields = (
             "activation_letter_attachment",
             "activation_letter_file",
+            "activation_protocol",
             # "actual_amount",
             "agreement",
             "amendments",
@@ -569,6 +575,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "signed_by_unicef_date",
             "signed_pd_attachment",
             "signed_pd_document_file",
+            "sites",
             "start",
             "status",
             "status_list",
