@@ -80,7 +80,8 @@ class InterventionSupplyItemUploadSerializer(serializers.Serializer):
             if row.get(column):
                 row[column] = row[column].strip()
 
-        if row.get("Product Number", "").startswith("\"Disclaimer"):
+        # dont parse disclaimer line
+        if 'disclaimer' in ''.join(map(str, row.values())).lower():
             return False
 
         # skip if row is empty

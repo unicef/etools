@@ -2,8 +2,8 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from model_utils.models import TimeStampedModel
-from unicef_notification.utils import send_notification_with_template
 
+from etools.applications.environment.notifications import send_notification_with_template
 from etools.applications.firms.models import BaseFirm, BaseStaffMember
 from etools.libraries.djangolib.utils import get_environment
 

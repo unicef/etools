@@ -12,8 +12,8 @@ from django.utils.timezone import make_aware, now
 
 from dateutil.relativedelta import relativedelta
 from unicef_attachments.models import Attachment, FileType
-from unicef_notification.utils import send_notification_with_template
 
+from etools.applications.environment.notifications import send_notification_with_template
 from etools.applications.partners.models import (
     Agreement,
     AgreementAmendment,

@@ -9,10 +9,10 @@ from django.utils import timezone
 
 from celery.utils.log import get_task_logger
 from django_tenants.utils import get_tenant_model, schema_context
-from unicef_notification.utils import send_notification_with_template
 from unicef_vision.exceptions import VisionException
 from unicef_vision.utils import get_data_from_insight
 
+from etools.applications.environment.notifications import send_notification_with_template
 from etools.applications.partners.models import Agreement, Intervention, PartnerOrganization, PartnerStaffMember
 from etools.applications.partners.prp_api import PRPAPI
 from etools.applications.partners.serializers.prp_v1 import PRPPartnerOrganizationWithStaffMembersSerializer
