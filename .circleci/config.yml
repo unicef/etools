@@ -85,6 +85,7 @@ jobs:
             else
               echo "not triggered - '$CIRCLE_BRANCH' is not a deployable branch: '$DEPLOY_BRANCHES'"
             fi
+    parallelism: 4
 
   build_and_upload:
     machine: true
