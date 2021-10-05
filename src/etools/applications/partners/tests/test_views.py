@@ -2086,6 +2086,7 @@ class TestPartnerOrganizationDashboardAPIView(BaseTenantTestCase):
 
     @classmethod
     def setUpTestData(cls):
+        call_command('update_notifications')
         cls.sec1, cls.sec2, _ = SectionFactory.create_batch(3)
         cls.loc1, cls.loc2, _ = LocationFactory.create_batch(3)
         cls.partner = PartnerFactory(
@@ -2121,6 +2122,7 @@ class TestPartnerOrganizationDashboardAPIView(BaseTenantTestCase):
         par = PartnerFactory(name="Other", vendor_number='008', total_ct_cy=1000.00)
         int = InterventionFactory(agreement=AgreementFactory(partner=par, signed_by_unicef_date=today))
         ActionPointFactory.create_batch(3, travel_activity=ta, intervention=int, status=ActionPoint.STATUS_OPEN)
+        call_command('update_notifications')
 
     def setUp(self):
         self.response = self.forced_auth_req('get', reverse("partners_api:partner-dashboard"), user=self.unicef_staff)
