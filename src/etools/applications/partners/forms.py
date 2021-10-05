@@ -58,7 +58,7 @@ class PartnerStaffMemberForm(forms.ModelForm):
 
     class Meta:
         model = PartnerStaffMember
-        exclude = ['user', ]
+        exclude = ("user", )
 
     def clean(self):
         cleaned_data = super().clean()
@@ -106,7 +106,7 @@ class PartnerStaffMemberForm(forms.ModelForm):
             # disabled is unavailable if user already synced to PRP to avoid data inconsistencies
             if self.instance.active and not active:
                 if Intervention.objects.filter(
-                    # todo epd: Q(date_sent_to_partner__isnull=False, agreement__partner__staff_members=self.instance) |
+                    Q(date_sent_to_partner__isnull=False, agreement__partner__staff_members=self.instance) |
                     Q(
                         ~Q(status=Intervention.DRAFT),
                         Q(partner_focal_points=self.instance) | Q(partner_authorized_officer_signatory=self.instance),

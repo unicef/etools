@@ -252,7 +252,7 @@ class TestAgreementsAPI(BaseTenantTestCase):
         self.assertFalse(Activity.objects.exists())
 
     def test_list_agreements(self):
-        with self.assertNumQueries(1):
+        with self.assertNumQueries(2):
             status_code, response = self.run_request_list_ep(user=self.unicef_staff, method='get')
 
         self.assertEqual(status_code, status.HTTP_200_OK)
@@ -269,7 +269,7 @@ class TestAgreementsAPI(BaseTenantTestCase):
         self.assertEqual(status_code, status.HTTP_200_OK)
         self.assertEqual(len(response), 0)
 
-        with self.assertNumQueries(1):
+        with self.assertNumQueries(2):
             status_code, response = self.run_request_list_ep(
                 user=self.unicef_staff,
                 method='get',

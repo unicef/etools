@@ -20,6 +20,7 @@ from etools.applications.reports.views.v1 import (
     UnitViewSet,
 )
 from etools.applications.reports.views.v2 import OfficeViewSet
+from etools.applications.reports.views.v3 import PMPOfficeViewSet, PMPSectionViewSet
 from etools.applications.t2f.urls import urlpatterns as t2f_patterns
 from etools.applications.users.views import CountriesViewSet, GroupViewSet, ModuleRedirectView, UserViewSet
 # these imports are used to autodiscover admin forms located outside of INSTALLED_APPS(the libraries folder for example)
@@ -47,8 +48,10 @@ api.register(r'partners/file-types', FileTypeViewSet, basename='filetypes')
 
 api.register(r'users', UserViewSet, basename='users')
 api.register(r'groups', GroupViewSet, basename='groups')
+api.register(r'offices/v3', PMPOfficeViewSet, basename='offices-pmp')
 api.register(r'offices', OfficeViewSet, basename='offices')
 
+api.register(r'sections/v3', PMPSectionViewSet, basename='sections-pmp')
 api.register(r'sections', SectionViewSet, basename='sections')
 
 api.register(r'reports/result-types', ResultTypeViewSet, basename='resulttypes')
@@ -74,6 +77,7 @@ urlpatterns = [
     url(r'^locations/cartodbtables/$', CartoDBTablesView.as_view(), name='cartodbtables'),
     url(r'^locations/autocomplete/$', LocationQuerySetView.as_view(), name='locations_autocomplete'),
     url(r'^api/v1/field-monitoring/', include('etools.applications.field_monitoring.urls')),
+    url(r'^api/comments/v1/', include('etools.applications.comments.urls')),
 
     # GIS API urls
     url(r'^api/management/gis/', include('etools.applications.management.urls_gis')),
@@ -104,7 +108,14 @@ urlpatterns = [
 
     # ***************  API version 3  ******************
     url(r'^api/v3/users/', include('etools.applications.users.urls_v3', namespace='users_v3')),
-
+    url(
+        r'^api/pmp/v3/',
+        include('etools.applications.partners.urls_v3', namespace='pmp_v3'),
+    ),
+    url(
+        r'^api/reports/v3/',
+        include('etools.applications.reports.urls_v3', namespace='reports_v3'),
+    ),
 
     url(r'^api/docs/', schema_view),
     url(r'^api/schema/coreapi', schema_view_json_coreapi),

@@ -223,6 +223,7 @@ TENANT_APPS = (
     'etools.applications.field_monitoring.planning',
     'etools.applications.field_monitoring.data_collection',
     'etools.applications.field_monitoring.analyze',
+    'etools.applications.comments',
     'unicef_snapshot',
     'unicef_attachments',
     'unicef_vision',
@@ -572,3 +573,9 @@ INSIGHT_REQUESTS_TIMEOUT = get_from_secrets_or_env('INSIGHT_REQUESTS_TIMEOUT', 4
 ETOOLS_OFFLINE_API = get_from_secrets_or_env('ETOOLS_OFFLINE_API', '')
 ETOOLS_OFFLINE_TOKEN = get_from_secrets_or_env('ETOOLS_OFFLINE_TOKEN', '')
 ETOOLS_OFFLINE_TASK_APP = "etools.config.celery.get_task_app"
+
+# PRP Integration
+# https://github.com/unicef/etools-partner-reporting-portal
+PRP_API_ENDPOINT = get_from_secrets_or_env('PRP_API_ENDPOINT', '')  # example: http://172.18.0.1:8083/api
+PRP_API_USER = get_from_secrets_or_env('PRP_API_USER', '')
+PRP_API_PASSWORD = get_from_secrets_or_env('PRP_API_PASSWORD', '')

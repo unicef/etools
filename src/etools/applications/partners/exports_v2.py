@@ -224,7 +224,7 @@ class AgreementCSVRenderer(r.CSVRenderer):
 
 class InterventionCSVRenderer(r.CSVRenderer):
     header = [
-        "partner_name", "vendor_number", "status", "partner_type", "cso_type", "agreement_number", "country_programme",
+        "partner_name", "vendor_number", "status", "partner_type", "cso_type", "agreement_number", "country_programmes",
         "document_type", "number", "title", "start", "end", "offices", "sectors", "locations", "contingency_pd",
         "intervention_clusters", "unicef_focal_points", "partner_focal_points", "budget_currency", "cso_contribution",
         "unicef_budget", "unicef_supply", "total_planned_budget", "fr_numbers", "fr_currency", "fr_posting_date",
@@ -232,6 +232,7 @@ class InterventionCSVRenderer(r.CSVRenderer):
         "submission_date_prc", "review_date_prc", "partner_authorized_officer_signatory", "signed_by_partner_date",
         "unicef_signatory", "signed_by_unicef_date", "days_from_submission_to_signed", "days_from_review_to_signed",
         "amendment_sum", "last_amendment_date", "attachment_type", "total_attachments", "cp_outputs", "url",
+        "cfei_number",
     ]
 
     labels = {
@@ -241,7 +242,7 @@ class InterventionCSVRenderer(r.CSVRenderer):
         "partner_type": "Partner Type",
         "cso_type": "CSO Type",
         "agreement_number": "Agreement",
-        "country_programme": "Country Programme",
+        "country_programmes": "Country Programme",
         "document_type": "Document Type",
         "number": "Reference Number",
         "title": "Document Title",
@@ -258,7 +259,7 @@ class InterventionCSVRenderer(r.CSVRenderer):
         "cso_contribution": "Total CSO Budget (USD)",
         "unicef_budget": "UNICEF Cash (USD)",
         "unicef_supply": "UNICEF Supply (USD)",
-        "total_planned_budget": "Total PD/SSFA Budget (USD)",
+        "total_planned_budget": "Total PD/SPD Budget (USD)",
         "fr_numbers": "FR Number(s)",
         "fr_currency": "FR Currency",
         "fr_posting_date": "FR Posting Date",
@@ -283,6 +284,7 @@ class InterventionCSVRenderer(r.CSVRenderer):
         "total_attachments": "# of attachments",
         "cp_outputs": "CP Outputs",
         "url": "URL",
+        "cfei_number": "UNPP Number",
     }
 
 
@@ -316,7 +318,7 @@ class PartnershipDashCSVRenderer(r.CSVRenderer):
     labels = {
         "partner_name": "IP Name",
         "partner_vendor_number": "Vendor Number",
-        "number": "PD/SSFA Ref #",
+        "number": "PD/SPD Ref #",
         "sections": "Section",
         "offices_names": "Field Office",
         "status": "Status",

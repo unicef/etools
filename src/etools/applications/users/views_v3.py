@@ -1,16 +1,18 @@
 import logging
 
 from django.contrib.auth import get_user_model
+from django.core.exceptions import PermissionDenied
 from django.db import connection
 from django.db.models import OuterRef, Q, Subquery
 
 from rest_framework import mixins, status, viewsets
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import ListAPIView, RetrieveAPIView
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from unicef_restlib.views import QueryStringFilterMixin, SafeTenantViewSetMixin
 
+from etools.applications.partners.views.v3 import PMPBaseViewMixin
 from etools.applications.users import views as v1, views_v2 as v2
 from etools.applications.users.serializers_v3 import (
     CountryDetailSerializer,
@@ -57,7 +59,7 @@ class UsersDetailAPIView(RetrieveAPIView):
         )
 
 
-class UsersListAPIView(QueryStringFilterMixin, ListAPIView):
+class UsersListAPIView(PMPBaseViewMixin, QueryStringFilterMixin, ListAPIView):
     """
     Gets a list of Unicef Staff users in the current country.
     Country is determined by the currently logged in user.
@@ -65,7 +67,7 @@ class UsersListAPIView(QueryStringFilterMixin, ListAPIView):
     model = get_user_model()
     queryset = get_user_model().objects.all().select_related('profile')
     serializer_class = MinimalUserSerializer
-    permission_classes = (IsAdminUser, )
+    permission_classes = (IsAuthenticated, )
     pagination_class = AppendablePageNumberPagination
     search_terms = ('email__icontains', 'first_name__icontains', 'middle_name__icontains', 'last_name__icontains')
 
@@ -75,8 +77,9 @@ class UsersListAPIView(QueryStringFilterMixin, ListAPIView):
     )
 
     def get_queryset(self, pk=None):
-
-        # note that if user_ids is set we do not filter by current tenant, I guess this is the expected behavior
+        qs = super().get_queryset()
+        # note that if user_ids is set we do not filter by current tenant,
+        # I guess this is the expected behavior
         user_ids = self.request.query_params.get("values", None)
         if user_ids:
             try:
@@ -84,17 +87,26 @@ class UsersListAPIView(QueryStringFilterMixin, ListAPIView):
             except ValueError:
                 raise ValidationError("Query parameter values are not integers")
             else:
-                return self.model.objects.filter(
-                    id__in=user_ids,
-                    is_staff=True
-                ).order_by('first_name')
+                qs = qs.filter(id__in=user_ids)
 
-        user = self.request.user
-        queryset = super().get_queryset().filter(
-            profile__country=user.profile.country, is_staff=True).prefetch_related(
-            'profile', 'groups', 'user_permissions').order_by('first_name')
+        if self.is_partner_staff():
+            emails = []
+            for p in self.partners():
+                emails += p.staff_members.values_list("email", flat=True)
+            qs = qs.filter(email__in=emails)
+        elif self.request.user.is_staff:
+            qs = qs.filter(
+                profile__country=self.request.user.profile.country,
+                is_staff=True,
+            )
+        else:
+            raise PermissionDenied
 
-        return queryset
+        return qs.prefetch_related(
+            'profile',
+            'groups',
+            'user_permissions',
+        ).order_by("first_name")
 
 
 class CountryView(v2.CountryView):

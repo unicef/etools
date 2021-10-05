@@ -1,12 +1,12 @@
 import datetime
 import json
 from decimal import Decimal
+from unittest.mock import Mock, patch
 
 from django.db import connection
 from django.test import override_settings, SimpleTestCase
 from django.urls import reverse
 
-from mock import Mock, patch
 from rest_framework import status
 from rest_framework.exceptions import ErrorDetail
 from unicef_snapshot.models import Activity
@@ -30,7 +30,6 @@ from etools.applications.partners.models import (
     CoreValuesAssessment,
     Intervention,
     InterventionAmendment,
-    InterventionBudget,
     PartnerOrganization,
     PartnerPlannedVisits,
     PartnerType,
@@ -1224,20 +1223,16 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(BaseTenantTestCase):
             partner=cls.partner,
             signed_by_unicef_date=datetime.date.today())
 
-        cls.intervention = InterventionFactory(agreement=agreement)
+        cls.intervention = InterventionFactory(
+            agreement=agreement,
+            status=Intervention.DRAFT,
+        )
         cls.output_res_type = ResultTypeFactory(name=ResultType.OUTPUT)
 
         cls.result = ResultFactory(
             result_type=cls.output_res_type,)
 
-        cls.partnership_budget = InterventionBudget.objects.create(
-            intervention=cls.intervention,
-            unicef_cash=100,
-            unicef_cash_local=10,
-            partner_contribution=200,
-            partner_contribution_local=20,
-            in_kind_amount_local=10,
-        )
+        cls.partnership_budget = cls.intervention.planned_budget
         cls.amendment = InterventionAmendment.objects.create(
             intervention=cls.intervention,
             types=[InterventionAmendment.RESULTS]
