@@ -8,10 +8,10 @@ from django.db.models import F, Sum
 
 from celery.utils.log import get_task_logger
 from django_tenants.utils import schema_context
-from unicef_notification.utils import send_notification_with_template
 from unicef_vision.exceptions import VisionException
 from unicef_vision.utils import get_data_from_insight
 
+from etools.applications.environment.notifications import send_notification_with_template
 from etools.applications.partners.models import Agreement, Intervention, PartnerOrganization
 from etools.applications.partners.utils import (
     copy_all_attachments,
