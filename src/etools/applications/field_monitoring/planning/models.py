@@ -11,11 +11,11 @@ from model_utils.models import TimeStampedModel
 from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation
 from unicef_locations.models import Location
-from unicef_notification.utils import send_notification_with_template
 
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.core.permissions import import_permissions
 from etools.applications.core.urlresolvers import build_frontend_url
+from etools.applications.environment.notifications import send_notification_with_template
 from etools.applications.field_monitoring.data_collection.offline.synchronizer import (
     MonitoringActivityOfflineSynchronizer,
 )

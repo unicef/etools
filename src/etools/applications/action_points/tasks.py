@@ -5,9 +5,9 @@ from django.db import connection
 
 from celery.utils.log import get_task_logger
 from django_tenants.utils import get_public_schema_name
-from unicef_notification.utils import send_notification_with_template
 
 from etools.applications.action_points.models import ActionPoint
+from etools.applications.environment.notifications import send_notification_with_template
 from etools.applications.users.models import Country
 from etools.config.celery import app
 

@@ -5,9 +5,9 @@ from celery.utils.log import get_task_logger
 from tenant_schemas_celery.app import get_schema_name_from_task
 from unicef_locations.models import CartoDBTable
 from unicef_locations.synchronizers import LocationSynchronizer
-from unicef_notification.utils import send_notification_with_template
 from unicef_vision.utils import get_vision_logger_domain_model
 
+from etools.applications.environment.notifications import send_notification_with_template
 from etools.applications.field_monitoring.fm_settings.models import LocationSite
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.users.models import Country
