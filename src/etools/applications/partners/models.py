@@ -2741,6 +2741,7 @@ class InterventionAmendment(TimeStampedModel):
             INTERVENTION_AMENDMENT_COPY_POST_EFFECTS,
         )
         self.amended_intervention.title = '[Amended] ' + self.intervention.title
+        self.amended_intervention.submission_date = timezone.now().date()
         self.amended_intervention.save()
 
     def merge_amendment(self):
