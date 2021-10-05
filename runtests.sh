@@ -20,6 +20,6 @@ fi
 
 # Run unittests and coverage report
 coverage erase
-time coverage run manage.py test --noinput --keepdb "$@"
+time coverage run manage.py test --parallel --noinput --keepdb "$@"
 coverage report -m
 coverage html
