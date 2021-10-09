@@ -162,7 +162,7 @@
                 <td class="w-p12">Supplies:</td>
                 <td class="w-p12">{{ pd.planned_budget.in_kind_amount_local }}</td>
                 <td class="w-p12">HQ Cash:</td>
-                <td class="w-p12">{{ pd.planned_budget.total_unicef_cash_local_wo_hq }}</td>
+                <td class="w-p12">{{ pd.planned_budget.total_hq_cash_local }}</td>
                 <td class="w-p12">Total:</td>
                 <td class="w-p12">{{ pd.planned_budget.total_unicef_contribution_local }}</td>
               </tr>
@@ -440,14 +440,14 @@
           </tr>
           <tr>
             <td>
-              <span>CSO Authorised Name: {% if pd.partner_authorized_officer_signatory %}{{ pd.partner_authorized_officer_signatory.user.first_name }} {{ pd.partner_authorized_officer_signatory.user.last_name }} ({{ pd.partner_authorized_officer_signatory.user.email }}){% endif %}</span><br/>
+              <span>CSO Authorized Officer: </span><br/>
               <span>Signature:</span><br/>
-              <span>Date: {{ pd.signed_by_partner_date }}</span>
+              <span>Date: </span>
             </td>
             <td>
-              <span>UNICEF Authorised Name: {% if pd.unicef_signatory %}{{ pd.unicef_signatory.first_name }} {{ pd.unicef_signatory.last_name }} ({{ pd.unicef_signatory.email }}){% endif %}</span><br/>
+              <span>UNICEF Authorized Officer: </span><br/>
               <span>Signature:</span><br/>
-              <span>Date: {{ pd.signed_by_unicef_date }}</span>
+              <span>Date: </span>
             </td>
           </tr>
         <tbody>

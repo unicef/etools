@@ -206,7 +206,7 @@ class PMPInterventionPDFView(PMPInterventionMixin, RetrieveAPIView):
             "font_path": font_path,
         }
 
-        return render_to_pdf_response(request, "pd/detail.html", data, filename=str(pd))
+        return render_to_pdf_response(request, "pd/detail.html", data, filename=f'{str(pd)}.pdf')
 
 
 class PMPInterventionDeleteView(PMPInterventionMixin, InterventionDeleteView):
