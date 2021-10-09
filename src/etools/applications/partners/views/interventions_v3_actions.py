@@ -76,8 +76,8 @@ class PMPInterventionAcceptView(PMPInterventionActionView):
             if pd.unicef_accepted:
                 raise ValidationError("UNICEF has already accepted this PD.")
 
-            if self.request.user not in pd.unicef_focal_points.all():
-                raise ValidationError("Only focal points can accept")
+            if self.request.user not in pd.unicef_focal_points.all() and self.request.user != pd.budget_owner:
+                raise ValidationError("Only focal points or budget owners can accept")
 
             request.data.update({"unicef_accepted": True})
             recipients = [u.email for u in pd.partner_focal_points.all()]
@@ -138,7 +138,7 @@ class PMPInterventionAcceptOnBehalfOfPartner(PMPInterventionActionView):
             [u.email for u in pd.partner_focal_points.all()] +
             [u.email for u in pd.unicef_focal_points.all()]
         )
-        recipients.remove(self.request.user.email)
+        recipients.discard(self.request.user.email)
         template_name = 'partners/intervention/unicef_accepted_behalf_of_partner'
 
         response = super().update(request, *args, **kwargs)
