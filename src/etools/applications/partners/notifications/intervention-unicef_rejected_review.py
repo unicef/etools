@@ -6,10 +6,10 @@ defaults = {
     Dear Colleague,
 
     PD {{reference_number}} has been reviewed and rejected.
-    
+
     The following comments were provided:
     {{review_comments}}
-    
+
     The following were listed as suggested actions:
     {{review_actions}}
 
@@ -28,7 +28,7 @@ defaults = {
     The following were listed as suggested actions:<br />
     {{review_actions}}
     <br /><br />
-    
+
     You can review the PD at the following link:
     {{pd_link}}
 

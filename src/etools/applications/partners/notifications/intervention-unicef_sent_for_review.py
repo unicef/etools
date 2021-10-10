@@ -6,7 +6,7 @@ defaults = {
     Dear Colleague,
 
     PD {{reference_number}} has been sent for review by UNICEF budget owner: {{budget_owner_name}}
-    
+
     {{pd_link}}
 
     Please note that this is an automated message and replies to this email address are not monitored.
