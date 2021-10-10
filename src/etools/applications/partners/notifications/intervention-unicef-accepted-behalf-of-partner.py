@@ -1,7 +1,7 @@
 name = "partners/intervention/unicef_accepted_behalf_of_partner"
 defaults = {
     "description": "UNICEF Accepted PD on behalf of Partner",
-    "subject": "[eTools] UNICEF Accepted PD on behalf of Partner",
+    "subject": "[eTools] UNICEF Accepted the PD on behalf of Partner",
     "content": """
     Dear Colleague,
 
