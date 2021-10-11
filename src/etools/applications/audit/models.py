@@ -16,7 +16,6 @@ from model_utils.models import TimeStampedModel
 from ordered_model.models import OrderedModel
 from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation, CurrencyField
-from unicef_notification.utils import send_notification_with_template
 
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.audit.purchase_order.models import AuditorStaffMember, PurchaseOrder, PurchaseOrderItem
@@ -32,6 +31,7 @@ from etools.applications.audit.transitions.conditions import (
 from etools.applications.audit.transitions.serializers import EngagementCancelSerializer
 from etools.applications.audit.utils import generate_final_report
 from etools.applications.core.urlresolvers import build_frontend_url
+from etools.applications.environment.notifications import send_notification_with_template
 from etools.applications.partners.models import PartnerOrganization, PartnerStaffMember
 from etools.applications.reports.models import Office, Section
 from etools.libraries.djangolib.models import GroupWrapper, InheritedModelMixin

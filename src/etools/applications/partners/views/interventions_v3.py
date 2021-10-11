@@ -195,9 +195,6 @@ class PMPInterventionPDFView(PMPInterventionMixin, RetrieveAPIView):
     queryset = Intervention.objects.detail_qs().all()
     permission_classes = (PMPInterventionPermission,)
 
-    def get_pdf_filename(self):
-        return str(self.pd)
-
     def get(self, request, *args, **kwargs):
         pd = self.get_pd_or_404(self.kwargs.get("pk"))
         # re-fetch to get prefetched detail queries
@@ -211,7 +208,7 @@ class PMPInterventionPDFView(PMPInterventionMixin, RetrieveAPIView):
             "font_path": font_path,
         }
 
-        return render_to_pdf_response(request, "pd/detail.html", data)
+        return render_to_pdf_response(request, "pd/detail.html", data, filename=f'{str(pd)}.pdf')
 
 
 class PMPInterventionXLSView(PMPInterventionMixin, RetrieveAPIView):

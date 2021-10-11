@@ -118,6 +118,7 @@ class ProfileRetrieveUpdateSerializer(serializers.ModelSerializer):
     country = DashboardCountrySerializer(read_only=True)
     show_ap = serializers.SerializerMethodField()
     is_unicef_user = serializers.SerializerMethodField()
+    _partner_staff_member = serializers.SerializerMethodField()
 
     class Meta:
         model = UserProfile
@@ -131,6 +132,10 @@ class ProfileRetrieveUpdateSerializer(serializers.ModelSerializer):
         if obj.country and obj.country.name in AP_ALLOWED_COUNTRIES:
             return True
         return False
+
+    def get__partner_staff_member(self, obj):
+        psm = obj.user.get_partner_staff_member()
+        return psm.id if psm else None
 
     def get_is_unicef_user(self, obj):
         return obj.user.is_unicef_user()
