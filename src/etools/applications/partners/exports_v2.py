@@ -567,21 +567,25 @@ class InterventionXLSRenderer:
                                    [self.fill_blue, self.font_white])
         worksheet.append([
             'Result Level', 'Result/Activity', 'Timeframe', 'CSO contribution',
-            'UNICEF contribution', 'Total (CSO+ UNICEF) [currency]'
+            'UNICEF contribution', f'Total (CSO+ UNICEF) [{self.intervention.planned_budget.currency}]'
         ])
         self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, 6, [self.fill_gray])
         activity_rows = 0
         for result_link in self.intervention.result_links.all():
             for pd_output in result_link.ll_results.all():
-                worksheet.append(['Prog Output', result_link.cp_output.name + '\n' + pd_output.name])
-                self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, 1, [self.fill_gray])
-                self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, 2, [self.font_bold])
+                worksheet.append([
+                    'Prog Output', result_link.cp_output.name + '\n' + pd_output.name, '',
+                    pd_output.total_cso(), pd_output.total_unicef(), pd_output.total(),
+                ])
+                worksheet.merge_cells(start_row=worksheet.max_row, start_column=2,
+                                      end_row=worksheet.max_row, end_column=3)
+                self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, 6, [self.fill_yellow])
                 activity_rows += 1
 
                 for activity in pd_output.activities.all():
                     worksheet.append([
                         'Prog Activity', activity.name, activity.get_time_frames_display(),
-                        activity.cso_cash, activity.unicef_cash, activity.cso_cash + activity.unicef_cash,
+                        activity.cso_cash, activity.unicef_cash, activity.total,
                     ])
                     self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, 1, [self.fill_gray])
                     activity_rows += 1
@@ -615,7 +619,7 @@ class InterventionXLSRenderer:
             'Total', '', '',
             self.intervention.planned_budget.partner_contribution_local,
             self.intervention.planned_budget.unicef_cash_local,
-            self.intervention.planned_budget.total_local,
+            self.intervention.planned_budget.total_cash_local(),
         ])
         self.apply_styles_to_cells(worksheet, worksheet.max_row - 1, 1, worksheet.max_row, 1, [self.fill_blue_light])
         self.apply_styles_to_cells(
@@ -679,27 +683,15 @@ class InterventionXLSRenderer:
         worksheet.append(['Signatures and date'])
         self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, 6,
                                    [self.fill_blue, self.font_white])
+        worksheet.merge_cells(start_row=worksheet.max_row, start_column=1, end_row=worksheet.max_row, end_column=6)
 
-        if self.intervention.partner_authorized_officer_signatory:
-            cso = self.intervention.partner_authorized_officer_signatory
-            cso_name = f'{cso.user.first_name} {cso.user.last_name} ({cso.user.email})'
-        else:
-            cso_name = ''
-
-        if self.intervention.unicef_signatory:
-            unicef_sig = self.intervention.unicef_signatory
-            unicef_signature_name = f'{unicef_sig.first_name} {unicef_sig.last_name} ({unicef_sig.email})'
-        else:
-            unicef_signature_name = ''
-
-        worksheet.append(['CSO Authorized Name', cso_name, '', 'UNICEF Authorized Name', unicef_signature_name, ''])
+        worksheet.append(['CSO Authorized Name', '', '', 'UNICEF Authorized Name', '', ''])
         worksheet.merge_cells(start_row=worksheet.max_row, start_column=2, end_row=worksheet.max_row, end_column=3)
         worksheet.merge_cells(start_row=worksheet.max_row, start_column=5, end_row=worksheet.max_row, end_column=6)
         worksheet.append(['Signature', '', '', 'Signature', '', ''])
         worksheet.merge_cells(start_row=worksheet.max_row, start_column=2, end_row=worksheet.max_row, end_column=3)
         worksheet.merge_cells(start_row=worksheet.max_row, start_column=5, end_row=worksheet.max_row, end_column=6)
-        worksheet.append(['Date', self.intervention.signed_by_partner_date, '',
-                          'Date', self.intervention.signed_by_unicef_date, ''])
+        worksheet.append(['Date', '', '', 'Date', '', ''])
         worksheet.merge_cells(start_row=worksheet.max_row, start_column=2, end_row=worksheet.max_row, end_column=3)
         worksheet.merge_cells(start_row=worksheet.max_row, start_column=5, end_row=worksheet.max_row, end_column=6)
         self.apply_styles_to_cells(worksheet, worksheet.max_row - 2, 1, worksheet.max_row, 1, [self.fill_gray])
