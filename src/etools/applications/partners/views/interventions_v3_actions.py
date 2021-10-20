@@ -5,8 +5,8 @@ from django.utils import timezone
 
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
-from etools.applications.environment.notifications import send_notification_with_template
 
+from etools.applications.environment.notifications import send_notification_with_template
 from etools.applications.partners.amendment_utils import MergeError
 from etools.applications.partners.models import Intervention, InterventionAmendment, InterventionReview
 from etools.applications.partners.permissions import (
