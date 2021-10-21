@@ -3,12 +3,14 @@ import itertools
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.contenttypes.models import ContentType
 from django.db import connection, transaction
 from django.db.models import F, Prefetch, Sum
 from django.utils import timezone
 
 from celery.utils.log import get_task_logger
 from django_tenants.utils import get_tenant_model, schema_context
+from unicef_snapshot.models import Activity
 from unicef_vision.exceptions import VisionException
 from unicef_vision.utils import get_data_from_insight
 
@@ -428,3 +430,68 @@ def _set_intervention_expired(country_name):
     for pd in pd_qs:
         pd.status = Intervention.EXPIRED
         pd.save()
+
+
+def get_pilot_numbers(country_name):
+    logger.info(
+        '... Starting epd numbers counting for {}'.format(
+            country_name,
+        ),
+    )
+    now = timezone.now()
+    today = now.date()
+    pd_qs = Intervention.objects.filter(
+        date_sent_to_partner__isnull=False,
+    ).prefetch_related("agreement__partner")
+    record = []
+    for pd in pd_qs:
+        fp_users = [fp.user for fp in pd.partner_focal_points.all()]
+        has_the_partner_logged_in = pd.partner_focal_points.filter(
+            user__last_login__gt=timezone.make_aware(datetime.datetime(2021, 10, 15))
+        ).exists()
+        act_qs = Activity.objects.filter(target_object_id=pd.id,
+                                         target_content_type=ContentType.objects.get_for_model(pd))
+        partner_entered_data = act_qs.filter(by_user__in=fp_users).exists()
+        date_sent = pd.date_sent_to_partner.strftime("%Y-%m-%d") if pd.date_sent_to_partner else None
+        record.append([
+            country_name,
+            pd.number,
+            pd.agreement.partner.name,
+            date_sent,
+            has_the_partner_logged_in,
+            partner_entered_data,
+            pd.unicef_accepted,
+            pd.partner_accepted,
+            "Unicef" if pd.unicef_court else "Partner",
+            pd.status,
+            today.strftime("%Y-%m-%d")
+        ])
+    return record
+
+
+@app.task
+def epd_pilot_tracking():
+    # TODO: remove this before ePD merges into the main branch
+    # temporary task to get some epd pilot numbers emailed
+    import csv
+    import io
+    import os
+
+    from post_office import mail
+    recipients = os.environ.get("EPD_PILOT_RECIPIENTS", "").split(",")
+    countries = os.environ.get("EPD_PILOT_SCHEMAS", "").split(",")
+    my_file = io.StringIO()
+    my_numbers = [["CO Name", "PD No", "IP", "Date Sent to IP", "IP Logged In", "IP Entered Data",
+                  "Unicef Accepted", "Partner Accepted", "Editable By", "Status", "Date of export"]]
+    for country in Country.objects.filter(schema_name=countries).all():
+        connection.set_tenant(country)
+        my_numbers += get_pilot_numbers(country.name)
+
+    csv_writer = csv.writer(my_file)
+    for line in my_numbers:
+        csv_writer.writerow(line)
+    mail.send(
+        recipients, "etoolsunicef@gmail.com", subject="ePD Pilot Numbers",
+        attachments={"epd_pilot_values.csv": my_file},
+        message="enjoy!"
+    )
