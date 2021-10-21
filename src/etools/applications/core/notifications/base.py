@@ -134,7 +134,7 @@ defaults = {
                                     <tr>
                                       <td style="font-family:sans-serif;font-size:14px;vertical-align:top;">
                                         <!-- TODO: update image link with global -->
-                                        <a href="http://etools.unicef.org" target="_blank"
+                                        <a href="https://etools.unicef.org" target="_blank"
                                            style="color:#0099FF;text-decoration:none;">
                                           <span style="color: white;text-decoration: none;">eTools</span>
                                         </a>
@@ -172,10 +172,10 @@ defaults = {
                                     <tr>
                                       <td style="font-family:sans-serif;font-size:14px;vertical-align:top;">
                                         <!-- TODO: update image link with global -->
-                                        <a href="http://unicef.org" target="_blank"
+                                        <a href="https://unicef.org" target="_blank"
                                            style="color:#0099FF;text-decoration:underline;">
 
-                                           <img src='http://etools.unicef.org/static/img/UNICEF_logo_Cyan.png'
+                                           <img src='https://etools.unicef.org/pmp/images/UNICEF_logo.png'
                                                 alt="Unicef" class="logo-unicef" width="101" height="24"
                                                 style="border:none;-ms-interpolation-mode:bicubic;max-width:100%;
                                                        display:block;margin:0;padding:0;width:101px;height:24px;"/>

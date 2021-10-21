@@ -1,11 +1,11 @@
-name = "partners/intervention/unicef_reviewed"
+name = "partners/intervention/unicef_sent_for_review"
 defaults = {
-    "description": "UNICEF Reviewed PD",
-    "subject": "[eTools] UNICEF Reviewed PD",
+    "description": "UNICEF Sent PD for Review",
+    "subject": "[eTools] PD was sent for review",
     "content": """
     Dear Colleague,
 
-    PD {{reference_number}} has been reviewed by UNICEF
+    PD {{reference_number}} has been sent for review by UNICEF budget owner: {{budget_owner_name}}
 
     {{pd_link}}
 
@@ -16,7 +16,7 @@ defaults = {
     {% block content %}
     Dear Colleague,<br /><br />
 
-    PD {{reference_number}} has been reviewed by UNICEF
+    PD {{reference_number}} has been sent for review by UNICEF budget owner: {{budget_owner_name}}
 
     {{pd_link}}<br />
 
