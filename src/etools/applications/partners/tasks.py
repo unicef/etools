@@ -1,4 +1,3 @@
-import csv
 import datetime
 import itertools
 
@@ -448,7 +447,7 @@ def get_pilot_numbers(country_name):
     for pd in pd_qs:
         fp_users = [fp.user for fp in pd.partner_focal_points.all()]
         has_the_partner_logged_in = pd.partner_focal_points.filter(
-            user__last_login__gt=timezone.make_aware(datetime.datetime(2021,10,15))
+            user__last_login__gt=timezone.make_aware(datetime.datetime(2021, 10, 15))
         ).exists()
         act_qs = Activity.objects.filter(target_object_id=pd.id,
                                          target_content_type=ContentType.objects.get_for_model(pd))
@@ -475,8 +474,9 @@ def epd_pilot_tracking():
     # TODO: remove this before ePD merges into the main branch
     # temporary task to get some epd pilot numbers emailed
     import csv
-    import os
     import io
+    import os
+
     from post_office import mail
     recipients = os.environ.get("EPD_PILOT_RECIPIENTS", "").split(",")
     countries = os.environ.get("EPD_PILOT_SCHEMAS", "").split(",")
