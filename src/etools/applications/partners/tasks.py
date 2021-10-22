@@ -483,7 +483,7 @@ def epd_pilot_tracking():
     my_file = io.StringIO()
     my_numbers = [["CO Name", "PD No", "IP", "Date Sent to IP", "IP Logged In", "IP Entered Data",
                   "Unicef Accepted", "Partner Accepted", "Editable By", "Status", "Date of export"]]
-    for country in Country.objects.filter(schema_name=countries).all():
+    for country in Country.objects.filter(schema_name__in=countries).all():
         connection.set_tenant(country)
         my_numbers += get_pilot_numbers(country.name)
 
