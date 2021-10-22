@@ -2171,7 +2171,8 @@ class Intervention(TimeStampedModel):
         )
 
     def get_frontend_object_url(self, to_unicef=True):
-        return f'https://{settings.HOST}/{"pmp" if to_unicef else "epd"}/interventions/{self.pk}/strategy'
+        host = settings.HOST if "https://" in settings.HOST else f'https://{settings.HOST}'
+        return f'{host}/{"pmp" if to_unicef else "epd"}/interventions/{self.pk}/strategy'
 
     def get_object_url(self):
         return reverse("partners_api:intervention-detail", args=[self.pk])

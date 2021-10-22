@@ -464,7 +464,8 @@ def get_pilot_numbers(country_name):
             pd.partner_accepted,
             "Unicef" if pd.unicef_court else "Partner",
             pd.status,
-            today.strftime("%Y-%m-%d")
+            today.strftime("%Y-%m-%d"),
+            pd.get_frontend_object_url()
         ])
     return record
 
@@ -482,11 +483,11 @@ def epd_pilot_tracking():
     countries = os.environ.get("EPD_PILOT_SCHEMAS", "").split(",")
     my_file = io.StringIO()
     my_numbers = [["CO Name", "PD No", "IP", "Date Sent to IP", "IP Logged In", "IP Entered Data",
-                  "Unicef Accepted", "Partner Accepted", "Editable By", "Status", "Date of export"]]
+                  "Unicef Accepted", "Partner Accepted", "Editable By", "Status", "Date of export",
+                   "PD URL"]]
     for country in Country.objects.filter(schema_name__in=countries).all():
         connection.set_tenant(country)
         my_numbers += get_pilot_numbers(country.name)
-
     csv_writer = csv.writer(my_file)
     for line in my_numbers:
         csv_writer.writerow(line)
@@ -494,7 +495,6 @@ def epd_pilot_tracking():
     # taken from https://stackoverflow.com/questions/55889474/convert-io-stringio-to-io-bytesio/55961119#55961119
     class BytesIOWrapper(io.BufferedReader):
         """Wrap a buffered bytes stream over TextIOBase string stream."""
-
         def __init__(self, text_io_buffer, encoding=None, errors=None, **kwargs):
             super(BytesIOWrapper, self).__init__(text_io_buffer, **kwargs)
             self.encoding = encoding or text_io_buffer.encoding or 'utf-8'
