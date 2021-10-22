@@ -52,7 +52,7 @@ class PMPInterventionActionView(PMPInterventionMixin, InterventionDetailAPIView)
                 context=context
             )
         if external_rec:
-            context["pd_link"] = pd.get_frontend_object_url()
+            context["pd_link"] = pd.get_frontend_object_url(to_unicef=False)
             send_notification_with_template(
                 recipients=external_rec,
                 template_name=template_name,
