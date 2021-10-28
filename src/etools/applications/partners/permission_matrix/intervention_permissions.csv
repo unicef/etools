@@ -169,7 +169,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,submission_date,Partner User,,Draft,Edit,TRUE
 ,submission_date,*,,Draft,Required,FALSE
 ,submission_date_prc,*,,*,View,TRUE
-,submission_date_prc,Unicef Focal Point,,Review,Edit,TRUE
+,submission_date_prc,Unicef Users Involved,,Review,Edit,TRUE
 ,supply_items,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
 ,supply_items,Partner User,partner_court,Draft,Edit,TRUE
 ,technical_guidance,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
