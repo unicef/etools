@@ -133,7 +133,7 @@ class LocationsCountryView(views.APIView):
 
 
 class FMLocationsViewSet(FMBaseViewSet, mixins.ListModelMixin, viewsets.GenericViewSet):
-    queryset = Location.objects.all()
+    queryset = Location.objects.active()
     serializer_class = LocationFullSerializer
     filter_backends = (DjangoFilterBackend, SearchFilter)
     filter_fields = ('level', 'parent')
