@@ -6,6 +6,7 @@ from django.utils.translation import gettext as _
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from unicef_restlib.permissions import IsSuperUser
 
 from etools.applications.management.handlers.sections import MigrationException, SectionHandler
 
@@ -14,6 +15,7 @@ logger = logging.getLogger(__name__)
 
 class SectionsManagementView(viewsets.ViewSet):
     """Class for handling session creation, merging and closing"""
+    permission_classes = [IsSuperUser]
 
     @action(detail=False, methods=['post'])
     def new(self, request):
