@@ -55,7 +55,6 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.9.8,frs,Partner User,,*,View,FALSE
 3.9.8,frs,*,user_adds_amendment,*,View,FALSE
 3.9.8,frs,*,,Draft,View,FALSE
-3.9.8,frs,Unicef Focal Point,,Draft,Edit,TRUE
 3.10.1,frs,Unicef Focal Point,,Review,Edit,TRUE
 3.10.1,frs,Unicef Focal Point,,Signature,Edit,TRUE
 3.10.1,frs,Unicef Focal Point,,Signed,Edit,TRUE
