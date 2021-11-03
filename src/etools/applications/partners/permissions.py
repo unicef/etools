@@ -118,6 +118,9 @@ class InterventionPermissions(PMPPermissions):
         def prp_server_on():
             return tenant_switch_is_active("prp_server_on")
 
+        def ssfa_in_amendment(instance):
+            return user_added_amendment(instance) and instance.document_type == instance.SSFA
+
         self.condition_map = {
             'condition1': self.user in self.instance.unicef_focal_points.all(),
             'condition2': self.user in self.instance.partner_focal_points.all(),
@@ -131,7 +134,8 @@ class InterventionPermissions(PMPPermissions):
             'prp_server_on': prp_server_on(),
             'user_adds_amendment+prp_mode_on': user_added_amendment(self.instance) and not prp_mode_off(),
             'termination_doc_attached': self.instance.termination_doc_attachment.exists(),
-            'not_ended': self.instance.end >= datetime.datetime.now().date() if self.instance.end else False
+            'not_ended': self.instance.end >= datetime.datetime.now().date() if self.instance.end else False,
+            'ssfa_in_amendment': ssfa_in_amendment(self.instance)
         }
 
 

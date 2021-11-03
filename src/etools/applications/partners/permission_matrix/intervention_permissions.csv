@@ -1,5 +1,6 @@
 Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.2.2,agreement,Partnership Manager,,Draft,Edit,TRUE
+3.2.2,agreement,Partnership Manager,ssfa_in_amendment,*,Edit,TRUE
 3.2.3,document_type,Partnership Manager,,Draft,Edit,TRUE
 3.2.4,number,Partnership Manager,user_adds_amendment,*,Edit,TRUE
 3.2.4,number,Partnership Manager,,Draft,Edit,TRUE
