@@ -210,7 +210,7 @@ class QuestionsViewSet(
     viewsets.GenericViewSet
 ):
     permission_classes = FMBaseViewSet.permission_classes + [
-        IsReadAction | (IsEditAction & IsFieldMonitor)
+        IsReadAction | (IsEditAction & IsPME)
     ]
     queryset = Question.objects.prefetch_related('options').order_by('-id')
     serializer_class = QuestionSerializer
