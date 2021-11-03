@@ -116,7 +116,6 @@ class TestInterventionsAPI(BaseTenantTestCase):
             "equity_narrative",
             "equity_rating",
             "flat_locations",
-            "frs",
             "gender_narrative",
             "gender_rating",
             "hq_support_cost",

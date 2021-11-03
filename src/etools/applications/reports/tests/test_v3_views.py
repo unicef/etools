@@ -345,7 +345,7 @@ class TestSpecialReportingRequirementRetrieveUpdateDestroyView(BaseTenantTestCas
                 "description": "New",
             }
         )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_delete_invalid_old(self):
         """Cannot delete special reporting requirements in the past"""
