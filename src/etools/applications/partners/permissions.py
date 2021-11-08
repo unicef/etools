@@ -162,6 +162,13 @@ class InterventionPermissions(PMPPermissions):
 
         if self.user.is_staff and self.user in self.instance.unicef_focal_points.all():
             self.user_groups.append("Unicef Focal Point")
+        if self.user.is_staff and self.instance.budget_owner and self.user == self.instance.budget_owner:
+            self.user_groups.append("Unicef Budget Owner")
+        if self.user.is_staff and self.user in self.instance.unicef_users_involved:
+            self.user_groups.append("Unicef Users Involved")
+
+        if self.user.is_staff and self.instance.budget_owner and self.user == self.instance.budget_owner:
+            self.user_groups.append("Unicef Budget Owner")
 
         review = self.instance.review
         if review:

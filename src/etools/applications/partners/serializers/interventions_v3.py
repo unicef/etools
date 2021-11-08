@@ -420,7 +420,8 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
 
             # any unicef focal point user
             if user in obj.unicef_focal_points.all():
-                available_actions.append("send_to_partner")
+                if not obj.partner_accepted:
+                    available_actions.append("send_to_partner")
                 available_actions.append("cancel")
                 if obj.partner_accepted:
                     available_actions.append("unlock")
