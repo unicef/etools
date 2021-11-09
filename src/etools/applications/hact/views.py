@@ -43,7 +43,7 @@ class HactHistoryAPIView(QueryStringFilterMixin, ListAPIView):
         if self.get_queryset().exists():
             data = self.get_queryset().first().partner_values
         try:
-            data = json.loads(data)
+            data = json.loads(data) if isinstance(data, str) else data
         except (ValueError, TypeError):
             pass
         context["header"] = [x[0] for x in data]
@@ -78,7 +78,8 @@ class GraphHactExportView(DetailView):
     def get(self, request, *args, **kwargs):
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = f'attachment; filename="{self.filename}.csv"'
-        partner_values = json.loads(self.get_object().partner_values)
+        data = self.get_object().partner_values
+        partner_values = json.loads(data) if isinstance(data, str) else data
         export_values = (
             ('Assessment and Assurance Activities', 'Programmatic Visits: Completed',
              partner_values['assurance_activities']['programmatic_visits']['completed']),
