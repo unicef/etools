@@ -494,6 +494,11 @@ class TestGisLocationViews(BaseTenantTestCase):
 
 
 class SectionManagementViewTestCase(BaseTenantTestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        call_command('update_notifications')
+
     def test_regular_user_not_allowed(self):
         response = self.forced_auth_req(
             'post',
