@@ -1672,6 +1672,22 @@ class TestInterventionAcceptBehalfOfPartner(BaseInterventionActionTestCase):
         self.assertEqual(self.intervention.unicef_accepted, False)
         self.assertEqual(self.intervention.submission_date, timezone.now().date())
 
+    def test_submission_date_not_changed_if_set(self):
+        self.intervention.unicef_accepted = True
+        self.intervention.partner_accepted = False
+        self.intervention.unicef_court = True
+        self.intervention.submission_date = timezone.now().date() - datetime.timedelta(days=1)
+        self.intervention.save()
+
+        response = self.forced_auth_req(
+            "patch",
+            self.url,
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.intervention.refresh_from_db()
+        self.assertEqual(self.intervention.submission_date, timezone.now().date() - datetime.timedelta(days=1))
+
 
 class TestInterventionReview(BaseInterventionActionTestCase):
     def setUp(self):
