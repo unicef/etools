@@ -253,7 +253,7 @@ class TestMonitoringActivityGroups(BaseTenantTestCase):
         )
         self.partner.programmatic_visits()
 
-        old_hact = self.partner.get_hact_json()
+        old_hact = self.partner.hact_values
         # 1 group and two activities
         self.assertEqual(old_hact['programmatic_visits']['completed'][get_quarter()], 3)
 
@@ -264,5 +264,5 @@ class TestMonitoringActivityGroups(BaseTenantTestCase):
 
         # values should be unchanged
         self.partner.programmatic_visits()
-        new_hact = self.partner.get_hact_json()
+        new_hact = self.partner.hact_values
         self.assertEqual(new_hact['programmatic_visits']['completed'][get_quarter()], 3)

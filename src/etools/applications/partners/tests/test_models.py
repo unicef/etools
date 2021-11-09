@@ -1230,11 +1230,6 @@ class TestPartnerOrganization(BaseTenantTestCase):
         p = models.PartnerOrganization(name="Test Partner Org")
         self.assertEqual(str(p), "Test Partner Org")
 
-    def test_save_exception(self):
-        p = models.PartnerOrganization(name="Test", hact_values="wrong")
-        with self.assertRaises(ValueError):
-            p.save()
-
     def test_save(self):
         p = models.PartnerOrganization(
             name="Test",
@@ -1242,19 +1237,6 @@ class TestPartnerOrganization(BaseTenantTestCase):
         )
         p.save()
         self.assertIsNotNone(p.pk)
-
-    def test_save_hact_is_string(self):
-        p = models.PartnerOrganization(
-            name="Test",
-            hact_values='{"all": "good"}'
-        )
-        self.assertTrue(isinstance(p.hact_values, str),
-                        msg="The type of p.hact_values is %s" % type(p.hact_values))
-        p.save()
-        self.assertIsNotNone(p.pk)
-        # This really is type 'str' in either version of Python
-        self.assertTrue(isinstance(p.hact_values, str), msg="The type of p.hact_values is %s" % type(p.hact_values))
-        self.assertEqual(p.hact_values, '{"all": "good"}')
 
 
 class TestPartnerStaffMember(BaseTenantTestCase):
@@ -1633,8 +1615,7 @@ class TestPlannedEngagement(BaseTenantTestCase):
 
     def test_spot_check_required_with_completed_audit(self):
         partner = PartnerFactory(name="Partner")
-        hact = partner.get_hact_json()
-        hact['audits']['completed'] = 1
+        partner.hact_values['audits']['completed'] = 1
         partner.save()
 
         pe = PlannedEngagementFactory(
