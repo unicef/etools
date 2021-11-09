@@ -774,6 +774,7 @@ class MonitoringActivityActionPointsViewTestCase(FMBaseTestCaseMixin, APIViewSet
     def setUpTestData(cls):
         super().setUpTestData()
         cls.activity = MonitoringActivityFactory(status='completed')
+        call_command('update_notifications')
 
     def get_list_args(self):
         return [self.activity.pk]

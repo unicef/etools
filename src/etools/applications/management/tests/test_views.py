@@ -1,3 +1,4 @@
+from django.core.management import call_command
 from django.urls import reverse
 
 from django_tenants.test.client import TenantClient
@@ -188,6 +189,7 @@ class TestGisLocationViews(BaseTenantTestCase):
         )
         self.inactive_location = LocationFactory(is_active=False)
         self.locations = [self.location_no_geom, self.location_with_geom]
+        call_command('update_notifications')
 
     def assertGeomListResponseFundamentals(self, response, response_len, expected_keys=None):
         """
