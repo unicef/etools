@@ -25,6 +25,7 @@ from rest_framework.views import APIView
 from unicef_djangolib.fields import CURRENCY_LIST
 
 from etools.applications.field_monitoring.permissions import IsEditAction, IsReadAction
+from etools.applications.partners.filters import InterventionEditableByFilter
 from etools.applications.partners.models import (
     Intervention,
     InterventionAttachment,
@@ -119,9 +120,9 @@ class PMPInterventionListCreateView(PMPInterventionMixin, InterventionListAPIVie
         'number__icontains',
         'cfei_number__icontains',
     )
-    filters = InterventionListAPIView.filters + [
-        ('sent_to_partner', 'date_sent_to_partner__isnotnull'),
-    ]
+    filter_backends = InterventionListAPIView.filter_backends + (
+        InterventionEditableByFilter,
+    )
 
     def get_serializer_class(self):
         if self.request.method == "GET":

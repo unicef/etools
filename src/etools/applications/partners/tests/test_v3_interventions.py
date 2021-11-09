@@ -238,37 +238,35 @@ class TestList(BaseInterventionTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
 
-    def test_filter_sent_to_partner(self):
+    def test_filter_editable_by_partner(self):
+        InterventionFactory(unicef_court=True)
+        InterventionFactory(unicef_court=False, date_sent_to_partner=None)
         for __ in range(3):
-            intervention = InterventionFactory()
+            InterventionFactory(unicef_court=False, date_sent_to_partner=timezone.now().date())
+
         response = self.forced_auth_req(
-            "get",
+            'get',
             reverse('pmp_v3:intervention-list'),
             user=self.user,
+            data={'editable_by': 'partner'},
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 3)
 
-        # set sent_to_partner filter
-        with mock.patch(PRP_PARTNER_SYNC, mock.Mock()):
-            intervention.date_sent_to_partner = datetime.date.today()
-            intervention.save()
-
-        self.assertEqual(
-            Intervention.objects.filter(
-                date_sent_to_partner__isnull=False,
-            ).count(),
-            1,
-        )
+    def test_filter_editable_by_unicef(self):
+        InterventionFactory(unicef_court=True, date_sent_to_partner=None)
+        InterventionFactory(unicef_court=False)
+        for __ in range(3):
+            InterventionFactory(unicef_court=True, date_sent_to_partner=timezone.now().date())
 
         response = self.forced_auth_req(
-            "get",
+            'get',
             reverse('pmp_v3:intervention-list'),
             user=self.user,
-            data={"sent_to_partner": True}
+            data={'editable_by': 'unicef'},
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
+        self.assertEqual(len(response.data), 4)
 
     def test_updated_country_programmes_field_in_use(self):
         intervention = InterventionFactory()
