@@ -1055,7 +1055,8 @@ class TestAssessmentActionPointViewSet(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         call_command('update_psea_permissions', verbosity=0)
-        cls.send_path = "etools.applications.action_points.models.Notification"
+        call_command('update_notifications')
+        cls.send_path = "etools.applications.action_points.models.send_notification_with_template"
         cls.focal_user = UserFactory()
         cls.focal_user.groups.add(
             GroupFactory(name=UNICEFAuditFocalPoint.name),
@@ -1095,7 +1096,7 @@ class TestAssessmentActionPointViewSet(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(assessment.action_points.count(), 1)
         self.assertIsNotNone(assessment.action_points.first().partner)
-        self.assertTrue(mock_send.objects.create.called)
+        self.assertTrue(mock_send)
 
     def _test_action_point_editable(self, action_point, user, editable=True):
         assessment = action_point.psea_assessment

@@ -833,7 +833,7 @@ class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
         response = self.forced_auth_req(
             'post',
             reverse('field_monitoring_settings:questions-list'),
-            user=self.fm_user,
+            user=self.pme,
             data={
                 'answer_type': 'text',
                 'level': 'partner',
@@ -851,7 +851,7 @@ class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
         response = self.forced_auth_req(
             'post',
             reverse('field_monitoring_settings:questions-list'),
-            user=self.fm_user,
+            user=self.pme,
             data={
                 'answer_type': 'text',
                 'level': 'partner',
@@ -868,7 +868,7 @@ class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
         response = self.forced_auth_req(
             'post',
             reverse('field_monitoring_settings:questions-list'),
-            user=self.fm_user,
+            user=self.pme,
             data={
                 'answer_type': 'likert_scale',
                 'level': 'partner',
@@ -896,7 +896,7 @@ class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
         response = self.forced_auth_req(
             'post',
             reverse('field_monitoring_settings:questions-list'),
-            user=self.fm_user,
+            user=self.pme,
             data={
                 'answer_type': 'bool',
                 'level': 'partner',
@@ -926,7 +926,7 @@ class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
         response = self.forced_auth_req(
             'patch',
             reverse('field_monitoring_settings:questions-detail', args=[question.id, ]),
-            user=self.fm_user,
+            user=self.pme,
             data={
                 'title': 'New title',
                 'options': [
