@@ -558,9 +558,15 @@ INTERVENTION_AMENDMENT_IGNORED_FIELDS = {
         'created', 'modified',
         'number', 'status', 'in_amendment',
         'title',
-        'partner_accepted',
         'sites',
+
+        # submission
+        'unicef_court',
+        'partner_accepted',
         'unicef_accepted',
+        'date_sent_to_partner',
+        'submission_date',
+        'accepted_on_behalf_of_partner',
 
         # signatures
         'signed_by_unicef_date',
