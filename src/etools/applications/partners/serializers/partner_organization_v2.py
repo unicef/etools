@@ -598,3 +598,76 @@ class PartnerOrganizationHactSerializer(serializers.ModelSerializer):
             "flags",
             "planned_engagement"
         )
+
+
+class PartnerOrganizationHactFullSerializer(PartnerOrganizationHactSerializer):
+    programmatic_visits = serializers.SerializerMethodField()
+    spot_checks = serializers.SerializerMethodField()
+
+    def get_programmatic_visits(self, obj):
+
+        visits = []
+
+        t2f_visits = obj.programmatic_visits['t2f'] or []
+        for visit in t2f_visits:
+            visits.append({
+                'module': 't2f',
+                'end_date': visit.end_date,
+                'reference_number': visit.reference_number
+            })
+
+        tpm_visits = obj.programmatic_visits['tpm'] or []
+        for visit in tpm_visits:
+            visits.append({
+                'module': 'tpm',
+                'end_date': visit.date,
+                'reference_number': visit.tpm_visit.reference_number
+            })
+
+        fm_visits = obj.programmatic_visits['fm_group'] or []
+        for visit in fm_visits:
+            visits.append({
+                'module': 'fm',
+                'date': max([monitor_activity.end_date for monitor_activity in visit.monitoring_activities.all()]),
+                'reference_number': ', '.join([
+                    monitor_activity.reference_number for monitor_activity in visit.monitoring_activities.all()
+                ])
+            })
+        fm_visits = obj.programmatic_visits['fm'] or []
+        for monitor_activity in fm_visits:
+            visits.append({
+                'module': 'fm',
+                'date': monitor_activity.end_date,
+                'reference_number': monitor_activity.reference_number
+            })
+
+        return visits
+
+    def get_spot_checks(self, obj):
+
+        scs = []
+        spot_checks = obj.spot_checks or []
+        for spot_check in spot_checks:
+            scs.append({
+                'date': spot_check.date_of_draft_report_to_ip,
+                'reference_number': spot_check.reference_number
+            })
+        return scs
+
+    class Meta:
+        model = PartnerOrganization
+        fields = (
+            "id",
+            "name",
+            "vendor_number",
+            "short_name",
+            "type_of_assessment",
+            "partner_type",
+            "partner_type_slug",
+            "cso_type",
+            "rating",
+            "hact_values",
+            "hact_min_requirements",
+            "programmatic_visits",
+            "spot_checks"
+        )

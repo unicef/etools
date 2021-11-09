@@ -62,6 +62,7 @@ from etools.applications.partners.serializers.partner_organization_v2 import (
     PartnerOrganizationCreateUpdateSerializer,
     PartnerOrganizationDashboardSerializer,
     PartnerOrganizationDetailSerializer,
+    PartnerOrganizationHactFullSerializer,
     PartnerOrganizationHactSerializer,
     PartnerOrganizationListSerializer,
     PartnerPlannedVisitsSerializer,
@@ -374,6 +375,10 @@ class PartnerOrganizationHactAPIView(ListAPIView):
             if query_params.get("format") == 'csv':
                 response['Content-Disposition'] = f"attachment;filename={self.filename}.csv"
         return response
+
+
+class PartnerOrganizationHactFullAPIView(PartnerOrganizationHactAPIView):
+    serializer_class = PartnerOrganizationHactFullSerializer
 
 
 class PartnerOrganizationSimpleHactAPIView(PartnerOrganizationHactAPIView):
