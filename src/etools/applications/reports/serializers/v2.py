@@ -70,6 +70,12 @@ class IndicatorBlueprintCUSerializer(serializers.ModelSerializer):
         return IndicatorBlueprint.objects.get_or_create(**validated_data)[0]
 
 
+class IndicatorBlueprintUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = IndicatorBlueprint
+        fields =  ('id', 'title')
+
+
 class DisaggregationValueSerializer(serializers.ModelSerializer):
     # this is here explicitly to allow for passing IDs as nested values in the update function
     # https://stackoverflow.com/a/37275096/8207
@@ -159,7 +165,6 @@ class AppliedIndicatorSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         lower_result = attrs.get('lower_result', getattr(self.instance, 'lower_result', None))
-        blueprint_data = attrs.get('indicator', getattr(self.instance, 'indicator', None))
 
         # allowed to change target "v" denominator only if intervention is draft or signed
         # or active and in amendment mode
@@ -205,30 +210,37 @@ class AppliedIndicatorSerializer(serializers.ModelSerializer):
             raise ValidationError(_('This indicator can only have a section that was '
                                     'previously saved on the intervention'))
 
-        if self.partial:
-            if not isinstance(blueprint_data, IndicatorBlueprint):
-                raise ValidationError(
-                    _('Indicator blueprint cannot be updated after first use, '
-                      'please remove this indicator and add another or contact the eTools Focal Point in '
-                      'your office for assistance')
-                )
-
-        elif not attrs.get('cluster_indicator_id'):
-            indicator_blueprint = IndicatorBlueprintCUSerializer(data=blueprint_data)
-            indicator_blueprint.is_valid(raise_exception=True)
-            indicator_blueprint.save()
-
-            attrs["indicator"] = indicator_blueprint.instance
-            if lower_result.applied_indicators.filter(indicator__id=attrs['indicator'].id).exists():
-                raise ValidationError(_('This indicator is already being monitored for this Result'))
-
         if lower_result.result_link.intervention.agreement.partner.blocked is True:
             raise ValidationError(_('The Indicators cannot be updated while the Partner is blocked in Vision'))
         return super().validate(attrs)
 
+    @transaction.atomic
     def create(self, validated_data):
+        if 'indicator' in validated_data and not validated_data.get('cluster_indicator_id'):
+            indicator_blueprint = IndicatorBlueprintCUSerializer(data=validated_data.pop('indicator'))
+            indicator_blueprint.is_valid(raise_exception=True)
+            indicator_blueprint.save()
+            validated_data['indicator'] = indicator_blueprint.instance
+
+            lower_result = validated_data['lower_result']
+            if lower_result.applied_indicators.filter(indicator__id=indicator_blueprint.instance.id).exists():
+                raise ValidationError({
+                    'non_field_errors': [_('This indicator is already being monitored for this Result')],
+                })
+
         return super().create(validated_data)
 
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        if 'indicator' in validated_data and self.partial:
+            blueprint_serializer = IndicatorBlueprintUpdateSerializer(
+                instance=instance.indicator,
+                data=validated_data.pop('indicator'),
+            )
+            blueprint_serializer.is_valid(raise_exception=True)
+            blueprint_serializer.save()
+
+        return super().update(instance, validated_data)
 
 class AppliedIndicatorCUSerializer(serializers.ModelSerializer):
 

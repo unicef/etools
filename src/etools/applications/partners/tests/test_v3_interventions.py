@@ -2611,6 +2611,20 @@ class TestPMPInterventionIndicatorsUpdateView(BaseTenantTestCase):
         self.indicator.refresh_from_db()
         self.assertFalse(self.indicator.is_active)
 
+    def test_update_indicator_title(self):
+        old_title = self.indicator.indicator.title
+        old_code = self.indicator.indicator.code
+        response = self.forced_auth_req(
+            'patch',
+            self.url,
+            user=self.partnership_manager,
+            data={'indicator': {'title': f'new_{old_title}', 'code': 'new_code'}},
+        )
+        self.assertEquals(response.status_code, status.HTTP_200_OK, response.data)
+        self.indicator.indicator.refresh_from_db()
+        self.assertEqual(self.indicator.indicator.title, f'new_{old_title}')
+        self.assertEqual(self.indicator.indicator.code, old_code)
+
 
 class TestPMPInterventionReportingRequirementView(
         BaseInterventionReportingRequirementMixin,
