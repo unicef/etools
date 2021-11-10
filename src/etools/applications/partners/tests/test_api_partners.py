@@ -44,7 +44,12 @@ from etools.applications.partners.tests.factories import (
 )
 from etools.applications.partners.views.partner_organization_v2 import PartnerOrganizationAddView
 from etools.applications.reports.models import ResultType
-from etools.applications.reports.tests.factories import CountryProgrammeFactory, ResultFactory, ResultTypeFactory
+from etools.applications.reports.tests.factories import (
+    CountryProgrammeFactory,
+    ResultFactory,
+    ResultTypeFactory,
+    SectionFactory,
+)
 from etools.applications.t2f.tests.factories import TravelActivityFactory
 from etools.applications.users.models import Country
 from etools.applications.users.tests.factories import GroupFactory, UserFactory
@@ -63,6 +68,38 @@ class URLsTestCase(URLAssertionMixin, SimpleTestCase):
         )
         self.assertReversal(names_and_paths, 'partners_api:', '/api/v2/partners/')
         self.assertIntParamRegexes(names_and_paths, 'partners_api:')
+
+
+class TestPartnerOrganizationListAPIView(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.url = reverse("partners_api:partner-list")
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_list(self):
+        PartnerFactory()
+        PartnerFactory()
+        response = self.forced_auth_req(
+            'get', self.url,
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_filter_by_lead_section(self):
+        section = SectionFactory()
+        partner = PartnerFactory(lead_section=section)
+        PartnerFactory()
+        response = self.forced_auth_req(
+            'get', self.url,
+            user=self.unicef_staff,
+            QUERY_STRING=f'lead_section={section.id}'
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['id'], partner.id)
 
 
 class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
