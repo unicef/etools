@@ -17,8 +17,14 @@ from etools.applications.attachments.tests.factories import (
     AttachmentLinkFactory,
 )
 from etools.applications.core.tests.cases import BaseTenantTestCase
-from etools.applications.field_monitoring.data_collection.models import ActivityOverallFinding
-from etools.applications.field_monitoring.data_collection.tests.factories import StartedChecklistFactory
+from etools.applications.field_monitoring.data_collection.models import (
+    ActivityOverallFinding,
+    ActivityQuestionOverallFinding,
+)
+from etools.applications.field_monitoring.data_collection.tests.factories import (
+    ActivityQuestionFactory,
+    StartedChecklistFactory,
+)
 from etools.applications.field_monitoring.fm_settings.models import Question
 from etools.applications.field_monitoring.fm_settings.tests.factories import QuestionFactory
 from etools.applications.field_monitoring.planning.models import MonitoringActivity, YearPlan
@@ -125,6 +131,42 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             self.unicef_user, [activity1, activity2],
             data={'visit_lead__in': f'{activity1.visit_lead.pk},{activity2.visit_lead.pk}'}
         )
+
+    def test_filter_by_partner_hact(self):
+        partner = PartnerFactory()
+        activity1 = MonitoringActivityFactory(partners=[partner], status='completed')
+        MonitoringActivityFactory(partners=[partner])
+        MonitoringActivityFactory(partners=[partner])
+        ActivityQuestionOverallFinding.objects.create(
+            activity_question=ActivityQuestionFactory(
+                question__is_hact=True,
+                question__level='partner',
+                monitoring_activity=activity1,
+            ),
+            value='ok',
+        )
+        ActivityOverallFinding.objects.create(partner=partner, narrative_finding='test',
+                                              monitoring_activity=activity1)
+
+        # not completed
+        activity2 = MonitoringActivityFactory(partners=[partner], status='report_finalization')
+        MonitoringActivityFactory(partners=[partner])
+        MonitoringActivityFactory(partners=[partner])
+        ActivityQuestionOverallFinding.objects.create(
+            activity_question=ActivityQuestionFactory(
+                question__is_hact=True,
+                question__level='partner',
+                monitoring_activity=activity2,
+            ),
+            value='ok',
+        )
+        ActivityOverallFinding.objects.create(partner=partner, narrative_finding='test',
+                                              monitoring_activity=activity2)
+
+        # not hact
+        MonitoringActivityFactory(partners=[partner], status='completed')
+
+        self._test_list(self.unicef_user, [activity1], data={'hact_for_partner': partner.id})
 
     def test_details(self):
         activity = MonitoringActivityFactory(monitor_type='staff', team_members=[UserFactory(unicef_user=True)])
@@ -732,6 +774,7 @@ class MonitoringActivityActionPointsViewTestCase(FMBaseTestCaseMixin, APIViewSet
     def setUpTestData(cls):
         super().setUpTestData()
         cls.activity = MonitoringActivityFactory(status='completed')
+        call_command('update_notifications')
 
     def get_list_args(self):
         return [self.activity.pk]

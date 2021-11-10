@@ -128,12 +128,12 @@ class LocationSitesViewSet(FMBaseViewSet, viewsets.ModelViewSet):
 
 class LocationsCountryView(views.APIView):
     def get(self, request, *args, **kwargs):
-        country = get_object_or_404(Location, gateway__admin_level=0)
+        country = get_object_or_404(Location, gateway__admin_level=0, is_active=True)
         return Response(data=LocationFullSerializer(instance=country).data)
 
 
 class FMLocationsViewSet(FMBaseViewSet, mixins.ListModelMixin, viewsets.GenericViewSet):
-    queryset = Location.objects.all()
+    queryset = Location.objects.active()
     serializer_class = LocationFullSerializer
     filter_backends = (DjangoFilterBackend, SearchFilter)
     filter_fields = ('level', 'parent')
@@ -210,7 +210,7 @@ class QuestionsViewSet(
     viewsets.GenericViewSet
 ):
     permission_classes = FMBaseViewSet.permission_classes + [
-        IsReadAction | (IsEditAction & IsFieldMonitor)
+        IsReadAction | (IsEditAction & IsPME)
     ]
     queryset = Question.objects.prefetch_related('options').order_by('-id')
     serializer_class = QuestionSerializer

@@ -272,6 +272,7 @@ class MinimalInterventionListSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'title',
+            'number',
         )
 
 
@@ -329,7 +330,7 @@ class InterventionResultNestedSerializer(serializers.ModelSerializer):
     ll_results = LowerResultSerializer(many=True, read_only=True)
 
     def get_ram_indicator_names(self, obj):
-        return [i.name for i in obj.ram_indicators.all()]
+        return [i.light_repr for i in obj.ram_indicators.all()]
 
     class Meta:
         model = InterventionResultLink
@@ -364,6 +365,13 @@ class InterventionResultLinkSimpleCUSerializer(serializers.ModelSerializer):
     class Meta:
         model = InterventionResultLink
         fields = "__all__"
+        validators = [
+            UniqueTogetherValidator(
+                queryset=InterventionResultLink.objects.all(),
+                fields=["intervention", "cp_output"],
+                message=_("Invalid CP Output provided.")
+            )
+        ]
 
 
 class InterventionResultCUSerializer(serializers.ModelSerializer):

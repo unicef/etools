@@ -1,4 +1,3 @@
-import json
 from csv import DictWriter
 
 from django.http import HttpResponse
@@ -42,10 +41,6 @@ class HactHistoryAPIView(QueryStringFilterMixin, ListAPIView):
         data = {}
         if self.get_queryset().exists():
             data = self.get_queryset().first().partner_values
-        try:
-            data = json.loads(data)
-        except (ValueError, TypeError):
-            pass
         context["header"] = [x[0] for x in data]
         return context
 
@@ -78,7 +73,7 @@ class GraphHactExportView(DetailView):
     def get(self, request, *args, **kwargs):
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = f'attachment; filename="{self.filename}.csv"'
-        partner_values = json.loads(self.get_object().partner_values)
+        partner_values = self.get_object().partner_values
         export_values = (
             ('Assessment and Assurance Activities', 'Programmatic Visits: Completed',
              partner_values['assurance_activities']['programmatic_visits']['completed']),

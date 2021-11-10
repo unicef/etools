@@ -1,9 +1,8 @@
 import datetime
 import decimal
-import json
 
 from django.conf import settings
-from django.contrib.postgres.fields import ArrayField, JSONField
+from django.contrib.postgres.fields import ArrayField
 from django.db import connection, IntegrityError, models, transaction
 from django.db.models import Case, CharField, Count, F, Max, Min, OuterRef, Q, Subquery, Sum, When
 from django.urls import reverse
@@ -498,7 +497,7 @@ class PartnerOrganization(TimeStampedModel):
         verbose_name=_('Outstanding DCT more than 9 months')
     )
 
-    hact_values = JSONField(blank=True, null=True, default=hact_default, verbose_name='HACT')
+    hact_values = models.JSONField(blank=True, null=True, default=hact_default, verbose_name='HACT', encoder=CustomJSONEncoder)
     basis_for_risk_rating = models.CharField(
         verbose_name=_("Basis for Risk Rating"), max_length=50, default='', blank=True)
     psea_assessment_date = models.DateTimeField(
@@ -546,24 +545,6 @@ class PartnerOrganization(TimeStampedModel):
     def latest_assessment(self, type):
         return self.assessments.filter(type=type).order_by('completed_date').last()
 
-    def get_hact_json(self):
-        return json.loads(self.hact_values) if isinstance(self.hact_values, str) else self.hact_values
-
-    def save(self, *args, **kwargs):
-        # JSONFIELD has an issue where it keeps escaping characters
-
-        hact_is_string = isinstance(self.hact_values, str)
-
-        try:
-            self.hact_values = self.get_hact_json()
-        except ValueError as e:
-            e.args = ['hact_values needs to be a valid format (dict)']
-            raise e
-
-        super().save(*args, **kwargs)
-        if hact_is_string:
-            self.hact_values = json.dumps(self.hact_values, cls=CustomJSONEncoder)
-
     @cached_property
     def partner_type_slug(self):
         slugs = {
@@ -593,6 +574,13 @@ class PartnerOrganization(TimeStampedModel):
         return False
 
     @cached_property
+    def expiring_psea_assessment_flag(self):
+        if self.psea_assessment_date:
+            psea_assessment_age = datetime.date.today().year - self.psea_assessment_date.year
+            return psea_assessment_age >= PartnerOrganization.EXPIRING_ASSESSMENT_LIMIT_YEAR
+        return False
+
+    @cached_property
     def approaching_threshold_flag(self):
         total_ct_ytd = self.total_ct_ytd or 0
         not_required = self.highest_risk_rating_name == PartnerOrganization.RATING_NOT_REQUIRED
@@ -603,7 +591,8 @@ class PartnerOrganization(TimeStampedModel):
     def flags(self):
         return {
             'expiring_assessment_flag': self.expiring_assessment_flag,
-            'approaching_threshold_flag': self.approaching_threshold_flag
+            'approaching_threshold_flag': self.approaching_threshold_flag,
+            'expiring_psea_assessment_flag': self.expiring_psea_assessment_flag,
         }
 
     @cached_property
@@ -666,10 +655,9 @@ class PartnerOrganization(TimeStampedModel):
     @cached_property
     def assurance_coverage(self):
 
-        hact = self.get_hact_json()
-        pv = hact['programmatic_visits']['completed']['total']
-        sc = hact['spot_checks']['completed']['total']
-        au = hact['audits']['completed']
+        pv = self.hact_values['programmatic_visits']['completed']['total']
+        sc = self.hact_values['spot_checks']['completed']['total']
+        au = self.hact_values['audits']['completed']
 
         if (pv >= self.min_req_programme_visits) & (sc >= self.min_req_spot_checks) & (au >= self.min_req_audits):
             return PartnerOrganization.ASSURANCE_COMPLETE
@@ -702,14 +690,12 @@ class PartnerOrganization(TimeStampedModel):
             except PartnerPlannedVisits.DoesNotExist:
                 pvq1 = pvq2 = pvq3 = pvq4 = 0
 
-        hact = self.get_hact_json()
-        hact['programmatic_visits']['planned']['q1'] = pvq1
-        hact['programmatic_visits']['planned']['q2'] = pvq2
-        hact['programmatic_visits']['planned']['q3'] = pvq3
-        hact['programmatic_visits']['planned']['q4'] = pvq4
-        hact['programmatic_visits']['planned']['total'] = pvq1 + pvq2 + pvq3 + pvq4
+        self.hact_values['programmatic_visits']['planned']['q1'] = pvq1
+        self.hact_values['programmatic_visits']['planned']['q2'] = pvq2
+        self.hact_values['programmatic_visits']['planned']['q3'] = pvq3
+        self.hact_values['programmatic_visits']['planned']['q4'] = pvq4
+        self.hact_values['programmatic_visits']['planned']['total'] = pvq1 + pvq2 + pvq3 + pvq4
 
-        self.hact_values = hact
         self.save()
 
     def programmatic_visits(self, event_date=None, update_one=False):
@@ -717,19 +703,17 @@ class PartnerOrganization(TimeStampedModel):
         :return: all completed programmatic visits
         """
         # Avoid circular imports
-        from etools.applications.field_monitoring.data_collection.models import ActivityQuestion
+        from etools.applications.field_monitoring.planning.models import MonitoringActivity, MonitoringActivityGroup
 
-        hact = self.get_hact_json()
-
-        pv = hact['programmatic_visits']['completed']['total']
+        pv = self.hact_values['programmatic_visits']['completed']['total']
 
         if update_one and event_date:
             quarter_name = get_quarter(event_date)
-            pvq = hact['programmatic_visits']['completed'][quarter_name]
+            pvq = self.hact_values['programmatic_visits']['completed'][quarter_name]
             pv += 1
             pvq += 1
-            hact['programmatic_visits']['completed'][quarter_name] = pvq
-            hact['programmatic_visits']['completed']['total'] = pv
+            self.hact_values['programmatic_visits']['completed'][quarter_name] = pvq
+            self.hact_values['programmatic_visits']['completed']['total'] = pv
         else:
             pv_year = Travel.objects.filter(
                 activities__travel_type=TravelType.PROGRAMME_MONITORING,
@@ -755,24 +739,40 @@ class PartnerOrganization(TimeStampedModel):
 
             tpm_total = tpmv1 + tpmv2 + tpmv3 + tpmv4
 
+            fmvgs = MonitoringActivityGroup.objects.filter(
+                partner=self,
+                monitoring_activities__status="completed",
+            ).annotate(
+                end_date=Max('monitoring_activities__end_date'),
+            ).distinct()
+            fmgv1 = fmvgs.filter(end_date__quarter=1).count()
+            fmgv2 = fmvgs.filter(end_date__quarter=2).count()
+            fmgv3 = fmvgs.filter(end_date__quarter=3).count()
+            fmgv4 = fmvgs.filter(end_date__quarter=4).count()
+            fmgv_total = fmgv1 + fmgv2 + fmgv3 + fmgv4
+
             # field monitoring activities qualify as programmatic visits if during a monitoring activity the hact
             # question was answered with an overall rating and the visit is completed
-            fmvqs = ActivityQuestion.objects.filter(question__is_hact=True, partner=self,
-                                                    overall_finding__value__isnull=False,
-                                                    monitoring_activity__status="completed")
-            fmvq1 = fmvqs.filter(monitoring_activity__end_date__quarter=1).count()
-            fmvq2 = fmvqs.filter(monitoring_activity__end_date__quarter=2).count()
-            fmvq3 = fmvqs.filter(monitoring_activity__end_date__quarter=3).count()
-            fmvq4 = fmvqs.filter(monitoring_activity__end_date__quarter=4).count()
+            grouped_activities = MonitoringActivityGroup.objects.filter(
+                partner=self
+            ).values_list('monitoring_activities__id', flat=True)
+            fmvqs = MonitoringActivity.objects.filter(
+                end_date__year=datetime.datetime.now().year,
+            ).filter_hact_for_partner(self.id).exclude(
+                id__in=grouped_activities,
+            )
+            fmvq1 = fmvqs.filter(end_date__quarter=1).count()
+            fmvq2 = fmvqs.filter(end_date__quarter=2).count()
+            fmvq3 = fmvqs.filter(end_date__quarter=3).count()
+            fmvq4 = fmvqs.filter(end_date__quarter=4).count()
             fmv_total = fmvq1 + fmvq2 + fmvq3 + fmvq4
 
-            hact['programmatic_visits']['completed']['q1'] = pvq1 + tpmv1 + fmvq1
-            hact['programmatic_visits']['completed']['q2'] = pvq2 + tpmv2 + fmvq2
-            hact['programmatic_visits']['completed']['q3'] = pvq3 + tpmv3 + fmvq3
-            hact['programmatic_visits']['completed']['q4'] = pvq4 + tpmv4 + fmvq4
-            hact['programmatic_visits']['completed']['total'] = pv + tpm_total + fmv_total
+            self.hact_values['programmatic_visits']['completed']['q1'] = pvq1 + tpmv1 + fmgv1 + fmvq1
+            self.hact_values['programmatic_visits']['completed']['q2'] = pvq2 + tpmv2 + fmgv2 + fmvq2
+            self.hact_values['programmatic_visits']['completed']['q3'] = pvq3 + tpmv3 + fmgv3 + fmvq3
+            self.hact_values['programmatic_visits']['completed']['q4'] = pvq4 + tpmv4 + fmgv4 + fmvq4
+            self.hact_values['programmatic_visits']['completed']['total'] = pv + tpm_total + fmgv_total + fmv_total
 
-        self.hact_values = hact
         self.save()
 
     def spot_checks(self, event_date=None, update_one=False):
@@ -783,14 +783,13 @@ class PartnerOrganization(TimeStampedModel):
         if not event_date:
             event_date = datetime.datetime.today()
         quarter_name = get_quarter(event_date)
-        hact = self.get_hact_json()
-        sc = hact['spot_checks']['completed']['total']
-        scq = hact['spot_checks']['completed'][quarter_name]
+        sc = self.hact_values['spot_checks']['completed']['total']
+        scq = self.hact_values['spot_checks']['completed'][quarter_name]
 
         if update_one:
             sc += 1
             scq += 1
-            hact['spot_checks']['completed'][quarter_name] = scq
+            self.hact_values['spot_checks']['completed'][quarter_name] = scq
         else:
             audit_spot_check = SpotCheck.objects.filter(
                 partner=self, date_of_draft_report_to_ip__year=datetime.datetime.now().year
@@ -801,15 +800,14 @@ class PartnerOrganization(TimeStampedModel):
             asc3 = audit_spot_check.filter(date_of_draft_report_to_ip__quarter=3).count()
             asc4 = audit_spot_check.filter(date_of_draft_report_to_ip__quarter=4).count()
 
-            hact['spot_checks']['completed']['q1'] = asc1
-            hact['spot_checks']['completed']['q2'] = asc2
-            hact['spot_checks']['completed']['q3'] = asc3
-            hact['spot_checks']['completed']['q4'] = asc4
+            self.hact_values['spot_checks']['completed']['q1'] = asc1
+            self.hact_values['spot_checks']['completed']['q2'] = asc2
+            self.hact_values['spot_checks']['completed']['q3'] = asc3
+            self.hact_values['spot_checks']['completed']['q4'] = asc4
 
             sc = audit_spot_check.count()  # TODO 1.1.9c add spot checks from field monitoring
 
-        hact['spot_checks']['completed']['total'] = sc
-        self.hact_values = hact
+        self.hact_values['spot_checks']['completed']['total'] = sc
         self.save()
 
     def audits_completed(self, update_one=False):
@@ -819,8 +817,7 @@ class PartnerOrganization(TimeStampedModel):
         :return: all completed audit (including special audit)
         """
         from etools.applications.audit.models import Audit, Engagement, SpecialAudit
-        hact = self.get_hact_json()
-        completed_audit = hact['audits']['completed']
+        completed_audit = self.hact_values['audits']['completed']
         if update_one:
             completed_audit += 1
         else:
@@ -833,33 +830,28 @@ class PartnerOrganization(TimeStampedModel):
                 date_of_draft_report_to_ip__year=datetime.datetime.now().year
             ).exclude(status=Engagement.CANCELLED).count()
             completed_audit = audits + s_audits
-        hact['audits']['completed'] = completed_audit
-        self.hact_values = hact
+        self.hact_values['audits']['completed'] = completed_audit
         self.save()
 
     def hact_support(self):
         from etools.applications.audit.models import Audit, Engagement
 
-        hact = self.get_hact_json()
         audits = Audit.objects.filter(
             partner=self, status=Engagement.FINAL,
             date_of_draft_report_to_ip__year=datetime.datetime.today().year
         ).exclude(status=Engagement.CANCELLED)
-        hact['outstanding_findings'] = sum([
+        self.hact_values['outstanding_findings'] = sum([
             audit.pending_unsupported_amount for audit in audits if audit.pending_unsupported_amount])
-        hact['assurance_coverage'] = self.assurance_coverage
-        self.hact_values = json.dumps(hact, cls=CustomJSONEncoder)
+        self.hact_values['assurance_coverage'] = self.assurance_coverage
         self.save()
 
     def update_min_requirements(self):
-        hact = self.get_hact_json()
         updated = []
         for hact_eng in ['programmatic_visits', 'spot_checks', 'audits']:
-            if hact[hact_eng]['minimum_requirements'] != self.hact_min_requirements[hact_eng]:
-                hact[hact_eng]['minimum_requirements'] = self.hact_min_requirements[hact_eng]
+            if self.hact_values[hact_eng]['minimum_requirements'] != self.hact_min_requirements[hact_eng]:
+                self.hact_values[hact_eng]['minimum_requirements'] = self.hact_min_requirements[hact_eng]
                 updated.append(hact_eng)
         if updated:
-            self.hact_values = json.dumps(hact, cls=CustomJSONEncoder)
             self.save()
             return updated
 
@@ -1015,7 +1007,7 @@ class PlannedEngagement(TimeStampedModel):
 
     @cached_property
     def spot_check_required(self):
-        completed_audit = self.partner.get_hact_json()['audits']['completed']
+        completed_audit = self.partner.hact_values['audits']['completed']
         required = self.spot_check_follow_up + self.partner.min_req_spot_checks - completed_audit
         return max(0, required)
 
@@ -1907,7 +1899,7 @@ class Intervention(TimeStampedModel):
 
     # Flag if this has been migrated to a status that is not correct
     # previous status
-    metadata = JSONField(
+    metadata = models.JSONField(
         verbose_name=_("Metadata"),
         blank=True,
         null=True,
@@ -2348,6 +2340,9 @@ class InterventionResultLink(TimeStampedModel):
     ram_indicators = models.ManyToManyField(Indicator, blank=True, verbose_name=_('RAM Indicators'))
 
     tracker = FieldTracker()
+
+    class Meta:
+        unique_together = ['intervention', 'cp_output']
 
     def __str__(self):
         return '{} {}'.format(

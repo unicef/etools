@@ -3,7 +3,6 @@ from django.conf.urls import include, url
 from django.contrib import admin
 from django.views.generic import TemplateView
 
-import rest_framework_jwt.views
 from rest_framework_nested import routers
 from rest_framework_swagger.renderers import OpenAPIRenderer
 
@@ -113,10 +112,6 @@ urlpatterns = [
     url(r'^api/schema/openapi', schema_view_json_openapi),
     url(r'^admin/', admin.site.urls),
 
-    # helper urls
-    url(r'^login/token-auth/', rest_framework_jwt.views.obtain_jwt_token),
-    # TODO: remove this when eTrips is deployed needed
-    url(r'^api-token-auth/', rest_framework_jwt.views.obtain_jwt_token),
     url(r'^workspace_inactive/$', TemplateView.as_view(template_name='removed_workspace.html'),
         name='workspace-inactive'),
 

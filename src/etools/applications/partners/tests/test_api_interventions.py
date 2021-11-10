@@ -813,6 +813,15 @@ class TestAPIInterventionResultLinkCreateView(BaseTenantTestCase):
         response = self._make_request(user)
         self.assertResponseFundamentals(response)
 
+    def test_duplicates_not_allowed(self):
+        user = UserFactory()
+        _add_user_to_partnership_manager_group(user)
+        response = self._make_request(user)
+        self.assertResponseFundamentals(response)
+        response = self._make_request(user)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data['non_field_errors'][0], "Invalid CP Output provided.")
+
 
 class TestAPIInterventionResultLinkRetrieveView(BaseTenantTestCase):
     """Exercise the retrieve view for InterventionResultLinkUpdateView"""
@@ -927,6 +936,17 @@ class TestAPIInterventionResultLinkUpdateView(BaseTenantTestCase):
         # Now the request should succeed.
         response = self._make_request(user)
         self.assertResponseFundamentals(response)
+
+    def test_duplicates_not_allowed(self):
+        user = UserFactory()
+        _add_user_to_partnership_manager_group(user)
+        InterventionResultLinkFactory(
+            intervention=self.intervention_result_link.intervention,
+            cp_output=self.new_cp_output,
+        )
+        response = self._make_request(user)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
+        self.assertEqual(response.data['non_field_errors'][0], "Invalid CP Output provided.")
 
 
 class TestAPIInterventionResultLinkDeleteView(BaseTenantTestCase):

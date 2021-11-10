@@ -371,6 +371,13 @@ class TestAPIPartnerOrganizationListView(BaseTenantTestCase):
         response = self.forced_auth_req('get', self.url, data={"values": "banana"})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_switchable_pagination(self):
+        [PartnerFactory() for _i in range(15)]
+        response = self.forced_auth_req('get', self.url, data={'page': 1})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 16)
+
 
 class TestPartnerOrganizationListViewForCSV(BaseTenantTestCase):
     """Exercise the CSV-generating portion of the list view for PartnerOrganization.
@@ -1264,7 +1271,7 @@ class TestInterventionViews(BaseTenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(list(response.data[0].keys()), ["id", "title"])
+        self.assertEqual(list(response.data[0].keys()), ["id", "title", "number"])
 
     def test_intervention_create(self):
         data = {
@@ -2079,6 +2086,7 @@ class TestPartnerOrganizationDashboardAPIView(BaseTenantTestCase):
 
     @classmethod
     def setUpTestData(cls):
+        call_command('update_notifications')
         cls.sec1, cls.sec2, _ = SectionFactory.create_batch(3)
         cls.loc1, cls.loc2, _ = LocationFactory.create_batch(3)
         cls.partner = PartnerFactory(
@@ -2114,6 +2122,7 @@ class TestPartnerOrganizationDashboardAPIView(BaseTenantTestCase):
         par = PartnerFactory(name="Other", vendor_number='008', total_ct_cy=1000.00)
         int = InterventionFactory(agreement=AgreementFactory(partner=par, signed_by_unicef_date=today))
         ActionPointFactory.create_batch(3, travel_activity=ta, intervention=int, status=ActionPoint.STATUS_OPEN)
+        call_command('update_notifications')
 
     def setUp(self):
         self.response = self.forced_auth_req('get', reverse("partners_api:partner-dashboard"), user=self.unicef_staff)

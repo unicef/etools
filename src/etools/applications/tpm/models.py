@@ -12,11 +12,11 @@ from model_utils import Choices, FieldTracker
 from model_utils.models import TimeStampedModel
 from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation
-from unicef_notification.utils import send_notification_with_template
 
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.activities.models import Activity
 from etools.applications.core.urlresolvers import build_frontend_url
+from etools.applications.environment.notifications import send_notification_with_template
 from etools.applications.tpm.tpmpartners.models import TPMPartner, TPMPartnerStaffMember
 from etools.applications.tpm.transitions.conditions import (
     TPMVisitAssignRequiredFieldsCheck,
@@ -471,8 +471,8 @@ class TPMActionPoint(ActionPoint):
     objects = TPMActionPointManager()
 
     class Meta(ActionPoint.Meta):
-        verbose_name = _('Engagement Action Point')
-        verbose_name_plural = _('Engagement Action Points')
+        verbose_name = _('TPM Action Point')
+        verbose_name_plural = _('TPM Action Points')
         proxy = True
 
     def get_mail_context(self, user=None):
