@@ -2625,6 +2625,19 @@ class TestPMPInterventionIndicatorsUpdateView(BaseTenantTestCase):
         self.assertEqual(self.indicator.indicator.title, f'new_{old_title}')
         self.assertEqual(self.indicator.indicator.code, old_code)
 
+    def test_update_indicator_title_already_taken(self):
+        AppliedIndicatorFactory(lower_result=self.lower_result, indicator__title='second title')
+
+        response = self.forced_auth_req(
+            'patch',
+            self.url,
+            user=self.partnership_manager,
+            data={'indicator': {'title': f'second title'}},
+        )
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
+        self.assertIn('non_field_errors', response.data)
+        self.assertIn('already being monitored', response.data['non_field_errors'][0])
+
 
 class TestPMPInterventionReportingRequirementView(
         BaseInterventionReportingRequirementMixin,

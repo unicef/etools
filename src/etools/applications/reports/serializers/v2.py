@@ -232,11 +232,18 @@ class AppliedIndicatorSerializer(serializers.ModelSerializer):
 
     @transaction.atomic
     def update(self, instance, validated_data):
-        if 'indicator' in validated_data and self.partial:
-            blueprint_serializer = IndicatorBlueprintUpdateSerializer(
-                instance=instance.indicator,
-                data=validated_data.pop('indicator'),
-            )
+        if 'indicator' in validated_data and self.partial and instance.indicator:
+            indicator_data = validated_data.pop('indicator')
+            lower_result = getattr(self.instance, 'lower_result')
+            if 'title' in indicator_data:
+                if lower_result.applied_indicators.filter(
+                    indicator__title=indicator_data['title']
+                ).exclude(indicator=instance.indicator).exists():
+                    raise ValidationError({
+                        'non_field_errors': [_('Indicator with this title is already being monitored for this Result')],
+                    })
+
+            blueprint_serializer = IndicatorBlueprintUpdateSerializer(instance=instance.indicator, data=indicator_data)
             blueprint_serializer.is_valid(raise_exception=True)
             blueprint_serializer.save()
 
