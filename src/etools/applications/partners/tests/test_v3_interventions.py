@@ -2632,7 +2632,7 @@ class TestPMPInterventionIndicatorsUpdateView(BaseTenantTestCase):
             'patch',
             self.url,
             user=self.partnership_manager,
-            data={'indicator': {'title': f'second title'}},
+            data={'indicator': {'title': 'second title'}},
         )
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
         self.assertIn('non_field_errors', response.data)

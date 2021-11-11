@@ -73,7 +73,7 @@ class IndicatorBlueprintCUSerializer(serializers.ModelSerializer):
 class IndicatorBlueprintUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = IndicatorBlueprint
-        fields =  ('id', 'title')
+        fields = ('id', 'title')
 
 
 class DisaggregationValueSerializer(serializers.ModelSerializer):
@@ -248,6 +248,7 @@ class AppliedIndicatorSerializer(serializers.ModelSerializer):
             blueprint_serializer.save()
 
         return super().update(instance, validated_data)
+
 
 class AppliedIndicatorCUSerializer(serializers.ModelSerializer):
 
