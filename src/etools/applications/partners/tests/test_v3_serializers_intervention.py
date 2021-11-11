@@ -30,6 +30,7 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
             "download_comments",
             "export_results",
             "export_pdf",
+            "export_xls",
         ])
 
     def test_available_actions_not_draft(self):
@@ -157,7 +158,6 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
         available_actions = self.unicef_serializer.get_available_actions(pd)
         expected_actions = self.default_actions + [
             "cancel",
-            "send_to_partner",
             "unlock",
         ]
         self.assertEqual(

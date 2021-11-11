@@ -4,10 +4,10 @@ from django.contrib.auth import get_user_model
 from django.db import connection, transaction
 
 from celery.utils.log import get_task_logger
-from unicef_notification.utils import send_notification_with_template
 from unicef_vision.exceptions import VisionException
 
 from etools.applications.audit.models import UNICEFAuditFocalPoint
+from etools.applications.environment.notifications import send_notification_with_template
 from etools.applications.hact.models import AggregateHact
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.users.models import Country

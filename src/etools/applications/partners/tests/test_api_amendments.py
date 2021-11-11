@@ -291,6 +291,7 @@ class TestInterventionAmendments(BaseTenantTestCase):
 
         amended_intervention.unicef_accepted = True
         amended_intervention.partner_accepted = True
+        amended_intervention.date_sent_to_partner = timezone.now().date()
         amended_intervention.status = Intervention.REVIEW
         amended_intervention.save()
         review = InterventionReviewFactory(
@@ -380,6 +381,7 @@ class TestInterventionAmendments(BaseTenantTestCase):
         amendment = InterventionAmendmentFactory(intervention=self.active_intervention)
         amendment.amended_intervention.unicef_accepted = True
         amendment.amended_intervention.partner_accepted = True
+        amendment.amended_intervention.date_sent_to_partner = timezone.now().date()
         amendment.amended_intervention.save()
         InterventionSupplyItemFactory(intervention=amendment.amended_intervention)
 

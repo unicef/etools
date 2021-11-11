@@ -19,9 +19,9 @@ from model_utils.models import TimeStampedModel
 from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation, CurrencyField
 from unicef_locations.models import Location
-from unicef_notification.utils import send_notification_with_template
 
 from etools.applications.core.permissions import import_permissions
+from etools.applications.environment.notifications import send_notification_with_template
 from etools.applications.funds.models import FundsReservationHeader
 from etools.applications.partners.amendment_utils import (
     calculate_difference,
@@ -2170,6 +2170,10 @@ class Intervention(TimeStampedModel):
             self.number
         )
 
+    def get_frontend_object_url(self, to_unicef=True):
+        host = settings.HOST if "https://" in settings.HOST else f'https://{settings.HOST}'
+        return f'{host}/{"pmp" if to_unicef else "epd"}/interventions/{self.pk}/strategy'
+
     def get_object_url(self):
         return reverse("partners_api:intervention-detail", args=[self.pk])
 
@@ -2741,6 +2745,7 @@ class InterventionAmendment(TimeStampedModel):
             INTERVENTION_AMENDMENT_COPY_POST_EFFECTS,
         )
         self.amended_intervention.title = '[Amended] ' + self.intervention.title
+        self.amended_intervention.submission_date = timezone.now().date()
         self.amended_intervention.save()
 
     def merge_amendment(self):
@@ -2824,6 +2829,9 @@ class InterventionResultLink(TimeStampedModel):
     ram_indicators = models.ManyToManyField(Indicator, blank=True, verbose_name=_('RAM Indicators'))
 
     tracker = FieldTracker()
+
+    class Meta:
+        unique_together = ['intervention', 'cp_output']
 
     def __str__(self):
         return '{} {}'.format(
@@ -3148,7 +3156,7 @@ class InterventionReviewNotification(TimeStampedModel):
             'intervention_number': self.review.intervention.reference_number,
             'meeting_date': self.review.meeting_date.strftime('%d-%m-%Y'),
             'user_name': self.user.get_full_name(),
-            'url': '{}{}'.format(settings.HOST, self.review.intervention.get_object_url())
+            'url': '{}{}'.format(settings.HOST, self.review.intervention.get_frontend_object_url())
         }
 
         send_notification_with_template(

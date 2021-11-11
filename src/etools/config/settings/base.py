@@ -94,7 +94,7 @@ DEBUG = str2bool(get_from_secrets_or_env('DJANGO_DEBUG'))
 SERVICE_NOW_USER = get_from_secrets_or_env('SERVICE_NOW_USER', 'api_servicenow_etools@unicef.org')
 
 # DJANGO: EMAIL
-DEFAULT_FROM_EMAIL = "no-reply@unicef.org"
+DEFAULT_FROM_EMAIL = get_from_secrets_or_env('DEFAULT_FROM_EMAIL', "no-reply@unicef.org")
 EMAIL_BACKEND = 'unicef_notification.backends.EmailBackend'
 EMAIL_HOST = get_from_secrets_or_env('EMAIL_HOST', '')
 EMAIL_HOST_USER = get_from_secrets_or_env('EMAIL_HOST_USER', '')
