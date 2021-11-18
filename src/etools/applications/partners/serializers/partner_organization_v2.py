@@ -553,7 +553,7 @@ class PartnerOrganizationCreateUpdateSerializer(SnapshotModelSerializer):
         if monitoring_activity_groups is not None:
             groups_updated = self.save_monitoring_activity_groups(instance, monitoring_activity_groups)
             if groups_updated:
-                instance.programmatic_visits()
+                instance.update_programmatic_visits()
 
         return instance
 
