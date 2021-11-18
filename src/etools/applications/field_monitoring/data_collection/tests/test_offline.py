@@ -101,6 +101,27 @@ class ChecklistBlueprintViewTestCase(APIViewSetTestCase, BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+    def test_save_long_information_source(self):
+        response = self.make_detail_request(
+            self.team_member, self.started_checklist, action='blueprint', method='post',
+            data={
+                'information_source': {
+                    'name': '0'*101,
+                },
+                'partner': {
+                    str(self.text_question.partner.id): {
+                        'overall': 'overall',
+                        'questions': {
+                            str(self.text_question.question_id): 'Question answer'
+                        }
+                    }
+                }
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('information_source', response.data)
+
     def test_generated_blueprint_value_accepted_for_saving(self):
         AttachmentFactory(
             content_object=self.started_checklist.overall_findings.first(),
