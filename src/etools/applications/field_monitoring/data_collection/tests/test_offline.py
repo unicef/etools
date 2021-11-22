@@ -106,7 +106,7 @@ class ChecklistBlueprintViewTestCase(APIViewSetTestCase, BaseTenantTestCase):
             self.team_member, self.started_checklist, action='blueprint', method='post',
             data={
                 'information_source': {
-                    'name': '0'*101,
+                    'name': '0' * 101,
                 },
                 'partner': {
                     str(self.text_question.partner.id): {
