@@ -735,6 +735,7 @@ class AmendmentTestCase(BaseTenantTestCase):
                 'signed_pd_attachment',
                 'activation_letter_attachment',
                 'termination_doc_attachment',
+                'history',
             ],
             'reports.ReportingRequirement': ['intervention'],
             'reports.AppliedIndicator': ['lower_result'],

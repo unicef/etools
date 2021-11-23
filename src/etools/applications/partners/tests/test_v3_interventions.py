@@ -45,7 +45,7 @@ from etools.applications.partners.tests.test_api_interventions import (
     BaseAPIInterventionIndicatorsListMixin,
     BaseInterventionReportingRequirementMixin,
 )
-from etools.applications.reports.models import ResultType
+from etools.applications.reports.models import AppliedIndicator, ResultType
 from etools.applications.reports.tests.factories import (
     AppliedIndicatorFactory,
     CountryProgrammeFactory,
@@ -2621,22 +2621,37 @@ class TestPMPInterventionIndicatorsUpdateView(BaseTenantTestCase):
             data={'indicator': {'title': f'new_{old_title}', 'code': 'new_code'}},
         )
         self.assertEquals(response.status_code, status.HTTP_200_OK, response.data)
-        self.indicator.indicator.refresh_from_db()
-        self.assertEqual(self.indicator.indicator.title, f'new_{old_title}')
-        self.assertEqual(self.indicator.indicator.code, old_code)
+        self.assertNotEqual(response.data['id'], self.indicator.id)
+        self.assertNotEqual(response.data['indicator']['id'], self.indicator.indicator.id)
+        self.assertEqual(response.data['indicator']['title'], f'new_{old_title}')
+        self.assertEqual(response.data['indicator']['code'], old_code)
+        self.assertFalse(AppliedIndicator.objects.filter(id=self.indicator.id).exists())
 
-    def test_update_indicator_title_already_taken(self):
-        AppliedIndicatorFactory(lower_result=self.lower_result, indicator__title='second title')
+    def test_update_indicator_title_intervention_was_signed(self):
+        intervention = self.indicator.lower_result.result_link.intervention
+
+        pre_save = create_dict_with_relations(intervention)
+
+        intervention.status = Intervention.SIGNED
+        intervention.save()
+
+        create_snapshot(intervention, pre_save, self.partnership_manager)
+
+        intervention.status = Intervention.DRAFT
+        intervention.save()
 
         response = self.forced_auth_req(
             'patch',
             self.url,
             user=self.partnership_manager,
-            data={'indicator': {'title': 'second title'}},
+            data={'indicator': {'title': 'new title'}},
         )
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
-        self.assertIn('non_field_errors', response.data)
-        self.assertIn('already being monitored', response.data['non_field_errors'][0])
+        self.assertEquals(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertNotEqual(response.data['id'], self.indicator.id)
+        self.assertNotEqual(response.data['indicator']['id'], self.indicator.indicator.id)
+        self.assertEqual(response.data['indicator']['title'], 'new title')
+        self.assertTrue(AppliedIndicator.objects.filter(id=self.indicator.id).exists())
+        self.assertFalse(AppliedIndicator.objects.get(id=self.indicator.id).is_active)
 
 
 class TestPMPInterventionReportingRequirementView(

@@ -67,7 +67,10 @@ class IndicatorBlueprintCUSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         # always try to get first
-        return IndicatorBlueprint.objects.get_or_create(**validated_data)[0]
+        indicator = IndicatorBlueprint.objects.filter(**validated_data).first()
+        if not indicator:
+            indicator = super().create(validated_data)
+        return indicator
 
 
 class IndicatorBlueprintUpdateSerializer(serializers.ModelSerializer):
@@ -217,13 +220,24 @@ class AppliedIndicatorSerializer(serializers.ModelSerializer):
     @transaction.atomic
     def create(self, validated_data):
         if 'indicator' in validated_data and not validated_data.get('cluster_indicator_id'):
-            indicator_blueprint = IndicatorBlueprintCUSerializer(data=validated_data.pop('indicator'))
-            indicator_blueprint.is_valid(raise_exception=True)
-            indicator_blueprint.save()
-            validated_data['indicator'] = indicator_blueprint.instance
-
             lower_result = validated_data['lower_result']
-            if lower_result.applied_indicators.filter(indicator__id=indicator_blueprint.instance.id).exists():
+            indicator_data = validated_data.pop('indicator')
+
+            # give priority to blueprints linked with current lower result
+            blueprint = IndicatorBlueprint.objects.filter(
+                appliedindicator__lower_result=lower_result,
+                **indicator_data,
+            ).first()
+
+            if not blueprint:
+                indicator_blueprint_serializer = IndicatorBlueprintCUSerializer(data=indicator_data)
+                indicator_blueprint_serializer.is_valid(raise_exception=True)
+                indicator_blueprint_serializer.save()
+                blueprint = indicator_blueprint_serializer.instance
+
+            validated_data['indicator'] = blueprint
+
+            if lower_result.applied_indicators.filter(indicator__id=blueprint.id).exists():
                 raise ValidationError({
                     'non_field_errors': [_('This indicator is already being monitored for this Result')],
                 })
@@ -232,16 +246,23 @@ class AppliedIndicatorSerializer(serializers.ModelSerializer):
 
     @transaction.atomic
     def update(self, instance, validated_data):
-        if 'indicator' in validated_data and self.partial and instance.indicator:
+        if validated_data.get('indicator') and self.partial and instance.indicator:
             indicator_data = validated_data.pop('indicator')
-            lower_result = getattr(self.instance, 'lower_result')
-            if 'title' in indicator_data:
-                if lower_result.applied_indicators.filter(
-                    indicator__title=indicator_data['title']
-                ).exclude(indicator=instance.indicator).exists():
-                    raise ValidationError({
-                        'non_field_errors': [_('Indicator with this title is already being monitored for this Result')],
-                    })
+
+            # if instance was signed, it was reported to PRP. it means we cannot just edit blueprint
+            # and only option is to deactivate previous indicator as inactive
+            instance_copy = instance.make_copy()
+
+            intervention = instance.lower_result.result_link.intervention
+            was_active_before = intervention.was_active_before()
+            in_amendment = intervention.in_amendment
+            if was_active_before or in_amendment:
+                instance.is_active = False
+                instance.save()
+            else:
+                instance.delete()
+
+            instance = instance_copy
 
             blueprint_serializer = IndicatorBlueprintUpdateSerializer(instance=instance.indicator, data=indicator_data)
             blueprint_serializer.is_valid(raise_exception=True)

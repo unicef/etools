@@ -3,6 +3,7 @@ import decimal
 import json
 
 from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import ArrayField
 from django.core.validators import MinValueValidator
 from django.db import connection, IntegrityError, models, transaction
@@ -19,6 +20,7 @@ from model_utils.models import TimeStampedModel
 from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation, CurrencyField
 from unicef_locations.models import Location
+from unicef_snapshot.models import Activity
 
 from etools.applications.core.permissions import import_permissions
 from etools.applications.environment.notifications import send_notification_with_template
@@ -2554,6 +2556,18 @@ class Intervention(TimeStampedModel):
     def get_cash_transfer_modalities_display(self):
         choices = dict(self.CASH_TRANSFER_CHOICES)
         return ', '.join(choices.get(m, 'Unknown') for m in self.cash_transfer_modalities)
+
+    def was_active_before(self):
+        """
+        check whether intervention was in signed or active status before.
+        if yes, it should be treated in special way because intervention is synchronized to PRP
+        """
+        return Activity.objects.filter(
+            target_content_type=ContentType.objects.get_for_model(self),
+            target_object_id=self.id,
+            action=Activity.UPDATE,
+            change__status__after__in=[self.SIGNED, self.ACTIVE],
+        ).exists()
 
 
 class InterventionAmendment(TimeStampedModel):
