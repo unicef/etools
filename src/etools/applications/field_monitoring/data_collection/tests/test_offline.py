@@ -155,12 +155,12 @@ class ChecklistBlueprintViewTestCase(APIViewSetTestCase, BaseTenantTestCase):
             self.started_checklist,
             action='blueprint',
             method='post',
-            data={'information_source': {"name": 'value' * 100}}
+            data={'information_source': {'name': 'value' * 100}}
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn(
-            'Ensure this field has no more than 100 characters.',
+        self.assertDictEqual(
+            {'name': ['Ensure this field has no more than 100 characters.']},
             response.data['information_source'],
         )
 
