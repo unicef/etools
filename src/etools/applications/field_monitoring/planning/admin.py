@@ -44,7 +44,7 @@ class MonitoringActivityGroupAdmin(admin.ModelAdmin):
         return super().get_queryset(request).prefetch_related('monitoring_activities')
 
     def get_monitoring_activities(self, obj):
-        return ', '.join(a.number for a in obj.monitoring_activities)
+        return ', '.join(a.number for a in obj.monitoring_activities.all())
 
 
 @admin.register(MonitoringActivityActionPoint)
