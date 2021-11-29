@@ -292,7 +292,7 @@ class MonitoringActivity(
             for item in self.trip_itinerary_items.all():
                 item.update_values_from_ma(self)
                 item.save()
-                
+
         if self.trip_activities.exists():
             for ta in self.trip_activities.all():
                 if ta.trip.status not in [ta.trip.STATUS_APPROVED, ta.trip.STATUS_COMPLETED, ta.trip.STATUS_CANCELLED] \

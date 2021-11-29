@@ -17,7 +17,7 @@ from etools.applications.attachments.tests.factories import AttachmentFactory, A
 from etools.applications.audit.models import UNICEFAuditFocalPoint
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.reports.tests.factories import SectionFactory
-from etools.applications.travel.models import Activity, Trip, ItineraryItem, TripStatusHistory, Report
+from etools.applications.travel.models import Activity, ItineraryItem, Report, Trip, TripStatusHistory
 from etools.applications.travel.tests.factories import (
     ActivityFactory,
     ItineraryFactory,

@@ -25,10 +25,7 @@ from etools.applications.field_monitoring.planning.models import MonitoringActiv
 from etools.applications.partners.views.v2 import choices_to_json_ready
 from etools.applications.permissions2.views import PermissionContextMixin, PermittedSerializerMixin
 from etools.applications.travel.models import Activity, ItineraryItem, Report, Trip
-from etools.applications.travel.permissions import (
-    trip_field_is_editable_permission,
-    UserIsStaffPermission,
-)
+from etools.applications.travel.permissions import trip_field_is_editable_permission, UserIsStaffPermission
 from etools.applications.travel.serializers import (
     ActivityCreateUpdateSerializer,
     ActivityDetailSerializer,

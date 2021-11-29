@@ -1,7 +1,5 @@
 from django.conf import settings
-from django.contrib.contenttypes.fields import GenericForeignKey
-from django.contrib.contenttypes.models import ContentType
-from django.contrib.postgres.fields import ArrayField, JSONField
+from django.contrib.postgres.fields import JSONField
 from django.db import connection, models, transaction
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
@@ -13,7 +11,6 @@ from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation
 from unicef_locations.models import Location
 
-from etools.applications.action_points.models import ActionPoint
 from etools.applications.core.permissions import import_permissions
 from etools.applications.core.urlresolvers import build_frontend_url
 from etools.applications.field_monitoring.planning.models import MonitoringActivity

@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from etools.applications.travel.models import Activity, Trip, Report
+from etools.applications.travel.models import Activity, Report, Trip
 
 
 class ActivityInline(admin.TabularInline):

@@ -1,21 +1,12 @@
-from copy import copy
-
 from django.contrib.contenttypes.models import ContentType
 from django.utils.translation import ugettext_lazy as _
 
 from rest_framework import serializers
 from unicef_attachments.fields import FileTypeModelChoiceField
 from unicef_attachments.models import Attachment, FileType
-
 from unicef_restlib.fields import SeparatedReadWriteField
 
-from etools.applications.travel.models import (
-    Activity,
-    Trip,
-    ItineraryItem,
-    TripStatusHistory,
-    Report,
-)
+from etools.applications.travel.models import Activity, ItineraryItem, Report, Trip, TripStatusHistory
 from etools.applications.travel.permissions import TripPermissions
 from etools.applications.users.serializers_v3 import MinimalUserSerializer
 
@@ -212,7 +203,7 @@ class TripCreateUpdateSerializer(BaseTripSerializer):
     def _add_attachments(self, trip, attachment_data):
         content_type = ContentType.objects.get_for_model(Trip)
         file_type = FileType.objects.get(name="generic_trip_attachment")
-        current = list(Attachment.objects.filter(
+        list(Attachment.objects.filter(
             object_id=trip.pk,
             content_type=content_type,
         ).all())
@@ -221,7 +212,7 @@ class TripCreateUpdateSerializer(BaseTripSerializer):
             for initial in self.initial_data.get("attachments"):
                 pk = initial["id"]
                 if pk not in used:
-                    attachment = Attachment.objects.filter(pk=pk).update(
+                    Attachment.objects.filter(pk=pk).update(
                         file_type=file_type,
                         code="travel_docs",
                         object_id=trip.pk,
