@@ -730,7 +730,7 @@ class TestUpdate(BaseInterventionTestCase):
             "patch",
             reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
             user=self.user,
-            data={'context': '*'*7000}
+            data={'context': '*' * 7000},
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
 
@@ -741,7 +741,7 @@ class TestUpdate(BaseInterventionTestCase):
             "patch",
             reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
             user=self.user,
-            data={'context': '*'*7001}
+            data={'context': '*' * 7001},
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
         self.assertIn('context', response.data)
