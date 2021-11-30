@@ -417,7 +417,8 @@ class ActivityViewSet(
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        if serializer.initial_data['activity_type'] == Activity.TYPE_PROGRAMME_MONITORING:
+        if 'activity_type' in serializer.initial_data and \
+                ['activity_type'] == Activity.TYPE_PROGRAMME_MONITORING:
             self.update_ma_date(serializer)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)

@@ -8,7 +8,7 @@ from etools.applications.travel import models
 from etools.applications.users.tests.factories import UserFactory
 
 
-class ItineraryFactory(factory.django.DjangoModelFactory):
+class TripFactory(factory.django.DjangoModelFactory):
     supervisor = factory.SubFactory(UserFactory)
     traveller = factory.SubFactory(UserFactory)
     office = factory.SubFactory(OfficeFactory)
@@ -18,15 +18,15 @@ class ItineraryFactory(factory.django.DjangoModelFactory):
         model = models.Trip
 
 
-class ItineraryItemFactory(factory.django.DjangoModelFactory):
-    itinerary = factory.SubFactory(ItineraryFactory)
+class ItineraryFactory(factory.django.DjangoModelFactory):
+    trip = factory.SubFactory(TripFactory)
 
     class Meta:
         model = models.ItineraryItem
 
 
 class ItineraryStatusHistoryFactory(factory.django.DjangoModelFactory):
-    itinerary = factory.SubFactory(ItineraryFactory)
+    trip = factory.SubFactory(TripFactory)
     status = fuzzy.FuzzyChoice(
         [x[0] for x in models.Trip.STATUS_CHOICES],
     )
@@ -36,7 +36,7 @@ class ItineraryStatusHistoryFactory(factory.django.DjangoModelFactory):
 
 
 class ActivityFactory(factory.django.DjangoModelFactory):
-    itinerary = factory.SubFactory(ItineraryFactory)
+    trip = factory.SubFactory(TripFactory)
     activity_date = fuzzy.FuzzyDate(datetime.date.today())
 
     class Meta:
@@ -44,7 +44,8 @@ class ActivityFactory(factory.django.DjangoModelFactory):
 
 
 class ReportFactory(factory.django.DjangoModelFactory):
-    itinerary = factory.SubFactory(ItineraryFactory)
+    trip = factory.SubFactory(TripFactory)
 
     class Meta:
         model = models.Report
+        django_get_or_create = ('trip',)

@@ -39,13 +39,13 @@ class ReportSerializer(serializers.ModelSerializer):
         model = Report
         fields = '__all__'
 
-    def _add_attachments(self, report, attachment_data):
+    def _add_attachments(self, report):
 
         content_type = ContentType.objects.get_for_model(Report)
-        file_type = FileType.objects.get(name="generic_trip_attachment")
+        file_type = FileType.objects.get(code="generic_trip_attachment")
         used = []
-        for attachment in attachment_data:
-            pk = attachment["id"]
+        for initial in self.initial_data.get("attachments"):
+            pk = initial["id"]
             if pk not in used:
                 Attachment.objects.filter(pk=pk).update(
                     file_type=file_type,
@@ -56,23 +56,22 @@ class ReportSerializer(serializers.ModelSerializer):
                 used.append(pk)
 
     def create(self, validated_data):
-        attachment_data = self.context.get("attachments", None)
-
+        attachment_data = validated_data.pop("attachments", None)
         report = Report.objects.create(**validated_data)
 
         if attachment_data is not None:
-            self._add_attachments(report, attachment_data)
+            self._add_attachments(report)
         return report
 
     def update(self, instance, validated_data):
-        attachment_data = self.context.get("attachments", None)
+        attachment_data = validated_data.pop("attachments", None)
         instance.narrative = validated_data.get(
             "narrative",
             instance.narrative,
         )
         instance.save()
         if attachment_data is not None:
-            self._add_attachments(instance, attachment_data)
+            self._add_attachments(instance)
 
         return instance
 
@@ -200,7 +199,7 @@ class TripCreateUpdateSerializer(BaseTripSerializer):
     # status = serializers.CharField(required=False)
     attachments = TripAttachmentSerializer(many=True, required=False)
 
-    def _add_attachments(self, trip, attachment_data):
+    def _add_attachments(self, trip):
         content_type = ContentType.objects.get_for_model(Trip)
         file_type = FileType.objects.get(name="generic_trip_attachment")
         list(Attachment.objects.filter(
@@ -208,18 +207,17 @@ class TripCreateUpdateSerializer(BaseTripSerializer):
             content_type=content_type,
         ).all())
         used = []
-        for attachment in attachment_data:
-            for initial in self.initial_data.get("attachments"):
-                pk = initial["id"]
-                if pk not in used:
-                    Attachment.objects.filter(pk=pk).update(
-                        file_type=file_type,
-                        code="travel_docs",
-                        object_id=trip.pk,
-                        content_type=content_type,
-                    )
-                    used.append(pk)
-                    break
+        for initial in self.initial_data.get("attachments"):
+            pk = initial["id"]
+            if pk not in used:
+                Attachment.objects.filter(pk=pk).update(
+                    file_type=file_type,
+                    code="travel_docs",
+                    object_id=trip.pk,
+                    content_type=content_type,
+                )
+                used.append(pk)
+                break
 
     def update(self, instance, validated_data):
         attachment_data = None
@@ -227,7 +225,7 @@ class TripCreateUpdateSerializer(BaseTripSerializer):
             attachment_data = validated_data.pop("attachments")
         instance.save()
         if attachment_data is not None:
-            self._add_attachments(instance, attachment_data)
+            self._add_attachments(instance)
 
         return super().update(instance, validated_data)
 
@@ -383,7 +381,7 @@ class TripExportSerializer(TripSerializer):
         ]
 
     def get_itinerary_items(self, obj):
-        return ", ".join([str(a) for a in obj.items.all()])
+        return ", ".join([str(a) for a in obj.itinerary_items.all()])
 
     def get_activities(self, obj):
         return ", ".join([str(a) for a in obj.activities.all()])
