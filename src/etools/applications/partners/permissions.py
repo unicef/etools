@@ -98,7 +98,7 @@ class PMPPermissions:
 class InterventionPermissions(PMPPermissions):
 
     MODEL_NAME = 'partners.Intervention'
-    EXTRA_FIELDS = ['sections_present', 'pd_outputs', 'final_partnership_review', 'prc_reviews']
+    EXTRA_FIELDS = ['sections_present', 'pd_outputs', 'final_partnership_review', 'prc_reviews', 'document_currency']
 
     def __init__(self, **kwargs):
         """
