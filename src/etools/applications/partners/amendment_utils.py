@@ -558,7 +558,6 @@ INTERVENTION_AMENDMENT_IGNORED_FIELDS = {
         'created', 'modified',
         'number', 'status', 'in_amendment',
         'title',
-        'sites',
 
         # submission
         'unicef_court',

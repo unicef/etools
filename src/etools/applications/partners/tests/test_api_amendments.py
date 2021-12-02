@@ -7,10 +7,12 @@ from django.utils import timezone
 
 from rest_framework import status
 from rest_framework.exceptions import ErrorDetail
+from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.attachments.models import AttachmentFlat
 from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.field_monitoring.fm_settings.tests.factories import LocationSiteFactory
 from etools.applications.partners.models import Intervention, InterventionAmendment
 from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, UNICEF_USER
 from etools.applications.partners.tests.factories import (
@@ -392,6 +394,17 @@ class TestInterventionAmendments(BaseTenantTestCase):
         # check difference updated on review
         amendment.refresh_from_db()
         self.assertNotEqual({}, amendment.difference)
+
+    def test_geographical_coverage_displayed_in_difference(self):
+        location = LocationFactory()
+        site = LocationSiteFactory()
+        amendment = InterventionAmendmentFactory(intervention=self.active_intervention)
+        amendment.amended_intervention.flat_locations.add(location)
+        amendment.amended_intervention.sites.add(site)
+
+        difference = amendment.get_difference()
+        self.assertIn('flat_locations', difference)
+        self.assertIn('sites', difference)
 
 
 class TestInterventionAmendmentDeleteView(BaseTenantTestCase):
