@@ -493,7 +493,8 @@ class InterventionActivityItemSerializer(serializers.ModelSerializer):
         unicef_cash = attrs.get('unicef_cash', instance.unicef_cash if instance else None)
         cso_cash = attrs.get('cso_cash', instance.cso_cash if instance else None)
 
-        if unit_price * no_units != unicef_cash + cso_cash:
+        # unit_price * no_units can contain more decimal places than we're able to save
+        if abs((unit_price * no_units) - (unicef_cash + cso_cash)) > 0.01:
             self.fail('invalid_budget')
 
         return attrs

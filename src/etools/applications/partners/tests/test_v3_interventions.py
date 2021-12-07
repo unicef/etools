@@ -946,6 +946,49 @@ class TestManagementBudget(BaseInterventionTestCase):
         self.assertEqual(len(response.data['items']), 2)
         self.assertEqual(InterventionManagementBudgetItem.objects.filter(id=item_to_remove.id).exists(), False)
 
+    def test_budget_validation(self):
+        intervention = InterventionFactory()
+        item_to_update = InterventionManagementBudgetItemFactory(
+            budget=intervention.management_budgets,
+            no_units=1, unit_price=42, unicef_cash=22, cso_cash=20,
+        )
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse("pmp_v3:intervention-budget", args=[intervention.pk]),
+            user=self.user,
+            data={
+                'items': [{'id': item_to_update.id, 'no_units': 2}],
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
+        self.assertIn(
+            'Invalid budget data. Total cash should be equal to items number * price per item.',
+            response.data['items'][0]['non_field_errors'],
+        )
+
+    def test_create_items_fractional_total(self):
+        intervention = InterventionFactory()
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse("pmp_v3:intervention-budget", args=[intervention.pk]),
+            user=self.user,
+            data={
+                'items': [{
+                    'name': 'test',
+                    'kind': InterventionManagementBudgetItem.KIND_CHOICES.planning,
+                    'unit': 'test',
+                    'no_units': 17.9,
+                    'unit_price': 14.89,
+                    'unicef_cash': 4.64,
+                    'cso_cash': 261.89
+                }]
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+
 
 class TestSupplyItem(BaseInterventionTestCase):
     def setUp(self):
