@@ -688,9 +688,9 @@ class AppliedIndicator(TimeStampedModel):
     @cached_property
     def target_display_string(self):
         if self.target_display[1] == '-':
-            target = self.target_display[0]
+            target = str(self.target_display[0])
         else:
-            target = '/'.join(self.target_display)
+            target = '/'.join(map(str, self.target_display))
         return target
 
     @cached_property
@@ -704,10 +704,13 @@ class AppliedIndicator(TimeStampedModel):
 
     @cached_property
     def baseline_display_string(self):
+        if self.baseline_display[0] is None:
+            return _('Unknown')
+
         if self.baseline_display[1] == '-':
-            baseline = self.baseline_display[0]
+            baseline = str(self.baseline_display[0])
         else:
-            baseline = '/'.join(self.baseline_display)
+            baseline = '/'.join(map(str, self.baseline_display))
         return baseline
 
     class Meta:
