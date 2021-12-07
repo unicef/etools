@@ -696,10 +696,16 @@ class AppliedIndicator(TimeStampedModel):
     @cached_property
     def baseline_display(self):
         ind_type = self.indicator.display_type
-        numerator = self.baseline.get('v', self.baseline)
+        if self.baseline is None:
+            numerator = None
+        else:
+            numerator = self.baseline.get('v', self.baseline)
         denominator = '-'
         if ind_type == IndicatorBlueprint.RATIO:
-            denominator = self.baseline.get('d', '')
+            if self.baseline is None:
+                denominator = ''
+            else:
+                denominator = self.baseline.get('d', '')
         return numerator, denominator
 
     @cached_property

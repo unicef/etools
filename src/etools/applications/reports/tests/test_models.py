@@ -369,6 +369,13 @@ class TestInterventionTimeFrame(BaseTenantTestCase):
 
 
 class TestAppliedIndicator(BaseTenantTestCase):
+    def test_baseline_display_string_none(self):
+        indicator = AppliedIndicatorFactory(
+            baseline=None,
+            lower_result__result_link=InterventionResultLinkFactory(),
+        )
+        self.assertEqual(indicator.baseline_display_string, 'Unknown')
+
     def test_baseline_display_string_unknown_baseline(self):
         indicator = AppliedIndicatorFactory(
             baseline={'v': None, 'd': 1},
