@@ -172,10 +172,8 @@ def transition_to_signed(i):
     if i.has_active_amendment(InterventionAmendment.KIND_NORMAL):
         raise TransitionError([_('Cannot Transition status while adding an amendment')])
 
-    if i.document_type in [i.PD, i.SPD] and i.agreement.status in [Agreement.SUSPENDED, Agreement.TERMINATED,
-                                                                   Agreement.DRAFT]:
-        raise TransitionError([_('The PCA related to this record is Draft, Suspended or Terminated. '
-                                 'This Programme Document will not change status until the related PCA '
+    if i.document_type in [i.PD, i.SPD] and i.agreement.status != i.agreement.SIGNED:
+        raise TransitionError([_('This Programme Document will not change status until the related PCA '
                                  'is in Signed status')])
 
     if i.agreement.partner.blocked:

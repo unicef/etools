@@ -333,7 +333,7 @@ class TestTransitionToSigned(BaseTenantTestCase):
                 )
                 with self.assertRaisesRegexp(
                         TransitionError,
-                        "The PCA related to this record is Draft, Suspended or Terminated."
+                        "until the related PCA is in Signed status"
                 ):
                     transition_to_signed(intervention)
 
