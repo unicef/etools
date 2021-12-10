@@ -1,4 +1,3 @@
-import json
 from datetime import date, datetime
 from decimal import Decimal
 
@@ -66,7 +65,6 @@ class AggregateHact(TimeStampedModel):
             qs_filters = qs_filters.split('__')
             json_field_name = qs_filters.pop(0)
             json_field = getattr(obj, json_field_name)
-            json_field = json_field if type(json_field) is dict else json.loads(json_field)
             for qs_filter in qs_filters:
                 json_field = json_field[qs_filter]
             return json_field

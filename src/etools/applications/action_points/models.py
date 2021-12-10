@@ -8,13 +8,13 @@ from django_fsm import FSMField, transition
 from model_utils import Choices, FieldTracker
 from model_utils.fields import MonitorField
 from model_utils.models import TimeStampedModel
-from unicef_notification.models import Notification
 from unicef_snapshot.models import Activity
 
 from etools.applications.action_points.categories.models import Category
 from etools.applications.action_points.transitions.conditions import ActionPointCompleteActionsTakenCheck
 from etools.applications.action_points.transitions.serializers.serializers import ActionPointCompleteSerializer
 from etools.applications.core.urlresolvers import build_frontend_url
+from etools.applications.environment.notifications import send_notification_with_template
 from etools.libraries.djangolib.models import GroupWrapper
 from etools.libraries.djangolib.utils import get_environment
 from etools.libraries.fsm.views import has_action_permission
@@ -215,6 +215,7 @@ class ActionPoint(TimeStampedModel):
         }
 
     def send_email(self, recipient, template_name, additional_context=None, cc=None):
+
         context = {
             'environment': get_environment(),
             'action_point': self.get_mail_context(user=recipient),
@@ -222,12 +223,13 @@ class ActionPoint(TimeStampedModel):
         }
         context.update(additional_context or {})
 
-        notification = Notification.objects.create(
-            sender=self, cc=cc or [],
-            recipients=[recipient.email], template_name=template_name,
-            template_data=context,
+        send_notification_with_template(
+            recipients=recipient.email,
+            template_name=template_name,
+            context=context,
+            sender=self,
+            cc=cc,
         )
-        notification.send_notification()
 
     def _do_complete(self, completed_by=None):
         self.send_email(self.assigned_by, 'action_points/action_point/completed', cc=[self.assigned_to.email],
