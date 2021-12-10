@@ -1,10 +1,10 @@
-from django.conf.urls import url
+from django.urls import re_path
 
 from etools.libraries.monitoring.views import AppAliveView, AppReadyView
 
 app_name = 'monitoring'
 urlpatterns = (
-    url(r'^app_alive/$', AppAliveView.as_view(), name="app_alive"),
-    url(r'^app_ready/$', AppReadyView.as_view(), name="app_ready"),
+    re_path(r'^app_alive/$', AppAliveView.as_view(), name="app_alive"),
+    re_path(r'^app_ready/$', AppReadyView.as_view(), name="app_ready"),
 
 )
