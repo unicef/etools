@@ -1,2 +1,2 @@
-VERSION = __version__ = '9.9.0'
+VERSION = __version__ = '9.10.0'
 NAME = 'eTools'
