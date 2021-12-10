@@ -533,6 +533,15 @@ class InterventionActivityDetailSerializer(serializers.ModelSerializer):
         self.intervention = kwargs.pop('intervention')
         super().__init__(*args, **kwargs)
 
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+        if self.instance and self.partial and 'items' not in attrs and self.instance.items.exists():
+            # when we do partial update for activity having items attached without items provided in request
+            # it's easy to break total values, so we ignore them
+            attrs.pop('unicef_cash', None)
+            attrs.pop('cso_cash', None)
+        return attrs
+
     @transaction.atomic
     def create(self, validated_data):
         options = validated_data.pop('items', None)
