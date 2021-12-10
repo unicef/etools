@@ -556,20 +556,21 @@ class InterventionXLSRenderer:
 
     def render_workplan_budget(self, worksheet):
         worksheet.append(['Workplan Budget'])
-        worksheet.merge_cells(start_row=worksheet.max_row, start_column=1, end_row=worksheet.max_row, end_column=6)
+        worksheet.merge_cells(start_row=worksheet.max_row, start_column=1, end_row=worksheet.max_row, end_column=9)
         worksheet.append(['eTools reference number', self.intervention.reference_number])
-        worksheet.merge_cells(start_row=worksheet.max_row, start_column=2, end_row=worksheet.max_row, end_column=6)
+        worksheet.merge_cells(start_row=worksheet.max_row, start_column=2, end_row=worksheet.max_row, end_column=9)
         worksheet.append(['Partner:', self.intervention.agreement.partner.name])
-        worksheet.merge_cells(start_row=worksheet.max_row, start_column=2, end_row=worksheet.max_row, end_column=6)
+        worksheet.merge_cells(start_row=worksheet.max_row, start_column=2, end_row=worksheet.max_row, end_column=9)
         worksheet.append(['Currency:', self.intervention.planned_budget.currency])
-        worksheet.merge_cells(start_row=worksheet.max_row, start_column=2, end_row=worksheet.max_row, end_column=6)
-        self.apply_styles_to_cells(worksheet, worksheet.max_row - 3, 1, worksheet.max_row, 6,
+        worksheet.merge_cells(start_row=worksheet.max_row, start_column=2, end_row=worksheet.max_row, end_column=9)
+        self.apply_styles_to_cells(worksheet, worksheet.max_row - 3, 1, worksheet.max_row, 9,
                                    [self.fill_blue, self.font_white])
         worksheet.append([
             'Result Level', 'Result/Activity', 'Timeframe', 'CSO contribution',
-            'UNICEF contribution', f'Total (CSO+ UNICEF) [{self.intervention.planned_budget.currency}]'
+            'UNICEF contribution', f'Total (CSO+ UNICEF) [{self.intervention.planned_budget.currency}]',
+            'Unit', 'Number of Units', 'Price',
         ])
-        self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, 6, [self.fill_gray])
+        self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, 9, [self.fill_gray])
         activity_rows = 0
         for result_link in self.intervention.result_links.all():
             for pd_output in result_link.ll_results.all():
@@ -579,7 +580,7 @@ class InterventionXLSRenderer:
                 ])
                 worksheet.merge_cells(start_row=worksheet.max_row, start_column=2,
                                       end_row=worksheet.max_row, end_column=3)
-                self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, 6, [self.fill_yellow])
+                self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, 9, [self.fill_yellow])
                 activity_rows += 1
 
                 for activity in pd_output.activities.all():
@@ -590,28 +591,57 @@ class InterventionXLSRenderer:
                     self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, 1, [self.fill_gray])
                     activity_rows += 1
 
+                    for item in activity.items.all():
+                        worksheet.append([
+                            'Activity Item', item.name, '', '', '', '',
+                            item.unit, item.no_units, item.unicef_cash + item.cso_cash,
+                        ])
+                        self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, 1,
+                                                   [self.fill_gray])
+                        activity_rows += 1
+
         worksheet.append([
             'Prog. Output', 'Effective and efficient programme management', '',
             self.intervention.management_budgets.partner_total, self.intervention.management_budgets.unicef_total,
-            self.intervention.management_budgets.total
+            self.intervention.management_budgets.total,
         ])
-        self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, 6, [self.fill_yellow])
+        self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, 9, [self.fill_yellow])
+        budget_items = 0
         worksheet.append([
             '1', 'In-country management & support', '',
             self.intervention.management_budgets.act1_partner, self.intervention.management_budgets.act1_unicef,
-            self.intervention.management_budgets.act1_unicef + self.intervention.management_budgets.act1_partner
+            self.intervention.management_budgets.act1_unicef + self.intervention.management_budgets.act1_partner,
         ])
+        for item in self.intervention.management_budgets.items.filter(kind='in_country'):
+            worksheet.append([
+                'EEPM Item', item.name, '', '', '', '',
+                item.unit, item.no_units, item.unicef_cash + item.cso_cash,
+            ])
+            budget_items += 1
         worksheet.append([
             '2', 'Operational costs', '',
             self.intervention.management_budgets.act2_partner, self.intervention.management_budgets.act2_unicef,
-            self.intervention.management_budgets.act2_unicef + self.intervention.management_budgets.act2_partner
+            self.intervention.management_budgets.act2_unicef + self.intervention.management_budgets.act2_partner,
         ])
+        for item in self.intervention.management_budgets.items.filter(kind='operational'):
+            worksheet.append([
+                'EEPM Item', item.name, '', '', '', '',
+                item.unit, item.no_units, item.unicef_cash + item.cso_cash,
+            ])
+            budget_items += 1
         worksheet.append([
             '3', 'Planning, monitoring, evaluation, and communication', '',
             self.intervention.management_budgets.act3_partner, self.intervention.management_budgets.act3_unicef,
-            self.intervention.management_budgets.act3_unicef + self.intervention.management_budgets.act3_partner
+            self.intervention.management_budgets.act3_unicef + self.intervention.management_budgets.act3_partner,
         ])
-        self.apply_styles_to_cells(worksheet, worksheet.max_row - 2, 1, worksheet.max_row, 1, [self.fill_gray])
+        for item in self.intervention.management_budgets.items.filter(kind='planning'):
+            worksheet.append([
+                'EEPM Item', item.name, '', '', '', '',
+                item.unit, item.no_units, item.unicef_cash + item.cso_cash,
+            ])
+            budget_items += 1
+        self.apply_styles_to_cells(worksheet, worksheet.max_row - budget_items - 2, 1, worksheet.max_row, 1,
+                                   [self.fill_gray])
         worksheet.append([
             'Overhead cost', 'Applicable {0}%'.format(self.intervention.hq_support_cost),
         ])
@@ -623,7 +653,7 @@ class InterventionXLSRenderer:
         ])
         self.apply_styles_to_cells(worksheet, worksheet.max_row - 1, 1, worksheet.max_row, 1, [self.fill_blue_light])
         self.apply_styles_to_cells(
-            worksheet, worksheet.max_row - activity_rows - 10, 1, worksheet.max_row, 6,
+            worksheet, worksheet.max_row - activity_rows - budget_items - 10, 1, worksheet.max_row, 9,
             [self.border_gray_dark],
         )
 
