@@ -11,10 +11,11 @@ logger = get_task_logger(__name__)
 
 class AzureUserMapper:
 
-    KEY_ATTRIBUTE = 'userPrincipalName'
+    KEY_ATTRIBUTE = 'id'
     SPECIAL_FIELDS = ['country']
 
     REQUIRED_USER_FIELDS = [
+        'id',
         'givenName',
         'userPrincipalName',
         'mail',
@@ -106,8 +107,9 @@ class AzureUserMapper:
         logger.debug(key_value)
 
         try:
+            profile, _ = UserProfile.objects.get_or_create(guid=key_value)
             user, created = get_user_model().objects.get_or_create(
-                email=key_value, username=key_value, defaults={'is_staff': True})
+                profile=profile, defaults={'is_staff': True})
 
             if created:
                 status['created'] = int(created)
@@ -115,7 +117,6 @@ class AzureUserMapper:
                 user.groups.add(self.groups['UNICEF User'])
                 logger.info('Group added to user {}'.format(user))
 
-            profile, _ = UserProfile.objects.get_or_create(user=user)
             user_updated = self.update_user(user, record)
             profile_updated = self.update_profile(profile, record)
 

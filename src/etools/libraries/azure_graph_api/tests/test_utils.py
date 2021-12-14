@@ -26,6 +26,7 @@ class TestClient(BaseTenantTestCase):
         user_initial_count = user_qs.count()
         self.assertEqual(user_qs.count(), user_initial_count)
         user_record = {
+            'id': '1234',
             'givenName': 'Joe',
             'mail': 'jdoe@unicef.org',
             'surname': 'Doe',

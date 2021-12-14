@@ -123,6 +123,7 @@ class TestUserMapper(BaseTenantTestCase):
         """Ensure user is created and added to default group"""
         email = "tester@example.com"
         res = self.mapper.create_or_update_user({
+            "id": "1234",
             "userPrincipalName": email,
             "internetaddress": email,
             "givenName": "Tester",
@@ -149,6 +150,7 @@ class TestUserMapper(BaseTenantTestCase):
             last_name="Last",
         )
         res = self.mapper.create_or_update_user({
+            "id": "1234",
             "userPrincipalName": email,
             "internetaddress": email,
             "givenName": "Tester",
@@ -167,6 +169,7 @@ class TestUserMapper(BaseTenantTestCase):
         email = "tester@example.com"
         phone = "0987654321"
         res = self.mapper.create_or_update_user({
+            "id": "1234",
             "internetaddress": email,
             "userPrincipalName": email,
             "givenName": "Tester",
