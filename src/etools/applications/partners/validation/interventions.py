@@ -167,7 +167,7 @@ def transition_to_signature(i):
 
 
 def transition_to_signed(i):
-    from etools.applications.partners.models import Agreement, InterventionAmendment
+    from etools.applications.partners.models import InterventionAmendment
 
     if i.has_active_amendment(InterventionAmendment.KIND_NORMAL):
         raise TransitionError([_('Cannot Transition status while adding an amendment')])
