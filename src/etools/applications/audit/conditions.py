@@ -13,8 +13,10 @@ class AuditStaffMemberCondition(SimpleCondition):
         self.user = user
 
     def is_satisfied(self):
-        return self.partner.staff_members.exists() and self.user.pk in self.partner.staff_members.values_list(
-            'user', flat=True)
+        return \
+            self.partner and \
+            self.partner.staff_members.exists() and \
+            self.user.pk in self.partner.staff_members.values_list('user', flat=True)
 
 
 class EngagementStaffMemberCondition(SimpleCondition):
