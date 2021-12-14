@@ -917,6 +917,7 @@ class TestManagementBudget(BaseInterventionTestCase):
         )
         item_to_update = InterventionManagementBudgetItemFactory(
             budget=intervention.management_budgets,
+            no_units=1, unit_price=42,
             unicef_cash=22, cso_cash=20,
             name='old',
         )
