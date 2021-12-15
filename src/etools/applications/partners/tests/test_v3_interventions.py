@@ -14,6 +14,7 @@ from django.utils import timezone
 from rest_framework import status
 from unicef_locations.tests.factories import LocationFactory
 from unicef_snapshot.utils import create_dict_with_relations, create_snapshot
+from waffle.utils import get_cache
 
 from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
@@ -452,10 +453,13 @@ class TestDetail(BaseInterventionTestCase):
         )
 
     def test_num_queries(self):
+        # clear waffle cache to avoid queries number incostintency caused by cached tenant flags
+        get_cache().clear()
+
         [InterventionManagementBudgetItemFactory(budget=self.intervention.management_budgets) for _i in range(10)]
 
         # there is a lot of queries, but no duplicates caused by budget items
-        with self.assertNumQueries(46):
+        with self.assertNumQueries(48):
             response = self.forced_auth_req(
                 "get",
                 reverse('pmp_v3:intervention-detail', args=[self.intervention.pk]),
@@ -917,6 +921,7 @@ class TestManagementBudget(BaseInterventionTestCase):
         )
         item_to_update = InterventionManagementBudgetItemFactory(
             budget=intervention.management_budgets,
+            no_units=1, unit_price=42,
             unicef_cash=22, cso_cash=20,
             name='old',
         )
@@ -945,6 +950,49 @@ class TestManagementBudget(BaseInterventionTestCase):
         self.assertEqual(intervention.management_budgets.items.count(), 2)
         self.assertEqual(len(response.data['items']), 2)
         self.assertEqual(InterventionManagementBudgetItem.objects.filter(id=item_to_remove.id).exists(), False)
+
+    def test_budget_validation(self):
+        intervention = InterventionFactory()
+        item_to_update = InterventionManagementBudgetItemFactory(
+            budget=intervention.management_budgets,
+            no_units=1, unit_price=42, unicef_cash=22, cso_cash=20,
+        )
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse("pmp_v3:intervention-budget", args=[intervention.pk]),
+            user=self.user,
+            data={
+                'items': [{'id': item_to_update.id, 'no_units': 2}],
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
+        self.assertIn(
+            'Invalid budget data. Total cash should be equal to items number * price per item.',
+            response.data['items'][0]['non_field_errors'],
+        )
+
+    def test_create_items_fractional_total(self):
+        intervention = InterventionFactory()
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse("pmp_v3:intervention-budget", args=[intervention.pk]),
+            user=self.user,
+            data={
+                'items': [{
+                    'name': 'test',
+                    'kind': InterventionManagementBudgetItem.KIND_CHOICES.planning,
+                    'unit': 'test',
+                    'no_units': 17.9,
+                    'unit_price': 14.89,
+                    'unicef_cash': 4.64,
+                    'cso_cash': 261.89
+                }]
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
 
 
 class TestSupplyItem(BaseInterventionTestCase):
