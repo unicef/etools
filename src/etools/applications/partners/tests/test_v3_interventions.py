@@ -14,6 +14,7 @@ from django.utils import timezone
 from rest_framework import status
 from unicef_locations.tests.factories import LocationFactory
 from unicef_snapshot.utils import create_dict_with_relations, create_snapshot
+from waffle.utils import get_cache
 
 from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
@@ -452,6 +453,9 @@ class TestDetail(BaseInterventionTestCase):
         )
 
     def test_num_queries(self):
+        # clear waffle cache to avoid queries number incostintency caused by cached tenant flags
+        get_cache().clear()
+
         [InterventionManagementBudgetItemFactory(budget=self.intervention.management_budgets) for _i in range(10)]
 
         # there is a lot of queries, but no duplicates caused by budget items
