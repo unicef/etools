@@ -110,6 +110,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
             "country_programme_id",
             "created",
             "date_sent_to_partner",
+            "document_currency",
             "document_type",
             "end",
             "engagement",
@@ -170,7 +171,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
         'active': ['']
     }
     REQUIRED_FIELDS = {
-        'draft': ['number', 'title', 'agreement', 'document_type'],
+        'draft': ['number', 'title', 'agreement', 'document_type', 'document_currency'],
         'signed': [],
         'active': ['']
     }
@@ -791,6 +792,23 @@ class TestInterventionsAPI(BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), pd_qs.count())
+
+    def test_permissions_cash_and_document_type_not_editable_when_locked(self):
+        draft_intervention = InterventionFactory(
+            agreement=self.agreement, status='draft',
+            unicef_accepted=False, partner_accepted=False, unicef_court=True,
+        )
+        draft_intervention.unicef_focal_points.add(self.partnership_manager_user)
+        status_code, response = self.run_request(draft_intervention.id, user=self.partnership_manager_user)
+        self.assertTrue(response['permissions']['edit']['document_type'])
+        self.assertTrue(response['permissions']['edit']['document_currency'])
+        self.assertTrue(response['permissions']['edit']['cash_transfer_modalities'])
+        draft_intervention.partner_accepted = True
+        draft_intervention.save()
+        status_code, response = self.run_request(draft_intervention.id, user=self.partnership_manager_user)
+        self.assertFalse(response['permissions']['edit']['document_type'])
+        self.assertFalse(response['permissions']['edit']['document_currency'])
+        self.assertFalse(response['permissions']['edit']['cash_transfer_modalities'])
 
 
 class TestAPIInterventionResultLinkListView(BaseTenantTestCase):

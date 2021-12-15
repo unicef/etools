@@ -367,10 +367,15 @@ class TestInterventionAmendments(BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertFalse(response.data['permissions']['view']['partner_focal_points'])
+        self.assertFalse(response.data['permissions']['edit']['partner_focal_points'])
         self.assertFalse(response.data['permissions']['view']['unicef_focal_points'])
+        self.assertFalse(response.data['permissions']['edit']['unicef_focal_points'])
         self.assertFalse(response.data['permissions']['view']['planned_visits'])
+        self.assertFalse(response.data['permissions']['edit']['planned_visits'])
         self.assertFalse(response.data['permissions']['view']['frs'])
+        self.assertFalse(response.data['permissions']['edit']['frs'])
         self.assertFalse(response.data['permissions']['view']['attachments'])
+        self.assertFalse(response.data['permissions']['edit']['attachments'])
 
     def test_amendment_prc_no_review_type(self):
         amendment = InterventionAmendmentFactory(intervention=self.active_intervention)
