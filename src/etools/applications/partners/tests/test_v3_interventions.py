@@ -2432,12 +2432,24 @@ class TestInterventionSendToPartner(BaseInterventionActionTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    def test_get(self):
+    def test_unicef_no_access(self):
+        intervention = InterventionFactory()
+        response = self.forced_auth_req(
+            "patch",
+            reverse(
+                'pmp_v3:intervention-send-partner',
+                args=[intervention.pk],
+            ),
+            user=UserFactory(is_staff=True, groups__data=[UNICEF_USER]),
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_patch(self):
         self.intervention.date_sent_to_partner = None
         self.intervention.save()
         self.assertTrue(self.intervention.unicef_court)
         self.assertIsNone(self.intervention.date_sent_to_partner)
-
+        self.intervention.unicef_focal_points.add(self.user)
         # unicef sends PD to partner
         mock_send = mock.Mock(return_value=self.mock_email)
         with mock.patch(self.notify_path, mock_send):
@@ -2481,15 +2493,37 @@ class TestInterventionSendToUNICEF(BaseInterventionActionTestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_partner_no_access(self):
-        intervention = InterventionFactory()
+        partner_user = UserFactory(is_staff=False, groups__data=[])
+        PartnerStaffFactory(email=partner_user.email, user=partner_user)
         response = self.forced_auth_req(
             "patch",
-            reverse('pmp_v3:intervention-accept', args=[intervention.pk]),
-            user=self.partner_user,
+            self.url,
+            user=partner_user,
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    def test_get(self):
+    def test_not_focal_point_no_access(self):
+        partner_user = UserFactory(is_staff=False, groups__data=[])
+        PartnerStaffFactory(email=partner_user.email, user=partner_user, partner=self.partner)
+
+        response = self.forced_auth_req(
+            "patch",
+            self.url,
+            user=partner_user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_unicef_no_access(self):
+        user = UserFactory(is_staff=True, groups__data=[UNICEF_USER])
+        self.intervention.unicef_focal_points.add(self.user)
+        response = self.forced_auth_req(
+            "patch",
+            self.url,
+            user=user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_patch(self):
         self.intervention.unicef_court = False
         self.intervention.date_sent_to_partner = datetime.date.today()
         self.intervention.save()
