@@ -297,6 +297,10 @@ class PMPInterventionCancelView(PMPInterventionActionView):
         pd = self.get_object()
         if pd.status == Intervention.CANCELLED:
             raise ValidationError("PD has already been cancelled.")
+
+        if self.request.user not in pd.unicef_focal_points.all() and self.request.user != pd.budget_owner:
+            raise ValidationError("Only focal points or budget owners can cancel")
+
         request.data.update({"status": Intervention.CANCELLED})
 
         response = super().update(request, *args, **kwargs)
@@ -329,6 +333,9 @@ class PMPInterventionTerminateView(PMPInterventionActionView):
         pd = self.get_object()
         if pd.status == Intervention.TERMINATED:
             raise ValidationError("PD has already been terminated.")
+
+        if self.request.user not in pd.unicef_focal_points.all() and self.request.user != pd.budget_owner:
+            raise ValidationError("Only focal points or budget owners can terminate")
 
         # override status as terminated
         request.data.update({"status": Intervention.TERMINATED})
@@ -363,6 +370,9 @@ class PMPInterventionSuspendView(PMPInterventionActionView):
         if pd.status == Intervention.SUSPENDED:
             raise ValidationError("PD has already been suspended.")
 
+        if self.request.user not in pd.unicef_focal_points.all() and self.request.user != pd.budget_owner:
+            raise ValidationError("Only focal points or budget owners can suspend")
+
         # override status as suspended
         request.data.update({"status": Intervention.SUSPENDED})
         response = super().update(request, *args, **kwargs)
@@ -395,6 +405,9 @@ class PMPInterventionUnsuspendView(PMPInterventionActionView):
         pd = self.get_object()
         if pd.status != Intervention.SUSPENDED:
             raise ValidationError("PD is not suspended.")
+
+        if self.request.user not in pd.unicef_focal_points.all() and self.request.user != pd.budget_owner:
+            raise ValidationError("Only focal points or budget owners can unsuspend")
 
         # override status as active
         request.data.update({"status": Intervention.ACTIVE})
