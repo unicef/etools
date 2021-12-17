@@ -98,7 +98,7 @@ class PMPPermissions:
 class InterventionPermissions(PMPPermissions):
 
     MODEL_NAME = 'partners.Intervention'
-    EXTRA_FIELDS = ['sections_present', 'pd_outputs', 'final_partnership_review', 'prc_reviews']
+    EXTRA_FIELDS = ['sections_present', 'pd_outputs', 'final_partnership_review', 'prc_reviews', 'document_currency']
 
     def __init__(self, **kwargs):
         """
@@ -184,6 +184,7 @@ class InterventionPermissions(PMPPermissions):
             'condition1': self.user in self.instance.unicef_focal_points.all(),
             'condition2': self.user in self.instance.partner_focal_points.all(),
             'contingency on': self.instance.contingency_pd is True,
+            'in_amendment_mode': user_added_amendment(self.instance),
             'not_in_amendment_mode': not user_added_amendment(self.instance),
             'not_ssfa': not_ssfa(self.instance),
             'user_adds_amendment': user_added_amendment(self.instance),

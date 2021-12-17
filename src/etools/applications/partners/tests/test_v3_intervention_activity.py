@@ -277,6 +277,24 @@ class TestFunctionality(BaseTestCase):
 
         check_ordering()
 
+    def test_create_items_fractional_total(self):
+        response = self.forced_auth_req(
+            'post', self.list_url,
+            user=self.user,
+            data={
+                'name': 'test',
+                'items': [{
+                    'name': 'test',
+                    'unit': 'test',
+                    'no_units': 17.9,
+                    'unit_price': 14.89,
+                    'unicef_cash': 4.64,
+                    'cso_cash': 261.89
+                }]
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
+
 
 class TestPermissions(BaseTestCase):
     def test_create_for_unknown_user(self):
