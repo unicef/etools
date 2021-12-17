@@ -73,6 +73,9 @@
             border-bottom: 2pt solid #A0A0A0;
             border-right: 2pt solid #A0A0A0;
           }
+          .small-text {
+              font-size:7pt;
+          }
           td {
             word-break: break-all;
             {#weird paddings fix#}
@@ -84,6 +87,7 @@
           .mt-20 {margin-top: 20pt}
           .mb-5 {margin-bottom: 5pt}
           .w-p4 {width: 4%;}
+          .w-p5 {width: 5%;}
           .w-p8 {width: 8%;}
           .w-p10 {width: 10%;}
           .w-p12 {width: 12.5%;}
@@ -162,7 +166,7 @@
                 <td class="w-p12">Supplies:</td>
                 <td class="w-p12">{{ pd.planned_budget.in_kind_amount_local }}</td>
                 <td class="w-p12">HQ Cash:</td>
-                <td class="w-p12">{{ pd.planned_budget.total_unicef_cash_local_wo_hq }}</td>
+                <td class="w-p12">{{ pd.planned_budget.total_hq_cash_local }}</td>
                 <td class="w-p12">Total:</td>
                 <td class="w-p12">{{ pd.planned_budget.total_unicef_contribution_local }}</td>
               </tr>
@@ -247,9 +251,9 @@
           <tr>
             <td class="b-gray w-p30">Result statement</td>
             <td class="b-gray w-p30">Performance indicator/s</td>
-            <td class="b-gray w-p10">Location</td>
-            <td class="b-gray w-p10">Baseline</td>
-            <td class="b-gray w-p10">Target</td>
+            <td class="b-gray w-p20">Location</td>
+            <td class="b-gray w-p5">Baseline</td>
+            <td class="b-gray w-p5">Target</td>
             <td class="b-gray w-p10">Means of Verification</td>
           </tr>
           {% for result_link in pd.result_links.all %}
@@ -260,35 +264,35 @@
                   <span>{{ indicator.name }}</span><br/>
                 {% endfor %}
               </td>
-              <td class="b-gray w-p10"></td>
-              <td class="b-gray w-p10"></td>
-              <td class="b-gray w-p10"></td>
+              <td class="b-gray w-p20"></td>
+              <td class="b-gray w-p5"></td>
+              <td class="b-gray w-p5"></td>
               <td class="b-gray w-p10"></td>
             </tr>
             {% for pd_output in result_link.ll_results.all %}
             <tr>
-            <td class="w-p30" rowspan={{ pd_output.applied_indicators.count }}>{{ pd_output.name }}</td>
+            <td class="w-p30">{{ pd_output.name }}</td>
               {% for indicator in pd_output.applied_indicators.all %}
                     {%  if not forloop.first %}
-                        <tr>
+                        <td><span> </span></td>
                     {% endif %}
-
                       <td class="w-p30">{{ indicator.indicator.title }}</td>
-                      <td class="w-p10">
+                      <td class="w-p20">
                         {% for location in indicator.locations.all %}
-                          <span>{{ location.name }}</span><br/>
+                          <span class="small-text">{{ location.name }}{%  if not forloop.last %}, {% endif %}
+                          </span>
                         {% endfor %}
                       </td>
-                      <td class="w-p10">{{ indicator.baseline_display_string }}</td>
-                      <td class="w-p10">{{ indicator.target_display_string }}</td>
+                      <td class="w-p5">{{ indicator.baseline_display_string }}</td>
+                      <td class="w-p5">{{ indicator.target_display_string }}</td>
                       <td class="w-p10">{{ indicator.means_of_verification }}</td>
                   </tr>
 
               {% empty %}
                   <td class="w-p30"></td>
-                  <td class="w-p10"></td>
-                  <td class="w-p10"></td>
-                  <td class="w-p10"></td>
+                  <td class="w-p20"></td>
+                  <td class="w-p5"></td>
+                  <td class="w-p5"></td>
                   <td class="w-p10"></td>
 
               {% endfor %}
@@ -440,14 +444,14 @@
           </tr>
           <tr>
             <td>
-              <span>CSO Authorised Name: {% if pd.partner_authorized_officer_signatory %}{{ pd.partner_authorized_officer_signatory.user.first_name }} {{ pd.partner_authorized_officer_signatory.user.last_name }} ({{ pd.partner_authorized_officer_signatory.user.email }}){% endif %}</span><br/>
+              <span>CSO Authorized Officer: </span><br/>
               <span>Signature:</span><br/>
-              <span>Date: {{ pd.signed_by_partner_date }}</span>
+              <span>Date: </span>
             </td>
             <td>
-              <span>UNICEF Authorised Name: {% if pd.unicef_signatory %}{{ pd.unicef_signatory.first_name }} {{ pd.unicef_signatory.last_name }} ({{ pd.unicef_signatory.email }}){% endif %}</span><br/>
+              <span>UNICEF Authorized Officer: </span><br/>
               <span>Signature:</span><br/>
-              <span>Date: {{ pd.signed_by_unicef_date }}</span>
+              <span>Date: </span>
             </td>
           </tr>
         <tbody>

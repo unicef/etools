@@ -98,7 +98,7 @@ class PMPPermissions:
 class InterventionPermissions(PMPPermissions):
 
     MODEL_NAME = 'partners.Intervention'
-    EXTRA_FIELDS = ['sections_present', 'pd_outputs', 'final_partnership_review', 'prc_reviews']
+    EXTRA_FIELDS = ['sections_present', 'pd_outputs', 'final_partnership_review', 'prc_reviews', 'document_currency']
 
     def __init__(self, **kwargs):
         """
@@ -162,6 +162,13 @@ class InterventionPermissions(PMPPermissions):
 
         if self.user.is_staff and self.user in self.instance.unicef_focal_points.all():
             self.user_groups.append("Unicef Focal Point")
+        if self.user.is_staff and self.instance.budget_owner and self.user == self.instance.budget_owner:
+            self.user_groups.append("Unicef Budget Owner")
+        if self.user.is_staff and self.user in self.instance.unicef_users_involved:
+            self.user_groups.append("Unicef Users Involved")
+
+        if self.user.is_staff and self.instance.budget_owner and self.user == self.instance.budget_owner:
+            self.user_groups.append("Unicef Budget Owner")
 
         review = self.instance.review
         if review:
@@ -177,6 +184,7 @@ class InterventionPermissions(PMPPermissions):
             'condition1': self.user in self.instance.unicef_focal_points.all(),
             'condition2': self.user in self.instance.partner_focal_points.all(),
             'contingency on': self.instance.contingency_pd is True,
+            'in_amendment_mode': user_added_amendment(self.instance),
             'not_in_amendment_mode': not user_added_amendment(self.instance),
             'not_ssfa': not_ssfa(self.instance),
             'user_adds_amendment': user_added_amendment(self.instance),

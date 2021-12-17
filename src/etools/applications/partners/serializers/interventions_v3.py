@@ -4,6 +4,7 @@ import decimal
 
 from django.contrib.auth import get_user_model
 from django.db import transaction
+from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -126,6 +127,10 @@ class InterventionSupplyItemUploadSerializer(serializers.Serializer):
 
 
 class InterventionManagementBudgetItemSerializer(serializers.ModelSerializer):
+    default_error_messages = {
+        'invalid_budget': _('Invalid budget data. Total cash should be equal to items number * price per item.')
+    }
+
     id = serializers.IntegerField(required=False)
 
     class Meta:
@@ -135,6 +140,24 @@ class InterventionManagementBudgetItemSerializer(serializers.ModelSerializer):
             'unit', 'unit_price', 'no_units',
             'unicef_cash', 'cso_cash'
         )
+
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+
+        instance = None
+        if 'id' in attrs:
+            instance = self.Meta.model.objects.filter(id=attrs['id']).first()
+
+        unit_price = attrs.get('unit_price', instance.unit_price if instance else None)
+        no_units = attrs.get('no_units', instance.no_units if instance else None)
+        unicef_cash = attrs.get('unicef_cash', instance.unicef_cash if instance else None)
+        cso_cash = attrs.get('cso_cash', instance.cso_cash if instance else None)
+
+        # unit_price * no_units can contain more decimal places than we're able to save
+        if abs((unit_price * no_units) - (unicef_cash + cso_cash)) > 0.01:
+            self.fail('invalid_budget')
+
+        return attrs
 
 
 class InterventionManagementBudgetSerializer(serializers.ModelSerializer):
@@ -361,12 +384,14 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "download_comments",
             "export_results",
             "export_pdf",
+            "export_xls",
             "amendment_merge",
         ]
         available_actions = [
             "download_comments",
             "export_results",
             "export_pdf",
+            "export_xls",
         ]
         user = self.context['request'].user
 
@@ -418,7 +443,8 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
 
             # any unicef focal point user
             if user in obj.unicef_focal_points.all():
-                available_actions.append("send_to_partner")
+                if not obj.partner_accepted:
+                    available_actions.append("send_to_partner")
                 available_actions.append("cancel")
                 if obj.partner_accepted:
                     available_actions.append("unlock")

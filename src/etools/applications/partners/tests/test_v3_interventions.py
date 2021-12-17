@@ -14,6 +14,7 @@ from django.utils import timezone
 from rest_framework import status
 from unicef_locations.tests.factories import LocationFactory
 from unicef_snapshot.utils import create_dict_with_relations, create_snapshot
+from waffle.utils import get_cache
 
 from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
@@ -238,37 +239,35 @@ class TestList(BaseInterventionTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
 
-    def test_filter_sent_to_partner(self):
+    def test_filter_editable_by_partner(self):
+        InterventionFactory(unicef_court=True)
+        InterventionFactory(unicef_court=False, date_sent_to_partner=None)
         for __ in range(3):
-            intervention = InterventionFactory()
+            InterventionFactory(unicef_court=False, date_sent_to_partner=timezone.now().date())
+
         response = self.forced_auth_req(
-            "get",
+            'get',
             reverse('pmp_v3:intervention-list'),
             user=self.user,
+            data={'editable_by': 'partner'},
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 3)
 
-        # set sent_to_partner filter
-        with mock.patch(PRP_PARTNER_SYNC, mock.Mock()):
-            intervention.date_sent_to_partner = datetime.date.today()
-            intervention.save()
-
-        self.assertEqual(
-            Intervention.objects.filter(
-                date_sent_to_partner__isnull=False,
-            ).count(),
-            1,
-        )
+    def test_filter_editable_by_unicef(self):
+        InterventionFactory(unicef_court=True, date_sent_to_partner=None)
+        InterventionFactory(unicef_court=False)
+        for __ in range(3):
+            InterventionFactory(unicef_court=True, date_sent_to_partner=timezone.now().date())
 
         response = self.forced_auth_req(
-            "get",
+            'get',
             reverse('pmp_v3:intervention-list'),
             user=self.user,
-            data={"sent_to_partner": True}
+            data={'editable_by': 'unicef'},
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
+        self.assertEqual(len(response.data), 4)
 
     def test_updated_country_programmes_field_in_use(self):
         intervention = InterventionFactory()
@@ -448,13 +447,19 @@ class TestDetail(BaseInterventionTestCase):
             user=self.user
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertListEqual(['download_comments', 'export_results', 'export_pdf'], response.data["available_actions"])
+        self.assertListEqual(
+            ['download_comments', 'export_results', 'export_pdf', 'export_xls'],
+            response.data["available_actions"],
+        )
 
     def test_num_queries(self):
+        # clear waffle cache to avoid queries number incostintency caused by cached tenant flags
+        get_cache().clear()
+
         [InterventionManagementBudgetItemFactory(budget=self.intervention.management_budgets) for _i in range(10)]
 
         # there is a lot of queries, but no duplicates caused by budget items
-        with self.assertNumQueries(46):
+        with self.assertNumQueries(48):
             response = self.forced_auth_req(
                 "get",
                 reverse('pmp_v3:intervention-detail', args=[self.intervention.pk]),
@@ -916,6 +921,7 @@ class TestManagementBudget(BaseInterventionTestCase):
         )
         item_to_update = InterventionManagementBudgetItemFactory(
             budget=intervention.management_budgets,
+            no_units=1, unit_price=42,
             unicef_cash=22, cso_cash=20,
             name='old',
         )
@@ -944,6 +950,49 @@ class TestManagementBudget(BaseInterventionTestCase):
         self.assertEqual(intervention.management_budgets.items.count(), 2)
         self.assertEqual(len(response.data['items']), 2)
         self.assertEqual(InterventionManagementBudgetItem.objects.filter(id=item_to_remove.id).exists(), False)
+
+    def test_budget_validation(self):
+        intervention = InterventionFactory()
+        item_to_update = InterventionManagementBudgetItemFactory(
+            budget=intervention.management_budgets,
+            no_units=1, unit_price=42, unicef_cash=22, cso_cash=20,
+        )
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse("pmp_v3:intervention-budget", args=[intervention.pk]),
+            user=self.user,
+            data={
+                'items': [{'id': item_to_update.id, 'no_units': 2}],
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
+        self.assertIn(
+            'Invalid budget data. Total cash should be equal to items number * price per item.',
+            response.data['items'][0]['non_field_errors'],
+        )
+
+    def test_create_items_fractional_total(self):
+        intervention = InterventionFactory()
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse("pmp_v3:intervention-budget", args=[intervention.pk]),
+            user=self.user,
+            data={
+                'items': [{
+                    'name': 'test',
+                    'kind': InterventionManagementBudgetItem.KIND_CHOICES.planning,
+                    'unit': 'test',
+                    'no_units': 17.9,
+                    'unit_price': 14.89,
+                    'unicef_cash': 4.64,
+                    'cso_cash': 261.89
+                }]
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
 
 
 class TestSupplyItem(BaseInterventionTestCase):
@@ -1673,6 +1722,22 @@ class TestInterventionAcceptBehalfOfPartner(BaseInterventionActionTestCase):
         self.assertEqual(self.intervention.partner_accepted, True)
         self.assertEqual(self.intervention.unicef_accepted, False)
         self.assertEqual(self.intervention.submission_date, timezone.now().date())
+
+    def test_submission_date_not_changed_if_set(self):
+        self.intervention.unicef_accepted = True
+        self.intervention.partner_accepted = False
+        self.intervention.unicef_court = True
+        self.intervention.submission_date = timezone.now().date() - datetime.timedelta(days=1)
+        self.intervention.save()
+
+        response = self.forced_auth_req(
+            "patch",
+            self.url,
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.intervention.refresh_from_db()
+        self.assertEqual(self.intervention.submission_date, timezone.now().date() - datetime.timedelta(days=1))
 
 
 class TestInterventionReview(BaseInterventionActionTestCase):

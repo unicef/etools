@@ -106,6 +106,33 @@ class TestFunctionality(BaseTestCase):
         self.assertEqual(response.data['cso_cash'], '6.20')
         self.assertEqual(response.data['partner_percentage'], '67.39')  # cso_cash / (unicef_cash + cso_cash)
 
+    def test_set_bad_cash_values_having_items(self):
+        InterventionActivityItemFactory(activity=self.activity, unicef_cash=8, cso_cash=5)
+        response = self.forced_auth_req(
+            'patch', self.detail_url,
+            user=self.user,
+            data={
+                'unicef_cash': 1,
+                'cso_cash': 1,
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['unicef_cash'], '8.00')
+        self.assertEqual(response.data['cso_cash'], '5.00')
+
+    def test_set_cash_values_having_no_items(self):
+        response = self.forced_auth_req(
+            'patch', self.detail_url,
+            user=self.user,
+            data={
+                'unicef_cash': 1,
+                'cso_cash': 1,
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['unicef_cash'], '1.00')
+        self.assertEqual(response.data['cso_cash'], '1.00')
+
     def test_set_items(self):
         item_to_remove = InterventionActivityItemFactory(
             activity=self.activity,
@@ -249,6 +276,24 @@ class TestFunctionality(BaseTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         check_ordering()
+
+    def test_create_items_fractional_total(self):
+        response = self.forced_auth_req(
+            'post', self.list_url,
+            user=self.user,
+            data={
+                'name': 'test',
+                'items': [{
+                    'name': 'test',
+                    'unit': 'test',
+                    'no_units': 17.9,
+                    'unit_price': 14.89,
+                    'unicef_cash': 4.64,
+                    'cso_cash': 261.89
+                }]
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
 
 
 class TestPermissions(BaseTestCase):

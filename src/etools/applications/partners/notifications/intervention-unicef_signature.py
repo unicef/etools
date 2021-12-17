@@ -5,7 +5,7 @@ defaults = {
     "content": """
     Dear Colleague,
 
-    PD {{reference_number}} has been marked for signature by UNICEF
+    PD {{reference_number}} is ready to be signed. Please download it at the following link:
 
     {{pd_link}}
 
@@ -16,7 +16,7 @@ defaults = {
     {% block content %}
     Dear Colleague,<br /><br />
 
-    PD {{reference_number}} has been marked for signature by UNICEF
+    PD {{reference_number}} is ready to be signed. Please download it at the following link:
 
     {{pd_link}}<br />
 

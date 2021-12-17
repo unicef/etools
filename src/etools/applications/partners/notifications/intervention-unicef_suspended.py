@@ -1,7 +1,7 @@
 name = "partners/intervention/unicef_suspended"
 defaults = {
     "description": "UNICEF Suspended PD",
-    "subject": "[eTools] UNICEF Suspended PD",
+    "subject": "[eTools] UNICEF has suspended a PD",
     "content": """
     Dear Colleague,
 

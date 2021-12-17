@@ -1,11 +1,11 @@
 name = "partners/intervention/send_to_partner"
 defaults = {
-    "description": "Send PD to Partner",
-    "subject": "[eTools] PD Open for Updates by Partner",
+    "description": "PD sent to Partner",
+    "subject": "[eTools] PD sent to Partner",
     "content": """
     Dear Colleague,
 
-    PD {{reference_number}} now with {{ partner_name }}
+    PD {{reference_number}} has been sent to {{ partner_name }}
 
     {{pd_link}}
 
@@ -17,7 +17,7 @@ defaults = {
     {% block content %}
     Dear Colleague,<br /><br />
 
-    PD {{reference_number}} now with {{ partner_name }}
+    PD {{reference_number}} has been sent to {{ partner_name }}
 
     {{pd_link}}<br />
 
