@@ -23,6 +23,7 @@ from etools.applications.partners.views.interventions_v3 import (
     PMPInterventionSupplyItemListCreateView,
     PMPInterventionSupplyItemRetrieveUpdateView,
     PMPInterventionSupplyItemUploadView,
+    PMPInterventionXLSView,
     PMPOfficerReviewDetailView,
     PMPOfficerReviewListView,
     PMPReviewDetailView,
@@ -84,6 +85,11 @@ urlpatterns = [
         'interventions/<int:pk>/pdf/',
         view=PMPInterventionPDFView.as_view(http_method_names=['get']),
         name='intervention-detail-pdf',
+    ),
+    path(
+        'interventions/<int:pk>/xls/',
+        view=PMPInterventionXLSView.as_view(http_method_names=['get']),
+        name='intervention-detail-xls',
     ),
     path(
         'interventions/<int:pk>/delete/',

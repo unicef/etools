@@ -2,6 +2,7 @@ from copy import copy
 
 from django.conf import settings
 from django.db import transaction
+from django.http import HttpResponse
 from django.utils.translation import ugettext_lazy as _
 
 from easy_pdf.rendering import render_to_pdf_response
@@ -25,6 +26,8 @@ from rest_framework.views import APIView
 from unicef_djangolib.fields import CURRENCY_LIST
 
 from etools.applications.field_monitoring.permissions import IsEditAction, IsReadAction
+from etools.applications.partners.exports_v2 import InterventionXLSRenderer
+from etools.applications.partners.filters import InterventionEditableByFilter
 from etools.applications.partners.models import (
     Intervention,
     InterventionAttachment,
@@ -119,9 +122,9 @@ class PMPInterventionListCreateView(PMPInterventionMixin, InterventionListAPIVie
         'number__icontains',
         'cfei_number__icontains',
     )
-    filters = InterventionListAPIView.filters + [
-        ('sent_to_partner', 'date_sent_to_partner__isnotnull'),
-    ]
+    filter_backends = InterventionListAPIView.filter_backends + (
+        InterventionEditableByFilter,
+    )
 
     def get_serializer_class(self):
         if self.request.method == "GET":
@@ -207,6 +210,19 @@ class PMPInterventionPDFView(PMPInterventionMixin, RetrieveAPIView):
         }
 
         return render_to_pdf_response(request, "pd/detail.html", data, filename=f'{str(pd)}.pdf')
+
+
+class PMPInterventionXLSView(PMPInterventionMixin, RetrieveAPIView):
+    queryset = Intervention.objects.detail_qs().all()
+    permission_classes = (IsAuthenticated, PMPInterventionPermission,)
+
+    def get(self, request, *args, **kwargs):
+        pd = self.get_pd_or_404(self.kwargs.get("pk"))
+        pd = self.get_queryset().get(pk=pd.pk)
+
+        return HttpResponse(content=InterventionXLSRenderer(pd).render(), headers={
+            'Content-Disposition': 'attachment;filename={}.xlsx'.format(str(pd))
+        })
 
 
 class PMPInterventionDeleteView(PMPInterventionMixin, InterventionDeleteView):

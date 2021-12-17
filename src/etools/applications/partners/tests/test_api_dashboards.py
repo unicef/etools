@@ -1,6 +1,7 @@
 import datetime
 import json
 
+from django.core.management import call_command
 from django.urls import reverse
 
 from rest_framework import status
@@ -27,6 +28,7 @@ class TestInterventionPartnershipDashView(BaseTenantTestCase):
         cls.intervention = InterventionFactory(status=Intervention.SIGNED)
         InterventionFactory(status=Intervention.DRAFT)
         cls.file_type = FileTypeFactory(name=FileType.FINAL_PARTNERSHIP_REVIEW)
+        call_command('update_notifications')
 
     def test_get(self):
         response = self.forced_auth_req(
