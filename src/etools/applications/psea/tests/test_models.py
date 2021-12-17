@@ -1,3 +1,4 @@
+from django.core.management import call_command
 from django.db import connection
 from django.utils import timezone
 
@@ -224,6 +225,10 @@ class TestAssessmentStatusHistory(BaseTenantTestCase):
 
 
 class TestAssessmentActionPoint(BaseTenantTestCase):
+
+    def setUp(self):
+        call_command('update_notifications')
+
     def test_get_mail_context(self):
         user = UserFactory()
         assessment = AssessmentFactory()

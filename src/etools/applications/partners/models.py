@@ -2349,6 +2349,10 @@ class Intervention(TimeStampedModel):
         # to be used only to track changes in validator mixin
         return self.attachments.filter(type__name=FileType.FINAL_PARTNERSHIP_REVIEW, active=True)
 
+    @property
+    def document_currency(self):
+        return self.planned_budget.currency
+
     def illegal_transitions(self):
         return False
 
@@ -2843,6 +2847,9 @@ class InterventionResultLink(TimeStampedModel):
     ram_indicators = models.ManyToManyField(Indicator, blank=True, verbose_name=_('RAM Indicators'))
 
     tracker = FieldTracker()
+
+    class Meta:
+        unique_together = ['intervention', 'cp_output']
 
     def __str__(self):
         return '{} {}'.format(

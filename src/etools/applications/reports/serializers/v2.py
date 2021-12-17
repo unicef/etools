@@ -534,7 +534,8 @@ class InterventionActivityItemSerializer(serializers.ModelSerializer):
         unicef_cash = attrs.get('unicef_cash', instance.unicef_cash if instance else None)
         cso_cash = attrs.get('cso_cash', instance.cso_cash if instance else None)
 
-        if unit_price * no_units != unicef_cash + cso_cash:
+        # unit_price * no_units can contain more decimal places than we're able to save
+        if abs((unit_price * no_units) - (unicef_cash + cso_cash)) > 0.01:
             self.fail('invalid_budget')
 
         return attrs
@@ -573,6 +574,15 @@ class InterventionActivityDetailSerializer(serializers.ModelSerializer):
     def __init__(self, *args, **kwargs):
         self.intervention = kwargs.pop('intervention')
         super().__init__(*args, **kwargs)
+
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+        if self.instance and self.partial and 'items' not in attrs and self.instance.items.exists():
+            # when we do partial update for activity having items attached without items provided in request
+            # it's easy to break total values, so we ignore them
+            attrs.pop('unicef_cash', None)
+            attrs.pop('cso_cash', None)
+        return attrs
 
     @transaction.atomic
     def create(self, validated_data):
