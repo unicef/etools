@@ -203,32 +203,32 @@
           <td class="b-navy">Strategy</td>
         </tr>
         <tr>
-          <td class=""><span class="bold">Context:</span> {{ pd.context }}</td>
+          <td class=""><span class="bold">Context:</span> {{ pd.context|escape|linebreaks }}</td>
         </tr>
         <tr>
           <td class=""><span
-              class="bold">Implementation Strategy & Technical Guidance:</span> {{ pd.implementation_strategy }}
+              class="bold">Implementation Strategy & Technical Guidance:</span> {{ pd.implementation_strategy|escape|linebreaks }}
           </td>
         </tr>
         <tr>
-          <td class=""><span class="bold">Capacity Development:</span> {{ pd.capacity_development }}</td>
+          <td class=""><span class="bold">Capacity Development:</span> {{ pd.capacity_development|escape|linebreaks }}</td>
         </tr>
         <tr>
-          <td class=""><span class="bold">Other Partners involved:</span> {{ pd.other_partners_involved }}</td>
+          <td class=""><span class="bold">Other Partners involved:</span> {{ pd.other_partners_involved|escape|linebreaks }}</td>
         </tr>
         <tr>
           <td class=""><span class="bold">Gender Rating: </span>{{ pd.get_gender_rating_display }} <br>
-            {{ pd.gender_narrative }}
+            {{ pd.gender_narrative|escape|linebreaks }}
           </td>
         </tr>
         <tr>
           <td class=""><span class="bold">Equity Rating:</span> {{ pd.get_equity_rating_display }} <br>
-            {{ pd.equity_narrative }}
+            {{ pd.equity_narrative|escape|linebreaks }}
           </td>
         </tr>
         <tr>
           <td class=""><span class="bold">Sustainability Rating:</span> {{ pd.get_sustainability_rating_display }} <br>
-            {{ pd.sustainability_narrative }}
+            {{ pd.sustainability_narrative|escape|linebreaks }}
           </td>
         </tr>
         <tr>
@@ -424,7 +424,7 @@
         </tr>
         <tr>
           <td class="b-gray w-p20">Partner non-financial contribution</td>
-          <td>{{ pd.ip_program_contribution }}</td>
+          <td>{{ pd.ip_program_contribution|escape|linebreaks }}</td>
         </tr>
         <tr>
           <td class="b-gray w-p20">Cash Transfer modality</td>
