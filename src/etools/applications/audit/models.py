@@ -450,7 +450,7 @@ class SpotCheck(Engagement):
     @transition('status', source=Engagement.STATUSES.report_submitted, target=Engagement.STATUSES.final,
                 permission=has_action_permission(action='finalize'))
     def finalize(self, *args, **kwargs):
-        self.partner.spot_checks(update_one=True, event_date=self.date_of_draft_report_to_ip)
+        self.partner.update_spot_checks(update_one=True, event_date=self.date_of_draft_report_to_ip)
         return super().finalize(*args, **kwargs)
 
     def get_object_url(self, **kwargs):
@@ -678,7 +678,7 @@ class Audit(Engagement):
     @transition('status', source=Engagement.STATUSES.report_submitted, target=Engagement.STATUSES.final,
                 permission=has_action_permission(action='finalize'))
     def finalize(self, *args, **kwargs):
-        self.partner.audits_completed(update_one=True)
+        self.partner.update_audits_completed(update_one=True)
         return super().finalize(*args, **kwargs)
 
     def get_object_url(self, **kwargs):
@@ -789,7 +789,7 @@ class SpecialAudit(Engagement):
     @transition('status', source=Engagement.STATUSES.report_submitted, target=Engagement.STATUSES.final,
                 permission=has_action_permission(action='finalize'))
     def finalize(self, *args, **kwargs):
-        self.partner.audits_completed(update_one=True)
+        self.partner.update_audits_completed(update_one=True)
         return super().finalize(*args, **kwargs)
 
     def get_object_url(self, **kwargs):
