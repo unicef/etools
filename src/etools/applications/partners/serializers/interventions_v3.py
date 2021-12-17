@@ -24,6 +24,7 @@ from etools.applications.partners.models import (
 from etools.applications.partners.permissions import (
     InterventionPermissions,
     PARTNERSHIP_MANAGER_GROUP,
+    REPRESENTATIVE_OFFICE_GROUP,
     SENIOR_MANAGEMENT_GROUP,
 )
 from etools.applications.partners.serializers.interventions_v2 import (
@@ -354,6 +355,13 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             profile__country=self.context['request'].user.profile.country
         ).exists()
 
+    def _is_representative_office_manager(self):
+        return get_user_model().objects.filter(
+            pk=self.context['request'].user.pk,
+            groups__name__in=[REPRESENTATIVE_OFFICE_GROUP],
+            profile__country=self.context['request'].user.profile.country
+        ).exists()
+
     def _is_overall_approver(self, obj, user):
         if not obj.review:
             return False
@@ -386,6 +394,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "export_pdf",
             "export_xls",
             "amendment_merge",
+            "delete",
         ]
         available_actions = [
             "download_comments",
@@ -394,6 +403,10 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "export_xls",
         ]
         user = self.context['request'].user
+
+        if obj.status == obj.DRAFT and not obj.date_sent_to_partner:
+            if self._is_management() or self._is_partnership_manager() or self._is_representative_office_manager():
+                available_actions.append("delete")
 
         # Partnership Manager
         if self._is_partnership_manager():

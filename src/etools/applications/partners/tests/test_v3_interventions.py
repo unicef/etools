@@ -759,6 +759,62 @@ class TestDelete(BaseInterventionTestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(self.intervention_qs.exists())
 
+    def test_with_date_sent_to_partner(self):
+        self.intervention.date_sent_to_partner = timezone.now().date()
+        self.intervention.save()
+
+        response = self.forced_auth_req(
+            "delete",
+            reverse('pmp_v3:intervention-delete', args=[self.intervention.pk]),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("PD has already been sent to Partner.", response.data[0])
+
+    def test_with_status_not_draft(self):
+        self.intervention.status = Intervention.ACTIVE
+        self.intervention.save()
+
+        response = self.forced_auth_req(
+            "delete",
+            reverse('pmp_v3:intervention-delete', args=[self.intervention.pk]),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Cannot delete a PD or SSFA that is not Draft", response.data[0])
+
+    def test_with_status_not_draft_in_history(self):
+        pre_save = create_dict_with_relations(self.intervention)
+        self.intervention.status = Intervention.ACTIVE
+        self.intervention.save()
+        create_snapshot(self.intervention, pre_save, self.user)
+        self.intervention.status = Intervention.DRAFT
+        self.intervention.save()
+
+        response = self.forced_auth_req(
+            "delete",
+            reverse('pmp_v3:intervention-delete', args=[self.intervention.pk]),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Cannot delete a PD or SSFA that was manually moved back to Draft", response.data[0])
+
+    def test_with_status_sent_to_partner_in_history(self):
+        pre_save = create_dict_with_relations(self.intervention)
+        self.intervention.date_sent_to_partner = timezone.now().date()
+        self.intervention.save()
+        create_snapshot(self.intervention, pre_save, self.user)
+        self.intervention.date_sent_to_partner = None
+        self.intervention.save()
+
+        response = self.forced_auth_req(
+            "delete",
+            reverse('pmp_v3:intervention-delete', args=[self.intervention.pk]),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("PD has already been sent to Partner.", response.data[0])
+
     def test_delete_partner(self):
         self.assertTrue(self.intervention_qs.exists())
         response = self.forced_auth_req(
