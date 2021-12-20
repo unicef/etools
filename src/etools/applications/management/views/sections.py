@@ -57,11 +57,11 @@ class SectionsManagementView(viewsets.ViewSet):
         try:
             old_section = request.data['old_section']
             objects_dict = request.data['new_sections']
-
             logger.info('Section Migrate', objects_dict)
+            sections = SectionHandler.close(old_section, objects_dict)
+
         except (KeyError, MigrationException):
             return Response(_('Unable to unpack'), status=status.HTTP_400_BAD_REQUEST)
 
-        sections = SectionHandler.close(old_section, objects_dict)
         data = [{'id': section.id, 'name': section.name} for section in sections]
         return Response(data)
