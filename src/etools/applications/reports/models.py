@@ -836,9 +836,12 @@ class ReportingRequirement(TimeStampedModel):
     class Meta:
         ordering = ("-end_date", )
 
+    def get_report_type_display(self):
+        return dict(self.TYPE_CHOICES).get(self.report_type)
+
     def __str__(self):
         return "{} ({}) {}".format(
-            self.get_report_type_display,
+            self.get_report_type_display(),
             self.report_type,
             self.due_date
         )
