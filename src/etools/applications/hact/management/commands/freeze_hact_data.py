@@ -1,6 +1,8 @@
+import json
 from datetime import datetime
 
 from django.core.management import BaseCommand
+from django.core.serializers.json import DjangoJSONEncoder
 from django.db import transaction
 
 from etools.applications.core.util_scripts import set_country
@@ -78,7 +80,7 @@ class Command(BaseCommand):
             ('Audit Completed', self.get_or_empty(partner_hact, ['audits', 'completed'])),
             ('Audit Outstanding Findings', self.get_or_empty(partner_hact, ['outstanding_findings', ])),
         ]
-        hact_history.partner_values = partner_values
+        hact_history.partner_values = json.dumps(partner_values, cls=DjangoJSONEncoder)
         hact_history.save()
 
     @transaction.atomic
