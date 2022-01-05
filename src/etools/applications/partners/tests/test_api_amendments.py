@@ -445,3 +445,34 @@ class TestInterventionAmendmentDeleteView(BaseTenantTestCase):
             user=self.unicef_staff,
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_delete_active(self):
+        self.intervention.status = 'active'
+        self.intervention.save()
+        response = self.forced_auth_req(
+            'delete',
+            self.url,
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_delete_active_focal_point(self):
+        self.intervention.status = 'active'
+        self.intervention.save()
+        self.intervention.unicef_focal_points.add(self.unicef_staff)
+        response = self.forced_auth_req(
+            'delete',
+            self.url,
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_delete_active_partnership_manager(self):
+        self.intervention.status = 'active'
+        self.intervention.save()
+        response = self.forced_auth_req(
+            'delete',
+            self.url,
+            user=UserFactory(is_staff=True, groups__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)

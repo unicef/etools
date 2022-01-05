@@ -395,8 +395,8 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
         ]
         user = self.context['request'].user
 
-        # Partnership Manager
-        if self._is_partnership_manager():
+        # focal point or budget owner
+        if self._is_unicef_focal_point(obj, user) or obj.budget_owner == user:
             # amendments should be deleted instead of moving to cancelled/terminated
             if not obj.in_amendment:
                 if obj.status in [obj.SIGNED, obj.ACTIVE, obj.IMPLEMENTED, obj.SUSPENDED]:
@@ -442,7 +442,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
                     available_actions.append("review")
 
             # any unicef focal point user
-            if user in obj.unicef_focal_points.all():
+            if user in obj.unicef_focal_points.all() or obj.budget_owner == user:
                 if not obj.partner_accepted:
                     available_actions.append("send_to_partner")
                 available_actions.append("cancel")
