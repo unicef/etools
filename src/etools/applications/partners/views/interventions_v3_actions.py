@@ -261,6 +261,12 @@ class PMPInterventionReviewView(PMPInterventionActionView):
                 amendment.save()
             except InterventionAmendment.DoesNotExist:
                 pass
+            except MergeError as ex:
+                raise ValidationError(
+                    f'Merge Error: Amended field was already changed ({ex.field} at {ex.instance}). '
+                    'This can be caused by parallel merged amendment or changed original intervention. '
+                    'Amendment should be re-created.'
+                )
 
         if response.status_code == 200:
             # send notification
@@ -606,7 +612,8 @@ class PMPAmendedInterventionMerge(InterventionDetailAPIView):
         except MergeError as ex:
             raise ValidationError(
                 f'Merge Error: Amended field was already changed ({ex.field} at {ex.instance}). '
-                'This can be caused by parallel merged amendment. Amendment should be re-created.'
+                'This can be caused by parallel merged amendment or changed original intervention. '
+                'Amendment should be re-created.'
             )
 
         return Response(

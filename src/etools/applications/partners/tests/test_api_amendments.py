@@ -398,6 +398,25 @@ class TestInterventionAmendments(BaseTenantTestCase):
         amendment.refresh_from_db()
         self.assertNotEqual({}, amendment.difference)
 
+    def test_amendment_review_original_budget_changed(self):
+        amendment = InterventionAmendmentFactory(intervention=self.active_intervention)
+        amendment.amended_intervention.unicef_accepted = True
+        amendment.amended_intervention.partner_accepted = True
+        amendment.amended_intervention.date_sent_to_partner = timezone.now().date()
+        amendment.amended_intervention.save()
+        amendment.amended_intervention.planned_budget.total_hq_cash_local += 2
+        amendment.amended_intervention.planned_budget.save()
+
+        self.active_intervention.planned_budget.total_hq_cash_local += 1
+        self.active_intervention.planned_budget.save()
+
+        response = self.forced_auth_req(
+            "patch", reverse('pmp_v3:intervention-review', args=[amendment.amended_intervention.pk]),
+            user=self.unicef_staff, data={'review_type': 'no-review'}
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('total_hq_cash_local', response.data[0])
+
 
 class TestInterventionAmendmentDeleteView(BaseTenantTestCase):
     @classmethod
