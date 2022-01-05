@@ -688,26 +688,35 @@ class AppliedIndicator(TimeStampedModel):
     @cached_property
     def target_display_string(self):
         if self.target_display[1] == '-':
-            target = self.target_display[0]
+            target = str(self.target_display[0])
         else:
-            target = '/'.join(self.target_display)
+            target = '/'.join(map(str, self.target_display))
         return target
 
     @cached_property
     def baseline_display(self):
         ind_type = self.indicator.display_type
-        numerator = self.baseline.get('v', self.baseline)
+        if self.baseline is None:
+            numerator = None
+        else:
+            numerator = self.baseline.get('v', self.baseline)
         denominator = '-'
         if ind_type == IndicatorBlueprint.RATIO:
-            denominator = self.baseline.get('d', '')
+            if self.baseline is None:
+                denominator = ''
+            else:
+                denominator = self.baseline.get('d', '')
         return numerator, denominator
 
     @cached_property
     def baseline_display_string(self):
+        if self.baseline_display[0] is None:
+            return _('Unknown')
+
         if self.baseline_display[1] == '-':
-            baseline = self.baseline_display[0]
+            baseline = str(self.baseline_display[0])
         else:
-            baseline = '/'.join(self.baseline_display)
+            baseline = '/'.join(map(str, self.baseline_display))
         return baseline
 
     class Meta:
