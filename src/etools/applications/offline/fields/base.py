@@ -110,7 +110,7 @@ class BaseField(ValidatedStructure):
             except ValidationError as ex:
                 errors.extend(ex.detail)
         if errors:
-            raise ValidationError(set(errors))
+            raise ValidationError(list(set(errors)))
         return value
 
 
