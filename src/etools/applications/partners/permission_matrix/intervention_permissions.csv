@@ -112,6 +112,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.3.2,pd_outputs,*,,*,View,TRUE
 3.3.3,pd_outputs,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
 3.3.2,pd_outputs,Partner User,partner_court,Draft,Edit,TRUE
+3.3.3,pd_outputs,Unicef Focal Point,user_adds_amendment,*,Edit,TRUE
 3.3.3,planned_budget,Unicef Focal Point,,Draft,Edit,TRUE
 3.3.5,planned_budget,Unicef Focal Point,,Signed,Edit,TRUE
 3.9.11,planned_budget,Unicef Focal Point,user_adds_amendment,*,Edit,TRUE
