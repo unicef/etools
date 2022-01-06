@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.utils import timezone
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
@@ -5,75 +7,77 @@ from etools.applications.travel.models import Activity, Trip
 from etools.applications.travel.tests.factories import (
     ActivityFactory,
     ItineraryFactory,
-    ItineraryItemFactory,
     ItineraryStatusHistoryFactory,
     ReportFactory,
+    TripFactory,
 )
 from etools.applications.users.tests.factories import UserFactory
 
 
-class TestItinerary(BaseTenantTestCase):
+class TestTrip(BaseTenantTestCase):
     def test_get_object_url(self):
-        itinerary = ItineraryFactory()
-        self.assertIn(str(itinerary.pk), itinerary.get_object_url())
+        trip = TripFactory()
+        self.assertIn(str(trip.pk), trip.get_object_url())
 
     def test_str(self):
         user = UserFactory()
-        itinerary = ItineraryFactory(traveller=user)
-        self.assertIsNotNone(itinerary.reference_number)
+        trip = TripFactory(traveller=user)
+        self.assertIsNotNone(trip.reference_number)
         self.assertEqual(
-            str(itinerary),
-            f"{user} [Draft] {itinerary.reference_number}",
+            str(trip),
+            f"{user} [Draft] {trip.reference_number}",
         )
 
     def test_get_rejected_comment(self):
-        itinerary = ItineraryFactory()
-        self.assertIsNone(itinerary.get_rejected_comment())
+        trip = TripFactory()
+        self.assertIsNone(trip.get_rejected_comment())
 
         ItineraryStatusHistoryFactory(
-            itinerary=itinerary,
-            status=itinerary.STATUS_REJECTED,
+            trip=trip,
+            status=trip.STATUS_REJECTED,
             comment="Rejected",
         )
-        self.assertEqual(itinerary.get_rejected_comment(), "Rejected")
+        self.assertEqual(trip.get_rejected_comment(), "Rejected")
 
     def test_get_mail_context(self):
         user = UserFactory()
-        itinerary = ItineraryFactory()
-        url = itinerary.get_object_url(user=user)
-        context = itinerary.get_mail_context(user)
-        self.assertEqual(context, {"url": url, "itinerary": itinerary})
+        trip = TripFactory()
+        url = trip.get_object_url(user=user)
+        context = trip.get_mail_context(user)
+        self.assertEqual(context, {"url": url, "trip": trip})
 
     def test_get_mail_context_rejected(self):
         user = UserFactory()
-        itinerary = ItineraryFactory()
-        itinerary.status = itinerary.STATUS_REJECTED
-        itinerary.save()
+        trip = TripFactory()
+        trip.status = trip.STATUS_REJECTED
+        trip.save()
         ItineraryStatusHistoryFactory(
-            itinerary=itinerary,
-            status=itinerary.STATUS_REJECTED,
+            trip=trip,
+            status=trip.STATUS_REJECTED,
             comment="Rejected",
         )
-        url = itinerary.get_object_url(user=user)
-        context = itinerary.get_mail_context(user)
+        url = trip.get_object_url(user=user)
+        context = trip.get_mail_context(user)
         self.assertEqual(
             context,
             {
                 "url": url,
-                "itinerary": itinerary,
+                "trip": trip,
                 "rejected_comment": "Rejected",
             },
         )
 
 
-class TestItineraryItem(BaseTenantTestCase):
+class TestItinerary(BaseTenantTestCase):
     def test_str(self):
-        itinerary = ItineraryFactory()
-        item = ItineraryItemFactory(
-            itinerary=itinerary,
+        trip = TripFactory()
+        item = ItineraryFactory(
+            trip=trip,
             travel_method="Flight",
+            start_date=datetime(2020, 1, 1),
+            end_date=datetime(2020, 1, 3),
         )
-        self.assertEqual(str(item), f"{itinerary} Item Flight")
+        self.assertEqual(str(item), f"{trip} Item 2020-01-01 00:00:00 - 2020-01-03 00:00:00")
 
 
 class TestItineraryStatusHistory(BaseTenantTestCase):
@@ -98,6 +102,5 @@ class TestActivity(BaseTenantTestCase):
 
 class TestReport(BaseTenantTestCase):
     def test_str(self):
-        itinerary = ItineraryFactory()
-        report = ReportFactory(itinerary=itinerary)
-        self.assertEqual(str(report), f"{itinerary} Report")
+        report = ReportFactory()
+        self.assertEqual(str(report), f"{report.trip} Report")

@@ -1,5 +1,4 @@
 from django.conf import settings
-from django.contrib.postgres.fields import JSONField
 from django.db import connection, models, transaction
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
@@ -121,7 +120,7 @@ class Trip(TimeStampedModel):
     )
     # stores information about the visit that will be displayed to the user,
     # the keys are interpretable error codes, that can be generated based on specific logic.
-    user_info_text = JSONField(verbose_name="User Information Text", default=dict, blank=True)
+    user_info_text = models.JSONField(verbose_name="User Information Text", default=dict, blank=True)
 
     class Meta:
         verbose_name = _('Trip')

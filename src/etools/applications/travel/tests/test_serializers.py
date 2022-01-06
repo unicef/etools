@@ -3,7 +3,7 @@ from unittest.mock import Mock
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.travel import serializers
 from etools.applications.travel.models import Trip
-from etools.applications.travel.tests.factories import ItineraryFactory
+from etools.applications.travel.tests.factories import TripFactory
 from etools.applications.users.tests.factories import UserFactory
 
 
@@ -26,60 +26,53 @@ class TestItinerarySerializer(BaseTenantTestCase):
         self.mock_request.user = self.user
 
     def test_get_status_list_default(self):
-        itinerary = ItineraryFactory()
-        status_list = self.serializer.get_status_list(itinerary)
+        trip = TripFactory()
+        status_list = self.serializer.get_status_list(trip)
         self.assertEqual(status_list, expected_status_list([
-            itinerary.STATUS_DRAFT,
-            itinerary.STATUS_SUBMISSION_REVIEW,
-            itinerary.STATUS_SUBMITTED,
-            itinerary.STATUS_APPROVED,
-            itinerary.STATUS_REVIEW,
-            itinerary.STATUS_COMPLETED,
+            trip.STATUS_DRAFT,
+            trip.STATUS_SUBMITTED,
+            trip.STATUS_APPROVED,
+            trip.STATUS_REVIEW,
+            trip.STATUS_COMPLETED,
         ]))
 
     def test_get_status_list_rejected(self):
-        itinerary = ItineraryFactory()
-        itinerary.status = Trip.STATUS_REJECTED
-        itinerary.save()
-        status_list = self.serializer.get_status_list(itinerary)
+        trip = TripFactory()
+        trip.status = Trip.STATUS_REJECTED
+        trip.save()
+        status_list = self.serializer.get_status_list(trip)
         self.assertEqual(status_list, expected_status_list([
-            itinerary.STATUS_DRAFT,
-            itinerary.STATUS_REJECTED,
-            itinerary.STATUS_SUBMISSION_REVIEW,
-            itinerary.STATUS_SUBMITTED,
-            itinerary.STATUS_APPROVED,
-            itinerary.STATUS_REVIEW,
-            itinerary.STATUS_COMPLETED,
+            trip.STATUS_DRAFT,
+            trip.STATUS_REJECTED,
+            trip.STATUS_SUBMITTED,
+            trip.STATUS_APPROVED,
+            trip.STATUS_REVIEW,
+            trip.STATUS_COMPLETED,
         ]))
 
     def test_get_status_list_cancelled(self):
-        itinerary = ItineraryFactory()
-        itinerary.status = Trip.STATUS_CANCELLED
-        itinerary.save()
-        status_list = self.serializer.get_status_list(itinerary)
+        trip = TripFactory()
+        trip.status = Trip.STATUS_CANCELLED
+        trip.save()
+        status_list = self.serializer.get_status_list(trip)
         self.assertEqual(status_list, expected_status_list([
-            itinerary.STATUS_DRAFT,
-            itinerary.STATUS_SUBMISSION_REVIEW,
-            itinerary.STATUS_CANCELLED,
+            trip.STATUS_DRAFT, trip.STATUS_CANCELLED
         ]))
 
     def test_get_available_actions_view_list(self):
-        itinerary = ItineraryFactory()
-        self.assertEqual(itinerary.status, itinerary.STATUS_DRAFT)
+        trip = TripFactory()
+        self.assertEqual(trip.status, trip.STATUS_DRAFT)
         self.serializer.context["view"].action = "list"
         self.assertEqual(
-            self.serializer.get_available_actions(itinerary),
+            self.serializer.get_available_actions(trip),
             [],
         )
 
     def test_get_available_actions_traveller(self):
-        itinerary = ItineraryFactory(traveller=self.user)
+        trip = TripFactory(traveller=self.user)
         mapping = [
-            (Trip.STATUS_DRAFT, ["subreview", "cancel"]),
-            (
-                Trip.STATUS_SUBMISSION_REVIEW,
-                ["revise", "submit", "cancel"],
-            ),
+            (Trip.STATUS_DRAFT, ["submit", "cancel"]),
+            # (Trip.STATUS_SUBMISSION_REVIEW,["revise", "submit", "cancel"]),
             (Trip.STATUS_SUBMITTED, []),
             (Trip.STATUS_REJECTED, ["revise", "cancel"]),
             (Trip.STATUS_APPROVED, ["review", "complete", "cancel"]),
@@ -88,16 +81,16 @@ class TestItinerarySerializer(BaseTenantTestCase):
             (Trip.STATUS_CANCELLED, []),
         ]
         for status, expected in mapping:
-            itinerary.status = status
-            itinerary.save()
-            self.assertEqual(itinerary.status, status)
+            trip.status = status
+            trip.save()
+            self.assertEqual(trip.status, status)
             self.assertEqual(
-                self.serializer.get_available_actions(itinerary),
+                self.serializer.get_available_actions(trip),
                 expected,
             )
 
     def test_get_available_actions_supervisor(self):
-        itinerary = ItineraryFactory(supervisor=self.user)
+        trip = TripFactory(supervisor=self.user)
         mapping = [
             (Trip.STATUS_DRAFT, []),
             (Trip.STATUS_SUBMISSION_REVIEW, []),
@@ -109,10 +102,10 @@ class TestItinerarySerializer(BaseTenantTestCase):
             (Trip.STATUS_CANCELLED, []),
         ]
         for status, expected in mapping:
-            itinerary.status = status
-            itinerary.save()
-            self.assertEqual(itinerary.status, status)
+            trip.status = status
+            trip.save()
+            self.assertEqual(trip.status, status)
             self.assertEqual(
-                self.serializer.get_available_actions(itinerary),
+                self.serializer.get_available_actions(trip),
                 expected,
             )
