@@ -838,7 +838,7 @@ class ReportingRequirement(TimeStampedModel):
 
     def __str__(self):
         return "{} ({}) {}".format(
-            self.get_report_type_display,
+            self.get_report_type_display(),
             self.report_type,
             self.due_date
         )

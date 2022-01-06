@@ -600,7 +600,7 @@ class MonitoringActivity(
         partner_orgs = [aq.partner for aq in aq_qs.all() if aq.partner]
 
         for partner_org in partner_orgs:
-            partner_org.programmatic_visits(event_date=self.end_date, update_one=True)
+            partner_org.update_programmatic_visits(event_date=self.end_date, update_one=True)
 
     def init_offline_blueprints(self):
         MonitoringActivityOfflineSynchronizer(self).initialize_blueprints()

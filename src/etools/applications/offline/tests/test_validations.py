@@ -1,6 +1,5 @@
-from unittest import TestCase
-
-from etools.applications.offline.errors import BadValueError, ValueTypeMismatch
+from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.offline.errors import BadValueError, ValidationError, ValueTypeMismatch
 from etools.applications.offline.validations.numbers import GreaterThanValidation, LessThanValidation
 from etools.applications.offline.validations.text import MaxLengthTextValidation, RegexTextValidation
 
@@ -18,7 +17,7 @@ class TextBasedValidationMixin:
             self.get_validation().validate(1)
 
 
-class TestMaxLengthTextValidation(TextBasedValidationMixin, TestCase):
+class TestMaxLengthTextValidation(TextBasedValidationMixin, BaseTenantTestCase):
     def get_validation(self):
         return MaxLengthTextValidation(max_length=100)
 
@@ -26,11 +25,11 @@ class TestMaxLengthTextValidation(TextBasedValidationMixin, TestCase):
         MaxLengthTextValidation(max_length=100).validate('1' * 100)
 
     def test_invalid_text(self):
-        with self.assertRaises(BadValueError):
+        with self.assertRaises(ValidationError):
             MaxLengthTextValidation(max_length=100).validate('1' * 101)
 
 
-class TestRegexTextValidation(TextBasedValidationMixin, TestCase):
+class TestRegexTextValidation(TextBasedValidationMixin, BaseTenantTestCase):
     def get_validation(self):
         return RegexTextValidation(regex=r'\d{6}\w')
 
@@ -55,7 +54,7 @@ class NumberBasedValidation:
             self.get_validation().validate(None)
 
 
-class TestLessThanValidation(NumberBasedValidation, TestCase):
+class TestLessThanValidation(NumberBasedValidation, BaseTenantTestCase):
     def get_validation(self):
         return LessThanValidation(threshold=42, allow_equality=False)
 
@@ -67,7 +66,7 @@ class TestLessThanValidation(NumberBasedValidation, TestCase):
             self.get_validation().validate(42)
 
 
-class TestLessThanOrEqualValidation(NumberBasedValidation, TestCase):
+class TestLessThanOrEqualValidation(NumberBasedValidation, BaseTenantTestCase):
     def get_validation(self):
         return LessThanValidation(threshold=42, allow_equality=True)
 
@@ -79,7 +78,7 @@ class TestLessThanOrEqualValidation(NumberBasedValidation, TestCase):
             self.get_validation().validate(43)
 
 
-class TestGreaterThanValidation(NumberBasedValidation, TestCase):
+class TestGreaterThanValidation(NumberBasedValidation, BaseTenantTestCase):
     def get_validation(self):
         return GreaterThanValidation(threshold=42, allow_equality=False)
 
@@ -91,7 +90,7 @@ class TestGreaterThanValidation(NumberBasedValidation, TestCase):
             self.get_validation().validate(42)
 
 
-class TestGreaterThanOrEqualValidation(NumberBasedValidation, TestCase):
+class TestGreaterThanOrEqualValidation(NumberBasedValidation, BaseTenantTestCase):
     def get_validation(self):
         return GreaterThanValidation(threshold=42, allow_equality=True)
 
