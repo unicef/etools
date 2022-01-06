@@ -27,7 +27,7 @@ from etools.applications.partners.models import (
     InterventionReview,
     InterventionSupplyItem,
 )
-from etools.applications.partners.permissions import PRC_SECRETARY
+from etools.applications.partners.permissions import PRC_SECRETARY, UNICEF_USER
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
     FileTypeFactory,
@@ -459,7 +459,7 @@ class TestDetail(BaseInterventionTestCase):
         [InterventionManagementBudgetItemFactory(budget=self.intervention.management_budgets) for _i in range(10)]
 
         # there is a lot of queries, but no duplicates caused by budget items
-        with self.assertNumQueries(48):
+        with self.assertNumQueries(47):
             response = self.forced_auth_req(
                 "get",
                 reverse('pmp_v3:intervention-detail', args=[self.intervention.pk]),
@@ -584,14 +584,14 @@ class TestCreate(BaseInterventionTestCase):
             data=data
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        for i in [
-                "context",
-                "implementation_strategy",
-                "ip_program_contribution",
+        for field_name, max_length in [
+            ("context", 7000),
+            ("implementation_strategy", 5000),
+            ("ip_program_contribution", 5000),
         ]:
             self.assertEqual(
-                response.data[i],
-                ["This field is limited to 5000 or less characters."],
+                response.data[field_name],
+                ["This field is limited to {0} or less characters.".format(max_length)],
             )
 
 
@@ -726,6 +726,29 @@ class TestUpdate(BaseInterventionTestCase):
             'signed_by_partner_date', 'partner_authorized_officer_signatory',
         ]:
             self.assertNotIn(field, response.data[0])
+
+    def test_update_context_characters_limitation_ok(self):
+        intervention = InterventionFactory(status=Intervention.DRAFT)
+        intervention.unicef_focal_points.add(self.user)
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+            user=self.user,
+            data={'context': '*' * 7000},
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+
+    def test_update_context_characters_limitation_fail(self):
+        intervention = InterventionFactory(status=Intervention.DRAFT)
+        intervention.unicef_focal_points.add(self.user)
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+            user=self.user,
+            data={'context': '*' * 7001},
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
+        self.assertIn('context', response.data)
 
 
 class TestDelete(BaseInterventionTestCase):
@@ -2002,8 +2025,21 @@ class TestInterventionCancel(BaseInterventionActionTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    def test_unicef_no_access(self):
+        intervention = InterventionFactory()
+        response = self.forced_auth_req(
+            "patch",
+            reverse(
+                'pmp_v3:intervention-cancel',
+                args=[intervention.pk],
+            ),
+            user=UserFactory(is_staff=True, groups__data=[UNICEF_USER]),
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
     def test_patch(self):
         # unicef cancels
+        self.intervention.unicef_focal_points.add(self.user)
         self.assertFalse(self.intervention.unicef_accepted)
         self.assertIsNone(self.intervention.cancel_justification)
         mock_send = mock.Mock(return_value=self.mock_email)
@@ -2073,9 +2109,22 @@ class TestInterventionTerminate(BaseInterventionActionTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    def test_unicef_no_access(self):
+        intervention = InterventionFactory()
+        response = self.forced_auth_req(
+            "patch",
+            reverse(
+                'pmp_v3:intervention-terminate',
+                args=[intervention.pk],
+            ),
+            user=UserFactory(is_staff=True, groups__data=[UNICEF_USER]),
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
     def test_patch(self):
         # unicef terminates
         self.assertFalse(self.intervention.unicef_accepted)
+        self.intervention.unicef_focal_points.add(self.user)
         mock_send = mock.Mock(return_value=self.mock_email)
         with mock.patch(self.notify_path, mock_send):
             response = self.forced_auth_req("patch", self.url, user=self.user)
@@ -2122,10 +2171,23 @@ class TestInterventionSuspend(BaseInterventionActionTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    def test_unicef_no_access(self):
+        intervention = InterventionFactory()
+        response = self.forced_auth_req(
+            "patch",
+            reverse(
+                'pmp_v3:intervention-suspend',
+                args=[intervention.pk],
+            ),
+            user=UserFactory(is_staff=True, groups__data=[UNICEF_USER]),
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
     def test_patch(self):
         # unicef suspends
         self.intervention.date_sent_to_partner = datetime.date.today()
         self.intervention.save()
+        self.intervention.unicef_focal_points.add(self.user)
         self.assertFalse(self.intervention.unicef_accepted)
         mock_send = mock.Mock(return_value=self.mock_email)
         with mock.patch(self.notify_path, mock_send):
@@ -2173,6 +2235,18 @@ class TestInterventionUnsuspend(BaseInterventionActionTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    def test_unicef_no_access(self):
+        intervention = InterventionFactory()
+        response = self.forced_auth_req(
+            "patch",
+            reverse(
+                'pmp_v3:intervention-unsuspend',
+                args=[intervention.pk],
+            ),
+            user=UserFactory(is_staff=True, groups__data=[UNICEF_USER]),
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
     def test_patch(self):
         # unicef unsuspends
         self.intervention.status = self.intervention.SUSPENDED
@@ -2180,6 +2254,7 @@ class TestInterventionUnsuspend(BaseInterventionActionTestCase):
         self.intervention.save()
         self.intervention.management_budgets.act1_unicef = 10.00
         self.intervention.management_budgets.save()
+        self.intervention.unicef_focal_points.add(self.user)
         self.assertFalse(self.intervention.unicef_accepted)
         mock_send = mock.Mock(return_value=self.mock_email)
         with mock.patch(self.notify_path, mock_send):
@@ -2380,12 +2455,24 @@ class TestInterventionSendToPartner(BaseInterventionActionTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    def test_get(self):
+    def test_unicef_no_access(self):
+        intervention = InterventionFactory()
+        response = self.forced_auth_req(
+            "patch",
+            reverse(
+                'pmp_v3:intervention-send-partner',
+                args=[intervention.pk],
+            ),
+            user=UserFactory(is_staff=True, groups__data=[UNICEF_USER]),
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_patch(self):
         self.intervention.date_sent_to_partner = None
         self.intervention.save()
         self.assertTrue(self.intervention.unicef_court)
         self.assertIsNone(self.intervention.date_sent_to_partner)
-
+        self.intervention.unicef_focal_points.add(self.user)
         # unicef sends PD to partner
         mock_send = mock.Mock(return_value=self.mock_email)
         with mock.patch(self.notify_path, mock_send):
@@ -2429,15 +2516,37 @@ class TestInterventionSendToUNICEF(BaseInterventionActionTestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_partner_no_access(self):
-        intervention = InterventionFactory()
+        partner_user = UserFactory(is_staff=False, groups__data=[])
+        PartnerStaffFactory(email=partner_user.email, user=partner_user)
         response = self.forced_auth_req(
             "patch",
-            reverse('pmp_v3:intervention-accept', args=[intervention.pk]),
-            user=self.partner_user,
+            self.url,
+            user=partner_user,
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    def test_get(self):
+    def test_not_focal_point_no_access(self):
+        partner_user = UserFactory(is_staff=False, groups__data=[])
+        PartnerStaffFactory(email=partner_user.email, user=partner_user, partner=self.partner)
+
+        response = self.forced_auth_req(
+            "patch",
+            self.url,
+            user=partner_user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_unicef_no_access(self):
+        user = UserFactory(is_staff=True, groups__data=[UNICEF_USER])
+        self.intervention.unicef_focal_points.add(self.user)
+        response = self.forced_auth_req(
+            "patch",
+            self.url,
+            user=user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_patch(self):
         self.intervention.unicef_court = False
         self.intervention.date_sent_to_partner = datetime.date.today()
         self.intervention.save()
