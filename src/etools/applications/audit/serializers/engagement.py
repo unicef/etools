@@ -175,7 +175,7 @@ class EngagementExportSerializer(serializers.ModelSerializer):
         read_only=True
     )
     status_date = serializers.ReadOnlyField(source='displayed_status_date')
-    unique_id = serializers.ReadOnlyField()
+    reference_number = serializers.ReadOnlyField()
 
     class Meta:
         model = Engagement
@@ -187,7 +187,7 @@ class EngagementExportSerializer(serializers.ModelSerializer):
             'auditor_firm_name',
             'status',
             'status_date',
-            'unique_id',
+            'reference_number',
         )
 
 
@@ -209,7 +209,10 @@ class EngagementLightSerializer(serializers.ModelSerializer):
         read_only=True
     )
     status_date = serializers.ReadOnlyField(source='displayed_status_date', label=_('Date of Status'))
-    unique_id = serializers.ReadOnlyField(label=_('Unique ID'))
+    unique_id = serializers.ReadOnlyField(
+        source="reference_number",
+        label=_('Unique ID'),
+    )
 
     offices = OfficeLightSerializer(many=True)
     sections = SectionSerializer(many=True)

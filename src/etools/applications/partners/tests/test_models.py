@@ -407,7 +407,7 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
             programmatic_q1=1,
             programmatic_q3=3,
         )
-        self.partner_organization.planned_visits_to_hact()
+        self.partner_organization.update_planned_visits_to_hact()
         self.assertEqual(
             self.partner_organization.hact_values['programmatic_visits']['planned']['total'],
             4
@@ -436,13 +436,13 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
             year=year - 1,
             programmatic_q4=2
         )
-        self.partner_organization.planned_visits_to_hact()
+        self.partner_organization.update_planned_visits_to_hact()
         self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['planned']['total'], 4)
         self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['planned']['q3'], 3)
 
     def test_programmatic_visits_update_one(self):
         self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['total'], 0)
-        self.partner_organization.programmatic_visits(
+        self.partner_organization.update_programmatic_visits(
             event_date=datetime.datetime(2013, 5, 26),
             update_one=True
         )
@@ -467,7 +467,7 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
             travel_type=TravelType.PROGRAMME_MONITORING,
             partner=self.partner_organization,
         )
-        self.partner_organization.programmatic_visits()
+        self.partner_organization.update_programmatic_visits()
         self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['total'], 1)
         self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['q1'], 0)
         self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['q2'], 0)
@@ -506,7 +506,7 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
             date=datetime.datetime(datetime.datetime.today().year, 5, 1)
         )
 
-        self.partner_organization.programmatic_visits()
+        self.partner_organization.update_programmatic_visits()
         self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['total'], 2)
         self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['q1'], 0)
         self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['completed']['q2'], 1)
@@ -516,7 +516,7 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
     @freeze_time("2013-12-26")
     def test_spot_checks_update_one(self):
         self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['total'], 0)
-        self.partner_organization.spot_checks(update_one=True)
+        self.partner_organization.update_spot_checks(update_one=True)
         self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['total'], 1)
         self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['q1'], 0)
         self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['q2'], 0)
@@ -526,7 +526,7 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
     @freeze_time("2013-12-26")
     def test_spot_checks_update_one_with_date(self):
         self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['total'], 0)
-        self.partner_organization.spot_checks(
+        self.partner_organization.update_spot_checks(
             update_one=True,
             event_date=datetime.datetime(2013, 5, 12)
         )
@@ -553,7 +553,7 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
             status=Engagement.REPORT_SUBMITTED,
             date_of_draft_report_to_ip=None
         )
-        self.partner_organization.spot_checks()
+        self.partner_organization.update_spot_checks()
         self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['total'], 1)
         self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['q1'], 0)
         self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['q2'], 1)
@@ -563,7 +563,7 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
     @freeze_time("2013-12-26")
     def test_audits_completed_update_one(self):
         self.assertEqual(self.partner_organization.hact_values['audits']['completed'], 0)
-        self.partner_organization.audits_completed(
+        self.partner_organization.update_audits_completed(
             update_one=True,
         )
         self.assertEqual(self.partner_organization.hact_values['audits']['completed'], 1)
@@ -590,7 +590,7 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
             status=Engagement.CANCELLED,
             date_of_draft_report_to_ip=datetime.datetime(datetime.datetime.today().year, 8, 1)
         )
-        self.partner_organization.audits_completed()
+        self.partner_organization.update_audits_completed()
         self.assertEqual(self.partner_organization.hact_values['audits']['completed'], 2)
 
     def test_partner_organization_get_admin_url(self):
@@ -1250,11 +1250,6 @@ class TestPartnerOrganization(BaseTenantTestCase):
         p = models.PartnerOrganization(name="Test Partner Org")
         self.assertEqual(str(p), "Test Partner Org")
 
-    def test_save_exception(self):
-        p = models.PartnerOrganization(name="Test", hact_values="wrong")
-        with self.assertRaises(ValueError):
-            p.save()
-
     def test_save(self):
         p = models.PartnerOrganization(
             name="Test",
@@ -1262,19 +1257,6 @@ class TestPartnerOrganization(BaseTenantTestCase):
         )
         p.save()
         self.assertIsNotNone(p.pk)
-
-    def test_save_hact_is_string(self):
-        p = models.PartnerOrganization(
-            name="Test",
-            hact_values='{"all": "good"}'
-        )
-        self.assertTrue(isinstance(p.hact_values, str),
-                        msg="The type of p.hact_values is %s" % type(p.hact_values))
-        p.save()
-        self.assertIsNotNone(p.pk)
-        # This really is type 'str' in either version of Python
-        self.assertTrue(isinstance(p.hact_values, str), msg="The type of p.hact_values is %s" % type(p.hact_values))
-        self.assertEqual(p.hact_values, '{"all": "good"}')
 
 
 class TestPartnerStaffMember(BaseTenantTestCase):
@@ -1862,8 +1844,7 @@ class TestPlannedEngagement(BaseTenantTestCase):
 
     def test_spot_check_required_with_completed_audit(self):
         partner = PartnerFactory(name="Partner")
-        hact = partner.get_hact_json()
-        hact['audits']['completed'] = 1
+        partner.hact_values['audits']['completed'] = 1
         partner.save()
 
         pe = PlannedEngagementFactory(

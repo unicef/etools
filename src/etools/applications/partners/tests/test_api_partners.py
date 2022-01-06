@@ -623,7 +623,7 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
         self._add_hact_finding_for_activity(activity1)
         self._add_hact_finding_for_activity(activity2)
 
-        self.partner.programmatic_visits()
+        self.partner.update_programmatic_visits()
         response = self.forced_auth_req('get', self.url, user=self.unicef_staff)
         self.assertEqual(response.data['hact_values']['programmatic_visits']['completed'][get_quarter()], 2)
 
@@ -650,7 +650,7 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
 
         MonitoringActivityGroupFactory(partner=self.partner, monitoring_activities=[activity1, activity2])
 
-        self.partner.programmatic_visits()
+        self.partner.update_programmatic_visits()
         response = self.forced_auth_req('get', self.url, user=self.unicef_staff)
         self.assertEqual(response.data['hact_values']['programmatic_visits']['completed'][get_quarter()], 2)
 
@@ -705,7 +705,7 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
             partner=self.partner,
             monitoring_activities=[activity3, activity4]
         )
-        self.partner.programmatic_visits()
+        self.partner.update_programmatic_visits()
         # 2 groups
         response = self.forced_auth_req('get', self.url, user=self.unicef_staff)
         self.assertEqual(response.data['hact_values']['programmatic_visits']['completed'][get_quarter()], 2)

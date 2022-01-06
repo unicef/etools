@@ -42,7 +42,7 @@ class Migration(migrations.Migration):
                 ('modified', model_utils.fields.AutoLastModifiedField(
                     default=django.utils.timezone.now, editable=False, verbose_name='modified')),
                 ('year', models.IntegerField(default=etools.libraries.pythonlib.datetime.get_current_year, verbose_name='Year')),
-                ('partner_values', models.JSONField(
+                ('partner_values', models.JSONField(encoder=etools.libraries.pythonlib.encoders.CustomJSONEncoder,
                     blank=True, null=True, verbose_name='Partner Values')),
             ],
             options={
