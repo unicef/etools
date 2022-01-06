@@ -37,11 +37,11 @@ def update_hact_for_country(business_area_code):
         partners = PartnerOrganization.objects.hact_active()
         for partner in partners:
             logger.debug('Updating Partner {}'.format(partner.name))
-            partner.planned_visits_to_hact()
-            partner.programmatic_visits()
-            partner.spot_checks()
-            partner.audits_completed()
-            partner.hact_support()
+            partner.update_planned_visits_to_hact()
+            partner.update_programmatic_visits()
+            partner.update_spot_checks()
+            partner.update_audits_completed()
+            partner.update_hact_support()
             updated = partner.update_min_requirements()
             if updated:
                 updated_string = ', '.join([updated_dict[item] for item in updated])
