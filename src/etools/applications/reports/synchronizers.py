@@ -303,6 +303,7 @@ class ProgrammeSynchronizer(VisionDataTenantSynchronizer):
             for k in self.DATES:
                 r[k] = datetime.datetime.strptime(r[k], INSIGHT_DATE_FORMAT).date() if r[k] else None
             r['HUMANITARIAN_TAG'] = r['HUMANITARIAN_TAG'] not in ['No', 'None', '0']
+
         return self._clean_records(records)
 
     def _save_records(self, records):
