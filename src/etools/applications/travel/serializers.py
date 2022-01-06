@@ -42,7 +42,7 @@ class ReportSerializer(serializers.ModelSerializer):
     def _add_attachments(self, report):
 
         content_type = ContentType.objects.get_for_model(Report)
-        file_type = FileType.objects.get(code="generic_trip_attachment")
+        file_type = FileType.objects.get(name="generic_trip_attachment")
         used = []
         for initial in self.initial_data.get("attachments"):
             pk = initial["id"]
