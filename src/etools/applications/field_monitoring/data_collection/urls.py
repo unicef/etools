@@ -1,4 +1,4 @@
-from django.conf.urls import include, url
+from django.urls import include, re_path
 
 from rest_framework_nested import routers
 from unicef_restlib.routers import NestedComplexRouter
@@ -29,8 +29,8 @@ checklist_overall_findings_api.register(r'attachments', views.ChecklistOverallAt
 
 app_name = 'field_monitoring_data_collection'
 urlpatterns = [
-    url(r'^', include(checklist_overall_findings_api.urls)),
-    url(r'^', include(checklists_api.urls)),
-    url(r'^', include(activities_api.urls)),
-    url(r'^', include(root_api.urls)),
+    re_path(r'^', include(checklist_overall_findings_api.urls)),
+    re_path(r'^', include(checklists_api.urls)),
+    re_path(r'^', include(activities_api.urls)),
+    re_path(r'^', include(root_api.urls)),
 ]

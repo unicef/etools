@@ -1,4 +1,4 @@
-from django.conf.urls import include, url
+from django.urls import include, re_path
 
 from rest_framework_nested import routers
 from unicef_restlib.routers import NestedComplexRouter
@@ -27,31 +27,31 @@ attachments_api.register(r'report-attachments', views.ReportAttachmentsViewSet, 
 
 app_name = 'audit'
 urlpatterns = [
-    url(r'^', include(auditor_staffmember_api.urls)),
-    url(r'^', include(engagement_action_points_api.urls)),
-    url(r'^', include(attachments_api.urls)),
-    url(r'^', include(root_api.urls)),
-    url(
+    re_path(r'^', include(auditor_staffmember_api.urls)),
+    re_path(r'^', include(engagement_action_points_api.urls)),
+    re_path(r'^', include(attachments_api.urls)),
+    re_path(r'^', include(root_api.urls)),
+    re_path(
         r'^engagement/(?P<object_pk>\d+)/links',
         view=views.EngagementAttachmentLinksView.as_view(),
         name='engagement-links'
     ),
-    url(
+    re_path(
         r'^spot-check/(?P<object_pk>\d+)/links',
         view=views.SpotCheckAttachmentLinksView.as_view(),
         name='spot-check-links'
     ),
-    url(
+    re_path(
         r'^micro-assessment/(?P<object_pk>\d+)/links',
         view=views.MicroAssessmentAttachmentLinksView.as_view(),
         name='micro-assessment-links'
     ),
-    url(
+    re_path(
         r'^audit/(?P<object_pk>\d+)/links',
         view=views.AuditAttachmentLinksView.as_view(),
         name='audit-links'
     ),
-    url(
+    re_path(
         r'^special-audit/(?P<object_pk>\d+)/links',
         view=views.SpecialAuditAttachmentLinksView.as_view(),
         name='special-audit-links'
