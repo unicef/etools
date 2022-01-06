@@ -5,7 +5,7 @@ from xml.etree import ElementTree as ET
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.transaction import atomic
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 
 from celery.utils.log import get_task_logger
 from storages.backends.azure_storage import AzureStorage
@@ -164,7 +164,7 @@ class DSARateUploader:
                 raw = raw.replace(' ', '')  # remove space delimiter
                 n = Decimal(raw)
             except InvalidOperation as e:
-                self.errors['{} (line {})'.format(field, line + 1)] = force_text(e)
+                self.errors['{} (line {})'.format(field, line + 1)] = force_str(e)
                 return None
             else:
                 return n
@@ -177,7 +177,7 @@ class DSARateUploader:
                     year += 2000
                 d = date(year, month, day)
             except ValueError as e:
-                self.errors['{} (line {})'.format(field, line + 1)] = force_text(e)
+                self.errors['{} (line {})'.format(field, line + 1)] = force_str(e)
                 return None
             else:
                 return d
