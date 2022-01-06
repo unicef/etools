@@ -21,7 +21,7 @@ class HactHistory(TimeStampedModel):
         on_delete=models.CASCADE,
     )
     year = models.IntegerField(default=get_current_year, verbose_name=_('Year'))
-    partner_values = models.JSONField(null=True, blank=True, verbose_name=_('Partner Values'))
+    partner_values = models.JSONField(null=True, blank=True, verbose_name=_('Partner Values'), encoder=CustomJSONEncoder)
 
     class Meta:
         unique_together = ('partner', 'year')
