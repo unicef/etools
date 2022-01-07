@@ -1,4 +1,4 @@
-from django.conf.urls import url
+from django.urls import re_path
 
 from etools.applications.users.views_v2 import (
     ChangeUserCountryView,
@@ -11,10 +11,10 @@ from etools.applications.users.views_v2 import (
 
 app_name = 'users'
 urlpatterns = (
-    url(r'^changecountry/$', ChangeUserCountryView.as_view(http_method_names=['post']), name="country-change"),
-    url(r'^$', StaffUsersView.as_view()),
-    url(r'^(?P<pk>\d)/$', UsersDetailAPIView.as_view(http_method_names=['get']), name="user-detail"),
-    url(r'^myprofile/$', MyProfileAPIView.as_view(), name="myprofile-detail"),
-    url(r'^country/$', CountryView.as_view(http_method_names=['get']), name="country-detail"),
-    url(r'^workspaces', CountriesViewSet.as_view(http_method_names=['get']), name="list-workspaces"),
+    re_path(r'^changecountry/$', ChangeUserCountryView.as_view(http_method_names=['post']), name="country-change"),
+    re_path(r'^$', StaffUsersView.as_view()),
+    re_path(r'^(?P<pk>\d)/$', UsersDetailAPIView.as_view(http_method_names=['get']), name="user-detail"),
+    re_path(r'^myprofile/$', MyProfileAPIView.as_view(), name="myprofile-detail"),
+    re_path(r'^country/$', CountryView.as_view(http_method_names=['get']), name="country-detail"),
+    re_path(r'^workspaces', CountriesViewSet.as_view(http_method_names=['get']), name="list-workspaces"),
 )
