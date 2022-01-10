@@ -522,7 +522,7 @@ def epd_pilot_tracking():
 
 
 @app.task
-def fix_inactual_interventions():
+def update_interventions_task_chain():
     # call two tasks above one after another to avoid problems with parallel execution
     # because both of them handle similar cases yet in different way
     transfer_active_pds_to_new_cp()

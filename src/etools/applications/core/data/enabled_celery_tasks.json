@@ -391,7 +391,7 @@
     "pk": 16,
     "fields": {
       "name": "Transition active PD to new CP & expire rest of them",
-      "task": "etools.applications.partners.tasks.fix_inactual_interventions",
+      "task": "etools.applications.partners.tasks.update_interventions_task_chain",
       "interval": null,
       "crontab": 1,
       "solar": null,
