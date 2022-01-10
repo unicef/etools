@@ -349,6 +349,48 @@ class TestAppliedIndicator(BaseTenantTestCase):
 
         self.assertEqual(indicator.indicator.title, indicator_copy.indicator.title)
 
+    def test_baseline_display_string_none(self):
+        indicator = AppliedIndicatorFactory(
+            baseline=None,
+            lower_result__result_link=InterventionResultLinkFactory(),
+        )
+        self.assertEqual(indicator.baseline_display_string, 'Unknown')
+
+    def test_baseline_display_string_unknown_baseline(self):
+        indicator = AppliedIndicatorFactory(
+            baseline={'v': None, 'd': 1},
+            lower_result__result_link=InterventionResultLinkFactory(),
+        )
+        self.assertEqual(indicator.baseline_display_string, 'Unknown')
+
+    def test_baseline_display_string_natural_number(self):
+        indicator = AppliedIndicatorFactory(
+            baseline={'v': 5, 'd': '-'},
+            lower_result__result_link=InterventionResultLinkFactory(),
+        )
+        self.assertEqual(indicator.baseline_display_string, '5')
+
+    def test_baseline_display_string_ratio(self):
+        indicator = AppliedIndicatorFactory(
+            baseline={'v': 5, 'd': 6}, indicator__display_type=IndicatorBlueprint.RATIO,
+            lower_result__result_link=InterventionResultLinkFactory(),
+        )
+        self.assertEqual(indicator.baseline_display_string, '5/6')
+
+    def test_target_display_string_natural_number(self):
+        indicator = AppliedIndicatorFactory(
+            target={'v': 5, 'd': '-'},
+            lower_result__result_link=InterventionResultLinkFactory(),
+        )
+        self.assertEqual(indicator.target_display_string, '5')
+
+    def test_target_display_string_ratio(self):
+        indicator = AppliedIndicatorFactory(
+            target={'v': 5, 'd': 6}, indicator__display_type=IndicatorBlueprint.RATIO,
+            lower_result__result_link=InterventionResultLinkFactory(),
+        )
+        self.assertEqual(indicator.target_display_string, '5/6')
+
 
 class TestIndicator(BaseTenantTestCase):
     def test_save_empty(self):
@@ -452,47 +494,3 @@ class TestInterventionTimeFrame(BaseTenantTestCase):
         intervention.end = datetime.date(year=1981, month=3, day=31)
         intervention.save()
         self.assertEqual(intervention.quarters.count(), 5)
-
-
-class TestAppliedIndicator(BaseTenantTestCase):
-    def test_baseline_display_string_none(self):
-        indicator = AppliedIndicatorFactory(
-            baseline=None,
-            lower_result__result_link=InterventionResultLinkFactory(),
-        )
-        self.assertEqual(indicator.baseline_display_string, 'Unknown')
-
-    def test_baseline_display_string_unknown_baseline(self):
-        indicator = AppliedIndicatorFactory(
-            baseline={'v': None, 'd': 1},
-            lower_result__result_link=InterventionResultLinkFactory(),
-        )
-        self.assertEqual(indicator.baseline_display_string, 'Unknown')
-
-    def test_baseline_display_string_natural_number(self):
-        indicator = AppliedIndicatorFactory(
-            baseline={'v': 5, 'd': '-'},
-            lower_result__result_link=InterventionResultLinkFactory(),
-        )
-        self.assertEqual(indicator.baseline_display_string, '5')
-
-    def test_baseline_display_string_ratio(self):
-        indicator = AppliedIndicatorFactory(
-            baseline={'v': 5, 'd': 6}, indicator__display_type=IndicatorBlueprint.RATIO,
-            lower_result__result_link=InterventionResultLinkFactory(),
-        )
-        self.assertEqual(indicator.baseline_display_string, '5/6')
-
-    def test_target_display_string_natural_number(self):
-        indicator = AppliedIndicatorFactory(
-            target={'v': 5, 'd': '-'},
-            lower_result__result_link=InterventionResultLinkFactory(),
-        )
-        self.assertEqual(indicator.target_display_string, '5')
-
-    def test_target_display_string_ratio(self):
-        indicator = AppliedIndicatorFactory(
-            target={'v': 5, 'd': 6}, indicator__display_type=IndicatorBlueprint.RATIO,
-            lower_result__result_link=InterventionResultLinkFactory(),
-        )
-        self.assertEqual(indicator.target_display_string, '5/6')
