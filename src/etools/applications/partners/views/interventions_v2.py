@@ -785,7 +785,6 @@ class InterventionLocationListAPIView(QueryStringFilterMixin, ListAPIView):
 
 
 class InterventionDeleteView(DestroyAPIView):
-    # todo: permission_classes are ignored here. see comments in InterventionAmendmentDeleteView.delete
     permission_classes = (PartnershipManagerRepPermission,)
     queryset = Intervention.objects
 
