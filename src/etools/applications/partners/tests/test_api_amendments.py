@@ -400,7 +400,7 @@ class TestInterventionAmendments(BaseTenantTestCase):
         amendment.refresh_from_db()
         self.assertNotEqual({}, amendment.difference)
 
-    def test_geographical_coverage_displayed_in_difference(self):
+    def test_geographical_coverage_sites_ignored_in_difference(self):
         location = LocationFactory()
         site = LocationSiteFactory()
         amendment = InterventionAmendmentFactory(intervention=self.active_intervention)
@@ -409,7 +409,23 @@ class TestInterventionAmendments(BaseTenantTestCase):
 
         difference = amendment.get_difference()
         self.assertIn('flat_locations', difference)
-        self.assertIn('sites', difference)
+        self.assertNotIn('sites', difference)
+
+    def test_geographical_coverage_not_available(self):
+        amendment = InterventionAmendmentFactory(intervention=self.active_intervention)
+        response = self.forced_auth_req(
+            'get', reverse('pmp_v3:intervention-detail', args=[amendment.amended_intervention.pk]), self.unicef_staff
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(response.data['permissions']['view']['sites'])
+        self.assertFalse(response.data['permissions']['edit']['sites'])
+
+        original_intervention_response = self.forced_auth_req(
+            'get', reverse('pmp_v3:intervention-detail', args=[amendment.intervention.pk]), self.unicef_staff
+        )
+        self.assertEqual(original_intervention_response.status_code, status.HTTP_200_OK)
+        self.assertTrue(original_intervention_response.data['permissions']['view']['sites'])
+        self.assertTrue(original_intervention_response.data['permissions']['edit']['sites'])
 
 
 class TestInterventionAmendmentDeleteView(BaseTenantTestCase):

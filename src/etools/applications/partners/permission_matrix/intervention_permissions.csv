@@ -186,8 +186,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,unicef_focal_points,Partnership Manager,user_adds_amendment,*,Edit,TRUE
 ,unicef_focal_points,*,unicef_not_accepted,Draft,Required,FALSE
 ,sites,*,not_in_amendment_mode,*,View,TRUE
-,sites,Unicef Focal Point,,*,Edit,TRUE
-,sites,Unicef Focal Point,user_adds_amendment,*,Edit,TRUE
+,sites,Unicef Focal Point,not_in_amendment_mode,*,Edit,TRUE
 ,sites,*,,*,Required,FALSE
 ,unicef_signatory,*,,*,View,TRUE
 ,unicef_signatory,Unicef Focal Point,,Signature,Edit,TRUE
