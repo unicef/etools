@@ -1,4 +1,4 @@
-from django.conf.urls import url
+from django.urls import re_path
 
 from rest_framework import routers
 
@@ -17,6 +17,6 @@ api.register(r'locations-light', LocationsLightViewSet, basename='locations-ligh
 api.register(r'locations-types', LocationTypesViewSet, basename='locationtypes')
 
 urlpatterns = [
-    url(r'^cartodbtables/$', CartoDBTablesView.as_view(), name='cartodbtables'),
-    url(r'^autocomplete/$', LocationQuerySetView.as_view(), name='locations_autocomplete'),
+    re_path(r'^cartodbtables/$', CartoDBTablesView.as_view(), name='cartodbtables'),
+    re_path(r'^autocomplete/$', LocationQuerySetView.as_view(), name='locations_autocomplete'),
 ]

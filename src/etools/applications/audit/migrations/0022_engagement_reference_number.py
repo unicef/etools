@@ -10,7 +10,7 @@ def set_reference_number(apps, schema_editor):
         schema_name=connection.tenant.schema_name,
     )
     for engagement in Engagement.objects.all():
-        if engagement.engagement_type == engagement.TYPES.audit:
+        if engagement.engagement_type == 'audit':
             engagement_code = 'a'
         else:
             engagement_code = engagement.engagement_type
@@ -36,5 +36,5 @@ class Migration(migrations.Migration):
             name='reference_number',
             field=models.CharField(max_length=100, null=True, verbose_name='Reference Number'),
         ),
-        migrations.RunPython(set_reference_number),
+        migrations.RunPython(set_reference_number, migrations.RunPython.noop),
     ]
