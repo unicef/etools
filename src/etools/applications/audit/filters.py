@@ -77,6 +77,7 @@ class EngagementFilter(filters.FilterSet):
             'agreement__auditor_firm__unicef_users_allowed': ['exact'],
             'staff_members__user': ['exact', 'in'],
             'partner_contacted_at': ['lte', 'gte', 'gt', 'lt'],
+            'date_of_draft_report_to_ip': ['lte', 'gte', 'gt', 'lt'],
             'offices': ['exact', 'in'],
             'sections': ['exact', 'in'],
         }

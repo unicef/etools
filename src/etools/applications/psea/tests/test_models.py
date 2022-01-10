@@ -182,7 +182,7 @@ class TestAssessment(BaseTenantTestCase):
 
     def test_get_mail_context(self):
         user = UserFactory()
-        assessment = AssessmentFactory(reference_number='TST/2021PSEA')
+        assessment = AssessmentFactory(reference_number='TST/{}PSEA'.format(timezone.now().year))
         AssessorFactory(assessment=assessment)
         self.assertEqual(assessment.get_mail_context(user), {
             "partner_name": assessment.partner.name,

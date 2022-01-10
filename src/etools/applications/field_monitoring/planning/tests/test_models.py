@@ -251,9 +251,9 @@ class TestMonitoringActivityGroups(BaseTenantTestCase):
             partner=self.partner,
             monitoring_activities=[activity1, activity2]
         )
-        self.partner.programmatic_visits()
+        self.partner.update_programmatic_visits()
 
-        old_hact = self.partner.get_hact_json()
+        old_hact = self.partner.hact_values
         # 1 group and two activities
         self.assertEqual(old_hact['programmatic_visits']['completed'][get_quarter()], 3)
 
@@ -263,6 +263,6 @@ class TestMonitoringActivityGroups(BaseTenantTestCase):
                 question.question.save()
 
         # values should be unchanged
-        self.partner.programmatic_visits()
-        new_hact = self.partner.get_hact_json()
+        self.partner.update_programmatic_visits()
+        new_hact = self.partner.hact_values
         self.assertEqual(new_hact['programmatic_visits']['completed'][get_quarter()], 3)
