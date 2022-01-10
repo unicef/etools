@@ -1,4 +1,4 @@
-from django.conf.urls import include, url
+from django.urls import include, re_path
 
 from rest_framework_nested import routers
 from unicef_restlib.routers import NestedComplexRouter
@@ -46,18 +46,18 @@ tpm_action_points_api.register(r'action-points', TPMActionPointViewSet, basename
 
 app_name = 'tpm'
 urlpatterns = [
-    url(r'^', include(tpm_staffmember_api.urls)),
-    url(r'^', include(partner_attachments_api.urls)),
-    url(r'^', include(tpm_partners_api.urls)),
-    url(r'^', include(tpm_action_points_api.urls)),
-    url(r'^', include(visit_attachments_api.urls)),
-    url(r'^', include(tpm_visits_api.urls)),
-    url(
+    re_path(r'^', include(tpm_staffmember_api.urls)),
+    re_path(r'^', include(partner_attachments_api.urls)),
+    re_path(r'^', include(tpm_partners_api.urls)),
+    re_path(r'^', include(tpm_action_points_api.urls)),
+    re_path(r'^', include(visit_attachments_api.urls)),
+    re_path(r'^', include(tpm_visits_api.urls)),
+    re_path(
         r'^visits/activities/(?P<object_pk>\d+)/links',
         view=ActivityAttachmentLinksView.as_view(),
         name='activity-links'
     ),
-    url(
+    re_path(
         r'^visits/(?P<object_pk>\d+)/links',
         view=VisitAttachmentLinksView.as_view(),
         name='visit-links'

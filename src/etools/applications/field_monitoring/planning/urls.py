@@ -1,4 +1,4 @@
-from django.conf.urls import include, url
+from django.urls import include, re_path
 
 from rest_framework_nested import routers
 from unicef_restlib.routers import NestedComplexRouter
@@ -21,6 +21,6 @@ activities_api.register(r'action-points', views.MonitoringActivityActionPointVie
 
 app_name = 'field_monitoring_planning'
 urlpatterns = [
-    url(r'^', include(activities_api.urls)),
-    url(r'^', include(root_api.urls)),
+    re_path(r'^', include(activities_api.urls)),
+    re_path(r'^', include(root_api.urls)),
 ]

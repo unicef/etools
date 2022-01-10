@@ -584,14 +584,14 @@ class TestCreate(BaseInterventionTestCase):
             data=data
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        for i in [
-                "context",
-                "implementation_strategy",
-                "ip_program_contribution",
+        for field_name, max_length in [
+            ("context", 7000),
+            ("implementation_strategy", 5000),
+            ("ip_program_contribution", 5000),
         ]:
             self.assertEqual(
-                response.data[i],
-                ["This field is limited to 5000 or less characters."],
+                response.data[field_name],
+                ["This field is limited to {0} or less characters.".format(max_length)],
             )
 
 
@@ -726,6 +726,29 @@ class TestUpdate(BaseInterventionTestCase):
             'signed_by_partner_date', 'partner_authorized_officer_signatory',
         ]:
             self.assertNotIn(field, response.data[0])
+
+    def test_update_context_characters_limitation_ok(self):
+        intervention = InterventionFactory(status=Intervention.DRAFT)
+        intervention.unicef_focal_points.add(self.user)
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+            user=self.user,
+            data={'context': '*' * 7000},
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+
+    def test_update_context_characters_limitation_fail(self):
+        intervention = InterventionFactory(status=Intervention.DRAFT)
+        intervention.unicef_focal_points.add(self.user)
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+            user=self.user,
+            data={'context': '*' * 7001},
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
+        self.assertIn('context', response.data)
 
 
 class TestDelete(BaseInterventionTestCase):
