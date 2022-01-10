@@ -3,7 +3,7 @@ import itertools
 from django.conf import settings
 from django.db import connection, models
 from django.utils import timezone
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 
@@ -446,10 +446,10 @@ class TPMActivity(Activity):
 
     def get_mail_context(self, user=None, include_visit=True):
         context = {
-            'locations': ', '.join(map(force_text, self.locations.all())),
+            'locations': ', '.join(map(force_str, self.locations.all())),
             'intervention': self.intervention.title if self.intervention else '-',
-            'cp_output': force_text(self.cp_output) if self.cp_output else '-',
-            'section': force_text(self.section) if self.section else '-',
+            'cp_output': force_str(self.cp_output) if self.cp_output else '-',
+            'section': force_str(self.section) if self.section else '-',
             'partner': self.partner.name if self.partner else '-',
         }
         if include_visit:

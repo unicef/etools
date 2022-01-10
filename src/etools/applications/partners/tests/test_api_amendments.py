@@ -400,6 +400,25 @@ class TestInterventionAmendments(BaseTenantTestCase):
         amendment.refresh_from_db()
         self.assertNotEqual({}, amendment.difference)
 
+    def test_amendment_review_original_budget_changed(self):
+        amendment = InterventionAmendmentFactory(intervention=self.active_intervention)
+        amendment.amended_intervention.unicef_accepted = True
+        amendment.amended_intervention.partner_accepted = True
+        amendment.amended_intervention.date_sent_to_partner = timezone.now().date()
+        amendment.amended_intervention.save()
+        amendment.amended_intervention.planned_budget.total_hq_cash_local += 2
+        amendment.amended_intervention.planned_budget.save()
+
+        self.active_intervention.planned_budget.total_hq_cash_local += 1
+        self.active_intervention.planned_budget.save()
+
+        response = self.forced_auth_req(
+            "patch", reverse('pmp_v3:intervention-review', args=[amendment.amended_intervention.pk]),
+            user=self.unicef_staff, data={'review_type': 'no-review'}
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('total_hq_cash_local', response.data[0])
+
     def test_geographical_coverage_sites_ignored_in_difference(self):
         location = LocationFactory()
         site = LocationSiteFactory()
@@ -474,3 +493,34 @@ class TestInterventionAmendmentDeleteView(BaseTenantTestCase):
             user=self.unicef_staff,
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_delete_active(self):
+        self.intervention.status = 'active'
+        self.intervention.save()
+        response = self.forced_auth_req(
+            'delete',
+            self.url,
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_delete_active_focal_point(self):
+        self.intervention.status = 'active'
+        self.intervention.save()
+        self.intervention.unicef_focal_points.add(self.unicef_staff)
+        response = self.forced_auth_req(
+            'delete',
+            self.url,
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_delete_active_partnership_manager(self):
+        self.intervention.status = 'active'
+        self.intervention.save()
+        response = self.forced_auth_req(
+            'delete',
+            self.url,
+            user=UserFactory(is_staff=True, groups__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)

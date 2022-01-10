@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 
 from rest_framework import serializers
 
@@ -123,7 +123,7 @@ class GroupSerializer(serializers.ModelSerializer):
             group = Group.objects.create(**validated_data)
 
         except Exception as ex:
-            raise serializers.ValidationError({'group': force_text(ex)})
+            raise serializers.ValidationError({'group': force_str(ex)})
 
         return group
 
@@ -210,7 +210,7 @@ class UserCreationSerializer(serializers.ModelSerializer):
             user.profile.save()
 
         except Exception as ex:
-            raise serializers.ValidationError({'user': force_text(ex)})
+            raise serializers.ValidationError({'user': force_str(ex)})
 
         return user
 

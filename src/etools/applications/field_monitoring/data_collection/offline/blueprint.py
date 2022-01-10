@@ -16,6 +16,7 @@ from etools.applications.offline.fields import (
     TextField,
 )
 from etools.applications.offline.fields.choices import LocalPairsOptions
+from etools.applications.offline.validations.text import MaxLengthTextValidation
 
 if TYPE_CHECKING:
     from etools.applications.field_monitoring.planning.models import MonitoringActivity
@@ -43,10 +44,14 @@ def get_blueprint_for_activity_and_method(activity: 'MonitoringActivity', method
         blueprint.add(
             Group(
                 'information_source',
-                TextField('name', label=_('Source of Information'), styling=['wide']),
+                TextField(
+                    'name', label=_('Source of Information'),
+                    styling=['wide'], validations=['information_source_max_length'],
+                ),
                 styling=['card'],
             )
         )
+        blueprint.metadata.validations['information_source_max_length'] = MaxLengthTextValidation(100)
 
     for relation, level in activity.RELATIONS_MAPPING:
         level_block = Group(level, styling=['abstract'], required=False)
