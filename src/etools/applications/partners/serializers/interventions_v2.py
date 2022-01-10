@@ -714,7 +714,7 @@ class InterventionCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotMode
         return value
 
     def validate_context(self, value):
-        return self._validate_character_limitation(value)
+        return self._validate_character_limitation(value, limit=7000)
 
     def validate_implementation_strategy(self, value):
         return self._validate_character_limitation(value)

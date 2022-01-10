@@ -337,3 +337,14 @@ class TestPermissions(BaseTestCase):
 
         response = self.forced_auth_req('post', self.list_url, self.partner_focal_point, data={})
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
+
+    def test_create_in_amendment(self):
+        self.intervention.unicef_court = False
+        self.intervention.in_amendment = True
+        self.intervention.save()
+
+        response = self.forced_auth_req(
+            'post', self.list_url, self.user,
+            data={'name': 'test', 'context_details': 'test'}
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)

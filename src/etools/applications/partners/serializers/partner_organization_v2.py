@@ -1,6 +1,5 @@
 import datetime
 import itertools
-import json
 
 from django.contrib.auth import get_user_model
 from django.db import connection
@@ -444,7 +443,6 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
     staff_members = PartnerStaffMemberDetailSerializer(many=True, read_only=True)
     assessments = AssessmentDetailSerializer(many=True, read_only=True)
     planned_engagement = PlannedEngagementSerializer(read_only=True)
-    hact_values = serializers.SerializerMethodField(read_only=True)
     interventions = serializers.SerializerMethodField(read_only=True)
     hact_min_requirements = serializers.JSONField(read_only=True)
     hidden = serializers.BooleanField(read_only=True)
@@ -456,9 +454,6 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
     highest_risk_rating_type = serializers.CharField(label="highest_risk_type")
     highest_risk_rating_name = serializers.CharField(label="highest_risk_rating")
     monitoring_activity_groups = MonitoringActivityGroupSerializer()
-
-    def get_hact_values(self, obj):
-        return json.loads(obj.hact_values) if isinstance(obj.hact_values, str) else obj.hact_values
 
     def get_interventions(self, obj):
         interventions = InterventionListSerializer(self.get_related_interventions(obj), many=True)
@@ -507,14 +502,10 @@ class PartnerOrganizationCreateUpdateSerializer(SnapshotModelSerializer):
 
     staff_members = PartnerStaffMemberNestedSerializer(many=True, read_only=True)
     planned_engagement = PlannedEngagementNestedSerializer(read_only=True)
-    hact_values = serializers.SerializerMethodField(read_only=True)
     hidden = serializers.BooleanField(read_only=True)
     planned_visits = PartnerPlannedVisitsSerializer(many=True, read_only=True, required=False)
     core_values_assessments = CoreValuesAssessmentSerializer(many=True, read_only=True, required=False)
     monitoring_activity_groups = MonitoringActivityGroupSerializer(required=False)
-
-    def get_hact_values(self, obj):
-        return json.loads(obj.hact_values) if isinstance(obj.hact_values, str) else obj.hact_values
 
     def validate(self, data):
         data = super().validate(data)
@@ -571,7 +562,7 @@ class PartnerOrganizationCreateUpdateSerializer(SnapshotModelSerializer):
         if monitoring_activity_groups is not None:
             groups_updated = self.save_monitoring_activity_groups(instance, monitoring_activity_groups)
             if groups_updated:
-                instance.programmatic_visits()
+                instance.update_programmatic_visits()
 
         return instance
 
@@ -590,12 +581,8 @@ class PartnerOrganizationCreateUpdateSerializer(SnapshotModelSerializer):
 class PartnerOrganizationHactSerializer(serializers.ModelSerializer):
 
     planned_engagement = PlannedEngagementSerializer(read_only=True)
-    hact_values = serializers.SerializerMethodField(read_only=True)
     hact_min_requirements = serializers.JSONField()
     rating = serializers.CharField(source='get_rating_display')
-
-    def get_hact_values(self, obj):
-        return json.loads(obj.hact_values) if isinstance(obj.hact_values, str) else obj.hact_values
 
     class Meta:
         model = PartnerOrganization
