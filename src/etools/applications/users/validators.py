@@ -38,7 +38,6 @@ class EmailValidator(UniqueValidator):
             message="This user already exists in the system.",
         )
 
-
     def exclude_current_instance(self, queryset, instance):
         """
         If an instance is already assigned to validator itself, prefer it.
