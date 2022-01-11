@@ -28,12 +28,25 @@ class ExternalUserValidator:
 
 class EmailValidator(UniqueValidator):
     def __init__(self, queryset=None):
+        # WritableNestedChildSerializerMixin set instance directly to validator while running deferred validators
+        self.instance = None
+
         if queryset is None:
             queryset = get_user_model().objects.all()
         super().__init__(
             queryset,
             message="This user already exists in the system.",
         )
+
+
+    def exclude_current_instance(self, queryset, instance):
+        """
+        If an instance is already assigned to validator itself, prefer it.
+        """
+        if not instance and self.instance:
+            return queryset.exclude(pk=self.instance.pk)
+
+        return super().exclude_current_instance(queryset, instance)
 
     def __call__(self, value, serializer_field):
         if value != value.lower():
