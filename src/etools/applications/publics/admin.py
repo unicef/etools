@@ -73,7 +73,7 @@ class BusinessRegionAdmin(AdminListMixin, admin.ModelAdmin):
 
 
 class BusinessAreaAdmin(AdminListMixin, admin.ModelAdmin):
-    pass
+    search_fields = ['name']
 
 
 class CountryAdmin(AdminListMixin, admin.ModelAdmin):

@@ -1,10 +1,12 @@
 from django.contrib import admin, messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.models import Group
 from django.db import connection
 from django.http.response import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
+from django.utils.translation import gettext_lazy as _
 
 from admin_extra_urls.decorators import button
 from admin_extra_urls.mixins import ExtraUrlMixin
@@ -13,7 +15,7 @@ from django_tenants.utils import get_public_schema_name
 
 from etools.applications.funds.tasks import sync_all_delegated_frs, sync_country_delegated_fr
 from etools.applications.hact.tasks import update_hact_for_country, update_hact_values
-from etools.applications.users.models import Country, UserProfile, WorkspaceCounter
+from etools.applications.users.models import Country, Realm, UserProfile, WorkspaceCounter
 from etools.applications.vision.tasks import sync_handler, vision_sync_task
 from etools.libraries.azure_graph_api.tasks import sync_user
 
@@ -175,6 +177,15 @@ class ProfileAdmin(admin.ModelAdmin):
 
 
 class UserAdminPlus(ExtraUrlMixin, UserAdmin):
+    fieldsets = (
+        (None, {'fields': ('username', 'password')}),
+        (_('Personal info'), {'fields': ('first_name', 'last_name', 'email')}),
+        (_('Permissions'), {
+            'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'realms', 'user_permissions'),
+        }),
+        (_('Important dates'), {'fields': ('last_login', 'date_joined')}),
+    )
+    filter_horizontal = ('realms', 'groups', 'user_permissions',)
     inlines = [ProfileInline]
     readonly_fields = ('date_joined',)
 
@@ -261,6 +272,7 @@ class CountryAdmin(ExtraUrlMixin, TenantAdminMixin, admin.ModelAdmin):
     filter_horizontal = (
         'offices',
     )
+    search_fields = ('name', 'country_short_code')
 
     @button()
     def sync_fund_reservation_delegated(self, request, pk):
@@ -313,9 +325,22 @@ class CountryAdmin(ExtraUrlMixin, TenantAdminMixin, admin.ModelAdmin):
             messages.info(request, "HACT update has been started for %s" % country.name)
         return HttpResponseRedirect(reverse('admin:users_country_change', args=[country.pk]))
 
+#
+# class RealmGroupInline(admin.TabularInline):
+#     model = Realm.groups.through
+#     extra = 1
+
+
+class RealmAdmin(admin.ModelAdmin):
+    # inlines = (RealmGroupInline,)
+    filter_horizontal = ('groups',)
+
+    autocomplete_fields = ('business_area',)
+
 
 # Re-register UserAdmin
 admin.site.register(get_user_model(), UserAdminPlus)
 admin.site.register(UserProfile, ProfileAdmin)
 admin.site.register(Country, CountryAdmin)
 admin.site.register(WorkspaceCounter)
+admin.site.register(Realm, RealmAdmin)

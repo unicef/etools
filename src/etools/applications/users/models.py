@@ -3,7 +3,15 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from django.conf import settings
-from django.contrib.auth.models import AbstractBaseUser, Group, PermissionsMixin, UserManager
+from django.contrib.auth.models import (
+    _user_get_permissions,
+    _user_has_module_perms,
+    _user_has_perm,
+    AbstractBaseUser,
+    Group,
+    Permission,
+    UserManager,
+)
 from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -22,7 +30,103 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
+class RealmPermissionsMixin(models.Model):
+    is_superuser = models.BooleanField(
+        _('superuser status'),
+        default=False,
+        help_text=_(
+            'Designates that this user has all permissions without '
+            'explicitly assigning them.'
+        ),
+    )
+    groups = models.ManyToManyField(
+        Group,
+        verbose_name=_('groups'),
+        blank=True,
+        help_text=_(
+            'The groups this user belongs to. A user will get all permissions '
+            'granted to each of their groups.'
+        ),
+        related_name="user_set",
+        related_query_name="user",
+    )
+    realms = models.ManyToManyField(
+        'users.Realm',
+        verbose_name=_('Realms'),
+        blank=True,
+        help_text=_(
+            'The realm this user belongs to. A user will get all permissions '
+            'granted to each of the realm groups.'
+        ),
+        related_name="user_set",
+        related_query_name="user",
+    )
+    user_permissions = models.ManyToManyField(
+        Permission,
+        verbose_name=_('user permissions'),
+        blank=True,
+        help_text=_('Specific permissions for this user.'),
+        related_name="user_set",
+        related_query_name="user",
+    )
+
+    class Meta:
+        abstract = True
+
+    def get_user_permissions(self, obj=None):
+        """
+        Return a list of permission strings that this user has directly.
+        Query all available auth backends. If an object is passed in,
+        return only permissions matching this object.
+        """
+        return _user_get_permissions(self, obj, 'user')
+
+    def get_group_permissions(self, obj=None):
+        """
+        Return a list of permission strings that this user has through their
+        groups. Query all available auth backends. If an object is passed in,
+        return only permissions matching this object.
+        """
+        return _user_get_permissions(self, obj, 'group')
+
+    def get_all_permissions(self, obj=None):
+        return _user_get_permissions(self, obj, 'all')
+
+    def has_perm(self, perm, obj=None):
+        """
+        Return True if the user has the specified permission. Query all
+        available auth backends, but return immediately if any backend returns
+        True. Thus, a user who has permission from a single auth backend is
+        assumed to have permission in general. If an object is provided, check
+        permissions for that object.
+        """
+        # Active superusers have all permissions.
+        if self.is_active and self.is_superuser:
+            return True
+
+        # Otherwise we need to check the backends.
+        return _user_has_perm(self, perm, obj)
+
+    def has_perms(self, perm_list, obj=None):
+        """
+        Return True if the user has each of the specified permissions. If
+        object is passed, check if the user has all required perms for it.
+        """
+        return all(self.has_perm(perm, obj) for perm in perm_list)
+
+    def has_module_perms(self, app_label):
+        """
+        Return True if the user has any permissions in the given app label.
+        Use similar logic as has_perm(), above.
+        """
+        # Active superusers have all permissions.
+        if self.is_active and self.is_superuser:
+            return True
+
+        return _user_has_module_perms(self, app_label)
+
+
+class User(TimeStampedModel, AbstractBaseUser, RealmPermissionsMixin):
     USERNAME_FIELD = "username"
     REQUIRED_FIELDS = ['email']
 
@@ -383,3 +487,57 @@ class UserProfile(models.Model):
 
 
 post_save.connect(UserProfile.create_user_profile, sender=settings.AUTH_USER_MODEL)
+
+
+class Realm(models.Model):
+    name = models.CharField(max_length=350,
+                            unique=True,
+                            verbose_name=_('Realm Name'))
+
+    vendor_number = models.CharField(max_length=50,
+                                     blank=True, null=True,
+                                     verbose_name=_('Vendor Number'))
+    business_area = models.ForeignKey(
+        'publics.BusinessArea',
+        verbose_name=_('Business Area'),
+        related_name='realms',
+        blank=True, null=True,
+        on_delete=models.CASCADE)
+    groups = models.ManyToManyField(
+        Group,
+        verbose_name=_('groups'),
+        blank=True,
+        help_text=_(
+            'The groups available in the user realm. A user will get all permissions '
+            'granted to each of the realm groups.'
+        ),
+        related_name="realm_set",
+        related_query_name="realm",
+    )
+
+    def __str__(self):
+        business_area = self.business_area if self.business_area else '-'
+        if self.vendor_number:
+            return f'{business_area} {self.vendor_number}'
+        return f"{business_area} ({'/ '.join(self.groups.values_list('name', flat=True))})"
+
+
+# class RealmGroup(models.Model):
+#     realm = models.ForeignKey(Realm,
+#                               verbose_name=_('Realm'),
+#                               related_name='realm_groups',
+#                               db_index=True,
+#                               on_delete=models.CASCADE)
+#
+#     group = models.ForeignKey(Group,
+#                               verbose_name=_('Group'),
+#                               related_name='realm_groups',
+#                               on_delete=models.CASCADE)
+#
+#     class Meta:
+#         constraints = [
+#             models.UniqueConstraint(fields=['realm', 'group'], name='unique realm group')
+#         ]
+#
+#     def __str__(self):
+#         return f'{self.realm} {self.group}'

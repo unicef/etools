@@ -14,8 +14,8 @@ class AdminListMixin:
         """
         self.list_display = [field.name for field in model._meta.fields if field.name not in self.exclude_fields]
         self.list_display += self.custom_fields
-        self.search_fields = [field.name for field in model._meta.fields if isinstance(
-            not field, (OneToOneField, ForeignKey, ManyToManyField)) and field.name not in self.exclude_fields]
+        self.search_fields = [field.name for field in model._meta.fields if not isinstance(
+            field, (OneToOneField, ForeignKey, ManyToManyField)) and field.name not in self.exclude_fields]
 
         super().__init__(model, admin_site)
 
