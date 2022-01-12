@@ -831,7 +831,7 @@ class TestReportViewSet(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.user = UserFactory()
         cls.content_type = ContentType.objects.get_for_model(Report)
-        cls.file_type = AttachmentFileTypeFactory(code="generic_trip_attachment")
+        cls.file_type = AttachmentFileTypeFactory(name="generic_trip_attachment")
 
     def test_list(self):
         self.trip = TripFactory()
