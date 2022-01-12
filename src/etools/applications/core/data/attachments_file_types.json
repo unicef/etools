@@ -718,5 +718,16 @@
             "code": "special_audit_final_report",
             "group": ["special_audit_final_report"]
         }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 2104,
+        "fields": {
+            "order": 5,
+            "name": "generic trip attachment",
+            "label": "Generic Trip Attachment",
+            "code": "generic_trip_attachment",
+            "group": ["generic_trip_attachment"]
+        }
     }
 ]
