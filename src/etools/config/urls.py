@@ -84,8 +84,8 @@ urlpatterns = [
 
     # ***************  API version 2  ******************
     re_path(r'^api/locations/pcode/(?P<p_code>\w+)/$',
-        LocationsViewSet.as_view({'get': 'retrieve'}),
-        name='locations_detail_pcode'),
+            LocationsViewSet.as_view({'get': 'retrieve'}),
+            name='locations_detail_pcode'),
     re_path(r'^api/t2f/', include(t2f_patterns)),
     re_path(r'^api/tpm/', include('etools.applications.tpm.urls')),
     re_path(r'^api/audit/', include('etools.applications.audit.urls')),
