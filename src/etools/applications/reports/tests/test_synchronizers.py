@@ -545,7 +545,7 @@ class TestProgrammeSynchronizer(BaseTenantTestCase):
         self.data["OUTCOME_AREA_CODE"] = "OC_CODE"
         self.data["OUTCOME_DESCRIPTION"] = "OC_NAME"
         self.data["OUTCOME_START_DATE"] = "20-Feb-13"
-        self.data["OUTCOME_END_DATE"] = "20-Feb-20"
+        self.data["OUTCOME_END_DATE"] = "20-Feb-{}".format(str(datetime.date.today().year)[-2:])
         self.data["OUTPUT_START_DATE"] = "29-Oct-44"
         self.data["OUTPUT_END_DATE"] = "29-Oct-44"
         self.data["ACTIVITY_START_DATE"] = "29-Oct-45"
@@ -566,7 +566,7 @@ class TestProgrammeSynchronizer(BaseTenantTestCase):
                 "wbs": "OC_WBS",
                 "name": "OC_NAME",
                 "from_date": datetime.date(2013, 2, 20),
-                "to_date": datetime.date(2020, 2, 20),
+                "to_date": datetime.date(datetime.date.today().year, 2, 20),
             }},
             "outputs": {},
             "activities": {}
