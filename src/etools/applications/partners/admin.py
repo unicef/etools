@@ -589,11 +589,11 @@ class PartnerAdmin(ExtraUrlMixin, ExportMixin, admin.ModelAdmin):
     @button()
     def update_hact(self, request, pk):
         obj = self.get_object(request, pk)
-        obj.planned_visits_to_hact()
-        obj.programmatic_visits()
-        obj.spot_checks()
-        obj.audits_completed()
-        obj.hact_support()
+        obj.update_planned_visits_to_hact()
+        obj.update_programmatic_visits()
+        obj.update_spot_checks()
+        obj.update_audits_completed()
+        obj.update_hact_support()
         obj.update_min_requirements()
 
 

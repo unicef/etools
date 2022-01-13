@@ -1,6 +1,8 @@
 import datetime
 from unittest.mock import Mock, patch
 
+from django.core.management import call_command
+
 from etools.applications.action_points import tasks
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.action_points.tests.factories import ActionPointFactory
@@ -11,6 +13,7 @@ EMAIL_PATH = "etools.applications.action_points.tasks.send_notification_with_tem
 
 class TestNotifyActionPointOverdue(BaseTenantTestCase):
     def setUp(self):
+        call_command('update_notifications')
         self.mock_email = Mock()
         self.yesterday = datetime.date.today() - datetime.timedelta(days=1)
         self.overdue_qs = ActionPoint.objects.exclude(
