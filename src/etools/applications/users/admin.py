@@ -84,7 +84,6 @@ class ProfileAdmin(admin.ModelAdmin):
         'country_override',
         'countries_available',
         'office',
-        'job_title',
         'phone_number',
         'staff_id',
         'org_unit_code',
@@ -163,15 +162,6 @@ class ProfileAdmin(admin.ModelAdmin):
 
     def office(self, obj):
         return get_office(obj)
-
-    def save_model(self, request, obj, form, change):
-        if form.data.get('supervisor'):
-            supervisor = get_user_model().objects.get(id=int(form.data['supervisor']))
-            obj.supervisor = supervisor
-        if form.data.get('oic'):
-            oic = get_user_model().objects.get(id=int(form.data['oic']))
-            obj.oic = oic
-        obj.save()
 
 
 class UserAdminPlus(ExtraUrlMixin, UserAdmin):

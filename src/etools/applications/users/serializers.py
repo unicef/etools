@@ -78,16 +78,13 @@ class GroupSerializer(serializers.ModelSerializer):
 
 class ProfileRetrieveUpdateSerializer(serializers.ModelSerializer):
     countries_available = SimpleCountrySerializer(many=True, read_only=True)
-    supervisor = serializers.CharField(read_only=True)
     groups = GroupSerializer(source="user.groups", read_only=True, many=True)
-    supervisees = serializers.PrimaryKeyRelatedField(source='user.supervisee', many=True, read_only=True)
     name = serializers.CharField(source='user.get_full_name', read_only=True)
     office = serializers.CharField(source="tenant_profile.office")
 
     class Meta:
         model = UserProfile
-        fields = ('name', 'office', 'supervisor', 'countries_available',
-                  'oic', 'groups', 'supervisees', 'job_title', 'phone_number')
+        fields = ('name', 'office', 'countries_available', 'groups', 'job_title', 'phone_number')
 
 
 class UserSerializer(serializers.ModelSerializer):

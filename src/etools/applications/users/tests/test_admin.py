@@ -5,13 +5,13 @@ from django.contrib.admin.sites import AdminSite
 from django.urls import reverse
 
 from django_tenants.utils import schema_context
-from mock import ANY, Mock, patch
+from mock import ANY, patch
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.hact.tasks import update_hact_for_country
 from etools.applications.users.admin import CountryAdmin, ProfileAdmin, ProfileInline, UserAdminPlus
 from etools.applications.users.models import Country, User, UserProfile
-from etools.applications.users.tests.factories import ProfileFactory, UserFactory
+from etools.applications.users.tests.factories import UserFactory
 
 
 class MockRequest:
@@ -70,34 +70,6 @@ class TestProfileAdmin(BaseTenantTestCase):
         self.assertTrue(self.request.user.is_superuser)
         fields = self.admin.get_fields(self.request)
         self.assertIn("country_override", fields)
-
-    def test_save_model_supervisor(self):
-        """If supervisor provided, then set supervisor"""
-        mock_form = Mock()
-        mock_form.data = {"supervisor": self.superuser.pk}
-        obj = ProfileFactory()
-        self.assertIsNone(obj.supervisor)
-        self.admin.save_model(
-            self.request,
-            obj,
-            mock_form,
-            None)
-        profile_updated = UserProfile.objects.get(pk=obj.pk)
-        self.assertEqual(profile_updated.supervisor, self.superuser)
-
-    def test_save_model_oic(self):
-        """If OIC provided, then set OIC"""
-        mock_form = Mock()
-        mock_form.data = {"oic": self.superuser.pk}
-        obj = ProfileFactory()
-        self.assertIsNone(obj.oic)
-        self.admin.save_model(
-            self.request,
-            obj,
-            mock_form,
-            None)
-        profile_updated = UserProfile.objects.get(pk=obj.pk)
-        self.assertEqual(profile_updated.oic, self.superuser)
 
 
 class TestUserAdminPlus(BaseTenantTestCase):

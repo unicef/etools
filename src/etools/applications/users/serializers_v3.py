@@ -34,12 +34,11 @@ class MinimalUserSerializer(serializers.ModelSerializer):
 class MinimalUserDetailSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='get_full_name', read_only=True)
     job_title = serializers.CharField(source='profile.job_title')
-    vendor_number = serializers.CharField(source='profile.vendor_number')
     email = serializers.EmailField(validators=[EmailValidator()])
 
     class Meta:
         model = get_user_model()
-        fields = ('name', 'first_name', 'middle_name', 'last_name', 'username', 'email', 'job_title', 'vendor_number',)
+        fields = ('name', 'first_name', 'middle_name', 'last_name', 'username', 'email', 'job_title',)
 
 
 class CountrySerializer(serializers.ModelSerializer):
@@ -87,9 +86,7 @@ class CountryDetailSerializer(serializers.ModelSerializer):
 
 class ProfileRetrieveUpdateSerializer(serializers.ModelSerializer):
     countries_available = SimpleCountrySerializer(many=True, read_only=True)
-    supervisor = serializers.CharField(read_only=True)
     groups = GroupSerializer(source="user.groups", read_only=True, many=True)
-    supervisees = serializers.PrimaryKeyRelatedField(source='user.supervisee', many=True, read_only=True)
     name = serializers.CharField(source='user.get_full_name', read_only=True)
     last_login = serializers.CharField(source='user.last_login', read_only=True)
     is_superuser = serializers.CharField(source='user.is_superuser', read_only=True)

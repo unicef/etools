@@ -84,12 +84,6 @@ class TestUserProfileModel(BaseTenantTestCase):
         profile.save()
         self.assertIsNone(profile.staff_id)
 
-    def test_save_vendor_number(self):
-        profile = ProfileFactory()
-        profile.vendor_number = ""
-        profile.save()
-        self.assertIsNone(profile.vendor_number)
-
 
 class TestUserModel(BaseTenantTestCase):
 

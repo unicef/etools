@@ -189,12 +189,7 @@ class TestMyProfileAPIView(BaseTenantTestCase):
         self.assertTrue(UserProfile.objects.filter(user=user).exists())
 
     def test_patch(self):
-        self.assertNotEqual(
-            self.unicef_staff.profile.oic,
-            self.unicef_superuser
-        )
         data = {
-            "oic": self.unicef_superuser.id,
         }
         response = self.forced_auth_req(
             'patch',
@@ -204,7 +199,6 @@ class TestMyProfileAPIView(BaseTenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["oic"], self.unicef_superuser.id)
 
         response = self.forced_auth_req(
             'get',
@@ -213,7 +207,6 @@ class TestMyProfileAPIView(BaseTenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["oic"], self.unicef_superuser.id)
 
 
 class TestUsersDetailAPIView(BaseTenantTestCase):

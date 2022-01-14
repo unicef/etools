@@ -259,9 +259,6 @@ class UserProfile(models.Model):
     # TODO: after migration remove the ability to add blank=True
     guid = models.CharField(max_length=40, unique=True, null=True, verbose_name=_('GUID'))
 
-    # legacy field; to be removed
-    _partner_staff_member = models.IntegerField(null=True, blank=True, verbose_name=_('Partner Staff Member'))
-
     country = models.ForeignKey(
         Country, null=True, blank=True, verbose_name=_('Country'),
         on_delete=models.CASCADE,
@@ -286,17 +283,6 @@ class UserProfile(models.Model):
     org_unit_name = models.CharField(max_length=64, null=True, blank=True, verbose_name=_('Org Unit Name'))
     post_number = models.CharField(max_length=32, null=True, blank=True, verbose_name=_('Post Number'))
     post_title = models.CharField(max_length=64, null=True, blank=True, verbose_name=_('Post Title'))
-    # vendor_number needs to be NULLable so we can make it unique while still making it optional
-    vendor_number = models.CharField(max_length=32, null=True, blank=True,
-                                     unique=True, verbose_name=_('Vendor Number'))
-    supervisor = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='supervisee', on_delete=models.SET_NULL,
-                                   blank=True, null=True, verbose_name=_('Supervisor'))
-    oic = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, verbose_name=_('OIC'),
-                            null=True, blank=True)  # related oic_set
-
-    # TODO: figure this out when we need to automatically map to groups
-    # vision_roles = ArrayField(models.CharField(max_length=20, blank=True, choices=VISION_ROLES),
-    #                           blank=True, null=True)
 
     def username(self):
         return self.user.username
@@ -376,8 +362,6 @@ class UserProfile(models.Model):
 
         if self.staff_id == '':
             self.staff_id = None
-        if self.vendor_number == '':
-            self.vendor_number = None
 
         super().save(**kwargs)
 

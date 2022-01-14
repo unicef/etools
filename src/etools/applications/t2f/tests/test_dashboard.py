@@ -89,8 +89,7 @@ class TravelActivityList(BaseTenantTestCase):
                 'traveler': traveler.id,
                 'ta_required': True,
                 'report': 'Some report',
-                'currency': currency.id,
-                'supervisor': self.unicef_staff.id}
+                'currency': currency.id}
         act1 = TravelActivityFactory(travel_type=TravelType.PROGRAMME_MONITORING, primary_traveler=traveler)
         act2 = TravelActivityFactory(travel_type=TravelType.SPOT_CHECK, primary_traveler=traveler)
         act1.travels.add(travel)
