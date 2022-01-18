@@ -797,20 +797,9 @@ class PartnerOrganization(TimeStampedModel):
     @cached_property
     def spot_checks(self):
         from etools.applications.audit.models import Engagement, SpotCheck
-        audit_sc = SpotCheck.objects.filter(
+        return SpotCheck.objects.filter(
             partner=self, date_of_draft_report_to_ip__year=datetime.datetime.now().year
         ).exclude(status=Engagement.CANCELLED)
-
-        t2f_sc = TravelActivity.objects.filter(
-            travel_type=TravelType.SPOT_CHECK,
-            travels__status=Travel.COMPLETED,
-            date__year=datetime.datetime.now().year,
-            partner=self
-        ).distinct()
-        return {
-            'audit_sc': audit_sc,
-            't2f_sc': t2f_sc
-        }
 
     def update_spot_checks(self, event_date=None, update_one=False):
         """
@@ -824,24 +813,19 @@ class PartnerOrganization(TimeStampedModel):
             self.hact_values['spot_checks']['completed']['total'] += 1
             self.hact_values['spot_checks']['completed'][quarter_name] += 1
         else:
-            audit_sc = self.spot_checks['audit_sc']
-            t2f_sc = self.spot_checks['t2f_sc']
+            audit_spot_check = self.spot_checks
 
-            a_sc1 = audit_sc.filter(date_of_draft_report_to_ip__quarter=1).count()
-            a_sc2 = audit_sc.filter(date_of_draft_report_to_ip__quarter=2).count()
-            a_sc3 = audit_sc.filter(date_of_draft_report_to_ip__quarter=3).count()
-            a_sc4 = audit_sc.filter(date_of_draft_report_to_ip__quarter=4).count()
+            asc1 = audit_spot_check.filter(date_of_draft_report_to_ip__quarter=1).count()
+            asc2 = audit_spot_check.filter(date_of_draft_report_to_ip__quarter=2).count()
+            asc3 = audit_spot_check.filter(date_of_draft_report_to_ip__quarter=3).count()
+            asc4 = audit_spot_check.filter(date_of_draft_report_to_ip__quarter=4).count()
 
-            t2f_sc1 = t2f_sc.filter(date__quarter=1).count()
-            t2f_sc2 = t2f_sc.filter(date__quarter=2).count()
-            t2f_sc3 = t2f_sc.filter(date__quarter=3).count()
-            t2f_sc4 = t2f_sc.filter(date__quarter=4).count()
+            self.hact_values['spot_checks']['completed']['q1'] = asc1
+            self.hact_values['spot_checks']['completed']['q2'] = asc2
+            self.hact_values['spot_checks']['completed']['q3'] = asc3
+            self.hact_values['spot_checks']['completed']['q4'] = asc4
 
-            self.hact_values['spot_checks']['completed']['q1'] = a_sc1 + t2f_sc1
-            self.hact_values['spot_checks']['completed']['q2'] = a_sc2 + t2f_sc2
-            self.hact_values['spot_checks']['completed']['q3'] = a_sc3 + t2f_sc3
-            self.hact_values['spot_checks']['completed']['q4'] = a_sc4 + t2f_sc4
-            self.hact_values['spot_checks']['completed']['total'] = audit_sc.count() + t2f_sc.count()
+            self.hact_values['spot_checks']['completed']['total'] = audit_spot_check.count()  # TODO 1.1.9c add spot checks from field monitoring
         self.save(update_fields=['hact_values'])
 
     @cached_property

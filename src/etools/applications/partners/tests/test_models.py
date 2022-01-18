@@ -551,19 +551,11 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
         )
         self.partner_organization.update_spot_checks(update_one=True)
         tz = timezone.get_default_timezone()
-        traveller = UserFactory()
-        travel = TravelFactory(
-            traveler=traveller,
-            status=Travel.COMPLETED,
-            end_date=datetime.datetime(datetime.datetime.today().year, 5, 1, tzinfo=tz)
-        )
         date = datetime.datetime(datetime.datetime.today().year, 5, 1, tzinfo=tz)
-        TravelActivityFactory(
-            travels=[travel],
-            primary_traveler=traveller,
-            travel_type=TravelType.SPOT_CHECK,
+        SpotCheckFactory(
             partner=self.partner_organization,
-            date=date
+            status=Engagement.FINAL,
+            date_of_draft_report_to_ip=date
         )
         self.partner_organization.update_spot_checks(update_one=True, event_date=date)
         self.partner_organization.refresh_from_db()
