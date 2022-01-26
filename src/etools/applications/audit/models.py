@@ -456,7 +456,6 @@ class SpotCheck(Engagement):
     @transition('status', source=Engagement.STATUSES.report_submitted, target=Engagement.STATUSES.final,
                 permission=has_action_permission(action='finalize'))
     def finalize(self, *args, **kwargs):
-        self.partner.update_spot_checks(event_date=self.date_of_draft_report_to_ip)
         return super().finalize(*args, **kwargs)
 
     def get_object_url(self, **kwargs):

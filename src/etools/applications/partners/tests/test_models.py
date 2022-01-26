@@ -541,35 +541,6 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
         self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['q3'], 0)
         self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['q4'], 0)
 
-    @freeze_time("2013-12-26")
-    def test_spot_checks_update_one_true_false(self):
-        self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['total'], 0)
-        SpotCheckFactory(
-            partner=self.partner_organization,
-            status=Engagement.FINAL,
-            date_of_draft_report_to_ip=datetime.datetime(datetime.datetime.today().year, 12, 1)
-        )
-        self.partner_organization.update_spot_checks(update_one=True)
-        tz = timezone.get_default_timezone()
-        date = datetime.datetime(datetime.datetime.today().year, 5, 1, tzinfo=tz)
-        SpotCheckFactory(
-            partner=self.partner_organization,
-            status=Engagement.FINAL,
-            date_of_draft_report_to_ip=date
-        )
-        self.partner_organization.update_spot_checks(update_one=True, event_date=date)
-        self.partner_organization.refresh_from_db()
-        hact_values_update_true = copy.deepcopy(self.partner_organization.hact_values)
-
-        self.partner_organization.update_spot_checks()
-        hact_values_update_false = self.partner_organization.hact_values
-        self.partner_organization.refresh_from_db()
-
-        for key, value in {'total': 2, 'q1': 0, 'q2': 1, 'q3': 0, 'q4': 1}.items():
-            self.assertTrue(hact_values_update_true['spot_checks']['completed'][key] ==
-                            hact_values_update_false['spot_checks']['completed'][key] ==
-                            value)
-
     def test_spot_checks_update_travel_activity(self):
         self.assertEqual(self.partner_organization.hact_values['spot_checks']['completed']['total'], 0)
         SpotCheckFactory(
