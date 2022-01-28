@@ -28,6 +28,12 @@ def get_office(obj):
         return None
 
 
+class RealmInline(admin.TabularInline):
+    model = get_user_model().realms.through
+    extra = 1
+    raw_id_fields = ('realm', )
+
+
 class ProfileInline(admin.StackedInline):
     model = UserProfile
     can_delete = False
@@ -184,8 +190,7 @@ class UserAdminPlus(ExtraUrlMixin, UserAdmin):
         }),
         (_('Important dates'), {'fields': ('last_login', 'date_joined')}),
     )
-    filter_horizontal = ('realms', 'groups', 'user_permissions',)
-    inlines = [ProfileInline]
+    inlines = [RealmInline, ProfileInline]
     readonly_fields = ('date_joined',)
 
     list_display = [
@@ -324,16 +329,10 @@ class CountryAdmin(ExtraUrlMixin, TenantAdminMixin, admin.ModelAdmin):
             messages.info(request, "HACT update has been started for %s" % country.name)
         return HttpResponseRedirect(reverse('admin:users_country_change', args=[country.pk]))
 
-#
-# class RealmGroupInline(admin.TabularInline):
-#     model = Realm.groups.through
-#     extra = 1
-
 
 class RealmAdmin(admin.ModelAdmin):
-    # inlines = (RealmGroupInline,)
     filter_horizontal = ('groups',)
-
+    search_fields = ('name', 'vendor_number', 'business_area__name', 'business_area__code')
     autocomplete_fields = ('business_area',)
 
 

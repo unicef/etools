@@ -520,24 +520,3 @@ class Realm(models.Model):
         if self.vendor_number:
             return f'{business_area} {self.vendor_number}'
         return f"{business_area} ({'/ '.join(self.groups.values_list('name', flat=True))})"
-
-
-# class RealmGroup(models.Model):
-#     realm = models.ForeignKey(Realm,
-#                               verbose_name=_('Realm'),
-#                               related_name='realm_groups',
-#                               db_index=True,
-#                               on_delete=models.CASCADE)
-#
-#     group = models.ForeignKey(Group,
-#                               verbose_name=_('Group'),
-#                               related_name='realm_groups',
-#                               on_delete=models.CASCADE)
-#
-#     class Meta:
-#         constraints = [
-#             models.UniqueConstraint(fields=['realm', 'group'], name='unique realm group')
-#         ]
-#
-#     def __str__(self):
-#         return f'{self.realm} {self.group}'
