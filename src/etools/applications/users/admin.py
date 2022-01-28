@@ -186,11 +186,13 @@ class UserAdminPlus(ExtraUrlMixin, UserAdmin):
         (None, {'fields': ('username', 'password')}),
         (_('Personal info'), {'fields': ('first_name', 'last_name', 'email')}),
         (_('Permissions'), {
-            'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'realms', 'user_permissions'),
+            'fields': ('is_active', 'is_staff', 'is_superuser', 'user_permissions'),
         }),
         (_('Important dates'), {'fields': ('last_login', 'date_joined')}),
     )
     inlines = [RealmInline, ProfileInline]
+    filter_horizontal = ('user_permissions',)
+    list_filter = ('is_staff', 'is_superuser', 'is_active', 'realms__groups')
     readonly_fields = ('date_joined',)
 
     list_display = [

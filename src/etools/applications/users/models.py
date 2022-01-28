@@ -183,6 +183,12 @@ class User(TimeStampedModel, AbstractBaseUser, RealmPermissionsMixin):
     def full_name(self):
         return self.get_full_name()
 
+    @property
+    def groups(self):
+        realm_ids = self.realms.values_list('id', flat=True)
+        group_qs = Group.objects.filter(realm__id__in=realm_ids)
+        return group_qs
+
     @cached_property
     def partner(self):
         staff_member = self.get_partner_staff_member()
