@@ -8,11 +8,14 @@ from etools.libraries.pythonlib.urlresolvers import update_url_with_kwargs
 
 
 def build_frontend_url(*parts, user=None):
+    host = settings.HOST
+    if not host.startswith('http'):
+        host = f'https://{host}'
 
     if not user or user.is_staff:
-        frontend_url = '{}{}'.format(settings.HOST, reverse('main'))
+        frontend_url = '{}{}'.format(host, reverse('main'))
     else:
-        frontend_url = '{}{}'.format(settings.HOST, reverse('social:begin', kwargs={'backend': 'azuread-b2c-oauth2'}))
+        frontend_url = '{}{}'.format(host, reverse('social:begin', kwargs={'backend': 'azuread-b2c-oauth2'}))
 
     if hasattr(connection, "tenant"):
         country_id = connection.tenant.id
