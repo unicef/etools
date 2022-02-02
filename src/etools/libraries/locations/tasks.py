@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 
 import celery
+from carto.exceptions import CartoException
 from celery.utils.log import get_task_logger
 from tenant_schemas_celery.app import get_schema_name_from_task
 from unicef_locations.models import CartoDBTable
@@ -29,11 +30,17 @@ class eToolsLocationSynchronizer(LocationSynchronizer):
         )
 
     def sync(self):
-        new, updated, skipped, error = super().sync()
-        self.log.total_records = new + updated + skipped + error
-        self.log.total_processed = new + updated
-        self.log.successful = True
-        self.log.save()
+        try:
+            new, updated, skipped, error = super().sync()
+            self.log.total_records = new + updated + skipped + error
+            self.log.total_processed = new + updated
+            self.log.successful = True
+            self.log.exception_message = 'Congrats: Success'
+        except CartoException as e:
+            self.log.exception_message = e
+            self.log.successful = False
+        finally:
+            self.log.save()
 
     def post_sync(self):
         # update sites
