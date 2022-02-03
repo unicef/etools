@@ -93,9 +93,7 @@ class PartnerStaffMemberForm(forms.ModelForm):
                 try:
                     user = User.objects.get(email=email)
                 except User.DoesNotExist:
-                    raise ValidationError(
-                        "The staff member email {} does not match any existing user email. "
-                        "Activation did not succeed.".format(email))
+                    pass
                 else:
                     if self.instance.user != user:
                         raise ValidationError({'email': self.ERROR_MESSAGES['user_mismatch']})
