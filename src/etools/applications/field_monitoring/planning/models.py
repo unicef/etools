@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import connection, models
-from django.db.models import Exists, OuterRef, Q
+from django.db.models import Count, Exists, OuterRef, Q
 from django.db.models.base import ModelBase
 from django.utils.translation import gettext_lazy as _
 
@@ -193,6 +193,7 @@ class MonitoringActivity(
         ],
         STATUSES.report_finalization: [
             lambda i, old_instance=None, user=None: i.close_offline_blueprints(),
+            lambda i, old_instance=None, user=None: i.port_findings_to_summary(),
         ],
         STATUSES.submitted: [
             lambda i, old_instance=None, user=None: i.send_submit_notice(),
@@ -576,6 +577,14 @@ class MonitoringActivity(
 
     def close_offline_blueprints(self):
         MonitoringActivityOfflineSynchronizer(self).close_blueprints()
+
+    def port_findings_to_summary(self):
+        valid_questions = self.questions.annotate(
+            answers_count=Count('findings', filter=Q(findings__value__isnull=False)),
+        ).filter(answers_count=1).prefetch_related('findings')
+        for question in valid_questions:
+            question.overall_finding.value = question.findings.all()[0].value
+            question.overall_finding.save()
 
 
 class MonitoringActivityActionPointManager(models.Manager):

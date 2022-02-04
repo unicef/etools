@@ -533,6 +533,51 @@ class TestChecklistFindingsView(ChecklistDataCollectionTestMixin, APIViewSetTest
     def test_update_fm_user(self):
         self._test_update(self.fm_user, self.finding, {}, expected_status=status.HTTP_403_FORBIDDEN)
 
+    def test_activity_answers_porting_no_answers(self):
+        method = self.activity_question.question.methods.first()
+        StartedChecklistFactory(monitoring_activity=self.activity, method=method)
+
+        self.activity.port_findings_to_summary()
+
+        self.activity_question.overall_finding.refresh_from_db()
+        activity_finding = self.activity_question.overall_finding
+        self.assertIsNone(activity_finding.value)
+
+    def test_activity_answers_porting_one_answer(self):
+        StartedChecklistFactory(
+            monitoring_activity=self.activity,
+            method=self.activity_question.question.methods.first(),
+        )
+
+        finding = self.started_checklist.findings.filter(activity_question=self.activity_question).first()
+        finding.value = 'test value'
+        finding.save()
+
+        self.activity.port_findings_to_summary()
+
+        self.activity_question.overall_finding.refresh_from_db()
+        activity_finding = self.activity_question.overall_finding
+        self.assertEqual(activity_finding.value, 'test value')
+
+    def test_activity_answers_porting_two_answers(self):
+        second_checklist = StartedChecklistFactory(
+            monitoring_activity=self.activity,
+            method=self.activity_question.question.methods.first(),
+        )
+
+        finding = self.started_checklist.findings.filter(activity_question=self.activity_question).first()
+        finding.value = 'test value'
+        finding.save()
+        finding = second_checklist.findings.filter(activity_question=self.activity_question).first()
+        finding.value = 'another value'
+        finding.save()
+
+        self.activity.port_findings_to_summary()
+
+        self.activity_question.overall_finding.refresh_from_db()
+        activity_finding = self.activity_question.overall_finding
+        self.assertIsNone(activity_finding.value)
+
 
 class TestActivityOverallFindingsView(ChecklistDataCollectionTestMixin, APIViewSetTestCase):
     base_view = 'field_monitoring_data_collection:activity-overall-findings'
