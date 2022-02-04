@@ -579,12 +579,26 @@ class MonitoringActivity(
         MonitoringActivityOfflineSynchronizer(self).close_blueprints()
 
     def port_findings_to_summary(self):
+        from etools.applications.field_monitoring.data_collection.models import ChecklistOverallFinding
+
         valid_questions = self.questions.annotate(
             answers_count=Count('findings', filter=Q(findings__value__isnull=False)),
         ).filter(answers_count=1).prefetch_related('findings')
         for question in valid_questions:
             question.overall_finding.value = question.findings.all()[0].value
             question.overall_finding.save()
+
+        for overall_finding in self.overall_findings.all():
+            narrative_findings = ChecklistOverallFinding.objects.filter(
+                ~Q(narrative_finding=''),
+                started_checklist__monitoring_activity=self,
+                partner=overall_finding.partner,
+                cp_output=overall_finding.cp_output,
+                intervention=overall_finding.intervention,
+            ).values_list('narrative_finding', flat=True)
+            if len(narrative_findings) == 1:
+                overall_finding.narrative_finding = narrative_findings[0]
+                overall_finding.save()
 
 
 class MonitoringActivityActionPointManager(models.Manager):

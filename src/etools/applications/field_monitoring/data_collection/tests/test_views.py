@@ -543,6 +543,9 @@ class TestChecklistFindingsView(ChecklistDataCollectionTestMixin, APIViewSetTest
         activity_finding = self.activity_question.overall_finding
         self.assertIsNone(activity_finding.value)
 
+        activity_overall_finding = self.activity.overall_findings.first()
+        self.assertEqual(activity_overall_finding.narrative_finding, '')
+
     def test_activity_answers_porting_one_answer(self):
         StartedChecklistFactory(
             monitoring_activity=self.activity,
@@ -553,11 +556,18 @@ class TestChecklistFindingsView(ChecklistDataCollectionTestMixin, APIViewSetTest
         finding.value = 'test value'
         finding.save()
 
+        overall_finding = self.started_checklist.overall_findings.first()
+        overall_finding.narrative_finding = 'ok'
+        overall_finding.save()
+
         self.activity.port_findings_to_summary()
 
         self.activity_question.overall_finding.refresh_from_db()
         activity_finding = self.activity_question.overall_finding
         self.assertEqual(activity_finding.value, 'test value')
+
+        activity_overall_finding = self.activity.overall_findings.first()
+        self.assertEqual(activity_overall_finding.narrative_finding, 'ok')
 
     def test_activity_answers_porting_two_answers(self):
         second_checklist = StartedChecklistFactory(
@@ -572,11 +582,21 @@ class TestChecklistFindingsView(ChecklistDataCollectionTestMixin, APIViewSetTest
         finding.value = 'another value'
         finding.save()
 
+        overall_finding = self.started_checklist.overall_findings.first()
+        overall_finding.narrative_finding = 'ok'
+        overall_finding.save()
+        second_overall_finding = second_checklist.overall_findings.first()
+        second_overall_finding.narrative_finding = 'fine'
+        second_overall_finding.save()
+
         self.activity.port_findings_to_summary()
 
         self.activity_question.overall_finding.refresh_from_db()
         activity_finding = self.activity_question.overall_finding
         self.assertIsNone(activity_finding.value)
+
+        activity_overall_finding = self.activity.overall_findings.first()
+        self.assertEqual(activity_overall_finding.narrative_finding, '')
 
 
 class TestActivityOverallFindingsView(ChecklistDataCollectionTestMixin, APIViewSetTestCase):
