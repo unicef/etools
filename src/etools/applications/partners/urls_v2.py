@@ -126,7 +126,8 @@ urlpatterns = (
     re_path(r'^partners/assessments/(?P<pk>\d+)/$',
             view=PartnerOrganizationAssessmentUpdateDeleteView.as_view(http_method_names=['delete', 'patch']),
             name='partner-assessment-detail'),
-    re_path(r'^partners/add/$', view=PartnerOrganizationAddView.as_view(http_method_names=['post']), name='partner-add'),
+    re_path(r'^partners/add/$', view=PartnerOrganizationAddView.as_view(http_method_names=['post']),
+            name='partner-add'),
 
     re_path(r'^partners/(?P<partner_pk>\d+)/staff-members/$',
             view=PartnerStaffMemberListAPIVIew.as_view(http_method_names=['get']),
