@@ -13,7 +13,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from unicef_attachments.models import FileType as AttachmentFileType
 from unicef_djangolib.fields import CURRENCIES
-from unicef_locations.models import GatewayType
+from unicef_locations.models import Location
 
 from etools.applications.attachments.models import AttachmentFlat
 from etools.applications.funds.models import FundsReservationItem
@@ -93,7 +93,7 @@ class PMPStaticDropdownsListAPIView(APIView):
         intervention_doc_type = choices_to_json_ready(Intervention.INTERVENTION_TYPES)
         intervention_status = choices_to_json_ready(Intervention.INTERVENTION_STATUS, sort_choices=False)
         intervention_amendment_types = choices_to_json_ready(InterventionAmendment.AMENDMENT_TYPES)
-        location_types = GatewayType.objects.values('id', 'name', 'admin_level').order_by('id')
+        location_types = Location.objects.values('admin_level_name', 'admin_level').order_by('admin_level').distinct()
         currencies = choices_to_json_ready(CURRENCIES)
         attachment_types = AttachmentFileType.objects.values_list(
             "label",
