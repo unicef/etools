@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "f78768da25e26aae5e73a39985447affc1a8c461b785db7c9dbdaf37f1531796"
+            "sha256": "da70c32c7d55680dae1d4dbdc512469c8e1f0a95c4163def4886e580417ae2f4"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -1301,11 +1301,11 @@
         },
         "unicef-locations": {
             "hashes": [
-                "sha256:456895b1e3e71bb46e0f989ed14f8a784acb11123bc34d507a7aa36453a6bbf4",
-                "sha256:7d732f408861dc07034ed22b54bbd18bea029ee6280a7015b79059cf89938117"
+                "sha256:172e66008117ed6703b8dd37a592fc2977712da7c59e6b498aa818329b00a8b2",
+                "sha256:88d0e1ecfd13bc2824999000727371d98e1b6e8b65c0d3179582ef5ba44d4c01"
             ],
             "index": "pypi",
-            "version": "==3.2.2"
+            "version": "==3.2.3"
         },
         "unicef-notification": {
             "hashes": [
