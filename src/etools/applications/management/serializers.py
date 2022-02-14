@@ -15,7 +15,6 @@ class GisLocationListSerializer(serializers.ModelSerializer):
             'parent_id',
             'name',
             'p_code',
-            'gateway_id',
             'level',
         )
 
@@ -39,7 +38,6 @@ class GisLocationWktSerializer(serializers.ModelSerializer):
             'parent_id',
             'name',
             'p_code',
-            'gateway_id',
             'level',
             'geom',
             'point'
@@ -57,7 +55,6 @@ class GisLocationGeojsonSerializer(GeoFeatureModelSerializer):
             'parent_id',
             'name',
             'p_code',
-            'gateway_id',
             'level',
             'geom',
             'point'

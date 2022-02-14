@@ -153,7 +153,7 @@ class TestCountryAdmin(BaseTenantTestCase):
         country = Country.objects.exclude(schema_name='public').first()
         url = reverse('admin:users_country_change', args=[country.pk])
         response = self.client.get(url)
-        self.assertContains(response, text=">Update Hact<", msg_prefix=response.content.decode('utf-8'))
+        self.assertContains(response, text="Update Hact<", msg_prefix=response.content.decode('utf-8'))
         self.assertTemplateUsed('admin/users/country/change_form.html')
 
     def test_update_hact_action_nonpublic_country(self):
