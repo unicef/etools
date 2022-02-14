@@ -29,7 +29,6 @@ from etools.libraries.locations.views import (
     LocationQuerySetView,
     LocationsLightViewSet,
     LocationsViewSet,
-    LocationTypesViewSet,
 )
 
 # ******************  API docs and schemas  ******************************
@@ -59,7 +58,6 @@ api.register(r'reports/sectors', SectionViewSet, basename='sectors')  # TODO rem
 
 api.register(r'locations', LocationsViewSet, basename='locations')
 api.register(r'locations-light', LocationsLightViewSet, basename='locations-light')
-api.register(r'locations-types', LocationTypesViewSet, basename='locationtypes')
 
 urlpatterns = [
     # Used for admin and dashboard pages in django

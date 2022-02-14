@@ -573,3 +573,5 @@ INSIGHT_REQUESTS_TIMEOUT = get_from_secrets_or_env('INSIGHT_REQUESTS_TIMEOUT', 4
 ETOOLS_OFFLINE_API = get_from_secrets_or_env('ETOOLS_OFFLINE_API', '')
 ETOOLS_OFFLINE_TOKEN = get_from_secrets_or_env('ETOOLS_OFFLINE_TOKEN', '')
 ETOOLS_OFFLINE_TASK_APP = "etools.config.celery.get_task_app"
+
+UNICEF_LOCATIONS_MODEL = 'locations.Location'
