@@ -2,6 +2,7 @@ from django.urls import reverse
 
 from rest_framework import status
 from unicef_locations.tests.factories import LocationFactory
+from unicef_snapshot.models import Activity
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import Intervention, InterventionResultLink
@@ -19,6 +20,7 @@ from etools.applications.reports.tests.factories import (
     SectionFactory,
 )
 from etools.applications.users.tests.factories import UserFactory
+from etools.libraries.unicef_snapshot_child.tests.utils import get_recursive_from_dict
 
 
 class TestInterventionLowerResultsViewBase(BaseTenantTestCase):
@@ -319,6 +321,27 @@ class TestInterventionLowerResultsDetailView(TestInterventionLowerResultsViewBas
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertNotIn('intervention', response.data)
+
+    def test_create_intervention_snapshot(self):
+        result = LowerResultFactory(result_link=self.result_link, name='old_name')
+        response = self.forced_auth_req(
+            'patch',
+            reverse('partners:intervention-pd-output-detail', args=[self.intervention.pk, result.pk]),
+            self.user,
+            data={'name': 'new_name'}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+
+        activity = Activity.objects.first()
+        self.assertEqual(activity.target, self.intervention)
+        self.assertDictEqual(
+            {'name': {'after': 'new_name', 'before': 'old_name'}},
+            get_recursive_from_dict(activity.change, 'result_links.*.ll_results.*'),
+        )
+        self.assertEqual(
+            result.id,
+            get_recursive_from_dict(activity.data, 'result_links.*.ll_results.*')['id'],
+        )
 
 
 class TestAppliedIndicatorsCreate(TestInterventionLowerResultsViewBase):

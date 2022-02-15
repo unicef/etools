@@ -6,6 +6,7 @@ from django.utils import timezone
 
 from factory import fuzzy
 from rest_framework import status
+from unicef_snapshot.models import Activity
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import Intervention
@@ -23,6 +24,7 @@ from etools.applications.reports.tests.factories import (
     SectionFactory,
 )
 from etools.applications.users.tests.factories import UserFactory
+from etools.libraries.unicef_snapshot_child.tests.utils import get_recursive_from_dict
 
 
 class BaseInterventionMixin:
@@ -237,6 +239,27 @@ class PRCReviewTestCase(ReviewInterventionMixin, BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertNotIn('individual_review', response.data['available_actions'])
+
+    def test_create_intervention_snapshot(self):
+        prc_member = UserFactory(is_staff=True)
+        self.review.prc_officers.add(prc_member)
+        prc_review = self.review.prc_reviews.get()
+        response = self.forced_auth_req(
+            'patch', self.get_detail_url(prc_member), prc_member,
+            data={'overall_comment': 'ok'},
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+
+        activity = Activity.objects.first()
+        self.assertEqual(activity.target, self.review_intervention)
+        self.assertDictEqual(
+            {'overall_comment': {'after': 'ok', 'before': prc_review.overall_comment}},
+            get_recursive_from_dict(activity.change, 'reviews.*.prc_reviews.*'),
+        )
+        self.assertEqual(
+            prc_review.id,
+            get_recursive_from_dict(activity.data, 'reviews.*.prc_reviews.*')['id'],
+        )
 
 
 class DevelopPermissionsTestCase(TestPermissionsMixin, DevelopInterventionMixin, BaseTenantTestCase):

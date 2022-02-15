@@ -8,6 +8,7 @@ from unicef_restlib.fields import SeparatedReadWriteField
 from etools.applications.partners.models import InterventionResultLink, InterventionReview, PRCOfficerInterventionReview
 from etools.applications.reports.models import LowerResult, Result, ResultType
 from etools.applications.users.serializers_v3 import MinimalUserSerializer
+from etools.libraries.unicef_snapshot_child.serializers import ChildRelatedModelSnapshotSerializerMixin
 
 
 class CPOutputValidator:
@@ -26,7 +27,9 @@ class CPOutputValidator:
             raise serializers.ValidationError(_("Invalid CP Output provided."))
 
 
-class InterventionLowerResultBaseSerializer(serializers.ModelSerializer):
+class InterventionLowerResultBaseSerializer(ChildRelatedModelSnapshotSerializerMixin, serializers.ModelSerializer):
+    parent_object_path = 'result_link.intervention'
+
     class Meta:
         abstract = True
         model = LowerResult
@@ -87,7 +90,9 @@ class InterventionReviewSerializer(serializers.ModelSerializer):
         instance.prc_officers.remove(*diff)
 
 
-class PRCOfficerInterventionReviewSerializer(serializers.ModelSerializer):
+class PRCOfficerInterventionReviewSerializer(ChildRelatedModelSnapshotSerializerMixin, serializers.ModelSerializer):
+    parent_object_path = 'overall_review.intervention'
+
     user = MinimalUserSerializer(read_only=True)
 
     class Meta:
