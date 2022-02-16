@@ -1,3 +1,4 @@
+from django.db import IntegrityError
 from django.db.models.fields.related_descriptors import ForwardManyToOneDescriptor, ManyToManyDescriptor
 from django.db.transaction import atomic
 
@@ -168,7 +169,10 @@ class SectionHandler:
         from_instance = Section.objects.get(pk=from_instance_pk)
         from_instance.active = False
         from_instance.name = f'{from_instance.name} [Inactive]'
-        from_instance.save()
+        try:
+            from_instance.save()
+        except IntegrityError:
+            raise MigrationException(f'Section "{from_instance.name}" already exists')
 
         new_sections = []
         # m2m relation need to be cleaned at the end.
