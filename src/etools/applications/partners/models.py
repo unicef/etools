@@ -825,14 +825,11 @@ class PartnerOrganization(TimeStampedModel):
         """
         if not event_date:
             event_date = datetime.datetime.today()
-        quarter_name = get_quarter(event_date)
-        sc = self.hact_values['spot_checks']['completed']['total']
-        scq = self.hact_values['spot_checks']['completed'][quarter_name]
 
         if update_one:
-            sc += 1
-            scq += 1
-            self.hact_values['spot_checks']['completed'][quarter_name] = scq
+            quarter_name = get_quarter(event_date)
+            self.hact_values['spot_checks']['completed']['total'] += 1
+            self.hact_values['spot_checks']['completed'][quarter_name] += 1
         else:
             audit_spot_check = self.spot_checks
 
@@ -846,10 +843,8 @@ class PartnerOrganization(TimeStampedModel):
             self.hact_values['spot_checks']['completed']['q3'] = asc3
             self.hact_values['spot_checks']['completed']['q4'] = asc4
 
-            sc = audit_spot_check.count()  # TODO 1.1.9c add spot checks from field monitoring
-
-        self.hact_values['spot_checks']['completed']['total'] = sc
-        self.save()
+            self.hact_values['spot_checks']['completed']['total'] = audit_spot_check.count()  # TODO 1.1.9c add spot checks from field monitoring
+        self.save(update_fields=['hact_values'])
 
     @cached_property
     def audits_completed(self):

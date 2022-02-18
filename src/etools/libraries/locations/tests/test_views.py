@@ -16,17 +16,13 @@ class TestLocationViews(BaseTenantTestCase):
         cls.locations.append(cls.parent)
         # heavy_detail_expected_keys are the keys that should be in response.data.keys()
         cls.heavy_detail_expected_keys = sorted(
-            ('id', 'name', 'name_display', 'p_code', 'gateway', 'parent', 'geo_point')
+            ('admin_level', 'admin_level_name', 'id', 'name', 'name_display', 'p_code', 'parent', 'geo_point')
         )
-
-    def test_api_locationtypes_list(self):
-        response = self.forced_auth_req('get', reverse('locationtypes-list'), user=self.unicef_staff)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_api_location_light_list(self):
         response = self.forced_auth_req('get', reverse('locations-light-list'), user=self.unicef_staff)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(sorted(response.data[0].keys()), ["gateway", "id", "name", "name_display", "p_code", "parent"])
+        self.assertEqual(sorted(response.data[0].keys()), ['admin_level', 'admin_level_name', "id", "name", "name_display", "p_code", "parent"])
         # sort the expected locations by name, the same way the API results are sorted
         self.locations.sort(key=lambda location: location.name)
 
@@ -36,14 +32,14 @@ class TestLocationViews(BaseTenantTestCase):
             if location.parent:
                 self.assertEqual(data["name"], '{} ({}: {}) -- {}'.format(
                     location.name,
-                    location.gateway.name,
+                    location.admin_level_name,
                     location.p_code,
                     location.parent.name
                 ))
             else:
                 self.assertEqual(data["name"], '{} ({}: {})'.format(
                     location.name,
-                    location.gateway.name,
+                    location.admin_level_name,
                     location.p_code,
                 ))
 
@@ -117,5 +113,6 @@ class TestLocationViews(BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 6)
-        self.assertEqual(sorted(response.data[0].keys()), ["gateway", "id", "name", "name_display", "p_code", "parent"])
+        self.assertEqual(sorted(response.data[0].keys()), ['admin_level', 'admin_level_name', "id", "name",
+                                                           "name_display", "p_code", "parent"])
         self.assertIn("Loc", response.data[0]["name"])

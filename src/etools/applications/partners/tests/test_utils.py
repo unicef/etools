@@ -6,7 +6,7 @@ from django.core.management import call_command
 from django.utils import timezone
 
 from dateutil.relativedelta import relativedelta
-from unicef_locations.tests.factories import GatewayTypeFactory, LocationFactory
+from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.attachments.tests.factories import AttachmentFileTypeFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
@@ -93,7 +93,6 @@ def setup_intervention_test_data(test_case, include_results_and_indicators=False
         )
         test_case.applied_indicator.locations.add(LocationFactory(
             name='A Location',
-            gateway=GatewayTypeFactory(name='A Gateway'),
             p_code='a-p-code')
         )
         test_case.disaggregation = test_case.applied_indicator.disaggregation.create(name='A Disaggregation')

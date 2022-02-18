@@ -208,7 +208,7 @@ class LocationSite(TimeStampedModel):
             matched_locations = list(filter(lambda l: l.is_leaf_node(), locations)) or locations
             location = min(matched_locations, key=lambda l: l.geom.length)
         else:
-            location = Location.objects.filter(gateway__admin_level=0, is_active=True).first()
+            location = Location.objects.filter(admin_level=0, is_active=True).first()
 
         return location
 
