@@ -255,7 +255,7 @@ class TestTripViewSet(BaseTenantTestCase):
         )
         self.assertFalse(trip_qs.exists())
         start_date = timezone.now().date()
-
+        end_date = start_date + datetime.timedelta(days=2)
         response = self.forced_auth_req(
             "post",
             reverse('travel:trip-list'),
@@ -264,6 +264,7 @@ class TestTripViewSet(BaseTenantTestCase):
                 "traveller": traveller.pk,
                 "supervisor": self.user.pk,
                 "start_date": start_date,
+                "end_date": end_date,
                 "office": office.pk,
                 "section": section.pk,
             },
