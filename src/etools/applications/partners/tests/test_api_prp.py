@@ -55,7 +55,7 @@ class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, BaseTenantTestCase):
         # TODO: think of how to improve this test without having to dig through the object to delete ids
         json_filename = os.path.join(os.path.dirname(__file__), 'data', 'prp-intervention-list.json')
         with open(json_filename) as f:
-            expected_interventions = json.loads(f.read())
+            expected_interventions = json.load(f)
 
         # need to do some annoying scrubbing of IDs
         for i in range(len(response)):
