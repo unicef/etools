@@ -388,6 +388,11 @@ class LowerResult(TimeStampedModel):
         unique_together = (('result_link', 'code'),)
         ordering = ('created',)
 
+    def save(self, *args, **kwargs):
+        if not self.code:
+            self.code = '{0}.{1}'.format(self.result_link.code, self.result_link.ll_results.count() + 1)
+        super().save(*args, **kwargs)
+
     def total(self):
         results = self.activities.aggregate(
             total=Sum("unicef_cash") + Sum("cso_cash"),
@@ -944,6 +949,12 @@ class InterventionActivity(TimeStampedModel):
         verbose_name=_("Name"),
         max_length=150,
     )
+    code = models.CharField(
+        verbose_name=_("Code"),
+        max_length=50,
+        blank=True,
+        null=True
+    )
     context_details = models.TextField(
         verbose_name=_("Context Details"),
         blank=True,
@@ -1002,6 +1013,8 @@ class InterventionActivity(TimeStampedModel):
         return self.cso_cash / self.total * 100
 
     def save(self, *args, **kwargs):
+        if not self.code:
+            self.code = '{0}.{1}'.format(self.result.code, self.result.activities.count() + 1)
         super().save(*args, **kwargs)
         self.result.result_link.intervention.planned_budget.calc_totals()
 

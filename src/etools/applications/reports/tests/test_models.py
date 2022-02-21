@@ -249,6 +249,17 @@ class TestLowerResult(BaseTenantTestCase):
         InterventionActivityFactory(result=ll, unicef_cash=10, cso_cash=20)
         self.assertEqual(ll.total(), 30)
 
+    def test_auto_code(self):
+        intervention = InterventionFactory()
+        LowerResultFactory(code=None, result_link=InterventionResultLinkFactory(intervention=intervention))
+        result1 = LowerResultFactory(code=None, result_link=InterventionResultLinkFactory(intervention=intervention))
+        result2 = LowerResultFactory(code=None, result_link=result1.result_link)
+        LowerResultFactory(code=None, result_link=InterventionResultLinkFactory(intervention=intervention))
+        result3 = LowerResultFactory(code=None, result_link=result1.result_link)
+        self.assertEqual(result1.code, '2.1')
+        self.assertEqual(result2.code, '2.2')
+        self.assertEqual(result3.code, '2.3')
+
 
 class TestIndicatorBlueprint(BaseTenantTestCase):
     def test_save_empty(self):
@@ -298,6 +309,18 @@ class TestInterventionActivity(BaseTenantTestCase):
 
         budget.refresh_from_db()
         self.assertEqual(budget.total_cash_local(), 606)
+
+    def test_auto_code(self):
+        intervention = InterventionFactory()
+        link = InterventionResultLinkFactory(intervention=intervention)
+        InterventionActivityFactory(code=None, result=LowerResultFactory(result_link=link))
+        activity1 = InterventionActivityFactory(code=None, result=LowerResultFactory(result_link=link))
+        activity2 = InterventionActivityFactory(code=None, result=activity1.result)
+        InterventionActivityFactory(code=None, result_link=LowerResultFactory(result_link=link))
+        activity3 = InterventionActivityFactory(code=None, result=activity1.result)
+        self.assertEqual(activity1.code, '2.2.1')
+        self.assertEqual(activity2.code, '2.2.2')
+        self.assertEqual(activity3.code, '2.2.3')
 
 
 class TestInterventionActivityItem(BaseTenantTestCase):

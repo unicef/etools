@@ -1467,6 +1467,15 @@ class TestInterventionResultLink(BaseTenantTestCase):
         InterventionActivityFactory(result=ll, unicef_cash=10, cso_cash=20)
         self.assertEqual(link.total(), 30)
 
+    def test_auto_code(self):
+        link1 = InterventionResultLinkFactory()
+        link2 = InterventionResultLinkFactory(intervention=link1.intervention)
+        InterventionResultLinkFactory()
+        link3 = InterventionResultLinkFactory(intervention=link1.intervention)
+        self.assertEqual(link1.code, '1')
+        self.assertEqual(link2.code, '2')
+        self.assertEqual(link3.code, '3')
+
 
 class TestInterventionBudget(BaseTenantTestCase):
     def test_str(self):

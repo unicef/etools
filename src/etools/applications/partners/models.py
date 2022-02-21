@@ -2809,6 +2809,7 @@ class InterventionPlannedVisits(TimeStampedModel):
 
 
 class InterventionResultLink(TimeStampedModel):
+    code = models.CharField(verbose_name=_("Code"), max_length=50, blank=True, null=True)
     intervention = models.ForeignKey(
         Intervention, related_name='result_links', verbose_name=_('Intervention'),
         on_delete=models.CASCADE,
@@ -2836,6 +2837,8 @@ class InterventionResultLink(TimeStampedModel):
         return results["total"] if results["total"] is not None else 0
 
     def save(self, *args, **kwargs):
+        if not self.code:
+            self.code = str(self.intervention.result_links.count() + 1)
         super().save(*args, **kwargs)
 
 
