@@ -63,16 +63,26 @@ class TripViewSet(
 
     filter_backends = (SearchFilter, DjangoFilterBackend, OrderingFilter)
     filters = (
-        ('q', [
+        ('search', [
             'reference_number__icontains',
             'supervisor__first_name__icontains',
             'supervisor__last_name__icontains',
             'traveller__first_name__icontains',
             'traveller__last_name__icontains',
+            'section__name',
+            'office__name',
         ]),
         ('status', 'status__in'),
-        ('start_date', 'start_date'),
-        ('end_date', 'end_date'),
+        ('traveller', 'traveller'),
+        ('supervisor', 'supervisor'),
+        ('office', 'office'),
+        ('section', 'section'),
+        ('partner', 'activities__partner__pk'),
+        ('month', ['start_date__month',
+                   'end_date__month'
+                   ]),
+        ('year', ['start_date__year',
+                  'end_date__year'])
     )
     export_filename = 'Trip'
 
