@@ -92,22 +92,19 @@ class TripViewSet(
     }
 
     def parse_sort_params(self):
-        MAP_SORT = {
-            "reference_number": "reference_number",
-        }
+        SORT_BY = [
+            "reference_number", "traveller",
+            "office", "section", "start_date",
+            "end_date", "status"
+        ]
         sort_param = self.request.GET.get("sort")
         ordering = []
         if sort_param:
             sort_options = sort_param.split("|")
             for sort in sort_options:
                 field, asc_desc = sort.split(".", 2)
-                if field in MAP_SORT:
-                    ordering.append(
-                        "{}{}".format(
-                            "-" if asc_desc == "desc" else "",
-                            MAP_SORT[field],
-                        )
-                    )
+                if asc_desc in ['asc', 'desc'] and field in SORT_BY:
+                    ordering.append(f'{"-" if asc_desc == "desc" else ""}{field}')
         return ordering
 
     def get_queryset(self):
