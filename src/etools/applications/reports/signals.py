@@ -64,6 +64,7 @@ def update_cash_on_delete(instance, **kwargs):
     else:
         Activity.update_cash()
 
+
 @receiver(post_delete, sender=InterventionResultLink)
 def recalculate_result_links_numbering(instance, **kwargs):
     InterventionResultLink.renumber_result_links_for_intervention(instance.intervention)
@@ -75,11 +76,13 @@ def recalculate_result_links_numbering(instance, **kwargs):
         for result in result_link.ll_results.all():
             InterventionActivity.renumber_activities_for_result(result)
 
+
 @receiver(post_delete, sender=LowerResult)
 def recalculate_results_numbering(instance, **kwargs):
     LowerResult.renumber_results_for_result_link(instance.result_link)
     for result in instance.result_link.ll_results.filter(id__gt=instance.id).prefetch_related('activities'):
         InterventionActivity.renumber_activities_for_result(result)
+
 
 @receiver(post_delete, sender=InterventionActivity)
 def recalculate_activities_numbering(instance, **kwargs):
