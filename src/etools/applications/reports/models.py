@@ -393,6 +393,13 @@ class LowerResult(TimeStampedModel):
             self.code = '{0}.{1}'.format(self.result_link.code, self.result_link.ll_results.count() + 1)
         super().save(*args, **kwargs)
 
+    @classmethod
+    def renumber_results_for_result_link(cls, result_link):
+        results = result_link.ll_results.all()
+        for i, result in enumerate(results):
+            result.code = '{0}.{1}'.format(result_link.code, i + 1)
+        cls.objects.bulk_update(results, fields=['code'])
+
     def total(self):
         results = self.activities.aggregate(
             total=Sum("unicef_cash") + Sum("cso_cash"),
@@ -1017,6 +1024,13 @@ class InterventionActivity(TimeStampedModel):
             self.code = '{0}.{1}'.format(self.result.code, self.result.activities.count() + 1)
         super().save(*args, **kwargs)
         self.result.result_link.intervention.planned_budget.calc_totals()
+
+    @classmethod
+    def renumber_activities_for_result(cls, result: LowerResult, start_id=None):
+        activities = result.activities.all()
+        for i, activity in enumerate(activities):
+            activity.code = '{0}.{1}'.format(result.code, i + 1)
+        cls.objects.bulk_update(activities, fields=['code'])
 
     def get_amended_name(self):
         return f'{self.result} {self.name} (Total: {self.total}, UNICEF: {self.unicef_cash}, Partner: {self.cso_cash})'

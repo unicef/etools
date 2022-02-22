@@ -2841,6 +2841,13 @@ class InterventionResultLink(TimeStampedModel):
             self.code = str(self.intervention.result_links.count() + 1)
         super().save(*args, **kwargs)
 
+    @classmethod
+    def renumber_result_links_for_intervention(cls, intervention):
+        result_links = intervention.result_links.all()
+        for i, result_link in enumerate(result_links):
+            result_link.code = str(i + 1)
+        cls.objects.bulk_update(result_links, fields=['code'])
+
 
 class InterventionBudget(TimeStampedModel):
     """

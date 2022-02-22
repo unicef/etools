@@ -1476,6 +1476,23 @@ class TestInterventionResultLink(BaseTenantTestCase):
         self.assertEqual(link2.code, '2')
         self.assertEqual(link3.code, '3')
 
+    def test_code_renumber_on_result_link_delete(self):
+        intervention = InterventionFactory()
+        result_link_1 = InterventionResultLinkFactory(intervention=intervention, code=None)
+        result_link_2 = InterventionResultLinkFactory(intervention=intervention, code=None)
+        result_link_3 = InterventionResultLinkFactory(intervention=intervention, code=None)
+
+        self.assertEqual(result_link_1.code, '1')
+        self.assertEqual(result_link_2.code, '2')
+        self.assertEqual(result_link_3.code, '3')
+
+        result_link_2.delete()
+
+        result_link_1.refresh_from_db()
+        result_link_3.refresh_from_db()
+        self.assertEqual(result_link_1.code, '1')
+        self.assertEqual(result_link_3.code, '2')
+
 
 class TestInterventionBudget(BaseTenantTestCase):
     def test_str(self):
