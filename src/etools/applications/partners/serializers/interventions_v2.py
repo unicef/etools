@@ -462,6 +462,7 @@ class InterventionResultNestedSerializer(serializers.ModelSerializer):
         model = InterventionResultLink
         fields = (
             'id',
+            'code',
             'intervention',
             'cp_output',
             'cp_output_name',
@@ -470,6 +471,7 @@ class InterventionResultNestedSerializer(serializers.ModelSerializer):
             'll_results',
             'total',
         )
+        read_only_fields = ['code']
 
 
 class InterventionResultLinkSimpleCUSerializer(serializers.ModelSerializer):
@@ -495,6 +497,7 @@ class InterventionResultLinkSimpleCUSerializer(serializers.ModelSerializer):
     class Meta:
         model = InterventionResultLink
         fields = "__all__"
+        read_only_fields = ['code']
         validators = [
             UniqueTogetherValidator(
                 queryset=InterventionResultLink.objects.all(),

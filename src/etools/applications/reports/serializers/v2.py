@@ -600,10 +600,11 @@ class InterventionActivitySerializer(serializers.ModelSerializer):
     class Meta:
         model = InterventionActivity
         fields = (
-            'id', 'name', 'context_details',
+            'id', 'name', 'code', 'context_details',
             'unicef_cash', 'cso_cash', 'partner_percentage',
             'time_frames',
         )
+        read_only_fields = ['code']
 
 
 class LowerResultWithActivitiesSerializer(LowerResultSerializer):
