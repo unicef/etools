@@ -24,6 +24,7 @@ from etools.applications.field_monitoring.permissions import IsEditAction, IsRea
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.partners.views.v2 import choices_to_json_ready
 from etools.applications.permissions2.views import PermissionContextMixin, PermittedSerializerMixin
+from etools.applications.travel.filters import ShowHiddenFilter
 from etools.applications.travel.models import Activity, ItineraryItem, Report, Trip
 from etools.applications.travel.permissions import trip_field_is_editable_permission, UserIsStaffPermission
 from etools.applications.travel.serializers import (
@@ -61,7 +62,7 @@ class TripViewSet(
     queryset = Trip.objects.all()
     serializer_class = TripSerializer
 
-    filter_backends = (SearchFilter, DjangoFilterBackend, OrderingFilter)
+    filter_backends = (SearchFilter, DjangoFilterBackend, OrderingFilter, ShowHiddenFilter)
     filters = (
         ('search', [
             'reference_number__icontains',

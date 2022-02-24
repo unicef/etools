@@ -62,6 +62,38 @@ class TestTripViewSet(BaseTenantTestCase):
         self.assertEqual(data["available_actions"], ["submit", "cancel"])
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_filter_show_hidden(self):
+        for _ in range(5):
+            TripFactory()
+        TripFactory(status=Trip.STATUS_CANCELLED)
+
+        response = self.forced_auth_req(
+            "get",
+            reverse('travel:trip-list'),
+            data={"show_hidden": 'true'},
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data["results"]
+        self.assertEqual(
+            len(data),
+            Trip.objects.all().count()
+        )
+
+        response = self.forced_auth_req(
+            "get",
+            reverse('travel:trip-list'),
+            data={"show_hidden": 'false'},
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data["results"]
+        self.assertEqual(
+            len(data),
+            Trip.objects.exclude(status=Trip.STATUS_CANCELLED).count()
+        )
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_filter_status(self):
         for _ in range(10):
             TripFactory()
