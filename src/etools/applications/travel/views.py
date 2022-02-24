@@ -74,14 +74,13 @@ class TripViewSet(
 
     filters = (
         ('status', 'status__in'),
-        ('traveller', 'traveller'),
-        ('supervisor', 'supervisor'),
-        ('office', 'office'),
-        ('section', 'section'),
-        ('partner', 'activities__partner__pk'),
+        ('traveller', 'traveller__in'),
+        ('supervisor', 'supervisor__in'),
+        ('office', 'office__in'),
+        ('section', 'section__in'),
+        ('partner', 'activities__partner__pk__in'),
         ('month', ['start_date__month',
-                   'end_date__month'
-                   ]),
+                   'end_date__month']),
         ('year', ['start_date__year',
                   'end_date__year'])
     )
