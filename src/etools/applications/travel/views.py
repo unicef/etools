@@ -63,16 +63,16 @@ class TripViewSet(
     serializer_class = TripSerializer
 
     filter_backends = (SearchFilter, DjangoFilterBackend, OrderingFilter, ShowHiddenFilter)
+    search_terms = [
+        'reference_number__icontains',
+        'supervisor__first_name__icontains',
+        'supervisor__last_name__icontains',
+        'traveller__first_name__icontains',
+        'traveller__last_name__icontains',
+        'section__name__icontains',
+        'office__name__icontains']
+
     filters = (
-        ('search', [
-            'reference_number__icontains',
-            'supervisor__first_name__icontains',
-            'supervisor__last_name__icontains',
-            'traveller__first_name__icontains',
-            'traveller__last_name__icontains',
-            'section__name',
-            'office__name',
-        ]),
         ('status', 'status__in'),
         ('traveller', 'traveller'),
         ('supervisor', 'supervisor'),
