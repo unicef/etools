@@ -186,6 +186,14 @@ class Trip(TimeStampedModel):
             return cancel_qs.first().comment
         return None
 
+    def get_completed_comment(self):
+        completed_qs = self.status_history.filter(
+            status=Trip.STATUS_COMPLETED,
+        )
+        if completed_qs.exists():
+            return completed_qs.first().comment
+        return None
+
     def get_mail_context(self, user):
         context = {
             "url": self.get_object_url(user=user),
