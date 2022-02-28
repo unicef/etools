@@ -352,15 +352,15 @@ class TestTripViewSet(BaseTenantTestCase):
             (
                 trip.STATUS_APPROVED,
                 "complete",
-            #     trip.STATUS_REVIEW,
-            #     False,
-            # ),
+                trip.STATUS_COMPLETED,
+                False,
+            ),
             # (
             #     trip.STATUS_REVIEW,
             #     "complete",
-                trip.STATUS_COMPLETED,
-                False
-            ),
+            #     trip.STATUS_COMPLETED,
+            #     False
+            # ),
             (
                 trip.STATUS_SUBMISSION_REVIEW,
                 "cancel",
