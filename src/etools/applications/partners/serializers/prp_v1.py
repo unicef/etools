@@ -165,7 +165,7 @@ class PRPIndicatorSerializer(serializers.ModelSerializer):
             "admin_level",
         )
         for loc in location_qs:
-            loc["pcode"] = loc.pop("p_code")
+            loc["p_code"] = loc.pop("p_code")
             loc["admin_level_name"] = loc.pop("admin_level_name")
             loc["admin_level"] = loc.pop("admin_level")
         return list(location_qs)
