@@ -261,7 +261,7 @@ class TripSerializer(BaseTripSerializer):
                 obj.STATUS_REJECTED,
                 obj.STATUS_SUBMITTED,
                 obj.STATUS_APPROVED,
-                obj.STATUS_REVIEW,
+                # obj.STATUS_REVIEW,
                 obj.STATUS_COMPLETED,
             ]
         elif obj.status == obj.STATUS_CANCELLED:
@@ -274,7 +274,7 @@ class TripSerializer(BaseTripSerializer):
                 obj.STATUS_DRAFT,
                 obj.STATUS_SUBMITTED,
                 obj.STATUS_APPROVED,
-                obj.STATUS_REVIEW,
+                # obj.STATUS_REVIEW,
                 obj.STATUS_COMPLETED,
             ]
         return [s for s in obj.STATUS_CHOICES if s[0] in status_list]
@@ -294,7 +294,7 @@ class TripSerializer(BaseTripSerializer):
             Trip.STATUS_SUBMITTED: "submit",
             Trip.STATUS_REJECTED: "reject",
             Trip.STATUS_APPROVED: "approve",
-            Trip.STATUS_REVIEW: "review",
+            # Trip.STATUS_REVIEW: "review",
             Trip.STATUS_COMPLETED: "complete",
         }
 
@@ -309,16 +309,16 @@ class TripSerializer(BaseTripSerializer):
             # if obj.status in [obj.STATUS_SUBMISSION_REVIEW]:
             #     available_actions.append(ACTION_MAP.get(obj.STATUS_DRAFT))
             #     available_actions.append(ACTION_MAP.get(obj.STATUS_SUBMITTED))
+            # if obj.status in [obj.STATUS_APPROVED]:
+            #     available_actions.append(ACTION_MAP.get(obj.STATUS_REVIEW))
             if obj.status in [obj.STATUS_APPROVED]:
-                available_actions.append(ACTION_MAP.get(obj.STATUS_REVIEW))
-            if obj.status in [obj.STATUS_APPROVED, obj.STATUS_REVIEW]:
                 available_actions.append(ACTION_MAP.get(obj.STATUS_COMPLETED))
             if obj.status in [obj.STATUS_REJECTED]:
                 available_actions.append(ACTION_MAP.get(obj.STATUS_DRAFT))
             if obj.status not in [
                     obj.STATUS_CANCELLED,
                     obj.STATUS_SUBMITTED,
-                    obj.STATUS_REVIEW,
+                    # obj.STATUS_REVIEW,
                     obj.STATUS_COMPLETED,
             ]:
                 available_actions.append(ACTION_MAP.get(obj.STATUS_CANCELLED))

@@ -221,17 +221,17 @@ class Trip(TimeStampedModel):
     def transition_to_approved(self):
         """Trip moves to approved status"""
 
-    @transition(
-        field=status,
-        source=[STATUS_APPROVED],
-        target=[STATUS_REVIEW],
-    )
-    def transition_to_review(self):
-        """Trip moves to review status"""
+    # @transition(
+    #     field=status,
+    #     source=[STATUS_APPROVED],
+    #     target=[STATUS_REVIEW],
+    # )
+    # def transition_to_review(self):
+    #     """Trip moves to review status"""
 
     @transition(
         field=status,
-        source=[STATUS_APPROVED, STATUS_REVIEW],
+        source=[STATUS_APPROVED],
         target=[STATUS_COMPLETED],
     )
     def transition_to_completed(self):
@@ -265,7 +265,7 @@ class Trip(TimeStampedModel):
             STATUS_SUBMISSION_REVIEW,
             STATUS_SUBMITTED,
             STATUS_APPROVED,
-            STATUS_REVIEW,
+            # STATUS_REVIEW,
             STATUS_COMPLETED,
             STATUS_CANCELLED,
         ],
@@ -280,7 +280,7 @@ class Trip(TimeStampedModel):
         source=[
             STATUS_SUBMITTED,
             STATUS_APPROVED,
-            STATUS_REVIEW,
+            # STATUS_REVIEW,
             STATUS_COMPLETED,
             STATUS_REJECTED,
             STATUS_CANCELLED,
@@ -295,7 +295,7 @@ class Trip(TimeStampedModel):
         field=status,
         source=[
             STATUS_APPROVED,
-            STATUS_REVIEW,
+            # STATUS_REVIEW,
             STATUS_COMPLETED,
             STATUS_REJECTED,
             STATUS_CANCELLED,
@@ -311,7 +311,7 @@ class Trip(TimeStampedModel):
         source=[
             STATUS_DRAFT,
             STATUS_SUBMISSION_REVIEW,
-            STATUS_REVIEW,
+            # STATUS_REVIEW,
             STATUS_COMPLETED,
             STATUS_REJECTED,
             STATUS_CANCELLED,
@@ -322,21 +322,21 @@ class Trip(TimeStampedModel):
     def transition_to_approved_invalid(self):
         """Not allowed to move to approved status"""
 
-    @transition(
-        field=status,
-        source=[
-            STATUS_DRAFT,
-            STATUS_SUBMISSION_REVIEW,
-            STATUS_SUBMITTED,
-            STATUS_COMPLETED,
-            STATUS_REJECTED,
-            STATUS_CANCELLED,
-        ],
-        target=[STATUS_REVIEW],
-        conditions=[trip_illegal_transition],
-    )
-    def transition_to_review_invalid(self):
-        """Not allowed to move to review status"""
+    # @transition(
+    #     field=status,
+    #     source=[
+    #         STATUS_DRAFT,
+    #         STATUS_SUBMISSION_REVIEW,
+    #         STATUS_SUBMITTED,
+    #         STATUS_COMPLETED,
+    #         STATUS_REJECTED,
+    #         STATUS_CANCELLED,
+    #     ],
+    #     target=[STATUS_REVIEW],
+    #     conditions=[trip_illegal_transition],
+    # )
+    # def transition_to_review_invalid(self):
+    #     """Not allowed to move to review status"""
 
     @transition(
         field=status,
@@ -360,7 +360,7 @@ class Trip(TimeStampedModel):
             STATUS_DRAFT,
             STATUS_SUBMISSION_REVIEW,
             STATUS_APPROVED,
-            STATUS_REVIEW,
+            # STATUS_REVIEW,
             STATUS_COMPLETED,
             STATUS_CANCELLED,
         ],
@@ -374,7 +374,7 @@ class Trip(TimeStampedModel):
         field=status,
         source=[
             STATUS_SUBMITTED,
-            STATUS_REVIEW,
+            # STATUS_REVIEW,
             STATUS_COMPLETED,
         ],
         target=[STATUS_CANCELLED],

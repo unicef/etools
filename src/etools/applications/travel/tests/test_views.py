@@ -351,13 +351,13 @@ class TestTripViewSet(BaseTenantTestCase):
             ),
             (
                 trip.STATUS_APPROVED,
-                "review",
-                trip.STATUS_REVIEW,
-                False,
-            ),
-            (
-                trip.STATUS_REVIEW,
                 "complete",
+            #     trip.STATUS_REVIEW,
+            #     False,
+            # ),
+            # (
+            #     trip.STATUS_REVIEW,
+            #     "complete",
                 trip.STATUS_COMPLETED,
                 False
             ),
@@ -377,7 +377,7 @@ class TestTripViewSet(BaseTenantTestCase):
         for init_status, request, expected_status, email_sent in mapping:
             trip.status = init_status
             trip.save()
-            if expected_status == trip.STATUS_REVIEW:
+            if expected_status == trip.STATUS_COMPLETED:
                 ReportFactory(trip=trip)
             self.assertEqual(trip.status, init_status)
             mock_send = Mock()
