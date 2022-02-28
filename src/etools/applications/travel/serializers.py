@@ -248,6 +248,7 @@ class TripSerializer(BaseTripSerializer):
     status_list = serializers.SerializerMethodField()
     rejected_comment = serializers.SerializerMethodField()
     cancelled_comment = serializers.SerializerMethodField()
+    completed_comment = serializers.SerializerMethodField()
     available_actions = serializers.SerializerMethodField()
 
     class Meta(BaseTripSerializer.Meta):
@@ -284,6 +285,9 @@ class TripSerializer(BaseTripSerializer):
 
     def get_cancelled_comment(self, obj):
         return obj.get_cancelled_comment() or ""
+
+    def get_completed_comment(self, obj):
+        return obj.get_completed_comment() or ""
 
     def get_available_actions(self, obj):
         # don't provide available actions for list view
