@@ -516,12 +516,6 @@ class TestTripViewSet(BaseTenantTestCase):
             ),
             (
                 trip.STATUS_SUBMISSION_REVIEW,
-                "cancel",
-                trip.STATUS_CANCELLED,
-                False,
-            ),
-            (
-                trip.STATUS_SUBMISSION_REVIEW,
                 "revise",
                 trip.STATUS_DRAFT,
                 False,
@@ -635,6 +629,56 @@ class TestTripViewSet(BaseTenantTestCase):
             )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(mock_send.call_count, 0)
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_cancel(self):
+        start_date = str(timezone.now().date())
+        end_date = str((timezone.now() + datetime.timedelta(days=3)).date())
+        trip = TripFactory(
+            start_date=start_date,
+            end_date=end_date,
+            status=Trip.STATUS_APPROVED
+        )
+        ActivityFactory(trip=trip)
+        self.assertEqual(trip.status, trip.STATUS_APPROVED)
+        history_qs = TripStatusHistory.objects.filter(
+            trip=trip,
+        )
+        status_count = history_qs.count()
+        cancel_text = "Cancel comment"
+        response = self.forced_auth_req(
+            "patch",
+            reverse("travel:trip-cancel", args=[trip.pk]),
+            user=self.user,
+            data={
+                "comment": cancel_text
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.data.get("status"),
+            trip.STATUS_CANCELLED,
+        )
+        self.assertEqual(
+            response.data.get("cancelled_comment"),
+            cancel_text
+        )
+        trip.refresh_from_db()
+        self.assertEqual(trip.status, trip.STATUS_CANCELLED)
+        self.assertEqual(history_qs.count(), status_count + 1)
+        history = history_qs.first()
+        self.assertEqual(history.comment, cancel_text)
+
+        # no subsequent cancel requests allowed
+        response = self.forced_auth_req(
+            "patch",
+            reverse("travel:trip-cancel", args=[trip.pk]),
+            user=self.user,
+            data={},
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        trip.refresh_from_db()
+        self.assertEqual(trip.status, trip.STATUS_CANCELLED)
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_export(self):
