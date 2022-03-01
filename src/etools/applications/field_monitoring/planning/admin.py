@@ -34,7 +34,9 @@ class MonitoringActivityAdmin(admin.ModelAdmin):
     list_select_related = ('tpm_partner', 'visit_lead', 'location', 'location_site')
     list_filter = ('monitor_type', 'status')
 
-    raw_id_fields = ('tpm_partner', 'visit_lead', 'location')
+    raw_id_fields = ('tpm_partner', 'visit_lead', 'location',
+                     'team_members', 'offices', 'sections',
+                     'partners', 'interventions', 'cp_outputs')
 
     def get_queryset(self, request):
         return super().get_queryset(request)\
