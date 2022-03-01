@@ -2960,7 +2960,7 @@ class InterventionBudget(TimeStampedModel):
         init = False
         for link in self.intervention.result_links.all():
             for result in link.ll_results.all():
-                for activity in result.activities.all():
+                for activity in result.activities.filter(is_active=True):
                     if not init:
                         init_totals()
                         init = True

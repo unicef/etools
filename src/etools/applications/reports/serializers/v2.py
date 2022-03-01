@@ -524,13 +524,16 @@ class InterventionActivityDetailSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'name',
+            'code',
             'context_details',
             'unicef_cash',
             'cso_cash',
             'items',
             'time_frames',
             'partner_percentage',
+            'is_active',
         )
+        read_only_fields = ['code']
 
     def __init__(self, *args, **kwargs):
         self.intervention = kwargs.pop('intervention')

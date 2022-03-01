@@ -987,6 +987,8 @@ class InterventionActivity(TimeStampedModel):
         related_name='activities',
     )
 
+    is_active = models.BooleanField(default=True, verbose_name=_('Is Active'))
+
     class Meta:
         verbose_name = _('Intervention Activity')
         verbose_name_plural = _('Intervention Activities')
