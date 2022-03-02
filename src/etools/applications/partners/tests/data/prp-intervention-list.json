@@ -23,7 +23,7 @@
                 "admin_level": 0,
                 "pcode": "a-p-code",
                 "name": "A Location",
-                "location_type": "A Gateway"
+                "admin_level_name": "A Gateway"
               }
             ],
             "cluster_indicator_id": null,

@@ -21,10 +21,6 @@ class LocationsViewSet(views.LocationsViewSet):
     pass
 
 
-class LocationTypesViewSet(views.LocationTypesViewSet):
-    permission_classes = (permissions.IsAdminUser,)
-
-
 class LocationQuerySetView(views.LocationQuerySetView):
     pass
 

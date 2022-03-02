@@ -193,7 +193,7 @@ class GeographicCoverageViewTestCase(BaseTenantTestCase):
         super().setUpTestData()
         cls.user = UserFactory(unicef_user=True)
 
-        cls.country = LocationFactory(gateway__admin_level=0)
+        cls.country = LocationFactory(admin_level=0)
         cls.first_location = LocationFactory(parent=cls.country)
         cls.second_location = LocationFactory(parent=cls.country)
         LocationFactory(parent=cls.first_location)  # hidden
