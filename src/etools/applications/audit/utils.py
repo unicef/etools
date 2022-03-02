@@ -22,8 +22,9 @@ def generate_final_report(obj, code, labels, pdf, template, filename):
     )
     if not file_type.group:
         file_type.group = []
-    file_type.group += code
-    file_type.save()
+    file_type.group.append(code)
+    file_type.save(update_fields=['group'])
+
     attachment, __ = Attachment.objects.get_or_create(
         code=code,
         content_type=content_type,
