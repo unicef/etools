@@ -2832,7 +2832,10 @@ class InterventionResultLink(TimeStampedModel):
 
     def total(self):
         results = self.ll_results.aggregate(
-            total=Sum("activities__unicef_cash") + Sum("activities__cso_cash"),
+            total=(
+                Sum("activities__unicef_cash", filter=Q(activities__is_active=True)) +
+                Sum("activities__cso_cash", filter=Q(activities__is_active=True))
+            ),
         )
         return results["total"] if results["total"] is not None else 0
 

@@ -39,6 +39,7 @@ from etools.applications.partners.models import (
     PRCOfficerInterventionReview,
 )
 from etools.applications.partners.permissions import (
+    AmendmentSessionActivitiesPermission,
     intervention_field_is_editable_permission,
     PMPInterventionPermission,
     UserBelongsToObjectPermission,
@@ -480,6 +481,7 @@ class InterventionActivityViewMixin(DetailedInterventionResponseMixin):
     queryset = InterventionActivity.objects.prefetch_related('items', 'time_frames').order_by('id')
     permission_classes = [
         IsAuthenticated,
+        AmendmentSessionActivitiesPermission,
         IsReadAction | (IsEditAction & intervention_field_is_editable_permission('pd_outputs'))
     ]
     serializer_class = InterventionActivityDetailSerializer

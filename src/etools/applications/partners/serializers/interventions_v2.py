@@ -119,6 +119,7 @@ class InterventionAmendmentCUSerializer(AttachmentSerializerMixin, serializers.M
             'partner_authorized_officer_signatory',
             'signed_amendment_attachment',
             'difference',
+            'created',
         )
         validators = [
             UniqueTogetherValidator(

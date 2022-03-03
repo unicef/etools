@@ -2,7 +2,7 @@ from datetime import date
 
 from django.core.validators import MinValueValidator
 from django.db import models, transaction
-from django.db.models import Sum
+from django.db.models import Q, Sum
 from django.utils.functional import cached_property
 from django.utils.translation import gettext as _
 
@@ -402,19 +402,19 @@ class LowerResult(TimeStampedModel):
 
     def total(self):
         results = self.activities.aggregate(
-            total=Sum("unicef_cash") + Sum("cso_cash"),
+            total=Sum("unicef_cash", filter=Q(is_active=True)) + Sum("cso_cash", filter=Q(is_active=True)),
         )
         return results["total"] if results["total"] is not None else 0
 
     def total_cso(self):
         results = self.activities.aggregate(
-            total=Sum("cso_cash"),
+            total=Sum("cso_cash", filter=Q(is_active=True)),
         )
         return results["total"] if results["total"] is not None else 0
 
     def total_unicef(self):
         results = self.activities.aggregate(
-            total=Sum("unicef_cash"),
+            total=Sum("unicef_cash", filter=Q(is_active=True)),
         )
         return results["total"] if results["total"] is not None else 0
 

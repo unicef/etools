@@ -605,7 +605,7 @@ class InterventionActivitySerializer(serializers.ModelSerializer):
         fields = (
             'id', 'name', 'code', 'context_details',
             'unicef_cash', 'cso_cash', 'partner_percentage',
-            'time_frames',
+            'time_frames', 'is_active', 'created',
         )
         read_only_fields = ['code']
 
