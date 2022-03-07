@@ -524,13 +524,16 @@ class InterventionActivityDetailSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'name',
+            'code',
             'context_details',
             'unicef_cash',
             'cso_cash',
             'items',
             'time_frames',
             'partner_percentage',
+            'is_active',
         )
+        read_only_fields = ['code']
 
     def __init__(self, *args, **kwargs):
         self.intervention = kwargs.pop('intervention')
@@ -600,10 +603,11 @@ class InterventionActivitySerializer(serializers.ModelSerializer):
     class Meta:
         model = InterventionActivity
         fields = (
-            'id', 'name', 'context_details',
+            'id', 'name', 'code', 'context_details',
             'unicef_cash', 'cso_cash', 'partner_percentage',
-            'time_frames',
+            'time_frames', 'is_active', 'created',
         )
+        read_only_fields = ['code']
 
 
 class LowerResultWithActivitiesSerializer(LowerResultSerializer):
