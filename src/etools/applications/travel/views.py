@@ -180,6 +180,9 @@ class TripViewSet(
         comment = request.data.get("comment")
         if comment:
             update_data["comment"] = comment
+            if trip_status == Trip.STATUS_COMPLETED:
+                update_data['not_as_planned'] = True
+
         request.data.clear()
         request.data.update(**update_data)
         request.data.update(

@@ -565,6 +565,7 @@ class TestTripViewSet(BaseTenantTestCase):
         self.assertEqual(history_qs.count(), status_count + 1)
         history = history_qs.first()
         self.assertEqual(history.comment, complete_text)
+        self.assertTrue(trip.not_as_planned, "Trip completed not as planned")
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_export(self):
