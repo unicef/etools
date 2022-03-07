@@ -131,6 +131,25 @@ class TestTripViewSet(BaseTenantTestCase):
         self.assertEqual(data[0]["id"], trip.pk)
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_filter_not_as_planned(self):
+        for _ in range(2):
+            TripFactory()
+        for _ in range(3):
+            TripFactory(not_as_planned=True)
+
+        response = self.forced_auth_req(
+            "get",
+            reverse('travel:trip-list'),
+            data={"not_as_planned": True},
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data["results"]
+        self.assertTrue(
+            len(data) == Trip.objects.filter(not_as_planned=True).count() == 3
+        )
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_search_reference_number(self):
         for _ in range(10):
             TripFactory()

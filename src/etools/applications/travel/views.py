@@ -73,6 +73,7 @@ class TripViewSet(
         ('status', 'status__in'),
         ('start_date', 'start_date'),
         ('end_date', 'end_date'),
+        ('not_as_planned', 'not_as_planned')
     )
     export_filename = 'Trip'
 
