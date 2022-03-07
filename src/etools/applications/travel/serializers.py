@@ -131,6 +131,7 @@ class ActivityBaseSerializer(serializers.ModelSerializer):
     location_name = serializers.SerializerMethodField()
     monitoring_activity_name = serializers.SerializerMethodField()
     section_name = serializers.SerializerMethodField()
+    status = serializers.SerializerMethodField()
 
     def get_partner_name(self, obj):
         if obj.partner:
@@ -159,6 +160,11 @@ class ActivityBaseSerializer(serializers.ModelSerializer):
             return obj.monitoring_activity.destination_str
         elif obj.location:
             return str(obj.location)
+        return ''
+
+    def get_status(self, obj):
+        if obj.monitoring_activity:
+            return obj.monitoring_activity.status
         return ''
 
     class Meta:
