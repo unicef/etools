@@ -528,6 +528,45 @@ class TestTripViewSet(BaseTenantTestCase):
         self.assertEqual(trip.status, trip.STATUS_CANCELLED)
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_completed_with_comment(self):
+        start_date = str(timezone.now().date())
+        end_date = str((timezone.now() + datetime.timedelta(days=3)).date())
+        trip = TripFactory(
+            start_date=start_date,
+            end_date=end_date,
+            status=Trip.STATUS_APPROVED
+        )
+        ActivityFactory(trip=trip)
+        self.assertEqual(trip.status, trip.STATUS_APPROVED)
+        history_qs = TripStatusHistory.objects.filter(
+            trip=trip,
+        )
+        status_count = history_qs.count()
+        complete_text = "Completed not as planned"
+        response = self.forced_auth_req(
+            "patch",
+            reverse("travel:trip-complete", args=[trip.pk]),
+            user=self.user,
+            data={
+                "comment": complete_text
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.data.get("status"),
+            trip.STATUS_COMPLETED,
+        )
+        self.assertEqual(
+            response.data.get("completed_comment"),
+            complete_text
+        )
+        trip.refresh_from_db()
+        self.assertEqual(trip.status, trip.STATUS_COMPLETED)
+        self.assertEqual(history_qs.count(), status_count + 1)
+        history = history_qs.first()
+        self.assertEqual(history.comment, complete_text)
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_export(self):
         trip = TripFactory()
         export_urls = [
