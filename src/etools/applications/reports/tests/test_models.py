@@ -352,14 +352,14 @@ class TestInterventionActivity(BaseTenantTestCase):
 
     def test_auto_code(self):
         link = InterventionResultLinkFactory(code=None)
-        InterventionActivityFactory(code=None, result=LowerResultFactory(result_link=link))
-        activity1 = InterventionActivityFactory(code=None, result=LowerResultFactory(result_link=link))
+        InterventionActivityFactory(code=None, result=LowerResultFactory(code=None, result_link=link))
+        activity1 = InterventionActivityFactory(code=None, result=LowerResultFactory(code=None, result_link=link))
         activity2 = InterventionActivityFactory(code=None, result=activity1.result)
-        InterventionActivityFactory(code=None, result_link=LowerResultFactory(result_link=link))
+        InterventionActivityFactory(code=None, result=LowerResultFactory(code=None, result_link=link))
         activity3 = InterventionActivityFactory(code=None, result=activity1.result)
-        self.assertEqual(activity1.code, '2.2.1')
-        self.assertEqual(activity2.code, '2.2.2')
-        self.assertEqual(activity3.code, '2.2.3')
+        self.assertEqual(activity1.code, '1.2.1')
+        self.assertEqual(activity2.code, '1.2.2')
+        self.assertEqual(activity3.code, '1.2.3')
 
     def test_code_renumber_on_result_link_delete(self):
         intervention = InterventionFactory()

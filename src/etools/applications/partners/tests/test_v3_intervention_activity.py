@@ -231,13 +231,13 @@ class TestFunctionality(BaseTestCase):
         self.intervention.status = Intervention.SIGNED
         self.intervention.save()
         response = self.forced_auth_req('delete', self.detail_url, user=self.user, data={})
-        self.assertEqual(response.status_code, status.HTTP_403_BAD_REQUEST, response.data)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
 
     def test_destroy_in_amendment(self):
         self.intervention.status = Intervention.SIGNED
         self.intervention.save()
         response = self.forced_auth_req('delete', self.detail_url, user=self.user, data={})
-        self.assertEqual(response.status_code, status.HTTP_403_BAD_REQUEST, response.data)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
 
     def test_destroy_in_amendment_original_activity(self):
         amendment = InterventionAmendmentFactory(intervention=self.intervention)
@@ -253,7 +253,7 @@ class TestFunctionality(BaseTestCase):
             user=self.user,
             data={}
         )
-        self.assertEqual(response.status_code, status.HTTP_403_BAD_REQUEST, response.data)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
 
     def test_destroy_in_amendment_new_activity(self):
         amendment = InterventionAmendmentFactory(intervention=self.intervention)
