@@ -64,6 +64,10 @@ class Trip(TimeStampedModel):
         choices=STATUS_CHOICES,
         default=STATUS_DRAFT,
     )
+    not_as_planned = models.BooleanField(
+        verbose_name=_('Trip completed not as planned'),
+        default=False)
+
     supervisor = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         verbose_name=_('Supervisor'),
