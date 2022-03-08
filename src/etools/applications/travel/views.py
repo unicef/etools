@@ -73,6 +73,7 @@ class TripViewSet(
         ('status', 'status__in'),
         ('start_date', 'start_date'),
         ('end_date', 'end_date'),
+        ('not_as_planned', 'not_as_planned')
     )
     export_filename = 'Trip'
 
@@ -180,6 +181,9 @@ class TripViewSet(
         comment = request.data.get("comment")
         if comment:
             update_data["comment"] = comment
+            if trip_status == Trip.STATUS_COMPLETED:
+                update_data['not_as_planned'] = True
+
         request.data.clear()
         request.data.update(**update_data)
         request.data.update(
