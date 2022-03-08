@@ -248,6 +248,8 @@ class TripSerializer(BaseTripSerializer):
     traveller = MinimalUserSerializer()
     status_list = serializers.SerializerMethodField()
     rejected_comment = serializers.SerializerMethodField()
+    cancelled_comment = serializers.SerializerMethodField()
+    completed_comment = serializers.SerializerMethodField()
     available_actions = serializers.SerializerMethodField()
 
     class Meta(BaseTripSerializer.Meta):
@@ -281,6 +283,12 @@ class TripSerializer(BaseTripSerializer):
 
     def get_rejected_comment(self, obj):
         return obj.get_rejected_comment() or ""
+
+    def get_cancelled_comment(self, obj):
+        return obj.get_cancelled_comment() or ""
+
+    def get_completed_comment(self, obj):
+        return obj.get_completed_comment() or ""
 
     def get_available_actions(self, obj):
         # don't provide available actions for list view
@@ -409,9 +417,9 @@ class TripStatusHistorySerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         data = super().validate(data)
-        if data["status"] == Trip.STATUS_REJECTED:
+        if data["status"] in [Trip.STATUS_REJECTED, Trip.STATUS_CANCELLED]:
             if not data.get("comment"):
                 raise serializers.ValidationError(
-                    _("Comment is required when rejecting."),
+                    _(f"Comment is required when updating status to {data['status']}."),
                 )
         return data
