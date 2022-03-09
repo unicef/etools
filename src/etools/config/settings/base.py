@@ -246,9 +246,11 @@ TEMPLATES = [
         'OPTIONS': {
             'debug': DEBUG,
             'loaders': [
-                'django.template.loaders.filesystem.Loader',
-                'django.template.loaders.app_directories.Loader',
-                'unicef_notification.loaders.EmailTemplateLoader',
+                ('django.template.loaders.cached.Loader', [
+                    'django.template.loaders.filesystem.Loader',
+                    'django.template.loaders.app_directories.Loader',
+                    'unicef_notification.loaders.EmailTemplateLoader',
+                ]),
             ],
             'context_processors': [
                 # Already defined Django-related contexts here
