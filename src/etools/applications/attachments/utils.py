@@ -172,6 +172,7 @@ def denormalize_attachment(attachment):
             "file_link": attachment.file_link,
             "filename": attachment.filename,
             "uploaded_by": uploaded_by,
+            "ip_address": attachment.ip_address,
             "source": source,
             "created": attachment.created,
         }

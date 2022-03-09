@@ -664,7 +664,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     def get_location_names(self, obj):
         return ['{} [{} - {}]'.format(
             loc.name,
-            loc.gateway.name,
+            loc.admin_level_name,
             loc.p_code
         ) for loc in obj.flat_locations.all()]
 

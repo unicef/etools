@@ -56,7 +56,7 @@ from etools.applications.users.models import Country
 from etools.applications.users.tests.factories import GroupFactory, UserFactory
 from etools.libraries.pythonlib.datetime import get_quarter
 
-INSIGHT_PATH = "etools.applications.partners.views.partner_organization_v2.get_data_from_insight"
+INSIGHT_PATH = "etools.applications.partners.tasks.get_data_from_insight"
 
 
 class URLsTestCase(URLAssertionMixin, SimpleTestCase):
@@ -776,7 +776,7 @@ class TestPartnerOrganizationAddView(BaseTenantTestCase):
         )
 
     def test_no_insight_reponse(self):
-        mock_insight = Mock(return_value=(False, "Insight Failed"))
+        mock_insight = Mock(return_value=(False, "The vendor number could not be found in INSIGHT"))
         with patch(INSIGHT_PATH, mock_insight):
             response = self.forced_auth_req(
                 'post',
@@ -785,13 +785,23 @@ class TestPartnerOrganizationAddView(BaseTenantTestCase):
                 view=self.view
             )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data, {"error": "Insight Failed"})
+        self.assertEqual(response.data, {"error": "The vendor number could not be found in INSIGHT"})
 
     def test_vendor_exists(self):
         PartnerFactory(vendor_number="321")
         mock_insight = Mock(return_value=(True, {
             "ROWSET": {
-                "ROW": {"VENDOR_CODE": "321"}
+                "ROW": {
+                    'VENDOR_CODE': '321',
+                    'PARTNER_TYPE_DESC': 'Test',
+                    'VENDOR_NAME': 'Vendor',
+                    'COUNTRY': 'Italy',
+                    'TOTAL_CASH_TRANSFERRED_CP': 2000,
+                    'TOTAL_CASH_TRANSFERRED_CY': 1000,
+                    'NET_CASH_TRANSFERRED_CY': 500,
+                    'REPORTED_CY': 250,
+                    'TOTAL_CASH_TRANSFERRED_YTD': 125
+                }
             }
         }))
         with patch(INSIGHT_PATH, mock_insight):
@@ -801,11 +811,8 @@ class TestPartnerOrganizationAddView(BaseTenantTestCase):
                 data={},
                 view=self.view
             )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            response.data,
-            {"error": "This vendor number already exists in eTools"}
-        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(response.data)
 
     def test_missing_required_keys(self):
         mock_insight = Mock(return_value=(True, {

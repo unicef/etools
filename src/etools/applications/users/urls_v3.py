@@ -1,4 +1,4 @@
-from django.conf.urls import include, url
+from django.urls import include, re_path
 
 from rest_framework_nested import routers
 
@@ -17,11 +17,11 @@ root_api.register(r'external', ExternalUserViewSet, basename='external')
 
 app_name = 'users'
 urlpatterns = (
-    url(r'^profile/$', MyProfileAPIView.as_view(http_method_names=['get', 'patch']), name="myprofile-detail"),
-    url(r'^changecountry/$', ChangeUserCountryView.as_view(), name="country-change"),
-    url(r'^country/$', CountryView.as_view(http_method_names=['get']), name="country-detail"),
-    url(r'^(?P<pk>[0-9]+)/$', UsersDetailAPIView.as_view(http_method_names=['get']), name="user-detail"),
-    url(r'^AD/(?P<username>.*)$', ADUserAPIView.as_view(http_method_names=['get', ]), name="ad-user-api-view"),
-    url(r'^', include(root_api.urls)),
-    url(r'^$', UsersListAPIView.as_view(), name="users-list"),
+    re_path(r'^profile/$', MyProfileAPIView.as_view(http_method_names=['get', 'patch']), name="myprofile-detail"),
+    re_path(r'^changecountry/$', ChangeUserCountryView.as_view(), name="country-change"),
+    re_path(r'^country/$', CountryView.as_view(http_method_names=['get']), name="country-detail"),
+    re_path(r'^(?P<pk>[0-9]+)/$', UsersDetailAPIView.as_view(http_method_names=['get']), name="user-detail"),
+    re_path(r'^AD/(?P<username>.*)$', ADUserAPIView.as_view(http_method_names=['get', ]), name="ad-user-api-view"),
+    re_path(r'^', include(root_api.urls)),
+    re_path(r'^$', UsersListAPIView.as_view(), name="users-list"),
 )

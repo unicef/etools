@@ -246,9 +246,11 @@ TEMPLATES = [
         'OPTIONS': {
             'debug': DEBUG,
             'loaders': [
-                'django.template.loaders.filesystem.Loader',
-                'django.template.loaders.app_directories.Loader',
-                'unicef_notification.loaders.EmailTemplateLoader',
+                ('django.template.loaders.cached.Loader', [
+                    'django.template.loaders.filesystem.Loader',
+                    'django.template.loaders.app_directories.Loader',
+                    'unicef_notification.loaders.EmailTemplateLoader',
+                ]),
             ],
             'context_processors': [
                 # Already defined Django-related contexts here
@@ -502,7 +504,7 @@ SECRET = os.getenv('AZURE_B2C_CLIENT_SECRET', None)
 
 SOCIAL_AUTH_URL_NAMESPACE = 'social'
 SOCIAL_AUTH_SANITIZE_REDIRECTS = False
-SOCIAL_AUTH_POSTGRES_JSONFIELD = True
+SOCIAL_AUTH_JSONFIELD_ENABLED = True
 POLICY = os.getenv('AZURE_B2C_POLICY_NAME', "b2c_1A_UNICEF_PARTNERS_signup_signin")
 
 TENANT_ID = os.getenv('AZURE_B2C_TENANT', 'unicefpartners')
@@ -572,3 +574,5 @@ INSIGHT_REQUESTS_TIMEOUT = get_from_secrets_or_env('INSIGHT_REQUESTS_TIMEOUT', 4
 ETOOLS_OFFLINE_API = get_from_secrets_or_env('ETOOLS_OFFLINE_API', '')
 ETOOLS_OFFLINE_TOKEN = get_from_secrets_or_env('ETOOLS_OFFLINE_TOKEN', '')
 ETOOLS_OFFLINE_TASK_APP = "etools.config.celery.get_task_app"
+
+UNICEF_LOCATIONS_MODEL = 'locations.Location'
