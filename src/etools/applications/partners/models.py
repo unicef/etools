@@ -2214,7 +2214,7 @@ class Intervention(TimeStampedModel):
 
     @property
     def cp_output_names(self):
-        return ', '.join(link.cp_output.name for link in self.result_links.all())
+        return ', '.join(link.cp_output.name for link in self.result_links.all() if link.cp_output)
 
     @property
     def focal_point_names(self):
