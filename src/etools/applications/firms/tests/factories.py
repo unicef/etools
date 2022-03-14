@@ -12,7 +12,7 @@ from etools.applications.users.tests.factories import ProfileFactory
 class BaseUserFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = get_user_model()
-        django_get_or_create = ("email", )
+        django_get_or_create = ("username", "email", )
 
     username = factory.Faker('email')
     first_name = factory.Faker('first_name')
