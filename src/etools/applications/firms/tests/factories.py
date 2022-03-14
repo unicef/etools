@@ -14,10 +14,10 @@ class BaseUserFactory(factory.django.DjangoModelFactory):
         model = get_user_model()
         django_get_or_create = ("username", )
 
-    username = factory.Sequence(lambda n: 'person{}.example.com'.format(n))
+    username = factory.Sequence(lambda n: 'person{}@example.com'.format(n))
     first_name = factory.Faker('first_name')
     last_name = factory.Faker('last_name')
-    email = factory.Sequence(lambda n: 'person{}.example.com'.format(n))
+    email = factory.Sequence(lambda n: 'person{}@example.com'.format(n))
     profile = factory.RelatedFactory(ProfileFactory, 'user')
 
 
