@@ -293,6 +293,7 @@ class LocationSitesViewTestCase(TestExportMixin, FMBaseTestCaseMixin, BaseTenant
 class LocationsCountryViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
     def test_retrieve(self):
         country = LocationFactory(admin_level=0, point="POINT(20 20)")
+        LocationFactory(admin_level=0, point="POINT(20 20)")
         LocationFactory(admin_level=1)
 
         response = self.forced_auth_req(
