@@ -8,6 +8,12 @@ from rest_framework_swagger.renderers import OpenAPIRenderer
 
 from etools.applications.core.schemas import get_schema_view, get_swagger_view
 from etools.applications.core.views import IssueJWTRedirectView, logout_view, MainView
+from etools.applications.locations.views import (
+    CartoDBTablesView,
+    LocationQuerySetView,
+    LocationsLightViewSet,
+    LocationsViewSet,
+)
 from etools.applications.management.urls import urlpatterns as management_urls
 from etools.applications.partners.views.v1 import FileTypeViewSet
 from etools.applications.publics import urls as publics_patterns
@@ -22,14 +28,6 @@ from etools.applications.reports.views.v1 import (
 from etools.applications.reports.views.v2 import OfficeViewSet
 from etools.applications.t2f.urls import urlpatterns as t2f_patterns
 from etools.applications.users.views import CountriesViewSet, GroupViewSet, ModuleRedirectView, UserViewSet
-# these imports are used to autodiscover admin forms located outside of INSTALLED_APPS(the libraries folder for example)
-from etools.libraries.locations import admin as locations_admin  # noqa: ignore=F401
-from etools.libraries.locations.views import (
-    CartoDBTablesView,
-    LocationQuerySetView,
-    LocationsLightViewSet,
-    LocationsViewSet,
-)
 
 # ******************  API docs and schemas  ******************************
 schema_view = get_swagger_view(title='eTools API')

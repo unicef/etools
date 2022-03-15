@@ -101,14 +101,14 @@ class TestLocationViews(BaseTenantTestCase):
 
         LocationFactory()
 
-        response = self.forced_auth_req('get', reverse('locations-list'),
+        response = self.forced_auth_req('get', reverse('unicef_locations:locations-list'),
                                         user=self.unicef_staff, HTTP_IF_NONE_MATCH=etag)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 7)
         # self.assertEqual(response.status_code, status.HTTP_304_NOT_MODIFIED)
 
     def test_api_location_autocomplete(self):
-        response = self.forced_auth_req('get', reverse('locations:locations_autocomplete'),
+        response = self.forced_auth_req('get', reverse('unicef_locations:locations_autocomplete'),
                                         user=self.unicef_staff, data={"q": "Loc"})
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)

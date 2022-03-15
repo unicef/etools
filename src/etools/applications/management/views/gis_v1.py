@@ -3,10 +3,10 @@ from django.db.models import Q
 
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.response import Response
-from unicef_locations.models import Location
 from unicef_restlib.permissions import IsSuperUser
 
 from etools.applications.activities.models import Activity
+from etools.applications.locations.models import Location
 from etools.applications.management.serializers import (
     GisLocationGeojsonSerializer,
     GisLocationListSerializer,
