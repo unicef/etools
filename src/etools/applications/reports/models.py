@@ -2,7 +2,7 @@ from datetime import date
 
 from django.core.validators import MinValueValidator
 from django.db import models, transaction
-from django.db.models import Sum
+from django.db.models import Q, Sum
 from django.utils.functional import cached_property
 from django.utils.translation import gettext as _
 
@@ -388,21 +388,33 @@ class LowerResult(TimeStampedModel):
         unique_together = (('result_link', 'code'),)
         ordering = ('created',)
 
+    def save(self, *args, **kwargs):
+        if not self.code:
+            self.code = '{0}.{1}'.format(self.result_link.code, self.result_link.ll_results.count() + 1)
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def renumber_results_for_result_link(cls, result_link):
+        results = result_link.ll_results.all()
+        for i, result in enumerate(results):
+            result.code = '{0}.{1}'.format(result_link.code, i + 1)
+        cls.objects.bulk_update(results, fields=['code'])
+
     def total(self):
         results = self.activities.aggregate(
-            total=Sum("unicef_cash") + Sum("cso_cash"),
+            total=Sum("unicef_cash", filter=Q(is_active=True)) + Sum("cso_cash", filter=Q(is_active=True)),
         )
         return results["total"] if results["total"] is not None else 0
 
     def total_cso(self):
         results = self.activities.aggregate(
-            total=Sum("cso_cash"),
+            total=Sum("cso_cash", filter=Q(is_active=True)),
         )
         return results["total"] if results["total"] is not None else 0
 
     def total_unicef(self):
         results = self.activities.aggregate(
-            total=Sum("unicef_cash"),
+            total=Sum("unicef_cash", filter=Q(is_active=True)),
         )
         return results["total"] if results["total"] is not None else 0
 
@@ -944,6 +956,12 @@ class InterventionActivity(TimeStampedModel):
         verbose_name=_("Name"),
         max_length=150,
     )
+    code = models.CharField(
+        verbose_name=_("Code"),
+        max_length=50,
+        blank=True,
+        null=True
+    )
     context_details = models.TextField(
         verbose_name=_("Context Details"),
         blank=True,
@@ -968,6 +986,8 @@ class InterventionActivity(TimeStampedModel):
         blank=True,
         related_name='activities',
     )
+
+    is_active = models.BooleanField(default=True, verbose_name=_('Is Active'))
 
     class Meta:
         verbose_name = _('Intervention Activity')
@@ -1002,8 +1022,17 @@ class InterventionActivity(TimeStampedModel):
         return self.cso_cash / self.total * 100
 
     def save(self, *args, **kwargs):
+        if not self.code:
+            self.code = '{0}.{1}'.format(self.result.code, self.result.activities.count() + 1)
         super().save(*args, **kwargs)
         self.result.result_link.intervention.planned_budget.calc_totals()
+
+    @classmethod
+    def renumber_activities_for_result(cls, result: LowerResult, start_id=None):
+        activities = result.activities.all()
+        for i, activity in enumerate(activities):
+            activity.code = '{0}.{1}'.format(result.code, i + 1)
+        cls.objects.bulk_update(activities, fields=['code'])
 
     def get_amended_name(self):
         return f'{self.result} {self.name} (Total: {self.total}, UNICEF: {self.unicef_cash}, Partner: {self.cso_cash})'
