@@ -1,4 +1,5 @@
 import datetime
+import json
 from decimal import Decimal
 from unittest import mock, skip
 from unittest.mock import patch
@@ -2829,3 +2830,35 @@ class TestPMPInterventionIndicatorsCreateView(
             'pmp_v3:intervention-indicators-list',
             kwargs={'lower_result_pk': cls.lower_result.pk},
         )
+
+    def test_target_baseline_validation(self):
+        """
+        """
+        user = UserFactory(is_staff=True)
+        self.lower_result.result_link.intervention.unicef_focal_points.add(user)
+        data = self.data.copy()
+        # valid values
+        data.update({
+            'indicator': {'title': 'Indicator test title '},
+            'target': {'v': '3.2', 'd': 1},
+            'baseline': {'v': '7.2', 'd': 1},
+        })
+        response = self._make_request(user, data)
+        self.assertResponseFundamentals(response)
+
+        # invalid values
+        _target_baseline_error_cases = {
+            "3,2": "Invalid format. Use '.' (dot) instead of ',' (comma) for decimal values.",
+            "string value": "Invalid number"
+        }
+        for i, (value, response_error) in enumerate(_target_baseline_error_cases.items()):
+            data.update({
+                'indicator': {'title': f'Indicator test title {i}'},
+                'target': {'v': value, 'd': 1},
+                'baseline': {'v': value, 'd': 1}
+            })
+            response = self._make_request(user, data)
+            self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+            response_json = json.loads(response.rendered_content)
+            self.assertEqual(response_json['target'], [response_error])
+            self.assertEqual(response_json['baseline'], [response_error])
