@@ -225,9 +225,9 @@ class TripViewSet(
     def approve(self, request, pk=None):
         return self._set_status(request, Trip.STATUS_APPROVED)
 
-    @action(detail=True, methods=["patch"])
-    def review(self, request, pk=None):
-        return self._set_status(request, Trip.STATUS_REVIEW)
+    # @action(detail=True, methods=["patch"])
+    # def review(self, request, pk=None):
+    #     return self._set_status(request, Trip.STATUS_REVIEW)
 
     @action(detail=True, methods=["patch"])
     def complete(self, request, pk=None):
