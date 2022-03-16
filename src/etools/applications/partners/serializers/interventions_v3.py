@@ -326,7 +326,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
         return [
             '{} [{} - {}]'.format(
                 loc.name,
-                loc.gateway.name,
+                loc.admin_level_name,
                 loc.p_code
             ) for loc in obj.flat_locations.all()
         ]

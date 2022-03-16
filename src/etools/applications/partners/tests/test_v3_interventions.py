@@ -13,6 +13,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from rest_framework import status
+from rest_framework.test import APIClient
 from unicef_locations.tests.factories import LocationFactory
 from unicef_snapshot.utils import create_dict_with_relations, create_snapshot
 from waffle.utils import get_cache
@@ -355,6 +356,16 @@ class TestDetail(BaseInterventionTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response['Content-Type'], 'application/pdf')
+
+    def test_pdf_unauthenticated_user_forbidden(self):
+        """Ensure an unauthenticated user gets the 403 forbidden"""
+        response = APIClient().get(
+            reverse(
+                'pmp_v3:intervention-detail-pdf',
+                args=[self.intervention.pk],
+            )
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_pdf_partner_user(self):
         staff_member = PartnerStaffFactory(partner=self.intervention.agreement.partner)
