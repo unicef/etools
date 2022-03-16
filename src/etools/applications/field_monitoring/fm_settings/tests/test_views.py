@@ -6,7 +6,7 @@ from django.urls import reverse
 from factory import fuzzy
 from rest_framework import status
 from unicef_attachments.models import Attachment, AttachmentLink, FileType
-from unicef_locations.models import GatewayType
+from unicef_locations.models import Location
 from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.attachments.tests.factories import (
@@ -81,7 +81,7 @@ class LocationsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
             """
         )
 
-        cls.country = LocationFactory(gateway__admin_level=0, geom=boundary)
+        cls.country = LocationFactory(admin_level=0, geom=boundary)
         cls.child_location = LocationFactory(parent=cls.country, geom=boundary)
 
     def test_filter_root(self):
@@ -278,10 +278,8 @@ class LocationSitesViewTestCase(TestExportMixin, FMBaseTestCaseMixin, BaseTenant
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_csv_export(self):
-        gateway_0, _created = GatewayType.objects.get_or_create(admin_level=0, defaults={'name': 'Gateway level 0'})
-        gateway_1, _created = GatewayType.objects.get_or_create(admin_level=1, defaults={'name': 'Gateway level 1'})
-        LocationSiteFactory(point=GEOSGeometry("POINT(1 2)"), parent__gateway=gateway_0)
-        LocationSiteFactory(parent__gateway=gateway_1, parent__parent__gateway=gateway_0)
+        LocationSiteFactory(point=GEOSGeometry("POINT(1 2)"), parent__admin_level=0)
+        LocationSiteFactory(parent__admin_level=1, parent__parent__admin_level=0)
 
         response = self._test_export(self.unicef_user, 'field_monitoring_settings:sites-export')
 
@@ -295,11 +293,8 @@ class LocationSitesViewTestCase(TestExportMixin, FMBaseTestCaseMixin, BaseTenant
 
 class LocationsCountryViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
     def test_retrieve(self):
-        country = LocationFactory(
-            gateway__admin_level=0,
-            point="POINT(20 20)",
-        )
-        LocationFactory(gateway__admin_level=1)
+        country = LocationFactory(admin_level=0, point="POINT(20 20)")
+        LocationFactory(admin_level=1)
 
         response = self.forced_auth_req(
             'get', reverse('field_monitoring_settings:locations-country'),
@@ -310,11 +305,28 @@ class LocationsCountryViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.data['id'], str(country.id))
         self.assertEqual(response.data['point']['type'], 'Point')
 
-    def test_centroid(self):
-        LocationFactory(
-            gateway__admin_level=0,
+    def test_retrieve_multiple_country_locations(self):
+        country = LocationFactory(admin_level=0, point="POINT(10 10)")
+        LocationFactory(admin_level=0, point="POINT(20 20)")
+        LocationFactory(admin_level=0, point="POINT(30 30)")
+        LocationFactory(admin_level=1)
+        self.assertEqual(Location.objects.count(), 4)
+        self.assertEqual(Location.objects.filter(admin_level=0, is_active=True).count(), 3)
+        self.assertEqual(Location.objects.filter(admin_level=1, is_active=True).count(), 1)
+
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_settings:locations-country'),
+            user=self.unicef_user
         )
-        LocationFactory(gateway__admin_level=1, point="POINT(20 20)",)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['id'], str(country.id))
+        self.assertEqual(response.data['admin_level'], country.admin_level)
+        self.assertEqual(response.data['point']['type'], 'Point')
+
+    def test_centroid(self):
+        LocationFactory(admin_level=0)
+        LocationFactory(admin_level=1, point="POINT(20 20)",)
 
         response = self.forced_auth_req(
             'get', reverse('field_monitoring_settings:locations-country'),

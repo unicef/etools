@@ -83,7 +83,7 @@ class CoverageCPOutputsView(ListAPIView):
 
 class CoverageGeographicView(ListAPIView):
     serializer_class = CoverageGeographicSerializer
-    queryset = Location.objects.filter(parent__gateway__admin_level=0)
+    queryset = Location.objects.filter(parent__admin_level=0)
 
     def get_queryset(self):
         queryset = super().get_queryset()

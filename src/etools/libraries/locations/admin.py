@@ -4,7 +4,7 @@ from django.contrib.gis import admin
 from admin_extra_urls.decorators import button
 from celery import chain
 from unicef_locations.admin import CartoDBTableAdmin
-from unicef_locations.models import CartoDBTable, LocationRemapHistory
+from unicef_locations.models import CartoDBTable
 
 from etools.libraries.locations.tasks import import_locations, notify_import_site_completed
 
@@ -41,4 +41,3 @@ class RemapAdmin(admin.ModelAdmin):
 
 admin.site.unregister(CartoDBTable)
 admin.site.register(CartoDBTable, EtoolsCartoDBTableAdmin)
-admin.site.register(LocationRemapHistory, RemapAdmin)

@@ -98,7 +98,7 @@ class LocationSitesViewSet(FMBaseViewSet, viewsets.ModelViewSet):
     filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
     filter_fields = ('is_active',)
     ordering_fields = (
-        'parent__gateway__admin_level', 'parent__name',
+        'parent__admin_level', 'parent__name',
         'is_active', 'name',
     )
     search_fields = ('parent__name', 'parent__p_code', 'name', 'p_code')
@@ -128,7 +128,10 @@ class LocationSitesViewSet(FMBaseViewSet, viewsets.ModelViewSet):
 
 class LocationsCountryView(views.APIView):
     def get(self, request, *args, **kwargs):
-        country = get_object_or_404(Location, gateway__admin_level=0, is_active=True)
+        try:
+            country = get_object_or_404(Location, admin_level=0, is_active=True)
+        except Location.MultipleObjectsReturned:
+            country = Location.objects.filter(admin_level=0, is_active=True).first()
         return Response(data=LocationFullSerializer(instance=country).data)
 
 
@@ -137,13 +140,12 @@ class FMLocationsViewSet(FMBaseViewSet, mixins.ListModelMixin, viewsets.GenericV
     serializer_class = LocationFullSerializer
     filter_backends = (DjangoFilterBackend, SearchFilter)
     filter_fields = ('level', 'parent')
-    search_fields = ('name', 'gateway__name')
+    search_fields = ('name', 'admin_level_name')
 
     @action(methods=['get'], detail=True)
     def path(self, request, *args, **kwargs):
-        return Response(
-            data=self.get_serializer(instance=self.get_object().get_ancestors(include_self=True), many=True).data
-        )
+        ancestors = self.get_object().get_ancestors(include_self=True).filter(is_active=True)
+        return Response(data=self.get_serializer(instance=ancestors, many=True).data)
 
 
 class LogIssuesViewSet(FMBaseViewSet, viewsets.ModelViewSet):
