@@ -3,6 +3,7 @@ from django.conf import settings
 from django.utils.safestring import mark_safe
 
 from etools import NAME, VERSION
+from etools.applications.core.util_scripts import currency_format
 
 register = template.Library()
 
@@ -55,3 +56,8 @@ def tenant_app_filter(app):
 def call_method(obj, method_name, *args):
     method = getattr(obj, method_name)
     return method(*args)
+
+
+@register.filter(is_safe=True)
+def currency(value):
+    return currency_format(value)
