@@ -2157,9 +2157,9 @@ class Intervention(TimeStampedModel):
             self.number
         )
 
-    def get_frontend_object_url(self, to_unicef=True):
+    def get_frontend_object_url(self, to_unicef=True, suffix='strategy'):
         host = settings.HOST if "https://" in settings.HOST else f'https://{settings.HOST}'
-        return f'{host}/{"pmp" if to_unicef else "epd"}/interventions/{self.pk}/strategy'
+        return f'{host}/{"pmp" if to_unicef else "epd"}/interventions/{self.pk}/{suffix}'
 
     def get_object_url(self):
         return reverse("partners_api:intervention-detail", args=[self.pk])
@@ -3129,6 +3129,8 @@ class InterventionReview(InterventionReviewQuestionnaire, TimeStampedModel):
         on_delete=models.CASCADE,
         related_name='+',
     )
+
+    sent_back_comment = models.TextField(verbose_name=_('Sent Back by Secretary Comment'), blank=True)
 
     class Meta:
         ordering = ["-created"]

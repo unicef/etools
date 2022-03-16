@@ -449,6 +449,23 @@ class TestDetail(BaseInterventionTestCase):
         self.assertIn("sign", response.data["available_actions"])
         self.assertIn("reject_review", response.data["available_actions"])
 
+    def test_available_actions_review_prc_secretary(self):
+        self.intervention.date_sent_to_partner = datetime.date.today()
+        self.intervention.unicef_accepted = True
+        self.intervention.partner_accepted = True
+        self.intervention.status = Intervention.REVIEW
+        self.intervention.save()
+        InterventionReviewFactory(intervention=self.intervention, review_type='prc', overall_approval=None)
+        self.user.groups.add(GroupFactory(name=PRC_SECRETARY))
+
+        response = self.forced_auth_req(
+            "get",
+            reverse('pmp_v3:intervention-detail', args=[self.intervention.pk]),
+            user=self.user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("send_back_review", response.data["available_actions"])
+
     def test_empty_actions_while_cancelled(self):
         self.intervention.status = Intervention.CANCELLED
         self.intervention.budget_owner = self.user
@@ -1932,6 +1949,60 @@ class TestInterventionReviewReject(BaseInterventionActionTestCase):
         self.assertFalse(self.intervention.unicef_accepted)
         self.assertFalse(self.intervention.partner_accepted)
         self.assertEqual(self.intervention.review.review_date, timezone.now().date())
+
+
+class TestInterventionReviewSendBack(BaseInterventionActionTestCase):
+    def setUp(self):
+        super().setUp()
+        self.url = reverse(
+            'pmp_v3:intervention-send-back-review',
+            args=[self.intervention.pk],
+        )
+
+    def test_partner_no_access(self):
+        response = self.forced_auth_req("patch", self.url, user=self.partner_user)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_patch_not_secretary(self):
+        self.intervention.partner_accepted = True
+        self.intervention.unicef_accepted = True
+        self.intervention.date_sent_to_partner = datetime.date.today()
+        self.intervention.status = Intervention.REVIEW
+        self.intervention.save()
+        InterventionReviewFactory(intervention=self.intervention, overall_approval=None)
+
+        response = self.forced_auth_req("patch", self.url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
+
+    def test_patch_comment_required(self):
+        self.intervention.partner_accepted = True
+        self.intervention.unicef_accepted = True
+        self.intervention.date_sent_to_partner = datetime.date.today()
+        self.intervention.status = Intervention.REVIEW
+        self.intervention.save()
+        self.user.groups.add(GroupFactory(name=PRC_SECRETARY))
+        InterventionReviewFactory(intervention=self.intervention, overall_approval=None)
+
+        response = self.forced_auth_req("patch", self.url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
+        self.assertIn('sent_back_comment', response.data)
+
+    def test_patch(self):
+        self.intervention.partner_accepted = True
+        self.intervention.unicef_accepted = True
+        self.intervention.date_sent_to_partner = datetime.date.today()
+        self.intervention.status = Intervention.REVIEW
+        self.intervention.save()
+        self.user.groups.add(GroupFactory(name=PRC_SECRETARY))
+        InterventionReviewFactory(intervention=self.intervention, overall_approval=None)
+
+        mock_send = mock.Mock(return_value=self.mock_email)
+        with mock.patch(self.notify_path, mock_send):
+            response = self.forced_auth_req("patch", self.url, user=self.user, data={'sent_back_comment': 'Because'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        mock_send.assert_called()
+        self.intervention.refresh_from_db()
+        self.assertEqual(self.intervention.status, Intervention.DRAFT)
 
 
 class TestInterventionReviews(BaseInterventionTestCase):

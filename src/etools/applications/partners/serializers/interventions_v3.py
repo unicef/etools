@@ -24,6 +24,7 @@ from etools.applications.partners.models import (
 from etools.applications.partners.permissions import (
     InterventionPermissions,
     PARTNERSHIP_MANAGER_GROUP,
+    PRC_SECRETARY,
     SENIOR_MANAGEMENT_GROUP,
 )
 from etools.applications.partners.serializers.interventions_v2 import (
@@ -354,6 +355,13 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             profile__country=self.context['request'].user.profile.country
         ).exists()
 
+    def _is_prc_secretary(self):
+        return get_user_model().objects.filter(
+            pk=self.context['request'].user.pk,
+            groups__name__in=[PRC_SECRETARY],
+            profile__country=self.context['request'].user.profile.country
+        ).exists()
+
     def _is_overall_approver(self, obj, user):
         if not obj.review:
             return False
@@ -376,6 +384,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "review",
             "sign",
             "reject_review",
+            "send_back_review",
             "unlock",
             "cancel",
             "suspend",
@@ -415,6 +424,10 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
         if obj.status == obj.REVIEW and self._is_overall_approver(obj, user):
             available_actions.append("sign")
             available_actions.append("reject_review")
+
+        # prc secretary can send back intervention if not approved yet
+        if obj.status == obj.REVIEW and self._is_prc_secretary() and obj.review and obj.review.overall_approval is None:
+            available_actions.append("send_back_review")
 
         # PD is in review and user prc review not started
         if obj.status == obj.REVIEW and obj.review and obj.review.prc_reviews.filter(
@@ -656,3 +669,12 @@ class AmendedInterventionReviewActionSerializer(serializers.ModelSerializer):
     class Meta:
         model = InterventionReview
         fields = ('id', 'review_type')
+
+
+class InterventionReviewSendBackSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InterventionReview
+        fields = ('id', 'sent_back_comment')
+        extra_kwargs = {
+            'sent_back_comment': {'required': True},
+        }
