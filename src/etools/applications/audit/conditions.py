@@ -27,3 +27,13 @@ class EngagementStaffMemberCondition(SimpleCondition):
     def is_satisfied(self):
         return hasattr(self.user, 'purchase_order_auditorstaffmember'
                        ) and self.user.purchase_order_auditorstaffmember in self.engagement.staff_members.all()
+
+
+class IsStaffMemberCondition(SimpleCondition):
+    predicate = 'user.is_staff'
+
+    def __init__(self, user):
+        self.user = user
+
+    def is_satisfied(self):
+        return self.user.is_staff
