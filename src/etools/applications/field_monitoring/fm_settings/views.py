@@ -141,9 +141,8 @@ class FMLocationsViewSet(FMBaseViewSet, mixins.ListModelMixin, viewsets.GenericV
 
     @action(methods=['get'], detail=True)
     def path(self, request, *args, **kwargs):
-        return Response(
-            data=self.get_serializer(instance=self.get_object().get_ancestors(include_self=True), many=True).data
-        )
+        ancestors = self.get_object().get_ancestors(include_self=True).filter(is_active=True)
+        return Response(data=self.get_serializer(instance=ancestors, many=True).data)
 
 
 class LogIssuesViewSet(FMBaseViewSet, viewsets.ModelViewSet):
