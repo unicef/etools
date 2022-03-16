@@ -37,6 +37,7 @@ from etools.applications.partners.views.interventions_v3_actions import (
     PMPInterventionCancelView,
     PMPInterventionRejectReviewView,
     PMPInterventionReviewView,
+    PMPInterventionSendBackViewReview,
     PMPInterventionSendToPartnerView,
     PMPInterventionSendToUNICEFView,
     PMPInterventionSignatureView,
@@ -117,6 +118,13 @@ urlpatterns = [
             http_method_names=['patch'],
         ),
         name='intervention-reject-review',
+    ),
+    path(
+        'interventions/<int:pk>/send_back_review/',
+        view=PMPInterventionSendBackViewReview.as_view(
+            http_method_names=['patch'],
+        ),
+        name='intervention-send-back-review',
     ),
     path(
         'interventions/<int:pk>/cancel/',
