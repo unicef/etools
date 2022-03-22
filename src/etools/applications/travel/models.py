@@ -525,21 +525,21 @@ class Activity(TimeStampedModel):
     )
     monitoring_activity = models.ForeignKey(
         MonitoringActivity,
-        on_delete=models.DO_NOTHING,
+        on_delete=models.CASCADE,
         related_name="trip_activities",
         null=True,
         blank=True
     )
     partner = models.ForeignKey(
         PartnerOrganization,
-        on_delete=models.DO_NOTHING,
+        on_delete=models.CASCADE,
         related_name="trip_activities",
         null=True,
         blank=True
     )
     location = models.ForeignKey(
         Location,
-        on_delete=models.DO_NOTHING,
+        on_delete=models.SET_NULL,
         related_name="trip_activities",
         null=True,
         blank=True

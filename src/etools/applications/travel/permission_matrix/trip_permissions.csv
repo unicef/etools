@@ -9,6 +9,8 @@ Field no,Verbose Name,Field Name,Group,Condition,Status,Action,Allowed
 1.1.1,End date,end_date,,,draft,Edit,TRUE
 1.1.1,Activities,activities,,,draft,Edit,TRUE
 1.1.1,itinerary_items,itinerary_items,Traveller,,draft,Edit,TRUE
+1.1.1,itinerary_items,itinerary_items,Travel Administrator,,draft,Edit,TRUE
+1.1.1,itinerary_items,itinerary_items,Travel Focal Point,,draft,Edit,TRUE
 1.1.1,Title,title,,,,Required,TRUE
 1.1.1,Traveller,traveller,,,draft,Required,FALSE
 1.1.1,Supervisor,supervisor,,,draft,Required,FALSE
