@@ -2,7 +2,8 @@ from django.contrib.gis.geos import GEOSGeometry
 
 from rest_framework import serializers
 from rest_framework_gis.serializers import GeoFeatureModelSerializer
-from unicef_locations.models import Location
+
+from etools.applications.locations.models import Location
 
 
 class GisLocationListSerializer(serializers.ModelSerializer):

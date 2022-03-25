@@ -6,7 +6,6 @@ from django.urls import reverse
 from factory import fuzzy
 from rest_framework import status
 from unicef_attachments.models import Attachment, AttachmentLink, FileType
-from unicef_locations.models import Location
 from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.attachments.tests.factories import (
@@ -25,6 +24,7 @@ from etools.applications.field_monitoring.fm_settings.tests.factories import (
 )
 from etools.applications.field_monitoring.planning.tests.factories import MonitoringActivityFactory
 from etools.applications.field_monitoring.tests.base import APIViewSetTestCase, FMBaseTestCaseMixin
+from etools.applications.locations.models import Location
 from etools.applications.partners.tests.factories import InterventionFactory, PartnerFactory
 from etools.applications.reports.models import ResultType
 from etools.applications.reports.tests.factories import ResultFactory, SectionFactory
