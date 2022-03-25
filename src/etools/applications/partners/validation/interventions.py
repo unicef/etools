@@ -319,6 +319,14 @@ def cp_structure_valid(i):
     return True
 
 
+def pd_outputs_presented(i):
+    return i.result_links.exists()
+
+
+def pd_outputs_are_linked_to_indicators(i):
+    return not i.result_links.filter(ram_indicators__isnull=True).exists()
+
+
 def all_pd_outputs_are_associated(i):
     return not i.result_links.filter(cp_output__isnull=True).exists()
 
@@ -399,6 +407,10 @@ class InterventionValid(CompleteValidation):
         if intervention.unicef_accepted:
             if not all_activities_have_timeframes(intervention):
                 raise StateValidationError([_('All activities must have at least one time frame')])
+            if not pd_outputs_presented(intervention):
+                raise StateValidationError([_('Results section is empty')])
+            if not pd_outputs_are_linked_to_indicators(intervention):
+                raise StateValidationError([_('All PD Outputs need to be associated to indicators')])
             if not all_pd_outputs_are_associated(intervention):
                 raise StateValidationError([_('All PD Outputs need to be associated to a CP Output')])
             if not intervention.planned_budget.total_unicef_contribution_local():
