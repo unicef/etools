@@ -1,0 +1,123 @@
+{% extends "easy_pdf/base.html" %}
+{% load humanize %}
+
+{% block style_base %}
+    {% comment %}
+        See DEFAULT_CSS in https://github.com/chrisglass/xhtml2pdf/blob/master/xhtml2pdf/default.py
+        for base style.
+    {% endcomment %}
+
+    {% block layout_style %}
+        <style type="text/css">
+              @page {
+                size: a4 landscape;
+                margin: 1.8cm 2.0cm;
+
+                @frame footer_frame {
+                  /* Static frame */
+                  -pdf-frame-content:footer_content;
+                  right: 60pt; width: 100pt; top: 570pt; height: 20pt;
+                }
+              }
+        </style>
+    {% endblock %}
+
+    {% block extra_style %}
+        <style type="text/css">
+        #content {
+          font-family: 'Roboto', 'Noto', sans-serif;
+          font-size: 10pt;
+        }
+        .label {
+          font-size: 16pt;
+          font-weight: bold;
+        }
+        .value {
+          font-size: 12pt;
+        }
+
+        .main_title {
+          font-size: 20pt;
+          font-weight: lighter;
+          color: #0099ff;
+        }
+        .content-section {
+          margin-bottom: 17pt;
+          font-weight: lighter;
+          color: #0099ff;
+        }
+        .content-section__header {
+          font-size: 15pt;
+          line-height: 15pt;
+          font-weight: bold;
+          padding: 7pt 5pt 5pt;
+          background-color: #0099ff;
+          color: #ffffff;
+          margin: 0;
+        }
+        .content-section__header__title {
+          text-align: center;
+        }
+        .content-section__wrapper {
+          padding: 8pt 12pt 20pt;
+        }
+        .content-section__wrapper tr {
+          border: none;
+        }
+        .content-section__table tr {
+          padding: 4pt 10pt;
+        }
+        .content-section__table tr.content-section__table__header {
+          color: rgb(122, 122, 122);
+        }
+        .input-container {
+          padding: 7pt 10pt;
+          margin: 0;
+        }
+
+        .left-column {
+            float: left;
+            width: 50%;
+        }
+        .right-column {
+            float: right;
+            width: 50%;
+            display: block;
+        }
+        .risk-subheader {
+          font-weight: bold;
+          font-size: 12pt;
+        }
+        .internal-control-message {
+          padding: 0;
+        }
+        .text-center {
+          text-align: center!important;
+        }
+        .text-left {
+          text-align: left!important;
+        }
+        </style>
+    {% endblock %}
+{% endblock %}
+
+{% block content %}
+    {% if error %}
+        PDF could not be generated properly: <br> {{ error }}
+    {% else %}
+        <div id="content">
+            <div class="view-container">
+                <div class="main_title">{{ ma.reference_number }}</div>
+                    <div class="left-column">
+                        <div class="label">Start date: {{ ma.start_date }}</div>
+                    </div>
+                    <div class="right-column">
+                        <div class="label">End date: {{ ma.end_date }} </div>
+                    </div>
+            </div>
+        </div>
+        <div id="footer_content" style="text-align: right">
+            <pdf:pagenumber> of <pdf:pagecount>
+        <div>
+    {% endif %}
+{% endblock %}

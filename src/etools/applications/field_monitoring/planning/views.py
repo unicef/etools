@@ -234,6 +234,18 @@ class MonitoringActivitiesViewSet(
             filename="visit_letter_{}.pdf".format(ma.reference_number)
         )
 
+    @action(detail=True, methods=['get'], url_path='pdf')
+    def visit_pdf(self, request, *args, **kwargs):
+        ma = self.get_object()
+        return render_to_pdf_response(
+            request, "fm/visit_pdf.html", context={
+                "ma": ma,
+                "partners": list(ma.partners.all()),
+                "results": list(ma.cp_outputs.all())
+            },
+            filename="visit_{}.pdf".format(ma.reference_number)
+        )
+
 
 class FMUsersViewSet(
     FMBaseViewSet,
