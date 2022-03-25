@@ -17,11 +17,11 @@ from model_utils import Choices, FieldTracker
 from model_utils.models import TimeStampedModel
 from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation, CurrencyField
-from unicef_locations.models import Location
 
 from etools.applications.core.permissions import import_permissions
 from etools.applications.environment.notifications import send_notification_with_template
 from etools.applications.funds.models import FundsReservationHeader
+from etools.applications.locations.models import Location
 from etools.applications.partners.amendment_utils import (
     calculate_difference,
     copy_instance,
