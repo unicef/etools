@@ -41,6 +41,7 @@ from etools.applications.partners.models import (
 from etools.applications.partners.permissions import (
     AmendmentSessionActivitiesPermission,
     intervention_field_is_editable_permission,
+    PartnershipManagerPermission,
     PMPInterventionPermission,
     UserBelongsToObjectPermission,
     UserIsStaffPermission,
@@ -55,6 +56,7 @@ from etools.applications.partners.serializers.interventions_v2 import (
     MinimalInterventionListSerializer,
 )
 from etools.applications.partners.serializers.interventions_v3 import (
+    InterventionDetailResultsStructureSerializer,
     InterventionDetailSerializer,
     InterventionListSerializer,
     InterventionManagementBudgetSerializer,
@@ -191,6 +193,12 @@ class PMPInterventionRetrieveUpdateView(PMPInterventionMixin, InterventionDetail
                 context=self.get_serializer_context(),
             ).data,
         )
+
+
+class PMPInterventionRetrieveResultsStructure(PMPInterventionMixin, RetrieveAPIView):
+    queryset = Intervention.objects.detail_qs().all()
+    serializer_class = InterventionDetailResultsStructureSerializer
+    permission_classes = (PartnershipManagerPermission,)
 
 
 class PMPInterventionPDFView(PMPInterventionMixin, RetrieveAPIView):
