@@ -401,6 +401,8 @@ class InterventionValid(CompleteValidation):
                 raise StateValidationError([_('All activities must have at least one time frame')])
             if not all_pd_outputs_are_associated(intervention):
                 raise StateValidationError([_('All PD Outputs need to be associated to a CP Output')])
+            if not intervention.planned_budget.total_unicef_contribution_local():
+                raise StateValidationError([_('Total UNICEF Contribution must be > 0')])
         return True
 
     def state_review_valid(self, intervention, user=None):
