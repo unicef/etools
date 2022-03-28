@@ -65,10 +65,6 @@ class TestAPIInterventionRetrieveResultsStructure(BaseTenantTestCase):
             user=self.user
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
-        self.assertIn('permissions', response.data)
-        self.assertIn('quarters', response.data)
-        self.assertEqual(response.data['currency'], self.intervention.planned_budget.currency)
-        self.assertEqual(response.data['status'], self.intervention.status)
         self.assertEqual(len(response.data["result_links"]), 1)
 
         links = response.data["result_links"][0]
@@ -96,10 +92,6 @@ class TestAPIInterventionRetrieveResultsStructure(BaseTenantTestCase):
             user=self.user
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
-        self.assertIn('permissions', response.data)
-        self.assertIn('quarters', response.data)
-        self.assertEqual(response.data['currency'], self.intervention.planned_budget.currency)
-        self.assertEqual(response.data['status'], self.intervention.status)
         self.assertEqual(len(response.data["result_links"]), 1)
 
         links = response.data["result_links"][0]

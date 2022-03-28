@@ -641,39 +641,12 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
 
 
 class InterventionDetailResultsStructureSerializer(serializers.ModelSerializer):
-    currency = serializers.CharField(source='planned_budget.currency', read_only=True)
-    permissions = serializers.SerializerMethodField(read_only=True)
-    quarters = InterventionTimeFrameSerializer(many=True, read_only=True)
     result_links = InterventionResultsStructureSerializer(many=True, read_only=True, required=False)
-
-    def get_permissions(self, obj):
-        user = self.context['request'].user
-        ps = Intervention.permission_structure()
-        permissions = InterventionPermissions(
-            user=user,
-            instance=self.instance,
-            permission_structure=ps,
-        )
-        return permissions.get_permissions()
-
-    def get_quarters(self, obj: Intervention):
-        return [
-            {
-                'name': 'Q{}'.format(i + 1),
-                'start': quarter[0].strftime('%Y-%m-%d'),
-                'end': quarter[1].strftime('%Y-%m-%d')
-            }
-            for i, quarter in enumerate(get_quarters_range(obj.start, obj.end))
-        ]
 
     class Meta:
         model = Intervention
         fields = (
-            "currency",
-            "permissions",
-            "quarters",
             "result_links",
-            "status",
         )
 
 
