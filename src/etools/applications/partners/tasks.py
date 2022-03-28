@@ -379,20 +379,31 @@ def transfer_active_pds_to_new_cp():
         connection.set_tenant(original_tenant)
 
 
+@app.task
 def sync_partner(vendor_number=None, country=None):
     from etools.applications.partners.synchronizers import PartnerSynchronizer
     try:
-        valid_response, response = get_data_from_insight('partners/?vendor={vendor_code}',
-                                                         {"vendor_code": vendor_number})
+        valid_response, response = get_data_from_insight(
+            'partners/?vendor={vendor_code}', {
+                "vendor_code": vendor_number,
+                "businessarea": country.business_area_code
+            })
+
+        if "ROWSET" not in response:
+            logger.exception("{} sync failed: Invalid response".format(PartnerSynchronizer.__name__))
+            return 'The vendor number could not be found in INSIGHT'
+
         partner_resp = response["ROWSET"]["ROW"]
         partner_sync = PartnerSynchronizer(business_area_code=country.business_area_code)
         if not partner_sync._filter_records([partner_resp]):
-            raise VisionException
+            raise VisionException('Partner skipped because one or more of the required fields are missing')
 
         partner_sync._partner_save(partner_resp, full_sync=False)
-    except VisionException:
+    except VisionException as e:
         logger.exception("{} sync failed".format(PartnerSynchronizer.__name__))
-    logger.info('Partner {} synced successfully.'.format(vendor_number))
+        return str(e)
+    else:
+        logger.info('Partner {} synced successfully.'.format(vendor_number))
 
 
 @app.task

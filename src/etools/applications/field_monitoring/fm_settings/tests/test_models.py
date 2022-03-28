@@ -65,7 +65,7 @@ class SitesTestCase(BaseTenantTestCase):
               }
             """
         )
-        cls.country = LocationFactory(gateway__admin_level=0)
+        cls.country = LocationFactory(admin_level=0)
         cls.boundary_location = LocationFactory(geom=cls.boundary)
 
     def test_parent_boundary(self):
