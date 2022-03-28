@@ -1,4 +1,4 @@
-ARG  BASE_TAG=latest_prod
+ARG  BASE_TAG=latest
 FROM unicef/etools-base:$BASE_TAG
 
 #### CLEANUP
