@@ -40,11 +40,8 @@ class SectionsManagementView(viewsets.ViewSet):
             new_section_name = request.data['new_section_name']
             sections_to_merge = request.data['sections_to_merge']
             logger.info('Section to Merge', sections_to_merge)
-        except KeyError:
-            return Response(_('Unable to unpack'), status=status.HTTP_400_BAD_REQUEST)
-        try:
             section = SectionHandler.merge(new_section_name, sections_to_merge)
-        except (IntegrityError, MigrationException) as e:
+        except (KeyError, IntegrityError, MigrationException) as e:
             return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
 
         return Response({
@@ -59,9 +56,8 @@ class SectionsManagementView(viewsets.ViewSet):
             objects_dict = request.data['new_sections']
             logger.info('Section Migrate', objects_dict)
             sections = SectionHandler.close(old_section, objects_dict)
-
-        except (KeyError, MigrationException):
-            return Response(_('Unable to unpack'), status=status.HTTP_400_BAD_REQUEST)
+        except (KeyError, IntegrityError, MigrationException) as e:
+            return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
 
         data = [{'id': section.id, 'name': section.name} for section in sections]
         return Response(data)

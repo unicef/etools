@@ -96,6 +96,8 @@ class DisaggregationSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         values_data = validated_data.pop('disaggregation_values')
+        if not values_data or len(values_data) == 1:
+            raise ValidationError('At least 2 Disaggregation Groups must be set.')
         disaggregation = Disaggregation.objects.create(**validated_data)
         for value_data in values_data:
             if 'id' in value_data:
@@ -522,13 +524,16 @@ class InterventionActivityDetailSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'name',
+            'code',
             'context_details',
             'unicef_cash',
             'cso_cash',
             'items',
             'time_frames',
             'partner_percentage',
+            'is_active',
         )
+        read_only_fields = ['code']
 
     def __init__(self, *args, **kwargs):
         self.intervention = kwargs.pop('intervention')
@@ -598,10 +603,11 @@ class InterventionActivitySerializer(serializers.ModelSerializer):
     class Meta:
         model = InterventionActivity
         fields = (
-            'id', 'name', 'context_details',
+            'id', 'name', 'code', 'context_details',
             'unicef_cash', 'cso_cash', 'partner_percentage',
-            'time_frames',
+            'time_frames', 'is_active', 'created',
         )
+        read_only_fields = ['code']
 
 
 class LowerResultWithActivitiesSerializer(LowerResultSerializer):
