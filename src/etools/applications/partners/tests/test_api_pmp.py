@@ -7,7 +7,7 @@ from django.urls import reverse
 from django_tenants.test.client import TenantClient
 from rest_framework import status
 from unicef_djangolib.fields import CURRENCY_LIST
-from unicef_locations.tests.factories import GatewayTypeFactory
+from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.core.tests.mixins import URLAssertionMixin
@@ -187,15 +187,15 @@ class TestPMPStaticDropdownsListApiView(BaseTenantTestCase):
 
     def test_location_types(self):
         """Verify the location_types portion of the response"""
-        gateway_types = [GatewayTypeFactory() for i in range(3)]
+        gateway_types = [LocationFactory() for i in range(3)]
 
         response = self.forced_auth_req('get', self.url)
         d = self._assertResponseFundamentals(response)
 
         # These are formatted differently than most other elements in the response.
-        gateway_types = [{name: getattr(gateway_type, name) for name in ('id', 'name', 'admin_level')}
+        gateway_types = [{name: getattr(gateway_type, name) for name in ('admin_level', 'admin_level_name')}
                          for gateway_type in gateway_types]
-        gateway_types.sort(key=lambda gateway_type: gateway_type['id'])
+        gateway_types.sort(key=lambda gateway_type: gateway_type['admin_level'])
         self.assertCountEqual(d['location_types'], gateway_types)
 
     def test_currencies(self):

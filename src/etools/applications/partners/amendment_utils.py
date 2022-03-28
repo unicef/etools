@@ -555,7 +555,7 @@ INTERVENTION_AMENDMENT_RELATED_FIELDS = {
 }
 INTERVENTION_AMENDMENT_IGNORED_FIELDS = {
     'partners.Intervention': [
-        'created', 'modified',
+        'modified',
         'number', 'status', 'in_amendment',
         'title',
         'sites',
@@ -577,7 +577,7 @@ INTERVENTION_AMENDMENT_IGNORED_FIELDS = {
         'review_date_prc',
     ],
     'partners.InterventionBudget': [
-        'created', 'modified',
+        'modified',
         # auto calculated fields
         'partner_contribution_local',
         'total_unicef_cash_local_wo_hq',
@@ -589,15 +589,18 @@ INTERVENTION_AMENDMENT_IGNORED_FIELDS = {
         'total_local',
         'programme_effectiveness',
     ],
-    'partners.InterventionManagementBudget': ['created', 'modified'],
-    'partners.InterventionResultLink': ['created', 'modified'],
-    'reports.ReportingRequirement': ['created', 'modified'],
-    'reports.InterventionActivity': ['created', 'modified'],
-    'reports.AppliedIndicator': ['created', 'modified'],
-    'reports.LowerResult': ['created', 'modified'],
-    'partners.InterventionRisk': ['created', 'modified'],
-    'partners.InterventionSupplyItem': ['created', 'modified', 'total_price', 'result'],
-    'reports.InterventionActivityItem': ['created', 'modified'],
+    'partners.InterventionManagementBudget': ['modified'],
+    'partners.InterventionResultLink': ['modified'],
+    'reports.ReportingRequirement': ['modified'],
+    'reports.InterventionActivity': ['modified'],
+    'reports.AppliedIndicator': ['modified'],
+    'reports.LowerResult': ['modified'],
+    'partners.InterventionRisk': ['modified'],
+    'partners.InterventionSupplyItem': [
+        'modified',
+        'total_price', 'result'
+    ],
+    'reports.InterventionActivityItem': ['modified'],
 }
 INTERVENTION_AMENDMENT_DEFAULTS = {
     'partners.Intervention': {

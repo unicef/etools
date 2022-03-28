@@ -119,6 +119,7 @@ class InterventionAmendmentCUSerializer(AttachmentSerializerMixin, serializers.M
             'partner_authorized_officer_signatory',
             'signed_amendment_attachment',
             'difference',
+            'created',
         )
         validators = [
             UniqueTogetherValidator(
@@ -462,6 +463,7 @@ class InterventionResultNestedSerializer(serializers.ModelSerializer):
         model = InterventionResultLink
         fields = (
             'id',
+            'code',
             'intervention',
             'cp_output',
             'cp_output_name',
@@ -470,6 +472,7 @@ class InterventionResultNestedSerializer(serializers.ModelSerializer):
             'll_results',
             'total',
         )
+        read_only_fields = ['code']
 
 
 class InterventionResultLinkSimpleCUSerializer(serializers.ModelSerializer):
@@ -495,6 +498,7 @@ class InterventionResultLinkSimpleCUSerializer(serializers.ModelSerializer):
     class Meta:
         model = InterventionResultLink
         fields = "__all__"
+        read_only_fields = ['code']
         validators = [
             UniqueTogetherValidator(
                 queryset=InterventionResultLink.objects.all(),
@@ -854,7 +858,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     def get_location_names(self, obj):
         return ['{} [{} - {}]'.format(
             loc.name,
-            loc.gateway.name,
+            loc.admin_level_name,
             loc.p_code
         ) for loc in obj.flat_locations.all()]
 
