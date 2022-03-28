@@ -1675,6 +1675,7 @@ class TestInterventionAccept(BaseInterventionActionTestCase):
         result_link = InterventionResultLinkFactory(
             intervention=self.intervention,
             cp_output__result_type__name=ResultType.OUTPUT,
+            ram_indicators=[IndicatorFactory()],
         )
         pd_output = LowerResultFactory(result_link=result_link)
         activity = InterventionActivityFactory(result=pd_output)
