@@ -7,6 +7,7 @@ from django.utils import timezone
 
 from rest_framework import status
 from rest_framework.exceptions import ErrorDetail
+from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.attachments.models import AttachmentFlat
 from etools.applications.attachments.tests.factories import AttachmentFactory
@@ -68,6 +69,7 @@ class TestInterventionAmendments(BaseTenantTestCase):
             partner_authorized_officer_signatory=self.partner.staff_members.all().first(),
             budget_owner=self.pme,
         )
+        self.active_intervention.flat_locations.add(LocationFactory())
         self.active_intervention.partner_focal_points.add(self.partner.staff_members.all().first())
         self.active_intervention.unicef_focal_points.add(self.unicef_staff)
         self.active_intervention.offices.add(OfficeFactory())
@@ -257,6 +259,7 @@ class TestInterventionAmendments(BaseTenantTestCase):
             contingency_pd=False,
             unicef_court=True,
         )
+        intervention.flat_locations.add(LocationFactory())
         intervention.planned_budget.total_hq_cash_local = 10
         intervention.planned_budget.save()
         # FundsReservationHeaderFactory(intervention=intervention, currency='USD') # frs code is unique

@@ -51,6 +51,7 @@ from etools.applications.reports.models import ResultType
 from etools.applications.reports.tests.factories import (
     AppliedIndicatorFactory,
     CountryProgrammeFactory,
+    IndicatorFactory,
     InterventionActivityFactory,
     LowerResultFactory,
     OfficeFactory,
@@ -705,6 +706,8 @@ class TestUpdate(BaseInterventionTestCase):
             signed_by_partner_date=None,
             signed_by_unicef_date=None,
         )
+        ReportingRequirementFactory(intervention=intervention, start_date=intervention.start, end_date=intervention.end)
+        intervention.flat_locations.add(LocationFactory())
         intervention.unicef_focal_points.add(self.user)
         staff_member = PartnerStaffFactory(partner=self.partner)
         intervention.partner_focal_points.add(staff_member)
@@ -1535,11 +1538,19 @@ class BaseInterventionActionTestCase(BaseInterventionTestCase):
             partner_authorized_officer_signatory=staff_member,
             budget_owner=UserFactory(),
         )
+        InterventionResultLinkFactory(
+            cp_output__result_type__name=ResultType.OUTPUT,
+            intervention=self.intervention,
+            ram_indicators=[IndicatorFactory()],
+        )
+        self.intervention.flat_locations.add(LocationFactory())
         self.intervention.country_programmes.add(agreement.country_programme)
         self.intervention.partner_focal_points.add(staff_member)
         self.intervention.unicef_focal_points.add(self.user)
         self.intervention.offices.add(office)
         self.intervention.sections.add(section)
+        self.intervention.management_budgets.act1_unicef = 1
+        self.intervention.management_budgets.save()
         AttachmentFactory(
             file="sample.pdf",
             object_id=self.intervention.pk,
@@ -1591,7 +1602,7 @@ class TestInterventionAccept(BaseInterventionActionTestCase):
         mock_send = mock.Mock(return_value=self.mock_email)
         with mock.patch(self.notify_path, mock_send):
             response = self.forced_auth_req("patch", self.url, user=self.user)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertIn("available_actions", response.data)
         mock_send.assert_called()
         self.intervention.refresh_from_db()
@@ -2327,6 +2338,7 @@ class TestInterventionSignature(BaseInterventionActionTestCase):
         # unicef signature
         self.intervention.date_sent_to_partner = datetime.date.today()
         self.intervention.review_date_prc = None
+        self.intervention.unicef_signatory = None
         self.intervention.save()
         InterventionReviewFactory(
             intervention=self.intervention,
