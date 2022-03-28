@@ -249,6 +249,57 @@ class TestLowerResult(BaseTenantTestCase):
         InterventionActivityFactory(result=ll, unicef_cash=10, cso_cash=20)
         self.assertEqual(ll.total(), 30)
 
+    def test_auto_code(self):
+        intervention = InterventionFactory()
+        LowerResultFactory(code=None, result_link=InterventionResultLinkFactory(intervention=intervention))
+        result1 = LowerResultFactory(code=None, result_link=InterventionResultLinkFactory(intervention=intervention))
+        result2 = LowerResultFactory(code=None, result_link=result1.result_link)
+        LowerResultFactory(code=None, result_link=InterventionResultLinkFactory(intervention=intervention))
+        result3 = LowerResultFactory(code=None, result_link=result1.result_link)
+        self.assertEqual(result1.code, '2.1')
+        self.assertEqual(result2.code, '2.2')
+        self.assertEqual(result3.code, '2.3')
+
+    def test_code_renumber_on_result_link_delete(self):
+        intervention = InterventionFactory()
+        result_link_1 = InterventionResultLinkFactory(intervention=intervention, code=None)
+        result1 = LowerResultFactory(
+            code=None,
+            result_link=InterventionResultLinkFactory(intervention=intervention, code=None),
+        )
+        result2 = LowerResultFactory(code=None, result_link=result1.result_link)
+
+        self.assertEqual(result1.code, '2.1')
+        self.assertEqual(result2.code, '2.2')
+
+        result_link_1.delete()
+
+        result1.refresh_from_db()
+        result2.refresh_from_db()
+        self.assertEqual(result1.code, '1.1')
+        self.assertEqual(result2.code, '1.2')
+
+    def test_code_renumber_on_result_delete(self):
+        intervention = InterventionFactory()
+        InterventionResultLinkFactory(code=None, intervention=intervention)
+        result1 = LowerResultFactory(
+            code=None,
+            result_link=InterventionResultLinkFactory(code=None, intervention=intervention),
+        )
+        result2 = LowerResultFactory(code=None, result_link=result1.result_link)
+        result3 = LowerResultFactory(code=None, result_link=result1.result_link)
+
+        self.assertEqual(result1.code, '2.1')
+        self.assertEqual(result2.code, '2.2')
+        self.assertEqual(result3.code, '2.3')
+
+        result2.delete()
+
+        result1.refresh_from_db()
+        result3.refresh_from_db()
+        self.assertEqual(result1.code, '2.1')
+        self.assertEqual(result3.code, '2.2')
+
 
 class TestIndicatorBlueprint(BaseTenantTestCase):
     def test_save_empty(self):
@@ -298,6 +349,69 @@ class TestInterventionActivity(BaseTenantTestCase):
 
         budget.refresh_from_db()
         self.assertEqual(budget.total_cash_local(), 606)
+
+    def test_auto_code(self):
+        link = InterventionResultLinkFactory(code=None)
+        InterventionActivityFactory(code=None, result=LowerResultFactory(code=None, result_link=link))
+        activity1 = InterventionActivityFactory(code=None, result=LowerResultFactory(code=None, result_link=link))
+        activity2 = InterventionActivityFactory(code=None, result=activity1.result)
+        InterventionActivityFactory(code=None, result=LowerResultFactory(code=None, result_link=link))
+        activity3 = InterventionActivityFactory(code=None, result=activity1.result)
+        self.assertEqual(activity1.code, '1.2.1')
+        self.assertEqual(activity2.code, '1.2.2')
+        self.assertEqual(activity3.code, '1.2.3')
+
+    def test_code_renumber_on_result_link_delete(self):
+        intervention = InterventionFactory()
+        link1 = InterventionResultLinkFactory(intervention=intervention, code=None)
+        link2 = InterventionResultLinkFactory(intervention=intervention, code=None)
+        LowerResultFactory(result_link=link2, code=None)
+        activity1 = InterventionActivityFactory(code=None, result=LowerResultFactory(result_link=link2, code=None))
+        activity2 = InterventionActivityFactory(code=None, result=activity1.result)
+
+        self.assertEqual(activity1.code, '2.2.1')
+        self.assertEqual(activity2.code, '2.2.2')
+
+        link1.delete()
+
+        activity1.refresh_from_db()
+        activity2.refresh_from_db()
+        self.assertEqual(activity1.code, '1.2.1')
+        self.assertEqual(activity2.code, '1.2.2')
+
+    def test_code_renumber_on_result_delete(self):
+        link = InterventionResultLinkFactory(code=None)
+        result_1 = LowerResultFactory(result_link=link, code=None)
+        activity1 = InterventionActivityFactory(code=None, result=LowerResultFactory(result_link=link, code=None))
+        activity2 = InterventionActivityFactory(code=None, result=activity1.result)
+
+        self.assertEqual(activity1.code, '1.2.1')
+        self.assertEqual(activity2.code, '1.2.2')
+
+        result_1.delete()
+
+        activity1.refresh_from_db()
+        activity2.refresh_from_db()
+        self.assertEqual(activity1.code, '1.1.1')
+        self.assertEqual(activity2.code, '1.1.2')
+
+    def test_code_renumber_on_activity_delete(self):
+        link = InterventionResultLinkFactory(code=None)
+        LowerResultFactory(result_link=link, code=None)
+        activity1 = InterventionActivityFactory(code=None, result=LowerResultFactory(result_link=link, code=None))
+        activity2 = InterventionActivityFactory(code=None, result=activity1.result)
+        activity3 = InterventionActivityFactory(code=None, result=activity1.result)
+
+        self.assertEqual(activity1.code, '1.2.1')
+        self.assertEqual(activity2.code, '1.2.2')
+        self.assertEqual(activity3.code, '1.2.3')
+
+        activity2.delete()
+
+        activity1.refresh_from_db()
+        activity3.refresh_from_db()
+        self.assertEqual(activity1.code, '1.2.1')
+        self.assertEqual(activity3.code, '1.2.2')
 
 
 class TestInterventionActivityItem(BaseTenantTestCase):

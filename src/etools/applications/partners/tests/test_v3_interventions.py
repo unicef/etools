@@ -1,4 +1,5 @@
 import datetime
+import json
 from decimal import Decimal
 from unittest import mock, skip
 from unittest.mock import patch
@@ -12,6 +13,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from rest_framework import status
+from rest_framework.test import APIClient
 from unicef_locations.tests.factories import LocationFactory
 from unicef_snapshot.utils import create_dict_with_relations, create_snapshot
 from waffle.utils import get_cache
@@ -355,6 +357,16 @@ class TestDetail(BaseInterventionTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response['Content-Type'], 'application/pdf')
 
+    def test_pdf_unauthenticated_user_forbidden(self):
+        """Ensure an unauthenticated user gets the 403 forbidden"""
+        response = APIClient().get(
+            reverse(
+                'pmp_v3:intervention-detail-pdf',
+                args=[self.intervention.pk],
+            )
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
     def test_pdf_partner_user(self):
         staff_member = PartnerStaffFactory(partner=self.intervention.agreement.partner)
         self.intervention.partner_focal_points.add(staff_member)
@@ -436,6 +448,23 @@ class TestDetail(BaseInterventionTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("sign", response.data["available_actions"])
         self.assertIn("reject_review", response.data["available_actions"])
+
+    def test_available_actions_review_prc_secretary(self):
+        self.intervention.date_sent_to_partner = datetime.date.today()
+        self.intervention.unicef_accepted = True
+        self.intervention.partner_accepted = True
+        self.intervention.status = Intervention.REVIEW
+        self.intervention.save()
+        InterventionReviewFactory(intervention=self.intervention, review_type='prc', overall_approval=None)
+        self.user.groups.add(GroupFactory(name=PRC_SECRETARY))
+
+        response = self.forced_auth_req(
+            "get",
+            reverse('pmp_v3:intervention-detail', args=[self.intervention.pk]),
+            user=self.user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("send_back_review", response.data["available_actions"])
 
     def test_empty_actions_while_cancelled(self):
         self.intervention.status = Intervention.CANCELLED
@@ -1978,6 +2007,60 @@ class TestInterventionReviewReject(BaseInterventionActionTestCase):
         self.assertEqual(self.intervention.review.review_date, timezone.now().date())
 
 
+class TestInterventionReviewSendBack(BaseInterventionActionTestCase):
+    def setUp(self):
+        super().setUp()
+        self.url = reverse(
+            'pmp_v3:intervention-send-back-review',
+            args=[self.intervention.pk],
+        )
+
+    def test_partner_no_access(self):
+        response = self.forced_auth_req("patch", self.url, user=self.partner_user)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_patch_not_secretary(self):
+        self.intervention.partner_accepted = True
+        self.intervention.unicef_accepted = True
+        self.intervention.date_sent_to_partner = datetime.date.today()
+        self.intervention.status = Intervention.REVIEW
+        self.intervention.save()
+        InterventionReviewFactory(intervention=self.intervention, overall_approval=None)
+
+        response = self.forced_auth_req("patch", self.url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
+
+    def test_patch_comment_required(self):
+        self.intervention.partner_accepted = True
+        self.intervention.unicef_accepted = True
+        self.intervention.date_sent_to_partner = datetime.date.today()
+        self.intervention.status = Intervention.REVIEW
+        self.intervention.save()
+        self.user.groups.add(GroupFactory(name=PRC_SECRETARY))
+        InterventionReviewFactory(intervention=self.intervention, overall_approval=None)
+
+        response = self.forced_auth_req("patch", self.url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
+        self.assertIn('sent_back_comment', response.data)
+
+    def test_patch(self):
+        self.intervention.partner_accepted = True
+        self.intervention.unicef_accepted = True
+        self.intervention.date_sent_to_partner = datetime.date.today()
+        self.intervention.status = Intervention.REVIEW
+        self.intervention.save()
+        self.user.groups.add(GroupFactory(name=PRC_SECRETARY))
+        InterventionReviewFactory(intervention=self.intervention, overall_approval=None)
+
+        mock_send = mock.Mock(return_value=self.mock_email)
+        with mock.patch(self.notify_path, mock_send):
+            response = self.forced_auth_req("patch", self.url, user=self.user, data={'sent_back_comment': 'Because'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        mock_send.assert_called()
+        self.intervention.refresh_from_db()
+        self.assertEqual(self.intervention.status, Intervention.DRAFT)
+
+
 class TestInterventionReviews(BaseInterventionTestCase):
     def setUp(self):
         super().setUp()
@@ -2874,3 +2957,35 @@ class TestPMPInterventionIndicatorsCreateView(
             'pmp_v3:intervention-indicators-list',
             kwargs={'lower_result_pk': cls.lower_result.pk},
         )
+
+    def test_target_baseline_validation(self):
+        """
+        """
+        user = UserFactory(is_staff=True)
+        self.lower_result.result_link.intervention.unicef_focal_points.add(user)
+        data = self.data.copy()
+        # valid values
+        data.update({
+            'indicator': {'title': 'Indicator test title '},
+            'target': {'v': '3.2', 'd': 1},
+            'baseline': {'v': '7.2', 'd': 1},
+        })
+        response = self._make_request(user, data)
+        self.assertResponseFundamentals(response)
+
+        # invalid values
+        _target_baseline_error_cases = {
+            "3,2": "Invalid format. Use '.' (dot) instead of ',' (comma) for decimal values.",
+            "string value": "Invalid number"
+        }
+        for i, (value, response_error) in enumerate(_target_baseline_error_cases.items()):
+            data.update({
+                'indicator': {'title': f'Indicator test title {i}'},
+                'target': {'v': value, 'd': 1},
+                'baseline': {'v': value, 'd': 1}
+            })
+            response = self._make_request(user, data)
+            self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+            response_json = json.loads(response.rendered_content)
+            self.assertEqual(response_json['target'], [response_error])
+            self.assertEqual(response_json['baseline'], [response_error])
