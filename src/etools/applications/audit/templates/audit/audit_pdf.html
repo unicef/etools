@@ -1,4 +1,5 @@
 {% extends "audit/engagement_pdf.html" %}
+{% load etools %}
 
 {% block extra_content %}
   <div class="content-section">
@@ -29,9 +30,9 @@
         </tr>
         <tr>
           <td colspan="2">{{ engagement.partner.name }}</td>
-          <td>{{ engagement.audited_expenditure|default_if_none:"0.00" }}</td>
-          <td>{{ engagement.financial_findings|default_if_none:"0.00" }}</td>
-          <td>{{ engagement.percent_of_audited_expenditure|default_if_none:"0.00" }}</td>
+          <td>{{ engagement.audited_expenditure|default_if_none:"0.00"|currency }}</td>
+          <td>{{ engagement.financial_findings|default_if_none:"0.00"|currency }}</td>
+          <td>{{ engagement.percent_of_audited_expenditure|default_if_none:"0.00"|currency }}</td>
           <td>{{ engagement.audit_opinion|default:"-"|title }}</td>
           <td>{{ engagement.financial_finding_set|length }}</td>
           <td>{{ engagement.key_internal_weakness.high_risk_count }}</td>
@@ -83,41 +84,41 @@
         <td class="input-container">
           <div class="input-container__label">{{ serializer.fields.audited_expenditure.label }}</div>
           <div class="input-container__value">
-            $ {{ engagement.audited_expenditure|default:"0.00" }}</div>
+            $ {{ engagement.audited_expenditure|default:"0.00"|currency }}</div>
         </td>
         <td class="input-container">
           <div class="input-container__label">{{ serializer.fields.financial_findings.label }}</div>
           <div class="input-container__value">
-            $ {{ engagement.financial_findings|default_if_none:"0.00" }}</div>
+            $ {{ engagement.financial_findings|default_if_none:"0.00"|currency }}</div>
         </td>
         <td class="input-container">
           <div class="input-container__label">{{ serializer.fields.amount_refunded.label }}</div>
           <div class="input-container__value">
-            $ {{ engagement.amount_refunded|default:"0.00" }}</div>
+            $ {{ engagement.amount_refunded|default:"0.00"|currency }}</div>
         </td>
       </tr>
       <tr>
         <td class="input-container">
           <div class="input-container__label">{{ serializer.fields.additional_supporting_documentation_provided.label }}</div>
           <div class="input-container__value">
-            $ {{ engagement.additional_supporting_documentation_provided|default:"0.00" }}</div>
+            $ {{ engagement.additional_supporting_documentation_provided|default:"0.00"|currency }}</div>
         </td>
         <td class="input-container">
           <div class="input-container__label">{{ serializer.fields.justification_provided_and_accepted.label }}</div>
           <div class="input-container__value">
-            $ {{ engagement.justification_provided_and_accepted|default:"0.00" }}</div>
+            $ {{ engagement.justification_provided_and_accepted|default:"0.00"|currency }}</div>
         </td>
         <td class="input-container">
           <div class="input-container__label">{{ serializer.fields.write_off_required.label }}</div>
           <div class="input-container__value">
-            $ {{ engagement.write_off_required|default:"0.00" }}</div>
+            $ {{ engagement.write_off_required|default:"0.00"|currency }}</div>
         </td>
       </tr>
       <tr>
         <td class="input-container">
           <div class="input-container__label">{{ serializer.fields.pending_unsupported_amount.label }}</div>
           <div class="input-container__value">
-            $ {{ engagement.pending_unsupported_amount|default:"0.00" }}</div>
+            $ {{ engagement.pending_unsupported_amount|default:"0.00"|currency }}</div>
         </td>
       </tr>
       <tr>

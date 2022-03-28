@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('field_monitoring_planning', '0009_auto_20210318_2046'),
-        ('locations', '0008_auto_20190422_1537'),
+        ('locations', '0001_initial'),
         ('reports', '0025_auto_20191220_2022'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         ('partners', '0048_auto_20210506_0803'),

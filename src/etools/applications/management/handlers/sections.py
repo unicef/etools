@@ -12,7 +12,7 @@ from etools.applications.t2f.models import Travel
 from etools.applications.tpm.models import TPMActivity, TPMVisit
 
 
-class MigrationException(Exception):
+class MigrationException(BaseException):
     """Exception thrown when migration is failing due validation"""
 
 
