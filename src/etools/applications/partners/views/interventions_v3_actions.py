@@ -4,6 +4,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from rest_framework.exceptions import ValidationError
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from etools.applications.environment.notifications import send_notification_with_template
@@ -12,12 +13,14 @@ from etools.applications.partners.models import Intervention, InterventionAmendm
 from etools.applications.partners.permissions import (
     IsInterventionBudgetOwnerPermission,
     PARTNERSHIP_MANAGER_GROUP,
+    PRC_SECRETARY,
     user_group_permission,
 )
 from etools.applications.partners.serializers.interventions_v3 import (
     AmendedInterventionReviewActionSerializer,
     InterventionDetailSerializer,
     InterventionReviewActionSerializer,
+    InterventionReviewSendBackSerializer,
 )
 from etools.applications.partners.views.interventions_v3 import InterventionDetailAPIView, PMPInterventionMixin
 
@@ -213,6 +216,52 @@ class PMPInterventionRejectReviewView(PMPInterventionActionView):
                 "partner_name": str(pd.agreement.partner),
                 "review_actions": pd.review.actions_list,
                 "pd_link": pd.get_frontend_object_url(),
+            }
+            self.send_notification(
+                pd,
+                recipients=list(recipients),
+                template_name=template_name,
+                context=context
+            )
+
+        return response
+
+
+class PMPInterventionSendBackViewReview(PMPInterventionActionView):
+    permission_classes = [IsAuthenticated, user_group_permission(PRC_SECRETARY)]
+
+    @transaction.atomic
+    def update(self, request, *args, **kwargs):
+        pd = self.get_object()
+        if pd.status != Intervention.REVIEW:
+            raise ValidationError("PD needs to be in Review state")
+        if not pd.review:
+            raise ValidationError("PD review is missing")
+        if pd.review.overall_approval is not None:
+            raise ValidationError("PD review already approved")
+
+        serializer = InterventionReviewSendBackSerializer(data=request.data, instance=pd.review)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        request.data.clear()
+        request.data.update({
+            "status": Intervention.DRAFT,
+            "unicef_accepted": False,
+            "partner_accepted": False,
+        })
+
+        response = super().update(request, *args, **kwargs)
+        template_name = 'partners/intervention/prc_review_sent_back'
+        if response.status_code == 200:
+            recipients = set(
+                [u.email for u in pd.unicef_focal_points.all()] +
+                [pd.budget_owner.email]
+            )
+            # send notification
+            context = {
+                "reference_number": pd.reference_number,
+                "pd_link": pd.get_frontend_object_url(suffix='review'),
             }
             self.send_notification(
                 pd,

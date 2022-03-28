@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import connection, models
-from django.db.models import Exists, OuterRef, Q
+from django.db.models import Count, Exists, OuterRef, Q
 from django.db.models.base import ModelBase
 from django.utils.translation import gettext_lazy as _
 
@@ -10,7 +10,6 @@ from model_utils import Choices, FieldTracker
 from model_utils.models import TimeStampedModel
 from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation
-from unicef_locations.models import Location
 
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.core.permissions import import_permissions
@@ -26,6 +25,7 @@ from etools.applications.field_monitoring.planning.transitions.permissions impor
     user_is_pme_permission,
     user_is_visit_lead_permission,
 )
+from etools.applications.locations.models import Location
 from etools.applications.partners.models import Intervention, PartnerOrganization
 from etools.applications.reports.models import Result, Section
 from etools.applications.tpm.models import PME
@@ -193,6 +193,7 @@ class MonitoringActivity(
         ],
         STATUSES.report_finalization: [
             lambda i, old_instance=None, user=None: i.close_offline_blueprints(),
+            lambda i, old_instance=None, user=None: i.port_findings_to_summary(),
         ],
         STATUSES.submitted: [
             lambda i, old_instance=None, user=None: i.send_submit_notice(),
@@ -576,6 +577,28 @@ class MonitoringActivity(
 
     def close_offline_blueprints(self):
         MonitoringActivityOfflineSynchronizer(self).close_blueprints()
+
+    def port_findings_to_summary(self):
+        from etools.applications.field_monitoring.data_collection.models import ChecklistOverallFinding
+
+        valid_questions = self.questions.annotate(
+            answers_count=Count('findings', filter=Q(findings__value__isnull=False)),
+        ).filter(answers_count=1).prefetch_related('findings')
+        for question in valid_questions:
+            question.overall_finding.value = question.findings.all()[0].value
+            question.overall_finding.save()
+
+        for overall_finding in self.overall_findings.all():
+            narrative_findings = ChecklistOverallFinding.objects.filter(
+                ~Q(narrative_finding=''),
+                started_checklist__monitoring_activity=self,
+                partner=overall_finding.partner,
+                cp_output=overall_finding.cp_output,
+                intervention=overall_finding.intervention,
+            ).values_list('narrative_finding', flat=True)
+            if len(narrative_findings) == 1:
+                overall_finding.narrative_finding = narrative_findings[0]
+                overall_finding.save()
 
 
 class MonitoringActivityActionPointManager(models.Manager):

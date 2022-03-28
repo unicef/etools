@@ -12,7 +12,8 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('locations', '0008_auto_20190422_1537'),
+        ('locations', '0001_initial'),
+        ('unicef_locations', '0001_initial'),
         ('partners', '0039_auto_20191106_1345'),
         ('reports', '0019_auto_20190816_1609'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),

@@ -22,6 +22,9 @@ def value_numbers(data):
         try:
             Decimal(v)
         except (TypeError, InvalidOperation):
+            if v and ',' in v:
+                raise forms.ValidationError(
+                    "Invalid format. Use '.' (dot) instead of ',' (comma) for decimal values.")
             raise forms.ValidationError("Invalid number")
 
 
@@ -37,6 +40,9 @@ def value_none_or_numbers(data):
             try:
                 Decimal(v)
             except (TypeError, InvalidOperation):
+                if ',' in v:
+                    raise forms.ValidationError(
+                        "Invalid format. Use '.' (dot) instead of ',' (comma) for decimal values.")
                 raise forms.ValidationError("Invalid number")
 
 

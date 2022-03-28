@@ -275,7 +275,7 @@ class TestGisLocationViews(BaseTenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(sorted(response.data[0].keys()), ["gateway_id", "id", "level", "name", "p_code", "parent_id"])
+        self.assertEqual(sorted(response.data[0].keys()), ["id", "level", "name", "p_code", "parent_id"])
 
     def test_intervention_locations_in_use(self):
         # add intervention locations and test the response
@@ -291,7 +291,7 @@ class TestGisLocationViews(BaseTenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(sorted(response.data[0].keys()), ["gateway_id", "id", "level", "name", "p_code", "parent_id"])
+        self.assertEqual(sorted(response.data[0].keys()), ["id", "level", "name", "p_code", "parent_id"])
 
     def test_activities_in_use(self):
         activity = Activity(
@@ -310,7 +310,7 @@ class TestGisLocationViews(BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)
-        self.assertEqual(sorted(response.data[0].keys()), ["gateway_id", "id", "level", "name", "p_code", "parent_id"])
+        self.assertEqual(sorted(response.data[0].keys()), ["id", "level", "name", "p_code", "parent_id"])
 
     def test_action_points_in_use(self):
         ActionPointFactory(
@@ -326,7 +326,7 @@ class TestGisLocationViews(BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
-        self.assertEqual(sorted(response.data[0].keys()), ["gateway_id", "id", "level", "name", "p_code", "parent_id"])
+        self.assertEqual(sorted(response.data[0].keys()), ["id", "level", "name", "p_code", "parent_id"])
 
     def test_intervention_locations_geom_bad_request(self):
         url = reverse("management_gis:locations-gis-geom-list")
@@ -415,7 +415,7 @@ class TestGisLocationViews(BaseTenantTestCase):
         self.assertEqual(len(response.data), 1)
         self.assertEqual(
             sorted(response.data[0].keys()),
-            ["gateway_id", "geom", "id", "level", "name", "p_code", "parent_id", "point"]
+            ["geom", "id", "level", "name", "p_code", "parent_id", "point"]
         )
         self.assertEqual(response.data[0]["geom"], self.location_with_geom.geom.wkt)
 
@@ -437,7 +437,7 @@ class TestGisLocationViews(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
             sorted(response.data.keys()),
-            ["gateway_id", "geom", "id", "level", "name", "p_code", "parent_id", "point"]
+            ["geom", "id", "level", "name", "p_code", "parent_id", "point"]
         )
         self.assertEqual(response.data["id"], str(self.location_with_geom.id))
         self.assertEqual(response.data["geom"], self.location_with_geom.geom.wkt)
@@ -474,7 +474,7 @@ class TestGisLocationViews(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
             sorted(response.data.keys()),
-            ["gateway_id", "geom", "id", "level", "name", "p_code", "parent_id", "point"]
+            ["geom", "id", "level", "name", "p_code", "parent_id", "point"]
         )
         self.assertEqual(response.data["id"], str(self.location_with_geom.id))
         self.assertEqual(response.data["geom"], self.location_with_geom.geom.wkt)
