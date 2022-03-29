@@ -216,6 +216,7 @@ TENANT_APPS = (
     'etools.applications.tpm',
     'etools.applications.audit',
     'etools.applications.firms',
+    'etools.applications.locations',
     'etools.applications.management',
     'etools.applications.action_points',
     'etools.applications.psea',
@@ -547,7 +548,7 @@ SCHEMA_OVERRIDE_PARAM = "schema"
 PCA_REQUIRED_NOTIFICATION_LEAD = 30
 
 UNICEF_NOTIFICATION_TEMPLATE_DIR = "notifications"
-UNICEF_LOCATIONS_GET_CACHE_KEY = 'etools.libraries.locations.views.cache_key'
+UNICEF_LOCATIONS_GET_CACHE_KEY = 'etools.applications.locations.views.cache_key'
 
 ATTACHMENT_FILEPATH_PREFIX_FUNC = "etools.applications.attachments.utils.get_filepath_prefix"
 ATTACHMENT_FLAT_MODEL = "etools.applications.attachments.models.AttachmentFlat"

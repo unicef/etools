@@ -3,10 +3,11 @@ from django.contrib.gis import admin
 
 from admin_extra_urls.decorators import button
 from celery import chain
-from unicef_locations.admin import CartoDBTableAdmin
+from unicef_locations.admin import CartoDBTableAdmin, LocationAdmin
 from unicef_locations.models import CartoDBTable
 
-from etools.libraries.locations.tasks import import_locations, notify_import_site_completed
+from etools.applications.locations.models import Location
+from etools.applications.locations.tasks import import_locations, notify_import_site_completed
 
 
 class EtoolsCartoDBTableAdmin(CartoDBTableAdmin):
@@ -21,23 +22,6 @@ class EtoolsCartoDBTableAdmin(CartoDBTableAdmin):
         messages.info(request, 'Import Scheduled')
 
 
-class RemapAdmin(admin.ModelAdmin):
-    list_display = (
-        'id',
-        'old_id',
-        'new_id',
-        'old_location',
-        'new_location',
-    )
-
-    ordering = ('new_location__id',)
-
-    def old_id(self, obj):
-        return obj.old_location.id
-
-    def new_id(self, obj):
-        return obj.new_location.id
-
-
 admin.site.unregister(CartoDBTable)
 admin.site.register(CartoDBTable, EtoolsCartoDBTableAdmin)
+admin.site.register(Location, LocationAdmin)
