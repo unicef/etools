@@ -1,9 +1,15 @@
 from unicef_restlib.serializers import UserContextSerializerMixin
 from unicef_snapshot.models import Activity
-from unicef_snapshot.utils import create_change_dict, create_dict_with_relations
+from unicef_snapshot.utils import create_change_dict
+
+from etools.applications.partners.amendment_utils import (
+    full_snapshot_instance,
+    INTERVENTION_AMENDMENT_IGNORED_FIELDS,
+    INTERVENTION_FULL_SNAPSHOT_RELATED_FIELDS,
+)
 
 
-class ChildRelatedModelSnapshotSerializerMixin(UserContextSerializerMixin):
+class FullInterventionSnapshotSerializerMixin(UserContextSerializerMixin):
     """
     save related model to parent snapshot.
     """
@@ -20,18 +26,16 @@ class ChildRelatedModelSnapshotSerializerMixin(UserContextSerializerMixin):
             instance = getattr(instance, field_name)
         return instance, parent_path
 
-    def save_snapshot(self, target_before, current_obj_dict):
+    def save_snapshot(self, target, target_before, current_obj_dict):
         change = create_change_dict(target_before, current_obj_dict)
         if not change:
             return
-
-        target, parent_path = self.get_parent_object()
 
         activity_kwargs = {
             'target': target,
             'by_user': self.get_user(),
             'action': Activity.UPDATE,
-            'data': current_obj_dict,
+            'data': target_before,
             'change': change
         }
 
@@ -39,19 +43,23 @@ class ChildRelatedModelSnapshotSerializerMixin(UserContextSerializerMixin):
         if callable(snapshot_additional_data):
             activity_kwargs['data'].update(snapshot_additional_data(change))
 
-        # wrap data & change with path structure
-        for field_name, child_pk in parent_path:
-            activity_kwargs['data'] = {field_name: {child_pk: activity_kwargs['data']}}
-            activity_kwargs['change'] = {field_name: {child_pk: activity_kwargs['change']}}
-
         Activity.objects.create(**activity_kwargs)
 
     def save(self, **kwargs):
-        target_before = create_dict_with_relations(self.instance)
+        target, parent_path = self.get_parent_object()
+        target_before = full_snapshot_instance(
+            target,
+            INTERVENTION_FULL_SNAPSHOT_RELATED_FIELDS,
+            INTERVENTION_AMENDMENT_IGNORED_FIELDS,
+        )
 
         instance = super().save(**kwargs)
 
-        current_obj_dict = create_dict_with_relations(instance)
-        self.save_snapshot(target_before, current_obj_dict)
+        current_obj_dict = full_snapshot_instance(
+            target.__class__.objects.get(pk=target.pk),
+            INTERVENTION_FULL_SNAPSHOT_RELATED_FIELDS,
+            INTERVENTION_AMENDMENT_IGNORED_FIELDS,
+        )
+        self.save_snapshot(target, target_before, current_obj_dict)
 
-        return self.instance
+        return instance

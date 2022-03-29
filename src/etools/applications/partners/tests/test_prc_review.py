@@ -1,3 +1,4 @@
+import itertools
 from datetime import date
 from unittest.mock import patch
 
@@ -24,7 +25,6 @@ from etools.applications.reports.tests.factories import (
     SectionFactory,
 )
 from etools.applications.users.tests.factories import UserFactory
-from etools.libraries.unicef_snapshot_child.tests.utils import get_recursive_from_dict
 
 
 class BaseInterventionMixin:
@@ -252,13 +252,13 @@ class PRCReviewTestCase(ReviewInterventionMixin, BaseTenantTestCase):
 
         activity = Activity.objects.first()
         self.assertEqual(activity.target, self.review_intervention)
-        self.assertDictEqual(
-            {'overall_comment': {'after': 'ok', 'before': prc_review.overall_comment}},
-            get_recursive_from_dict(activity.change, 'reviews.*.prc_reviews.*'),
-        )
         self.assertEqual(
+            'ok',
+            activity.change['reviews']['after'][0]['prc_reviews'][0]['overall_comment'],
+        )
+        self.assertIn(
             prc_review.id,
-            get_recursive_from_dict(activity.data, 'reviews.*.prc_reviews.*')['id'],
+            [pr['pk'] for pr in itertools.chain(*[r['prc_reviews'] for r in activity.data['reviews']])],
         )
 
 

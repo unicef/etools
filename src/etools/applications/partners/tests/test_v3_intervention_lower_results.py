@@ -1,3 +1,5 @@
+import itertools
+
 from django.urls import reverse
 
 from rest_framework import status
@@ -20,7 +22,6 @@ from etools.applications.reports.tests.factories import (
     SectionFactory,
 )
 from etools.applications.users.tests.factories import UserFactory
-from etools.libraries.unicef_snapshot_child.tests.utils import get_recursive_from_dict
 
 
 class TestInterventionLowerResultsViewBase(BaseTenantTestCase):
@@ -333,13 +334,13 @@ class TestInterventionLowerResultsDetailView(TestInterventionLowerResultsViewBas
 
         activity = Activity.objects.first()
         self.assertEqual(activity.target, self.intervention)
-        self.assertDictEqual(
-            {'name': {'after': 'new_name', 'before': 'old_name'}},
-            get_recursive_from_dict(activity.change, 'result_links.*.ll_results.*'),
-        )
         self.assertEqual(
+            'new_name',
+            activity.change['result_links']['after'][0]['ll_results'][0]['name'],
+        )
+        self.assertIn(
             result.id,
-            get_recursive_from_dict(activity.data, 'result_links.*.ll_results.*')['id'],
+            [lr['pk'] for lr in itertools.chain(*[rl['ll_results'] for rl in activity.data['result_links']])],
         )
 
 
