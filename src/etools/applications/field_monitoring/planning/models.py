@@ -10,7 +10,6 @@ from model_utils import Choices, FieldTracker
 from model_utils.models import TimeStampedModel
 from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation
-from unicef_locations.models import Location
 
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.core.permissions import import_permissions
@@ -26,6 +25,7 @@ from etools.applications.field_monitoring.planning.transitions.permissions impor
     user_is_pme_permission,
     user_is_visit_lead_permission,
 )
+from etools.applications.locations.models import Location
 from etools.applications.partners.models import Intervention, PartnerOrganization
 from etools.applications.reports.models import Result, Section
 from etools.applications.tpm.models import PME

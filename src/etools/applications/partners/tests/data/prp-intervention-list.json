@@ -21,7 +21,7 @@
               {
                 "id": 1,
                 "admin_level": 0,
-                "pcode": "a-p-code",
+                "p_code": "a-p-code",
                 "name": "A Location",
                 "admin_level_name": "A Gateway"
               }
