@@ -11,6 +11,7 @@ from etools.applications.audit.conditions import (
     AuditModuleCondition,
     AuditStaffMemberCondition,
     EngagementStaffMemberCondition,
+    IsStaffMemberCondition,
 )
 from etools.applications.audit.models import (
     Auditor,
@@ -108,6 +109,9 @@ class Command(BaseCommand):
 
     staff_members_block = [
         'audit.engagement.staff_members',
+    ]
+
+    users_notified_block = [
         'audit.engagement.users_notified'
     ]
 
@@ -131,7 +135,7 @@ class Command(BaseCommand):
     ] + action_points_block
 
     engagement_overview_editable_page = (engagement_overview_editable_block + special_audit_block +
-                                         partner_block + staff_members_block)
+                                         partner_block + staff_members_block + users_notified_block)
 
     engagement_overview_page = engagement_overview_editable_page + engagement_overview_read_block
 
@@ -317,6 +321,12 @@ class Command(BaseCommand):
             self.report_readonly_block,
             condition=partner_contacted_condition
         )
+        is_staff_condition = [IsStaffMemberCondition.predicate]
+        self.add_permissions(
+            self.engagement_staff_auditor, 'edit',
+            self.users_notified_block,
+            condition=partner_contacted_condition + is_staff_condition
+        )
         self.add_permissions(
             self.engagement_staff_auditor, 'edit',
             self.staff_members_block +
@@ -332,7 +342,8 @@ class Command(BaseCommand):
 
         self.add_permissions(
             self.focal_point, 'edit',
-            self.staff_members_block,
+            self.staff_members_block +
+            self.users_notified_block,
             condition=partner_contacted_condition
         )
         self.add_permissions(

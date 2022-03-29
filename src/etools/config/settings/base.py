@@ -216,6 +216,7 @@ TENANT_APPS = (
     'etools.applications.tpm',
     'etools.applications.audit',
     'etools.applications.firms',
+    'etools.applications.locations',
     'etools.applications.management',
     'etools.applications.action_points',
     'etools.applications.psea',
@@ -247,9 +248,11 @@ TEMPLATES = [
         'OPTIONS': {
             'debug': DEBUG,
             'loaders': [
-                'django.template.loaders.filesystem.Loader',
-                'django.template.loaders.app_directories.Loader',
-                'unicef_notification.loaders.EmailTemplateLoader',
+                ('django.template.loaders.cached.Loader', [
+                    'django.template.loaders.filesystem.Loader',
+                    'django.template.loaders.app_directories.Loader',
+                    'unicef_notification.loaders.EmailTemplateLoader',
+                ]),
             ],
             'context_processors': [
                 # Already defined Django-related contexts here
@@ -546,7 +549,7 @@ SCHEMA_OVERRIDE_PARAM = "schema"
 PCA_REQUIRED_NOTIFICATION_LEAD = 30
 
 UNICEF_NOTIFICATION_TEMPLATE_DIR = "notifications"
-UNICEF_LOCATIONS_GET_CACHE_KEY = 'etools.libraries.locations.views.cache_key'
+UNICEF_LOCATIONS_GET_CACHE_KEY = 'etools.applications.locations.views.cache_key'
 
 ATTACHMENT_FILEPATH_PREFIX_FUNC = "etools.applications.attachments.utils.get_filepath_prefix"
 ATTACHMENT_FLAT_MODEL = "etools.applications.attachments.models.AttachmentFlat"
@@ -573,6 +576,8 @@ INSIGHT_REQUESTS_TIMEOUT = get_from_secrets_or_env('INSIGHT_REQUESTS_TIMEOUT', 4
 ETOOLS_OFFLINE_API = get_from_secrets_or_env('ETOOLS_OFFLINE_API', '')
 ETOOLS_OFFLINE_TOKEN = get_from_secrets_or_env('ETOOLS_OFFLINE_TOKEN', '')
 ETOOLS_OFFLINE_TASK_APP = "etools.config.celery.get_task_app"
+
+UNICEF_LOCATIONS_MODEL = 'locations.Location'
 
 # PRP Integration
 # https://github.com/unicef/etools-partner-reporting-portal
