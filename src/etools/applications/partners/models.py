@@ -18,7 +18,6 @@ from model_utils import Choices, FieldTracker
 from model_utils.models import TimeStampedModel
 from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation, CurrencyField
-from unicef_locations.models import Location
 from unicef_snapshot.models import Activity
 
 from etools.applications.core.permissions import import_permissions
