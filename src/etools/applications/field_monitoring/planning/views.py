@@ -237,12 +237,20 @@ class MonitoringActivitiesViewSet(
     @action(detail=True, methods=['get'], url_path='pdf')
     def visit_pdf(self, request, *args, **kwargs):
         ma = self.get_object()
+        context = {
+            "ma": ma,
+            "location": f'{str(ma.location)}{" -- {}".format(ma.location.parent.name) if ma.location.parent else ""}',
+            "sections": ', '.join(ma.sections.all().values_list('name', flat=True)),
+            "partners": ', '.join([partner.name for partner in ma.partners.all()]),
+            "team_members": ', '.join([member.full_name for member in ma.team_members.all()]),
+            "cp_outputs": ', '.join([cp_out.name for cp_out in ma.cp_outputs.all()]),
+            "interventions": ', '.join([str(intervention) for intervention in ma.interventions.all()]),
+            "overall_findings": list(ma.get_overall_findings().values('entity_name', 'narrative_finding')),
+            "summary_findings": ma.get_export_summary_findings()
+
+        }
         return render_to_pdf_response(
-            request, "fm/visit_pdf.html", context={
-                "ma": ma,
-                "partners": list(ma.partners.all()),
-                "results": list(ma.cp_outputs.all())
-            },
+            request, "fm/visit_pdf.html", context=context,
             filename="visit_{}.pdf".format(ma.reference_number)
         )
 

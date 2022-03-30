@@ -7,98 +7,53 @@
         for base style.
     {% endcomment %}
 
-    {% block layout_style %}
-        <style type="text/css">
-              @page {
-                size: a4 landscape;
-                margin: 1.8cm 2.0cm;
+{% block layout_style %}
+    <style type="text/css">
+          @page {
+            size: a4 landscape;
+            margin: 2.0cm;
 
-                @frame footer_frame {
-                  /* Static frame */
-                  -pdf-frame-content:footer_content;
-                  right: 60pt; width: 100pt; top: 570pt; height: 20pt;
-                }
-              }
-        </style>
-    {% endblock %}
+            @frame footer_frame {
+              /* Static frame */
+              -pdf-frame-content:footer_content;
+              right: 60pt; width: 100pt; top: 570pt; height: 20pt;
+            }
+          }
+    </style>
+{% endblock %}
 
-    {% block extra_style %}
-        <style type="text/css">
-        #content {
-          font-family: 'Roboto', 'Noto', sans-serif;
-          font-size: 10pt;
-        }
-        .label {
-          font-size: 16pt;
-          font-weight: bold;
-        }
-        .value {
-          font-size: 12pt;
-        }
+{% block extra_style %}
+    <style type="text/css">
+    #content {
+      font-family: 'Roboto', 'Noto', sans-serif;
+      font-size: 10pt;
+    }
+    .label {
+      font-size: 12pt;
+      font-weight: bold;
+    }
+    .value {
+      font-size: 12pt;
+      padding: 5px 5px 5px 5px;
+    }
 
-        .main_title {
-          font-size: 20pt;
-          font-weight: lighter;
-          color: #0099ff;
-        }
-        .content-section {
-          margin-bottom: 17pt;
-          font-weight: lighter;
-          color: #0099ff;
-        }
-        .content-section__header {
-          font-size: 15pt;
-          line-height: 15pt;
-          font-weight: bold;
-          padding: 7pt 5pt 5pt;
-          background-color: #0099ff;
-          color: #ffffff;
-          margin: 0;
-        }
-        .content-section__header__title {
-          text-align: center;
-        }
-        .content-section__wrapper {
-          padding: 8pt 12pt 20pt;
-        }
-        .content-section__wrapper tr {
-          border: none;
-        }
-        .content-section__table tr {
-          padding: 4pt 10pt;
-        }
-        .content-section__table tr.content-section__table__header {
-          color: rgb(122, 122, 122);
-        }
-        .input-container {
-          padding: 7pt 10pt;
-          margin: 0;
-        }
+    .main_title {
+      font-size: 20pt;
+      font-weight: lighter;
+      color: #0099ff;
+    }
+    .content-section {
+      font-size: 16pt;
+      font-weight: lighter;
+      color: #0099ff;
+    }
 
-        .left-column {
-            float: left;
-            width: 50%;
-        }
-        .right-column {
-            float: right;
-            width: 50%;
-            display: block;
-        }
-        .risk-subheader {
-          font-weight: bold;
-          font-size: 12pt;
-        }
-        .internal-control-message {
-          padding: 0;
-        }
-        .text-center {
-          text-align: center!important;
-        }
-        .text-left {
-          text-align: left!important;
-        }
-        </style>
-    {% endblock %}
+    .right {
+      width: 50%;
+    }
+
+    </style>
+{% endblock %}
 {% endblock %}
 
 {% block content %}
@@ -107,15 +62,114 @@
     {% else %}
         <div id="content">
             <div class="view-container">
-                <div class="main_title">{{ ma.reference_number }}</div>
-                    <div class="left-column">
-                        <div class="label">Start date: {{ ma.start_date }}</div>
+                <div class="main_title">
+                    {{ ma.reference_number }}
+                </div>
+                <table>
+                    <tr>
+                        <td class="right">
+                            <div>
+                                <span class="label">Start Date:</span>
+                                <span class="value">{{ ma.start_date|date:"d-M-y"|default_if_none:"-" }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div>
+                                <span class="label">End Date:</span>
+                                <span class="value">{{ ma.end_date|date:"d-M-y"|default_if_none:"-" }}</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div>
+                                <span class="label">Status:</span>
+                                <span class="value">{{ ma.get_status_display }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div>
+                                <span class="label">Field office:</span>
+                                <span class="value">{{ ma.field_office|default_if_none:"-" }}</span>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+                <br/>
+                <div>
+                    <span class="label">Sections:</span>
+                    <span class="value">{{ sections }}</span>
+                </div>
+                <div>
+                    <span class="label">Location:</span>
+                    <span class="value">{{ location|default_if_none:"-" }}</span>
+                </div>
+                <br/>
+                <div>
+                    <span class="label">Team Members:</span>
+                    <span class="value">{{ team_members|default_if_none:"-" }}</span>
+                </div>
+                <div>
+                    <span class="label">Visit Lead:</span>
+                    <span class="value">{{ ma.visit_lead|default_if_none:"-" }}</span>
+                </div>
+                <br/>
+                <div class="content-section">
+                    <span>ENTITIES TO MONITOR:</span>
+                </div>
+                <div>
+                    <span class="label">Partner:</span>
+                    <span class="value">{{ partners|default_if_none:"-" }}</span>
+                </div>
+                <div>
+                    <span class="label">CP Outputs:</span>
+                    <span class="value">{{ cp_outputs|default_if_none:"-" }}</span>
+                </div>
+                <div>
+                    <span class="label">PD/SSFAS:</span>
+                    <span class="value">{{ interventions|default_if_none:"-" }}</span>
+                </div>
+                <br/>
+                <div class="content-section">
+                    <span>OVERALL FINDING:</span>
+                </div>
+                {% regroup overall_findings by entity_name as overall_findings_list %}
+                {% for finding in overall_findings_list %}
+                    <div>
+                        <span class="label">ENTITY:</span>
+                        <span class="value">{{ finding.grouper }}</span>
                     </div>
-                    <div class="right-column">
-                        <div class="label">End date: {{ ma.end_date }} </div>
+                    {% for finding in finding.list %}
+                        <div class="value">
+                            {{ finding.narrative_finding|default:"-"|linebreaks }}
+                        </div>
+                    {% endfor %}
+                {% endfor %}
+                <br/>
+                <div class="content-section">
+                    <span>SUMMARY FINDINGS:</span>
+                </div><br/>
+                {% regroup summary_findings by entity_name as summary_findings_list %}
+                {% for finding in summary_findings_list %}
+                    <div>
+                        <span class="label">ENTITY:</span>
+                        <span class="value">{{ finding.grouper }}</span>
                     </div>
-            </div>
+                    {% for finding in finding.list %}
+                        <table border="1">
+                            <tr>
+                                <td class="right value">{{ finding.question_text }}</td>
+                                <td class="value">{{ finding.value|default_if_none:"-" }}</td>
+                            </tr>
+                        </table>
+                    {% endfor %}<br/>
+                {% endfor %}
+                <br/>
+                <div class="content-section">
+                    <span>DATA COLLECTED:</span>
+                </div>
         </div>
+    </div>
         <div id="footer_content" style="text-align: right">
             <pdf:pagenumber> of <pdf:pagecount>
         <div>

@@ -600,6 +600,41 @@ class MonitoringActivity(
                 overall_finding.narrative_finding = narrative_findings[0]
                 overall_finding.save()
 
+    def get_overall_findings(self):
+        return self.overall_findings.all() \
+            .annotate(entity_name=models.Case(
+                models.When(cp_output__isnull=False, then=models.F('cp_output__name')),
+                models.When(partner__isnull=False, then=models.F('partner__name')),
+                output_field=models.TextField()))
+
+    def get_summary_findings(self):
+        from etools.applications.field_monitoring.data_collection.models import ActivityQuestionOverallFinding
+        return ActivityQuestionOverallFinding.objects \
+            .filter(activity_question__monitoring_activity__id=self.pk) \
+            .select_related('activity_question', 'activity_question__question') \
+            .annotate(entity_name=models.Case(
+                models.When(activity_question__cp_output__isnull=False,
+                            then=models.F('activity_question__cp_output__name')),
+                models.When(activity_question__partner__isnull=False,
+                            then=models.F('activity_question__partner__name')),
+                output_field=models.TextField()))
+
+    def get_export_summary_findings(self):
+        findings_list = []
+        for summary in self.get_summary_findings():
+            summary_dict = {
+                'entity_name': summary.entity_name,
+                'question_text': summary.activity_question.text,
+            }
+            if not summary.value or summary.activity_question.question.answer_type != 'likert_scale':
+                summary_dict['value'] = summary.value
+            else:
+                option = summary.activity_question.question.options.get(value=summary.value)
+                summary_dict['value'] = option.label
+
+            findings_list.append(summary_dict)
+        return findings_list
+
 
 class MonitoringActivityActionPointManager(models.Manager):
     def get_queryset(self):
