@@ -239,14 +239,16 @@ class MonitoringActivitiesViewSet(
         ma = self.get_object()
         context = {
             "ma": ma,
+            "field_offices": ', '.join(ma.offices.all().values_list('name', flat=True)),
             "location": f'{str(ma.location)}{" -- {}".format(ma.location.parent.name) if ma.location.parent else ""}',
             "sections": ', '.join(ma.sections.all().values_list('name', flat=True)),
             "partners": ', '.join([partner.name for partner in ma.partners.all()]),
             "team_members": ', '.join([member.full_name for member in ma.team_members.all()]),
             "cp_outputs": ', '.join([cp_out.name for cp_out in ma.cp_outputs.all()]),
             "interventions": ', '.join([str(intervention) for intervention in ma.interventions.all()]),
-            "overall_findings": list(ma.get_overall_findings().values('entity_name', 'narrative_finding')),
-            "summary_findings": ma.get_export_summary_findings()
+            "overall_findings": list(ma.get_activity_overall_findings().values('entity_name', 'narrative_finding')),
+            "summary_findings": ma.get_export_activity_questions_overall_findings(),
+            "data_collected": ma.get_export_checklist_findings()
 
         }
         return render_to_pdf_response(
