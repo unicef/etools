@@ -611,7 +611,8 @@ class MonitoringActivity(
         from etools.applications.field_monitoring.data_collection.models import ActivityQuestionOverallFinding
 
         return ActivityQuestionOverallFinding.objects \
-            .filter(activity_question__monitoring_activity=self) \
+            .filter(activity_question__monitoring_activity=self,
+                    activity_question__is_enabled=True) \
             .select_related('activity_question', 'activity_question__question') \
             .annotate(entity_name=models.Case(
                 models.When(activity_question__cp_output__isnull=False,
@@ -643,13 +644,15 @@ class MonitoringActivity(
                                   source=started_checklist.information_source,
                                   team_member=started_checklist.author.full_name,
                                   overall=[])
-            checklist_overall_findings = ChecklistOverallFinding.objects\
+            checklist_overall_findings = ChecklistOverallFinding.objects \
                 .filter(started_checklist=started_checklist)\
                 .annotate(entity_name=models.Case(
                     models.When(cp_output__isnull=False, then=models.F('cp_output__name')),
                     models.When(partner__isnull=False, then=models.F('partner__name')),
                     output_field=models.TextField()))
+
             checklist_findings = started_checklist.findings \
+                .filter(activity_question__is_enabled=True) \
                 .annotate(entity_name=models.Case(
                     models.When(activity_question__cp_output__isnull=False,
                                 then=models.F('activity_question__cp_output__name')),
@@ -660,19 +663,21 @@ class MonitoringActivity(
             for cof in checklist_overall_findings:
                 overall_dict = dict(narrative_finding=cof.narrative_finding,
                                     entity_name=cof.entity_name,
-                                    findings=[]
-                                    )
+                                    findings=[])
+
                 for finding in checklist_findings\
                         .filter(entity_name=cof.entity_name)\
                         .select_related('activity_question', 'activity_question__question'):
-                    finding_dict = dict(question_text=finding.activity_question.text,
-                                        entity_name=finding.entity_name)
+                    finding_dict = dict(question_text=finding.activity_question.text)
+
                     if not finding.value or finding.activity_question.question.answer_type != 'likert_scale':
                         finding_dict['value'] = finding.value
                     else:
                         option = finding.activity_question.question.options.get(value=finding.value)
                         finding_dict['value'] = option.label
+
                     overall_dict['findings'].append(finding_dict)
+
                 checklist_dict['overall'].append(overall_dict)
             export_list.append(checklist_dict)
         return export_list

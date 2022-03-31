@@ -249,7 +249,6 @@ class MonitoringActivitiesViewSet(
             "overall_findings": list(ma.get_activity_overall_findings().values('entity_name', 'narrative_finding')),
             "summary_findings": ma.get_export_activity_questions_overall_findings(),
             "data_collected": ma.get_export_checklist_findings()
-
         }
         return render_to_pdf_response(
             request, "fm/visit_pdf.html", context=context,
