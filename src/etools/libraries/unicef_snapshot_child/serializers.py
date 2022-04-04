@@ -20,21 +20,26 @@ def create_change_dict_recursive(prev_dict, current_dict):
         for k, v in prev_dict.items():
             if k not in current_dict:
                 continue
-            if current_dict[k] != prev_dict[k]:
-                if isinstance(current_dict[k], dict):
-                    sub_change = create_change_dict_recursive(prev_dict[k], current_dict[k])
+            old_value = prev_dict[k]
+            new_value = current_dict[k]
+            if new_value != old_value:
+                if isinstance(new_value, dict):
+                    sub_change = create_change_dict_recursive(old_value, new_value)
                     if sub_change:
                         change[k] = sub_change
-                elif isinstance(current_dict[k], list) and len(current_dict[k]) > 0 and isinstance(current_dict[k][0], dict):
-                    sub_change_list = [create_change_dict_recursive(prev_dict[k][i], current_dict[k][i]) for i in range(len(current_dict[k]))]
+                elif isinstance(new_value, list) and len(new_value) > 0 and isinstance(new_value[0], dict):
+                    sub_change_list = [
+                        create_change_dict_recursive(old_value[i], new_value[i])
+                        for i in range(len(new_value))
+                    ]
                     sub_change_list = [c for c in sub_change_list if c]
                     if sub_change_list:
                         change[k] = sub_change_list
                 else:
                     change.update({
                         k: jsonify({
-                            "before": prev_dict[k],
-                            "after": current_dict[k],
+                            "before": old_value,
+                            "after": new_value,
                         })
                     })
 
