@@ -49,7 +49,7 @@ jobs:
         environment:
           PGHOST: 127.0.0.1
           DATABASE_URL: "postgis://postgres:postgres@localhost:5432/circle_test"
-          DEPLOY_BRANCHES: "develop|staging|master|ci-updates2|epd"
+          DEPLOY_BRANCHES: "develop|staging|master|ci-updates2|epd|results-structure"
       - image: cimg/postgres:12.9-postgis
         environment:
           POSTGRES_USER: postgres
@@ -115,11 +115,6 @@ jobs:
             else
               echo "Not a followed branch not pushing latest"
             fi
-      - run:
-          name: trigger redeploy?
-          command: |
-            pip install requests
-            python utils/trigger_redeploy.py --loglevel=INFO
 
 
 workflows:
