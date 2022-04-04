@@ -1,5 +1,5 @@
 {% extends "easy_pdf/base.html" %}
-{% load humanize %}
+{% load humanize static %}
 
 {% block style_base %}
     {% comment %}
@@ -7,51 +7,94 @@
         for base style.
     {% endcomment %}
 
-{% block layout_style %}
-    <style type="text/css">
+    {% block layout_style %}
+        <style type="text/css">
           @page {
-            size: a4 landscape;
-            margin: 2.0cm;
+            margin-left: 0.85in;
+            margin-right: 0.85in;
+            margin-top: 1.76in;
+            margin-bottom: 1in;
+
+            @frame header {
+              -pdf-frame-content: page-header;
+              margin-left: 0.85in;
+              margin-right: 0.85in;
+              margin-top: 0.5in;
+            }
 
             @frame footer_frame {
               /* Static frame */
               -pdf-frame-content:footer_content;
-              right: 60pt; width: 100pt; top: 570pt; height: 20pt;
+              left: 50pt; width: 512pt; top: 772pt; height: 20pt;
             }
           }
-    </style>
+        </style>
+    {% endblock %}
+
+    {% block extra_style %}
+        <style type="text/css">
+        #content {
+          font-family: 'Roboto', 'Noto', sans-serif;
+          font-size: 10pt;
+        }
+        #page-header {
+          font-family: arial;
+          font-size: 8pt;
+          color: #00aeef;
+        }
+        #page-header hr {
+          padding: 0;
+          margin: 0;
+        }
+        #page-header * {
+         margin: 0;
+        }
+
+        .label {
+          font-size: 12pt;
+          font-weight: bold;
+        }
+        .value {
+          font-size: 12pt;
+          padding: 5px 5px 5px 5px;
+        }
+
+        .main_title {
+          font-size: 20pt;
+          font-weight: lighter;
+          color: #0099ff;
+        }
+        .content-section {
+          font-size: 16pt;
+          font-weight: lighter;
+          color: #0099ff;
+        }
+        .right {
+          width: 50%;
+        }
+        </style>
+    {% endblock %}
 {% endblock %}
 
-{% block extra_style %}
-    <style type="text/css">
-    #content {
-      font-family: 'Roboto', 'Noto', sans-serif;
-      font-size: 10pt;
-    }
-    .label {
-      font-size: 12pt;
-      font-weight: bold;
-    }
-    .value {
-      font-size: 12pt;
-      padding: 5px 5px 5px 5px;
-    }
+{% block page_header %}
+<div id="page-header">
+    <table>
+        <tr>
+            <td style="width: 70%">
+                <img src="{% static 'images/UNICEF_logo_Cyan.png' %}" style="display: block; width: 2.17in; height: 0.5in; margin-top: -0.19in;">
+            </td>
+            <td>
+                <div>
+                    <span class="label">Business Area:</span>
+                    <span class="value">{{ business_area|default_if_none:"-" }}</span>
+                </div>
+            </td>
+        </tr>
 
-    .main_title {
-      font-size: 20pt;
-      font-weight: lighter;
-      color: #0099ff;
-    }
-    .content-section {
-      font-size: 16pt;
-      font-weight: lighter;
-      color: #0099ff;
-    }
-    .right {
-      width: 50%;
-    }
-    </style>
-{% endblock %}
+    </table>
+    <hr size="0.01in" color="#a6a6a6">
+</div>
+
 {% endblock %}
 
 {% block content %}
@@ -59,7 +102,7 @@
         PDF could not be generated properly: <br> {{ error }}
     {% else %}
         <div id="content">
-            <div class="view-container">
+            <div>
                 <div class="main_title">
                     {{ ma.reference_number }}
                 </div>
