@@ -335,8 +335,8 @@ class TestInterventionLowerResultsDetailView(TestInterventionLowerResultsViewBas
         activity = Activity.objects.first()
         self.assertEqual(activity.target, self.intervention)
         self.assertEqual(
-            'new_name',
-            activity.change['result_links']['after'][0]['ll_results'][0]['name'],
+            {'result_links': [{'ll_results': [{'name': {'after': 'new_name', 'before': 'old_name'}}]}]},
+            activity.change,
         )
         self.assertIn(
             result.id,

@@ -254,7 +254,7 @@ class PRCReviewTestCase(ReviewInterventionMixin, BaseTenantTestCase):
         self.assertEqual(activity.target, self.review_intervention)
         self.assertEqual(
             'ok',
-            activity.change['reviews']['after'][0]['prc_reviews'][0]['overall_comment'],
+            activity.change['reviews'][0]['prc_reviews'][0]['overall_comment']['after'],
         )
         self.assertIn(
             prc_review.id,

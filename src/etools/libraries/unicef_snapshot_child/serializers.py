@@ -1,12 +1,44 @@
 from unicef_restlib.serializers import UserContextSerializerMixin
 from unicef_snapshot.models import Activity
-from unicef_snapshot.utils import create_change_dict
+from unicef_snapshot.utils import jsonify
 
 from etools.applications.partners.amendment_utils import (
     full_snapshot_instance,
     INTERVENTION_AMENDMENT_IGNORED_FIELDS,
     INTERVENTION_FULL_SNAPSHOT_RELATED_FIELDS,
 )
+
+
+def create_change_dict_recursive(prev_dict, current_dict):
+    """Create a dictionary showing the differences between the
+    initial target and the target after being saved.
+
+    If prev_dict is empty, then change is empty as well
+    """
+    change = {}
+    if prev_dict is not None:
+        for k, v in prev_dict.items():
+            if k not in current_dict:
+                continue
+            if current_dict[k] != prev_dict[k]:
+                if isinstance(current_dict[k], dict):
+                    sub_change = create_change_dict_recursive(prev_dict[k], current_dict[k])
+                    if sub_change:
+                        change[k] = sub_change
+                elif isinstance(current_dict[k], list) and len(current_dict[k]) > 0 and isinstance(current_dict[k][0], dict):
+                    sub_change_list = [create_change_dict_recursive(prev_dict[k][i], current_dict[k][i]) for i in range(len(current_dict[k]))]
+                    sub_change_list = [c for c in sub_change_list if c]
+                    if sub_change_list:
+                        change[k] = sub_change_list
+                else:
+                    change.update({
+                        k: jsonify({
+                            "before": prev_dict[k],
+                            "after": current_dict[k],
+                        })
+                    })
+
+    return change
 
 
 class FullInterventionSnapshotSerializerMixin(UserContextSerializerMixin):
@@ -27,7 +59,7 @@ class FullInterventionSnapshotSerializerMixin(UserContextSerializerMixin):
         return instance, parent_path
 
     def save_snapshot(self, target, target_before, current_obj_dict):
-        change = create_change_dict(target_before, current_obj_dict)
+        change = create_change_dict_recursive(target_before, current_obj_dict)
         if not change:
             return
 
