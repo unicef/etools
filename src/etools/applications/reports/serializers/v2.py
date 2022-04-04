@@ -536,7 +536,7 @@ class InterventionActivityDetailSerializer(serializers.ModelSerializer):
         read_only_fields = ['code']
 
     def __init__(self, *args, **kwargs):
-        self.intervention = kwargs.pop('intervention') if 'intervention' in kwargs else None
+        self.intervention = kwargs.pop('intervention', None)
         super().__init__(*args, **kwargs)
 
     def validate(self, attrs):

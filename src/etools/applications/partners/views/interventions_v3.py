@@ -196,7 +196,7 @@ class PMPInterventionRetrieveUpdateView(PMPInterventionMixin, InterventionDetail
 
 
 class PMPInterventionRetrieveResultsStructure(PMPInterventionMixin, RetrieveAPIView):
-    queryset = Intervention.objects.detail_qs().all()
+    queryset = Intervention.objects.detail_qs()
     serializer_class = InterventionDetailResultsStructureSerializer
     permission_classes = (PartnershipManagerPermission,)
 
