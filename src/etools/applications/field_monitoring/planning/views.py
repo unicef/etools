@@ -238,8 +238,10 @@ class MonitoringActivitiesViewSet(
     @action(detail=True, methods=['get'], url_path='pdf')
     def visit_pdf(self, request, *args, **kwargs):
         ma = self.get_object()
-        business_area = BusinessArea.objects.get(code=connection.tenant.business_area_code).name
-
+        try:
+            business_area = BusinessArea.objects.get(code=connection.tenant.business_area_code).name
+        except BusinessArea.DoesNotExist:
+            business_area = connection.tenant.name
         context = {
             "business_area": business_area,
             "ma": ma,
