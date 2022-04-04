@@ -131,6 +131,25 @@ class TestTripViewSet(BaseTenantTestCase):
         self.assertEqual(data[0]["id"], trip.pk)
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_filter_not_as_planned(self):
+        for _ in range(2):
+            TripFactory()
+        for _ in range(3):
+            TripFactory(not_as_planned=True)
+
+        response = self.forced_auth_req(
+            "get",
+            reverse('travel:trip-list'),
+            data={"not_as_planned": True},
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data["results"]
+        self.assertTrue(
+            len(data) == Trip.objects.filter(not_as_planned=True).count() == 3
+        )
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_search_reference_number(self):
         for _ in range(10):
             TripFactory()
@@ -352,22 +371,16 @@ class TestTripViewSet(BaseTenantTestCase):
             ),
             (
                 trip.STATUS_APPROVED,
-                "review",
-                trip.STATUS_REVIEW,
-                False,
-            ),
-            (
-                trip.STATUS_REVIEW,
                 "complete",
                 trip.STATUS_COMPLETED,
-                False
-            ),
-            (
-                trip.STATUS_SUBMISSION_REVIEW,
-                "cancel",
-                trip.STATUS_CANCELLED,
                 False,
             ),
+            # (
+            #     trip.STATUS_REVIEW,
+            #     "complete",
+            #     trip.STATUS_COMPLETED,
+            #     False
+            # ),
             (
                 trip.STATUS_SUBMISSION_REVIEW,
                 "revise",
@@ -378,7 +391,7 @@ class TestTripViewSet(BaseTenantTestCase):
         for init_status, request, expected_status, email_sent in mapping:
             trip.status = init_status
             trip.save()
-            if expected_status == trip.STATUS_REVIEW:
+            if expected_status == trip.STATUS_COMPLETED:
                 ReportFactory(trip=trip)
             self.assertEqual(trip.status, init_status)
             mock_send = Mock()
@@ -483,6 +496,96 @@ class TestTripViewSet(BaseTenantTestCase):
             )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(mock_send.call_count, 0)
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_cancel(self):
+        start_date = str(timezone.now().date())
+        end_date = str((timezone.now() + datetime.timedelta(days=3)).date())
+        trip = TripFactory(
+            start_date=start_date,
+            end_date=end_date,
+            status=Trip.STATUS_APPROVED
+        )
+        ActivityFactory(trip=trip)
+        self.assertEqual(trip.status, trip.STATUS_APPROVED)
+        history_qs = TripStatusHistory.objects.filter(
+            trip=trip,
+        )
+        status_count = history_qs.count()
+        cancel_text = "Cancel comment"
+        response = self.forced_auth_req(
+            "patch",
+            reverse("travel:trip-cancel", args=[trip.pk]),
+            user=self.user,
+            data={
+                "comment": cancel_text
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.data.get("status"),
+            trip.STATUS_CANCELLED,
+        )
+        self.assertEqual(
+            response.data.get("cancelled_comment"),
+            cancel_text
+        )
+        trip.refresh_from_db()
+        self.assertEqual(trip.status, trip.STATUS_CANCELLED)
+        self.assertEqual(history_qs.count(), status_count + 1)
+        history = history_qs.first()
+        self.assertEqual(history.comment, cancel_text)
+
+        # no subsequent cancel requests allowed
+        response = self.forced_auth_req(
+            "patch",
+            reverse("travel:trip-cancel", args=[trip.pk]),
+            user=self.user,
+            data={},
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        trip.refresh_from_db()
+        self.assertEqual(trip.status, trip.STATUS_CANCELLED)
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_completed_with_comment(self):
+        start_date = str(timezone.now().date())
+        end_date = str((timezone.now() + datetime.timedelta(days=3)).date())
+        trip = TripFactory(
+            start_date=start_date,
+            end_date=end_date,
+            status=Trip.STATUS_APPROVED
+        )
+        ActivityFactory(trip=trip)
+        self.assertEqual(trip.status, trip.STATUS_APPROVED)
+        history_qs = TripStatusHistory.objects.filter(
+            trip=trip,
+        )
+        status_count = history_qs.count()
+        complete_text = "Completed not as planned"
+        response = self.forced_auth_req(
+            "patch",
+            reverse("travel:trip-complete", args=[trip.pk]),
+            user=self.user,
+            data={
+                "comment": complete_text
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.data.get("status"),
+            trip.STATUS_COMPLETED,
+        )
+        self.assertEqual(
+            response.data.get("completed_comment"),
+            complete_text
+        )
+        trip.refresh_from_db()
+        self.assertEqual(trip.status, trip.STATUS_COMPLETED)
+        self.assertEqual(history_qs.count(), status_count + 1)
+        history = history_qs.first()
+        self.assertEqual(history.comment, complete_text)
+        self.assertTrue(trip.not_as_planned, "Trip completed not as planned")
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_export(self):

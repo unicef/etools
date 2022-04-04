@@ -64,6 +64,10 @@ class Trip(TimeStampedModel):
         choices=STATUS_CHOICES,
         default=STATUS_DRAFT,
     )
+    not_as_planned = models.BooleanField(
+        verbose_name=_('Trip completed not as planned'),
+        default=False)
+
     supervisor = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         verbose_name=_('Supervisor'),
@@ -176,6 +180,22 @@ class Trip(TimeStampedModel):
         )
         if rejected_qs.exists():
             return rejected_qs.first().comment
+        return None
+
+    def get_cancelled_comment(self):
+        cancel_qs = self.status_history.filter(
+            status=Trip.STATUS_CANCELLED,
+        )
+        if cancel_qs.exists():
+            return cancel_qs.first().comment
+        return None
+
+    def get_completed_comment(self):
+        completed_qs = self.status_history.filter(
+            status=Trip.STATUS_COMPLETED,
+        )
+        if completed_qs.exists():
+            return completed_qs.first().comment
         return None
 
     def get_mail_context(self, user):
