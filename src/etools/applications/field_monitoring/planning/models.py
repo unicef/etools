@@ -600,71 +600,35 @@ class MonitoringActivity(
                 overall_finding.narrative_finding = narrative_findings[0]
                 overall_finding.save()
 
-    def get_activity_overall_findings(self):
-        return self.overall_findings \
-            .annotate(entity_name=models.Case(
-                models.When(cp_output__isnull=False, then=models.F('cp_output__name')),
-                models.When(partner__isnull=False, then=models.F('partner__name')),
-                output_field=models.TextField()))
-
-    def get_activity_questions_overall_findings(self):
-        from etools.applications.field_monitoring.data_collection.models import ActivityQuestionOverallFinding
-
-        return ActivityQuestionOverallFinding.objects \
-            .filter(activity_question__monitoring_activity=self,
-                    activity_question__is_enabled=True) \
-            .select_related('activity_question', 'activity_question__question') \
-            .annotate(entity_name=models.Case(
-                models.When(activity_question__cp_output__isnull=False,
-                            then=models.F('activity_question__cp_output__name')),
-                models.When(activity_question__partner__isnull=False,
-                            then=models.F('activity_question__partner__name')),
-                output_field=models.TextField()))
+    def activity_overall_findings(self):
+        return self.overall_findings.annotate_for_activity_export()
 
     def get_export_activity_questions_overall_findings(self):
-        export_list = []
-        for finding in self.get_activity_questions_overall_findings():
-            finding_dict = dict(entity_name=finding.entity_name,
-                                question_text=finding.activity_question.text)
-            if not finding.value or finding.activity_question.question.answer_type != 'likert_scale':
-                finding_dict['value'] = finding.value
+        for activity_question in self.questions.filter_for_activity_export():
+            finding_dict = dict(entity_name=activity_question.entity_name,
+                                question_text=activity_question.text)
+            if not activity_question.overall_finding.value or \
+                    activity_question.question.answer_type != 'likert_scale':
+                finding_dict['value'] = activity_question.overall_finding.value
             else:
-                option = finding.activity_question.question.options.get(value=finding.value)
+                option = activity_question.question.options\
+                    .get(value=activity_question.overall_finding.value)
                 finding_dict['value'] = option.label
-
-            export_list.append(finding_dict)
-        return export_list
+            yield finding_dict
 
     def get_export_checklist_findings(self):
-        from etools.applications.field_monitoring.data_collection.models import ChecklistOverallFinding
-
-        export_list = []
         for started_checklist in self.checklists.all():
             checklist_dict = dict(method=started_checklist.method.name,
                                   source=started_checklist.information_source,
                                   team_member=started_checklist.author.full_name,
                                   overall=[])
-            checklist_overall_findings = ChecklistOverallFinding.objects \
-                .filter(started_checklist=started_checklist)\
-                .annotate(entity_name=models.Case(
-                    models.When(cp_output__isnull=False, then=models.F('cp_output__name')),
-                    models.When(partner__isnull=False, then=models.F('partner__name')),
-                    output_field=models.TextField()))
-
-            checklist_findings = started_checklist.findings \
-                .filter(activity_question__is_enabled=True) \
-                .annotate(entity_name=models.Case(
-                    models.When(activity_question__cp_output__isnull=False,
-                                then=models.F('activity_question__cp_output__name')),
-                    models.When(activity_question__partner__isnull=False,
-                                then=models.F('activity_question__partner__name')),
-                    output_field=models.TextField()))
+            checklist_overall_findings = started_checklist.overall_findings.annotate_for_activity_export()
+            checklist_findings = started_checklist.findings.filter_for_activity_export()
 
             for cof in checklist_overall_findings:
                 overall_dict = dict(narrative_finding=cof.narrative_finding,
                                     entity_name=cof.entity_name,
                                     findings=[])
-
                 for finding in checklist_findings\
                         .filter(entity_name=cof.entity_name)\
                         .select_related('activity_question', 'activity_question__question'):
@@ -679,8 +643,7 @@ class MonitoringActivity(
                     overall_dict['findings'].append(finding_dict)
 
                 checklist_dict['overall'].append(overall_dict)
-            export_list.append(checklist_dict)
-        return export_list
+            yield checklist_dict
 
 
 class MonitoringActivityActionPointManager(models.Manager):
