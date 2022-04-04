@@ -3,20 +3,20 @@ from unicef_notification.utils import strip_text
 name = 'travel/trip/submitted'
 defaults = {
     'description': 'Email sent to supervisor when Travel itinerary ready for review.',
-    'subject': 'Travel Trip ({{ itinerary.reference_number }}) Submitted',
+    'subject': 'Travel Trip ({{ trip.reference_number }}) Submitted',
 
     'content': strip_text("""
-    Dear {{ itinerary.supervisor }},
+    Dear {{ supervisor }},
 
     UNICEF is granting you access to the Travel Module in eTools.
     Please refer below for additional information.
 
-    Description: {{ itinerary.description }}
-    Traveller: {{ itinerary.traveller }}
-    Start Date: {{ itinerary.start_date }}
-    End Date: {{ itinerary.end_date }}
+    Description: {{ trip.description }}
+    Traveller: {{ traveller }}
+    Start Date: {{ trip.start_date }}
+    End Date: {{ trip.end_date }}
 
-    Please click this link to review the itinerary: {{ url }}
+    Please click this link to review the trip: {{ url }}
 
     Thank you.
     """),
@@ -25,15 +25,15 @@ defaults = {
     {% extends "email-templates/base" %}
 
     {% block content %}
-    Dear {{ itinerary.supervisor }},<br/><br/>
+    Dear {{ supervisor }},<br/><br/>
 
     UNICEF is granting you access to the Travel Module in eTools.<br/>
     Please refer below for additional information.<br/><br/>
 
-    Description: {{ itinerary.description }}
-    Traveller: {{ itinerary.traveller }}
-    Start Date: {{ itinerary.start_date }}
-    End Date: {{ itinerary.end_date }}
+    Description: {{ trip.description }}
+    Traveller: {{ traveller }}
+    Start Date: {{ trip.start_date }}
+    End Date: {{ trip.end_date }}
 
     Please click <a href="{{ url }}">this link</a> to review the itinerary.<br/><br/>
 
