@@ -53,6 +53,7 @@ class TripViewSet(
         mixins.ListModelMixin,
         mixins.UpdateModelMixin,
         mixins.RetrieveModelMixin,
+        mixins.DestroyModelMixin,
         PermittedSerializerMixin,
         viewsets.GenericViewSet,
 ):
@@ -181,6 +182,11 @@ class TripViewSet(
                 context=self.get_serializer_context(),
             ).data
         )
+
+    def perform_destroy(self, instance):
+        if instance.status != Trip.STATUS_DRAFT:
+            raise ValidationError(_("Only Draft Trips are allowed to be deleted."))
+        super().perform_destroy(instance)
 
     def _set_status(self, request, trip_status):
         self.serializer_class = TripCreateUpdateStatusSerializer

@@ -491,6 +491,25 @@ class TestTripViewSet(BaseTenantTestCase):
         self.assertEqual(trip.start_date, start_date)
         self.assertEqual(trip.end_date, end_date)
 
+    def test_delete_draft(self):
+        trip_draft = TripFactory(status=Trip.STATUS_DRAFT)
+        response = self.forced_auth_req(
+            "delete",
+            reverse('travel:trip-detail', args=[trip_draft.pk]),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_delete_not_in_draft(self):
+        trip_approved = TripFactory(status=Trip.STATUS_APPROVED)
+        response = self.forced_auth_req(
+            "delete",
+            reverse('travel:trip-detail', args=[trip_approved.pk]),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Only Draft Trips are allowed to be deleted.", response.content.decode('utf-8'))
+
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_status_request(self):
         start_date = str(timezone.now().date())
