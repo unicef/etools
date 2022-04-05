@@ -73,6 +73,8 @@ class Trip(TimeStampedModel):
         verbose_name=_('Supervisor'),
         on_delete=models.CASCADE,
         related_name="supervised_itineraries",
+        blank=True,
+        null=True
     )
     title = models.CharField(
         max_length=120,
@@ -82,6 +84,7 @@ class Trip(TimeStampedModel):
     description = models.TextField(
         verbose_name=_("Description"),
         blank=True,
+        null=True
     )
     start_date = models.DateField(
         verbose_name=_('Start Date'),
@@ -115,12 +118,16 @@ class Trip(TimeStampedModel):
         verbose_name=_("Office"),
         on_delete=models.DO_NOTHING,
         related_name="trips",
+        blank=True,
+        null=True
     )
     section = models.ForeignKey(
         Section,
         verbose_name=_("Section"),
         on_delete=models.DO_NOTHING,
         related_name="trips",
+        blank=True,
+        null=True
     )
     # stores information about the visit that will be displayed to the user,
     # the keys are interpretable error codes, that can be generated based on specific logic.
@@ -525,21 +532,21 @@ class Activity(TimeStampedModel):
     )
     monitoring_activity = models.ForeignKey(
         MonitoringActivity,
-        on_delete=models.DO_NOTHING,
+        on_delete=models.CASCADE,
         related_name="trip_activities",
         null=True,
         blank=True
     )
     partner = models.ForeignKey(
         PartnerOrganization,
-        on_delete=models.DO_NOTHING,
+        on_delete=models.CASCADE,
         related_name="trip_activities",
         null=True,
         blank=True
     )
     location = models.ForeignKey(
         Location,
-        on_delete=models.DO_NOTHING,
+        on_delete=models.SET_NULL,
         related_name="trip_activities",
         null=True,
         blank=True
