@@ -302,7 +302,6 @@ class TestTripViewSet(BaseTenantTestCase):
             supervisor=self.user,
         )
         self.assertFalse(trip_qs.exists())
-        start_date = timezone.now().date()
 
         response = self.forced_auth_req(
             "post",
@@ -310,7 +309,7 @@ class TestTripViewSet(BaseTenantTestCase):
             user=self.user,
             data={
                 "traveller": traveller.pk,
-                "start_date": start_date,
+                "title": None
             },
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -345,6 +344,7 @@ class TestTripViewSet(BaseTenantTestCase):
         trip = TripFactory(
             start_date=start_date,
             end_date=end_date,
+            description='trip description'
         )
         ActivityFactory(trip=trip)
 
@@ -434,6 +434,7 @@ class TestTripViewSet(BaseTenantTestCase):
         trip = TripFactory(
             start_date=start_date,
             end_date=end_date,
+            description='trip description'
         )
         trip.status = trip.STATUS_SUBMITTED
         trip.save()
@@ -503,7 +504,8 @@ class TestTripViewSet(BaseTenantTestCase):
         trip = TripFactory(
             start_date=start_date,
             end_date=end_date,
-            status=Trip.STATUS_APPROVED
+            status=Trip.STATUS_APPROVED,
+            description='trip description'
         )
         ActivityFactory(trip=trip)
         self.assertEqual(trip.status, trip.STATUS_APPROVED)
@@ -553,7 +555,8 @@ class TestTripViewSet(BaseTenantTestCase):
         trip = TripFactory(
             start_date=start_date,
             end_date=end_date,
-            status=Trip.STATUS_APPROVED
+            status=Trip.STATUS_APPROVED,
+            description='trip description'
         )
         ActivityFactory(trip=trip)
         self.assertEqual(trip.status, trip.STATUS_APPROVED)
