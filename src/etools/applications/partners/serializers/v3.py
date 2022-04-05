@@ -27,9 +27,7 @@ class CPOutputValidator:
             raise serializers.ValidationError(_("Invalid CP Output provided."))
 
 
-class InterventionLowerResultBaseSerializer(FullInterventionSnapshotSerializerMixin, serializers.ModelSerializer):
-    parent_object_path = 'result_link.intervention'
-
+class InterventionLowerResultBaseSerializer(serializers.ModelSerializer):
     class Meta:
         abstract = True
         model = LowerResult
@@ -92,8 +90,6 @@ class InterventionReviewSerializer(serializers.ModelSerializer):
 
 
 class PRCOfficerInterventionReviewSerializer(FullInterventionSnapshotSerializerMixin, serializers.ModelSerializer):
-    parent_object_path = 'overall_review.intervention'
-
     user = MinimalUserSerializer(read_only=True)
 
     class Meta:
@@ -124,8 +120,14 @@ class PRCOfficerInterventionReviewSerializer(FullInterventionSnapshotSerializerM
             validated_data['review_date'] = timezone.now().date()
         return super().update(instance, validated_data)
 
+    def get_intervention(self):
+        return self.instance.overall_review.intervention
 
-class PartnerInterventionLowerResultSerializer(InterventionLowerResultBaseSerializer):
+
+class PartnerInterventionLowerResultSerializer(
+    FullInterventionSnapshotSerializerMixin,
+    InterventionLowerResultBaseSerializer
+):
     cp_output = serializers.ReadOnlyField(source='result_link.cp_output_id')
 
     class Meta(InterventionLowerResultBaseSerializer.Meta):
@@ -147,8 +149,14 @@ class PartnerInterventionLowerResultSerializer(InterventionLowerResultBaseSerial
         instance = super().create(validated_data)
         return instance
 
+    def get_intervention(self):
+        return self.intervention
 
-class UNICEFInterventionLowerResultSerializer(InterventionLowerResultBaseSerializer):
+
+class UNICEFInterventionLowerResultSerializer(
+    FullInterventionSnapshotSerializerMixin,
+    InterventionLowerResultBaseSerializer,
+):
     cp_output = SeparatedReadWriteField(
         read_field=serializers.ReadOnlyField(),
         write_field=serializers.PrimaryKeyRelatedField(
@@ -206,3 +214,6 @@ class UNICEFInterventionLowerResultSerializer(InterventionLowerResultBaseSeriali
                 instance.save()
 
         return instance
+
+    def get_intervention(self):
+        return self.intervention

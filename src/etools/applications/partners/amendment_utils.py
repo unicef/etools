@@ -714,6 +714,10 @@ INTERVENTION_FULL_SNAPSHOT_RELATED_FIELDS['partners.InterventionReview'] = [
 INTERVENTION_FULL_SNAPSHOT_RELATED_FIELDS['partners.PRCOfficerInterventionReview'] = [
     'user',
 ]
+INTERVENTION_FULL_SNAPSHOT_IGNORED_FIELDS = copy.deepcopy(INTERVENTION_AMENDMENT_IGNORED_FIELDS)
+INTERVENTION_FULL_SNAPSHOT_IGNORED_FIELDS['partners.InterventionBudget'] = [
+    'modified',
+]
 
 
 # activity quarters

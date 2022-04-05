@@ -27,6 +27,7 @@ from etools.applications.reports.validators import (
     value_none_or_numbers,
     value_numbers,
 )
+from etools.libraries.unicef_snapshot_child.serializers import FullInterventionSnapshotSerializerMixin
 
 
 class MinimalOutputListSerializer(serializers.ModelSerializer):
@@ -515,7 +516,7 @@ class InterventionTimeFrameSerializer(serializers.ModelSerializer):
         return 'Q{}'.format(obj.quarter)
 
 
-class InterventionActivityDetailSerializer(serializers.ModelSerializer):
+class InterventionActivityDetailSerializer(FullInterventionSnapshotSerializerMixin, serializers.ModelSerializer):
     items = InterventionActivityItemSerializer(many=True, required=False)
     partner_percentage = serializers.DecimalField(max_digits=5, decimal_places=2, read_only=True)
 
@@ -595,6 +596,9 @@ class InterventionActivityDetailSerializer(serializers.ModelSerializer):
         new_time_frames = self.intervention.quarters.filter(id__in=[t.id for t in time_frames])
         instance.time_frames.clear()
         instance.time_frames.add(*new_time_frames)
+
+    def get_intervention(self):
+        return self.intervention
 
 
 class InterventionActivitySerializer(serializers.ModelSerializer):
