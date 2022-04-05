@@ -12,6 +12,8 @@ from unicef_rest_export import renderers
 
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.field_monitoring.planning.tests.factories import MonitoringActivityFactory
+from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.reports.tests.factories import OfficeFactory, SectionFactory
 from etools.applications.travel.models import Activity, ItineraryItem, Report, Trip, TripStatusHistory
 from etools.applications.travel.tests.factories import ActivityFactory, ItineraryFactory, ReportFactory, TripFactory
@@ -827,6 +829,34 @@ class TestActivityViewSet(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["id"], activity.pk)
 
+    def test_patch_activity_type(self):
+        activity = ActivityFactory(
+            trip=self.trip,
+            activity_type=Activity.TYPE_PROGRAMME_MONITORING,
+            monitoring_activity=MonitoringActivityFactory()
+        )
+        self.assertIsNotNone(activity.monitoring_activity)
+
+        response = self.forced_auth_req(
+            "patch",
+            reverse(
+                "travel:activity-detail",
+                args=[self.trip.pk, activity.pk],
+            ),
+            user=self.user,
+            data={
+                "activity_type": "Meeting",
+                "activity_date": str(timezone.now().date()),
+                "partner": PartnerFactory().pk,
+                "office": OfficeFactory().pk,
+                "section": SectionFactory().pk,
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["id"], activity.pk)
+        self.assertIsNone(response.data["monitoring_activity"])
+        self.assertEqual(response.data["monitoring_activity_name"], "")
+        self.assertEqual(response.data["status"], "")
 
 # commented until we know how to handle Travel APs
 # class TestActivityActionPointViewSet(BaseTenantTestCase):

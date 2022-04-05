@@ -433,8 +433,13 @@ class ActivityViewSet(
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
+
         if serializer.initial_data['activity_type'] == Activity.TYPE_PROGRAMME_MONITORING:
             self.update_ma_date(serializer)
+        elif instance.monitoring_activity and \
+                instance.activity_type == Activity.TYPE_PROGRAMME_MONITORING:
+            serializer.initial_data['monitoring_activity'] = None
+
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
         if getattr(instance, '_prefetched_objects_cache', None):
