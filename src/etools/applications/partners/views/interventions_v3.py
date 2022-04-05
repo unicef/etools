@@ -41,7 +41,6 @@ from etools.applications.partners.models import (
 from etools.applications.partners.permissions import (
     AmendmentSessionActivitiesPermission,
     intervention_field_is_editable_permission,
-    PartnershipManagerPermission,
     PMPInterventionPermission,
     UserBelongsToObjectPermission,
     UserIsStaffPermission,
@@ -198,7 +197,7 @@ class PMPInterventionRetrieveUpdateView(PMPInterventionMixin, InterventionDetail
 class PMPInterventionRetrieveResultsStructure(PMPInterventionMixin, RetrieveAPIView):
     queryset = Intervention.objects.detail_qs()
     serializer_class = InterventionDetailResultsStructureSerializer
-    permission_classes = (PartnershipManagerPermission,)
+    permission_classes = (IsAuthenticated, PMPInterventionPermission,)
 
 
 class PMPInterventionPDFView(PMPInterventionMixin, RetrieveAPIView):
