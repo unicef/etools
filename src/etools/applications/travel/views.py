@@ -63,14 +63,26 @@ class TripViewSet(
 
     filter_backends = (SearchFilter, DjangoFilterBackend, OrderingFilter)
     filters = (
-        ('q', [
+        ('search', [
             'reference_number__icontains',
             'supervisor__first_name__icontains',
             'supervisor__last_name__icontains',
             'traveller__first_name__icontains',
             'traveller__last_name__icontains',
+            'section__name',
+            'office__name',
         ]),
         ('status', 'status__in'),
+        ('traveller', 'traveller'),
+        ('supervisor', 'supervisor'),
+        ('office', 'office'),
+        ('section', 'section'),
+        ('partner', 'activities__partner__pk'),
+        ('month', ['start_date__month',
+                   'end_date__month'
+                   ]),
+        ('year', ['start_date__year',
+                  'end_date__year']),
         ('start_date', 'start_date'),
         ('end_date', 'end_date'),
         ('not_as_planned', 'not_as_planned')
@@ -83,22 +95,19 @@ class TripViewSet(
     }
 
     def parse_sort_params(self):
-        MAP_SORT = {
-            "reference_number": "reference_number",
-        }
+        SORT_BY = [
+            "reference_number", "traveller",
+            "office", "section", "start_date",
+            "end_date", "status"
+        ]
         sort_param = self.request.GET.get("sort")
         ordering = []
         if sort_param:
             sort_options = sort_param.split("|")
             for sort in sort_options:
                 field, asc_desc = sort.split(".", 2)
-                if field in MAP_SORT:
-                    ordering.append(
-                        "{}{}".format(
-                            "-" if asc_desc == "desc" else "",
-                            MAP_SORT[field],
-                        )
-                    )
+                if asc_desc in ['asc', 'desc'] and field in SORT_BY:
+                    ordering.append(f'{"-" if asc_desc == "desc" else ""}{field}')
         return ordering
 
     def get_queryset(self):
