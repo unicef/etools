@@ -77,6 +77,7 @@ def import_permissions(model_name):
         'Assessment': settings.PACKAGE_ROOT + '/applications/psea/permission_matrix/assessment_permissions.csv',
         'MonitoringActivity': settings.PACKAGE_ROOT + '/applications/field_monitoring/planning/'
                                                       'activity_validation/permissions_matrix.csv',
+        'Trip': settings.PACKAGE_ROOT + '/applications/travel/permission_matrix/trip_permissions.csv',
     }
 
     def process_file():
