@@ -59,7 +59,8 @@ class TestTripViewSet(BaseTenantTestCase):
         self.assertEqual(data["start_date"], start_date)
         self.assertEqual(data["end_date"], end_date)
         self.assertEqual(data["status"], "draft")
-        self.assertEqual(data["available_actions"], ["submit", "cancel"])
+        self.assertEqual(data["available_actions"],
+                         ['submit_request_approval', 'submit_no_approval', 'cancel'])
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_filter_status(self):
