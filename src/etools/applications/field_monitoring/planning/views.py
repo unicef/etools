@@ -58,7 +58,6 @@ from etools.applications.field_monitoring.planning.serializers import (
 from etools.applications.field_monitoring.views import FMBaseViewSet, LinkedAttachmentsViewSet
 from etools.applications.partners.models import Intervention, PartnerOrganization
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
-from etools.applications.publics.models import BusinessArea
 from etools.applications.reports.models import Result, ResultType
 
 
@@ -238,12 +237,8 @@ class MonitoringActivitiesViewSet(
     @action(detail=True, methods=['get'], url_path='pdf')
     def visit_pdf(self, request, *args, **kwargs):
         ma = self.get_object()
-        try:
-            business_area = BusinessArea.objects.get(code=connection.tenant.business_area_code).name
-        except BusinessArea.DoesNotExist:
-            business_area = connection.tenant.name
         context = {
-            "business_area": business_area,
+            "workspace": connection.tenant.name,
             "ma": ma,
             "field_offices": ', '.join(ma.offices.all().values_list('name', flat=True)),
             "location": f'{str(ma.location)}{" -- {}".format(ma.location.parent.name) if ma.location.parent else ""}',
