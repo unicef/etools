@@ -12,15 +12,8 @@
           @page {
             margin-left: 0.85in;
             margin-right: 0.85in;
-            margin-top: 1.76in;
+            margin-top: 1in;
             margin-bottom: 1in;
-
-            @frame header {
-              -pdf-frame-content: page-header;
-              margin-left: 0.85in;
-              margin-right: 0.85in;
-              margin-top: 0.5in;
-            }
 
             @frame footer_frame {
               /* Static frame */
@@ -33,23 +26,10 @@
 
     {% block extra_style %}
         <style type="text/css">
-        #content {
+        .content {
           font-family: 'Roboto', 'Noto', sans-serif;
           font-size: 10pt;
         }
-        #page-header {
-          font-family: arial;
-          font-size: 8pt;
-          color: #00aeef;
-        }
-        #page-header hr {
-          padding: 0;
-          margin: 0;
-        }
-        #page-header * {
-         margin: 0;
-        }
-
         .label {
           font-size: 12pt;
           font-weight: bold;
@@ -77,14 +57,14 @@
 {% endblock %}
 
 {% block page_header %}
-<div id="page-header">
-    <table>
+<div class="content">
+    <table style="background-color: #0099ff;height:1in">
         <tr>
             <td style="width: 70%">
-                <img src="{% static 'images/UNICEF_logo_Cyan.png' %}" style="display: block; width: 2.17in; height: 0.5in; margin-top: -0.19in;">
+                <img src="{% static 'images/UNICEF_logo_with_text_white.png' %}" style="display: block; width: 3.17in; height: 0.5in; margin-left: 0.19in;">
             </td>
             <td>
-                <div>
+                <div style="color: #FFFFFF;">
                     <span class="label">Workspace:</span>
                     <span class="value">{{ workspace|default_if_none:"-" }}</span>
                 </div>
@@ -101,7 +81,7 @@
     {% if error %}
         PDF could not be generated properly: <br> {{ error }}
     {% else %}
-        <div id="content">
+        <div class="content">
             <div>
                 <div class="main_title">
                     {{ ma.reference_number }}
