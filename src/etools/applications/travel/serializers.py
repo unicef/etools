@@ -304,7 +304,7 @@ class TripSerializer(BaseTripSerializer):
             Trip.STATUS_DRAFT: "revise",
             Trip.STATUS_SUBMISSION_REVIEW: "subreview",
             Trip.STATUS_CANCELLED: "cancel",
-            Trip.STATUS_SUBMITTED: ["submit_request_approval", "submit_no_approval"],
+            Trip.STATUS_SUBMITTED: ["submit-request-approval", "submit-no-approval"],
             Trip.STATUS_REJECTED: "reject",
             Trip.STATUS_APPROVED: "approve",
             # Trip.STATUS_REVIEW: "review",

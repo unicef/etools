@@ -232,11 +232,11 @@ class TripViewSet(
     def subreview(self, request, pk=None):
         return self._set_status(request, Trip.STATUS_SUBMISSION_REVIEW)
 
-    @action(detail=True, methods=["patch"], url_name='submit')
+    @action(detail=True, methods=["patch"], url_name='submit-request-approval')
     def submit_request_approval(self, request, pk=None):
         return self._set_status(request, Trip.STATUS_SUBMITTED)
 
-    @action(detail=True, methods=["patch"])
+    @action(detail=True, methods=["patch"], url_name='submit-no-approval')
     def submit_no_approval(self, request, pk=None):
         return self._set_status(request, Trip.STATUS_APPROVED)
 
