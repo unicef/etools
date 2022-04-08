@@ -55,6 +55,7 @@ from etools.applications.partners.serializers.interventions_v2 import (
     MinimalInterventionListSerializer,
 )
 from etools.applications.partners.serializers.interventions_v3 import (
+    InterventionDetailResultsStructureSerializer,
     InterventionDetailSerializer,
     InterventionListSerializer,
     InterventionManagementBudgetSerializer,
@@ -191,6 +192,12 @@ class PMPInterventionRetrieveUpdateView(PMPInterventionMixin, InterventionDetail
                 context=self.get_serializer_context(),
             ).data,
         )
+
+
+class PMPInterventionRetrieveResultsStructure(PMPInterventionMixin, RetrieveAPIView):
+    queryset = Intervention.objects.detail_qs()
+    serializer_class = InterventionDetailResultsStructureSerializer
+    permission_classes = (IsAuthenticated, PMPInterventionPermission,)
 
 
 class PMPInterventionPDFView(PMPInterventionMixin, RetrieveAPIView):
