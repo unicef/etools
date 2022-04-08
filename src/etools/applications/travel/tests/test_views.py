@@ -8,6 +8,7 @@ from django.utils import timezone
 
 from rest_framework import status
 from unicef_attachments.models import Attachment
+from unicef_locations.tests.factories import LocationFactory
 from unicef_rest_export import renderers
 
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
@@ -849,14 +850,16 @@ class TestActivityViewSet(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["id"], activity.pk)
 
-    def test_patch_activity_type(self):
+    def test_patch_monitoring_activity_to_meeting(self):
         activity = ActivityFactory(
             trip=self.trip,
             activity_type=Activity.TYPE_PROGRAMME_MONITORING,
             monitoring_activity=MonitoringActivityFactory()
         )
         self.assertIsNotNone(activity.monitoring_activity)
-
+        partner = PartnerFactory()
+        location = LocationFactory()
+        section = SectionFactory()
         response = self.forced_auth_req(
             "patch",
             reverse(
@@ -865,18 +868,121 @@ class TestActivityViewSet(BaseTenantTestCase):
             ),
             user=self.user,
             data={
-                "activity_type": "Meeting",
+                "activity_type": Activity.TYPE_MEETING,
                 "activity_date": str(timezone.now().date()),
-                "partner": PartnerFactory().pk,
-                "office": OfficeFactory().pk,
-                "section": SectionFactory().pk,
+                "partner": partner.pk,
+                "location": location.pk,
+                "section": section.pk,
             }
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["id"], activity.pk)
+        self.assertEqual(response.data["partner"], partner.pk)
+        self.assertEqual(response.data["location"], location.pk)
+        self.assertEqual(response.data["section"], section.pk)
+
         self.assertIsNone(response.data["monitoring_activity"])
         self.assertEqual(response.data["monitoring_activity_name"], "")
         self.assertEqual(response.data["status"], "")
+
+    def test_patch_monitoring_activity_to_tech_support(self):
+        activity = ActivityFactory(
+            trip=self.trip,
+            activity_type=Activity.TYPE_PROGRAMME_MONITORING,
+            monitoring_activity=MonitoringActivityFactory()
+        )
+        self.assertIsNotNone(activity.monitoring_activity)
+
+        location = LocationFactory()
+        response = self.forced_auth_req(
+            "patch",
+            reverse(
+                "travel:activity-detail",
+                args=[self.trip.pk, activity.pk],
+            ),
+            user=self.user,
+            data={
+                "activity_type": Activity.TYPE_TECHNICAL_SUPPORT,
+                "activity_date": str(timezone.now().date()),
+                "location": location.pk,
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["id"], activity.pk)
+        self.assertEqual(response.data["location"], location.pk)
+        self.assertEqual(response.data["activity_date"], str(timezone.now().date()))
+
+        self.assertIsNone(response.data["monitoring_activity"])
+        self.assertEqual(response.data["monitoring_activity_name"], "")
+        self.assertEqual(response.data["status"], "")
+
+    def test_patch_meeting_to_monitoring_activity(self):
+        activity = ActivityFactory(
+            trip=self.trip,
+            activity_type=Activity.TYPE_MEETING,
+            activity_date=str(timezone.now().date()),
+            partner=PartnerFactory(),
+            location=LocationFactory(),
+            section=SectionFactory(),
+        )
+        self.assertEqual(activity.activity_type, Activity.TYPE_MEETING)
+
+        monitoring_activity = MonitoringActivityFactory()
+        response = self.forced_auth_req(
+            "patch",
+            reverse(
+                "travel:activity-detail",
+                args=[self.trip.pk, activity.pk],
+            ),
+            user=self.user,
+            data={
+                "activity_type": Activity.TYPE_PROGRAMME_MONITORING,
+                "monitoring_activity": monitoring_activity.pk
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["id"], activity.pk)
+        self.assertEqual(response.data["monitoring_activity"], monitoring_activity.pk)
+        self.assertEqual(response.data["monitoring_activity_name"], monitoring_activity.number)
+        self.assertEqual(response.data["status"], monitoring_activity.status)
+        self.assertEqual(response.data["activity_date"], str(monitoring_activity.start_date))
+
+        self.assertIsNone(response.data["partner"])
+        self.assertIsNone(response.data["section"])
+        self.assertIsNone(response.data["location"])
+
+    def test_patch_meeting_to_tech_support(self):
+        activity = ActivityFactory(
+            trip=self.trip,
+            activity_type=Activity.TYPE_MEETING,
+            activity_date=str(timezone.now().date()),
+            partner=PartnerFactory(),
+            location=LocationFactory(),
+            section=SectionFactory(),
+        )
+        self.assertEqual(activity.activity_type, Activity.TYPE_MEETING)
+
+        location = LocationFactory()
+        response = self.forced_auth_req(
+            "patch",
+            reverse(
+                "travel:activity-detail",
+                args=[self.trip.pk, activity.pk],
+            ),
+            user=self.user,
+            data={
+                "activity_type": Activity.TYPE_TECHNICAL_SUPPORT,
+                "activity_date": str(timezone.now().date()),
+                "location": location.pk,
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["id"], activity.pk)
+        self.assertEqual(response.data["location"], location.pk)
+        self.assertEqual(response.data["activity_date"], str(timezone.now().date()))
+
+        self.assertIsNone(response.data["partner"])
+        self.assertIsNone(response.data["section"])
 
 # commented until we know how to handle Travel APs
 # class TestActivityActionPointViewSet(BaseTenantTestCase):
