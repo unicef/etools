@@ -221,8 +221,9 @@ class TestSCTransitionsTestCase(
     def test_finalize_focal_point(self):
         self._init_submitted_engagement()
         content_type = ContentType.objects.get_for_model(self.engagement)
+        code = 'spot_check_final_report'
         attachment_qs = Attachment.objects.filter(
-            code='spot_check_final_report',
+            code=code,
             content_type=content_type,
             object_id=self.engagement.pk,
         )
@@ -231,6 +232,7 @@ class TestSCTransitionsTestCase(
         self.assertTrue(attachment_qs.exists())
         attachment = attachment_qs.get()
         assert attachment.file
+        self.assertEqual(attachment.file_type.group, [code])
 
     def test_cancel_auditor(self):
         self._test_cancel(self.auditor, status.HTTP_403_FORBIDDEN)

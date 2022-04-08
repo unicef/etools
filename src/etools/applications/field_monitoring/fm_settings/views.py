@@ -8,7 +8,6 @@ from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from unicef_locations.cache import etag_cached
-from unicef_locations.models import Location
 from unicef_locations.serializers import LocationLightSerializer
 
 from etools.applications.field_monitoring.fm_settings.export.renderers import (
@@ -46,6 +45,7 @@ from etools.applications.field_monitoring.fm_settings.serializers import (
 )
 from etools.applications.field_monitoring.permissions import IsEditAction, IsFieldMonitor, IsPME, IsReadAction
 from etools.applications.field_monitoring.views import FMBaseViewSet, LinkedAttachmentsViewSet
+from etools.applications.locations.models import Location
 from etools.applications.reports.views.v2 import OutputListAPIView
 
 
