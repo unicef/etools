@@ -1567,11 +1567,6 @@ class BaseInterventionActionTestCase(BaseInterventionTestCase):
             partner_authorized_officer_signatory=staff_member,
             budget_owner=UserFactory(),
         )
-        InterventionResultLinkFactory(
-            cp_output__result_type__name=ResultType.OUTPUT,
-            intervention=self.intervention,
-            ram_indicators=[IndicatorFactory()],
-        )
         self.intervention.flat_locations.add(LocationFactory())
         self.intervention.country_programmes.add(agreement.country_programme)
         self.intervention.partner_focal_points.add(staff_member)
@@ -1591,6 +1586,12 @@ class BaseInterventionActionTestCase(BaseInterventionTestCase):
             intervention=self.intervention,
             currency='USD',
         )
+        result_link = InterventionResultLinkFactory(
+            cp_output__result_type__name=ResultType.OUTPUT,
+            intervention=self.intervention,
+        )
+        lower_result = LowerResultFactory(result_link=result_link)
+        AppliedIndicatorFactory(lower_result=lower_result, section=section)
 
         self.notify_path = "post_office.mail.send"
         self.mock_email = EmailFactory()
@@ -1707,6 +1708,7 @@ class TestInterventionAccept(BaseInterventionActionTestCase):
             ram_indicators=[IndicatorFactory()],
         )
         pd_output = LowerResultFactory(result_link=result_link)
+        AppliedIndicatorFactory(lower_result=pd_output, section=self.intervention.sections.first())
         activity = InterventionActivityFactory(result=pd_output)
         activity.time_frames.add(self.intervention.quarters.first())
 
