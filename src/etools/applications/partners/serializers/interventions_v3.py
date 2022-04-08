@@ -34,6 +34,7 @@ from etools.applications.partners.serializers.interventions_v2 import (
     InterventionBudgetCUSerializer,
     InterventionListSerializer as InterventionV2ListSerializer,
     InterventionResultNestedSerializer,
+    InterventionResultsStructureSerializer,
     PlannedVisitsNestedSerializer,
     SingleInterventionAttachmentField,
 )
@@ -543,6 +544,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "cash_transfer_modalities",
             "cfei_number",
             "cluster_names",
+            "confidential",
             "context",
             "contingency_pd",
             "country_programmes",
@@ -636,6 +638,16 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "unicef_focal_points",
             "unicef_signatory",
             "original_intervention",
+        )
+
+
+class InterventionDetailResultsStructureSerializer(serializers.ModelSerializer):
+    result_links = InterventionResultsStructureSerializer(many=True, read_only=True, required=False)
+
+    class Meta:
+        model = Intervention
+        fields = (
+            "result_links",
         )
 
 

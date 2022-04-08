@@ -48,7 +48,7 @@ from etools.applications.partners.tests.test_api_interventions import (
     BaseAPIInterventionIndicatorsListMixin,
     BaseInterventionReportingRequirementMixin,
 )
-from etools.applications.reports.models import ResultType
+from etools.applications.reports.models import AppliedIndicator, ResultType
 from etools.applications.reports.tests.factories import (
     AppliedIndicatorFactory,
     CountryProgrammeFactory,
@@ -344,6 +344,7 @@ class TestDetail(BaseInterventionTestCase):
         self.assertEqual(data["id"], self.intervention.pk)
         self.assertEqual(data["result_links"][0]["total"], 30)
         self.assertEqual(data["unicef_signatory"], self.user_serialized)
+        self.assertIn('confidential', data)
 
     def test_pdf(self):
         response = self.forced_auth_req(
@@ -2853,6 +2854,48 @@ class TestPMPInterventionIndicatorsUpdateView(BaseTenantTestCase):
         self.assertTrue(response.data["is_high_frequency"])
         self.indicator.refresh_from_db()
         self.assertFalse(self.indicator.is_active)
+
+    def test_update_indicator_title(self):
+        old_title = self.indicator.indicator.title
+        old_code = self.indicator.indicator.code
+        response = self.forced_auth_req(
+            'patch',
+            self.url,
+            user=self.partnership_manager,
+            data={'indicator': {'title': f'new_{old_title}', 'code': 'new_code'}},
+        )
+        self.assertEquals(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertNotEqual(response.data['id'], self.indicator.id)
+        self.assertNotEqual(response.data['indicator']['id'], self.indicator.indicator.id)
+        self.assertEqual(response.data['indicator']['title'], f'new_{old_title}')
+        self.assertEqual(response.data['indicator']['code'], old_code)
+        self.assertFalse(AppliedIndicator.objects.filter(id=self.indicator.id).exists())
+
+    def test_update_indicator_title_intervention_was_signed(self):
+        intervention = self.indicator.lower_result.result_link.intervention
+
+        pre_save = create_dict_with_relations(intervention)
+
+        intervention.status = Intervention.SIGNED
+        intervention.save()
+
+        create_snapshot(intervention, pre_save, self.partnership_manager)
+
+        intervention.status = Intervention.DRAFT
+        intervention.save()
+
+        response = self.forced_auth_req(
+            'patch',
+            self.url,
+            user=self.partnership_manager,
+            data={'indicator': {'title': 'new title'}},
+        )
+        self.assertEquals(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertNotEqual(response.data['id'], self.indicator.id)
+        self.assertNotEqual(response.data['indicator']['id'], self.indicator.indicator.id)
+        self.assertEqual(response.data['indicator']['title'], 'new title')
+        self.assertTrue(AppliedIndicator.objects.filter(id=self.indicator.id).exists())
+        self.assertFalse(AppliedIndicator.objects.get(id=self.indicator.id).is_active)
 
 
 class TestPMPInterventionReportingRequirementView(

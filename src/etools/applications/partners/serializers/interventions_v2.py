@@ -38,6 +38,7 @@ from etools.applications.reports.serializers.v2 import (
     LowerResultCUSerializer,
     LowerResultSerializer,
     LowerResultWithActivitiesSerializer,
+    LowerResultWithActivityItemsSerializer,
     RAMIndicatorSerializer,
     ReportingRequirementSerializer,
 )
@@ -451,17 +452,16 @@ class SingleInterventionAttachmentField(serializers.Field):
         return intervention_attachment
 
 
-class InterventionResultNestedSerializer(serializers.ModelSerializer):
+class BaseInterventionResultNestedSerializer(serializers.ModelSerializer):
     cp_output_name = serializers.CharField(source="cp_output.output_name", read_only=True)
     ram_indicator_names = serializers.SerializerMethodField(read_only=True)
-    ll_results = LowerResultWithActivitiesSerializer(many=True, read_only=True)
 
     def get_ram_indicator_names(self, obj):
         return [i.light_repr for i in obj.ram_indicators.all()]
 
     class Meta:
         model = InterventionResultLink
-        fields = (
+        fields = [
             'id',
             'code',
             'intervention',
@@ -469,10 +469,23 @@ class InterventionResultNestedSerializer(serializers.ModelSerializer):
             'cp_output_name',
             'ram_indicators',
             'ram_indicator_names',
-            'll_results',
             'total',
-        )
+        ]
         read_only_fields = ['code']
+
+
+class InterventionResultNestedSerializer(BaseInterventionResultNestedSerializer):
+    ll_results = LowerResultWithActivitiesSerializer(many=True, read_only=True)
+
+    class Meta(BaseInterventionResultNestedSerializer.Meta):
+        fields = BaseInterventionResultNestedSerializer.Meta.fields + ['ll_results']
+
+
+class InterventionResultsStructureSerializer(BaseInterventionResultNestedSerializer):
+    ll_results = LowerResultWithActivityItemsSerializer(many=True, read_only=True)
+
+    class Meta(BaseInterventionResultNestedSerializer.Meta):
+        fields = BaseInterventionResultNestedSerializer.Meta.fields + ['ll_results']
 
 
 class InterventionResultLinkSimpleCUSerializer(serializers.ModelSerializer):

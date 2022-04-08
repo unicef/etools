@@ -390,8 +390,8 @@
     "model": "django_celery_beat.periodictask",
     "pk": 16,
     "fields": {
-      "name": "Transition active PD to new CP",
-      "task": "etools.applications.partners.tasks.transfer_active_pds_to_new_cp",
+      "name": "Transition active PD to new CP & expire rest of them",
+      "task": "etools.applications.partners.tasks.update_interventions_task_chain",
       "interval": null,
       "crontab": 1,
       "solar": null,
@@ -408,7 +408,7 @@
       "last_run_at": null,
       "total_run_count": 0,
       "date_changed": "2021-08-24T00:00:00.322Z",
-      "description": "Transition active PD to new CP on cp change"
+      "description": "Transition active PD to new CP on cp change and if not possible, expire them"
     }
   }
 ]
