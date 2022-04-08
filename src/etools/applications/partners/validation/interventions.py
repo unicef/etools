@@ -319,7 +319,7 @@ def cp_structure_valid(i):
     return True
 
 
-def pd_outputs_presented(i):
+def pd_outputs_present(i):
     return i.result_links.exists()
 
 
@@ -407,7 +407,7 @@ class InterventionValid(CompleteValidation):
         if intervention.unicef_accepted:
             if not all_activities_have_timeframes(intervention):
                 raise StateValidationError([_('All activities must have at least one time frame')])
-            if not pd_outputs_presented(intervention):
+            if not pd_outputs_present(intervention):
                 raise StateValidationError([_('Results section is empty')])
             if not pd_outputs_are_linked_to_indicators(intervention):
                 raise StateValidationError([_('All PD Outputs need to be associated to indicators')])
