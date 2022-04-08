@@ -475,6 +475,7 @@ class InterventionActivityItemSerializer(serializers.ModelSerializer):
         model = InterventionActivityItem
         fields = (
             'id',
+            'code',
             'name',
             'unit',
             'unit_price',
