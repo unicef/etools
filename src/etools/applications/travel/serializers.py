@@ -208,22 +208,21 @@ class TripCreateUpdateSerializer(BaseTripSerializer):
     def _add_attachments(self, trip):
         content_type = ContentType.objects.get_for_model(Trip)
         file_type = FileType.objects.get(name="generic_trip_attachment")
-        list(Attachment.objects.filter(
+        used = list(Attachment.objects.filter(
             object_id=trip.pk,
             content_type=content_type,
-        ).all())
-        used = []
+        ).values_list('id', flat=True))
         for initial in self.initial_data.get("attachments"):
             pk = initial["id"]
-            if pk not in used:
-                Attachment.objects.filter(pk=pk).update(
-                    file_type=file_type,
-                    code="travel_docs",
-                    object_id=trip.pk,
-                    content_type=content_type,
-                )
-                used.append(pk)
-                break
+            if pk in used:
+                continue
+            Attachment.objects.filter(pk=pk).update(
+                file_type=file_type,
+                code="travel_docs",
+                object_id=trip.pk,
+                content_type=content_type,
+            )
+            used.append(pk)
 
     def update(self, instance, validated_data):
         attachment_data = None
