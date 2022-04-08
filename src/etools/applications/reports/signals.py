@@ -100,5 +100,5 @@ def recalculate_activities_numbering(instance, **kwargs):
 
 
 @receiver(post_delete, sender=InterventionActivityItem)
-def recalculate_activities_numbering(instance, **kwargs):
+def recalculate_items_numbering(instance, **kwargs):
     InterventionActivityItem.renumber_items_for_activity(instance.activity)
