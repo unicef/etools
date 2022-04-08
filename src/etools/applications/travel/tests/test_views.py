@@ -12,6 +12,7 @@ from unicef_rest_export import renderers
 
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.reports.tests.factories import OfficeFactory, SectionFactory
 from etools.applications.travel.models import Activity, ItineraryItem, Report, Trip, TripStatusHistory
 from etools.applications.travel.tests.factories import ActivityFactory, ItineraryFactory, ReportFactory, TripFactory
@@ -97,29 +98,180 @@ class TestTripViewSet(BaseTenantTestCase):
         self.assertEqual(data["available_actions"], ["submit", "cancel"])
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
-    def test_filter_status(self):
-        for _ in range(10):
+    def test_filter_show_hidden(self):
+        for _ in range(5):
             TripFactory()
-
-        status_val = Trip.STATUS_CANCELLED
-        trip = TripFactory(status=status_val)
-        trip.status = status_val
-        trip.save()
-        self.assertEqual(trip.status, status_val)
+        TripFactory(status=Trip.STATUS_CANCELLED)
 
         response = self.forced_auth_req(
             "get",
             reverse('travel:trip-list'),
-            data={"status": status_val},
+            data={"show_hidden": 'true'},
             user=self.user,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.data["results"]
         self.assertEqual(
             len(data),
-            Trip.objects.filter(status=status_val).count()
+            Trip.objects.all().count()
         )
-        self.assertEqual(data[0]["id"], trip.pk)
+
+        response = self.forced_auth_req(
+            "get",
+            reverse('travel:trip-list'),
+            data={"show_hidden": 'false'},
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data["results"]
+        self.assertEqual(
+            len(data),
+            Trip.objects.exclude(status=Trip.STATUS_CANCELLED).count()
+        )
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_filter_status(self):
+        for _ in range(5):
+            TripFactory()
+
+        status_val = Trip.STATUS_CANCELLED
+        trip = TripFactory(status=status_val)
+        trip.status = status_val
+        trip.save(update_fields=['status'])
+        self.assertEqual(trip.status, status_val)
+
+        # filter by multiple status values
+        response = self.forced_auth_req(
+            "get",
+            reverse('travel:trip-list'),
+            data={"status": f"{Trip.STATUS_DRAFT},{Trip.STATUS_CANCELLED}"},
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data["results"]
+        self.assertEqual(
+            len(data),
+            Trip.objects.filter(status__in=[Trip.STATUS_DRAFT, Trip.STATUS_CANCELLED]).count()
+        )
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_filter_traveller(self):
+        traveller_1 = UserFactory()
+        for _ in range(5):
+            TripFactory(traveller=traveller_1)
+
+        traveller_2 = UserFactory()
+        TripFactory(traveller=traveller_2)
+
+        # filter by multiple travellers
+        response = self.forced_auth_req(
+            "get",
+            reverse('travel:trip-list'),
+            data={"traveller": f"{traveller_1.pk},{traveller_2.pk}"},
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data["results"]
+        self.assertEqual(
+            len(data),
+            Trip.objects.filter(traveller__in=[traveller_1.pk, traveller_2.pk]).count()
+        )
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_filter_supervisor(self):
+        supervisor_1 = UserFactory()
+        for _ in range(5):
+            TripFactory(supervisor=supervisor_1)
+
+        supervisor_2 = UserFactory()
+        TripFactory(supervisor=supervisor_2)
+
+        # filter by multiple supervisors
+        response = self.forced_auth_req(
+            "get",
+            reverse('travel:trip-list'),
+            data={"supervisor": f"{supervisor_1.pk},{supervisor_2.pk}"},
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data["results"]
+        self.assertEqual(
+            len(data),
+            Trip.objects.filter(supervisor__in=[supervisor_1.pk, supervisor_2.pk]).count()
+        )
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_filter_office(self):
+        office_1 = OfficeFactory()
+        for _ in range(5):
+            TripFactory(office=office_1)
+
+        office_2 = OfficeFactory()
+        TripFactory(office=office_2)
+
+        # filter by multiple offices
+        response = self.forced_auth_req(
+            "get",
+            reverse('travel:trip-list'),
+            data={"office": f"{office_1.pk},{office_2.pk}"},
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data["results"]
+        self.assertEqual(
+            len(data),
+            Trip.objects.filter(office__in=[office_1.pk, office_2.pk]).count()
+        )
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_filter_section(self):
+        section_1 = SectionFactory()
+        for _ in range(5):
+            TripFactory(section=section_1)
+
+        section_2 = SectionFactory()
+        TripFactory(section=section_2)
+
+        # filter by multiple supervisors
+        response = self.forced_auth_req(
+            "get",
+            reverse('travel:trip-list'),
+            data={"section": f"{section_1.pk},{section_2.pk}"},
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data["results"]
+        self.assertEqual(
+            len(data),
+            Trip.objects.filter(section__in=[section_1.pk, section_2.pk]).count()
+        )
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_filter_partner(self):
+        trip_1 = TripFactory()
+        partner_1 = PartnerFactory()
+        ActivityFactory(trip=trip_1, partner=partner_1)
+
+        trip_2 = TripFactory()
+        partner_2 = PartnerFactory()
+        ActivityFactory(trip=trip_2, partner=partner_2)
+
+        for _ in range(5):
+            TripFactory()
+
+        # filter by multiple partners
+        response = self.forced_auth_req(
+            "get",
+            reverse('travel:trip-list'),
+            data={"partner": f"{partner_1.pk},{partner_2.pk}"},
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data["results"]
+        self.assertEqual(
+            len(data),
+            Trip.objects.filter(activities__partner__pk__in=[partner_1.pk, partner_2.pk]).count()
+        )
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_filter_month(self):
@@ -203,11 +355,67 @@ class TestTripViewSet(BaseTenantTestCase):
         self.assertEqual(data[0]["id"], trip.pk)
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_search_title(self):
+        for _ in range(10):
+            TripFactory()
+
+        trip = TripFactory(title='Trip title')
+
+        response = self.forced_auth_req(
+            "get",
+            reverse('travel:trip-list'),
+            data={"search": trip.title[-4:]},
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data["results"]
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["id"], trip.pk)
+
+        response = self.forced_auth_req(
+            "get",
+            reverse('travel:trip-list'),
+            data={"search": 'nonexistent'},
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 0)
+        self.assertEqual(response.data["results"], [])
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_search_description(self):
+        for _ in range(10):
+            TripFactory()
+
+        trip = TripFactory(description='Description for trip')
+
+        response = self.forced_auth_req(
+            "get",
+            reverse('travel:trip-list'),
+            data={"search": trip.description[-4:]},
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data["results"]
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["id"], trip.pk)
+
+        response = self.forced_auth_req(
+            "get",
+            reverse('travel:trip-list'),
+            data={"search": 'nonexistent'},
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 0)
+        self.assertEqual(response.data["results"], [])
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_search_supervisor_name(self):
         for _ in range(10):
             TripFactory()
 
-        user = UserFactory(first_name="Super", last_name="Last")
+        user = UserFactory(first_name="First name", last_name="Last name")
         trip = TripFactory(supervisor=user)
 
         def _validate_response(response):
@@ -219,7 +427,7 @@ class TestTripViewSet(BaseTenantTestCase):
         response = self.forced_auth_req(
             "get",
             reverse('travel:trip-list'),
-            data={"search": "sup"},
+            data={"search": user.first_name[:4]},
             user=self.user,
         )
         _validate_response(response)
@@ -227,7 +435,7 @@ class TestTripViewSet(BaseTenantTestCase):
         response = self.forced_auth_req(
             "get",
             reverse('travel:trip-list'),
-            data={"search": "last"},
+            data={"search": user.last_name},
             user=self.user,
         )
         _validate_response(response)
@@ -237,7 +445,7 @@ class TestTripViewSet(BaseTenantTestCase):
         for _ in range(10):
             TripFactory()
 
-        user = UserFactory(first_name="Traveller", last_name="Last")
+        user = UserFactory(first_name="First name", last_name="Last name")
         trip = TripFactory(traveller=user)
 
         def _validate_response(response):
@@ -249,7 +457,7 @@ class TestTripViewSet(BaseTenantTestCase):
         response = self.forced_auth_req(
             "get",
             reverse('travel:trip-list'),
-            data={"search": "las"},
+            data={"search": user.first_name[:4]},
             user=self.user,
         )
         _validate_response(response)
@@ -257,7 +465,7 @@ class TestTripViewSet(BaseTenantTestCase):
         response = self.forced_auth_req(
             "get",
             reverse('travel:trip-list'),
-            data={"search": "last"},
+            data={"search": user.last_name},
             user=self.user,
         )
         _validate_response(response)

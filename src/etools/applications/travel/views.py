@@ -24,6 +24,7 @@ from etools.applications.field_monitoring.permissions import IsEditAction, IsRea
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.partners.views.v2 import choices_to_json_ready
 from etools.applications.permissions2.views import PermissionContextMixin, PermittedSerializerMixin
+from etools.applications.travel.filters import ShowHiddenFilter
 from etools.applications.travel.models import Activity, ItineraryItem, Report, Trip
 from etools.applications.travel.permissions import trip_field_is_editable_permission, UserIsStaffPermission
 from etools.applications.travel.serializers import (
@@ -62,26 +63,27 @@ class TripViewSet(
     queryset = Trip.objects.all()
     serializer_class = TripSerializer
 
-    filter_backends = (SearchFilter, DjangoFilterBackend, OrderingFilter)
+    filter_backends = (SearchFilter, DjangoFilterBackend, OrderingFilter, ShowHiddenFilter)
+    search_terms = [
+        'reference_number__icontains',
+        'title__icontains',
+        'description__icontains',
+        'supervisor__first_name__icontains',
+        'supervisor__last_name__icontains',
+        'traveller__first_name__icontains',
+        'traveller__last_name__icontains',
+        'section__name__icontains',
+        'office__name__icontains']
+
     filters = (
-        ('search', [
-            'reference_number__icontains',
-            'supervisor__first_name__icontains',
-            'supervisor__last_name__icontains',
-            'traveller__first_name__icontains',
-            'traveller__last_name__icontains',
-            'section__name',
-            'office__name',
-        ]),
         ('status', 'status__in'),
-        ('traveller', 'traveller'),
-        ('supervisor', 'supervisor'),
-        ('office', 'office'),
-        ('section', 'section'),
-        ('partner', 'activities__partner__pk'),
+        ('traveller', 'traveller__in'),
+        ('supervisor', 'supervisor__in'),
+        ('office', 'office__in'),
+        ('section', 'section__in'),
+        ('partner', 'activities__partner__pk__in'),
         ('month', ['start_date__month',
-                   'end_date__month'
-                   ]),
+                   'end_date__month']),
         ('year', ['start_date__year',
                   'end_date__year']),
         ('start_date', 'start_date'),
