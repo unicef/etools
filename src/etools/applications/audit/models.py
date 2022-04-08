@@ -202,6 +202,16 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
     def __str__(self):
         return '{} {}'.format(self.get_engagement_type_display(), self.reference_number)
 
+    def clean(self):
+        validation_errors = {}
+        # Don't allow blank values for total_value and exchange_rate.
+        if not self.total_value:
+            validation_errors['total_value'] = ValidationError(_('Total value is required.'))
+        if not self.exchange_rate:
+            validation_errors['exchange_rate'] = ValidationError(_('Exchange Rate value is required.'))
+        if validation_errors:
+            raise ValidationError(validation_errors)
+
     @property
     def displayed_status(self):
         if self.status != self.STATUSES.partner_contacted:
