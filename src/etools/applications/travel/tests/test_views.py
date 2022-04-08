@@ -320,6 +320,63 @@ class TestTripViewSet(BaseTenantTestCase):
         self.assertEqual(data[0]["id"], trip.pk)
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_search_title(self):
+        for _ in range(10):
+            TripFactory()
+
+        trip = TripFactory(title='Trip title')
+
+        response = self.forced_auth_req(
+            "get",
+            reverse('travel:trip-list'),
+            data={"search": trip.title[-4:]},
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data["results"]
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["id"], trip.pk)
+
+        response = self.forced_auth_req(
+            "get",
+            reverse('travel:trip-list'),
+            data={"search": 'nonexistent'},
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 0)
+        self.assertEqual(response.data["results"], [])
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_search_description(self):
+        for _ in range(10):
+            TripFactory()
+
+        trip = TripFactory(description='Description for trip')
+
+        response = self.forced_auth_req(
+            "get",
+            reverse('travel:trip-list'),
+            data={"search": trip.description[-4:]},
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data["results"]
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["id"], trip.pk)
+
+        response = self.forced_auth_req(
+            "get",
+            reverse('travel:trip-list'),
+            data={"search": 'nonexistent'},
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 0)
+        self.assertEqual(response.data["results"], [])
+
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_search_supervisor_name(self):
         for _ in range(10):
             TripFactory()

@@ -66,6 +66,8 @@ class TripViewSet(
     filter_backends = (SearchFilter, DjangoFilterBackend, OrderingFilter, ShowHiddenFilter)
     search_terms = [
         'reference_number__icontains',
+        'title__icontains',
+        'description__icontains',
         'supervisor__first_name__icontains',
         'supervisor__last_name__icontains',
         'traveller__first_name__icontains',
