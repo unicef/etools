@@ -71,7 +71,7 @@ class TestItinerarySerializer(BaseTenantTestCase):
     def test_get_available_actions_traveller(self):
         trip = TripFactory(traveller=self.user)
         mapping = [
-            (Trip.STATUS_DRAFT, ["submit", "cancel"]),
+            (Trip.STATUS_DRAFT, ["submit-request-approval", "submit-no-approval", "cancel"]),
             # (Trip.STATUS_SUBMISSION_REVIEW,["revise", "submit", "cancel"]),
             (Trip.STATUS_SUBMITTED, []),
             (Trip.STATUS_REJECTED, ["revise", "cancel"]),

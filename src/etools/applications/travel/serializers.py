@@ -310,7 +310,7 @@ class TripSerializer(BaseTripSerializer):
             Trip.STATUS_DRAFT: "revise",
             Trip.STATUS_SUBMISSION_REVIEW: "subreview",
             Trip.STATUS_CANCELLED: "cancel",
-            Trip.STATUS_SUBMITTED: "submit",
+            Trip.STATUS_SUBMITTED: ["submit-request-approval", "submit-no-approval"],
             Trip.STATUS_REJECTED: "reject",
             Trip.STATUS_APPROVED: "approve",
             # Trip.STATUS_REVIEW: "review",
@@ -321,7 +321,7 @@ class TripSerializer(BaseTripSerializer):
         available_actions = []
         if user == obj.traveller:
             if obj.status in [obj.STATUS_DRAFT]:
-                available_actions.append(
+                available_actions.extend(
                     # ACTION_MAP.get(obj.STATUS_SUBMISSION_REVIEW),  - Skipping this status for now
                     ACTION_MAP.get(obj.STATUS_SUBMITTED),
                 )
