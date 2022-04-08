@@ -88,13 +88,17 @@ class BaseTripSerializer(serializers.ModelSerializer):
         model = Trip
 
     def get_permissions(self, obj):
-        # don't provide permissions for list view
+        user = self.context['request'].user
+        # provide obj delete permissions for list view
+        # delete is available for the traveller or the travel administrator
         if self.context["view"].action == "list":
-            return []
+            return {
+                "delete": obj.traveller == user or user.groups.filter(name='Travel Administrator').exists()
+            }
 
         ps = Trip.permission_structure()
         permissions = TripPermissions(
-            self.context['request'].user,
+            user,
             obj,
             ps,
         )
@@ -304,7 +308,7 @@ class TripSerializer(BaseTripSerializer):
             Trip.STATUS_DRAFT: "revise",
             Trip.STATUS_SUBMISSION_REVIEW: "subreview",
             Trip.STATUS_CANCELLED: "cancel",
-            Trip.STATUS_SUBMITTED: "submit",
+            Trip.STATUS_SUBMITTED: ["submit-request-approval", "submit-no-approval"],
             Trip.STATUS_REJECTED: "reject",
             Trip.STATUS_APPROVED: "approve",
             # Trip.STATUS_REVIEW: "review",
@@ -315,7 +319,7 @@ class TripSerializer(BaseTripSerializer):
         available_actions = []
         if user == obj.traveller:
             if obj.status in [obj.STATUS_DRAFT]:
-                available_actions.append(
+                available_actions.extend(
                     # ACTION_MAP.get(obj.STATUS_SUBMISSION_REVIEW),  - Skipping this status for now
                     ACTION_MAP.get(obj.STATUS_SUBMITTED),
                 )
