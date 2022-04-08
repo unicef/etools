@@ -833,6 +833,7 @@ class TestAPIInterventionResultLinkListView(BaseTenantTestCase):
             'intervention',
             'created',
             'modified',
+            'code',
         ))
 
     def _make_request(self, user):
@@ -972,6 +973,7 @@ class TestAPIInterventionResultLinkRetrieveView(BaseTenantTestCase):
             'intervention',
             'created',
             'modified',
+            'code',
         ))
 
     def _make_request(self, user):

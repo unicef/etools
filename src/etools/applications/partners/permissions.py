@@ -594,3 +594,19 @@ class UserBelongsToObjectPermission(BasePermission):
 class IsInterventionBudgetOwnerPermission(BasePermission):
     def has_object_permission(self, request, view, obj):
         return obj.budget_owner and obj.budget_owner == request.user
+
+
+class AmendmentSessionActivitiesPermission(BasePermission):
+    """
+    Lock activities created before current amendment
+    """
+    def has_object_permission(self, request, view, obj):
+        if request.method.upper() != 'DELETE':
+            return True
+
+        intervention = view.get_root_object()
+        if not hasattr(intervention, 'amendment'):
+            return True
+
+        amendment = intervention.amendment
+        return obj.created > amendment.created

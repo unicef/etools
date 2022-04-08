@@ -17,11 +17,11 @@ from model_utils import Choices, FieldTracker
 from model_utils.models import TimeStampedModel
 from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation, CurrencyField
-from unicef_locations.models import Location
 
 from etools.applications.core.permissions import import_permissions
 from etools.applications.environment.notifications import send_notification_with_template
 from etools.applications.funds.models import FundsReservationHeader
+from etools.applications.locations.models import Location
 from etools.applications.partners.amendment_utils import (
     calculate_difference,
     copy_instance,
@@ -2157,9 +2157,9 @@ class Intervention(TimeStampedModel):
             self.number
         )
 
-    def get_frontend_object_url(self, to_unicef=True):
+    def get_frontend_object_url(self, to_unicef=True, suffix='strategy'):
         host = settings.HOST if "https://" in settings.HOST else f'https://{settings.HOST}'
-        return f'{host}/{"pmp" if to_unicef else "epd"}/interventions/{self.pk}/strategy'
+        return f'{host}/{"pmp" if to_unicef else "epd"}/interventions/{self.pk}/{suffix}'
 
     def get_object_url(self):
         return reverse("partners_api:intervention-detail", args=[self.pk])
@@ -2214,7 +2214,7 @@ class Intervention(TimeStampedModel):
 
     @property
     def cp_output_names(self):
-        return ', '.join(link.cp_output.name for link in self.result_links.all())
+        return ', '.join(link.cp_output.name for link in self.result_links.filter(cp_output__isnull=False))
 
     @property
     def focal_point_names(self):
@@ -2809,6 +2809,7 @@ class InterventionPlannedVisits(TimeStampedModel):
 
 
 class InterventionResultLink(TimeStampedModel):
+    code = models.CharField(verbose_name=_("Code"), max_length=50, blank=True, null=True)
     intervention = models.ForeignKey(
         Intervention, related_name='result_links', verbose_name=_('Intervention'),
         on_delete=models.CASCADE,
@@ -2831,12 +2832,24 @@ class InterventionResultLink(TimeStampedModel):
 
     def total(self):
         results = self.ll_results.aggregate(
-            total=Sum("activities__unicef_cash") + Sum("activities__cso_cash"),
+            total=(
+                Sum("activities__unicef_cash", filter=Q(activities__is_active=True)) +
+                Sum("activities__cso_cash", filter=Q(activities__is_active=True))
+            ),
         )
         return results["total"] if results["total"] is not None else 0
 
     def save(self, *args, **kwargs):
+        if not self.code:
+            self.code = str(self.intervention.result_links.count() + 1)
         super().save(*args, **kwargs)
+
+    @classmethod
+    def renumber_result_links_for_intervention(cls, intervention):
+        result_links = intervention.result_links.all()
+        for i, result_link in enumerate(result_links):
+            result_link.code = str(i + 1)
+        cls.objects.bulk_update(result_links, fields=['code'])
 
 
 class InterventionBudget(TimeStampedModel):
@@ -2950,7 +2963,7 @@ class InterventionBudget(TimeStampedModel):
         init = False
         for link in self.intervention.result_links.all():
             for result in link.ll_results.all():
-                for activity in result.activities.all():
+                for activity in result.activities.filter(is_active=True):
                     if not init:
                         init_totals()
                         init = True
@@ -3116,6 +3129,8 @@ class InterventionReview(InterventionReviewQuestionnaire, TimeStampedModel):
         on_delete=models.CASCADE,
         related_name='+',
     )
+
+    sent_back_comment = models.TextField(verbose_name=_('Sent Back by Secretary Comment'), blank=True)
 
     class Meta:
         ordering = ["-created"]

@@ -524,16 +524,19 @@ class InterventionActivityDetailSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'name',
+            'code',
             'context_details',
             'unicef_cash',
             'cso_cash',
             'items',
             'time_frames',
             'partner_percentage',
+            'is_active',
         )
+        read_only_fields = ['code']
 
     def __init__(self, *args, **kwargs):
-        self.intervention = kwargs.pop('intervention')
+        self.intervention = kwargs.pop('intervention', None)
         super().__init__(*args, **kwargs)
 
     def validate(self, attrs):
@@ -600,14 +603,22 @@ class InterventionActivitySerializer(serializers.ModelSerializer):
     class Meta:
         model = InterventionActivity
         fields = (
-            'id', 'name', 'context_details',
+            'id', 'name', 'code', 'context_details',
             'unicef_cash', 'cso_cash', 'partner_percentage',
-            'time_frames',
+            'time_frames', 'is_active', 'created',
         )
+        read_only_fields = ['code']
 
 
 class LowerResultWithActivitiesSerializer(LowerResultSerializer):
     activities = InterventionActivitySerializer(read_only=True, many=True)
+
+    class Meta(LowerResultSerializer.Meta):
+        fields = LowerResultSerializer.Meta.fields + ["activities"]
+
+
+class LowerResultWithActivityItemsSerializer(LowerResultSerializer):
+    activities = InterventionActivityDetailSerializer(read_only=True, many=True)
 
     class Meta(LowerResultSerializer.Meta):
         fields = LowerResultSerializer.Meta.fields + ["activities"]

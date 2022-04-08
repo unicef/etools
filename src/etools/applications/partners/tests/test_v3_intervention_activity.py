@@ -7,6 +7,7 @@ from rest_framework import status
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import Intervention
 from etools.applications.partners.tests.factories import (
+    InterventionAmendmentFactory,
     InterventionFactory,
     InterventionResultLinkFactory,
     PartnerStaffFactory,
@@ -226,6 +227,50 @@ class TestFunctionality(BaseTestCase):
         response = self.forced_auth_req('delete', self.detail_url, user=self.user, data={})
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT, response.data)
 
+    def test_destroy_after_develop(self):
+        self.intervention.status = Intervention.SIGNED
+        self.intervention.save()
+        response = self.forced_auth_req('delete', self.detail_url, user=self.user, data={})
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
+
+    def test_destroy_in_amendment(self):
+        self.intervention.status = Intervention.SIGNED
+        self.intervention.save()
+        response = self.forced_auth_req('delete', self.detail_url, user=self.user, data={})
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
+
+    def test_destroy_in_amendment_original_activity(self):
+        amendment = InterventionAmendmentFactory(intervention=self.intervention)
+        intervention = amendment.amended_intervention
+        pd_output = intervention.result_links.first().ll_results.first()
+        activity = amendment.amended_intervention.result_links.first().ll_results.first().activities.first()
+        response = self.forced_auth_req(
+            'delete',
+            reverse(
+                'partners:intervention-activity-detail',
+                args=[intervention.pk, pd_output.pk, activity.pk]
+            ),
+            user=self.user,
+            data={}
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
+
+    def test_destroy_in_amendment_new_activity(self):
+        amendment = InterventionAmendmentFactory(intervention=self.intervention)
+        intervention = amendment.amended_intervention
+        pd_output = intervention.result_links.first().ll_results.first()
+        activity = InterventionActivityFactory(result=amendment.amended_intervention.result_links.first().ll_results.first())
+        response = self.forced_auth_req(
+            'delete',
+            reverse(
+                'partners:intervention-activity-detail',
+                args=[intervention.pk, pd_output.pk, activity.pk]
+            ),
+            user=self.user,
+            data={}
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT, response.data)
+
     def test_update(self):
         response = self.forced_auth_req('patch', self.detail_url, user=self.user, data={'name': 'new'})
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
@@ -294,6 +339,17 @@ class TestFunctionality(BaseTestCase):
             }
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
+
+    def test_deactivate_activity(self):
+        response = self.forced_auth_req(
+            'patch', self.detail_url,
+            user=self.user,
+            data={
+                'is_active': False,
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['is_active'], False)
 
 
 class TestPermissions(BaseTestCase):

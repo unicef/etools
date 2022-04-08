@@ -39,6 +39,7 @@ from etools.applications.partners.models import (
     PRCOfficerInterventionReview,
 )
 from etools.applications.partners.permissions import (
+    AmendmentSessionActivitiesPermission,
     intervention_field_is_editable_permission,
     PMPInterventionPermission,
     UserBelongsToObjectPermission,
@@ -54,6 +55,7 @@ from etools.applications.partners.serializers.interventions_v2 import (
     MinimalInterventionListSerializer,
 )
 from etools.applications.partners.serializers.interventions_v3 import (
+    InterventionDetailResultsStructureSerializer,
     InterventionDetailSerializer,
     InterventionListSerializer,
     InterventionManagementBudgetSerializer,
@@ -190,6 +192,12 @@ class PMPInterventionRetrieveUpdateView(PMPInterventionMixin, InterventionDetail
                 context=self.get_serializer_context(),
             ).data,
         )
+
+
+class PMPInterventionRetrieveResultsStructure(PMPInterventionMixin, RetrieveAPIView):
+    queryset = Intervention.objects.detail_qs()
+    serializer_class = InterventionDetailResultsStructureSerializer
+    permission_classes = (IsAuthenticated, PMPInterventionPermission,)
 
 
 class PMPInterventionPDFView(PMPInterventionMixin, RetrieveAPIView):
@@ -480,6 +488,7 @@ class InterventionActivityViewMixin(DetailedInterventionResponseMixin):
     queryset = InterventionActivity.objects.prefetch_related('items', 'time_frames').order_by('id')
     permission_classes = [
         IsAuthenticated,
+        AmendmentSessionActivitiesPermission,
         IsReadAction | (IsEditAction & intervention_field_is_editable_permission('pd_outputs'))
     ]
     serializer_class = InterventionActivityDetailSerializer
