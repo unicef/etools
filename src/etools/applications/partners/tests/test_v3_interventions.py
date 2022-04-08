@@ -368,6 +368,17 @@ class TestDetail(BaseInterventionTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    def test_reporting_requirements_partner_user(self):
+        staff_member = PartnerStaffFactory(partner=self.intervention.agreement.partner)
+        self.intervention.partner_focal_points.add(staff_member)
+        response = self.forced_auth_req(
+            "get",
+            reverse('pmp_v3:intervention-detail', args=[self.intervention.pk]),
+            user=staff_member.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(response.data['permissions']['view']['reporting_requirements'])
+
     def test_pdf_partner_user(self):
         staff_member = PartnerStaffFactory(partner=self.intervention.agreement.partner)
         self.intervention.partner_focal_points.add(staff_member)

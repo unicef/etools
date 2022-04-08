@@ -324,7 +324,7 @@ def pd_outputs_present(i):
 
 
 def pd_outputs_are_linked_to_indicators(i):
-    return not i.result_links.filter(ram_indicators__isnull=True).exists()
+    return not i.result_links.filter(ll_results__applied_indicators__isnull=True)
 
 
 def all_pd_outputs_are_associated(i):
