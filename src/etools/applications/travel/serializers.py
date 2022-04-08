@@ -88,13 +88,17 @@ class BaseTripSerializer(serializers.ModelSerializer):
         model = Trip
 
     def get_permissions(self, obj):
-        # don't provide permissions for list view
+        user = self.context['request'].user
+        # provide obj delete permissions for list view
+        # delete is available for the traveller or the travel administrator
         if self.context["view"].action == "list":
-            return []
+            return {
+                "delete": obj.traveller == user or user.groups.filter(name='Travel Administrator').exists()
+            }
 
         ps = Trip.permission_structure()
         permissions = TripPermissions(
-            self.context['request'].user,
+            user,
             obj,
             ps,
         )
