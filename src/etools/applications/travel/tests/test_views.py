@@ -15,7 +15,7 @@ from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.reports.tests.factories import OfficeFactory, SectionFactory
 from etools.applications.travel.models import Activity, ItineraryItem, Report, Trip, TripStatusHistory
 from etools.applications.travel.tests.factories import ActivityFactory, ItineraryFactory, ReportFactory, TripFactory
-from etools.applications.users.tests.factories import UserFactory
+from etools.applications.users.tests.factories import GroupFactory, UserFactory
 
 
 class TestTripViewSet(BaseTenantTestCase):
@@ -37,6 +37,41 @@ class TestTripViewSet(BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data.get("results")), num)
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_list_delete_permissions(self):
+        trip = TripFactory()
+        self.assertNotEqual(trip.traveller, self.user)
+
+        trip_user_traveller = TripFactory(traveller=self.user)
+        self.assertEqual(trip_user_traveller.traveller, self.user)
+
+        response = self.forced_auth_req(
+            "get",
+            reverse('travel:trip-list'),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data.get("results")), 2)
+        for actual_trip in response.data.get("results"):
+            if actual_trip['id'] == trip.pk:
+                self.assertNotEqual(actual_trip['traveller']['id'], self.user.pk)
+                self.assertFalse(actual_trip['permissions']['delete'])
+            if actual_trip['id'] == trip_user_traveller.pk:
+                self.assertEqual(actual_trip['traveller']['id'], self.user.pk)
+                self.assertTrue(actual_trip['permissions']['delete'])
+
+        travel_adm_group = GroupFactory(name='Travel Administrator')
+        self.user.groups.add(travel_adm_group)
+        response = self.forced_auth_req(
+            "get",
+            reverse('travel:trip-list'),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data.get("results")), 2)
+        for actual_trip in response.data.get("results"):
+            self.assertTrue(actual_trip['permissions']['delete'])
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_get(self):
