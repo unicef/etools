@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
-from django.db import connection, models
+from django.db import connection, models, transaction
 from django.db.models import Count, Exists, OuterRef, Q
 from django.db.models.base import ModelBase
 from django.utils.translation import gettext_lazy as _
@@ -10,7 +10,6 @@ from model_utils import Choices, FieldTracker
 from model_utils.models import TimeStampedModel
 from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation
-from unicef_locations.models import Location
 
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.core.permissions import import_permissions
@@ -26,6 +25,7 @@ from etools.applications.field_monitoring.planning.transitions.permissions impor
     user_is_pme_permission,
     user_is_visit_lead_permission,
 )
+from etools.applications.locations.models import Location
 from etools.applications.partners.models import Intervention, PartnerOrganization
 from etools.applications.reports.models import Result, Section
 from etools.applications.tpm.models import PME
@@ -277,6 +277,7 @@ class MonitoringActivity(
     def __str__(self):
         return self.reference_number
 
+    @transaction.atomic()
     def save(self, **kwargs):
         super().save(**kwargs)
 
@@ -288,6 +289,32 @@ class MonitoringActivity(
             )
             super().save(update_fields=['number'])
 
+        if self.trip_itinerary_items.exists():
+            for item in self.trip_itinerary_items.all():
+                item.update_values_from_ma(self)
+                item.save()
+
+        if self.trip_activities.exists():
+            for ta in self.trip_activities.all():
+                if ta.trip.status not in [ta.trip.STATUS_APPROVED, ta.trip.STATUS_COMPLETED, ta.trip.STATUS_CANCELLED] \
+                        and ta.trip.traveller not in self.team_members.all() and \
+                        ta.trip.traveller != self.visit_lead:
+                    ta.trip.update_ma_traveler_excluded_infotext(self, ta)
+                    ta.trip.save()
+                if ta.activity_date != self.start_date:
+                    ta.trip.update_ma_dates_changed_infotext(self, ta)
+                    ta.trip.save()
+                    ta.activity_date = self.start_date
+                    ta.save()
+
+    @transaction.atomic()
+    def delete(self, *args, **kwargs):
+        if self.trip_activities.exists():
+            for ta in self.trip_activities.all():
+                ta.trip.update_ma_deleted_infotext(self)
+                ta.trip.save()
+        super().delete(**kwargs)
+
     @property
     def reference_number(self):
         return self.number
@@ -296,6 +323,10 @@ class MonitoringActivity(
     def permission_structure(cls):
         permissions = import_permissions(cls.__name__)
         return permissions
+
+    @property
+    def destination_str(self):
+        return str(self.location_site) if self.location_site else str(self.location)
 
     def check_if_rejected(self, old_instance):
         # if rejected send notice
