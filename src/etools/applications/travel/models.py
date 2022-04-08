@@ -8,11 +8,11 @@ from model_utils import Choices
 from model_utils.models import TimeStampedModel
 from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation
-from unicef_locations.models import Location
 
 from etools.applications.core.permissions import import_permissions
 from etools.applications.core.urlresolvers import build_frontend_url
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
+from etools.applications.locations.models import Location
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.reports.models import Office, Section
 from etools.applications.travel.validation import (
@@ -64,6 +64,10 @@ class Trip(TimeStampedModel):
         choices=STATUS_CHOICES,
         default=STATUS_DRAFT,
     )
+    not_as_planned = models.BooleanField(
+        verbose_name=_('Trip completed not as planned'),
+        default=False)
+
     supervisor = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         verbose_name=_('Supervisor'),
@@ -176,6 +180,22 @@ class Trip(TimeStampedModel):
         )
         if rejected_qs.exists():
             return rejected_qs.first().comment
+        return None
+
+    def get_cancelled_comment(self):
+        cancel_qs = self.status_history.filter(
+            status=Trip.STATUS_CANCELLED,
+        )
+        if cancel_qs.exists():
+            return cancel_qs.first().comment
+        return None
+
+    def get_completed_comment(self):
+        completed_qs = self.status_history.filter(
+            status=Trip.STATUS_COMPLETED,
+        )
+        if completed_qs.exists():
+            return completed_qs.first().comment
         return None
 
     def get_mail_context(self, user):
@@ -505,21 +525,21 @@ class Activity(TimeStampedModel):
     )
     monitoring_activity = models.ForeignKey(
         MonitoringActivity,
-        on_delete=models.DO_NOTHING,
+        on_delete=models.CASCADE,
         related_name="trip_activities",
         null=True,
         blank=True
     )
     partner = models.ForeignKey(
         PartnerOrganization,
-        on_delete=models.DO_NOTHING,
+        on_delete=models.CASCADE,
         related_name="trip_activities",
         null=True,
         blank=True
     )
     location = models.ForeignKey(
         Location,
-        on_delete=models.DO_NOTHING,
+        on_delete=models.SET_NULL,
         related_name="trip_activities",
         null=True,
         blank=True

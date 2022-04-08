@@ -131,6 +131,7 @@ class ActivityBaseSerializer(serializers.ModelSerializer):
     location_name = serializers.SerializerMethodField()
     monitoring_activity_name = serializers.SerializerMethodField()
     section_name = serializers.SerializerMethodField()
+    status = serializers.SerializerMethodField()
 
     def get_partner_name(self, obj):
         if obj.partner:
@@ -159,6 +160,11 @@ class ActivityBaseSerializer(serializers.ModelSerializer):
             return obj.monitoring_activity.destination_str
         elif obj.location:
             return str(obj.location)
+        return ''
+
+    def get_status(self, obj):
+        if obj.monitoring_activity:
+            return obj.monitoring_activity.status
         return ''
 
     class Meta:
@@ -247,6 +253,8 @@ class TripSerializer(BaseTripSerializer):
     traveller = MinimalUserSerializer()
     status_list = serializers.SerializerMethodField()
     rejected_comment = serializers.SerializerMethodField()
+    cancelled_comment = serializers.SerializerMethodField()
+    completed_comment = serializers.SerializerMethodField()
     available_actions = serializers.SerializerMethodField()
 
     class Meta(BaseTripSerializer.Meta):
@@ -260,7 +268,7 @@ class TripSerializer(BaseTripSerializer):
                 obj.STATUS_REJECTED,
                 obj.STATUS_SUBMITTED,
                 obj.STATUS_APPROVED,
-                obj.STATUS_REVIEW,
+                # obj.STATUS_REVIEW,
                 obj.STATUS_COMPLETED,
             ]
         elif obj.status == obj.STATUS_CANCELLED:
@@ -273,13 +281,19 @@ class TripSerializer(BaseTripSerializer):
                 obj.STATUS_DRAFT,
                 obj.STATUS_SUBMITTED,
                 obj.STATUS_APPROVED,
-                obj.STATUS_REVIEW,
+                # obj.STATUS_REVIEW,
                 obj.STATUS_COMPLETED,
             ]
         return [s for s in obj.STATUS_CHOICES if s[0] in status_list]
 
     def get_rejected_comment(self, obj):
         return obj.get_rejected_comment() or ""
+
+    def get_cancelled_comment(self, obj):
+        return obj.get_cancelled_comment() or ""
+
+    def get_completed_comment(self, obj):
+        return obj.get_completed_comment() or ""
 
     def get_available_actions(self, obj):
         # don't provide available actions for list view
@@ -293,7 +307,7 @@ class TripSerializer(BaseTripSerializer):
             Trip.STATUS_SUBMITTED: "submit",
             Trip.STATUS_REJECTED: "reject",
             Trip.STATUS_APPROVED: "approve",
-            Trip.STATUS_REVIEW: "review",
+            # Trip.STATUS_REVIEW: "review",
             Trip.STATUS_COMPLETED: "complete",
         }
 
@@ -308,16 +322,16 @@ class TripSerializer(BaseTripSerializer):
             # if obj.status in [obj.STATUS_SUBMISSION_REVIEW]:
             #     available_actions.append(ACTION_MAP.get(obj.STATUS_DRAFT))
             #     available_actions.append(ACTION_MAP.get(obj.STATUS_SUBMITTED))
+            # if obj.status in [obj.STATUS_APPROVED]:
+            #     available_actions.append(ACTION_MAP.get(obj.STATUS_REVIEW))
             if obj.status in [obj.STATUS_APPROVED]:
-                available_actions.append(ACTION_MAP.get(obj.STATUS_REVIEW))
-            if obj.status in [obj.STATUS_APPROVED, obj.STATUS_REVIEW]:
                 available_actions.append(ACTION_MAP.get(obj.STATUS_COMPLETED))
             if obj.status in [obj.STATUS_REJECTED]:
                 available_actions.append(ACTION_MAP.get(obj.STATUS_DRAFT))
             if obj.status not in [
                     obj.STATUS_CANCELLED,
                     obj.STATUS_SUBMITTED,
-                    obj.STATUS_REVIEW,
+                    # obj.STATUS_REVIEW,
                     obj.STATUS_COMPLETED,
             ]:
                 available_actions.append(ACTION_MAP.get(obj.STATUS_CANCELLED))
@@ -408,9 +422,9 @@ class TripStatusHistorySerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         data = super().validate(data)
-        if data["status"] == Trip.STATUS_REJECTED:
+        if data["status"] in [Trip.STATUS_REJECTED, Trip.STATUS_CANCELLED]:
             if not data.get("comment"):
                 raise serializers.ValidationError(
-                    _("Comment is required when rejecting."),
+                    _(f"Comment is required when updating status to {data['status']}."),
                 )
         return data

@@ -32,7 +32,7 @@ class TestItinerarySerializer(BaseTenantTestCase):
             trip.STATUS_DRAFT,
             trip.STATUS_SUBMITTED,
             trip.STATUS_APPROVED,
-            trip.STATUS_REVIEW,
+            # trip.STATUS_REVIEW,
             trip.STATUS_COMPLETED,
         ]))
 
@@ -46,7 +46,7 @@ class TestItinerarySerializer(BaseTenantTestCase):
             trip.STATUS_REJECTED,
             trip.STATUS_SUBMITTED,
             trip.STATUS_APPROVED,
-            trip.STATUS_REVIEW,
+            # trip.STATUS_REVIEW,
             trip.STATUS_COMPLETED,
         ]))
 
@@ -75,8 +75,8 @@ class TestItinerarySerializer(BaseTenantTestCase):
             # (Trip.STATUS_SUBMISSION_REVIEW,["revise", "submit", "cancel"]),
             (Trip.STATUS_SUBMITTED, []),
             (Trip.STATUS_REJECTED, ["revise", "cancel"]),
-            (Trip.STATUS_APPROVED, ["review", "complete", "cancel"]),
-            (Trip.STATUS_REVIEW, ["complete"]),
+            (Trip.STATUS_APPROVED, ["complete", "cancel"]),
+            # (Trip.STATUS_REVIEW, ["complete"]),
             (Trip.STATUS_COMPLETED, []),
             (Trip.STATUS_CANCELLED, []),
         ]
@@ -97,7 +97,7 @@ class TestItinerarySerializer(BaseTenantTestCase):
             (Trip.STATUS_SUBMITTED, ["approve", "reject"]),
             (Trip.STATUS_REJECTED, []),
             (Trip.STATUS_APPROVED, []),
-            (Trip.STATUS_REVIEW, []),
+            # (Trip.STATUS_REVIEW, []),
             (Trip.STATUS_COMPLETED, []),
             (Trip.STATUS_CANCELLED, []),
         ]

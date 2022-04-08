@@ -24,6 +24,7 @@ from etools.applications.field_monitoring.fm_settings.tests.factories import (
 )
 from etools.applications.field_monitoring.planning.tests.factories import MonitoringActivityFactory
 from etools.applications.field_monitoring.tests.base import APIViewSetTestCase, FMBaseTestCaseMixin
+from etools.applications.locations.models import Location
 from etools.applications.partners.tests.factories import InterventionFactory, PartnerFactory
 from etools.applications.reports.models import ResultType
 from etools.applications.reports.tests.factories import ResultFactory, SectionFactory
@@ -302,6 +303,25 @@ class LocationsCountryViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['id'], str(country.id))
+        self.assertEqual(response.data['point']['type'], 'Point')
+
+    def test_retrieve_multiple_country_locations(self):
+        country = LocationFactory(admin_level=0, point="POINT(10 10)")
+        LocationFactory(admin_level=0, point="POINT(20 20)")
+        LocationFactory(admin_level=0, point="POINT(30 30)")
+        LocationFactory(admin_level=1)
+        self.assertEqual(Location.objects.count(), 4)
+        self.assertEqual(Location.objects.filter(admin_level=0, is_active=True).count(), 3)
+        self.assertEqual(Location.objects.filter(admin_level=1, is_active=True).count(), 1)
+
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_settings:locations-country'),
+            user=self.unicef_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['id'], str(country.id))
+        self.assertEqual(response.data['admin_level'], country.admin_level)
         self.assertEqual(response.data['point']['type'], 'Point')
 
     def test_centroid(self):

@@ -53,6 +53,7 @@ class TripViewSet(
         mixins.ListModelMixin,
         mixins.UpdateModelMixin,
         mixins.RetrieveModelMixin,
+        mixins.DestroyModelMixin,
         PermittedSerializerMixin,
         viewsets.GenericViewSet,
 ):
@@ -82,7 +83,10 @@ class TripViewSet(
         ('month', ['start_date__month',
                    'end_date__month']),
         ('year', ['start_date__year',
-                  'end_date__year'])
+                  'end_date__year']),
+        ('start_date', 'start_date'),
+        ('end_date', 'end_date'),
+        ('not_as_planned', 'not_as_planned')
     )
     export_filename = 'Trip'
 
@@ -179,6 +183,11 @@ class TripViewSet(
             ).data
         )
 
+    def perform_destroy(self, instance):
+        if instance.status != Trip.STATUS_DRAFT:
+            raise ValidationError(_("Only Draft Trips are allowed to be deleted."))
+        super().perform_destroy(instance)
+
     def _set_status(self, request, trip_status):
         self.serializer_class = TripCreateUpdateStatusSerializer
         update_data = {
@@ -187,6 +196,9 @@ class TripViewSet(
         comment = request.data.get("comment")
         if comment:
             update_data["comment"] = comment
+            if trip_status == Trip.STATUS_COMPLETED:
+                update_data['not_as_planned'] = True
+
         request.data.clear()
         request.data.update(**update_data)
         request.data.update(
@@ -228,9 +240,9 @@ class TripViewSet(
     def approve(self, request, pk=None):
         return self._set_status(request, Trip.STATUS_APPROVED)
 
-    @action(detail=True, methods=["patch"])
-    def review(self, request, pk=None):
-        return self._set_status(request, Trip.STATUS_REVIEW)
+    # @action(detail=True, methods=["patch"])
+    # def review(self, request, pk=None):
+    #     return self._set_status(request, Trip.STATUS_REVIEW)
 
     @action(detail=True, methods=["patch"])
     def complete(self, request, pk=None):
