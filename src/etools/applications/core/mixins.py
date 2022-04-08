@@ -48,3 +48,12 @@ class ExportSerializerMixin:
 
     def get_country(self, obj):
         return connection.schema_name
+
+
+class GetSerializerClassMixin(object):
+
+    def get_serializer_class(self):
+        try:
+            return self.serializer_action_map[self.action]
+        except (KeyError, AttributeError):
+            return super().get_serializer_class()
