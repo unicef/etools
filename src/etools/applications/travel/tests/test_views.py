@@ -382,7 +382,7 @@ class TestTripViewSet(BaseTenantTestCase):
         for _ in range(10):
             TripFactory()
 
-        user = UserFactory(first_name="Super", last_name="Last")
+        user = UserFactory(first_name="First name", last_name="Last name")
         trip = TripFactory(supervisor=user)
 
         def _validate_response(response):
@@ -394,7 +394,7 @@ class TestTripViewSet(BaseTenantTestCase):
         response = self.forced_auth_req(
             "get",
             reverse('travel:trip-list'),
-            data={"search": "sup"},
+            data={"search": user.first_name[:4]},
             user=self.user,
         )
         _validate_response(response)
@@ -402,7 +402,7 @@ class TestTripViewSet(BaseTenantTestCase):
         response = self.forced_auth_req(
             "get",
             reverse('travel:trip-list'),
-            data={"search": "last"},
+            data={"search": user.last_name},
             user=self.user,
         )
         _validate_response(response)
@@ -412,7 +412,7 @@ class TestTripViewSet(BaseTenantTestCase):
         for _ in range(10):
             TripFactory()
 
-        user = UserFactory(first_name="Traveller", last_name="Last")
+        user = UserFactory(first_name="First name", last_name="Last name")
         trip = TripFactory(traveller=user)
 
         def _validate_response(response):
@@ -424,7 +424,7 @@ class TestTripViewSet(BaseTenantTestCase):
         response = self.forced_auth_req(
             "get",
             reverse('travel:trip-list'),
-            data={"search": "las"},
+            data={"search": user.first_name[:4]},
             user=self.user,
         )
         _validate_response(response)
@@ -432,7 +432,7 @@ class TestTripViewSet(BaseTenantTestCase):
         response = self.forced_auth_req(
             "get",
             reverse('travel:trip-list'),
-            data={"search": "last"},
+            data={"search": user.last_name},
             user=self.user,
         )
         _validate_response(response)
