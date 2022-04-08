@@ -95,7 +95,8 @@ class TestTripViewSet(BaseTenantTestCase):
         self.assertEqual(data["start_date"], start_date)
         self.assertEqual(data["end_date"], end_date)
         self.assertEqual(data["status"], "draft")
-        self.assertEqual(data["available_actions"], ["submit", "cancel"])
+        self.assertEqual(data["available_actions"],
+                         ['submit-request-approval', 'submit-no-approval', 'cancel'])
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_filter_show_hidden(self):
@@ -620,8 +621,14 @@ class TestTripViewSet(BaseTenantTestCase):
                 True,
             ),
             (
+                trip.STATUS_DRAFT,
+                "submit-no-approval",
+                trip.STATUS_APPROVED,
+                True,
+            ),
+            (
                 trip.STATUS_SUBMISSION_REVIEW,
-                "submit",
+                "submit-request-approval",
                 trip.STATUS_SUBMITTED,
                 True,
             ),
