@@ -7,10 +7,12 @@ from django.utils import timezone
 
 from rest_framework import status
 from rest_framework.exceptions import ErrorDetail
+from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.attachments.models import AttachmentFlat
 from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.field_monitoring.fm_settings.tests.factories import LocationSiteFactory
 from etools.applications.partners.models import Intervention, InterventionAmendment
 from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, UNICEF_USER
 from etools.applications.partners.tests.factories import (
@@ -416,6 +418,33 @@ class TestInterventionAmendments(BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('total_hq_cash_local', response.data[0])
+
+    def test_geographical_coverage_sites_ignored_in_difference(self):
+        location = LocationFactory()
+        site = LocationSiteFactory()
+        amendment = InterventionAmendmentFactory(intervention=self.active_intervention)
+        amendment.amended_intervention.flat_locations.add(location)
+        amendment.amended_intervention.sites.add(site)
+
+        difference = amendment.get_difference()
+        self.assertIn('flat_locations', difference)
+        self.assertNotIn('sites', difference)
+
+    def test_geographical_coverage_not_available(self):
+        amendment = InterventionAmendmentFactory(intervention=self.active_intervention)
+        response = self.forced_auth_req(
+            'get', reverse('pmp_v3:intervention-detail', args=[amendment.amended_intervention.pk]), self.unicef_staff
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(response.data['permissions']['view']['sites'])
+        self.assertFalse(response.data['permissions']['edit']['sites'])
+
+        original_intervention_response = self.forced_auth_req(
+            'get', reverse('pmp_v3:intervention-detail', args=[amendment.intervention.pk]), self.unicef_staff
+        )
+        self.assertEqual(original_intervention_response.status_code, status.HTTP_200_OK)
+        self.assertTrue(original_intervention_response.data['permissions']['view']['sites'])
+        self.assertTrue(original_intervention_response.data['permissions']['edit']['sites'])
 
 
 class TestInterventionAmendmentDeleteView(BaseTenantTestCase):
