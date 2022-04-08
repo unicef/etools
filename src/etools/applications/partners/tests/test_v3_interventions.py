@@ -2668,6 +2668,11 @@ class TestInterventionSendToUNICEF(BaseInterventionActionTestCase):
 
 
 class TestTimeframesValidation(BaseInterventionTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        call_command("update_notifications")
+
     def setUp(self):
         super().setUp()
         self.intervention = InterventionFactory(
@@ -2730,6 +2735,60 @@ class TestTimeframesValidation(BaseInterventionTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
         self.assertIn('end', response.data)
+
+    def test_shift_quarters_on_terminate_end_in_future(self):
+        self.activity.time_frames.add(
+            self.intervention.quarters.get(
+                start_date=datetime.date(year=1970, month=10, day=1),
+                end_date=datetime.date(year=1970, month=12, day=31)
+            )
+        )
+        self.intervention.status = Intervention.ACTIVE
+        self.intervention.save()
+        old_quarters_num = self.intervention.quarters.count()
+
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-terminate', args=[self.intervention.pk]),
+            user=self.user,
+            data={
+                'end': datetime.date(year=1971, month=9, day=1),
+                'termination_doc_attachment': AttachmentFactory(file="test_file.pdf", file_type=None, code="").id,
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertGreater(self.intervention.quarters.count(), old_quarters_num)
+
+    def test_shift_quarters_on_terminate_remove_last_quarter(self):
+        self.activity.time_frames.add(
+            self.intervention.quarters.get(
+                start_date=datetime.date(year=1970, month=10, day=1),
+                end_date=datetime.date(year=1970, month=12, day=31)
+            )
+        )
+        self.activity.time_frames.add(
+            self.intervention.quarters.get(
+                start_date=datetime.date(year=1970, month=7, day=1),
+                end_date=datetime.date(year=1970, month=9, day=30)
+            )
+        )
+        self.intervention.status = Intervention.ACTIVE
+        self.intervention.save()
+        self.assertEqual(self.intervention.quarters.count(), 4)
+        self.assertEqual(self.activity.time_frames.count(), 2)
+
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-terminate', args=[self.intervention.pk]),
+            user=self.user,
+            data={
+                'end': datetime.date(year=1970, month=9, day=1),
+                'termination_doc_attachment': AttachmentFactory(file="test_file.pdf", file_type=None, code="").id,
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(self.intervention.quarters.count(), 3)
+        self.assertEqual(self.activity.time_frames.count(), 1)
 
 
 class TestInterventionAttachments(BaseTenantTestCase):
