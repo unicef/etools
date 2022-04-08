@@ -89,8 +89,8 @@ def copy_attached_agreements(**kwargs):
     )
     if not file_type.group:
         file_type.group = []
-    file_type.group += code
-    file_type.save()
+    file_type.group.append(code)
+    file_type.save(update_fields=['group'])
 
     content_type = ContentType.objects.get_for_model(Agreement)
 
@@ -121,8 +121,8 @@ def copy_core_values_assessments(**kwargs):
     )
     if not file_type.group:
         file_type.group = []
-    file_type.group += code
-    file_type.save()
+    file_type.group.append(code)
+    file_type.save(update_fields=['group'])
 
     content_type = ContentType.objects.get_for_model(CoreValuesAssessment)
 
@@ -152,8 +152,8 @@ def copy_reports(**kwargs):
     )
     if not file_type.group:
         file_type.group = []
-    file_type.group += code
-    file_type.save()
+    file_type.group.append(code)
+    file_type.save(update_fields=['group'])
 
     content_type = ContentType.objects.get_for_model(Assessment)
 
@@ -183,8 +183,8 @@ def copy_signed_amendments(**kwargs):
     )
     if not file_type.group:
         file_type.group = []
-    file_type.group += code
-    file_type.save()
+    file_type.group.append(code)
+    file_type.save(update_fields=['group'])
 
     content_type = ContentType.objects.get_for_model(AgreementAmendment)
 
@@ -214,8 +214,8 @@ def copy_interventions(**kwargs):
     )
     if not prc_file_type.group:
         prc_file_type.group = []
-    prc_file_type.group += prc_code
-    prc_file_type.save()
+    prc_file_type.group.append(prc_code)
+    prc_file_type.save(update_fields=['group'])
 
     pd_code = "partners_intervention_signed_pd"
     pd_file_type, _ = FileType.objects.get_or_create(
@@ -228,9 +228,8 @@ def copy_interventions(**kwargs):
     )
     if not pd_file_type.group:
         pd_file_type.group = []
-    pd_file_type.group += pd_code
-    pd_file_type.save()
-
+    pd_file_type.group.append(prc_code)
+    pd_file_type.save(update_fields=['group'])
     activation_letter_code = "partners_intervention_activation_letter"
     activation_letter, _ = FileType.objects.get_or_create(
         code=activation_letter_code,
@@ -242,8 +241,8 @@ def copy_interventions(**kwargs):
     )
     if not activation_letter.group:
         activation_letter.group = []
-    activation_letter.group += activation_letter_code
-    activation_letter.save()
+    activation_letter.group.append(activation_letter_code)
+    activation_letter.save(update_fields=['group'])
 
     termination_doc_code = "partners_intervention_termination_doc"
     termination_doc, _ = FileType.objects.get_or_create(
@@ -256,8 +255,8 @@ def copy_interventions(**kwargs):
     )
     if not termination_doc.group:
         termination_doc.group = []
-    termination_doc.group += termination_doc_code
-    termination_doc.save()
+    termination_doc.group.append(termination_doc_code)
+    termination_doc.save(update_fields=['group'])
 
     content_type = ContentType.objects.get_for_model(Intervention)
 
@@ -315,8 +314,8 @@ def copy_intervention_amendments(**kwargs):
     )
     if not file_type.group:
         file_type.group = []
-    file_type.group += code
-    file_type.save()
+    file_type.group.append(code)
+    file_type.save(update_fields=['group'])
 
     content_type = ContentType.objects.get_for_model(InterventionAmendment)
 
@@ -347,8 +346,8 @@ def copy_intervention_attachments(**kwargs):
     )
     if not file_type.group:
         file_type.group = []
-    file_type.group += code
-    file_type.save()
+    file_type.group.append(code)
+    file_type.save(update_fields=['group'])
 
     content_type = ContentType.objects.get_for_model(InterventionAttachment)
 
@@ -380,8 +379,8 @@ def copy_t2f_travel_attachments(**kwargs):
     )
     if not file_type.group:
         file_type.group = []
-    file_type.group += code
-    file_type.save()
+    file_type.group.append(code)
+    file_type.save(update_fields=['group'])
 
     content_type = ContentType.objects.get_for_model(TravelAttachment)
 
