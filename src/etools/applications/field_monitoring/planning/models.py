@@ -298,7 +298,7 @@ class MonitoringActivity(
             for ta in self.trip_activities.all():
                 if ta.trip.status not in [ta.trip.STATUS_APPROVED, ta.trip.STATUS_COMPLETED, ta.trip.STATUS_CANCELLED] \
                         and ta.trip.traveller not in self.team_members.all() and \
-                        ta.trip.traveller != self.person_responsible:
+                        ta.trip.traveller != self.visit_lead:
                     ta.trip.update_ma_traveler_excluded_infotext(self, ta)
                     ta.trip.save()
                 if ta.activity_date != self.start_date:

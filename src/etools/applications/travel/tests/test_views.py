@@ -87,17 +87,17 @@ class TestTripViewSet(BaseTenantTestCase):
         self.assertEqual(data[0]["id"], trip.pk)
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
-    def test_filter_start_date(self):
+    def test_filter_month(self):
         for _ in range(10):
             TripFactory()
 
-        date = str(timezone.now().date())
+        date = timezone.now().date()
         trip = TripFactory(start_date=date)
 
         response = self.forced_auth_req(
             "get",
             reverse('travel:trip-list'),
-            data={"start_date": date},
+            data={"month": date.month},
             user=self.user,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -109,17 +109,17 @@ class TestTripViewSet(BaseTenantTestCase):
         self.assertEqual(data[0]["id"], trip.pk)
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
-    def test_filter_end_date(self):
+    def test_filter_year(self):
         for _ in range(10):
             TripFactory()
 
-        date = str(timezone.now().date())
+        date = timezone.now().date()
         trip = TripFactory(end_date=date)
 
         response = self.forced_auth_req(
             "get",
             reverse('travel:trip-list'),
-            data={"end_date": date},
+            data={"year": date.year},
             user=self.user,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -159,7 +159,7 @@ class TestTripViewSet(BaseTenantTestCase):
         response = self.forced_auth_req(
             "get",
             reverse('travel:trip-list'),
-            data={"q": trip.reference_number[-4:]},
+            data={"search": trip.reference_number[-4:]},
             user=self.user,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -168,7 +168,7 @@ class TestTripViewSet(BaseTenantTestCase):
         self.assertEqual(data[0]["id"], trip.pk)
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
-    def test_search_supevrisor_name(self):
+    def test_search_supervisor_name(self):
         for _ in range(10):
             TripFactory()
 
@@ -184,7 +184,7 @@ class TestTripViewSet(BaseTenantTestCase):
         response = self.forced_auth_req(
             "get",
             reverse('travel:trip-list'),
-            data={"q": "sup"},
+            data={"search": "sup"},
             user=self.user,
         )
         _validate_response(response)
@@ -192,7 +192,7 @@ class TestTripViewSet(BaseTenantTestCase):
         response = self.forced_auth_req(
             "get",
             reverse('travel:trip-list'),
-            data={"q": "last"},
+            data={"search": "last"},
             user=self.user,
         )
         _validate_response(response)
@@ -214,7 +214,7 @@ class TestTripViewSet(BaseTenantTestCase):
         response = self.forced_auth_req(
             "get",
             reverse('travel:trip-list'),
-            data={"q": "las"},
+            data={"search": "las"},
             user=self.user,
         )
         _validate_response(response)
@@ -222,7 +222,7 @@ class TestTripViewSet(BaseTenantTestCase):
         response = self.forced_auth_req(
             "get",
             reverse('travel:trip-list'),
-            data={"q": "last"},
+            data={"search": "last"},
             user=self.user,
         )
         _validate_response(response)
@@ -274,7 +274,7 @@ class TestTripViewSet(BaseTenantTestCase):
         )
         self.assertFalse(trip_qs.exists())
         start_date = timezone.now().date()
-
+        end_date = start_date + datetime.timedelta(days=2)
         response = self.forced_auth_req(
             "post",
             reverse('travel:trip-list'),
@@ -283,6 +283,7 @@ class TestTripViewSet(BaseTenantTestCase):
                 "traveller": traveller.pk,
                 "supervisor": self.user.pk,
                 "start_date": start_date,
+                "end_date": end_date,
                 "office": office.pk,
                 "section": section.pk,
             },
@@ -337,6 +338,25 @@ class TestTripViewSet(BaseTenantTestCase):
         trip.refresh_from_db()
         self.assertEqual(trip.start_date, start_date)
         self.assertEqual(trip.end_date, end_date)
+
+    def test_delete_draft(self):
+        trip_draft = TripFactory(status=Trip.STATUS_DRAFT)
+        response = self.forced_auth_req(
+            "delete",
+            reverse('travel:trip-detail', args=[trip_draft.pk]),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_delete_not_in_draft(self):
+        trip_approved = TripFactory(status=Trip.STATUS_APPROVED)
+        response = self.forced_auth_req(
+            "delete",
+            reverse('travel:trip-detail', args=[trip_approved.pk]),
+            user=self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Only Draft Trips are allowed to be deleted.", response.content.decode('utf-8'))
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_status_request(self):
