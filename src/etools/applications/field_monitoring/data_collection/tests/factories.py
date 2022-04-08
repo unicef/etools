@@ -1,6 +1,11 @@
 import factory.fuzzy
 
-from etools.applications.field_monitoring.data_collection.models import ActivityQuestion, Finding, StartedChecklist
+from etools.applications.field_monitoring.data_collection.models import (
+    ActivityQuestion,
+    ChecklistOverallFinding,
+    Finding,
+    StartedChecklist,
+)
 from etools.applications.field_monitoring.fm_settings.tests.factories import MethodFactory, QuestionFactory
 from etools.applications.field_monitoring.planning.tests.factories import MonitoringActivityFactory
 from etools.applications.field_monitoring.tests.factories import UserFactory
@@ -35,3 +40,11 @@ class FindingFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = Finding
+
+
+class ChecklistOverallFindingFactory(factory.django.DjangoModelFactory):
+    started_checklist = factory.SubFactory(StartedChecklistFactory)
+    narrative_finding = factory.fuzzy.FuzzyText()
+
+    class Meta:
+        model = ChecklistOverallFinding
