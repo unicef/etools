@@ -577,7 +577,7 @@ class InterventionActivityDetailSerializer(serializers.ModelSerializer):
         read_only_fields = ['code']
 
     def __init__(self, *args, **kwargs):
-        self.intervention = kwargs.pop('intervention')
+        self.intervention = kwargs.pop('intervention', None)
         super().__init__(*args, **kwargs)
 
     def validate(self, attrs):
@@ -653,6 +653,13 @@ class InterventionActivitySerializer(serializers.ModelSerializer):
 
 class LowerResultWithActivitiesSerializer(LowerResultSerializer):
     activities = InterventionActivitySerializer(read_only=True, many=True)
+
+    class Meta(LowerResultSerializer.Meta):
+        fields = LowerResultSerializer.Meta.fields + ["activities"]
+
+
+class LowerResultWithActivityItemsSerializer(LowerResultSerializer):
+    activities = InterventionActivityDetailSerializer(read_only=True, many=True)
 
     class Meta(LowerResultSerializer.Meta):
         fields = LowerResultSerializer.Meta.fields + ["activities"]
