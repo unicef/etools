@@ -440,6 +440,19 @@ class ActivityViewSet(
             raise ValidationError(_("Monitoring Activity not found"))
         serializer.initial_data['activity_date'] = ma.start_date
 
+    @staticmethod
+    def activity_type_fields_cleanup(serializer):
+        _NULLABLE_FIELDS_MAP = {
+            Activity.TYPE_PROGRAMME_MONITORING: ['partner', 'section', 'location'],
+            Activity.TYPE_STAFF_DEVELOPMENT: ['partner', 'section', 'monitoring_activity'],
+            Activity.TYPE_STAFF_ENTITLEMENT: ['partner', 'section', 'monitoring_activity'],
+            Activity.TYPE_TECHNICAL_SUPPORT: ['partner', 'section', 'monitoring_activity'],
+            Activity.TYPE_MEETING: ['monitoring_activity']
+        }
+        fields = _NULLABLE_FIELDS_MAP.get(serializer.initial_data['activity_type'])
+        for field in fields:
+            serializer.initial_data[field] = None
+
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if 'activity_type' in serializer.initial_data and \
@@ -457,9 +470,8 @@ class ActivityViewSet(
 
         if serializer.initial_data['activity_type'] == Activity.TYPE_PROGRAMME_MONITORING:
             self.update_ma_date(serializer)
-        elif instance.monitoring_activity and \
-                instance.activity_type == Activity.TYPE_PROGRAMME_MONITORING:
-            serializer.initial_data['monitoring_activity'] = None
+
+        self.activity_type_fields_cleanup(serializer)
 
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
