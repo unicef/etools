@@ -19,6 +19,7 @@ class Migration(migrations.Migration):
         ('reports', '0001_initial'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         ('locations', '0001_initial'),
+        ('unicef_locations', '0001_initial'),
         ('publics', '0001_initial'),
         ('partners', '0001_initial'),
     ]
