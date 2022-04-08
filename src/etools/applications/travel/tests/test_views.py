@@ -375,7 +375,6 @@ class TestTripViewSet(BaseTenantTestCase):
         self.assertEqual(response.data["count"], 0)
         self.assertEqual(response.data["results"], [])
 
-
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_search_supervisor_name(self):
         for _ in range(10):
