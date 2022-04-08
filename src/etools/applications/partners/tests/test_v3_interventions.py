@@ -344,6 +344,7 @@ class TestDetail(BaseInterventionTestCase):
         self.assertEqual(data["id"], self.intervention.pk)
         self.assertEqual(data["result_links"][0]["total"], 30)
         self.assertEqual(data["unicef_signatory"], self.user_serialized)
+        self.assertIn('confidential', data)
 
     def test_pdf(self):
         response = self.forced_auth_req(
