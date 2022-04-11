@@ -440,6 +440,23 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             data={'sections__in': f'{section.id}'},
         )
 
+    def test_visit_pdf_export(self):
+        partner = PartnerFactory()
+        activity = MonitoringActivityFactory(partners=[partner])
+        ActivityQuestionOverallFinding.objects.create(
+            activity_question=ActivityQuestionFactory(
+                question__level='partner',
+                monitoring_activity=activity,
+            ),
+            value='ok',
+        )
+        ActivityOverallFinding.objects.create(partner=partner, narrative_finding='test',
+                                              monitoring_activity=activity)
+        response = self.make_request_to_viewset(
+            self.fm_user, action='visit-pdf', method='get', instance=activity)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('Content-Disposition', response.headers)
+
 
 class TestActivityAttachmentsView(FMBaseTestCaseMixin, APIViewSetTestCase):
     base_view = 'field_monitoring_planning:activity_attachments'

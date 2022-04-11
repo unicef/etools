@@ -35,6 +35,7 @@ from etools.applications.partners.serializers.interventions_v2 import (
     InterventionBudgetCUSerializer,
     InterventionListSerializer as InterventionV2ListSerializer,
     InterventionResultNestedSerializer,
+    InterventionResultsStructureSerializer,
     PlannedVisitsNestedSerializer,
     SingleInterventionAttachmentField,
 )
@@ -546,6 +547,7 @@ class InterventionDetailSerializer(FullInterventionSnapshotSerializerMixin, seri
             "cash_transfer_modalities",
             "cfei_number",
             "cluster_names",
+            "confidential",
             "context",
             "contingency_pd",
             "country_programmes",
@@ -643,6 +645,16 @@ class InterventionDetailSerializer(FullInterventionSnapshotSerializerMixin, seri
 
     def get_intervention(self):
         return self.instance
+
+
+class InterventionDetailResultsStructureSerializer(serializers.ModelSerializer):
+    result_links = InterventionResultsStructureSerializer(many=True, read_only=True, required=False)
+
+    class Meta:
+        model = Intervention
+        fields = (
+            "result_links",
+        )
 
 
 class PMPInterventionAttachmentSerializer(InterventionAttachmentSerializer):

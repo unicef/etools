@@ -49,7 +49,7 @@ from etools.applications.partners.tests.test_api_interventions import (
     BaseAPIInterventionIndicatorsListMixin,
     BaseInterventionReportingRequirementMixin,
 )
-from etools.applications.reports.models import ResultType
+from etools.applications.reports.models import AppliedIndicator, ResultType
 from etools.applications.reports.tests.factories import (
     AppliedIndicatorFactory,
     CountryProgrammeFactory,
@@ -345,6 +345,7 @@ class TestDetail(BaseInterventionTestCase):
         self.assertEqual(data["id"], self.intervention.pk)
         self.assertEqual(data["result_links"][0]["total"], 30)
         self.assertEqual(data["unicef_signatory"], self.user_serialized)
+        self.assertIn('confidential', data)
 
     def test_pdf(self):
         response = self.forced_auth_req(
@@ -2700,6 +2701,11 @@ class TestInterventionSendToUNICEF(BaseInterventionActionTestCase):
 
 
 class TestTimeframesValidation(BaseInterventionTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        call_command("update_notifications")
+
     def setUp(self):
         super().setUp()
         self.intervention = InterventionFactory(
@@ -2762,6 +2768,60 @@ class TestTimeframesValidation(BaseInterventionTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
         self.assertIn('end', response.data)
+
+    def test_shift_quarters_on_terminate_end_in_future(self):
+        self.activity.time_frames.add(
+            self.intervention.quarters.get(
+                start_date=datetime.date(year=1970, month=10, day=1),
+                end_date=datetime.date(year=1970, month=12, day=31)
+            )
+        )
+        self.intervention.status = Intervention.ACTIVE
+        self.intervention.save()
+        old_quarters_num = self.intervention.quarters.count()
+
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-terminate', args=[self.intervention.pk]),
+            user=self.user,
+            data={
+                'end': datetime.date(year=1971, month=9, day=1),
+                'termination_doc_attachment': AttachmentFactory(file="test_file.pdf", file_type=None, code="").id,
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertGreater(self.intervention.quarters.count(), old_quarters_num)
+
+    def test_shift_quarters_on_terminate_remove_last_quarter(self):
+        self.activity.time_frames.add(
+            self.intervention.quarters.get(
+                start_date=datetime.date(year=1970, month=10, day=1),
+                end_date=datetime.date(year=1970, month=12, day=31)
+            )
+        )
+        self.activity.time_frames.add(
+            self.intervention.quarters.get(
+                start_date=datetime.date(year=1970, month=7, day=1),
+                end_date=datetime.date(year=1970, month=9, day=30)
+            )
+        )
+        self.intervention.status = Intervention.ACTIVE
+        self.intervention.save()
+        self.assertEqual(self.intervention.quarters.count(), 4)
+        self.assertEqual(self.activity.time_frames.count(), 2)
+
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-terminate', args=[self.intervention.pk]),
+            user=self.user,
+            data={
+                'end': datetime.date(year=1970, month=9, day=1),
+                'termination_doc_attachment': AttachmentFactory(file="test_file.pdf", file_type=None, code="").id,
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(self.intervention.quarters.count(), 3)
+        self.assertEqual(self.activity.time_frames.count(), 1)
 
 
 class TestInterventionAttachments(BaseTenantTestCase):
@@ -2886,6 +2946,48 @@ class TestPMPInterventionIndicatorsUpdateView(BaseTenantTestCase):
         self.assertTrue(response.data["is_high_frequency"])
         self.indicator.refresh_from_db()
         self.assertFalse(self.indicator.is_active)
+
+    def test_update_indicator_title(self):
+        old_title = self.indicator.indicator.title
+        old_code = self.indicator.indicator.code
+        response = self.forced_auth_req(
+            'patch',
+            self.url,
+            user=self.partnership_manager,
+            data={'indicator': {'title': f'new_{old_title}', 'code': 'new_code'}},
+        )
+        self.assertEquals(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertNotEqual(response.data['id'], self.indicator.id)
+        self.assertNotEqual(response.data['indicator']['id'], self.indicator.indicator.id)
+        self.assertEqual(response.data['indicator']['title'], f'new_{old_title}')
+        self.assertEqual(response.data['indicator']['code'], old_code)
+        self.assertFalse(AppliedIndicator.objects.filter(id=self.indicator.id).exists())
+
+    def test_update_indicator_title_intervention_was_signed(self):
+        intervention = self.indicator.lower_result.result_link.intervention
+
+        pre_save = create_dict_with_relations(intervention)
+
+        intervention.status = Intervention.SIGNED
+        intervention.save()
+
+        create_snapshot(intervention, pre_save, self.partnership_manager)
+
+        intervention.status = Intervention.DRAFT
+        intervention.save()
+
+        response = self.forced_auth_req(
+            'patch',
+            self.url,
+            user=self.partnership_manager,
+            data={'indicator': {'title': 'new title'}},
+        )
+        self.assertEquals(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertNotEqual(response.data['id'], self.indicator.id)
+        self.assertNotEqual(response.data['indicator']['id'], self.indicator.indicator.id)
+        self.assertEqual(response.data['indicator']['title'], 'new title')
+        self.assertTrue(AppliedIndicator.objects.filter(id=self.indicator.id).exists())
+        self.assertFalse(AppliedIndicator.objects.get(id=self.indicator.id).is_active)
 
 
 class TestPMPInterventionReportingRequirementView(

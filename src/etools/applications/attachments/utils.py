@@ -90,10 +90,11 @@ def get_pd_ssfa(obj):
     return ""
 
 
-def get_agreement_obj(obj):
+def get_content_obj(obj):
     """Not able to get specific agreement for partners, engagements,
     and assessments
     """
+    from etools.applications.audit.models import Engagement
     from etools.applications.partners.models import (
         Agreement,
         AgreementAmendment,
@@ -101,9 +102,10 @@ def get_agreement_obj(obj):
         InterventionAmendment,
         InterventionAttachment,
     )
+    from etools.applications.psea.models import Assessment
     from etools.applications.tpm.models import TPMActivity
 
-    if isinstance(obj.content_object, (Agreement)):
+    if isinstance(obj.content_object, (Agreement, Engagement, Assessment)):
         return obj.content_object
     elif isinstance(obj.content_object, (AgreementAmendment, Intervention)):
         return obj.content_object.agreement
@@ -117,10 +119,10 @@ def get_agreement_obj(obj):
     return ""
 
 
-def get_agreement_reference_number(obj):
-    agreement = get_agreement_obj(obj)
-    if agreement:
-        return agreement.reference_number
+def get_reference_number(obj):
+    content_obj = get_content_obj(obj)
+    if content_obj:
+        return content_obj.reference_number
     return ""
 
 
@@ -142,6 +144,8 @@ def get_source(obj):
             return "Third Party Monitoring"
         elif app_label == "t2f":
             return "Trips"
+        elif app_label == "psea":
+            return "PSEA"
     return ""
 
 
@@ -152,7 +156,7 @@ def denormalize_attachment(attachment):
     partner_type = get_partner_type(attachment)
     vendor_number = get_vendor_number(attachment)
     pd_ssfa = get_pd_ssfa(attachment)
-    agreement_reference_number = get_agreement_reference_number(attachment)
+    agreement_reference_number = get_reference_number(attachment)
     file_type = get_file_type(attachment)
     object_link = get_object_url(attachment)
     source = get_source(attachment)
