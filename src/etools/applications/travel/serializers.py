@@ -280,6 +280,12 @@ class TripSerializer(BaseTripSerializer):
                 obj.STATUS_DRAFT,
                 obj.STATUS_CANCELLED,
             ]
+        elif obj.status in [obj.STATUS_APPROVED, obj.STATUS_COMPLETED]:
+            status_list = [
+                obj.STATUS_DRAFT,
+                obj.STATUS_APPROVED,
+                obj.STATUS_COMPLETED,
+            ]
         else:
             status_list = [
                 obj.STATUS_DRAFT,
