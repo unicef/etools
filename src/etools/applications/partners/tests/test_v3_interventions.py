@@ -8,6 +8,7 @@ from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.models import ContentType
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
+from django.db import connection
 from django.test import SimpleTestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -110,6 +111,8 @@ class URLsTestCase(URLAssertionMixin, SimpleTestCase):
 class BaseInterventionTestCase(BaseTenantTestCase):
     def setUp(self):
         super().setUp()
+        # explicitly set tenant - some requests switch schema to public, so subsequent ones are failing
+        connection.set_tenant(self.tenant)
         self.user = UserFactory(is_staff=True, groups__data=['UNICEF User', 'Partnership Manager'])
         self.user.groups.add(GroupFactory())
         self.partner = PartnerFactory(name='Partner 1', vendor_number="VP1")
