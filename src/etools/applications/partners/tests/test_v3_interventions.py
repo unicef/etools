@@ -1283,6 +1283,32 @@ class TestSupplyItem(BaseInterventionTestCase):
         self.assertEqual(response.data["unit_price"], "3.00")
         self.assertEqual(response.data["total_price"], "30.00")
 
+    def test_patch_intervention_snapshot(self):
+        item = InterventionSupplyItemFactory(
+            intervention=self.intervention,
+            unit_number=100,
+            unit_price=2,
+        )
+        response = self.forced_auth_req(
+            "patch",
+            reverse("pmp_v3:intervention-supply-item-detail", args=[self.intervention.pk, item.pk]),
+            data={"unit_price": 8}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        activity = Activity.objects.first()
+        self.assertEqual(activity.target, self.intervention)
+        self.assertEqual(
+            {
+                'supply_items': [{'unit_price': {'after': '8.00', 'before': '2.00'}}],
+                'planned_budget': {
+                    'total_local': {'after': '800.00', 'before': '200.00'},
+                    'in_kind_amount_local': {'after': '800.00', 'before': '200.00'}
+                }
+            },
+            activity.change,
+        )
+
+
     def test_delete(self):
         item = InterventionSupplyItemFactory(intervention=self.intervention)
         response = self.forced_auth_req(
