@@ -12,6 +12,7 @@ from etools.applications.field_monitoring.data_collection.models import (
 
 class FindingAdminInline(admin.TabularInline):
     model = Finding
+    raw_id_fields = ('activity_question',)
 
 
 class ChecklistOverallFindingInline(admin.TabularInline):
@@ -38,6 +39,7 @@ class StartedChecklistAdmin(admin.ModelAdmin):
     list_filter = ('method',)
     list_select_related = ('monitoring_activity', 'method', 'author')
     inlines = (FindingAdminInline, ChecklistOverallFindingInline)
+    raw_id_fields = ('monitoring_activity', 'author')
 
 
 @admin.register(ActivityOverallFinding)

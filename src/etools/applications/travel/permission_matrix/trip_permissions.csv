@@ -17,8 +17,8 @@ Field no,Verbose Name,Field Name,Group,Condition,Status,Action,Allowed
 1.1.1,Description,description,,,draft,Required,FALSE
 1.1.1,Office,office,,,draft,Required,FALSE
 1.1.1,Section,section,,,draft,Required,FALSE
-1.1.1,Start date,start_date,,,draft,Required,FALSE
-1.1.1,End date,end_date,,,draft,Required,FALSE
+1.1.1,Start date,start_date,,,,Required,TRUE
+1.1.1,End date,end_date,,,,Required,TRUE
 1.1.1,Activities,activities,,,draft,Required,FALSE
 1.1.1,Report,report,,,*,Edit,TRUE
 1.1.1,Report,report,,,review,Edit,TRUE
