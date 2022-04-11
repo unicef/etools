@@ -103,6 +103,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
             "capacity_development",
             "cash_transfer_modalities",
             "cfei_number",
+            "confidential",
             "context",
             "contingency_pd",
             "country_programme",

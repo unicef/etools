@@ -199,22 +199,9 @@ class TestAppliedIndicatorSerializer(BaseTenantTestCase):
         self.applied_indicator.indicator = self.indicator
         self.applied_indicator.save()
         serializer = AppliedIndicatorSerializer(data=self.data)
-        self.assertFalse(serializer.is_valid())
-        self.assertEqual(serializer.errors, {"non_field_errors": [
-            'This indicator is already being monitored for this Result'
-        ]})
-
-    def test_validate_partial_exception(self):
-        """If partial validation, and indicator is not blueprint indicator
-        instance then fail"""
-        self.data["indicator"] = {"title": "wrong"}
-        serializer = AppliedIndicatorSerializer(data=self.data, partial=True)
-        self.assertFalse(serializer.is_valid())
-        self.assertEqual(serializer.errors, {"non_field_errors": [
-            'Indicator blueprint cannot be updated after first use, '
-            'please remove this indicator and add another or contact the eTools Focal Point in '
-            'your office for assistance'
-        ]})
+        self.assertTrue(serializer.is_valid())
+        with self.assertRaisesMessage(ValidationError, 'This indicator is already being monitored for this Result'):
+            serializer.save()
 
     def test_validate(self):
         """If cluster indicator provided, no check is happening that value"""

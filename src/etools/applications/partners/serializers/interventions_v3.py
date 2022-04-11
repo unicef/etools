@@ -544,6 +544,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "cash_transfer_modalities",
             "cfei_number",
             "cluster_names",
+            "confidential",
             "context",
             "contingency_pd",
             "country_programmes",
