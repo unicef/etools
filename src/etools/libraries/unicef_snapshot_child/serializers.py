@@ -7,6 +7,7 @@ from etools.applications.partners.amendment_utils import (
     INTERVENTION_FULL_SNAPSHOT_IGNORED_FIELDS,
     INTERVENTION_FULL_SNAPSHOT_RELATED_FIELDS,
 )
+from etools.applications.partners.models import Intervention
 
 
 def create_change_dict_recursive(prev_dict, current_dict):
@@ -53,8 +54,11 @@ class FullInterventionSnapshotSerializerMixin(UserContextSerializerMixin):
     save related model to parent snapshot.
     """
 
-    def get_intervention(self):
+    def get_intervention(self) -> Intervention:
         raise NotImplementedError
+
+    def prefetch_relations(self, instance: object) -> Intervention:
+        return Intervention.objects.full_snapshot_qs().get(pk=instance.pk)
 
     def save_snapshot(self, target, target_before, current_obj_dict):
         change = create_change_dict_recursive(target_before, current_obj_dict)
@@ -78,7 +82,7 @@ class FullInterventionSnapshotSerializerMixin(UserContextSerializerMixin):
     def save(self, **kwargs):
         target = self.get_intervention()
         target_before = full_snapshot_instance(
-            target,
+            self.prefetch_relations(target),
             INTERVENTION_FULL_SNAPSHOT_RELATED_FIELDS,
             INTERVENTION_FULL_SNAPSHOT_IGNORED_FIELDS,
         )
@@ -86,7 +90,7 @@ class FullInterventionSnapshotSerializerMixin(UserContextSerializerMixin):
         instance = super().save(**kwargs)
 
         # refresh instance to avoid cached relations
-        target = target.__class__.objects.get(pk=target.pk)
+        target = self.prefetch_relations(target)
 
         current_obj_dict = full_snapshot_instance(
             target,

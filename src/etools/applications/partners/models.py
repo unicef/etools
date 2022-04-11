@@ -1627,6 +1627,16 @@ class InterventionManager(models.Manager):
         )
         return qs
 
+    def full_snapshot_qs(self):
+        return self.detail_qs().prefetch_related(
+            'reviews',
+            'reviews__submitted_by',
+            'reviews__prc_officers',
+            'reviews__overall_approver',
+            'reviews__prc_reviews',
+            'reviews__prc_reviews__user',
+        )
+
     def frs_qs(self):
         frs_query = FundsReservationHeader.objects.filter(
             intervention=OuterRef("pk")
