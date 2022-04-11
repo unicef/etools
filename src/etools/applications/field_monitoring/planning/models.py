@@ -1,3 +1,5 @@
+import logging
+
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import connection, models, transaction
@@ -18,7 +20,7 @@ from etools.applications.environment.notifications import send_notification_with
 from etools.applications.field_monitoring.data_collection.offline.synchronizer import (
     MonitoringActivityOfflineSynchronizer,
 )
-from etools.applications.field_monitoring.fm_settings.models import LocationSite, Method, Question
+from etools.applications.field_monitoring.fm_settings.models import LocationSite, Method, Option, Question
 from etools.applications.field_monitoring.planning.mixins import ProtectUnknownTransitionsMeta
 from etools.applications.field_monitoring.planning.transitions.permissions import (
     user_is_field_monitor_permission,
@@ -32,6 +34,8 @@ from etools.applications.tpm.models import PME
 from etools.applications.tpm.tpmpartners.models import TPMPartner
 from etools.libraries.djangolib.models import SoftDeleteMixin
 from etools.libraries.djangolib.utils import get_environment
+
+logger = logging.getLogger(__name__)
 
 
 class YearPlan(TimeStampedModel):
@@ -630,6 +634,59 @@ class MonitoringActivity(
             if len(narrative_findings) == 1:
                 overall_finding.narrative_finding = narrative_findings[0]
                 overall_finding.save()
+
+    def activity_overall_findings(self):
+        return self.overall_findings.annotate_for_activity_export()
+
+    def get_export_activity_questions_overall_findings(self):
+        for activity_question in self.questions.filter_for_activity_export():
+            finding_dict = dict(entity_name=activity_question.entity_name,
+                                question_text=activity_question.text)
+            if activity_question.overall_finding.value and \
+                    activity_question.question.answer_type == 'likert_scale':
+                try:
+                    option = activity_question.question.options \
+                        .get(value=activity_question.overall_finding.value)
+                    finding_dict['value'] = option.label
+                except Option.DoesNotExist:
+                    logger.error(f'No option found for finding value {activity_question.overall_finding.value}')
+            else:
+                finding_dict['value'] = activity_question.overall_finding.value
+
+            yield finding_dict
+
+    def get_export_checklist_findings(self):
+        for started_checklist in self.checklists.all():
+            checklist_dict = dict(method=started_checklist.method.name,
+                                  source=started_checklist.information_source,
+                                  team_member=started_checklist.author.full_name,
+                                  overall=[])
+            checklist_overall_findings = started_checklist.overall_findings.annotate_for_activity_export()
+            checklist_findings = started_checklist.findings.filter_for_activity_export()
+
+            for cof in checklist_overall_findings:
+                overall_dict = dict(narrative_finding=cof.narrative_finding,
+                                    entity_name=cof.entity_name,
+                                    findings=[])
+                for finding in checklist_findings\
+                        .filter(entity_name=cof.entity_name)\
+                        .select_related('activity_question', 'activity_question__question'):
+
+                    finding_dict = dict(question_text=finding.activity_question.text)
+                    if finding.value and \
+                            finding.activity_question.question.answer_type == 'likert_scale':
+                        try:
+                            option = finding.activity_question.question.options.get(value=finding.value)
+                            finding_dict['value'] = option.label
+                        except Option.DoesNotExist:
+                            logger.error(f'No option found for finding value {finding.value}')
+                    else:
+                        finding_dict['value'] = finding.value
+
+                    overall_dict['findings'].append(finding_dict)
+                checklist_dict['overall'].append(overall_dict)
+
+            yield checklist_dict
 
 
 class MonitoringActivityActionPointManager(models.Manager):
