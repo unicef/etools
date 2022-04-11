@@ -6,9 +6,9 @@ from rest_framework.exceptions import ValidationError
 from unicef_restlib.fields import SeparatedReadWriteField
 
 from etools.applications.partners.models import InterventionResultLink, InterventionReview, PRCOfficerInterventionReview
+from etools.applications.partners.serializers.intervention_snapshot import FullInterventionSnapshotSerializerMixin
 from etools.applications.reports.models import LowerResult, Result, ResultType
 from etools.applications.users.serializers_v3 import MinimalUserSerializer
-from etools.libraries.unicef_snapshot_child.serializers import FullInterventionSnapshotSerializerMixin
 
 
 class CPOutputValidator:

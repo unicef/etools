@@ -6,6 +6,7 @@ from rest_framework.exceptions import ValidationError
 from unicef_rest_export.serializers import ExportSerializer
 
 from etools.applications.partners.models import Intervention
+from etools.applications.partners.serializers.intervention_snapshot import FullInterventionSnapshotSerializerMixin
 from etools.applications.reports.models import (
     AppliedIndicator,
     Disaggregation,
@@ -27,7 +28,6 @@ from etools.applications.reports.validators import (
     value_none_or_numbers,
     value_numbers,
 )
-from etools.libraries.unicef_snapshot_child.serializers import FullInterventionSnapshotSerializerMixin
 
 
 class MinimalOutputListSerializer(serializers.ModelSerializer):

@@ -30,6 +30,7 @@ from etools.applications.partners.models import (
     PartnerType,
 )
 from etools.applications.partners.permissions import InterventionPermissions
+from etools.applications.partners.serializers.intervention_snapshot import FullInterventionSnapshotSerializerMixin
 from etools.applications.partners.utils import get_quarters_range
 from etools.applications.reports.models import AppliedIndicator, LowerResult, ReportingRequirement
 from etools.applications.reports.serializers.v2 import (
@@ -43,7 +44,6 @@ from etools.applications.reports.serializers.v2 import (
 )
 from etools.applications.users.serializers import MinimalUserSerializer
 from etools.libraries.pythonlib.hash import h11
-from etools.libraries.unicef_snapshot_child.serializers import FullInterventionSnapshotSerializerMixin
 
 
 class InterventionBudgetCUSerializer(FullInterventionSnapshotSerializerMixin, serializers.ModelSerializer):

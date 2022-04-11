@@ -27,6 +27,7 @@ from etools.applications.partners.permissions import (
     PRC_SECRETARY,
     SENIOR_MANAGEMENT_GROUP,
 )
+from etools.applications.partners.serializers.intervention_snapshot import FullInterventionSnapshotSerializerMixin
 from etools.applications.partners.serializers.interventions_v2 import (
     FRsSerializer,
     InterventionAmendmentCUSerializer,
@@ -42,7 +43,6 @@ from etools.applications.partners.serializers.v3 import InterventionReviewSerial
 from etools.applications.partners.utils import get_quarters_range
 from etools.applications.reports.serializers.v2 import InterventionTimeFrameSerializer
 from etools.applications.users.serializers_v3 import MinimalUserSerializer
-from etools.libraries.unicef_snapshot_child.serializers import FullInterventionSnapshotSerializerMixin
 
 
 class InterventionRiskSerializer(FullInterventionSnapshotSerializerMixin, serializers.ModelSerializer):
