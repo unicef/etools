@@ -76,7 +76,7 @@ class InterventionSupplyItemSerializer(FullInterventionSnapshotSerializerMixin, 
         return super().create(validated_data)
 
     def get_intervention(self):
-        return self.initial_data["intervention"]
+        return self.context["intervention"]
 
 
 class InterventionSupplyItemUploadSerializer(serializers.Serializer):
