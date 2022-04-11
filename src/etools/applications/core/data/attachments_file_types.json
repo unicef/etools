@@ -124,7 +124,7 @@
             "label": "Report",
             "name": "report",
             "code": "audit_report",
-            "group": ["audit_report", "tpm_report"]
+            "group": ["audit_report"]
         }
     },
     {
@@ -523,6 +523,17 @@
     },
     {
         "model": "unicef_attachments.filetype",
+        "pk": 61,
+        "fields": {
+            "order": 0,
+            "label": "Generic Trip Attachment",
+            "name": "generic_trip_attachment",
+            "code": "travel_docs",
+            "group": ["travel"]
+        }
+    },
+    {
+        "model": "unicef_attachments.filetype",
         "pk": 62,
         "fields": {
             "order": 0,
@@ -530,6 +541,182 @@
             "name": "psea_nfr_attachment",
             "code": "psea_nfr_attachment",
             "group": ["psea"]
+        }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 2000,
+        "fields": {
+            "order": 3,
+            "name": "Partners Intervention Activation Letter",
+            "label": "Partners Intervention Activation Letter",
+            "code": "partners_intervention_activation_letter",
+            "group": "[\"pmp_documents\"]"
+        }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 2001,
+        "fields": {
+            "order": 4,
+            "name": "Partners Intervention Termination Doc",
+            "label": "Partners Intervention Termination Doc",
+            "code": "partners_intervention_termination_doc",
+            "group": "[\"pmp_documents\"]"
+        }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 2002,
+        "fields": {
+            "order": 5,
+            "name": "Partners Intervention Amendment Signed",
+            "label": "Partners Intervention Amendment Signed",
+            "code": "partners_intervention_amendment_signed",
+            "group": "[\"pmp_documents\"]"
+        }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 2003,
+        "fields": {
+            "order": 5,
+            "name": "Partners Intervention Amendment Internal Prc Review",
+            "label": "Partners Intervention Amendment Internal Prc Review",
+            "code": "partners_intervention_amendment_internal_prc_review",
+            "group": "[\"pmp_documents\"]"
+        }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 2004,
+        "fields": {
+            "order": 5,
+            "name": "Partners Partner Assessment",
+            "label": "Partners Partner Assessment",
+            "code": "partners_partner_assessment",
+            "group": "[\"pmp_documents\"]"
+        }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 2005,
+        "fields": {
+            "order": 5,
+            "name": "Partners Intervention Attachment",
+            "label": "Partners Intervention Attachment",
+            "code": "partners_intervention_attachment",
+            "group": "[\"pmp_documents\"]"
+        }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 2006,
+        "fields": {
+            "order": 5,
+            "name": "Partners Assessment Report",
+            "label": "Partners Assessment Report",
+            "code": "partners_assessment_report",
+            "group": "[\"pmp_documents\"]"
+        }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 2007,
+        "fields": {
+            "order": 5,
+            "name": "Partners Agreement",
+            "label": "Partners Agreement",
+            "code": "partners_agreement",
+            "group": "[\"pmp_documents\"]"
+        }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 2008,
+        "fields": {
+            "order": 5,
+            "name": "Partners Agreement Termination Doc",
+            "label": "Partners Agreement Termination Doc",
+            "code": "partners_agreement_termination_doc",
+            "group": "[\"pmp_documents\"]"
+        }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 2009,
+        "fields": {
+            "order": 5,
+            "name": "Partners Agreement Amendment",
+            "label": "Partners Agreement Amendment",
+            "code": "partners_agreement_amendment",
+            "group": "[\"pmp_documents\"]"
+        }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 2010,
+        "fields": {
+            "order": 5,
+            "name": "Partners Intervention Prc Review",
+            "label": "Partners Intervention Prc Review",
+            "code": "partners_intervention_prc_review",
+            "group": "[\"pmp_documents\"]"
+        }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 2011,
+        "fields": {
+            "order": 5,
+            "name": "Partners Intervention Signed Pd",
+            "label": "Partners Intervention Signed Pd",
+            "code": "partners_intervention_signed_pd",
+            "group": "[\"pmp_documents\"]"
+        }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 2100,
+        "fields": {
+            "order": 5,
+            "name": "spot check final report",
+            "label": "Spot Check Final Report",
+            "code": "spot_check_final_report",
+            "group": ["spot_check_final_report"]
+        }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 2101,
+        "fields": {
+            "order": 5,
+            "name": "audit final report",
+            "label": "Audit Final Report",
+            "code": "audit_final_report",
+            "group": ["audit_final_report"]
+        }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 2102,
+        "fields": {
+            "order": 5,
+            "name": "micro assessment final report",
+            "label": "Micro Assessment Final Report",
+            "code": "micro_assessment_final_report",
+            "group": ["micro_assessment_final_report"]
+        }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 2103,
+        "fields": {
+            "order": 5,
+            "name": "special audit final report",
+            "label": "Special Audit Final Report",
+            "code": "special_audit_final_report",
+            "group": ["special_audit_final_report"]
         }
     }
 ]

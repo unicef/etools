@@ -44,13 +44,18 @@ from etools.applications.partners.tests.factories import (
 )
 from etools.applications.partners.views.partner_organization_v2 import PartnerOrganizationAddView
 from etools.applications.reports.models import ResultType
-from etools.applications.reports.tests.factories import CountryProgrammeFactory, ResultFactory, ResultTypeFactory
+from etools.applications.reports.tests.factories import (
+    CountryProgrammeFactory,
+    ResultFactory,
+    ResultTypeFactory,
+    SectionFactory,
+)
 from etools.applications.t2f.tests.factories import TravelActivityFactory
 from etools.applications.users.models import Country
 from etools.applications.users.tests.factories import GroupFactory, UserFactory
 from etools.libraries.pythonlib.datetime import get_quarter
 
-INSIGHT_PATH = "etools.applications.partners.views.partner_organization_v2.get_data_from_insight"
+INSIGHT_PATH = "etools.applications.partners.tasks.get_data_from_insight"
 
 
 class URLsTestCase(URLAssertionMixin, SimpleTestCase):
@@ -63,6 +68,38 @@ class URLsTestCase(URLAssertionMixin, SimpleTestCase):
         )
         self.assertReversal(names_and_paths, 'partners_api:', '/api/v2/partners/')
         self.assertIntParamRegexes(names_and_paths, 'partners_api:')
+
+
+class TestPartnerOrganizationListAPIView(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.url = reverse("partners_api:partner-list")
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_list(self):
+        PartnerFactory()
+        PartnerFactory()
+        response = self.forced_auth_req(
+            'get', self.url,
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_filter_by_lead_section(self):
+        section = SectionFactory()
+        partner = PartnerFactory(lead_section=section)
+        PartnerFactory()
+        response = self.forced_auth_req(
+            'get', self.url,
+            user=self.unicef_staff,
+            QUERY_STRING=f'lead_section={section.id}'
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['id'], partner.id)
 
 
 class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
@@ -564,9 +601,31 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
         )
         self.assertEqual(response.data['monitoring_activity_groups'], [[activity1.id, activity2.id], [activity3.id]])
 
+    def _add_hact_finding_for_activity(self, activity):
+        ActivityQuestionOverallFinding.objects.create(
+            activity_question=ActivityQuestionFactory(
+                monitoring_activity=activity,
+                question__is_hact=True,
+                question__level='partner',
+            ),
+            value=True
+        )
+        ActivityOverallFinding.objects.create(
+            narrative_finding='ok',
+            monitoring_activity=activity,
+            partner=self.partner,
+        )
+
     def test_add_partner_monitoring_activity_groups(self):
-        activity1 = MonitoringActivityFactory(partners=[self.partner], status='completed')
-        activity2 = MonitoringActivityFactory(partners=[self.partner], status='completed')
+        today = datetime.date.today()
+        activity1 = MonitoringActivityFactory(partners=[self.partner], end_date=today, status='completed')
+        activity2 = MonitoringActivityFactory(partners=[self.partner], end_date=today, status='completed')
+        self._add_hact_finding_for_activity(activity1)
+        self._add_hact_finding_for_activity(activity2)
+
+        self.partner.update_programmatic_visits()
+        response = self.forced_auth_req('get', self.url, user=self.unicef_staff)
+        self.assertEqual(response.data['hact_values']['programmatic_visits']['completed'][get_quarter()], 2)
 
         response = self.forced_auth_req(
             'patch',
@@ -577,33 +636,66 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
             }
         )
         self.assertEqual(len(response.data['monitoring_activity_groups']), 1)
+        self.assertCountEqual(response.data['monitoring_activity_groups'][0], [activity1.id, activity2.id])
+        self.assertEqual(response.data['hact_values']['programmatic_visits']['completed'][get_quarter()], 1)
+
+    def test_add_partner_monitoring_activity_into_group(self):
+        today = datetime.date.today()
+        activity1 = MonitoringActivityFactory(partners=[self.partner], end_date=today, status='completed')
+        activity2 = MonitoringActivityFactory(partners=[self.partner], end_date=today, status='completed')
+        activity3 = MonitoringActivityFactory(partners=[self.partner], end_date=today, status='completed')
+        self._add_hact_finding_for_activity(activity1)
+        self._add_hact_finding_for_activity(activity2)
+        self._add_hact_finding_for_activity(activity3)
+
+        MonitoringActivityGroupFactory(partner=self.partner, monitoring_activities=[activity1, activity2])
+
+        self.partner.update_programmatic_visits()
+        response = self.forced_auth_req('get', self.url, user=self.unicef_staff)
+        self.assertEqual(response.data['hact_values']['programmatic_visits']['completed'][get_quarter()], 2)
+
+        response = self.forced_auth_req(
+            'patch',
+            self.url,
+            user=self.unicef_staff,
+            data={
+                'monitoring_activity_groups': [[activity1.id, activity2.id, activity3.id]],
+            }
+        )
+        self.assertEqual(len(response.data['monitoring_activity_groups']), 1)
+        self.assertCountEqual(response.data['monitoring_activity_groups'][0],
+                              [activity1.id, activity2.id, activity3.id])
+        self.assertEqual(response.data['hact_values']['programmatic_visits']['completed'][get_quarter()], 1)
+
+    def test_add_partner_monitoring_activity_groups_not_completed_or_not_hact(self):
+        activity1 = MonitoringActivityFactory(partners=[self.partner], status='completed')
+        activity2 = MonitoringActivityFactory(partners=[self.partner], status='report_finalization')
+        activity3 = MonitoringActivityFactory(partners=[self.partner], status='completed')
+        self._add_hact_finding_for_activity(activity1)
+        self._add_hact_finding_for_activity(activity2)
+
+        response = self.forced_auth_req(
+            'patch',
+            self.url,
+            user=self.unicef_staff,
+            data={
+                'monitoring_activity_groups': [[activity1.id, activity2.id, activity3.id]],
+            }
+        )
+        self.assertEqual(len(response.data['monitoring_activity_groups']), 1)
+        self.assertEqual(response.data['monitoring_activity_groups'], [[activity1.id]])
 
     def test_update_partner_monitoring_activity_groups(self):
-        activity1 = MonitoringActivityFactory(partners=[self.partner], status='completed')
-        activity2 = MonitoringActivityFactory(partners=[self.partner], status='completed')
-        activity3 = MonitoringActivityFactory(partners=[self.partner], status='completed')
-        activity4 = MonitoringActivityFactory(partners=[self.partner], status='completed')
+        today = datetime.date.today()
+        activity1 = MonitoringActivityFactory(partners=[self.partner], end_date=today, status='completed')
+        activity2 = MonitoringActivityFactory(partners=[self.partner], end_date=today, status='completed')
+        activity3 = MonitoringActivityFactory(partners=[self.partner], end_date=today, status='completed')
+        activity4 = MonitoringActivityFactory(partners=[self.partner], end_date=today, status='completed')
+        self._add_hact_finding_for_activity(activity1)
+        self._add_hact_finding_for_activity(activity2)
+        self._add_hact_finding_for_activity(activity3)
+        self._add_hact_finding_for_activity(activity4)
         MonitoringActivityFactory(partners=[self.partner])
-        ActivityQuestionOverallFinding.objects.create(
-            activity_question=ActivityQuestionFactory(
-                question__is_hact=True,
-                question__level='partner',
-                monitoring_activity=activity1,
-            ),
-            value='ok',
-        )
-        ActivityOverallFinding.objects.create(partner=self.partner, narrative_finding='test',
-                                              monitoring_activity=activity1)
-        ActivityQuestionOverallFinding.objects.create(
-            activity_question=ActivityQuestionFactory(
-                question__is_hact=True,
-                question__level='partner',
-                monitoring_activity=activity3,
-            ),
-            value='ok',
-        )
-        ActivityOverallFinding.objects.create(partner=self.partner, narrative_finding='test',
-                                              monitoring_activity=activity3)
 
         MonitoringActivityGroupFactory(
             partner=self.partner,
@@ -613,9 +705,10 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
             partner=self.partner,
             monitoring_activities=[activity3, activity4]
         )
-        self.partner.programmatic_visits()
+        self.partner.update_programmatic_visits()
         # 2 groups
-        self.assertEqual(self.partner.hact_values['programmatic_visits']['completed'][get_quarter()], 2)
+        response = self.forced_auth_req('get', self.url, user=self.unicef_staff)
+        self.assertEqual(response.data['hact_values']['programmatic_visits']['completed'][get_quarter()], 2)
 
         response = self.forced_auth_req(
             'patch',
@@ -630,7 +723,7 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
         self.assertEqual(self.partner.monitoring_activity_groups.count(), 1)
         self.partner.refresh_from_db()
         # 1 group + 2 ungrouped
-        self.assertEqual(self.partner.hact_values['programmatic_visits']['completed'][get_quarter()], 3)
+        self.assertEqual(response.data['hact_values']['programmatic_visits']['completed'][get_quarter()], 3)
 
 
 class TestPartnerOrganizationHactAPIView(BaseTenantTestCase):
@@ -682,7 +775,7 @@ class TestPartnerOrganizationAddView(BaseTenantTestCase):
         )
 
     def test_no_insight_reponse(self):
-        mock_insight = Mock(return_value=(False, "Insight Failed"))
+        mock_insight = Mock(return_value=(False, "The vendor number could not be found in INSIGHT"))
         with patch(INSIGHT_PATH, mock_insight):
             response = self.forced_auth_req(
                 'post',
@@ -691,13 +784,23 @@ class TestPartnerOrganizationAddView(BaseTenantTestCase):
                 view=self.view
             )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data, {"error": "Insight Failed"})
+        self.assertEqual(response.data, {"error": "The vendor number could not be found in INSIGHT"})
 
     def test_vendor_exists(self):
         PartnerFactory(vendor_number="321")
         mock_insight = Mock(return_value=(True, {
             "ROWSET": {
-                "ROW": {"VENDOR_CODE": "321"}
+                "ROW": {
+                    'VENDOR_CODE': '321',
+                    'PARTNER_TYPE_DESC': 'Test',
+                    'VENDOR_NAME': 'Vendor',
+                    'COUNTRY': 'Italy',
+                    'TOTAL_CASH_TRANSFERRED_CP': 2000,
+                    'TOTAL_CASH_TRANSFERRED_CY': 1000,
+                    'NET_CASH_TRANSFERRED_CY': 500,
+                    'REPORTED_CY': 250,
+                    'TOTAL_CASH_TRANSFERRED_YTD': 125
+                }
             }
         }))
         with patch(INSIGHT_PATH, mock_insight):
@@ -707,11 +810,8 @@ class TestPartnerOrganizationAddView(BaseTenantTestCase):
                 data={},
                 view=self.view
             )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            response.data,
-            {"error": "This vendor number already exists in eTools"}
-        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(response.data)
 
     def test_missing_required_keys(self):
         mock_insight = Mock(return_value=(True, {

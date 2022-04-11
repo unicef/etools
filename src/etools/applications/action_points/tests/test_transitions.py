@@ -15,6 +15,7 @@ class ActionPointTransitionTestCase(ActionPointsTestCaseMixin, BaseTenantTestCas
     @classmethod
     def setUpTestData(cls):
         call_command('update_action_points_permissions', verbosity=0)
+        call_command('update_notifications')
 
     def _do_transition(self, action_point, action, user, data=None):
         data = data or {}

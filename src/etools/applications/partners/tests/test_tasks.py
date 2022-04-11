@@ -1,6 +1,7 @@
 # Python imports
 
 import datetime
+from datetime import timedelta
 from decimal import Decimal
 from pprint import pformat
 from unittest import mock
@@ -17,6 +18,7 @@ from etools.applications.attachments.tests.factories import AttachmentFactory, A
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
 from etools.applications.partners.models import Agreement, Intervention
+from etools.applications.partners.tasks import transfer_active_pds_to_new_cp
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
     CoreValuesAssessmentFactory,
@@ -1063,3 +1065,103 @@ class TestCheckInterventionPastStartStatus(BaseTenantTestCase):
         with mock.patch(send_path, mock_send):
             etools.applications.partners.tasks.check_intervention_past_start()
         self.assertEqual(mock_send.call_count, 1)
+
+
+class TestInterventionExpired(BaseTenantTestCase):
+    def test_task(self):
+        today = timezone.now().date()
+        old_cp = CountryProgrammeFactory(
+            from_date=today - datetime.timedelta(days=5),
+            to_date=today - datetime.timedelta(days=2),
+        )
+        active_cp = CountryProgrammeFactory(
+            from_date=today - datetime.timedelta(days=1),
+            to_date=today + datetime.timedelta(days=10),
+        )
+
+        today = datetime.date.today()
+        intervention_1 = InterventionFactory(
+            contingency_pd=True,
+            status=Intervention.SIGNED,
+            start=today - datetime.timedelta(days=2),
+            country_programmes=[old_cp],
+        )
+        intervention_2 = InterventionFactory(
+            contingency_pd=True,
+            status=Intervention.SIGNED,
+            start=today - datetime.timedelta(days=2),
+            country_programmes=[old_cp, active_cp],
+        )
+        etools.applications.partners.tasks.intervention_expired()
+        intervention_1.refresh_from_db()
+        intervention_2.refresh_from_db()
+        self.assertEqual(intervention_1.status, Intervention.EXPIRED)
+        self.assertEqual(intervention_2.status, Intervention.SIGNED)
+
+
+class ActivePDTransferToNewCPTestCase(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.today = timezone.now().date()
+        cls.old_cp = CountryProgrammeFactory(
+            from_date=cls.today - timedelta(days=5),
+            to_date=cls.today - timedelta(days=2),
+        )
+        cls.partner = PartnerFactory()
+        cls.old_agreement = AgreementFactory(partner=cls.partner, country_programme=cls.old_cp)
+
+    def _init_new_cp(self):
+        self.active_cp = CountryProgrammeFactory(
+            from_date=self.today - timedelta(days=1),
+            to_date=self.today + timedelta(days=10),
+        )
+
+    def test_transfer_without_active_cp(self):
+        pd = InterventionFactory(
+            agreement=self.old_agreement,
+            status=Intervention.ACTIVE,
+            start=self.today - timedelta(days=4),
+            end=self.today + timedelta(days=4),
+            country_programmes=[self.old_cp],
+        )
+
+        transfer_active_pds_to_new_cp()
+
+        pd.refresh_from_db()
+        self.assertListEqual(list(pd.country_programmes.all()), [self.old_cp])
+
+    def test_transfer(self):
+        pd = InterventionFactory(
+            agreement=self.old_agreement,
+            status=Intervention.ACTIVE,
+            start=self.today - timedelta(days=4),
+            end=self.today + timedelta(days=4),
+            country_programmes=[self.old_cp],
+        )
+        self._init_new_cp()
+
+        transfer_active_pds_to_new_cp()
+
+        pd.refresh_from_db()
+        self.assertListEqual(list(pd.country_programmes.all()), [self.old_cp, self.active_cp])
+
+    def test_skip_transfer_if_one_programme_already_active(self):
+        second_active_cp = CountryProgrammeFactory(
+            from_date=self.today - timedelta(days=1),
+            to_date=self.today + timedelta(days=10),
+        )
+
+        pd = InterventionFactory(
+            agreement=self.old_agreement,
+            status=Intervention.ACTIVE,
+            start=self.today - timedelta(days=4),
+            end=self.today + timedelta(days=4),
+            country_programmes=[self.old_cp, second_active_cp],
+        )
+        self._init_new_cp()
+
+        transfer_active_pds_to_new_cp()
+
+        pd.refresh_from_db()
+        self.assertListEqual(list(pd.country_programmes.all()), [self.old_cp, second_active_cp])

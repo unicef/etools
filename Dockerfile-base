@@ -30,7 +30,6 @@ RUN apk add --no-cache --virtual .build-deps --update \
     g++
 
 RUN pip install --no-cache-dir --upgrade \
-    setuptools \
     pip \
     pipenv
 

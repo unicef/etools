@@ -34,6 +34,26 @@ class MonitoringActivityAdmin(admin.ModelAdmin):
     list_select_related = ('tpm_partner', 'visit_lead', 'location', 'location_site')
     list_filter = ('monitor_type', 'status')
 
+    raw_id_fields = ('tpm_partner', 'visit_lead', 'location',
+                     'team_members', 'offices', 'sections',
+                     'partners', 'interventions', 'cp_outputs')
+
+    def get_queryset(self, request):
+        return super().get_queryset(request)\
+            .select_related(
+                'tpm_partner',
+                'visit_lead',
+                'location',
+                'location_site')\
+            .prefetch_related(
+                'team_members',
+                'offices',
+                'sections',
+                'partners',
+                'interventions',
+                'cp_outputs'
+        )
+
 
 @admin.register(MonitoringActivityGroup)
 class MonitoringActivityGroupAdmin(admin.ModelAdmin):
@@ -44,7 +64,7 @@ class MonitoringActivityGroupAdmin(admin.ModelAdmin):
         return super().get_queryset(request).prefetch_related('monitoring_activities')
 
     def get_monitoring_activities(self, obj):
-        return ', '.join(a.number for a in obj.monitoring_activities)
+        return ', '.join(a.number for a in obj.monitoring_activities.all())
 
 
 @admin.register(MonitoringActivityActionPoint)

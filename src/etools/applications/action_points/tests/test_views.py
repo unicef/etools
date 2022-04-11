@@ -24,6 +24,7 @@ class TestActionPointViewSet(TestExportMixin, ActionPointsTestCaseMixin, BaseTen
     @classmethod
     def setUpTestData(cls):
         call_command('update_action_points_permissions', verbosity=0)
+        call_command('update_notifications')
 
         cls.pme_user = PMEUserFactory()
         cls.unicef_user = UserFactory()
@@ -330,6 +331,7 @@ class TestActionPointsViewMetadata(ActionPointsTestCaseMixin):
     @classmethod
     def setUpTestData(cls):
         call_command('update_action_points_permissions', verbosity=0)
+        call_command('update_notifications')
 
         cls.pme_user = PMEUserFactory()
         cls.unicef_user = UserFactory()

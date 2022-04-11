@@ -33,6 +33,7 @@ class TestInterventionLowerResultsViewBase(BaseTenantTestCase):
             user=self.partner_focal_point,
         )
         self.intervention.partner_focal_points.add(self.staff_member)
+        self.intervention.unicef_focal_points.add(self.user)
 
         self.partner_staff_member = PartnerStaffFactory(partner=self.intervention.agreement.partner).user
 
@@ -206,7 +207,7 @@ class TestInterventionLowerResultsDetailView(TestInterventionLowerResultsViewBas
         self.assertTrue(InterventionResultLink.objects.filter(pk=old_result_link.pk).exists())
         self.assertEqual(old_result_link.ll_results.count(), 1)
 
-    def test_associate_two_outputs_duplicated_code(self):
+    def test_associate_two_outputs(self):
         first_pd_output = LowerResultFactory(
             result_link=InterventionResultLinkFactory(
                 intervention=self.intervention, cp_output__result_type__name=ResultType.OUTPUT
@@ -220,8 +221,6 @@ class TestInterventionLowerResultsDetailView(TestInterventionLowerResultsViewBas
             code=None
         )
 
-        # two pd outputs have same codes, so unique together by result_link + code will raise error without more logic
-        self.assertEqual(first_pd_output.code, second_pd_output.code)
         first_response = self.forced_auth_req(
             'patch',
             reverse('partners:intervention-pd-output-detail', args=[self.intervention.pk, first_pd_output.pk]),
@@ -236,6 +235,7 @@ class TestInterventionLowerResultsDetailView(TestInterventionLowerResultsViewBas
             data={'cp_output': self.result_link.cp_output.id}
         )
         self.assertEqual(second_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(first_response.data['cp_output'], second_response.data['cp_output'])
 
     def test_deassociate_temp_output(self):
         old_result_link = InterventionResultLinkFactory(intervention=self.intervention, cp_output=None)

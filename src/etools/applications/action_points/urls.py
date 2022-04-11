@@ -1,4 +1,4 @@
-from django.conf.urls import include, url
+from django.urls import include, re_path
 
 from rest_framework_nested import routers
 
@@ -12,5 +12,5 @@ action_points_api.register(r'categories', CategoryViewSet, basename='categories'
 
 
 urlpatterns = [
-    url(r'^', include(action_points_api.urls)),
+    re_path(r'^', include(action_points_api.urls)),
 ]

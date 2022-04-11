@@ -39,6 +39,7 @@ class TestPMPDropdownsListApiView(BaseTenantTestCase):
             'partner_types',
             'risk_types',
             'sea_risk_ratings',
+            'supply_item_provided_by',
             'review_types',
         ]
 

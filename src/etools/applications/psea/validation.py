@@ -5,9 +5,9 @@ from django.conf import settings
 from etools_validator.exceptions import StateValidationError, TransitionError
 from etools_validator.utils import check_required_fields, check_rigid_fields
 from etools_validator.validation import CompleteValidation
-from unicef_notification.utils import send_notification_with_template
 
 from etools.applications.audit.models import UNICEFAuditFocalPoint
+from etools.applications.environment.notifications import send_notification_with_template
 from etools.applications.psea.permissions import AssessmentPermissions
 
 

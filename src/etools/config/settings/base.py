@@ -94,7 +94,7 @@ DEBUG = str2bool(get_from_secrets_or_env('DJANGO_DEBUG'))
 SERVICE_NOW_USER = get_from_secrets_or_env('SERVICE_NOW_USER', 'api_servicenow_etools@unicef.org')
 
 # DJANGO: EMAIL
-DEFAULT_FROM_EMAIL = "no-reply@unicef.org"
+DEFAULT_FROM_EMAIL = get_from_secrets_or_env('DEFAULT_FROM_EMAIL', "no-reply@unicef.org")
 EMAIL_BACKEND = 'unicef_notification.backends.EmailBackend'
 EMAIL_HOST = get_from_secrets_or_env('EMAIL_HOST', '')
 EMAIL_HOST_USER = get_from_secrets_or_env('EMAIL_HOST_USER', '')
@@ -216,6 +216,7 @@ TENANT_APPS = (
     'etools.applications.tpm',
     'etools.applications.audit',
     'etools.applications.firms',
+    'etools.applications.locations',
     'etools.applications.management',
     'etools.applications.action_points',
     'etools.applications.psea',
@@ -225,6 +226,7 @@ TENANT_APPS = (
     'etools.applications.field_monitoring.analyze',
     'etools.applications.comments',
     'etools.applications.eface',
+    'etools.applications.travel',
     'unicef_snapshot',
     'unicef_attachments',
     'unicef_vision',
@@ -248,9 +250,11 @@ TEMPLATES = [
         'OPTIONS': {
             'debug': DEBUG,
             'loaders': [
-                'django.template.loaders.filesystem.Loader',
-                'django.template.loaders.app_directories.Loader',
-                'unicef_notification.loaders.EmailTemplateLoader',
+                ('django.template.loaders.cached.Loader', [
+                    'django.template.loaders.filesystem.Loader',
+                    'django.template.loaders.app_directories.Loader',
+                    'unicef_notification.loaders.EmailTemplateLoader',
+                ]),
             ],
             'context_processors': [
                 # Already defined Django-related contexts here
@@ -504,7 +508,7 @@ SECRET = os.getenv('AZURE_B2C_CLIENT_SECRET', None)
 
 SOCIAL_AUTH_URL_NAMESPACE = 'social'
 SOCIAL_AUTH_SANITIZE_REDIRECTS = False
-SOCIAL_AUTH_POSTGRES_JSONFIELD = True
+SOCIAL_AUTH_JSONFIELD_ENABLED = True
 POLICY = os.getenv('AZURE_B2C_POLICY_NAME', "b2c_1A_UNICEF_PARTNERS_signup_signin")
 
 TENANT_ID = os.getenv('AZURE_B2C_TENANT', 'unicefpartners')
@@ -547,7 +551,7 @@ SCHEMA_OVERRIDE_PARAM = "schema"
 PCA_REQUIRED_NOTIFICATION_LEAD = 30
 
 UNICEF_NOTIFICATION_TEMPLATE_DIR = "notifications"
-UNICEF_LOCATIONS_GET_CACHE_KEY = 'etools.libraries.locations.views.cache_key'
+UNICEF_LOCATIONS_GET_CACHE_KEY = 'etools.applications.locations.views.cache_key'
 
 ATTACHMENT_FILEPATH_PREFIX_FUNC = "etools.applications.attachments.utils.get_filepath_prefix"
 ATTACHMENT_FLAT_MODEL = "etools.applications.attachments.models.AttachmentFlat"
@@ -574,6 +578,8 @@ INSIGHT_REQUESTS_TIMEOUT = get_from_secrets_or_env('INSIGHT_REQUESTS_TIMEOUT', 4
 ETOOLS_OFFLINE_API = get_from_secrets_or_env('ETOOLS_OFFLINE_API', '')
 ETOOLS_OFFLINE_TOKEN = get_from_secrets_or_env('ETOOLS_OFFLINE_TOKEN', '')
 ETOOLS_OFFLINE_TASK_APP = "etools.config.celery.get_task_app"
+
+UNICEF_LOCATIONS_MODEL = 'locations.Location'
 
 # PRP Integration
 # https://github.com/unicef/etools-partner-reporting-portal

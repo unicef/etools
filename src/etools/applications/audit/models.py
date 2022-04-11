@@ -6,7 +6,7 @@ from django.core.exceptions import ValidationError
 from django.db import connection, models
 from django.db.transaction import atomic
 from django.utils import timezone
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 from django.utils.translation import gettext_lazy as _
 
 from django_fsm import FSMField, transition
@@ -16,7 +16,6 @@ from model_utils.models import TimeStampedModel
 from ordered_model.models import OrderedModel
 from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation, CurrencyField
-from unicef_notification.utils import send_notification_with_template
 
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.audit.purchase_order.models import AuditorStaffMember, PurchaseOrder, PurchaseOrderItem
@@ -32,6 +31,7 @@ from etools.applications.audit.transitions.conditions import (
 from etools.applications.audit.transitions.serializers import EngagementCancelSerializer
 from etools.applications.audit.utils import generate_final_report
 from etools.applications.core.urlresolvers import build_frontend_url
+from etools.applications.environment.notifications import send_notification_with_template
 from etools.applications.partners.models import PartnerOrganization, PartnerStaffMember
 from etools.applications.reports.models import Office, Section
 from etools.libraries.djangolib.models import GroupWrapper, InheritedModelMixin
@@ -186,6 +186,11 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
         blank=True,
         related_name='engagements',
     )
+    reference_number = models.CharField(
+        verbose_name=_("Reference Number"),
+        max_length=100,
+        null=True,
+    )
 
     objects = InheritanceManager()
 
@@ -196,6 +201,16 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
 
     def __str__(self):
         return '{} {}'.format(self.get_engagement_type_display(), self.reference_number)
+
+    def clean(self):
+        validation_errors = {}
+        # Don't allow blank values for total_value and exchange_rate.
+        if not self.total_value:
+            validation_errors['total_value'] = ValidationError(_('Total value is required.'))
+        if not self.exchange_rate:
+            validation_errors['exchange_rate'] = ValidationError(_('Exchange Rate value is required.'))
+        if validation_errors:
+            raise ValidationError(validation_errors)
 
     @property
     def displayed_status(self):
@@ -222,8 +237,7 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
     def get_shared_ip_with_display(self):
         return list(map(lambda po: dict(PartnerOrganization.AGENCY_CHOICES).get(po, 'Unknown'), self.shared_ip_with))
 
-    @property
-    def unique_id(self):
+    def get_reference_number(self):
         engagement_code = 'a' if self.engagement_type == self.TYPES.audit else self.engagement_type
         return '{}/{}/{}/{}/{}'.format(
             connection.tenant.country_short_code or '',
@@ -233,19 +247,15 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
             self.id
         )
 
-    @property
-    def reference_number(self):
-        return self.unique_id
-
     def get_mail_context(self, **kwargs):
         object_url = self.get_object_url(**kwargs)
 
         return {
-            'unique_id': self.unique_id,
+            'unique_id': self.reference_number,
             'engagement_type': self.get_engagement_type_display(),
             'object_url': object_url,
-            'partner': force_text(self.partner),
-            'auditor_firm': force_text(self.agreement.auditor_firm),
+            'partner': force_str(self.partner),
+            'auditor_firm': force_str(self.agreement.auditor_firm),
         }
 
     def _notify_focal_points(self, template_name, context=None):
@@ -292,6 +302,12 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
 
     def get_object_url(self, **kwargs):
         return build_frontend_url('ap', 'engagements', self.id, 'overview', **kwargs)
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        if not self.reference_number:
+            self.reference_number = self.get_reference_number()
+            self.save()
 
 
 class RiskCategory(OrderedModel, models.Model):
@@ -450,7 +466,6 @@ class SpotCheck(Engagement):
     @transition('status', source=Engagement.STATUSES.report_submitted, target=Engagement.STATUSES.final,
                 permission=has_action_permission(action='finalize'))
     def finalize(self, *args, **kwargs):
-        self.partner.spot_checks(update_one=True, event_date=self.date_of_draft_report_to_ip)
         return super().finalize(*args, **kwargs)
 
     def get_object_url(self, **kwargs):
@@ -678,7 +693,7 @@ class Audit(Engagement):
     @transition('status', source=Engagement.STATUSES.report_submitted, target=Engagement.STATUSES.final,
                 permission=has_action_permission(action='finalize'))
     def finalize(self, *args, **kwargs):
-        self.partner.audits_completed(update_one=True)
+        self.partner.update_audits_completed(update_one=True)
         return super().finalize(*args, **kwargs)
 
     def get_object_url(self, **kwargs):
@@ -733,7 +748,10 @@ class FinancialFinding(models.Model):
         ordering = ('id', )
 
     def __str__(self):
-        return '{}: {}'.format(self.audit.unique_id, self.get_title_display())
+        return '{}: {}'.format(
+            self.audit.reference_number,
+            self.get_title_display(),
+        )
 
 
 class KeyInternalControl(models.Model):
@@ -751,7 +769,10 @@ class KeyInternalControl(models.Model):
         ordering = ('id', )
 
     def __str__(self):
-        return '{}: {}'.format(self.audit.unique_id, self.audit_observation)
+        return '{}: {}'.format(
+            self.audit.reference_number,
+            self.audit_observation,
+        )
 
 
 class SpecialAudit(Engagement):
@@ -789,7 +810,7 @@ class SpecialAudit(Engagement):
     @transition('status', source=Engagement.STATUSES.report_submitted, target=Engagement.STATUSES.final,
                 permission=has_action_permission(action='finalize'))
     def finalize(self, *args, **kwargs):
-        self.partner.audits_completed(update_one=True)
+        self.partner.update_audits_completed(update_one=True)
         return super().finalize(*args, **kwargs)
 
     def get_object_url(self, **kwargs):
@@ -823,7 +844,7 @@ class SpecificProcedure(models.Model):
         verbose_name_plural = _('Specific Procedures')
 
     def __str__(self):
-        return '{}: {}'.format(self.audit.unique_id, self.description)
+        return '{}: {}'.format(self.audit.reference_number, self.description)
 
 
 class SpecialAuditRecommendation(models.Model):
@@ -840,7 +861,7 @@ class SpecialAuditRecommendation(models.Model):
         verbose_name_plural = _('Special Audit Recommendations')
 
     def __str__(self):
-        return '{}: {}'.format(self.audit.unique_id, self.description)
+        return '{}: {}'.format(self.audit.reference_number, self.description)
 
 
 class EngagementActionPointManager(models.Manager):

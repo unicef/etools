@@ -7,7 +7,7 @@ from django.utils import timezone
 
 from rest_framework import status
 from rest_framework.test import APIRequestFactory
-from unicef_locations.tests.factories import GatewayTypeFactory, LocationFactory
+from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.core.tests.mixins import WorkspaceRequiredAPITestMixIn
@@ -75,6 +75,8 @@ class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, BaseTenantTestCase):
             del actual_intervention['partner_org']['unicef_vendor_number']
             del expected_intervention['reporting_requirements']
             del actual_intervention['reporting_requirements']
+            del expected_intervention['unicef_focal_points']
+            del actual_intervention['unicef_focal_points']
 
             for j in range(len(expected_intervention['expected_results'])):
                 del expected_intervention['expected_results'][j]['id']
@@ -83,6 +85,7 @@ class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, BaseTenantTestCase):
                 del expected_intervention['expected_results'][j]['indicators'][0]['blueprint_id']
                 del expected_intervention['expected_results'][j]['indicators'][0]['disaggregation'][0]['id']
                 del expected_intervention['expected_results'][j]['indicators'][0]['locations'][0]['id']
+                del expected_intervention['expected_results'][j]['indicators'][0]['locations'][0]['admin_level_name']
                 del expected_intervention['expected_results'][j]['indicators'][0]['locations'][0]['admin_level']
 
                 del actual_intervention['expected_results'][j]['id']
@@ -92,6 +95,7 @@ class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, BaseTenantTestCase):
                 del actual_intervention['expected_results'][j]['indicators'][0]['blueprint_id']
                 del actual_intervention['expected_results'][j]['indicators'][0]['disaggregation'][0]['id']
                 del actual_intervention['expected_results'][j]['indicators'][0]['locations'][0]['id']
+                del actual_intervention['expected_results'][j]['indicators'][0]['locations'][0]['admin_level_name']
                 del actual_intervention['expected_results'][j]['indicators'][0]['locations'][0]['admin_level']
 
         self.assertEqual(response, expected_interventions)
@@ -140,9 +144,7 @@ class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, BaseTenantTestCase):
             indicator=indicator_blueprint,
             lower_result=lower_result,
         )
-        applied_indicator.locations.add(LocationFactory(name='A Location',
-                                                        gateway=GatewayTypeFactory(name='Another Gateway'),
-                                                        p_code='a-p-code'))
+        applied_indicator.locations.add(LocationFactory(name='A Location', p_code='a p-code'))
         applied_indicator.disaggregation.create(name='Another Disaggregation')
         with self.assertNumQueries(EXPECTED_QUERIES):
             self.run_prp_v1(

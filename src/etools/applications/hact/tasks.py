@@ -4,10 +4,10 @@ from django.contrib.auth import get_user_model
 from django.db import connection, transaction
 
 from celery.utils.log import get_task_logger
-from unicef_notification.utils import send_notification_with_template
 from unicef_vision.exceptions import VisionException
 
 from etools.applications.audit.models import UNICEFAuditFocalPoint
+from etools.applications.environment.notifications import send_notification_with_template
 from etools.applications.hact.models import AggregateHact
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.users.models import Country
@@ -37,11 +37,11 @@ def update_hact_for_country(business_area_code):
         partners = PartnerOrganization.objects.hact_active()
         for partner in partners:
             logger.debug('Updating Partner {}'.format(partner.name))
-            partner.planned_visits_to_hact()
-            partner.programmatic_visits()
-            partner.spot_checks()
-            partner.audits_completed()
-            partner.hact_support()
+            partner.update_planned_visits_to_hact()
+            partner.update_programmatic_visits()
+            partner.update_spot_checks()
+            partner.update_audits_completed()
+            partner.update_hact_support()
             updated = partner.update_min_requirements()
             if updated:
                 updated_string = ', '.join([updated_dict[item] for item in updated])

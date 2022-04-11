@@ -102,6 +102,7 @@ class TestAttachmentListView(BaseTenantTestCase):
             "created",
             "attachment",
             "source",
+            "ip_address"
         ]
         for row in response.data:
             self.assertCountEqual(list(row.keys()), expected_keys)
@@ -469,7 +470,7 @@ class TestAttachmentListView(BaseTenantTestCase):
             "partner_type": self.partner.partner_type,
             "vendor_number": self.partner.vendor_number,
             "pd_ssfa_number": "",
-            "agreement_reference_number": "",
+            "agreement_reference_number": self.engagement.reference_number,
             "source": "Financial Assurance (FAM)",
         }])
         self.assertCountEqual([x["file_type"] for x in response.data], [
@@ -501,7 +502,7 @@ class TestAttachmentListView(BaseTenantTestCase):
             "partner_type": self.partner.partner_type,
             "vendor_number": self.partner.vendor_number,
             "pd_ssfa_number": "",
-            "agreement_reference_number": "",
+            "agreement_reference_number": self.engagement.reference_number,
             "source": "Financial Assurance (FAM)",
         }])
         self.assertCountEqual([x["file_type"] for x in response.data], [

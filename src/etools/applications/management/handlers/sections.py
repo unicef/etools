@@ -6,13 +6,13 @@ from etools.applications.audit.models import Engagement
 from etools.applications.field_monitoring.fm_settings.models import Question
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.management.models import SectionHistory
-from etools.applications.partners.models import Intervention
+from etools.applications.partners.models import Intervention, PartnerOrganization
 from etools.applications.reports.models import AppliedIndicator, Section
 from etools.applications.t2f.models import Travel
 from etools.applications.tpm.models import TPMActivity, TPMVisit
 
 
-class MigrationException(Exception):
+class MigrationException(BaseException):
     """Exception thrown when migration is failing due validation"""
 
 
@@ -96,6 +96,10 @@ class SectionHandler:
             Question.objects,
             'sections',
         ),
+        'partners': (
+            PartnerOrganization.objects,
+            'lead_section',
+        )
     }
 
     @staticmethod

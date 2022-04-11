@@ -12,8 +12,8 @@ from model_utils.models import TimeStampedModel
 from ordered_model.models import OrderedModel
 from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation
-from unicef_locations.models import Location
 
+from etools.applications.locations.models import Location
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.reports.models import Result, Section
 
@@ -196,9 +196,9 @@ class LocationSite(TimeStampedModel):
         ordering = ('parent', 'id',)
 
     def __str__(self):
-        return u'{}: {}'.format(
+        return u'{}{}'.format(
             self.name,
-            self.p_code if self.p_code else ''
+            f': {self.p_code}' if self.p_code else ''
         )
 
     @staticmethod
@@ -208,7 +208,7 @@ class LocationSite(TimeStampedModel):
             matched_locations = list(filter(lambda l: l.is_leaf_node(), locations)) or locations
             location = min(matched_locations, key=lambda l: l.geom.length)
         else:
-            location = Location.objects.filter(gateway__admin_level=0, is_active=True).first()
+            location = Location.objects.filter(admin_level=0, is_active=True).first()
 
         return location
 

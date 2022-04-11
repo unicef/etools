@@ -1,5 +1,4 @@
 import datetime
-import json
 
 from django.test import override_settings
 from django.urls import reverse
@@ -40,7 +39,46 @@ class PartnerModelExportTestCase(BaseTenantTestCase):
             blocked=False,
             type_of_assessment="Type of Assessment",
             last_assessment_date=datetime.date.today(),
-            hact_values='{"outstanding_findings": 0, "audits": {"completed": 0, "minimum_requirements": 0}, "programmatic_visits": {"completed": {"q1": 0, "total": 0, "q3": 0, "q2": 0, "q4": 0}, "planned": {"q1": 0, "total": 0, "q3": 0, "q2": 0, "q4": 0}}, "spot_checks": {"completed": {"q1": 0, "total": 0, "q3": 0, "q2": 0, "q4": 0}, "planned": {"q1": 0, "total": 0, "q3": 0, "q2": 0, "q4": 0}, "follow_up_required": 0}}',
+            hact_values={
+                "outstanding_findings": 0,
+                "audits": {
+                    "completed": 0,
+                    "minimum_requirements": 0
+                },
+                "programmatic_visits": {
+                    "completed": {
+                        "q1": 0,
+                        "total": 0,
+                        "q3": 0,
+                        "q2": 0,
+                        "q4": 0
+                    },
+                    "planned": {
+                        "q1": 0,
+                        "total": 0,
+                        "q3": 0,
+                        "q2": 0,
+                        "q4": 0
+                    }
+                },
+                "spot_checks": {
+                    "completed": {
+                        "q1": 0,
+                        "total": 0,
+                        "q3": 0,
+                        "q2": 0,
+                        "q4": 0
+                    },
+                    "planned": {
+                        "q1": 0,
+                        "total": 0,
+                        "q3": 0,
+                        "q2": 0,
+                        "q4": 0
+                    },
+                    "follow_up_required": 0
+                }
+            },
         )
         cls.partnerstaff = PartnerStaffFactory(partner=cls.partner)
         cls.planned_visit = PartnerPlannedVisitsFactory(partner=cls.partner)
@@ -161,7 +199,7 @@ class TestPartnerOrganizationModelExport(PartnerModelExportTestCase):
         partner = self.partner
         partner.pk = None
         partner.vendor_number = "Vendor New Num"
-        partner.hact_values = json.dumps('{"key": "random string"}')
+        partner.hact_values = {"key": "random string"}
         partner.save()
         response = self.forced_auth_req(
             'get',

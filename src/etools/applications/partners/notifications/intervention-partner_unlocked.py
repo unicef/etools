@@ -5,7 +5,9 @@ defaults = {
     "content": """
     Dear Colleague,
 
-    PD {{reference_number}} has been unlocked by {{ partner_name }}
+    PD {{reference_number}} has been unlocked by {{ partner_name }},
+    The previously accepted PD has been moved back to `Development` and will need to be accepted again after desired
+    modifications have been completed.
 
     {{pd_link}}
 
@@ -16,7 +18,9 @@ defaults = {
     {% block content %}
     Dear Colleague,<br /><br />
 
-    PD {{reference_number}} has been unlocked by {{ partner_name }}
+    PD {{reference_number}} has been unlocked by {{ partner_name }},
+    The previously accepted PD has been moved back to `Development` and will need to be accepted again after desired
+    modifications have been completed.
 
     {{pd_link}}<br />
 

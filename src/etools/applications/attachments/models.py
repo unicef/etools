@@ -78,6 +78,7 @@ class AttachmentFlat(models.Model):
         verbose_name=_('Created'),
         null=True,
     )
+    ip_address = models.GenericIPAddressField(default='0.0.0.0')
 
     objects = AttachmentFlatManager()
 

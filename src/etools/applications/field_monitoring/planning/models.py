@@ -1,7 +1,9 @@
+import logging
+
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
-from django.db import connection, models
-from django.db.models import Exists, OuterRef, Q
+from django.db import connection, models, transaction
+from django.db.models import Count, Exists, OuterRef, Q
 from django.db.models.base import ModelBase
 from django.utils.translation import gettext_lazy as _
 
@@ -10,28 +12,30 @@ from model_utils import Choices, FieldTracker
 from model_utils.models import TimeStampedModel
 from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation
-from unicef_locations.models import Location
-from unicef_notification.utils import send_notification_with_template
 
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.core.permissions import import_permissions
 from etools.applications.core.urlresolvers import build_frontend_url
+from etools.applications.environment.notifications import send_notification_with_template
 from etools.applications.field_monitoring.data_collection.offline.synchronizer import (
     MonitoringActivityOfflineSynchronizer,
 )
-from etools.applications.field_monitoring.fm_settings.models import LocationSite, Method, Question
+from etools.applications.field_monitoring.fm_settings.models import LocationSite, Method, Option, Question
 from etools.applications.field_monitoring.planning.mixins import ProtectUnknownTransitionsMeta
 from etools.applications.field_monitoring.planning.transitions.permissions import (
     user_is_field_monitor_permission,
     user_is_pme_permission,
     user_is_visit_lead_permission,
 )
+from etools.applications.locations.models import Location
 from etools.applications.partners.models import Intervention, PartnerOrganization
 from etools.applications.reports.models import Result, Section
 from etools.applications.tpm.models import PME
 from etools.applications.tpm.tpmpartners.models import TPMPartner
 from etools.libraries.djangolib.models import SoftDeleteMixin
 from etools.libraries.djangolib.utils import get_environment
+
+logger = logging.getLogger(__name__)
 
 
 class YearPlan(TimeStampedModel):
@@ -104,29 +108,30 @@ class QuestionTemplate(QuestionTargetMixin, models.Model):
 
 class MonitoringActivitiesQuerySet(models.QuerySet):
     def filter_hact_for_partner(self, partner_id: int):
-        from etools.applications.field_monitoring.data_collection.models import (
-            ActivityOverallFinding,
-            ActivityQuestionOverallFinding,
-        )
+        from etools.applications.field_monitoring.data_collection.models import ActivityQuestionOverallFinding
 
         question_sq = ActivityQuestionOverallFinding.objects.filter(
             activity_question__monitoring_activity_id=OuterRef('id'),
-            activity_question__question__is_hact=True,
+            activity_question__is_hact=True,
             activity_question__question__level='partner',
             value__isnull=False,
         )
-        finding_sq = ActivityOverallFinding.objects.filter(
-            ~Q(narrative_finding=''),
-            monitoring_activity_id=OuterRef('id'),
-            partner_id=partner_id,
-        )
+        # an overall finding for the partner is not requried for hact, leaving the code in for now in case
+        # the business owners want to change
+        # finding_sq = ActivityOverallFinding.objects.filter(
+        #     ~Q(narrative_finding=''),
+        #     monitoring_activity_id=OuterRef('id'),
+        #     partner_id=partner_id,
+        # )
 
         return self.annotate(
             is_hact=Exists(question_sq),
-            has_finding_for_partner=Exists(finding_sq),
+            # has_finding_for_partner=Exists(finding_sq),
         ).filter(
+            partners=partner_id,
+            status=MonitoringActivity.STATUS_COMPLETED,
             is_hact=True,
-            has_finding_for_partner=True,
+            # has_finding_for_partner=True,
         )
 
 
@@ -192,6 +197,7 @@ class MonitoringActivity(
         ],
         STATUSES.report_finalization: [
             lambda i, old_instance=None, user=None: i.close_offline_blueprints(),
+            lambda i, old_instance=None, user=None: i.port_findings_to_summary(),
         ],
         STATUSES.submitted: [
             lambda i, old_instance=None, user=None: i.send_submit_notice(),
@@ -275,6 +281,7 @@ class MonitoringActivity(
     def __str__(self):
         return self.reference_number
 
+    @transaction.atomic()
     def save(self, **kwargs):
         super().save(**kwargs)
 
@@ -286,6 +293,32 @@ class MonitoringActivity(
             )
             super().save(update_fields=['number'])
 
+        if self.trip_itinerary_items.exists():
+            for item in self.trip_itinerary_items.all():
+                item.update_values_from_ma(self)
+                item.save()
+
+        if self.trip_activities.exists():
+            for ta in self.trip_activities.all():
+                if ta.trip.status not in [ta.trip.STATUS_APPROVED, ta.trip.STATUS_COMPLETED, ta.trip.STATUS_CANCELLED] \
+                        and ta.trip.traveller not in self.team_members.all() and \
+                        ta.trip.traveller != self.visit_lead:
+                    ta.trip.update_ma_traveler_excluded_infotext(self, ta)
+                    ta.trip.save()
+                if ta.activity_date != self.start_date:
+                    ta.trip.update_ma_dates_changed_infotext(self, ta)
+                    ta.trip.save()
+                    ta.activity_date = self.start_date
+                    ta.save()
+
+    @transaction.atomic()
+    def delete(self, *args, **kwargs):
+        if self.trip_activities.exists():
+            for ta in self.trip_activities.all():
+                ta.trip.update_ma_deleted_infotext(self)
+                ta.trip.save()
+        super().delete(**kwargs)
+
     @property
     def reference_number(self):
         return self.number
@@ -294,6 +327,10 @@ class MonitoringActivity(
     def permission_structure(cls):
         permissions = import_permissions(cls.__name__)
         return permissions
+
+    @property
+    def destination_str(self):
+        return str(self.location_site) if self.location_site else str(self.location)
 
     def check_if_rejected(self, old_instance):
         # if rejected send notice
@@ -352,6 +389,7 @@ class MonitoringActivity(
                 for target_question in target_questions:
                     activity_question = ActivityQuestion(
                         question=target_question, monitoring_activity=self,
+                        text=target_question.text, is_hact=target_question.is_hact,
                         is_enabled=target_question.template.is_active if target_question.template else False
                     )
 
@@ -567,13 +605,88 @@ class MonitoringActivity(
         partner_orgs = [aq.partner for aq in aq_qs.all() if aq.partner]
 
         for partner_org in partner_orgs:
-            partner_org.programmatic_visits(event_date=self.end_date, update_one=True)
+            partner_org.update_programmatic_visits(event_date=self.end_date, update_one=True)
 
     def init_offline_blueprints(self):
         MonitoringActivityOfflineSynchronizer(self).initialize_blueprints()
 
     def close_offline_blueprints(self):
         MonitoringActivityOfflineSynchronizer(self).close_blueprints()
+
+    def port_findings_to_summary(self):
+        from etools.applications.field_monitoring.data_collection.models import ChecklistOverallFinding
+
+        valid_questions = self.questions.annotate(
+            answers_count=Count('findings', filter=Q(findings__value__isnull=False)),
+        ).filter(answers_count=1).prefetch_related('findings')
+        for question in valid_questions:
+            question.overall_finding.value = question.findings.all()[0].value
+            question.overall_finding.save()
+
+        for overall_finding in self.overall_findings.all():
+            narrative_findings = ChecklistOverallFinding.objects.filter(
+                ~Q(narrative_finding=''),
+                started_checklist__monitoring_activity=self,
+                partner=overall_finding.partner,
+                cp_output=overall_finding.cp_output,
+                intervention=overall_finding.intervention,
+            ).values_list('narrative_finding', flat=True)
+            if len(narrative_findings) == 1:
+                overall_finding.narrative_finding = narrative_findings[0]
+                overall_finding.save()
+
+    def activity_overall_findings(self):
+        return self.overall_findings.annotate_for_activity_export()
+
+    def get_export_activity_questions_overall_findings(self):
+        for activity_question in self.questions.filter_for_activity_export():
+            finding_dict = dict(entity_name=activity_question.entity_name,
+                                question_text=activity_question.text)
+            if activity_question.overall_finding.value and \
+                    activity_question.question.answer_type == 'likert_scale':
+                try:
+                    option = activity_question.question.options \
+                        .get(value=activity_question.overall_finding.value)
+                    finding_dict['value'] = option.label
+                except Option.DoesNotExist:
+                    logger.error(f'No option found for finding value {activity_question.overall_finding.value}')
+            else:
+                finding_dict['value'] = activity_question.overall_finding.value
+
+            yield finding_dict
+
+    def get_export_checklist_findings(self):
+        for started_checklist in self.checklists.all():
+            checklist_dict = dict(method=started_checklist.method.name,
+                                  source=started_checklist.information_source,
+                                  team_member=started_checklist.author.full_name,
+                                  overall=[])
+            checklist_overall_findings = started_checklist.overall_findings.annotate_for_activity_export()
+            checklist_findings = started_checklist.findings.filter_for_activity_export()
+
+            for cof in checklist_overall_findings:
+                overall_dict = dict(narrative_finding=cof.narrative_finding,
+                                    entity_name=cof.entity_name,
+                                    findings=[])
+                for finding in checklist_findings\
+                        .filter(entity_name=cof.entity_name)\
+                        .select_related('activity_question', 'activity_question__question'):
+
+                    finding_dict = dict(question_text=finding.activity_question.text)
+                    if finding.value and \
+                            finding.activity_question.question.answer_type == 'likert_scale':
+                        try:
+                            option = finding.activity_question.question.options.get(value=finding.value)
+                            finding_dict['value'] = option.label
+                        except Option.DoesNotExist:
+                            logger.error(f'No option found for finding value {finding.value}')
+                    else:
+                        finding_dict['value'] = finding.value
+
+                    overall_dict['findings'].append(finding_dict)
+                checklist_dict['overall'].append(overall_dict)
+
+            yield checklist_dict
 
 
 class MonitoringActivityActionPointManager(models.Manager):

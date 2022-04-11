@@ -38,6 +38,7 @@ from etools.applications.reports.serializers.v2 import (
     LowerResultCUSerializer,
     LowerResultSerializer,
     LowerResultWithActivitiesSerializer,
+    LowerResultWithActivityItemsSerializer,
     RAMIndicatorSerializer,
     ReportingRequirementSerializer,
 )
@@ -119,6 +120,7 @@ class InterventionAmendmentCUSerializer(AttachmentSerializerMixin, serializers.M
             'partner_authorized_officer_signatory',
             'signed_amendment_attachment',
             'difference',
+            'created',
         )
         validators = [
             UniqueTogetherValidator(
@@ -450,26 +452,40 @@ class SingleInterventionAttachmentField(serializers.Field):
         return intervention_attachment
 
 
-class InterventionResultNestedSerializer(serializers.ModelSerializer):
+class BaseInterventionResultNestedSerializer(serializers.ModelSerializer):
     cp_output_name = serializers.CharField(source="cp_output.output_name", read_only=True)
     ram_indicator_names = serializers.SerializerMethodField(read_only=True)
-    ll_results = LowerResultWithActivitiesSerializer(many=True, read_only=True)
 
     def get_ram_indicator_names(self, obj):
         return [i.light_repr for i in obj.ram_indicators.all()]
 
     class Meta:
         model = InterventionResultLink
-        fields = (
+        fields = [
             'id',
+            'code',
             'intervention',
             'cp_output',
             'cp_output_name',
             'ram_indicators',
             'ram_indicator_names',
-            'll_results',
             'total',
-        )
+        ]
+        read_only_fields = ['code']
+
+
+class InterventionResultNestedSerializer(BaseInterventionResultNestedSerializer):
+    ll_results = LowerResultWithActivitiesSerializer(many=True, read_only=True)
+
+    class Meta(BaseInterventionResultNestedSerializer.Meta):
+        fields = BaseInterventionResultNestedSerializer.Meta.fields + ['ll_results']
+
+
+class InterventionResultsStructureSerializer(BaseInterventionResultNestedSerializer):
+    ll_results = LowerResultWithActivityItemsSerializer(many=True, read_only=True)
+
+    class Meta(BaseInterventionResultNestedSerializer.Meta):
+        fields = BaseInterventionResultNestedSerializer.Meta.fields + ['ll_results']
 
 
 class InterventionResultLinkSimpleCUSerializer(serializers.ModelSerializer):
@@ -495,6 +511,14 @@ class InterventionResultLinkSimpleCUSerializer(serializers.ModelSerializer):
     class Meta:
         model = InterventionResultLink
         fields = "__all__"
+        read_only_fields = ['code']
+        validators = [
+            UniqueTogetherValidator(
+                queryset=InterventionResultLink.objects.all(),
+                fields=["intervention", "cp_output"],
+                message=_("Invalid CP Output provided.")
+            )
+        ]
 
 
 class InterventionResultCUSerializer(serializers.ModelSerializer):
@@ -707,7 +731,7 @@ class InterventionCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotMode
         return value
 
     def validate_context(self, value):
-        return self._validate_character_limitation(value)
+        return self._validate_character_limitation(value, limit=7000)
 
     def validate_implementation_strategy(self, value):
         return self._validate_character_limitation(value)
@@ -718,6 +742,12 @@ class InterventionCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotMode
     def validate(self, attrs):
         validated_data = super().validate(attrs)
         if self.instance and ('start' in validated_data or 'end' in validated_data):
+            new_status = validated_data.get('status', None)
+            old_status = self.instance.status
+            if new_status is not None and new_status == self.instance.TERMINATED and new_status != old_status:
+                # no checks required for terminated status
+                return validated_data
+
             start = validated_data.get('start', self.instance.start)
             end = validated_data.get('end', self.instance.end)
             old_quarters = get_quarters_range(self.instance.start, self.instance.end)
@@ -740,7 +770,7 @@ class InterventionCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotMode
                     error_text = _('Please adjust activities to not use the quarters to be removed ({}).').format(
                         names_to_be_removed
                     )
-                    bad_keys = set(validated_data.keys()).union({'start', 'end'})
+                    bad_keys = set(validated_data.keys()).intersection({'start', 'end'})
                     raise ValidationError({key: [error_text] for key in bad_keys})
 
         return validated_data
@@ -847,7 +877,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     def get_location_names(self, obj):
         return ['{} [{} - {}]'.format(
             loc.name,
-            loc.gateway.name,
+            loc.admin_level_name,
             loc.p_code
         ) for loc in obj.flat_locations.all()]
 

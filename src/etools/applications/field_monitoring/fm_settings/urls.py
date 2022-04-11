@@ -1,4 +1,4 @@
-from django.conf.urls import include, url
+from django.urls import include, re_path
 
 from rest_framework_nested import routers
 from unicef_restlib.routers import NestedComplexRouter
@@ -19,10 +19,10 @@ log_issues_api.register(r'attachments', views.LogIssueAttachmentsViewSet, basena
 
 app_name = 'field_monitoring_settings'
 urlpatterns = [
-    url(r'^interventions/(?P<intervention_pk>[0-9]+)/locations/', views.InterventionLocationsView.as_view(),
-        name='intervention-locations'),
-    url(r'^results/', views.ResultsView.as_view(), name='results-list'),
-    url(r'^locations/country/', views.LocationsCountryView.as_view(), name='locations-country'),
-    url(r'^', include(log_issues_api.urls)),
-    url(r'^', include(root_api.urls)),
+    re_path(r'^interventions/(?P<intervention_pk>[0-9]+)/locations/', views.InterventionLocationsView.as_view(),
+            name='intervention-locations'),
+    re_path(r'^results/', views.ResultsView.as_view(), name='results-list'),
+    re_path(r'^locations/country/', views.LocationsCountryView.as_view(), name='locations-country'),
+    re_path(r'^', include(log_issues_api.urls)),
+    re_path(r'^', include(root_api.urls)),
 ]

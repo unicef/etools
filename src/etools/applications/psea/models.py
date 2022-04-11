@@ -283,7 +283,7 @@ class Assessment(TimeStampedModel):
             "assessment_date": str(self.assessment_date),
             "assessment_type": self.get_assessment_type_display(),
             "assessment_ingo_reason": self.get_assessment_ingo_reason_display(),
-            "assessor": str(self.assessor),
+            "assessor": str(getattr(self, 'assessor', '')),
             "focal_points": ", ".join(f"{fp.get_full_name()} ({fp.email})" for fp in self.focal_points.all()),
             "nfr_attachment": nfr_attachment
         }

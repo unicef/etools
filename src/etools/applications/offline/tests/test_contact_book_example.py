@@ -1,13 +1,12 @@
 import json
 import os
 
-from django.test import TestCase
-
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.offline.errors import ValidationError
 from etools.applications.offline.tests.contact_book import contact_book
 
 
-class ContactBookExampleTestCase(TestCase):
+class ContactBookExampleTestCase(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
@@ -58,7 +57,7 @@ class ContactBookExampleTestCase(TestCase):
         value = {'name': 'test', 'users': [{'full_name': 'John Doe', 'phones': [{'number': '123456'}]}]}
         with self.assertRaises(ValidationError) as err:
             contact_book.validate(value)
-        self.assertDictEqual({'users': [{'phones': [{'number': [{'Invalid value: 123456'}]}]}]}, err.exception.detail)
+        self.assertDictEqual({'users': [{'phones': [{'number': ['Invalid value: 123456']}]}]}, err.exception.detail)
 
         value['users'][0]['phones'][0]['number'] = '1234567'
         contact_book.validate(value)

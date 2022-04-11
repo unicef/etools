@@ -4,10 +4,10 @@ from django.contrib.postgres.fields.jsonb import KeyTextTransform
 from django.db.models import Max
 
 from rest_framework import serializers
-from unicef_locations.models import Location
 
 from etools.applications.field_monitoring.analyze.utils import get_avg_days_between_visits, get_days_since_last_visit
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
+from etools.applications.locations.models import Location
 from etools.applications.partners.models import Intervention, PartnerOrganization
 from etools.applications.partners.serializers.interventions_v2 import MinimalInterventionListSerializer
 from etools.applications.reports.models import Result

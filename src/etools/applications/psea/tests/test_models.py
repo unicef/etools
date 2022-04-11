@@ -1,3 +1,4 @@
+from django.core.management import call_command
 from django.db import connection
 from django.utils import timezone
 
@@ -181,7 +182,7 @@ class TestAssessment(BaseTenantTestCase):
 
     def test_get_mail_context(self):
         user = UserFactory()
-        assessment = AssessmentFactory(reference_number='TST/2021PSEA')
+        assessment = AssessmentFactory(reference_number='TST/{}PSEA'.format(timezone.now().year))
         AssessorFactory(assessment=assessment)
         self.assertEqual(assessment.get_mail_context(user), {
             "partner_name": assessment.partner.name,
@@ -194,7 +195,7 @@ class TestAssessment(BaseTenantTestCase):
             "assessor": str(assessment.assessor),
             'assessment_ingo_reason': None,
             'assessment_type': 'UNICEF Assessment 2020',
-            'reference_number': 'TST/2021PSEA{}'.format(assessment.pk),
+            'reference_number': 'TST/{}PSEA{}'.format(timezone.now().year, assessment.pk),
         })
 
     def test_get_reference_number(self):
@@ -224,6 +225,10 @@ class TestAssessmentStatusHistory(BaseTenantTestCase):
 
 
 class TestAssessmentActionPoint(BaseTenantTestCase):
+
+    def setUp(self):
+        call_command('update_notifications')
+
     def test_get_mail_context(self):
         user = UserFactory()
         assessment = AssessmentFactory()
@@ -243,7 +248,7 @@ class TestAssessmentActionPoint(BaseTenantTestCase):
             "assessor": str(assessment.assessor),
             'assessment_ingo_reason': None,
             'assessment_type': 'UNICEF Assessment 2020',
-            'reference_number': 'TST/2021PSEA{}'.format(assessment.pk),
+            'reference_number': 'TST/{}PSEA{}'.format(timezone.now().year, assessment.pk),
         })
 
 

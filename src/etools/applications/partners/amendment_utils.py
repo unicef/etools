@@ -352,9 +352,10 @@ def calculate_simple_fields_difference(instance, instance_copy, fields_map, excl
     return changes_map
 
 
-def calculate_difference(instance, instance_copy, fields_map, relations_to_copy, exclude_fields):
+def calculate_difference(instance, instance_copy, fields_map, relations_to_copy, exclude_fields, diff_post_effects):
     related_fields_to_copy = relations_to_copy.get(instance._meta.label, [])
     fields_to_exclude = exclude_fields.get(instance._meta.label, [])
+    local_post_effects = diff_post_effects.get(instance._meta.label, [])
 
     changes_map = calculate_simple_fields_difference(instance, instance_copy, fields_map, exclude=fields_to_exclude)
 
@@ -403,7 +404,7 @@ def calculate_difference(instance, instance_copy, fields_map, relations_to_copy,
             related_instance_copy = getattr(instance_copy, field.name)
             related_object_changes_map = calculate_difference(
                 related_instance, related_instance_copy, fields_map[field.name], relations_to_copy,
-                exclude_fields=exclude_fields
+                exclude_fields, diff_post_effects
             )
 
             if related_object_changes_map:
@@ -435,7 +436,7 @@ def calculate_difference(instance, instance_copy, fields_map, relations_to_copy,
                 if related_instance_copy:
                     related_object_changes_map = calculate_difference(
                         related_instance, related_instance_copy, related_instance_data, relations_to_copy,
-                        exclude_fields=exclude_fields
+                        exclude_fields, diff_post_effects
                     )
                     if related_object_changes_map:
                         data = serialize_instance(related_instance)
@@ -489,6 +490,9 @@ def calculate_difference(instance, instance_copy, fields_map, relations_to_copy,
                 }
             }
 
+    for post_effect in local_post_effects:
+        post_effect(instance, instance_copy, fields_map, changes_map)
+
     return changes_map
 
 
@@ -509,7 +513,7 @@ INTERVENTION_AMENDMENT_RELATED_FIELDS = {
         'budget_owner',
 
         # many to many
-        'country_programmes', 'unicef_focal_points', 'partner_focal_points',
+        'country_programmes', 'unicef_focal_points', 'partner_focal_points', 'sites',
         'sections', 'offices', 'flat_locations'
     ],
     'partners.InterventionResultLink': [
@@ -551,11 +555,18 @@ INTERVENTION_AMENDMENT_RELATED_FIELDS = {
 }
 INTERVENTION_AMENDMENT_IGNORED_FIELDS = {
     'partners.Intervention': [
-        'created', 'modified',
+        'modified',
         'number', 'status', 'in_amendment',
         'title',
+        'sites',
+
+        # submission
+        'unicef_court',
         'partner_accepted',
         'unicef_accepted',
+        'date_sent_to_partner',
+        'submission_date',
+        'accepted_on_behalf_of_partner',
 
         # signatures
         'signed_by_unicef_date',
@@ -566,7 +577,7 @@ INTERVENTION_AMENDMENT_IGNORED_FIELDS = {
         'review_date_prc',
     ],
     'partners.InterventionBudget': [
-        'created', 'modified',
+        'modified',
         # auto calculated fields
         'partner_contribution_local',
         'total_unicef_cash_local_wo_hq',
@@ -578,15 +589,18 @@ INTERVENTION_AMENDMENT_IGNORED_FIELDS = {
         'total_local',
         'programme_effectiveness',
     ],
-    'partners.InterventionManagementBudget': ['created', 'modified'],
-    'partners.InterventionResultLink': ['created', 'modified'],
-    'reports.ReportingRequirement': ['created', 'modified'],
-    'reports.InterventionActivity': ['created', 'modified'],
-    'reports.AppliedIndicator': ['created', 'modified'],
-    'reports.LowerResult': ['created', 'modified'],
-    'partners.InterventionRisk': ['created', 'modified'],
-    'partners.InterventionSupplyItem': ['created', 'modified', 'total_price'],
-    'reports.InterventionActivityItem': ['created', 'modified'],
+    'partners.InterventionManagementBudget': ['modified'],
+    'partners.InterventionResultLink': ['modified'],
+    'reports.ReportingRequirement': ['modified'],
+    'reports.InterventionActivity': ['modified'],
+    'reports.AppliedIndicator': ['modified'],
+    'reports.LowerResult': ['modified'],
+    'partners.InterventionRisk': ['modified'],
+    'partners.InterventionSupplyItem': [
+        'modified',
+        'total_price', 'result'
+    ],
+    'reports.InterventionActivityItem': ['modified'],
 }
 INTERVENTION_AMENDMENT_DEFAULTS = {
     'partners.Intervention': {
@@ -598,6 +612,7 @@ INTERVENTION_AMENDMENT_DEFAULTS = {
 }
 
 
+# activity quarters
 def copy_activity_quarters(activity, activity_copy, fields_map):
     quarters = list(activity.time_frames.values_list('quarter', flat=True))
     activity_copy.time_frames.add(*activity_copy.result.result_link.intervention.quarters.filter(quarter__in=quarters))
@@ -610,14 +625,102 @@ def merge_activity_quarters(activity, activity_copy, fields_map):
     activity.time_frames.add(*activity.result.result_link.intervention.quarters.filter(quarter__in=quarters))
 
 
+def render_quarters_difference(activity, activity_copy, fields_map, difference):
+    old_quarters = list(activity.time_frames.values_list('quarter', flat=True))
+    new_quarters = list(activity_copy.time_frames.values_list('quarter', flat=True))
+    if set(old_quarters).symmetric_difference(set(new_quarters)):
+        difference['quarters'] = {
+            'type': 'simple',
+            'diff': (old_quarters, new_quarters)
+        }
+
+
+# supply items results
+def copy_supply_item_result(item, item_copy, fields_map):
+    result = item.result
+    if result:
+        item_copy.result = item.result.__class__.objects.filter(
+            intervention=item_copy.intervention,
+            cp_output=result.cp_output,
+        ).first()
+        item_copy.save()
+    fields_map['result__cp_output'] = serialize_instance(result.cp_output) if result else None
+
+
+def merge_supply_item_result(item, item_copy, fields_map):
+    result = item_copy.result
+    if result:
+        item.result = item_copy.result.__class__.objects.filter(
+            intervention=item.intervention,
+            cp_output=result.cp_output,
+        ).first()
+    else:
+        item.result = None
+    item.save()
+
+
+def render_supply_item_result_difference(item, item_copy, fields_map, difference):
+    old_output = getattr(item.result, 'cp_output', None)
+    new_output = getattr(item_copy.result, 'cp_output', None)
+    if old_output != new_output:
+        difference['result__cp_output'] = {
+            'type': 'simple',
+            'diff': (
+                str(old_output) if old_output else None,
+                str(new_output) if new_output else None
+            )
+        }
+
+
+# choices_key it's the key where choices can be found in Dropdowns api (PMPDropdownsListApiView)
+def transform_to_choices_list(field_name, choices_key):
+    def transform_field(instance, instance_copy, fields_map, difference):
+        if field_name in difference:
+            difference[field_name]['type'] = 'list[choices]'
+            difference[field_name]['choices_key'] = choices_key
+    return transform_field
+
+
+def transform_to_choices(field_name, choices_key):
+    def transform_field(instance, instance_copy, fields_map, difference):
+        if field_name in difference:
+            difference[field_name]['type'] = 'choices'
+            difference[field_name]['choices_key'] = choices_key
+    return transform_field
+
+
 INTERVENTION_AMENDMENT_MERGE_POST_EFFECTS = {
     'reports.InterventionActivity': [
         merge_activity_quarters,
+    ],
+    'partners.InterventionSupplyItem': [
+        merge_supply_item_result,
     ],
 }
 INTERVENTION_AMENDMENT_COPY_POST_EFFECTS = {
     'reports.InterventionActivity': [
         copy_activity_quarters,
     ],
+    'partners.InterventionSupplyItem': [
+        copy_supply_item_result,
+    ],
 }
-# todo: fields copied/merged in custom post effects will not be displayed in difference, similar logic should be added
+INTERVENTION_AMENDMENT_DIFF_POST_EFFECTS = {
+    'reports.InterventionActivity': [
+        render_quarters_difference,
+    ],
+    'partners.Intervention': [
+        transform_to_choices_list('cash_transfer_modalities', 'cash_transfer_modalities'),
+        transform_to_choices('document_type', 'intervention_doc_type'),
+        transform_to_choices('gender_rating', 'gender_rating'),
+        transform_to_choices('equity_rating', 'equity_rating'),
+        transform_to_choices('sustainability_rating', 'sustainability_rating'),
+    ],
+    'partners.InterventionRisk': [
+        transform_to_choices('risk_type', 'risk_types'),
+    ],
+    'partners.InterventionSupplyItem': [
+        render_supply_item_result_difference,
+        transform_to_choices('provided_by', 'supply_item_provided_by'),
+    ],
+}

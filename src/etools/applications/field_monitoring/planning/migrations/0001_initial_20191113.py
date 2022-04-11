@@ -20,7 +20,8 @@ class Migration(migrations.Migration):
         ('users', '0012_auto_20190513_1804'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         ('reports', '0019_auto_20190816_1609'),
-        ('locations', '0008_auto_20190422_1537'),
+        ('locations', '0001_initial'),
+        ('unicef_locations', '0001_initial'),
         ('partners', '0039_auto_20191106_1345'),
     ]
 

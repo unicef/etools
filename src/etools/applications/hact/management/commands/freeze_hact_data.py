@@ -29,7 +29,7 @@ class Command(BaseCommand):
     def freeze_data(self, hact_history):
         # partner values list needs to be in the desired order for export results
         partner = hact_history.partner
-        partner_hact = hact_history.partner.get_hact_json()
+        partner_hact = hact_history.partner.hact_values
         planned_engagement = getattr(partner, 'planned_engagement', {})
         partner_values = [
             ('Implementing Partner', partner.name),

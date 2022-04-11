@@ -134,7 +134,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
 
     def test_filter_by_partner_hact(self):
         partner = PartnerFactory()
-        activity1 = MonitoringActivityFactory(partners=[partner])
+        activity1 = MonitoringActivityFactory(partners=[partner], status='completed')
         MonitoringActivityFactory(partners=[partner])
         MonitoringActivityFactory(partners=[partner])
         ActivityQuestionOverallFinding.objects.create(
@@ -147,6 +147,25 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         )
         ActivityOverallFinding.objects.create(partner=partner, narrative_finding='test',
                                               monitoring_activity=activity1)
+
+        # not completed
+        activity2 = MonitoringActivityFactory(partners=[partner], status='report_finalization')
+        MonitoringActivityFactory(partners=[partner])
+        MonitoringActivityFactory(partners=[partner])
+        ActivityQuestionOverallFinding.objects.create(
+            activity_question=ActivityQuestionFactory(
+                question__is_hact=True,
+                question__level='partner',
+                monitoring_activity=activity2,
+            ),
+            value='ok',
+        )
+        ActivityOverallFinding.objects.create(partner=partner, narrative_finding='test',
+                                              monitoring_activity=activity2)
+
+        # not hact
+        MonitoringActivityFactory(partners=[partner], status='completed')
+
         self._test_list(self.unicef_user, [activity1], data={'hact_for_partner': partner.id})
 
     def test_details(self):
@@ -420,6 +439,23 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             self.fm_user, [activity1, activity2],
             data={'sections__in': f'{section.id}'},
         )
+
+    def test_visit_pdf_export(self):
+        partner = PartnerFactory()
+        activity = MonitoringActivityFactory(partners=[partner])
+        ActivityQuestionOverallFinding.objects.create(
+            activity_question=ActivityQuestionFactory(
+                question__level='partner',
+                monitoring_activity=activity,
+            ),
+            value='ok',
+        )
+        ActivityOverallFinding.objects.create(partner=partner, narrative_finding='test',
+                                              monitoring_activity=activity)
+        response = self.make_request_to_viewset(
+            self.fm_user, action='visit-pdf', method='get', instance=activity)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('Content-Disposition', response.headers)
 
 
 class TestActivityAttachmentsView(FMBaseTestCaseMixin, APIViewSetTestCase):
@@ -755,6 +791,7 @@ class MonitoringActivityActionPointsViewTestCase(FMBaseTestCaseMixin, APIViewSet
     def setUpTestData(cls):
         super().setUpTestData()
         cls.activity = MonitoringActivityFactory(status='completed')
+        call_command('update_notifications')
 
     def get_list_args(self):
         return [self.activity.pk]

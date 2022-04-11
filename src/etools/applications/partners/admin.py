@@ -1,9 +1,11 @@
-from django.contrib import admin
+from django.contrib import admin, messages
+from django.contrib.admin.utils import quote
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.forms import SelectMultiple
 from django.http.response import HttpResponseRedirect
 from django.urls import reverse
+from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
@@ -36,6 +38,7 @@ from etools.applications.partners.models import (  # TODO intervention sector lo
     InterventionPlannedVisits,
     InterventionResultLink,
     InterventionReview,
+    InterventionSupplyItem,
     PartnerOrganization,
     PartnerStaffMember,
     PlannedEngagement,
@@ -628,11 +631,11 @@ class PartnerAdmin(ExtraUrlMixin, ExportMixin, admin.ModelAdmin):
     @button()
     def update_hact(self, request, pk):
         obj = self.get_object(request, pk)
-        obj.planned_visits_to_hact()
-        obj.programmatic_visits()
-        obj.spot_checks()
-        obj.audits_completed()
-        obj.hact_support()
+        obj.update_planned_visits_to_hact()
+        obj.update_programmatic_visits()
+        obj.update_spot_checks()
+        obj.update_audits_completed()
+        obj.update_hact_support()
         obj.update_min_requirements()
 
 
@@ -768,6 +771,46 @@ class AgreementAdmin(
     def has_module_permission(self, request):
         return request.user.is_superuser or request.user.groups.filter(name='Country Office Administrator').exists()
 
+    def get_deleted_objects(self, objs, request):
+        deleted_objects, model_count, perms_needed, protected = super().get_deleted_objects(objs, request)
+        if 'interventions' in model_count and model_count['interventions'] != 0:
+            if 'action' in request.POST and request.POST['action'] == 'delete_selected':
+                messages.error(
+                    request,
+                    _('Please delete all interventions associated with the selected Agreements '
+                      'before deleting them.')
+                )
+            else:
+                messages.error(
+                    request,
+                    _('Please delete all interventions associated with this Agreement '
+                      'before deleting the agreement.')
+                )
+            protected.extend(self.get_interventions_admin_urls(objs))
+
+        return deleted_objects, model_count, perms_needed, protected
+
+    def get_interventions_admin_urls(self, objs):
+        urls = []
+
+        agreement_ids = [agreement.id for agreement in objs] if isinstance(objs, list) else \
+            objs.values_list('id', flat=True)
+        for intervention_obj in Intervention.objects.filter(agreement_id__in=agreement_ids):
+            intervention_url = reverse(
+                'admin:%s_%s_change' %
+                (intervention_obj._meta.app_label, intervention_obj._meta.model_name),
+                args=(quote(intervention_obj.pk),),
+                current_app=self.admin_site.name
+            )
+            formatted_url = format_html(
+                '{} : <a href="{}">{}</a>',
+                intervention_obj._meta.model.__name__,
+                intervention_url,
+                intervention_obj
+            )
+            urls.append(formatted_url)
+        return urls
+
 
 class FileTypeAdmin(admin.ModelAdmin):
 
@@ -785,6 +828,13 @@ class InterventionManagementBudgetAdmin(admin.ModelAdmin):
     inlines = (InterventionManagementBudgetItemAdmin,)
 
 
+class InterventionSupplyItemAdmin(admin.ModelAdmin):
+    list_display = ('intervention', 'title', 'unit_number', 'unit_price', 'provided_by')
+    list_select_related = ('intervention',)
+    list_filter = ('provided_by',)
+    search_fields = ('title',)
+
+
 admin.site.register(PartnerOrganization, PartnerAdmin)
 admin.site.register(Assessment, AssessmentAdmin)
 admin.site.register(PartnerStaffMember, PartnerStaffMemberAdmin)
@@ -800,5 +850,6 @@ admin.site.register(InterventionBudget, InterventionBudgetAdmin)
 admin.site.register(InterventionPlannedVisits, InterventionPlannedVisitsAdmin)
 admin.site.register(InterventionAttachment, InterventionAttachmentAdmin)
 admin.site.register(InterventionManagementBudget, InterventionManagementBudgetAdmin)
+admin.site.register(InterventionSupplyItem, InterventionSupplyItemAdmin)
 
 admin.site.register(FileType, FileTypeAdmin)

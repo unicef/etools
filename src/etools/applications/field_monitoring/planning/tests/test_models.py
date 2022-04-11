@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import date, timedelta
 
 from dateutil.utils import today
 from factory import fuzzy
@@ -6,15 +6,22 @@ from factory import fuzzy
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.field_monitoring.data_collection.models import (
     ActivityOverallFinding,
+    ActivityQuestion,
     ActivityQuestionOverallFinding,
 )
-from etools.applications.field_monitoring.data_collection.tests.factories import ActivityQuestionFactory
+from etools.applications.field_monitoring.data_collection.tests.factories import (
+    ActivityQuestionFactory,
+    ChecklistOverallFindingFactory,
+    FindingFactory,
+    StartedChecklistFactory,
+)
 from etools.applications.field_monitoring.fm_settings.models import Question
 from etools.applications.field_monitoring.fm_settings.tests.factories import QuestionFactory
 from etools.applications.field_monitoring.planning.activity_validation.validator import ActivityValid
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.field_monitoring.planning.tests.factories import (
     MonitoringActivityFactory,
+    MonitoringActivityGroupFactory,
     QuestionTemplateFactory,
 )
 from etools.applications.field_monitoring.tests.factories import UserFactory
@@ -26,6 +33,7 @@ from etools.applications.partners.tests.factories import (
 from etools.applications.reports.models import CountryProgramme, ResultType
 from etools.applications.reports.tests.factories import CountryProgrammeFactory, ResultFactory, SectionFactory
 from etools.applications.tpm.tests.factories import TPMPartnerFactory, TPMPartnerStaffMemberFactory
+from etools.libraries.pythonlib.datetime import get_quarter
 
 
 class TestMonitoringActivityValidations(BaseTenantTestCase):
@@ -206,3 +214,219 @@ class TestMonitoringActivityQuestionsFlow(BaseTenantTestCase):
             3
         )
         self.assertFalse(ActivityQuestionOverallFinding.objects.filter(activity_question=disabled_question).exists())
+
+
+class TestMonitoringActivityGroups(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.partner = PartnerFactory()
+
+    def _add_hact_finding_for_activity(self, activity):
+        ActivityQuestionOverallFinding.objects.create(
+            activity_question=ActivityQuestionFactory(
+                monitoring_activity=activity,
+                question__is_hact=True,
+                question__level='partner',
+            ),
+            value=True
+        )
+        ActivityOverallFinding.objects.create(
+            narrative_finding='ok',
+            monitoring_activity=activity,
+            partner=self.partner,
+        )
+
+    def test_hact_values_not_changed_on_fm_question_deactivate(self):
+        today = date.today()
+        activity1 = MonitoringActivityFactory(partners=[self.partner], end_date=today,
+                                              status='completed')
+        activity2 = MonitoringActivityFactory(partners=[self.partner], end_date=today,
+                                              status='completed')
+        activity3 = MonitoringActivityFactory(partners=[self.partner], end_date=today,
+                                              status='completed')
+        activity4 = MonitoringActivityFactory(partners=[self.partner], end_date=today,
+                                              status='completed')
+        self._add_hact_finding_for_activity(activity1)
+        self._add_hact_finding_for_activity(activity2)
+        self._add_hact_finding_for_activity(activity3)
+        self._add_hact_finding_for_activity(activity4)
+        MonitoringActivityFactory(partners=[self.partner])
+
+        MonitoringActivityGroupFactory(
+            partner=self.partner,
+            monitoring_activities=[activity1, activity2]
+        )
+        self.partner.update_programmatic_visits()
+
+        old_hact = self.partner.hact_values
+        # 1 group and two activities
+        self.assertEqual(old_hact['programmatic_visits']['completed'][get_quarter()], 3)
+
+        for activity in [activity1, activity2, activity3, activity4]:
+            for question in activity.questions.all():
+                question.question.is_hact = False
+                question.question.save()
+
+        # values should be unchanged
+        self.partner.update_programmatic_visits()
+        new_hact = self.partner.hact_values
+        self.assertEqual(new_hact['programmatic_visits']['completed'][get_quarter()], 3)
+
+
+class TestMonitoringActivityFindingsExport(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.partner = PartnerFactory()
+        cls.cp_output = ResultFactory(
+            result_type__name=ResultType.OUTPUT
+        )
+        cls.activity = MonitoringActivityFactory(
+            partners=[cls.partner],
+            cp_outputs=[cls.cp_output]
+        )
+        cls.question1 = QuestionFactory(
+            text='text question1',
+            answer_type=Question.ANSWER_TYPES.likert_scale
+        )
+        cls.question2 = QuestionFactory(
+            text='text question2',
+            answer_type=Question.ANSWER_TYPES.text
+        )
+
+    def test_activity_overall_findings(self):
+        ActivityOverallFinding.objects.create(
+            narrative_finding='narrative1',
+            monitoring_activity=self.activity,
+            partner=self.partner
+        )
+        ActivityOverallFinding.objects.create(
+            narrative_finding='narrative2',
+            monitoring_activity=self.activity,
+            cp_output=self.cp_output
+        )
+
+        overall_findings = self.activity.activity_overall_findings()
+        self.assertEqual(
+            overall_findings.count(),
+            self.activity.overall_findings.count()
+        )
+        for finding in overall_findings:
+            self.assertIsNotNone(finding.entity_name)
+
+    def test_get_export_activity_questions_overall_findings(self):
+        activity_question1 = ActivityQuestionFactory(
+            monitoring_activity=self.activity,
+            partner=self.partner,
+            question=self.question1
+        )
+        activity_question2 = ActivityQuestionFactory(
+            monitoring_activity=self.activity,
+            cp_output=self.cp_output,
+            question=self.question2
+        )
+        disabled_activity_question = ActivityQuestionFactory(
+            monitoring_activity=self.activity,
+            cp_output=self.cp_output,
+            is_enabled=False
+        )
+
+        overall_findings = list()
+        overall_findings.append(ActivityQuestionOverallFinding(
+            activity_question=activity_question1,
+            value=self.question1.options.all()[0].value)
+        )
+        overall_findings.append(ActivityQuestionOverallFinding(
+            activity_question=activity_question2,
+            value='text value')
+        )
+        overall_findings.append(ActivityQuestionOverallFinding(
+            activity_question=disabled_activity_question)
+        )
+        ActivityQuestionOverallFinding.objects.bulk_create(overall_findings)
+
+        export_list = list(self.activity.get_export_activity_questions_overall_findings())
+        self.assertEqual(
+            len(export_list),
+            self.activity.questions.filter_for_activity_export().count()
+        )
+        for actual, expected in zip(export_list, overall_findings[:2]):
+
+            expected_entity = expected.activity_question.partner.name if expected.activity_question.partner \
+                else expected.activity_question.cp_output.name
+            self.assertEqual(actual['entity_name'], expected_entity)
+
+            self.assertEqual(actual['question_text'], expected.activity_question.question.text)
+
+            expected_value = expected.value if expected.activity_question.question.answer_type != 'likert_scale' \
+                else expected.activity_question.question.options.all()[0].label
+            self.assertEqual(actual['value'], expected_value)
+
+    def test_get_export_checklist_findings(self):
+        started_checklist = StartedChecklistFactory(monitoring_activity=self.activity)
+        ChecklistOverallFindingFactory(
+            started_checklist=started_checklist,
+            partner=self.partner)
+        ChecklistOverallFindingFactory(
+            started_checklist=started_checklist,
+            cp_output=self.cp_output)
+
+        activity_question1 = ActivityQuestionFactory(
+            monitoring_activity=self.activity,
+            partner=self.partner,
+            question=self.question1
+        )
+        activity_question2 = ActivityQuestionFactory(
+            monitoring_activity=self.activity,
+            cp_output=self.cp_output,
+            question=self.question2
+        )
+        disabled_activity_question = ActivityQuestionFactory(
+            monitoring_activity=self.activity,
+            cp_output=self.cp_output,
+            is_enabled=False
+        )
+        FindingFactory(
+            started_checklist=started_checklist,
+            activity_question=activity_question1,
+            value=self.question1.options.all()[0].value
+        )
+        FindingFactory(
+            started_checklist=started_checklist,
+            activity_question=activity_question2,
+            value='text value'
+        )
+        FindingFactory(
+            started_checklist=started_checklist,
+            activity_question=disabled_activity_question
+        )
+
+        export_list = list(self.activity.get_export_checklist_findings())
+        self.assertEqual(
+            len(export_list),
+            self.activity.checklists.count()
+        )
+        for actual, expected in zip(export_list, [started_checklist]):
+            self.assertEqual(
+                actual['method'],
+                expected.method.name
+            )
+            self.assertEqual(
+                actual['source'],
+                expected.information_source
+            )
+            self.assertEqual(
+                actual['team_member'],
+                expected.author.full_name
+            )
+            activity_question_qs = ActivityQuestion.objects.filter(
+                monitoring_activity=self.activity, is_enabled=True)
+            self.assertEqual(
+                len(actual['overall']),
+                activity_question_qs.count()
+            )
+            for actual_overall, expected_overall in zip(actual['overall'], activity_question_qs):
+                expected_entity = expected_overall.partner.name if expected_overall.partner \
+                    else expected_overall.cp_output.name
+                self.assertEqual(actual_overall['entity_name'], expected_entity)

@@ -9,13 +9,32 @@ from etools.applications.field_monitoring.fm_settings.models import Method, Ques
 from etools.applications.field_monitoring.planning.models import MonitoringActivity, QuestionTargetMixin
 
 
+class ActivityQuestionQuerySet(models.QuerySet):
+    def filter_for_activity_export(self):
+        return self.filter(is_enabled=True) \
+            .select_related('question') \
+            .annotate(entity_name=models.Case(
+                models.When(cp_output__isnull=False,
+                            then=models.F('cp_output__name')),
+                models.When(partner__isnull=False,
+                            then=models.F('partner__name')),
+                output_field=models.TextField()))
+
+
 class ActivityQuestion(QuestionTargetMixin, models.Model):
     monitoring_activity = models.ForeignKey(MonitoringActivity, related_name='questions', verbose_name=_('Activity'),
                                             on_delete=models.CASCADE)
     question = models.ForeignKey(Question, related_name='activity_questions', verbose_name=_('Question'),
                                  on_delete=models.CASCADE)
+
+    """copy important fields from question to safely allow future question edits"""
+    text = models.TextField(verbose_name=_('Question Text'))
+    is_hact = models.BooleanField(default=False, verbose_name=_('Count as HACT'))
+
     specific_details = models.TextField(verbose_name=_('Specific Details To Probe'), blank=True)
     is_enabled = models.BooleanField(verbose_name=_('Enabled'), default=True)
+
+    objects = models.Manager.from_queryset(ActivityQuestionQuerySet)()
 
     class Meta:
         verbose_name = _('Activity Question')
@@ -75,12 +94,26 @@ class StartedChecklist(models.Model):
             self.prepare_overall_findings()
 
 
+class FindingQuerySet(models.QuerySet):
+    def filter_for_activity_export(self):
+        return self.filter(
+            activity_question__is_enabled=True) \
+            .annotate(entity_name=models.Case(
+                models.When(activity_question__cp_output__isnull=False,
+                            then=models.F('activity_question__cp_output__name')),
+                models.When(activity_question__partner__isnull=False,
+                            then=models.F('activity_question__partner__name')),
+                output_field=models.TextField()))
+
+
 class Finding(models.Model):
     started_checklist = models.ForeignKey(StartedChecklist, related_name='findings', verbose_name=_('Checklist'),
                                           on_delete=models.CASCADE)
     activity_question = models.ForeignKey(ActivityQuestion, related_name='findings',
                                           verbose_name=_('Activity Question'), on_delete=models.CASCADE)
     value = models.JSONField(null=True, blank=True, verbose_name=_('Value'))
+
+    objects = models.Manager.from_queryset(FindingQuerySet)()
 
     class Meta:
         verbose_name = _('Checklist Finding')
@@ -92,6 +125,12 @@ class Finding(models.Model):
 
 
 class ActivityQuestionOverallFinding(models.Model):
+    """
+        This model refers to the answer provided for a question during the 'summary analysis'
+        in the case where the related activity_question.question is marked as 'is_hact' then this, answer not being
+        null, reflects that the related monitoring activity (activity_question.monitoring_activity) will count as a
+        programmatic visit for the partner
+    """
     activity_question = models.OneToOneField(ActivityQuestion, related_name='overall_finding',
                                              verbose_name=_('Activity'), on_delete=models.CASCADE)
     value = models.JSONField(null=True, blank=True, verbose_name=_('Value'))
@@ -105,11 +144,21 @@ class ActivityQuestionOverallFinding(models.Model):
         return '{} - {}'.format(self.activity_question, self.value)
 
 
+class ChecklistOverallFindingQuerySet(models.QuerySet):
+    def annotate_for_activity_export(self):
+        return self.annotate(entity_name=models.Case(
+            models.When(cp_output__isnull=False, then=models.F('cp_output__name')),
+            models.When(partner__isnull=False, then=models.F('partner__name')),
+            output_field=models.TextField()))
+
+
 class ChecklistOverallFinding(QuestionTargetMixin, models.Model):
     started_checklist = models.ForeignKey(StartedChecklist, related_name='overall_findings',
                                           verbose_name=_('Checklist'), on_delete=models.CASCADE)
     narrative_finding = models.TextField(blank=True, verbose_name=_('Narrative Finding'))
     attachments = CodedGenericRelation(Attachment, code='attachments', verbose_name=_('Attachments'), blank=True)
+
+    objects = models.Manager.from_queryset(ChecklistOverallFindingQuerySet)()
 
     class Meta:
         verbose_name = _('Checklist Overall Finding')
@@ -120,11 +169,21 @@ class ChecklistOverallFinding(QuestionTargetMixin, models.Model):
         return '{} - {}'.format(self.started_checklist, self.narrative_finding)
 
 
+class ActivityOverallFindingQuerySet(models.QuerySet):
+    def annotate_for_activity_export(self):
+        return self.annotate(entity_name=models.Case(
+            models.When(cp_output__isnull=False, then=models.F('cp_output__name')),
+            models.When(partner__isnull=False, then=models.F('partner__name')),
+            output_field=models.TextField()))
+
+
 class ActivityOverallFinding(QuestionTargetMixin, models.Model):
     monitoring_activity = models.ForeignKey(MonitoringActivity, related_name='overall_findings',
                                             verbose_name=_('Activity'), on_delete=models.CASCADE)
     narrative_finding = models.TextField(blank=True, verbose_name=_('Narrative Finding'))
     on_track = models.BooleanField(null=True, blank=True)
+
+    objects = models.Manager.from_queryset(ActivityOverallFindingQuerySet)()
 
     class Meta:
         verbose_name = _('Activity Overall Finding')

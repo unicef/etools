@@ -98,7 +98,7 @@ class PMPPermissions:
 class InterventionPermissions(PMPPermissions):
 
     MODEL_NAME = 'partners.Intervention'
-    EXTRA_FIELDS = ['sections_present', 'pd_outputs', 'final_partnership_review', 'prc_reviews']
+    EXTRA_FIELDS = ['sections_present', 'pd_outputs', 'final_partnership_review', 'prc_reviews', 'document_currency']
 
     def __init__(self, **kwargs):
         """
@@ -130,8 +130,24 @@ class InterventionPermissions(PMPPermissions):
         def unicef_not_accepted(instance):
             return not instance.unicef_accepted
 
+        def unicef_not_accepted_contingency(instance):
+            """ field not required to accept if contingency is on"""
+            return instance.contingency_pd or not instance.unicef_accepted
+
+        def is_spd_non_hum(instance):
+            # TODO: in the future we might want to add a money condition here (100k is the current limit)
+            return instance.document_type == instance.SPD and not instance.humanitarian_flag
+
+        def unicef_not_accepted_spd_non_hum(instance):
+            """ field not required to accept if pd is not non-humanitarian spd"""
+            # TODO: in the future we might want to add a money condition here (100k is the current limit)
+            return is_spd_non_hum(instance) or not instance.unicef_accepted
+
+        def not_spd(instance):
+            return not instance.document_type == instance.SPD
+
         def not_ssfa(instance):
-            return instance.document_type != instance.SSFA
+            return not is_spd_non_hum(instance)
 
         staff_member = self.user.get_partner_staff_member()
 
@@ -143,6 +159,16 @@ class InterventionPermissions(PMPPermissions):
 
         if staff_member and staff_member.id in partner_focal_points:
             self.user_groups.extend(['Partner User', 'Partner Focal Point'])
+
+        if self.user.is_staff and self.user in self.instance.unicef_focal_points.all():
+            self.user_groups.append("Unicef Focal Point")
+        if self.user.is_staff and self.instance.budget_owner and self.user == self.instance.budget_owner:
+            self.user_groups.append("Unicef Budget Owner")
+        if self.user.is_staff and self.user in self.instance.unicef_users_involved:
+            self.user_groups.append("Unicef Users Involved")
+
+        if self.user.is_staff and self.instance.budget_owner and self.user == self.instance.budget_owner:
+            self.user_groups.append("Unicef Budget Owner")
 
         review = self.instance.review
         if review:
@@ -158,6 +184,7 @@ class InterventionPermissions(PMPPermissions):
             'condition1': self.user in self.instance.unicef_focal_points.all(),
             'condition2': self.user in self.instance.partner_focal_points.all(),
             'contingency on': self.instance.contingency_pd is True,
+            'in_amendment_mode': user_added_amendment(self.instance),
             'not_in_amendment_mode': not user_added_amendment(self.instance),
             'not_ssfa': not_ssfa(self.instance),
             'user_adds_amendment': user_added_amendment(self.instance),
@@ -174,7 +201,11 @@ class InterventionPermissions(PMPPermissions):
             'partner_court': not self.instance.unicef_court and unlocked(self.instance),
             'unlocked': unlocked(self.instance),
             'is_spd': self.instance.document_type == self.instance.SPD,
+            'is_spd_non_hum': is_spd_non_hum(self.instance),
             'unicef_not_accepted': unicef_not_accepted(self.instance),
+            'unicef_not_accepted_contingency': unicef_not_accepted_contingency(self.instance),
+            'unicef_not_accepted_spd': not_spd(self.instance) or unicef_not_accepted(self.instance),
+            'unicef_not_accepted_spd_non_hum': unicef_not_accepted_spd_non_hum(self.instance),
             'not_ssfa+unicef_not_accepted': not_ssfa(self.instance) and unicef_not_accepted(self.instance),
         }
 
@@ -210,7 +241,9 @@ class InterventionPermissions(PMPPermissions):
                               "other_partners_involved",
                               "technical_guidance",
                               "cancel_justification",
-                              "population_focus"]
+                              "population_focus",
+                              "risks",
+                              "sites"]
         ps = self.permission_structure
         my_permissions = {}
         for action in self.possible_actions:
@@ -554,3 +587,19 @@ class UserBelongsToObjectPermission(BasePermission):
 class IsInterventionBudgetOwnerPermission(BasePermission):
     def has_object_permission(self, request, view, obj):
         return obj.budget_owner and obj.budget_owner == request.user
+
+
+class AmendmentSessionActivitiesPermission(BasePermission):
+    """
+    Lock activities created before current amendment
+    """
+    def has_object_permission(self, request, view, obj):
+        if request.method.upper() != 'DELETE':
+            return True
+
+        intervention = view.get_root_object()
+        if not hasattr(intervention, 'amendment'):
+            return True
+
+        amendment = intervention.amendment
+        return obj.created > amendment.created

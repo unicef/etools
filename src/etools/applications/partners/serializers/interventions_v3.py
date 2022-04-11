@@ -4,11 +4,13 @@ import decimal
 
 from django.contrib.auth import get_user_model
 from django.db import transaction
+from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from unicef_attachments.fields import AttachmentSingleFileField
 
+from etools.applications.field_monitoring.fm_settings.serializers import LocationSiteSerializer
 from etools.applications.partners.models import (
     FileType,
     Intervention,
@@ -22,6 +24,7 @@ from etools.applications.partners.models import (
 from etools.applications.partners.permissions import (
     InterventionPermissions,
     PARTNERSHIP_MANAGER_GROUP,
+    PRC_SECRETARY,
     SENIOR_MANAGEMENT_GROUP,
 )
 from etools.applications.partners.serializers.interventions_v2 import (
@@ -31,6 +34,7 @@ from etools.applications.partners.serializers.interventions_v2 import (
     InterventionBudgetCUSerializer,
     InterventionListSerializer as InterventionV2ListSerializer,
     InterventionResultNestedSerializer,
+    InterventionResultsStructureSerializer,
     PlannedVisitsNestedSerializer,
     SingleInterventionAttachmentField,
 )
@@ -79,7 +83,8 @@ class InterventionSupplyItemUploadSerializer(serializers.Serializer):
             if row.get(column):
                 row[column] = row[column].strip()
 
-        if row.get("Product Number", "").startswith("\"Disclaimer"):
+        # dont parse disclaimer line
+        if 'disclaimer' in ''.join(map(str, row.values())).lower():
             return False
 
         # skip if row is empty
@@ -124,6 +129,10 @@ class InterventionSupplyItemUploadSerializer(serializers.Serializer):
 
 
 class InterventionManagementBudgetItemSerializer(serializers.ModelSerializer):
+    default_error_messages = {
+        'invalid_budget': _('Invalid budget data. Total cash should be equal to items number * price per item.')
+    }
+
     id = serializers.IntegerField(required=False)
 
     class Meta:
@@ -133,6 +142,24 @@ class InterventionManagementBudgetItemSerializer(serializers.ModelSerializer):
             'unit', 'unit_price', 'no_units',
             'unicef_cash', 'cso_cash'
         )
+
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+
+        instance = None
+        if 'id' in attrs:
+            instance = self.Meta.model.objects.filter(id=attrs['id']).first()
+
+        unit_price = attrs.get('unit_price', instance.unit_price if instance else None)
+        no_units = attrs.get('no_units', instance.no_units if instance else None)
+        unicef_cash = attrs.get('unicef_cash', instance.unicef_cash if instance else None)
+        cso_cash = attrs.get('cso_cash', instance.cso_cash if instance else None)
+
+        # unit_price * no_units can contain more decimal places than we're able to save
+        if abs((unit_price * no_units) - (unicef_cash + cso_cash)) > 0.01:
+            self.fail('invalid_budget')
+
+        return attrs
 
 
 class InterventionManagementBudgetSerializer(serializers.ModelSerializer):
@@ -241,6 +268,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     section_names = serializers.SerializerMethodField(read_only=True)
     signed_pd_attachment = AttachmentSingleFileField(read_only=True)
     signed_pd_document_file = serializers.FileField(source='signed_pd_document', read_only=True)
+    sites = LocationSiteSerializer(many=True)
     submitted_to_prc = serializers.ReadOnlyField()
     termination_doc_attachment = AttachmentSingleFileField(read_only=True)
     termination_doc_file = serializers.FileField(source='termination_doc', read_only=True)
@@ -300,7 +328,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
         return [
             '{} [{} - {}]'.format(
                 loc.name,
-                loc.gateway.name,
+                loc.admin_level_name,
                 loc.p_code
             ) for loc in obj.flat_locations.all()
         ]
@@ -328,6 +356,13 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             profile__country=self.context['request'].user.profile.country
         ).exists()
 
+    def _is_prc_secretary(self):
+        return get_user_model().objects.filter(
+            pk=self.context['request'].user.pk,
+            groups__name__in=[PRC_SECRETARY],
+            profile__country=self.context['request'].user.profile.country
+        ).exists()
+
     def _is_overall_approver(self, obj, user):
         if not obj.review:
             return False
@@ -350,6 +385,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "review",
             "sign",
             "reject_review",
+            "send_back_review",
             "unlock",
             "cancel",
             "suspend",
@@ -357,16 +393,20 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "terminate",
             "download_comments",
             "export_results",
+            "export_pdf",
+            "export_xls",
             "amendment_merge",
         ]
         available_actions = [
             "download_comments",
             "export_results",
+            "export_pdf",
+            "export_xls",
         ]
         user = self.context['request'].user
 
-        # Partnership Manager
-        if self._is_partnership_manager():
+        # focal point or budget owner
+        if self._is_unicef_focal_point(obj, user) or obj.budget_owner == user:
             # amendments should be deleted instead of moving to cancelled/terminated
             if not obj.in_amendment:
                 if obj.status in [obj.SIGNED, obj.ACTIVE, obj.IMPLEMENTED, obj.SUSPENDED]:
@@ -386,6 +426,10 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             available_actions.append("sign")
             available_actions.append("reject_review")
 
+        # prc secretary can send back intervention if not approved yet
+        if obj.status == obj.REVIEW and self._is_prc_secretary() and obj.review and obj.review.overall_approval is None:
+            available_actions.append("send_back_review")
+
         # PD is in review and user prc review not started
         if obj.status == obj.REVIEW and obj.review and obj.review.prc_reviews.filter(
             user=user, overall_approval__isnull=True
@@ -399,7 +443,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
         if obj.status != obj.DRAFT:
             return [action for action in default_ordering if action in available_actions]
 
-        if obj.budget_owner == user and not obj.partner_accepted:
+        if not obj.partner_accepted and user in obj.unicef_users_involved:
             available_actions.append("accept_on_behalf_of_partner")
 
         # PD is assigned to UNICEF
@@ -412,8 +456,9 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
                     available_actions.append("review")
 
             # any unicef focal point user
-            if user in obj.unicef_focal_points.all():
-                available_actions.append("send_to_partner")
+            if user in obj.unicef_focal_points.all() or obj.budget_owner == user:
+                if not obj.partner_accepted:
+                    available_actions.append("send_to_partner")
                 available_actions.append("cancel")
                 if obj.partner_accepted:
                     available_actions.append("unlock")
@@ -432,39 +477,35 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
         return [action for action in default_ordering if action in available_actions]
 
     def get_status_list(self, obj):
+        pre_signed_statuses = [
+            obj.DRAFT,
+            obj.REVIEW,
+            obj.SIGNATURE,
+            obj.SIGNED
+        ]
+        post_signed_statuses = [
+            obj.DRAFT,
+            obj.SIGNED,
+            obj.ACTIVE,
+            obj.ENDED,
+            obj.CLOSED,
+        ]
         if obj.status == obj.SUSPENDED:
-            status_list = [
-                obj.DRAFT,
-                obj.REVIEW,
-                obj.SIGNATURE,
-                obj.SIGNED,
-                obj.SUSPENDED,
-                obj.ACTIVE,
-                obj.ENDED,
-                obj.CLOSED,
-            ]
+            status_list = [obj.SUSPENDED]
+
         elif obj.status == obj.TERMINATED:
             status_list = [
-                obj.DRAFT,
-                obj.REVIEW,
-                obj.SIGNATURE,
-                obj.SIGNED,
                 obj.TERMINATED,
             ]
         elif obj.status == obj.CANCELLED:
             status_list = [
                 obj.CANCELLED,
             ]
+        elif obj.status not in [obj.SIGNED, obj.ACTIVE, obj.ENDED, obj.CLOSED]:
+            status_list = pre_signed_statuses
         else:
-            status_list = [
-                obj.DRAFT,
-                obj.REVIEW,
-                obj.SIGNATURE,
-                obj.SIGNED,
-                obj.ACTIVE,
-                obj.ENDED,
-                obj.CLOSED,
-            ]
+            status_list = post_signed_statuses
+
         return [s for s in obj.INTERVENTION_STATUS if s[0] in status_list]
 
     def get_quarters(self, obj: Intervention):
@@ -490,6 +531,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
         fields = (
             "activation_letter_attachment",
             "activation_letter_file",
+            "activation_protocol",
             # "actual_amount",
             "agreement",
             "amendments",
@@ -502,6 +544,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "cash_transfer_modalities",
             "cfei_number",
             "cluster_names",
+            "confidential",
             "context",
             "contingency_pd",
             "country_programmes",
@@ -573,6 +616,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "signed_by_unicef_date",
             "signed_pd_attachment",
             "signed_pd_document_file",
+            "sites",
             "start",
             "status",
             "status_list",
@@ -594,6 +638,16 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "unicef_focal_points",
             "unicef_signatory",
             "original_intervention",
+        )
+
+
+class InterventionDetailResultsStructureSerializer(serializers.ModelSerializer):
+    result_links = InterventionResultsStructureSerializer(many=True, read_only=True, required=False)
+
+    class Meta:
+        model = Intervention
+        fields = (
+            "result_links",
         )
 
 
@@ -627,3 +681,12 @@ class AmendedInterventionReviewActionSerializer(serializers.ModelSerializer):
     class Meta:
         model = InterventionReview
         fields = ('id', 'review_type')
+
+
+class InterventionReviewSendBackSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InterventionReview
+        fields = ('id', 'sent_back_comment')
+        extra_kwargs = {
+            'sent_back_comment': {'required': True},
+        }

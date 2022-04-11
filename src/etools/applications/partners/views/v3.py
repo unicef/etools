@@ -23,6 +23,7 @@ from etools.applications.partners.models import (
     InterventionAmendment,
     InterventionReview,
     InterventionRisk,
+    InterventionSupplyItem,
     PartnerOrganization,
     PartnerType,
 )
@@ -214,6 +215,10 @@ class PMPDropdownsListApiView(APIView):
             ),
             'review_types': choices_to_json_ready(
                 InterventionReview.ALL_REVIEW_TYPES,
+                sort_choices=False,
+            ),
+            'supply_item_provided_by': choices_to_json_ready(
+                InterventionSupplyItem.PROVIDED_BY_CHOICES,
                 sort_choices=False,
             ),
         }

@@ -29,6 +29,7 @@ from etools.applications.audit.conditions import (
     AuditModuleCondition,
     AuditStaffMemberCondition,
     EngagementStaffMemberCondition,
+    IsStaffMemberCondition,
 )
 from etools.applications.audit.exports import (
     AuditDetailCSVRenderer,
@@ -369,6 +370,7 @@ class EngagementViewSet(
             ObjectStatusCondition(obj),
             AuditStaffMemberCondition(obj.agreement.auditor_firm, self.request.user),
             EngagementStaffMemberCondition(obj, self.request.user),
+            IsStaffMemberCondition(self.request.user)
         ])
         return context
 
@@ -409,7 +411,7 @@ class EngagementViewSet(
             request, template,
             context={'engagement': pdf_serializer_class(obj).data,
                      'serializer': serializer},
-            filename='engagement_{}.pdf'.format(obj.unique_id),
+            filename='engagement_{}.pdf'.format(obj.reference_number),
         )
 
     @action(detail=False, methods=['get'], url_path='csv', renderer_classes=[EngagementCSVRenderer])
@@ -436,7 +438,9 @@ class EngagementManagementMixin(
         serializer = self.csv_export_serializer(engagement)
 
         return Response(serializer.data, headers={
-            'Content-Disposition': 'attachment;filename={}.csv'.format(engagement.unique_id)
+            'Content-Disposition': 'attachment;filename={}.csv'.format(
+                engagement.reference_number,
+            )
         })
 
 

@@ -1,6 +1,8 @@
 from copy import copy
 
+from django.conf import settings
 from django.db import transaction
+from django.http import HttpResponse
 from django.utils.translation import ugettext_lazy as _
 
 from easy_pdf.rendering import render_to_pdf_response
@@ -24,6 +26,8 @@ from rest_framework.views import APIView
 from unicef_djangolib.fields import CURRENCY_LIST
 
 from etools.applications.field_monitoring.permissions import IsEditAction, IsReadAction
+from etools.applications.partners.exports_v2 import InterventionXLSRenderer
+from etools.applications.partners.filters import InterventionEditableByFilter
 from etools.applications.partners.models import (
     Intervention,
     InterventionAttachment,
@@ -35,6 +39,7 @@ from etools.applications.partners.models import (
     PRCOfficerInterventionReview,
 )
 from etools.applications.partners.permissions import (
+    AmendmentSessionActivitiesPermission,
     intervention_field_is_editable_permission,
     PMPInterventionPermission,
     UserBelongsToObjectPermission,
@@ -50,6 +55,7 @@ from etools.applications.partners.serializers.interventions_v2 import (
     MinimalInterventionListSerializer,
 )
 from etools.applications.partners.serializers.interventions_v3 import (
+    InterventionDetailResultsStructureSerializer,
     InterventionDetailSerializer,
     InterventionListSerializer,
     InterventionManagementBudgetSerializer,
@@ -118,9 +124,9 @@ class PMPInterventionListCreateView(PMPInterventionMixin, InterventionListAPIVie
         'number__icontains',
         'cfei_number__icontains',
     )
-    filters = InterventionListAPIView.filters + [
-        ('sent_to_partner', 'date_sent_to_partner__isnotnull'),
-    ]
+    filter_backends = InterventionListAPIView.filter_backends + (
+        InterventionEditableByFilter,
+    )
 
     def get_serializer_class(self):
         if self.request.method == "GET":
@@ -188,20 +194,43 @@ class PMPInterventionRetrieveUpdateView(PMPInterventionMixin, InterventionDetail
         )
 
 
+class PMPInterventionRetrieveResultsStructure(PMPInterventionMixin, RetrieveAPIView):
+    queryset = Intervention.objects.detail_qs()
+    serializer_class = InterventionDetailResultsStructureSerializer
+    permission_classes = (IsAuthenticated, PMPInterventionPermission,)
+
+
 class PMPInterventionPDFView(PMPInterventionMixin, RetrieveAPIView):
     queryset = Intervention.objects.detail_qs().all()
-    permission_classes = (PMPInterventionPermission,)
-
-    def get_pdf_filename(self):
-        return str(self.pd)
+    permission_classes = (IsAuthenticated, PMPInterventionPermission,)
 
     def get(self, request, *args, **kwargs):
         pd = self.get_pd_or_404(self.kwargs.get("pk"))
+        # re-fetch to get prefetched detail queries
+        pd = self.get_queryset().get(pk=pd.pk)
+        font_path = settings.PACKAGE_ROOT + '/assets/fonts/'
+
         data = {
-            "pd": self.get_queryset().get(pk=pd.pk),
+            "pd": pd,
+            "pd_offices": [o.name for o in pd.offices.all()],
+            "pd_locations": [location.name for location in pd.flat_locations.all()],
+            "font_path": font_path,
         }
 
-        return render_to_pdf_response(request, "pd/detail.html", data)
+        return render_to_pdf_response(request, "pd/detail.html", data, filename=f'{str(pd)}.pdf')
+
+
+class PMPInterventionXLSView(PMPInterventionMixin, RetrieveAPIView):
+    queryset = Intervention.objects.detail_qs().all()
+    permission_classes = (IsAuthenticated, PMPInterventionPermission,)
+
+    def get(self, request, *args, **kwargs):
+        pd = self.get_pd_or_404(self.kwargs.get("pk"))
+        pd = self.get_queryset().get(pk=pd.pk)
+
+        return HttpResponse(content=InterventionXLSRenderer(pd).render(), headers={
+            'Content-Disposition': 'attachment;filename={}.xlsx'.format(str(pd))
+        })
 
 
 class PMPInterventionDeleteView(PMPInterventionMixin, InterventionDeleteView):
@@ -459,6 +488,7 @@ class InterventionActivityViewMixin(DetailedInterventionResponseMixin):
     queryset = InterventionActivity.objects.prefetch_related('items', 'time_frames').order_by('id')
     permission_classes = [
         IsAuthenticated,
+        AmendmentSessionActivitiesPermission,
         IsReadAction | (IsEditAction & intervention_field_is_editable_permission('pd_outputs'))
     ]
     serializer_class = InterventionActivityDetailSerializer

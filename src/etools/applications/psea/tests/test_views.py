@@ -1055,7 +1055,8 @@ class TestAssessmentActionPointViewSet(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         call_command('update_psea_permissions', verbosity=0)
-        cls.send_path = "etools.applications.action_points.models.Notification"
+        call_command('update_notifications')
+        cls.send_path = "etools.applications.action_points.models.send_notification_with_template"
         cls.focal_user = UserFactory()
         cls.focal_user.groups.add(
             GroupFactory(name=UNICEFAuditFocalPoint.name),
@@ -1080,22 +1081,42 @@ class TestAssessmentActionPointViewSet(BaseTenantTestCase):
                 'post',
                 reverse("psea:action-points-list", args=[assessment.pk]),
                 user=self.focal_user,
-                data={
-                    'description': fuzzy.FuzzyText(length=100).fuzz(),
-                    'due_date': fuzzy.FuzzyDate(
-                        timezone.now().date(),
-                        timezone.now().date() + datetime.timedelta(days=5),
-                    ).fuzz(),
-                    'assigned_to': self.unicef_user.pk,
-                    'office': self.focal_user.profile.tenant_profile.office.pk,
-                    'section': SectionFactory().pk,
-                }
+                data=self._get_post_payload()
             )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(assessment.action_points.count(), 1)
         self.assertIsNotNone(assessment.action_points.first().partner)
-        self.assertTrue(mock_send.objects.create.called)
+        self.assertTrue(mock_send)
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_action_point_added_no_assessor(self):
+        assessment = AssessmentFactory()
+        mock_send = Mock()
+        with patch(self.send_path, mock_send):
+            response = self.forced_auth_req(
+                'post',
+                reverse("psea:action-points-list", args=[assessment.pk]),
+                user=self.focal_user,
+                data=self._get_post_payload()
+            )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(assessment.action_points.count(), 1)
+        self.assertIsNotNone(assessment.action_points.first().partner)
+        self.assertTrue(mock_send)
+
+    def _get_post_payload(self):
+        return {
+            'description': fuzzy.FuzzyText(length=100).fuzz(),
+            'due_date': fuzzy.FuzzyDate(
+                timezone.now().date(),
+                timezone.now().date() + datetime.timedelta(days=5)
+            ).fuzz(),
+            'assigned_to': self.unicef_user.pk,
+            'office': self.focal_user.profile.tenant_profile.office.pk,
+            'section': SectionFactory().pk,
+        }
 
     def _test_action_point_editable(self, action_point, user, editable=True):
         assessment = action_point.psea_assessment

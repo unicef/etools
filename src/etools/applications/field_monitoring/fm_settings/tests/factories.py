@@ -2,7 +2,6 @@ from django.contrib.gis.geos import GEOSGeometry
 
 import factory
 from factory import fuzzy, LazyAttribute
-from unicef_locations.models import GatewayType
 from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.attachments.tests.factories import AttachmentFactory
@@ -29,8 +28,7 @@ class LocationSiteFactory(factory.django.DjangoModelFactory):
     name = factory.Sequence(lambda n: 'Location {}'.format(n))
     point = GEOSGeometry("POINT(20 20)")
     p_code = factory.Sequence(lambda n: 'PCODE{}'.format(n))
-    parent = factory.LazyFunction(lambda:
-                                  LocationFactory(gateway=GatewayType.objects.get_or_create(admin_level=0)[0]))
+    parent = factory.LazyFunction(lambda: LocationFactory(admin_level=0))
 
     class Meta:
         model = LocationSite

@@ -69,13 +69,13 @@ Pillow = "==8.1.0"
 psycopg2-binary = "==2.9.1"
 sentry-sdk = "*"
 requests = "==2.26"
-social-auth-app-django = "==4.0"
+social-auth-app-django = "==5.0"
 social-auth-core = {extras = ["azuread"],version = "==4.1"}
 tenant-schemas-celery = "==1.0.1"
-unicef-attachments = "==0.9.0"
+unicef-attachments = "==0.10.1"
 unicef-djangolib = "==0.5.4"
-unicef-locations = "==3.0"
-unicef-notification = "==0.2.1"
+unicef-locations = "==4.0"
+unicef-notification = "==1.1"
 unicef-restlib = "==0.7"
 unicef-snapshot = "==1.1"
 unicef-rest-export = "==0.5.3"
@@ -84,6 +84,8 @@ unicef-vision = "==0.6"
 etools-offline = "==0.1.0"
 openpyxl = "==3.0.5"
 pyyaml = "==5.4.1"
+
+reportlab = "==3.6.6"  # freeze: getStringIO from 'reportlab.lib.utils'
 
 [requires]
 python_version = "3.9"

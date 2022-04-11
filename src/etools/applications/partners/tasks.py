@@ -3,15 +3,18 @@ import itertools
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.contenttypes.models import ContentType
 from django.db import connection, transaction
 from django.db.models import F, Prefetch, Sum
+from django.utils import timezone
 
 from celery.utils.log import get_task_logger
 from django_tenants.utils import get_tenant_model, schema_context
-from unicef_notification.utils import send_notification_with_template
+from unicef_snapshot.models import Activity
 from unicef_vision.exceptions import VisionException
 from unicef_vision.utils import get_data_from_insight
 
+from etools.applications.environment.notifications import send_notification_with_template
 from etools.applications.partners.models import Agreement, Intervention, PartnerOrganization, PartnerStaffMember
 from etools.applications.partners.prp_api import PRPAPI
 from etools.applications.partners.serializers.prp_v1 import PRPPartnerOrganizationWithStaffMembersSerializer
@@ -25,6 +28,7 @@ from etools.applications.partners.utils import (
 )
 from etools.applications.partners.validation.agreements import AgreementValid
 from etools.applications.partners.validation.interventions import InterventionValid
+from etools.applications.reports.models import CountryProgramme
 from etools.applications.users.models import Country
 from etools.config.celery import app
 from etools.libraries.djangolib.utils import get_environment
@@ -336,17 +340,201 @@ def sync_partners_staff_members_from_prp():
             sync_partner_staff_member(partner, staff_member_data)
 
 
+@app.task
+def transfer_active_pds_to_new_cp():
+    today = timezone.now().date()
+
+    original_tenant = connection.tenant
+    try:
+        for country in Country.objects.exclude(name='Global'):
+            connection.set_tenant(country)
+
+            active_cp = CountryProgramme.objects.filter(invalid=False, to_date__gte=today).first()
+            if not active_cp:
+                continue
+
+            # exclude by id because of m2m filter
+            outdated_active_pds = Intervention.objects.filter(
+                status__in=[
+                    Intervention.DRAFT,
+                    Intervention.REVIEW,
+                    Intervention.SIGNATURE,
+                    Intervention.SIGNED,
+                    Intervention.ACTIVE,
+                ],
+                end__gte=today,
+            ).exclude(
+                pk__in=Intervention.objects.filter(
+                    end__gte=today,
+                    country_programmes__invalid=False,
+                    country_programmes__to_date__gte=today,
+                ).values_list('id', flat=True)
+            ).prefetch_related(
+                'agreement__partner'
+            )
+
+            for pd in outdated_active_pds:
+                pd.country_programmes.add(active_cp)
+    finally:
+        connection.set_tenant(original_tenant)
+
+
+@app.task
 def sync_partner(vendor_number=None, country=None):
     from etools.applications.partners.synchronizers import PartnerSynchronizer
     try:
-        valid_response, response = get_data_from_insight('partners/?vendor={vendor_code}',
-                                                         {"vendor_code": vendor_number})
+        valid_response, response = get_data_from_insight(
+            'partners/?vendor={vendor_code}', {
+                "vendor_code": vendor_number,
+                "businessarea": country.business_area_code
+            })
+
+        if "ROWSET" not in response:
+            logger.exception("{} sync failed: Invalid response".format(PartnerSynchronizer.__name__))
+            return 'The vendor number could not be found in INSIGHT'
+
         partner_resp = response["ROWSET"]["ROW"]
         partner_sync = PartnerSynchronizer(business_area_code=country.business_area_code)
         if not partner_sync._filter_records([partner_resp]):
-            raise VisionException
+            raise VisionException('Partner skipped because one or more of the required fields are missing')
 
         partner_sync._partner_save(partner_resp, full_sync=False)
-    except VisionException:
+    except VisionException as e:
         logger.exception("{} sync failed".format(PartnerSynchronizer.__name__))
-    logger.info('Partner {} synced successfully.'.format(vendor_number))
+        return str(e)
+    else:
+        logger.info('Partner {} synced successfully.'.format(vendor_number))
+
+
+@app.task
+def intervention_expired():
+    for country in Country.objects.exclude(name='Global').all():
+        connection.set_tenant(country)
+        _set_intervention_expired(country.name)
+
+
+def _set_intervention_expired(country_name):
+    # Check and transition to 'Expired' any contingency PD that has not
+    # been activated and the CP for which was created has now expired
+    logger.info(
+        'Starting intervention expirations for country {}'.format(
+            country_name,
+        ),
+    )
+    today = timezone.now().date()
+    pd_qs = Intervention.objects.filter(
+        contingency_pd=True,
+        status__in=[
+            Intervention.REVIEW,
+            Intervention.SIGNATURE,
+            Intervention.SIGNED,
+        ],
+        end__gte=today,
+    ).exclude(
+        pk__in=Intervention.objects.filter(
+            contingency_pd=True,
+            end__gte=today,
+            country_programmes__invalid=False,
+            country_programmes__to_date__gte=today,
+        ).values_list('id', flat=True)
+    )
+    for pd in pd_qs:
+        pd.status = Intervention.EXPIRED
+        pd.save()
+
+
+def get_pilot_numbers(country_name):
+    logger.info(
+        '... Starting epd numbers counting for {}'.format(
+            country_name,
+        ),
+    )
+    now = timezone.now()
+    today = now.date()
+    pd_qs = Intervention.objects.filter(
+        date_sent_to_partner__isnull=False,
+    ).prefetch_related("agreement__partner")
+    record = []
+    for pd in pd_qs:
+        fp_users = [fp.user for fp in pd.partner_focal_points.all()]
+        has_the_partner_logged_in = pd.partner_focal_points.filter(
+            user__last_login__gt=timezone.make_aware(datetime.datetime(2021, 10, 15))
+        ).exists()
+        act_qs = Activity.objects.filter(target_object_id=pd.id,
+                                         target_content_type=ContentType.objects.get_for_model(pd))
+        partner_entered_data = act_qs.filter(by_user__in=fp_users).exists()
+        date_sent = pd.date_sent_to_partner.strftime("%Y-%m-%d") if pd.date_sent_to_partner else None
+        record.append([
+            country_name,
+            pd.number,
+            pd.agreement.partner.name,
+            date_sent,
+            has_the_partner_logged_in,
+            partner_entered_data,
+            pd.unicef_accepted,
+            pd.partner_accepted,
+            "Unicef" if pd.unicef_court else "Partner",
+            pd.status,
+            today.strftime("%Y-%m-%d"),
+            pd.get_frontend_object_url()
+        ])
+    return record
+
+
+@app.task
+def epd_pilot_tracking():
+    # TODO: remove this before ePD merges into the main branch
+    # temporary task to get some epd pilot numbers emailed
+    import csv
+    import io
+    import os
+
+    from post_office import mail
+    recipients = os.environ.get("EPD_PILOT_RECIPIENTS", "").split(",")
+    countries = os.environ.get("EPD_PILOT_SCHEMAS", "").split(",")
+    my_file = io.StringIO()
+    my_numbers = [["CO Name", "PD No", "IP", "Date Sent to IP", "IP Logged In", "IP Entered Data",
+                  "Unicef Accepted", "Partner Accepted", "Editable By", "Status", "Date of export",
+                   "PD URL"]]
+    for country in Country.objects.filter(schema_name__in=countries).all():
+        connection.set_tenant(country)
+        my_numbers += get_pilot_numbers(country.name)
+    csv_writer = csv.writer(my_file)
+    for line in my_numbers:
+        csv_writer.writerow(line)
+
+    # taken from https://stackoverflow.com/questions/55889474/convert-io-stringio-to-io-bytesio/55961119#55961119
+    class BytesIOWrapper(io.BufferedReader):
+        """Wrap a buffered bytes stream over TextIOBase string stream."""
+        def __init__(self, text_io_buffer, encoding=None, errors=None, **kwargs):
+            super(BytesIOWrapper, self).__init__(text_io_buffer, **kwargs)
+            self.encoding = encoding or text_io_buffer.encoding or 'utf-8'
+            self.errors = errors or text_io_buffer.errors or 'strict'
+
+        def _encoding_call(self, method_name, *args, **kwargs):
+            raw_method = getattr(self.raw, method_name)
+            val = raw_method(*args, **kwargs)
+            return val.encode(self.encoding, errors=self.errors)
+
+        def read(self, size=-1):
+            return self._encoding_call('read', size)
+
+        def read1(self, size=-1):
+            return self._encoding_call('read1', size)
+
+        def peek(self, size=-1):
+            return self._encoding_call('peek', size)
+    bio = BytesIOWrapper(my_file)
+    mail.send(
+        recipients, "etoolsunicef@gmail.com", subject="ePD Pilot Numbers",
+        attachments={"epd_pilot_values.csv": bio},
+        message="enjoy!"
+    )
+
+
+@app.task
+def update_interventions_task_chain():
+    # call two tasks above one after another to avoid problems with parallel execution
+    # because both of them handle similar cases yet in different way
+    transfer_active_pds_to_new_cp()
+    intervention_expired()

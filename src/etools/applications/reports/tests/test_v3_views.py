@@ -181,6 +181,7 @@ class TestPMPSpecialReportingRequirementListCreateView(BaseTenantTestCase):
             status=Intervention.DRAFT,
             in_amendment=True,
         )
+        cls.intervention.unicef_focal_points.add(cls.unicef_staff)
 
         cls.url = reverse(
             "reports_v3:interventions-special-reporting-requirements",
@@ -284,6 +285,7 @@ class TestSpecialReportingRequirementRetrieveUpdateDestroyView(BaseTenantTestCas
             date_sent_to_partner=datetime.date.today()
         )
         cls.intervention.partner_focal_points.add(cls.partner_focal_point.get_partner_staff_member())
+        cls.intervention.unicef_focal_points.add(cls.unicef_staff)
 
     def _get_url(self, requirement):
         return reverse(
@@ -343,7 +345,7 @@ class TestSpecialReportingRequirementRetrieveUpdateDestroyView(BaseTenantTestCas
                 "description": "New",
             }
         )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_delete_invalid_old(self):
         """Cannot delete special reporting requirements in the past"""

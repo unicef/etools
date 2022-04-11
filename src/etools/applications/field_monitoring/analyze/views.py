@@ -3,7 +3,6 @@ from django.db.models import Count, Max, Min, OuterRef, Prefetch, Q
 from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from unicef_locations.models import Location
 
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.field_monitoring.analyze.serializers import (
@@ -20,6 +19,7 @@ from etools.applications.field_monitoring.analyze.serializers import (
 from etools.applications.field_monitoring.fm_settings.models import LogIssue
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.field_monitoring.utils.models import SubQueryCount
+from etools.applications.locations.models import Location
 from etools.applications.partners.models import Intervention, PartnerOrganization
 from etools.applications.reports.models import Result, ResultType
 
@@ -83,7 +83,7 @@ class CoverageCPOutputsView(ListAPIView):
 
 class CoverageGeographicView(ListAPIView):
     serializer_class = CoverageGeographicSerializer
-    queryset = Location.objects.filter(parent__gateway__admin_level=0)
+    queryset = Location.objects.filter(parent__admin_level=0)
 
     def get_queryset(self):
         queryset = super().get_queryset()

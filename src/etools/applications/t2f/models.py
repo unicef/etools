@@ -291,11 +291,13 @@ class Travel(models.Model):
         try:
             for act in self.activities.filter(primary_traveler=self.traveler,
                                               travel_type=TravelType.PROGRAMME_MONITORING):
-                act.partner.programmatic_visits(event_date=self.end_date, update_one=True)
+                if act.partner:
+                    act.partner.update_programmatic_visits(event_date=self.end_date, update_one=True)
 
             for act in self.activities.filter(primary_traveler=self.traveler,
                                               travel_type=TravelType.SPOT_CHECK):
-                act.partner.spot_checks(event_date=self.end_date, update_one=True)
+                if act.partner:
+                    act.partner.update_spot_checks(event_date=self.end_date, update_one=True)
 
         except Exception:
             logger.exception('Exception while trying to update hact values.')

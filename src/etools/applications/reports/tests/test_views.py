@@ -337,7 +337,23 @@ class TestDisaggregationListCreateViews(BaseTenantTestCase):
         data = {
             'name': 'Gender',
             'disaggregation_values': [
+                {'id': 998, 'value': 'Male'},
                 {'id': 999, 'value': 'Female'},
+            ]
+        }
+        response = self.forced_auth_req(
+            'post',
+            self.url,
+            user=self.pme_user,
+            data=data
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_create_one_group(self):
+        data = {
+            'name': 'Gender',
+            'disaggregation_values': [
+                {'value': 'Female'},
             ]
         }
         response = self.forced_auth_req(

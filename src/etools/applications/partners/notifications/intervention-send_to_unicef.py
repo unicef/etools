@@ -1,11 +1,11 @@
 name = "partners/intervention/send_to_unicef"
 defaults = {
-    "description": "Send PD to UNICEF",
-    "subject": "[eTools] PD Open for Updates by UNICEF",
+    "description": "PD sent to UNICEF",
+    "subject": "[eTools] PD sent to UNICEF",
     "content": """
     Dear Colleague,
 
-    PD {{reference_number}} now with {{ partner_name }}
+    PD {{reference_number}} has been sent to UNICEF
 
     {{pd_link}}
 
@@ -17,7 +17,7 @@ defaults = {
     {% block content %}
     Dear Colleague,<br /><br />
 
-    PD {{reference_number}} now with {{ partner_name }}
+    PD {{reference_number}} has been sent to UNICEF
 
     {{pd_link}}<br />
 

@@ -4,8 +4,8 @@ from django.db import connection
 
 from rest_framework import serializers
 from unicef_attachments.fields import AttachmentSingleFileField
-from unicef_locations.models import Location
 
+from etools.applications.locations.models import Location
 from etools.applications.partners.models import (
     Intervention,
     InterventionAmendment,
@@ -104,14 +104,11 @@ class InterventionAmendmentSerializer(serializers.ModelSerializer):
 
 
 class PRPLocationSerializer(serializers.ModelSerializer):
-    pcode = serializers.CharField(source='p_code', read_only=True)
-    location_type = serializers.CharField(source='gateway.name', read_only=True)
-    admin_level = serializers.IntegerField(source='gateway.admin_level')
 
     class Meta:
         model = Location
         depth = 1
-        fields = ('id', 'name', 'pcode', 'location_type', 'admin_level')
+        fields = ('id', 'name', 'p_code', 'admin_level_name', 'admin_level')
 
 
 class DisaggregationValueSerilizer(serializers.ModelSerializer):
@@ -164,13 +161,13 @@ class PRPIndicatorSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "p_code",
-            "gateway__name",
-            "gateway__admin_level",
+            "admin_level_name",
+            "admin_level",
         )
         for loc in location_qs:
-            loc["pcode"] = loc.pop("p_code")
-            loc["location_type"] = loc.pop("gateway__name")
-            loc["admin_level"] = loc.pop("gateway__admin_level")
+            loc["p_code"] = loc.pop("p_code")
+            loc["admin_level_name"] = loc.pop("admin_level_name")
+            loc["admin_level"] = loc.pop("admin_level")
         return list(location_qs)
 
     class Meta:

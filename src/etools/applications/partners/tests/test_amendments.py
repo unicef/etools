@@ -63,7 +63,8 @@ class AmendmentTestCase(BaseTenantTestCase):
             signed_by_unicef_date=today - datetime.timedelta(days=1),
             signed_by_partner_date=today - datetime.timedelta(days=1),
             unicef_signatory=self.unicef_staff,
-            partner_authorized_officer_signatory=self.partner1.staff_members.all().first()
+            partner_authorized_officer_signatory=self.partner1.staff_members.all().first(),
+            cash_transfer_modalities=[Intervention.CASH_TRANSFER_DIRECT],
         )
         ReportingRequirementFactory(intervention=self.active_intervention)
         self.signed_pd_document = AttachmentFactory(
@@ -152,6 +153,8 @@ class AmendmentTestCase(BaseTenantTestCase):
         )
         new_activity.time_frames.add(amendment.amended_intervention.quarters.first())
 
+        difference = amendment.get_difference()
+
         amendment.merge_amendment()
 
         self.assertListEqual(list(activity.time_frames.values_list('quarter', flat=True)), [2, 3, 4])
@@ -162,6 +165,10 @@ class AmendmentTestCase(BaseTenantTestCase):
             ).get().time_frames.values_list('quarter', flat=True).count(),
             1,
         )
+
+        quarters_difference = difference['result_links']['diff']['update'][0]['diff']['ll_results']['diff']['update']
+        quarters_difference = quarters_difference[0]['diff']['activities']['diff']['update'][0]['diff']['quarters']
+        self.assertDictEqual(quarters_difference, {'diff': ([1, 3], [2, 3, 4]), 'type': 'simple'})
 
     def test_activity_items_copy(self):
         original_item = InterventionActivityItemFactory(activity=self.activity)
@@ -370,6 +377,31 @@ class AmendmentTestCase(BaseTenantTestCase):
             },
         )
 
+    def test_calculate_difference_cash_transfer_modalities_choices(self):
+        amendment = InterventionAmendmentFactory(
+            intervention=self.active_intervention,
+            kind=InterventionAmendment.KIND_NORMAL,
+        )
+
+        amendment.amended_intervention.cash_transfer_modalities = [Intervention.CASH_TRANSFER_PAYMENT]
+        amendment.amended_intervention.save()
+
+        difference = amendment.get_difference()
+
+        self.assertDictEqual(
+            difference,
+            {
+                'cash_transfer_modalities': {
+                    'type': 'list[choices]',
+                    'diff': (
+                        [Intervention.CASH_TRANSFER_DIRECT],
+                        [Intervention.CASH_TRANSFER_PAYMENT],
+                    ),
+                    'choices_key': 'cash_transfer_modalities',
+                },
+            },
+        )
+
     def test_calculate_difference_one_to_one_field(self):
         amendment = InterventionAmendmentFactory(
             intervention=self.active_intervention,
@@ -542,7 +574,7 @@ class AmendmentTestCase(BaseTenantTestCase):
             kind=InterventionAmendment.KIND_NORMAL,
         )
 
-        risk = amendment.amended_intervention.risks.first()
+        risk = amendment.amended_intervention.risks.get(mitigation_measures=original_risk.mitigation_measures)
         risk.mitigation_measures = "mitigation_measures"
         risk.save()
 
@@ -570,6 +602,34 @@ class AmendmentTestCase(BaseTenantTestCase):
         self.assertIn('supply_items', amendment.difference)
         original_supply_item.refresh_from_db()
         self.assertEqual(original_supply_item.title, supply_item.title)
+
+    def test_create_intervention_supply_item(self):
+        # on amendment merge it's possible to clean extra supply items due to result links from amended intervention
+        result_link = InterventionResultLinkFactory(intervention=self.active_intervention)
+        original_supply_item = InterventionSupplyItemFactory(
+            intervention=self.active_intervention, title='original',
+            result=result_link,
+        )
+        supply_items_count_original = self.active_intervention.supply_items.count()
+        amendment = InterventionAmendmentFactory(
+            intervention=self.active_intervention,
+            kind=InterventionAmendment.KIND_NORMAL,
+        )
+        InterventionSupplyItemFactory(intervention=amendment.amended_intervention)
+        InterventionSupplyItemFactory(
+            intervention=amendment.amended_intervention,
+            result=InterventionResultLink.objects.get(
+                intervention=amendment.amended_intervention, cp_output=result_link.cp_output
+            ),
+        )
+
+        amendment.difference = amendment.get_difference()
+        amendment.merge_amendment()
+
+        self.assertIn('supply_items', amendment.difference)
+        self.assertEqual(self.active_intervention.supply_items.count(), supply_items_count_original + 2)
+        self.assertTrue(self.active_intervention.supply_items.filter(pk=original_supply_item.pk).exists())
+        self.assertEqual(self.active_intervention.supply_items.filter(result__cp_output=result_link.cp_output).count(), 2)
 
     def test_update_budget_items(self):
         item = InterventionManagementBudgetItemFactory(
@@ -676,6 +736,7 @@ class AmendmentTestCase(BaseTenantTestCase):
                 'signed_pd_attachment',
                 'activation_letter_attachment',
                 'termination_doc_attachment',
+                'history',
             ],
             'reports.ReportingRequirement': ['intervention'],
             'reports.AppliedIndicator': ['lower_result'],
@@ -692,3 +753,87 @@ class AmendmentTestCase(BaseTenantTestCase):
             'partners.InterventionManagementBudgetItem': ['budget'],
         }
         self._check_related_fields(Intervention, ignored_fields)
+
+    def test_amendment_unicef_focal_points_synchronization(self):
+        focal_point_to_add = UserFactory()
+        focal_point_to_keep = UserFactory()
+        focal_point_to_remove = UserFactory()
+        self.active_intervention.unicef_focal_points.add(focal_point_to_keep, focal_point_to_remove)
+        focal_points_initial_count = self.active_intervention.unicef_focal_points.count()
+
+        active_amendment = InterventionAmendmentFactory(
+            intervention=self.active_intervention,
+            kind=InterventionAmendment.KIND_NORMAL,
+        )
+        completed_amendment = InterventionAmendmentFactory(
+            intervention=self.active_intervention,
+            kind=InterventionAmendment.KIND_CONTINGENCY,
+            is_active=False,
+        )
+
+        self.active_intervention.unicef_focal_points.add(focal_point_to_add)
+        self.active_intervention.unicef_focal_points.remove(focal_point_to_remove)
+
+        active_focal_points = active_amendment.amended_intervention.unicef_focal_points
+        completed_focal_points = completed_amendment.amended_intervention.unicef_focal_points
+
+        # active amendment affected, completed not
+        self.assertEqual(active_focal_points.count(), focal_points_initial_count + 1 - 1)
+        self.assertEqual(completed_focal_points.count(), focal_points_initial_count)
+        self.assertTrue(active_focal_points.filter(pk=focal_point_to_add.pk).exists())
+        self.assertFalse(active_focal_points.filter(pk=focal_point_to_remove.pk).exists())
+        self.assertFalse(completed_focal_points.filter(pk=focal_point_to_add.pk).exists())
+        self.assertTrue(completed_focal_points.filter(pk=focal_point_to_remove.pk).exists())
+
+    def test_amendment_partner_focal_points_synchronization(self):
+        focal_point_to_add = PartnerStaffFactory(partner=self.active_intervention.agreement.partner)
+        focal_point_to_keep = PartnerStaffFactory(partner=self.active_intervention.agreement.partner)
+        focal_point_to_remove = PartnerStaffFactory(partner=self.active_intervention.agreement.partner)
+        self.active_intervention.partner_focal_points.add(focal_point_to_keep, focal_point_to_remove)
+        focal_points_initial_count = self.active_intervention.partner_focal_points.count()
+
+        active_amendment = InterventionAmendmentFactory(
+            intervention=self.active_intervention,
+            kind=InterventionAmendment.KIND_NORMAL,
+        )
+        completed_amendment = InterventionAmendmentFactory(
+            intervention=self.active_intervention,
+            kind=InterventionAmendment.KIND_CONTINGENCY,
+            is_active=False,
+        )
+
+        self.active_intervention.partner_focal_points.add(focal_point_to_add)
+        self.active_intervention.partner_focal_points.remove(focal_point_to_remove)
+
+        active_focal_points = active_amendment.amended_intervention.partner_focal_points
+        completed_focal_points = completed_amendment.amended_intervention.partner_focal_points
+
+        # active amendment affected, completed not
+        self.assertEqual(active_focal_points.count(), focal_points_initial_count + 1 - 1)
+        self.assertEqual(completed_focal_points.count(), focal_points_initial_count)
+        self.assertTrue(active_focal_points.filter(pk=focal_point_to_add.pk).exists())
+        self.assertFalse(active_focal_points.filter(pk=focal_point_to_remove.pk).exists())
+        self.assertFalse(completed_focal_points.filter(pk=focal_point_to_add.pk).exists())
+        self.assertTrue(completed_focal_points.filter(pk=focal_point_to_remove.pk).exists())
+
+    def test_sync_budget_owner(self):
+        old_budget_owner = self.active_intervention.budget_owner = UserFactory()
+        self.active_intervention.save()
+        active_amendment = InterventionAmendmentFactory(
+            intervention=self.active_intervention,
+            kind=InterventionAmendment.KIND_NORMAL,
+        )
+        completed_amendment = InterventionAmendmentFactory(
+            intervention=self.active_intervention,
+            kind=InterventionAmendment.KIND_CONTINGENCY,
+            is_active=False,
+        )
+        self.active_intervention.budget_owner = UserFactory()
+        self.active_intervention.save()
+
+        active_amendment.amended_intervention.refresh_from_db()
+        completed_amendment.amended_intervention.refresh_from_db()
+
+        self.assertNotEqual(self.active_intervention.budget_owner, old_budget_owner)
+        self.assertEqual(active_amendment.amended_intervention.budget_owner, self.active_intervention.budget_owner)
+        self.assertEqual(completed_amendment.amended_intervention.budget_owner, old_budget_owner)

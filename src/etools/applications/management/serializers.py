@@ -2,7 +2,8 @@ from django.contrib.gis.geos import GEOSGeometry
 
 from rest_framework import serializers
 from rest_framework_gis.serializers import GeoFeatureModelSerializer
-from unicef_locations.models import Location
+
+from etools.applications.locations.models import Location
 
 
 class GisLocationListSerializer(serializers.ModelSerializer):
@@ -15,7 +16,6 @@ class GisLocationListSerializer(serializers.ModelSerializer):
             'parent_id',
             'name',
             'p_code',
-            'gateway_id',
             'level',
         )
 
@@ -39,7 +39,6 @@ class GisLocationWktSerializer(serializers.ModelSerializer):
             'parent_id',
             'name',
             'p_code',
-            'gateway_id',
             'level',
             'geom',
             'point'
@@ -57,7 +56,6 @@ class GisLocationGeojsonSerializer(GeoFeatureModelSerializer):
             'parent_id',
             'name',
             'p_code',
-            'gateway_id',
             'level',
             'geom',
             'point'

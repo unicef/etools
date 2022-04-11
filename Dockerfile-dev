@@ -10,5 +10,4 @@ ENV PYTHONUNBUFFERED 1
 ENV PYTHONPATH /code
 ENV DJANGO_SETTINGS_MODULE etools.config.settings.local
 
-VOLUME "./:/code/"
 WORKDIR /code/

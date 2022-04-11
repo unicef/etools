@@ -1,6 +1,8 @@
 import re
 
-from etools.applications.offline.errors import BadValueError, ValueTypeMismatch
+from django.utils.translation import ugettext_lazy as _
+
+from etools.applications.offline.errors import BadValueError, ValidationError, ValueTypeMismatch
 from etools.applications.offline.validations.base import BaseValidation
 
 
@@ -20,7 +22,7 @@ class MaxLengthTextValidation(TextValidation):
     def validate(self, value):
         super().validate(value)
         if not len(value) <= self.max_length:
-            raise BadValueError(value)
+            raise ValidationError(_('Ensure this field has no more than {0} characters.').format(self.max_length))
 
     def to_dict(self, **kwargs):
         return super().to_dict(max_length=self.max_length, **kwargs)

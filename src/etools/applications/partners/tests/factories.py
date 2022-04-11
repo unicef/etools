@@ -123,6 +123,10 @@ class InterventionFactory(factory.django.DjangoModelFactory):
     ip_program_contribution = "ip_program_contribution"
     sustainability_narrative = "sustainability_narrative"
     # date_sent_to_partner = datetime.date.today()
+    risks = factory.RelatedFactory(
+        'etools.applications.partners.tests.factories.InterventionRiskFactory',
+        factory_related_name='intervention'
+    )
 
     @factory.post_generation
     def country_programmes(self, create, extracted, **kwargs):

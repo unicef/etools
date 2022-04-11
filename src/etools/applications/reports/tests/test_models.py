@@ -2,6 +2,9 @@ import datetime
 
 from django.test import SimpleTestCase
 
+import factory.fuzzy
+from unicef_locations.tests.factories import LocationFactory
+
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import Agreement
 from etools.applications.partners.tests.factories import (
@@ -17,7 +20,9 @@ from etools.applications.reports.models import (
     Quarter,
 )
 from etools.applications.reports.tests.factories import (
+    AppliedIndicatorFactory,
     CountryProgrammeFactory,
+    DisaggregationFactory,
     IndicatorBlueprintFactory,
     IndicatorFactory,
     InterventionActivityFactory,
@@ -74,6 +79,9 @@ class TestStrUnicode(SimpleTestCase):
 
         instance = LowerResultFactory.build(name='\xccsland', code='xyz')
         self.assertEqual(str(instance), 'xyz: \xccsland')
+
+        instance = LowerResultFactory.build(name='\xccsland', code=None)
+        self.assertEqual(str(instance), '\xccsland')
 
     def test_unit(self):
         instance = UnitFactory.build(type='xyz')
@@ -245,6 +253,57 @@ class TestLowerResult(BaseTenantTestCase):
         InterventionActivityFactory(result=ll, unicef_cash=10, cso_cash=20)
         self.assertEqual(ll.total(), 30)
 
+    def test_auto_code(self):
+        intervention = InterventionFactory()
+        LowerResultFactory(code=None, result_link=InterventionResultLinkFactory(intervention=intervention))
+        result1 = LowerResultFactory(code=None, result_link=InterventionResultLinkFactory(intervention=intervention))
+        result2 = LowerResultFactory(code=None, result_link=result1.result_link)
+        LowerResultFactory(code=None, result_link=InterventionResultLinkFactory(intervention=intervention))
+        result3 = LowerResultFactory(code=None, result_link=result1.result_link)
+        self.assertEqual(result1.code, '2.1')
+        self.assertEqual(result2.code, '2.2')
+        self.assertEqual(result3.code, '2.3')
+
+    def test_code_renumber_on_result_link_delete(self):
+        intervention = InterventionFactory()
+        result_link_1 = InterventionResultLinkFactory(intervention=intervention, code=None)
+        result1 = LowerResultFactory(
+            code=None,
+            result_link=InterventionResultLinkFactory(intervention=intervention, code=None),
+        )
+        result2 = LowerResultFactory(code=None, result_link=result1.result_link)
+
+        self.assertEqual(result1.code, '2.1')
+        self.assertEqual(result2.code, '2.2')
+
+        result_link_1.delete()
+
+        result1.refresh_from_db()
+        result2.refresh_from_db()
+        self.assertEqual(result1.code, '1.1')
+        self.assertEqual(result2.code, '1.2')
+
+    def test_code_renumber_on_result_delete(self):
+        intervention = InterventionFactory()
+        InterventionResultLinkFactory(code=None, intervention=intervention)
+        result1 = LowerResultFactory(
+            code=None,
+            result_link=InterventionResultLinkFactory(code=None, intervention=intervention),
+        )
+        result2 = LowerResultFactory(code=None, result_link=result1.result_link)
+        result3 = LowerResultFactory(code=None, result_link=result1.result_link)
+
+        self.assertEqual(result1.code, '2.1')
+        self.assertEqual(result2.code, '2.2')
+        self.assertEqual(result3.code, '2.3')
+
+        result2.delete()
+
+        result1.refresh_from_db()
+        result3.refresh_from_db()
+        self.assertEqual(result1.code, '2.1')
+        self.assertEqual(result3.code, '2.2')
+
 
 class TestIndicatorBlueprint(BaseTenantTestCase):
     def test_save_empty(self):
@@ -258,6 +317,130 @@ class TestIndicatorBlueprint(BaseTenantTestCase):
         indicator = IndicatorBlueprint(code="C123")
         indicator.save()
         self.assertEqual(indicator.code, "C123")
+
+    def test_make_copy(self):
+        blueprint = IndicatorBlueprintFactory(
+            unit='number',
+            description='test description',
+            code=factory.fuzzy.FuzzyText(length=20),
+            subdomain=factory.fuzzy.FuzzyText(length=20),
+            disaggregatable=True,
+            calculation_formula_across_periods='sum',
+            calculation_formula_across_locations='sum',
+            display_type='number',
+        )
+        blueprint_copy = blueprint.make_copy()
+
+        fields_to_exclude = [
+            'id', 'created', 'modified',  # auto fields
+            'code',  # code is being checked separately as it is unique field
+            'appliedindicator',  # blueprint should be assigned to applied indicator later manually
+        ]
+
+        for field in blueprint._meta.get_fields():
+            if field.name in fields_to_exclude:
+                continue
+
+            self.assertEqual(
+                getattr(blueprint, field.name),
+                getattr(blueprint_copy, field.name),
+                f'`{field.name}` is different in blueprint copy'
+            )
+
+        self.assertEqual(blueprint.code, blueprint_copy.code[:20], '`code` is not inherited from original blueprint')
+
+
+class TestAppliedIndicator(BaseTenantTestCase):
+    def test_make_copy(self):
+        indicator = AppliedIndicatorFactory(
+            lower_result__result_link=InterventionResultLinkFactory(),
+            measurement_specifications='measurement_specifications',
+            label='label',
+            numerator_label='numerator_label',
+            denominator_label='denominator_label',
+            section=SectionFactory(),
+            cluster_indicator_id=1,
+            response_plan_name='response_plan_name',
+            cluster_name='cluster_name',
+            cluster_indicator_title='cluster_indicator_title',
+            context_code='context_code',
+            target={'d': 1, 'v': 0},
+            baseline={'d': 1, 'v': 0},
+            assumptions='assumptions',
+            means_of_verification='means_of_verification',
+            total=42,
+            is_high_frequency=True,
+            is_active=True,
+        )
+        indicator.disaggregation.add(DisaggregationFactory())
+        indicator.locations.add(LocationFactory())
+        indicator_copy = indicator.make_copy()
+
+        fields_to_exclude = [
+            'id', 'created', 'modified',  # auto fields
+            'indicator',  # we should make full copy of indicator, so it's fine
+        ]
+
+        for field in indicator._meta.get_fields():
+            if field.name in fields_to_exclude:
+                continue
+
+            if getattr(field, 'many_to_many', False):
+                self.assertListEqual(
+                    list(getattr(indicator, field.name).all()),
+                    list(getattr(indicator_copy, field.name).all()),
+                    f'`{field.name}` is different in indicator copy'
+                )
+            else:
+                self.assertEqual(
+                    getattr(indicator, field.name),
+                    getattr(indicator_copy, field.name),
+                    f'`{field.name}` is different in indicator copy'
+                )
+
+        self.assertEqual(indicator.indicator.title, indicator_copy.indicator.title)
+
+    def test_baseline_display_string_none(self):
+        indicator = AppliedIndicatorFactory(
+            baseline=None,
+            lower_result__result_link=InterventionResultLinkFactory(),
+        )
+        self.assertEqual(indicator.baseline_display_string, 'Unknown')
+
+    def test_baseline_display_string_unknown_baseline(self):
+        indicator = AppliedIndicatorFactory(
+            baseline={'v': None, 'd': 1},
+            lower_result__result_link=InterventionResultLinkFactory(),
+        )
+        self.assertEqual(indicator.baseline_display_string, 'Unknown')
+
+    def test_baseline_display_string_natural_number(self):
+        indicator = AppliedIndicatorFactory(
+            baseline={'v': 5, 'd': '-'},
+            lower_result__result_link=InterventionResultLinkFactory(),
+        )
+        self.assertEqual(indicator.baseline_display_string, '5')
+
+    def test_baseline_display_string_ratio(self):
+        indicator = AppliedIndicatorFactory(
+            baseline={'v': 5, 'd': 6}, indicator__display_type=IndicatorBlueprint.RATIO,
+            lower_result__result_link=InterventionResultLinkFactory(),
+        )
+        self.assertEqual(indicator.baseline_display_string, '5/6')
+
+    def test_target_display_string_natural_number(self):
+        indicator = AppliedIndicatorFactory(
+            target={'v': 5, 'd': '-'},
+            lower_result__result_link=InterventionResultLinkFactory(),
+        )
+        self.assertEqual(indicator.target_display_string, '5')
+
+    def test_target_display_string_ratio(self):
+        indicator = AppliedIndicatorFactory(
+            target={'v': 5, 'd': 6}, indicator__display_type=IndicatorBlueprint.RATIO,
+            lower_result__result_link=InterventionResultLinkFactory(),
+        )
+        self.assertEqual(indicator.target_display_string, '5/6')
 
 
 class TestIndicator(BaseTenantTestCase):
@@ -294,6 +477,69 @@ class TestInterventionActivity(BaseTenantTestCase):
 
         budget.refresh_from_db()
         self.assertEqual(budget.total_cash_local(), 606)
+
+    def test_auto_code(self):
+        link = InterventionResultLinkFactory(code=None)
+        InterventionActivityFactory(code=None, result=LowerResultFactory(code=None, result_link=link))
+        activity1 = InterventionActivityFactory(code=None, result=LowerResultFactory(code=None, result_link=link))
+        activity2 = InterventionActivityFactory(code=None, result=activity1.result)
+        InterventionActivityFactory(code=None, result=LowerResultFactory(code=None, result_link=link))
+        activity3 = InterventionActivityFactory(code=None, result=activity1.result)
+        self.assertEqual(activity1.code, '1.2.1')
+        self.assertEqual(activity2.code, '1.2.2')
+        self.assertEqual(activity3.code, '1.2.3')
+
+    def test_code_renumber_on_result_link_delete(self):
+        intervention = InterventionFactory()
+        link1 = InterventionResultLinkFactory(intervention=intervention, code=None)
+        link2 = InterventionResultLinkFactory(intervention=intervention, code=None)
+        LowerResultFactory(result_link=link2, code=None)
+        activity1 = InterventionActivityFactory(code=None, result=LowerResultFactory(result_link=link2, code=None))
+        activity2 = InterventionActivityFactory(code=None, result=activity1.result)
+
+        self.assertEqual(activity1.code, '2.2.1')
+        self.assertEqual(activity2.code, '2.2.2')
+
+        link1.delete()
+
+        activity1.refresh_from_db()
+        activity2.refresh_from_db()
+        self.assertEqual(activity1.code, '1.2.1')
+        self.assertEqual(activity2.code, '1.2.2')
+
+    def test_code_renumber_on_result_delete(self):
+        link = InterventionResultLinkFactory(code=None)
+        result_1 = LowerResultFactory(result_link=link, code=None)
+        activity1 = InterventionActivityFactory(code=None, result=LowerResultFactory(result_link=link, code=None))
+        activity2 = InterventionActivityFactory(code=None, result=activity1.result)
+
+        self.assertEqual(activity1.code, '1.2.1')
+        self.assertEqual(activity2.code, '1.2.2')
+
+        result_1.delete()
+
+        activity1.refresh_from_db()
+        activity2.refresh_from_db()
+        self.assertEqual(activity1.code, '1.1.1')
+        self.assertEqual(activity2.code, '1.1.2')
+
+    def test_code_renumber_on_activity_delete(self):
+        link = InterventionResultLinkFactory(code=None)
+        LowerResultFactory(result_link=link, code=None)
+        activity1 = InterventionActivityFactory(code=None, result=LowerResultFactory(result_link=link, code=None))
+        activity2 = InterventionActivityFactory(code=None, result=activity1.result)
+        activity3 = InterventionActivityFactory(code=None, result=activity1.result)
+
+        self.assertEqual(activity1.code, '1.2.1')
+        self.assertEqual(activity2.code, '1.2.2')
+        self.assertEqual(activity3.code, '1.2.3')
+
+        activity2.delete()
+
+        activity1.refresh_from_db()
+        activity3.refresh_from_db()
+        self.assertEqual(activity1.code, '1.2.1')
+        self.assertEqual(activity3.code, '1.2.2')
 
 
 class TestInterventionActivityItem(BaseTenantTestCase):

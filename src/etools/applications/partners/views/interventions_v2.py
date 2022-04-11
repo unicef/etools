@@ -42,6 +42,7 @@ from etools.applications.partners.models import (
     InterventionResultLink,
 )
 from etools.applications.partners.permissions import (
+    PARTNERSHIP_MANAGER_GROUP,
     PartnershipManagerPermission,
     PartnershipManagerRepPermission,
     SENIOR_MANAGEMENT_GROUP,
@@ -121,7 +122,8 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
         ('office', 'offices__in'),
         ('location', 'result_links__ll_results__applied_indicators__locations__name__icontains'),
         ('contingency_pd', 'contingency_pd'),
-        ('grants', 'frs__fr_items__grant_number__icontains'),
+        ('grants', 'frs__fr_items__grant_number__in'),
+        ('grants__contains', 'frs__fr_items__grant_number__icontains'),
         ('donors', 'frs__fr_items__donor__icontains'),
         ('budget_owner__in', 'budget_owner__in'),
     ]
@@ -531,7 +533,7 @@ class InterventionAmendmentDeleteView(DestroyAPIView):
 
         if intervention_amendment.intervention.status in [Intervention.DRAFT] or \
             request.user in intervention_amendment.intervention.unicef_focal_points.all() or \
-            request.user.groups.filter(name__in=['Partnership Manager',
+            request.user.groups.filter(name__in=[PARTNERSHIP_MANAGER_GROUP,
                                                  SENIOR_MANAGEMENT_GROUP]).exists():
             intervention_amendment.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)

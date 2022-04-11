@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+from django.core.management import call_command
 from django.urls import reverse
 from django.utils import timezone
 
@@ -192,7 +193,7 @@ class GeographicCoverageViewTestCase(BaseTenantTestCase):
         super().setUpTestData()
         cls.user = UserFactory(unicef_user=True)
 
-        cls.country = LocationFactory(gateway__admin_level=0)
+        cls.country = LocationFactory(admin_level=0)
         cls.first_location = LocationFactory(parent=cls.country)
         cls.second_location = LocationFactory(parent=cls.country)
         LocationFactory(parent=cls.first_location)  # hidden
@@ -272,6 +273,7 @@ class IssuesPartnersViewTestCase(BaseTenantTestCase):
     def setUpTestData(cls):
         super().setUpTestData()
         cls.user = UserFactory(unicef_user=True)
+        call_command('update_notifications')
 
     def test_response(self):
         partner = PartnerFactory()
@@ -301,6 +303,7 @@ class IssuesCPOutputsViewTestCase(BaseTenantTestCase):
     def setUpTestData(cls):
         super().setUpTestData()
         cls.user = UserFactory(unicef_user=True)
+        call_command('update_notifications')
 
     def test_response(self):
         cp_output = ResultFactory(result_type__name=ResultType.OUTPUT)
@@ -330,6 +333,7 @@ class IssuesLocationsViewTestCase(BaseTenantTestCase):
     def setUpTestData(cls):
         super().setUpTestData()
         cls.user = UserFactory(unicef_user=True)
+        call_command('update_notifications')
 
     def test_response(self):
         location = LocationFactory()

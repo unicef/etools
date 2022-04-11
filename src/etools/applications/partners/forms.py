@@ -92,7 +92,7 @@ class PartnerStaffMemberForm(forms.ModelForm):
             if active and not self.instance.active:
                 try:
                     user = User.objects.get(email=email)
-                except User.DoesNotExist():
+                except User.DoesNotExist:
                     pass
                 else:
                     if self.instance.user != user:

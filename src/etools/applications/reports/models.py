@@ -1,16 +1,18 @@
+import random
 from datetime import date
+from string import ascii_lowercase
 
 from django.core.validators import MinValueValidator
 from django.db import models, transaction
-from django.db.models import Sum
+from django.db.models import Q, Sum
 from django.utils.functional import cached_property
 from django.utils.translation import gettext as _
 
 from model_utils.fields import AutoCreatedField, AutoLastModifiedField
 from model_utils.models import TimeStampedModel
 from mptt.models import MPTTModel, TreeForeignKey
-from unicef_locations.models import Location
 
+from etools.applications.locations.models import Location
 from etools.applications.users.models import UserProfile
 
 
@@ -376,6 +378,9 @@ class LowerResult(TimeStampedModel):
     code = models.CharField(verbose_name=_("Code"), max_length=50, blank=True, null=True)
 
     def __str__(self):
+        if not self.code:
+            return self.name
+
         return '{}: {}'.format(
             self.code,
             self.name
@@ -385,9 +390,33 @@ class LowerResult(TimeStampedModel):
         unique_together = (('result_link', 'code'),)
         ordering = ('created',)
 
+    def save(self, *args, **kwargs):
+        if not self.code:
+            self.code = '{0}.{1}'.format(self.result_link.code, self.result_link.ll_results.count() + 1)
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def renumber_results_for_result_link(cls, result_link):
+        results = result_link.ll_results.all()
+        for i, result in enumerate(results):
+            result.code = '{0}.{1}'.format(result_link.code, i + 1)
+        cls.objects.bulk_update(results, fields=['code'])
+
     def total(self):
         results = self.activities.aggregate(
-            total=Sum("unicef_cash") + Sum("cso_cash"),
+            total=Sum("unicef_cash", filter=Q(is_active=True)) + Sum("cso_cash", filter=Q(is_active=True)),
+        )
+        return results["total"] if results["total"] is not None else 0
+
+    def total_cso(self):
+        results = self.activities.aggregate(
+            total=Sum("cso_cash", filter=Q(is_active=True)),
+        )
+        return results["total"] if results["total"] is not None else 0
+
+    def total_unicef(self):
+        results = self.activities.aggregate(
+            total=Sum("unicef_cash", filter=Q(is_active=True)),
         )
         return results["total"] if results["total"] is not None else 0
 
@@ -510,6 +539,24 @@ class IndicatorBlueprint(TimeStampedModel):
 
     def __str__(self):
         return self.title
+
+    def make_copy(self):
+        new_code = None
+        if self.code:
+            # code is unique, so we need to make inherited copy
+            new_code = self.code[:40] + '-' + ''.join([random.choice(ascii_lowercase) for _i in range(9)])
+
+        return IndicatorBlueprint.objects.create(
+            title=self.title,
+            unit=self.unit,
+            description=self.description,
+            code=new_code,
+            subdomain=self.subdomain,
+            disaggregatable=self.disaggregatable,
+            calculation_formula_across_periods=self.calculation_formula_across_periods,
+            calculation_formula_across_locations=self.calculation_formula_across_locations,
+            display_type=self.display_type,
+        )
 
 
 class Disaggregation(TimeStampedModel):
@@ -671,13 +718,38 @@ class AppliedIndicator(TimeStampedModel):
         return numerator, denominator
 
     @cached_property
+    def target_display_string(self):
+        if self.target_display[1] == '-':
+            target = str(self.target_display[0])
+        else:
+            target = '/'.join(map(str, self.target_display))
+        return target
+
+    @cached_property
     def baseline_display(self):
         ind_type = self.indicator.display_type
-        numerator = self.baseline.get('v', self.baseline)
+        if self.baseline is None:
+            numerator = None
+        else:
+            numerator = self.baseline.get('v', self.baseline)
         denominator = '-'
         if ind_type == IndicatorBlueprint.RATIO:
-            denominator = self.baseline.get('d', '')
+            if self.baseline is None:
+                denominator = ''
+            else:
+                denominator = self.baseline.get('d', '')
         return numerator, denominator
+
+    @cached_property
+    def baseline_display_string(self):
+        if self.baseline_display[0] is None:
+            return _('Unknown')
+
+        if self.baseline_display[1] == '-':
+            baseline = str(self.baseline_display[0])
+        else:
+            baseline = '/'.join(map(str, self.baseline_display))
+        return baseline
 
     class Meta:
         unique_together = (("indicator", "lower_result"),)
@@ -687,19 +759,33 @@ class AppliedIndicator(TimeStampedModel):
         super().save(*args, **kwargs)
 
     def get_amended_name(self):
-        baseline_display = self.baseline_display
-        if baseline_display[1] == '-':
-            baseline = baseline_display[0]
-        else:
-            baseline = '/'.join(baseline_display)
+        return f'{self.indicator}: {self.baseline_display_string} - {self.target_display_string}'
 
-        target_display = self.target_display
-        if target_display[1] == '-':
-            target = target_display[0]
-        else:
-            target = '/'.join(target_display)
-
-        return f'{self.indicator}: {baseline} - {target}'
+    def make_copy(self):
+        indicator_copy = AppliedIndicator.objects.create(
+            indicator=self.indicator.make_copy(),
+            measurement_specifications=self.measurement_specifications,
+            label=self.label,
+            numerator_label=self.numerator_label,
+            denominator_label=self.denominator_label,
+            section=self.section,
+            cluster_indicator_id=self.cluster_indicator_id,
+            response_plan_name=self.response_plan_name,
+            cluster_name=self.cluster_name,
+            cluster_indicator_title=self.cluster_indicator_title,
+            lower_result=self.lower_result,
+            context_code=self.context_code,
+            target=self.target,
+            baseline=self.baseline,
+            assumptions=self.assumptions,
+            means_of_verification=self.means_of_verification,
+            total=self.total,
+            is_high_frequency=self.is_high_frequency,
+            is_active=self.is_active,
+        )
+        indicator_copy.disaggregation.add(*self.disaggregation.all())
+        indicator_copy.locations.add(*self.locations.all())
+        return indicator_copy
 
 
 class Indicator(TimeStampedModel):
@@ -916,6 +1002,12 @@ class InterventionActivity(TimeStampedModel):
         verbose_name=_("Name"),
         max_length=150,
     )
+    code = models.CharField(
+        verbose_name=_("Code"),
+        max_length=50,
+        blank=True,
+        null=True
+    )
     context_details = models.TextField(
         verbose_name=_("Context Details"),
         blank=True,
@@ -940,6 +1032,8 @@ class InterventionActivity(TimeStampedModel):
         blank=True,
         related_name='activities',
     )
+
+    is_active = models.BooleanField(default=True, verbose_name=_('Is Active'))
 
     class Meta:
         verbose_name = _('Intervention Activity')
@@ -974,11 +1068,23 @@ class InterventionActivity(TimeStampedModel):
         return self.cso_cash / self.total * 100
 
     def save(self, *args, **kwargs):
+        if not self.code:
+            self.code = '{0}.{1}'.format(self.result.code, self.result.activities.count() + 1)
         super().save(*args, **kwargs)
         self.result.result_link.intervention.planned_budget.calc_totals()
 
+    @classmethod
+    def renumber_activities_for_result(cls, result: LowerResult, start_id=None):
+        activities = result.activities.all()
+        for i, activity in enumerate(activities):
+            activity.code = '{0}.{1}'.format(result.code, i + 1)
+        cls.objects.bulk_update(activities, fields=['code'])
+
     def get_amended_name(self):
         return f'{self.result} {self.name} (Total: {self.total}, UNICEF: {self.unicef_cash}, Partner: {self.cso_cash})'
+
+    def get_time_frames_display(self):
+        return ', '.join([f'{tf.start_date.year} Q{tf.quarter}' for tf in self.time_frames.all()])
 
 
 class InterventionActivityItem(TimeStampedModel):

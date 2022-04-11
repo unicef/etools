@@ -3,7 +3,12 @@ from datetime import date
 
 from django.utils.translation import gettext as _
 
-from etools_validator.exceptions import BasicValidationError, StateValidationError, TransitionError
+from etools_validator.exceptions import (
+    BasicValidationError,
+    DetailedStateValidationError,
+    StateValidationError,
+    TransitionError,
+)
 from etools_validator.utils import check_required_fields, check_rigid_fields
 from etools_validator.validation import CompleteValidation
 
@@ -211,6 +216,8 @@ def start_end_dates_valid(i):
 
 def start_date_signed_valid(i):
     # i = intervention
+    if i.in_amendment:
+        return True
     if i.signed_by_unicef_date and i.signed_by_partner_date and i.start and (i.signed_pd_document or i.signed_pd_attachment):
         if i.start < max([i.signed_by_unicef_date, i.signed_by_partner_date]):
             return False
@@ -219,6 +226,8 @@ def start_date_signed_valid(i):
 
 def start_date_related_agreement_valid(i):
     # i = intervention
+    if i.in_amendment:
+        return True
     if i.document_type in [i.PD, i.SPD] and not i.contingency_pd and i.start and i.agreement.start and \
             (i.signed_pd_document or i.signed_pd_attachment) and i.start < i.agreement.start:
         return False
@@ -369,8 +378,11 @@ class InterventionValid(CompleteValidation):
         required_fields = [f for f in self.permissions['required'] if self.permissions['required'][f] is True]
         required_valid, fields = check_required_fields(intervention, required_fields)
         if not required_valid:
-            raise StateValidationError(['Required fields not completed in {}: {}'.format(
-                intervention.status, ', '.join(f for f in fields))])
+            raise DetailedStateValidationError(
+                'required_in_status',
+                'Required fields not completed in {}: {}'.format(intervention.status, ', '.join(f for f in fields)),
+                {'fields': fields, 'status': intervention.status},
+            )
 
     def check_rigid_fields(self, intervention, related=False):
         # this can be set if running in a task and old_instance is not set

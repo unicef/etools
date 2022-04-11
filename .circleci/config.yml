@@ -50,7 +50,7 @@ jobs:
           PGHOST: 127.0.0.1
           DATABASE_URL: "postgis://postgres:postgres@localhost:5432/circle_test"
           DEPLOY_BRANCHES: "develop|staging|master|ci-updates2|epd|eface-forms"
-      - image: circleci/postgres:12-alpine-postgis
+      - image: cimg/postgres:12.9-postgis
         environment:
           POSTGRES_USER: postgres
           PGUSER: postgres
@@ -64,7 +64,7 @@ jobs:
       - run:
           name: Run Tests
           command: |
-            pip install --upgrade tox
+            pip install tox
             tox -e d32,report
       - save_cache:
           key: deps2-{{ .Branch }}--{{ checksum "Pipfile.lock" }}-{{ checksum ".circleci/config.yml" }}

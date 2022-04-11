@@ -1,7 +1,7 @@
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
-from etools.applications.partners.models import Intervention, InterventionBudget
+from etools.applications.partners.models import Intervention, InterventionBudget, InterventionResultLink
 from etools.applications.partners.utils import get_quarters_range
 from etools.applications.reports.models import (
     InterventionActivity,
@@ -63,3 +63,27 @@ def update_cash_on_delete(instance, **kwargs):
         pass
     else:
         Activity.update_cash()
+
+
+@receiver(post_delete, sender=InterventionResultLink)
+def recalculate_result_links_numbering(instance, **kwargs):
+    InterventionResultLink.renumber_result_links_for_intervention(instance.intervention)
+    for result_link in instance.intervention.result_links.filter(id__gt=instance.id).prefetch_related(
+        'll_results',
+        'll_results__activities',
+    ):
+        LowerResult.renumber_results_for_result_link(result_link)
+        for result in result_link.ll_results.all():
+            InterventionActivity.renumber_activities_for_result(result)
+
+
+@receiver(post_delete, sender=LowerResult)
+def recalculate_results_numbering(instance, **kwargs):
+    LowerResult.renumber_results_for_result_link(instance.result_link)
+    for result in instance.result_link.ll_results.filter(id__gt=instance.id).prefetch_related('activities'):
+        InterventionActivity.renumber_activities_for_result(result)
+
+
+@receiver(post_delete, sender=InterventionActivity)
+def recalculate_activities_numbering(instance, **kwargs):
+    InterventionActivity.renumber_activities_for_result(instance.result)

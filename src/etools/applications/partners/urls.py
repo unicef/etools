@@ -1,9 +1,8 @@
-
-from django.conf.urls import url
+from django.urls import re_path
 
 from .views.v1 import PCAPDFView, PortalLoginFailedView
 
 urlpatterns = (
-    url(r'^accounts/loginfailed/(?P<email>.+)/$', PortalLoginFailedView.as_view(), name='sociallogin_notamember'),
-    url(r'^agreement/(?P<agr>\d+)/pdf', PCAPDFView.as_view(), name='pca_pdf'),
+    re_path(r'^accounts/loginfailed/(?P<email>.+)/$', PortalLoginFailedView.as_view(), name='sociallogin_notamember'),
+    re_path(r'^agreement/(?P<agr>\d+)/pdf', PCAPDFView.as_view(), name='pca_pdf'),
 )

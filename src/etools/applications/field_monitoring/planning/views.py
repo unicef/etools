@@ -2,7 +2,7 @@ import logging
 from datetime import date
 
 from django.contrib.auth import get_user_model
-from django.db import transaction
+from django.db import connection, transaction
 from django.db.models import Count, Prefetch, Q
 from django.http import Http404
 from django.utils.translation import gettext_lazy as _
@@ -142,7 +142,7 @@ class MonitoringActivitiesViewSet(
     Retrieve and Update Agreement.
     """
     queryset = MonitoringActivity.objects.annotate(checklists_count=Count('checklists')).select_related(
-        'tpm_partner', 'visit_lead', 'location__gateway', 'location_site',
+        'tpm_partner', 'visit_lead', 'location', 'location_site',
     ).prefetch_related(
         'team_members', 'partners', 'interventions', 'cp_outputs'
     ).order_by("-id")
@@ -232,6 +232,28 @@ class MonitoringActivitiesViewSet(
                 "results": list(ma.cp_outputs.all())
             },
             filename="visit_letter_{}.pdf".format(ma.reference_number)
+        )
+
+    @action(detail=True, methods=['get'], url_path='pdf')
+    def visit_pdf(self, request, *args, **kwargs):
+        ma = self.get_object()
+        context = {
+            "workspace": connection.tenant.name,
+            "ma": ma,
+            "field_offices": ', '.join(ma.offices.all().values_list('name', flat=True)),
+            "location": f'{str(ma.location)}{" -- {}".format(ma.location.parent.name) if ma.location.parent else ""}',
+            "sections": ', '.join(ma.sections.all().values_list('name', flat=True)),
+            "partners": ', '.join([partner.name for partner in ma.partners.all()]),
+            "team_members": ', '.join([member.full_name for member in ma.team_members.all()]),
+            "cp_outputs": ', '.join([cp_out.name for cp_out in ma.cp_outputs.all()]),
+            "interventions": ', '.join([str(intervention) for intervention in ma.interventions.all()]),
+            "overall_findings": list(ma.activity_overall_findings().values('entity_name', 'narrative_finding')),
+            "summary_findings": ma.get_export_activity_questions_overall_findings(),
+            "data_collected": ma.get_export_checklist_findings()
+        }
+        return render_to_pdf_response(
+            request, "fm/visit_pdf.html", context=context,
+            filename="visit_{}.pdf".format(ma.reference_number)
         )
 
 

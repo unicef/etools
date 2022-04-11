@@ -1,18 +1,30 @@
 from unittest.mock import patch
 
+from django.core.management import call_command
 from django.urls import reverse
 
 from django_tenants.test.client import TenantClient
 from rest_framework import status
 from unicef_locations.tests.factories import LocationFactory
 
+from etools.applications.action_points.models import ActionPoint
 from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.activities.models import Activity
+from etools.applications.audit.tests.factories import EngagementFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.field_monitoring.fm_settings.tests.factories import QuestionFactory
+from etools.applications.field_monitoring.planning.tests.factories import MonitoringActivityFactory
 from etools.applications.partners.models import Intervention
-from etools.applications.partners.tests.factories import AgreementFactory, InterventionFactory, PartnerFactory
+from etools.applications.partners.tests.factories import (
+    AgreementFactory,
+    InterventionFactory,
+    InterventionResultLinkFactory,
+    PartnerFactory,
+)
+from etools.applications.reports.tests.factories import AppliedIndicatorFactory, SectionFactory
 from etools.applications.t2f.models import Travel, TravelType
 from etools.applications.t2f.tests.factories import TravelActivityFactory, TravelFactory
+from etools.applications.tpm.tests.factories import TPMActivityFactory, TPMVisitFactory
 from etools.applications.users.tests.factories import CountryFactory, GroupFactory, UserFactory
 
 
@@ -178,6 +190,7 @@ class TestGisLocationViews(BaseTenantTestCase):
         )
         self.inactive_location = LocationFactory(is_active=False)
         self.locations = [self.location_no_geom, self.location_with_geom]
+        call_command('update_notifications')
 
     def assertGeomListResponseFundamentals(self, response, response_len, expected_keys=None):
         """
@@ -262,7 +275,7 @@ class TestGisLocationViews(BaseTenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(sorted(response.data[0].keys()), ["gateway_id", "id", "level", "name", "p_code", "parent_id"])
+        self.assertEqual(sorted(response.data[0].keys()), ["id", "level", "name", "p_code", "parent_id"])
 
     def test_intervention_locations_in_use(self):
         # add intervention locations and test the response
@@ -278,7 +291,7 @@ class TestGisLocationViews(BaseTenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(sorted(response.data[0].keys()), ["gateway_id", "id", "level", "name", "p_code", "parent_id"])
+        self.assertEqual(sorted(response.data[0].keys()), ["id", "level", "name", "p_code", "parent_id"])
 
     def test_activities_in_use(self):
         activity = Activity(
@@ -297,7 +310,7 @@ class TestGisLocationViews(BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)
-        self.assertEqual(sorted(response.data[0].keys()), ["gateway_id", "id", "level", "name", "p_code", "parent_id"])
+        self.assertEqual(sorted(response.data[0].keys()), ["id", "level", "name", "p_code", "parent_id"])
 
     def test_action_points_in_use(self):
         ActionPointFactory(
@@ -313,7 +326,7 @@ class TestGisLocationViews(BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
-        self.assertEqual(sorted(response.data[0].keys()), ["gateway_id", "id", "level", "name", "p_code", "parent_id"])
+        self.assertEqual(sorted(response.data[0].keys()), ["id", "level", "name", "p_code", "parent_id"])
 
     def test_intervention_locations_geom_bad_request(self):
         url = reverse("management_gis:locations-gis-geom-list")
@@ -402,7 +415,7 @@ class TestGisLocationViews(BaseTenantTestCase):
         self.assertEqual(len(response.data), 1)
         self.assertEqual(
             sorted(response.data[0].keys()),
-            ["gateway_id", "geom", "id", "level", "name", "p_code", "parent_id", "point"]
+            ["geom", "id", "level", "name", "p_code", "parent_id", "point"]
         )
         self.assertEqual(response.data[0]["geom"], self.location_with_geom.geom.wkt)
 
@@ -424,7 +437,7 @@ class TestGisLocationViews(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
             sorted(response.data.keys()),
-            ["gateway_id", "geom", "id", "level", "name", "p_code", "parent_id", "point"]
+            ["geom", "id", "level", "name", "p_code", "parent_id", "point"]
         )
         self.assertEqual(response.data["id"], str(self.location_with_geom.id))
         self.assertEqual(response.data["geom"], self.location_with_geom.geom.wkt)
@@ -461,7 +474,7 @@ class TestGisLocationViews(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
             sorted(response.data.keys()),
-            ["gateway_id", "geom", "id", "level", "name", "p_code", "parent_id", "point"]
+            ["geom", "id", "level", "name", "p_code", "parent_id", "point"]
         )
         self.assertEqual(response.data["id"], str(self.location_with_geom.id))
         self.assertEqual(response.data["geom"], self.location_with_geom.geom.wkt)
@@ -479,3 +492,70 @@ class TestGisLocationViews(BaseTenantTestCase):
         self.assertEqual(response.data["geometry"]['type'], 'MultiPolygon')
         # TODO: check returned coordinates, and add 1 more test with POINT() returned
         self.assertIsNotNone(response.data["geometry"]['coordinates'])
+
+
+class SectionManagementViewTestCase(BaseTenantTestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        call_command('update_notifications')
+
+    def test_regular_user_not_allowed(self):
+        response = self.forced_auth_req(
+            'post',
+            reverse('management:sections_management-merge'),
+            user=UserFactory(is_staff=False),
+            data={
+                'new_section_name': 'New Section',
+                'sections_to_merge': str(SectionFactory().id),
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_merge(self):
+        old_section = SectionFactory(name='Old Section')
+        intervention = InterventionFactory()
+        intervention.sections.add(old_section)
+        applied_indicator = AppliedIndicatorFactory(section=old_section,
+                                                    lower_result__result_link=InterventionResultLinkFactory())
+        travel = TravelFactory(section=old_section)
+        engagement = EngagementFactory()
+        engagement.sections.add(old_section)
+        tpm_activity = TPMActivityFactory(section=old_section, tpm_visit=TPMVisitFactory())
+        action_point = ActionPointFactory(section=old_section)
+        fm_activities = MonitoringActivityFactory(sections=[old_section])
+        question = QuestionFactory(sections=[old_section])
+        partner = PartnerFactory(lead_section=old_section)
+
+        user = UserFactory(is_staff=True, is_superuser=True)
+
+        response = self.forced_auth_req(
+            'post',
+            reverse('management:sections_management-merge'),
+            user=user,
+            data={
+                'new_section_name': 'New Section',
+                'sections_to_merge': [old_section.id],
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+
+        intervention.refresh_from_db()
+        applied_indicator.refresh_from_db()
+        travel = Travel.objects.get(id=travel.id)
+        engagement.refresh_from_db()
+        tpm_activity.refresh_from_db()
+        action_point = ActionPoint.objects.get(id=action_point.id)
+        fm_activities.refresh_from_db()
+        question.refresh_from_db()
+        partner.refresh_from_db()
+
+        self.assertEqual(intervention.sections.first().name, 'New Section')
+        self.assertEqual(applied_indicator.section.name, 'New Section')
+        self.assertEqual(travel.section.name, 'New Section')
+        self.assertEqual(engagement.sections.first().name, 'New Section')
+        self.assertEqual(tpm_activity.section.name, 'New Section')
+        self.assertEqual(action_point.section.name, 'New Section')
+        self.assertEqual(fm_activities.sections.first().name, 'New Section')
+        self.assertEqual(question.sections.first().name, 'New Section')
+        self.assertEqual(partner.lead_section.name, 'New Section')

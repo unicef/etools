@@ -108,6 +108,14 @@ class TestUsersListAPIView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 5)
 
+    def test_search(self):
+        UserFactory(is_staff=True, email='test_user_email@example.com')
+        UserFactory(is_staff=True, email='test_user@example.com')
+        response = self.forced_auth_req('get', self.url, user=self.unicef_staff, data={'search': 'test_user_email'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['email'], 'test_user_email@example.com')
+
     def test_users_api_list_values(self):
         response = self.forced_auth_req(
             'get',
@@ -218,7 +226,7 @@ class TestMyProfileAPIView(BaseTenantTestCase):
             response.data["name"],
             self.unicef_staff.get_full_name()
         )
-        self.assertEqual(response.data["is_superuser"], "False")
+        self.assertEqual(response.data["is_superuser"], False)
 
     def test_get_no_profile(self):
         """Ensure profile is created for user, if it does not exist"""
@@ -262,7 +270,7 @@ class TestMyProfileAPIView(BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["oic"], self.unicef_superuser.id)
-        self.assertEqual(response.data["is_superuser"], "False")
+        self.assertEqual(response.data["is_superuser"], False)
 
         response = self.forced_auth_req(
             'get',
@@ -272,7 +280,7 @@ class TestMyProfileAPIView(BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["oic"], self.unicef_superuser.id)
-        self.assertEqual(response.data["is_superuser"], "False")
+        self.assertEqual(response.data["is_superuser"], False)
 
 
 class TestExternalUserAPIView(BaseTenantTestCase):

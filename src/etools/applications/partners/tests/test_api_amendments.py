@@ -7,10 +7,12 @@ from django.utils import timezone
 
 from rest_framework import status
 from rest_framework.exceptions import ErrorDetail
+from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.attachments.models import AttachmentFlat
 from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.field_monitoring.fm_settings.tests.factories import LocationSiteFactory
 from etools.applications.partners.models import Intervention, InterventionAmendment
 from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, UNICEF_USER
 from etools.applications.partners.tests.factories import (
@@ -261,7 +263,8 @@ class TestInterventionAmendments(BaseTenantTestCase):
         intervention.planned_budget.save()
         # FundsReservationHeaderFactory(intervention=intervention, currency='USD') # frs code is unique
         ReportingRequirementFactory(intervention=intervention)
-        intervention.unicef_focal_points.add(UserFactory())
+        unicef_user = UserFactory(is_staff=True, groups__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP])
+        intervention.unicef_focal_points.add(unicef_user)
         intervention.sections.add(SectionFactory())
         intervention.offices.add(OfficeFactory())
         intervention.partner_focal_points.add(PartnerStaffFactory(
@@ -278,7 +281,7 @@ class TestInterventionAmendments(BaseTenantTestCase):
         response = self.forced_auth_req(
             'patch',
             reverse('pmp_v3:intervention-detail', args=[amended_intervention.pk]),
-            UserFactory(is_staff=True, groups__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
+            unicef_user,
             data={
                 'start': timezone.now().date() + datetime.timedelta(days=2),
             },
@@ -290,6 +293,7 @@ class TestInterventionAmendments(BaseTenantTestCase):
 
         amended_intervention.unicef_accepted = True
         amended_intervention.partner_accepted = True
+        amended_intervention.date_sent_to_partner = timezone.now().date()
         amended_intervention.status = Intervention.REVIEW
         amended_intervention.save()
         review = InterventionReviewFactory(
@@ -365,15 +369,21 @@ class TestInterventionAmendments(BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertFalse(response.data['permissions']['view']['partner_focal_points'])
+        self.assertFalse(response.data['permissions']['edit']['partner_focal_points'])
         self.assertFalse(response.data['permissions']['view']['unicef_focal_points'])
+        self.assertFalse(response.data['permissions']['edit']['unicef_focal_points'])
         self.assertFalse(response.data['permissions']['view']['planned_visits'])
+        self.assertFalse(response.data['permissions']['edit']['planned_visits'])
         self.assertFalse(response.data['permissions']['view']['frs'])
+        self.assertFalse(response.data['permissions']['edit']['frs'])
         self.assertFalse(response.data['permissions']['view']['attachments'])
+        self.assertFalse(response.data['permissions']['edit']['attachments'])
 
     def test_amendment_prc_no_review_type(self):
         amendment = InterventionAmendmentFactory(intervention=self.active_intervention)
         amendment.amended_intervention.unicef_accepted = True
         amendment.amended_intervention.partner_accepted = True
+        amendment.amended_intervention.date_sent_to_partner = timezone.now().date()
         amendment.amended_intervention.save()
         InterventionSupplyItemFactory(intervention=amendment.amended_intervention)
 
@@ -389,6 +399,52 @@ class TestInterventionAmendments(BaseTenantTestCase):
         # check difference updated on review
         amendment.refresh_from_db()
         self.assertNotEqual({}, amendment.difference)
+
+    def test_amendment_review_original_budget_changed(self):
+        amendment = InterventionAmendmentFactory(intervention=self.active_intervention)
+        amendment.amended_intervention.unicef_accepted = True
+        amendment.amended_intervention.partner_accepted = True
+        amendment.amended_intervention.date_sent_to_partner = timezone.now().date()
+        amendment.amended_intervention.save()
+        amendment.amended_intervention.planned_budget.total_hq_cash_local += 2
+        amendment.amended_intervention.planned_budget.save()
+
+        self.active_intervention.planned_budget.total_hq_cash_local += 1
+        self.active_intervention.planned_budget.save()
+
+        response = self.forced_auth_req(
+            "patch", reverse('pmp_v3:intervention-review', args=[amendment.amended_intervention.pk]),
+            user=self.unicef_staff, data={'review_type': 'no-review'}
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('total_hq_cash_local', response.data[0])
+
+    def test_geographical_coverage_sites_ignored_in_difference(self):
+        location = LocationFactory()
+        site = LocationSiteFactory()
+        amendment = InterventionAmendmentFactory(intervention=self.active_intervention)
+        amendment.amended_intervention.flat_locations.add(location)
+        amendment.amended_intervention.sites.add(site)
+
+        difference = amendment.get_difference()
+        self.assertIn('flat_locations', difference)
+        self.assertNotIn('sites', difference)
+
+    def test_geographical_coverage_not_available(self):
+        amendment = InterventionAmendmentFactory(intervention=self.active_intervention)
+        response = self.forced_auth_req(
+            'get', reverse('pmp_v3:intervention-detail', args=[amendment.amended_intervention.pk]), self.unicef_staff
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(response.data['permissions']['view']['sites'])
+        self.assertFalse(response.data['permissions']['edit']['sites'])
+
+        original_intervention_response = self.forced_auth_req(
+            'get', reverse('pmp_v3:intervention-detail', args=[amendment.intervention.pk]), self.unicef_staff
+        )
+        self.assertEqual(original_intervention_response.status_code, status.HTTP_200_OK)
+        self.assertTrue(original_intervention_response.data['permissions']['view']['sites'])
+        self.assertTrue(original_intervention_response.data['permissions']['edit']['sites'])
 
 
 class TestInterventionAmendmentDeleteView(BaseTenantTestCase):
@@ -437,3 +493,34 @@ class TestInterventionAmendmentDeleteView(BaseTenantTestCase):
             user=self.unicef_staff,
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_delete_active(self):
+        self.intervention.status = 'active'
+        self.intervention.save()
+        response = self.forced_auth_req(
+            'delete',
+            self.url,
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_delete_active_focal_point(self):
+        self.intervention.status = 'active'
+        self.intervention.save()
+        self.intervention.unicef_focal_points.add(self.unicef_staff)
+        response = self.forced_auth_req(
+            'delete',
+            self.url,
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_delete_active_partnership_manager(self):
+        self.intervention.status = 'active'
+        self.intervention.save()
+        response = self.forced_auth_req(
+            'delete',
+            self.url,
+            user=UserFactory(is_staff=True, groups__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)

@@ -7,6 +7,7 @@ from rest_framework import status
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import Intervention
 from etools.applications.partners.tests.factories import (
+    InterventionAmendmentFactory,
     InterventionFactory,
     InterventionResultLinkFactory,
     PartnerStaffFactory,
@@ -36,6 +37,7 @@ class BaseTestCase(BaseTenantTestCase):
             user=self.partner_focal_point,
         )
         self.intervention.partner_focal_points.add(self.staff_member)
+        self.intervention.unicef_focal_points.add(self.user)
 
         self.result_link = InterventionResultLinkFactory(
             intervention=self.intervention,
@@ -104,6 +106,33 @@ class TestFunctionality(BaseTestCase):
         self.assertEqual(response.data['unicef_cash'], '3.00')
         self.assertEqual(response.data['cso_cash'], '6.20')
         self.assertEqual(response.data['partner_percentage'], '67.39')  # cso_cash / (unicef_cash + cso_cash)
+
+    def test_set_bad_cash_values_having_items(self):
+        InterventionActivityItemFactory(activity=self.activity, unicef_cash=8, cso_cash=5)
+        response = self.forced_auth_req(
+            'patch', self.detail_url,
+            user=self.user,
+            data={
+                'unicef_cash': 1,
+                'cso_cash': 1,
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['unicef_cash'], '8.00')
+        self.assertEqual(response.data['cso_cash'], '5.00')
+
+    def test_set_cash_values_having_no_items(self):
+        response = self.forced_auth_req(
+            'patch', self.detail_url,
+            user=self.user,
+            data={
+                'unicef_cash': 1,
+                'cso_cash': 1,
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['unicef_cash'], '1.00')
+        self.assertEqual(response.data['cso_cash'], '1.00')
 
     def test_set_items(self):
         item_to_remove = InterventionActivityItemFactory(
@@ -198,6 +227,50 @@ class TestFunctionality(BaseTestCase):
         response = self.forced_auth_req('delete', self.detail_url, user=self.user, data={})
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT, response.data)
 
+    def test_destroy_after_develop(self):
+        self.intervention.status = Intervention.SIGNED
+        self.intervention.save()
+        response = self.forced_auth_req('delete', self.detail_url, user=self.user, data={})
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
+
+    def test_destroy_in_amendment(self):
+        self.intervention.status = Intervention.SIGNED
+        self.intervention.save()
+        response = self.forced_auth_req('delete', self.detail_url, user=self.user, data={})
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
+
+    def test_destroy_in_amendment_original_activity(self):
+        amendment = InterventionAmendmentFactory(intervention=self.intervention)
+        intervention = amendment.amended_intervention
+        pd_output = intervention.result_links.first().ll_results.first()
+        activity = amendment.amended_intervention.result_links.first().ll_results.first().activities.first()
+        response = self.forced_auth_req(
+            'delete',
+            reverse(
+                'partners:intervention-activity-detail',
+                args=[intervention.pk, pd_output.pk, activity.pk]
+            ),
+            user=self.user,
+            data={}
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
+
+    def test_destroy_in_amendment_new_activity(self):
+        amendment = InterventionAmendmentFactory(intervention=self.intervention)
+        intervention = amendment.amended_intervention
+        pd_output = intervention.result_links.first().ll_results.first()
+        activity = InterventionActivityFactory(result=amendment.amended_intervention.result_links.first().ll_results.first())
+        response = self.forced_auth_req(
+            'delete',
+            reverse(
+                'partners:intervention-activity-detail',
+                args=[intervention.pk, pd_output.pk, activity.pk]
+            ),
+            user=self.user,
+            data={}
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT, response.data)
+
     def test_update(self):
         response = self.forced_auth_req('patch', self.detail_url, user=self.user, data={'name': 'new'})
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
@@ -249,6 +322,35 @@ class TestFunctionality(BaseTestCase):
 
         check_ordering()
 
+    def test_create_items_fractional_total(self):
+        response = self.forced_auth_req(
+            'post', self.list_url,
+            user=self.user,
+            data={
+                'name': 'test',
+                'items': [{
+                    'name': 'test',
+                    'unit': 'test',
+                    'no_units': 17.9,
+                    'unit_price': 14.89,
+                    'unicef_cash': 4.64,
+                    'cso_cash': 261.89
+                }]
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
+
+    def test_deactivate_activity(self):
+        response = self.forced_auth_req(
+            'patch', self.detail_url,
+            user=self.user,
+            data={
+                'is_active': False,
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['is_active'], False)
+
 
 class TestPermissions(BaseTestCase):
     def test_create_for_unknown_user(self):
@@ -291,3 +393,14 @@ class TestPermissions(BaseTestCase):
 
         response = self.forced_auth_req('post', self.list_url, self.partner_focal_point, data={})
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
+
+    def test_create_in_amendment(self):
+        self.intervention.unicef_court = False
+        self.intervention.in_amendment = True
+        self.intervention.save()
+
+        response = self.forced_auth_req(
+            'post', self.list_url, self.user,
+            data={'name': 'test', 'context_details': 'test'}
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)

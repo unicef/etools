@@ -196,6 +196,11 @@ class UserAdminPlus(ExtraUrlMixin, UserAdmin):
         sync_user.delay(user.username)
         return HttpResponseRedirect(reverse('admin:users_user_change', args=[user.pk]))
 
+    @button()
+    def ad(self, request, pk):
+        user = get_object_or_404(get_user_model(), pk=pk)
+        return HttpResponseRedirect(reverse('users_v3:ad-user-api-view', args=[user.email]))
+
     def country(self, obj):
         return obj.profile.country
 
@@ -256,10 +261,6 @@ class CountryAdmin(ExtraUrlMixin, TenantAdminMixin, admin.ModelAdmin):
     filter_horizontal = (
         'offices',
     )
-
-    @button()
-    def sync_fund_commitment(self, request, pk):
-        return self.execute_sync(pk, 'fund_commitment', request)
 
     @button()
     def sync_fund_reservation_delegated(self, request, pk):

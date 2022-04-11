@@ -6,7 +6,7 @@ from django.core.management import call_command
 from django.utils import timezone
 
 from dateutil.relativedelta import relativedelta
-from unicef_locations.tests.factories import GatewayTypeFactory, LocationFactory
+from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.attachments.tests.factories import AttachmentFileTypeFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
@@ -44,12 +44,14 @@ def setup_intervention_test_data(test_case, include_results_and_indicators=False
         title='Intervention 1',
         status=Intervention.DRAFT,
     )
+    test_case.intervention.unicef_focal_points.add(test_case.partnership_manager_user)
     test_case.intervention_2 = InterventionFactory(
         agreement=test_case.agreement,
         title='Intervention 2',
         document_type=Intervention.PD,
         status=Intervention.DRAFT,
     )
+    test_case.intervention_2.unicef_focal_points.add(test_case.partnership_manager_user)
     test_case.active_intervention = InterventionFactory(
         agreement=test_case.active_agreement,
         title='Active Intervention',
@@ -63,6 +65,7 @@ def setup_intervention_test_data(test_case, include_results_and_indicators=False
         unicef_signatory=test_case.unicef_staff,
         partner_authorized_officer_signatory=test_case.partner1.staff_members.all().first()
     )
+    test_case.active_intervention.unicef_focal_points.add(test_case.partnership_manager_user)
     test_case.reporting_requirement = ReportingRequirementFactory(intervention=test_case.active_intervention)
     test_case.result_type = ResultType.objects.get_or_create(name=ResultType.OUTPUT)[0]
     test_case.result = ResultFactory(result_type=test_case.result_type)
@@ -90,7 +93,6 @@ def setup_intervention_test_data(test_case, include_results_and_indicators=False
         )
         test_case.applied_indicator.locations.add(LocationFactory(
             name='A Location',
-            gateway=GatewayTypeFactory(name='A Gateway'),
             p_code='a-p-code')
         )
         test_case.disaggregation = test_case.applied_indicator.disaggregation.create(name='A Disaggregation')

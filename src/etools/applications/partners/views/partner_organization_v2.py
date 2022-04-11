@@ -20,7 +20,6 @@ from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_csv import renderers as r
 from unicef_restlib.views import QueryStringFilterMixin
-from unicef_vision.utils import get_data_from_insight
 
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.core.mixins import ExportModelMixin
@@ -70,7 +69,7 @@ from etools.applications.partners.serializers.partner_organization_v2 import (
     PlannedEngagementNestedSerializer,
     PlannedEngagementSerializer,
 )
-from etools.applications.partners.synchronizers import PartnerSynchronizer
+from etools.applications.partners.tasks import sync_partner
 from etools.applications.partners.views.helpers import set_tenant_or_fail
 from etools.applications.t2f.models import Travel, TravelActivity, TravelType
 from etools.applications.utils.pagination import AppendablePageNumberPagination
@@ -100,6 +99,7 @@ class PartnerOrganizationListAPIView(ExternalModuleFilterMixin, QueryStringFilte
         ('sea_risk_rating', 'sea_risk_rating_name__in'),
         ('psea_assessment_date_before', 'psea_assessment_date__lt'),
         ('psea_assessment_date_after', 'psea_assessment_date__gt'),
+        ('lead_section', 'lead_section__in'),
     )
     search_terms = ('name__icontains', 'vendor_number__icontains', 'short_name__icontains')
     module2filters = {
@@ -459,10 +459,7 @@ class PartnerOrganizationAssessmentUpdateDeleteView(RetrieveUpdateDestroyAPIView
 
 
 class PartnerOrganizationAddView(CreateAPIView):
-    """
-        Create new Partners.
-        Returns a list of Partners.
-        """
+    """Sync Partner given a vendor number (it creates it if it does not exist)"""
     serializer_class = PartnerOrganizationCreateUpdateSerializer
     permission_classes = (PartnershipManagerPermission,)
 
@@ -473,32 +470,11 @@ class PartnerOrganizationAddView(CreateAPIView):
             return Response({"error": "No vendor number provided for Partner Organization"},
                             status=status.HTTP_400_BAD_REQUEST)
 
-        valid_response, response = get_data_from_insight('partners/?vendor={vendor_code}',
-                                                         {"vendor_code": vendor})
+        error = sync_partner(vendor, request.user.profile.country)
+        if error:
+            return Response({"error": error}, status=status.HTTP_400_BAD_REQUEST)
 
-        if valid_response and "ROWSET" not in response:
-            return Response({"error": "The vendor number could not be found in Insight"}, status=status.HTTP_400_BAD_REQUEST)
-
-        if not valid_response or "ROWSET" not in response:
-            return Response({"error": response}, status=status.HTTP_400_BAD_REQUEST)
-
-        partner_resp = response["ROWSET"]["ROW"]
-
-        if PartnerOrganization.objects.filter(
-                vendor_number=partner_resp[PartnerSynchronizer.MAPPING['vendor_number']]).exists():
-            return Response({"error": 'This vendor number already exists in eTools'},
-                            status=status.HTTP_400_BAD_REQUEST)
-
-        country = request.user.profile.country
-        partner_sync = PartnerSynchronizer(business_area_code=country.business_area_code)
-
-        if not partner_sync._filter_records([partner_resp]):
-            return Response({"error": 'Partner skipped because one or more of the required fields are missing'},
-                            status=status.HTTP_400_BAD_REQUEST)
-        partner_sync._partner_save(partner_resp, full_sync=False)
-
-        partner = PartnerOrganization.objects.get(
-            vendor_number=partner_resp[PartnerSynchronizer.MAPPING['vendor_number']])
+        partner = PartnerOrganization.objects.get(vendor_number=vendor)
         po_serializer = PartnerOrganizationDetailSerializer(partner)
         return Response(po_serializer.data, status=status.HTTP_201_CREATED)
 

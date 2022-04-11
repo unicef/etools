@@ -15,6 +15,7 @@ class Migration(migrations.Migration):
         ('funds', '0002_auto_20180326_1605'),
         ('users', '0001_initial'),
         ('locations', '0001_initial'),
+        ('unicef_locations', '0001_initial'),
         ('partners', '0001_initial'),
     ]
 

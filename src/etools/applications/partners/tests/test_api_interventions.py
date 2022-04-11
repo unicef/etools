@@ -91,6 +91,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
         'draft': [
             "accepted_on_behalf_of_partner",
             "actionpoint",
+            "activation_protocol",
             "activity",
             "agreement",
             "agreement_id",
@@ -102,6 +103,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
             "capacity_development",
             "cash_transfer_modalities",
             "cfei_number",
+            "confidential",
             "context",
             "contingency_pd",
             "country_programme",
@@ -109,6 +111,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
             "country_programme_id",
             "created",
             "date_sent_to_partner",
+            "document_currency",
             "document_type",
             "efaceform",
             "end",
@@ -147,6 +150,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
             "sections",
             "sections_present",
             "special_reporting_requirements",
+            "sites",
             "start",
             "status",
             "submission_date",
@@ -169,7 +173,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
         'active': ['']
     }
     REQUIRED_FIELDS = {
-        'draft': ['number', 'title', 'agreement', 'document_type'],
+        'draft': ['number', 'title', 'agreement', 'document_type', 'document_currency'],
         'signed': [],
         'active': ['']
     }
@@ -280,6 +284,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
             "contingency_pd": True,
             "agreement": self.agreement.id,
             "reference_number_year": datetime.date.today().year,
+            "activation_protocol": "test",
         }
         status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
 
@@ -311,6 +316,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
             "contingency_pd": True,
             "agreement": self.agreement.pk,
             "reference_number_year": datetime.date.today().year,
+            "activation_protocol": "test",
 
         }
         status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
@@ -359,7 +365,8 @@ class TestInterventionsAPI(BaseTenantTestCase):
             "agreement": self.agreement.pk,
             "prc_review_attachment": attachment_prc.pk,
             "signed_pd_attachment": attachment_pd.pk,
-            "reference_number_year": datetime.date.today().year
+            "reference_number_year": datetime.date.today().year,
+            "activation_protocol": "test",
         }
         status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
         self.assertEqual(status_code, status.HTTP_201_CREATED)
@@ -788,6 +795,23 @@ class TestInterventionsAPI(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), pd_qs.count())
 
+    def test_permissions_cash_and_document_type_not_editable_when_locked(self):
+        draft_intervention = InterventionFactory(
+            agreement=self.agreement, status='draft',
+            unicef_accepted=False, partner_accepted=False, unicef_court=True,
+        )
+        draft_intervention.unicef_focal_points.add(self.partnership_manager_user)
+        status_code, response = self.run_request(draft_intervention.id, user=self.partnership_manager_user)
+        self.assertTrue(response['permissions']['edit']['document_type'])
+        self.assertTrue(response['permissions']['edit']['document_currency'])
+        self.assertTrue(response['permissions']['edit']['cash_transfer_modalities'])
+        draft_intervention.partner_accepted = True
+        draft_intervention.save()
+        status_code, response = self.run_request(draft_intervention.id, user=self.partnership_manager_user)
+        self.assertFalse(response['permissions']['edit']['document_type'])
+        self.assertFalse(response['permissions']['edit']['document_currency'])
+        self.assertFalse(response['permissions']['edit']['cash_transfer_modalities'])
+
 
 class TestAPIInterventionResultLinkListView(BaseTenantTestCase):
     """Exercise the list view for InterventionResultLinkListCreateView"""
@@ -811,6 +835,7 @@ class TestAPIInterventionResultLinkListView(BaseTenantTestCase):
             'intervention',
             'created',
             'modified',
+            'code',
         ))
 
     def _make_request(self, user):
@@ -921,6 +946,15 @@ class TestAPIInterventionResultLinkCreateView(BaseTenantTestCase):
         response = self._make_request(user)
         self.assertResponseFundamentals(response)
 
+    def test_duplicates_not_allowed(self):
+        user = UserFactory()
+        _add_user_to_partnership_manager_group(user)
+        response = self._make_request(user)
+        self.assertResponseFundamentals(response)
+        response = self._make_request(user)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data['non_field_errors'][0], "Invalid CP Output provided.")
+
 
 class TestAPIInterventionResultLinkRetrieveView(BaseTenantTestCase):
     """Exercise the retrieve view for InterventionResultLinkUpdateView"""
@@ -941,6 +975,7 @@ class TestAPIInterventionResultLinkRetrieveView(BaseTenantTestCase):
             'intervention',
             'created',
             'modified',
+            'code',
         ))
 
     def _make_request(self, user):
@@ -1035,6 +1070,17 @@ class TestAPIInterventionResultLinkUpdateView(BaseTenantTestCase):
         # Now the request should succeed.
         response = self._make_request(user)
         self.assertResponseFundamentals(response)
+
+    def test_duplicates_not_allowed(self):
+        user = UserFactory()
+        _add_user_to_partnership_manager_group(user)
+        InterventionResultLinkFactory(
+            intervention=self.intervention_result_link.intervention,
+            cp_output=self.new_cp_output,
+        )
+        response = self._make_request(user)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
+        self.assertEqual(response.data['non_field_errors'][0], "Invalid CP Output provided.")
 
 
 class TestAPIInterventionResultLinkDeleteView(BaseTenantTestCase):
@@ -1411,11 +1457,12 @@ class BaseAPIInterventionIndicatorsCreateMixin:
 
     def test_group_permission_non_staff(self):
         """Ensure group membership is sufficient for create; even non-staff group members can create"""
-        user = UserFactory()
+        user = UserFactory(is_staff=True)
         response = self._make_request(user)
         self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
 
         _add_user_to_partnership_manager_group(user)
+        self.lower_result.result_link.intervention.unicef_focal_points.add(user)
 
         # Now the request should succeed.
         response = self._make_request(user)
@@ -1425,8 +1472,9 @@ class BaseAPIInterventionIndicatorsCreateMixin:
         """Ensure a different indicator blueprint can be associated with the same lower_result, but
         the same indicator can't be added twice.
         """
-        user = UserFactory()
+        user = UserFactory(is_staff=True)
         _add_user_to_partnership_manager_group(user)
+        self.lower_result.result_link.intervention.unicef_focal_points.add(user)
         data = self.data.copy()
         data['indicator'] = {'title': 'another indicator blueprint'}
         response = self._make_request(user, data)

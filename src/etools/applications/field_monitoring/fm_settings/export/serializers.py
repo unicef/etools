@@ -26,7 +26,7 @@ class LocationSiteExportSerializer(serializers.Serializer):
             level = i + 1
             parents_info.update({
                 'admin_{}_name'.format(level): parent.name if parent else '',
-                'admin_{}_type'.format(level): parent.gateway.name if parent else '',
+                'admin_{}_type'.format(level): parent.admin_level_name if parent else '',
                 'admin_{}_pcode'.format(level): parent.p_code if parent else '',
             })
 

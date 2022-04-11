@@ -11,6 +11,7 @@ class Migration(migrations.Migration):
     dependencies = [
         ('activities', '0001_initial'),
         ('locations', '0001_initial'),
+        ('unicef_locations', '0001_initial'),
         ('reports', '0001_initial'),
         ('partners', '0001_initial'),
     ]
