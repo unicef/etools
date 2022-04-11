@@ -235,7 +235,7 @@ class Trip(TimeStampedModel):
 
     @transition(
         field=status,
-        source=[STATUS_SUBMITTED, STATUS_SUBMISSION_REVIEW],
+        source=[STATUS_DRAFT, STATUS_SUBMITTED, STATUS_SUBMISSION_REVIEW],
         target=[STATUS_APPROVED],
     )
     def transition_to_approved(self):
@@ -329,7 +329,6 @@ class Trip(TimeStampedModel):
     @transition(
         field=status,
         source=[
-            STATUS_DRAFT,
             STATUS_SUBMISSION_REVIEW,
             STATUS_REVIEW,
             STATUS_COMPLETED,
@@ -525,21 +524,21 @@ class Activity(TimeStampedModel):
     )
     monitoring_activity = models.ForeignKey(
         MonitoringActivity,
-        on_delete=models.DO_NOTHING,
+        on_delete=models.CASCADE,
         related_name="trip_activities",
         null=True,
         blank=True
     )
     partner = models.ForeignKey(
         PartnerOrganization,
-        on_delete=models.DO_NOTHING,
+        on_delete=models.CASCADE,
         related_name="trip_activities",
         null=True,
         blank=True
     )
     location = models.ForeignKey(
         Location,
-        on_delete=models.DO_NOTHING,
+        on_delete=models.SET_NULL,
         related_name="trip_activities",
         null=True,
         blank=True

@@ -196,9 +196,9 @@ class LocationSite(TimeStampedModel):
         ordering = ('parent', 'id',)
 
     def __str__(self):
-        return u'{}: {}'.format(
+        return u'{}{}'.format(
             self.name,
-            self.p_code if self.p_code else ''
+            f': {self.p_code}' if self.p_code else ''
         )
 
     @staticmethod
