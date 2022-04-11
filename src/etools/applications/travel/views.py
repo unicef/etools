@@ -24,6 +24,7 @@ from etools.applications.field_monitoring.permissions import IsEditAction, IsRea
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.partners.views.v2 import choices_to_json_ready
 from etools.applications.permissions2.views import PermissionContextMixin, PermittedSerializerMixin
+from etools.applications.travel.filters import ShowHiddenFilter
 from etools.applications.travel.models import Activity, ItineraryItem, Report, Trip
 from etools.applications.travel.permissions import trip_field_is_editable_permission, UserIsStaffPermission
 from etools.applications.travel.serializers import (
@@ -62,26 +63,27 @@ class TripViewSet(
     queryset = Trip.objects.all()
     serializer_class = TripSerializer
 
-    filter_backends = (SearchFilter, DjangoFilterBackend, OrderingFilter)
+    filter_backends = (SearchFilter, DjangoFilterBackend, OrderingFilter, ShowHiddenFilter)
+    search_terms = [
+        'reference_number__icontains',
+        'title__icontains',
+        'description__icontains',
+        'supervisor__first_name__icontains',
+        'supervisor__last_name__icontains',
+        'traveller__first_name__icontains',
+        'traveller__last_name__icontains',
+        'section__name__icontains',
+        'office__name__icontains']
+
     filters = (
-        ('search', [
-            'reference_number__icontains',
-            'supervisor__first_name__icontains',
-            'supervisor__last_name__icontains',
-            'traveller__first_name__icontains',
-            'traveller__last_name__icontains',
-            'section__name',
-            'office__name',
-        ]),
         ('status', 'status__in'),
-        ('traveller', 'traveller'),
-        ('supervisor', 'supervisor'),
-        ('office', 'office'),
-        ('section', 'section'),
-        ('partner', 'activities__partner__pk'),
+        ('traveller', 'traveller__in'),
+        ('supervisor', 'supervisor__in'),
+        ('office', 'office__in'),
+        ('section', 'section__in'),
+        ('partner', 'activities__partner__pk__in'),
         ('month', ['start_date__month',
-                   'end_date__month'
-                   ]),
+                   'end_date__month']),
         ('year', ['start_date__year',
                   'end_date__year']),
         ('start_date', 'start_date'),
@@ -232,9 +234,13 @@ class TripViewSet(
     def subreview(self, request, pk=None):
         return self._set_status(request, Trip.STATUS_SUBMISSION_REVIEW)
 
-    @action(detail=True, methods=["patch"])
-    def submit(self, request, pk=None):
+    @action(detail=True, methods=["patch"], url_name='submit-request-approval')
+    def submit_request_approval(self, request, pk=None):
         return self._set_status(request, Trip.STATUS_SUBMITTED)
+
+    @action(detail=True, methods=["patch"], url_name='submit-no-approval')
+    def submit_no_approval(self, request, pk=None):
+        return self._set_status(request, Trip.STATUS_APPROVED)
 
     @action(detail=True, methods=["patch"])
     def approve(self, request, pk=None):
@@ -434,6 +440,19 @@ class ActivityViewSet(
             raise ValidationError(_("Monitoring Activity not found"))
         serializer.initial_data['activity_date'] = ma.start_date
 
+    @staticmethod
+    def activity_type_fields_cleanup(serializer):
+        _NULLABLE_FIELDS_MAP = {
+            Activity.TYPE_PROGRAMME_MONITORING: ['partner', 'section', 'location'],
+            Activity.TYPE_STAFF_DEVELOPMENT: ['partner', 'section', 'monitoring_activity'],
+            Activity.TYPE_STAFF_ENTITLEMENT: ['partner', 'section', 'monitoring_activity'],
+            Activity.TYPE_TECHNICAL_SUPPORT: ['partner', 'section', 'monitoring_activity'],
+            Activity.TYPE_MEETING: ['monitoring_activity']
+        }
+        fields = _NULLABLE_FIELDS_MAP.get(serializer.initial_data['activity_type'])
+        for field in fields:
+            serializer.initial_data[field] = None
+
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if 'activity_type' in serializer.initial_data and \
@@ -448,8 +467,12 @@ class ActivityViewSet(
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
+
         if serializer.initial_data['activity_type'] == Activity.TYPE_PROGRAMME_MONITORING:
             self.update_ma_date(serializer)
+
+        self.activity_type_fields_cleanup(serializer)
+
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
         if getattr(instance, '_prefetched_objects_cache', None):
