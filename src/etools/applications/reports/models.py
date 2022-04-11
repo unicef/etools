@@ -1,4 +1,6 @@
+import random
 from datetime import date
+from string import ascii_lowercase
 
 from django.core.validators import MinValueValidator
 from django.db import models, transaction
@@ -538,6 +540,24 @@ class IndicatorBlueprint(TimeStampedModel):
     def __str__(self):
         return self.title
 
+    def make_copy(self):
+        new_code = None
+        if self.code:
+            # code is unique, so we need to make inherited copy
+            new_code = self.code[:40] + '-' + ''.join([random.choice(ascii_lowercase) for _i in range(9)])
+
+        return IndicatorBlueprint.objects.create(
+            title=self.title,
+            unit=self.unit,
+            description=self.description,
+            code=new_code,
+            subdomain=self.subdomain,
+            disaggregatable=self.disaggregatable,
+            calculation_formula_across_periods=self.calculation_formula_across_periods,
+            calculation_formula_across_locations=self.calculation_formula_across_locations,
+            display_type=self.display_type,
+        )
+
 
 class Disaggregation(TimeStampedModel):
     """
@@ -740,6 +760,32 @@ class AppliedIndicator(TimeStampedModel):
 
     def get_amended_name(self):
         return f'{self.indicator}: {self.baseline_display_string} - {self.target_display_string}'
+
+    def make_copy(self):
+        indicator_copy = AppliedIndicator.objects.create(
+            indicator=self.indicator.make_copy(),
+            measurement_specifications=self.measurement_specifications,
+            label=self.label,
+            numerator_label=self.numerator_label,
+            denominator_label=self.denominator_label,
+            section=self.section,
+            cluster_indicator_id=self.cluster_indicator_id,
+            response_plan_name=self.response_plan_name,
+            cluster_name=self.cluster_name,
+            cluster_indicator_title=self.cluster_indicator_title,
+            lower_result=self.lower_result,
+            context_code=self.context_code,
+            target=self.target,
+            baseline=self.baseline,
+            assumptions=self.assumptions,
+            means_of_verification=self.means_of_verification,
+            total=self.total,
+            is_high_frequency=self.is_high_frequency,
+            is_active=self.is_active,
+        )
+        indicator_copy.disaggregation.add(*self.disaggregation.all())
+        indicator_copy.locations.add(*self.locations.all())
+        return indicator_copy
 
 
 class Indicator(TimeStampedModel):

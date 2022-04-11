@@ -742,6 +742,12 @@ class InterventionCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotMode
     def validate(self, attrs):
         validated_data = super().validate(attrs)
         if self.instance and ('start' in validated_data or 'end' in validated_data):
+            new_status = validated_data.get('status', None)
+            old_status = self.instance.status
+            if new_status is not None and new_status == self.instance.TERMINATED and new_status != old_status:
+                # no checks required for terminated status
+                return validated_data
+
             start = validated_data.get('start', self.instance.start)
             end = validated_data.get('end', self.instance.end)
             old_quarters = get_quarters_range(self.instance.start, self.instance.end)
@@ -764,7 +770,7 @@ class InterventionCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotMode
                     error_text = _('Please adjust activities to not use the quarters to be removed ({}).').format(
                         names_to_be_removed
                     )
-                    bad_keys = set(validated_data.keys()).union({'start', 'end'})
+                    bad_keys = set(validated_data.keys()).intersection({'start', 'end'})
                     raise ValidationError({key: [error_text] for key in bad_keys})
 
         return validated_data

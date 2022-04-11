@@ -530,3 +530,11 @@ def epd_pilot_tracking():
         attachments={"epd_pilot_values.csv": bio},
         message="enjoy!"
     )
+
+
+@app.task
+def update_interventions_task_chain():
+    # call two tasks above one after another to avoid problems with parallel execution
+    # because both of them handle similar cases yet in different way
+    transfer_active_pds_to_new_cp()
+    intervention_expired()
