@@ -15,6 +15,7 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
 from unicef_locations.tests.factories import LocationFactory
+from unicef_snapshot.models import Activity
 from unicef_snapshot.utils import create_dict_with_relations, create_snapshot
 from waffle.utils import get_cache
 
@@ -898,6 +899,38 @@ class TestManagementBudget(BaseInterventionTestCase):
         data = response.data
         self.assertEqual(data["act1_unicef"], "1000.00")
         self.assertIn('intervention', response.data)
+
+    def test_patch_intervention_snapshot(self):
+        intervention = InterventionFactory()
+        response = self.forced_auth_req(
+            "patch",
+            reverse(
+                "pmp_v3:intervention-budget",
+                args=[intervention.pk],
+            ),
+            user=self.user,
+            data={"act1_unicef": 1000, "act2_partner": 500},
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        activity = Activity.objects.first()
+        self.assertEqual(activity.target, intervention)
+        self.assertEqual(
+            {
+                'planned_budget': {
+                    'total_local': {'after': '1500.00', 'before': '0.00'},
+                    'unicef_cash_local': {'after': '1000.00', 'before': '0.00'},
+                    'programme_effectiveness': {'after': '100.00', 'before': '0.00'},
+                    'partner_contribution_local': {'after': '500.00', 'before': '0.00'},
+                    'total_unicef_cash_local_wo_hq': {'after': '1000.00', 'before': '0.00'},
+                    'total_partner_contribution_local': {'after': '500.00', 'before': '0.00'}
+                },
+                'management_budgets': {
+                    'act1_unicef': {'after': '1000.00', 'before': '0.00'},
+                    'act2_partner': {'after': '500.00', 'before': '0.00'}
+                }
+            },
+            activity.change,
+        )
 
     def test_set_cash_values_directly(self):
         intervention = InterventionFactory()
