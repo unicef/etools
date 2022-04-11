@@ -69,7 +69,7 @@ urlpatterns = [
     re_path(r'^api/static_data/$', StaticDataView.as_view({'get': 'list'}), name='public_static'),
 
     # ***************  API version 1  ********************
-    url(r'^api/eface/v1/', include('etools.applications.eface.urls')),
+    re_path(r'^api/eface/v1/', include('etools.applications.eface.urls')),
     re_path(r'^locations/', include('unicef_locations.urls')),
     re_path(r'^locations/cartodbtables/$', CartoDBTablesView.as_view(), name='cartodbtables'),
     re_path(r'^locations/autocomplete/$', LocationQuerySetView.as_view(), name='locations_autocomplete'),
