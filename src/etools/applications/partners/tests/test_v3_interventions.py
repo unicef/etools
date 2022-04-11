@@ -1308,7 +1308,6 @@ class TestSupplyItem(BaseInterventionTestCase):
             activity.change,
         )
 
-
     def test_delete(self):
         item = InterventionSupplyItemFactory(intervention=self.intervention)
         response = self.forced_auth_req(
