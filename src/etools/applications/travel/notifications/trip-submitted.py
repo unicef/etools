@@ -6,9 +6,9 @@ defaults = {
     'subject': 'Travel Trip ({{ trip.reference_number }}) Submitted',
 
     'content': strip_text("""
-    Dear {{ supervisor }},
+    Hello {{ supervisor }},
 
-    UNICEF is granting you access to the Travel Module in eTools.
+    The following Travel has been submitted: {{ trip.reference_number }}.
     Please refer below for additional information.
 
     Description: {{ trip.description }}
@@ -16,7 +16,7 @@ defaults = {
     Start Date: {{ trip.start_date }}
     End Date: {{ trip.end_date }}
 
-    Please click this link to review the trip: {{ url }}
+    Please click this link to review the Travel: {{ url }}
 
     Thank you.
     """),
@@ -25,9 +25,9 @@ defaults = {
     {% extends "email-templates/base" %}
 
     {% block content %}
-    Dear {{ supervisor }},<br/><br/>
+    Hello {{ supervisor }},<br/><br/>
 
-    UNICEF is granting you access to the Travel Module in eTools.<br/>
+    The following Travel has been submitted: {{ trip.reference_number }}.<br/>
     Please refer below for additional information.<br/><br/>
 
     Description: {{ trip.description }}
@@ -35,7 +35,7 @@ defaults = {
     Start Date: {{ trip.start_date }}
     End Date: {{ trip.end_date }}
 
-    Please click <a href="{{ url }}">this link</a> to review the itinerary.<br/><br/>
+    Please click <a href="{{ url }}">this link</a> to review the Travel.<br/><br/>
 
     Thank you.
     {% endblock %}
