@@ -1094,6 +1094,12 @@ class InterventionActivityItem(TimeStampedModel):
         related_name="items",
         on_delete=models.CASCADE,
     )
+    code = models.CharField(
+        verbose_name=_("Code"),
+        max_length=50,
+        blank=True,
+        null=True
+    )
     name = models.CharField(
         verbose_name=_("Name"),
         max_length=150,
@@ -1135,8 +1141,17 @@ class InterventionActivityItem(TimeStampedModel):
         return "{} {}".format(self.activity, self.name)
 
     def save(self, **kwargs):
+        if not self.code:
+            self.code = '{0}.{1}'.format(self.activity.code, self.activity.items.count() + 1)
         super().save(**kwargs)
         self.activity.update_cash()
+
+    @classmethod
+    def renumber_items_for_activity(cls, activity: InterventionActivity, start_id=None):
+        items = activity.items.all()
+        for i, item in enumerate(items):
+            item.code = '{0}.{1}'.format(activity.code, i + 1)
+        cls.objects.bulk_update(items, fields=['code'])
 
 
 class InterventionTimeFrame(TimeStampedModel):
