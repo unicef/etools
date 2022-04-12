@@ -27,6 +27,7 @@ from etools.applications.partners.permissions import (
     PRC_SECRETARY,
     SENIOR_MANAGEMENT_GROUP,
 )
+from etools.applications.partners.serializers.intervention_snapshot import FullInterventionSnapshotSerializerMixin
 from etools.applications.partners.serializers.interventions_v2 import (
     FRsSerializer,
     InterventionAmendmentCUSerializer,
@@ -45,14 +46,17 @@ from etools.applications.reports.serializers.v2 import InterventionTimeFrameSeri
 from etools.applications.users.serializers_v3 import MinimalUserSerializer
 
 
-class InterventionRiskSerializer(serializers.ModelSerializer):
+class InterventionRiskSerializer(FullInterventionSnapshotSerializerMixin, serializers.ModelSerializer):
     class Meta:
         model = InterventionRisk
         fields = ('id', 'risk_type', 'mitigation_measures', 'intervention')
         kwargs = {'intervention': {'write_only': True}}
 
+    def get_intervention(self):
+        return self.validated_data['intervention']
 
-class InterventionSupplyItemSerializer(serializers.ModelSerializer):
+
+class InterventionSupplyItemSerializer(FullInterventionSnapshotSerializerMixin, serializers.ModelSerializer):
     class Meta:
         model = InterventionSupplyItem
         fields = (
@@ -70,6 +74,9 @@ class InterventionSupplyItemSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data["intervention"] = self.initial_data.get("intervention")
         return super().create(validated_data)
+
+    def get_intervention(self):
+        return self.context["intervention"]
 
 
 class InterventionSupplyItemUploadSerializer(serializers.Serializer):
@@ -162,7 +169,7 @@ class InterventionManagementBudgetItemSerializer(serializers.ModelSerializer):
         return attrs
 
 
-class InterventionManagementBudgetSerializer(serializers.ModelSerializer):
+class InterventionManagementBudgetSerializer(FullInterventionSnapshotSerializerMixin, serializers.ModelSerializer):
     items = InterventionManagementBudgetItemSerializer(many=True, required=False)
     act1_total = serializers.SerializerMethodField()
     act2_total = serializers.SerializerMethodField()
@@ -199,13 +206,6 @@ class InterventionManagementBudgetSerializer(serializers.ModelSerializer):
         return str(obj.act3_unicef + obj.act3_partner)
 
     @transaction.atomic
-    def create(self, validated_data):
-        items = validated_data.pop('items', None)
-        instance = super().create(validated_data)
-        self.set_items(instance, items)
-        return instance
-
-    @transaction.atomic
     def update(self, instance, validated_data):
         items = validated_data.pop('items', None)
         instance = super().update(instance, validated_data)
@@ -236,8 +236,11 @@ class InterventionManagementBudgetSerializer(serializers.ModelSerializer):
         # doing update in serializer instead of post_save to avoid big number of budget re-calculations
         instance.update_cash()
 
+    def get_intervention(self):
+        return self.instance.intervention
 
-class InterventionDetailSerializer(serializers.ModelSerializer):
+
+class InterventionDetailSerializer(FullInterventionSnapshotSerializerMixin, serializers.ModelSerializer):
     activation_letter_attachment = AttachmentSingleFileField(read_only=True)
     activation_letter_file = serializers.FileField(source='activation_letter', read_only=True)
     amendments = InterventionAmendmentCUSerializer(many=True, read_only=True, required=False)
@@ -639,6 +642,9 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "unicef_signatory",
             "original_intervention",
         )
+
+    def get_intervention(self):
+        return self.instance
 
 
 class InterventionDetailResultsStructureSerializer(serializers.ModelSerializer):

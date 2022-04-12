@@ -15,6 +15,7 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
 from unicef_locations.tests.factories import LocationFactory
+from unicef_snapshot.models import Activity
 from unicef_snapshot.utils import create_dict_with_relations, create_snapshot
 from waffle.utils import get_cache
 
@@ -900,6 +901,38 @@ class TestManagementBudget(BaseInterventionTestCase):
         self.assertEqual(data["act1_unicef"], "1000.00")
         self.assertIn('intervention', response.data)
 
+    def test_patch_intervention_snapshot(self):
+        intervention = InterventionFactory()
+        response = self.forced_auth_req(
+            "patch",
+            reverse(
+                "pmp_v3:intervention-budget",
+                args=[intervention.pk],
+            ),
+            user=self.user,
+            data={"act1_unicef": 1000, "act2_partner": 500},
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        activity = Activity.objects.first()
+        self.assertEqual(activity.target, intervention)
+        self.assertEqual(
+            {
+                'planned_budget': {
+                    'total_local': {'after': '1500.00', 'before': '0.00'},
+                    'unicef_cash_local': {'after': '1000.00', 'before': '0.00'},
+                    'programme_effectiveness': {'after': '100.00', 'before': '0.00'},
+                    'partner_contribution_local': {'after': '500.00', 'before': '0.00'},
+                    'total_unicef_cash_local_wo_hq': {'after': '1000.00', 'before': '0.00'},
+                    'total_partner_contribution_local': {'after': '500.00', 'before': '0.00'}
+                },
+                'management_budgets': {
+                    'act1_unicef': {'after': '1000.00', 'before': '0.00'},
+                    'act2_partner': {'after': '500.00', 'before': '0.00'}
+                }
+            },
+            activity.change,
+        )
+
     def test_set_cash_values_directly(self):
         intervention = InterventionFactory()
         response = self.forced_auth_req(
@@ -1249,6 +1282,31 @@ class TestSupplyItem(BaseInterventionTestCase):
         self.assertEqual(response.data["unit_number"], "10.00")
         self.assertEqual(response.data["unit_price"], "3.00")
         self.assertEqual(response.data["total_price"], "30.00")
+
+    def test_patch_intervention_snapshot(self):
+        item = InterventionSupplyItemFactory(
+            intervention=self.intervention,
+            unit_number=100,
+            unit_price=2,
+        )
+        response = self.forced_auth_req(
+            "patch",
+            reverse("pmp_v3:intervention-supply-item-detail", args=[self.intervention.pk, item.pk]),
+            data={"unit_price": 8}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        activity = Activity.objects.first()
+        self.assertEqual(activity.target, self.intervention)
+        self.assertEqual(
+            {
+                'supply_items': [{'unit_price': {'after': '8.00', 'before': '2.00'}}],
+                'planned_budget': {
+                    'total_local': {'after': '800.00', 'before': '200.00'},
+                    'in_kind_amount_local': {'after': '800.00', 'before': '200.00'}
+                }
+            },
+            activity.change,
+        )
 
     def test_delete(self):
         item = InterventionSupplyItemFactory(intervention=self.intervention)

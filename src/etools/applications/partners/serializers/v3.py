@@ -6,6 +6,7 @@ from rest_framework.exceptions import ValidationError
 from unicef_restlib.fields import SeparatedReadWriteField
 
 from etools.applications.partners.models import InterventionResultLink, InterventionReview, PRCOfficerInterventionReview
+from etools.applications.partners.serializers.intervention_snapshot import FullInterventionSnapshotSerializerMixin
 from etools.applications.reports.models import LowerResult, Result, ResultType
 from etools.applications.users.serializers_v3 import MinimalUserSerializer
 
@@ -88,7 +89,7 @@ class InterventionReviewSerializer(serializers.ModelSerializer):
         instance.prc_officers.remove(*diff)
 
 
-class PRCOfficerInterventionReviewSerializer(serializers.ModelSerializer):
+class PRCOfficerInterventionReviewSerializer(FullInterventionSnapshotSerializerMixin, serializers.ModelSerializer):
     user = MinimalUserSerializer(read_only=True)
 
     class Meta:
@@ -119,8 +120,14 @@ class PRCOfficerInterventionReviewSerializer(serializers.ModelSerializer):
             validated_data['review_date'] = timezone.now().date()
         return super().update(instance, validated_data)
 
+    def get_intervention(self):
+        return self.instance.overall_review.intervention
 
-class PartnerInterventionLowerResultSerializer(InterventionLowerResultBaseSerializer):
+
+class PartnerInterventionLowerResultSerializer(
+    FullInterventionSnapshotSerializerMixin,
+    InterventionLowerResultBaseSerializer
+):
     cp_output = serializers.ReadOnlyField(source='result_link.cp_output_id')
 
     class Meta(InterventionLowerResultBaseSerializer.Meta):
@@ -142,8 +149,14 @@ class PartnerInterventionLowerResultSerializer(InterventionLowerResultBaseSerial
         instance = super().create(validated_data)
         return instance
 
+    def get_intervention(self):
+        return self.intervention
 
-class UNICEFInterventionLowerResultSerializer(InterventionLowerResultBaseSerializer):
+
+class UNICEFInterventionLowerResultSerializer(
+    FullInterventionSnapshotSerializerMixin,
+    InterventionLowerResultBaseSerializer,
+):
     cp_output = SeparatedReadWriteField(
         read_field=serializers.ReadOnlyField(),
         write_field=serializers.PrimaryKeyRelatedField(
@@ -201,3 +214,6 @@ class UNICEFInterventionLowerResultSerializer(InterventionLowerResultBaseSeriali
                 instance.save()
 
         return instance
+
+    def get_intervention(self):
+        return self.intervention

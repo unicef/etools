@@ -408,6 +408,11 @@ class PMPInterventionSupplyItemMixin(
     def get_root_object(self):
         return self.get_intervention()
 
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['intervention'] = self.get_intervention()
+        return context
+
 
 class PMPInterventionSupplyItemListCreateView(
         PMPInterventionSupplyItemMixin,

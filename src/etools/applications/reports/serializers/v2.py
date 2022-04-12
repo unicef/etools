@@ -6,6 +6,7 @@ from rest_framework.exceptions import ValidationError
 from unicef_rest_export.serializers import ExportSerializer
 
 from etools.applications.partners.models import Intervention
+from etools.applications.partners.serializers.intervention_snapshot import FullInterventionSnapshotSerializerMixin
 from etools.applications.reports.models import (
     AppliedIndicator,
     Disaggregation,
@@ -557,7 +558,7 @@ class InterventionTimeFrameSerializer(serializers.ModelSerializer):
         return 'Q{}'.format(obj.quarter)
 
 
-class InterventionActivityDetailSerializer(serializers.ModelSerializer):
+class InterventionActivityDetailSerializer(FullInterventionSnapshotSerializerMixin, serializers.ModelSerializer):
     items = InterventionActivityItemSerializer(many=True, required=False)
     partner_percentage = serializers.DecimalField(max_digits=5, decimal_places=2, read_only=True)
 
@@ -637,6 +638,9 @@ class InterventionActivityDetailSerializer(serializers.ModelSerializer):
         new_time_frames = self.intervention.quarters.filter(id__in=[t.id for t in time_frames])
         instance.time_frames.clear()
         instance.time_frames.add(*new_time_frames)
+
+    def get_intervention(self):
+        return self.intervention
 
 
 class InterventionActivitySerializer(serializers.ModelSerializer):
