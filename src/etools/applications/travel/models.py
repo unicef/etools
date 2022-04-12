@@ -175,9 +175,9 @@ class Trip(TimeStampedModel):
     def get_object_url(self, **kwargs):
         return build_frontend_url(
             'travel',
-            'trip',
+            'trips',
             self.pk,
-            'detail',
+            'details',
             **kwargs,
         )
 
