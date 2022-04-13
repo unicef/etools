@@ -172,7 +172,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
         'active': ['']
     }
     REQUIRED_FIELDS = {
-        'draft': ['number', 'title', 'agreement', 'document_type', 'document_currency'],
+        'draft': ['number', 'title', 'agreement', 'document_type', 'document_currency', 'risks'],
         'signed': [],
         'active': ['']
     }
