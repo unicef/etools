@@ -73,6 +73,8 @@ class Trip(TimeStampedModel):
         verbose_name=_('Supervisor'),
         on_delete=models.CASCADE,
         related_name="supervised_itineraries",
+        blank=True,
+        null=True
     )
     title = models.CharField(
         max_length=120,
@@ -82,6 +84,7 @@ class Trip(TimeStampedModel):
     description = models.TextField(
         verbose_name=_("Description"),
         blank=True,
+        null=True
     )
     start_date = models.DateField(
         verbose_name=_('Start Date'),
@@ -115,12 +118,16 @@ class Trip(TimeStampedModel):
         verbose_name=_("Office"),
         on_delete=models.DO_NOTHING,
         related_name="trips",
+        blank=True,
+        null=True
     )
     section = models.ForeignKey(
         Section,
         verbose_name=_("Section"),
         on_delete=models.DO_NOTHING,
         related_name="trips",
+        blank=True,
+        null=True
     )
     # stores information about the visit that will be displayed to the user,
     # the keys are interpretable error codes, that can be generated based on specific logic.
@@ -168,9 +175,9 @@ class Trip(TimeStampedModel):
     def get_object_url(self, **kwargs):
         return build_frontend_url(
             'travel',
-            'trip',
-            'detail',
+            'trips',
             self.pk,
+            'details',
             **kwargs,
         )
 
@@ -201,7 +208,9 @@ class Trip(TimeStampedModel):
     def get_mail_context(self, user):
         context = {
             "url": self.get_object_url(user=user),
-            "trip": self
+            "trip": self,
+            "supervisor": self.supervisor.full_name,
+            "traveller": self.traveller.full_name
         }
         if self.status == self.STATUS_REJECTED:
             context["rejected_comment"] = self.get_rejected_comment()

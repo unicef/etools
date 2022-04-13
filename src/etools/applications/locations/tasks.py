@@ -23,7 +23,7 @@ class eToolsLocationSynchronizer(LocationSynchronizer):
         super().__init__(pk)
         country = Country.objects.get(schema_name=schema)
         self.log, _ = get_vision_logger_domain_model().objects.get_or_create(
-            handler_name=f'LocationsHandler (lev{self.carto.location_type.admin_level})',
+            handler_name=f'LocationsHandler (lev{self.carto.admin_level})',
             business_area_code=getattr(country, 'business_area_code', ''),
             country=country,
             details=self.__class__.__name__
