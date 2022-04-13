@@ -175,9 +175,9 @@ class Trip(TimeStampedModel):
     def get_object_url(self, **kwargs):
         return build_frontend_url(
             'travel',
-            'trip',
-            'detail',
+            'trips',
             self.pk,
+            'details',
             **kwargs,
         )
 
@@ -208,7 +208,9 @@ class Trip(TimeStampedModel):
     def get_mail_context(self, user):
         context = {
             "url": self.get_object_url(user=user),
-            "trip": self
+            "trip": self,
+            "supervisor": self.supervisor.full_name,
+            "traveller": self.traveller.full_name
         }
         if self.status == self.STATUS_REJECTED:
             context["rejected_comment"] = self.get_rejected_comment()
