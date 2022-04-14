@@ -251,7 +251,7 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
         object_url = self.get_object_url(**kwargs)
 
         return {
-            'unique_id': self.reference_number,
+            'reference_number': self.reference_number,
             'engagement_type': self.get_engagement_type_display(),
             'object_url': object_url,
             'partner': force_text(self.partner),
