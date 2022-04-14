@@ -4,7 +4,7 @@ name = 'audit/engagement/reported_by_auditor'
 defaults = {
     'description': 'Email that send when auditor fill engagement\'s report.',
     'subject': '{{ engagement.auditor_firm }} has completed the final report for '
-    '{{ engagement.engagement_type }}, {{ engagement.unique_id }}',
+    '{{ engagement.engagement_type }}, {{ engagement.reference_number }}',
 
     'content': strip_text("""
     Dear Audit Focal Point,
