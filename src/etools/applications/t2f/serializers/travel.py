@@ -14,10 +14,10 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from unicef_attachments.fields import AttachmentSingleFileField
 from unicef_attachments.serializers import AttachmentSerializerMixin
-from unicef_locations.models import Location
 
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.action_points.serializers import ActionPointBaseSerializer
+from etools.applications.locations.models import Location
 from etools.applications.partners.models import PartnerType
 from etools.applications.publics.models import AirlineCompany
 from etools.applications.t2f.helpers.permission_matrix import PermissionMatrix

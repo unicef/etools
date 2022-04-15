@@ -26,6 +26,7 @@ from etools.applications.audit.serializers.risks import (
     KeyInternalWeaknessSerializer,
     RiskRootSerializer,
 )
+from etools.applications.core.util_scripts import currency_format
 from etools.applications.partners.models import PartnerOrganization
 from etools.libraries.pythonlib.collections import to_choices_list
 
@@ -250,14 +251,19 @@ class EngagementBaseDetailCSVSerializer(serializers.Serializer):
         return dict(Engagement.DISPLAY_STATUSES)[obj.displayed_status]
 
 
+class CurrencyReadOnlyField(serializers.ReadOnlyField):
+    def to_representation(self, value):
+        return currency_format(value)
+
+
 class SpotCheckDetailCSVSerializer(EngagementBaseDetailCSVSerializer):
-    total_value = serializers.ReadOnlyField()
-    total_amount_tested = serializers.ReadOnlyField()
-    amount_refunded = serializers.ReadOnlyField()
-    additional_supporting_documentation_provided = serializers.ReadOnlyField()
-    justification_provided_and_accepted = serializers.ReadOnlyField()
-    write_off_required = serializers.ReadOnlyField()
-    pending_unsupported_amount = serializers.ReadOnlyField()
+    total_value = CurrencyReadOnlyField()
+    total_amount_tested = CurrencyReadOnlyField()
+    amount_refunded = CurrencyReadOnlyField()
+    additional_supporting_documentation_provided = CurrencyReadOnlyField()
+    justification_provided_and_accepted = CurrencyReadOnlyField()
+    write_off_required = CurrencyReadOnlyField()
+    pending_unsupported_amount = CurrencyReadOnlyField()
     high_priority_observations = serializers.SerializerMethodField()
 
     def get_high_priority_observations(self, obj):
@@ -268,17 +274,17 @@ class SpotCheckDetailCSVSerializer(EngagementBaseDetailCSVSerializer):
 
 
 class AuditDetailCSVSerializer(EngagementBaseDetailCSVSerializer):
-    total_value = serializers.ReadOnlyField()
-    audited_expenditure = serializers.ReadOnlyField()
-    audited_expenditure_local = serializers.ReadOnlyField()
-    financial_findings = serializers.ReadOnlyField()
-    financial_findings_local = serializers.ReadOnlyField()
+    total_value = CurrencyReadOnlyField()
+    audited_expenditure = CurrencyReadOnlyField()
+    audited_expenditure_local = CurrencyReadOnlyField()
+    financial_findings = CurrencyReadOnlyField()
+    financial_findings_local = CurrencyReadOnlyField()
     audit_opinion = serializers.ReadOnlyField()
-    amount_refunded = serializers.ReadOnlyField()
-    additional_supporting_documentation_provided = serializers.ReadOnlyField()
-    justification_provided_and_accepted = serializers.ReadOnlyField()
-    write_off_required = serializers.ReadOnlyField()
-    pending_unsupported_amount = serializers.ReadOnlyField()
+    amount_refunded = CurrencyReadOnlyField()
+    additional_supporting_documentation_provided = CurrencyReadOnlyField()
+    justification_provided_and_accepted = CurrencyReadOnlyField()
+    write_off_required = CurrencyReadOnlyField()
+    pending_unsupported_amount = CurrencyReadOnlyField()
     control_weaknesses = serializers.SerializerMethodField()
     subject_area = serializers.SerializerMethodField()
 

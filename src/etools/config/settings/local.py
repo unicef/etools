@@ -20,6 +20,7 @@ POST_OFFICE = {
 REST_FRAMEWORK['DEFAULT_AUTHENTICATION_CLASSES'] = (
     # this setting fixes the bug where user can be logged in as AnonymousUser
     'etools.applications.core.auth.CsrfExemptSessionAuthentication',
+    'rest_framework.authentication.BasicAuthentication',
 ) + REST_FRAMEWORK['DEFAULT_AUTHENTICATION_CLASSES']
 
 AUTHENTICATION_BACKENDS = (

@@ -222,6 +222,7 @@ class UserTenantProfileAdmin(admin.ModelAdmin):
     model = UserTenantProfile
     list_filter = ("office",)
     list_display = ("id", "profile", "office")
+    raw_id_fields = ("profile", )
 
 
 admin.site.register(Result, ResultAdmin)

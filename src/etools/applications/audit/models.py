@@ -108,10 +108,10 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
     start_date = models.DateField(verbose_name=_('Period Start Date'), blank=True, null=True)
     end_date = models.DateField(verbose_name=_('Period End Date'), blank=True, null=True)
     total_value = models.DecimalField(
-        verbose_name=_('Total value of selected FACE form(s)'), blank=True, default=0, decimal_places=2, max_digits=20
+        verbose_name=_('Total value of selected FACE form(s)'), default=0, decimal_places=2, max_digits=20
     )
     exchange_rate = models.DecimalField(
-        verbose_name=_('Exchange Rate'), blank=True, default=0, decimal_places=2, max_digits=20
+        verbose_name=_('Exchange Rate'), default=0, decimal_places=2, max_digits=20
     )
     currency_of_report = CurrencyField(verbose_name=_("Currency of Report"), null=True, blank=True)
 
@@ -241,7 +241,7 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
         object_url = self.get_object_url(**kwargs)
 
         return {
-            'unique_id': self.reference_number,
+            'reference_number': self.reference_number,
             'engagement_type': self.get_engagement_type_display(),
             'object_url': object_url,
             'partner': force_text(self.partner),

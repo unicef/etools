@@ -7,8 +7,8 @@ from django.utils.translation import gettext as _
 from model_utils.fields import AutoCreatedField, AutoLastModifiedField
 from model_utils.models import TimeStampedModel
 from mptt.models import MPTTModel, TreeForeignKey
-from unicef_locations.models import Location
 
+from etools.applications.locations.models import Location
 from etools.applications.users.models import UserProfile
 
 

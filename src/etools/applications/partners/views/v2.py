@@ -13,10 +13,10 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from unicef_attachments.models import FileType as AttachmentFileType
 from unicef_djangolib.fields import CURRENCIES
-from unicef_locations.models import Location
 
 from etools.applications.attachments.models import AttachmentFlat
 from etools.applications.funds.models import FundsReservationItem
+from etools.applications.locations.models import Location
 from etools.applications.partners.filters import PartnerScopeFilter
 from etools.applications.partners.models import (
     Agreement,
