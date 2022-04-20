@@ -16,6 +16,8 @@ from django_tenants.models import TenantMixin
 from django_tenants.utils import get_public_schema_name, tenant_context
 from model_utils.models import TimeStampedModel
 
+from etools.libraries.djangolib.models import GroupWrapper
+
 if TYPE_CHECKING:
     from etools.applications.partners.models import PartnerStaffMember
 
@@ -383,3 +385,5 @@ class UserProfile(models.Model):
 
 
 post_save.connect(UserProfile.create_user_profile, sender=settings.AUTH_USER_MODEL)
+
+PRCSecretary = GroupWrapper(code='prc_secretary', name='PRC Secretary')
