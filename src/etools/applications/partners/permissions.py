@@ -135,6 +135,10 @@ class InterventionPermissions(PMPPermissions):
             """ field not required to accept if contingency is on"""
             return instance.contingency_pd or not instance.unicef_accepted
 
+        def unlocked_or_contingency(instance):
+            """ field not required to accept if contingency is on"""
+            return instance.contingency_pd or not instance.locked
+
         def is_spd_non_hum(instance):
             # TODO: in the future we might want to add a money condition here (100k is the current limit)
             return instance.document_type == instance.SPD and not instance.humanitarian_flag
@@ -203,9 +207,12 @@ class InterventionPermissions(PMPPermissions):
             'unlocked': unlocked(self.instance),
             'is_spd': self.instance.document_type == self.instance.SPD,
             'is_spd_non_hum': is_spd_non_hum(self.instance),
+            'is_pd_unlocked': self.instance.document_type == self.instance.PD and not self.instance.locked,
             'unicef_not_accepted': unicef_not_accepted(self.instance),
             'unicef_not_accepted_contingency': unicef_not_accepted_contingency(self.instance),
+            'unlocked_or_contingency': unlocked_or_contingency(self.instance),
             'unicef_not_accepted_spd': not_spd(self.instance) or unicef_not_accepted(self.instance),
+            'unlocked_spd': not_spd(self.instance) or unlocked(self.instance),
             'unicef_not_accepted_spd_non_hum': unicef_not_accepted_spd_non_hum(self.instance),
             'not_ssfa+unicef_not_accepted': not_ssfa(self.instance) and unicef_not_accepted(self.instance),
         }

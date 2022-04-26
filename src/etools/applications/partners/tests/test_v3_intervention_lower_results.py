@@ -1,7 +1,10 @@
+import itertools
+
 from django.urls import reverse
 
 from rest_framework import status
 from unicef_locations.tests.factories import LocationFactory
+from unicef_snapshot.models import Activity
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import Intervention, InterventionResultLink
@@ -318,6 +321,27 @@ class TestInterventionLowerResultsDetailView(TestInterventionLowerResultsViewBas
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertNotIn('intervention', response.data)
+
+    def test_create_intervention_snapshot(self):
+        result = LowerResultFactory(result_link=self.result_link, name='old_name')
+        response = self.forced_auth_req(
+            'patch',
+            reverse('partners:intervention-pd-output-detail', args=[self.intervention.pk, result.pk]),
+            self.user,
+            data={'name': 'new_name'}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+
+        activity = Activity.objects.first()
+        self.assertEqual(activity.target, self.intervention)
+        self.assertEqual(
+            {'result_links': [{'ll_results': [{'name': {'after': 'new_name', 'before': 'old_name'}}]}]},
+            activity.change,
+        )
+        self.assertIn(
+            result.id,
+            [lr['pk'] for lr in itertools.chain(*[rl['ll_results'] for rl in activity.data['result_links']])],
+        )
 
 
 class TestAppliedIndicatorsCreate(TestInterventionLowerResultsViewBase):

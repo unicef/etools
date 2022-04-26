@@ -71,19 +71,34 @@ def recalculate_result_links_numbering(instance, **kwargs):
     for result_link in instance.intervention.result_links.filter(id__gt=instance.id).prefetch_related(
         'll_results',
         'll_results__activities',
+        'll_results__activities__items',
     ):
         LowerResult.renumber_results_for_result_link(result_link)
         for result in result_link.ll_results.all():
             InterventionActivity.renumber_activities_for_result(result)
+            for activity in result.activities.all():
+                InterventionActivityItem.renumber_items_for_activity(activity)
 
 
 @receiver(post_delete, sender=LowerResult)
 def recalculate_results_numbering(instance, **kwargs):
     LowerResult.renumber_results_for_result_link(instance.result_link)
-    for result in instance.result_link.ll_results.filter(id__gt=instance.id).prefetch_related('activities'):
+    for result in instance.result_link.ll_results.filter(id__gt=instance.id).prefetch_related(
+        'activities',
+        'activities__items',
+    ):
         InterventionActivity.renumber_activities_for_result(result)
+        for activity in result.activities.all():
+            InterventionActivityItem.renumber_items_for_activity(activity)
 
 
 @receiver(post_delete, sender=InterventionActivity)
 def recalculate_activities_numbering(instance, **kwargs):
     InterventionActivity.renumber_activities_for_result(instance.result)
+    for activity in instance.result.activities.filter(id__gt=instance.id).prefetch_related('items'):
+        InterventionActivityItem.renumber_items_for_activity(activity)
+
+
+@receiver(post_delete, sender=InterventionActivityItem)
+def recalculate_items_numbering(instance, **kwargs):
+    InterventionActivityItem.renumber_items_for_activity(instance.activity)

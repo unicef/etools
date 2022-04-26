@@ -44,7 +44,15 @@ class TestTrip(BaseTenantTestCase):
         trip = TripFactory()
         url = trip.get_object_url(user=user)
         context = trip.get_mail_context(user)
-        self.assertEqual(context, {"url": url, "trip": trip})
+        self.assertEqual(
+            context,
+            {
+                "url": url,
+                "trip": trip,
+                "supervisor": getattr(trip.supervisor, "full_name", ""),
+                "traveller": getattr(trip.traveller, "full_name", "")
+            }
+        )
 
     def test_get_mail_context_rejected(self):
         user = UserFactory()
@@ -64,6 +72,8 @@ class TestTrip(BaseTenantTestCase):
                 "url": url,
                 "trip": trip,
                 "rejected_comment": "Rejected",
+                "supervisor": getattr(trip.supervisor, "full_name", ""),
+                "traveller": getattr(trip.traveller, "full_name", "")
             },
         )
 

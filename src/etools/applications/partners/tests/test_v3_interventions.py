@@ -16,6 +16,7 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
 from unicef_locations.tests.factories import LocationFactory
+from unicef_snapshot.models import Activity
 from unicef_snapshot.utils import create_dict_with_relations, create_snapshot
 from waffle.utils import get_cache
 
@@ -53,6 +54,7 @@ from etools.applications.reports.models import AppliedIndicator, ResultType
 from etools.applications.reports.tests.factories import (
     AppliedIndicatorFactory,
     CountryProgrammeFactory,
+    IndicatorFactory,
     InterventionActivityFactory,
     LowerResultFactory,
     OfficeFactory,
@@ -370,6 +372,17 @@ class TestDetail(BaseInterventionTestCase):
             )
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_reporting_requirements_partner_user(self):
+        staff_member = PartnerStaffFactory(partner=self.intervention.agreement.partner)
+        self.intervention.partner_focal_points.add(staff_member)
+        response = self.forced_auth_req(
+            "get",
+            reverse('pmp_v3:intervention-detail', args=[self.intervention.pk]),
+            user=staff_member.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(response.data['permissions']['view']['reporting_requirements'])
 
     def test_pdf_partner_user(self):
         staff_member = PartnerStaffFactory(partner=self.intervention.agreement.partner)
@@ -749,6 +762,8 @@ class TestUpdate(BaseInterventionTestCase):
             signed_by_partner_date=None,
             signed_by_unicef_date=None,
         )
+        ReportingRequirementFactory(intervention=intervention, start_date=intervention.start, end_date=intervention.end)
+        intervention.flat_locations.add(LocationFactory())
         intervention.unicef_focal_points.add(self.user)
         staff_member = PartnerStaffFactory(partner=self.partner)
         intervention.partner_focal_points.add(staff_member)
@@ -924,6 +939,38 @@ class TestManagementBudget(BaseInterventionTestCase):
         data = response.data
         self.assertEqual(data["act1_unicef"], "1000.00")
         self.assertIn('intervention', response.data)
+
+    def test_patch_intervention_snapshot(self):
+        intervention = InterventionFactory()
+        response = self.forced_auth_req(
+            "patch",
+            reverse(
+                "pmp_v3:intervention-budget",
+                args=[intervention.pk],
+            ),
+            user=self.user,
+            data={"act1_unicef": 1000, "act2_partner": 500},
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        activity = Activity.objects.first()
+        self.assertEqual(activity.target, intervention)
+        self.assertEqual(
+            {
+                'planned_budget': {
+                    'total_local': {'after': '1500.00', 'before': '0.00'},
+                    'unicef_cash_local': {'after': '1000.00', 'before': '0.00'},
+                    'programme_effectiveness': {'after': '100.00', 'before': '0.00'},
+                    'partner_contribution_local': {'after': '500.00', 'before': '0.00'},
+                    'total_unicef_cash_local_wo_hq': {'after': '1000.00', 'before': '0.00'},
+                    'total_partner_contribution_local': {'after': '500.00', 'before': '0.00'}
+                },
+                'management_budgets': {
+                    'act1_unicef': {'after': '1000.00', 'before': '0.00'},
+                    'act2_partner': {'after': '500.00', 'before': '0.00'}
+                }
+            },
+            activity.change,
+        )
 
     def test_set_cash_values_directly(self):
         intervention = InterventionFactory()
@@ -1275,6 +1322,31 @@ class TestSupplyItem(BaseInterventionTestCase):
         self.assertEqual(response.data["unit_price"], "3.00")
         self.assertEqual(response.data["total_price"], "30.00")
 
+    def test_patch_intervention_snapshot(self):
+        item = InterventionSupplyItemFactory(
+            intervention=self.intervention,
+            unit_number=100,
+            unit_price=2,
+        )
+        response = self.forced_auth_req(
+            "patch",
+            reverse("pmp_v3:intervention-supply-item-detail", args=[self.intervention.pk, item.pk]),
+            data={"unit_price": 8}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        activity = Activity.objects.first()
+        self.assertEqual(activity.target, self.intervention)
+        self.assertEqual(
+            {
+                'supply_items': [{'unit_price': {'after': '8.00', 'before': '2.00'}}],
+                'planned_budget': {
+                    'total_local': {'after': '800.00', 'before': '200.00'},
+                    'in_kind_amount_local': {'after': '800.00', 'before': '200.00'}
+                }
+            },
+            activity.change,
+        )
+
     def test_delete(self):
         item = InterventionSupplyItemFactory(intervention=self.intervention)
         response = self.forced_auth_req(
@@ -1579,11 +1651,14 @@ class BaseInterventionActionTestCase(BaseInterventionTestCase):
             partner_authorized_officer_signatory=staff_member,
             budget_owner=UserFactory(),
         )
+        self.intervention.flat_locations.add(LocationFactory())
         self.intervention.country_programmes.add(agreement.country_programme)
         self.intervention.partner_focal_points.add(staff_member)
         self.intervention.unicef_focal_points.add(self.user)
         self.intervention.offices.add(office)
         self.intervention.sections.add(section)
+        self.intervention.management_budgets.act1_unicef = 1
+        self.intervention.management_budgets.save()
         AttachmentFactory(
             file="sample.pdf",
             object_id=self.intervention.pk,
@@ -1595,6 +1670,12 @@ class BaseInterventionActionTestCase(BaseInterventionTestCase):
             intervention=self.intervention,
             currency='USD',
         )
+        result_link = InterventionResultLinkFactory(
+            cp_output__result_type__name=ResultType.OUTPUT,
+            intervention=self.intervention,
+        )
+        lower_result = LowerResultFactory(result_link=result_link)
+        AppliedIndicatorFactory(lower_result=lower_result, section=section)
 
         self.notify_path = "post_office.mail.send"
         self.mock_email = EmailFactory()
@@ -1635,7 +1716,7 @@ class TestInterventionAccept(BaseInterventionActionTestCase):
         mock_send = mock.Mock(return_value=self.mock_email)
         with mock.patch(self.notify_path, mock_send):
             response = self.forced_auth_req("patch", self.url, user=self.user)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertIn("available_actions", response.data)
         mock_send.assert_called()
         self.intervention.refresh_from_db()
@@ -1708,8 +1789,10 @@ class TestInterventionAccept(BaseInterventionActionTestCase):
         result_link = InterventionResultLinkFactory(
             intervention=self.intervention,
             cp_output__result_type__name=ResultType.OUTPUT,
+            ram_indicators=[IndicatorFactory()],
         )
         pd_output = LowerResultFactory(result_link=result_link)
+        AppliedIndicatorFactory(lower_result=pd_output, section=self.intervention.sections.first())
         activity = InterventionActivityFactory(result=pd_output)
         activity.time_frames.add(self.intervention.quarters.first())
 
@@ -2425,6 +2508,7 @@ class TestInterventionSignature(BaseInterventionActionTestCase):
         # unicef signature
         self.intervention.date_sent_to_partner = datetime.date.today()
         self.intervention.review_date_prc = None
+        self.intervention.unicef_signatory = None
         self.intervention.save()
         InterventionReviewFactory(
             intervention=self.intervention,

@@ -30,6 +30,7 @@ from etools.applications.partners.models import (
     PartnerType,
 )
 from etools.applications.partners.permissions import InterventionPermissions
+from etools.applications.partners.serializers.intervention_snapshot import FullInterventionSnapshotSerializerMixin
 from etools.applications.partners.utils import get_quarters_range
 from etools.applications.reports.models import AppliedIndicator, LowerResult, ReportingRequirement
 from etools.applications.reports.serializers.v2 import (
@@ -46,7 +47,7 @@ from etools.applications.users.serializers import MinimalUserSerializer
 from etools.libraries.pythonlib.hash import h11
 
 
-class InterventionBudgetCUSerializer(serializers.ModelSerializer):
+class InterventionBudgetCUSerializer(FullInterventionSnapshotSerializerMixin, serializers.ModelSerializer):
     partner_contribution_local = serializers.DecimalField(max_digits=20, decimal_places=2)
     unicef_cash_local = serializers.DecimalField(max_digits=20, decimal_places=2)
     in_kind_amount_local = serializers.DecimalField(max_digits=20, decimal_places=2)
@@ -81,6 +82,9 @@ class InterventionBudgetCUSerializer(serializers.ModelSerializer):
             "partner_supply_local",
             "total_partner_contribution_local",
         )
+
+    def get_intervention(self):
+        return self.validated_data['intervention']
 
 
 class PartnerStaffMemberUserSerializer(serializers.ModelSerializer):
@@ -488,7 +492,7 @@ class InterventionResultsStructureSerializer(BaseInterventionResultNestedSeriali
         fields = BaseInterventionResultNestedSerializer.Meta.fields + ['ll_results']
 
 
-class InterventionResultLinkSimpleCUSerializer(serializers.ModelSerializer):
+class InterventionResultLinkSimpleCUSerializer(FullInterventionSnapshotSerializerMixin, serializers.ModelSerializer):
     cp_output_name = serializers.CharField(source="cp_output.name", read_only=True)
     ram_indicator_names = serializers.SerializerMethodField(read_only=True)
 
@@ -519,6 +523,9 @@ class InterventionResultLinkSimpleCUSerializer(serializers.ModelSerializer):
                 message=_("Invalid CP Output provided.")
             )
         ]
+
+    def get_intervention(self):
+        return self.validated_data.get('intervention', getattr(self.instance, 'intervention', None))
 
 
 class InterventionResultCUSerializer(serializers.ModelSerializer):
@@ -1025,7 +1032,10 @@ class InterventionRAMIndicatorsListSerializer(serializers.ModelSerializer):
         fields = ("ram_indicators", "cp_output_name")
 
 
-class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializer):
+class InterventionReportingRequirementCreateSerializer(
+    FullInterventionSnapshotSerializerMixin,
+    serializers.ModelSerializer,
+):
     report_type = serializers.ChoiceField(
         choices=ReportingRequirement.TYPE_CHOICES
     )
@@ -1254,6 +1264,9 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
             if r.get("id"):
                 ReportingRequirement.objects.filter(pk=r.get("id")).delete()
         return self.intervention
+
+    def get_intervention(self):
+        return self.context['intervention']
 
 
 class InterventionLocationExportSerializer(serializers.Serializer):

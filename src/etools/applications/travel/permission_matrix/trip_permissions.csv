@@ -5,6 +5,8 @@ Field no,Verbose Name,Field Name,Group,Condition,Status,Action,Allowed
 1.1.1,Supervisor,supervisor,,,draft,Edit,TRUE
 1.1.1,Title,title,,,draft,Edit,TRUE
 1.1.1,Description,description,,,draft,Edit,TRUE
+1.1.1,Office,office,,,draft,Edit,TRUE
+1.1.1,Section,section,,,draft,Edit,TRUE
 1.1.1,Start date,start_date,,,draft,Edit,TRUE
 1.1.1,End date,end_date,,,draft,Edit,TRUE
 1.1.1,Activities,activities,,,draft,Edit,TRUE
@@ -15,6 +17,8 @@ Field no,Verbose Name,Field Name,Group,Condition,Status,Action,Allowed
 1.1.1,Traveller,traveller,,,draft,Required,FALSE
 1.1.1,Supervisor,supervisor,,,draft,Required,FALSE
 1.1.1,Description,description,,,draft,Required,FALSE
+1.1.1,Office,office,,,draft,Required,FALSE
+1.1.1,Section,section,,,draft,Required,FALSE
 1.1.1,Start date,start_date,,,,Required,TRUE
 1.1.1,End date,end_date,,,,Required,TRUE
 1.1.1,Activities,activities,,,draft,Required,FALSE

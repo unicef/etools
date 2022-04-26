@@ -852,6 +852,7 @@ class InterventionReportingRequirementView(APIView):
         serializer = self.serializer_create_class(
             data=self.request.data,
             context={
+                "user": request.user,
                 "intervention": self.intervention,
             }
         )
