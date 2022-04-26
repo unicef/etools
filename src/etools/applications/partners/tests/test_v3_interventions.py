@@ -9,7 +9,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
 from django.db import connection
-from django.test import SimpleTestCase
+from django.test import override_settings, SimpleTestCase
 from django.urls import reverse
 from django.utils import timezone
 
@@ -500,6 +500,28 @@ class TestDetail(BaseInterventionTestCase):
             )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('items', response.data['management_budgets'])
+
+    @override_settings(PMP_V2_RELEASE_DATE=datetime.datetime.now().date() - datetime.timedelta(days=365))
+    def test_permissions_pd_v2(self):
+        active_intervention = InterventionFactory(status=Intervention.ACTIVE)
+        response = self.forced_auth_req(
+            "get",
+            reverse('pmp_v3:intervention-detail', args=[active_intervention.pk]),
+            user=self.user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['permissions']['required']['budget_owner'])
+
+    @override_settings(PMP_V2_RELEASE_DATE=datetime.datetime.now().date() + datetime.timedelta(days=365))
+    def test_permissions_pd_v1(self):
+        active_intervention = InterventionFactory(status=Intervention.ACTIVE)
+        response = self.forced_auth_req(
+            "get",
+            reverse('pmp_v3:intervention-detail', args=[active_intervention.pk]),
+            user=self.user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(response.data['permissions']['required']['budget_owner'])
 
 
 class TestCreate(BaseInterventionTestCase):

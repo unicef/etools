@@ -2,6 +2,7 @@ import datetime
 from functools import lru_cache
 
 from django.apps import apps
+from django.conf import settings
 from django.utils.translation import gettext as _
 
 from etools_validator.utils import check_rigid_related
@@ -214,7 +215,7 @@ class InterventionPermissions(PMPPermissions):
         def intervention_is_v1():
             if self.instance.status in [self.instance.DRAFT]:
                 return False
-            return self.instance.start < datetime.date(year=2020, month=10, day=1) if self.instance.start else False
+            return self.instance.start < settings.PMP_V2_RELEASE_DATE if self.instance.start else False
 
         # TODO: Remove this method when there are no active legacy programme documents
         list_of_new_fields = ["budget_owner",
