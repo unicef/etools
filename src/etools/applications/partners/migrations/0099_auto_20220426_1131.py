@@ -3,9 +3,18 @@
 from django.db import migrations
 
 
-def deactivate_old_amendments(apps, schema_editor):
+def deactivate_v1_amendments(apps, schema_editor):
     InterventionAmendment = apps.get_model('partners', 'InterventionAmendment')
-    InterventionAmendment.objects.filter(amended_intervention__isnull=True).update(is_active=False)
+    for amendment in InterventionAmendment.objects.filter(amended_intervention__isnull=True):
+        amendment.signed_by_unicef_date = amendment.signed_date
+        amendment.signed_by_partner_date = amendment.signed_date
+        amendment.is_active = False
+        amendment.save()
+
+        intervention = amendment.intervention
+        if intervention.in_amendment:
+            intervention.in_amendment = False
+            intervention.save()
 
 
 class Migration(migrations.Migration):
@@ -15,5 +24,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(deactivate_old_amendments, migrations.RunPython.noop),
+        migrations.RunPython(deactivate_v1_amendments, migrations.RunPython.noop),
     ]
