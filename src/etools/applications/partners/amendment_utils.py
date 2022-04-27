@@ -34,6 +34,9 @@ def serialize_simple_field_value(field, value):
 
 
 def serialize_instance(instance):
+    if instance is None:
+        return None
+
     if hasattr(instance, 'get_amended_name'):
         name = instance.get_amended_name()
     else:
