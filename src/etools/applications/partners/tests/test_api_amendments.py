@@ -2,6 +2,7 @@ import datetime
 from unittest import skip
 
 from django.core.management import call_command
+from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -420,6 +421,26 @@ class TestInterventionAmendments(BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('total_hq_cash_local', response.data[0])
+
+    @override_settings(PMP_V2_RELEASE_DATE=datetime.date(year=2020, month=10, day=1))
+    def test_amendment_review_pd_v1(self):
+        self.active_intervention.start = datetime.date(year=2019, month=10, day=1)
+        self.active_intervention.budget_owner = None
+        self.active_intervention.date_sent_to_partner = None
+        self.active_intervention.save()
+
+        amendment = InterventionAmendmentFactory(intervention=self.active_intervention)
+        amendment.amended_intervention.budget_owner = self.unicef_staff
+        amendment.amended_intervention.unicef_accepted = True
+        amendment.amended_intervention.partner_accepted = True
+        amendment.amended_intervention.save()
+
+        response = self.forced_auth_req(
+            "patch", reverse('pmp_v3:intervention-review', args=[amendment.amended_intervention.pk]),
+            user=self.unicef_staff, data={'review_type': 'no-review'}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['status'], Intervention.SIGNATURE)
 
     def test_geographical_coverage_sites_ignored_in_difference(self):
         location = LocationFactory()

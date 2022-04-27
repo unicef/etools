@@ -691,6 +691,31 @@ class AmendmentTestCase(BaseTenantTestCase):
             intervention.number, reference_number + '-3'
         )
 
+    def test_calculate_difference_pd_v1_no_budget_owner(self):
+        self.active_intervention.budget_owner = None
+        self.active_intervention.save()
+
+        amendment = InterventionAmendmentFactory(
+            intervention=self.active_intervention,
+            kind=InterventionAmendment.KIND_NORMAL,
+        )
+
+        amendment.amended_intervention.budget_owner = UserFactory()
+        amendment.amended_intervention.save()
+
+        difference = amendment.get_difference()
+
+        budget_owner = amendment.amended_intervention.budget_owner
+        self.assertDictEqual(
+            difference,
+            {
+                'budget_owner': {
+                    'type': 'many_to_one',
+                    'diff': (None, {'name': str(budget_owner), 'pk': budget_owner.pk})
+                }
+            },
+        )
+
     def _check_related_fields(self, model_class, ignored_relations):
         related_fields = INTERVENTION_AMENDMENT_RELATED_FIELDS.get(model_class._meta.label, [])
         full_relations_list = related_fields + ignored_relations.get(model_class._meta.label, [])
