@@ -1142,6 +1142,7 @@ class InterventionActivityItem(TimeStampedModel):
 
     def save(self, **kwargs):
         if not self.code:
+            self.activity.refresh_from_db()
             self.code = '{0}.{1}'.format(self.activity.code, self.activity.items.count() + 1)
         super().save(**kwargs)
         self.activity.update_cash()

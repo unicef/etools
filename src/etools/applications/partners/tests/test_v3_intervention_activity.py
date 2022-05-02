@@ -107,6 +107,12 @@ class TestFunctionality(BaseTestCase):
         self.assertEqual(response.data['cso_cash'], '6.20')
         self.assertEqual(response.data['partner_percentage'], '67.39')  # cso_cash / (unicef_cash + cso_cash)
 
+        self.assertIsNotNone(response.data['items'])
+        item_code_list = map(lambda x: x['code'], response.data['items'])
+        # assert the item codes are distinct and not duplicated
+        self.assertEqual(self.activity.items.count(), len(response.data['items']))
+        self.assertEqual(len(response.data['items']), len(set(item_code_list)))
+
     def test_set_bad_cash_values_having_items(self):
         InterventionActivityItemFactory(activity=self.activity, unicef_cash=8, cso_cash=5)
         response = self.forced_auth_req(
