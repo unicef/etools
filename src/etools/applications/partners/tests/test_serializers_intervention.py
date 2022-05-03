@@ -119,6 +119,29 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
             ['This field is required.']
         )
 
+    def test_validation_qpr_null_start_end_dates(self):
+        data = {
+            "report_type": ReportingRequirement.TYPE_QPR,
+            "reporting_requirements": [{
+                "start_date": None,
+                "end_date": None,
+                "due_date": datetime.date(2001, 4, 15)
+            }]
+        }
+        serializer = InterventionReportingRequirementCreateSerializer(
+            data=data,
+            context=self.context
+        )
+        self.assertFalse(serializer.is_valid())
+        self.assertEqual(
+            serializer.errors['reporting_requirements'],
+            [
+                {"start_date": ['This field may not be null.'],
+                 "end_date": ['This field may not be null.']
+                 }
+            ]
+        )
+
     def test_validation_qpr_missing_fields(self):
         data = {
             "report_type": ReportingRequirement.TYPE_QPR,

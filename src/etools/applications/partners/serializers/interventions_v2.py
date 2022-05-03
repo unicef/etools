@@ -883,6 +883,8 @@ class InterventionReportingRequirementCreateSerializer(serializers.ModelSerializ
         serializer.fields["end_date"].required = True
         serializer.fields["due_date"].required = True
 
+        serializer.fields["start_date"].allow_null = False
+        serializer.fields["end_date"].allow_null = False
         return super().run_validation(initial_data)
 
     def validate(self, data):
