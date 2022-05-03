@@ -2158,10 +2158,9 @@ class Intervention(TimeStampedModel):
         null=True,
         default=dict,
     )
-    confidential = models.TextField(
+    confidential = models.BooleanField(
         verbose_name=_("Confidential"),
-        blank=True,
-        null=True,
+        default=False,
     )
 
     # todo: filter out amended interventions from list api's
