@@ -257,7 +257,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
 
             self.assertSimpleExceptionFundamentals(
                 context_manager,
-                'Partner type must be CSO for PCA or SSFA agreement types.'
+                'Partner type must be CSO for PCA agreement types.'
             )
 
         # Test for all agreement types that are not PCA or SSFA. These should not fail.
