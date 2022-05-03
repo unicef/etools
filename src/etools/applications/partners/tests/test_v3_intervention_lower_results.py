@@ -283,6 +283,26 @@ class TestInterventionLowerResultsDetailView(TestInterventionLowerResultsViewBas
 
         self.assertFalse(InterventionResultLink.objects.filter(pk=result_link.pk).exists())
 
+    def test_associate_output_renumber_codes(self):
+        self.assertEqual(self.result_link.code, '1')
+        self.assertEqual(LowerResultFactory(code=None, result_link=self.result_link).code, '1.1')
+        old_result_link = InterventionResultLinkFactory(code=None, intervention=self.intervention, cp_output=None)
+        result = LowerResultFactory(code=None, result_link=old_result_link)
+        activity = InterventionActivityFactory(code=None, result=result)
+        self.assertEqual(result.code, '2.1')
+        self.assertEqual(activity.code, '2.1.1')
+        response = self.forced_auth_req(
+            'patch',
+            reverse('partners:intervention-pd-output-detail', args=[self.intervention.pk, result.pk]),
+            self.user,
+            data={'cp_output': self.result_link.cp_output.id}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        result.refresh_from_db()
+        activity.refresh_from_db()
+        self.assertEqual(result.code, '1.2')
+        self.assertEqual(activity.code, '1.2.1')
+
     # permissions are common with list view and were explicitly checked in corresponding api test case
 
     def test_associate_output_as_partner(self):

@@ -2870,7 +2870,10 @@ class InterventionResultLink(TimeStampedModel):
 
     def save(self, *args, **kwargs):
         if not self.code:
-            self.code = str(self.intervention.result_links.count() + 1)
+            self.code = str(
+                # explicitly perform model.objects.count to avoid caching
+                self.__class__.objects.filter(intervention=self.intervention).count() + 1,
+            )
         super().save(*args, **kwargs)
 
     @classmethod
