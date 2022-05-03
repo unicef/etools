@@ -392,7 +392,11 @@ class LowerResult(TimeStampedModel):
 
     def save(self, *args, **kwargs):
         if not self.code:
-            self.code = '{0}.{1}'.format(self.result_link.code, self.result_link.ll_results.count() + 1)
+            self.code = '{0}.{1}'.format(
+                self.result_link.code,
+                # explicitly perform model.objects.count to avoid caching
+                self.__class__.objects.filter(result_link=self.result_link).count() + 1,
+            )
         super().save(*args, **kwargs)
 
     @classmethod
@@ -1069,7 +1073,11 @@ class InterventionActivity(TimeStampedModel):
 
     def save(self, *args, **kwargs):
         if not self.code:
-            self.code = '{0}.{1}'.format(self.result.code, self.result.activities.count() + 1)
+            self.code = '{0}.{1}'.format(
+                self.result.code,
+                # explicitly perform model.objects.count to avoid caching
+                self.__class__.objects.filter(result=self.result).count() + 1,
+            )
         super().save(*args, **kwargs)
         self.result.result_link.intervention.planned_budget.calc_totals()
 
@@ -1142,7 +1150,11 @@ class InterventionActivityItem(TimeStampedModel):
 
     def save(self, **kwargs):
         if not self.code:
-            self.code = '{0}.{1}'.format(self.activity.code, self.activity.items.count() + 1)
+            self.code = '{0}.{1}'.format(
+                self.activity.code,
+                # explicitly perform model.objects.count to avoid caching
+                self.__class__.objects.filter(activity=self.activity).count() + 1,
+            )
         super().save(**kwargs)
         self.activity.update_cash()
 
