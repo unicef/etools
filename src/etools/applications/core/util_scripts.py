@@ -1,10 +1,13 @@
 import logging
 import re
+from decimal import Decimal
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.db import connection
 from django.db.models import Q
+
+from humanize import intcomma
 
 from etools.applications.users.models import Country, UserProfile
 
@@ -59,3 +62,11 @@ def create_test_user(email, password):
     userp.country_override = country
     userp.save()
     logger.info("user {} created".format(u.email))
+
+
+def currency_format(value):
+    if isinstance(value, (int, float, Decimal)):
+        return "{:,.2f}".format(value)
+    elif isinstance(value, str):
+        return intcomma(value)
+    return value

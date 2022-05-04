@@ -912,6 +912,34 @@ class TestAuditMetadataDetailViewSet(TestMetadataDetailViewSet, BaseTenantTestCa
     def test_weaknesses_choices(self):
         self._test_risk_choices('key_internal_weakness', Risk.AUDIT_VALUES)
 
+    def test_users_notified_auditor_not_staff(self):
+        self.assertFalse(self.auditor.is_staff)
+        response = self.forced_auth_req(
+            'options',
+            '/api/audit/{}/{}/'.format(self.endpoint, self.engagement.id),
+            user=self.auditor
+        )
+        self.assertIn('GET', response.data['actions'])
+        get = response.data['actions']['GET']
+        self.assertIn('users_notified', get)
+        put = response.data['actions']['PUT']
+        self.assertNotIn('users_notified', put)
+
+    def test_users_notified_auditor_is_staff(self):
+        self.auditor.is_staff = True
+        self.auditor.save()
+        self.assertTrue(self.auditor.is_staff)
+        response = self.forced_auth_req(
+            'options',
+            '/api/audit/{}/{}/'.format(self.endpoint, self.engagement.id),
+            user=self.auditor
+        )
+        self.assertIn('GET', response.data['actions'])
+        get = response.data['actions']['GET']
+        self.assertIn('users_notified', get)
+        put = response.data['actions']['PUT']
+        self.assertIn('users_notified', put)
+
 
 class TestAuditorFirmViewSet(AuditTestCaseMixin, BaseTenantTestCase):
     def setUp(self):

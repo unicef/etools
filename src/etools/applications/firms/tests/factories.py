@@ -12,18 +12,18 @@ from etools.applications.users.tests.factories import ProfileFactory
 class BaseUserFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = get_user_model()
-        django_get_or_create = ("email", )
 
-    username = factory.Faker('email')
+    username = factory.Sequence(lambda n: 'person{}@example.com'.format(n))
     first_name = factory.Faker('first_name')
     last_name = factory.Faker('last_name')
-    email = factory.Faker('email')
+    email = factory.Sequence(lambda n: 'person{}@example.com'.format(n))
     profile = factory.RelatedFactory(ProfileFactory, 'user')
 
 
 class BaseStaffMemberFactory(factory.django.DjangoModelFactory):
     class Meta:
         abstract = True
+        django_get_or_create = ("user", )
 
     user = factory.SubFactory(BaseUserFactory)
 

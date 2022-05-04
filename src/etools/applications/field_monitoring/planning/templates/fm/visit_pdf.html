@@ -1,0 +1,234 @@
+{% extends "easy_pdf/base.html" %}
+{% load humanize static %}
+
+{% block style_base %}
+    {% comment %}
+        See DEFAULT_CSS in https://github.com/chrisglass/xhtml2pdf/blob/master/xhtml2pdf/default.py
+        for base style.
+    {% endcomment %}
+
+    {% block layout_style %}
+        <style type="text/css">
+          @page {
+            margin-left: 0.85in;
+            margin-right: 0.85in;
+            margin-top: 1in;
+            margin-bottom: 1in;
+
+            @frame footer_frame {
+              /* Static frame */
+              -pdf-frame-content:footer_content;
+              left: 50pt; width: 512pt; top: 772pt; height: 20pt;
+            }
+          }
+        </style>
+    {% endblock %}
+
+    {% block extra_style %}
+        <style type="text/css">
+        .content {
+          font-family: 'Roboto', 'Noto', sans-serif;
+          font-size: 10pt;
+        }
+        .label {
+          font-size: 12pt;
+          font-weight: bold;
+        }
+        .value {
+          font-size: 12pt;
+          padding: 5px 5px 5px 5px;
+        }
+
+        .main_title {
+          font-size: 20pt;
+          font-weight: lighter;
+          color: #0099ff;
+        }
+        .content-section {
+          font-size: 16pt;
+          font-weight: lighter;
+          color: #0099ff;
+        }
+        .right {
+          width: 50%;
+        }
+        </style>
+    {% endblock %}
+{% endblock %}
+
+{% block page_header %}
+<div class="content">
+    <table style="background-color: #0099ff;height:1in">
+        <tr>
+            <td style="width: 70%">
+                <img src="{% static 'images/UNICEF_logo_with_text_white.png' %}" style="display: block; width: 3.17in; height: 0.5in; margin-left: 0.19in;">
+            </td>
+            <td>
+                <div style="color: #FFFFFF;">
+                    <span class="label">Workspace:</span>
+                    <span class="value">{{ workspace|default_if_none:"-" }}</span>
+                </div>
+            </td>
+        </tr>
+
+    </table>
+    <hr size="0.01in" color="#a6a6a6">
+</div>
+
+{% endblock %}
+
+{% block content %}
+    {% if error %}
+        PDF could not be generated properly: <br> {{ error }}
+    {% else %}
+        <div class="content">
+            <div>
+                <div class="main_title">
+                    {{ ma.reference_number }}
+                </div>
+                <table>
+                    <tr>
+                        <td class="right">
+                            <div>
+                                <span class="label">Start Date:</span>
+                                <span class="value">{{ ma.start_date|date:"d-M-y"|default_if_none:"-" }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div>
+                                <span class="label">End Date:</span>
+                                <span class="value">{{ ma.end_date|date:"d-M-y"|default_if_none:"-" }}</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div>
+                                <span class="label">Status:</span>
+                                <span class="value">{{ ma.get_status_display }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div>
+                                <span class="label">Field offices:</span>
+                                <span class="value">{{ field_offices|default_if_none:"-" }}</span>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+                <br/>
+                <div>
+                    <span class="label">Sections:</span>
+                    <span class="value">{{ sections }}</span>
+                </div>
+                <div>
+                    <span class="label">Location:</span>
+                    <span class="value">{{ location|default_if_none:"-" }}</span>
+                </div>
+                <br/>
+                <div>
+                    <span class="label">Team Members:</span>
+                    <span class="value">{{ team_members|default_if_none:"-" }}</span>
+                </div>
+                <div>
+                    <span class="label">Visit Lead:</span>
+                    <span class="value">{{ ma.visit_lead|default_if_none:"-" }}</span>
+                </div>
+                <br/>
+                <div class="content-section">
+                    <span>ENTITIES TO MONITOR:</span>
+                </div>
+                <div>
+                    <span class="label">Partner:</span>
+                    <span class="value">{{ partners|default_if_none:"-" }}</span>
+                </div>
+                <div>
+                    <span class="label">CP Outputs:</span>
+                    <span class="value">{{ cp_outputs|default_if_none:"-" }}</span>
+                </div>
+                <div>
+                    <span class="label">PD/SSFAS:</span>
+                    <span class="value">{{ interventions|default_if_none:"-" }}</span>
+                </div>
+                <br/>
+                <div class="content-section">
+                    <span>OVERALL FINDING:</span>
+                </div>
+                {% regroup overall_findings by entity_name as overall_findings_list %}
+                {% for finding in overall_findings_list %}
+                    <div>
+                        <span class="label">ENTITY:</span>
+                        <span class="value">{{ finding.grouper }}</span>
+                    </div>
+                    {% for finding in finding.list %}
+                        <div class="value">
+                            {{ finding.narrative_finding|default:"-"|linebreaks }}
+                        </div>
+                    {% endfor %}
+                {% endfor %}
+                <br/>
+                <div class="content-section">
+                    <span>SUMMARY FINDINGS:</span>
+                </div><br/>
+                {% regroup summary_findings by entity_name as summary_findings_list %}
+                {% for finding in summary_findings_list %}
+                    <div>
+                        <span class="label">ENTITY:</span>
+                        <span class="value">{{ finding.grouper }}</span>
+                    </div>
+                    <table border="1">
+                        {% for finding in finding.list %}
+                            <tr>
+                                <td class="right value">{{ finding.question_text }}</td>
+                                <td class="value">{{ finding.value|default_if_none:"-"|linebreaks }}</td>
+                            </tr>
+                        {% endfor %}
+                    </table><br/>
+                {% endfor %}
+                <br/>
+                <div class="content-section">
+                    <span>DATA COLLECTED:</span>
+                </div><br/>
+                {% regroup data_collected by method as data_collected_list %}
+                {% for checklist in data_collected_list %}
+                    {% for checkl in checklist.list %}
+                        <div>
+                            <span class="label">Team Member:</span>
+                            <span class="value">{{ checkl.team_member }}</span>
+                        </div>
+                        <div>
+                            <span class="label">Method:</span>
+                            <span class="value">{{ checkl.method }}</span>
+                        </div>
+                        <div>
+                            <span class="label">Source:</span>
+                            <span class="value">{{ checkl.source }}</span>
+                        </div>
+                            {% for overall in checkl.overall %}
+                                <div>
+                                    <span class="label">Entity:</span>
+                                    <span class="value">{{ overall.entity_name }}</span>
+                                </div>
+                                <div>
+                                    <span class="label">Overall Finding:</span>
+                                    <span class="value">{{ overall.narrative_finding }}</span>
+                                </div>
+                                <table border="1">
+                                {% for finding in overall.findings %}
+                                    <tr>
+                                        <td class="right value">{{ finding.question_text }}</td>
+                                        <td class="value">{{ finding.value|default_if_none:"-"|linebreaks }}</td>
+                                    </tr>
+                                {% endfor %}
+                                </table><br/>
+                            {% endfor %}
+                    {% endfor %}<br/><br/>
+                {% endfor %}
+                <br/>
+        </div>
+    </div>
+        <div id="footer_content" style="text-align: right">
+            <pdf:pagenumber> of <pdf:pagecount>
+        <div>
+    {% endif %}
+{% endblock %}

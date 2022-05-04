@@ -53,13 +53,13 @@ class DisplayStatusFilter(BaseFilterBackend):
 class UniqueIDOrderingFilter(BaseFilterBackend):
     def filter_queryset(self, request, queryset, view):
         ordering = request.query_params.get('ordering', '')
-        if not ordering.lstrip('-') == 'unique_id':
+        if not ordering.lstrip('-') == 'reference_number':
             return queryset
 
         ordering_params = ['partner__name', 'engagement_type', 'created_year', 'id']
 
         return queryset.annotate(created_year=TruncYear('created'))\
-            .order_by(*map(lambda param: ('' if ordering == 'unique_id' else '-') + param, ordering_params))
+            .order_by(*map(lambda param: ('' if ordering == 'reference_number' else '-') + param, ordering_params))
 
 
 class EngagementFilter(filters.FilterSet):

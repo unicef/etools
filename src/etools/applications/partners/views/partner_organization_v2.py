@@ -108,6 +108,12 @@ class PartnerOrganizationListAPIView(ExternalModuleFilterMixin, QueryStringFilte
     }
     pagination_class = AppendablePageNumberPagination
 
+    def get_renderer_context(self):
+        context = super().get_renderer_context()
+        if self.request.query_params.get('format', None) == 'csv':
+            context['encoding'] = 'utf-8-sig'
+        return context
+
     def get_serializer_class(self, format=None):
         """
         Use restricted field set for listing

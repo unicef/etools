@@ -209,10 +209,6 @@ class EngagementLightSerializer(serializers.ModelSerializer):
         read_only=True
     )
     status_date = serializers.ReadOnlyField(source='displayed_status_date', label=_('Date of Status'))
-    unique_id = serializers.ReadOnlyField(
-        source="reference_number",
-        label=_('Unique ID'),
-    )
 
     offices = OfficeLightSerializer(many=True)
     sections = SectionSerializer(many=True)
@@ -220,8 +216,8 @@ class EngagementLightSerializer(serializers.ModelSerializer):
     class Meta:
         model = Engagement
         fields = [
-            'id', 'unique_id', 'agreement', 'po_item', 'related_agreement', 'partner', 'engagement_type',
-            'status', 'status_date', 'total_value', 'offices', 'sections'
+            'id', 'reference_number', 'agreement', 'po_item', 'related_agreement', 'partner',
+            'engagement_type', 'status', 'status_date', 'total_value', 'offices', 'sections'
         ]
 
     def validate(self, attrs):
