@@ -15,7 +15,7 @@ from pytz import UTC
 EPOCH_ZERO = datetime(1970, 1, 1, tzinfo=UTC)
 
 
-class GroupWrapper(object):
+class GroupWrapper:
     """
     Wrapper for easy access to commonly used django groups and mapping shortcodes for them.
     example:
