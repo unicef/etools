@@ -345,6 +345,22 @@ class TestInterventionLowerResultsDetailView(TestInterventionLowerResultsViewBas
         self.assertEqual(r31.code, '2.2')
         self.assertEqual(r41.code, '2.3')
 
+    def test_delete_pd_output_recalculate_broken_codes(self):
+        LowerResultFactory(result_link=self.result_link, code='1.1')
+        LowerResultFactory(result_link=self.result_link, code='2.1')
+        LowerResultFactory(result_link=self.result_link, code='1.2')
+        result = LowerResultFactory(result_link=self.result_link, code='1.3')
+        response = self.forced_auth_req(
+            'delete',
+            reverse('partners:intervention-pd-output-detail', args=[self.intervention.pk, result.pk]),
+            self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertListEqual(
+            list(self.result_link.ll_results.order_by('id').values_list('code', flat=True)),
+            ['1.1', '1.2', '1.3'],
+        )
+
     # permissions are common with list view and were explicitly checked in corresponding api test case
 
     def test_associate_output_as_partner(self):
