@@ -466,7 +466,9 @@ class PartnerStaffMemberAdmin(SnapshotModelAdmin):
         'first_name',
         'last_name',
         'email',
-        'user',
+        'user__first_name',
+        'user__last_name',
+        'partner__name'
     )
     inlines = [
         ActivityInline,
