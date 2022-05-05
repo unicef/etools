@@ -402,6 +402,8 @@ class LowerResult(TimeStampedModel):
     @classmethod
     def renumber_results_for_result_link(cls, result_link):
         results = result_link.ll_results.all()
+        # drop codes because in another case we'll face to UniqueViolation exception
+        results.update(code=None)
         for i, result in enumerate(results):
             result.code = '{0}.{1}'.format(result_link.code, i + 1)
         cls.objects.bulk_update(results, fields=['code'])
@@ -1084,6 +1086,8 @@ class InterventionActivity(TimeStampedModel):
     @classmethod
     def renumber_activities_for_result(cls, result: LowerResult, start_id=None):
         activities = result.activities.all()
+        # drop codes because in another case we'll face to UniqueViolation exception
+        activities.update(code=None)
         for i, activity in enumerate(activities):
             activity.code = '{0}.{1}'.format(result.code, i + 1)
         cls.objects.bulk_update(activities, fields=['code'])
@@ -1161,6 +1165,8 @@ class InterventionActivityItem(TimeStampedModel):
     @classmethod
     def renumber_items_for_activity(cls, activity: InterventionActivity, start_id=None):
         items = activity.items.all()
+        # drop codes because in another case we'll face to UniqueViolation exception
+        items.update(code=None)
         for i, item in enumerate(items):
             item.code = '{0}.{1}'.format(activity.code, i + 1)
         cls.objects.bulk_update(items, fields=['code'])

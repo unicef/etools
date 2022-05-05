@@ -208,6 +208,8 @@ class UNICEFInterventionLowerResultSerializer(
                     old_link.delete()
 
                 # result link was updated, it means lower result code is not actual anymore and should be recalculated
+                # result_link should be refreshed, because it's code was changed after removal old_link object
+                result_link.refresh_from_db()
                 LowerResult.renumber_results_for_result_link(result_link)
                 for result in result_link.ll_results.all():
                     InterventionActivity.renumber_activities_for_result(result)

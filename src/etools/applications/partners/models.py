@@ -2879,6 +2879,8 @@ class InterventionResultLink(TimeStampedModel):
     @classmethod
     def renumber_result_links_for_intervention(cls, intervention):
         result_links = intervention.result_links.all()
+        # drop codes because in another case we'll face to UniqueViolation exception
+        result_links.update(code=None)
         for i, result_link in enumerate(result_links):
             result_link.code = str(i + 1)
         cls.objects.bulk_update(result_links, fields=['code'])
