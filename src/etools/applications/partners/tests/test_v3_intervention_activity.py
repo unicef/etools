@@ -213,6 +213,26 @@ class TestFunctionality(BaseTestCase):
         self.assertEqual(self.activity.time_frames.filter(pk=item_to_keep.pk).exists(), True)
         self.assertEqual(response.data['time_frames'], time_frames)
 
+    def test_set_multiple_items_unique_codes(self):
+        response = self.forced_auth_req(
+            'patch', self.detail_url,
+            user=self.user,
+            data={
+                'items': [
+                    {
+                        'name': f'item_{i}',
+                        'unit': 'item', 'no_units': 1, 'unit_price': '1',
+                        'unicef_cash': '1', 'cso_cash': '0.0',
+                    } for i in range(3)
+                ],
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertListEqual(
+            list(self.activity.items.order_by('code').values_list('code', flat=True)),
+            [self.activity.code + f'.{i + 1}' for i in range(3)]
+        )
+
     def test_minimal_create(self):
         response = self.forced_auth_req(
             'post', self.list_url,

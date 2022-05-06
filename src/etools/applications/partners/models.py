@@ -2158,10 +2158,9 @@ class Intervention(TimeStampedModel):
         null=True,
         default=dict,
     )
-    confidential = models.TextField(
+    confidential = models.BooleanField(
         verbose_name=_("Confidential"),
-        blank=True,
-        null=True,
+        default=False,
     )
 
     # todo: filter out amended interventions from list api's
@@ -2871,12 +2870,17 @@ class InterventionResultLink(TimeStampedModel):
 
     def save(self, *args, **kwargs):
         if not self.code:
-            self.code = str(self.intervention.result_links.count() + 1)
+            self.code = str(
+                # explicitly perform model.objects.count to avoid caching
+                self.__class__.objects.filter(intervention=self.intervention).count() + 1,
+            )
         super().save(*args, **kwargs)
 
     @classmethod
     def renumber_result_links_for_intervention(cls, intervention):
         result_links = intervention.result_links.all()
+        # drop codes because in another case we'll face to UniqueViolation exception
+        result_links.update(code=None)
         for i, result_link in enumerate(result_links):
             result_link.code = str(i + 1)
         cls.objects.bulk_update(result_links, fields=['code'])
