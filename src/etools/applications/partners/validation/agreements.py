@@ -156,7 +156,7 @@ class AgreementValid(CompleteValidation):
         'start_end_dates_valid': 'Agreement start date needs to be earlier than or the same as the end date',
         'generic_transition_fail': 'GENERIC TRANSITION FAIL',
         'agreement_transition_to_active_invalid_PCA': "You cannot have more than 1 PCA active per Partner within 1 CP",
-        'partner_type_valid_cso': 'Partner type must be CSO for PCA agreement types.',
+        'partner_type_valid_cso': 'Partner must be CSO in order to create a PCA.',
         'amendments_valid': {'signed_amendment': ['Please check that the Document is attached and'
                                                   ' signatures are not in the future']},
     }
