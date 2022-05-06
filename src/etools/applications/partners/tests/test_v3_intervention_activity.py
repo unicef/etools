@@ -186,6 +186,25 @@ class TestFunctionality(BaseTestCase):
             response.data['items'][0]['non_field_errors'],
         )
 
+    def test_budget_item_validation_rouding_ok(self):
+        item_to_update = InterventionActivityItemFactory(activity=self.activity)
+
+        response = self.forced_auth_req(
+            'patch', self.detail_url,
+            user=self.user,
+            data={
+                'items': [{
+                    'id': item_to_update.id,
+                    'no_units': '17.22',
+                    'unit_price': '17.89',
+                    'cso_cash': '287.00',
+                    'unicef_cash': '21.06',
+                }],
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+
     def test_set_time_frames(self):
         item_to_remove = InterventionTimeFrame.objects.get(
             intervention=self.intervention,
