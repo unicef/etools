@@ -190,7 +190,7 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
         if 'user' not in validated_data:
             validated_data['user'] = User.objects.create(
                 first_name=validated_data.get('first_name'),
-                last_name=validated_data.get('first_name'),
+                last_name=validated_data.get('last_name'),
                 username=validated_data['email'],
                 email=validated_data['email'],
                 is_staff=False,
