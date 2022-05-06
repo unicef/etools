@@ -1127,7 +1127,7 @@ class InterventionActivityItem(TimeStampedModel):
     )
     no_units = models.DecimalField(
         verbose_name=_("Units Number"),
-        decimal_places=1,
+        decimal_places=2,
         max_digits=20,
         validators=[MinValueValidator(0)],
     )
