@@ -41,7 +41,6 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,document_currency,*,,*,Required,TRUE
 3.9.2,end,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
 3.9.2,end,Partner User,partner_court,Draft,Edit,TRUE
-3.9.3,end,Unicef Focal Point,,Signed,Edit,TRUE
 3.9.3,end,Unicef Focal Point,termination_doc_attached,Active,Edit,TRUE
 3.9.5,end,Unicef Focal Point,user_adds_amendment,*,Edit,TRUE
 3.9.4,end,*,unicef_not_accepted_contingency,Draft,Required,FALSE
@@ -119,7 +118,6 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.3.2,pd_outputs,Partner User,partner_court,Draft,Edit,TRUE
 3.3.3,pd_outputs,Unicef Focal Point,user_adds_amendment,*,Edit,TRUE
 3.3.3,planned_budget,Unicef Focal Point,,Draft,Edit,TRUE
-3.3.5,planned_budget,Unicef Focal Point,,Signed,Edit,TRUE
 3.9.11,planned_budget,Unicef Focal Point,user_adds_amendment,*,Edit,TRUE
 3.9.11,planned_visits,UNICEF User,not_in_amendment_mode,*,View,TRUE
 3.9.11,planned_visits,Unicef Focal Point,not_in_amendment_mode,*,Edit,TRUE
@@ -171,7 +169,6 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,signed_pd_document,Unicef Focal Point,,Signature,Edit,TRUE
 ,start,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
 ,start,Partner User,partner_court,Draft,Edit,TRUE
-,start,Unicef Focal Point,,Signed,Edit,TRUE
 ,start,*,unicef_not_accepted_contingency,Draft,Required,FALSE
 ,start,*,contingency on,Signed,Required,FALSE
 ,submission_date,*,,*,View,TRUE

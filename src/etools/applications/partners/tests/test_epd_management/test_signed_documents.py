@@ -28,6 +28,13 @@ class TestSignedDocumentsManagement(APIViewSetTestCase, BaseTestCase):
             'partner_authorized_officer_signatory': PartnerStaffFactory(partner=self.partner).pk,
             'signed_by_partner_date': '1970-01-02',
         }
+        self.signed_data = {
+            'start': '1970-01-02',
+            'end': '1970-02-02',
+            'planned_budget': {
+                'id': self.signed_intervention.planned_budget.pk,
+                'total_hq_cash_local': 1300}
+        }
         self.all_data = {
             **self.draft_unicef_data, **self.review_unicef_data, **self.review_unicef_data,
             **self.signature_partner_data,
@@ -79,6 +86,21 @@ class TestSignedDocumentsManagement(APIViewSetTestCase, BaseTestCase):
         for field in self.signature_partner_data.keys():
             self.assertEqual(response.data['permissions']['view'][field], True, field)
             self.assertEqual(response.data['permissions']['edit'][field], True, field)
+
+    def test_user_roles_permissions_on_signed(self):
+        users_roles = [self.unicef_user, self.partnership_manager, self.partner_staff_member,
+                       self.partner_authorized_officer, self.partner_focal_point]
+        for user_role in users_roles:
+            response = self.forced_auth_req(
+                'get',
+                reverse('pmp_v3:intervention-detail', args=[self.signed_intervention.pk]),
+                user=user_role,
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+
+            for field in self.signed_data.keys():
+                self.assertEqual(response.data['permissions']['view'][field], True, field)
+                self.assertEqual(response.data['permissions']['edit'][field], False, field)
 
     # test functionality
     def test_base_update(self):
@@ -143,3 +165,15 @@ class TestSignedDocumentsManagement(APIViewSetTestCase, BaseTestCase):
             ),
             allowed_fields=self.signature_partner_data
         )
+
+    def test_user_roles_for_update_signed(self):
+        users_roles = [self.unicef_user, self.partnership_manager, self.partner_staff_member,
+                       self.partner_authorized_officer, self.partner_focal_point]
+        for user_role in users_roles:
+            self._test_update_fields(
+                user_role, self.signed_intervention,
+                restricted_fields=dict(
+                    **self.draft_unicef_data, **self.review_unicef_data,
+                    **self.signature_unicef_data, **self.signed_data
+                )
+            )
