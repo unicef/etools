@@ -1026,6 +1026,7 @@ class TestAgreementAPIView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data, ["Cannot delete a signed amendment"])
 
+    @override_settings(STATIC_ROOT=settings.PACKAGE_ROOT + '/assets/fonts/')
     def test_agreement_generate_pdf_default(self):
         self.client.force_login(self.unicef_staff)
         with mock.patch('etools.applications.partners.views.v1.get_data_from_insight') as mock_get_insight:
