@@ -1098,6 +1098,27 @@ class TestManagementBudget(BaseInterventionTestCase):
             response.data['items'][0]['non_field_errors'],
         )
 
+    def test_budget_item_validation_rouding_ok(self):
+        intervention = InterventionFactory()
+        item_to_update = InterventionManagementBudgetItemFactory(budget=intervention.management_budgets)
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse("pmp_v3:intervention-budget", args=[intervention.pk]),
+            user=self.user,
+            data={
+                'items': [{
+                    'id': item_to_update.id,
+                    'no_units': '13.70',
+                    'unit_price': '16.37',
+                    'cso_cash': '223.98',
+                    'unicef_cash': '0.29',
+                }],
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+
     def test_create_items_fractional_total(self):
         intervention = InterventionFactory()
 

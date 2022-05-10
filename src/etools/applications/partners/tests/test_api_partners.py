@@ -541,6 +541,20 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
             'with a different Partner Organization'
         )
 
+    def test_assign_staff_member_creates_new_user(self):
+        self.assertEqual(self.partner.staff_members.count(), 1)
+        staff_email = "email@staff.com"
+        response = self.forced_auth_req(
+            "patch", self.url,
+            data={"staff_members": [{"email": staff_email, "active": True, 'first_name': 'First', 'last_name': 'Last'}]},
+            user=self.unicef_staff
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(self.partner.staff_members.count(), 2)
+        created_staff = self.partner.staff_members.get(email=staff_email)
+        self.assertEqual(created_staff.first_name, created_staff.user.first_name)
+        self.assertEqual(created_staff.last_name, created_staff.user.last_name)
+
     def test_assign_staff_member_to_existing_user(self):
         user = UserFactory(groups__data=[], is_staff=False)
         user.profile.countries_available.clear()
