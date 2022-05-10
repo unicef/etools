@@ -395,7 +395,7 @@ class TestModelExport(BaseTenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
+        dataset = Dataset().load(response.content.decode('utf-8-sig'), 'csv')
         self.assertEqual(dataset.height, 2)
         self.assertEqual(dataset._get_headers(), [
             'Vendor Number',
@@ -427,9 +427,9 @@ class TestModelExport(BaseTenantTestCase):
         deleted_flag = "Yes" if self.partner.deleted_flag else "No"
         blocked = "Yes" if self.partner.blocked else "No"
 
-        test_option = [e for e in dataset if e[0] == self.partner.vendor_number][0]
+        test_option = [e for e in dataset if e[0] == f'\ufeff{self.partner.vendor_number}'][0]
         self.assertEqual(test_option, (
-            self.partner.vendor_number,
+            f'\ufeff{self.partner.vendor_number}',
             str(self.partner.name),
             self.partner.short_name,
             self.partner.alternate_name,
