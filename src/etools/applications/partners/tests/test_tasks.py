@@ -12,20 +12,34 @@ from django.core.management import call_command
 from django.utils import timezone
 
 from unicef_attachments.models import Attachment
+from unicef_locations.tests.factories import LocationFactory
 
 import etools.applications.partners.tasks
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
 from etools.applications.partners.models import Agreement, Intervention
-from etools.applications.partners.tasks import transfer_active_pds_to_new_cp
+from etools.applications.partners.permissions import UNICEF_USER
+from etools.applications.partners.tasks import (
+    _make_intervention_status_automatic_transitions,
+    transfer_active_pds_to_new_cp,
+)
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
     CoreValuesAssessmentFactory,
     InterventionFactory,
+    InterventionResultLinkFactory,
     PartnerFactory,
 )
-from etools.applications.reports.tests.factories import CountryProgrammeFactory
+from etools.applications.reports.models import ResultType
+from etools.applications.reports.tests.factories import (
+    CountryProgrammeFactory,
+    InterventionActivityFactory,
+    LowerResultFactory,
+    OfficeFactory,
+    ReportingRequirementFactory,
+    SectionFactory,
+)
 from etools.applications.users.tests.factories import CountryFactory, UserFactory
 
 
@@ -681,6 +695,58 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
             (('Bad interventions ids: {}'.format(interventions[0].id), ), {}),
         ]
         self._assertCalls(mock_logger.error, expected_call_args)
+
+    def test_activate_intervention_with_task(self, _mock_db_connection, _mock_logger):
+        today = datetime.date.today()
+        unicef_staff = UserFactory(is_staff=True, groups__data=[UNICEF_USER])
+
+        partner = PartnerFactory(name='Partner 2')
+        active_agreement = AgreementFactory(
+            partner=partner,
+            status=Agreement.SIGNED,
+            signed_by_unicef_date=today - datetime.timedelta(days=2),
+            signed_by_partner_date=today - datetime.timedelta(days=2),
+            start=today - datetime.timedelta(days=2),
+        )
+
+        active_intervention = InterventionFactory(
+            agreement=active_agreement,
+            title='Active Intervention',
+            document_type=Intervention.PD,
+            start=today - datetime.timedelta(days=1),
+            end=today + datetime.timedelta(days=365),
+            status=Intervention.SIGNED,
+            budget_owner=unicef_staff,
+            date_sent_to_partner=today - datetime.timedelta(days=1),
+            signed_by_unicef_date=today - datetime.timedelta(days=1),
+            signed_by_partner_date=today - datetime.timedelta(days=1),
+            unicef_signatory=unicef_staff,
+            partner_authorized_officer_signatory=partner.staff_members.all().first(),
+            cash_transfer_modalities=[Intervention.CASH_TRANSFER_DIRECT],
+        )
+        active_intervention.flat_locations.add(LocationFactory())
+        active_intervention.partner_focal_points.add(partner.staff_members.all().first())
+        active_intervention.unicef_focal_points.add(unicef_staff)
+        active_intervention.offices.add(OfficeFactory())
+        active_intervention.sections.add(SectionFactory())
+        ReportingRequirementFactory(intervention=active_intervention)
+        AttachmentFactory(
+            code='partners_intervention_signed_pd',
+            content_object=active_intervention,
+        )
+        FundsReservationHeaderFactory(intervention=active_intervention)
+
+        result_link = InterventionResultLinkFactory(
+            intervention=active_intervention,
+            cp_output__result_type__name=ResultType.OUTPUT,
+        )
+        pd_output = LowerResultFactory(result_link=result_link)
+        activity = InterventionActivityFactory(result=pd_output)
+        activity.time_frames.add(active_intervention.quarters.first())
+
+        _make_intervention_status_automatic_transitions(self.country_name)
+        active_intervention.refresh_from_db()
+        self.assertEqual(active_intervention.status, Intervention.ACTIVE)
 
 
 @mock.patch('etools.applications.partners.tasks.logger', spec=['info'])
