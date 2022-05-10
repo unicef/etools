@@ -3200,7 +3200,7 @@ class InterventionReviewNotification(TimeStampedModel):
             'intervention_number': self.review.intervention.reference_number,
             'meeting_date': self.review.meeting_date.strftime('%d-%m-%Y'),
             'user_name': self.user.get_full_name(),
-            'url': '{}{}'.format(settings.HOST, self.review.intervention.get_frontend_object_url())
+            'url': '{}{}'.format(settings.HOST, self.review.intervention.get_frontend_object_url(suffix='review'))
         }
 
         send_notification_with_template(
@@ -3609,7 +3609,7 @@ class InterventionManagementBudgetItem(models.Model):
     )
     no_units = models.DecimalField(
         verbose_name=_("Units Number"),
-        decimal_places=1,
+        decimal_places=2,
         max_digits=20,
         validators=[MinValueValidator(0)],
     )

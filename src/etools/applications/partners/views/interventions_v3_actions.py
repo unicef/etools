@@ -263,8 +263,7 @@ class PMPInterventionSendBackViewReview(PMPInterventionActionView):
                 "reference_number": pd.reference_number,
                 "pd_link": pd.get_frontend_object_url(suffix='review'),
             }
-            self.send_notification(
-                pd,
+            send_notification_with_template(
                 recipients=list(recipients),
                 template_name=template_name,
                 context=context

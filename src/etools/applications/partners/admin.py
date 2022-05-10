@@ -343,6 +343,7 @@ class InterventionAdmin(
                  ('start', 'end'),
                  'population_focus',
                  'activation_letter',
+                 'activation_protocol'
                  ),
         }),
         (_('ePD'), {
