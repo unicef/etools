@@ -228,7 +228,7 @@ class LowerResultsDeleteView(DestroyAPIView):
             # do cleanup if pd output is still not associated to cp output
             result_link = lower_result.result_link
             lower_result.delete()
-            if result_link.cp_output is None:
+            if result_link.cp_output is None and not result_link.ll_results.exists():
                 result_link.delete()
 
             return Response(status=status.HTTP_204_NO_CONTENT)
