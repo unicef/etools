@@ -2853,6 +2853,7 @@ class InterventionResultLink(TimeStampedModel):
 
     class Meta:
         unique_together = ['intervention', 'cp_output']
+        ordering = ['created']
 
     def __str__(self):
         return '{} {}'.format(
@@ -2870,15 +2871,18 @@ class InterventionResultLink(TimeStampedModel):
 
     def save(self, *args, **kwargs):
         if not self.code:
-            self.code = str(
-                # explicitly perform model.objects.count to avoid caching
-                self.__class__.objects.filter(intervention=self.intervention).count() + 1,
-            )
+            if self.cp_output:
+                self.code = str(
+                    # explicitly perform model.objects.count to avoid caching
+                    self.__class__.objects.filter(intervention=self.intervention).exclude(cp_output=None).count() + 1,
+                )
+            else:
+                self.code = '0'
         super().save(*args, **kwargs)
 
     @classmethod
     def renumber_result_links_for_intervention(cls, intervention):
-        result_links = intervention.result_links.all()
+        result_links = intervention.result_links.exclude(cp_output=None)
         # drop codes because in another case we'll face to UniqueViolation exception
         result_links.update(code=None)
         for i, result_link in enumerate(result_links):
