@@ -65,6 +65,7 @@ class TestInterventionLowerResultsListView(TestInterventionLowerResultsViewBase)
         pd_result = LowerResult.objects.get(id=response.data['id'])
         self.assertEqual(pd_result.result_link.intervention, self.intervention)
         self.assertEqual(pd_result.result_link.cp_output, None)
+        self.assertEqual(pd_result.code, '0.1')
 
     def test_create_associated(self):
         response = self.forced_auth_req(
@@ -75,6 +76,7 @@ class TestInterventionLowerResultsListView(TestInterventionLowerResultsViewBase)
         pd_result = LowerResult.objects.get(id=response.data['id'])
         self.assertEqual(pd_result.result_link.intervention, self.intervention)
         self.assertEqual(pd_result.result_link.cp_output, self.cp_output)
+        self.assertEqual(pd_result.code, '1.1')
 
     def test_create_associated_invalid_cp_output(self):
         cp_output = ResultFactory(result_type__name=ResultType.OUTPUT)
