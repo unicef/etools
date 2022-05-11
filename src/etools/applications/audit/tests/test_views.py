@@ -1416,6 +1416,67 @@ class TestEngagementAttachmentsView(MATransitionsTestCaseMixin, BaseTenantTestCa
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), attachments_num)
 
+    def test_get(self):
+        attachment = AttachmentFactory(
+            file="sample.pdf",
+            file_type=self.file_type,
+            content_type=ContentType.objects.get_for_model(Engagement),
+            object_id=self.engagement.pk,
+            code="audit_engagement",
+        )
+        self.engagement.engagement_attachments.add(attachment)
+
+        response = self.forced_auth_req(
+            'get',
+            reverse(
+                'audit:engagement-attachments-detail',
+                args=[self.engagement.pk, attachment.pk],
+            ),
+            user=self.auditor
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_get_does_not_belong(self):
+        attachment = AttachmentFactory(
+            file="sample.pdf",
+            file_type=self.file_type,
+            content_type=ContentType.objects.get_for_model(Engagement),
+            object_id=self.engagement.pk,
+            code="audit_engagement",
+        )
+        self.engagement.engagement_attachments.add(attachment)
+
+        response = self.forced_auth_req(
+            'get',
+            reverse(
+                'audit:engagement-attachments-detail',
+                args=[EngagementFactory().pk, attachment.pk],
+            ),
+            user=self.auditor
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+        response = self.forced_auth_req(
+            'get',
+            reverse(
+                'audit:engagement-attachments-detail',
+                args=[self.engagement.pk, attachment.pk],
+            ),
+            user=self.auditor
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_get_non_existent(self):
+        response = self.forced_auth_req(
+            'get',
+            reverse(
+                'audit:engagement-attachments-detail',
+                args=[self.engagement.pk, 111111],
+            ),
+            user=self.auditor
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
     def test_post(self):
         attachment = AttachmentFactory(file="sample.pdf")
         self.assertIsNone(attachment.object_id)
@@ -1538,6 +1599,69 @@ class TestEngagementReportAttachmentsView(MATransitionsTestCaseMixin, BaseTenant
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), attachments_num)
+
+    def test_get(self):
+        attachment = AttachmentFactory(
+            file="sample.pdf",
+            file_type=self.file_type,
+            content_type=ContentType.objects.get_for_model(Engagement),
+            object_id=self.engagement.pk,
+            code="audit_report",
+        )
+        self.engagement.report_attachments.add(attachment)
+
+        response = self.forced_auth_req(
+            'get',
+            reverse(
+                'audit:report-attachments-detail',
+                args=[self.engagement.pk, attachment.pk],
+            ),
+            user=self.auditor
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['id'], attachment.pk)
+
+    def test_get_does_not_belong(self):
+        attachment = AttachmentFactory(
+            file="sample.pdf",
+            file_type=self.file_type,
+            content_type=ContentType.objects.get_for_model(Engagement),
+            object_id=self.engagement.pk,
+            code="audit_report",
+        )
+        self.engagement.report_attachments.add(attachment)
+
+        response = self.forced_auth_req(
+            'get',
+            reverse(
+                'audit:report-attachments-detail',
+                args=[EngagementFactory().pk, attachment.pk],
+            ),
+            user=self.auditor
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+        response = self.forced_auth_req(
+            'get',
+            reverse(
+                'audit:report-attachments-detail',
+                args=[self.engagement.pk, attachment.pk],
+            ),
+            user=self.auditor
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['id'], attachment.pk)
+
+    def test_get_non_existent(self):
+        response = self.forced_auth_req(
+            'get',
+            reverse(
+                'audit:report-attachments-detail',
+                args=[self.engagement.pk, 1111111111],
+            ),
+            user=self.auditor
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_post(self):
         attachment = AttachmentFactory(file="sample.pdf")
