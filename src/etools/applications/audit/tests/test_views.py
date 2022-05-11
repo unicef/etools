@@ -1551,6 +1551,47 @@ class TestEngagementAttachmentsView(MATransitionsTestCaseMixin, BaseTenantTestCa
         self.assertEqual(attachment_qs.count(), attachments_num - 1)
         self.assertFalse(Attachment.objects.filter(pk=attachment.pk).exists())
 
+    def test_delete_non_existent(self):
+        response = self.forced_auth_req(
+            'delete',
+            reverse(
+                'audit:engagement-attachments-detail',
+                args=[self.engagement.pk, 11111111],
+            ),
+            user=self.unicef_focal_point,
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_delete_does_not_belong(self):
+        attachment = AttachmentFactory(
+            file="sample.pdf",
+            file_type=self.file_type,
+            content_type=ContentType.objects.get_for_model(Engagement),
+            object_id=self.engagement.pk,
+            code="audit_engagement",
+        )
+        self.engagement.engagement_attachments.add(attachment)
+
+        response = self.forced_auth_req(
+            'delete',
+            reverse(
+                'audit:engagement-attachments-detail',
+                args=[EngagementFactory().pk, attachment.pk],
+            ),
+            user=self.auditor
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+        response = self.forced_auth_req(
+            'delete',
+            reverse(
+                'audit:engagement-attachments-detail',
+                args=[self.engagement.pk, attachment.pk],
+            ),
+            user=self.auditor
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
     def test_create_meta_focal_point(self):
         response = self.forced_auth_req(
             'options',
@@ -1734,3 +1775,44 @@ class TestEngagementReportAttachmentsView(MATransitionsTestCaseMixin, BaseTenant
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(attachment_qs.count(), attachments_num - 1)
         self.assertFalse(Attachment.objects.filter(pk=attachment.pk).exists())
+
+    def test_delete_non_existent(self):
+        response = self.forced_auth_req(
+            'delete',
+            reverse(
+                'audit:report-attachments-detail',
+                args=[self.engagement.pk, 1111],
+            ),
+            user=self.unicef_focal_point,
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_delete_does_not_belong(self):
+        attachment = AttachmentFactory(
+            file="sample.pdf",
+            file_type=self.file_type,
+            content_type=ContentType.objects.get_for_model(Engagement),
+            object_id=self.engagement.pk,
+            code="audit_report",
+        )
+        self.engagement.report_attachments.add(attachment)
+
+        response = self.forced_auth_req(
+            'delete',
+            reverse(
+                'audit:report-attachments-detail',
+                args=[EngagementFactory().pk, attachment.pk],
+            ),
+            user=self.auditor
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+        response = self.forced_auth_req(
+            'delete',
+            reverse(
+                'audit:report-attachments-detail',
+                args=[self.engagement.pk, attachment.pk],
+            ),
+            user=self.auditor
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
