@@ -209,10 +209,6 @@ class EngagementLightSerializer(serializers.ModelSerializer):
         read_only=True
     )
     status_date = serializers.ReadOnlyField(source='displayed_status_date', label=_('Date of Status'))
-    unique_id = serializers.ReadOnlyField(
-        source="reference_number",
-        label=_('Unique ID'),
-    )
 
     offices = OfficeLightSerializer(many=True)
     sections = SectionSerializer(many=True)
@@ -220,8 +216,8 @@ class EngagementLightSerializer(serializers.ModelSerializer):
     class Meta:
         model = Engagement
         fields = [
-            'id', 'unique_id', 'agreement', 'po_item', 'related_agreement', 'partner', 'engagement_type',
-            'status', 'status_date', 'total_value', 'offices', 'sections'
+            'id', 'reference_number', 'agreement', 'po_item', 'related_agreement', 'partner',
+            'engagement_type', 'status', 'status_date', 'total_value', 'offices', 'sections'
         ]
 
     def validate(self, attrs):
@@ -521,7 +517,7 @@ class AuditSerializer(ActivePDValidationMixin, RiskCategoriesUpdateMixin, Engage
     number_of_financial_findings = serializers.SerializerMethodField(label=_('No. of Financial Findings'))
 
     pending_unsupported_amount = serializers.DecimalField(20, 2, label=_('Pending Unsupported Amount'), read_only=True)
-    percent_of_audited_expenditure = serializers.IntegerField(label=_('% Of Audited Expenditure'), read_only=True)
+    percent_of_audited_expenditure = serializers.DecimalField(20, 1, label=_('% Of Audited Expenditure'), read_only=True)
 
     class Meta(EngagementSerializer.Meta):
         model = Audit
