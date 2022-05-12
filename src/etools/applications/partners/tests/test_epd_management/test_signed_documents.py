@@ -1,3 +1,5 @@
+from collections import namedtuple
+
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 
@@ -28,9 +30,12 @@ class TestSignedDocumentsManagement(APIViewSetTestCase, BaseTestCase):
             'partner_authorized_officer_signatory': PartnerStaffFactory(partner=self.partner).pk,
             'signed_by_partner_date': '1970-01-02',
         }
-        self.signed_data = {
+        self.contingency_signed_data = {
             'start': '1970-01-02',
-            'end': '1970-02-02',
+            'end': '1970-02-02'
+        }
+        self.signed_data = {
+            **self.contingency_signed_data,
             'planned_budget': {
                 'id': self.signed_intervention.planned_budget.pk,
                 'total_hq_cash_local': 1300}
@@ -101,6 +106,36 @@ class TestSignedDocumentsManagement(APIViewSetTestCase, BaseTestCase):
             for field in self.signed_data.keys():
                 self.assertEqual(response.data['permissions']['view'][field], True, field)
                 self.assertEqual(response.data['permissions']['edit'][field], False, field)
+
+    def test_user_roles_permissions_on_contingency_signed(self):
+        self.signed_intervention.contingency_pd = True
+        self.signed_intervention.activation_protocol = "test"
+        self.signed_intervention.save(update_fields=['contingency_pd', 'activation_protocol'])
+        # The partnership_manager user is Unicef Focal Point
+        self.assertEqual(
+            list(self.signed_intervention.unicef_focal_points.values_list('pk', flat=True)),
+            [self.partnership_manager.pk]
+        )
+        EditPermission = namedtuple('EditPermission', 'user, edit_allowed')
+        expected_edit_perms = [
+            # only Unicef Focal Point can edit start/end dates and HQ contrib
+            EditPermission(self.partnership_manager, True),
+            EditPermission(self.unicef_user, False),
+            EditPermission(self.partner_staff_member, False),
+            EditPermission(self.partner_authorized_officer, False),
+            EditPermission(self.partner_focal_point, False)
+        ]
+        for expected in expected_edit_perms:
+            response = self.forced_auth_req(
+                'get',
+                reverse('pmp_v3:intervention-detail', args=[self.signed_intervention.pk]),
+                user=expected.user,
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+
+            for field in self.contingency_signed_data.keys():
+                self.assertEqual(response.data['permissions']['view'][field], True, field)
+                self.assertEqual(response.data['permissions']['edit'][field], expected.edit_allowed, field)
 
     # test functionality
     def test_base_update(self):
@@ -176,4 +211,43 @@ class TestSignedDocumentsManagement(APIViewSetTestCase, BaseTestCase):
                     **self.draft_unicef_data, **self.review_unicef_data,
                     **self.signature_unicef_data, **self.signed_data
                 )
+            )
+
+    def test_user_roles_allowed_update_contingency_signed(self):
+        self.signed_intervention.contingency_pd = True
+        self.signed_intervention.activation_protocol = "test"
+        self.signed_intervention.save(update_fields=['contingency_pd', 'activation_protocol'])
+
+        self.assertEqual(
+            list(self.signed_intervention.unicef_focal_points.values_list('pk', flat=True)),
+            [self.partnership_manager.pk]
+        )
+
+        self._test_update_fields(
+            self.partnership_manager, self.signed_intervention,
+            restricted_fields=dict(
+                **self.draft_unicef_data, **self.review_unicef_data,
+                **self.signature_unicef_data,
+            ),
+            allowed_fields=self.contingency_signed_data
+        )
+
+    def test_user_roles_restricted_update_contingency_signed(self):
+        self.signed_intervention.contingency_pd = True
+        self.signed_intervention.activation_protocol = "test"
+        self.signed_intervention.save(update_fields=['contingency_pd', 'activation_protocol'])
+
+        restricted_edit_user_roles = [
+            self.unicef_user,
+            self.partner_staff_member,
+            self.partner_authorized_officer,
+            self.partner_focal_point
+        ]
+        for user_role in restricted_edit_user_roles:
+            self._test_update_fields(
+                user_role, self.signed_intervention,
+                restricted_fields=dict(
+                    **self.draft_unicef_data, **self.review_unicef_data,
+                    **self.signature_unicef_data, **self.contingency_signed_data
+                ),
             )
