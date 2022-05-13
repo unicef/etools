@@ -186,9 +186,7 @@ class InterventionPermissions(PMPPermissions):
         self.user_groups = list(set(self.user_groups))
 
         self.condition_map = {
-            'condition1': self.user in self.instance.unicef_focal_points.all(),
-            'condition2': self.user in self.instance.partner_focal_points.all(),
-            'contingency on': self.instance.contingency_pd is True,
+            'contingency_on': self.instance.contingency_pd is True,
             'in_amendment_mode': user_added_amendment(self.instance),
             'not_in_amendment_mode': not user_added_amendment(self.instance),
             'not_ssfa': not_ssfa(self.instance),
@@ -212,7 +210,7 @@ class InterventionPermissions(PMPPermissions):
             'unicef_not_accepted_contingency': unicef_not_accepted_contingency(self.instance),
             'unlocked_or_contingency': unlocked_or_contingency(self.instance),
             'unicef_not_accepted_spd': not_spd(self.instance) or unicef_not_accepted(self.instance),
-            'unlocked_spd': not_spd(self.instance) or unlocked(self.instance),
+            'unlocked_or_spd': not not_spd(self.instance) or unlocked(self.instance),
             'unicef_not_accepted_spd_non_hum': unicef_not_accepted_spd_non_hum(self.instance),
             'not_ssfa+unicef_not_accepted': not_ssfa(self.instance) and unicef_not_accepted(self.instance),
         }
