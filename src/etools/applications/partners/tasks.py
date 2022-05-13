@@ -129,7 +129,7 @@ def _make_intervention_status_automatic_transitions(country_name):
     # we should try all interventions except the ones in terminal statuses
     possible_interventions = Intervention.objects.exclude(status__in=[
         Intervention.DRAFT, Intervention.TERMINATED, Intervention.CLOSED, Intervention.SUSPENDED
-    ])
+    ]).order_by('id')
     processed = 0
     for intervention in possible_interventions:
         old_status = intervention.status

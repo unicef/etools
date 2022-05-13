@@ -565,23 +565,11 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
         interventions.append(intervention)
 
         # Create a few items that should be ignored. If they're not ignored, this test will fail.
-        # Ignored because of end date
-        InterventionFactory(status=Intervention.ACTIVE, end=datetime.date.today() + datetime.timedelta(days=2))
         # Ignored because of status
-        InterventionFactory(status=Intervention.IMPLEMENTED, end=end_date)
-        # Ignored because funds total outstanding != 0
-        intervention = InterventionFactory(status=Intervention.ENDED, end=end_date)
-        for i in range(3):
-            FundsReservationHeaderFactory(intervention=intervention, outstanding_amt=Decimal(i),
-                                          intervention_amt=_make_decimal(i),
-                                          actual_amt=_make_decimal(i), total_amt=_make_decimal(i))
-
-        # Ignored because funds totals don't match
-        intervention = InterventionFactory(status=Intervention.ENDED, end=end_date)
-        for i in range(3):
-            FundsReservationHeaderFactory(intervention=intervention, outstanding_amt=Decimal(0.00),
-                                          intervention_amt=_make_decimal(i),
-                                          actual_amt=_make_decimal(i + 1), total_amt=_make_decimal(i))
+        InterventionFactory(status=Intervention.TERMINATED)
+        InterventionFactory(status=Intervention.CLOSED)
+        InterventionFactory(status=Intervention.SUSPENDED)
+        InterventionFactory(status=Intervention.DRAFT)
 
         # Mock InterventionValid() to always return True.
         mock_validator = mock.Mock(spec=['is_valid'])
@@ -635,22 +623,11 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
         interventions.append(intervention)
 
         # Create a few items that should be ignored. If they're not ignored, this test will fail.
-        # Ignored because of end date
-        InterventionFactory(status=Intervention.ACTIVE, end=datetime.date.today() + datetime.timedelta(days=2))
         # Ignored because of status
-        InterventionFactory(status=Intervention.IMPLEMENTED, end=end_date)
-        # Ignored because funds total outstanding != 0
-        intervention = InterventionFactory(status=Intervention.ENDED, end=end_date)
-        for i in range(3):
-            FundsReservationHeaderFactory(intervention=intervention, outstanding_amt=Decimal(i),
-                                          intervention_amt=_make_decimal(i),
-                                          actual_amt=_make_decimal(i), total_amt=_make_decimal(i))
-        # Ignored because funds totals don't match
-        intervention = InterventionFactory(status=Intervention.ENDED, end=end_date)
-        for i in range(3):
-            FundsReservationHeaderFactory(intervention=intervention, outstanding_amt=Decimal(0.00),
-                                          intervention_amt=_make_decimal(i),
-                                          actual_amt=_make_decimal(i + 1), total_amt=_make_decimal(i))
+        InterventionFactory(status=Intervention.TERMINATED)
+        InterventionFactory(status=Intervention.CLOSED)
+        InterventionFactory(status=Intervention.SUSPENDED)
+        InterventionFactory(status=Intervention.DRAFT)
 
         def mock_intervention_valid_class_side_effect(*args, **kwargs):
             """Side effect for my mock InterventionValid() that gets called each time my mock InterventionValid() class
