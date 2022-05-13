@@ -110,6 +110,30 @@ class BaseTestCase(BaseTenantTestCase):
         self.signature_intervention.review.overall_approval = True
         self.signature_intervention.review.save()
 
+        signed_fields = copy(signature_fields)
+        signed_fields.update(**dict(
+            unicef_signatory=UserFactory(),
+            status=Intervention.SIGNED,
+        ))
+        self.signed_intervention = InterventionFactory(**signed_fields)
+        self.signed_intervention.flat_locations.add(LocationFactory())
+        InterventionReviewFactory(intervention=self.signed_intervention)
+        ReportingRequirementFactory(intervention=self.signed_intervention)
+        FundsReservationHeaderFactory(intervention=self.signed_intervention)
+        self.signed_intervention.planned_budget.unicef_cash_local = 1
+        self.signed_intervention.planned_budget.save()
+        self.signed_intervention.review.overall_approval = True
+        self.signed_intervention.review.save()
+        AttachmentFactory(
+            file=SimpleUploadedFile('test.txt', b'test'),
+            code='partners_intervention_signed_pd',
+            content_object=self.signed_intervention,
+        )
+        self.signed_intervention.unicef_focal_points.add(self.partnership_manager)
+        self.signed_intervention.sections.add(SectionFactory())
+        self.signed_intervention.offices.add(OfficeFactory())
+        self.signed_intervention.partner_focal_points.add(partner_focal_point_staff)
+
         ended_fields = copy(signature_fields)
         ended_fields.update(**dict(
             unicef_signatory=UserFactory(),
