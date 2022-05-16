@@ -410,7 +410,7 @@ class InterventionValid(CompleteValidation):
             if not pd_outputs_present(intervention):
                 raise StateValidationError([_('Results section is empty')])
             if not pd_outputs_are_linked_to_indicators(intervention):
-                raise StateValidationError([_('All PD Outputs need to to have at least one indicator')])
+                raise StateValidationError([_('All PD Outputs need to have at least one indicator')])
             if not intervention.planned_budget.total_unicef_contribution_local():
                 raise StateValidationError([_('Total UNICEF Contribution must be greater than 0')])
         if intervention.unicef_accepted:
