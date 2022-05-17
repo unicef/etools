@@ -752,7 +752,7 @@ class TestUpdate(BaseInterventionTestCase):
 
     def test_fields_required_on_unicef_accept(self):
         intervention = InterventionFactory(
-            ip_program_contribution=None,
+            ip_program_contribution='contribution',
             status=Intervention.DRAFT,
             unicef_accepted=False,
             partner_accepted=False,
@@ -774,8 +774,19 @@ class TestUpdate(BaseInterventionTestCase):
             data={}
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+
         intervention.unicef_court = False
         intervention.save()
+        intervention.sections.add(SectionFactory())
+        result_link = InterventionResultLinkFactory(
+            intervention=intervention,
+            cp_output__result_type__name=ResultType.OUTPUT,
+            ram_indicators=[IndicatorFactory()],
+        )
+        pd_output = LowerResultFactory(result_link=result_link)
+        AppliedIndicatorFactory(lower_result=pd_output, section=intervention.sections.first())
+        activity = InterventionActivityFactory(result=pd_output)
+        activity.time_frames.add(intervention.quarters.first())
         response = self.forced_auth_req(
             "patch",
             reverse('pmp_v3:intervention-accept', args=[intervention.pk]),
