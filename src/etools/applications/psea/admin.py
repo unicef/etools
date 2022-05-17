@@ -37,9 +37,19 @@ class AssessmentAdmin(admin.ModelAdmin):
 
 @admin.register(Answer)
 class AnswerAdmin(admin.ModelAdmin):
-    list_display = ('assessment', 'indicator', 'rating')
-    list_filter = ('assessment', 'rating')
+    search_fields = ('assessment__reference_number__icontains', 'assessment__partner__name__icontains', )
+    list_display = ('partner', 'assessment', 'indicator', 'rating')
+    list_filter = ('assessment__partner', 'assessment', 'rating')
     raw_id_fields = ('assessment', 'indicator',)
+
+    def partner(self, obj):
+        return obj.assessment.partner
+
+    partner.short_description = 'Partner'
+    partner.admin_order_field = 'assessment__partner__name'
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('assessment', 'assessment__partner')
 
 
 @admin.register(Evidence)
