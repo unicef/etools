@@ -8,6 +8,7 @@ def number_lower_results(apps, schema_editor):
     InterventionResultLink = apps.get_model('partners', 'InterventionResultLink')
     for result_link in InterventionResultLink.objects.all():
         lower_results = result_link.ll_results.all()
+        lower_results.update(code=None) # reset codes to avoid IntegrityError collision caused by old data
         for i, lower_result in enumerate(lower_results):
             lower_result.code = '{0}.{1}'.format(result_link.code, str(i + 1))
         LowerResult.objects.bulk_update(lower_results, fields=['code'])
