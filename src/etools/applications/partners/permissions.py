@@ -611,3 +611,23 @@ class AmendmentSessionActivitiesPermission(BasePermission):
 
         amendment = intervention.amendment
         return obj.created > amendment.created
+
+
+class InterventionIsDraftPermission(BasePermission):
+    def has_permission(self, request, view):
+        intervention = view.get_root_object()
+        return intervention.status == 'draft'
+
+
+class UserIsUnicefFocalPoint(BasePermission):
+    def has_permission(self, request, view):
+        intervention = view.get_root_object()
+        return request.user in intervention.unicef_focal_points.all()
+
+
+class UserIsPartnershipManagerOrSeniorManager(BasePermission):
+    def has_permission(self, request, view):
+        if not request.user.is_authenticated:
+            return False
+
+        return is_user_in_groups(request.user, [PARTNERSHIP_MANAGER_GROUP, SENIOR_MANAGEMENT_GROUP])

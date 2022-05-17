@@ -1,3 +1,4 @@
+import functools
 from copy import copy
 
 from django.conf import settings
@@ -70,6 +71,7 @@ from etools.applications.partners.serializers.v3 import (
     PRCOfficerInterventionReviewSerializer,
     UNICEFInterventionLowerResultSerializer,
 )
+from etools.applications.partners.views.intervention_snapshot import FullInterventionSnapshotDeleteMixin
 from etools.applications.partners.views.interventions_v2 import (
     InterventionAttachmentUpdateDeleteView,
     InterventionDeleteView,
@@ -267,7 +269,11 @@ class InterventionPDOutputsListCreateView(InterventionPDOutputsViewMixin, ListCr
     pass
 
 
-class InterventionPDOutputsDetailUpdateView(InterventionPDOutputsViewMixin, RetrieveUpdateDestroyAPIView):
+class InterventionPDOutputsDetailUpdateView(
+    InterventionPDOutputsViewMixin,
+    FullInterventionSnapshotDeleteMixin,
+    RetrieveUpdateDestroyAPIView,
+):
     def perform_destroy(self, instance):
         # do cleanup if pd output is still not associated to cp output
         result_link = instance.result_link
@@ -531,17 +537,19 @@ class InterventionActivityDetailUpdateView(InterventionActivityViewMixin, Retrie
     pass
 
 
-class InterventionRiskDeleteView(DestroyAPIView):
+class InterventionRiskDeleteView(FullInterventionSnapshotDeleteMixin, DestroyAPIView):
     queryset = InterventionRisk.objects
     permission_classes = [
         IsAuthenticated,
         IsReadAction | (IsEditAction & intervention_field_is_editable_permission('risks'))
     ]
 
+    @functools.cache
     def get_root_object(self):
-        if not hasattr(self, '_intervention'):
-            self._intervention = Intervention.objects.filter(pk=self.kwargs.get('intervention_pk')).first()
-        return self._intervention
+        return Intervention.objects.filter(pk=self.kwargs.get('intervention_pk')).first()
+
+    def get_intervention(self) -> Intervention:
+        return self.get_root_object()
 
     def get_queryset(self):
         return super().get_queryset().filter(intervention=self.get_root_object())

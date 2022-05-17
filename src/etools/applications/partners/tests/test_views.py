@@ -1659,8 +1659,7 @@ class TestInterventionViews(BaseTenantTestCase):
             user=self.partnership_manager_user,
         )
 
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('Planned visits can only be deleted in Draft status', response.data)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_intervention_filter(self):
         country_programme = CountryProgrammeFactory()

@@ -506,8 +506,7 @@ class TestInterventionAmendmentDeleteView(BaseTenantTestCase):
             self.url,
             user=self.unicef_staff,
         )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data, ["You do not have permissions to delete an amendment"])
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_intervention_amendments_delete(self):
         response = self.forced_auth_req(
@@ -525,7 +524,7 @@ class TestInterventionAmendmentDeleteView(BaseTenantTestCase):
             self.url,
             user=self.unicef_staff,
         )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_delete_active_focal_point(self):
         self.intervention.status = 'active'
