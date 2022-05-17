@@ -12,10 +12,11 @@ class AttachmentAdmin(admin.ModelAdmin):
         'pd_ssfa',
         'pd_ssfa_number',
         'agreement_reference_number',
+        'source',
         'file_type',
         'file_link',
         'filename',
         'uploaded_by',
         'ip_address',
     ]
-    list_filter = ['file_type', 'partner', ]
+    list_filter = ['file_type', 'source', 'partner', ]

@@ -1470,10 +1470,12 @@ class TestInterventionResultLink(BaseTenantTestCase):
     def test_auto_code(self):
         link1 = InterventionResultLinkFactory()
         link2 = InterventionResultLinkFactory(intervention=link1.intervention)
+        link0 = InterventionResultLinkFactory(intervention=link1.intervention, cp_output=None)
         InterventionResultLinkFactory()
         link3 = InterventionResultLinkFactory(intervention=link1.intervention)
         self.assertEqual(link1.code, '1')
         self.assertEqual(link2.code, '2')
+        self.assertEqual(link0.code, '0')
         self.assertEqual(link3.code, '3')
 
     def test_code_renumber_on_result_link_delete(self):
