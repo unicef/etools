@@ -96,3 +96,4 @@ class TravelAttachmentAdmin(AdminListMixin, admin.ModelAdmin):
 class T2FActionPointAdmin(ActionPointAdmin):
     form = T2FActionPointAdminForm
     list_display = ('travel_activity', ) + ActionPointAdmin.list_display
+    readonly_fields = ('status',)
