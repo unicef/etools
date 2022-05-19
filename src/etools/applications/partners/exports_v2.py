@@ -2,13 +2,14 @@ from copy import copy
 from tempfile import NamedTemporaryFile
 
 from openpyxl import Workbook
-from openpyxl.styles import Border, Font, PatternFill, Side, Alignment
+from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
-from etools.applications.partners.utils import get_quarters_range
 from rest_framework_csv import renderers as r
 
 from etools.applications.core.renderers import FriendlyCSVRenderer
+from etools.applications.core.util_scripts import currency_format
 from etools.applications.partners.models import Intervention
+from etools.applications.partners.utils import get_quarters_range
 
 
 class PartnerOrganizationCSVRenderer(r.CSVRenderer):
@@ -441,9 +442,9 @@ class InterventionXLSRenderer:
     def td_format(self, td_object):
         seconds = int(td_object.total_seconds())
         periods = [
-            ('year',        60*60*24*365),
-            ('month',       60*60*24*30),
-            ('day',         60*60*24)
+            ('year', 60 * 60 * 24 * 365),
+            ('month', 60 * 60 * 24 * 30),
+            ('day', 60 * 60 * 24)
         ]
 
         strings = []
@@ -478,9 +479,23 @@ class InterventionXLSRenderer:
         worksheet.merge_cells(start_row=worksheet.max_row, start_column=1, end_row=worksheet.max_row, end_column=2)
         self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, 1, [self.font_bold])
 
-        worksheet.append(['Partner', self.intervention.agreement.partner.name, 'Start date', self.intervention.start, f"Currency {self.intervention.planned_budget.currency}"])
-        worksheet.append(['', 'Vendor #: ' + self.intervention.agreement.partner.vendor_number, 'End date', self.intervention.end])
-        worksheet.append(['PD Reference', self.intervention.number, 'Duration', self.td_format(self.intervention.end - self.intervention.start)])
+        worksheet.append([
+            'Partner',
+            self.intervention.agreement.partner.name,
+            'Start date', self.intervention.start,
+            f"Currency {self.intervention.planned_budget.currency}"
+        ])
+        worksheet.append([
+            '',
+            'Vendor #: ' + self.intervention.agreement.partner.vendor_number,
+            'End date', self.intervention.end
+        ])
+        worksheet.append([
+            'PD Reference',
+            self.intervention.number,
+            'Duration',
+            self.td_format(self.intervention.end - self.intervention.start)
+        ])
 
         self.apply_styles_to_cells(worksheet, 2, 1, worksheet.max_row, 1, [self.font_bold])
         self.apply_styles_to_cells(worksheet, 2, 3, worksheet.max_row, 3, [self.font_bold])
@@ -490,39 +505,82 @@ class InterventionXLSRenderer:
 
     def budget_summary(self, worksheet):
         budget = self.intervention.planned_budget
-
         unicef_contribution = budget.total_unicef_contribution_local()
         partner_contribution = budget.total_partner_contribution_local
         unicef_contribution_p = unicef_contribution / budget.total_local * 100 if budget.total_local else 0
-        total_cash_p = budget.total_unicef_cash_local_wo_hq / unicef_contribution * 100 if unicef_contribution else 0
-        prog_effectivness_p = self.intervention.management_budgets.unicef_total / unicef_contribution * 100 if unicef_contribution else 0
-        supplies_p = budget.in_kind_amount_local / unicef_contribution * 100 if unicef_contribution else 0
-        partner_supplies_p = budget.partner_supply_local / partner_contribution * 100 if partner_contribution else 0
-        partner_total_cash = budget.partner_contribution_local / partner_contribution * 100 if partner_contribution else 0
-        partner_prog_effectivness_p = self.intervention.management_budgets.partner_total / partner_contribution * 100 if partner_contribution else 0
+        total_cash_p = budget.total_unicef_cash_local_wo_hq / unicef_contribution * 100 \
+            if unicef_contribution else 0
+        prog_effectivness_p = self.intervention.management_budgets.unicef_total / unicef_contribution * 100 \
+            if unicef_contribution else 0
+        supplies_p = budget.in_kind_amount_local / unicef_contribution * 100 \
+            if unicef_contribution else 0
+        partner_supplies_p = budget.partner_supply_local / partner_contribution * 100 \
+            if partner_contribution else 0
+        partner_total_cash = budget.partner_contribution_local / partner_contribution * 100 \
+            if partner_contribution else 0
+        partner_prog_effectivness_p = self.intervention.management_budgets.partner_total / partner_contribution * 100 \
+            if partner_contribution else 0
 
-        worksheet.append(['Total PD Budget', '{:,}'.format(budget.total_local), '%'])
-        self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, 3, [self.fill_blue, self.font_white])
+        worksheet.append(['Total PD Budget', currency_format(budget.total_local), '%'])
+        self.apply_styles_to_cells(
+            worksheet, worksheet.max_row, 1, worksheet.max_row, 3, [self.fill_blue, self.font_white]
+        )
         self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, 2, [self.font_white_bold])
         self.apply_styles_to_cells(worksheet, worksheet.max_row, 3, worksheet.max_row, 3, [self.font_white_italic])
-        worksheet.append(['UNICEF Contribution', '{:,}'.format(unicef_contribution), '{:.2f}'.format(unicef_contribution_p)])
-        self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, 3, [self.font_bold, self.fill_blue_pale])
-        worksheet.append(['Total Cash', '{:,}'.format(budget.total_unicef_cash_local_wo_hq), '{:.2f}'.format(total_cash_p)])
+        worksheet.append([
+            'UNICEF Contribution',
+            currency_format(unicef_contribution),
+            '{:.2f}'.format(unicef_contribution_p)
+        ])
+        self.apply_styles_to_cells(
+            worksheet, worksheet.max_row, 1, worksheet.max_row, 3, [self.font_bold, self.fill_blue_pale]
+        )
+        worksheet.append([
+            'Total Cash',
+            currency_format(budget.total_unicef_cash_local_wo_hq),
+            '{:.2f}'.format(total_cash_p)
+        ])
         self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, 3, [self.fill_yellow_light])
-        worksheet.append(['Prog effectiveness', '{:,}'.format(self.intervention.management_budgets.unicef_total), '{:.2f}'.format(prog_effectivness_p)])
-        worksheet.append(['HQ cost', '{:,}'.format(budget.total_hq_cash_local), '{:.2f}'.format(self.intervention.hq_support_cost)])
-        worksheet.append(['Supplies in-kind', '{:,}'.format(budget.in_kind_amount_local), '{:.2f}'.format(supplies_p)])
+        worksheet.append([
+            'Prog effectiveness',
+            currency_format(self.intervention.management_budgets.unicef_total),
+            '{:.2f}'.format(prog_effectivness_p)
+        ])
+        worksheet.append([
+            'HQ cost',
+            currency_format(budget.total_hq_cash_local),
+            '{:.2f}'.format(self.intervention.hq_support_cost)
+        ])
+        worksheet.append(
+            ['Supplies in-kind', currency_format(budget.in_kind_amount_local), '{:.2f}'.format(supplies_p)]
+        )
         self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, 3, [self.fill_yellow_light])
         self.apply_styles_to_cells(worksheet, worksheet.max_row - 4, 3, worksheet.max_row, 3, [self.font_italic])
 
-        worksheet.append(['Partner Contribution', '{:,}'.format(partner_contribution), '{:.2f}'.format(budget.partner_contribution_percent)])
+        worksheet.append([
+            'Partner Contribution',
+            currency_format(partner_contribution),
+            '{:.2f}'.format(budget.partner_contribution_percent)
+        ])
         self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, 3, [self.fill_blue_pale])
         self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, 2, [self.font_bold])
         self.apply_styles_to_cells(worksheet, worksheet.max_row, 3, worksheet.max_row, 3, [self.font_italic])
-        worksheet.append(['Total Cash', '{:,}'.format(budget.partner_contribution_local), '{:.2f}'.format(partner_total_cash)])
+        worksheet.append([
+            'Total Cash',
+            currency_format(budget.partner_contribution_local),
+            '{:.2f}'.format(partner_total_cash)
+        ])
         self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, 3, [self.fill_yellow_light])
-        worksheet.append(['Prog effectiveness', '{:,}'.format(self.intervention.management_budgets.partner_total), '{:.2f}'.format(partner_prog_effectivness_p)])
-        worksheet.append(['Supplies in-kind', '{:,}'.format(budget.partner_supply_local), '{:.2f}'.format(partner_supplies_p)])
+        worksheet.append([
+            'Prog effectiveness',
+            currency_format(self.intervention.management_budgets.partner_total),
+            '{:.2f}'.format(partner_prog_effectivness_p)
+        ])
+        worksheet.append([
+            'Supplies in-kind',
+            currency_format(budget.partner_supply_local),
+            '{:.2f}'.format(partner_supplies_p)
+        ])
         self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, 3, [self.fill_yellow_light])
         self.apply_styles_to_cells(worksheet, worksheet.max_row - 1, 3, worksheet.max_row, 3, [self.font_italic])
         self.apply_styles_to_cells(worksheet, worksheet.max_row - 9, 2, worksheet.max_row, 3, [self.align_right])
@@ -544,87 +602,112 @@ class InterventionXLSRenderer:
         ])
         quarters = get_quarters_range(self.intervention.start, self.intervention.end)
         total_columns = 5 + len(quarters)
-        worksheet.merge_cells(start_row=worksheet.max_row, start_column=6, end_row=worksheet.max_row, end_column=total_columns)
-        self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns, [self.fill_blue, self.font_white_bold, self.align_center])
+        worksheet.merge_cells(
+            start_row=worksheet.max_row, start_column=6, end_row=worksheet.max_row, end_column=total_columns
+        )
+        self.apply_styles_to_cells(
+            worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns,
+            [self.fill_blue, self.font_white_bold, self.align_center]
+        )
         worksheet.append([
             'Result Level', '', '', '', ''
         ] + [f'Q{q.quarter}' for q in quarters])
-        self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns, [self.fill_blue, self.font_white_bold, self.align_center])
+        self.apply_styles_to_cells(
+            worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns,
+            [self.fill_blue, self.font_white_bold, self.align_center]
+        )
 
         for result_link in self.intervention.result_links.all():
             worksheet.append([
                 "CP Output " + result_link.code + ":",
                 result_link.cp_output.name
             ])
-            self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns, [self.fill_blue_pale])
+            self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns,
+                                       [self.fill_blue_pale])
             for pd_output in result_link.ll_results.all():
                 worksheet.append([
                     "PD Output\n" + pd_output.code + ":",
                     pd_output.name,
-                    '{:,}'.format(pd_output.total()),
-                    '{:,}'.format(pd_output.total_cso()),
-                    '{:,}'.format(pd_output.total_unicef()),
+                    currency_format(pd_output.total()),
+                    currency_format(pd_output.total_cso()),
+                    currency_format(pd_output.total_unicef()),
                 ])
-                self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns, [self.fill_blue_pale_light])
+                self.apply_styles_to_cells(
+                    worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns, [self.fill_blue_pale_light]
+                )
 
                 for activity in pd_output.activities.all():
                     time_frames = activity.time_frames.all()
                     worksheet.append([
                         activity.code,
                         activity.name,
-                        '{:,}'.format(activity.total),
-                        '{:,}'.format(activity.cso_cash),
-                        '{:,}'.format(activity.unicef_cash),
+                        currency_format(activity.total),
+                        currency_format(activity.cso_cash),
+                        currency_format(activity.unicef_cash),
                     ] +
                         ['x' if any(t.quarter == q.quarter for t in time_frames) else '' for q in quarters]
                     )
 
         worksheet.append([
             'EEPM', 'Effective and efficient programme management',
-            '{:,}'.format(self.intervention.management_budgets.total),
-            '{:,}'.format(self.intervention.management_budgets.partner_total),
-            '{:,}'.format(self.intervention.management_budgets.unicef_total),
+            currency_format(self.intervention.management_budgets.total),
+            currency_format(self.intervention.management_budgets.partner_total),
+            currency_format(self.intervention.management_budgets.unicef_total),
         ])
-        self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns, [self.fill_blue_pale_light])
+        self.apply_styles_to_cells(
+            worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns, [self.fill_blue_pale_light]
+        )
 
         worksheet.append([
             'EEPM.1', 'In-country management & support',
-            '{:,}'.format(self.intervention.management_budgets.act1_unicef + self.intervention.management_budgets.act1_partner),
-            '{:,}'.format(self.intervention.management_budgets.act1_partner),
-            '{:,}'.format(self.intervention.management_budgets.act1_unicef),
+            currency_format(self.intervention.management_budgets.act1_unicef +
+                            self.intervention.management_budgets.act1_partner),
+            currency_format(self.intervention.management_budgets.act1_partner),
+            currency_format(self.intervention.management_budgets.act1_unicef),
         ])
         worksheet.append([
             'EEPM.2', 'Operational costs',
-            '{:,}'.format(self.intervention.management_budgets.act2_unicef + self.intervention.management_budgets.act2_partner),
-            '{:,}'.format(self.intervention.management_budgets.act2_partner),
-            '{:,}'.format(self.intervention.management_budgets.act2_unicef),
+            currency_format(self.intervention.management_budgets.act2_unicef +
+                            self.intervention.management_budgets.act2_partner),
+            currency_format(self.intervention.management_budgets.act2_partner),
+            currency_format(self.intervention.management_budgets.act2_unicef),
         ])
         worksheet.append([
             'EEPM.3', 'Planning, monitoring, evaluation, and communication',
-            '{:,}'.format(self.intervention.management_budgets.act3_unicef + self.intervention.management_budgets.act3_partner),
-            '{:,}'.format(self.intervention.management_budgets.act3_partner),
-            '{:,}'.format(self.intervention.management_budgets.act3_unicef),
+            currency_format(self.intervention.management_budgets.act3_unicef +
+                            self.intervention.management_budgets.act3_partner),
+            currency_format(self.intervention.management_budgets.act3_partner),
+            currency_format(self.intervention.management_budgets.act3_unicef),
         ])
         worksheet.append([
             'Subtotal for the programme costs', '',
-            '{:,}'.format(self.intervention.planned_budget.partner_contribution_local + self.intervention.planned_budget.total_unicef_cash_local_wo_hq),
-            '{:,}'.format(self.intervention.planned_budget.partner_contribution_local),
-            '{:,}'.format(self.intervention.planned_budget.total_unicef_cash_local_wo_hq),
+            currency_format(self.intervention.planned_budget.partner_contribution_local +
+                            self.intervention.planned_budget.total_unicef_cash_local_wo_hq),
+            currency_format(self.intervention.planned_budget.partner_contribution_local),
+            currency_format(self.intervention.planned_budget.total_unicef_cash_local_wo_hq),
         ])
-        self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns, [self.fill_blue, self.font_white_bold])
+        self.apply_styles_to_cells(
+            worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns, [self.fill_blue, self.font_white_bold]
+        )
         worksheet.append([
-            'HQ Support/Capacity Building  ({0}% of UNICEF the cash component)'.format(self.intervention.hq_support_cost),
+            'HQ Support/Capacity Building  ({0}% of UNICEF the cash component)'.format(
+                self.intervention.hq_support_cost
+            ),
             '', '', '',
-            '{:,}'.format(self.intervention.planned_budget.total_hq_cash_local),
+            currency_format(self.intervention.planned_budget.total_hq_cash_local),
         ])
-        self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns, [self.fill_blue_pale_light])
+        self.apply_styles_to_cells(
+            worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns, [self.fill_blue_pale_light]
+        )
         worksheet.append([
             'Total', '',
-            '{:,}'.format(self.intervention.planned_budget.total_cash_local()),
-            '{:,}'.format(self.intervention.planned_budget.partner_contribution_local),
-            '{:,}'.format(self.intervention.planned_budget.unicef_cash_local),
+            currency_format(self.intervention.planned_budget.total_cash_local()),
+            currency_format(self.intervention.planned_budget.partner_contribution_local),
+            currency_format(self.intervention.planned_budget.unicef_cash_local),
         ])
-        self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns, [self.fill_blue, self.font_white_bold])
+        self.apply_styles_to_cells(
+            worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns, [self.fill_blue, self.font_white_bold]
+        )
         self.apply_styles_to_cells(worksheet, 6, 3, worksheet.max_row, 5, [self.align_right])
         self.auto_format_cell_width(worksheet)
         worksheet.column_dimensions['A'].width = 15
@@ -644,23 +727,36 @@ class InterventionXLSRenderer:
         ] + [''] * (len(quarters) - 1) + ['Other Notes'])
 
         total_columns = 9 + len(quarters)
-        worksheet.merge_cells(start_row=worksheet.max_row, start_column=9, end_row=worksheet.max_row, end_column=total_columns - 1)
-        self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns, [self.fill_blue, self.font_white_bold, self.align_center])
-        worksheet.append([
-            '', '', '', '', '', '', '', '',
-        ] + [f'Q{q.quarter}' for q in quarters] + [''])
+        worksheet.merge_cells(
+            start_row=worksheet.max_row, start_column=9, end_row=worksheet.max_row, end_column=total_columns - 1
+        )
+        self.apply_styles_to_cells(
+            worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns,
+            [self.fill_blue, self.font_white_bold, self.align_center]
+        )
+        worksheet.append(['', '', '', '', '', '', '', ''] + [f'Q{q.quarter}' for q in quarters] + [''])
 
         for i in range(1, 9):
-            worksheet.merge_cells(start_row=worksheet.max_row - 1, start_column=i, end_row=worksheet.max_row, end_column=i)
-        worksheet.merge_cells(start_row=worksheet.max_row - 1, start_column=total_columns, end_row=worksheet.max_row, end_column=total_columns)
+            worksheet.merge_cells(
+                start_row=worksheet.max_row - 1, start_column=i, end_row=worksheet.max_row, end_column=i
+            )
+        worksheet.merge_cells(
+            start_row=worksheet.max_row - 1, start_column=total_columns,
+            end_row=worksheet.max_row, end_column=total_columns
+        )
 
-        self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns, [self.fill_blue, self.font_white_bold, self.align_center])
+        self.apply_styles_to_cells(
+            worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns,
+            [self.fill_blue, self.font_white_bold, self.align_center]
+        )
         for result_link in self.intervention.result_links.all():
             worksheet.append([
                 result_link.code,
                 result_link.cp_output.name
             ])
-            self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns, [self.fill_blue_pale])
+            self.apply_styles_to_cells(
+                worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns, [self.fill_blue_pale]
+            )
             for pd_output in result_link.ll_results.all():
                 worksheet.append([
                     pd_output.code,
@@ -668,29 +764,34 @@ class InterventionXLSRenderer:
                     '',
                     '',
                     '',
-                    '{:,}'.format(pd_output.total_cso()),
-                    '{:,}'.format(pd_output.total_unicef()),
-                    '{:,}'.format(pd_output.total())
+                    currency_format(pd_output.total_cso()),
+                    currency_format(pd_output.total_unicef()),
+                    currency_format(pd_output.total())
                 ])
-                self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns, [self.fill_blue_pale_light])
+                self.apply_styles_to_cells(
+                    worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns, [self.fill_blue_pale_light]
+                )
 
                 for activity in pd_output.activities.all():
                     time_frames = activity.time_frames.all()
-                    worksheet.append([
-                        activity.code,
-                        "Activity:" + activity.name,
-                        '',
-                        '',
-                        '',
-                        '{:,}'.format(activity.cso_cash),
-                        '{:,}'.format(activity.unicef_cash),
-                        '{:,}'.format(activity.total)
-                    ] +
+                    worksheet.append(
+                        [
+                            activity.code,
+                            "Activity:" + activity.name,
+                            '',
+                            '',
+                            '',
+                            currency_format(activity.cso_cash),
+                            currency_format(activity.unicef_cash),
+                            currency_format(activity.total)
+                        ] +
                         ['x' if any(t.quarter == q.quarter for t in time_frames) else '' for q in quarters] +
                         [activity.context_details]
                     )
 
-                    self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns, [self.fill_yellow_light])
+                    self.apply_styles_to_cells(
+                        worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns, [self.fill_yellow_light]
+                    )
 
                     for item in activity.items.all():
                         worksheet.append([
@@ -707,88 +808,107 @@ class InterventionXLSRenderer:
         worksheet.append([
             'EEPM', 'Effective and efficient programme management',
             '', '', '',
-            '{:,}'.format(self.intervention.management_budgets.total),
-            '{:,}'.format(self.intervention.management_budgets.partner_total),
-            '{:,}'.format(self.intervention.management_budgets.unicef_total),
+            currency_format(self.intervention.management_budgets.total),
+            currency_format(self.intervention.management_budgets.partner_total),
+            currency_format(self.intervention.management_budgets.unicef_total),
         ])
-        self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns, [self.fill_blue_pale_light])
+        self.apply_styles_to_cells(
+            worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns, [self.fill_blue_pale_light]
+        )
 
         worksheet.append([
             'EEPM.1', 'Activity: In-country management & support',
             '', '', '',
-            '{:,}'.format(self.intervention.management_budgets.act1_partner),
-            '{:,}'.format(self.intervention.management_budgets.act1_unicef),
-            '{:,}'.format(self.intervention.management_budgets.act1_unicef + self.intervention.management_budgets.act1_partner),
+            currency_format(self.intervention.management_budgets.act1_partner),
+            currency_format(self.intervention.management_budgets.act1_unicef),
+            currency_format(self.intervention.management_budgets.act1_unicef +
+                            self.intervention.management_budgets.act1_partner),
         ])
-        self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns, [self.fill_yellow_light])
+        self.apply_styles_to_cells(
+            worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns, [self.fill_yellow_light]
+        )
         for i, item in enumerate(self.intervention.management_budgets.items.filter(kind='in_country')):
             worksheet.append([
                 'EEPM.1.{0}'.format(i + 1),
                 item.name,
                 '', '', '',
-                '{:,}'.format(item.cso_cash),
-                '{:,}'.format(item.unicef_cash),
-                '{:,}'.format(item.unicef_cash + item.cso_cash),
+                currency_format(item.cso_cash),
+                currency_format(item.unicef_cash),
+                currency_format(item.unicef_cash + item.cso_cash),
             ])
 
         worksheet.append([
             'EEPM.2', 'Activity: Operational costs',
             '', '', '',
-            '{:,}'.format(self.intervention.management_budgets.act2_partner),
-            '{:,}'.format(self.intervention.management_budgets.act2_unicef),
-            '{:,}'.format(self.intervention.management_budgets.act2_unicef + self.intervention.management_budgets.act2_partner),
+            currency_format(self.intervention.management_budgets.act2_partner),
+            currency_format(self.intervention.management_budgets.act2_unicef),
+            currency_format(self.intervention.management_budgets.act2_unicef +
+                            self.intervention.management_budgets.act2_partner),
         ])
-        self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns, [self.fill_yellow_light])
+        self.apply_styles_to_cells(
+            worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns, [self.fill_yellow_light]
+        )
         for i, item in enumerate(self.intervention.management_budgets.items.filter(kind='operational')):
             worksheet.append([
                 'EEPM.2.{0}'.format(i + 1),
                 item.name,
                 '', '', '',
-                '{:,}'.format(item.cso_cash),
-                '{:,}'.format(item.unicef_cash),
-                '{:,}'.format(item.unicef_cash + item.cso_cash),
+                currency_format(item.cso_cash),
+                currency_format(item.unicef_cash),
+                currency_format(item.unicef_cash + item.cso_cash),
             ])
 
         worksheet.append([
             'EEPM.3', 'Activity: Planning, monitoring, evaluation, and communication',
             '', '', '',
-            '{:,}'.format(self.intervention.management_budgets.act3_partner),
-            '{:,}'.format(self.intervention.management_budgets.act3_unicef),
-            '{:,}'.format(self.intervention.management_budgets.act3_unicef + self.intervention.management_budgets.act3_partner),
+            currency_format(self.intervention.management_budgets.act3_partner),
+            currency_format(self.intervention.management_budgets.act3_unicef),
+            currency_format(self.intervention.management_budgets.act3_unicef +
+                            self.intervention.management_budgets.act3_partner),
         ])
-        self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns, [self.fill_yellow_light])
+        self.apply_styles_to_cells(
+            worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns, [self.fill_yellow_light]
+        )
         for i, item in enumerate(self.intervention.management_budgets.items.filter(kind='planning')):
             worksheet.append([
                 'EEPM.3.{0}'.format(i + 1),
                 item.name,
                 '', '', '',
-                '{:,}'.format(item.cso_cash),
-                '{:,}'.format(item.unicef_cash),
-                '{:,}'.format(item.unicef_cash + item.cso_cash),
+                currency_format(item.cso_cash),
+                currency_format(item.unicef_cash),
+                currency_format(item.unicef_cash + item.cso_cash),
             ])
 
         worksheet.append([
             'Total Cost for all outputs', '', '', '', '',
-            '{:,}'.format(self.intervention.planned_budget.partner_contribution_local + self.intervention.planned_budget.total_unicef_cash_local_wo_hq),
-            '{:,}'.format(self.intervention.planned_budget.partner_contribution_local),
-            '{:,}'.format(self.intervention.planned_budget.total_unicef_cash_local_wo_hq),
+            currency_format(self.intervention.planned_budget.partner_contribution_local +
+                            self.intervention.planned_budget.total_unicef_cash_local_wo_hq),
+            currency_format(self.intervention.planned_budget.partner_contribution_local),
+            currency_format(self.intervention.planned_budget.total_unicef_cash_local_wo_hq),
         ])
-        self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns, [self.fill_blue, self.font_white_bold])
+        self.apply_styles_to_cells(
+            worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns, [self.fill_blue, self.font_white_bold]
+        )
         self.apply_styles_to_cells(worksheet, 6, 3, worksheet.max_row, 8, [self.align_right])
         self.auto_format_cell_width(worksheet)
         worksheet.column_dimensions['A'].width = 15
 
     def render_supply_plan(self, worksheet):
-        worksheet.append(['Item', 'Number of Units', 'Price/unit', 'Total Price', 'Provided By', 'CP Output', 'Other Mentions', 'UNICEF Product Number'])
-        self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, 8, [self.fill_blue, self.font_white_bold])
+        worksheet.append([
+            'Item', 'Number of Units', 'Price/unit', 'Total Price',
+            'Provided By', 'CP Output', 'Other Mentions', 'UNICEF Product Number'
+        ])
+        self.apply_styles_to_cells(
+            worksheet, worksheet.max_row, 1, worksheet.max_row, 8, [self.fill_blue, self.font_white_bold]
+        )
 
         supply_items_no = 0
         for supply_item in self.intervention.supply_items.all():
             worksheet.append([
                 supply_item.title,
-                '{:,}'.format(supply_item.unit_number),
-                '{:,}'.format(supply_item.unit_price),
-                '{:,}'.format(supply_item.total_price),
+                currency_format(supply_item.unit_number),
+                currency_format(supply_item.unit_price),
+                currency_format(supply_item.total_price),
                 supply_item.get_provided_by_display(),
                 supply_item.result.cp_output.output_name,
                 supply_item.other_mentions,
@@ -798,145 +918,41 @@ class InterventionXLSRenderer:
 
         worksheet.append([''])
 
-        self.apply_styles_to_cells(worksheet, worksheet.max_row - supply_items_no, 2, worksheet.max_row, 4, [self.align_right])
+        self.apply_styles_to_cells(
+            worksheet, worksheet.max_row - supply_items_no, 2, worksheet.max_row, 4, [self.align_right]
+        )
 
-        worksheet.append(['Total Value', '', '', '{:,}'.format(self.intervention.planned_budget.in_kind_amount_local + self.intervention.planned_budget.partner_supply_local)])
-        worksheet.append(['UNICEF Contibution', '', '', '{:,}'.format(self.intervention.planned_budget.in_kind_amount_local)])
-        worksheet.append(['Partner Contribution', '', '', '{:,}'.format(self.intervention.planned_budget.partner_supply_local)])
+        worksheet.append(
+            ['Total Value', '', '', currency_format(self.intervention.planned_budget.in_kind_amount_local +
+                                                    self.intervention.planned_budget.partner_supply_local)]
+        )
+        worksheet.append(
+            ['UNICEF Contibution', '', '', currency_format(self.intervention.planned_budget.in_kind_amount_local)]
+        )
+        worksheet.append(
+            ['Partner Contribution', '', '', currency_format(self.intervention.planned_budget.partner_supply_local)]
+        )
 
-        self.apply_styles_to_cells(worksheet, worksheet.max_row - 2, 1, worksheet.max_row, 4, [self.fill_blue, self.font_white])
-        self.apply_styles_to_cells(worksheet, worksheet.max_row - 2, 4, worksheet.max_row, 4, [self.align_right])
-        self.apply_styles_to_cells(worksheet, worksheet.max_row - 2, 1, worksheet.max_row - 2, 4, [self.font_white_bold])
+        self.apply_styles_to_cells(
+            worksheet, worksheet.max_row - 2, 1, worksheet.max_row, 4, [self.fill_blue, self.font_white]
+        )
+        self.apply_styles_to_cells(
+            worksheet, worksheet.max_row - 2, 4, worksheet.max_row, 4, [self.align_right]
+        )
+        self.apply_styles_to_cells(
+            worksheet, worksheet.max_row - 2, 1, worksheet.max_row - 2, 4, [self.font_white_bold]
+        )
 
         self.auto_format_cell_width(worksheet)
 
     def render_others_section(self, worksheet):
         if self.intervention.ip_program_contribution:
             worksheet.append(['Partner non-financial contribution:'])
-            self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, 1, [self.fill_blue, self.font_white])
+            self.apply_styles_to_cells(
+                worksheet, worksheet.max_row, 1, worksheet.max_row, 1, [self.fill_blue, self.font_white]
+            )
             worksheet.append([self.intervention.ip_program_contribution])
             worksheet.append([''])
-
-        # if self.intervention.get_cash_transfer_modalities_display():
-        #     worksheet.append(['Cash Transfer modality:'])
-        #     self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, 1, [self.fill_blue, self.font_white])
-        #     worksheet.append([self.intervention.get_cash_transfer_modalities_display()])
-        #     worksheet.append([''])
-
-        # if self.intervention.activation_protocol:
-        #     worksheet.append(['Activation Protocol:'])
-        #     self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, 1, [self.fill_blue, self.font_white])
-        #     worksheet.append([ self.intervention.activation_protocol])
-        #     worksheet.append([''])
-
-    # def render_pd_info(self, worksheet):
-    #     pd_type = self.intervention.get_document_type_display()
-    #     if self.intervention.humanitarian_flag:
-    #         pd_type += '(Humanitarian)'
-    #     if self.intervention.contingency_pd:
-    #         pd_type += '(Contingency)'
-
-    #     worksheet.append(['Document Type:', pd_type])
-    #     worksheet.merge_cells(start_row=worksheet.max_row, start_column=2, end_row=worksheet.max_row, end_column=9)
-    #     worksheet.append(['UNICEF Office:', ', '.join(o.name for o in self.intervention.offices.all())])
-    #     worksheet.merge_cells(start_row=worksheet.max_row, start_column=2, end_row=worksheet.max_row, end_column=9)
-    #     worksheet.append(['Organization Name:', self.intervention.agreement.partner.name])
-    #     worksheet.merge_cells(start_row=worksheet.max_row, start_column=2, end_row=worksheet.max_row, end_column=9)
-    #     worksheet.append(['Programme Title:', self.intervention.title])
-    #     worksheet.merge_cells(start_row=worksheet.max_row, start_column=2, end_row=worksheet.max_row, end_column=9)
-    #     worksheet.append([
-    #         'Geographical coverage:',
-    #         ', '.join(location.name for location in self.intervention.flat_locations.all())
-    #     ])
-    #     worksheet.merge_cells(start_row=worksheet.max_row, start_column=2, end_row=worksheet.max_row, end_column=9)
-
-    # def render_strategy(self, worksheet):
-    #     worksheet.append(['Strategy'])
-    #     self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, 9,
-    #                                [self.fill_blue, self.font_white])
-    #     worksheet.merge_cells(start_row=worksheet.max_row, start_column=1, end_row=worksheet.max_row, end_column=9)
-    #     worksheet.append(['Context:', self.intervention.context])
-    #     worksheet.append(['Implementation Strategy & Technical Guidance:', self.intervention.implementation_strategy])
-    #     worksheet.append(['Capacity Development:', self.intervention.capacity_development])
-    #     worksheet.append(['Other Partners involved:', self.intervention.other_partners_involved])
-    #     worksheet.append(['Gender Rating:', self.intervention.get_gender_rating_display()])
-    #     worksheet.append(['Equity Rating:', self.intervention.get_equity_rating_display()])
-    #     worksheet.append(['Sustainability Rating:', self.intervention.get_sustainability_rating_display()])
-    #     for i in range(7):
-    #         worksheet.merge_cells(start_row=worksheet.max_row - i, start_column=2,
-    #                               end_row=worksheet.max_row - i, end_column=9)
-
-    # def render_risks(self, worksheet):
-    #     worksheet.append(['Risk & Proposed Mitigation Measures'])
-    #     self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, 9,
-    #                                [self.fill_blue, self.font_white])
-    #     worksheet.merge_cells(start_row=worksheet.max_row, start_column=1, end_row=worksheet.max_row, end_column=9)
-    #     risks_no = 0
-    #     for risk in self.intervention.risks.all():
-    #         worksheet.append([risk.get_risk_type_display(), risk.mitigation_measures])
-    #         worksheet.merge_cells(start_row=worksheet.max_row, start_column=2, end_row=worksheet.max_row, end_column=9)
-    #         risks_no += 1
-
-    # def render_workplan(self, worksheet):
-    #     worksheet.append(['Workplan Result'])
-    #     worksheet.merge_cells(start_row=worksheet.max_row, start_column=1, end_row=worksheet.max_row, end_column=9)
-    #     worksheet.append(['eTools ref no:', self.intervention.reference_number])
-    #     worksheet.merge_cells(start_row=worksheet.max_row, start_column=2, end_row=worksheet.max_row, end_column=9)
-    #     worksheet.append(['Partner:', self.intervention.agreement.partner.name])
-    #     worksheet.merge_cells(start_row=worksheet.max_row, start_column=2, end_row=worksheet.max_row, end_column=9)
-    #     self.apply_styles_to_cells(worksheet, worksheet.max_row - 2, 1, worksheet.max_row, 9,
-    #                                [self.fill_blue, self.font_white])
-
-    #     worksheet.append([
-    #         'CP output', 'PD output', 'RAM indicator', 'Section/Cluster',
-    #         'Baseline', 'Target', 'MoV', 'Disaggregation', 'Location',
-    #     ])
-    #     self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, 9, [self.fill_gray])
-    #     data_len = 0
-
-    #     for result_link in self.intervention.result_links.all():
-    #         base_row_data = [result_link.cp_output.name if result_link.cp_output else '']
-
-    #         worksheet.append(base_row_data + [''] * 8)
-    #         self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, 1, [self.fill_yellow])
-    #         self.apply_styles_to_cells(worksheet, worksheet.max_row, 2, worksheet.max_row, 9, [self.fill_gray])
-    #         data_len += 1
-
-    #         for pd_output in result_link.ll_results.all():
-    #             pd_row_data = base_row_data + [pd_output.name]
-    #             indicators = list(pd_output.applied_indicators.all())
-    #             for indicator in indicators:
-    #                 worksheet.append(pd_row_data + [
-    #                     indicator.indicator.title,
-    #                     indicator.section.name,
-    #                     indicator.baseline_display_string,
-    #                     indicator.target_display_string,
-    #                     indicator.means_of_verification,
-    #                     ', '.join(disaggregation.name for disaggregation in indicator.disaggregation.all()),
-    #                     ', '.join(location.name for location in indicator.locations.all()),
-    #                 ])
-    #                 data_len += 1
-    #             if not indicators:
-    #                 worksheet.append(pd_row_data + [''] * 7)
-    #                 data_len += 1
-
-    # def render_signatures_section(self, worksheet):
-    #     worksheet.append(['Signatures and date'])
-    #     self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, 6,
-    #                                [self.fill_blue, self.font_white])
-    #     worksheet.merge_cells(start_row=worksheet.max_row, start_column=1, end_row=worksheet.max_row, end_column=6)
-
-    #     worksheet.append(['CSO Authorized Name', '', '', 'UNICEF Authorized Name', '', ''])
-    #     worksheet.merge_cells(start_row=worksheet.max_row, start_column=2, end_row=worksheet.max_row, end_column=3)
-    #     worksheet.merge_cells(start_row=worksheet.max_row, start_column=5, end_row=worksheet.max_row, end_column=6)
-    #     worksheet.append(['Signature', '', '', 'Signature', '', ''])
-    #     worksheet.merge_cells(start_row=worksheet.max_row, start_column=2, end_row=worksheet.max_row, end_column=3)
-    #     worksheet.merge_cells(start_row=worksheet.max_row, start_column=5, end_row=worksheet.max_row, end_column=6)
-    #     worksheet.append(['Date', '', '', 'Date', '', ''])
-    #     worksheet.merge_cells(start_row=worksheet.max_row, start_column=2, end_row=worksheet.max_row, end_column=3)
-    #     worksheet.merge_cells(start_row=worksheet.max_row, start_column=5, end_row=worksheet.max_row, end_column=6)
-    #     self.apply_styles_to_cells(worksheet, worksheet.max_row - 2, 1, worksheet.max_row, 1, [self.fill_gray])
-    #     self.apply_styles_to_cells(worksheet, worksheet.max_row - 2, 4, worksheet.max_row, 4, [self.fill_gray])
 
     def render(self):
         workbook = Workbook()
@@ -956,16 +972,6 @@ class InterventionXLSRenderer:
 
         self.sheet_header(budget_summary_sheet, 'Budget Summary')
         self.budget_summary(budget_summary_sheet)
-
-        # self.render_pd_info(budget_summary_sheet)
-        # budget_summary_sheet.append([])
-        # self.render_strategy(budget_summary_sheet)
-        # budget_summary_sheet.append([])
-        # self.render_risks(budget_summary_sheet)
-        # budget_summary_sheet.append([])
-        # self.render_workplan(budget_summary_sheet)
-        # budget_summary_sheet.append([])
-        # self.render_signatures_section(budget_summary_sheet)
 
         self.sheet_header(activity_sheet, 'Workplan Budget')
         self.render_workplan_budget(activity_sheet)
