@@ -199,6 +199,15 @@ class AppliedIndicatorSerializer(serializers.ModelSerializer):
                     'not in status Draft or Signed'
                 ))
 
+        if attrs.get('indicator') and self.instance:
+            if attrs['indicator'].get('title') and attrs['indicator']['title'] != self.instance.indicator.title and not (
+                    status in [Intervention.DRAFT]
+            ):
+                raise ValidationError(_(
+                    'You cannot change the Indicator Title if PD/SPD is '
+                    'not in status Draft'
+                ))
+
         # make sure locations are in the intervention
         locations = set(loc.id for loc in attrs.get('locations', []))
         if not locations.issubset(

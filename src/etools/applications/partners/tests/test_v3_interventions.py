@@ -3071,6 +3071,23 @@ class TestPMPInterventionIndicatorsUpdateView(BaseTenantTestCase):
         self.assertEqual(response.data['indicator']['code'], old_code)
         self.assertFalse(AppliedIndicator.objects.filter(id=self.indicator.id).exists())
 
+    def test_update_indicator_title_pd_not_draft_not_allowed(self):
+        # Only allowed case non DRAFT for edit result_links based on permissions_matrix
+        self.intervention.status = Intervention.SIGNED
+        self.intervention.contingency_pd = True
+        self.intervention.save(update_fields=['status', 'contingency_pd'])
+        response = self.forced_auth_req(
+            'patch',
+            self.url,
+            user=self.partnership_manager,
+            data={'indicator': {'title': 'new_title'}},
+        )
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
+        self.assertIn(
+            'You cannot change the Indicator Title if PD/SPD is not in status Draft',
+            response.data['non_field_errors'],
+        )
+
     def test_update_indicator_title_intervention_was_signed(self):
         intervention = self.indicator.lower_result.result_link.intervention
 
