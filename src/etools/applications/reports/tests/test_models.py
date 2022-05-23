@@ -93,18 +93,17 @@ class TestQuarter(BaseTenantTestCase):
 
 
 class TestCountryProgramme(BaseTenantTestCase):
-    @classmethod
-    def setUpTestData(cls):
+    def setUp(self):
         today = datetime.date.today()
-        cls.programme_active = CountryProgrammeFactory(
+        self.programme_active = CountryProgrammeFactory(
             from_date=today - datetime.timedelta(days=1),
             to_date=today + datetime.timedelta(days=1),
         )
-        cls.programme_past = CountryProgrammeFactory(
+        self.programme_past = CountryProgrammeFactory(
             from_date=datetime.date(2001, 1, 1),
             to_date=datetime.date(2001, 12, 31),
         )
-        cls.programme_future = CountryProgrammeFactory(
+        self.programme_future = CountryProgrammeFactory(
             from_date=today + datetime.timedelta(days=2 * 30),
             to_date=today + datetime.timedelta(days=6 * 30),
         )
