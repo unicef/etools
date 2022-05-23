@@ -4,7 +4,6 @@ import itertools
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import connection, transaction
-from django.db.models import F, Sum
 
 from celery.utils.log import get_task_logger
 from django_tenants.utils import schema_context
@@ -119,17 +118,12 @@ def _make_intervention_status_automatic_transitions(country_name):
 
     admin_user = get_user_model().objects.get(username=settings.TASK_ADMIN_USER)
     bad_interventions = []
-    active_ended = Intervention.objects.filter(status=Intervention.ACTIVE,
-                                               end__lt=datetime.date.today())
-    qs = Intervention.objects\
-        .prefetch_related('frs')\
-        .filter(status=Intervention.ENDED)\
-        .annotate(frs_total_outstanding=Sum('frs__outstanding_amt_local'),
-                  frs_total_actual_amt=Sum('frs__total_amt_local'),
-                  frs_intervention_amt=Sum('frs__actual_amt_local'))\
-        .filter(frs_total_outstanding=0, frs_total_actual_amt=F('frs_intervention_amt'))
+    # we should try all interventions except the ones in terminal statuses
+    possible_interventions = Intervention.objects.exclude(status__in=[
+        Intervention.DRAFT, Intervention.TERMINATED, Intervention.CLOSED, Intervention.SUSPENDED
+    ]).order_by('id')
     processed = 0
-    for intervention in itertools.chain(active_ended, qs):
+    for intervention in possible_interventions:
         old_status = intervention.status
         with transaction.atomic():
             validator = InterventionValid(intervention, user=admin_user, disable_rigid_check=True)
@@ -142,7 +136,7 @@ def _make_intervention_status_automatic_transitions(country_name):
 
     logger.error('Bad interventions {}'.format(len(bad_interventions)))
     logger.error('Bad interventions ids: ' + ' '.join(str(a.id) for a in bad_interventions))
-    logger.info('Total interventions {}'.format(active_ended.count() + qs.count()))
+    logger.info('Total interventions {}'.format(possible_interventions.count()))
     logger.info("Transitioned interventions {} ".format(processed))
 
 
