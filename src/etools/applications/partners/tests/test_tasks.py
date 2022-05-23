@@ -18,10 +18,11 @@ import etools.applications.partners.tasks
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
-
 from etools.applications.partners.models import Agreement, Intervention, InterventionBudget
-from etools.applications.partners.tasks import transfer_active_pds_to_new_cp, _make_intervention_status_automatic_transitions
-
+from etools.applications.partners.tasks import (
+    _make_intervention_status_automatic_transitions,
+    transfer_active_pds_to_new_cp,
+)
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
     CoreValuesAssessmentFactory,

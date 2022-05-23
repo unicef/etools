@@ -5,7 +5,6 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.db import connection, transaction
-
 from django.db.models import Prefetch
 from django.utils import timezone
 
