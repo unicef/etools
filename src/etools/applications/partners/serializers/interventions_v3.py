@@ -52,6 +52,15 @@ class InterventionRiskSerializer(FullInterventionSnapshotSerializerMixin, serial
         fields = ('id', 'risk_type', 'mitigation_measures', 'intervention')
         kwargs = {'intervention': {'write_only': True}}
 
+    def validate_mitigation_measures(self, value):
+        if value and len(value) > 2500:
+            raise serializers.ValidationError(
+                "This field is limited to {} or less characters.".format(
+                    2500,
+                ),
+            )
+        return value
+
     def get_intervention(self):
         return self.validated_data['intervention']
 
