@@ -17,6 +17,7 @@ from etools.applications.reports.models import LowerResult, ResultType
 from etools.applications.reports.tests.factories import (
     AppliedIndicatorFactory,
     InterventionActivityFactory,
+    InterventionActivityItemFactory,
     LowerResultFactory,
     ResultFactory,
     SectionFactory,
@@ -295,7 +296,7 @@ class TestInterventionLowerResultsDetailView(TestInterventionLowerResultsViewBas
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         return response
 
-    def test_associate_output_renumber_codes(self):
+    def test_associate_output_renumber_codes_activities(self):
         self.assertEqual(self.result_link.code, '1')
         self.assertEqual(LowerResultFactory(code=None, result_link=self.result_link).code, '1.1')
         old_result_link = InterventionResultLinkFactory(code=None, intervention=self.intervention, cp_output=None)
@@ -308,6 +309,27 @@ class TestInterventionLowerResultsDetailView(TestInterventionLowerResultsViewBas
         activity.refresh_from_db()
         self.assertEqual(result.code, '1.2')
         self.assertEqual(activity.code, '1.2.1')
+
+    def test_associate_output_renumber_codes_activity_items(self):
+        self.assertEqual(self.result_link.code, '1')
+        self.assertEqual(LowerResultFactory(code=None, result_link=self.result_link).code, '1.1')
+        old_result_link = InterventionResultLinkFactory(code=None, intervention=self.intervention, cp_output=None)
+        result = LowerResultFactory(code=None, result_link=old_result_link)
+        activity = InterventionActivityFactory(code=None, result=result)
+        quarter = self.intervention.quarters.first()
+        act_item = InterventionActivityItemFactory(activity=activity, unicef_cash=8)
+        quarter.activities.add(activity)
+
+        self.assertEqual(result.code, '0.1')
+        self.assertEqual(activity.code, '0.1.1')
+        self.assertEqual(act_item.code, '0.1.1.1')
+        self.assign_result_to_cp_output(result, self.result_link.cp_output)
+        result.refresh_from_db()
+        activity.refresh_from_db()
+        act_item.refresh_from_db()
+        self.assertEqual(result.code, '1.2')
+        self.assertEqual(activity.code, '1.2.1')
+        self.assertEqual(act_item.code, '1.2.1.1')
 
     def test_associate_output_renumber_codes_shift_to_the_middle(self):
         self.assertEqual(self.result_link.code, '1')
