@@ -18,7 +18,7 @@ import etools.applications.partners.tasks
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
-from etools.applications.partners.models import Agreement, Intervention, InterventionBudget
+from etools.applications.partners.models import Agreement, Intervention
 from etools.applications.partners.tasks import (
     _make_intervention_status_automatic_transitions,
     transfer_active_pds_to_new_cp,
@@ -692,24 +692,19 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
             end=today + datetime.timedelta(days=365),
             status=Intervention.SIGNED,
             country_programme=active_agreement.country_programme,
-            # budget_owner=unicef_staff,
-            # date_sent_to_partner=today - datetime.timedelta(days=1),
+            budget_owner=unicef_staff,
+            date_sent_to_partner=today - datetime.timedelta(days=1),
             signed_by_unicef_date=today - datetime.timedelta(days=1),
             signed_by_partner_date=today - datetime.timedelta(days=1),
             unicef_signatory=unicef_staff,
             partner_authorized_officer_signatory=partner.staff_members.all().first(),
             # cash_transfer_modalities=[Intervention.CASH_TRANSFER_DIRECT],
         )
-        InterventionBudget.objects.get_or_create(
-            intervention=active_intervention,
-            defaults={
-                'unicef_cash': 100,
-                'unicef_cash_local': 10,
-                'partner_contribution': 200,
-                'partner_contribution_local': 20,
-                'in_kind_amount_local': 10,
-            }
-        )
+        active_intervention.planned_budget.partner_contribution_local = 10
+        active_intervention.planned_budget.unicef_cash_local = 20
+        active_intervention.planned_budget.total_hq_cash_local = 60
+        active_intervention.planned_budget.save()
+
         active_intervention.flat_locations.add(LocationFactory())
         active_intervention.partner_focal_points.add(partner.staff_members.all().first())
         active_intervention.unicef_focal_points.add(unicef_staff)
