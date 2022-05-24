@@ -1,6 +1,7 @@
 import logging
 from datetime import date
 
+from django.db.models import Count
 from django.utils.translation import gettext as _
 
 from etools_validator.exceptions import (
@@ -323,6 +324,10 @@ def pd_outputs_present(i):
     return i.result_links.exists()
 
 
+def all_cp_outputs_have_pds_assigned(i):
+    return not i.result_links.annotate(ll_count=Count('ll_results')).filter(ll_count=0).exists()
+
+
 def pd_outputs_are_linked_to_indicators(i):
     return not i.result_links.filter(ll_results__applied_indicators__isnull=True)
 
@@ -409,6 +414,8 @@ class InterventionValid(CompleteValidation):
                 raise StateValidationError([_('All activities must have at least one time frame')])
             if not pd_outputs_present(intervention):
                 raise StateValidationError([_('Results section is empty')])
+            if not all_cp_outputs_have_pds_assigned(intervention):
+                raise StateValidationError([_('All CP Outputs need to have a PD output associated.')])
             if not pd_outputs_are_linked_to_indicators(intervention):
                 raise StateValidationError([_('All PD Outputs need to have at least one indicator')])
             if not intervention.planned_budget.total_unicef_contribution_local():

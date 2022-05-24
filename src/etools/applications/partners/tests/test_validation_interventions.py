@@ -14,6 +14,7 @@ from etools.applications.partners.tests.factories import (
     InterventionAmendmentFactory,
     InterventionAttachmentFactory,
     InterventionFactory,
+    InterventionResultLinkFactory,
     PartnerStaffFactory,
 )
 from etools.applications.partners.validation.interventions import (
@@ -30,6 +31,8 @@ from etools.applications.partners.validation.interventions import (
     transition_to_suspended,
     transition_to_terminated,
 )
+from etools.applications.reports.models import ResultType
+from etools.applications.reports.tests.factories import LowerResultFactory, ResultFactory
 from etools.applications.users.tests.factories import GroupFactory, UserFactory
 
 
@@ -815,6 +818,22 @@ class TestInterventionValid(BaseTenantTestCase):
                     "Cannot change fields while"
             ):
                 validator.check_rigid_fields(self.intervention)
+
+    def test_state_draft_invalid_cp_without_pd_output(self):
+        self.assertTrue(self.intervention.status, Intervention.DRAFT)
+        self.intervention.unicef_accepted = True
+        self.intervention.save(update_fields=['unicef_accepted'])
+        cp_output1 = ResultFactory(result_type__name=ResultType.OUTPUT)
+        result_link1 = InterventionResultLinkFactory(intervention=self.intervention, cp_output=cp_output1)
+        LowerResultFactory(result_link=result_link1)
+        cp_output2 = ResultFactory(result_type__name=ResultType.OUTPUT)
+        InterventionResultLinkFactory(intervention=self.intervention, cp_output=cp_output2)
+        self.assertTrue(self.intervention.result_links.count(), 2)
+        with self.assertRaisesRegexp(
+                StateValidationError,
+                "All CP Outputs need to have a PD output associated."
+        ):
+            self.validator.state_draft_valid(self.intervention)
 
     def test_state_signed_valid_invalid(self):
         """Invalid if unicef budget is 0"""
