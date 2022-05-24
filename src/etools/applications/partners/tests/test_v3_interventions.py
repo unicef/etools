@@ -536,6 +536,35 @@ class TestDetail(BaseInterventionTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertFalse(response.data['permissions']['required']['budget_owner'])
 
+    def test_planned_budget_total_supply(self):
+        count = 5
+        for __ in range(count):
+            InterventionSupplyItemFactory(
+                intervention=self.intervention,
+                unit_number=1,
+                unit_price=1,
+                provided_by=InterventionSupplyItem.PROVIDED_BY_PARTNER
+            )
+        for __ in range(count):
+            InterventionSupplyItemFactory(
+                intervention=self.intervention,
+                unit_number=1,
+                unit_price=2,
+                provided_by=InterventionSupplyItem.PROVIDED_BY_UNICEF
+            )
+        response = self.forced_auth_req(
+            "get",
+            reverse('pmp_v3:intervention-detail', args=[self.intervention.pk]),
+            user=self.user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('planned_budget', response.data)
+        self.assertEqual(response.data['planned_budget']['total_supply'],
+                         str(self.intervention.planned_budget.total_supply))
+        self.assertEqual(response.data['planned_budget']['total_supply'],
+                         str(self.intervention.planned_budget.in_kind_amount_local +
+                             self.intervention.planned_budget.partner_supply_local))
+
 
 class TestCreate(BaseInterventionTestCase):
     def test_post(self):
