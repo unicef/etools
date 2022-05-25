@@ -1,6 +1,7 @@
 import codecs
 import csv
 import decimal
+import string
 
 from django.contrib.auth import get_user_model
 from django.db import transaction
@@ -119,6 +120,7 @@ class InterventionSupplyItemUploadSerializer(serializers.Serializer):
             codecs.iterdecode(
                 self.validated_data.get("supply_items_file"),
                 "utf-8",
+                errors='ignore'
             ),
             delimiter=",",
         )
@@ -135,11 +137,14 @@ class InterventionSupplyItemUploadSerializer(serializers.Serializer):
                 except decimal.InvalidOperation:
                     raise ValidationError(f"Unable to process row {index}, bad number provided for `Indicative Price`")
 
+                title = ''.join([x if x in string.printable else '' for x in row["Product Title"]])
+                product_no = ''.join([x if x in string.printable else '' for x in row["Product Number"]])
+
                 data.append((
-                    row["Product Title"],
+                    title,
                     quantity,
                     price,
-                    row["Product Number"],
+                    product_no,
                 ))
         return data
 

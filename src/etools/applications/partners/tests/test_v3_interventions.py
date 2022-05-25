@@ -1560,6 +1560,31 @@ class TestSupplyItem(BaseInterventionTestCase):
             response.data["supply_items_file"]
         )
 
+    def test_upload_non_printable_char(self):
+        supply_items_file = SimpleUploadedFile(
+            'my_list.csv',
+            u'''"Product Number","Product Title","Product Description","Unit of Measure",Quantity,"Indicative Price","Total Price"\n
+            S9975020,"First aid kit A \x0a","First aid kit A",EA,1,28,28\n
+            '''.encode('utf-8'),
+            content_type="multipart/form-data",
+        )
+        response = self.forced_auth_req(
+            "post",
+            reverse(
+                "pmp_v3:intervention-supply-item-upload",
+                args=[self.intervention.pk],
+            ),
+            data={
+                "supply_items_file": supply_items_file,
+            },
+            request_format=None,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        new_item = self.intervention.supply_items.get(
+            unicef_product_number="S9975020",
+        )
+        self.assertEqual(new_item.title, "First aid kit A")
+
 
 class TestInterventionUpdate(BaseInterventionTestCase):
     def _test_patch(self, mapping):
