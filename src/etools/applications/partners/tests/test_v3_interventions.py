@@ -1585,6 +1585,32 @@ class TestSupplyItem(BaseInterventionTestCase):
         )
         self.assertEqual(new_item.title, "First aid kit A")
 
+    def test_upload_400_max_length_exceeded(self):
+        supply_items_file = SimpleUploadedFile(
+            'my_list.csv',
+            u'''"Product Number","Product Title","Product Description","Unit of Measure",Quantity,"Indicative Price","Total Price"\n
+            S9975020,"Product Title to exceed maximum length of 150 characters **********************************************************************************************", "First aid kit A",EA,1,28,28\n
+            '''.encode('utf-8'),
+            content_type="multipart/form-data",
+        )
+        response = self.forced_auth_req(
+            "post",
+            reverse(
+                "pmp_v3:intervention-supply-item-upload",
+                args=[self.intervention.pk],
+            ),
+            data={
+                "supply_items_file": supply_items_file,
+            },
+            request_format=None,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.data['supply_items_file'],
+            'S9975020:  value too long for type character varying(150)\n',
+        )
+
 
 class TestInterventionUpdate(BaseInterventionTestCase):
     def _test_patch(self, mapping):
