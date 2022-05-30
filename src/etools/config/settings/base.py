@@ -112,8 +112,8 @@ MEDIA_URL = '/media/'
 # DJANGO: GLOBALIZATION (I18N/L10N)
 LANGUAGE_CODE = 'en-us'
 LANGUAGES = [
-    ('en', _('English US')),
-    ('fr', _('French')),
+    ('en', _('English')),
+    ('fr', _('Français')),
 ]
 
 TIME_ZONE = 'UTC'
