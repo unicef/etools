@@ -498,9 +498,9 @@ class TestInterventionAmendmentDeleteView(BaseTenantTestCase):
         self.assertFalse(InterventionAmendment.objects.filter(pk=self.amendment.pk).exists())
         self.assertFalse(Intervention.objects.filter(pk=self.amendment.amended_intervention.pk).exists())
 
-    def test_delete_invalid(self):
-        self.intervention.status = Intervention.ACTIVE
-        self.intervention.save()
+    def test_delete_inactive(self):
+        self.amendment.is_active = False
+        self.amendment.save()
         response = self.forced_auth_req(
             'delete',
             self.url,
@@ -517,14 +517,14 @@ class TestInterventionAmendmentDeleteView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_delete_active(self):
-        self.intervention.status = 'active'
-        self.intervention.save()
+        self.amendment.is_active = True
+        self.amendment.save()
         response = self.forced_auth_req(
             'delete',
             self.url,
             user=self.unicef_staff,
         )
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_delete_active_focal_point(self):
         self.intervention.status = 'active'
