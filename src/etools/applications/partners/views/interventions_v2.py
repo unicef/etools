@@ -46,8 +46,7 @@ from etools.applications.partners.permissions import (
     PartnershipManagerPermission,
     PartnershipManagerRepPermission,
     UserIsNotPartnerStaffMemberPermission,
-    UserIsPartnershipManagerOrSeniorManager,
-    UserIsUnicefFocalPoint,
+    UserIsUnicefFocalPoint, InterventionAmendmentIsNotCompleted, IsInterventionBudgetOwnerPermission,
 )
 from etools.applications.partners.serializers.exports.interventions import (
     InterventionAmendmentExportFlatSerializer,
@@ -520,11 +519,12 @@ class InterventionAmendmentListAPIView(ExportModelMixin, ValidatorViewMixin, Lis
 class InterventionAmendmentDeleteView(FullInterventionSnapshotDeleteMixin, DestroyAPIView):
     permission_classes = (
         IsAuthenticated,
-        InterventionIsDraftPermission | UserIsUnicefFocalPoint | UserIsPartnershipManagerOrSeniorManager,
+        InterventionAmendmentIsNotCompleted,
+        UserIsUnicefFocalPoint | IsInterventionBudgetOwnerPermission,
     )
     queryset = InterventionAmendment.objects.all()
 
-    def get_intervention(self) -> Intervention:
+    def get_intervention(self):
         return self.get_root_object()
 
     @functools.cache
@@ -631,7 +631,7 @@ class InterventionResultLinkUpdateView(FullInterventionSnapshotDeleteMixin, Retr
     queryset = InterventionResultLink.objects.all()
 
     @functools.cache
-    def get_intervention(self) -> Intervention:
+    def get_intervention(self):
         return self.get_object().intervention
 
     def delete(self, request, *args, **kwargs):
@@ -687,7 +687,7 @@ class InterventionIndicatorsUpdateView(FullInterventionSnapshotDeleteMixin, Retr
     queryset = AppliedIndicator.objects.all()
 
     @functools.cache
-    def get_intervention(self) -> Intervention:
+    def get_intervention(self):
         return self.get_object().lower_result.result_link.intervention
 
     def delete(self, request, *args, **kwargs):
@@ -884,7 +884,7 @@ class InterventionPlannedVisitsDeleteView(FullInterventionSnapshotDeleteMixin, D
     def get_queryset(self):
         return super().get_queryset().filter(intervention=int(self.kwargs['intervention_pk']))
 
-    def get_intervention(self) -> Intervention:
+    def get_intervention(self):
         return self.get_root_object()
 
     @functools.cache

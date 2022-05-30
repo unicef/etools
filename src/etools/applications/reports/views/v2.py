@@ -220,7 +220,7 @@ class LowerResultsDeleteView(FullInterventionSnapshotDeleteMixin, DestroyAPIView
         InterventionIsDraftPermission | UserIsUnicefFocalPoint | UserIsPartnershipManagerOrSeniorManager,
     )
 
-    def get_intervention(self) -> Intervention:
+    def get_intervention(self):
         return self.get_root_object()
 
     @functools.cache

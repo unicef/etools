@@ -74,7 +74,7 @@ class FullInterventionSnapshotSerializerMixin(UserContextSerializerMixin):
     Save full intervention snapshot on save.
     """
 
-    def get_intervention(self) -> Intervention:
+    def get_intervention(self):
         raise NotImplementedError
 
     def prefetch_relations(self, instance: object) -> Intervention:

@@ -12,7 +12,7 @@ class FullInterventionSnapshotDeleteMixin:
     Save full intervention snapshot on delete.
     """
 
-    def get_intervention(self) -> Intervention:
+    def get_intervention(self):
         raise NotImplementedError
 
     def prefetch_relations(self, instance: object) -> Intervention:

@@ -105,7 +105,7 @@ class DetailedInterventionResponseMixin:
     detailed_intervention_methods = ['post', 'put', 'patch']
     detailed_intervention_serializer = InterventionDetailSerializer
 
-    def get_intervention(self) -> Intervention:
+    def get_intervention(self):
         raise NotImplementedError
 
     def dispatch(self, request, *args, **kwargs):
@@ -314,7 +314,7 @@ class PMPReviewMixin(DetailedInterventionResponseMixin, PMPBaseViewMixin):
     def get_root_object(self):
         return Intervention.objects.get(pk=self.kwargs["intervention_pk"])
 
-    def get_intervention(self) -> Intervention:
+    def get_intervention(self):
         return self.get_root_object()
 
     def get_queryset(self):
@@ -357,7 +357,7 @@ class PMPOfficerReviewBaseView(DetailedInterventionResponseMixin, PMPBaseViewMix
     def get_root_object(self):
         return Intervention.objects.get(pk=self.kwargs['intervention_pk'])
 
-    def get_intervention(self) -> Intervention:
+    def get_intervention(self):
         return self.get_root_object()
 
     def get_queryset(self):
@@ -408,7 +408,7 @@ class PMPInterventionSupplyItemMixin(
             intervention=self.get_pd(self.kwargs.get("intervention_pk")),
         )
 
-    def get_intervention(self) -> Intervention:
+    def get_intervention(self):
         return self.get_pd(self.kwargs.get("intervention_pk"))
 
     def get_root_object(self):
@@ -509,7 +509,7 @@ class InterventionActivityViewMixin(DetailedInterventionResponseMixin):
             pk=self.kwargs.get('intervention_pk'),
         ).first()
 
-    def get_intervention(self) -> Intervention:
+    def get_intervention(self):
         return self.get_root_object()
 
     def get_parent_object(self):
@@ -548,7 +548,7 @@ class InterventionRiskDeleteView(FullInterventionSnapshotDeleteMixin, DestroyAPI
     def get_root_object(self):
         return Intervention.objects.filter(pk=self.kwargs.get('intervention_pk')).first()
 
-    def get_intervention(self) -> Intervention:
+    def get_intervention(self):
         return self.get_root_object()
 
     def get_queryset(self):
@@ -574,7 +574,7 @@ class PMPInterventionAttachmentListCreateView(DetailedInterventionResponseMixin,
     def perform_create(self, serializer):
         serializer.save(intervention=self.get_root_object())
 
-    def get_intervention(self) -> Intervention:
+    def get_intervention(self):
         return self.get_root_object()
 
 
@@ -597,7 +597,7 @@ class PMPInterventionAttachmentUpdateDeleteView(
     def get_queryset(self):
         return super().get_queryset().filter(intervention=self.get_root_object())
 
-    def get_intervention(self) -> Intervention:
+    def get_intervention(self):
         return self.get_root_object()
 
 
@@ -615,7 +615,7 @@ class PMPInterventionIndicatorsUpdateView(
             self._intervention = self.get_object().lower_result.result_link.intervention
         return self._intervention
 
-    def get_intervention(self) -> Intervention:
+    def get_intervention(self):
         return self.get_root_object()
 
 
