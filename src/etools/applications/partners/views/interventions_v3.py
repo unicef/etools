@@ -2,7 +2,7 @@ import functools
 from copy import copy
 
 from django.conf import settings
-from django.db import transaction
+from django.db import transaction, utils
 from django.http import HttpResponse
 from django.utils.translation import ugettext_lazy as _
 
@@ -476,14 +476,20 @@ class PMPInterventionSupplyItemUploadView(
                 item.unit_number += unit_number
                 item.save()
             else:
-                InterventionSupplyItem.objects.create(
-                    intervention=intervention,
-                    title=title,
-                    unit_number=unit_number,
-                    unit_price=unit_price,
-                    unicef_product_number=product_number,
-                    provided_by=InterventionSupplyItem.PROVIDED_BY_UNICEF,
-                )
+                try:
+                    InterventionSupplyItem.objects.create(
+                        intervention=intervention,
+                        title=title,
+                        unit_number=unit_number,
+                        unit_price=unit_price,
+                        unicef_product_number=product_number,
+                        provided_by=InterventionSupplyItem.PROVIDED_BY_UNICEF,
+                    )
+                except utils.DataError as err:
+                    return Response(
+                        {"supply_items_file": f"{product_number}:  {str(err)}"},
+                        status.HTTP_400_BAD_REQUEST,
+                    )
         # make sure we get the correct totals
         intervention.refresh_from_db()
         return Response(
