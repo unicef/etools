@@ -1620,6 +1620,7 @@ class TestInterventionBudget(BaseTenantTestCase):
         self.assertEqual(budget.unicef_cash_local, 900 + 60)
         self.assertEqual(budget.in_kind_amount_local, 30)
         self.assertEqual(budget.partner_supply_local, 40)
+        self.assertEqual(budget.total_supply, 30 + 40)
         self.assertEqual(budget.total_partner_contribution_local, 1240)
         self.assertEqual(budget.total_local, 1200 + 900 + 60 + 40 + 30)
         self.assertEqual(

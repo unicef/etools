@@ -7,7 +7,13 @@ from unicef_restlib.fields import SeparatedReadWriteField
 
 from etools.applications.partners.models import InterventionResultLink, InterventionReview, PRCOfficerInterventionReview
 from etools.applications.partners.serializers.intervention_snapshot import FullInterventionSnapshotSerializerMixin
-from etools.applications.reports.models import InterventionActivity, LowerResult, Result, ResultType
+from etools.applications.reports.models import (
+    InterventionActivity,
+    InterventionActivityItem,
+    LowerResult,
+    Result,
+    ResultType,
+)
 from etools.applications.users.serializers_v3 import MinimalUserSerializer
 
 
@@ -214,6 +220,8 @@ class UNICEFInterventionLowerResultSerializer(
                         LowerResult.renumber_results_for_result_link(old_link)
                         for result in old_link.ll_results.all():
                             InterventionActivity.renumber_activities_for_result(result)
+                            for activity in result.activities.all():
+                                InterventionActivityItem.renumber_items_for_activity(activity)
 
                 # result link was updated, it means lower result code is not actual anymore and should be recalculated
                 if old_link_deleted:
@@ -222,6 +230,8 @@ class UNICEFInterventionLowerResultSerializer(
                 LowerResult.renumber_results_for_result_link(result_link)
                 for result in result_link.ll_results.all():
                     InterventionActivity.renumber_activities_for_result(result)
+                    for activity in result.activities.all():
+                        InterventionActivityItem.renumber_items_for_activity(activity)
         elif cp_output is None and 'cp_output_id' in result_link_data:
             if instance.result_link.cp_output is not None:
                 instance.result_link = InterventionResultLink.objects.get_or_create(
