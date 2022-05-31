@@ -126,7 +126,6 @@ MIDDLEWARE = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'etools.applications.core.auth.CustomSocialAuthExceptionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -134,6 +133,7 @@ MIDDLEWARE = (
     'corsheaders.middleware.CorsMiddleware',
     'etools.applications.core.middleware.EToolsTenantMiddleware',
     'waffle.middleware.WaffleMiddleware',  # needs request.tenant from EToolsTenantMiddleware
+    'etools.applications.core.middleware.EToolsLocaleMiddleware',
 )
 WSGI_APPLICATION = 'etools.config.wsgi.application'
 
