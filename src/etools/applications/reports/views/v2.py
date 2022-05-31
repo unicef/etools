@@ -31,10 +31,8 @@ from etools.applications.core.renderers import CSVFlatRenderer
 from etools.applications.partners.filters import PartnerScopeFilter
 from etools.applications.partners.models import Intervention, InterventionResultLink
 from etools.applications.partners.permissions import (
-    InterventionIsDraftPermission,
+    intervention_field_is_editable_permission,
     PartnershipManagerPermission,
-    UserIsPartnershipManagerOrSeniorManager,
-    UserIsUnicefFocalPoint,
 )
 from etools.applications.partners.views.intervention_snapshot import FullInterventionSnapshotDeleteMixin
 from etools.applications.reports.models import (
@@ -215,10 +213,10 @@ class LowerResultsListAPIView(ExportModelMixin, ListAPIView):
 
 class LowerResultsDeleteView(FullInterventionSnapshotDeleteMixin, DestroyAPIView):
     queryset = LowerResult.objects.all().select_related('result_link__intervention')
-    permission_classes = (
+    permission_classes = [
         IsAuthenticated,
-        InterventionIsDraftPermission | UserIsUnicefFocalPoint | UserIsPartnershipManagerOrSeniorManager,
-    )
+        intervention_field_is_editable_permission('pd_outputs')
+    ]
 
     def get_intervention(self):
         return self.get_root_object()
