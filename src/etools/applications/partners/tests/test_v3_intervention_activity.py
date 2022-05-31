@@ -19,6 +19,7 @@ from etools.applications.reports.tests.factories import (
     LowerResultFactory,
 )
 from etools.applications.users.tests.factories import UserFactory
+from etools.libraries.tests.db_utils import CaptureQueries
 
 
 class BaseTestCase(BaseTenantTestCase):
@@ -109,6 +110,7 @@ class TestFunctionality(BaseTestCase):
 
     def test_set_bad_cash_values_having_items(self):
         InterventionActivityItemFactory(activity=self.activity, unicef_cash=8, cso_cash=5)
+        self.activity.update_cash()
         response = self.forced_auth_req(
             'patch', self.detail_url,
             user=self.user,
@@ -165,6 +167,40 @@ class TestFunctionality(BaseTestCase):
         self.assertEqual(self.activity.items.count(), 2)
         self.assertEqual(len(response.data['items']), 2)
         self.assertEqual(InterventionActivityItem.objects.filter(id=item_to_remove.id).exists(), False)
+
+    def test_set_many_items_queries(self):
+        items = [
+            InterventionActivityItem(
+                activity=self.activity, name=str(i), unit='test',
+                no_units=1, unit_price=42, unicef_cash=22, cso_cash=20,
+            )
+            for i in range(100)
+        ]
+        InterventionActivityItem.objects.bulk_create(items)
+        self.activity.update_cash()
+
+        with CaptureQueries() as cq:
+            response = self.forced_auth_req(
+                'patch', self.detail_url,
+                user=self.user,
+                data={
+                    'is_active': True,
+                    'items': [
+                        {
+                            'id': item.id, 'name': item.name,
+                            'unit': item.unit, 'no_units': str(item.no_units), 'unit_price': str(item.unit_price),
+                            'unicef_cash': str(item.unicef_cash), 'cso_cash': str(item.cso_cash),
+                        }
+                        for item in items
+                    ],
+                }
+            )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+
+        # initially there were around 2k db queries, so ~200 is more or less fine.
+        # they are mostly caused by snapshot + heavy permissions
+        self.assertLess(len(cq.queries), 200, '\n'.join((f'{i}: {q["sql"]}' for i, q in enumerate(cq.queries))))
 
     def test_budget_validation(self):
         item_to_update = InterventionActivityItemFactory(
