@@ -1,3 +1,4 @@
+from django.conf.global_settings import LANGUAGES
 from django.contrib.auth import get_user_model
 from django.db import connection
 from django.utils.translation.trans_real import get_languages
@@ -87,12 +88,12 @@ class CountryDetailSerializer(serializers.ModelSerializer):
 
 
 class UserPreferencesSerializer(serializers.Serializer):
-    language = serializers.ChoiceField(choices=get_languages())
+    language = serializers.ChoiceField(choices=dict(LANGUAGES))
 
 
 class ProfileRetrieveUpdateSerializer(serializers.ModelSerializer):
     countries_available = SimpleCountrySerializer(many=True, read_only=True)
-    languages_available = serializers.SerializerMethodField()
+
     supervisor = serializers.CharField(read_only=True)
     groups = GroupSerializer(source="user.groups", read_only=True, many=True)
     supervisees = serializers.PrimaryKeyRelatedField(source='user.supervisee', many=True, read_only=True)
@@ -127,9 +128,6 @@ class ProfileRetrieveUpdateSerializer(serializers.ModelSerializer):
 
     def get_is_unicef_user(self, obj):
         return obj.user.is_unicef_user()
-
-    def get_languages_available(self, obj):
-        return get_languages()
 
     def update(self, instance, validated_data):
         user = validated_data.pop('user', None)
