@@ -286,6 +286,52 @@ class TestMyProfileAPIView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["preferences"], self.unicef_staff.preferences)
 
+    def test_patch_preferences_unregistered_language(self):
+        self.assertEqual(
+            self.unicef_staff.preferences,
+            {"language": settings.LANGUAGE_CODE}
+        )
+        data = {
+            "preferences": {
+                "language": "nonsense"
+            }
+        }
+        response = self.forced_auth_req(
+            'patch',
+            self.url,
+            user=self.unicef_staff,
+            data=data
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertDictEqual(
+            response.data,
+            {
+                'preferences': {'language': ['"nonsense" is not a valid choice.']}
+            }
+        )
+
+    def test_patch_nonexistent_preference(self):
+        self.assertEqual(
+            self.unicef_staff.preferences,
+            {"language": settings.LANGUAGE_CODE}
+        )
+        data = {
+            "preferences": {
+                "nonexistent": "fr"
+            }
+        }
+        response = self.forced_auth_req(
+            'patch',
+            self.url,
+            user=self.unicef_staff,
+            data=data
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            self.unicef_staff.preferences,
+            {"language": settings.LANGUAGE_CODE}
+        )
+
 
 class TestExternalUserAPIView(BaseTenantTestCase):
     def setUp(self):
