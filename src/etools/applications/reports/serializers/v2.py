@@ -537,7 +537,7 @@ class InterventionActivityItemSerializer(serializers.ModelSerializer):
             try:
                 instance = [i for i in activity.items.all() if i.id == attrs['id']][0]
             except IndexError:
-                self.fail(_('Unable to find item for id: {}'.format(attrs['id'])))
+                raise ValidationError([_('Unable to find item for id: {}').format(attrs['id'])])
 
         unit_price = attrs.get('unit_price', instance.unit_price if instance else None)
         no_units = attrs.get('no_units', instance.no_units if instance else None)

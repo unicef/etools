@@ -168,6 +168,33 @@ class TestFunctionality(BaseTestCase):
         self.assertEqual(len(response.data['items']), 2)
         self.assertEqual(InterventionActivityItem.objects.filter(id=item_to_remove.id).exists(), False)
 
+    def test_set_items_validate_bad_id(self):
+        valid_item_to_update = InterventionActivityItemFactory(activity=self.activity)
+        invalid_item_to_update = InterventionActivityItemFactory(activity__result=self.activity.result)
+
+        response = self.forced_auth_req(
+            'patch', self.detail_url,
+            user=self.user,
+            data={
+                'items': [
+                    {
+                        'id': valid_item_to_update.id, 'name': 'first_item',
+                        'unit': 'item', 'no_units': 1, 'unit_price': '3.0',
+                        'unicef_cash': '1.0', 'cso_cash': '2.0',
+                    },
+                    {
+                        'id': invalid_item_to_update.id, 'name': 'second_item',
+                        'unit': 'item', 'no_units': 1, 'unit_price': '3.0',
+                        'unicef_cash': '1.0', 'cso_cash': '2.0',
+                    },
+                ],
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
+        self.assertEqual({}, response.data['items'][0])
+        self.assertIn('Unable to find item', response.data['items'][1]['non_field_errors'][0])
+
     def test_set_many_items_queries(self):
         items = [
             InterventionActivityItem(
