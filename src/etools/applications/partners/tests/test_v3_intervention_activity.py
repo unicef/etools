@@ -166,6 +166,7 @@ class TestFunctionality(BaseTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertEqual(self.activity.items.count(), 2)
         self.assertEqual(len(response.data['items']), 2)
+        self.assertEqual(response.data['items'][0]['name'], 'new')
         self.assertEqual(InterventionActivityItem.objects.filter(id=item_to_remove.id).exists(), False)
 
     def test_set_items_validate_bad_id(self):
@@ -249,7 +250,7 @@ class TestFunctionality(BaseTestCase):
             response.data['items'][0]['non_field_errors'],
         )
 
-    def test_budget_item_validation_rouding_ok(self):
+    def test_budget_item_validation_rounding_ok(self):
         item_to_update = InterventionActivityItemFactory(activity=self.activity)
 
         response = self.forced_auth_req(

@@ -529,26 +529,97 @@ class InterventionActivityItemSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         attrs = super().validate(attrs)
 
-        instance = self.instance
-        if not instance and 'id' in attrs and hasattr(self, 'root') and self.root.instance:
-            activity = self.root.instance
-            assert hasattr(activity, '_prefetched_objects_cache') and 'items' in activity._prefetched_objects_cache, \
-                'items has to be prefetched for activity'
-            try:
-                instance = [i for i in activity.items.all() if i.id == attrs['id']][0]
-            except IndexError:
-                raise ValidationError([_('Unable to find item for id: {}').format(attrs['id'])])
-
-        unit_price = attrs.get('unit_price', instance.unit_price if instance else None)
-        no_units = attrs.get('no_units', instance.no_units if instance else None)
-        unicef_cash = attrs.get('unicef_cash', instance.unicef_cash if instance else None)
-        cso_cash = attrs.get('cso_cash', instance.cso_cash if instance else None)
+        unit_price = attrs.get('unit_price', self.instance.unit_price if self.instance else None)
+        no_units = attrs.get('no_units', self.instance.no_units if self.instance else None)
+        unicef_cash = attrs.get('unicef_cash', self.instance.unicef_cash if self.instance else None)
+        cso_cash = attrs.get('cso_cash', self.instance.cso_cash if self.instance else None)
 
         # unit_price * no_units can contain more decimal places than we're able to save
         if abs((unit_price * no_units) - (unicef_cash + cso_cash)) > 0.01:
             self.fail('invalid_budget')
 
         return attrs
+
+
+class InterventionActivityItemBulkUpdateListSerializer(serializers.ListSerializer):
+    """
+    The purpose of this serializer is to wrap items update logic for activity
+    yet having db queries optimized: reuse prefetched objects when it's possible + use bulk_create instead of each .save
+    """
+    @property
+    def activity(self):
+        return self.root.instance
+
+    def get_instance(self, instance_id):
+        assert hasattr(self.activity, '_prefetched_objects_cache'), 'items has to be prefetched for activity'
+        assert 'items' in self.activity._prefetched_objects_cache, 'items has to be prefetched for activity'
+
+        try:
+            return [i for i in self.activity.items.all() if i.id == instance_id][0]
+        except IndexError:
+            raise ValidationError([_('Unable to find item for id: {}').format(instance_id)])
+
+    def save(self, items, **kwargs):
+        items = [
+            {**attrs, **kwargs} for attrs in items
+        ]
+
+        pks_to_update = [item['id'] for item in items if 'id' in item]
+        instances_to_create = []
+        instances_to_update = {pk: self.get_instance(pk) for pk in pks_to_update}
+        missing_pks_to_update = set(pks_to_update) - set(instances_to_update.keys())
+        if missing_pks_to_update:
+            raise ValidationError({'items': [_('Unable to find items: {}'.format(', '.join(missing_pks_to_update)))]})
+
+        # items already validated, so we're free to use bulk operations instead of serializer.save
+        for item in items:
+            if 'id' in item:
+                for key, value in item.items():
+                    setattr(instances_to_update[item['id']], key, value)
+            else:
+                instances_to_create.append(InterventionActivityItem(**item))
+
+        fields_to_update = list(InterventionActivityItemSerializer.Meta.fields)
+        fields_to_update.remove('id')
+        InterventionActivityItem.objects.bulk_update(instances_to_update.values(), fields=fields_to_update)
+        created_instances = InterventionActivityItem.objects.bulk_create(instances_to_create)
+
+        # cleanup, remove unused options
+        updated_pks = list(instances_to_update.keys()) + [i.id for i in created_instances]
+        removed_items = self.activity.items.exclude(pk__in=updated_pks).delete()
+        if removed_items:
+            # if items are removed, cash also should be recalculated
+            self.activity.update_cash()
+        InterventionActivityItem.renumber_items_for_activity(self.activity)
+
+
+class InterventionActivityItemBulkUpdateSerializer(InterventionActivityItemSerializer):
+    class Meta(InterventionActivityItemSerializer.Meta):
+        list_serializer_class = InterventionActivityItemBulkUpdateListSerializer
+
+    @property
+    def instance(self):
+        """
+        list serializer don't set instance for children directly, so we need to get it manually
+        """
+        if getattr(self, '_instance', None):
+            return self._instance
+
+        if 'id' not in self.initial_data:
+            return None
+        return self.parent.get_instance(self.initial_data['id'])
+
+    @instance.setter
+    def instance(self, value):
+        """
+        just dummy setter, to bypass `self.instance = None` step during initialization
+        """
+        self._instance = value
+
+    def validate(self, attrs):
+        # remember data to use for fetching instance
+        self.initial_data = attrs
+        return super().validate(attrs)
 
 
 class InterventionTimeFrameSerializer(serializers.ModelSerializer):
@@ -565,7 +636,7 @@ class InterventionTimeFrameSerializer(serializers.ModelSerializer):
 
 
 class InterventionActivityDetailSerializer(FullInterventionSnapshotSerializerMixin, serializers.ModelSerializer):
-    items = InterventionActivityItemSerializer(many=True, required=False)
+    items = InterventionActivityItemBulkUpdateSerializer(many=True, required=False)
     partner_percentage = serializers.DecimalField(max_digits=5, decimal_places=2, read_only=True)
 
     class Meta:
@@ -601,54 +672,24 @@ class InterventionActivityDetailSerializer(FullInterventionSnapshotSerializerMix
     def create(self, validated_data):
         options = validated_data.pop('items', None)
         time_frames = validated_data.pop('time_frames', None)
-        instance = super().create(validated_data)
-        self.set_items(instance, options)
-        self.set_time_frames(instance, time_frames)
-        return instance
+        self.instance = super().create(validated_data)
+        self.set_items(self.instance, options)
+        self.set_time_frames(self.instance, time_frames)
+        return self.instance
 
     @transaction.atomic
     def update(self, instance, validated_data):
         options = validated_data.pop('items', None)
         time_frames = validated_data.pop('time_frames', None)
-        instance = super().update(instance, validated_data)
-        self.set_items(instance, options)
-        self.set_time_frames(instance, time_frames)
-        return instance
+        self.instance = super().update(instance, validated_data)
+        self.set_items(self.instance, options)
+        self.set_time_frames(self.instance, time_frames)
+        return self.instance
 
     def set_items(self, instance, items):
-        if items is None:
+        if not items:
             return
-
-        pks_to_update = [item['id'] for item in items if 'id' in item]
-        instances_to_create = []
-        instances_to_update = {
-            i.pk: i
-            for i in InterventionActivityItem.objects.filter(activity=instance, pk__in=pks_to_update)
-        }
-        missing_pks_to_update = set(pks_to_update) - set(instances_to_update.keys())
-        if missing_pks_to_update:
-            raise ValidationError({'items': [_('Unable to find items: {}'.format(', '.join(missing_pks_to_update)))]})
-
-        # items already validated, so we're free to use bulk operations instead of serializer.save
-        for item in items:
-            if 'id' in item:
-                for key, value in item.items():
-                    setattr(instances_to_update[item['id']], key, value)
-            else:
-                instances_to_create.append(InterventionActivityItem(activity=instance, **item))
-
-        fields_to_update = list(InterventionActivityItemSerializer.Meta.fields)
-        fields_to_update.remove('id')
-        InterventionActivityItem.objects.bulk_update(instances_to_update.values(), fields=fields_to_update)
-        created_instances = InterventionActivityItem.objects.bulk_create(instances_to_create)
-
-        # cleanup, remove unused options
-        updated_pks = list(instances_to_update.keys()) + [i.id for i in created_instances]
-        removed_items = instance.items.exclude(pk__in=updated_pks).delete()
-        if removed_items:
-            # if items are removed, cash also should be recalculated
-            instance.update_cash()
-        InterventionActivityItem.renumber_items_for_activity(instance)
+        self.fields['items'].save(items, activity=instance)
 
     def set_time_frames(self, instance, time_frames):
         if time_frames is None:
