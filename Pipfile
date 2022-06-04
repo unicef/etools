@@ -73,7 +73,7 @@ social-auth-app-django = "==5.0"
 social-auth-core = {extras = ["azuread"],version = "==4.2"}
 tenant-schemas-celery = "==2.0.0"
 unicef-attachments = "==0.11"
-unicef-djangolib = "==0.5.4"
+unicef-djangolib = "==0.6"
 unicef-locations = "==4.0.1"
 unicef-notification = "==1.1"
 unicef-restlib = "==0.7"
