@@ -98,6 +98,7 @@ urlpatterns = [
     re_path(r'^api/v2/activity/', include('unicef_snapshot.urls')),
     re_path(r'^api/v2/environment/', include('etools.applications.environment.urls_v2')),
     re_path(r'^api/v2/attachments/', include('unicef_attachments.urls')),
+    re_path(r'^security/', include('unicef_security.urls')),
 
     # ***************  API version 3  ******************
     re_path(r'^api/v3/users/', include('etools.applications.users.urls_v3', namespace='users_v3')),
