@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "e64cf0f85bde902ceb0e195b38d6178a885abc2c279d4d1de69f061475603bc7"
+            "sha256": "cf4250071c053c1de6898dcd29b11b9e6fafc2e0b976bd364ee7f1b78cf71e69"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -281,6 +281,12 @@
             "index": "pypi",
             "version": "==3.2.13"
         },
+        "django-admin-extra-buttons": {
+            "hashes": [
+                "sha256:893c84d8b1718e9ab62ee1436e7ab10a706a8959b1eb92e01b4c0a5d4d5df43b"
+            ],
+            "version": "==1.4.1"
+        },
         "django-admin-extra-urls": {
             "hashes": [
                 "sha256:b896eebc24779081f5bb5015c41fb12a741c61d520eec88688749e4991f7cbf5"
@@ -326,6 +332,13 @@
             "index": "pypi",
             "version": "==2.3.1"
         },
+        "django-constance": {
+            "hashes": [
+                "sha256:758e190755f05b12e9729933239b87053aa1f790071a402cc02034cb23c8624e",
+                "sha256:c78eed0f75eb003836db84345fa7df0c529b47b2c4e04ac84fdf8558b3338a28"
+            ],
+            "version": "==2.9.0"
+        },
         "django-contrib-comments": {
             "hashes": [
                 "sha256:2ca79060bbc8fc5b636981ef6e50f35ab83649af75fc1be47bf770636be3271c",
@@ -341,6 +354,13 @@
             ],
             "index": "pypi",
             "version": "==3.11.0"
+        },
+        "django-countries": {
+            "hashes": [
+                "sha256:0df6d34193667c2343da8935cbfb8a2bd4fb0c97baf01ac10db4628ba1557a82",
+                "sha256:27fc8a0f66a87c9d839493f3926b4e0f4dd873ef66465aa8cd3e953f99758cc9"
+            ],
+            "version": "==7.3.2"
         },
         "django-debug-toolbar": {
             "hashes": [
@@ -436,6 +456,13 @@
             ],
             "index": "pypi",
             "version": "==3.5"
+        },
+        "django-picklefield": {
+            "hashes": [
+                "sha256:15ccba592ca953b9edf9532e64640329cd47b136b7f8f10f2939caa5f9ce4287",
+                "sha256:3c702a54fde2d322fe5b2f39b8f78d9f655b8f77944ab26f703be6c0ed335a35"
+            ],
+            "version": "==3.0.1"
         },
         "django-post-office": {
             "hashes": [
@@ -1437,6 +1464,14 @@
             ],
             "index": "pypi",
             "version": "==0.7"
+        },
+        "unicef-security": {
+            "hashes": [
+                "sha256:475d649c6287d97005e12c853a10bac39fa02cab9e36bce93a5d682127b688a6",
+                "sha256:4aae14e907748e7f3715acfb48b19156b4ca19bbb86142c0e5d54a2fbb508623"
+            ],
+            "index": "pypi",
+            "version": "==1.1"
         },
         "unicef-snapshot": {
             "hashes": [

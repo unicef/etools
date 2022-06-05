@@ -3,12 +3,15 @@ from unittest.mock import Mock, patch
 from django.contrib.auth import get_user_model
 from django.test import SimpleTestCase
 
+from unicef_security import pipeline
+
 from etools.applications.core import auth
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.users.tests.factories import UserFactory
 
-SOCIAL_AUTH_PATH = "etools.applications.core.auth.social_auth"
-SOCIAL_USER_PATH = "etools.applications.core.auth.social_core_user"
+SOCIAL_AUTH_PATH = "unicef_security.pipeline.social_auth"
+SOCIAL_USER_PATH = "unicef_security.pipeline.social_core_user"
+SOCIAL_ETOOLS_USER_PATH = "etools.applications.core.auth.social_core_user"
 
 
 class TestSocialDetails(SimpleTestCase):
@@ -27,7 +30,7 @@ class TestSocialDetails(SimpleTestCase):
             'details': self.details
         }
         with patch(SOCIAL_AUTH_PATH, self.mock_social):
-            r = auth.social_details(
+            r = pipeline.social_details(
                 None,
                 {},
                 {"idp": "123", "email": "test@example.com"}
@@ -42,7 +45,7 @@ class TestSocialDetails(SimpleTestCase):
             'details': self.details
         }
         with patch(SOCIAL_AUTH_PATH, self.mock_social):
-            r = auth.social_details(
+            r = pipeline.social_details(
                 None,
                 {},
                 {"idp": "123", "email": "new@example.com"}
@@ -63,7 +66,7 @@ class TestGetUsername(BaseTenantTestCase):
 
     def test_user_exists(self):
         self.user = UserFactory(username=self.details["email"])
-        r = auth.get_username(None, self.details, None)
+        r = pipeline.get_username(None, self.details, None)
         self.assertEqual(r, {"username": self.details["email"]})
 
 
@@ -81,7 +84,7 @@ class TestUserDetails(BaseTenantTestCase):
 
     def test_no_user(self):
         with patch(SOCIAL_USER_PATH, self.mock_social):
-            r = auth.user_details("strategy", self.details, None, None)
+            r = pipeline.user_details("strategy", self.details, None, None)
         self.assertEqual(r, "Returned")
         self.mock_social.user_details.assert_called_with(
             "strategy",
@@ -97,7 +100,7 @@ class TestUserDetails(BaseTenantTestCase):
         )
         self.details["business_area_code"] = user.profile.country.business_area_code
         with patch(SOCIAL_USER_PATH, self.mock_social):
-            r = auth.user_details("strategy", self.details, None, user)
+            r = pipeline.user_details("strategy", self.details, None, user)
         self.assertEqual(r, "Returned")
         self.mock_social.user_details.assert_called_with(
             "strategy",
@@ -116,7 +119,7 @@ class TestUserDetails(BaseTenantTestCase):
         user.profile.country = None
         user.profile.save()
         self.assertIsNone(user.profile.country)
-        with patch(SOCIAL_USER_PATH, self.mock_social):
+        with patch(SOCIAL_ETOOLS_USER_PATH, self.mock_social):
             r = auth.user_details("strategy", self.details, None, user)
         self.assertEqual(r, "Returned")
         self.mock_social.user_details.assert_called_with(
@@ -139,7 +142,7 @@ class TestUserDetails(BaseTenantTestCase):
         self.details["business_area_code"] = country.business_area_code
         self.details["idp"] = "UNICEF Azure AD"
         self.assertFalse(user.is_staff)
-        with patch(SOCIAL_USER_PATH, self.mock_social):
+        with patch(SOCIAL_ETOOLS_USER_PATH, self.mock_social):
             r = auth.user_details("strategy", self.details, None, user)
         self.assertEqual(r, "Returned")
         self.mock_social.user_details.assert_called_with(

@@ -25,7 +25,7 @@ REST_FRAMEWORK['DEFAULT_AUTHENTICATION_CLASSES'] = (
 
 AUTHENTICATION_BACKENDS = (
     # 'social_core.backends.azuread_b2c.AzureADB2COAuth2',
-    'etools.applications.core.auth.CustomAzureADBBCOAuth2',
+    'unicef_security.backends.UNICEFAzureADB2COAuth2',
     'django.contrib.auth.backends.ModelBackend',
 )
 

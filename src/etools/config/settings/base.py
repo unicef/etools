@@ -118,7 +118,7 @@ USE_TZ = True
 # DJANGO: HTTP
 MIDDLEWARE = (
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'etools.applications.core.auth.CustomSocialAuthExceptionMiddleware',
+    'unicef_security.middleware.UNICEFSocialAuthExceptionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -196,6 +196,7 @@ SHARED_APPS = (
     'etools.applications.tpm.tpmpartners',
     'waffle',
     'etools.applications.permissions2',
+    'unicef_security',
     'unicef_notification',
     'etools_offline',
     'etools.applications.offline',
@@ -282,7 +283,7 @@ ROOT_URLCONF = 'etools.config.urls'
 # CONTRIB: AUTH
 AUTHENTICATION_BACKENDS = (
     # 'social_core.backends.azuread_b2c.AzureADB2COAuth2',
-    'etools.applications.core.auth.CustomAzureADBBCOAuth2',
+    'unicef_security.backends.UNICEFAzureADB2COAuth2',
     'django.contrib.auth.backends.ModelBackend',
 )
 AUTH_USER_MODEL = 'users.User'
@@ -509,6 +510,7 @@ SOCIAL_AUTH_SANITIZE_REDIRECTS = False
 SOCIAL_AUTH_JSONFIELD_ENABLED = True
 POLICY = os.getenv('AZURE_B2C_POLICY_NAME', "b2c_1A_UNICEF_PARTNERS_signup_signin")
 
+TENANT_NAME = os.getenv('AZURE_B2C_TENANT_NAME', 'unicefpartners')
 TENANT_ID = os.getenv('AZURE_B2C_TENANT', 'unicefpartners')
 SCOPE = ['openid', 'email']
 IGNORE_DEFAULT_SCOPE = True
@@ -521,15 +523,15 @@ LOGIN_ERROR_URL = "/workspace_inactive"
 SOCIAL_PASSWORD_RESET_POLICY = os.getenv('AZURE_B2C_PASS_RESET_POLICY', "B2C_1_PasswordResetPolicy")
 SOCIAL_AUTH_PIPELINE = (
     # 'social_core.pipeline.social_auth.social_details',
-    'etools.applications.core.auth.social_details',
+    'unicef_security.pipeline.social_details',
     'social_core.pipeline.social_auth.social_uid',
     # allows based on emails being listed in 'WHITELISTED_EMAILS' or 'WHITELISTED_DOMAINS'
     'social_core.pipeline.social_auth.auth_allowed',
     'social_core.pipeline.social_auth.social_user',
     # 'social_core.pipeline.user.get_username',
-    'etools.applications.core.auth.get_username',
+    'unicef_security.pipeline.get_username',
     'social_core.pipeline.social_auth.associate_by_email',
-    'etools.applications.core.auth.create_user',
+    'unicef_security.pipeline.create_user',
     'social_core.pipeline.social_auth.associate_user',
     'social_core.pipeline.social_auth.load_extra_data',
     'social_core.pipeline.user.user_details',
