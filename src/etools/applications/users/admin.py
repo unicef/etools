@@ -5,6 +5,7 @@ from django.db import connection
 from django.http.response import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
+from django.utils.translation import gettext_lazy as _
 
 from admin_extra_urls.decorators import button
 from admin_extra_urls.mixins import ExtraUrlMixin
@@ -175,6 +176,14 @@ class ProfileAdmin(admin.ModelAdmin):
 
 
 class UserAdminPlus(ExtraUrlMixin, UserAdmin):
+    fieldsets = UserAdmin.fieldsets + (
+        (_('User Preferences'), {
+            'fields':
+                (
+                    'preferences',
+                )
+        }),
+    )
     inlines = [ProfileInline]
     readonly_fields = ('date_joined',)
 
