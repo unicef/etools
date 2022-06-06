@@ -1,7 +1,6 @@
 from django.conf.global_settings import LANGUAGES
 from django.contrib.auth import get_user_model
 from django.db import connection
-from django.utils.translation.trans_real import get_languages
 
 from rest_framework import serializers
 
