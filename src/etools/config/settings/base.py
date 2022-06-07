@@ -117,6 +117,7 @@ USE_TZ = True
 
 # DJANGO: HTTP
 MIDDLEWARE = (
+    'unicef_djangolib.middleware.HealthCheckMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'etools.applications.core.auth.CustomSocialAuthExceptionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -156,6 +157,7 @@ FIXTURE_DIRS = (
     os.path.join(os.path.dirname(etools.__file__), 'applications', 'core', 'data'),
 )
 SHARED_APPS = (
+    'unicef_djangolib',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -578,3 +580,6 @@ ETOOLS_OFFLINE_TOKEN = get_from_secrets_or_env('ETOOLS_OFFLINE_TOKEN', '')
 ETOOLS_OFFLINE_TASK_APP = "etools.config.celery.get_task_app"
 
 UNICEF_LOCATIONS_MODEL = 'locations.Location'
+
+PROJECT_NAME = etools.NAME
+PROJECT_VERSION = etools.VERSION

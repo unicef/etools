@@ -92,4 +92,4 @@ class LogIssueFactory(factory.django.DjangoModelFactory):
             return
 
         for i in range(count):
-            AttachmentFactory(content_object=self)
+            AttachmentFactory(content_object=self, code='attachments')
