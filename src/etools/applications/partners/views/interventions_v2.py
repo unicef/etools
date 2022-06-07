@@ -13,7 +13,7 @@ from etools_validator.mixins import ValidatorViewMixin
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import DestroyAPIView, ListAPIView, ListCreateAPIView, RetrieveUpdateDestroyAPIView
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -42,11 +42,13 @@ from etools.applications.partners.models import (
     InterventionResultLink,
 )
 from etools.applications.partners.permissions import (
-    PARTNERSHIP_MANAGER_GROUP,
+    InterventionAmendmentIsNotCompleted,
+    InterventionIsDraftPermission,
+    IsInterventionBudgetOwnerPermission,
     PartnershipManagerPermission,
     PartnershipManagerRepPermission,
-    SENIOR_MANAGEMENT_GROUP,
     UserIsNotPartnerStaffMemberPermission,
+    UserIsUnicefFocalPoint,
 )
 from etools.applications.partners.serializers.exports.interventions import (
     InterventionAmendmentExportFlatSerializer,
@@ -80,6 +82,7 @@ from etools.applications.partners.serializers.interventions_v2 import (
 )
 from etools.applications.partners.utils import send_intervention_amendment_added_notification
 from etools.applications.partners.validation.interventions import InterventionValid
+from etools.applications.partners.views.intervention_snapshot import FullInterventionSnapshotDeleteMixin
 from etools.applications.reports.models import AppliedIndicator, LowerResult, ReportingRequirement
 from etools.applications.reports.serializers.v2 import AppliedIndicatorSerializer, LowerResultSimpleCUSerializer
 from etools.applications.users.models import Country
@@ -515,30 +518,20 @@ class InterventionAmendmentListAPIView(ExportModelMixin, ValidatorViewMixin, Lis
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
-class InterventionAmendmentDeleteView(DestroyAPIView):
-    permission_classes = (PartnershipManagerRepPermission, UserIsNotPartnerStaffMemberPermission)
+class InterventionAmendmentDeleteView(FullInterventionSnapshotDeleteMixin, DestroyAPIView):
+    permission_classes = (
+        IsAuthenticated,
+        InterventionAmendmentIsNotCompleted,
+        UserIsUnicefFocalPoint | IsInterventionBudgetOwnerPermission,
+    )
+    queryset = InterventionAmendment.objects.all()
 
-    def delete(self, request, *args, **kwargs):
-        try:
-            intervention_amendment = InterventionAmendment.objects.get(id=int(kwargs['pk']))
-        except InterventionAmendment.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+    def get_intervention(self):
+        return self.get_root_object()
 
-        # todo: there are 3 possible checks for permissions: code below + permission_classes + permissions matrix.
-        #  should be refined and moved to permissions matrix. in fact, both permissions_classes and
-        #  permissions matrix are ignored. in addition to that, they are not synchronized to each other,
-        #  for example we ignore amendment mode here PartnershipManagerRepPermission.check_object_permissions
-        #  never executed. normally view.check_object_permissions is called
-        #  inside GenericAPIView.get_object method which is not used.
-
-        if intervention_amendment.intervention.status in [Intervention.DRAFT] or \
-            request.user in intervention_amendment.intervention.unicef_focal_points.all() or \
-            request.user.groups.filter(name__in=[PARTNERSHIP_MANAGER_GROUP,
-                                                 SENIOR_MANAGEMENT_GROUP]).exists():
-            intervention_amendment.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        else:
-            raise ValidationError("You do not have permissions to delete an amendment")
+    @functools.cache
+    def get_root_object(self):
+        return get_object_or_404(Intervention.objects, amendments=self.kwargs.get('pk'))
 
 
 class InterventionListMapView(QueryStringFilterMixin, ListCreateAPIView):
@@ -632,13 +625,16 @@ class InterventionResultLinkListCreateView(ListCreateAPIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
-class InterventionResultLinkUpdateView(RetrieveUpdateDestroyAPIView):
-
+class InterventionResultLinkUpdateView(FullInterventionSnapshotDeleteMixin, RetrieveUpdateDestroyAPIView):
     serializer_class = InterventionResultLinkSimpleCUSerializer
     permission_classes = (PartnershipManagerPermission,)
     filter_backends = (InterventionFilter,)
     renderer_classes = (JSONRenderer,)
     queryset = InterventionResultLink.objects.all()
+
+    @functools.cache
+    def get_intervention(self):
+        return self.get_object().intervention
 
     def delete(self, request, *args, **kwargs):
         # make sure there are no indicators added to this LLO
@@ -685,13 +681,16 @@ class InterventionIndicatorsListView(ListCreateAPIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
-class InterventionIndicatorsUpdateView(RetrieveUpdateDestroyAPIView):
-
+class InterventionIndicatorsUpdateView(FullInterventionSnapshotDeleteMixin, RetrieveUpdateDestroyAPIView):
     serializer_class = AppliedIndicatorSerializer
     permission_classes = (PartnershipManagerPermission,)
     filter_backends = (AppliedIndicatorsFilter,)
     renderer_classes = (JSONRenderer,)
     queryset = AppliedIndicator.objects.all()
+
+    @functools.cache
+    def get_intervention(self):
+        return self.get_object().lower_result.result_link.intervention
 
     def delete(self, request, *args, **kwargs):
         ai = self.get_object()
@@ -880,22 +879,16 @@ class InterventionRamIndicatorsView(APIView):
         )
 
 
-class InterventionPlannedVisitsDeleteView(DestroyAPIView):
-    permission_classes = (PartnershipManagerPermission,)
+class InterventionPlannedVisitsDeleteView(FullInterventionSnapshotDeleteMixin, DestroyAPIView):
+    permission_classes = (PartnershipManagerPermission, InterventionIsDraftPermission)
+    queryset = InterventionPlannedVisits.objects.all()
 
-    def delete(self, request, *args, **kwargs):
-        intervention = get_object_or_404(
-            Intervention,
-            pk=int(kwargs['intervention_pk'])
-        )
-        if intervention.status != Intervention.DRAFT:
-            raise ValidationError("Planned visits can only be deleted in Draft status")
+    def get_queryset(self):
+        return super().get_queryset().filter(intervention=int(self.kwargs['intervention_pk']))
 
-        intervention_planned_visit = get_object_or_404(
-            InterventionPlannedVisits,
-            pk=int(kwargs['pk']),
-            intervention=int(kwargs['intervention_pk'])
-        )
-        self.check_object_permissions(request, intervention_planned_visit)
-        intervention_planned_visit.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+    def get_intervention(self):
+        return self.get_root_object()
+
+    @functools.cache
+    def get_root_object(self):
+        return get_object_or_404(Intervention.objects, pk=self.kwargs.get('intervention_pk'))

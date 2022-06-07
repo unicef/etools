@@ -54,6 +54,7 @@ class InterventionBudgetCUSerializer(FullInterventionSnapshotSerializerMixin, se
     total_unicef_contribution_local = serializers.DecimalField(max_digits=20, decimal_places=2)
     total_cash_local = serializers.DecimalField(max_digits=20, decimal_places=2)
     total_local = serializers.DecimalField(max_digits=20, decimal_places=2)
+    total_supply = serializers.DecimalField(max_digits=20, decimal_places=2)
 
     class Meta:
         model = InterventionBudget
@@ -73,6 +74,7 @@ class InterventionBudgetCUSerializer(FullInterventionSnapshotSerializerMixin, se
             "total_cash_local",
             "total_unicef_cash_local_wo_hq",
             "total_hq_cash_local",
+            "total_supply"
         )
         read_only_fields = (
             "total_local",
@@ -81,6 +83,7 @@ class InterventionBudgetCUSerializer(FullInterventionSnapshotSerializerMixin, se
             "total_unicef_cash_local_wo_hq",
             "partner_supply_local",
             "total_partner_contribution_local",
+            "total_supply"
         )
 
     def get_intervention(self):
@@ -744,6 +747,9 @@ class InterventionCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotMode
         return self._validate_character_limitation(value)
 
     def validate_ip_program_contribution(self, value):
+        return self._validate_character_limitation(value)
+
+    def validate_capacity_development(self, value):
         return self._validate_character_limitation(value)
 
     def validate(self, attrs):

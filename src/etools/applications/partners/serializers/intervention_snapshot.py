@@ -49,35 +49,36 @@ def create_change_dict_recursive(prev_dict, current_dict):
     return change
 
 
+def save_snapshot(user, target, target_before, current_obj_dict):
+    change = create_change_dict_recursive(target_before, current_obj_dict)
+    if not change:
+        return
+
+    activity_kwargs = {
+        'target': target,
+        'by_user': user,
+        'action': Activity.UPDATE,
+        'data': target_before,
+        'change': change
+    }
+
+    snapshot_additional_data = getattr(target, 'snapshot_additional_data', None)
+    if callable(snapshot_additional_data):
+        activity_kwargs['data'].update(snapshot_additional_data(change))
+
+    Activity.objects.create(**activity_kwargs)
+
+
 class FullInterventionSnapshotSerializerMixin(UserContextSerializerMixin):
     """
-    save related model to parent snapshot.
+    Save full intervention snapshot on save.
     """
 
-    def get_intervention(self) -> Intervention:
+    def get_intervention(self):
         raise NotImplementedError
 
     def prefetch_relations(self, instance: object) -> Intervention:
         return Intervention.objects.full_snapshot_qs().get(pk=instance.pk)
-
-    def save_snapshot(self, target, target_before, current_obj_dict):
-        change = create_change_dict_recursive(target_before, current_obj_dict)
-        if not change:
-            return
-
-        activity_kwargs = {
-            'target': target,
-            'by_user': self.get_user(),
-            'action': Activity.UPDATE,
-            'data': target_before,
-            'change': change
-        }
-
-        snapshot_additional_data = getattr(target, 'snapshot_additional_data', None)
-        if callable(snapshot_additional_data):
-            activity_kwargs['data'].update(snapshot_additional_data(change))
-
-        Activity.objects.create(**activity_kwargs)
 
     def save(self, **kwargs):
         target = self.get_intervention()
@@ -97,6 +98,6 @@ class FullInterventionSnapshotSerializerMixin(UserContextSerializerMixin):
             INTERVENTION_FULL_SNAPSHOT_RELATED_FIELDS,
             INTERVENTION_FULL_SNAPSHOT_IGNORED_FIELDS,
         )
-        self.save_snapshot(target, target_before, current_obj_dict)
+        save_snapshot(self.get_user(), target, target_before, current_obj_dict)
 
         return instance

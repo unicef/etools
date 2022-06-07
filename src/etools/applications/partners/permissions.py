@@ -592,6 +592,8 @@ class UserBelongsToObjectPermission(BasePermission):
 
 class IsInterventionBudgetOwnerPermission(BasePermission):
     def has_object_permission(self, request, view, obj):
+        if hasattr(view, 'get_root_object'):
+            obj = view.get_root_object()
         return obj.budget_owner and obj.budget_owner == request.user
 
 
@@ -609,3 +611,20 @@ class AmendmentSessionActivitiesPermission(BasePermission):
 
         amendment = intervention.amendment
         return obj.created > amendment.created
+
+
+class InterventionIsDraftPermission(BasePermission):
+    def has_permission(self, request, view):
+        intervention = view.get_root_object()
+        return intervention.status == 'draft'
+
+
+class InterventionAmendmentIsNotCompleted(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        return obj.is_active
+
+
+class UserIsUnicefFocalPoint(BasePermission):
+    def has_permission(self, request, view):
+        intervention = view.get_root_object()
+        return request.user in intervention.unicef_focal_points.all()

@@ -2958,6 +2958,10 @@ class InterventionBudget(TimeStampedModel):
             return 0
         return self.total_partner_contribution_local / self.total_local * 100
 
+    @property
+    def total_supply(self):
+        return self.in_kind_amount_local + self.partner_supply_local
+
     def total_unicef_contribution(self):
         return self.unicef_cash + self.in_kind_amount
 

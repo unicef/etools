@@ -1,4 +1,5 @@
 import datetime
+import itertools
 from operator import itemgetter
 
 from django.test import SimpleTestCase
@@ -7,6 +8,7 @@ from django.urls import resolve, reverse
 from rest_framework import status
 from rest_framework.test import APIRequestFactory
 from tablib.core import Dataset
+from unicef_snapshot.models import Activity
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.core.tests.mixins import URLAssertionMixin
@@ -703,6 +705,25 @@ class TestLowerResultDeleteView(BaseTenantTestCase):
             LowerResult.objects.filter(pk=self.lower_result.pk).exists()
         )
 
+    def test_intervention_snapshot_on_delete(self):
+        self.intervention.unicef_focal_points.add(self.unicef_staff)
+        response = self.forced_auth_req(
+            "delete",
+            self.url,
+            user=self.unicef_staff
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        activity = Activity.objects.first()
+        self.assertIsNotNone(activity)
+        self.assertEqual(activity.target, self.intervention)
+        self.assertEqual(activity.change['result_links'][0]['ll_results']['after'], [])
+        self.assertNotEqual(activity.change['result_links'][0]['ll_results']['before'], [])
+        self.assertIn(
+            self.lower_result.id,
+            [pr['pk'] for pr in itertools.chain(*[r['ll_results'] for r in activity.data['result_links']])],
+        )
+
     def test_delete_not_found(self):
         response = self.forced_auth_req(
             "delete",
@@ -724,7 +745,7 @@ class TestLowerResultDeleteView(BaseTenantTestCase):
             self.url,
             user=user
         )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertTrue(
             LowerResult.objects.filter(pk=self.lower_result.pk).exists()
         )
