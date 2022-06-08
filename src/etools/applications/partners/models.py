@@ -6,7 +6,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import ArrayField
 from django.core.validators import MinValueValidator
 from django.db import connection, IntegrityError, models, transaction
-from django.db.models import Case, CharField, Count, F, Max, Min, OuterRef, Q, Subquery, Sum, When
+from django.db.models import Case, CharField, Count, F, Max, Min, OuterRef, Prefetch, Q, Subquery, Sum, When
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.functional import cached_property
@@ -1625,7 +1625,8 @@ class InterventionManager(models.Manager):
             'management_budgets__items',
             'flat_locations',
             'sites',
-            'supply_items',
+            Prefetch('supply_items',
+                     queryset=InterventionSupplyItem.objects.order_by('-id')),
         )
         return qs
 

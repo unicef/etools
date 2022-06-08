@@ -52,7 +52,7 @@ class PMPBaseViewMixin:
     def get_pd(self, pd_pk):
         try:
             if not self.is_partner_staff():
-                return Intervention.objects.get(pk=pd_pk)
+                return Intervention.objects.detail_qs().get(pk=pd_pk)
             return self.pds().get(pk=pd_pk)
         except Intervention.DoesNotExist:
             return None
