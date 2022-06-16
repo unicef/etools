@@ -150,7 +150,10 @@
             <div id="user-tools">
                 {% block welcome-msg %}
                     {% trans 'Welcome,' %}
+                <a href="{{ user.get_admin_url }}">
                     <strong>{% firstof user.get_short_name user.get_username %}</strong>.
+                </a>
+
                 {% endblock %}
                 {% block userlinks %}
                 <a href="{% url 'admin:logout' %}">{% trans 'Log out' %}</a>
