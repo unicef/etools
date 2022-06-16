@@ -19,6 +19,7 @@ from etools.applications.attachments.tests.factories import AttachmentFactory, A
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
 from etools.applications.partners.models import Agreement, Intervention
+from etools.applications.partners.permissions import UNICEF_USER
 from etools.applications.partners.tasks import (
     _make_intervention_status_automatic_transitions,
     transfer_active_pds_to_new_cp,
@@ -33,6 +34,7 @@ from etools.applications.partners.tests.factories import (
 from etools.applications.reports.models import ResultType
 from etools.applications.reports.tests.factories import (
     CountryProgrammeFactory,
+    InterventionActivityFactory,
     LowerResultFactory,
     OfficeFactory,
     ReportingRequirementFactory,
@@ -673,7 +675,7 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
 
     def test_activate_intervention_with_task(self, _mock_db_connection, _mock_logger):
         today = datetime.date.today()
-        unicef_staff = UserFactory(is_staff=True, groups__data=['UNICEF User'])
+        unicef_staff = UserFactory(is_staff=True, groups__data=[UNICEF_USER])
 
         partner = PartnerFactory(name='Partner 2')
         active_agreement = AgreementFactory(
@@ -691,20 +693,14 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
             start=today - datetime.timedelta(days=1),
             end=today + datetime.timedelta(days=365),
             status=Intervention.SIGNED,
-            country_programme=active_agreement.country_programme,
             budget_owner=unicef_staff,
             date_sent_to_partner=today - datetime.timedelta(days=1),
             signed_by_unicef_date=today - datetime.timedelta(days=1),
             signed_by_partner_date=today - datetime.timedelta(days=1),
             unicef_signatory=unicef_staff,
             partner_authorized_officer_signatory=partner.staff_members.all().first(),
-            # cash_transfer_modalities=[Intervention.CASH_TRANSFER_DIRECT],
+            cash_transfer_modalities=[Intervention.CASH_TRANSFER_DIRECT],
         )
-        active_intervention.planned_budget.partner_contribution_local = 10
-        active_intervention.planned_budget.unicef_cash_local = 20
-        active_intervention.planned_budget.total_hq_cash_local = 60
-        active_intervention.planned_budget.save()
-
         active_intervention.flat_locations.add(LocationFactory())
         active_intervention.partner_focal_points.add(partner.staff_members.all().first())
         active_intervention.unicef_focal_points.add(unicef_staff)
@@ -721,9 +717,9 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
             intervention=active_intervention,
             cp_output__result_type__name=ResultType.OUTPUT,
         )
-        LowerResultFactory(result_link=result_link)
-        # activity = InterventionActivityFactory(result=pd_output) # epd related stuff
-        # activity.time_frames.add(active_intervention.quarters.first())
+        pd_output = LowerResultFactory(result_link=result_link)
+        activity = InterventionActivityFactory(result=pd_output)
+        activity.time_frames.add(active_intervention.quarters.first())
 
         _make_intervention_status_automatic_transitions(self.country_name)
         active_intervention.refresh_from_db()
