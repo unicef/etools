@@ -116,7 +116,8 @@ class ProfileAdmin(admin.ModelAdmin):
     search_fields = (
         'tenant_profile__office__name',
         'country__name',
-        'user__email'
+        'user__email',
+        'guid'
     )
     readonly_fields = (
         'user',

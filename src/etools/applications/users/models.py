@@ -9,6 +9,7 @@ from django.core.mail import send_mail
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import connection, models
 from django.db.models.signals import post_save
+from django.urls import reverse
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 
@@ -104,6 +105,10 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
                 if PartnerStaffMember.objects.filter(user=self).exists():
                     return country
         return None
+
+    def get_admin_url(self):
+        info = (self._meta.app_label, self._meta.model_name)
+        return reverse('admin:%s_%s_change' % info, args=(self.pk,))
 
     def save(self, *args, **kwargs):
         if self.email != self.email.lower():
