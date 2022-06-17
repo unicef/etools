@@ -18,6 +18,7 @@ import os
 from os.path import abspath, basename, dirname, join, normpath
 
 from django.db import connection
+from django.utils.translation import gettext_lazy as _
 
 import dj_database_url
 import sentry_sdk
@@ -110,6 +111,11 @@ MEDIA_URL = '/media/'
 
 # DJANGO: GLOBALIZATION (I18N/L10N)
 LANGUAGE_CODE = 'en-us'
+LANGUAGES = [
+    ('en', _('English US')),
+    ('fr', _('French')),
+]
+
 TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_L10N = True
@@ -120,6 +126,7 @@ MIDDLEWARE = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'etools.applications.core.auth.CustomSocialAuthExceptionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
