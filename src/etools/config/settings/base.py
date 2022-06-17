@@ -112,8 +112,8 @@ MEDIA_URL = '/media/'
 # DJANGO: GLOBALIZATION (I18N/L10N)
 LANGUAGE_CODE = 'en-us'
 LANGUAGES = [
-    ('en', _('English US')),
-    ('fr', _('French')),
+    ('en', _('English')),
+    ('fr', _('Français')),
 ]
 
 TIME_ZONE = 'UTC'
@@ -126,7 +126,6 @@ MIDDLEWARE = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'etools.applications.core.auth.CustomSocialAuthExceptionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -134,6 +133,7 @@ MIDDLEWARE = (
     'corsheaders.middleware.CorsMiddleware',
     'etools.applications.core.middleware.EToolsTenantMiddleware',
     'waffle.middleware.WaffleMiddleware',  # needs request.tenant from EToolsTenantMiddleware
+    'etools.applications.core.middleware.EToolsLocaleMiddleware',
 )
 WSGI_APPLICATION = 'etools.config.wsgi.application'
 

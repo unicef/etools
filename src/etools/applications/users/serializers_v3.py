@@ -1,3 +1,4 @@
+from django.conf.global_settings import LANGUAGES
 from django.contrib.auth import get_user_model
 from django.db import connection
 
@@ -85,8 +86,13 @@ class CountryDetailSerializer(serializers.ModelSerializer):
         )
 
 
+class UserPreferencesSerializer(serializers.Serializer):
+    language = serializers.ChoiceField(choices=dict(LANGUAGES))
+
+
 class ProfileRetrieveUpdateSerializer(serializers.ModelSerializer):
     countries_available = SimpleCountrySerializer(many=True, read_only=True)
+
     supervisor = serializers.CharField(read_only=True)
     groups = GroupSerializer(source="user.groups", read_only=True, many=True)
     supervisees = serializers.PrimaryKeyRelatedField(source='user.supervisee', many=True, read_only=True)
@@ -104,6 +110,8 @@ class ProfileRetrieveUpdateSerializer(serializers.ModelSerializer):
     show_ap = serializers.SerializerMethodField()
     is_unicef_user = serializers.SerializerMethodField()
 
+    preferences = UserPreferencesSerializer(source="user.preferences", allow_null=False)
+
     class Meta:
         model = UserProfile
         exclude = ('id',)
@@ -119,6 +127,13 @@ class ProfileRetrieveUpdateSerializer(serializers.ModelSerializer):
 
     def get_is_unicef_user(self, obj):
         return obj.user.is_unicef_user()
+
+    def update(self, instance, validated_data):
+        user = validated_data.pop('user', None)
+        if user and user.get('preferences'):
+            instance.user.preferences = user.get('preferences')
+            instance.user.save(update_fields=['preferences'])
+        return super().update(instance, validated_data)
 
 
 class SimpleUserSerializer(serializers.ModelSerializer):

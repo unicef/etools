@@ -23,6 +23,10 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+def preferences_default_dict():
+    return {'language': settings.LANGUAGE_CODE}
+
+
 class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = "username"
     REQUIRED_FIELDS = ['email']
@@ -38,6 +42,8 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(_('active'), default=True)
     is_staff = models.BooleanField(_('staff'), default=False)
     is_superuser = models.BooleanField(_('superuser'), default=False)
+
+    preferences = models.JSONField(default=preferences_default_dict)
 
     objects = UserManager()
 
