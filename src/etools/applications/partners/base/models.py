@@ -122,6 +122,7 @@ class BaseIntervention(TimeStampedModel):
 
 
 class BaseInterventionResultLink(TimeStampedModel):
+    cp_output = None  # just dummy to unify logic
     code = models.CharField(verbose_name=_("Code"), max_length=50, blank=True, null=True)
     intervention = models.ForeignKey(
         'partners.Intervention', related_name='result_links', verbose_name=_('Intervention'),
@@ -135,13 +136,18 @@ class BaseInterventionResultLink(TimeStampedModel):
 
     def __str__(self):
         return '{} {}'.format(
-            self.intervention, self.code
+            self.intervention, self.cp_output
         )
 
     def save(self, *args, **kwargs):
-        # partner has no access to cp output, so use simplified code calculation
         if not self.code:
-            self.code = '0'
+            if self.cp_output:
+                self.code = str(
+                    # explicitly perform model.objects.count to avoid caching
+                    self.__class__.objects.filter(intervention=self.intervention).exclude(cp_output=None).count() + 1,
+                )
+            else:
+                self.code = '0'
         super().save(*args, **kwargs)
 
     @classmethod
@@ -260,15 +266,14 @@ class BaseInterventionSupplyItem(TimeStampedModel):
     class Meta:
         abstract = True
 
-    # todo: uncomment me after adding planned_budget to base_models
-    # def save(self, *args, **kwargs):
-    #     self.total_price = self.unit_number * self.unit_price
-    #     super().save()
-    #     self.intervention.planned_budget.calc_totals()
-    #
-    # def delete(self, **kwargs):
-    #     super().delete(**kwargs)
-    #     self.intervention.planned_budget.calc_totals()
+    def save(self, *args, **kwargs):
+        self.total_price = self.unit_number * self.unit_price
+        super().save()
+        self.intervention.planned_budget.calc_totals()
+
+    def delete(self, **kwargs):
+        super().delete(**kwargs)
+        self.intervention.planned_budget.calc_totals()
 
 
 class BaseInterventionBudget(TimeStampedModel):

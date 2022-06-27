@@ -2,6 +2,7 @@ from django.db import connection
 from django.db.models.signals import m2m_changed, post_delete, post_save
 from django.dispatch import receiver
 
+from etools.applications.partners.base.signals import intervention_budgets_initialization_on_create
 from etools.applications.partners.models import (
     Intervention,
     InterventionBudget,
@@ -10,6 +11,11 @@ from etools.applications.partners.models import (
     PRCOfficerInterventionReview,
 )
 from etools.applications.partners.tasks import sync_partner_to_prp
+
+
+@receiver(post_save, sender=Intervention)
+def initialize_intervention_budgets(instance: Intervention, created: bool, **kwargs):
+    intervention_budgets_initialization_on_create(instance, created, **kwargs)
 
 
 @receiver(post_save, sender=Intervention)

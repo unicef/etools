@@ -2476,10 +2476,6 @@ class Intervention(BaseIntervention):
 
         super().save()
 
-        if not oldself:
-            self.management_budgets = InterventionManagementBudget.objects.create(intervention=self)
-            self.planned_budget = InterventionBudget.objects.create(intervention=self)
-
     def has_active_amendment(self, kind=None):
         active_amendments = self.amendments.filter(is_active=True)
         if kind:
@@ -2778,11 +2774,6 @@ class InterventionResultLink(BaseInterventionResultLink):
     class Meta(BaseInterventionResultLink.Meta):
         unique_together = ['intervention', 'cp_output']
 
-    def __str__(self):
-        return '{} {}'.format(
-            self.intervention, self.cp_output
-        )
-
     def total(self):
         results = self.ll_results.aggregate(
             total=(
@@ -2791,17 +2782,6 @@ class InterventionResultLink(BaseInterventionResultLink):
             ),
         )
         return results["total"] if results["total"] is not None else 0
-
-    def save(self, *args, **kwargs):
-        if not self.code:
-            if self.cp_output:
-                self.code = str(
-                    # explicitly perform model.objects.count to avoid caching
-                    self.__class__.objects.filter(intervention=self.intervention).exclude(cp_output=None).count() + 1,
-                )
-            else:
-                self.code = '0'
-        super().save(*args, **kwargs)
 
 
 class InterventionBudget(BaseInterventionBudget):
@@ -3176,16 +3156,6 @@ class InterventionManagementBudget(BaseInterventionManagementBudget):
 
 
 class InterventionSupplyItem(BaseInterventionSupplyItem):
-    # todo: remove me after adding planned_budget to base models
-    def save(self, *args, **kwargs):
-        self.total_price = self.unit_number * self.unit_price
-        super().save()
-        self.intervention.planned_budget.calc_totals()
-
-    def delete(self, **kwargs):
-        super().delete(**kwargs)
-        self.intervention.planned_budget.calc_totals()
-
     class Meta(BaseInterventionSupplyItem.Meta):
         pass
 
