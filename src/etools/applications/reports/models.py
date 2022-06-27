@@ -2,7 +2,6 @@ import random
 from datetime import date
 from string import ascii_lowercase
 
-from django.core.validators import MinValueValidator
 from django.db import models, transaction
 from django.db.models import Q, Sum
 from django.utils.functional import cached_property
@@ -13,8 +12,12 @@ from model_utils.models import TimeStampedModel
 from mptt.models import MPTTModel, TreeForeignKey
 
 from etools.applications.locations.models import Location
-from etools.applications.reports.base_models import BaseLowerResult, BaseInterventionActivity, \
-    BaseInterventionActivityItem, BaseInterventionTimeFrame
+from etools.applications.reports.base_models import (
+    BaseInterventionActivity,
+    BaseInterventionActivityItem,
+    BaseInterventionTimeFrame,
+    BaseLowerResult,
+)
 from etools.applications.users.models import UserProfile
 
 

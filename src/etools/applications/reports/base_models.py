@@ -1,7 +1,8 @@
 from django.core.validators import MinValueValidator
-from django.db.models import Sum
-from django.utils.translation import ugettext_lazy as _
 from django.db import models
+from django.db.models import Sum
+from django.utils.translation import gettext_lazy as _
+
 from model_utils.models import TimeStampedModel
 
 
@@ -145,6 +146,16 @@ class BaseInterventionActivity(TimeStampedModel):
         self.unicef_cash = aggregates['unicef_cash']
         self.cso_cash = aggregates['cso_cash']
         self.save()
+
+    def save(self, *args, **kwargs):
+        if not self.code:
+            self.code = '{0}.{1}'.format(
+                self.result.code,
+                # explicitly perform model.objects.count to avoid caching
+                self.__class__.objects.filter(result=self.result).count() + 1,
+            )
+        super().save(*args, **kwargs)
+        self.result.result_link.intervention.planned_budget.calc_totals()
 
 
 class BaseInterventionActivityItem(TimeStampedModel):

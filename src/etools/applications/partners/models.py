@@ -35,7 +35,12 @@ from etools.applications.partners.amendment_utils import (
     INTERVENTION_AMENDMENT_RELATED_FIELDS,
     merge_instance,
 )
-from etools.applications.partners.base_models import BaseIntervention, BaseInterventionResultLink
+from etools.applications.partners.base_models import (
+    BaseIntervention,
+    BaseInterventionResultLink,
+    BaseInterventionRisk,
+    BaseInterventionSupplyItem,
+)
 from etools.applications.partners.validation import (
     agreements as agreement_validation,
     interventions as intervention_validation,
@@ -1692,6 +1697,10 @@ def side_effect_two(i, old_instance=None, user=None):
     pass
 
 
+def get_default_cash_transfer_modalities():
+    return [Intervention.CASH_TRANSFER_DIRECT]
+
+
 class Intervention(BaseIntervention):
     """
     Represents a partner intervention.
@@ -1759,17 +1768,6 @@ class Intervention(BaseIntervention):
         # (SSFA, 'SSFA'),
     )
 
-    RATING_NONE = "none"
-    RATING_MARGINAL = "marginal"
-    RATING_SIGNIFICANT = "significant"
-    RATING_PRINCIPAL = "principal"
-    RATING_CHOICES = (
-        (RATING_NONE, "None"),
-        (RATING_MARGINAL, "Marginal"),
-        (RATING_SIGNIFICANT, "Significant"),
-        (RATING_PRINCIPAL, "Principal"),
-    )
-
     REVIEW_TYPE_NONE = "none"
     REVIEW_TYPE_PRC = "prc"
     REVIEW_TYPE_NON_PRC = "non-prc"
@@ -1777,6 +1775,15 @@ class Intervention(BaseIntervention):
         (REVIEW_TYPE_NONE, "None"),
         (REVIEW_TYPE_PRC, "PRC"),
         (REVIEW_TYPE_NON_PRC, "Non-PRC"),
+    )
+
+    CASH_TRANSFER_PAYMENT = "payment"
+    CASH_TRANSFER_REIMBURSEMENT = "reimbursement"
+    CASH_TRANSFER_DIRECT = "dct"
+    CASH_TRANSFER_CHOICES = (
+        (CASH_TRANSFER_PAYMENT, "Direct Payment"),
+        (CASH_TRANSFER_REIMBURSEMENT, "Reimbursement"),
+        (CASH_TRANSFER_DIRECT, "Direct Cash Transfer"),
     )
 
     tracker = FieldTracker(["date_sent_to_partner", "start", "end", "budget_owner"])
@@ -1969,8 +1976,6 @@ class Intervention(BaseIntervention):
         blank=True,
         related_name='office_interventions',
     )
-    flat_locations = models.ManyToManyField(Location, related_name="intervention_flat_locations", blank=True,
-                                            verbose_name=_('Locations'))
 
     sites = models.ManyToManyField('field_monitoring_settings.LocationSite',
                                    related_name='interventions',
@@ -2022,39 +2027,6 @@ class Intervention(BaseIntervention):
         null=True,
         default="",
     )
-    gender_rating = models.CharField(
-        verbose_name=_("Gender Rating"),
-        max_length=50,
-        choices=RATING_CHOICES,
-        default=RATING_NONE,
-    )
-    gender_narrative = models.TextField(
-        verbose_name=_("Gender Narrative"),
-        blank=True,
-        null=True,
-    )
-    equity_rating = models.CharField(
-        verbose_name=_("Equity Rating"),
-        max_length=50,
-        choices=RATING_CHOICES,
-        default=RATING_NONE,
-    )
-    equity_narrative = models.TextField(
-        verbose_name=_("Equity Narrative"),
-        blank=True,
-        null=True,
-    )
-    sustainability_rating = models.CharField(
-        verbose_name=_("Sustainability Rating"),
-        max_length=50,
-        choices=RATING_CHOICES,
-        default=RATING_NONE,
-    )
-    sustainability_narrative = models.TextField(
-        verbose_name=_("Sustainability Narrative"),
-        blank=True,
-        null=True,
-    )
     ip_program_contribution = models.TextField(
         verbose_name=_("Partner Non-Financial Contribution to Programme"),
         blank=True,
@@ -2094,6 +2066,29 @@ class Intervention(BaseIntervention):
         null=True,
         default=dict,
     )
+
+    # todo: move fields back to their places to minimize merge conflicts chance
+    cash_transfer_modalities = ArrayField(
+        models.CharField(
+            verbose_name=_("Cash Transfer Modalities"),
+            max_length=50,
+            choices=CASH_TRANSFER_CHOICES,
+        ),
+        default=get_default_cash_transfer_modalities,
+    )
+    technical_guidance = models.TextField(
+        verbose_name=_("Technical Guidance"),
+        blank=True,
+        null=True,
+    )
+    confidential = models.BooleanField(
+        verbose_name=_("Confidential"),
+        default=False,
+    )
+
+    # todo: move locations into base model
+    flat_locations = models.ManyToManyField(Location, related_name="intervention_flat_locations", blank=True,
+                                            verbose_name=_('Locations'))
 
     # todo: filter out amended interventions from list api's
 
@@ -3311,42 +3306,9 @@ class PartnerPlannedVisits(TimeStampedModel):
         self.partner.update_planned_visits_to_hact()
 
 
-class InterventionRisk(TimeStampedModel):
-    RISK_TYPE_ENVIRONMENTAL = "environment"
-    RISK_TYPE_FINANCIAL = "financial"
-    RISK_TYPE_OPERATIONAL = "operational"
-    RISK_TYPE_ORGANIZATIONAL = "organizational"
-    RISK_TYPE_POLITICAL = "political"
-    RISK_TYPE_STRATEGIC = "strategic"
-    RISK_TYPE_SECURITY = "security"
-    RISK_TYPE_CHOICES = (
-        (RISK_TYPE_ENVIRONMENTAL, "Social & Environmental"),
-        (RISK_TYPE_FINANCIAL, "Financial"),
-        (RISK_TYPE_OPERATIONAL, "Operational"),
-        (RISK_TYPE_ORGANIZATIONAL, "Organizational"),
-        (RISK_TYPE_POLITICAL, "Political"),
-        (RISK_TYPE_STRATEGIC, "Strategic"),
-        (RISK_TYPE_SECURITY, "Safety & security"),
-    )
-
-    intervention = models.ForeignKey(
-        Intervention,
-        verbose_name=_("Intervention"),
-        related_name="risks",
-        on_delete=models.CASCADE,
-    )
-    risk_type = models.CharField(
-        verbose_name=_("Risk Type"),
-        max_length=50,
-        choices=RISK_TYPE_CHOICES,
-    )
-    mitigation_measures = models.TextField()
-
-    class Meta:
-        ordering = ('id',)
-
-    def __str__(self):
-        return "{} {}".format(self.intervention, self.get_risk_type_display())
+class InterventionRisk(BaseInterventionRisk):
+    class Meta(BaseInterventionRisk.Meta):
+        pass
 
 
 class InterventionManagementBudget(TimeStampedModel):
@@ -3427,70 +3389,8 @@ class InterventionManagementBudget(TimeStampedModel):
         self.save()
 
 
-class InterventionSupplyItem(TimeStampedModel):
-    PROVIDED_BY_UNICEF = 'unicef'
-    PROVIDED_BY_PARTNER = 'partner'
-    PROVIDED_BY_CHOICES = Choices(
-        (PROVIDED_BY_UNICEF, _('UNICEF')),
-        (PROVIDED_BY_PARTNER, _('Partner')),
-    )
-
-    intervention = models.ForeignKey(
-        Intervention,
-        verbose_name=_("Intervention"),
-        related_name="supply_items",
-        on_delete=models.CASCADE,
-    )
-    title = models.CharField(
-        verbose_name=_("Title"),
-        max_length=150,
-    )
-    unit_number = models.DecimalField(
-        verbose_name=_("Unit Number"),
-        decimal_places=2,
-        max_digits=20,
-        default=1,
-    )
-    unit_price = models.DecimalField(
-        verbose_name=_("Unit Price"),
-        decimal_places=2,
-        max_digits=20,
-        default=0,
-    )
-    result = models.ForeignKey(
-        InterventionResultLink,
-        verbose_name=_("Result"),
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-    )
-    total_price = models.DecimalField(
-        verbose_name=_("Total Price"),
-        decimal_places=2,
-        max_digits=20,
-        blank=True,
-        null=True,
-    )
-    other_mentions = models.TextField(
-        verbose_name=_("Other Mentions"),
-        blank=True,
-    )
-    provided_by = models.CharField(
-        max_length=10,
-        choices=PROVIDED_BY_CHOICES,
-        default=PROVIDED_BY_UNICEF,
-        verbose_name=_('Provided By'),
-    )
-    unicef_product_number = models.CharField(
-        verbose_name=_("UNICEF Product Number"),
-        max_length=150,
-        blank=True,
-        default="",
-    )
-
-    def __str__(self):
-        return "{} {}".format(self.intervention, self.title)
-
+class InterventionSupplyItem(BaseInterventionSupplyItem):
+    # todo: remove me after adding planned_budget to base models
     def save(self, *args, **kwargs):
         self.total_price = self.unit_number * self.unit_price
         super().save()
@@ -3499,6 +3399,9 @@ class InterventionSupplyItem(TimeStampedModel):
     def delete(self, **kwargs):
         super().delete(**kwargs)
         self.intervention.planned_budget.calc_totals()
+
+    class Meta(BaseInterventionSupplyItem.Meta):
+        pass
 
 
 class InterventionManagementBudgetItem(models.Model):
