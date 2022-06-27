@@ -12,7 +12,7 @@ from model_utils.models import TimeStampedModel
 from mptt.models import MPTTModel, TreeForeignKey
 
 from etools.applications.locations.models import Location
-from etools.applications.reports.base_models import (
+from etools.applications.reports.base.models import (
     BaseInterventionActivity,
     BaseInterventionActivityItem,
     BaseInterventionTimeFrame,
