@@ -2,10 +2,9 @@ from django.db import connection
 from django.db.models.signals import m2m_changed, post_delete, post_save
 from django.dispatch import receiver
 
-from etools.applications.partners.base.signals import intervention_budgets_initialization_on_create
+from etools.applications.partners.base import signals as base_signals
 from etools.applications.partners.models import (
     Intervention,
-    InterventionBudget,
     InterventionReview,
     InterventionSupplyItem,
     PRCOfficerInterventionReview,
@@ -15,7 +14,7 @@ from etools.applications.partners.tasks import sync_partner_to_prp
 
 @receiver(post_save, sender=Intervention)
 def initialize_intervention_budgets(instance: Intervention, created: bool, **kwargs):
-    intervention_budgets_initialization_on_create(instance, created, **kwargs)
+    base_signals.initialize_intervention_budgets(instance, created, **kwargs)
 
 
 @receiver(post_save, sender=Intervention)
@@ -26,15 +25,7 @@ def sync_pd_partner_to_prp(instance: Intervention, created: bool, **kwargs):
 
 @receiver(post_delete, sender=InterventionSupplyItem)
 def calc_totals_on_delete(instance, **kwargs):
-    try:
-        intervention = Intervention.objects.get(pk=instance.intervention.pk)
-    except Intervention.DoesNotExist:
-        pass
-    else:
-        try:
-            intervention.planned_budget.calc_totals()
-        except InterventionBudget.DoesNotExist:
-            pass
+    base_signals.calc_totals_on_delete(instance, **kwargs)
 
 
 @receiver(m2m_changed, sender=InterventionReview.prc_officers.through)

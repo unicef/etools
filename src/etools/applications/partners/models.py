@@ -2191,26 +2191,6 @@ class Intervention(BaseIntervention):
         return users
 
     @cached_property
-    def total_partner_contribution(self):
-        return self.planned_budget.partner_contribution_local
-
-    @cached_property
-    def total_unicef_cash(self):
-        return self.planned_budget.unicef_cash_local
-
-    @cached_property
-    def total_in_kind_amount(self):
-        return self.planned_budget.in_kind_amount_local
-
-    @cached_property
-    def total_budget(self):
-        return self.total_unicef_cash + self.total_partner_contribution + self.total_in_kind_amount
-
-    @cached_property
-    def total_unicef_budget(self):
-        return self.total_unicef_cash + self.total_in_kind_amount
-
-    @cached_property
     def review(self):
         return self.reviews.order_by('created').last()
 

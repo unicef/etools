@@ -1,7 +1,6 @@
 import datetime
 import html
 import logging
-import typing
 
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
@@ -10,7 +9,6 @@ from django.db.models import F, Q
 from django.urls import reverse
 from django.utils.timezone import make_aware, now
 
-from dateutil.relativedelta import relativedelta
 from unicef_attachments.models import Attachment, FileType
 
 from etools.applications.environment.notifications import send_notification_with_template
@@ -628,26 +626,3 @@ def sync_partner_staff_member(partner: PartnerOrganization, staff_member_data: P
         for key, value in staff_member_update_fields.items():
             setattr(staff_member, key, value)
         staff_member.save()
-
-
-class Quarter(typing.NamedTuple):
-    quarter: int
-    start: datetime.date
-    end: datetime.date
-
-
-def get_quarters_range(start: datetime.date, end: datetime.date) -> typing.List[Quarter]:
-    """first date included, last excluded for every period in range"""
-    if not start or not end:
-        return []
-
-    quarters = []
-    i = 0
-    while start < end:
-        quarter_end = start + relativedelta(months=3) - relativedelta(days=1)
-        period_end = min(quarter_end, end)
-        quarters.append(Quarter(i + 1, start, period_end))
-        start = quarter_end + relativedelta(days=1)
-        i += 1
-
-    return quarters

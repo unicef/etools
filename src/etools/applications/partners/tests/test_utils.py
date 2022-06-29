@@ -8,6 +8,8 @@ from django.utils import timezone
 from dateutil.relativedelta import relativedelta
 from unicef_locations.tests.factories import LocationFactory
 
+import etools.applications.partners.base.quarters
+import etools.applications.reports.base.quarters
 from etools.applications.attachments.tests.factories import AttachmentFileTypeFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
@@ -316,18 +318,18 @@ class TestSendInterventionPastStartNotification(BaseTenantTestCase):
 class TestGetQuartersRange(BaseTenantTestCase):
     def test_missing_dates(self):
         self.assertEqual(
-            utils.get_quarters_range(None, datetime.date.today()),
+            etools.applications.reports.base.quarters.get_quarters_range(None, datetime.date.today()),
             [],
         )
         self.assertEqual(
-            utils.get_quarters_range(datetime.date.today(), None),
+            etools.applications.reports.base.quarters.get_quarters_range(datetime.date.today(), None),
             [],
         )
 
     def test_start_after_end(self):
         today = datetime.date.today()
         self.assertEqual(
-            utils.get_quarters_range(today + relativedelta(months=2), today),
+            etools.applications.reports.base.quarters.get_quarters_range(today + relativedelta(months=2), today),
             [],
         )
 
@@ -335,35 +337,35 @@ class TestGetQuartersRange(BaseTenantTestCase):
         start = datetime.date(2001, 1, 1)
         end = datetime.date(2001, 5, 27)
         self.assertEqual(
-            utils.get_quarters_range(start, end),
+            etools.applications.reports.base.quarters.get_quarters_range(start, end),
             [
-                utils.Quarter(1, start=start, end=datetime.date(2001, 3, 31)),
-                utils.Quarter(2, start=datetime.date(2001, 4, 1), end=end),
+                etools.applications.reports.base.quarters.Quarter(1, start=start, end=datetime.date(2001, 3, 31)),
+                etools.applications.reports.base.quarters.Quarter(2, start=datetime.date(2001, 4, 1), end=end),
             ],
         )
 
     def test_end_of_quarter(self):
         start = datetime.date(2001, 1, 1)
         self.assertEqual(
-            utils.get_quarters_range(start, start + relativedelta(months=15)),
+            etools.applications.reports.base.quarters.get_quarters_range(start, start + relativedelta(months=15)),
             [
-                utils.Quarter(1, start=start, end=datetime.date(2001, 3, 31)),
-                utils.Quarter(
+                etools.applications.reports.base.quarters.Quarter(1, start=start, end=datetime.date(2001, 3, 31)),
+                etools.applications.reports.base.quarters.Quarter(
                     2,
                     start=datetime.date(2001, 4, 1),
                     end=datetime.date(2001, 6, 30),
                 ),
-                utils.Quarter(
+                etools.applications.reports.base.quarters.Quarter(
                     3,
                     start=datetime.date(2001, 7, 1),
                     end=datetime.date(2001, 9, 30),
                 ),
-                utils.Quarter(
+                etools.applications.reports.base.quarters.Quarter(
                     4,
                     start=datetime.date(2001, 10, 1),
                     end=datetime.date(2001, 12, 31),
                 ),
-                utils.Quarter(
+                etools.applications.reports.base.quarters.Quarter(
                     5,
                     start=datetime.date(2002, 1, 1),
                     end=datetime.date(2002, 3, 31),

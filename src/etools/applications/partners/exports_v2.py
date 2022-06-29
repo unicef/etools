@@ -9,7 +9,7 @@ from rest_framework_csv import renderers as r
 from etools.applications.core.renderers import FriendlyCSVRenderer
 from etools.applications.core.util_scripts import currency_format
 from etools.applications.partners.models import Intervention
-from etools.applications.partners.utils import get_quarters_range
+from etools.applications.reports.base.quarters import get_quarters_range
 
 
 class PartnerOrganizationCSVRenderer(r.CSVRenderer):

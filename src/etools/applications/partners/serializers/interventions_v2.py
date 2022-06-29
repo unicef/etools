@@ -31,7 +31,7 @@ from etools.applications.partners.models import (
 )
 from etools.applications.partners.permissions import InterventionPermissions
 from etools.applications.partners.serializers.intervention_snapshot import FullInterventionSnapshotSerializerMixin
-from etools.applications.partners.utils import get_quarters_range
+from etools.applications.reports.base.quarters import get_quarters_range
 from etools.applications.reports.models import AppliedIndicator, LowerResult, ReportingRequirement
 from etools.applications.reports.serializers.v2 import (
     AppliedIndicatorBasicSerializer,

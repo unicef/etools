@@ -42,7 +42,7 @@ from etools.applications.partners.serializers.interventions_v2 import (
 )
 from etools.applications.partners.serializers.partner_organization_v2 import PartnerStaffMemberUserSerializer
 from etools.applications.partners.serializers.v3 import InterventionReviewSerializer
-from etools.applications.partners.utils import get_quarters_range
+from etools.applications.reports.base.quarters import get_quarters_range
 from etools.applications.reports.serializers.v2 import InterventionTimeFrameSerializer
 from etools.applications.users.serializers_v3 import MinimalUserSerializer
 

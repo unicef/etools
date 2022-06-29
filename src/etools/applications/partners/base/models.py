@@ -1,4 +1,5 @@
 import decimal
+from functools import cached_property
 
 from django.core.validators import MinValueValidator
 from django.db import models, transaction
@@ -119,6 +120,32 @@ class BaseIntervention(TimeStampedModel):
         return '{}'.format(
             self.title
         )
+
+    @cached_property
+    def total_partner_contribution(self):
+        return self.planned_budget.partner_contribution_local
+
+    @property
+    def partner_contribution_percent(self):
+        if self.total_local == 0:
+            return 0
+        return self.total_partner_contribution_local / self.total_local * 100
+
+    @cached_property
+    def total_unicef_cash(self):
+        return self.planned_budget.unicef_cash_local
+
+    @cached_property
+    def total_in_kind_amount(self):
+        return self.planned_budget.in_kind_amount_local
+
+    @cached_property
+    def total_budget(self):
+        return self.total_unicef_cash + self.total_partner_contribution + self.total_in_kind_amount
+
+    @cached_property
+    def total_unicef_budget(self):
+        return self.total_unicef_cash + self.total_in_kind_amount
 
 
 class BaseInterventionResultLink(TimeStampedModel):
@@ -338,12 +365,6 @@ class BaseInterventionBudget(TimeStampedModel):
     class Meta:
         abstract = True
         verbose_name_plural = _('Intervention budget')
-
-    @property
-    def partner_contribution_percent(self):
-        if self.total_local == 0:
-            return 0
-        return self.total_partner_contribution_local / self.total_local * 100
 
     @property
     def total_supply(self):
