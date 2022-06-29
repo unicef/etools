@@ -125,12 +125,6 @@ class BaseIntervention(TimeStampedModel):
     def total_partner_contribution(self):
         return self.planned_budget.partner_contribution_local
 
-    @property
-    def partner_contribution_percent(self):
-        if self.total_local == 0:
-            return 0
-        return self.total_partner_contribution_local / self.total_local * 100
-
     @cached_property
     def total_unicef_cash(self):
         return self.planned_budget.unicef_cash_local
@@ -365,6 +359,12 @@ class BaseInterventionBudget(TimeStampedModel):
     class Meta:
         abstract = True
         verbose_name_plural = _('Intervention budget')
+
+    @property
+    def partner_contribution_percent(self):
+        if self.total_local == 0:
+            return 0
+        return self.total_partner_contribution_local / self.total_local * 100
 
     @property
     def total_supply(self):
