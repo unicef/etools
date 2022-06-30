@@ -20,6 +20,7 @@ fi
 
 # Run unittests and coverage report
 coverage erase
-time coverage run manage.py test --noinput --keepdb "$@"
+time coverage run --parallel-mode --concurrency=multiprocessing manage.py test --noinput --keepdb --parallel=6 "$@"
+coverage combine
 coverage report -m
 coverage html
