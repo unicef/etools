@@ -13,6 +13,7 @@ from unicef_djangolib.fields import CURRENCIES
 from unicef_locations.models import GatewayType
 
 from etools.applications.attachments.models import AttachmentFlat
+from etools.applications.core.views_utils import choices_to_json_ready
 from etools.applications.funds.models import FundsReservationItem
 from etools.applications.partners.models import (
     Agreement,
@@ -28,7 +29,6 @@ from etools.applications.partners.models import (
     PartnerType,
 )
 from etools.applications.partners.permissions import UserIsPartnerStaffMemberPermission
-from etools.applications.partners.views.v2 import choices_to_json_ready
 from etools.applications.reports.models import CountryProgramme, Result, ResultType
 
 

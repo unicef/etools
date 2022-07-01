@@ -28,7 +28,7 @@ from etools.applications.action_points.conditions import (
     ActionPointAuthorCondition,
 )
 from etools.applications.audit.models import UNICEFAuditFocalPoint
-from etools.applications.partners.views.v2 import choices_to_json_ready
+from etools.applications.core.views_utils import choices_to_json_ready
 from etools.applications.permissions2.conditions import ObjectStatusCondition
 from etools.applications.permissions2.drf_permissions import NestedPermission
 from etools.applications.permissions2.metadata import PermissionBasedMetadata

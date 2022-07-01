@@ -20,9 +20,9 @@ from unicef_restlib.pagination import DynamicPageNumberPagination
 from unicef_restlib.views import NestedViewSetMixin, QueryStringFilterMixin, SafeTenantViewSetMixin
 
 from etools.applications.core.mixins import GetSerializerClassMixin
+from etools.applications.core.views_utils import choices_to_json_ready
 from etools.applications.field_monitoring.permissions import IsEditAction, IsReadAction
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
-from etools.applications.partners.views.v2 import choices_to_json_ready
 from etools.applications.permissions2.views import PermissionContextMixin, PermittedSerializerMixin
 from etools.applications.travel.filters import ShowHiddenFilter
 from etools.applications.travel.models import Activity, ItineraryItem, Report, Trip

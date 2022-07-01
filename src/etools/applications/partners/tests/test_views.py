@@ -20,6 +20,7 @@ from rest_framework.test import APIRequestFactory
 from unicef_locations.tests.factories import LocationFactory
 from unicef_snapshot.models import Activity
 
+import etools.applications.core.views_utils
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
@@ -56,7 +57,7 @@ from etools.applications.partners.tests.factories import (
     PartnerStaffFactory,
     PlannedEngagementFactory,
 )
-from etools.applications.partners.views import partner_organization_v2, v2
+from etools.applications.partners.views import partner_organization_v2
 from etools.applications.reports.models import ResultType
 from etools.applications.reports.tests.factories import (
     CountryProgrammeFactory,
@@ -93,7 +94,7 @@ class URLsTestCase(URLAssertionMixin, SimpleTestCase):
 class TestChoicesToJSONReady(BaseTenantTestCase):
     def test_tuple(self):
         """Make tuple JSON ready"""
-        ready = v2.choices_to_json_ready(((1, "One"), (2, "Two")))
+        ready = etools.applications.core.views_utils.choices_to_json_ready(((1, "One"), (2, "Two")))
         self.assertEqual(ready, [
             {"label": "One", "value": 1},
             {"label": "Two", "value": 2}
@@ -101,7 +102,7 @@ class TestChoicesToJSONReady(BaseTenantTestCase):
 
     def test_list(self):
         """Make simple list JSON ready"""
-        ready = v2.choices_to_json_ready([1, 2, 3])
+        ready = etools.applications.core.views_utils.choices_to_json_ready([1, 2, 3])
         self.assertEqual(ready, [
             {"label": 1, "value": 1},
             {"label": 2, "value": 2},
@@ -110,7 +111,7 @@ class TestChoicesToJSONReady(BaseTenantTestCase):
 
     def test_list_of_tuples(self):
         """Make list of tuples JSON ready"""
-        ready = v2.choices_to_json_ready([(1, "One"), (2, "Two")])
+        ready = etools.applications.core.views_utils.choices_to_json_ready([(1, "One"), (2, "Two")])
         self.assertEqual(ready, [
             {"label": "One", "value": 1},
             {"label": "Two", "value": 2}
@@ -118,7 +119,7 @@ class TestChoicesToJSONReady(BaseTenantTestCase):
 
     def test_list_of_tuples_sorted(self):
         """Make list of tuples JSON ready"""
-        ready = v2.choices_to_json_ready([(1, "Uno"), (2, "Due")])
+        ready = etools.applications.core.views_utils.choices_to_json_ready([(1, "Uno"), (2, "Due")])
         self.assertEqual(ready, [
             {"label": "Due", "value": 2},
             {"label": "Uno", "value": 1}
@@ -126,12 +127,12 @@ class TestChoicesToJSONReady(BaseTenantTestCase):
 
     def test_dict(self):
         """Make dict JSON ready"""
-        ready = v2.choices_to_json_ready({"k": "v"})
+        ready = etools.applications.core.views_utils.choices_to_json_ready({"k": "v"})
         self.assertEqual(ready, [{"label": "v", "value": "k"}])
 
     def test_dict_sorted(self):
         """Make dict JSON ready"""
-        ready = v2.choices_to_json_ready({"k": "v", "a": "b"})
+        ready = etools.applications.core.views_utils.choices_to_json_ready({"k": "v", "a": "b"})
         self.assertEqual(ready, [
             {"label": "b", "value": "a"},
             {"label": "v", "value": "k"}
@@ -139,7 +140,7 @@ class TestChoicesToJSONReady(BaseTenantTestCase):
 
     def test_choices(self):
         """Make model_utils.Choices JSON ready"""
-        ready = v2.choices_to_json_ready(Choices("one", "two"))
+        ready = etools.applications.core.views_utils.choices_to_json_ready(Choices("one", "two"))
         self.assertEqual(ready, [
             {"label": "one", "value": "one"},
             {"label": "two", "value": "two"},
