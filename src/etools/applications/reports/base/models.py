@@ -1,6 +1,6 @@
 from django.core.validators import MinValueValidator
 from django.db import models
-from django.db.models import Sum
+from django.db.models import Q, Sum
 from django.utils.translation import gettext_lazy as _
 
 from model_utils.models import TimeStampedModel
@@ -42,6 +42,24 @@ class BaseLowerResult(TimeStampedModel):
                 self.__class__.objects.filter(result_link=self.result_link).count() + 1,
             )
         super().save(*args, **kwargs)
+
+    def total(self):
+        results = self.activities.aggregate(
+            total=Sum("unicef_cash", filter=Q(is_active=True)) + Sum("cso_cash", filter=Q(is_active=True)),
+        )
+        return results["total"] if results["total"] is not None else 0
+
+    def total_cso(self):
+        results = self.activities.aggregate(
+            total=Sum("cso_cash", filter=Q(is_active=True)),
+        )
+        return results["total"] if results["total"] is not None else 0
+
+    def total_unicef(self):
+        results = self.activities.aggregate(
+            total=Sum("unicef_cash", filter=Q(is_active=True)),
+        )
+        return results["total"] if results["total"] is not None else 0
 
     @classmethod
     def renumber_results_for_result_link(cls, result_link):

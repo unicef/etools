@@ -3,7 +3,7 @@ from functools import cached_property
 
 from django.core.validators import MinValueValidator
 from django.db import models, transaction
-from django.db.models import Sum
+from django.db.models import Q, Sum
 from django.utils.translation import gettext_lazy as _
 
 from model_utils import Choices, FieldTracker
@@ -170,6 +170,15 @@ class BaseInterventionResultLink(TimeStampedModel):
             else:
                 self.code = '0'
         super().save(*args, **kwargs)
+
+    def total(self):
+        results = self.ll_results.aggregate(
+            total=(
+                Sum("activities__unicef_cash", filter=Q(activities__is_active=True)) +
+                Sum("activities__cso_cash", filter=Q(activities__is_active=True))
+            ),
+        )
+        return results["total"] if results["total"] is not None else 0
 
     @classmethod
     def renumber_result_links_for_intervention(cls, intervention):

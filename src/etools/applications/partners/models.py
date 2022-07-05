@@ -2754,15 +2754,6 @@ class InterventionResultLink(BaseInterventionResultLink):
     class Meta(BaseInterventionResultLink.Meta):
         unique_together = ['intervention', 'cp_output']
 
-    def total(self):
-        results = self.ll_results.aggregate(
-            total=(
-                Sum("activities__unicef_cash", filter=Q(activities__is_active=True)) +
-                Sum("activities__cso_cash", filter=Q(activities__is_active=True))
-            ),
-        )
-        return results["total"] if results["total"] is not None else 0
-
 
 class InterventionBudget(BaseInterventionBudget):
     class Meta(BaseInterventionBudget.Meta):
