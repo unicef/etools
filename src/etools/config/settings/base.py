@@ -199,6 +199,7 @@ SHARED_APPS = (
     'unicef_notification',
     'etools_offline',
     'etools.applications.offline',
+    'etools.applications.organizations',
 )
 
 TENANT_APPS = (
