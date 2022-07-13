@@ -24,6 +24,7 @@ from etools.applications.core.permissions import import_permissions
 from etools.applications.environment.notifications import send_notification_with_template
 from etools.applications.funds.models import FundsReservationHeader
 from etools.applications.locations.models import Location
+from etools.applications.organizations.models import Organization
 from etools.applications.partners.amendment_utils import (
     calculate_difference,
     copy_instance,
@@ -337,6 +338,15 @@ class PartnerOrganization(TimeStampedModel):
     ASSURANCE_PARTIAL = 'partial'
     ASSURANCE_COMPLETE = 'complete'
 
+    organization = models.OneToOneField(
+        Organization,
+        on_delete=models.CASCADE,
+        related_name='partner',
+        null=True
+    )
+
+    # TODO: remove fields when migration to Organization model is done. check for references
+    # BEGIN REMOVE
     partner_type = models.CharField(
         verbose_name=_("Partner Type"),
         max_length=50,
@@ -361,6 +371,8 @@ class PartnerOrganization(TimeStampedModel):
         max_length=50,
         blank=True
     )
+    # END REMOVE
+
     description = models.CharField(
         verbose_name=_("Description"),
         max_length=256,
@@ -417,6 +429,9 @@ class PartnerOrganization(TimeStampedModel):
         blank=True,
         null=True,
     )
+
+    # TODO: remove fields when migration to Organization model is done. check for references
+    # BEGIN REMOVE
     vendor_number = models.CharField(
         verbose_name=_("Vendor Number"),
         blank=True,
@@ -424,17 +439,21 @@ class PartnerOrganization(TimeStampedModel):
         unique=True,
         max_length=30
     )
+    # END REMOVE
     alternate_id = models.IntegerField(
         verbose_name=_("Alternate ID"),
         blank=True,
         null=True
     )
+    # TODO: remove fields when migration to Organization model is done. check for references
+    # BEGIN REMOVE
     alternate_name = models.CharField(
         verbose_name=_("Alternate Name"),
         max_length=255,
         blank=True,
         null=True
     )
+    # END REMOVE
     rating = models.CharField(
         verbose_name=_('Risk Rating'),
         max_length=50,
