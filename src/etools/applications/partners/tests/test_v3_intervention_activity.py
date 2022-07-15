@@ -230,6 +230,29 @@ class TestFunctionality(BaseTestCase):
         # they are mostly caused by snapshot + heavy permissions
         self.assertLess(len(cq.queries), 200, '\n'.join((f'{i}: {q["sql"]}' for i, q in enumerate(cq.queries))))
 
+    def test_remove_all_items(self):
+        items = [
+            InterventionActivityItem(
+                activity=self.activity, name=str(i), unit='test',
+                no_units=1, unit_price=42, unicef_cash=22, cso_cash=20,
+            )
+            for i in range(5)
+        ]
+        InterventionActivityItem.objects.bulk_create(items)
+        self.assertEqual(self.activity.items.count(), 5)
+
+        response = self.forced_auth_req(
+            'patch', self.detail_url,
+            user=self.user,
+            data={
+                'items': [],
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(self.activity.items.count(), 0)
+        self.assertEqual(len(response.data['items']), 0)
+
     def test_budget_validation(self):
         item_to_update = InterventionActivityItemFactory(
             activity=self.activity,

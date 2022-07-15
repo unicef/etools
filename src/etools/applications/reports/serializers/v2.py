@@ -687,7 +687,7 @@ class InterventionActivityDetailSerializer(FullInterventionSnapshotSerializerMix
         return self.instance
 
     def set_items(self, instance, items):
-        if not items:
+        if items is None:
             return
         self.fields['items'].save(items, activity=instance)
 
