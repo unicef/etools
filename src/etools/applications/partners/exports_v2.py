@@ -620,7 +620,7 @@ class InterventionXLSRenderer:
         for result_link in self.intervention.result_links.all():
             worksheet.append([
                 "CP Output " + result_link.code + ":",
-                result_link.cp_output.name
+                result_link.cp_output.name if result_link.cp_output else ""
             ])
             self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns,
                                        [self.fill_blue_pale])
@@ -752,7 +752,7 @@ class InterventionXLSRenderer:
         for result_link in self.intervention.result_links.all():
             worksheet.append([
                 result_link.code,
-                result_link.cp_output.name
+                result_link.cp_output.name if result_link.cp_output else ""
             ])
             self.apply_styles_to_cells(
                 worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns, [self.fill_blue_pale]
@@ -910,7 +910,7 @@ class InterventionXLSRenderer:
                 currency_format(supply_item.unit_price),
                 currency_format(supply_item.total_price),
                 supply_item.get_provided_by_display(),
-                supply_item.result.cp_output.output_name,
+                supply_item.result.cp_output.output_name if supply_item.result and supply_item.result.cp_output else "",
                 supply_item.other_mentions,
                 supply_item.unicef_product_number,
             ])
@@ -927,7 +927,7 @@ class InterventionXLSRenderer:
                                                     self.intervention.planned_budget.partner_supply_local)]
         )
         worksheet.append(
-            ['UNICEF Contibution', '', '', currency_format(self.intervention.planned_budget.in_kind_amount_local)]
+            ['UNICEF Contribution', '', '', currency_format(self.intervention.planned_budget.in_kind_amount_local)]
         )
         worksheet.append(
             ['Partner Contribution', '', '', currency_format(self.intervention.planned_budget.partner_supply_local)]
