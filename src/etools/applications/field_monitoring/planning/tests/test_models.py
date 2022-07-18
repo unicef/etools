@@ -1,5 +1,4 @@
 from datetime import date, timedelta
-from unittest import skip
 
 from dateutil.utils import today
 from factory import fuzzy
@@ -85,7 +84,6 @@ class TestMonitoringActivityValidations(BaseTenantTestCase):
                                              interventions=[InterventionFactory()])
         self.assertFalse(ActivityValid(activity, user=self.user).is_valid)
 
-    @skip("disable cp output validation")
     def test_interventions_without_output(self):
         intervention = InterventionFactory()
         InterventionResultLinkFactory(intervention=intervention,
