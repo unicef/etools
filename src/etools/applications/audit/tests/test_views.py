@@ -1510,6 +1510,7 @@ class TestEngagementAttachmentsView(MATransitionsTestCaseMixin, BaseTenantTestCa
             object_id=self.engagement.pk,
             code="audit_engagement",
         )
+        self.engagement.engagement_attachments.add(attachment)
         self.assertNotEqual(attachment.file_type, self.file_type)
 
         response = self.forced_auth_req(
@@ -1526,6 +1527,59 @@ class TestEngagementAttachmentsView(MATransitionsTestCaseMixin, BaseTenantTestCa
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         attachment.refresh_from_db()
         self.assertEqual(attachment.file_type, self.file_type)
+
+    def test_patch_non_existent(self):
+        file_type_old = AttachmentFileTypeFactory(
+            group=["different_engagement"],
+        )
+        attachment = AttachmentFactory(
+            file="sample.pdf",
+            file_type=file_type_old,
+            content_type=ContentType.objects.get_for_model(Engagement),
+            object_id=self.engagement.pk,
+            code="audit_engagement",
+        )
+        self.assertNotEqual(attachment.file_type, self.file_type)
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse(
+                'audit:engagement-attachments-detail',
+                args=[self.engagement.pk, 111111],
+            ),
+            user=self.unicef_focal_point,
+            data={
+                "file_type": self.file_type.pk,
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_patch_does_not_belong(self):
+        file_type_old = AttachmentFileTypeFactory(
+            group=["different_engagement"],
+        )
+        attachment = AttachmentFactory(
+            file="sample.pdf",
+            file_type=file_type_old,
+            content_type=ContentType.objects.get_for_model(Engagement),
+            object_id=self.engagement.pk,
+            code="audit_engagement",
+        )
+        self.engagement.engagement_attachments.add(attachment)
+        self.assertNotEqual(attachment.file_type, self.file_type)
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse(
+                'audit:engagement-attachments-detail',
+                args=[EngagementFactory().pk, attachment.pk]
+            ),
+            user=self.unicef_focal_point,
+            data={
+                "file_type": self.file_type.pk,
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_delete(self):
         attachment = AttachmentFactory(
@@ -1736,6 +1790,7 @@ class TestEngagementReportAttachmentsView(MATransitionsTestCaseMixin, BaseTenant
             code="audit_report",
         )
         self.assertNotEqual(attachment.file_type, self.file_type)
+        self.engagement.report_attachments.add(attachment)
 
         response = self.forced_auth_req(
             'patch',
@@ -1751,6 +1806,59 @@ class TestEngagementReportAttachmentsView(MATransitionsTestCaseMixin, BaseTenant
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         attachment.refresh_from_db()
         self.assertEqual(attachment.file_type, self.file_type)
+
+    def test_patch_non_existent(self):
+        file_type_old = AttachmentFileTypeFactory(
+            group=["different_engagement"],
+        )
+        attachment = AttachmentFactory(
+            file="sample.pdf",
+            file_type=file_type_old,
+            content_type=ContentType.objects.get_for_model(Engagement),
+            object_id=self.engagement.pk,
+            code="audit_report",
+        )
+        self.assertNotEqual(attachment.file_type, self.file_type)
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse(
+                'audit:engagement-attachments-detail',
+                args=[self.engagement.pk, 111111],
+            ),
+            user=self.unicef_focal_point,
+            data={
+                "file_type": self.file_type.pk,
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_patch_does_not_belong(self):
+        file_type_old = AttachmentFileTypeFactory(
+            group=["different_engagement"],
+        )
+        attachment = AttachmentFactory(
+            file="sample.pdf",
+            file_type=file_type_old,
+            content_type=ContentType.objects.get_for_model(Engagement),
+            object_id=self.engagement.pk,
+            code="audit_report",
+        )
+        self.engagement.engagement_attachments.add(attachment)
+        self.assertNotEqual(attachment.file_type, self.file_type)
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse(
+                'audit:engagement-attachments-detail',
+                args=[EngagementFactory().pk, attachment.pk]
+            ),
+            user=self.unicef_focal_point,
+            data={
+                "file_type": self.file_type.pk,
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_delete(self):
         attachment = AttachmentFactory(

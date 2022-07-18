@@ -646,7 +646,7 @@ class BaseAuditAttachmentsViewSet(BaseAuditViewSet,
         }
 
     def get_object(self, pk=None):
-        if self.request.method in ['GET', 'DELETE']:
+        if self.request.method in ['GET', 'PATCH', 'DELETE']:
             self.queryset = self.filter_queryset(self.get_queryset())
         if pk:
             return get_object_or_404(self.queryset, **{"pk": pk})
