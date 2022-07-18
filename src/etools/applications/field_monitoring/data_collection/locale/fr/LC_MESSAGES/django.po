@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-05-27 10:11+0000\n"
+"POT-Creation-Date: 2022-07-18 09:07+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -20,59 +20,59 @@ msgstr ""
 
 #: models.py:25 models.py:49 models.py:135 models.py:182
 msgid "Activity"
-msgstr ""
+msgstr "Activité"
 
 #: models.py:27
 msgid "Question"
-msgstr ""
+msgstr "Question"
 
 #: models.py:31
 msgid "Question Text"
-msgstr ""
+msgstr "Texte de la question"
 
 #: models.py:32
 msgid "Count as HACT"
-msgstr ""
+msgstr "Compter comme HACT"
 
 #: models.py:34
 msgid "Specific Details To Probe"
-msgstr ""
+msgstr "Détails spécifiques à sonder"
 
 #: models.py:35
 msgid "Enabled"
-msgstr ""
+msgstr "Activé"
 
 #: models.py:40 models.py:113
 msgid "Activity Question"
-msgstr ""
+msgstr "Question d'activité"
 
 #: models.py:41
 msgid "Activity Questions"
-msgstr ""
+msgstr "Questions d'activité"
 
 #: models.py:51
 msgid "Methods"
-msgstr ""
+msgstr "Méthodes"
 
 #: models.py:52
 msgid "Information Source"
-msgstr ""
+msgstr "Source d'informatioon"
 
 #: models.py:53
 msgid "Author"
-msgstr ""
+msgstr "Auteur"
 
 #: models.py:57
 msgid "Started Checklist"
-msgstr ""
+msgstr "Liste de contrôle commencée"
 
 #: models.py:58
 msgid "Started Checklists"
-msgstr ""
+msgstr "Listes de contrôle commencées"
 
 #: models.py:110 models.py:157
 msgid "Checklist"
-msgstr ""
+msgstr "Liste de contrôle"
 
 #: models.py:114 models.py:136
 msgid "Value"
@@ -80,60 +80,60 @@ msgstr ""
 
 #: models.py:119
 msgid "Checklist Finding"
-msgstr ""
+msgstr "Liste de vérification"
 
 #: models.py:120
 msgid "Checklist Findings"
-msgstr ""
+msgstr "Liste de vérifications"
 
 #: models.py:139
 msgid "Overall Activity Question Finding"
-msgstr ""
+msgstr "Conclusion générale relative à la question"
 
 #: models.py:140
 msgid "Overall Activity Question Findings"
-msgstr ""
+msgstr "Conclusions générales relatives à la question"
 
 #: models.py:158 models.py:183
 msgid "Narrative Finding"
-msgstr ""
+msgstr "Conclusion narrative"
 
 #: models.py:159
 msgid "Attachments"
-msgstr ""
+msgstr "Pièces jointes"
 
 #: models.py:164
 msgid "Checklist Overall Finding"
-msgstr ""
+msgstr "Liste de conclusion générale"
 
 #: models.py:165
 msgid "Checklist Overall Findings"
-msgstr ""
+msgstr "Liste de conclusions générales"
 
 #: models.py:189
 msgid "Activity Overall Finding"
-msgstr ""
+msgstr "Conclusion générale de l'activité"
 
 #: models.py:190
 msgid "Activity Overall Findings"
-msgstr ""
+msgstr "Conclusions générales de l'activité"
 
 #: offline/blueprint.py:48
 msgid "Source of Information"
-msgstr ""
+msgstr "Source d'information"
 
 #: offline/blueprint.py:70
 msgid "Overall Finding"
-msgstr ""
+msgstr "Conclusion générale"
 
 #: serializers.py:79
 msgid "Document Type"
-msgstr ""
+msgstr "Type de document"
 
 #: serializers.py:102
 msgid "Information source is required"
-msgstr ""
+msgstr "La source d'information est requise"
 
 #: views.py:135
 msgid "Report Attachments"
-msgstr ""
+msgstr "Pièces jointes du rapport"
