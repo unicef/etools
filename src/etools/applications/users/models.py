@@ -9,6 +9,7 @@ from django.core.mail import send_mail
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import connection, models
 from django.db.models.signals import post_save
+from django.urls import reverse
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 
@@ -20,6 +21,10 @@ if TYPE_CHECKING:
     from etools.applications.partners.models import PartnerStaffMember
 
 logger = logging.getLogger(__name__)
+
+
+def preferences_default_dict():
+    return {'language': settings.LANGUAGE_CODE}
 
 
 class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
@@ -37,6 +42,8 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(_('active'), default=True)
     is_staff = models.BooleanField(_('staff'), default=False)
     is_superuser = models.BooleanField(_('superuser'), default=False)
+
+    preferences = models.JSONField(default=preferences_default_dict)
 
     objects = UserManager()
 
@@ -98,6 +105,10 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
                 if PartnerStaffMember.objects.filter(user=self).exists():
                     return country
         return None
+
+    def get_admin_url(self):
+        info = (self._meta.app_label, self._meta.model_name)
+        return reverse('admin:%s_%s_change' % info, args=(self.pk,))
 
     def save(self, *args, **kwargs):
         if self.email != self.email.lower():

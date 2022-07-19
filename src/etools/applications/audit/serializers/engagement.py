@@ -517,7 +517,7 @@ class AuditSerializer(ActivePDValidationMixin, RiskCategoriesUpdateMixin, Engage
     number_of_financial_findings = serializers.SerializerMethodField(label=_('No. of Financial Findings'))
 
     pending_unsupported_amount = serializers.DecimalField(20, 2, label=_('Pending Unsupported Amount'), read_only=True)
-    percent_of_audited_expenditure = serializers.IntegerField(label=_('% Of Audited Expenditure'), read_only=True)
+    percent_of_audited_expenditure = serializers.DecimalField(20, 1, label=_('% Of Audited Expenditure'), read_only=True)
 
     class Meta(EngagementSerializer.Meta):
         model = Audit
