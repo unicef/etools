@@ -9,6 +9,7 @@ from unicef_vision.settings import INSIGHT_DATE_FORMAT
 from unicef_vision.synchronizers import FileDataSynchronizer
 from unicef_vision.utils import comp_decimals
 
+from etools.applications.organizations.models import Organization
 from etools.applications.partners.models import PartnerOrganization, PlannedEngagement
 from etools.applications.partners.tasks import notify_partner_hidden
 from etools.applications.vision.synchronizers import VisionDataTenantSynchronizer
@@ -132,7 +133,7 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
             if field == 'blocked':
                 apiobj_field = mapped_key in api_obj
 
-            if getattr(local_obj, field) != apiobj_field:
+            if getattr(local_obj, field, None) != apiobj_field:
                 logger.debug('field changed', field)
                 return True
         return False
@@ -143,10 +144,11 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
         notify_block = False
 
         try:
-            partner_org, new = PartnerOrganization.objects.get_or_create(vendor_number=partner['VENDOR_CODE'])
+            org, created = Organization.objects.get_or_create(vendor_number=partner['VENDOR_CODE'])
+            partner_org, new = PartnerOrganization.objects.get_or_create(organization=org)
 
             if not self.get_partner_type(partner):
-                logger.info('Partner {} skipped, because PartnerType is {}'.format(
+                logger.info('Partner {} skipped, because OrganizationType is {}'.format(
                     partner['VENDOR_NAME'], partner['PARTNER_TYPE_DESC']
                 ))
 
@@ -157,9 +159,13 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
                     partner_org.save()
                 return processed
 
+            if created or self._changed_fields(org, partner):
+                org.name = partner['VENDOR_NAME']
+                org.short_name = partner['SEARCH_TERM1'] or ''
+                org.organization_type = self.get_partner_type(partner)
+                org.cso_type = self.get_cso_type(partner)
+
             if new or self._changed_fields(partner_org, partner):
-                partner_org.name = partner['VENDOR_NAME']
-                partner_org.cso_type = self.get_cso_type(partner)
                 partner_org.rating = self.get_partner_rating(partner)
                 partner_org.type_of_assessment = self.get_type_of_assessment(partner)
                 partner_org.address = partner.get('STREET', '')
@@ -173,7 +179,7 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
                     '%d-%b-%y') if partner['CORE_VALUE_ASSESSMENT_DT'] else None
                 partner_org.last_assessment_date = datetime.strptime(
                     partner['DATE_OF_ASSESSMENT'], '%d-%b-%y') if partner["DATE_OF_ASSESSMENT"] else None
-                partner_org.partner_type = self.get_partner_type(partner)
+
                 partner_org.deleted_flag = bool(partner['MARKED_FOR_DELETION'])
                 posting_block = bool(partner['POSTING_BLOCK'])
 
@@ -183,7 +189,7 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
 
                 partner_org.hidden = partner_org.deleted_flag or partner_org.blocked or partner_org.manually_blocked
                 partner_org.vision_synced = True
-                partner_org.short_name = partner['SEARCH_TERM1'] or ''
+
                 partner_org.highest_risk_rating_name = self.get_partner_higest_rating(partner)
                 partner_org.highest_risk_rating_type = partner.get("HIGEST_RISK_RATING_TYPE", "")
                 partner_org.psea_assessment_date = datetime.strptime(
@@ -224,6 +230,7 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
                         partner_org.type_of_assessment == PartnerOrganization.MICRO_ASSESSMENT)
                 ):
                     partner_org.basis_for_risk_rating = ''
+                org.save()
                 partner_org.save()
 
                 if notify_block:

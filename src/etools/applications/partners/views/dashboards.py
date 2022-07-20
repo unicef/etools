@@ -91,7 +91,7 @@ class InterventionPartnershipDashView(QueryStringFilterMixin, ListCreateAPIView)
                 expression = functools.reduce(operator.and_, queries)
                 qs = qs.filter(expression)
 
-        return qs.order_by('agreement__partner__name')
+        return qs.order_by('agreement__partner__organization__name')
 
     def list(self, request):
         """

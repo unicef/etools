@@ -122,7 +122,7 @@ class PMPInterventionListCreateView(PMPInterventionMixin, InterventionListAPIVie
     permission_classes = (IsAuthenticated, PMPInterventionPermission)
     search_terms = (
         'title__icontains',
-        'agreement__partner__name__icontains',
+        'agreement__partner__organization__name__icontains',
         'number__icontains',
         'cfei_number__icontains',
     )
