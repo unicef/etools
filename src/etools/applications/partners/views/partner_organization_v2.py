@@ -93,15 +93,16 @@ class PartnerOrganizationListAPIView(ExternalModuleFilterMixin, QueryStringFilte
         CSVFlatRenderer
     )
     filters = (
-        ('partner_type', 'partner_type__in'),
-        ('cso_type', 'cso_type__in'),
+        ('partner_type', 'organization__organization_type__in'),
+        ('cso_type', 'organization__cso_type__in'),
         ('rating', 'rating__in'),
         ('sea_risk_rating', 'sea_risk_rating_name__in'),
         ('psea_assessment_date_before', 'psea_assessment_date__lt'),
         ('psea_assessment_date_after', 'psea_assessment_date__gt'),
         ('lead_section', 'lead_section__in'),
     )
-    search_terms = ('name__icontains', 'vendor_number__icontains', 'short_name__icontains')
+    search_terms = ('organization__name__icontains', 'organization__vendor_number__icontains',
+                    'organization__short_name__icontains')
     module2filters = {
         'tpm': ['activity__tpmactivity__tpm_visit__tpm_partner__staff_members__user', ],
         'psea': ['psea_assessment__assessor__auditor_firm_staff__user', 'psea_assessment__assessor__user']

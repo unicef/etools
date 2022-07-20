@@ -18,10 +18,10 @@ from etools.applications.partners.models import (
     Assessment,
     CoreValuesAssessment,
     Intervention,
+    OrganizationType,
     PartnerOrganization,
     PartnerPlannedVisits,
     PartnerStaffMember,
-    PartnerType,
     PlannedEngagement,
 )
 from etools.applications.partners.serializers.interventions_v2 import (
@@ -252,6 +252,11 @@ class AssessmentDetailSerializer(AttachmentSerializerMixin, serializers.ModelSer
 
 class PartnerOrganizationListSerializer(serializers.ModelSerializer):
     rating = serializers.CharField(source='get_rating_display')
+    name = serializers.CharField(source='organization.name')
+    vendor_number = serializers.CharField(source='organization.vendor_number')
+    short_name = serializers.CharField(source='organization.short_name')
+    partner_type = serializers.CharField(source='organization.organization_type')
+    cso_type = serializers.CharField(source='organization.cso_type')
 
     class Meta:
         model = PartnerOrganization
@@ -288,6 +293,11 @@ class PartnerOrganizationListSerializer(serializers.ModelSerializer):
 
 class PartnerOrgPSEADetailsSerializer(serializers.ModelSerializer):
     staff_members = serializers.SerializerMethodField()
+    name = serializers.CharField(source='organization.name')
+    vendor_number = serializers.CharField(source='organization.vendor_number')
+    short_name = serializers.CharField(source='organization.short_name')
+    partner_type = serializers.CharField(source='organization.organization_type')
+    cso_type = serializers.CharField(source='organization.cso_type')
 
     def get_staff_members(self, obj):
         return [s.get_full_name() for s in obj.staff_members.all()]
@@ -389,7 +399,7 @@ class PartnerPlannedVisitsSerializer(serializers.ModelSerializer):
                 partner=self.initial_data.get("partner"),
                 year=self.initial_data.get("year"),
             )
-            if self.instance.partner.partner_type != PartnerType.GOVERNMENT:
+            if self.instance.partner.partner_type != OrganizationType.GOVERNMENT:
                 raise ValidationError({'partner': 'Planned Visit can be set only for Government partners'})
 
         except self.Meta.model.DoesNotExist:
@@ -439,7 +449,11 @@ class MonitoringActivityGroupSerializer(serializers.Field):
 
 
 class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
-
+    name = serializers.CharField(source='organization.name', read_only=True)
+    vendor_number = serializers.CharField(source='organization.vendor_number', read_only=True)
+    short_name = serializers.CharField(source='organization.short_name', read_only=True)
+    partner_type = serializers.CharField(source='organization.organization_type', read_only=True)
+    cso_type = serializers.CharField(source='organization.cso_type', read_only=True)
     staff_members = PartnerStaffMemberDetailSerializer(many=True, read_only=True)
     assessments = AssessmentDetailSerializer(many=True, read_only=True)
     planned_engagement = PlannedEngagementSerializer(read_only=True)
@@ -467,10 +481,13 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PartnerOrganization
-        fields = "__all__"
+        exclude = ('organization',)
 
 
 class PartnerOrganizationDashboardSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(source='organization.name')
+    vendor_number = serializers.CharField(source='organization.vendor_number')
+    partner_type = serializers.CharField(source='organization.organization_type')
     sections = serializers.ReadOnlyField(read_only=True)
     locations = serializers.ReadOnlyField(read_only=True)
     action_points = serializers.ReadOnlyField(read_only=True)
@@ -499,7 +516,11 @@ class PartnerOrganizationDashboardSerializer(serializers.ModelSerializer):
 
 
 class PartnerOrganizationCreateUpdateSerializer(SnapshotModelSerializer):
-
+    name = serializers.CharField(source='organization.name', read_only=True)
+    vendor_number = serializers.CharField(source='organization.vendor_number', read_only=True)
+    short_name = serializers.CharField(source='organization.short_name', read_only=True)
+    partner_type = serializers.CharField(source='organization.organization_type', read_only=True)
+    cso_type = serializers.CharField(source='organization.cso_type', read_only=True)
     staff_members = PartnerStaffMemberNestedSerializer(many=True, read_only=True)
     planned_engagement = PlannedEngagementNestedSerializer(read_only=True)
     hidden = serializers.BooleanField(read_only=True)
@@ -579,7 +600,11 @@ class PartnerOrganizationCreateUpdateSerializer(SnapshotModelSerializer):
 
 
 class PartnerOrganizationHactSerializer(serializers.ModelSerializer):
-
+    name = serializers.CharField(source='organization.name')
+    vendor_number = serializers.CharField(source='organization.vendor_number')
+    short_name = serializers.CharField(source='organization.short_name')
+    partner_type = serializers.CharField(source='organization.organization_type')
+    cso_type = serializers.CharField(source='organization.cso_type')
     planned_engagement = PlannedEngagementSerializer(read_only=True)
     hact_min_requirements = serializers.JSONField()
     rating = serializers.CharField(source='get_rating_display')

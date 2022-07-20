@@ -120,7 +120,7 @@ class AssessmentViewSet(
         MAP_SORT = {
             "reference_number": "reference_number",
             "assessment_date": "assessment_date",
-            "partner_name": "partner__name",
+            "partner_name": "partner__organization__name",
         }
         sort_param = self.request.GET.get("sort")
         ordering = []

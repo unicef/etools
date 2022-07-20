@@ -77,10 +77,10 @@ class ActionPointViewSet(
         'assigned_to__email', 'assigned_to__first_name', 'assigned_to__last_name',
         'assigned_by__email', 'assigned_by__first_name', 'assigned_by__last_name',
         'section__name', 'office__name', '=id',
-        'status', 'intervention__title', 'location__name', 'partner__name', 'cp_output__name',
+        'status', 'intervention__title', 'location__name', 'partner__organization__name', 'cp_output__name',
     )
     ordering_fields = (
-        'cp_output__name', 'partner__name', 'section__name', 'office__name', 'assigned_to__first_name',
+        'cp_output__name', 'partner__organization__name', 'section__name', 'office__name', 'assigned_to__first_name',
         'assigned_to__last_name', 'due_date', 'status', 'pk'
     )
     filter_fields = {field: ['exact'] for field in (

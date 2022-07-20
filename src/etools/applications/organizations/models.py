@@ -81,4 +81,4 @@ class Organization(TimeStampedModel, models.Model):
         unique_together = ('name', 'vendor_number')
 
     def __str__(self):
-        return self.name
+        return self.name if self.name else self.vendor_number

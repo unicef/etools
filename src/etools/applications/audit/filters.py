@@ -56,7 +56,7 @@ class UniqueIDOrderingFilter(BaseFilterBackend):
         if not ordering.lstrip('-') == 'reference_number':
             return queryset
 
-        ordering_params = ['partner__name', 'engagement_type', 'created_year', 'id']
+        ordering_params = ['partner__organization__name', 'engagement_type', 'created_year', 'id']
 
         return queryset.annotate(created_year=TruncYear('created'))\
             .order_by(*map(lambda param: ('' if ordering == 'reference_number' else '-') + param, ordering_params))
