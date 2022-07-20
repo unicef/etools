@@ -463,7 +463,7 @@ class TPMActivityViewSet(viewsets.ReadOnlyModelViewSet):
 
     filter_backends = (SearchFilter, OrderingFilter, DjangoFilterBackend)
     search_fields = ('tpm_visit__tpm_partner__vendor_number', 'tpm_visit__tpm_partner__name',
-                     'partner__name', 'partner__vendor_number')
+                     'partner__organization__name', 'partner__vendor_number')
 
 
 class TPMActionPointViewSet(BaseTPMViewSet,

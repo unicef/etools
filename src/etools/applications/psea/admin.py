@@ -23,7 +23,7 @@ class NFRAttachmentInline(AttachmentSingleInline):
 class AssessmentAdmin(admin.ModelAdmin):
     list_display = ('partner', 'get_status', 'overall_rating', )
     list_filter = ('partner', 'overall_rating')
-    search_fields = ('partner__name', )
+    search_fields = ('partner__organization__name', )
     raw_id_fields = ('partner', 'focal_points')
 
     def get_status(self, obj):

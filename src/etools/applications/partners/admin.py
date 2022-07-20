@@ -19,7 +19,6 @@ from unicef_snapshot.admin import ActivityInline, SnapshotModelAdmin
 from etools.applications.partners.exports import PartnerExport
 from etools.applications.partners.forms import (  # TODO intervention sector locations cleanup
     InterventionAttachmentForm,
-    PartnersAdminForm,
     PartnerStaffMemberForm,
 )
 from etools.applications.partners.mixins import CountryUsersAdminMixin, HiddenPartnerMixin
@@ -469,7 +468,7 @@ class PartnerStaffMemberAdmin(SnapshotModelAdmin):
         'email',
         'user__first_name',
         'user__last_name',
-        'partner__name'
+        'partner__organization__name'
     )
     inlines = [
         ActivityInline,
@@ -494,6 +493,8 @@ class HiddenPartnerFilter(admin.SimpleListFilter):
     def queryset(self, request, queryset):
 
         value = self.value()
+        if not value:
+            return queryset
         if value == 'True':
             return queryset.filter(hidden=True)
         return queryset.filter(hidden=False)
@@ -505,21 +506,21 @@ class CoreValueAssessmentInline(admin.StackedInline):
 
 
 class PartnerAdmin(ExtraUrlMixin, ExportMixin, admin.ModelAdmin):
-    form = PartnersAdminForm
     resource_class = PartnerExport
     search_fields = (
-        'name',
-        'vendor_number',
+        'alternate_name',
+        'organization__name',
+        'organization__vendor_number',
+        'organization__short_name'
     )
+    autocomplete_fields = ('lead_office', 'lead_section')
     list_filter = (
-        'partner_type',
+        'organization__organization_type',
         'rating',
         HiddenPartnerFilter,
     )
     list_display = (
-        'name',
-        'vendor_number',
-        'partner_type',
+        'organization',
         'rating',
         'highest_risk_rating_name',
         'highest_risk_rating_type',
@@ -534,7 +535,7 @@ class PartnerAdmin(ExtraUrlMixin, ExportMixin, admin.ModelAdmin):
     ]
     readonly_fields = (
         'vision_synced',
-        'vendor_number',
+        'organization',
         'rating',
         'type_of_assessment',
         'last_assessment_date',
@@ -543,7 +544,6 @@ class PartnerAdmin(ExtraUrlMixin, ExportMixin, admin.ModelAdmin):
         'total_ct_cp',
         'deleted_flag',
         'blocked',
-        'name',
         'hact_values',
         'total_ct_cp',
         'total_ct_cy',
@@ -560,13 +560,10 @@ class PartnerAdmin(ExtraUrlMixin, ExportMixin, admin.ModelAdmin):
     fieldsets = (
         (_('Partner Details'), {
             'fields':
-                (('name', 'vision_synced',),
-                 ('short_name', 'alternate_name',),
-                 ('partner_type', 'cso_type',),
+                (('organization', 'vision_synced',),
                  'lead_office',
                  'lead_section',
                  'shared_with',
-                 'vendor_number',
                  'rating',
                  'type_of_assessment',
                  'last_assessment_date',
@@ -645,7 +642,8 @@ class PartnerAdmin(ExtraUrlMixin, ExportMixin, admin.ModelAdmin):
 class PlannedEngagementAdmin(admin.ModelAdmin):
     model = PlannedEngagement
     search_fields = (
-        'partner__name',
+        'partner__organization__name',
+        'partner__organization__short_name',
     )
     fields = (
         'partner',
@@ -742,7 +740,7 @@ class AgreementAdmin(
     )
     search_fields = (
         'agreement_number',
-        'partner__name',
+        'partner__organization__name',
     )
     fieldsets = (
         (_('Agreement Details'), {
