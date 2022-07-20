@@ -159,7 +159,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
         return 'Visit ({} to {} at {} - {})'.format(
             self.tpm_partner, ', '.join(filter(
                 lambda x: x,
-                self.tpm_activities.values_list('partner__name', flat=True)
+                self.tpm_activities.values_list('partner__organization__name', flat=True)
             )),
             self.start_date, self.end_date
         )

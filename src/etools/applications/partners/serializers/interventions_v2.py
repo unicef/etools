@@ -17,6 +17,7 @@ from unicef_snapshot.serializers import SnapshotModelSerializer
 
 from etools.applications.funds.models import FundsCommitmentItem, FundsReservationHeader
 from etools.applications.funds.serializers import FRHeaderSerializer, FRsSerializer
+from etools.applications.organizations.models import OrganizationType
 from etools.applications.partners.models import (
     FileType,
     Intervention,
@@ -27,7 +28,6 @@ from etools.applications.partners.models import (
     InterventionReportingPeriod,
     InterventionResultLink,
     PartnerStaffMember,
-    PartnerType,
 )
 from etools.applications.partners.permissions import InterventionPermissions
 from etools.applications.partners.serializers.intervention_snapshot import FullInterventionSnapshotSerializerMixin
@@ -177,7 +177,7 @@ class PlannedVisitsCUSerializer(serializers.ModelSerializer):
                 intervention=self.initial_data.get("intervention"),
                 pk=self.initial_data.get("id"),
             )
-            if self.instance.intervention.agreement.partner.partner_type == PartnerType.GOVERNMENT:
+            if self.instance.intervention.agreement.partner.partner_type == OrganizationType.GOVERNMENT:
                 raise ValidationError("Planned Visit to be set only at Partner level")
             if self.instance.intervention.status == Intervention.TERMINATED:
                 raise ValidationError("Planned Visit cannot be set for Terminated interventions")

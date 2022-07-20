@@ -6,42 +6,10 @@ from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from django.db import connection
 from django.db.models import Q
-from django.utils.translation import gettext as _
 
-from unicef_djangolib.forms import AutoSizeTextForm
-
-from etools.applications.partners.models import (
-    Intervention,
-    InterventionAttachment,
-    PartnerOrganization,
-    PartnerStaffMember,
-    PartnerType,
-)
+from etools.applications.partners.models import Intervention, InterventionAttachment, PartnerStaffMember
 
 logger = logging.getLogger('partners.forms')
-
-
-class PartnersAdminForm(AutoSizeTextForm):
-
-    class Meta:
-        model = PartnerOrganization
-        fields = '__all__'
-
-    def clean(self):
-        cleaned_data = super().clean()
-
-        partner_type = cleaned_data.get('partner_type')
-        cso_type = cleaned_data.get('cso_type')
-
-        if partner_type and partner_type == PartnerType.CIVIL_SOCIETY_ORGANIZATION and not cso_type:
-            raise ValidationError(
-                _('You must select a type for this CSO')
-            )
-        if partner_type and partner_type != PartnerType.CIVIL_SOCIETY_ORGANIZATION and cso_type:
-            raise ValidationError(
-                _('"CSO Type" does not apply to non-CSO organizations, please remove type')
-            )
-        return cleaned_data
 
 
 class PartnerStaffMemberForm(forms.ModelForm):
