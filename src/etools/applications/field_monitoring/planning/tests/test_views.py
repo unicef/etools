@@ -1,9 +1,11 @@
 from datetime import date
 from unittest import skip
 
+from django.conf import settings
 from django.core import mail
 from django.core.management import call_command
 from django.db import connection
+from django.test import override_settings
 from django.urls import reverse
 
 from rest_framework import status
@@ -440,6 +442,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             data={'sections__in': f'{section.id}'},
         )
 
+    @override_settings(STATIC_ROOT=settings.PACKAGE_ROOT + '/assets/')
     def test_visit_pdf_export(self):
         partner = PartnerFactory()
         activity = MonitoringActivityFactory(partners=[partner])

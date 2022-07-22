@@ -1,6 +1,8 @@
 from datetime import datetime
 
+from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -337,6 +339,7 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
         visit = TPMVisitFactory(status='unicef_approved', tpm_activities__action_points__count=3)
         self._test_export(self.pme_user, 'tpm:action-points-csv-export', args=(visit.id,))
 
+    @override_settings(STATIC_ROOT=settings.PACKAGE_ROOT + '/assets/')
     def test_visit_letter(self):
         visit = TPMVisitFactory(status='tpm_accepted')
         self._test_export(self.pme_user, 'tpm:visits-tpm-visit-letter', args=(visit.id,))
