@@ -72,7 +72,7 @@ requests = "==2.26"
 social-auth-app-django = "==5.0"
 social-auth-core = {extras = ["azuread"],version = "==4.1"}
 tenant-schemas-celery = "==1.0.1"
-unicef-attachments = "==0.10.1"
+unicef-attachments = "==0.11"
 unicef-djangolib = "==0.5.4"
 unicef-locations = "==4.0.1"
 unicef-notification = "==1.1"
@@ -84,7 +84,6 @@ unicef-vision = "==0.6"
 etools-offline = "==0.1.0"
 openpyxl = "==3.0.5"
 pyyaml = "==5.4.1"
-
 reportlab = "==3.6.6"  # freeze: getStringIO from 'reportlab.lib.utils'
 
 [requires]
