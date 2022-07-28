@@ -149,7 +149,7 @@ class Option(models.Model):
     """
 
     question = models.ForeignKey(Question, related_name='options', verbose_name=_('Question'), on_delete=models.CASCADE)
-    label = models.CharField(max_length=50, verbose_name=_('Label'))
+    label = models.CharField(max_length=100, verbose_name=_('Label'))
     # TODO: remove json field usage and replace with Charfield as this is only used without a structure:
     # eg: value = 1, value = "Characters", value = True -> used only for automatic typecasting and cand be confusing
     value = models.JSONField(verbose_name=_('Value'), blank=True, null=True)
