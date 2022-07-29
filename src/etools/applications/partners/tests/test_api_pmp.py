@@ -11,6 +11,8 @@ from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.core.tests.mixins import URLAssertionMixin
+from etools.applications.organizations.models import Organization, OrganizationType
+from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.models import (
     Agreement,
     AgreementAmendment,
@@ -18,7 +20,6 @@ from etools.applications.partners.models import (
     Intervention,
     InterventionAmendment,
     PartnerOrganization,
-    PartnerType,
 )
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.publics.tests.factories import PublicsCurrencyFactory
@@ -102,16 +103,17 @@ class TestPMPStaticDropdownsListApiView(BaseTenantTestCase):
 
     def test_cso_types(self):
         """Verify the cso_types portion of the response"""
-        PartnerFactory(cso_type=PartnerOrganization.CSO_TYPES['International'])
+        PartnerFactory(organization=OrganizationFactory(
+            cso_type=Organization.CSO_TYPES['International']))
         # These should be filtered out of the endpoint response (https://github.com/unicef/etools/issues/510)
-        PartnerFactory(cso_type='')
+        PartnerFactory(organization=OrganizationFactory(cso_type=''))
 
         response = self.forced_auth_req('get', self.url)
         d = self._assertResponseFundamentals(response)
         self.assertCountEqual(
             d['cso_types'],
-            [{'value': PartnerOrganization.CSO_TYPES['International'],
-              'label': PartnerOrganization.CSO_TYPES['International']}])
+            [{'value': Organization.CSO_TYPES['International'],
+              'label': Organization.CSO_TYPES['International']}])
 
     def test_partner_types(self):
         """Verify the partner_types portion of the response"""
@@ -119,7 +121,7 @@ class TestPMPStaticDropdownsListApiView(BaseTenantTestCase):
         d = self._assertResponseFundamentals(response)
 
         self.assertCountEqual(d['partner_types'],
-                              self._make_value_label_list_from_choices(PartnerType.CHOICES))
+                              self._make_value_label_list_from_choices(OrganizationType.CHOICES))
 
     def test_agency_choices(self):
         """Verify the agency_choices portion of the response"""

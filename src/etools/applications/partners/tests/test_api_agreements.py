@@ -12,7 +12,9 @@ from unicef_snapshot.models import Activity
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.core.tests.mixins import URLAssertionMixin
-from etools.applications.partners.models import Agreement, AgreementAmendment, Intervention, PartnerType
+from etools.applications.organizations.models import OrganizationType
+from etools.applications.organizations.tests.factories import OrganizationFactory
+from etools.applications.partners.models import Agreement, AgreementAmendment, Intervention
 from etools.applications.partners.tests.factories import AgreementFactory, InterventionFactory, PartnerFactory
 from etools.applications.reports.tests.factories import CountryProgrammeFactory
 from etools.applications.users.tests.factories import GroupFactory, UserFactory
@@ -41,7 +43,8 @@ class TestAgreementsAPI(BaseTenantTestCase):
         cls.partnership_manager_user = UserFactory(is_staff=True)
         cls.partnership_manager_user.groups.add(GroupFactory())
 
-        cls.partner1 = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
+        cls.partner1 = PartnerFactory(
+            organization=OrganizationFactory(organization_type=OrganizationType.CIVIL_SOCIETY_ORGANIZATION))
         cls.country_programme = CountryProgrammeFactory()
         cls.agreement1 = AgreementFactory(partner=cls.partner1, signed_by_unicef_date=datetime.date.today())
         cls.intervention = InterventionFactory(agreement=cls.agreement1)

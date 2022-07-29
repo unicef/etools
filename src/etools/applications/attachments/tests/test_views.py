@@ -6,7 +6,8 @@ from rest_framework.test import APIRequestFactory
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.audit.tests.factories import EngagementFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
-from etools.applications.partners.models import PartnerType
+from etools.applications.organizations.models import OrganizationType
+from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.tests.factories import (
     AgreementAmendmentFactory,
     AgreementFactory,
@@ -46,11 +47,11 @@ class TestAttachmentListView(BaseTenantTestCase):
             content_object=cls.file_type_2,
             uploaded_by=cls.user
         )
-
-        cls.partner = PartnerFactory(
-            partner_type=PartnerType.UN_AGENCY,
-            vendor_number="V123",
+        cls.organization = OrganizationFactory(
+            organization_type=OrganizationType.UN_AGENCY,
+            vendor_number="V123"
         )
+        cls.partner = PartnerFactory(organization=cls.organization)
         cls.agreement = AgreementFactory(partner=cls.partner)
         cls.assessment = AssessmentFactory(partner=cls.partner)
         cls.amendment = AgreementAmendmentFactory(agreement=cls.agreement)

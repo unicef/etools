@@ -7,6 +7,8 @@ from tablib.core import Dataset
 from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.organizations.models import OrganizationType
+from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.models import Intervention
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
@@ -32,9 +34,12 @@ class BaseInterventionModelExportTestCase(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
         partner = PartnerFactory(
-            partner_type='Government',
-            vendor_number='Vendor No',
-            short_name="Short Name",
+            organization=OrganizationFactory(
+                name="Partner Organization Name",
+                organization_type=OrganizationType.GOVERNMENT,
+                vendor_number="Vendor No",
+                short_name="Short Name",
+            ),
             alternate_name="Alternate Name",
             shared_with=["DPKO", "ECA"],
             address="Address 123",
@@ -431,7 +436,8 @@ class TestInterventionLocationExport(BaseInterventionModelExportTestCase):
             start=None,
             end=None,
             agreement=AgreementFactory(
-                partner=PartnerFactory(name='Partner 2', vendor_number='123'),
+                partner=PartnerFactory(
+                    organization=OrganizationFactory(name='Partner 2', vendor_number='123')),
             ),
             status=Intervention.DRAFT,
         )
@@ -450,7 +456,8 @@ class TestInterventionLocationExport(BaseInterventionModelExportTestCase):
             start=None,
             end=None,
             agreement=AgreementFactory(
-                partner=PartnerFactory(name='Partner 3', vendor_number='456'),
+                partner=PartnerFactory(
+                    organization=OrganizationFactory(name='Partner 3', vendor_number='456')),
             ),
             status=Intervention.DRAFT,
         )

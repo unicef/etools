@@ -9,6 +9,7 @@ from rest_framework import status
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.core.tests.mixins import URLAssertionMixin
+from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.models import PartnerOrganization, PartnerStaffMember
 from etools.applications.partners.tests.factories import AgreementFactory, PartnerFactory, PartnerStaffFactory
 from etools.applications.users.tests.factories import GroupFactory, UserFactory
@@ -43,7 +44,7 @@ class BasePartnerOrganizationTestCase(BaseTenantTestCase):
             groups__data=['UNICEF User', 'Partnership Manager'],
         )
         self.user.groups.add(GroupFactory())
-        self.partner = PartnerFactory(name='Partner 1', vendor_number="VP1")
+        self.partner = PartnerFactory(organization=OrganizationFactory(name='Partner 1', vendor_number="VP1"))
         self.agreement = AgreementFactory(
             partner=self.partner,
             signed_by_unicef_date=datetime.date.today(),

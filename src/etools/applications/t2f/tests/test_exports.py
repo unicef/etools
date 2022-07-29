@@ -53,8 +53,8 @@ class TravelExports(BaseTenantTestCase):
 
         partnership_A1 = InterventionFactory(title='Partnership A1')
         partner = partnership_A1.agreement.partner
-        partner.name = 'Partner A'
-        partner.save()
+        partner.organization.name = 'Partner A'
+        partner.organization.save()
 
         partnership_A2 = InterventionFactory(title='Partnership A2')
         agreement = partnership_A2.agreement
@@ -63,13 +63,13 @@ class TravelExports(BaseTenantTestCase):
 
         partnership_B3 = InterventionFactory(title='Partnership B3')
         partner = partnership_B3.agreement.partner
-        partner.name = 'Partner B'
-        partner.save()
+        partner.organization.name = 'Partner B'
+        partner.organization.save()
 
         partnership_C1 = InterventionFactory(title='Partnership C1')
         partner = partnership_C1.agreement.partner
-        partner.name = 'Partner C'
-        partner.save()
+        partner.organization.name = 'Partner C'
+        partner.organization.save()
 
         # Some results
         result_A11 = ResultFactory(name='Result A11')

@@ -5,6 +5,7 @@ from django.utils import timezone
 
 from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.amendment_utils import INTERVENTION_AMENDMENT_RELATED_FIELDS, MergeError
 from etools.applications.partners.models import (
     Intervention,
@@ -44,7 +45,7 @@ class AmendmentTestCase(BaseTenantTestCase):
         self.unicef_staff = UserFactory(is_staff=True, groups__data=[UNICEF_USER])
         self.pme = UserFactory(is_staff=True, groups__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP])
 
-        self.partner1 = PartnerFactory(name='Partner 2')
+        self.partner1 = PartnerFactory(organization=OrganizationFactory(name='Partner 2'))
         self.active_agreement = AgreementFactory(
             partner=self.partner1,
             status='active',

@@ -29,6 +29,7 @@ from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.environment.tests.factories import TenantSwitchFactory
 from etools.applications.funds.models import FundsCommitmentHeader, FundsCommitmentItem
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
+from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.models import (
     Agreement,
     AgreementAmendment,
@@ -39,8 +40,8 @@ from etools.applications.partners.models import (
     InterventionBudget,
     InterventionPlannedVisits,
     InterventionReportingPeriod,
+    OrganizationType,
     PartnerOrganization,
-    PartnerType,
 )
 from etools.applications.partners.permissions import READ_ONLY_API_GROUP_NAME
 from etools.applications.partners.serializers.exports.partner_organization import PartnerOrganizationExportSerializer
@@ -153,10 +154,12 @@ class TestAPIPartnerOrganizationListView(BaseTenantTestCase):
         cls.user = UserFactory(is_staff=True)
 
         cls.partner = PartnerFactory(
-            name='List View Test Partner',
-            short_name='List View Test Partner Short Name',
-            partner_type=PartnerType.UN_AGENCY,
-            cso_type='International',
+            organization=OrganizationFactory(
+                name='List View Test Partner',
+                short_name='List View Test Partner Short Name',
+                organization_type=OrganizationType.UN_AGENCY,
+                cso_type='International'
+            )
         )
 
         cls.readonly_group = GroupFactory(name=READ_ONLY_API_GROUP_NAME)
@@ -242,15 +245,15 @@ class TestAPIPartnerOrganizationListView(BaseTenantTestCase):
     def test_filter_partner_type(self):
         """Ensure filtering by partner type works as expected"""
         # Make another partner that should be excluded from the search results.
-        PartnerFactory(partner_type=PartnerType.GOVERNMENT)
-        response = self.forced_auth_req('get', self.url, data={"partner_type": PartnerType.UN_AGENCY})
+        PartnerFactory(organization=OrganizationFactory(organization_type=OrganizationType.GOVERNMENT))
+        response = self.forced_auth_req('get', self.url, data={"partner_type": OrganizationType.UN_AGENCY})
         self.assertResponseFundamentals(response)
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_filter_cso_type(self):
         """Ensure filtering by CSO type works as expected"""
         # Make another partner that should be excluded from the search results.
-        PartnerFactory(cso_type="National")
+        PartnerFactory(organization=OrganizationFactory(cso_type="National"))
         response = self.forced_auth_req('get', self.url, data={"cso_type": "International"})
         self.assertResponseFundamentals(response)
 
@@ -265,10 +268,10 @@ class TestAPIPartnerOrganizationListView(BaseTenantTestCase):
     def test_filter_multiple(self):
         """Test that when supplying multiple filter terms, they're ANDed together"""
         # Make another partner that should be excluded from the search results.
-        PartnerFactory(cso_type="National")
+        PartnerFactory(organization=OrganizationFactory(cso_type="National"))
         params = {
             "cso_type": "National",
-            "partner_type": PartnerType.CIVIL_SOCIETY_ORGANIZATION,
+            "partner_type": OrganizationType.CIVIL_SOCIETY_ORGANIZATION,
         }
         response = self.forced_auth_req('get', self.url, data=params)
 
@@ -331,7 +334,7 @@ class TestAPIPartnerOrganizationListView(BaseTenantTestCase):
     def test_search_name(self):
         """Test that name search matches substrings and is case-independent"""
         # Make another partner that should be excluded from the search results.
-        PartnerFactory(name="Somethingelse")
+        PartnerFactory(organization=OrganizationFactory(name="Somethingelse"))
         response = self.forced_auth_req('get', self.url, data={"search": "PARTNER"})
         self.assertResponseFundamentals(response)
 
@@ -339,7 +342,7 @@ class TestAPIPartnerOrganizationListView(BaseTenantTestCase):
     def test_search_short_name(self):
         """Test that short name search matches substrings and is case-independent"""
         # Make another partner that should be excluded from the search results.
-        PartnerFactory(short_name="foo")
+        PartnerFactory(organization=OrganizationFactory(short_name="foo"))
         response = self.forced_auth_req('get', self.url, data={"search": "SHORT"})
         self.assertResponseFundamentals(response)
 
@@ -459,7 +462,7 @@ class TestPartnerOrganizationCreateView(BaseTenantTestCase):
 
     def setUp(self):
         self.data = {"name": "PO 1",
-                     "partner_type": PartnerType.GOVERNMENT,
+                     "partner_type": OrganizationType.GOVERNMENT,
                      "vendor_number": "AAA",
                      "staff_members": [],
                      }
@@ -478,7 +481,7 @@ class TestPartnershipViews(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
-        cls.partner = PartnerFactory()
+        cls.partner = PartnerFactory(organization=OrganizationFactory(name='Partner'))
         cls.partner_staff_member = PartnerStaffFactory(partner=cls.partner)
 
         agreement = AgreementFactory(partner=cls.partner,
@@ -532,7 +535,8 @@ class TestAgreementCreateAPIView(BaseTenantTestCase):
     """Exercise the create portion of the API."""
     @classmethod
     def setUpTestData(cls):
-        cls.partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
+        cls.partner = PartnerFactory(
+            organization=OrganizationFactory(organization_type=OrganizationType.CIVIL_SOCIETY_ORGANIZATION))
 
         cls.partnership_manager_user = UserFactory(is_staff=True)
         cls.partnership_manager_user.groups.add(GroupFactory())
@@ -592,7 +596,8 @@ class TestAgreementAPIFileAttachments(BaseTenantTestCase):
     """
     @classmethod
     def setUpTestData(cls):
-        cls.partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
+        cls.partner = PartnerFactory(
+            organization=OrganizationFactory(organization_type=OrganizationType.CIVIL_SOCIETY_ORGANIZATION))
         cls.partnership_manager_user = UserFactory(is_staff=True)
         cls.agreement = AgreementFactory(
             agreement_type=Agreement.MOU,
@@ -704,7 +709,10 @@ class TestAgreementAPIView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
-        cls.partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
+        cls.partner = PartnerFactory(
+            organization=OrganizationFactory(
+                name='Partner',
+                organization_type=OrganizationType.CIVIL_SOCIETY_ORGANIZATION))
 
         cls.partner_staff_user = UserFactory(is_staff=True)
         cls.partner_staff = PartnerStaffFactory(partner=cls.partner, user=cls.partner_staff_user)
@@ -1080,7 +1088,8 @@ class TestPartnerStaffMemberAPIView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
-        cls.partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
+        cls.partner = PartnerFactory(
+            organization=OrganizationFactory(organization_type=OrganizationType.CIVIL_SOCIETY_ORGANIZATION))
         cls.partner_staff_user = UserFactory(is_staff=True)
         cls.partner_staff_user.groups.add(GroupFactory())
         cls.partner_staff = PartnerStaffFactory(partner=cls.partner, user=cls.partner_staff_user)
@@ -1608,8 +1617,8 @@ class TestInterventionViews(BaseTenantTestCase):
 
     def test_intervention_update_planned_visits_fail_due_government_type(self):
         partner = self.intervention_obj.agreement.partner
-        partner.partner_type = PartnerType.GOVERNMENT
-        partner.save()
+        partner.organization.organization_type = OrganizationType.GOVERNMENT
+        partner.organization.save()
 
         data = {
             "planned_visits": {
@@ -2085,14 +2094,15 @@ class TestPartnerOrganizationDashboardAPIView(BaseTenantTestCase):
         cls.sec1, cls.sec2, _ = SectionFactory.create_batch(3)
         cls.loc1, cls.loc2, _ = LocationFactory.create_batch(3)
         cls.partner = PartnerFactory(
-            name="New",
-            vendor_number='007',
+            organization=OrganizationFactory(
+                organization_type=OrganizationType.UN_AGENCY,
+                name="New",
+                vendor_number='007'),
             total_ct_cy=1000.00,
             total_ct_cp=789.00,
             total_ct_ytd=123.00,
             outstanding_dct_amount_6_to_9_months_usd=69,
             outstanding_dct_amount_more_than_9_months_usd=90,
-            partner_type=PartnerType.UN_AGENCY,
             core_values_assessment_date=datetime.date.today() - datetime.timedelta(30),
         )
 
@@ -2114,7 +2124,7 @@ class TestPartnerOrganizationDashboardAPIView(BaseTenantTestCase):
                                                   status=ActionPoint.STATUS_OPEN)
 
         ActionPointFactory.create_batch(3, intervention=cls.intervention, status=ActionPoint.STATUS_OPEN)
-        par = PartnerFactory(name="Other", vendor_number='008', total_ct_cy=1000.00)
+        par = PartnerFactory(organization=OrganizationFactory(name="Other", vendor_number='008'), total_ct_cy=1000.00)
         int = InterventionFactory(agreement=AgreementFactory(partner=par, signed_by_unicef_date=today))
         ActionPointFactory.create_batch(3, travel_activity=ta, intervention=int, status=ActionPoint.STATUS_OPEN)
         call_command('update_notifications')
@@ -2150,12 +2160,12 @@ class TestPartnerOrganizationDashboardAPIView(BaseTenantTestCase):
 
     def test_filter_partner_type(self):
         partner_count = PartnerOrganization.objects.filter(
-            partner_type=PartnerType.UN_AGENCY
+            partner_type=OrganizationType.UN_AGENCY
         ).count()
         response = self.forced_auth_req(
             'get',
             reverse("partners_api:partner-dashboard"),
-            data={"partner_type": PartnerType.UN_AGENCY},
+            data={"partner_type": OrganizationType.UN_AGENCY},
             user=self.unicef_staff
         )
         data = response.data
@@ -2163,12 +2173,12 @@ class TestPartnerOrganizationDashboardAPIView(BaseTenantTestCase):
 
     def test_filter_partner_type_none_found(self):
         self.assertEqual(PartnerOrganization.objects.filter(
-            partner_type=PartnerType.GOVERNMENT
+            partner_type=OrganizationType.GOVERNMENT
         ).count(), 0)
         response = self.forced_auth_req(
             'get',
             reverse("partners_api:partner-dashboard"),
-            data={"partner_type": PartnerType.GOVERNMENT},
+            data={"partner_type": OrganizationType.GOVERNMENT},
             user=self.unicef_staff
         )
         data = response.data

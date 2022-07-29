@@ -32,7 +32,8 @@ from etools.applications.audit.tests.factories import (
 )
 from etools.applications.audit.tests.test_transitions import MATransitionsTestCaseMixin
 from etools.applications.core.tests.cases import BaseTenantTestCase
-from etools.applications.partners.models import PartnerType
+from etools.applications.organizations.models import OrganizationType
+from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.reports.tests.factories import SectionFactory
 from etools.applications.users.tests.factories import OfficeFactory
 
@@ -436,7 +437,8 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, BaseTenantT
         self._test_list(self.auditor, filter_params={'search': -1})
 
     def test_search_by_vendor_number(self):
-        partner = PartnerWithAgreementsFactory(vendor_number="321")
+        organization = OrganizationFactory(vendor_number="321")
+        partner = PartnerWithAgreementsFactory(organization=organization)
         engagement = self.engagement_factory(
             agreement__auditor_firm=self.auditor_firm,
             partner=partner,
@@ -449,7 +451,8 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, BaseTenantT
         )
 
     def test_search_by_short_name(self):
-        partner = PartnerWithAgreementsFactory(short_name="shorty")
+        organization = OrganizationFactory(short_name="shorty")
+        partner = PartnerWithAgreementsFactory(organization=organization)
         engagement = self.engagement_factory(
             agreement__auditor_firm=self.auditor_firm,
             partner=partner,
@@ -503,7 +506,7 @@ class TestEngagementCreateActivePDViewSet:
         self.assertEqual(response.data['active_pd'], [])
 
     def test_partner_with_active_pd(self):
-        self.engagement.partner.partner_type = PartnerType.CIVIL_SOCIETY_ORGANIZATION
+        self.engagement.partner.partner_type = OrganizationType.CIVIL_SOCIETY_ORGANIZATION
         self.engagement.partner.save()
 
         response = self._do_create(self.unicef_focal_point, self.create_data)
@@ -511,7 +514,7 @@ class TestEngagementCreateActivePDViewSet:
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
 
     def test_government_partner_without_active_pd(self):
-        self.engagement.partner.partner_type = PartnerType.GOVERNMENT
+        self.engagement.partner.partner_type = OrganizationType.GOVERNMENT
         self.engagement.partner.save()
         del self.create_data['active_pd']
 

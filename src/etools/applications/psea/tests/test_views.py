@@ -447,7 +447,7 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         self.assertEqual(len(data), Assessment.objects.count())
         self.assertEqual(
             data[0]["id"],
-            Assessment.objects.order_by("partner__name").first().pk,
+            Assessment.objects.order_by("partner__organization__name").first().pk,
         )
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
@@ -467,7 +467,7 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         self.assertEqual(len(data), Assessment.objects.count())
         self.assertEqual(
             data[0]["id"],
-            Assessment.objects.order_by("-partner__name").first().pk,
+            Assessment.objects.order_by("-partner__organization__name").first().pk,
         )
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
@@ -489,7 +489,7 @@ class TestAssessmentViewSet(BaseTenantTestCase):
             data[0]["id"],
             Assessment.objects.order_by(
                 "-reference_number",
-                "partner__name",
+                "partner__organization__name",
             ).first().pk,
         )
 

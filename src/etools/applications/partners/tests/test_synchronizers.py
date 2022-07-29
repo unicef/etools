@@ -1,6 +1,7 @@
 import datetime
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners import synchronizers
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.tests.factories import PartnerFactory
@@ -81,24 +82,20 @@ class TestPartnerSynchronizer(BaseTenantTestCase):
         """
         self.data["PARTNER_TYPE_DESC"] = "Supplier"
         self.data["VENDOR_CODE"] = "123"
-        partner_qs = PartnerOrganization.objects.filter(
-            vendor_number=self.data["VENDOR_CODE"]
-        )
+        partner_qs = PartnerOrganization.objects.filter(vendor_number=self.data["VENDOR_CODE"])
         self.assertFalse(partner_qs.exists())
         response = self.adapter._save_records([self.data])
         self.assertEqual(response, 0)
         self.assertTrue(partner_qs.exists())
         partner = partner_qs.first()
-        self.assertEqual(partner.name, "")
+        self.assertIsNone(partner.name)
 
     def test_save_records(self):
         """Check that partner organization record is created,
         type mapping matches
         """
         self.data["VENDOR_CODE"] = "124"
-        partner_qs = PartnerOrganization.objects.filter(
-            vendor_number=self.data["VENDOR_CODE"]
-        )
+        partner_qs = PartnerOrganization.objects.filter(vendor_number=self.data["VENDOR_CODE"])
         self.assertFalse(partner_qs.exists())
         num_saved = self.adapter._save_records([self.data])
         self.assertEqual(num_saved, 1)
@@ -111,8 +108,10 @@ class TestPartnerSynchronizer(BaseTenantTestCase):
         name changed
         """
         partner = PartnerFactory(
-            name="New",
-            vendor_number=self.data["VENDOR_CODE"]
+            organization=OrganizationFactory(
+                name="New",
+                vendor_number=self.data["VENDOR_CODE"],
+            ),
         )
         response = self.adapter._save_records([self.data])
         self.assertEqual(response, 1)
@@ -125,8 +124,10 @@ class TestPartnerSynchronizer(BaseTenantTestCase):
         """
         self.data["MARKED_FOR_DELETION"] = 'X'
         partner = PartnerFactory(
-            name=self.data["VENDOR_NAME"],
-            vendor_number=self.data["VENDOR_CODE"],
+            organization=OrganizationFactory(
+                name=self.data["VENDOR_NAME"],
+                vendor_number=self.data["VENDOR_CODE"],
+            ),
             deleted_flag=False
         )
         response = self.adapter._save_records([self.data])
@@ -140,8 +141,10 @@ class TestPartnerSynchronizer(BaseTenantTestCase):
         """
         self.data["DATE_OF_ASSESSMENT"] = "4-Apr-17"
         partner = PartnerFactory(
-            name=self.data["VENDOR_NAME"],
-            vendor_number=self.data["VENDOR_CODE"],
+            organization=OrganizationFactory(
+                name=self.data["VENDOR_NAME"],
+                vendor_number=self.data["VENDOR_CODE"],
+            ),
             country=self.data["COUNTRY"],
             last_assessment_date=datetime.date(2017, 4, 5),
         )
@@ -158,10 +161,12 @@ class TestPartnerSynchronizer(BaseTenantTestCase):
         if no change
         """
         PartnerFactory(
-            name=self.data["VENDOR_NAME"],
-            vendor_number=self.data["VENDOR_CODE"],
+            organization=OrganizationFactory(
+                name=self.data["VENDOR_NAME"],
+                vendor_number=self.data["VENDOR_CODE"],
+                organization_type="UN Agency"
+            ),
             country=self.data["COUNTRY"],
-            partner_type="UN Agency",
             total_ct_cp=self.data["TOTAL_CASH_TRANSFERRED_CP"],
             total_ct_cy=self.data["TOTAL_CASH_TRANSFERRED_CY"],
         )
@@ -226,8 +231,10 @@ class TestDCTSynchronizer(BaseTenantTestCase):
         ]
 
         cls.partner = PartnerFactory(
-            name="New",
-            vendor_number=cls.vendor_key
+            organization=OrganizationFactory(
+                name="New",
+                vendor_number=cls.vendor_key,
+            )
         )
         cls.synchronizer = synchronizers.DirectCashTransferSynchronizer(
             business_area_code=cls.country.business_area_code)
