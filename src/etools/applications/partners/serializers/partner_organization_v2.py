@@ -322,7 +322,6 @@ class PartnerOrgPSEADetailsSerializer(serializers.ModelSerializer):
 
 
 class MinimalPartnerOrganizationListSerializer(serializers.ModelSerializer):
-    # name = serializers.CharField(source='organization.name', read_only=True)
 
     class Meta:
         model = PartnerOrganization
@@ -333,7 +332,6 @@ class MinimalPartnerOrganizationListSerializer(serializers.ModelSerializer):
 
 
 class PartnerOrganizationMonitoringListSerializer(serializers.ModelSerializer):
-    # name = serializers.CharField(source='organization.name')
     prog_visit_mr = serializers.CharField(source='min_req_programme_visits')
     interventions = serializers.SerializerMethodField(read_only=True)
 
