@@ -420,7 +420,7 @@ TENANT_DOMAIN_MODEL = "core.Domain"
 TENANT_LIMIT_SET_CALLS = True
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': datetime.timedelta(days=480),
+    'ACCESS_TOKEN_LIFETIME': datetime.timedelta(minutes=480),
     'REFRESH_TOKEN_LIFETIME': datetime.timedelta(days=1),
     'ROTATE_REFRESH_TOKENS': False,
     'BLACKLIST_AFTER_ROTATION': True,
