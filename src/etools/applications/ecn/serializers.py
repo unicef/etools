@@ -322,9 +322,9 @@ class InterventionSerializer(serializers.ModelSerializer):
         locations = validated_data.pop('locations')
         if validated_data['other_info']:
             validated_data['other_info'] += '\n\n'
-            validated_data['other_info'] += locations
+            validated_data['other_info'] += f'Locations: {locations}'
         else:
-            validated_data['other_info'] = locations
+            validated_data['other_info'] = f'Locations: {locations}'
 
         intervention = super().create(validated_data)
 

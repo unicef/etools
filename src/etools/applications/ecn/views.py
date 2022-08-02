@@ -20,6 +20,9 @@ class ECNSyncView(GenericAPIView):
             serializer.validated_data['number'],
             serializer.validated_data['agreement'],
         )
+        if not intervention:
+            return Response(status=404)
+
         return Response(
             InterventionDetailSerializer(intervention, context=self.get_serializer_context()).data,
             status=status.HTTP_201_CREATED,

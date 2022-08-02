@@ -4,6 +4,7 @@ from django.conf import settings
 
 import jwt
 import requests
+from requests import HTTPError
 from rest_framework_simplejwt.tokens import RefreshToken
 
 
@@ -71,5 +72,9 @@ class ECNAPI(object):
             return
 
         self.url = self.url_prototype + '/pmp/v3/interventions/{0}/full-export/'.format(number)
-        response_data = self._push_request(timeout=60)
+        try:
+            response_data = self._push_request(timeout=60)
+        except HTTPError:
+            return None
+
         return response_data

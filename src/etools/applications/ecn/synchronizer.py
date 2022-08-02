@@ -17,6 +17,9 @@ class ECNSynchronizer:
 
     def synchronize(self, number, agreement):
         data = self.request_ecn(number)
+        if not data:
+            return None
+
         save_extra_kwargs = {
             'document_type': Intervention.PD,
             'status': Intervention.DRAFT,
