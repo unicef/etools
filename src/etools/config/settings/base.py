@@ -226,6 +226,7 @@ TENANT_APPS = (
     'etools.applications.field_monitoring.analyze',
     'etools.applications.comments',
     'etools.applications.travel',
+    'etools.applications.ecn',
     'unicef_snapshot',
     'unicef_attachments',
     'unicef_vision',
@@ -419,7 +420,7 @@ TENANT_DOMAIN_MODEL = "core.Domain"
 TENANT_LIMIT_SET_CALLS = True
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': datetime.timedelta(minutes=480),
+    'ACCESS_TOKEN_LIFETIME': datetime.timedelta(days=480),
     'REFRESH_TOKEN_LIFETIME': datetime.timedelta(days=1),
     'ROTATE_REFRESH_TOKENS': False,
     'BLACKLIST_AFTER_ROTATION': True,
@@ -590,3 +591,8 @@ PRP_API_PASSWORD = get_from_secrets_or_env('PRP_API_PASSWORD', '')
 # EPD settings
 PMP_V2_RELEASE_DATE = get_from_secrets_or_env('PMP_PD_V2_RELEASE_DATE', '2020-10-01')
 PMP_V2_RELEASE_DATE = datetime.datetime.strptime(PMP_V2_RELEASE_DATE, '%Y-%m-%d').date()
+
+
+# ECN Integration
+# https://github.com/unicef/etools-ecn
+ECN_API_ENDPOINT = get_from_secrets_or_env('ECN_API_ENDPOINT', '')  # example: http://172.18.0.1:8086/api
