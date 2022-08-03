@@ -14,9 +14,9 @@ def migrate_organizations(apps, schema_editor):
             if not partner_org.vendor_number:
                 continue
             organization, created = Organization.objects.get_or_create(
-                name=partner_org.name,
                 vendor_number=partner_org.vendor_number,
                 defaults={
+                    'name': partner_org.name,
                     'organization_type': partner_org.partner_type,
                     'cso_type': partner_org.cso_type,
                     'short_name': partner_org.short_name,
