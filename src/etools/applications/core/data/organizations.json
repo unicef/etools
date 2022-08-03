@@ -1,0 +1,28 @@
+[
+  {
+    "model": "organizations.organization",
+    "pk": null,
+    "fields": {
+      "parent": null,
+      "name": "UNICEF",
+      "vendor_number": "UNICEF",
+      "organization_type": "UN Agency",
+      "cso_type": "International",
+      "short_name": "",
+      "other": null
+    }
+  },
+  {
+    "model": "organizations.organization",
+    "pk": null,
+    "fields": {
+      "parent": null,
+      "name": "EXTERNAL PSEA ASSESSORS",
+      "vendor_number": "EXTERNAL PSEA ASSESSORS",
+      "organization_type": "",
+      "cso_type": null,
+      "short_name": "",
+      "other": null
+    }
+  }
+]
