@@ -13,7 +13,7 @@ from django_tenants.utils import get_public_schema_name
 
 from etools.applications.funds.tasks import sync_all_delegated_frs, sync_country_delegated_fr
 from etools.applications.hact.tasks import update_hact_for_country, update_hact_values
-from etools.applications.users.models import Country, UserProfile, WorkspaceCounter
+from etools.applications.users.models import Country, UserProfile, WorkspaceCounter, Realm
 from etools.applications.vision.tasks import sync_handler, vision_sync_task
 from etools.libraries.azure_graph_api.tasks import sync_user
 
@@ -319,3 +319,4 @@ admin.site.register(get_user_model(), UserAdminPlus)
 admin.site.register(UserProfile, ProfileAdmin)
 admin.site.register(Country, CountryAdmin)
 admin.site.register(WorkspaceCounter)
+admin.site.register(Realm)

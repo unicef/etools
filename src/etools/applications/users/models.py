@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractBaseUser, Group, PermissionsMixin, UserManager
+from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -15,6 +16,8 @@ from django.utils.translation import gettext_lazy as _
 from django_tenants.models import TenantMixin
 from django_tenants.utils import get_public_schema_name, tenant_context
 from model_utils.models import TimeStampedModel
+
+from etools.applications.organizations.models import Organization
 
 if TYPE_CHECKING:
     from etools.applications.partners.models import PartnerStaffMember
@@ -383,3 +386,25 @@ class UserProfile(models.Model):
 
 
 post_save.connect(UserProfile.create_user_profile, sender=settings.AUTH_USER_MODEL)
+
+
+class Realm(TimeStampedModel, models.Model):
+    user = models.ForeignKey(User, verbose_name=_('User'), on_delete=models.CASCADE)
+    country = models.ForeignKey(Country, verbose_name=_('Country'), null=True, blank=True,
+                                on_delete=models.CASCADE)
+    organization = models.ForeignKey(Organization, verbose_name=_('Organization'), on_delete=models.CASCADE)
+    group = models.ForeignKey(Group, verbose_name=_('Group'), blank=True, on_delete=models.CASCADE)
+
+    is_active = models.BooleanField(_('Active'), default=True)
+
+    history = GenericRelation('unicef_snapshot.Activity', object_id_field='target_object_id',
+                              content_type_field='target_content_type')
+
+    class Meta:
+        verbose_name = _("Realm")
+        verbose_name_plural = _("Realms")
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'country', 'organization', 'group'], name='unique_realm')
+        ]
+        # ordering = ["organization"]  # TBD
