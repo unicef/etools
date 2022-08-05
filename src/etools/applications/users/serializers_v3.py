@@ -127,8 +127,6 @@ class ProfileRetrieveUpdateSerializer(serializers.ModelSerializer):
 
     preferences = UserPreferencesSerializer(source="user.preferences", allow_null=False)
 
-    preferences = UserPreferencesSerializer(source="user.preferences", allow_null=False)
-
     class Meta:
         model = UserProfile
         exclude = ('id',)
