@@ -15,6 +15,7 @@ from django.utils.translation import gettext_lazy as _
 
 from django_tenants.models import TenantMixin
 from django_tenants.utils import get_public_schema_name, tenant_context
+from model_utils import FieldTracker
 from model_utils.models import TimeStampedModel
 
 from etools.applications.organizations.models import Organization
@@ -388,17 +389,25 @@ class UserProfile(models.Model):
 post_save.connect(UserProfile.create_user_profile, sender=settings.AUTH_USER_MODEL)
 
 
+class RealmManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().select_related('user', 'country', 'organization', 'group')
+
+
 class Realm(TimeStampedModel, models.Model):
     user = models.ForeignKey(User, verbose_name=_('User'), on_delete=models.CASCADE)
-    country = models.ForeignKey(Country, verbose_name=_('Country'), null=True, blank=True,
-                                on_delete=models.CASCADE)
+    country = models.ForeignKey(Country, verbose_name=_('Country'), on_delete=models.CASCADE)
     organization = models.ForeignKey(Organization, verbose_name=_('Organization'), on_delete=models.CASCADE)
-    group = models.ForeignKey(Group, verbose_name=_('Group'), blank=True, on_delete=models.CASCADE)
+    group = models.ForeignKey(Group, verbose_name=_('Group'), blank=True, null=True, on_delete=models.CASCADE)
 
     is_active = models.BooleanField(_('Active'), default=True)
 
     history = GenericRelation('unicef_snapshot.Activity', object_id_field='target_object_id',
                               content_type_field='target_content_type')
+
+    tracker = FieldTracker(fields=['user', 'country', 'organization', 'group', 'is_active'])
+
+    objects = RealmManager()
 
     class Meta:
         verbose_name = _("Realm")
@@ -408,3 +417,7 @@ class Realm(TimeStampedModel, models.Model):
                 fields=['user', 'country', 'organization', 'group'], name='unique_realm')
         ]
         # ordering = ["organization"]  # TBD
+
+    def __str__(self):
+        return f"{self.user.email} - {self.country.name} - {self.organization}: " \
+               f"{self.group.name if self.group else ''}"
