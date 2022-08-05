@@ -10,10 +10,11 @@ from admin_extra_urls.decorators import button
 from admin_extra_urls.mixins import ExtraUrlMixin
 from django_tenants.admin import TenantAdminMixin
 from django_tenants.utils import get_public_schema_name
+from unicef_snapshot.admin import ActivityInline, SnapshotModelAdmin
 
 from etools.applications.funds.tasks import sync_all_delegated_frs, sync_country_delegated_fr
 from etools.applications.hact.tasks import update_hact_for_country, update_hact_values
-from etools.applications.users.models import Country, UserProfile, WorkspaceCounter, Realm
+from etools.applications.users.models import Country, Realm, UserProfile, WorkspaceCounter
 from etools.applications.vision.tasks import sync_handler, vision_sync_task
 from etools.libraries.azure_graph_api.tasks import sync_user
 
@@ -174,8 +175,14 @@ class ProfileAdmin(admin.ModelAdmin):
         obj.save()
 
 
+class RealmInline(admin.StackedInline):
+    model = Realm
+    raw_id_fields = ('user', 'organization')
+    extra = 0
+
+
 class UserAdminPlus(ExtraUrlMixin, UserAdmin):
-    inlines = [ProfileInline]
+    inlines = [ProfileInline, RealmInline]
     readonly_fields = ('date_joined',)
 
     list_display = [
@@ -261,6 +268,7 @@ class CountryAdmin(ExtraUrlMixin, TenantAdminMixin, admin.ModelAdmin):
     filter_horizontal = (
         'offices',
     )
+    search_fields = ('name', )
 
     @button()
     def sync_fund_reservation_delegated(self, request, pk):
@@ -314,9 +322,18 @@ class CountryAdmin(ExtraUrlMixin, TenantAdminMixin, admin.ModelAdmin):
         return HttpResponseRedirect(reverse('admin:users_country_change', args=[country.pk]))
 
 
+class RealmAdmin(SnapshotModelAdmin):
+    raw_id_fields = ('user', )
+    search_fields = ('user__email', 'user__first_name', 'user__last_name', 'country__name',
+                     'organization__name', 'organization__vendor_number' 'group__name')
+    autocomplete_fields = ('country', 'organization', 'group')
+
+    inlines = (ActivityInline, )
+
+
 # Re-register UserAdmin
 admin.site.register(get_user_model(), UserAdminPlus)
 admin.site.register(UserProfile, ProfileAdmin)
 admin.site.register(Country, CountryAdmin)
 admin.site.register(WorkspaceCounter)
-admin.site.register(Realm)
+admin.site.register(Realm, RealmAdmin)
