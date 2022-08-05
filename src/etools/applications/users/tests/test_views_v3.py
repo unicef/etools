@@ -1,5 +1,6 @@
 import json
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 
@@ -281,6 +282,80 @@ class TestMyProfileAPIView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["oic"], self.unicef_superuser.id)
         self.assertEqual(response.data["is_superuser"], False)
+
+    def test_patch_preferences(self):
+        self.assertEqual(
+            self.unicef_staff.preferences,
+            {"language": settings.LANGUAGE_CODE}
+        )
+        data = {
+            "preferences": {
+                "language": "fr"
+            }
+        }
+        response = self.forced_auth_req(
+            'patch',
+            self.url,
+            user=self.unicef_staff,
+            data=data
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["preferences"], self.unicef_staff.preferences)
+        self.assertEqual(self.unicef_staff.preferences, data['preferences'])
+
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["preferences"], self.unicef_staff.preferences)
+
+    def test_patch_preferences_unregistered_language(self):
+        self.assertEqual(
+            self.unicef_staff.preferences,
+            {"language": settings.LANGUAGE_CODE}
+        )
+        data = {
+            "preferences": {
+                "language": "nonsense"
+            }
+        }
+        response = self.forced_auth_req(
+            'patch',
+            self.url,
+            user=self.unicef_staff,
+            data=data
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertDictEqual(
+            response.data,
+            {
+                'preferences': {'language': ['"nonsense" is not a valid choice.']}
+            }
+        )
+
+    def test_patch_nonexistent_preference(self):
+        self.assertEqual(
+            self.unicef_staff.preferences,
+            {"language": settings.LANGUAGE_CODE}
+        )
+        data = {
+            "preferences": {
+                "nonexistent": "fr"
+            }
+        }
+        response = self.forced_auth_req(
+            'patch',
+            self.url,
+            user=self.unicef_staff,
+            data=data
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            self.unicef_staff.preferences,
+            {"language": settings.LANGUAGE_CODE}
+        )
 
 
 class TestExternalUserAPIView(BaseTenantTestCase):

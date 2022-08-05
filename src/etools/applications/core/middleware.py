@@ -6,7 +6,9 @@ from django.db import connection
 from django.http.response import HttpResponseRedirect
 from django.template.response import SimpleTemplateResponse
 from django.urls import reverse
+from django.utils import translation
 from django.utils.deprecation import MiddlewareMixin
+from django.utils.translation.trans_real import get_languages
 
 from django_tenants.middleware import TenantMainMiddleware
 from django_tenants.utils import get_public_schema_name
@@ -101,3 +103,18 @@ class EToolsTenantMiddleware(TenantMainMiddleware):
         # Do we have a public-specific urlconf?
         if hasattr(settings, 'PUBLIC_SCHEMA_URLCONF') and request.tenant.schema_name == get_public_schema_name():
             request.urlconf = settings.PUBLIC_SCHEMA_URLCONF
+
+
+class EToolsLocaleMiddleware(MiddlewareMixin):
+    """
+    Activates translations for the language persisted in user preferences.
+    """
+
+    def process_request(self, request):
+        if request.user.is_anonymous:
+            return
+        preferences = request.user.preferences
+        if preferences and 'language' in preferences:
+            language_code = preferences['language']
+            if language_code in get_languages() or language_code == settings.LANGUAGE_CODE:
+                translation.activate(language_code)

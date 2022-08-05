@@ -18,6 +18,7 @@ import os
 from os.path import abspath, basename, dirname, join, normpath
 
 from django.db import connection
+from django.utils.translation import gettext_lazy as _
 
 import dj_database_url
 import sentry_sdk
@@ -110,6 +111,11 @@ MEDIA_URL = '/media/'
 
 # DJANGO: GLOBALIZATION (I18N/L10N)
 LANGUAGE_CODE = 'en-us'
+LANGUAGES = [
+    ('en', _('English')),
+    ('fr', _('Français')),
+]
+
 TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_L10N = True
@@ -127,6 +133,7 @@ MIDDLEWARE = (
     'corsheaders.middleware.CorsMiddleware',
     'etools.applications.core.middleware.EToolsTenantMiddleware',
     'waffle.middleware.WaffleMiddleware',  # needs request.tenant from EToolsTenantMiddleware
+    'etools.applications.core.middleware.EToolsLocaleMiddleware',
 )
 WSGI_APPLICATION = 'etools.config.wsgi.application'
 
