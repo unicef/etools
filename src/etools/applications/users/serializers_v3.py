@@ -107,7 +107,6 @@ class UserPreferencesSerializer(serializers.Serializer):
 
 class ProfileRetrieveUpdateSerializer(serializers.ModelSerializer):
     countries_available = SimpleCountrySerializer(many=True, read_only=True)
-
     supervisor = serializers.PrimaryKeyRelatedField(read_only=True)
     groups = GroupSerializer(source="user.groups", read_only=True, many=True)
     supervisees = serializers.PrimaryKeyRelatedField(source='user.supervisee', many=True, read_only=True)
@@ -125,6 +124,8 @@ class ProfileRetrieveUpdateSerializer(serializers.ModelSerializer):
     show_ap = serializers.SerializerMethodField()
     is_unicef_user = serializers.SerializerMethodField()
     _partner_staff_member = serializers.SerializerMethodField()
+
+    preferences = UserPreferencesSerializer(source="user.preferences", allow_null=False)
 
     preferences = UserPreferencesSerializer(source="user.preferences", allow_null=False)
 
