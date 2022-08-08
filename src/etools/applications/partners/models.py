@@ -3579,6 +3579,9 @@ class InterventionSupplyItem(TimeStampedModel):
         default="",
     )
 
+    class Meta:
+        ordering = ('id',)
+
     def __str__(self):
         return "{} {}".format(self.intervention, self.title)
 
@@ -3638,6 +3641,9 @@ class InterventionManagementBudgetItem(models.Model):
         max_digits=20,
         default=0,
     )
+
+    class Meta:
+        ordering = ('id',)
 
     def __str__(self):
         return f'{self.get_kind_display()} - UNICEF: {self.unicef_cash}, CSO: {self.cso_cash}'
