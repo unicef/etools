@@ -1236,8 +1236,7 @@ class TestSupplyItem(BaseInterventionTestCase):
     def setUp(self):
         super().setUp()
         self.partner = PartnerFactory()
-        self.intervention = InterventionFactory(date_sent_to_partner=datetime.date.today(),
-                                                agreement__partner=self.partner)
+        self.intervention = InterventionFactory(date_sent_to_partner=datetime.date.today(), agreement__partner=self.partner)
         self.intervention.unicef_focal_points.add(self.user)
         self.supply_items_file = SimpleUploadedFile(
             'my_list.csv',

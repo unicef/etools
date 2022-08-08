@@ -3504,7 +3504,8 @@ class InterventionManagementBudget(TimeStampedModel):
             self.intervention.planned_budget.calc_totals()
 
     def update_cash(self):
-        aggregated_items = self.items.values('kind').annotate(unicef_cash=Sum('unicef_cash'), cso_cash=Sum('cso_cash'))
+        aggregated_items = self.items.values('kind').order_by('kind')
+        aggregated_items = aggregated_items.annotate(unicef_cash=Sum('unicef_cash'), cso_cash=Sum('cso_cash'))
         for item in aggregated_items:
             if item['kind'] == InterventionManagementBudgetItem.KIND_CHOICES.in_country:
                 self.act1_unicef = item['unicef_cash']
