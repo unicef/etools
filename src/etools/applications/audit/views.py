@@ -13,6 +13,7 @@ from rest_framework import generics, mixins, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.filters import OrderingFilter, SearchFilter
+from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
@@ -645,10 +646,13 @@ class BaseAuditAttachmentsViewSet(BaseAuditViewSet,
         }
 
     def get_object(self, pk=None):
+        if self.request.method in ['GET', 'PATCH', 'DELETE']:
+            self.queryset = self.filter_queryset(self.get_queryset())
         if pk:
-            return self.queryset.get(pk=pk)
+            return get_object_or_404(self.queryset, **{"pk": pk})
         elif self.kwargs.get("pk"):
-            return self.queryset.get(pk=self.kwargs.get("pk"))
+            return get_object_or_404(self.queryset, **{"pk": self.kwargs.get("pk")})
+
         return super().get_object()
 
     def perform_create(self, serializer):

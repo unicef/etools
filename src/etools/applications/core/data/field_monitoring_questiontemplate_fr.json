@@ -1,0 +1,26 @@
+[
+{
+  "model": "field_monitoring_planning.questiontemplate",
+  "pk": 1034,
+  "fields": {
+    "partner": null,
+    "cp_output": null,
+    "intervention": null,
+    "question": 1034,
+    "is_active": true,
+    "specific_details": "Les critères minimaux pour la formation PEAS comprennent les éléments suivants : 1) une définition de l'EAS (qui est alignée sur la définition de l'ONU) ; 2) explication sur l'interdiction de l'EAS ; et 3) les actions que le personnel est tenu de prendre (c'est-à-dire le signalement rapide des allégations et le personnel du partenaire X. Le personnel du partenaire X. ont reçu une formation. 76 à 100 % ont reçu une formation. Correspond à l'indicateur du Produit 2.3, cadre de suivi des résultats, orientation des victimes)."
+  }
+},
+{
+  "model": "field_monitoring_planning.questiontemplate",
+  "pk": 1035,
+  "fields": {
+    "partner": null,
+    "cp_output": null,
+    "intervention": null,
+    "question": 1035,
+    "is_active": true,
+    "specific_details": "Les éléments nécessaires incluent : 1. Disponible dans la langue locale ; 2. Adapté aux différents niveaux d'alphabétisation ; 3. Les coordonnées sont claires (SMS, email ou numéro de téléphone) ; 4. Le design est adapté aux enfants."
+  }
+}
+]

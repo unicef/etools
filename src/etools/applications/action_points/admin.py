@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.contrib.contenttypes.admin import GenericStackedInline
+from django.urls import reverse
 
 from django_comments.models import Comment
 from unicef_snapshot.admin import ActivityInline, SnapshotModelAdmin
@@ -17,6 +18,12 @@ class CommentInline(GenericStackedInline):
     can_delete = False
     can_add = False
 
+    def view_on_site(self, obj):
+        return reverse('admin:%s_%s_change' %
+                       (self.opts.app_label, self.opts.model_name),
+                       args=(obj.pk,),
+                       current_app=self.admin_site.name)
+
     def has_add_permission(self, request, obj=None):
         return False
 
@@ -24,6 +31,7 @@ class CommentInline(GenericStackedInline):
 class ActionPointAdmin(SnapshotModelAdmin):
     list_display = ('reference_number', 'author', 'assigned_to', 'status', 'date_of_completion')
     list_filter = ('status', )
+    readonly_fields = ('status', )
     search_fields = ('author__email', 'assigned_to__email', 'reference_number')
     inlines = (CommentInline, ActivityInline, )
     raw_id_fields = ('section', 'office', 'location', 'cp_output', 'partner', 'intervention', 'tpm_activity',

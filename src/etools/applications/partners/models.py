@@ -640,6 +640,13 @@ class PartnerOrganization(TimeStampedModel):
             return 0
         if self.type_of_assessment == 'Low Risk Assumed' or reported_cy <= PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL:
             return 0
+        try:
+            self.planned_engagement
+        except PlannedEngagement.DoesNotExist:
+            pass
+        else:
+            if self.planned_engagement.scheduled_audit:
+                return 0
         return 1
 
     @cached_property

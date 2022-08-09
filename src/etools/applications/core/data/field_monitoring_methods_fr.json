@@ -1,0 +1,29 @@
+[
+    {
+        "model": "field_monitoring_settings.method",
+        "pk": 1,
+        "fields": {
+            "name": "Entretien avec un Informateur Clé",
+            "short_name": "EIC",
+            "use_information_source": true
+        }
+    },
+    {
+        "model": "field_monitoring_settings.method",
+        "pk": 2,
+        "fields": {
+            "name": "Groupe de Discussion",
+            "short_name": "GD",
+            "use_information_source": true
+        }
+    },
+    {
+        "model": "field_monitoring_settings.method",
+        "pk": 3,
+        "fields": {
+            "name": "Observation",
+            "short_name": "Obs.",
+            "use_information_source": false
+        }
+    }
+]

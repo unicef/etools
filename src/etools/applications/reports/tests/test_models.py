@@ -113,7 +113,6 @@ class TestQuarter(BaseTenantTestCase):
 
 class TestCountryProgramme(BaseTenantTestCase):
     def setUp(self):
-        super().setUp()
         today = datetime.date.today()
         self.programme_active = CountryProgrammeFactory(
             from_date=today - datetime.timedelta(days=1),
