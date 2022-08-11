@@ -10,12 +10,19 @@ class OrganizationType:
     CIVIL_SOCIETY_ORGANIZATION = "Civil Society Organization"
     GOVERNMENT = "Government"
     UN_AGENCY = "UN Agency"
+    AUDITOR_FIRM = "Auditor Firm"
+    TPM_PARTNER = "TPM Partner"
+    NA = "N/A"
 
     CHOICES = Choices(
         (BILATERAL_MULTILATERAL, _(BILATERAL_MULTILATERAL)),
         (CIVIL_SOCIETY_ORGANIZATION, _(CIVIL_SOCIETY_ORGANIZATION)),
         (GOVERNMENT, _(GOVERNMENT)),
-        (UN_AGENCY, _(UN_AGENCY)))
+        (UN_AGENCY, _(UN_AGENCY)),
+        (AUDITOR_FIRM, _(AUDITOR_FIRM)),
+        (TPM_PARTNER, _(TPM_PARTNER)),
+        (NA, _(NA))
+    )
 
 
 class Organization(TimeStampedModel, models.Model):

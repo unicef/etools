@@ -522,19 +522,19 @@ class PartnerOrganization(TimeStampedModel):
         base_manager_name = 'objects'
 
     def __str__(self):
-        return self.organization.name if self.organization.name else self.vendor_number
+        return self.organization.name if self.organization and self.organization.name else self.vendor_number
 
     @cached_property
     def name(self):
-        return self.organization.name if self.organization.name else ''
+        return self.organization.name if self.organization and self.organization.name else ''
 
     @cached_property
     def short_name(self):
-        return self.organization.short_name if self.organization.short_name else ''
+        return self.organization.short_name if self.organization and self.organization.short_name else ''
 
     @cached_property
     def vendor_number(self):
-        return self.organization.vendor_number
+        return self.organization.vendor_number if self.organization and self.organization.number else ''
 
     @cached_property
     def partner_type(self):
