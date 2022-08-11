@@ -189,7 +189,8 @@ class TPMPartnerViewSet(
     @action(detail=False, methods=['get'], url_path='export', renderer_classes=(TPMPartnerCSVRenderer,))
     def export(self, request, *args, **kwargs):
         tpm_partners = self.filter_queryset(
-            TPMPartner.objects.filter(countries__id__contains=request.user.profile.country.id).order_by('vendor_number')
+            TPMPartner.objects.filter(
+                countries__id__contains=request.user.profile.country.id).order_by('organization__vendor_number')
         )
         serializer = TPMPartnerExportSerializer(tpm_partners, many=True)
         return Response(serializer.data, headers={

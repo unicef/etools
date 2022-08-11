@@ -16,7 +16,7 @@ class TPMPartnerAdmin(admin.ModelAdmin):
         'country', 'countries_list',
     ]
     list_filter = ['blocked', 'hidden', 'country']
-    search_fields = ['vendor_number', 'name', ]
+    search_fields = ['organization__vendor_number', 'organization__name', ]
     inlines = [
         TPMPartnerStaffMemberInlineAdmin,
     ]

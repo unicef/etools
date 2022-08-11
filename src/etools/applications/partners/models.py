@@ -534,7 +534,7 @@ class PartnerOrganization(TimeStampedModel):
 
     @cached_property
     def vendor_number(self):
-        return self.organization.vendor_number if self.organization and self.organization.number else ''
+        return self.organization.vendor_number if self.organization and self.organization.vendor_number else ''
 
     @cached_property
     def partner_type(self):

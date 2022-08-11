@@ -48,7 +48,7 @@ class PurchaseOrderAdmin(ExtraUrlMixin, admin.ModelAdmin):
     list_filter = [
         'auditor_firm', 'contract_start_date', 'contract_end_date',
     ]
-    search_fields = ['order_number', 'auditor_firm__name', ]
+    search_fields = ['order_number', 'auditor_firm__organization__name', ]
     inlines = [PurchaseOrderItemAdmin]
 
     @button()

@@ -1,9 +1,15 @@
 [
   {
-    "model": "purchase_order.auditorfirm",
+    "model": "organizations.organization",
     "fields": {
       "vendor_number": "000",
-      "name": "UNICEF Staff Org.",
+      "name": "UNICEF Staff Org."
+    }
+  },
+  {
+    "model": "purchase_order.auditorfirm",
+    "fields": {
+      "organization": ["000"],
       "street_address": "3 United Nations Plaza",
       "city": "New York",
       "postal_code": "10017",

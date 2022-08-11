@@ -25,6 +25,11 @@ class OrganizationType:
     )
 
 
+class OrganizationManager(models.Manager):
+    def get_by_natural_key(self, vendor_number):
+        return self.get(vendor_number=vendor_number)
+
+
 class Organization(TimeStampedModel, models.Model):
 
     CSO_TYPE_INTERNATIONAL = "International"
@@ -80,6 +85,8 @@ class Organization(TimeStampedModel, models.Model):
         blank=True,
         null=True
     )
+
+    objects = OrganizationManager()
 
     class Meta:
         ordering = ("name",)
