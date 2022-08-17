@@ -22,7 +22,7 @@ class Migration(migrations.Migration):
                 ('modified', model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, editable=False, verbose_name='modified')),
                 ('name', models.CharField(blank=True, max_length=255, null=True, verbose_name='Vendor Name')),
                 ('vendor_number', models.CharField(max_length=30, unique=True, verbose_name='Vendor Number')),
-                ('organization_type', models.CharField(choices=[('Bilateral / Multilateral', 'Bilateral / Multilateral'), ('Civil Society Organization', 'Civil Society Organization'), ('Government', 'Government'), ('UN Agency', 'UN Agency')], max_length=50, verbose_name='Organization Type')),
+                ('organization_type', models.CharField(choices=[('Bilateral / Multilateral', 'Bilateral / Multilateral'), ('Civil Society Organization', 'Civil Society Organization'), ('Government', 'Government'), ('UN Agency', 'UN Agency'), ('Auditor Firm', 'Auditor Firm'), ('TPM Partner', 'TPM Partner'), ('N/A', 'N/A')], max_length=50, verbose_name='Organization Type')),
                 ('cso_type', models.CharField(blank=True, choices=[('International', 'International'), ('National', 'National'), ('Community Based Organization', 'Community Based Organization'), ('Academic Institution', 'Academic Institution')], max_length=50, null=True, verbose_name='CSO Type')),
                 ('short_name', models.CharField(blank=True, max_length=50, null=True, verbose_name='Short Name')),
                 ('other', models.JSONField(blank=True, null=True, verbose_name='Other Details')),

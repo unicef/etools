@@ -122,8 +122,8 @@ class TPMVisitExportSerializer(serializers.Serializer):
 
 
 class TPMPartnerExportSerializer(serializers.Serializer):
-    vendor_number = serializers.CharField()
-    name = serializers.CharField()
+    vendor_number = serializers.CharField(source='organization.vendor_number')
+    name = serializers.CharField(source='organization.name')
     street_address = serializers.CharField()
     postal_code = serializers.CharField()
     city = serializers.CharField()

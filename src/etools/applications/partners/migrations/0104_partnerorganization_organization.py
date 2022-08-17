@@ -13,7 +13,7 @@ def migrate_organizations(apps, schema_editor):
             # this should not be the case as Partners should all be sanitized
             if not partner_org.vendor_number:
                 continue
-            organization, created = Organization.objects.get_or_create(
+            organization, _ = Organization.objects.get_or_create(
                 vendor_number=partner_org.vendor_number,
                 defaults={
                     'name': partner_org.name,
