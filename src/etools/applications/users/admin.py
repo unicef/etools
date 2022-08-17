@@ -5,6 +5,7 @@ from django.db import connection
 from django.http.response import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
+from django.utils.translation import gettext_lazy as _
 
 from admin_extra_urls.decorators import button
 from admin_extra_urls.mixins import ExtraUrlMixin
@@ -116,7 +117,8 @@ class ProfileAdmin(admin.ModelAdmin):
     search_fields = (
         'tenant_profile__office__name',
         'country__name',
-        'user__email'
+        'user__email',
+        'guid'
     )
     readonly_fields = (
         'user',
@@ -182,6 +184,14 @@ class RealmInline(admin.StackedInline):
 
 
 class UserAdminPlus(ExtraUrlMixin, UserAdmin):
+    fieldsets = UserAdmin.fieldsets + (
+        (_('User Preferences'), {
+            'fields':
+                (
+                    'preferences',
+                )
+        }),
+    )
     inlines = [ProfileInline, RealmInline]
     readonly_fields = ('date_joined',)
 

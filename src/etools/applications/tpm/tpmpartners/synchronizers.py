@@ -1,5 +1,6 @@
 import logging
 
+from etools.applications.organizations.models import Organization, OrganizationType
 from etools.applications.tpm.tpmpartners.models import TPMPartner
 from etools.applications.vision.synchronizers import VisionDataTenantSynchronizer
 
@@ -31,8 +32,14 @@ class TPMPartnerSynchronizer(VisionDataTenantSynchronizer):
         processed = 0
 
         try:
+            organization = Organization.objects.update_or_create(
+                vendor_number=partner['VENDOR_CODE'],
+                defaults={
+                    'name': partner['VENDOR_NAME'],
+                    'organization_type': OrganizationType.TPM_PARTNER
+                }
+            )
             defaults = {
-                'name': partner['VENDOR_NAME'],
                 'street_address': partner['STREET'] if partner['STREET'] else '',
                 'city': partner['CITY'] if partner['CITY'] else '',
                 'postal_code': partner['POSTAL_CODE'] if partner["POSTAL_CODE"] else '',
@@ -44,7 +51,7 @@ class TPMPartnerSynchronizer(VisionDataTenantSynchronizer):
                 'deleted_flag': True if partner['MARKED_FOR_DELETION'] else False,
                 'hidden': True if partner['POSTING_BLOCK'] or partner['MARKED_FOR_DELETION'] else False,
             }
-            TPMPartner.objects.update_or_create(vendor_number=partner['VENDOR_CODE'], defaults=defaults)
+            TPMPartner.objects.update_or_create(organization=organization, defaults=defaults)
             processed = 1
 
         except Exception:
