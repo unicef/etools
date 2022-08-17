@@ -66,7 +66,9 @@ class TestAttachmentListView(BaseTenantTestCase):
             intervention=cls.intervention
         )
 
-        cls.tpm_partner = SimpleTPMPartnerFactory(vendor_number="V432")
+        cls.tpm_partner = SimpleTPMPartnerFactory(
+            organization=OrganizationFactory(vendor_number="V432")
+        )
         cls.tpm_visit = TPMVisitFactory(tpm_partner=cls.tpm_partner)
         cls.tpm_activity = TPMActivityFactory(
             partner=cls.partner,

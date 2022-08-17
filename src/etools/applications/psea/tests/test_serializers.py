@@ -6,6 +6,7 @@ from django.utils import timezone
 from etools.applications.audit.models import UNICEFAuditFocalPoint
 from etools.applications.audit.tests.factories import AuditPartnerFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.psea import serializers
 from etools.applications.psea.models import Assessment, Assessor
@@ -93,7 +94,7 @@ class TestAssessmentSerializer(BaseTenantTestCase):
 
     def test_get_assessor_firm(self):
         assessment = AssessmentFactory()
-        firm = AuditPartnerFactory(name="Firm Name")
+        firm = AuditPartnerFactory(organization=OrganizationFactory(name="Firm Name"))
         AssessorFactory(
             assessment=assessment,
             auditor_firm=firm,
