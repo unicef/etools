@@ -10,18 +10,12 @@ class OrganizationType:
     CIVIL_SOCIETY_ORGANIZATION = "Civil Society Organization"
     GOVERNMENT = "Government"
     UN_AGENCY = "UN Agency"
-    AUDITOR_FIRM = "Auditor Firm"
-    TPM_PARTNER = "TPM Partner"
-    NA = "N/A"
 
     CHOICES = Choices(
         (BILATERAL_MULTILATERAL, _(BILATERAL_MULTILATERAL)),
         (CIVIL_SOCIETY_ORGANIZATION, _(CIVIL_SOCIETY_ORGANIZATION)),
         (GOVERNMENT, _(GOVERNMENT)),
         (UN_AGENCY, _(UN_AGENCY)),
-        (AUDITOR_FIRM, _(AUDITOR_FIRM)),
-        (TPM_PARTNER, _(TPM_PARTNER)),
-        (NA, _(NA))
     )
 
 
@@ -64,26 +58,28 @@ class Organization(TimeStampedModel, models.Model):
     organization_type = models.CharField(
         verbose_name=_("Organization Type"),
         max_length=50,
-        choices=OrganizationType.CHOICES
+        choices=OrganizationType.CHOICES,
+        null=True,
+        blank=True
     )
     # this is only applicable if type is CSO
     cso_type = models.CharField(
         verbose_name=_("CSO Type"),
         max_length=50,
         choices=CSO_TYPES,
-        blank=True,
         null=True,
+        blank=True
     )
     short_name = models.CharField(
         verbose_name=_("Short Name"),
         max_length=50,
-        blank=True,
-        null=True
+        null=True,
+        blank=True
     )
     other = models.JSONField(
         verbose_name=_("Other Details"),
-        blank=True,
-        null=True
+        null=True,
+        blank=True
     )
 
     objects = OrganizationManager()
