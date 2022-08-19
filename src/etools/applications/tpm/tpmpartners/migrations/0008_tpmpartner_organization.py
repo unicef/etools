@@ -13,18 +13,13 @@ def migrate_tpm_partners_to_organizations(apps, schema_editor):
         for tpm_partner in TPMPartner.objects.all():
             if not tpm_partner.vendor_number:
                 logging.info(f"No vendor_number set for TPMPartner "
-                             f"{tpm_partner.name} id: {tpm_partner.pk}")
+                             f"{tpm_partner.name} id: {tpm_partner.pk}. Skipping..")
                 continue
-            organization, created = Organization.objects.get_or_create(
+            organization, _ = Organization.objects.get_or_create(
                 vendor_number=tpm_partner.vendor_number,
                 defaults={
                     'name': tpm_partner.name,
-                    'organization_type': "TPM Partner"
                 })
-            # set the organization_type to None if the organization already exists as Auditor Firm type
-            if not created and organization.organization_type == 'Auditor Firm':
-                organization.organization_type = None
-                organization.save(update_fields=['organization_type'])
             tpm_partner.organization = organization
             tpm_partner.save(update_fields=['organization'])
 
