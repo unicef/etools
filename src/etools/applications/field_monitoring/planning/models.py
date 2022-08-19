@@ -196,8 +196,8 @@ class MonitoringActivity(
             lambda i, old_instance=None, user=None: i.init_offline_blueprints(),
         ],
         STATUSES.report_finalization: [
-            lambda i, old_instance=None, user=None: i.close_offline_blueprints(),
-            lambda i, old_instance=None, user=None: i.port_findings_to_summary(),
+            lambda i, old_instance=None, user=None: i.close_offline_blueprints(old_instance),
+            lambda i, old_instance=None, user=None: i.port_findings_to_summary(old_instance),
             lambda i, old_instance=None, user=None: i.send_rejection_note(old_instance),
         ],
         STATUSES.submitted: [
@@ -611,12 +611,15 @@ class MonitoringActivity(
     def init_offline_blueprints(self):
         MonitoringActivityOfflineSynchronizer(self).initialize_blueprints()
 
-    def close_offline_blueprints(self):
+    def close_offline_blueprints(self, old_instance):
+        if old_instance and old_instance.status == self.STATUSES.submitted:
+            return
         MonitoringActivityOfflineSynchronizer(self).close_blueprints()
 
-    def port_findings_to_summary(self):
+    def port_findings_to_summary(self, old_instance=None):
         from etools.applications.field_monitoring.data_collection.models import ChecklistOverallFinding
-
+        if old_instance and old_instance.status == self.STATUSES.submitted:
+            return
         valid_questions = self.questions.annotate(
             answers_count=Count('findings', filter=Q(findings__value__isnull=False)),
         ).filter(answers_count=1).prefetch_related('findings')

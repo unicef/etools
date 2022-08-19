@@ -2,15 +2,15 @@ from unicef_notification.utils import strip_text
 
 name = 'fm/activity/reject-pme'
 defaults = {
-    'description': 'FM Activity rejected by PME. Visit Lead should be notified.',
-    'subject': '[FM Portal] {{ activity.vendor_name }} has rejected the Monitoring/Verification Visit Request activity {{ activity.reference_number }}',
+    'description': 'Monitoring Visit Report was rejected by the PME. The visit lead should be notified.',
+    'subject': '[eTools FM Module] PME has rejected the report for {{ activity.reference_number }}',
 
     'content': strip_text("""
-    Dear {{ recipient }},
+    Dear colleague,
 
-    {{ activity.vendor_name }} has rejected your request for a Monitoring/Verifcation activity to Implementing Partner {{ activity.location_name }}.
+    The PME has rejected the Monitoring Visit Report that was submitted for FM Visit: {{ activity.reference_number }}'
 
-    Please click {{ activity.object_url }} for additional information and reason for rejection.
+    Please go to {{ activity.object_url }} for additional information and reason for rejection.
 
     Thank you.
     """),
@@ -21,9 +21,9 @@ defaults = {
     {% block content %}
     Dear colleague,<br/>
     <br/>
-    {{ activity.vendor_name }} has rejected your request for a Monitoring/Verifcation activity to Implementing Partner {{ activity.location_name }}.<br/>
+    The PME has rejected the Monitoring Visit Report that was submitted for FM Visit: {{ activity.reference_number }}<br/>
     <br/>
-    Please click <a href="{{ activity.object_url }}">{{ activity.object_url }}</a> for additional information and reason for rejection.<br/>
+    Please go to <a href="{{ activity.object_url }}">{{ activity.object_url }}</a> for additional information and reason for rejection.<br/>
     <br/>
     Thank you.
     {% endblock %}
