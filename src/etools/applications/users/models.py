@@ -409,7 +409,7 @@ class Realm(TimeStampedModel):
     user = models.ForeignKey(User, verbose_name=_('User'), on_delete=models.CASCADE, db_index=True)
     country = models.ForeignKey(Country, verbose_name=_('Country'), on_delete=models.CASCADE, db_index=True)
     organization = models.ForeignKey(Organization, verbose_name=_('Organization'), on_delete=models.CASCADE)
-    group = models.ForeignKey(Group, verbose_name=_('Group'), blank=True, null=True, on_delete=models.CASCADE)
+    group = models.ForeignKey(Group, verbose_name=_('Group'), on_delete=models.CASCADE)
 
     is_active = models.BooleanField(_('Active'), default=True)
 

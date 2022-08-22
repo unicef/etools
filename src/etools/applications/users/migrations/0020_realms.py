@@ -24,7 +24,7 @@ class Migration(migrations.Migration):
                 ('modified', model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, editable=False, verbose_name='modified')),
                 ('is_active', models.BooleanField(default=True, verbose_name='Active')),
                 ('country', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='users.country', verbose_name='Country')),
-                ('group', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='auth.group', verbose_name='Group')),
+                ('group', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='auth.group', verbose_name='Group')),
                 ('organization', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='organizations.organization', verbose_name='Organization')),
                 ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL, verbose_name='User')),
             ],
