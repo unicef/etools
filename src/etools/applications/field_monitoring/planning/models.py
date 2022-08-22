@@ -207,7 +207,7 @@ class MonitoringActivity(
             lambda i, old_instance=None, user=None: i.update_one_hact_value(),
         ],
         STATUSES.cancelled: [
-            lambda i, old_instance=None, user=None: i.close_offline_blueprints(),
+            lambda i, old_instance=None, user=None: i.close_offline_blueprints(old_instance),
         ],
     }
 
