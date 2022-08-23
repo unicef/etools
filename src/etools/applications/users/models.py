@@ -406,8 +406,8 @@ class RealmManager(models.Manager):
 
 
 class Realm(TimeStampedModel):
-    user = models.ForeignKey(User, verbose_name=_('User'), on_delete=models.CASCADE, db_index=True)
-    country = models.ForeignKey(Country, verbose_name=_('Country'), on_delete=models.CASCADE, db_index=True)
+    user = models.ForeignKey(User, verbose_name=_('User'), on_delete=models.CASCADE)
+    country = models.ForeignKey(Country, verbose_name=_('Country'), on_delete=models.CASCADE)
     organization = models.ForeignKey(Organization, verbose_name=_('Organization'), on_delete=models.CASCADE)
     group = models.ForeignKey(Group, verbose_name=_('Group'), on_delete=models.CASCADE)
 
@@ -427,7 +427,9 @@ class Realm(TimeStampedModel):
             models.UniqueConstraint(
                 fields=['user', 'country', 'organization', 'group'], name='unique_realm')
         ]
-        # ordering = ["organization"]  # TBD
+        indexes = [
+            models.Index(fields=['user', 'country', 'organization'])
+        ]
 
     def __str__(self):
         return f"{self.user.email} - {self.country.name} - {self.organization}: " \
