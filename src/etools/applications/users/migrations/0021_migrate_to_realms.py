@@ -236,6 +236,10 @@ def fwd_migrate_to_user_realms(apps, schema_editor):
 
             unique_realms = [dict(t) for t in {tuple(sorted(d.items())) for d in realm_list}]
             Realm.objects.bulk_create([Realm(**realm_dict) for realm_dict in unique_realms])
+
+        # switch back to public schema
+        connection.set_schema_to_public()
+
         logging.info(f'{no_realms} users had no realms created because they are on Global country '
                      f'or the organization of the partner where is staff is None - no vendor_number')
         logging.info(f'{no_profile} users had no profile.')
@@ -249,5 +253,26 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(fwd_migrate_to_user_realms, migrations.RunPython.noop)
+        migrations.RunPython(fwd_migrate_to_user_realms, migrations.RunPython.noop),
+
+        migrations.RenameField(
+            model_name='user',
+            old_name='groups',
+            new_name='old_groups',
+        ),
+        migrations.AlterField(
+            model_name='user',
+            name='old_groups',
+            field=models.ManyToManyField(blank=True, help_text='The groups this user belongs to. A user will get all permissions granted to each of their groups.', related_name='user_set', related_query_name='user', to='auth.Group', verbose_name='Old Groups'),
+        ),
+        migrations.RenameField(
+            model_name='userprofile',
+            old_name='countries_available',
+            new_name='old_countries_available',
+        ),
+        migrations.AlterField(
+            model_name='userprofile',
+            name='old_countries_available',
+            field=models.ManyToManyField(blank=True, related_name='accessible_by', to='users.Country', verbose_name='Old Countries Available'),
+        ),
     ]

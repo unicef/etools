@@ -1,6 +1,7 @@
 from django.contrib import admin, messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.forms import UserChangeForm, UserCreationForm, AdminPasswordChangeForm
 from django.db import connection
 from django.http.response import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
@@ -15,7 +16,7 @@ from unicef_snapshot.admin import ActivityInline, SnapshotModelAdmin
 
 from etools.applications.funds.tasks import sync_all_delegated_frs, sync_country_delegated_fr
 from etools.applications.hact.tasks import update_hact_for_country, update_hact_values
-from etools.applications.users.models import Country, Realm, UserProfile, WorkspaceCounter
+from etools.applications.users.models import Country, Realm, UserProfile, WorkspaceCounter, User
 from etools.applications.vision.tasks import sync_handler, vision_sync_task
 from etools.libraries.azure_graph_api.tasks import sync_user
 
@@ -35,7 +36,7 @@ class ProfileInline(admin.StackedInline):
     fields = [
         'country',
         'country_override',
-        'countries_available',
+        'old_countries_available',
         'office',
         'job_title',
         'post_title',
@@ -43,7 +44,7 @@ class ProfileInline(admin.StackedInline):
         'staff_id',
     ]
     filter_horizontal = (
-        'countries_available',
+        'old_countries_available',
     )
     search_fields = (
         'tenant_profile__office__name',
@@ -66,11 +67,11 @@ class ProfileInline(admin.StackedInline):
 
     def formfield_for_manytomany(self, db_field, request=None, **kwargs):
 
-        if db_field.name == 'countries_available':
+        if db_field.name == 'old_countries_available':
             if request and request.user.is_superuser:
                 kwargs['queryset'] = Country.objects.all()
             else:
-                kwargs['queryset'] = request.user.profile.countries_available.all()
+                kwargs['queryset'] = request.user.profile.old_countries_available.all()
 
         return super().formfield_for_manytomany(
             db_field, request, **kwargs
@@ -84,7 +85,7 @@ class ProfileAdmin(admin.ModelAdmin):
     fields = [
         'country',
         'country_override',
-        'countries_available',
+        'old_countries_available',
         'office',
         'job_title',
         'phone_number',
@@ -112,7 +113,7 @@ class ProfileAdmin(admin.ModelAdmin):
         'office',
     )
     filter_horizontal = (
-        'countries_available',
+        'old_countries_available',
     )
     search_fields = (
         'tenant_profile__office__name',
@@ -141,7 +142,7 @@ class ProfileAdmin(admin.ModelAdmin):
         if not request.user.is_superuser:
             queryset = queryset.filter(
                 user__is_staff=True,
-                country__in=request.user.profile.countries_available.all()
+                country__in=request.user.profile.old_countries_available.all()
             )
         return queryset
 
@@ -154,11 +155,11 @@ class ProfileAdmin(admin.ModelAdmin):
 
     def formfield_for_manytomany(self, db_field, request=None, **kwargs):
 
-        if db_field.name == 'countries_available':
+        if db_field.name == 'old_countries_available':
             if request and request.user.is_superuser:
                 kwargs['queryset'] = Country.objects.all()
             else:
-                kwargs['queryset'] = request.user.profile.countries_available.all()
+                kwargs['queryset'] = request.user.profile.old_countries_available.all()
 
         return super().formfield_for_manytomany(
             db_field, request, **kwargs
@@ -183,15 +184,31 @@ class RealmInline(admin.StackedInline):
     extra = 0
 
 
-class UserAdminPlus(ExtraUrlMixin, UserAdmin):
-    fieldsets = UserAdmin.fieldsets + (
-        (_('User Preferences'), {
-            'fields':
-                (
-                    'preferences',
-                )
+class CustomUserAdmin(UserAdmin):
+    fieldsets = (
+        (None, {'fields': ('username', 'password')}),
+        (_('Personal info'), {'fields': ('first_name', 'last_name', 'email')}),
+        (_('Permissions'), {
+            'fields': ('is_active', 'is_staff', 'is_superuser', 'old_groups', 'user_permissions'),
         }),
+        (_('Important dates'), {'fields': ('last_login', 'date_joined')}),
     )
+    list_filter = ('is_staff', 'is_superuser', 'is_active', 'old_groups')
+    filter_horizontal = ('old_groups', 'user_permissions',)
+
+
+class UserAdminPlus(ExtraUrlMixin, CustomUserAdmin):
+    fieldsets = (
+        (None, {'fields': ('username', 'password')}),
+        (_('Personal info'), {'fields': ('first_name', 'last_name', 'email')}),
+        (_('Permissions'), {
+            'fields': ('is_active', 'is_staff', 'is_superuser', 'old_groups', 'user_permissions'),
+        }),
+        (_('Important dates'), {'fields': ('last_login', 'date_joined')}),
+        (_('User Preferences'), {'fields': ('preferences', )}),
+    )
+    list_filter = ('is_staff', 'is_superuser', 'is_active', 'old_groups')
+    filter_horizontal = ('old_groups', 'user_permissions',)
     inlines = [ProfileInline, RealmInline]
     readonly_fields = ('date_joined',)
 
@@ -206,6 +223,8 @@ class UserAdminPlus(ExtraUrlMixin, UserAdmin):
         'is_active',
         'country',
     ]
+
+    UserChangeForm.Meta.exclude = ('groups',)
 
     @button()
     def sync_user(self, request, pk):
