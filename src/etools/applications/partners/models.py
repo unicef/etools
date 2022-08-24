@@ -3504,7 +3504,8 @@ class InterventionManagementBudget(TimeStampedModel):
             self.intervention.planned_budget.calc_totals()
 
     def update_cash(self):
-        aggregated_items = self.items.values('kind').annotate(unicef_cash=Sum('unicef_cash'), cso_cash=Sum('cso_cash'))
+        aggregated_items = self.items.values('kind').order_by('kind')
+        aggregated_items = aggregated_items.annotate(unicef_cash=Sum('unicef_cash'), cso_cash=Sum('cso_cash'))
         for item in aggregated_items:
             if item['kind'] == InterventionManagementBudgetItem.KIND_CHOICES.in_country:
                 self.act1_unicef = item['unicef_cash']
@@ -3579,6 +3580,9 @@ class InterventionSupplyItem(TimeStampedModel):
         default="",
     )
 
+    class Meta:
+        ordering = ('id',)
+
     def __str__(self):
         return "{} {}".format(self.intervention, self.title)
 
@@ -3638,6 +3642,9 @@ class InterventionManagementBudgetItem(models.Model):
         max_digits=20,
         default=0,
     )
+
+    class Meta:
+        ordering = ('id',)
 
     def __str__(self):
         return f'{self.get_kind_display()} - UNICEF: {self.unicef_cash}, CSO: {self.cso_cash}'
