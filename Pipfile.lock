@@ -1259,11 +1259,11 @@
         },
         "unicef-attachments": {
             "hashes": [
-                "sha256:6453bc7a4eda14c41f327a35f7e58c298c30a27e387c74fe02cd4eb941892482",
-                "sha256:eb69e528fbddabb1a4eba21435ce4867a5c6c4a21de62b27b0aa56891141ae81"
+                "sha256:7e28ecffee5a3b8aeddc1ba3add823e708373cdfd300aa710a1f1b746b9124c7",
+                "sha256:a3e7e60d06c908f0a1305a294039016417e5da7779aa456e39a18b43d21aa9f3"
             ],
             "index": "pypi",
-            "version": "==0.10.1"
+            "version": "==0.11"
         },
         "unicef-djangolib": {
             "hashes": [
