@@ -65,14 +65,14 @@ class UsersListAPIView(PMPBaseViewMixin, QueryStringFilterMixin, ListAPIView):
     Country is determined by the currently logged in user.
     """
     model = get_user_model()
-    queryset = get_user_model().objects.all().select_related('profile')
+    queryset = get_user_model().objects.all().select_related('profile').prefetch_related('realm_set')
     serializer_class = MinimalUserSerializer
     permission_classes = (IsAuthenticated, )
     pagination_class = AppendablePageNumberPagination
     search_terms = ('email__icontains', 'first_name__icontains', 'middle_name__icontains', 'last_name__icontains')
 
     filters = (
-        ('group', 'groups__name__in'),
+        ('group', 'realm_set__group__name__in'),
         ('is_active', 'is_active'),
     )
 
@@ -104,7 +104,7 @@ class UsersListAPIView(PMPBaseViewMixin, QueryStringFilterMixin, ListAPIView):
 
         return qs.prefetch_related(
             'profile',
-            'groups',
+            'realm_set',
             'user_permissions',
         ).order_by("first_name")
 
@@ -132,7 +132,7 @@ class ExternalUserViewSet(
         from etools.applications.tpm.tpmpartners.models import TPMPartnerStaffMember
 
         qs = self.queryset.filter(
-            profile__countries_available__schema_name=connection.schema_name,
+            realm_set__country__schema_name=connection.schema_name,
         )
 
         # exclude user if connected with TPMPartnerStaffMember,

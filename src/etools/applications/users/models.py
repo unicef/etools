@@ -3,8 +3,15 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from django.conf import settings
-from django.contrib.auth.models import AbstractBaseUser, Group, UserManager, \
-    _user_has_perm, _user_has_module_perms, _user_get_permissions, Permission
+from django.contrib.auth.models import (
+    _user_get_permissions,
+    _user_has_module_perms,
+    _user_has_perm,
+    AbstractBaseUser,
+    Group,
+    Permission,
+    UserManager,
+)
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
@@ -37,14 +44,6 @@ class PermissionsMixin(models.Model):
     Add the fields and methods necessary to support the Group and Permission
     models using the ModelBackend.
     """
-    is_superuser = models.BooleanField(
-        _('superuser status'),
-        default=False,
-        help_text=_(
-            'Designates that this user has all permissions without '
-            'explicitly assigning them.'
-        ),
-    )
     old_groups = models.ManyToManyField(
         Group,
         verbose_name=_('Old Groups'),
@@ -121,6 +120,16 @@ class PermissionsMixin(models.Model):
         return _user_has_module_perms(self, app_label)
 
 
+class UsersManager(UserManager):
+
+    def get_queryset(self):
+        return super().get_queryset() \
+            .select_related('profile', 'profile__country', 'profile__country_override',
+                            'profile__organization', 'profile__office')\
+            .prefetch_related('realm_set', 'profile__old_countries_available',
+                              'old_groups', 'user_permissions')
+
+
 class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = "username"
     REQUIRED_FIELDS = ['email']
@@ -139,7 +148,7 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
 
     preferences = models.JSONField(default=preferences_default_dict)
 
-    objects = UserManager()
+    objects = UsersManager()
 
     class Meta:
         db_table = "auth_user"
@@ -184,6 +193,10 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
     def partner(self):
         staff_member = self.get_partner_staff_member()
         return staff_member.partner if staff_member else None
+
+    @cached_property
+    def groups(self):
+        return Group.objects.filter(realm__in=self.realm_set.all()).distinct()
 
     def get_partner_staff_member(self) -> ['PartnerStaffMember']:
         # just wrapper to avoid try...catch in place
@@ -347,7 +360,9 @@ class Office(models.Model):
 
 class UserProfileManager(models.Manager):
     def get_queryset(self):
-        return super().get_queryset().select_related('country')
+        return super().get_queryset()\
+            .select_related('user', 'country', 'country_override', 'organization')\
+            .prefetch_related('old_countries_available')
 
 
 class UserProfile(models.Model):
@@ -376,9 +391,14 @@ class UserProfile(models.Model):
         verbose_name=_('Country Override'),
         on_delete=models.CASCADE,
     )
-    old_countries_available = models.ManyToManyField(Country, blank=True,
-                                                     related_name="accessible_by",
-                                                     verbose_name=_('Old Countries Available'))
+    organization = models.ForeignKey(
+        Organization, null=True, blank=True, verbose_name=_('Current Organization'),
+        on_delete=models.CASCADE
+    )
+    old_countries_available = models.ManyToManyField(
+        Country, blank=True, related_name="accessible_by",
+        verbose_name=_('Old Countries Available')
+    )
     office = models.ForeignKey(
         Office, null=True, blank=True, verbose_name=_('Office'),
         on_delete=models.CASCADE,
@@ -403,6 +423,10 @@ class UserProfile(models.Model):
     # TODO: figure this out when we need to automatically map to groups
     # vision_roles = ArrayField(models.CharField(max_length=20, blank=True, choices=VISION_ROLES),
     #                           blank=True, null=True)
+
+    @cached_property
+    def countries_available(self):
+        return Country.objects.filter(realm__in=self.user.realm_set.all()).distinct()
 
     def username(self):
         return self.user.username

@@ -1,7 +1,7 @@
 from django.contrib import admin, messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
-from django.contrib.auth.forms import UserChangeForm, UserCreationForm, AdminPasswordChangeForm
+from django.contrib.auth.forms import UserChangeForm
 from django.db import connection
 from django.http.response import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
@@ -16,7 +16,7 @@ from unicef_snapshot.admin import ActivityInline, SnapshotModelAdmin
 
 from etools.applications.funds.tasks import sync_all_delegated_frs, sync_country_delegated_fr
 from etools.applications.hact.tasks import update_hact_for_country, update_hact_values
-from etools.applications.users.models import Country, Realm, UserProfile, WorkspaceCounter, User
+from etools.applications.users.models import Country, Realm, UserProfile, WorkspaceCounter
 from etools.applications.vision.tasks import sync_handler, vision_sync_task
 from etools.libraries.azure_graph_api.tasks import sync_user
 
@@ -36,6 +36,7 @@ class ProfileInline(admin.StackedInline):
     fields = [
         'country',
         'country_override',
+        'organization',
         'old_countries_available',
         'office',
         'job_title',
@@ -54,6 +55,10 @@ class ProfileInline(admin.StackedInline):
     readonly_fields = (
         'user',
         'country',
+    )
+
+    autocomplete_fields = (
+        'organization',
     )
 
     fk_name = 'user'
@@ -180,24 +185,14 @@ class ProfileAdmin(admin.ModelAdmin):
 
 class RealmInline(admin.StackedInline):
     model = Realm
-    raw_id_fields = ('user', 'organization')
+    raw_id_fields = ('country', 'organization', 'group')
     extra = 0
 
-
-class CustomUserAdmin(UserAdmin):
-    fieldsets = (
-        (None, {'fields': ('username', 'password')}),
-        (_('Personal info'), {'fields': ('first_name', 'last_name', 'email')}),
-        (_('Permissions'), {
-            'fields': ('is_active', 'is_staff', 'is_superuser', 'old_groups', 'user_permissions'),
-        }),
-        (_('Important dates'), {'fields': ('last_login', 'date_joined')}),
-    )
-    list_filter = ('is_staff', 'is_superuser', 'is_active', 'old_groups')
-    filter_horizontal = ('old_groups', 'user_permissions',)
+    def get_queryset(self, request):
+        return super().get_queryset(request).filter(country=connection.tenant)
 
 
-class UserAdminPlus(ExtraUrlMixin, CustomUserAdmin):
+class UserAdminPlus(ExtraUrlMixin, UserAdmin):
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
         (_('Personal info'), {'fields': ('first_name', 'last_name', 'email')}),
@@ -223,6 +218,7 @@ class UserAdminPlus(ExtraUrlMixin, CustomUserAdmin):
         'is_active',
         'country',
     ]
+    list_select_related = ('country', 'office')
 
     UserChangeForm.Meta.exclude = ('groups',)
 
@@ -354,7 +350,7 @@ class CountryAdmin(ExtraUrlMixin, TenantAdminMixin, admin.ModelAdmin):
 class RealmAdmin(SnapshotModelAdmin):
     raw_id_fields = ('user', )
     search_fields = ('user__email', 'user__first_name', 'user__last_name', 'country__name',
-                     'organization__name', 'organization__vendor_number' 'group__name')
+                     'organization__name', 'organization__vendor_number', 'group__name')
     autocomplete_fields = ('country', 'organization', 'group')
 
     inlines = (ActivityInline, )

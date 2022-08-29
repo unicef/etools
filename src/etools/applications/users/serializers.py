@@ -3,7 +3,7 @@ from django.utils.encoding import force_str
 
 from rest_framework import serializers
 
-from etools.applications.users.models import Country, Group, UserProfile
+from etools.applications.users.models import Country, Group, Realm, UserProfile
 from etools.applications.users.validators import EmailValidator
 
 
@@ -186,26 +186,28 @@ class UserCreationSerializer(serializers.ModelSerializer):
         return [perm.id for perm in user.user_permissions.all()]
 
     def create(self, validated_data):
-        try:
-            user_profile = validated_data.pop('profile')
-        except KeyError:
-            user_profile = {}
-
-        try:
-            countries = user_profile.pop('countries_available')
-        except KeyError:
-            countries = []
+        user_profile = validated_data.pop('profile', {})
+        groups = validated_data.pop('groups', [])
+        countries = user_profile.pop('countries_available', [])
 
         try:
             user = get_user_model().objects.create(**validated_data)
             user.profile.country = user_profile['country']
+            user.profile.organization = user_profile['organization']
             user.profile.tenant_profile.office = user_profile['office']
             user.profile.job_title = user_profile['job_title']
             user.profile.phone_number = user_profile['phone_number']
             user.profile.country_override = user_profile['country_override']
+            realm_list = []
             for country in countries:
-                user.profile.countries_available.add(country)
-
+                for group in groups:
+                    realm_list.append(Realm(
+                        user_id=user.pk,
+                        country_id=country.pk,
+                        organization_id=user.profile.organization.pk,
+                        group_id=group
+                    ))
+            Realm.objects.bulk_create(realm_list)
             user.save()
             user.profile.save()
 

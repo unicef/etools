@@ -18,7 +18,8 @@ from social_core.exceptions import AuthCanceled, AuthMissingParameter
 from social_core.pipeline import social_auth, user as social_core_user
 from social_django.middleware import SocialAuthExceptionMiddleware
 
-from etools.applications.users.models import Country
+from etools.applications.organizations.models import Organization
+from etools.applications.users.models import Country, Realm
 from etools.libraries.tenant_support.utils import set_country
 
 logger = logging.getLogger(__name__)
@@ -70,7 +71,7 @@ def user_details(strategy, details, backend, user=None, *args, **kwargs):
     # This is where we update the user
     # see what the property to map by is here
     if user:
-        user_groups = [group.name for group in user.groups.all()]
+        user_groups = [group.name for group in user.groups]
         business_area_code = details.get("business_area_code", 'defaultBA1235')
 
         try:
@@ -79,7 +80,10 @@ def user_details(strategy, details, backend, user=None, *args, **kwargs):
             country = Country.objects.get(name='UAT')
 
         if details.get("idp") == "UNICEF Azure AD" and "UNICEF User" not in user_groups:
-            user.groups.add(Group.objects.get(name='UNICEF User'))
+            Realm.objects.create(user=user,
+                                 country=country,
+                                 organization=Organization.objects.get(name='UNICEF'),
+                                 group=Group.objects.get(name='UNICEF User'))
             user.is_staff = True
             user.save()
 

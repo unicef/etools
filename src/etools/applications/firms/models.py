@@ -75,7 +75,9 @@ class BaseFirm(TimeStampedModel, models.Model):
         verbose_name_plural = _('Organizations')
 
     def __str__(self):
-        return self.organization.name if self.organization.name else self.organization.vendor_number
+        if self.organization:
+            return self.organization.name if self.organization.name else self.organization.vendor_number
+        return ''
 
     def natural_key(self):
         return self.organization.vendor_number,
