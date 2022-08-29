@@ -1116,7 +1116,7 @@ class TestInterventionViews(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
-        cls.partnership_manager_user = UserFactory(is_staff=True, groups__data=['Partnership Manager', 'UNICEF User'])
+        cls.partnership_manager_user = UserFactory(is_staff=True, realm_set__data=['Partnership Manager', 'UNICEF User'])
         cls.agreement = AgreementFactory()
         cls.agreement2 = AgreementFactory(status="draft")
         cls.partnerstaff = PartnerStaffFactory(partner=cls.agreement.partner)

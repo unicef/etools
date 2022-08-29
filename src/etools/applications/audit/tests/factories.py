@@ -2,6 +2,7 @@
 import random
 
 from django.contrib.auth.models import Group
+from django.db import connection
 
 import factory
 from factory import fuzzy
@@ -32,7 +33,7 @@ from etools.applications.audit.purchase_order.models import (
 from etools.applications.firms.tests.factories import BaseFirmFactory, BaseStaffMemberFactory
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.tests.factories import AgreementFactory, InterventionFactory, PartnerFactory
-from etools.applications.users.tests.factories import UserFactory
+from etools.applications.users.tests.factories import RealmFactory, UserFactory
 
 
 class FuzzyBooleanField(fuzzy.BaseFuzzyAttribute):
@@ -49,11 +50,11 @@ class PartnerWithAgreementsFactory(PartnerFactory):
 
 
 class AuditFocalPointUserFactory(UserFactory):
-    groups__data = [UNICEFUser.name, UNICEFAuditFocalPoint.name]
+    realm_set__data = [UNICEFUser.name, UNICEFAuditFocalPoint.name]
 
 
 class AuditorUserFactory(UserFactory):
-    groups__data = [Auditor.name]
+    realm_set__data = [Auditor.name]
 
     @factory.post_generation
     def partner_firm(self, create, extracted, **kwargs):
@@ -71,11 +72,13 @@ class AuditorStaffMemberFactory(BaseStaffMemberFactory):
         model = AuditorStaffMember
 
     @factory.post_generation
-    def user_groups(self, create, extracted, **kwargs):
+    def realm_set(self, create, extracted, **kwargs):
         if create:
-            self.user.groups.set([
-                Group.objects.get_or_create(name=Auditor.name)[0]
-            ])
+            RealmFactory(user=self.user,
+                         country=connection.get_tenant(),
+                         organization=self.auditor_firm.organization,
+                         group=Group.objects.get_or_create(name=Auditor.name)[0]
+                         )
 
 
 class AuditPartnerFactory(BaseFirmFactory):

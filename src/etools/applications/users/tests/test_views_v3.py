@@ -13,7 +13,7 @@ from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.tpm.tests.factories import SimpleTPMPartnerFactory, TPMPartnerStaffMemberFactory
 from etools.applications.users.models import UserProfile
 from etools.applications.users.serializers_v3 import AP_ALLOWED_COUNTRIES
-from etools.applications.users.tests.factories import GroupFactory, ProfileFactory, UserFactory
+from etools.applications.users.tests.factories import ProfileFactory, UserFactory
 
 
 class TestCountryView(BaseTenantTestCase):
@@ -77,9 +77,10 @@ class TestUsersListAPIView(BaseTenantTestCase):
     def setUp(self):
         self.unicef_staff = UserFactory(is_staff=True)
         self.unicef_superuser = UserFactory(is_superuser=True)
-        self.partnership_manager_user = UserFactory(is_staff=True)
-        self.group = GroupFactory()
-        self.partnership_manager_user.groups.add(self.group)
+        self.partnership_manager_user = UserFactory(
+            is_staff=True,
+            realm_set__data=['Partnership Manager', 'UNICEF User']
+        )
         self.url = reverse("users_v3:users-list")
 
     def test_not_admin(self):

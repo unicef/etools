@@ -44,8 +44,8 @@ class TestInterventionAmendments(BaseTenantTestCase):
     def setUp(self):
         super().setUp()
         today = timezone.now().date()
-        self.unicef_staff = UserFactory(is_staff=True, groups__data=[UNICEF_USER])
-        self.pme = UserFactory(is_staff=True, groups__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP])
+        self.unicef_staff = UserFactory(is_staff=True, realm_set__data=[UNICEF_USER])
+        self.pme = UserFactory(is_staff=True, realm_set__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP])
 
         self.partner = PartnerFactory()
         year_ago = datetime.date.today() - datetime.timedelta(days=365)
@@ -110,7 +110,7 @@ class TestInterventionAmendments(BaseTenantTestCase):
         response = self.forced_auth_req(
             'post',
             reverse('partners_api:intervention-amendments-add', args=[self.active_intervention.pk]),
-            UserFactory(is_staff=True, groups__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
+            UserFactory(is_staff=True, realm_set__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
             data={
                 'types': ['invalid_choice'],
                 'kind': InterventionAmendment.KIND_NORMAL,
@@ -126,7 +126,7 @@ class TestInterventionAmendments(BaseTenantTestCase):
         response = self.forced_auth_req(
             'post',
             reverse('partners_api:intervention-amendments-add', args=[self.active_intervention.pk]),
-            UserFactory(is_staff=True, groups__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
+            UserFactory(is_staff=True, realm_set__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
             data={
                 'types': [InterventionAmendment.OTHER],
                 'kind': InterventionAmendment.KIND_NORMAL,
@@ -159,7 +159,7 @@ class TestInterventionAmendments(BaseTenantTestCase):
         response = self.forced_auth_req(
             'post',
             reverse('partners_api:intervention-amendments-add', args=[self.active_intervention.pk]),
-            UserFactory(is_staff=True, groups__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
+            UserFactory(is_staff=True, realm_set__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
             data={
                 'types': [InterventionAmendment.TYPE_CHANGE],
                 'kind': InterventionAmendment.KIND_NORMAL,
@@ -191,7 +191,7 @@ class TestInterventionAmendments(BaseTenantTestCase):
         response = self.forced_auth_req(
             'post',
             reverse('partners_api:intervention-amendments-add', args=[self.active_intervention.pk]),
-            UserFactory(is_staff=True, groups__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
+            UserFactory(is_staff=True, realm_set__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
             data={
                 'types': [InterventionAmendment.TYPE_CHANGE],
                 'kind': InterventionAmendment.KIND_NORMAL,
@@ -207,7 +207,7 @@ class TestInterventionAmendments(BaseTenantTestCase):
         response = self.forced_auth_req(
             'post',
             reverse('partners_api:intervention-amendments-add', args=[intervention.pk]),
-            UserFactory(is_staff=True, groups__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
+            UserFactory(is_staff=True, realm_set__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
             data={
                 'types': [InterventionAmendment.TYPE_CHANGE],
                 'kind': InterventionAmendment.KIND_NORMAL,
@@ -219,7 +219,7 @@ class TestInterventionAmendments(BaseTenantTestCase):
         response = self.forced_auth_req(
             'post',
             reverse('partners_api:intervention-amendments-add', args=[intervention.pk]),
-            UserFactory(is_staff=True, groups__data=['UNICEF User', 'Partnership Manager']),
+            UserFactory(is_staff=True, realm_set__data=['UNICEF User', 'Partnership Manager']),
             data={
                 'types': [InterventionAmendment.TYPE_CHANGE],
                 'kind': InterventionAmendment.KIND_CONTINGENCY,
@@ -231,7 +231,7 @@ class TestInterventionAmendments(BaseTenantTestCase):
         response = self.forced_auth_req(
             'post',
             reverse('partners_api:intervention-amendments-add', args=[intervention.pk]),
-            UserFactory(is_staff=True, groups__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
+            UserFactory(is_staff=True, realm_set__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
             data={
                 'types': [InterventionAmendment.TYPE_CHANGE],
                 'kind': InterventionAmendment.KIND_CONTINGENCY,
@@ -245,7 +245,7 @@ class TestInterventionAmendments(BaseTenantTestCase):
         intervention = InterventionFactory(
             agreement__partner=self.partner,
             partner_authorized_officer_signatory=PartnerStaffFactory(
-                partner=self.partner, user__is_staff=False, user__groups__data=[]
+                partner=self.partner, user__is_staff=False, user__realm_set__data=[]
             ),
             unicef_signatory=UserFactory(),
             country_programme=country_programme,
@@ -266,12 +266,12 @@ class TestInterventionAmendments(BaseTenantTestCase):
         intervention.planned_budget.save()
         # FundsReservationHeaderFactory(intervention=intervention, currency='USD') # frs code is unique
         ReportingRequirementFactory(intervention=intervention)
-        unicef_user = UserFactory(is_staff=True, groups__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP])
+        unicef_user = UserFactory(is_staff=True, realm_set__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP])
         intervention.unicef_focal_points.add(unicef_user)
         intervention.sections.add(SectionFactory())
         intervention.offices.add(OfficeFactory())
         intervention.partner_focal_points.add(PartnerStaffFactory(
-            partner=self.partner, user__is_staff=False, user__groups__data=[]
+            partner=self.partner, user__is_staff=False, user__realm_set__data=[]
         ))
         ReportingRequirementFactory(intervention=intervention)
 
@@ -301,7 +301,7 @@ class TestInterventionAmendments(BaseTenantTestCase):
         amended_intervention.save()
         review = InterventionReviewFactory(
             intervention=amended_intervention, overall_approval=True,
-            overall_approver=UserFactory(is_staff=True, groups__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
+            overall_approver=UserFactory(is_staff=True, realm_set__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
         )
 
         # sign amended intervention
@@ -543,6 +543,6 @@ class TestInterventionAmendmentDeleteView(BaseTenantTestCase):
         response = self.forced_auth_req(
             'delete',
             self.url,
-            user=UserFactory(is_staff=True, groups__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
+            user=UserFactory(is_staff=True, realm_set__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
         )
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)

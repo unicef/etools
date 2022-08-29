@@ -41,7 +41,7 @@ class BasePartnerOrganizationTestCase(BaseTenantTestCase):
         super().setUp()
         self.user = UserFactory(
             is_staff=True,
-            groups__data=['UNICEF User', 'Partnership Manager'],
+            realm_set__data=['UNICEF User', 'Partnership Manager'],
         )
         self.user.groups.add(GroupFactory())
         self.partner = PartnerFactory(organization=OrganizationFactory(name='Partner 1', vendor_number="VP1"))
@@ -92,7 +92,7 @@ class TestPartnerOrganizationList(BasePartnerOrganizationTestCase):
         response = self.forced_auth_req(
             "get",
             reverse('pmp_v3:partner-list'),
-            user=UserFactory(is_staff=False, groups__data=[]),
+            user=UserFactory(is_staff=False, realm_set__data=[]),
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
@@ -101,7 +101,7 @@ class TestPartnerStaffMemberList(BasePartnerOrganizationTestCase):
     def test_list_for_unicef(self):
         partner = PartnerFactory()
         for __ in range(10):
-            user = UserFactory(is_staff=False, groups__data=[])
+            user = UserFactory(is_staff=False, realm_set__data=[])
             user_staff_member = PartnerStaffFactory(
                 partner=partner,
                 email=user.email,
@@ -138,7 +138,7 @@ class TestPartnerStaffMemberList(BasePartnerOrganizationTestCase):
 
         # partner user not able to view another partners users
         partner_2 = PartnerFactory()
-        user_2 = UserFactory(is_staff=False, groups__data=[])
+        user_2 = UserFactory(is_staff=False, realm_set__data=[])
         PartnerStaffFactory(
             partner=partner_2,
             user=user_2,
@@ -170,6 +170,6 @@ class TestPartnerStaffMemberList(BasePartnerOrganizationTestCase):
                 'pmp_v3:partner-staff-members-list',
                 args=[self.partner.pk],
             ),
-            user=UserFactory(is_staff=False, groups__data=[]),
+            user=UserFactory(is_staff=False, realm_set__data=[]),
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

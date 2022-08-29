@@ -31,21 +31,21 @@ class BaseTestCase(BaseTenantTestCase):
     def setUp(self):
         super().setUp()
 
-        self.unicef_user = UserFactory(is_staff=True, groups__data=['UNICEF User'])
-        self.partnership_manager = UserFactory(is_staff=True, groups__data=['UNICEF User', 'Partnership Manager'])
+        self.unicef_user = UserFactory(is_staff=True, realm_set__data=['UNICEF User'])
+        self.partnership_manager = UserFactory(is_staff=True, realm_set__data=['UNICEF User', 'Partnership Manager'])
 
         self.partner = PartnerFactory(organization=OrganizationFactory(vendor_number=fuzzy.FuzzyText(length=20).fuzz()))
-        self.partner_staff_member = UserFactory(is_staff=False, groups__data=[])
+        self.partner_staff_member = UserFactory(is_staff=False, realm_set__data=[])
         PartnerStaffFactory(
             partner=self.partner, email=self.partner_staff_member.email, user=self.partner_staff_member,
         )
 
-        self.partner_authorized_officer = UserFactory(is_staff=False, groups__data=[])
+        self.partner_authorized_officer = UserFactory(is_staff=False, realm_set__data=[])
         partner_authorized_officer_staff = PartnerStaffFactory(
             partner=self.partner, email=self.partner_authorized_officer.email, user=self.partner_authorized_officer
         )
 
-        self.partner_focal_point = UserFactory(is_staff=False, groups__data=[])
+        self.partner_focal_point = UserFactory(is_staff=False, realm_set__data=[])
         partner_focal_point_staff = PartnerStaffFactory(
             partner=self.partner, email=self.partner_focal_point.email, user=self.partner_focal_point
         )

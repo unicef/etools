@@ -67,7 +67,7 @@ class TestPMPDropdownsListApiView(BaseTenantTestCase):
         )
 
     def test_unknown_user(self):
-        response = self.forced_auth_req('get', self.url, UserFactory(is_staff=False, groups__data=[]))
+        response = self.forced_auth_req('get', self.url, UserFactory(is_staff=False, realm_set__data=[]))
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
 
     def test_authentication(self):

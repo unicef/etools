@@ -676,7 +676,7 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
 
     def test_activate_intervention_with_task(self, _mock_db_connection, _mock_logger):
         today = datetime.date.today()
-        unicef_staff = UserFactory(is_staff=True, groups__data=[UNICEF_USER])
+        unicef_staff = UserFactory(is_staff=True, realm_set__data=[UNICEF_USER])
 
         partner = PartnerFactory(organization=OrganizationFactory(name='Partner 2'))
         active_agreement = AgreementFactory(

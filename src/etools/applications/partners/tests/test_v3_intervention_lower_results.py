@@ -28,10 +28,10 @@ from etools.applications.users.tests.factories import UserFactory
 class TestInterventionLowerResultsViewBase(BaseTenantTestCase):
     def setUp(self):
         super().setUp()
-        self.user = UserFactory(is_staff=True, groups__data=['Partnership Manager', 'UNICEF User'])
+        self.user = UserFactory(is_staff=True, realm_set__data=['Partnership Manager', 'UNICEF User'])
         self.intervention = InterventionFactory(status=Intervention.DRAFT, unicef_court=True)
 
-        self.partner_focal_point = UserFactory(groups__data=[])
+        self.partner_focal_point = UserFactory(realm_set__data=[])
         self.staff_member = PartnerStaffFactory(
             partner=self.intervention.agreement.partner,
             user=self.partner_focal_point,
@@ -116,7 +116,7 @@ class TestInterventionLowerResultsListView(TestInterventionLowerResultsViewBase)
     # check permissions
     def test_create_for_unknown_user(self):
         response = self.forced_auth_req(
-            'post', self.list_url, UserFactory(groups__data=[]),
+            'post', self.list_url, UserFactory(realm_set__data=[]),
             data={'name': 'test', 'cp_output': self.cp_output.id}
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)

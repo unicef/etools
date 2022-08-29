@@ -68,6 +68,8 @@ class TestGetUsername(BaseTenantTestCase):
 
 
 class TestUserDetails(BaseTenantTestCase):
+    fixtures = ('audit_groups', 'organizations')
+
     def setUp(self):
         self.details = {
             'username': 'social_username',
@@ -133,8 +135,7 @@ class TestUserDetails(BaseTenantTestCase):
             username=self.details["email"],
             email=self.details["email"],
         )
-        for g in user.groups.all():
-            user.groups.remove(g)
+
         country = user.profile.country
         self.details["business_area_code"] = country.business_area_code
         self.details["idp"] = "UNICEF Azure AD"

@@ -122,7 +122,7 @@ class TPMActivityFactory(factory.django.DjangoModelFactory):
 
 
 class TPMUserFactory(UserFactory):
-    groups__data = ['Third Party Monitor']
+    realm_set__data = ['Third Party Monitor']
 
     @factory.post_generation
     def tpm_partner(self, create, extracted, **kwargs):

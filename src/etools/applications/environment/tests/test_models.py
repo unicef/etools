@@ -8,7 +8,8 @@ from django.test.utils import override_settings
 from etools.applications.environment.apps import EnvironmentConfig
 from etools.applications.environment.helpers import tenant_flag_is_active, tenant_switch_is_active
 from etools.applications.environment.tests.factories import TenantFlagFactory, TenantSwitchFactory
-from etools.applications.users.tests.factories import CountryFactory, GroupFactory, UserFactory
+from etools.applications.organizations.tests.factories import OrganizationFactory
+from etools.applications.users.tests.factories import CountryFactory, GroupFactory, RealmFactory, UserFactory
 
 
 class EnvironmentConfigTest(TestCase):
@@ -118,7 +119,10 @@ class TenantFlagTest(TestCase):
         group = GroupFactory()
         f.groups.add(group)
         f.save()
-        self.user.groups.add(group)
+        RealmFactory(user=self.user,
+                     group=group,
+                     country=CountryFactory(),
+                     organization=OrganizationFactory())
         with self.assertNumQueries(4):
             self.assertTrue(f.is_active(self.request))
         with self.assertNumQueries(1):

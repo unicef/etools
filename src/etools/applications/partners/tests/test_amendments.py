@@ -42,8 +42,8 @@ class AmendmentTestCase(BaseTenantTestCase):
     def setUp(self):
         super().setUp()
         today = timezone.now().date()
-        self.unicef_staff = UserFactory(is_staff=True, groups__data=[UNICEF_USER])
-        self.pme = UserFactory(is_staff=True, groups__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP])
+        self.unicef_staff = UserFactory(is_staff=True, realm_set__data=[UNICEF_USER])
+        self.pme = UserFactory(is_staff=True, realm_set__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP])
 
         self.partner1 = PartnerFactory(organization=OrganizationFactory(name='Partner 2'))
         self.active_agreement = AgreementFactory(
@@ -320,7 +320,7 @@ class AmendmentTestCase(BaseTenantTestCase):
         today = timezone.now().date()
         amended_intervention.signed_by_unicef_date = today
         amended_intervention.signed_by_partner_date = today
-        amended_intervention.unicef_signatory = UserFactory(is_staff=True, groups__data=[UNICEF_USER])
+        amended_intervention.unicef_signatory = UserFactory(is_staff=True, realm_set__data=[UNICEF_USER])
         amended_intervention.partner_authorized_officer_signatory = PartnerStaffFactory(partner=self.partner1)
         new_signed_document = AttachmentFactory(
             code='partners_intervention_signed_pd',

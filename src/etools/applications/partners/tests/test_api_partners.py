@@ -445,7 +445,7 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
                          ErrorDetail(string='Planned Visit can be set only for Government partners', code='invalid'))
 
     def test_update_staffmember_inactive(self):
-        partner_staff_user = UserFactory(is_staff=True, groups__data=[])
+        partner_staff_user = UserFactory(is_staff=True, realm_set__data=[])
         partner_staff = PartnerStaffFactory(partner=self.partner, user=partner_staff_user)
         response = self.forced_auth_req(
             "patch",
@@ -462,7 +462,7 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_update_staffmember_invalid_email(self):
-        partner_staff_user = UserFactory(is_staff=True, groups__data=[])
+        partner_staff_user = UserFactory(is_staff=True, realm_set__data=[])
         partner_staff = PartnerStaffFactory(
             partner=self.partner,
             user=partner_staff_user,
@@ -487,7 +487,7 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
         )
 
     def test_update_staffmember_inactive_prp_synced_from_intervention(self):
-        partner_staff_user = UserFactory(is_staff=True, groups__data=[])
+        partner_staff_user = UserFactory(is_staff=True, realm_set__data=[])
         partner_staff = PartnerStaffFactory(partner=self.partner, user=partner_staff_user, active=True)
         agreement = AgreementFactory(
             status=Agreement.SIGNED,
@@ -561,7 +561,7 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
         self.assertEqual(created_staff.last_name, created_staff.user.last_name)
 
     def test_assign_staff_member_to_existing_user(self):
-        user = UserFactory(groups__data=[], is_staff=False)
+        user = UserFactory(realm_set__data=[], is_staff=False)
         user.profile.countries_available.clear()
         response = self.forced_auth_req(
             "patch", self.url,
@@ -587,7 +587,7 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
         )
 
     def test_assign_staff_member_to_another_staff(self):
-        user = UserFactory(groups__data=[], is_staff=False)
+        user = UserFactory(realm_set__data=[], is_staff=False)
         PartnerStaffFactory(user=user)
         response = self.forced_auth_req(
             "patch", self.url,

@@ -24,9 +24,6 @@ class TestChangeUserCountry(BaseTenantTestCase):
         self.url = reverse("users:country-change")
 
     def test_post(self):
-        self.unicef_staff.profile.countries_available.add(
-            self.unicef_staff.profile.country
-        )
         response = self.forced_auth_req(
             "post",
             self.url,
@@ -61,9 +58,10 @@ class TestUserViews(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
         cls.unicef_superuser = UserFactory(is_superuser=True)
-        cls.partnership_manager_user = UserFactory(is_staff=True)
-        cls.group = GroupFactory()
-        cls.partnership_manager_user.groups.add(cls.group)
+        cls.partnership_manager_user = UserFactory(
+            is_staff=True,
+            realm_set__data=['Partnership Manager', 'UNICEF User']
+        )
 
     def test_api_users_list(self):
         response = self.forced_auth_req('get', '/api/users/', user=self.unicef_staff)
@@ -317,9 +315,10 @@ class TestUserViewSet(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
         cls.unicef_superuser = UserFactory(is_superuser=True)
-        cls.partnership_manager_user = UserFactory(is_staff=True)
-        cls.group = GroupFactory()
-        cls.partnership_manager_user.groups.add(cls.group)
+        cls.partnership_manager_user = UserFactory(
+            is_staff=True,
+            realm_set__data=['Partnership Manager', 'UNICEF User']
+        )
 
     def setUp(self):
         super().setUp()
@@ -371,7 +370,7 @@ class TestUserViewSet(BaseTenantTestCase):
                     "phone_number": "123-546-7890",
                     "country_override": None,
                 },
-                "groups": [self.group.pk]
+                "groups": [GroupFactory().pk]
             }
         )
         self.assertEqual(
