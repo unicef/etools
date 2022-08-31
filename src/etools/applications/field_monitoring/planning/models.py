@@ -10,6 +10,8 @@ from django.utils.translation import gettext_lazy as _
 from django_fsm import FSMField, transition
 from model_utils import Choices, FieldTracker
 from model_utils.models import TimeStampedModel
+
+from etools.applications.users.models import User
 from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation
 
@@ -336,9 +338,13 @@ class MonitoringActivity(
         # if rejected send notice
         if old_instance and old_instance.status == self.STATUSES.assigned:
             email_template = "fm/activity/reject"
-            recipients = PME.as_group().user_set.filter(
-                profile__country=connection.tenant,
-            )
+            # TODO : check logic here wrto organization
+            recipients = User.objects\
+                .prefetch_related('realms')\
+                .filter(realms__group=PME.as_group(),
+                        realms__country=connection.tenant,
+                        # realms__organization=old_instance.tpm_partner.organization
+                        )
             for recipient in recipients:
                 self._send_email(
                     recipient.email,

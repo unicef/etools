@@ -80,16 +80,17 @@ def user_details(strategy, details, backend, user=None, *args, **kwargs):
             country = Country.objects.get(name='UAT')
 
         if details.get("idp") == "UNICEF Azure AD" and "UNICEF User" not in user_groups:
-            Realm.objects.create(user=user,
-                                 country=country,
-                                 organization=Organization.objects.get(name='UNICEF'),
-                                 group=Group.objects.get(name='UNICEF User'))
+            Realm.objects.create(
+                user=user,
+                country=country,
+                organization=Organization.objects.get(name='UNICEF'),
+                group=Group.objects.get(name='UNICEF User'))
             user.is_staff = True
-            user.save()
+            user.save(update_fields=['is_staff'])
 
         if not user.profile.country:
             user.profile.country = country
-            user.profile.save()
+            user.profile.save(update_fields=['country'])
         # TODO: Hotfix. details not providing business area code
         # elif not user.profile.country_override:
         #     # make sure that we update the workspace based business area

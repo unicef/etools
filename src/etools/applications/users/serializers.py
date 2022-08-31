@@ -202,10 +202,10 @@ class UserCreationSerializer(serializers.ModelSerializer):
             for country in countries:
                 for group in groups:
                     realm_list.append(Realm(
-                        user_id=user.pk,
-                        country_id=country.pk,
-                        organization_id=user.profile.organization.pk,
-                        group_id=group
+                        user=user,
+                        country=country,
+                        organization=user.profile.organization,
+                        group=group
                     ))
             Realm.objects.bulk_create(realm_list)
             user.save()
