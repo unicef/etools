@@ -34,6 +34,7 @@ from etools.applications.partners.models import Intervention, PartnerOrganizatio
 from etools.applications.reports.models import Result, Section
 from etools.applications.tpm.models import PME
 from etools.applications.tpm.tpmpartners.models import TPMPartner
+from etools.applications.users.models import User
 from etools.libraries.djangolib.models import SoftDeleteMixin
 from etools.libraries.djangolib.utils import get_environment
 
