@@ -15,7 +15,7 @@ from unicef_rest_export import renderers
 
 from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
-from etools.applications.audit.models import UNICEFAuditFocalPoint
+from etools.applications.audit.models import UNICEFAuditFocalPoint, UNICEFUser
 from etools.applications.audit.tests.factories import (
     AuditorStaffMemberFactory,
     AuditPartnerFactory,
@@ -1058,14 +1058,8 @@ class TestAssessmentActionPointViewSet(BaseTenantTestCase):
         call_command('update_psea_permissions', verbosity=0)
         call_command('update_notifications')
         cls.send_path = "etools.applications.action_points.models.send_notification_with_template"
-        cls.focal_user = UserFactory()
-        cls.focal_user.groups.add(
-            GroupFactory(name=UNICEFAuditFocalPoint.name),
-        )
+        cls.focal_user = UserFactory(realms__data=[UNICEFUser.name, UNICEFAuditFocalPoint.name])
         cls.unicef_user = UserFactory()
-        cls.unicef_user.groups.add(
-            GroupFactory(name="UNICEF User"),
-        )
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_action_point_added(self):
@@ -1172,11 +1166,14 @@ class TestAssessmentActionPointViewSet(BaseTenantTestCase):
         )
 
 
+class UNICEFUNICEFAuditFocalPoint(object):
+    pass
+
+
 class TestAssessorViewSet(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.user = UserFactory()
-        cls.user.groups.add(GroupFactory(name=UNICEFAuditFocalPoint.name))
+        cls.user = UserFactory(realms__data=[UNICEFUser.name, UNICEFAuditFocalPoint.name])
         cls.unicef_user = UserFactory(email="staff@unicef.org")
 
     def _validate_assessor(self, assessor, expected):

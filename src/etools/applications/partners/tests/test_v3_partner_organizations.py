@@ -11,8 +11,9 @@ from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.core.tests.mixins import URLAssertionMixin
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.models import PartnerOrganization, PartnerStaffMember
+from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, UNICEF_USER
 from etools.applications.partners.tests.factories import AgreementFactory, PartnerFactory, PartnerStaffFactory
-from etools.applications.users.tests.factories import GroupFactory, UserFactory
+from etools.applications.users.tests.factories import UserFactory
 
 
 class URLsTestCase(URLAssertionMixin, SimpleTestCase):
@@ -40,10 +41,8 @@ class BasePartnerOrganizationTestCase(BaseTenantTestCase):
     def setUp(self):
         super().setUp()
         self.user = UserFactory(
-            is_staff=True,
-            realm_set__data=['UNICEF User', 'Partnership Manager'],
+            is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP],
         )
-        self.user.groups.add(GroupFactory())
         self.partner = PartnerFactory(organization=OrganizationFactory(name='Partner 1', vendor_number="VP1"))
         self.agreement = AgreementFactory(
             partner=self.partner,
@@ -92,7 +91,7 @@ class TestPartnerOrganizationList(BasePartnerOrganizationTestCase):
         response = self.forced_auth_req(
             "get",
             reverse('pmp_v3:partner-list'),
-            user=UserFactory(is_staff=False, realm_set__data=[]),
+            user=UserFactory(is_staff=False, realms__data=[]),
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
@@ -101,7 +100,7 @@ class TestPartnerStaffMemberList(BasePartnerOrganizationTestCase):
     def test_list_for_unicef(self):
         partner = PartnerFactory()
         for __ in range(10):
-            user = UserFactory(is_staff=False, realm_set__data=[])
+            user = UserFactory(is_staff=False, realms__data=[])
             user_staff_member = PartnerStaffFactory(
                 partner=partner,
                 email=user.email,
@@ -138,7 +137,7 @@ class TestPartnerStaffMemberList(BasePartnerOrganizationTestCase):
 
         # partner user not able to view another partners users
         partner_2 = PartnerFactory()
-        user_2 = UserFactory(is_staff=False, realm_set__data=[])
+        user_2 = UserFactory(is_staff=False, realms__data=[])
         PartnerStaffFactory(
             partner=partner_2,
             user=user_2,
@@ -170,6 +169,6 @@ class TestPartnerStaffMemberList(BasePartnerOrganizationTestCase):
                 'pmp_v3:partner-staff-members-list',
                 args=[self.partner.pk],
             ),
-            user=UserFactory(is_staff=False, realm_set__data=[]),
+            user=UserFactory(is_staff=False, realms__data=[]),
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

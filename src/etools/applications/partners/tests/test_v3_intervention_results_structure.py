@@ -6,6 +6,7 @@ from rest_framework import status
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import Intervention
+from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, UNICEF_USER
 from etools.applications.partners.tests.factories import (
     InterventionFactory,
     InterventionResultLinkFactory,
@@ -23,14 +24,14 @@ from etools.applications.users.tests.factories import UserFactory
 class TestAPIInterventionRetrieveResultsStructure(BaseTenantTestCase):
     def setUp(self):
         super().setUp()
-        self.user = UserFactory(is_staff=True, realm_set__data=['Partnership Manager', 'UNICEF User'])
+        self.user = UserFactory(is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP])
         self.intervention = InterventionFactory(
             status=Intervention.DRAFT, unicef_court=True,
             start=date(year=1970, month=1, day=1),
             end=date(year=1970, month=12, day=31),
         )
 
-        self.partner_focal_point = UserFactory(realm_set__data=[])
+        self.partner_focal_point = UserFactory(realms__data=[])
         self.staff_member = PartnerStaffFactory(
             partner=self.intervention.agreement.partner,
             user=self.partner_focal_point,

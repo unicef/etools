@@ -11,10 +11,12 @@ class TestShowCountrySelect(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.profile = ProfileFactory()
         cls.country = cls.profile.country
-        cls.realm = RealmFactory(user=cls.profile.user,
-                                 country=cls.country,
-                                 organization=OrganizationFactory(),
-                                 group=GroupFactory())
+        cls.realm = RealmFactory(
+            user=cls.profile.user,
+            country=cls.country,
+            organization=OrganizationFactory(),
+            group=GroupFactory()
+        )
 
     def test_no_profile(self):
         self.assertEqual(show_country_select({}, None), "")

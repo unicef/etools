@@ -21,7 +21,7 @@ from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.environment.tests.factories import TenantSwitchFactory
 from etools.applications.funds.tests.factories import FundsReservationItemFactory
 from etools.applications.partners.models import Intervention, InterventionResultLink
-from etools.applications.partners.permissions import InterventionPermissions
+from etools.applications.partners.permissions import InterventionPermissions, PARTNERSHIP_MANAGER_GROUP, UNICEF_USER
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
     FileTypeFactory,
@@ -42,14 +42,20 @@ from etools.applications.reports.tests.factories import (
     ResultFactory,
     SectionFactory,
 )
-from etools.applications.users.tests.factories import GroupFactory, UserFactory
+from etools.applications.users.tests.factories import CountryFactory, GroupFactory, RealmFactory, UserFactory
 from etools.libraries.djangolib.utils import get_all_field_names
 
 
 def _add_user_to_partnership_manager_group(user):
-    """Utility function to add a user to the 'Partnership Manager' group which may or may not exist"""
-    group = GroupFactory(name='Partnership Manager')
-    user.groups.add(group)
+    """
+    Utility function to add a user to the 'Partnership Manager' group which may or may not exist
+    """
+    RealmFactory(
+        user=user,
+        country=CountryFactory(),
+        organization=user.profile.organization,
+        group=GroupFactory(name=PARTNERSHIP_MANAGER_GROUP)
+    )
 
 
 class URLsTestCase(URLAssertionMixin, SimpleTestCase):
@@ -1585,8 +1591,9 @@ class TestAPInterventionIndicatorsUpdateView(BaseTenantTestCase):
 class TestInterventionAttachmentDeleteView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.partnership_manager = UserFactory(is_staff=True)
-        cls.partnership_manager.groups.add(GroupFactory())
+        cls.partnership_manager = UserFactory(
+            is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]
+        )
         cls.intervention = InterventionFactory(status=Intervention.DRAFT)
         cls.attachment = InterventionAttachmentFactory(
             intervention=cls.intervention,

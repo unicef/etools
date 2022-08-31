@@ -119,10 +119,12 @@ class TenantFlagTest(TestCase):
         group = GroupFactory()
         f.groups.add(group)
         f.save()
-        RealmFactory(user=self.user,
-                     group=group,
-                     country=CountryFactory(),
-                     organization=OrganizationFactory())
+        RealmFactory(
+            user=self.user,
+            group=group,
+            country=CountryFactory(),
+            organization=OrganizationFactory()
+        )
         with self.assertNumQueries(4):
             self.assertTrue(f.is_active(self.request))
         with self.assertNumQueries(1):

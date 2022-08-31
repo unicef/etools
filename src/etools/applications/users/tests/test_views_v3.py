@@ -9,6 +9,7 @@ from rest_framework import status
 from etools.applications.audit.models import Auditor
 from etools.applications.audit.tests.factories import AuditorUserFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, UNICEF_USER
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.tpm.tests.factories import SimpleTPMPartnerFactory, TPMPartnerStaffMemberFactory
 from etools.applications.users.models import UserProfile
@@ -78,8 +79,7 @@ class TestUsersListAPIView(BaseTenantTestCase):
         self.unicef_staff = UserFactory(is_staff=True)
         self.unicef_superuser = UserFactory(is_superuser=True)
         self.partnership_manager_user = UserFactory(
-            is_staff=True,
-            realm_set__data=['Partnership Manager', 'UNICEF User']
+            is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]
         )
         self.url = reverse("users_v3:users-list")
 

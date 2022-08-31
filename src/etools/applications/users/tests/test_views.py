@@ -9,6 +9,7 @@ from django.urls import reverse
 from rest_framework import status
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, UNICEF_USER
 from etools.applications.publics.tests.factories import PublicsBusinessAreaFactory
 from etools.applications.users.models import Group, UserProfile
 from etools.applications.users.tests.factories import CountryFactory, GroupFactory, UserFactory
@@ -59,8 +60,7 @@ class TestUserViews(BaseTenantTestCase):
         cls.unicef_staff = UserFactory(is_staff=True)
         cls.unicef_superuser = UserFactory(is_superuser=True)
         cls.partnership_manager_user = UserFactory(
-            is_staff=True,
-            realm_set__data=['Partnership Manager', 'UNICEF User']
+            is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]
         )
 
     def test_api_users_list(self):
@@ -316,8 +316,7 @@ class TestUserViewSet(BaseTenantTestCase):
         cls.unicef_staff = UserFactory(is_staff=True)
         cls.unicef_superuser = UserFactory(is_superuser=True)
         cls.partnership_manager_user = UserFactory(
-            is_staff=True,
-            realm_set__data=['Partnership Manager', 'UNICEF User']
+            is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]
         )
 
     def setUp(self):

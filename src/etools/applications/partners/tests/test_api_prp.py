@@ -178,8 +178,7 @@ class TestInterventionsAPIListPermissions(BaseTenantTestCase):
 
     def test_group_member_has_access(self):
         """Ensure a non-staff user in the correct group has access"""
-        user = UserFactory()
-        user.groups.add(self.readonly_group)
+        user = UserFactory(realms__data=[self.readonly_group])
         response = self.forced_auth_req('get', self.url, user=user, data=self.query_param_data)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 

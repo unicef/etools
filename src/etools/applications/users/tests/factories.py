@@ -1,12 +1,13 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
-from django.db import connection
 from django.db.models import signals
 
 import factory
 from factory.fuzzy import FuzzyText
 
+from etools.applications.action_points.models import PME
 from etools.applications.organizations.tests.factories import OrganizationFactory
+from etools.applications.partners.permissions import UNICEF_USER
 from etools.applications.publics.tests.factories import PublicsCurrencyFactory
 from etools.applications.reports.tests.factories import OfficeFactory, UserTenantProfileFactory
 from etools.applications.users import models
@@ -45,7 +46,7 @@ class ProfileFactory(factory.django.DjangoModelFactory):
     # We pass in profile=None to prevent UserFactory from creating another profile
     # (this disables the RelatedFactory)
     user = factory.SubFactory('etools.applications.users.tests.factories.UserFactory', profile=None)
-    # organization = factory.SubFactory(OrganizationFactory)
+    organization = factory.SubFactory(OrganizationFactory)
 
     @factory.post_generation
     def tenant_profile(self, create, extracted, **kwargs):
@@ -66,6 +67,7 @@ class ProfileLightFactory(ProfileFactory):
 class RealmFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Realm
+        django_get_or_create = ('user', 'country', 'organization', 'group')
 
     user = factory.SubFactory('etools.applications.users.tests.factories.UserFactory')
     country = factory.SubFactory(CountryFactory)
@@ -85,35 +87,37 @@ class UserFactory(factory.django.DjangoModelFactory):
     password = factory.PostGenerationMethodCall('set_password', 'test')
 
     # unicef realm is set for user by default, but we can easily overwrite it by passing empty list
-    realm_set__data = ['UNICEF User']
+    realms__data = [UNICEF_USER]
 
     # We pass in 'user' to link the generated Profile to our just-generated User
     # This will call ProfileFactory(user=our_new_user), thus skipping the SubFactory.
     profile = factory.RelatedFactory(ProfileFactory, 'user')
 
     @factory.post_generation
-    def realm_set(self, create, extracted, data=None, **kwargs):
+    def realms(self, create, extracted, data=None, **kwargs):
         if not create:
             return
 
         extracted = (extracted or []) + (data or [])
 
         if extracted:
-            if "UNICEF User" in extracted:
+            if UNICEF_USER in extracted:
                 organization = OrganizationFactory(name='UNICEF', vendor_number='UNICEF')
             else:
                 organization = OrganizationFactory()
             for group in extracted:
                 if isinstance(group, str):
-                    RealmFactory(user=self,
-                                 country=connection.get_tenant(),
-                                 organization=organization,
-                                 group=GroupFactory(name=group))
+                    RealmFactory(
+                        user=self,
+                        country=CountryFactory(),
+                        organization=organization,
+                        group=GroupFactory(name=group)
+                    )
 
 
 class SimpleUserFactory(UserFactory):
-    realm_set__data = []
+    realms__data = []
 
 
 class PMEUserFactory(UserFactory):
-    realm_set__data = ['UNICEF User', 'PME']
+    realms__data = [UNICEF_USER, PME.name]

@@ -10,12 +10,19 @@ from unicef_locations.tests.factories import LocationFactory
 from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.firms.tests.factories import BaseFirmFactory, BaseStaffMemberFactory
+from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.models import InterventionResultLink
 from etools.applications.partners.tests.factories import InterventionFactory
 from etools.applications.reports.tests.factories import OfficeFactory, ResultFactory, SectionFactory
 from etools.applications.tpm.models import TPMActivity, TPMVisit, TPMVisitReportRejectComment
 from etools.applications.tpm.tpmpartners.models import TPMPartner, TPMPartnerStaffMember
-from etools.applications.users.tests.factories import PMEUserFactory, UserFactory
+from etools.applications.users.tests.factories import (
+    CountryFactory,
+    GroupFactory,
+    PMEUserFactory,
+    RealmFactory,
+    UserFactory,
+)
 from etools.libraries.tests.factories import StatusFactoryMetaClass
 
 _FUZZY_START_DATE = timezone.now().date() - datetime.timedelta(days=5)
@@ -122,7 +129,7 @@ class TPMActivityFactory(factory.django.DjangoModelFactory):
 
 
 class TPMUserFactory(UserFactory):
-    realm_set__data = ['Third Party Monitor']
+    realms__data = ['Third Party Monitor']
 
     @factory.post_generation
     def tpm_partner(self, create, extracted, **kwargs):
@@ -133,6 +140,27 @@ class TPMUserFactory(UserFactory):
             extracted = TPMPartnerFactory()
 
         TPMPartnerStaffMemberFactory(tpm_partner=extracted, user=self)
+
+    @factory.post_generation
+    def realms(self, create, extracted, data=None, **kwargs):
+        if not create:
+            return
+
+        extracted = (extracted or []) + (data or [])
+        if extracted:
+            if hasattr(self, 'tpmpartners_tpmpartnerstaffmember') \
+                    and self.tpmpartners_tpmpartnerstaffmember:
+                organization = self.tpmpartners_tpmpartnerstaffmember.tpm_partner.organization
+            else:
+                organization = OrganizationFactory()
+            for group in extracted:
+                if isinstance(group, str):
+                    RealmFactory(
+                        user=self,
+                        country=CountryFactory(),
+                        organization=organization,
+                        group=GroupFactory(name=group)
+                    )
 
 
 class BaseTPMVisitFactory(factory.django.DjangoModelFactory):

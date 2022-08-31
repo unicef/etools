@@ -35,6 +35,7 @@ from etools.applications.partners.models import (
     PartnerOrganization,
     PartnerPlannedVisits,
 )
+from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, UNICEF_USER
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
     AssessmentFactory,
@@ -53,7 +54,7 @@ from etools.applications.reports.tests.factories import (
 )
 from etools.applications.t2f.tests.factories import TravelActivityFactory
 from etools.applications.users.models import Country
-from etools.applications.users.tests.factories import GroupFactory, UserFactory
+from etools.applications.users.tests.factories import UserFactory
 from etools.libraries.pythonlib.datetime import get_quarter
 
 INSIGHT_PATH = "etools.applications.partners.tasks.get_data_from_insight"
@@ -445,7 +446,7 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
                          ErrorDetail(string='Planned Visit can be set only for Government partners', code='invalid'))
 
     def test_update_staffmember_inactive(self):
-        partner_staff_user = UserFactory(is_staff=True, realm_set__data=[])
+        partner_staff_user = UserFactory(is_staff=True, realms__data=[])
         partner_staff = PartnerStaffFactory(partner=self.partner, user=partner_staff_user)
         response = self.forced_auth_req(
             "patch",
@@ -462,7 +463,7 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_update_staffmember_invalid_email(self):
-        partner_staff_user = UserFactory(is_staff=True, realm_set__data=[])
+        partner_staff_user = UserFactory(is_staff=True, realms__data=[])
         partner_staff = PartnerStaffFactory(
             partner=self.partner,
             user=partner_staff_user,
@@ -487,7 +488,7 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
         )
 
     def test_update_staffmember_inactive_prp_synced_from_intervention(self):
-        partner_staff_user = UserFactory(is_staff=True, realm_set__data=[])
+        partner_staff_user = UserFactory(is_staff=True, realms__data=[])
         partner_staff = PartnerStaffFactory(partner=self.partner, user=partner_staff_user, active=True)
         agreement = AgreementFactory(
             status=Agreement.SIGNED,
@@ -561,8 +562,8 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
         self.assertEqual(created_staff.last_name, created_staff.user.last_name)
 
     def test_assign_staff_member_to_existing_user(self):
-        user = UserFactory(realm_set__data=[], is_staff=False)
-        user.profile.countries_available.clear()
+        user = UserFactory(realms__data=[], is_staff=False)
+
         response = self.forced_auth_req(
             "patch", self.url,
             data={"staff_members": [{"email": user.email, "active": True, 'first_name': 'mr', 'last_name': 'smith'}]},
@@ -587,7 +588,7 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
         )
 
     def test_assign_staff_member_to_another_staff(self):
-        user = UserFactory(realm_set__data=[], is_staff=False)
+        user = UserFactory(realms__data=[], is_staff=False)
         PartnerStaffFactory(user=user)
         response = self.forced_auth_req(
             "patch", self.url,
@@ -773,8 +774,9 @@ class TestPartnerOrganizationAddView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.url = reverse("partners_api:partner-add")
-        cls.user = UserFactory(is_staff=True)
-        cls.user.groups.add(GroupFactory())
+        cls.user = UserFactory(
+            is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]
+        )
 
     def setUp(self):
         super().setUp()
@@ -1062,8 +1064,9 @@ class TestPartnerOrganizationDeleteView(BaseTenantTestCase):
 class TestPartnerPlannedVisitsDeleteView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.unicef_staff = UserFactory(is_staff=True)
-        cls.unicef_staff.groups.add(GroupFactory(name='Partnership Manager'))
+        cls.unicef_staff = UserFactory(
+            is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]
+        )
         cls.partner = PartnerFactory()
         cls.planned_visit = PartnerPlannedVisitsFactory(
             partner=cls.partner,
@@ -1118,8 +1121,9 @@ class TestPartnerOrganizationAssessmentUpdateDeleteView(BaseTenantTestCase):
             ),
             hidden=False,
         )
-        cls.partnership_manager_user = UserFactory(is_staff=True)
-        cls.partnership_manager_user.groups.add(GroupFactory())
+        cls.partnership_manager_user = UserFactory(
+            is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]
+        )
         cls.partner_staff = PartnerStaffFactory(partner=cls.partner, user=cls.partnership_manager_user)
 
     def setUp(self):

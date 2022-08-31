@@ -1,5 +1,3 @@
-from django.db import connection
-
 import factory
 
 from etools.applications.audit.models import UNICEFUser
@@ -7,7 +5,7 @@ from etools.applications.field_monitoring.groups import FMUser
 from etools.applications.firms.tests.factories import BaseUserFactory
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.tpm.models import PME
-from etools.applications.users.tests.factories import GroupFactory, RealmFactory
+from etools.applications.users.tests.factories import CountryFactory, GroupFactory, RealmFactory
 
 
 class UserFactory(BaseUserFactory):
@@ -16,19 +14,19 @@ class UserFactory(BaseUserFactory):
     """
     class Params:
         unicef_user = factory.Trait(
-            realm_set__data=[UNICEFUser.name],
+            realms__data=[UNICEFUser.name],
         )
 
         fm_user = factory.Trait(
-            realm_set__data=[UNICEFUser.name, FMUser.name],
+            realms__data=[UNICEFUser.name, FMUser.name],
         )
 
         pme = factory.Trait(
-            realm_set__data=[UNICEFUser.name, PME.name],
+            realms__data=[UNICEFUser.name, PME.name],
         )
 
     @factory.post_generation
-    def realm_set(self, create, extracted, data=None, **kwargs):
+    def realms(self, create, extracted, data=None, **kwargs):
         if not create:
             return
 
@@ -42,6 +40,6 @@ class UserFactory(BaseUserFactory):
             for group in extracted:
                 if isinstance(group, str):
                     RealmFactory(user=self,
-                                 country=connection.get_tenant(),
+                                 country=CountryFactory(),
                                  organization=organization,
                                  group=GroupFactory(name=group))

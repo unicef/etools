@@ -43,7 +43,7 @@ from etools.applications.partners.models import (
     OrganizationType,
     PartnerOrganization,
 )
-from etools.applications.partners.permissions import READ_ONLY_API_GROUP_NAME
+from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, READ_ONLY_API_GROUP_NAME, UNICEF_USER
 from etools.applications.partners.serializers.exports.partner_organization import PartnerOrganizationExportSerializer
 from etools.applications.partners.tests.factories import (
     AgreementAmendmentFactory,
@@ -538,8 +538,9 @@ class TestAgreementCreateAPIView(BaseTenantTestCase):
         cls.partner = PartnerFactory(
             organization=OrganizationFactory(organization_type=OrganizationType.CIVIL_SOCIETY_ORGANIZATION))
 
-        cls.partnership_manager_user = UserFactory(is_staff=True)
-        cls.partnership_manager_user.groups.add(GroupFactory())
+        cls.partnership_manager_user = UserFactory(
+            is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]
+        )
         PartnerStaffFactory(partner=cls.partner, user=cls.partnership_manager_user)
         cls.file_type_agreement = AttachmentFileTypeFactory()
 
@@ -1116,7 +1117,9 @@ class TestInterventionViews(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
-        cls.partnership_manager_user = UserFactory(is_staff=True, realm_set__data=['Partnership Manager', 'UNICEF User'])
+        cls.partnership_manager_user = UserFactory(
+            is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]
+        )
         cls.agreement = AgreementFactory()
         cls.agreement2 = AgreementFactory(status="draft")
         cls.partnerstaff = PartnerStaffFactory(partner=cls.agreement.partner)

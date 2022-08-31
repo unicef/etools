@@ -12,9 +12,10 @@ from etools.applications.core.tests.mixins import URLAssertionMixin
 from etools.applications.organizations.models import OrganizationType
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.models import Agreement
+from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, UNICEF_USER
 from etools.applications.partners.tests.factories import AgreementFactory, PartnerFactory, PartnerStaffFactory
 from etools.applications.reports.tests.factories import CountryProgrammeFactory
-from etools.applications.users.tests.factories import GroupFactory, UserFactory
+from etools.applications.users.tests.factories import UserFactory
 
 
 class URLsTestCase(URLAssertionMixin, SimpleTestCase):
@@ -35,8 +36,9 @@ class URLsTestCase(URLAssertionMixin, SimpleTestCase):
 class BaseAgreementTestCase(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.pme_user = UserFactory(is_staff=True)
-        cls.pme_user.groups.add(GroupFactory())
+        cls.pme_user = UserFactory(
+            is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]
+        )
         cls.partner_user = UserFactory(is_staff=False)
         cls.partner = PartnerFactory(
             organization=OrganizationFactory(

@@ -132,6 +132,7 @@ class TestUserDetails(BaseTenantTestCase):
 
     def test_is_staff_update(self):
         user = UserFactory(
+            realms__data=[],
             username=self.details["email"],
             email=self.details["email"],
         )

@@ -13,7 +13,7 @@ from unicef_attachments.models import Attachment
 
 from etools.applications.action_points.tests.factories import ActionPointCategoryFactory, ActionPointFactory
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
-from etools.applications.audit.models import Auditor, Engagement, Risk, SpotCheck
+from etools.applications.audit.models import Auditor, Engagement, Risk, SpotCheck, UNICEFUser
 from etools.applications.audit.tests.base import AuditTestCaseMixin, EngagementTransitionsTestCaseMixin
 from etools.applications.audit.tests.factories import (
     AuditFactory,
@@ -303,8 +303,7 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, BaseTenantT
         self._test_list(self.usual_user, expected_status=status.HTTP_403_FORBIDDEN)
 
     def test_list_view_without_audit_organization(self):
-        user = UserFactory()
-        user.groups.add(Auditor.as_group())
+        user = UserFactory(realms__data=[Auditor.name, UNICEFUser.name])
 
         self._test_list(user, [self.engagement, self.second_engagement])
 

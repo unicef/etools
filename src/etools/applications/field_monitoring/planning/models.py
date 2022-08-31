@@ -10,8 +10,6 @@ from django.utils.translation import gettext_lazy as _
 from django_fsm import FSMField, transition
 from model_utils import Choices, FieldTracker
 from model_utils.models import TimeStampedModel
-
-from etools.applications.users.models import User
 from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation
 

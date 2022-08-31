@@ -20,7 +20,6 @@ from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.models import Agreement, Intervention
-from etools.applications.partners.permissions import UNICEF_USER
 from etools.applications.partners.tasks import (
     _make_intervention_status_automatic_transitions,
     transfer_active_pds_to_new_cp,
@@ -676,7 +675,7 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
 
     def test_activate_intervention_with_task(self, _mock_db_connection, _mock_logger):
         today = datetime.date.today()
-        unicef_staff = UserFactory(is_staff=True, realm_set__data=[UNICEF_USER])
+        unicef_staff = UserFactory(is_staff=True)
 
         partner = PartnerFactory(organization=OrganizationFactory(name='Partner 2'))
         active_agreement = AgreementFactory(

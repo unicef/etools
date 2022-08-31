@@ -3,7 +3,7 @@ from django.db import connection
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
-from etools.applications.tpm.models import TPMActionPoint, TPMVisit, ThirdPartyMonitor
+from etools.applications.tpm.models import ThirdPartyMonitor, TPMActionPoint, TPMVisit
 from etools.applications.tpm.tpmpartners.models import TPMPartnerStaffMember
 from etools.applications.users.models import Country, Realm
 

@@ -7,6 +7,7 @@ from rest_framework import status
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import Intervention
+from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, UNICEF_USER
 from etools.applications.partners.tests.factories import (
     InterventionFactory,
     InterventionResultLinkFactory,
@@ -173,9 +174,9 @@ class TestPMPSpecialReportingRequirementListCreateView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
-        cls.unicef_staff = UserFactory(is_staff=True)
-        group = GroupFactory(name='Partnership Manager')
-        cls.unicef_staff.groups.add(group)
+        cls.unicef_staff = UserFactory(
+            is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]
+        )
         cls.intervention = InterventionFactory(
             start=datetime.date(2001, 1, 1),
             status=Intervention.DRAFT,

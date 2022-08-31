@@ -348,6 +348,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
     def test_reject_as_tpm(self):
         tpm_partner = SimpleTPMPartnerFactory()
         visit_lead = TPMUserFactory(tpm_partner=tpm_partner)
+
         activity = MonitoringActivityFactory(
             monitor_type='tpm', status='assigned',
             tpm_partner=tpm_partner, visit_lead=visit_lead, team_members=[visit_lead],

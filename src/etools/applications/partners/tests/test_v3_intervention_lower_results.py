@@ -8,6 +8,7 @@ from unicef_snapshot.models import Activity
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import Intervention, InterventionResultLink
+from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, UNICEF_USER
 from etools.applications.partners.tests.factories import (
     InterventionFactory,
     InterventionResultLinkFactory,
@@ -28,10 +29,10 @@ from etools.applications.users.tests.factories import UserFactory
 class TestInterventionLowerResultsViewBase(BaseTenantTestCase):
     def setUp(self):
         super().setUp()
-        self.user = UserFactory(is_staff=True, realm_set__data=['Partnership Manager', 'UNICEF User'])
+        self.user = UserFactory(is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP])
         self.intervention = InterventionFactory(status=Intervention.DRAFT, unicef_court=True)
 
-        self.partner_focal_point = UserFactory(realm_set__data=[])
+        self.partner_focal_point = UserFactory(realms__data=[])
         self.staff_member = PartnerStaffFactory(
             partner=self.intervention.agreement.partner,
             user=self.partner_focal_point,
@@ -116,7 +117,7 @@ class TestInterventionLowerResultsListView(TestInterventionLowerResultsViewBase)
     # check permissions
     def test_create_for_unknown_user(self):
         response = self.forced_auth_req(
-            'post', self.list_url, UserFactory(realm_set__data=[]),
+            'post', self.list_url, UserFactory(realms__data=[]),
             data={'name': 'test', 'cp_output': self.cp_output.id}
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)

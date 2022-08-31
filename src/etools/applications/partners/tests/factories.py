@@ -22,7 +22,7 @@ class PartnerStaffFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.PartnerStaffMember
 
-    user = factory.SubFactory(UserFactory, realm_set__data=[], is_staff=False)
+    user = factory.SubFactory(UserFactory, realms__data=[], is_staff=False)
     partner = factory.SubFactory('etools.applications.partners.tests.factories.PartnerFactory')
     title = 'Jedi Master'
     first_name = 'Mace'
