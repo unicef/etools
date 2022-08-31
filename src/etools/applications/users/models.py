@@ -125,9 +125,7 @@ class UsersManager(UserManager):
     def get_queryset(self):
         return super().get_queryset() \
             .select_related('profile', 'profile__country', 'profile__country_override',
-                            'profile__organization', 'profile__office')\
-            .prefetch_related('realm_set', 'profile__old_countries_available',
-                              'old_groups', 'user_permissions')
+                            'profile__organization', 'profile__office')
 
 
 class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
@@ -196,7 +194,7 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
 
     @cached_property
     def groups(self):
-        return Group.objects.filter(realm__in=self.realm_set.all()).distinct()
+        return Group.objects.filter(realms__in=self.realms.all()).distinct()
 
     def get_partner_staff_member(self) -> ['PartnerStaffMember']:
         # just wrapper to avoid try...catch in place
@@ -426,7 +424,7 @@ class UserProfile(models.Model):
 
     @cached_property
     def countries_available(self):
-        return Country.objects.filter(realm__in=self.user.realm_set.all()).distinct()
+        return Country.objects.filter(realms__in=self.user.realms.all()).distinct()
 
     def username(self):
         return self.user.username
@@ -521,17 +519,27 @@ class RealmManager(models.Manager):
 
 
 class Realm(TimeStampedModel):
-    user = models.ForeignKey(User, verbose_name=_('User'), on_delete=models.CASCADE)
-    country = models.ForeignKey(Country, verbose_name=_('Country'), on_delete=models.CASCADE)
-    organization = models.ForeignKey(Organization, verbose_name=_('Organization'), on_delete=models.CASCADE)
-    group = models.ForeignKey(Group, verbose_name=_('Group'), on_delete=models.CASCADE)
-
+    user = models.ForeignKey(
+        User, verbose_name=_('User'), on_delete=models.CASCADE, related_name='realms'
+    )
+    country = models.ForeignKey(
+        Country, verbose_name=_('Country'), on_delete=models.CASCADE, related_name='realms'
+    )
+    organization = models.ForeignKey(
+        Organization, verbose_name=_('Organization'), on_delete=models.CASCADE, related_name='realms'
+    )
+    group = models.ForeignKey(
+        Group, verbose_name=_('Group'), on_delete=models.CASCADE, related_name='realms'
+    )
     is_active = models.BooleanField(_('Active'), default=True)
 
-    history = GenericRelation('unicef_snapshot.Activity', object_id_field='target_object_id',
-                              content_type_field='target_content_type')
-
-    tracker = FieldTracker(fields=['user', 'country', 'organization', 'group', 'is_active'])
+    history = GenericRelation(
+        'unicef_snapshot.Activity', object_id_field='target_object_id',
+        content_type_field='target_content_type'
+    )
+    tracker = FieldTracker(
+        fields=['user', 'country', 'organization', 'group', 'is_active']
+    )
 
     objects = RealmManager()
 

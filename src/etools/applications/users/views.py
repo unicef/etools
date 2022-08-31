@@ -300,15 +300,15 @@ class UserViewSet(mixins.RetrieveModelMixin,
     def get_queryset(self):
         # we should only return workspace users.
         queryset = super().get_queryset()
-        queryset = queryset.prefetch_related('profile', 'realm_set', 'user_permissions')
+        queryset = queryset.prefetch_related('profile', 'realms', 'user_permissions')
         # Filter for Partnership Managers only
         driver_qps = self.request.query_params.get("drivers", "")
         if driver_qps.lower() == "true":
-            queryset = queryset.filter(realm__group__name='Driver')
+            queryset = queryset.filter(realms__group__name='Driver')
 
         filter_param = self.request.query_params.get("partnership_managers", "")
         if filter_param.lower() == "true":
-            queryset = queryset.filter(realm__group__name="Partnership Manager")
+            queryset = queryset.filter(realms__group__name="Partnership Manager")
 
         if "values" in self.request.query_params.keys():
             # Used for ghost data - filter in all(), and return straight away.
@@ -323,7 +323,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
-        queryset = queryset.filter(realm__group__name="UNICEF User")
+        queryset = queryset.filter(realms__group__name="UNICEF User")
         filter_param = self.request.query_params.get("all", "")
         if filter_param.lower() != "true":
             queryset = queryset.filter(profile__country=self.request.user.profile.country)
