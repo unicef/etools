@@ -528,7 +528,7 @@ class TestDetail(BaseInterventionTestCase):
         [InterventionManagementBudgetItemFactory(budget=self.intervention.management_budgets) for _i in range(10)]
 
         # there is a lot of queries, but no duplicates caused by budget items
-        with self.assertNumQueries(47):
+        with self.assertNumQueries(48):
             response = self.forced_auth_req(
                 "get",
                 reverse('pmp_v3:intervention-detail', args=[self.intervention.pk]),
