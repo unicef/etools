@@ -9,6 +9,7 @@ from unicef_snapshot.models import Activity
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import Intervention, InterventionResultLink
 from etools.applications.partners.tests.factories import (
+    InterventionAmendmentFactory,
     InterventionFactory,
     InterventionResultLinkFactory,
     PartnerStaffFactory,
@@ -465,6 +466,57 @@ class TestInterventionLowerResultsDetailView(TestInterventionLowerResultsViewBas
             result.id,
             [lr['pk'] for lr in itertools.chain(*[rl['ll_results'] for rl in activity.data['result_links']])],
         )
+
+    def test_destroy_in_amendment_original_output(self):
+        LowerResultFactory(result_link=self.intervention.result_links.first())
+        amendment = InterventionAmendmentFactory(intervention=self.intervention)
+        intervention = amendment.amended_intervention
+        pd_output = intervention.result_links.first().ll_results.first()
+        response = self.forced_auth_req(
+            'delete',
+            reverse(
+                'partners:intervention-pd-output-detail',
+                args=[intervention.pk, pd_output.pk]
+            ),
+            user=self.user,
+            data={}
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
+
+    def test_destroy_in_amendment_new_output(self):
+        amendment = InterventionAmendmentFactory(intervention=self.intervention)
+        intervention = amendment.amended_intervention
+        pd_output = LowerResultFactory(result_link=intervention.result_links.first())
+        response = self.forced_auth_req(
+            'delete',
+            reverse(
+                'partners:intervention-pd-output-detail',
+                args=[intervention.pk, pd_output.pk]
+            ),
+            user=self.user,
+            data={}
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT, response.data)
+
+    def test_deactivate_output(self):
+        amendment = InterventionAmendmentFactory(intervention=self.intervention)
+        intervention = amendment.amended_intervention
+        budget = intervention.planned_budget
+        pd_output = LowerResultFactory(result_link=intervention.result_links.first())
+        InterventionActivityFactory(result=pd_output, cso_cash=20)
+        original_contribution = budget.partner_contribution_local
+        response = self.forced_auth_req(
+            'patch',
+            reverse(
+                'partners:intervention-pd-output-detail',
+                args=[intervention.pk, pd_output.pk]
+            ),
+            user=self.user,
+            data={'is_active': False}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        budget.refresh_from_db()
+        self.assertEqual(budget.partner_contribution_local, original_contribution - 20)
 
 
 class TestAppliedIndicatorsCreate(TestInterventionLowerResultsViewBase):
