@@ -99,7 +99,7 @@ class TestUserMapper(BaseTenantTestCase):
         res = self.mapper._set_special_attr(profile, "country", name)
         self.assertTrue(res)
         self.assertEqual(profile.country, country)
-        # TODO : figure out how to create another country
+        # TODO REALMS: figure out how to create another country
         self.assertEqual(profile.countries_available.count(), 1)
 
     def test_set_attribute_special_field(self):

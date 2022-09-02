@@ -10,6 +10,8 @@ from django.utils import timezone
 
 from factory import fuzzy
 from rest_framework import status
+
+from etools.applications.partners.permissions import UNICEF_USER
 from unicef_attachments.models import Attachment
 from unicef_rest_export import renderers
 
@@ -60,9 +62,8 @@ class TestAssessmentViewSet(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.send_path = "etools.applications.psea.validation.send_notification_with_template"
         cls.user = UserFactory()
-        cls.focal_user = UserFactory()
-        cls.focal_user.groups.add(
-            GroupFactory(name=UNICEFAuditFocalPoint.name),
+        cls.focal_user = UserFactory(
+            is_staff=True, realms__data=[UNICEF_USER, UNICEFAuditFocalPoint.name]
         )
         cls.partner = PartnerFactory()
 

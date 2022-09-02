@@ -20,7 +20,7 @@ from etools.applications.users.tests.factories import UserFactory
 class StaticDataEndpoints(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.unicef_staff = UserFactory(is_staff=True, realms__data=[])
 
     def test_urls(self):
         static_data_url = reverse('publics:static')

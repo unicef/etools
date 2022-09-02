@@ -2273,7 +2273,12 @@ class TestInterventionReviews(BaseInterventionTestCase):
             agreement__partner=self.partner,
             status=Intervention.REVIEW,
         )
-        self.user.groups.add(GroupFactory(name=PRC_SECRETARY))
+        RealmFactory(
+            user=self.user,
+            organization=self.partner.organization,
+            country=connection.tenant,
+            group=GroupFactory(name=PRC_SECRETARY)
+        )
 
     def test_list(self):
         for __ in range(10):

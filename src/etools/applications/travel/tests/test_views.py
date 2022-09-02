@@ -18,7 +18,8 @@ from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.reports.tests.factories import OfficeFactory, SectionFactory
 from etools.applications.travel.models import Activity, ItineraryItem, Report, Trip, TripStatusHistory
 from etools.applications.travel.tests.factories import ActivityFactory, ItineraryFactory, ReportFactory, TripFactory
-from etools.applications.users.tests.factories import GroupFactory, UserFactory
+from etools.applications.users.tests.factories import GroupFactory, UserFactory, RealmFactory, \
+    CountryFactory
 
 
 class TestTripViewSet(BaseTenantTestCase):
@@ -65,7 +66,12 @@ class TestTripViewSet(BaseTenantTestCase):
                 self.assertTrue(actual_trip['permissions']['delete'])
 
         travel_adm_group = GroupFactory(name='Travel Administrator')
-        self.user.groups.add(travel_adm_group)
+        RealmFactory(
+            user=self.user,
+            country=CountryFactory(),
+            organization=self.user.profile.organization,
+            group=travel_adm_group
+        )
         response = self.forced_auth_req(
             "get",
             reverse('travel:trip-list'),

@@ -167,8 +167,7 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
         )
 
     def test_list_view_without_tpm_organization(self):
-        user = UserFactory()
-        user.groups.add(ThirdPartyMonitor.as_group())
+        user = UserFactory(realms__data=[ThirdPartyMonitor.name])
 
         self._test_list_view(user, [])
 

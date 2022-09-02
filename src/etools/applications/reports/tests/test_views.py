@@ -13,6 +13,7 @@ from unicef_snapshot.models import Activity
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.core.tests.mixins import URLAssertionMixin
 from etools.applications.partners.models import Intervention
+from etools.applications.partners.permissions import UNICEF_USER, PARTNERSHIP_MANAGER_GROUP
 from etools.applications.partners.tests.factories import InterventionFactory, InterventionResultLinkFactory
 from etools.applications.partners.tests.test_utils import setup_intervention_test_data
 from etools.applications.reports.models import (
@@ -280,9 +281,7 @@ class TestDisaggregationListCreateViews(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user = UserFactory(is_staff=True)
-        cls.pme_user = UserFactory()
-        cls.group = GroupFactory(name="PME")
-        cls.pme_user.groups.add(cls.group)
+        cls.pme_user = UserFactory(realms__data=[GroupFactory(name='PME')])
         cls.url = reverse('reports:disaggregation-list-create')
 
     def test_unauthed(self):
@@ -375,9 +374,7 @@ class TestDisaggregationRetrieveUpdateViews(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user = UserFactory(is_staff=True)
-        cls.pme_user = UserFactory()
-        cls.group = GroupFactory(name="PME")
-        cls.pme_user.groups.add(cls.group)
+        cls.pme_user = UserFactory(realms__data=[GroupFactory(name='PME')])
 
     @staticmethod
     def _get_url(dissagregation):
@@ -970,9 +967,9 @@ class TestClusterListAPIView(BaseTenantTestCase):
 class SpecialReportingRequirementListCreateMixin:
     @classmethod
     def setUpTestData(cls):
-        cls.unicef_staff = UserFactory(is_staff=True)
-        group = GroupFactory(name='Partnership Manager')
-        cls.unicef_staff.groups.add(group)
+        cls.unicef_staff = UserFactory(
+            is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]
+        )
         cls.intervention = InterventionFactory(
             start=datetime.date(2001, 1, 1),
             status=Intervention.DRAFT,
@@ -1078,9 +1075,9 @@ class TestSpecialReportingRequirementListCreateView(
 class TestSpecialReportingRequirementRetrieveUpdateDestroyView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.unicef_staff = UserFactory(is_staff=True)
-        group = GroupFactory(name='Partnership Manager')
-        cls.unicef_staff.groups.add(group)
+        cls.unicef_staff = UserFactory(
+            is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]
+        )
         cls.intervention = InterventionFactory(
             start=datetime.date(2001, 1, 1),
             status=Intervention.DRAFT,

@@ -216,8 +216,7 @@ class TestAPIPartnerOrganizationListView(BaseTenantTestCase):
 
     def test_group_permission(self):
         """Ensure a non-staff user in the correct group has access"""
-        user = UserFactory()
-        user.groups.add(self.readonly_group)
+        user = UserFactory(realms__data=[self.readonly_group])
         response = self.forced_auth_req('get', self.url, user=user)
         self.assertResponseFundamentals(response)
 
@@ -718,8 +717,9 @@ class TestAgreementAPIView(BaseTenantTestCase):
         cls.partner_staff_user = UserFactory(is_staff=True)
         cls.partner_staff = PartnerStaffFactory(partner=cls.partner, user=cls.partner_staff_user)
 
-        cls.partnership_manager_user = UserFactory(is_staff=True)
-        cls.partnership_manager_user.groups.add(GroupFactory())
+        cls.partnership_manager_user = UserFactory(
+            is_staff=True, realms__date=[PARTNERSHIP_MANAGER_GROUP]
+        )
         cls.partner_staff2 = PartnerStaffFactory(partner=cls.partner, user=cls.partnership_manager_user)
 
         cls.notify_path = "etools.applications.partners.utils.send_notification_with_template"
@@ -1091,8 +1091,9 @@ class TestPartnerStaffMemberAPIView(BaseTenantTestCase):
         cls.unicef_staff = UserFactory(is_staff=True)
         cls.partner = PartnerFactory(
             organization=OrganizationFactory(organization_type=OrganizationType.CIVIL_SOCIETY_ORGANIZATION))
-        cls.partner_staff_user = UserFactory(is_staff=True)
-        cls.partner_staff_user.groups.add(GroupFactory())
+        cls.partner_staff_user = UserFactory(
+            is_staff=True, realms__date=[PARTNERSHIP_MANAGER_GROUP]
+        )
         cls.partner_staff = PartnerStaffFactory(partner=cls.partner, user=cls.partner_staff_user)
         cls.url = reverse(
             "partners_api:partner-staff-members-list",
@@ -1808,8 +1809,9 @@ class TestInterventionReportingPeriodViews(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         # create a staff user in the Partnership Manager group
-        cls.user = UserFactory(is_staff=True)
-        cls.user.groups.add(GroupFactory())
+        cls.user = UserFactory(
+            is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]
+        )
         cls.intervention = InterventionFactory()
         cls.list_url = reverse('partners_api:intervention-reporting-periods-list', args=[cls.intervention.pk])
         cls.num_periods = 3
