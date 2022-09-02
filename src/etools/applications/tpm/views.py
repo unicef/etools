@@ -12,6 +12,8 @@ from rest_framework.exceptions import NotFound
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+
+from etools.applications.users.models import Realm
 from unicef_attachments.models import Attachment, AttachmentLink
 from unicef_restlib.pagination import DynamicPageNumberPagination
 from unicef_restlib.views import MultiSerializerViewSetMixin, NestedViewSetMixin, SafeTenantViewSetMixin
@@ -223,6 +225,12 @@ class TPMStaffMembersViewSet(
         instance = serializer.save(tpm_partner=self.get_parent_object(), **kwargs)
         if not instance.user.profile.country:
             instance.user.profile.country = self.request.user.profile.country
+        Realm.objects.update_or_create(
+            user=instance.user,
+            country=instance.user.profile.country,
+            organization=instance.tpm_partner.organization,
+            group=ThirdPartyMonitor.as_group()
+        )
         instance.user.profile.countries_available.add(self.request.user.profile.country)
         instance.user.groups.add(ThirdPartyMonitor.as_group())
         instance.user.profile.save()
