@@ -362,21 +362,21 @@ class InterventionDetailSerializer(FullInterventionSnapshotSerializerMixin, seri
     def _is_management(self):
         return get_user_model().objects.filter(
             pk=self.context['request'].user.pk,
-            groups__name__in=[SENIOR_MANAGEMENT_GROUP],
+            realms__group__name__in=[SENIOR_MANAGEMENT_GROUP],
             profile__country=self.context['request'].user.profile.country
         ).exists()
 
     def _is_partnership_manager(self):
         return get_user_model().objects.filter(
             pk=self.context['request'].user.pk,
-            groups__name__in=[PARTNERSHIP_MANAGER_GROUP],
+            realms__group__name__in=[PARTNERSHIP_MANAGER_GROUP],
             profile__country=self.context['request'].user.profile.country
         ).exists()
 
     def _is_prc_secretary(self):
         return get_user_model().objects.filter(
             pk=self.context['request'].user.pk,
-            groups__name__in=[PRC_SECRETARY],
+            realms__group__name__in=[PRC_SECRETARY],
             profile__country=self.context['request'].user.profile.country
         ).exists()
 

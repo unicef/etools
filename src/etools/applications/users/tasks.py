@@ -118,7 +118,7 @@ class AzureUserMapper:
             if created:
                 status['created'] = int(created)
                 user.set_unusable_password()
-                # TODO: TBD about UAT
+                # TODO REALMS: TBD about UAT
                 Realm.objects.create(
                     user=user,
                     country=self._get_country('UAT'),
