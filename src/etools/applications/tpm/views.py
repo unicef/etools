@@ -12,8 +12,6 @@ from rest_framework.exceptions import NotFound
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-
-from etools.applications.users.models import Realm
 from unicef_attachments.models import Attachment, AttachmentLink
 from unicef_restlib.pagination import DynamicPageNumberPagination
 from unicef_restlib.views import MultiSerializerViewSetMixin, NestedViewSetMixin, SafeTenantViewSetMixin
@@ -81,6 +79,7 @@ from etools.applications.tpm.serializers.visit import (
 )
 from etools.applications.tpm.tpmpartners.models import TPMPartner, TPMPartnerStaffMember
 from etools.applications.tpm.tpmpartners.synchronizers import TPMPartnerSynchronizer
+from etools.applications.users.models import Realm
 
 
 class BaseTPMViewSet(
