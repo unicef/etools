@@ -13,7 +13,7 @@ from unicef_snapshot.models import Activity
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.core.tests.mixins import URLAssertionMixin
 from etools.applications.partners.models import Intervention
-from etools.applications.partners.permissions import UNICEF_USER, PARTNERSHIP_MANAGER_GROUP
+from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, UNICEF_USER
 from etools.applications.partners.tests.factories import InterventionFactory, InterventionResultLinkFactory
 from etools.applications.partners.tests.test_utils import setup_intervention_test_data
 from etools.applications.reports.models import (

@@ -10,8 +10,6 @@ from django.utils import timezone
 
 from factory import fuzzy
 from rest_framework import status
-
-from etools.applications.partners.permissions import UNICEF_USER
 from unicef_attachments.models import Attachment
 from unicef_rest_export import renderers
 
@@ -25,6 +23,7 @@ from etools.applications.audit.tests.factories import (
 )
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.organizations.tests.factories import OrganizationFactory
+from etools.applications.partners.permissions import UNICEF_USER
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.psea.models import Answer, Assessment, AssessmentStatusHistory, Assessor, Indicator
 from etools.applications.psea.tests.factories import (
@@ -37,7 +36,7 @@ from etools.applications.psea.tests.factories import (
     RatingFactory,
 )
 from etools.applications.reports.tests.factories import SectionFactory
-from etools.applications.users.tests.factories import GroupFactory, UserFactory
+from etools.applications.users.tests.factories import UserFactory
 
 
 class TestPSEAStaticDropdownsListApiView(BaseTenantTestCase):

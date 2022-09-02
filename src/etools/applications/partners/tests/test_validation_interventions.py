@@ -8,7 +8,7 @@ from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
 from etools.applications.partners.models import Agreement, FileType, Intervention, InterventionAmendment
-from etools.applications.partners.permissions import UNICEF_USER, PARTNERSHIP_MANAGER_GROUP
+from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
     FileTypeFactory,
@@ -31,7 +31,7 @@ from etools.applications.partners.validation.interventions import (
     transition_to_suspended,
     transition_to_terminated,
 )
-from etools.applications.users.tests.factories import GroupFactory, UserFactory
+from etools.applications.users.tests.factories import UserFactory
 
 
 class TestPartnershipManagerOnly(BaseTenantTestCase):

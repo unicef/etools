@@ -18,8 +18,7 @@ from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.reports.tests.factories import OfficeFactory, SectionFactory
 from etools.applications.travel.models import Activity, ItineraryItem, Report, Trip, TripStatusHistory
 from etools.applications.travel.tests.factories import ActivityFactory, ItineraryFactory, ReportFactory, TripFactory
-from etools.applications.users.tests.factories import GroupFactory, UserFactory, RealmFactory, \
-    CountryFactory
+from etools.applications.users.tests.factories import CountryFactory, GroupFactory, RealmFactory, UserFactory
 
 
 class TestTripViewSet(BaseTenantTestCase):

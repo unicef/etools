@@ -7,7 +7,7 @@ from etools.applications.partners.models import Intervention
 from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP
 from etools.applications.partners.serializers import interventions_v3 as serializers
 from etools.applications.partners.tests.factories import InterventionFactory, PartnerFactory
-from etools.applications.users.tests.factories import GroupFactory, UserFactory, RealmFactory
+from etools.applications.users.tests.factories import GroupFactory, RealmFactory, UserFactory
 
 
 class TestInterventionDetailSerializer(BaseTenantTestCase):

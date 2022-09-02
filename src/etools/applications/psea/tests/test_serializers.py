@@ -12,7 +12,7 @@ from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.psea import serializers
 from etools.applications.psea.models import Assessment, Assessor
 from etools.applications.psea.tests.factories import AnswerFactory, AssessmentFactory, AssessorFactory, RatingFactory
-from etools.applications.users.tests.factories import GroupFactory, UserFactory
+from etools.applications.users.tests.factories import UserFactory
 
 
 def expected_status_list(statuses):
