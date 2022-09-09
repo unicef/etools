@@ -1584,6 +1584,7 @@ class TestInterventionBudget(BaseTenantTestCase):
         )
         self.assertEqual(budget.total_cash_local(), 616 + 323)
 
+    @skip("outputs deactivation disabled")
     def test_calc_totals_inactive_result(self):
         intervention = InterventionFactory()
         mgmt_budget = intervention.management_budgets
