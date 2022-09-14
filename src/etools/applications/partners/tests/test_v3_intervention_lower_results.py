@@ -1,4 +1,5 @@
 import itertools
+from unittest import skip
 
 from django.urls import reverse
 
@@ -498,6 +499,7 @@ class TestInterventionLowerResultsDetailView(TestInterventionLowerResultsViewBas
         )
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT, response.data)
 
+    @skip("outputs deactivation disabled")
     def test_deactivate_output(self):
         amendment = InterventionAmendmentFactory(intervention=self.intervention)
         intervention = amendment.amended_intervention

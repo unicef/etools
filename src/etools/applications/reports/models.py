@@ -377,6 +377,7 @@ class LowerResult(TimeStampedModel):
     name = models.CharField(verbose_name=_("Name"), max_length=500)
     code = models.CharField(verbose_name=_("Code"), max_length=50, blank=True, null=True)
 
+    # not being used. does not affect result link budget since d3693d2fbf7b66f5468fefbe4bc2e9685eeb4348
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
