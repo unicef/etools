@@ -2,19 +2,19 @@ from unicef_notification.utils import strip_text
 
 name = 'travel/trip/approved'
 defaults = {
-    'description': 'Email sent to traveller when Travel itinerary approved.',
-    'subject': 'Travel Trip ({{ itinerary.reference_number }} Approved',
+    'description': 'Email sent to traveller when Travel has been approved.',
+    'subject': 'Travel ({{ trip.reference_number }} Approved',
 
     'content': strip_text("""
-    Dear {{ itinerary.traveller }},
+    Hello {{ traveller }},
 
-    Please refer below for additional information.
+    Your travel {{trip.reference_number}} has been approved by {{ supervisor }}.
 
-    Description: {{ itinerary.description }}
-    Start Date: {{ itinerary.start_date }}
-    End Date: {{ itinerary.end_date }}
+    Description: {{ trip.description }}
+    Start Date: {{ trip.start_date }}
+    End Date: {{ trip.end_date }}
 
-    Please click this link to review the itinerary: {{ url }}
+    Please click this link to review the Travel: {{ url }}
 
     Thank you.
     """),
@@ -23,15 +23,15 @@ defaults = {
     {% extends "email-templates/base" %}
 
     {% block content %}
-    Dear {{ itinerary.traveller }},<br/><br/>
+    Hello {{ traveller }},,<br/><br/>
 
-    Please refer below for additional information.<br/><br/>
+    Your travel {{trip.reference_number}} has been approved by {{ supervisor }}.<br/><br/>
 
-    Description: {{ itinerary.description }}
-    Start Date: {{ itinerary.start_date }}
-    End Date: {{ itinerary.end_date }}
+    Description: {{ trip.description }}
+    Start Date: {{ trip.start_date }}
+    End Date: {{ trip.end_date }}
 
-    Please click <a href="{{ url }}">this link</a> to review the itinerary.<br/><br/>
+    Please click <a href="{{ url }}">this link</a> to review the Travel.<br/><br/>
 
     Thank you.
     {% endblock %}

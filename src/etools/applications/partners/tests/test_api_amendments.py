@@ -2,6 +2,7 @@ import datetime
 from unittest import skip
 
 from django.core.management import call_command
+from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -70,6 +71,7 @@ class TestInterventionAmendments(BaseTenantTestCase):
             partner_authorized_officer_signatory=self.partner.staff_members.all().first(),
             budget_owner=self.pme,
         )
+        self.active_intervention.flat_locations.add(LocationFactory())
         self.active_intervention.partner_focal_points.add(self.partner.staff_members.all().first())
         self.active_intervention.unicef_focal_points.add(self.unicef_staff)
         self.active_intervention.offices.add(OfficeFactory())
@@ -259,6 +261,7 @@ class TestInterventionAmendments(BaseTenantTestCase):
             contingency_pd=False,
             unicef_court=True,
         )
+        intervention.flat_locations.add(LocationFactory())
         intervention.planned_budget.total_hq_cash_local = 10
         intervention.planned_budget.save()
         # FundsReservationHeaderFactory(intervention=intervention, currency='USD') # frs code is unique
@@ -419,6 +422,26 @@ class TestInterventionAmendments(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('total_hq_cash_local', response.data[0])
 
+    @override_settings(PMP_V2_RELEASE_DATE=datetime.date(year=2020, month=10, day=1))
+    def test_amendment_review_pd_v1(self):
+        self.active_intervention.start = datetime.date(year=2019, month=10, day=1)
+        self.active_intervention.budget_owner = None
+        self.active_intervention.date_sent_to_partner = None
+        self.active_intervention.save()
+
+        amendment = InterventionAmendmentFactory(intervention=self.active_intervention)
+        amendment.amended_intervention.budget_owner = self.unicef_staff
+        amendment.amended_intervention.unicef_accepted = True
+        amendment.amended_intervention.partner_accepted = True
+        amendment.amended_intervention.save()
+
+        response = self.forced_auth_req(
+            "patch", reverse('pmp_v3:intervention-review', args=[amendment.amended_intervention.pk]),
+            user=self.unicef_staff, data={'review_type': 'no-review'}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['status'], Intervention.SIGNATURE)
+
     def test_geographical_coverage_sites_ignored_in_difference(self):
         location = LocationFactory()
         site = LocationSiteFactory()
@@ -475,16 +498,15 @@ class TestInterventionAmendmentDeleteView(BaseTenantTestCase):
         self.assertFalse(InterventionAmendment.objects.filter(pk=self.amendment.pk).exists())
         self.assertFalse(Intervention.objects.filter(pk=self.amendment.amended_intervention.pk).exists())
 
-    def test_delete_invalid(self):
-        self.intervention.status = Intervention.ACTIVE
-        self.intervention.save()
+    def test_delete_inactive(self):
+        self.amendment.is_active = False
+        self.amendment.save()
         response = self.forced_auth_req(
             'delete',
             self.url,
             user=self.unicef_staff,
         )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data, ["You do not have permissions to delete an amendment"])
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_intervention_amendments_delete(self):
         response = self.forced_auth_req(
@@ -495,14 +517,14 @@ class TestInterventionAmendmentDeleteView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_delete_active(self):
-        self.intervention.status = 'active'
-        self.intervention.save()
+        self.amendment.is_active = True
+        self.amendment.save()
         response = self.forced_auth_req(
             'delete',
             self.url,
             user=self.unicef_staff,
         )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_delete_active_focal_point(self):
         self.intervention.status = 'active'

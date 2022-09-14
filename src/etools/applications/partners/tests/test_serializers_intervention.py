@@ -6,6 +6,7 @@ from etools.applications.partners.serializers.interventions_v2 import Interventi
 from etools.applications.partners.tests.factories import InterventionFactory, InterventionResultLinkFactory
 from etools.applications.reports.models import ReportingRequirement
 from etools.applications.reports.tests.factories import AppliedIndicatorFactory, LowerResultFactory
+from etools.applications.users.tests.factories import UserFactory
 
 
 class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
@@ -21,7 +22,7 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         )
         cls.lower_result = LowerResultFactory(result_link=cls.result_link)
         cls.indicator = AppliedIndicatorFactory(lower_result=cls.lower_result)
-        cls.context = {"intervention": cls.intervention}
+        cls.context = {"user": UserFactory(), "intervention": cls.intervention}
 
     def test_validation_invalid_report_type(self):
         data = {

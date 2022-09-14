@@ -1,6 +1,7 @@
 import codecs
 import csv
 import decimal
+import string
 
 from django.contrib.auth import get_user_model
 from django.db import transaction
@@ -27,6 +28,7 @@ from etools.applications.partners.permissions import (
     PRC_SECRETARY,
     SENIOR_MANAGEMENT_GROUP,
 )
+from etools.applications.partners.serializers.intervention_snapshot import FullInterventionSnapshotSerializerMixin
 from etools.applications.partners.serializers.interventions_v2 import (
     FRsSerializer,
     InterventionAmendmentCUSerializer,
@@ -45,14 +47,26 @@ from etools.applications.reports.serializers.v2 import InterventionTimeFrameSeri
 from etools.applications.users.serializers_v3 import MinimalUserSerializer
 
 
-class InterventionRiskSerializer(serializers.ModelSerializer):
+class InterventionRiskSerializer(FullInterventionSnapshotSerializerMixin, serializers.ModelSerializer):
     class Meta:
         model = InterventionRisk
         fields = ('id', 'risk_type', 'mitigation_measures', 'intervention')
         kwargs = {'intervention': {'write_only': True}}
 
+    def validate_mitigation_measures(self, value):
+        if value and len(value) > 2500:
+            raise serializers.ValidationError(
+                "This field is limited to {} or less characters.".format(
+                    2500,
+                ),
+            )
+        return value
 
-class InterventionSupplyItemSerializer(serializers.ModelSerializer):
+    def get_intervention(self):
+        return self.validated_data['intervention']
+
+
+class InterventionSupplyItemSerializer(FullInterventionSnapshotSerializerMixin, serializers.ModelSerializer):
     class Meta:
         model = InterventionSupplyItem
         fields = (
@@ -70,6 +84,9 @@ class InterventionSupplyItemSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data["intervention"] = self.initial_data.get("intervention")
         return super().create(validated_data)
+
+    def get_intervention(self):
+        return self.context["intervention"]
 
 
 class InterventionSupplyItemUploadSerializer(serializers.Serializer):
@@ -103,6 +120,7 @@ class InterventionSupplyItemUploadSerializer(serializers.Serializer):
             codecs.iterdecode(
                 self.validated_data.get("supply_items_file"),
                 "utf-8",
+                errors='ignore'
             ),
             delimiter=",",
         )
@@ -119,11 +137,14 @@ class InterventionSupplyItemUploadSerializer(serializers.Serializer):
                 except decimal.InvalidOperation:
                     raise ValidationError(f"Unable to process row {index}, bad number provided for `Indicative Price`")
 
+                title = ''.join([x if x in string.printable else '' for x in row["Product Title"]])
+                product_no = ''.join([x if x in string.printable else '' for x in row["Product Number"]])
+
                 data.append((
-                    row["Product Title"],
+                    title,
                     quantity,
                     price,
-                    row["Product Number"],
+                    product_no,
                 ))
         return data
 
@@ -162,7 +183,7 @@ class InterventionManagementBudgetItemSerializer(serializers.ModelSerializer):
         return attrs
 
 
-class InterventionManagementBudgetSerializer(serializers.ModelSerializer):
+class InterventionManagementBudgetSerializer(FullInterventionSnapshotSerializerMixin, serializers.ModelSerializer):
     items = InterventionManagementBudgetItemSerializer(many=True, required=False)
     act1_total = serializers.SerializerMethodField()
     act2_total = serializers.SerializerMethodField()
@@ -199,13 +220,6 @@ class InterventionManagementBudgetSerializer(serializers.ModelSerializer):
         return str(obj.act3_unicef + obj.act3_partner)
 
     @transaction.atomic
-    def create(self, validated_data):
-        items = validated_data.pop('items', None)
-        instance = super().create(validated_data)
-        self.set_items(instance, items)
-        return instance
-
-    @transaction.atomic
     def update(self, instance, validated_data):
         items = validated_data.pop('items', None)
         instance = super().update(instance, validated_data)
@@ -236,8 +250,11 @@ class InterventionManagementBudgetSerializer(serializers.ModelSerializer):
         # doing update in serializer instead of post_save to avoid big number of budget re-calculations
         instance.update_cash()
 
+    def get_intervention(self):
+        return self.instance.intervention
 
-class InterventionDetailSerializer(serializers.ModelSerializer):
+
+class InterventionDetailSerializer(FullInterventionSnapshotSerializerMixin, serializers.ModelSerializer):
     activation_letter_attachment = AttachmentSingleFileField(read_only=True)
     activation_letter_file = serializers.FileField(source='activation_letter', read_only=True)
     amendments = InterventionAmendmentCUSerializer(many=True, read_only=True, required=False)
@@ -286,6 +303,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     partner_focal_points = PartnerStaffMemberUserSerializer(many=True)
     partner_authorized_officer_signatory = PartnerStaffMemberUserSerializer()
     original_intervention = serializers.SerializerMethodField()
+    in_amendment_date = serializers.SerializerMethodField()
 
     def get_location_p_codes(self, obj):
         return [location.p_code for location in obj.flat_locations.all()]
@@ -341,6 +359,9 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
 
     def get_cluster_names(self, obj):
         return [c for c in obj.intervention_clusters()]
+
+    def get_in_amendment_date(self, obj):
+        return obj.amendment.created if hasattr(obj, 'amendment') else None
 
     def _is_management(self):
         return get_user_model().objects.filter(
@@ -579,6 +600,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "id",
             "implementation_strategy",
             "in_amendment",
+            "in_amendment_date",
             "ip_program_contribution",
             "location_names",
             "location_p_codes",
@@ -639,6 +661,9 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "unicef_signatory",
             "original_intervention",
         )
+
+    def get_intervention(self):
+        return self.instance
 
 
 class InterventionDetailResultsStructureSerializer(serializers.ModelSerializer):

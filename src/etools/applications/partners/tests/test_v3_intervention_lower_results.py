@@ -1,11 +1,16 @@
+import itertools
+from unittest import skip
+
 from django.urls import reverse
 
 from rest_framework import status
 from unicef_locations.tests.factories import LocationFactory
+from unicef_snapshot.models import Activity
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import Intervention, InterventionResultLink
 from etools.applications.partners.tests.factories import (
+    InterventionAmendmentFactory,
     InterventionFactory,
     InterventionResultLinkFactory,
     PartnerStaffFactory,
@@ -14,6 +19,7 @@ from etools.applications.reports.models import LowerResult, ResultType
 from etools.applications.reports.tests.factories import (
     AppliedIndicatorFactory,
     InterventionActivityFactory,
+    InterventionActivityItemFactory,
     LowerResultFactory,
     ResultFactory,
     SectionFactory,
@@ -62,6 +68,7 @@ class TestInterventionLowerResultsListView(TestInterventionLowerResultsViewBase)
         pd_result = LowerResult.objects.get(id=response.data['id'])
         self.assertEqual(pd_result.result_link.intervention, self.intervention)
         self.assertEqual(pd_result.result_link.cp_output, None)
+        self.assertEqual(pd_result.code, '0.1')
 
     def test_create_associated(self):
         response = self.forced_auth_req(
@@ -72,6 +79,7 @@ class TestInterventionLowerResultsListView(TestInterventionLowerResultsViewBase)
         pd_result = LowerResult.objects.get(id=response.data['id'])
         self.assertEqual(pd_result.result_link.intervention, self.intervention)
         self.assertEqual(pd_result.result_link.cp_output, self.cp_output)
+        self.assertEqual(pd_result.code, '1.1')
 
     def test_create_associated_invalid_cp_output(self):
         cp_output = ResultFactory(result_type__name=ResultType.OUTPUT)
@@ -280,6 +288,126 @@ class TestInterventionLowerResultsDetailView(TestInterventionLowerResultsViewBas
 
         self.assertFalse(InterventionResultLink.objects.filter(pk=result_link.pk).exists())
 
+    def assign_result_to_cp_output(self, lower_result, cp_output):
+        response = self.forced_auth_req(
+            'patch',
+            reverse('partners:intervention-pd-output-detail', args=[self.intervention.pk, lower_result.pk]),
+            self.user,
+            data={'cp_output': cp_output.id}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        return response
+
+    def test_associate_output_renumber_codes_activities(self):
+        self.assertEqual(self.result_link.code, '1')
+        self.assertEqual(LowerResultFactory(code=None, result_link=self.result_link).code, '1.1')
+        old_result_link = InterventionResultLinkFactory(code=None, intervention=self.intervention, cp_output=None)
+        result = LowerResultFactory(code=None, result_link=old_result_link)
+        activity = InterventionActivityFactory(code=None, result=result)
+        self.assertEqual(result.code, '0.1')
+        self.assertEqual(activity.code, '0.1.1')
+        self.assign_result_to_cp_output(result, self.result_link.cp_output)
+        result.refresh_from_db()
+        activity.refresh_from_db()
+        self.assertEqual(result.code, '1.2')
+        self.assertEqual(activity.code, '1.2.1')
+
+    def test_associate_output_renumber_codes_activity_items(self):
+        self.assertEqual(self.result_link.code, '1')
+        self.assertEqual(LowerResultFactory(code=None, result_link=self.result_link).code, '1.1')
+        old_result_link = InterventionResultLinkFactory(code=None, intervention=self.intervention, cp_output=None)
+        result = LowerResultFactory(code=None, result_link=old_result_link)
+        activity = InterventionActivityFactory(code=None, result=result)
+        quarter = self.intervention.quarters.first()
+        act_item = InterventionActivityItemFactory(activity=activity, unicef_cash=8)
+        quarter.activities.add(activity)
+
+        self.assertEqual(result.code, '0.1')
+        self.assertEqual(activity.code, '0.1.1')
+        self.assertEqual(act_item.code, '0.1.1.1')
+        self.assign_result_to_cp_output(result, self.result_link.cp_output)
+        result.refresh_from_db()
+        activity.refresh_from_db()
+        act_item.refresh_from_db()
+        self.assertEqual(result.code, '1.2')
+        self.assertEqual(activity.code, '1.2.1')
+        self.assertEqual(act_item.code, '1.2.1.1')
+
+    def test_associate_output_renumber_codes_shift_to_the_middle(self):
+        self.assertEqual(self.result_link.code, '1')
+        self.assertEqual(LowerResultFactory(code=None, result_link=self.result_link).code, '1.1')
+        temp_link = InterventionResultLinkFactory(intervention=self.intervention, cp_output=None)
+        r01 = LowerResultFactory(code=None, result_link=temp_link)
+        r02 = LowerResultFactory(code=None, result_link=temp_link)
+
+        new_result_link = InterventionResultLinkFactory(
+            intervention=self.intervention,
+            cp_output__result_type__name=ResultType.OUTPUT,
+        )
+
+        r21 = LowerResultFactory(code=None, result_link=new_result_link)
+        self.assertEqual(r21.code, '2.1')
+
+        self.assign_result_to_cp_output(r02, new_result_link.cp_output)
+        # result link for r02 unchanged
+        for obj in [r01, r02, r21, new_result_link]:
+            obj.refresh_from_db()
+        self.assertEqual(new_result_link.code, '2')
+        self.assertEqual(r01.code, '0.1')
+        self.assertEqual(r02.code, '2.1')
+        self.assertEqual(r21.code, '2.2')
+
+        self.assign_result_to_cp_output(r01, new_result_link.cp_output)
+        # result link for r01 was removed, r21 as well as r02 shifted
+        for obj in [r01, r02, r21, new_result_link]:
+            obj.refresh_from_db()
+        self.assertEqual(new_result_link.code, '2')
+        self.assertEqual(r01.code, '2.1')
+        self.assertEqual(r02.code, '2.2')
+        self.assertEqual(r21.code, '2.3')
+
+    def test_delete_pd_output_recalculate_broken_codes(self):
+        LowerResultFactory(result_link=self.result_link, code='1.1')
+        LowerResultFactory(result_link=self.result_link, code='2.1')
+        LowerResultFactory(result_link=self.result_link, code='1.2')
+        result = LowerResultFactory(result_link=self.result_link, code='1.3')
+        response = self.forced_auth_req(
+            'delete',
+            reverse('partners:intervention-pd-output-detail', args=[self.intervention.pk, result.pk]),
+            self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertListEqual(
+            list(self.result_link.ll_results.order_by('id').values_list('code', flat=True)),
+            ['1.1', '1.2', '1.3'],
+        )
+
+    def test_delete_pd_output_persist_temp_result_link(self):
+        result_link = InterventionResultLinkFactory(intervention=self.intervention, cp_output=None)
+        result = LowerResultFactory(result_link=result_link, code=None)
+        second_result = LowerResultFactory(result_link=result_link, code=None)
+        self.assertEqual(second_result.code, f'{result_link.code}.2')
+        response = self.forced_auth_req(
+            'delete',
+            reverse('partners:intervention-pd-output-detail', args=[self.intervention.pk, result.pk]),
+            self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT, response.data)
+        self.assertTrue(InterventionResultLink.objects.filter(pk=result_link.pk).exists())
+        second_result.refresh_from_db()
+        self.assertEqual(second_result.code, f'{result_link.code}.1')
+
+    def test_delete_pd_output_remove_temp_result_link(self):
+        result_link = InterventionResultLinkFactory(intervention=self.intervention, cp_output=None)
+        result = LowerResultFactory(result_link=result_link, code=None)
+        response = self.forced_auth_req(
+            'delete',
+            reverse('partners:intervention-pd-output-detail', args=[self.intervention.pk, result.pk]),
+            self.user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT, response.data)
+        self.assertFalse(InterventionResultLink.objects.filter(pk=result_link.pk).exists())
+
     # permissions are common with list view and were explicitly checked in corresponding api test case
 
     def test_associate_output_as_partner(self):
@@ -318,6 +446,79 @@ class TestInterventionLowerResultsDetailView(TestInterventionLowerResultsViewBas
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertNotIn('intervention', response.data)
+
+    def test_create_intervention_snapshot(self):
+        result = LowerResultFactory(result_link=self.result_link, name='old_name')
+        response = self.forced_auth_req(
+            'patch',
+            reverse('partners:intervention-pd-output-detail', args=[self.intervention.pk, result.pk]),
+            self.user,
+            data={'name': 'new_name'}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+
+        activity = Activity.objects.first()
+        self.assertEqual(activity.target, self.intervention)
+        self.assertEqual(
+            {'result_links': [{'ll_results': [{'name': {'after': 'new_name', 'before': 'old_name'}}]}]},
+            activity.change,
+        )
+        self.assertIn(
+            result.id,
+            [lr['pk'] for lr in itertools.chain(*[rl['ll_results'] for rl in activity.data['result_links']])],
+        )
+
+    def test_destroy_in_amendment_original_output(self):
+        LowerResultFactory(result_link=self.intervention.result_links.first())
+        amendment = InterventionAmendmentFactory(intervention=self.intervention)
+        intervention = amendment.amended_intervention
+        pd_output = intervention.result_links.first().ll_results.first()
+        response = self.forced_auth_req(
+            'delete',
+            reverse(
+                'partners:intervention-pd-output-detail',
+                args=[intervention.pk, pd_output.pk]
+            ),
+            user=self.user,
+            data={}
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
+
+    def test_destroy_in_amendment_new_output(self):
+        amendment = InterventionAmendmentFactory(intervention=self.intervention)
+        intervention = amendment.amended_intervention
+        pd_output = LowerResultFactory(result_link=intervention.result_links.first())
+        response = self.forced_auth_req(
+            'delete',
+            reverse(
+                'partners:intervention-pd-output-detail',
+                args=[intervention.pk, pd_output.pk]
+            ),
+            user=self.user,
+            data={}
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT, response.data)
+
+    @skip("outputs deactivation disabled")
+    def test_deactivate_output(self):
+        amendment = InterventionAmendmentFactory(intervention=self.intervention)
+        intervention = amendment.amended_intervention
+        budget = intervention.planned_budget
+        pd_output = LowerResultFactory(result_link=intervention.result_links.first())
+        InterventionActivityFactory(result=pd_output, cso_cash=20)
+        original_contribution = budget.partner_contribution_local
+        response = self.forced_auth_req(
+            'patch',
+            reverse(
+                'partners:intervention-pd-output-detail',
+                args=[intervention.pk, pd_output.pk]
+            ),
+            user=self.user,
+            data={'is_active': False}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        budget.refresh_from_db()
+        self.assertEqual(budget.partner_contribution_local, original_contribution - 20)
 
 
 class TestAppliedIndicatorsCreate(TestInterventionLowerResultsViewBase):

@@ -1,7 +1,8 @@
+import functools
 from copy import copy
 
 from django.conf import settings
-from django.db import transaction
+from django.db import transaction, utils
 from django.http import HttpResponse
 from django.utils.translation import ugettext_lazy as _
 
@@ -39,7 +40,7 @@ from etools.applications.partners.models import (
     PRCOfficerInterventionReview,
 )
 from etools.applications.partners.permissions import (
-    AmendmentSessionActivitiesPermission,
+    AmendmentSessionOnlyDeletePermission,
     intervention_field_is_editable_permission,
     PMPInterventionPermission,
     UserBelongsToObjectPermission,
@@ -70,6 +71,7 @@ from etools.applications.partners.serializers.v3 import (
     PRCOfficerInterventionReviewSerializer,
     UNICEFInterventionLowerResultSerializer,
 )
+from etools.applications.partners.views.intervention_snapshot import FullInterventionSnapshotDeleteMixin
 from etools.applications.partners.views.interventions_v2 import (
     InterventionAttachmentUpdateDeleteView,
     InterventionDeleteView,
@@ -103,7 +105,7 @@ class DetailedInterventionResponseMixin:
     detailed_intervention_methods = ['post', 'put', 'patch']
     detailed_intervention_serializer = InterventionDetailSerializer
 
-    def get_intervention(self) -> Intervention:
+    def get_intervention(self):
         raise NotImplementedError
 
     def dispatch(self, request, *args, **kwargs):
@@ -241,7 +243,8 @@ class InterventionPDOutputsViewMixin(DetailedInterventionResponseMixin):
     queryset = LowerResult.objects.select_related('result_link').order_by('id')
     permission_classes = [
         IsAuthenticated,
-        IsReadAction | (IsEditAction & intervention_field_is_editable_permission('pd_outputs'))
+        IsReadAction | (IsEditAction & intervention_field_is_editable_permission('pd_outputs')),
+        AmendmentSessionOnlyDeletePermission,
     ]
 
     def get_serializer_class(self):
@@ -267,12 +270,16 @@ class InterventionPDOutputsListCreateView(InterventionPDOutputsViewMixin, ListCr
     pass
 
 
-class InterventionPDOutputsDetailUpdateView(InterventionPDOutputsViewMixin, RetrieveUpdateDestroyAPIView):
+class InterventionPDOutputsDetailUpdateView(
+    InterventionPDOutputsViewMixin,
+    FullInterventionSnapshotDeleteMixin,
+    RetrieveUpdateDestroyAPIView,
+):
     def perform_destroy(self, instance):
         # do cleanup if pd output is still not associated to cp output
         result_link = instance.result_link
         instance.delete()
-        if result_link.cp_output is None:
+        if result_link.cp_output is None and not result_link.ll_results.exists():
             result_link.delete()
 
 
@@ -308,7 +315,7 @@ class PMPReviewMixin(DetailedInterventionResponseMixin, PMPBaseViewMixin):
     def get_root_object(self):
         return Intervention.objects.get(pk=self.kwargs["intervention_pk"])
 
-    def get_intervention(self) -> Intervention:
+    def get_intervention(self):
         return self.get_root_object()
 
     def get_queryset(self):
@@ -351,7 +358,7 @@ class PMPOfficerReviewBaseView(DetailedInterventionResponseMixin, PMPBaseViewMix
     def get_root_object(self):
         return Intervention.objects.get(pk=self.kwargs['intervention_pk'])
 
-    def get_intervention(self) -> Intervention:
+    def get_intervention(self):
         return self.get_root_object()
 
     def get_queryset(self):
@@ -402,11 +409,16 @@ class PMPInterventionSupplyItemMixin(
             intervention=self.get_pd(self.kwargs.get("intervention_pk")),
         )
 
-    def get_intervention(self) -> Intervention:
+    def get_intervention(self):
         return self.get_pd(self.kwargs.get("intervention_pk"))
 
     def get_root_object(self):
         return self.get_intervention()
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['intervention'] = self.get_intervention()
+        return context
 
 
 class PMPInterventionSupplyItemListCreateView(
@@ -465,14 +477,20 @@ class PMPInterventionSupplyItemUploadView(
                 item.unit_number += unit_number
                 item.save()
             else:
-                InterventionSupplyItem.objects.create(
-                    intervention=intervention,
-                    title=title,
-                    unit_number=unit_number,
-                    unit_price=unit_price,
-                    unicef_product_number=product_number,
-                    provided_by=InterventionSupplyItem.PROVIDED_BY_UNICEF,
-                )
+                try:
+                    InterventionSupplyItem.objects.create(
+                        intervention=intervention,
+                        title=title,
+                        unit_number=unit_number,
+                        unit_price=unit_price,
+                        unicef_product_number=product_number,
+                        provided_by=InterventionSupplyItem.PROVIDED_BY_UNICEF,
+                    )
+                except utils.DataError as err:
+                    return Response(
+                        {"supply_items_file": f"{product_number}:  {str(err)}"},
+                        status.HTTP_400_BAD_REQUEST,
+                    )
         # make sure we get the correct totals
         intervention.refresh_from_db()
         return Response(
@@ -488,8 +506,8 @@ class InterventionActivityViewMixin(DetailedInterventionResponseMixin):
     queryset = InterventionActivity.objects.prefetch_related('items', 'time_frames').order_by('id')
     permission_classes = [
         IsAuthenticated,
-        AmendmentSessionActivitiesPermission,
-        IsReadAction | (IsEditAction & intervention_field_is_editable_permission('pd_outputs'))
+        IsReadAction | (IsEditAction & intervention_field_is_editable_permission('pd_outputs')),
+        AmendmentSessionOnlyDeletePermission,
     ]
     serializer_class = InterventionActivityDetailSerializer
 
@@ -498,7 +516,7 @@ class InterventionActivityViewMixin(DetailedInterventionResponseMixin):
             pk=self.kwargs.get('intervention_pk'),
         ).first()
 
-    def get_intervention(self) -> Intervention:
+    def get_intervention(self):
         return self.get_root_object()
 
     def get_parent_object(self):
@@ -526,17 +544,19 @@ class InterventionActivityDetailUpdateView(InterventionActivityViewMixin, Retrie
     pass
 
 
-class InterventionRiskDeleteView(DestroyAPIView):
+class InterventionRiskDeleteView(FullInterventionSnapshotDeleteMixin, DestroyAPIView):
     queryset = InterventionRisk.objects
     permission_classes = [
         IsAuthenticated,
         IsReadAction | (IsEditAction & intervention_field_is_editable_permission('risks'))
     ]
 
+    @functools.cache
     def get_root_object(self):
-        if not hasattr(self, '_intervention'):
-            self._intervention = Intervention.objects.filter(pk=self.kwargs.get('intervention_pk')).first()
-        return self._intervention
+        return Intervention.objects.filter(pk=self.kwargs.get('intervention_pk')).first()
+
+    def get_intervention(self):
+        return self.get_root_object()
 
     def get_queryset(self):
         return super().get_queryset().filter(intervention=self.get_root_object())
@@ -561,7 +581,7 @@ class PMPInterventionAttachmentListCreateView(DetailedInterventionResponseMixin,
     def perform_create(self, serializer):
         serializer.save(intervention=self.get_root_object())
 
-    def get_intervention(self) -> Intervention:
+    def get_intervention(self):
         return self.get_root_object()
 
 
@@ -584,7 +604,7 @@ class PMPInterventionAttachmentUpdateDeleteView(
     def get_queryset(self):
         return super().get_queryset().filter(intervention=self.get_root_object())
 
-    def get_intervention(self) -> Intervention:
+    def get_intervention(self):
         return self.get_root_object()
 
 
@@ -602,7 +622,7 @@ class PMPInterventionIndicatorsUpdateView(
             self._intervention = self.get_object().lower_result.result_link.intervention
         return self._intervention
 
-    def get_intervention(self) -> Intervention:
+    def get_intervention(self):
         return self.get_root_object()
 
 

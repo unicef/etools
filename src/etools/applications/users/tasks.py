@@ -20,7 +20,7 @@ class AzureUserMapper:
         'mail',
         'surname',
         'userType',
-        ('companyName', ['UNICEF', ]),
+        # ('companyName', ['UNICEF', ]),
     ]
 
     USER_ATTR_MAP = {

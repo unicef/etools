@@ -19,6 +19,7 @@ from etools.applications.reports.tests.factories import (
     LowerResultFactory,
 )
 from etools.applications.users.tests.factories import UserFactory
+from etools.libraries.tests.db_utils import CaptureQueries
 
 
 class BaseTestCase(BaseTenantTestCase):
@@ -109,6 +110,7 @@ class TestFunctionality(BaseTestCase):
 
     def test_set_bad_cash_values_having_items(self):
         InterventionActivityItemFactory(activity=self.activity, unicef_cash=8, cso_cash=5)
+        self.activity.update_cash()
         response = self.forced_auth_req(
             'patch', self.detail_url,
             user=self.user,
@@ -164,7 +166,92 @@ class TestFunctionality(BaseTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertEqual(self.activity.items.count(), 2)
         self.assertEqual(len(response.data['items']), 2)
+        self.assertEqual(response.data['items'][0]['name'], 'new')
         self.assertEqual(InterventionActivityItem.objects.filter(id=item_to_remove.id).exists(), False)
+
+    def test_set_items_validate_bad_id(self):
+        valid_item_to_update = InterventionActivityItemFactory(activity=self.activity)
+        invalid_item_to_update = InterventionActivityItemFactory(activity__result=self.activity.result)
+
+        response = self.forced_auth_req(
+            'patch', self.detail_url,
+            user=self.user,
+            data={
+                'items': [
+                    {
+                        'id': valid_item_to_update.id, 'name': 'first_item',
+                        'unit': 'item', 'no_units': 1, 'unit_price': '3.0',
+                        'unicef_cash': '1.0', 'cso_cash': '2.0',
+                    },
+                    {
+                        'id': invalid_item_to_update.id, 'name': 'second_item',
+                        'unit': 'item', 'no_units': 1, 'unit_price': '3.0',
+                        'unicef_cash': '1.0', 'cso_cash': '2.0',
+                    },
+                ],
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
+        self.assertEqual({}, response.data['items'][0])
+        self.assertIn('Unable to find item', response.data['items'][1]['non_field_errors'][0])
+
+    def test_set_many_items_queries(self):
+        items = [
+            InterventionActivityItem(
+                activity=self.activity, name=str(i), unit='test',
+                no_units=1, unit_price=42, unicef_cash=22, cso_cash=20,
+            )
+            for i in range(100)
+        ]
+        InterventionActivityItem.objects.bulk_create(items)
+        self.activity.update_cash()
+
+        with CaptureQueries() as cq:
+            response = self.forced_auth_req(
+                'patch', self.detail_url,
+                user=self.user,
+                data={
+                    'is_active': True,
+                    'items': [
+                        {
+                            'id': item.id, 'name': item.name,
+                            'unit': item.unit, 'no_units': str(item.no_units), 'unit_price': str(item.unit_price),
+                            'unicef_cash': str(item.unicef_cash), 'cso_cash': str(item.cso_cash),
+                        }
+                        for item in items
+                    ],
+                }
+            )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+
+        # initially there were around 2k db queries, so ~200 is more or less fine.
+        # they are mostly caused by snapshot + heavy permissions
+        self.assertLess(len(cq.queries), 200, '\n'.join((f'{i}: {q["sql"]}' for i, q in enumerate(cq.queries))))
+
+    def test_remove_all_items(self):
+        items = [
+            InterventionActivityItem(
+                activity=self.activity, name=str(i), unit='test',
+                no_units=1, unit_price=42, unicef_cash=22, cso_cash=20,
+            )
+            for i in range(5)
+        ]
+        InterventionActivityItem.objects.bulk_create(items)
+        self.assertEqual(self.activity.items.count(), 5)
+
+        response = self.forced_auth_req(
+            'patch', self.detail_url,
+            user=self.user,
+            data={
+                'items': [],
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(self.activity.items.count(), 0)
+        self.assertEqual(len(response.data['items']), 0)
 
     def test_budget_validation(self):
         item_to_update = InterventionActivityItemFactory(
@@ -185,6 +272,25 @@ class TestFunctionality(BaseTestCase):
             'Invalid budget data. Total cash should be equal to items number * price per item.',
             response.data['items'][0]['non_field_errors'],
         )
+
+    def test_budget_item_validation_rounding_ok(self):
+        item_to_update = InterventionActivityItemFactory(activity=self.activity)
+
+        response = self.forced_auth_req(
+            'patch', self.detail_url,
+            user=self.user,
+            data={
+                'items': [{
+                    'id': item_to_update.id,
+                    'no_units': '17.22',
+                    'unit_price': '17.89',
+                    'cso_cash': '287.00',
+                    'unicef_cash': '21.06',
+                }],
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
 
     def test_set_time_frames(self):
         item_to_remove = InterventionTimeFrame.objects.get(
@@ -212,6 +318,26 @@ class TestFunctionality(BaseTestCase):
         self.assertEqual(self.activity.time_frames.filter(pk=item_to_remove.pk).exists(), False)
         self.assertEqual(self.activity.time_frames.filter(pk=item_to_keep.pk).exists(), True)
         self.assertEqual(response.data['time_frames'], time_frames)
+
+    def test_set_multiple_items_unique_codes(self):
+        response = self.forced_auth_req(
+            'patch', self.detail_url,
+            user=self.user,
+            data={
+                'items': [
+                    {
+                        'name': f'item_{i}',
+                        'unit': 'item', 'no_units': 1, 'unit_price': '1',
+                        'unicef_cash': '1', 'cso_cash': '0.0',
+                    } for i in range(3)
+                ],
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertListEqual(
+            list(self.activity.items.order_by('code').values_list('code', flat=True)),
+            [self.activity.code + f'.{i + 1}' for i in range(3)]
+        )
 
     def test_minimal_create(self):
         response = self.forced_auth_req(

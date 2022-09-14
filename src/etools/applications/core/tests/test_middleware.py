@@ -1,11 +1,16 @@
 from unittest import skip
+from unittest.mock import patch
 
 from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
 from django.test import override_settings, RequestFactory, TestCase
 from django.urls import reverse
 
-from etools.applications.core.middleware import ANONYMOUS_ALLOWED_URL_FRAGMENTS, EToolsTenantMiddleware
+from etools.applications.core.middleware import (
+    ANONYMOUS_ALLOWED_URL_FRAGMENTS,
+    EToolsLocaleMiddleware,
+    EToolsTenantMiddleware,
+)
 from etools.applications.users.tests.factories import CountryFactory, ProfileLightFactory, UserFactory
 
 
@@ -89,3 +94,31 @@ class EToolsTenantMiddlewareTest(TestCase):
         self.request.user = superuser
         EToolsTenantMiddleware().process_request(self.request)
         self.assertEqual(self.request.urlconf, 'foo')
+
+
+@override_settings(LANGUAGE_CODE="fr")
+class EToolsLocaleMiddlewareTest(TestCase):
+    request_factory = RequestFactory()
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = ProfileLightFactory().user
+        cls.request = cls.request_factory.get('/')
+        cls.request.user = cls.user
+
+    def test_translation_activated(self):
+        self.assertEqual(
+            self.user.preferences,
+            {"language": "fr"}
+        )
+        with patch('etools.applications.core.middleware.translation.activate') as mock_method:
+            EToolsLocaleMiddleware().process_request(self.request)
+            mock_method.assert_called_once_with("fr")
+
+    def test_translation_not_activated(self):
+        self.user.preferences = {"language": "nonsense"}
+        self.user.save(update_fields=['preferences'])
+
+        with patch('etools.applications.core.middleware.translation.activate') as mock_method:
+            EToolsLocaleMiddleware().process_request(self.request)
+            mock_method.not_called()

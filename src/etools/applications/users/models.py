@@ -9,6 +9,7 @@ from django.core.mail import send_mail
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import connection, models
 from django.db.models.signals import post_save
+from django.urls import reverse
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 
@@ -22,6 +23,10 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+def preferences_default_dict():
+    return {'language': settings.LANGUAGE_CODE}
+
+
 class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = "username"
     REQUIRED_FIELDS = ['email']
@@ -29,14 +34,16 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
     username = models.CharField(_("username"), max_length=256, unique=True)
     email = models.EmailField(_('email address'), unique=True)
     password = models.CharField(_("password"), max_length=128)
-    first_name = models.CharField(_('first name'), max_length=30, blank=True)
+    first_name = models.CharField(_('first name'), max_length=150, blank=True)
     middle_name = models.CharField(_('middle_name'), max_length=50, blank=True)
-    last_name = models.CharField(_('last name'), max_length=30, blank=True)
+    last_name = models.CharField(_('last name'), max_length=150, blank=True)
     date_joined = models.DateTimeField(_('date joined'), auto_now_add=True)
     last_login = models.DateTimeField(_('last login'), blank=True, null=True)
     is_active = models.BooleanField(_('active'), default=True)
     is_staff = models.BooleanField(_('staff'), default=False)
     is_superuser = models.BooleanField(_('superuser'), default=False)
+
+    preferences = models.JSONField(default=preferences_default_dict)
 
     objects = UserManager()
 
@@ -98,6 +105,10 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
                 if PartnerStaffMember.objects.filter(user=self).exists():
                     return country
         return None
+
+    def get_admin_url(self):
+        info = (self._meta.app_label, self._meta.model_name)
+        return reverse('admin:%s_%s_change' % info, args=(self.pk,))
 
     def save(self, *args, **kwargs):
         if self.email != self.email.lower():

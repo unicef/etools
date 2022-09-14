@@ -75,6 +75,7 @@ urlpatterns = [
     re_path(r'^locations/autocomplete/$', LocationQuerySetView.as_view(), name='locations_autocomplete'),
     re_path(r'^api/v1/field-monitoring/', include('etools.applications.field_monitoring.urls')),
     re_path(r'^api/comments/v1/', include('etools.applications.comments.urls')),
+    re_path(r'^api/ecn/v1/', include('etools.applications.ecn.urls_v1', namespace='ecn_v1')),
 
     # GIS API urls
     re_path(r'^api/management/gis/', include('etools.applications.management.urls_gis')),

@@ -1,3 +1,4 @@
+import itertools
 from datetime import date
 from unittest.mock import patch
 
@@ -6,6 +7,7 @@ from django.utils import timezone
 
 from factory import fuzzy
 from rest_framework import status
+from unicef_snapshot.models import Activity
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import Intervention
@@ -237,6 +239,27 @@ class PRCReviewTestCase(ReviewInterventionMixin, BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertNotIn('individual_review', response.data['available_actions'])
+
+    def test_create_intervention_snapshot(self):
+        prc_member = UserFactory(is_staff=True)
+        self.review.prc_officers.add(prc_member)
+        prc_review = self.review.prc_reviews.get()
+        response = self.forced_auth_req(
+            'patch', self.get_detail_url(prc_member), prc_member,
+            data={'overall_comment': 'ok'},
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+
+        activity = Activity.objects.first()
+        self.assertEqual(activity.target, self.review_intervention)
+        self.assertEqual(
+            'ok',
+            activity.change['reviews'][0]['prc_reviews'][0]['overall_comment']['after'],
+        )
+        self.assertIn(
+            prc_review.id,
+            [pr['pk'] for pr in itertools.chain(*[r['prc_reviews'] for r in activity.data['reviews']])],
+        )
 
 
 class DevelopPermissionsTestCase(TestPermissionsMixin, DevelopInterventionMixin, BaseTenantTestCase):

@@ -18,6 +18,7 @@ import os
 from os.path import abspath, basename, dirname, join, normpath
 
 from django.db import connection
+from django.utils.translation import gettext_lazy as _
 
 import dj_database_url
 import sentry_sdk
@@ -110,6 +111,11 @@ MEDIA_URL = '/media/'
 
 # DJANGO: GLOBALIZATION (I18N/L10N)
 LANGUAGE_CODE = 'en-us'
+LANGUAGES = [
+    ('en', _('English')),
+    ('fr', _('Français')),
+]
+
 TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_L10N = True
@@ -127,6 +133,7 @@ MIDDLEWARE = (
     'corsheaders.middleware.CorsMiddleware',
     'etools.applications.core.middleware.EToolsTenantMiddleware',
     'waffle.middleware.WaffleMiddleware',  # needs request.tenant from EToolsTenantMiddleware
+    'etools.applications.core.middleware.EToolsLocaleMiddleware',
 )
 WSGI_APPLICATION = 'etools.config.wsgi.application'
 
@@ -227,6 +234,7 @@ TENANT_APPS = (
     'etools.applications.comments',
     'etools.applications.eface',
     'etools.applications.travel',
+    'etools.applications.ecn',
     'unicef_snapshot',
     'unicef_attachments',
     'unicef_vision',
@@ -586,3 +594,13 @@ UNICEF_LOCATIONS_MODEL = 'locations.Location'
 PRP_API_ENDPOINT = get_from_secrets_or_env('PRP_API_ENDPOINT', '')  # example: http://172.18.0.1:8083/api
 PRP_API_USER = get_from_secrets_or_env('PRP_API_USER', '')
 PRP_API_PASSWORD = get_from_secrets_or_env('PRP_API_PASSWORD', '')
+
+
+# EPD settings
+PMP_V2_RELEASE_DATE = get_from_secrets_or_env('PMP_PD_V2_RELEASE_DATE', '2020-10-01')
+PMP_V2_RELEASE_DATE = datetime.datetime.strptime(PMP_V2_RELEASE_DATE, '%Y-%m-%d').date()
+
+
+# ECN Integration
+# https://github.com/unicef/etools-ecn
+ECN_API_ENDPOINT = get_from_secrets_or_env('ECN_API_ENDPOINT', '')  # example: http://172.18.0.1:8086/api

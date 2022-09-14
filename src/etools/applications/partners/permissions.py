@@ -2,6 +2,7 @@ import datetime
 from functools import lru_cache
 
 from django.apps import apps
+from django.conf import settings
 from django.utils.translation import gettext as _
 
 from etools_validator.utils import check_rigid_related
@@ -134,6 +135,10 @@ class InterventionPermissions(PMPPermissions):
             """ field not required to accept if contingency is on"""
             return instance.contingency_pd or not instance.unicef_accepted
 
+        def unlocked_or_contingency(instance):
+            """ field not required to accept if contingency is on"""
+            return instance.contingency_pd or not instance.locked
+
         def is_spd_non_hum(instance):
             # TODO: in the future we might want to add a money condition here (100k is the current limit)
             return instance.document_type == instance.SPD and not instance.humanitarian_flag
@@ -181,9 +186,7 @@ class InterventionPermissions(PMPPermissions):
         self.user_groups = list(set(self.user_groups))
 
         self.condition_map = {
-            'condition1': self.user in self.instance.unicef_focal_points.all(),
-            'condition2': self.user in self.instance.partner_focal_points.all(),
-            'contingency on': self.instance.contingency_pd is True,
+            'contingency_on': self.instance.contingency_pd is True,
             'in_amendment_mode': user_added_amendment(self.instance),
             'not_in_amendment_mode': not user_added_amendment(self.instance),
             'not_ssfa': not_ssfa(self.instance),
@@ -202,9 +205,12 @@ class InterventionPermissions(PMPPermissions):
             'unlocked': unlocked(self.instance),
             'is_spd': self.instance.document_type == self.instance.SPD,
             'is_spd_non_hum': is_spd_non_hum(self.instance),
+            'is_pd_unlocked': self.instance.document_type == self.instance.PD and not self.instance.locked,
             'unicef_not_accepted': unicef_not_accepted(self.instance),
             'unicef_not_accepted_contingency': unicef_not_accepted_contingency(self.instance),
+            'unlocked_or_contingency': unlocked_or_contingency(self.instance),
             'unicef_not_accepted_spd': not_spd(self.instance) or unicef_not_accepted(self.instance),
+            'unlocked_or_spd': not not_spd(self.instance) or unlocked(self.instance),
             'unicef_not_accepted_spd_non_hum': unicef_not_accepted_spd_non_hum(self.instance),
             'not_ssfa+unicef_not_accepted': not_ssfa(self.instance) and unicef_not_accepted(self.instance),
         }
@@ -214,7 +220,7 @@ class InterventionPermissions(PMPPermissions):
         def intervention_is_v1():
             if self.instance.status in [self.instance.DRAFT]:
                 return False
-            return self.instance.start < datetime.date(year=2020, month=10, day=1) if self.instance.start else False
+            return self.instance.start < settings.PMP_V2_RELEASE_DATE if self.instance.start else False
 
         # TODO: Remove this method when there are no active legacy programme documents
         list_of_new_fields = ["budget_owner",
@@ -586,10 +592,12 @@ class UserBelongsToObjectPermission(BasePermission):
 
 class IsInterventionBudgetOwnerPermission(BasePermission):
     def has_object_permission(self, request, view, obj):
+        if hasattr(view, 'get_root_object'):
+            obj = view.get_root_object()
         return obj.budget_owner and obj.budget_owner == request.user
 
 
-class AmendmentSessionActivitiesPermission(BasePermission):
+class AmendmentSessionOnlyDeletePermission(BasePermission):
     """
     Lock activities created before current amendment
     """
@@ -603,3 +611,20 @@ class AmendmentSessionActivitiesPermission(BasePermission):
 
         amendment = intervention.amendment
         return obj.created > amendment.created
+
+
+class InterventionIsDraftPermission(BasePermission):
+    def has_permission(self, request, view):
+        intervention = view.get_root_object()
+        return intervention.status == 'draft'
+
+
+class InterventionAmendmentIsNotCompleted(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        return obj.is_active
+
+
+class UserIsUnicefFocalPoint(BasePermission):
+    def has_permission(self, request, view):
+        intervention = view.get_root_object()
+        return request.user in intervention.unicef_focal_points.all()

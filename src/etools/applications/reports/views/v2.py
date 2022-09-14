@@ -31,10 +31,10 @@ from etools.applications.core.renderers import CSVFlatRenderer
 from etools.applications.partners.filters import PartnerScopeFilter
 from etools.applications.partners.models import Intervention, InterventionResultLink
 from etools.applications.partners.permissions import (
+    intervention_field_is_editable_permission,
     PartnershipManagerPermission,
-    PartnershipManagerRepPermission,
-    SENIOR_MANAGEMENT_GROUP,
 )
+from etools.applications.partners.views.intervention_snapshot import FullInterventionSnapshotDeleteMixin
 from etools.applications.reports.models import (
     AppliedIndicator,
     CountryProgramme,
@@ -211,29 +211,28 @@ class LowerResultsListAPIView(ExportModelMixin, ListAPIView):
         return q
 
 
-class LowerResultsDeleteView(DestroyAPIView):
-    # todo: permission_classes are ignored here. see comments in InterventionAmendmentDeleteView.delete
-    permission_classes = (PartnershipManagerRepPermission,)
+class LowerResultsDeleteView(FullInterventionSnapshotDeleteMixin, DestroyAPIView):
+    queryset = LowerResult.objects.all().select_related('result_link__intervention')
+    permission_classes = [
+        IsAuthenticated,
+        intervention_field_is_editable_permission('pd_outputs')
+    ]
 
-    def delete(self, request, *args, **kwargs):
-        try:
-            lower_result = LowerResult.objects.get(id=int(kwargs['pk']))
-        except LowerResult.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        if lower_result.result_link.intervention.status in [Intervention.DRAFT] or \
-            request.user in lower_result.result_link.intervention.unicef_focal_points.all() or \
-            request.user.groups.filter(name__in=['Partnership Manager',
-                                                 SENIOR_MANAGEMENT_GROUP]).exists():
+    def get_intervention(self):
+        return self.get_root_object()
 
-            # do cleanup if pd output is still not associated to cp output
-            result_link = lower_result.result_link
-            lower_result.delete()
-            if result_link.cp_output is None:
-                result_link.delete()
+    @functools.cache
+    def get_root_object(self):
+        return get_object_or_404(Intervention.objects, result_links__ll_results=self.kwargs.get('pk'))
 
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        else:
-            raise ValidationError("You do not have permissions to delete a lower result")
+    def perform_destroy(self, instance):
+        result_link = instance.result_link
+        instance.delete()
+        # do cleanup if pd output still not associated to cp output
+        if result_link.cp_output is None and not result_link.ll_results.exists():
+            result_link.delete()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class DisaggregationListCreateView(ListCreateAPIView):

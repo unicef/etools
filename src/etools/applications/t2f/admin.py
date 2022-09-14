@@ -42,7 +42,8 @@ class TravelActivityAdmin(admin.ModelAdmin):
     search_fields = (
         'primary_traveler__first_name',
         'primary_traveler__last_name',
-        'partner__name'
+        'partner__name',
+        'travels__reference_number'
     )
     list_display = (
         'primary_traveler',
@@ -96,3 +97,4 @@ class TravelAttachmentAdmin(AdminListMixin, admin.ModelAdmin):
 class T2FActionPointAdmin(ActionPointAdmin):
     form = T2FActionPointAdminForm
     list_display = ('travel_activity', ) + ActionPointAdmin.list_display
+    readonly_fields = ('status',)

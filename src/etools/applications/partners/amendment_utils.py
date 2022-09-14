@@ -16,7 +16,27 @@ class MergeError(Exception):
                f"during amendment process. Please re-create amendment from updated instance."
 
 
+def serialize_simple_field_value(field, value):
+    if value is None:
+        return value
+
+    if isinstance(field, DateTimeField):
+        value = value.isoformat()
+    elif isinstance(field, DateField):
+        value = value.isoformat()
+    elif isinstance(field, DecimalField) and isinstance(value, decimal.Decimal):
+        # decimal field can contain float from default
+        value = value.to_eng_string()
+    elif isinstance(field, FileField):
+        value = value.name
+
+    return value
+
+
 def serialize_instance(instance):
+    if instance is None:
+        return None
+
     if hasattr(instance, 'get_amended_name'):
         name = instance.get_amended_name()
     else:
@@ -40,17 +60,7 @@ def copy_simple_fields(instance, instance_copy, fields_map, exclude=None):
             value = getattr(instance, field.name)
             setattr(instance_copy, field.name, value)
 
-            if value is not None:
-                if isinstance(field, DateTimeField):
-                    value = value.isoformat()
-                elif isinstance(field, DateField):
-                    value = value.isoformat()
-                elif isinstance(field, DecimalField) and isinstance(value, decimal.Decimal):
-                    # decimal field can contain float from default
-                    value = value.to_eng_string()
-                elif isinstance(field, FileField):
-                    value = value.name
-            fields_map[field.name] = value
+            fields_map[field.name] = serialize_simple_field_value(field, value)
 
 
 def merge_simple_fields(instance, instance_copy, fields_map, exclude=None):
@@ -496,6 +506,86 @@ def calculate_difference(instance, instance_copy, fields_map, relations_to_copy,
     return changes_map
 
 
+def full_snapshot_simple_fields(instance, fields_map, exclude=None):
+    """
+    copy_simple_fields method copy
+    """
+    exclude = exclude or []
+    for field in instance._meta.get_fields():
+        field_is_simple = not (field.many_to_many or field.many_to_one or field.one_to_many or field.one_to_one)
+        if field.name not in exclude and field.concrete and field_is_simple and not field.auto_created:
+            value = getattr(instance, field.name)
+            fields_map[field.name] = serialize_simple_field_value(field, value)
+
+
+def full_snapshot_one_to_one(instance, related_name, fields_map, relations_to_copy, exclude_fields):
+    """
+    copy_one_to_one copy
+    """
+    item = getattr(instance, related_name)
+    copy_map = full_snapshot_instance(item, relations_to_copy, exclude_fields)
+    fields_map.update(copy_map)
+
+
+def full_snapshot_one_to_many(instance, related_name, fields_map, relations_to_copy, exclude_fields):
+    """
+    copy_one_to_many copy
+    """
+    for item in getattr(instance, related_name).all():
+        copy_map = full_snapshot_instance(item, relations_to_copy, exclude_fields)
+        fields_map.append(copy_map)
+
+
+def full_snapshot_m2m_relations(instance, relations, objects_map):
+    """
+    copy_m2m_relations copy
+    """
+    for m2m_relation in relations:
+        m2m_instances = getattr(instance, m2m_relation).all()
+        objects_map[m2m_relation] = [serialize_instance(i) for i in m2m_instances]
+
+
+def full_snapshot_instance(instance, relations_to_copy, exclude_fields):
+    """
+    exact copy of copy_instance method, minus actual object copying
+    """
+    related_fields_to_copy = relations_to_copy.get(instance._meta.label, [])
+    fields_to_exclude = exclude_fields.get(instance._meta.label, [])
+
+    copy_map = {
+        'pk': instance.pk,
+    }
+    full_snapshot_simple_fields(instance, copy_map, exclude=fields_to_exclude)
+
+    for field in instance._meta.get_fields():
+        if field.name in fields_to_exclude or field.name not in related_fields_to_copy:
+            continue
+
+        if field.many_to_one:
+            # just set foreign key
+            value = getattr(instance, field.name)
+            copy_map[field.name] = value.pk if value else None
+
+    for field in instance._meta.get_fields():
+        if field.name in fields_to_exclude or field.name not in related_fields_to_copy:
+            continue
+
+        if field.one_to_one:
+            copy_map[field.name] = {}
+            full_snapshot_one_to_one(instance, field.name, copy_map[field.name], relations_to_copy, exclude_fields)
+
+        if field.one_to_many:
+            # copy all related instances
+            copy_map[field.name] = []
+            full_snapshot_one_to_many(instance, field.name, copy_map[field.name], relations_to_copy, exclude_fields)
+
+        if field.many_to_many:
+            # link all related instances with copy
+            full_snapshot_m2m_relations(instance, [field.name], copy_map)
+
+    return copy_map
+
+
 INTERVENTION_AMENDMENT_RELATED_FIELDS = {
     'partners.Intervention': [
         # one to many
@@ -610,6 +700,27 @@ INTERVENTION_AMENDMENT_DEFAULTS = {
         'unicef_accepted': False,
     }
 }
+
+# full snapshot related modifications to fields list.
+# as an example we don't need to copy intervention reviews, as they have custom flow,
+# although for full snapshot they are required
+INTERVENTION_FULL_SNAPSHOT_RELATED_FIELDS = copy.deepcopy(INTERVENTION_AMENDMENT_RELATED_FIELDS)
+INTERVENTION_FULL_SNAPSHOT_RELATED_FIELDS['partners.Intervention'].extend([
+    'reviews',
+])
+INTERVENTION_FULL_SNAPSHOT_RELATED_FIELDS['partners.InterventionReview'] = [
+    'prc_reviews',
+    'submitted_by',
+    'prc_officers',
+    'overall_approver',
+]
+INTERVENTION_FULL_SNAPSHOT_RELATED_FIELDS['partners.PRCOfficerInterventionReview'] = [
+    'user',
+]
+INTERVENTION_FULL_SNAPSHOT_IGNORED_FIELDS = copy.deepcopy(INTERVENTION_AMENDMENT_IGNORED_FIELDS)
+INTERVENTION_FULL_SNAPSHOT_IGNORED_FIELDS['partners.InterventionBudget'] = [
+    'modified',
+]
 
 
 # activity quarters

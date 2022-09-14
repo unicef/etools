@@ -6,7 +6,14 @@ from rest_framework.exceptions import ValidationError
 from unicef_restlib.fields import SeparatedReadWriteField
 
 from etools.applications.partners.models import InterventionResultLink, InterventionReview, PRCOfficerInterventionReview
-from etools.applications.reports.models import LowerResult, Result, ResultType
+from etools.applications.partners.serializers.intervention_snapshot import FullInterventionSnapshotSerializerMixin
+from etools.applications.reports.models import (
+    InterventionActivity,
+    InterventionActivityItem,
+    LowerResult,
+    Result,
+    ResultType,
+)
 from etools.applications.users.serializers_v3 import MinimalUserSerializer
 
 
@@ -30,7 +37,7 @@ class InterventionLowerResultBaseSerializer(serializers.ModelSerializer):
     class Meta:
         abstract = True
         model = LowerResult
-        fields = ('id', 'name', 'code', 'total')
+        fields = ('id', 'name', 'code', 'total', 'created')
         extra_kwargs = {
             'code': {'required': False},
         }
@@ -88,7 +95,7 @@ class InterventionReviewSerializer(serializers.ModelSerializer):
         instance.prc_officers.remove(*diff)
 
 
-class PRCOfficerInterventionReviewSerializer(serializers.ModelSerializer):
+class PRCOfficerInterventionReviewSerializer(FullInterventionSnapshotSerializerMixin, serializers.ModelSerializer):
     user = MinimalUserSerializer(read_only=True)
 
     class Meta:
@@ -119,8 +126,14 @@ class PRCOfficerInterventionReviewSerializer(serializers.ModelSerializer):
             validated_data['review_date'] = timezone.now().date()
         return super().update(instance, validated_data)
 
+    def get_intervention(self):
+        return self.instance.overall_review.intervention
 
-class PartnerInterventionLowerResultSerializer(InterventionLowerResultBaseSerializer):
+
+class PartnerInterventionLowerResultSerializer(
+    FullInterventionSnapshotSerializerMixin,
+    InterventionLowerResultBaseSerializer
+):
     cp_output = serializers.ReadOnlyField(source='result_link.cp_output_id')
 
     class Meta(InterventionLowerResultBaseSerializer.Meta):
@@ -136,14 +149,20 @@ class PartnerInterventionLowerResultSerializer(InterventionLowerResultBaseSerial
         return super().save(**kwargs)
 
     def create(self, validated_data):
-        result_link = InterventionResultLink.objects.create(intervention=self.intervention, cp_output=None)
+        result_link = InterventionResultLink.objects.get_or_create(intervention=self.intervention, cp_output=None)[0]
         validated_data['result_link'] = result_link
 
         instance = super().create(validated_data)
         return instance
 
+    def get_intervention(self):
+        return self.intervention
 
-class UNICEFInterventionLowerResultSerializer(InterventionLowerResultBaseSerializer):
+
+class UNICEFInterventionLowerResultSerializer(
+    FullInterventionSnapshotSerializerMixin,
+    InterventionLowerResultBaseSerializer,
+):
     cp_output = SeparatedReadWriteField(
         read_field=serializers.ReadOnlyField(),
         write_field=serializers.PrimaryKeyRelatedField(
@@ -190,14 +209,37 @@ class UNICEFInterventionLowerResultSerializer(InterventionLowerResultBaseSeriali
             if result_link and result_link != instance.result_link:
                 old_link, instance.result_link = instance.result_link, result_link
                 instance.save()
-                if old_link.cp_output is None and not old_link.ll_results.exclude(pk=instance.pk).exists():
-                    # just temp link, can be safely removed
-                    old_link.delete()
+                old_link_deleted = False
+                if old_link.cp_output is None:
+                    if not old_link.ll_results.exclude(pk=instance.pk).exists():
+                        # just temp link, can be safely removed
+                        old_link.delete()
+                        old_link_deleted = True
+                    else:
+                        # there are still results associated to temp link, recalculate codes
+                        LowerResult.renumber_results_for_result_link(old_link)
+                        for result in old_link.ll_results.all():
+                            InterventionActivity.renumber_activities_for_result(result)
+                            for activity in result.activities.all():
+                                InterventionActivityItem.renumber_items_for_activity(activity)
+
+                # result link was updated, it means lower result code is not actual anymore and should be recalculated
+                if old_link_deleted:
+                    # result_link should be refreshed, because it's code was changed after removal old_link object
+                    result_link.refresh_from_db()
+                LowerResult.renumber_results_for_result_link(result_link)
+                for result in result_link.ll_results.all():
+                    InterventionActivity.renumber_activities_for_result(result)
+                    for activity in result.activities.all():
+                        InterventionActivityItem.renumber_items_for_activity(activity)
         elif cp_output is None and 'cp_output_id' in result_link_data:
             if instance.result_link.cp_output is not None:
-                instance.result_link = InterventionResultLink.objects.create(
+                instance.result_link = InterventionResultLink.objects.get_or_create(
                     intervention=self.intervention, cp_output=None
-                )
+                )[0]
                 instance.save()
 
         return instance
+
+    def get_intervention(self):
+        return self.intervention

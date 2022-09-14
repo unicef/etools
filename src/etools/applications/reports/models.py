@@ -377,6 +377,9 @@ class LowerResult(TimeStampedModel):
     name = models.CharField(verbose_name=_("Name"), max_length=500)
     code = models.CharField(verbose_name=_("Code"), max_length=50, blank=True, null=True)
 
+    # not being used. does not affect result link budget since d3693d2fbf7b66f5468fefbe4bc2e9685eeb4348
+    is_active = models.BooleanField(default=True)
+
     def __str__(self):
         if not self.code:
             return self.name
@@ -392,12 +395,19 @@ class LowerResult(TimeStampedModel):
 
     def save(self, *args, **kwargs):
         if not self.code:
-            self.code = '{0}.{1}'.format(self.result_link.code, self.result_link.ll_results.count() + 1)
+            self.code = '{0}.{1}'.format(
+                self.result_link.code,
+                # explicitly perform model.objects.count to avoid caching
+                self.__class__.objects.filter(result_link=self.result_link).count() + 1,
+            )
         super().save(*args, **kwargs)
+        self.result_link.intervention.planned_budget.calc_totals()
 
     @classmethod
     def renumber_results_for_result_link(cls, result_link):
         results = result_link.ll_results.all()
+        # drop codes because in another case we'll face to UniqueViolation exception
+        results.update(code=None)
         for i, result in enumerate(results):
             result.code = '{0}.{1}'.format(result_link.code, i + 1)
         cls.objects.bulk_update(results, fields=['code'])
@@ -1069,13 +1079,19 @@ class InterventionActivity(TimeStampedModel):
 
     def save(self, *args, **kwargs):
         if not self.code:
-            self.code = '{0}.{1}'.format(self.result.code, self.result.activities.count() + 1)
+            self.code = '{0}.{1}'.format(
+                self.result.code,
+                # explicitly perform model.objects.count to avoid caching
+                self.__class__.objects.filter(result=self.result).count() + 1,
+            )
         super().save(*args, **kwargs)
         self.result.result_link.intervention.planned_budget.calc_totals()
 
     @classmethod
     def renumber_activities_for_result(cls, result: LowerResult, start_id=None):
         activities = result.activities.all()
+        # drop codes because in another case we'll face to UniqueViolation exception
+        activities.update(code=None)
         for i, activity in enumerate(activities):
             activity.code = '{0}.{1}'.format(result.code, i + 1)
         cls.objects.bulk_update(activities, fields=['code'])
@@ -1094,6 +1110,12 @@ class InterventionActivityItem(TimeStampedModel):
         related_name="items",
         on_delete=models.CASCADE,
     )
+    code = models.CharField(
+        verbose_name=_("Code"),
+        max_length=50,
+        blank=True,
+        null=True
+    )
     name = models.CharField(
         verbose_name=_("Name"),
         max_length=150,
@@ -1109,7 +1131,7 @@ class InterventionActivityItem(TimeStampedModel):
     )
     no_units = models.DecimalField(
         verbose_name=_("Units Number"),
-        decimal_places=1,
+        decimal_places=2,
         max_digits=20,
         validators=[MinValueValidator(0)],
     )
@@ -1135,8 +1157,23 @@ class InterventionActivityItem(TimeStampedModel):
         return "{} {}".format(self.activity, self.name)
 
     def save(self, **kwargs):
+        if not self.code:
+            self.code = '{0}.{1}'.format(
+                self.activity.code,
+                # explicitly perform model.objects.count to avoid caching
+                self.__class__.objects.filter(activity=self.activity).count() + 1,
+            )
         super().save(**kwargs)
         self.activity.update_cash()
+
+    @classmethod
+    def renumber_items_for_activity(cls, activity: InterventionActivity, start_id=None):
+        items = activity.items.all()
+        # drop codes because in another case we'll face to UniqueViolation exception
+        items.update(code=None)
+        for i, item in enumerate(items):
+            item.code = '{0}.{1}'.format(activity.code, i + 1)
+        cls.objects.bulk_update(items, fields=['code'])
 
 
 class InterventionTimeFrame(TimeStampedModel):

@@ -6,7 +6,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import ArrayField
 from django.core.validators import MinValueValidator
 from django.db import connection, IntegrityError, models, transaction
-from django.db.models import Case, CharField, Count, F, Max, Min, OuterRef, Q, Subquery, Sum, When
+from django.db.models import Case, CharField, Count, F, Max, Min, OuterRef, Prefetch, Q, Subquery, Sum, When
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.functional import cached_property
@@ -655,6 +655,13 @@ class PartnerOrganization(TimeStampedModel):
             return 0
         if self.type_of_assessment == 'Low Risk Assumed' or reported_cy <= PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL:
             return 0
+        try:
+            self.planned_engagement
+        except PlannedEngagement.DoesNotExist:
+            pass
+        else:
+            if self.planned_engagement.scheduled_audit:
+                return 0
         return 1
 
     @cached_property
@@ -1625,9 +1632,20 @@ class InterventionManager(models.Manager):
             'management_budgets__items',
             'flat_locations',
             'sites',
-            'supply_items',
+            Prefetch('supply_items',
+                     queryset=InterventionSupplyItem.objects.order_by('-id')),
         )
         return qs
+
+    def full_snapshot_qs(self):
+        return self.detail_qs().prefetch_related(
+            'reviews',
+            'reviews__submitted_by',
+            'reviews__prc_officers',
+            'reviews__overall_approver',
+            'reviews__prc_reviews',
+            'reviews__prc_reviews__user',
+        )
 
     def frs_qs(self):
         frs_query = FundsReservationHeader.objects.filter(
@@ -2148,10 +2166,9 @@ class Intervention(TimeStampedModel):
         null=True,
         default=dict,
     )
-    confidential = models.TextField(
+    confidential = models.BooleanField(
         verbose_name=_("Confidential"),
-        blank=True,
-        null=True,
+        default=False,
     )
 
     # todo: filter out amended interventions from list api's
@@ -2733,7 +2750,8 @@ class InterventionAmendment(TimeStampedModel):
             self.amended_intervention.save()
 
     def delete(self, **kwargs):
-        self.amended_intervention.delete()
+        if self.amended_intervention:
+            self.amended_intervention.delete()
         super().delete(**kwargs)
 
     def __str__(self):
@@ -2843,6 +2861,7 @@ class InterventionResultLink(TimeStampedModel):
 
     class Meta:
         unique_together = ['intervention', 'cp_output']
+        ordering = ['created']
 
     def __str__(self):
         return '{} {}'.format(
@@ -2850,7 +2869,7 @@ class InterventionResultLink(TimeStampedModel):
         )
 
     def total(self):
-        results = self.ll_results.aggregate(
+        results = self.ll_results.filter().aggregate(
             total=(
                 Sum("activities__unicef_cash", filter=Q(activities__is_active=True)) +
                 Sum("activities__cso_cash", filter=Q(activities__is_active=True))
@@ -2860,12 +2879,20 @@ class InterventionResultLink(TimeStampedModel):
 
     def save(self, *args, **kwargs):
         if not self.code:
-            self.code = str(self.intervention.result_links.count() + 1)
+            if self.cp_output:
+                self.code = str(
+                    # explicitly perform model.objects.count to avoid caching
+                    self.__class__.objects.filter(intervention=self.intervention).exclude(cp_output=None).count() + 1,
+                )
+            else:
+                self.code = '0'
         super().save(*args, **kwargs)
 
     @classmethod
     def renumber_result_links_for_intervention(cls, intervention):
-        result_links = intervention.result_links.all()
+        result_links = intervention.result_links.exclude(cp_output=None)
+        # drop codes because in another case we'll face to UniqueViolation exception
+        result_links.update(code=None)
         for i, result_link in enumerate(result_links):
             result_link.code = str(i + 1)
         cls.objects.bulk_update(result_links, fields=['code'])
@@ -2939,6 +2966,10 @@ class InterventionBudget(TimeStampedModel):
             return 0
         return self.total_partner_contribution_local / self.total_local * 100
 
+    @property
+    def total_supply(self):
+        return self.in_kind_amount_local + self.partner_supply_local
+
     def total_unicef_contribution(self):
         return self.unicef_cash + self.in_kind_amount
 
@@ -2981,7 +3012,7 @@ class InterventionBudget(TimeStampedModel):
 
         init = False
         for link in self.intervention.result_links.all():
-            for result in link.ll_results.all():
+            for result in link.ll_results.filter():
                 for activity in result.activities.filter(is_active=True):
                     if not init:
                         init_totals()
@@ -3181,7 +3212,7 @@ class InterventionReviewNotification(TimeStampedModel):
             'intervention_number': self.review.intervention.reference_number,
             'meeting_date': self.review.meeting_date.strftime('%d-%m-%Y'),
             'user_name': self.user.get_full_name(),
-            'url': '{}{}'.format(settings.HOST, self.review.intervention.get_frontend_object_url())
+            'url': '{}{}'.format(settings.HOST, self.review.intervention.get_frontend_object_url(suffix='review'))
         }
 
         send_notification_with_template(
@@ -3473,7 +3504,8 @@ class InterventionManagementBudget(TimeStampedModel):
             self.intervention.planned_budget.calc_totals()
 
     def update_cash(self):
-        aggregated_items = self.items.values('kind').annotate(unicef_cash=Sum('unicef_cash'), cso_cash=Sum('cso_cash'))
+        aggregated_items = self.items.values('kind').order_by('kind')
+        aggregated_items = aggregated_items.annotate(unicef_cash=Sum('unicef_cash'), cso_cash=Sum('cso_cash'))
         for item in aggregated_items:
             if item['kind'] == InterventionManagementBudgetItem.KIND_CHOICES.in_country:
                 self.act1_unicef = item['unicef_cash']
@@ -3548,6 +3580,9 @@ class InterventionSupplyItem(TimeStampedModel):
         default="",
     )
 
+    class Meta:
+        ordering = ('id',)
+
     def __str__(self):
         return "{} {}".format(self.intervention, self.title)
 
@@ -3590,7 +3625,7 @@ class InterventionManagementBudgetItem(models.Model):
     )
     no_units = models.DecimalField(
         verbose_name=_("Units Number"),
-        decimal_places=1,
+        decimal_places=2,
         max_digits=20,
         validators=[MinValueValidator(0)],
     )
@@ -3607,6 +3642,9 @@ class InterventionManagementBudgetItem(models.Model):
         max_digits=20,
         default=0,
     )
+
+    class Meta:
+        ordering = ('id',)
 
     def __str__(self):
         return f'{self.get_kind_display()} - UNICEF: {self.unicef_cash}, CSO: {self.cso_cash}'

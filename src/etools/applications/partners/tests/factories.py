@@ -127,6 +127,8 @@ class InterventionFactory(factory.django.DjangoModelFactory):
         'etools.applications.partners.tests.factories.InterventionRiskFactory',
         factory_related_name='intervention'
     )
+    capacity_development = "capacity_development"
+    other_partners_involved = "other_partners_involved"
 
     @factory.post_generation
     def country_programmes(self, create, extracted, **kwargs):
@@ -227,6 +229,11 @@ class InterventionResultLinkFactory(factory.django.DjangoModelFactory):
 
     intervention = factory.SubFactory(InterventionFactory)
     cp_output = factory.SubFactory(ResultFactory)
+
+    @factory.post_generation
+    def ram_indicators(self, create, extracted, **kwargs):
+        if extracted:
+            self.ram_indicators.add(*extracted)
 
 
 class PlannedEngagementFactory(factory.django.DjangoModelFactory):
