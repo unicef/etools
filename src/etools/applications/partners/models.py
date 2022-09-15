@@ -3004,14 +3004,16 @@ class InterventionBudget(TimeStampedModel):
         )
 
     def calc_totals(self, save=True):
-        # partner and unicef totals
+        # reload intervention from db to avoid inconsistencies caused by cached queryset
+        intervention = Intervention.objects.get(id=self.intervention_id)
 
+        # partner and unicef totals
         def init_totals():
             self.partner_contribution_local = 0
             self.total_unicef_cash_local_wo_hq = 0
 
         init = False
-        for link in self.intervention.result_links.all():
+        for link in intervention.result_links.all():
             for result in link.ll_results.filter():
                 for activity in result.activities.filter(is_active=True):
                     if not init:
@@ -3023,15 +3025,15 @@ class InterventionBudget(TimeStampedModel):
         programme_effectiveness = 0
         if not init:
             init_totals()
-        programme_effectiveness += self.intervention.management_budgets.total
-        self.partner_contribution_local += self.intervention.management_budgets.partner_total
-        self.total_unicef_cash_local_wo_hq += self.intervention.management_budgets.unicef_total
+        programme_effectiveness += intervention.management_budgets.total
+        self.partner_contribution_local += intervention.management_budgets.partner_total
+        self.total_unicef_cash_local_wo_hq += intervention.management_budgets.unicef_total
         self.unicef_cash_local = self.total_unicef_cash_local_wo_hq + self.total_hq_cash_local
 
         # in kind totals
         self.in_kind_amount_local = 0
         self.partner_supply_local = 0
-        for item in self.intervention.supply_items.all():
+        for item in intervention.supply_items.all():
             if item.provided_by == InterventionSupplyItem.PROVIDED_BY_UNICEF:
                 self.in_kind_amount_local += item.total_price
             else:
