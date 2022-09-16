@@ -1637,6 +1637,17 @@ class InterventionManager(models.Manager):
         )
         return qs
 
+    def budget_qs(self):
+        from etools.applications.reports.models import InterventionActivity
+
+        qs = super().get_queryset().only().prefetch_related(
+            'management_budgets',
+            'supply_items',
+            Prefetch('result_links__ll_results__activities',
+                     queryset=InterventionActivity.objects.filter(is_active=True)),
+        )
+        return qs
+
     def full_snapshot_qs(self):
         return self.detail_qs().prefetch_related(
             'reviews',
@@ -3004,8 +3015,7 @@ class InterventionBudget(TimeStampedModel):
         )
 
     def calc_totals(self, save=True):
-        # reload intervention from db to avoid inconsistencies caused by cached queryset
-        intervention = Intervention.objects.get(id=self.intervention_id)
+        intervention = Intervention.objects.budget_qs().get(id=self.intervention_id)
 
         # partner and unicef totals
         def init_totals():
@@ -3014,8 +3024,8 @@ class InterventionBudget(TimeStampedModel):
 
         init = False
         for link in intervention.result_links.all():
-            for result in link.ll_results.filter():
-                for activity in result.activities.filter(is_active=True):
+            for result in link.ll_results.all():
+                for activity in result.activities.all():  # activities prefetched with is_active=True in budget_qs
                     if not init:
                         init_totals()
                         init = True
@@ -3503,7 +3513,8 @@ class InterventionManagementBudget(TimeStampedModel):
         super().save(*args, **kwargs)
         # planned budget is not created yet, so just skip; totals will be updated during planned budget creation
         if not create:
-            self.intervention.planned_budget.calc_totals()
+            # update budgets
+            self.intervention.planned_budget.save()
 
     def update_cash(self):
         aggregated_items = self.items.values('kind').order_by('kind')
@@ -3591,11 +3602,13 @@ class InterventionSupplyItem(TimeStampedModel):
     def save(self, *args, **kwargs):
         self.total_price = self.unit_number * self.unit_price
         super().save()
-        self.intervention.planned_budget.calc_totals()
+        # update budgets
+        self.intervention.planned_budget.save()
 
     def delete(self, **kwargs):
         super().delete(**kwargs)
-        self.intervention.planned_budget.calc_totals()
+        # update budgets
+        self.intervention.planned_budget.save()
 
 
 class InterventionManagementBudgetItem(models.Model):
