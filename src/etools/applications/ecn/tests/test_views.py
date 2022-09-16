@@ -36,6 +36,8 @@ class SyncViewTestCase(BaseTenantTestCase):
         intervention = Intervention.objects.get(pk=response.data['id'])
         self.assertListEqual(list(intervention.sections.values_list('pk', flat=True)), [section.pk])
         self.assertEqual(intervention.flat_locations.count(), 10)
+        self.assertIn(f'Section {section} was added to all indicators', intervention.other_info)
+        self.assertIn(f'All indicators were assigned all locations', intervention.other_info)
         applied_indicator = intervention.result_links.first().ll_results.first().applied_indicators.first()
         self.assertEqual(applied_indicator.locations.count(), 10)
         self.assertEqual(applied_indicator.section, section)

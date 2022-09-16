@@ -325,6 +325,9 @@ class InterventionSerializer(serializers.ModelSerializer):
             validated_data['other_info'] += f'Locations: {locations}'
         else:
             validated_data['other_info'] = f'Locations: {locations}'
+        validated_data['other_info'] += f'\n\nSection {validated_data["sections"][0]} was added to all indicators, ' \
+                                        f'please review and correct if needed.'
+        validated_data['other_info'] += '\n\nAll indicators were assigned all locations, please adjust as needed.'
 
         self.instance = super().create(validated_data)
 
