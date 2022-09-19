@@ -89,7 +89,7 @@ class PMPDropdownsListApiView(APIView):
 
     def get_signed_by_unicef_users(self, request) -> list:
         return list(get_user_model().objects.filter(
-            groups__name__in=['Senior Management Team'],
+            realms__group__name__in=['Senior Management Team'],
             profile__country=request.user.profile.country
         ).annotate(
             name=Concat('first_name', Value(' '), 'last_name')

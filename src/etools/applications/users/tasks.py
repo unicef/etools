@@ -74,7 +74,7 @@ class AzureUserMapper:
                         country=obj.country,
                         organization=self.unicef_organization,
                         group=self.groups['UNICEF User'])
-                    # TODO: discuss : reset permission when changing country ?
+                    # TODO REALMS: discuss on reset permission when changing country
                     logger.info("Country Updated for {}".format(obj))
                     return True
 

@@ -230,8 +230,6 @@ class TPMStaffMembersViewSet(
             organization=instance.tpm_partner.organization,
             group=ThirdPartyMonitor.as_group()
         )
-        instance.user.profile.countries_available.add(self.request.user.profile.country)
-        instance.user.groups.add(ThirdPartyMonitor.as_group())
         instance.user.profile.save()
 
     @action(detail=False, methods=['get'], url_path='export', renderer_classes=(TPMPartnerContactsCSVRenderer,))

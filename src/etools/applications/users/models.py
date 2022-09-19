@@ -192,9 +192,9 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
         staff_member = self.get_partner_staff_member()
         return staff_member.partner if staff_member else None
 
-    @cached_property
+    @property
     def groups(self):
-        return Group.objects.filter(realms__in=self.realms.all()).distinct()
+        return Group.objects.filter(realms__in=self.realms.filter(is_active=True)).distinct()
 
     def get_partner_staff_member(self) -> ['PartnerStaffMember']:
         # just wrapper to avoid try...catch in place
@@ -422,9 +422,9 @@ class UserProfile(models.Model):
     # vision_roles = ArrayField(models.CharField(max_length=20, blank=True, choices=VISION_ROLES),
     #                           blank=True, null=True)
 
-    @cached_property
+    @property
     def countries_available(self):
-        return Country.objects.filter(realms__in=self.user.realms.all()).distinct()
+        return Country.objects.filter(realms__in=self.user.realms.filter(is_active=True)).distinct()
 
     def username(self):
         return self.user.username
