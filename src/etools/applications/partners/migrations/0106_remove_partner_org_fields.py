@@ -24,19 +24,11 @@ def reverse_partner_org_removed_fields(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('partners', '0104_partnerorganization_organization'),
+        ('partners', '0105_partnerorganization_organization'),
     ]
 
     operations = [
         migrations.RunPython(migrations.RunPython.noop, reverse_partner_org_removed_fields),
-        migrations.AlterModelOptions(
-            name='partnerorganization',
-            options={'base_manager_name': 'objects'},
-        ),
-        migrations.AlterUniqueTogether(
-            name='partnerorganization',
-            unique_together=set(),
-        ),
         migrations.RemoveField(
             model_name='partnerorganization',
             name='cso_type',

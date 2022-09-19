@@ -1588,6 +1588,32 @@ class TestInterventionBudget(BaseTenantTestCase):
         )
         self.assertEqual(budget.total_cash_local(), 616 + 323)
 
+    @skip("outputs deactivation disabled")
+    def test_calc_totals_inactive_result(self):
+        intervention = InterventionFactory()
+        mgmt_budget = intervention.management_budgets
+        budget = intervention.planned_budget
+
+        mgmt_budget.act1_unicef = 20
+        mgmt_budget.act1_partner = 10
+        mgmt_budget.save()
+
+        InterventionSupplyItemFactory(intervention=intervention, unit_number=6, unit_price=5)
+
+        link = InterventionResultLinkFactory(intervention=budget.intervention)
+        inactive_result = LowerResultFactory(result_link=link, is_active=False)
+        InterventionActivityFactory(result=inactive_result, unicef_cash=1000, cso_cash=1000)
+
+        self.assertEqual(budget.partner_contribution_local, 10)
+        self.assertEqual(budget.unicef_cash_local, 20)
+        self.assertEqual(budget.in_kind_amount_local, 30)
+        self.assertEqual(budget.programme_effectiveness, Decimal(50))
+        self.assertEqual(
+            "{:0.2f}".format(budget.partner_contribution_percent),
+            "{:0.2f}".format((10 / (10 + 20 + 30) * 100)),
+        )
+        self.assertEqual(budget.total_cash_local(), 10 + 20)
+
     def test_calc_totals_management_budget(self):
         intervention = InterventionFactory(hq_support_cost=7)
         budget = intervention.planned_budget
