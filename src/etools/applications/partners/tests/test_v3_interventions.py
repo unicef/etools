@@ -2262,7 +2262,7 @@ class TestInterventionReviewSendBack(BaseInterventionActionTestCase):
         RealmFactory(
             user=self.user,
             country=CountryFactory(),
-            organization=self.staff_member.partner.organization,
+            organization=self.intervention.partner_authorized_officer_signatory.partner.organization,
             group=GroupFactory(name=PRC_SECRETARY))
         InterventionReviewFactory(intervention=self.intervention, overall_approval=None)
 
@@ -2279,7 +2279,7 @@ class TestInterventionReviewSendBack(BaseInterventionActionTestCase):
         RealmFactory(
             user=self.user,
             country=CountryFactory(),
-            organization=self.staff_member.partner.organization,
+            organization=self.intervention.partner_authorized_officer_signatory.partner.organization,
             group=GroupFactory(name=PRC_SECRETARY))
         InterventionReviewFactory(intervention=self.intervention, overall_approval=None)
 

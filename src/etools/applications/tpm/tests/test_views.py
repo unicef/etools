@@ -169,7 +169,12 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
     def test_list_view_without_tpm_organization(self):
         user = UserFactory(realms__data=[ThirdPartyMonitor.name])
 
-        self._test_list_view(user, [])
+        response = self.forced_auth_req(
+            'get',
+            reverse('tpm:visits-list'),
+            user=user
+        )
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_create_empty(self):
         create_response = self.forced_auth_req(

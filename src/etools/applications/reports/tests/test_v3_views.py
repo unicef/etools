@@ -23,7 +23,7 @@ from etools.applications.reports.tests.factories import (
     SectionFactory,
     SpecialReportingRequirementFactory,
 )
-from etools.applications.users.tests.factories import GroupFactory, UserFactory
+from etools.applications.users.tests.factories import UserFactory
 
 
 class BasePMPTestCase(BaseTenantTestCase):
@@ -271,10 +271,9 @@ class TestPMPSpecialReportingRequirementListCreateView(BaseTenantTestCase):
 class TestSpecialReportingRequirementRetrieveUpdateDestroyView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.unicef_staff = UserFactory(is_staff=True)
-        group = GroupFactory(name='Partnership Manager')
-        cls.unicef_staff.groups.add(group)
-
+        cls.unicef_staff = UserFactory(
+            is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]
+        )
         cls.partner = PartnerFactory()
         cls.partner_focal_point = PartnerStaffFactory(partner=cls.partner).user
 

@@ -360,15 +360,17 @@ class TestMyProfileAPIView(BaseTenantTestCase):
 
 
 class TestExternalUserAPIView(BaseTenantTestCase):
-    def setUp(self):
-        self.user = UserFactory()
-        ProfileFactory(countries_available=[self.tenant], user=self.user)
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.unicef_superuser = UserFactory(is_superuser=True)
-        self.auditor_user = AuditorUserFactory()
-        self.tpmpartner = SimpleTPMPartnerFactory()
-        self.tpmpartner_user = TPMPartnerStaffMemberFactory(
-            tpm_partner=self.tpmpartner,
+    fixtures = ['organizations']
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = UserFactory()
+        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.unicef_superuser = UserFactory(is_superuser=True)
+        cls.auditor_user = AuditorUserFactory()
+        cls.tpmpartner = SimpleTPMPartnerFactory()
+        cls.tpmpartner_user = TPMPartnerStaffMemberFactory(
+            tpm_partner=cls.tpmpartner,
         )
 
     def test_list(self):
@@ -392,7 +394,7 @@ class TestExternalUserAPIView(BaseTenantTestCase):
         self.assertEqual(response.data["id"], self.user.pk)
 
     def test_get_not_in_schema(self):
-        user = UserFactory()
+        user = UserFactory(realms__data=[])
         response = self.forced_auth_req(
             'get',
             reverse("users_v3:external-detail", args=[user.pk]),
@@ -415,17 +417,17 @@ class TestExternalUserAPIView(BaseTenantTestCase):
                 "last_name": "Soap",
             }
         )
-
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertTrue(user_qs.exists())
         user = user_qs.first()
-        self.assertIn(self.tenant, user.profile.countries_available.all())
+        self.assertIn(self.tenant, user.profile.countries_available)
         self.assertEqual(self.tenant, user.profile.country_override)
-        self.assertIn(Auditor.as_group(), user.groups.all())
+        self.assertIn(Auditor.as_group(), user.groups)
 
     def test_post_exists(self):
-        profile = ProfileFactory()
-        self.assertNotIn(self.tenant, profile.countries_available.all())
+        profile = ProfileFactory(user=UserFactory(realms__data=[]))
+        self.assertNotIn(self.tenant, profile.countries_available)
+        self.assertNotIn(Auditor.as_group(), profile.user.groups)
         response = self.forced_auth_req(
             'post',
             reverse("users_v3:external-list"),
@@ -438,7 +440,8 @@ class TestExternalUserAPIView(BaseTenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertIn(self.tenant, profile.countries_available.all())
+        self.assertIn(self.tenant, profile.countries_available)
+        self.assertIn(Auditor.as_group(), profile.user.groups)
 
     def test_post_staff(self):
         response = self.forced_auth_req(

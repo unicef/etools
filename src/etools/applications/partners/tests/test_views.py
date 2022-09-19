@@ -216,7 +216,7 @@ class TestAPIPartnerOrganizationListView(BaseTenantTestCase):
 
     def test_group_permission(self):
         """Ensure a non-staff user in the correct group has access"""
-        user = UserFactory(realms__data=[self.readonly_group])
+        user = UserFactory(realms__data=[self.readonly_group.name])
         response = self.forced_auth_req('get', self.url, user=user)
         self.assertResponseFundamentals(response)
 
@@ -718,7 +718,7 @@ class TestAgreementAPIView(BaseTenantTestCase):
         cls.partner_staff = PartnerStaffFactory(partner=cls.partner, user=cls.partner_staff_user)
 
         cls.partnership_manager_user = UserFactory(
-            is_staff=True, realms__date=[PARTNERSHIP_MANAGER_GROUP]
+            is_staff=True, realms__data=[PARTNERSHIP_MANAGER_GROUP]
         )
         cls.partner_staff2 = PartnerStaffFactory(partner=cls.partner, user=cls.partnership_manager_user)
 
@@ -969,7 +969,7 @@ class TestAgreementAPIView(BaseTenantTestCase):
             partner_manager=self.partner_staff,
             start=datetime.date.today(),
             end=self.country_programme.to_date,
-            signed_by=None,
+            signed_by=self.unicef_staff,
         )
         # In order to auto-transition to signed, this agreement needs authorized officers
         agreement.authorized_officers.add(self.partner_staff)
@@ -979,7 +979,6 @@ class TestAgreementAPIView(BaseTenantTestCase):
         data = {
             "start": today - datetime.timedelta(days=5),
             "end": today + datetime.timedelta(days=5),
-            "signed_by": self.unicef_staff.id,
             "signed_by_unicef_date": datetime.date.today(),
         }
         mock_send = mock.Mock()
@@ -1092,7 +1091,7 @@ class TestPartnerStaffMemberAPIView(BaseTenantTestCase):
         cls.partner = PartnerFactory(
             organization=OrganizationFactory(organization_type=OrganizationType.CIVIL_SOCIETY_ORGANIZATION))
         cls.partner_staff_user = UserFactory(
-            is_staff=True, realms__date=[PARTNERSHIP_MANAGER_GROUP]
+            is_staff=True, realms__data=[PARTNERSHIP_MANAGER_GROUP]
         )
         cls.partner_staff = PartnerStaffFactory(partner=cls.partner, user=cls.partner_staff_user)
         cls.url = reverse(

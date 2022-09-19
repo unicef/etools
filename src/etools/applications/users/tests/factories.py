@@ -97,7 +97,6 @@ class UserFactory(factory.django.DjangoModelFactory):
     def realms(self, create, extracted, data=None, **kwargs):
         if not create:
             return
-
         extracted = (extracted or []) + (data or [])
 
         if extracted:

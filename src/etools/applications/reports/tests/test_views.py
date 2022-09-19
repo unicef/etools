@@ -38,7 +38,7 @@ from etools.applications.reports.tests.factories import (
     ResultTypeFactory,
     SpecialReportingRequirementFactory,
 )
-from etools.applications.users.tests.factories import GroupFactory, UserFactory
+from etools.applications.users.tests.factories import UserFactory
 
 
 class UrlsTestCase(URLAssertionMixin, SimpleTestCase):
@@ -281,7 +281,7 @@ class TestDisaggregationListCreateViews(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user = UserFactory(is_staff=True)
-        cls.pme_user = UserFactory(realms__data=[GroupFactory(name='PME')])
+        cls.pme_user = UserFactory(realms__data=['PME'])
         cls.url = reverse('reports:disaggregation-list-create')
 
     def test_unauthed(self):
@@ -374,7 +374,7 @@ class TestDisaggregationRetrieveUpdateViews(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user = UserFactory(is_staff=True)
-        cls.pme_user = UserFactory(realms__data=[GroupFactory(name='PME')])
+        cls.pme_user = UserFactory(realms__data=['PME'])
 
     @staticmethod
     def _get_url(dissagregation):

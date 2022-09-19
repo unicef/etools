@@ -1,6 +1,5 @@
 import json
 
-from django.contrib.auth.models import Group
 from django.urls import reverse
 
 from unicef_locations.tests.factories import LocationFactory
@@ -16,7 +15,7 @@ from etools.applications.users.tests.factories import UserFactory
 class TestPermissionMatrix(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.traveler = UserFactory(is_staff=True)
+        cls.traveler = UserFactory(is_staff=True, realms__data=[])
         cls.unicef_staff = UserFactory(is_staff=True)
 
     def test_urls(self):
@@ -32,27 +31,17 @@ class TestPermissionMatrix(BaseTenantTestCase):
             self.forced_auth_req('get', reverse('t2f:permission_matrix'), user=self.unicef_staff)
 
     def test_user_type_lookup(self):
-        travel = TravelFactory(traveler=self.traveler,
-                               supervisor=self.unicef_staff)
+        travel = TravelFactory(traveler=self.traveler, supervisor=self.unicef_staff)
 
-        group_tfp = Group.objects.create(name='Travel Focal Point')
-        group_ffp = Group.objects.create(name='Finance Focal Point')
-        group_ta = Group.objects.create(name='Travel Administrator')
-        group_representative = Group.objects.create(name='Representative Office')
+        just_a_user = UserFactory(realms__data=[])
 
-        just_a_user = UserFactory()
+        ffp = UserFactory(realms__data=['Finance Focal Point'])
 
-        ffp = UserFactory()
-        ffp.groups.add(group_ffp)
+        tfp = UserFactory(realms__data=['Travel Focal Point'])
 
-        tfp = UserFactory()
-        tfp.groups.add(group_tfp)
+        ta = UserFactory(realms__data=['Travel Administrator'])
 
-        ta = UserFactory()
-        ta.groups.add(group_ta)
-
-        representative = UserFactory()
-        representative.groups.add(group_representative)
+        representative = UserFactory(realms__data=['Representative Office'])
 
         roles = get_user_role_list(just_a_user, travel)
         self.assertEqual(roles, [UserTypes.ANYONE])
@@ -82,8 +71,9 @@ class TestPermissionMatrix(BaseTenantTestCase):
                                  UserTypes.REPRESENTATIVE])
 
         # Test and all in user
-        all_in_superuser = UserFactory()
-        all_in_superuser.groups.add(group_ffp, group_tfp, group_ta, group_representative)
+        all_in_superuser = UserFactory(
+            realms__data=['Finance Focal Point', 'Travel Focal Point',
+                          'Travel Administrator', 'Representative Office'])
 
         travel = TravelFactory(traveler=all_in_superuser,
                                supervisor=all_in_superuser)

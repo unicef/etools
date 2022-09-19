@@ -4,7 +4,7 @@ from unittest.mock import patch
 from django.contrib.auth import get_user_model
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
-from etools.applications.users.tests.factories import GroupFactory, UserFactory
+from etools.applications.users.tests.factories import CountryFactory, GroupFactory, UserFactory
 from etools.libraries.azure_graph_api.utils import handle_record, handle_records
 
 
@@ -34,7 +34,9 @@ class TestClient(BaseTenantTestCase):
             'userType': 'Member',
             'companyName': 'UNICEF',
         }
-        handle_record(user_record)
+        with patch('libraries.azure_graph_api.utils.AzureUserMapper._get_country',
+                   return_value=CountryFactory(name='UAT')):
+            handle_record(user_record)
         self.assertEqual(user_qs.count(), user_initial_count + 1)
 
     def test_handle_record_update(self):

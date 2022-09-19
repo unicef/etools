@@ -97,7 +97,7 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
     def test_available_actions_management(self):
         pd = InterventionFactory()
         RealmFactory(
-            user=self.self.unicef_user,
+            user=self.unicef_user,
             organization=self.partner.organization,
             country=connection.tenant,
             group=GroupFactory(name=PARTNERSHIP_MANAGER_GROUP)
@@ -118,7 +118,7 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
     def test_available_actions_management_unsuspend(self):
         pd = InterventionFactory(status=Intervention.SUSPENDED)
         RealmFactory(
-            user=self.self.unicef_user,
+            user=self.unicef_user,
             organization=self.partner.organization,
             country=connection.tenant,
             group=GroupFactory(name=PARTNERSHIP_MANAGER_GROUP)
@@ -131,7 +131,7 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
     def test_available_actions_management_terminate(self):
         pd = InterventionFactory(status=Intervention.ACTIVE)
         RealmFactory(
-            user=self.self.unicef_user,
+            user=self.unicef_user,
             organization=self.partner.organization,
             country=connection.tenant,
             group=GroupFactory(name=PARTNERSHIP_MANAGER_GROUP)

@@ -29,8 +29,7 @@ def setup_intervention_test_data(test_case, include_results_and_indicators=False
     today = datetime.date.today()
     test_case.unicef_staff = UserFactory(is_staff=True)
     test_case.partnership_manager_user = UserFactory(
-        is_staff=True,
-        realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]
+        is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]
     )
     test_case.partner = PartnerFactory(organization=OrganizationFactory(name='Partner 1', vendor_number="VP1"))
     test_case.partner1 = PartnerFactory(organization=OrganizationFactory(name='Partner 2'))
