@@ -76,7 +76,7 @@ class ActionPointViewSet(
     search_fields = (
         'assigned_to__email', 'assigned_to__first_name', 'assigned_to__last_name',
         'assigned_by__email', 'assigned_by__first_name', 'assigned_by__last_name',
-        'section__name', 'office__name', '=id',
+        'section__name', 'office__name', '=id', 'reference_number',
         'status', 'intervention__title', 'location__name', 'partner__organization__name', 'cp_output__name',
     )
     ordering_fields = (

@@ -535,7 +535,7 @@ class TestDetail(BaseInterventionTestCase):
         [InterventionManagementBudgetItemFactory(budget=self.intervention.management_budgets) for _i in range(10)]
 
         # there is a lot of queries, but no duplicates caused by budget items
-        with self.assertNumQueries(47):
+        with self.assertNumQueries(48):
             response = self.forced_auth_req(
                 "get",
                 reverse('pmp_v3:intervention-detail', args=[self.intervention.pk]),
@@ -1145,6 +1145,34 @@ class TestManagementBudget(BaseInterventionTestCase):
         self.assertEqual(intervention.management_budgets.items.count(), 2)
         self.assertEqual(len(response.data['items']), 2)
         self.assertEqual(InterventionManagementBudgetItem.objects.filter(id=item_to_remove.id).exists(), False)
+
+    def test_items_ordering(self):
+        intervention = InterventionFactory()
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse(
+                "pmp_v3:intervention-budget",
+                args=[intervention.pk],
+            ),
+            user=self.user,
+            data={
+                'items': [
+                    {
+                        'name': f'item_{i}', 'kind': 'operational',
+                        'unit': f'unit_{i}', 'no_units': '1.0', 'unit_price': '3.0',
+                        'unicef_cash': '1.0', 'cso_cash': '2.0',
+                    } for i in range(20)
+                ],
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(intervention.management_budgets.items.count(), 20)
+        self.assertListEqual(
+            [i['id'] for i in response.data['items']],
+            list(intervention.management_budgets.items.values_list('id', flat=True).order_by('id')),
+        )
 
     def test_budget_validation(self):
         intervention = InterventionFactory()

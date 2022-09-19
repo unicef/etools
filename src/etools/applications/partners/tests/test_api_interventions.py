@@ -1154,7 +1154,7 @@ class TestAPIInterventionLowerResultListView(BaseTenantTestCase):
                           kwargs={'result_link_pk': cls.result_link.id})
 
         # cls.expected_field_names is the list of field names expected in responses.
-        cls.expected_field_names = sorted(('id', 'code', 'created', 'modified', 'name', 'result_link'))
+        cls.expected_field_names = sorted(('id', 'is_active', 'code', 'created', 'modified', 'name', 'result_link'))
 
     def _make_request(self, user):
         return self.forced_auth_req('get', self.url, user=user)

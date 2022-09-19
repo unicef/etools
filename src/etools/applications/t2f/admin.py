@@ -42,6 +42,8 @@ class TravelActivityAdmin(admin.ModelAdmin):
     search_fields = (
         'primary_traveler__first_name',
         'primary_traveler__last_name',
+        'partner__name',
+        'travels__reference_number'
         'partner__organization__name'
     )
     list_display = (

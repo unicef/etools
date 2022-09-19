@@ -597,7 +597,7 @@ class IsInterventionBudgetOwnerPermission(BasePermission):
         return obj.budget_owner and obj.budget_owner == request.user
 
 
-class AmendmentSessionActivitiesPermission(BasePermission):
+class AmendmentSessionOnlyDeletePermission(BasePermission):
     """
     Lock activities created before current amendment
     """
