@@ -37,10 +37,18 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('organizations', '0001_initial'),
-        ('partners', '0103_merge_20220510_0742'),
+        ('partners', '0104_auto_20220808_0931'),
     ]
 
     operations = [
+        migrations.AlterModelOptions(
+            name='partnerorganization',
+            options={'base_manager_name': 'objects'},
+        ),
+        migrations.AlterUniqueTogether(
+            name='partnerorganization',
+            unique_together=set(),
+        ),
         migrations.AddField(
             model_name='partnerorganization',
             name='organization',

@@ -197,8 +197,9 @@ class MonitoringActivity(
             lambda i, old_instance=None, user=None: i.init_offline_blueprints(),
         ],
         STATUSES.report_finalization: [
-            lambda i, old_instance=None, user=None: i.close_offline_blueprints(),
-            lambda i, old_instance=None, user=None: i.port_findings_to_summary(),
+            lambda i, old_instance=None, user=None: i.close_offline_blueprints(old_instance),
+            lambda i, old_instance=None, user=None: i.port_findings_to_summary(old_instance),
+            lambda i, old_instance=None, user=None: i.send_rejection_note(old_instance),
         ],
         STATUSES.submitted: [
             lambda i, old_instance=None, user=None: i.send_submit_notice(),
@@ -207,7 +208,7 @@ class MonitoringActivity(
             lambda i, old_instance=None, user=None: i.update_one_hact_value(),
         ],
         STATUSES.cancelled: [
-            lambda i, old_instance=None, user=None: i.close_offline_blueprints(),
+            lambda i, old_instance=None, user=None: i.close_offline_blueprints(old_instance),
         ],
     }
 
@@ -615,12 +616,15 @@ class MonitoringActivity(
     def init_offline_blueprints(self):
         MonitoringActivityOfflineSynchronizer(self).initialize_blueprints()
 
-    def close_offline_blueprints(self):
+    def close_offline_blueprints(self, old_instance):
+        if old_instance and old_instance.status == self.STATUSES.submitted:
+            return
         MonitoringActivityOfflineSynchronizer(self).close_blueprints()
 
-    def port_findings_to_summary(self):
+    def port_findings_to_summary(self, old_instance=None):
         from etools.applications.field_monitoring.data_collection.models import ChecklistOverallFinding
-
+        if old_instance and old_instance.status == self.STATUSES.submitted:
+            return
         valid_questions = self.questions.annotate(
             answers_count=Count('findings', filter=Q(findings__value__isnull=False)),
         ).filter(answers_count=1).prefetch_related('findings')
@@ -639,6 +643,16 @@ class MonitoringActivity(
             if len(narrative_findings) == 1:
                 overall_finding.narrative_finding = narrative_findings[0]
                 overall_finding.save()
+
+    def send_rejection_note(self, old_instance):
+        if old_instance and old_instance.status == self.STATUSES.submitted:
+            email_template = "fm/activity/reject-pme"
+            self._send_email(
+                old_instance.visit_lead.email,
+                email_template,
+                context={'recipient': old_instance.visit_lead.get_full_name()},
+                user=old_instance.visit_lead
+            )
 
     def activity_overall_findings(self):
         return self.overall_findings.annotate_for_activity_export()

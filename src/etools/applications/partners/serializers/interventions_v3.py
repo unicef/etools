@@ -303,6 +303,7 @@ class InterventionDetailSerializer(FullInterventionSnapshotSerializerMixin, seri
     partner_focal_points = PartnerStaffMemberUserSerializer(many=True)
     partner_authorized_officer_signatory = PartnerStaffMemberUserSerializer()
     original_intervention = serializers.SerializerMethodField()
+    in_amendment_date = serializers.SerializerMethodField()
 
     def get_location_p_codes(self, obj):
         return [location.p_code for location in obj.flat_locations.all()]
@@ -358,6 +359,9 @@ class InterventionDetailSerializer(FullInterventionSnapshotSerializerMixin, seri
 
     def get_cluster_names(self, obj):
         return [c for c in obj.intervention_clusters()]
+
+    def get_in_amendment_date(self, obj):
+        return obj.amendment.created if hasattr(obj, 'amendment') else None
 
     def _is_management(self):
         return get_user_model().objects.filter(
@@ -596,6 +600,7 @@ class InterventionDetailSerializer(FullInterventionSnapshotSerializerMixin, seri
             "id",
             "implementation_strategy",
             "in_amendment",
+            "in_amendment_date",
             "ip_program_contribution",
             "location_names",
             "location_p_codes",
