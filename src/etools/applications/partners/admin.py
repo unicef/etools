@@ -44,9 +44,10 @@ from etools.applications.partners.models import (  # TODO intervention sector lo
     PlannedEngagement,
 )
 from etools.applications.partners.tasks import sync_partner
+from etools.libraries.djangolib.admin import RestrictedEditAdmin, RestrictedEditAdminMixin
 
 
-class InterventionReviewInlineAdmin((admin.TabularInline)):
+class InterventionReviewInlineAdmin(RestrictedEditAdminMixin, admin.TabularInline):
     model = InterventionReview
     extra = 0
 
@@ -57,7 +58,7 @@ class InterventionReviewInlineAdmin((admin.TabularInline)):
     ]
 
 
-class AttachmentSingleInline(AttachmentSingleInline):
+class AttachmentSingleInline(RestrictedEditAdminMixin, AttachmentSingleInline):
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         return qs.filter(code=self.code)
@@ -66,9 +67,6 @@ class AttachmentSingleInline(AttachmentSingleInline):
         formset = super().get_formset(request, obj, **kwargs)
         formset.code = self.code
         return formset
-
-    def has_add_permission(self, request, obj):
-        return True
 
 
 class AttachmentInlineAdminMixin:
@@ -89,7 +87,7 @@ class InterventionAmendmentPRCReviewInline(AttachmentSingleInline):
     code = 'partners_intervention_amendment_internal_prc_review'
 
 
-class InterventionAmendmentsAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
+class InterventionAmendmentsAdmin(AttachmentInlineAdminMixin, RestrictedEditAdmin):
     model = InterventionAmendment
     readonly_fields = [
         'amendment_number',
@@ -122,7 +120,7 @@ class InterventionAmendmentsAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
         return 0
 
 
-class InterventionBudgetAdmin(admin.ModelAdmin):
+class InterventionBudgetAdmin(RestrictedEditAdmin):
     model = InterventionBudget
     fields = (
         'intervention',
@@ -149,7 +147,7 @@ class InterventionBudgetAdmin(admin.ModelAdmin):
     extra = 0
 
 
-class InterventionPlannedVisitsAdmin(admin.ModelAdmin):
+class InterventionPlannedVisitsAdmin(RestrictedEditAdmin):
     model = InterventionPlannedVisits
     fields = (
         'intervention',
@@ -172,7 +170,7 @@ class InterventionPlannedVisitsAdmin(admin.ModelAdmin):
     )
 
 
-class InterventionPlannedVisitsInline(admin.TabularInline):
+class InterventionPlannedVisitsInline(RestrictedEditAdminMixin, admin.TabularInline):
     model = InterventionPlannedVisits
     fields = (
         'intervention',
@@ -190,7 +188,7 @@ class AttachmentFileInline(AttachmentSingleInline):
     code = 'partners_intervention_attachment'
 
 
-class InterventionAttachmentAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
+class InterventionAttachmentAdmin(AttachmentInlineAdminMixin, RestrictedEditAdmin):
     model = InterventionAttachment
     list_display = (
         'intervention',
@@ -209,7 +207,7 @@ class InterventionAttachmentAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
     ]
 
 
-class InterventionAttachmentsInline(admin.TabularInline):
+class InterventionAttachmentsInline(RestrictedEditAdminMixin, admin.TabularInline):
     model = InterventionAttachment
     form = InterventionAttachmentForm
     fields = (
@@ -225,7 +223,7 @@ class InterventionAttachmentsInline(admin.TabularInline):
         return formset
 
 
-class InterventionResultsLinkAdmin(admin.ModelAdmin):
+class InterventionResultsLinkAdmin(RestrictedEditAdmin):
 
     model = InterventionResultLink
     fields = (
@@ -263,6 +261,7 @@ class InterventionAdmin(
         AttachmentInlineAdminMixin,
         CountryUsersAdminMixin,
         HiddenPartnerMixin,
+        RestrictedEditAdminMixin,
         SnapshotModelAdmin
 ):
     model = Intervention
@@ -425,7 +424,7 @@ class AssessmentReportInline(AttachmentSingleInline):
     code = 'partners_assessment_report'
 
 
-class AssessmentAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
+class AssessmentAdmin(AttachmentInlineAdminMixin, RestrictedEditAdmin):
     model = Assessment
     fields = (
         'partner',
@@ -443,7 +442,7 @@ class AssessmentAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
     ]
 
 
-class PartnerStaffMemberAdmin(SnapshotModelAdmin):
+class PartnerStaffMemberAdmin(RestrictedEditAdminMixin, SnapshotModelAdmin):
     model = PartnerStaffMember
     form = PartnerStaffMemberForm
     raw_id_fields = ("partner", "user",)
@@ -499,12 +498,12 @@ class HiddenPartnerFilter(admin.SimpleListFilter):
         return queryset.filter(hidden=False)
 
 
-class CoreValueAssessmentInline(admin.StackedInline):
+class CoreValueAssessmentInline(RestrictedEditAdminMixin, admin.StackedInline):
     model = CoreValuesAssessment
     extra = 0
 
 
-class PartnerAdmin(ExtraUrlMixin, ExportMixin, admin.ModelAdmin):
+class PartnerAdmin(ExtraUrlMixin, ExportMixin, RestrictedEditAdmin):
     form = PartnersAdminForm
     resource_class = PartnerExport
     search_fields = (
@@ -642,7 +641,7 @@ class PartnerAdmin(ExtraUrlMixin, ExportMixin, admin.ModelAdmin):
         obj.update_min_requirements()
 
 
-class PlannedEngagementAdmin(admin.ModelAdmin):
+class PlannedEngagementAdmin(RestrictedEditAdmin):
     model = PlannedEngagement
     search_fields = (
         'partner__name',
@@ -680,7 +679,7 @@ class SignedAmendmentInline(AttachmentSingleInline):
     code = 'partners_agreement_amendment'
 
 
-class AgreementAmendmentAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
+class AgreementAmendmentAdmin(AttachmentInlineAdminMixin, RestrictedEditAdmin):
     model = AgreementAmendment
     fields = (
         'agreement',
@@ -726,6 +725,7 @@ class AgreementAdmin(
         ExportMixin,
         HiddenPartnerMixin,
         CountryUsersAdminMixin,
+        RestrictedEditAdminMixin,
         SnapshotModelAdmin,
 ):
 
@@ -815,23 +815,23 @@ class AgreementAdmin(
         return urls
 
 
-class FileTypeAdmin(admin.ModelAdmin):
+class FileTypeAdmin(RestrictedEditAdmin):
 
     def has_module_permission(self, request):
         return request.user.is_superuser or request.user.groups.filter(name='Country Office Administrator').exists()
 
 
-class InterventionManagementBudgetItemAdmin(admin.StackedInline):
+class InterventionManagementBudgetItemAdmin(RestrictedEditAdminMixin, admin.StackedInline):
     model = InterventionManagementBudgetItem
 
 
-class InterventionManagementBudgetAdmin(admin.ModelAdmin):
+class InterventionManagementBudgetAdmin(RestrictedEditAdmin):
     list_display = ('intervention',)
     list_select_related = ('intervention',)
     inlines = (InterventionManagementBudgetItemAdmin,)
 
 
-class InterventionSupplyItemAdmin(admin.ModelAdmin):
+class InterventionSupplyItemAdmin(RestrictedEditAdmin):
     list_display = ('intervention', 'title', 'unit_number', 'unit_price', 'provided_by')
     list_select_related = ('intervention',)
     list_filter = ('provided_by',)

@@ -21,6 +21,7 @@ from etools.applications.reports.models import (
     Unit,
     UserTenantProfile,
 )
+from etools.libraries.djangolib.admin import RestrictedEditAdmin, RestrictedEditAdminMixin
 
 
 class SectionListFilter(admin.SimpleListFilter):
@@ -54,13 +55,13 @@ class SectionListFilter(admin.SimpleListFilter):
         return queryset
 
 
-class SectionAdmin(admin.ModelAdmin):
+class SectionAdmin(RestrictedEditAdmin):
     form = AutoSizeTextForm
     list_display = ('name', 'color', 'dashboard', 'active', )
     list_editable = ('color', 'dashboard',)
 
 
-class IndicatorAdmin(admin.ModelAdmin):
+class IndicatorAdmin(RestrictedEditAdmin):
     form = IndicatorAdminForm
     search_fields = ('name', 'code')
     list_editable = (
@@ -82,7 +83,7 @@ class IndicatorAdmin(admin.ModelAdmin):
     )
 
 
-class LowerIndicatorAdmin(admin.ModelAdmin):
+class LowerIndicatorAdmin(RestrictedEditAdmin):
     search_fields = ('name', 'code')
     list_display = (
         'name',
@@ -110,7 +111,7 @@ class HiddenResultFilter(admin.SimpleListFilter):
         return queryset.filter(hidden=False)
 
 
-class ResultAdmin(MPTTModelAdmin):
+class ResultAdmin(RestrictedEditAdminMixin, MPTTModelAdmin):
     form = AutoSizeTextForm
     mptt_indent_field = 'result_name'
     search_fields = (
@@ -154,7 +155,7 @@ class ResultAdmin(MPTTModelAdmin):
         self.message_user(request, '{} results were shown'.format(results))
 
 
-class LowerResultAdmin(admin.ModelAdmin):
+class LowerResultAdmin(RestrictedEditAdmin):
     model = LowerResult
     search_fields = (
         'name',
@@ -169,7 +170,7 @@ class LowerResultAdmin(admin.ModelAdmin):
     )
 
 
-class AppliedIndicatorAdmin(admin.ModelAdmin):
+class AppliedIndicatorAdmin(RestrictedEditAdmin):
     model = AppliedIndicator
     search_fields = (
         'indicator__title',
@@ -191,7 +192,7 @@ class AppliedIndicatorAdmin(admin.ModelAdmin):
     )
 
 
-class DisaggregationAdmin(admin.ModelAdmin):
+class DisaggregationAdmin(RestrictedEditAdmin):
     model = Disaggregation
     list_filter = (
         'active',
@@ -202,7 +203,7 @@ class DisaggregationAdmin(admin.ModelAdmin):
     )
 
 
-class DisaggregationValueAdmin(admin.ModelAdmin):
+class DisaggregationValueAdmin(RestrictedEditAdmin):
     model = DisaggregationValue
     list_filter = (
         'disaggregation',
@@ -220,36 +221,40 @@ class DisaggregationValueAdmin(admin.ModelAdmin):
     get_disaggregation_name.short_description = 'Disaggregation Name'
 
 
-class UserTenantProfileAdmin(admin.ModelAdmin):
+class UserTenantProfileAdmin(RestrictedEditAdmin):
     model = UserTenantProfile
     list_filter = ("office",)
     list_display = ("id", "profile", "office")
     raw_id_fields = ("profile", )
 
 
-class InterventionActivityItemAdminInline(admin.TabularInline):
+class InterventionActivityItemAdminInline(RestrictedEditAdminMixin, admin.TabularInline):
     model = InterventionActivityItem
 
 
-class InterventionActivityAdmin(admin.ModelAdmin):
+class InterventionActivityAdmin(RestrictedEditAdmin):
     list_display = ('id', 'result', 'name')
     list_select_related = ('result',)
     search_fields = ('name', 'code')
     inlines = (InterventionActivityItemAdminInline,)
 
 
+class UnitAdmin(RestrictedEditAdminMixin, ImportExportModelAdmin):
+    pass
+
+
 admin.site.register(Result, ResultAdmin)
-admin.site.register(CountryProgramme)
+admin.site.register(CountryProgramme, RestrictedEditAdmin)
 admin.site.register(Section, SectionAdmin)
-admin.site.register(Unit, ImportExportModelAdmin)
+admin.site.register(Unit, UnitAdmin)
 admin.site.register(Indicator, IndicatorAdmin)
 # admin.site.register(ResultChain)
 admin.site.register(LowerResult, LowerResultAdmin)
 # admin.site.register(ResultType)
-admin.site.register(IndicatorBlueprint)
+admin.site.register(IndicatorBlueprint, RestrictedEditAdmin)
 admin.site.register(AppliedIndicator, AppliedIndicatorAdmin)
-admin.site.register(Disaggregation)
+admin.site.register(Disaggregation, RestrictedEditAdmin)
 admin.site.register(DisaggregationValue, DisaggregationValueAdmin)
-admin.site.register(Office)
+admin.site.register(Office, RestrictedEditAdmin)
 admin.site.register(UserTenantProfile, UserTenantProfileAdmin)
 admin.site.register(InterventionActivity, InterventionActivityAdmin)
