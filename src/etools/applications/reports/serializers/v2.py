@@ -645,6 +645,7 @@ class InterventionActivityDetailSerializer(FullInterventionSnapshotSerializerMix
             'id',
             'name',
             'code',
+            'created',
             'context_details',
             'unicef_cash',
             'cso_cash',
