@@ -3,6 +3,7 @@ from django.utils.encoding import force_str
 
 from rest_framework import serializers
 
+from etools.applications.organizations.models import Organization
 from etools.applications.users.models import Country, Group, Realm, UserProfile
 from etools.applications.users.validators import EmailValidator
 
@@ -11,6 +12,12 @@ class SimpleCountrySerializer(serializers.ModelSerializer):
     class Meta:
         model = Country
         fields = ('id', 'name', 'business_area_code')
+
+
+class SimpleOrganizationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Organization
+        fields = ('id', 'name')
 
 
 class UserProfileSerializer(serializers.ModelSerializer):

@@ -7,7 +7,7 @@ from rest_framework import serializers
 from etools.applications.audit.models import Auditor
 from etools.applications.organizations.models import Organization
 from etools.applications.users.models import Country, Realm, UserProfile
-from etools.applications.users.serializers import GroupSerializer, SimpleCountrySerializer
+from etools.applications.users.serializers import GroupSerializer, SimpleCountrySerializer, SimpleOrganizationSerializer
 from etools.applications.users.validators import EmailValidator, ExternalUserValidator
 
 # temporary list of Countries that will use the Auditor Portal Module.
@@ -108,6 +108,7 @@ class UserPreferencesSerializer(serializers.Serializer):
 
 class ProfileRetrieveUpdateSerializer(serializers.ModelSerializer):
     countries_available = SimpleCountrySerializer(many=True, read_only=True)
+    organizations_available = SimpleOrganizationSerializer(many=True, read_only=True)
     supervisor = serializers.PrimaryKeyRelatedField(read_only=True)
     groups = GroupSerializer(source="user.groups", read_only=True, many=True)
     supervisees = serializers.PrimaryKeyRelatedField(source='user.supervisee', many=True, read_only=True)
@@ -122,6 +123,7 @@ class ProfileRetrieveUpdateSerializer(serializers.ModelSerializer):
     is_staff = serializers.BooleanField(source='user.is_staff', read_only=True)
     is_active = serializers.BooleanField(source='user.is_active', read_only=True)
     country = DashboardCountrySerializer(read_only=True)
+    organization = SimpleOrganizationSerializer(read_only=True)
     show_ap = serializers.SerializerMethodField()
     is_unicef_user = serializers.SerializerMethodField()
     _partner_staff_member = serializers.SerializerMethodField()
@@ -130,7 +132,7 @@ class ProfileRetrieveUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserProfile
-        exclude = ('id',)
+        exclude = ('id', 'old_countries_available')
 
     # TODO remove once feature gating is in place.
     def get_show_ap(self, obj):
