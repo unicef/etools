@@ -75,7 +75,7 @@ class TestAPIInterventionRetrieveResultsStructure(BaseTenantTestCase):
                                                       [activity1, activity2]):
             self.assertEqual(actual_activity['id'], expected_activity.pk)
             self.assertEqual(actual_activity['is_active'], expected_activity.is_active)
-            for field in ['name', 'code', 'context_details',
+            for field in ['name', 'code', 'created', 'context_details',
                           'unicef_cash', 'cso_cash']:
                 self.assertEqual(actual_activity[field], str(getattr(expected_activity, field)))
 
