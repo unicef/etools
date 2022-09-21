@@ -1,6 +1,8 @@
 import logging
 import sys
+
 from etools.config.settings.base import *  # noqa: F403
+
 ALLOWED_HOSTS = ['*']
 DEBUG = True
 CELERY_TASK_ALWAYS_EAGER = True
