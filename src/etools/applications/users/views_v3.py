@@ -1,17 +1,20 @@
 import logging
 
 from django.contrib.auth import get_user_model
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError as DjangoValidationError
 from django.db import connection
 from django.db.models import OuterRef, Q, Subquery
+from django.http import HttpResponseForbidden, HttpResponseRedirect
 
 from rest_framework import mixins, status, viewsets
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from unicef_restlib.views import QueryStringFilterMixin, SafeTenantViewSetMixin
 
+from etools.applications.organizations.models import Organization
 from etools.applications.partners.views.v3 import PMPBaseViewMixin
 from etools.applications.users import views as v1, views_v2 as v2
 from etools.applications.users.serializers_v3 import (
@@ -28,6 +31,72 @@ logger = logging.getLogger(__name__)
 
 class ChangeUserCountryView(v1.ChangeUserCountryView):
     """Stub for ChangeUserCountryView"""
+
+
+class ChangeUserOrganizationView(APIView):
+    """
+    Allows a user to switch organization context if they have access to more than one
+    """
+
+    ERROR_MESSAGES = {
+        'organization_does_not_exist': 'The organization that you are attempting to switch to does not exist',
+        'access_to_organization_denied': 'You do not have access to the organization you are trying to switch to'
+    }
+
+    next_param = 'next'
+
+    permission_classes = (IsAuthenticated, )
+
+    def get_organization_id(self):
+        return self.request.data.get('organization', None) or self.request.query_params.get('organization', None)
+
+    def get_organization(self):
+        organization_id = self.get_organization_id()
+        try:
+            organization = Organization.objects.get(id=organization_id)
+        except Organization.DoesNotExist:
+            raise DjangoValidationError(
+                self.ERROR_MESSAGES['organization_does_not_exist'],
+                code='organization_does_not_exist'
+            )
+        return organization
+
+    def change_organization(self):
+        user = self.request.user
+        organization = self.get_organization()
+
+        if organization == user.profile.organization:
+            return
+
+        if organization not in user.profile.organizations_available.all():
+            raise DjangoValidationError(self.ERROR_MESSAGES['access_to_organization_denied'],
+                                        code='access_to_organization_denied')
+
+        user.profile.organization = organization
+        user.profile.save(update_fields=['organization'])
+
+    def get_redirect_url(self):
+        return self.request.GET.get(self.next_param, '/')
+
+    def get(self, request, *args, **kwargs):
+        try:
+            self.change_organization()
+        except DjangoValidationError as err:
+            return HttpResponseForbidden(str(err))
+
+        return HttpResponseRedirect(self.get_redirect_url())
+
+    def post(self, request, format=None):
+        try:
+            self.change_organization()
+        except DjangoValidationError as err:
+            if err.code == 'access_to_organization_denied':
+                status_code = status.HTTP_403_FORBIDDEN
+            else:
+                status_code = status.HTTP_400_BAD_REQUEST
+            return Response(str(err), status=status_code)
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class MyProfileAPIView(v1.MyProfileAPIView):

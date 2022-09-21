@@ -426,6 +426,10 @@ class UserProfile(models.Model):
     def countries_available(self):
         return Country.objects.filter(realms__in=self.user.realms.filter(is_active=True)).distinct()
 
+    @property
+    def organizations_available(self):
+        return Organization.objects.filter(realms__in=self.user.realms.filter(is_active=True)).distinct()
+
     def username(self):
         return self.user.username
 
