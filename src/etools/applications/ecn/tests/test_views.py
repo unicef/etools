@@ -28,7 +28,7 @@ class SyncViewTestCase(BaseTenantTestCase):
             data={
                 'agreement': agreement.pk,
                 'number': 'test',
-                'section': section.pk,
+                'sections': [section.pk],
                 'locations': [LocationFactory().pk for _i in range(10)]
             }
         )
@@ -54,7 +54,7 @@ class SyncViewTestCase(BaseTenantTestCase):
             data={
                 'agreement': AgreementFactory().pk,
                 'number': 'test',
-                'section': SectionFactory().pk,
+                'sections': [SectionFactory().pk],
                 'locations': [LocationFactory().pk for _i in range(10)]
             }
         )

@@ -278,7 +278,7 @@ class InterventionSerializer(serializers.ModelSerializer):
             'equity_rating', 'equity_narrative',
             'sustainability_rating', 'sustainability_narrative',
             'ip_program_contribution', 'reference_number_year',
-            'locations',
+            'locations', 'sections'
         ]
 
     def create_risks(self, intervention, data):
@@ -343,7 +343,7 @@ class InterventionSerializer(serializers.ModelSerializer):
 class ECNSyncSerializer(serializers.Serializer):
     number = serializers.CharField()
     agreement = serializers.PrimaryKeyRelatedField(queryset=Agreement.objects.all())
-    section = serializers.PrimaryKeyRelatedField(queryset=Section.objects.all())
+    sections = serializers.PrimaryKeyRelatedField(many=True, queryset=Section.objects.all())
     locations = serializers.PrimaryKeyRelatedField(queryset=Location.objects.all(), many=True)
 
     class Meta:
