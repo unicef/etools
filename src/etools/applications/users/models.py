@@ -28,6 +28,7 @@ from model_utils import FieldTracker
 from model_utils.models import TimeStampedModel
 
 from etools.applications.organizations.models import Organization
+from etools.libraries.djangolib.models import GroupWrapper
 
 if TYPE_CHECKING:
     from etools.applications.partners.models import PartnerStaffMember
@@ -561,3 +562,8 @@ class Realm(TimeStampedModel):
     def __str__(self):
         return f"{self.user.email} - {self.country.name} - {self.organization}: " \
                f"{self.group.name if self.group else ''}"
+
+
+IPViewer = GroupWrapper(code='ip_viewer', name='IP Viewer')
+IPEditor = GroupWrapper(code='ip_editor', name='IP Editor')
+IPAuthorizedOfficer = GroupWrapper(code='ip_authorized_officer', name='IP Authorized Officer')

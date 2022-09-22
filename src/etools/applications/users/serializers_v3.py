@@ -102,6 +102,21 @@ class CountryDetailSerializer(serializers.ModelSerializer):
         )
 
 
+class UserOganizationSerializer(serializers.ModelSerializer):
+    prp_group = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Organization
+        fields = (
+            'id',
+            'name',
+            'prp_group'
+        )
+
+    def get_prp_group(self, obj):
+        return obj.group_name
+
+
 class UserPreferencesSerializer(serializers.Serializer):
     language = serializers.ChoiceField(choices=dict(LANGUAGES))
 

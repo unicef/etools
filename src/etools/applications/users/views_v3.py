@@ -2,13 +2,13 @@ import logging
 
 from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied, ValidationError as DjangoValidationError
-from django.db import connection
+from django.db import connection, models
 from django.db.models import OuterRef, Q, Subquery
 from django.http import HttpResponseForbidden, HttpResponseRedirect
 
 from rest_framework import mixins, status, viewsets
 from rest_framework.exceptions import ValidationError
-from rest_framework.generics import ListAPIView, RetrieveAPIView
+from rest_framework.generics import get_object_or_404, ListAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -17,12 +17,14 @@ from unicef_restlib.views import QueryStringFilterMixin, SafeTenantViewSetMixin
 from etools.applications.organizations.models import Organization
 from etools.applications.partners.views.v3 import PMPBaseViewMixin
 from etools.applications.users import views as v1, views_v2 as v2
+from etools.applications.users.models import Country, IPAuthorizedOfficer, IPEditor, IPViewer
 from etools.applications.users.serializers_v3 import (
     CountryDetailSerializer,
     ExternalUserSerializer,
     MinimalUserDetailSerializer,
     MinimalUserSerializer,
     ProfileRetrieveUpdateSerializer,
+    UserOganizationSerializer,
 )
 from etools.applications.utils.pagination import AppendablePageNumberPagination
 
@@ -178,6 +180,32 @@ class UsersListAPIView(PMPBaseViewMixin, QueryStringFilterMixin, ListAPIView):
 
 class CountryView(v2.CountryView):
     serializer_class = CountryDetailSerializer
+
+
+class UserOrganizationListView(ListAPIView):
+    """
+    Gets a list of organizations given a country id of the currently logged in user
+    for which there are PRP groups set.
+    """
+    model = Organization
+    serializer_class = UserOganizationSerializer
+    permission_classes = (IsAuthenticated, )
+    prp_groups = [IPViewer.as_group(), IPEditor.as_group(), IPAuthorizedOfficer.as_group()]
+
+    def get_root_object(self):
+        return get_object_or_404(Country, pk=self.kwargs.get('country_pk'))
+
+    def get_queryset(self):
+        user_realms = self.request.user.realms\
+            .filter(country=self.get_root_object(),
+                    group__in=self.prp_groups,
+                    is_active=True)
+        if not user_realms.exists():
+            return self.model.objects.none()
+        return self.model.objects\
+            .filter(realms__in=user_realms)\
+            .annotate(group_name=models.F('realms__group__name'))\
+            .distinct()
 
 
 class ExternalUserViewSet(
