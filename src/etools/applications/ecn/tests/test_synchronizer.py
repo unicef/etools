@@ -17,9 +17,9 @@ class TestSynchronizer(BaseTenantTestCase):
         request_intervention_mock.return_value = get_example_ecn()
 
         agreement = AgreementFactory()
-        section = SectionFactory()
+        sections = [SectionFactory()]
         locations = [LocationFactory() for _li in range(5)]
-        intervention = ECNSynchronizer(UserFactory()).synchronize(1, agreement, section, locations)
+        intervention = ECNSynchronizer(UserFactory()).synchronize(1, agreement, sections, locations)
 
         self.assertEqual(intervention.risks.count(), 1)
         self.assertEqual(intervention.supply_items.count(), 2)
