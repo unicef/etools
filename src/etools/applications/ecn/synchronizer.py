@@ -15,7 +15,7 @@ class ECNSynchronizer:
         return ECNAPI(self.user).get_intervention(number)
 
     def parse(self, data, **kwargs):
-        serializer = InterventionSerializer(data=data)
+        serializer = InterventionSerializer(data=data, context={'user': self.user})
         serializer.is_valid(raise_exception=True)
         return serializer.save(**kwargs)
 

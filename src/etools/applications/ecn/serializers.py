@@ -1,6 +1,7 @@
 from django.db import transaction
 
 from rest_framework import serializers
+from unicef_restlib.serializers import UserContextSerializerMixin
 
 from etools.applications.locations.models import Location
 from etools.applications.partners.models import (
@@ -255,7 +256,7 @@ class InterventionResultLinkSerializer(serializers.ModelSerializer):
         serializer.save(result_link=result_link)
 
 
-class InterventionSerializer(serializers.ModelSerializer):
+class InterventionSerializer(UserContextSerializerMixin, serializers.ModelSerializer):
     planned_budget = InterventionBudgetSerializer()
     management_budgets = InterventionManagementBudgetSerializer()
     result_links = InterventionResultLinkSerializer(many=True)
@@ -337,6 +338,7 @@ class InterventionSerializer(serializers.ModelSerializer):
         self.update_planned_budget(self.instance, planned_budget)
         self.update_management_budgets(self.instance, management_budgets)
         self.create_result_links_structure(self.instance, result_links)
+        self.instance.unicef_focal_points.add(self.get_user())
 
         return self.instance
 

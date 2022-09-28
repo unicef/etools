@@ -22,10 +22,11 @@ class SyncViewTestCase(BaseTenantTestCase):
         agreement = AgreementFactory()
         section = SectionFactory()
         office = OfficeFactory()
+        user = UserFactory(groups__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP])
         response = self.forced_auth_req(
             'post',
             reverse('ecn_v1:intervention-import-ecn'),
-            user=UserFactory(groups__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
+            user=user,
             data={
                 'agreement': agreement.pk,
                 'number': 'test',
@@ -40,6 +41,8 @@ class SyncViewTestCase(BaseTenantTestCase):
         self.assertEqual(intervention.flat_locations.count(), 10)
         self.assertEqual(intervention.offices.count(), 1)
         self.assertEqual(intervention.offices.first().pk, office.pk)
+        self.assertEqual(intervention.unicef_focal_points.count(), 1)
+        self.assertEqual(intervention.unicef_focal_points.first().pk, user.pk)
         self.assertIn(f'Section {section} was added to all indicators', intervention.other_info)
         self.assertIn('All indicators were assigned all locations', intervention.other_info)
         applied_indicator = intervention.result_links.first().ll_results.first().applied_indicators.first()
