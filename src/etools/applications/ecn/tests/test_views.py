@@ -10,7 +10,7 @@ from etools.applications.ecn.tests.utils import get_example_ecn
 from etools.applications.partners.models import Intervention
 from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, UNICEF_USER
 from etools.applications.partners.tests.factories import AgreementFactory
-from etools.applications.reports.tests.factories import SectionFactory
+from etools.applications.reports.tests.factories import OfficeFactory, SectionFactory
 from etools.applications.users.tests.factories import UserFactory
 
 
@@ -21,6 +21,7 @@ class SyncViewTestCase(BaseTenantTestCase):
 
         agreement = AgreementFactory()
         section = SectionFactory()
+        office = OfficeFactory()
         response = self.forced_auth_req(
             'post',
             reverse('ecn_v1:intervention-import-ecn'),
@@ -29,13 +30,16 @@ class SyncViewTestCase(BaseTenantTestCase):
                 'agreement': agreement.pk,
                 'number': 'test',
                 'sections': [section.pk],
-                'locations': [LocationFactory().pk for _i in range(10)]
+                'locations': [LocationFactory().pk for _i in range(10)],
+                'offices': [office.pk],
             }
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
         intervention = Intervention.objects.get(pk=response.data['id'])
         self.assertListEqual(list(intervention.sections.values_list('pk', flat=True)), [section.pk])
         self.assertEqual(intervention.flat_locations.count(), 10)
+        self.assertEqual(intervention.offices.count(), 1)
+        self.assertEqual(intervention.offices.first().pk, office.pk)
         self.assertIn(f'Section {section} was added to all indicators', intervention.other_info)
         self.assertIn('All indicators were assigned all locations', intervention.other_info)
         applied_indicator = intervention.result_links.first().ll_results.first().applied_indicators.first()
@@ -55,7 +59,8 @@ class SyncViewTestCase(BaseTenantTestCase):
                 'agreement': AgreementFactory().pk,
                 'number': 'test',
                 'sections': [SectionFactory().pk],
-                'locations': [LocationFactory().pk for _i in range(10)]
+                'locations': [LocationFactory().pk for _i in range(10)],
+                'offices': [OfficeFactory().pk],
             }
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)

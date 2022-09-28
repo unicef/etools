@@ -19,6 +19,7 @@ from etools.applications.reports.models import (
     InterventionActivity,
     InterventionActivityItem,
     LowerResult,
+    Office,
     Section,
 )
 
@@ -278,7 +279,7 @@ class InterventionSerializer(serializers.ModelSerializer):
             'equity_rating', 'equity_narrative',
             'sustainability_rating', 'sustainability_narrative',
             'ip_program_contribution', 'reference_number_year',
-            'locations', 'sections'
+            'locations', 'sections', 'offices',
         ]
 
     def create_risks(self, intervention, data):
@@ -345,6 +346,7 @@ class ECNSyncSerializer(serializers.Serializer):
     agreement = serializers.PrimaryKeyRelatedField(queryset=Agreement.objects.all())
     sections = serializers.PrimaryKeyRelatedField(many=True, queryset=Section.objects.all())
     locations = serializers.PrimaryKeyRelatedField(queryset=Location.objects.all(), many=True)
+    offices = serializers.PrimaryKeyRelatedField(queryset=Office.objects.all(), many=True)
 
     class Meta:
-        fields = ['number', 'agreement', 'section', 'locations']
+        fields = ['number', 'agreement', 'section', 'locations', 'offices']
