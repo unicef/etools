@@ -117,32 +117,6 @@ class UserProfileCreationSerializer(serializers.ModelSerializer):
         )
 
 
-class GroupSerializer(serializers.ModelSerializer):
-
-    id = serializers.CharField(read_only=True)
-    permissions = serializers.SerializerMethodField()
-
-    def get_permissions(self, group):
-        return [perm.id for perm in group.permissions.all()]
-
-    def create(self, validated_data):
-        try:
-            group = Group.objects.create(**validated_data)
-
-        except Exception as ex:
-            raise serializers.ValidationError({'group': force_str(ex)})
-
-        return group
-
-    class Meta:
-        model = Group
-        fields = (
-            'id',
-            'name',
-            'permissions'
-        )
-
-
 class SimpleNestedProfileSerializer(serializers.ModelSerializer):
     office = serializers.CharField(source="tenant_profile.office")
 

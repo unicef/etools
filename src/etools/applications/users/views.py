@@ -17,6 +17,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from unicef_restlib.permissions import IsSuperUser
 
+from etools.applications.organizations.models import Organization
+from etools.applications.users.mixins import AMPGroupsAllowedMixin
 from etools.applications.users.models import Country, UserProfile
 from etools.applications.users.permissions import IsServiceNowUser
 from etools.applications.users.serializers import (
@@ -146,8 +148,11 @@ class ChangeUserCountryView(APIView):
         if country not in user.profile.countries_available.all():
             raise DjangoValidationError(self.ERROR_MESSAGES['access_to_country_denied'],
                                         code='access_to_country_denied')
-
         user.profile.country_override = country
+
+        if user.profile.organization not in Organization.objects\
+                .filter(realms__country=country, realms__user=user):
+            user.profile.organization = None
         user.profile.save()
 
     def get_redirect_url(self):
@@ -252,39 +257,16 @@ class UsersDetailAPIView(RetrieveAPIView):
         )
 
 
-class GroupViewSet(mixins.RetrieveModelMixin,
-                   mixins.ListModelMixin,
-                   mixins.CreateModelMixin,
-                   viewsets.GenericViewSet):
+class GroupViewSet(AMPGroupsAllowedMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
     """
     Returns a list of all User Groups
     """
     queryset = Group.objects.order_by('name')  # Provide consistent ordering
     serializer_class = GroupSerializer
-    permission_classes = (IsAdminUser,)
+    permission_classes = (IsAuthenticated,)
 
-    def create(self, request, *args, **kwargs):
-        """
-        Add a User Group
-        :return: JSON
-        """
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        serializer.instance = serializer.save()
-        data = serializer.data
-
-        try:
-            permissions = request.data['permissions']
-            for perm in permissions:
-                serializer.instance.permissions.add(perm)
-            serializer.save()
-        except Exception:
-            pass
-
-        headers = self.get_success_headers(serializer.data)
-        return Response(data, status=status.HTTP_201_CREATED,
-                        headers=headers)
+    def get_queryset(self):
+        return self.get_user_allowed_groups()
 
 
 class UserViewSet(mixins.RetrieveModelMixin,

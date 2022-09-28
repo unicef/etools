@@ -2,31 +2,52 @@ import logging
 
 from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied, ValidationError as DjangoValidationError
-from django.db import connection, models
-from django.db.models import OuterRef, Q, Subquery
+from django.db import connection, transaction
+from django.db.models import OuterRef, Prefetch, Q, Subquery
 from django.http import HttpResponseForbidden, HttpResponseRedirect
+from django.shortcuts import get_object_or_404
+from django.utils.translation import gettext_lazy as _
 
 from rest_framework import mixins, status, viewsets
 from rest_framework.exceptions import ValidationError
-from rest_framework.generics import get_object_or_404, ListAPIView, RetrieveAPIView
+from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from unicef_restlib.pagination import DynamicPageNumberPagination
 from unicef_restlib.views import QueryStringFilterMixin, SafeTenantViewSetMixin
 
 from etools.applications.organizations.models import Organization
+from etools.applications.partners.models import PartnerOrganization
+from etools.applications.partners.permissions import (
+    PARTNERSHIP_MANAGER_GROUP,
+    PartnershipManagerPermission,
+    user_group_permission,
+)
 from etools.applications.partners.views.v3 import PMPBaseViewMixin
 from etools.applications.users import views as v1, views_v2 as v2
-from etools.applications.users.models import Country, IPAuthorizedOfficer, IPEditor, IPViewer
+from etools.applications.users.models import (
+    Country,
+    IPAdmin,
+    IPAuthorizedOfficer,
+    IPEditor,
+    IPViewer,
+    PartnershipManager,
+    Realm,
+)
+from etools.applications.users.permissions import IsPartnershipManager
+from etools.applications.users.serializers import SimpleOrganizationSerializer
 from etools.applications.users.serializers_v3 import (
     CountryDetailSerializer,
     ExternalUserSerializer,
     MinimalUserDetailSerializer,
     MinimalUserSerializer,
     ProfileRetrieveUpdateSerializer,
-    UserOganizationSerializer,
+    UserRealmCreateSerializer,
+    UserRealmListSerializer,
 )
 from etools.applications.utils.pagination import AppendablePageNumberPagination
+from etools.libraries.djangolib.utils import is_user_in_groups
 
 logger = logging.getLogger(__name__)
 
@@ -182,30 +203,98 @@ class CountryView(v2.CountryView):
     serializer_class = CountryDetailSerializer
 
 
-class UserOrganizationListView(ListAPIView):
+class PartnerOrganizationListView(ListAPIView):
     """
-    Gets a list of organizations given a country id of the currently logged in user
-    for which there are PRP groups set.
+    Gets a list of organizations given a country id for the Partnership Manager currently logged in.
     """
-    model = Organization
-    serializer_class = UserOganizationSerializer
-    permission_classes = (IsAuthenticated, )
-    prp_groups = [IPViewer.as_group(), IPEditor.as_group(), IPAuthorizedOfficer.as_group()]
+    model = PartnerOrganization
+    serializer_class = SimpleOrganizationSerializer
+    permission_classes = (IsAuthenticated, PartnershipManagerPermission)
 
     def get_root_object(self):
         return get_object_or_404(Country, pk=self.kwargs.get('country_pk'))
 
     def get_queryset(self):
-        user_realms = self.request.user.realms\
-            .filter(country=self.get_root_object(),
-                    group__in=self.prp_groups,
-                    is_active=True)
+        country = self.get_root_object()
+        user_realms = self.request.user.realms.filter(
+            country=country,
+            group=PartnershipManager.as_group(), is_active=True)
+
         if not user_realms.exists():
             return self.model.objects.none()
-        return self.model.objects\
-            .filter(realms__in=user_realms)\
-            .annotate(group_name=models.F('realms__group__name'))\
+
+        return self.model.objects.filter(organization__realms__country=country).distinct()
+
+
+class UserRealmView(mixins.ListModelMixin, mixins.CreateModelMixin, viewsets.GenericViewSet):
+
+    model = get_user_model()
+
+    permission_classes = (
+        IsAuthenticated,
+        user_group_permission(IPEditor, IPAdmin, IPAuthorizedOfficer) | IsPartnershipManager
+    )
+
+    serializer_class = UserRealmListSerializer
+    pagination_class = DynamicPageNumberPagination
+
+    def get_permissions(self):
+        if self.action == "list":
+            self.permission_classes = (
+                IsAuthenticated,
+                user_group_permission(IPViewer, IPEditor, IPAdmin, IPAuthorizedOfficer) | IsPartnershipManager)
+        return super().get_permissions()
+
+    def get_serializer_class(self):
+        if self.request.method in ["POST"]:
+            return UserRealmCreateSerializer
+        return super().get_serializer_class()
+
+    def get_queryset(self):
+        organization_id = self.request.query_params.get('organization')
+        if organization_id:
+            if is_user_in_groups(self.request.user, [PARTNERSHIP_MANAGER_GROUP]):
+                organization = get_object_or_404(Organization, pk=organization_id)
+            else:
+                return self.model.objects.none()
+        else:
+            organization = self.request.user.profile.organization
+
+        context_realms_qs = Realm.objects.filter(
+            country=connection.tenant,
+            organization=organization,
+        )
+        return self.model.objects \
+            .filter(is_active=True, realms__in=context_realms_qs) \
+            .prefetch_related(Prefetch('realms', queryset=context_realms_qs))\
             .distinct()
+
+    @transaction.atomic
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        organization_id = serializer.validated_data.get('organization')
+        if organization_id:
+            organization = get_object_or_404(Organization, pk=organization_id)
+            if not is_user_in_groups(self.request.user, [PARTNERSHIP_MANAGER_GROUP]):
+                raise ValidationError(
+                    _('You do not have permissions to change groups for %(name)s organization.'
+                      % {'name': organization.name}))
+        else:
+            organization = self.request.user.profile.organization
+
+        user = get_object_or_404(
+            self.model.objects.prefetch_related(
+                Prefetch('realms', queryset=Realm.objects.filter(country=connection.tenant,
+                                                                 organization=organization))),
+            pk=serializer.validated_data.get('user'))
+
+        serializer.save(user=user, organization=organization)
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(UserRealmListSerializer(instance=user).data,
+                        status=status.HTTP_201_CREATED, headers=headers)
 
 
 class ExternalUserViewSet(

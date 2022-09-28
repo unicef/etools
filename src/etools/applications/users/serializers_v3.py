@@ -1,11 +1,15 @@
 from django.conf.global_settings import LANGUAGES
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.db import connection
+from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
+from rest_framework.exceptions import PermissionDenied
 
 from etools.applications.audit.models import Auditor
 from etools.applications.organizations.models import Organization
+from etools.applications.users.mixins import AMPGroupsAllowedMixin
 from etools.applications.users.models import Country, Realm, UserProfile
 from etools.applications.users.serializers import GroupSerializer, SimpleCountrySerializer, SimpleOrganizationSerializer
 from etools.applications.users.validators import EmailValidator, ExternalUserValidator
@@ -102,19 +106,76 @@ class CountryDetailSerializer(serializers.ModelSerializer):
         )
 
 
-class UserOganizationSerializer(serializers.ModelSerializer):
-    prp_group = serializers.SerializerMethodField()
+class RealmSerializer(serializers.ModelSerializer):
+    group_id = serializers.IntegerField(source='group.id')
+    group_name = serializers.CharField(source='group.name')
 
     class Meta:
-        model = Organization
+        model = Realm
+        fields = (
+            'id',
+            'group_id',
+            'group_name',
+            'is_active'
+        )
+
+
+class UserRealmListSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(source='full_name')
+    realms = RealmSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = get_user_model()
         fields = (
             'id',
             'name',
-            'prp_group'
+            'email',
+            'realms'
         )
 
-    def get_prp_group(self, obj):
-        return obj.group_name
+
+class UserRealmCreateSerializer(AMPGroupsAllowedMixin, serializers.ModelSerializer):
+    user = serializers.IntegerField(required=True, write_only=True)
+    organization = serializers.IntegerField(required=False, write_only=True)
+    groups = serializers.ListField(child=serializers.IntegerField(), required=True, write_only=True)
+
+    class Meta:
+        model = Realm
+        fields = (
+            'user',
+            'organization',
+            'groups'
+        )
+
+    def create(self, validated_data):
+        user = validated_data.get('user')
+        organization = validated_data.get('organization')
+
+        requested_group_ids = set(validated_data.get('groups'))
+
+        if requested_group_ids == []:
+            user.realms.update(is_active=False)
+            return
+
+        existing_group_ids = set(user.groups.values_list('id', flat=True))
+
+        _to_add = requested_group_ids - existing_group_ids
+        _to_deactivate = existing_group_ids - requested_group_ids
+
+        allowed_groups = set(self.get_user_allowed_groups(self.context['request'].user)
+                             .values_list('id', flat=True))
+        if not _to_add.issubset(allowed_groups) or not _to_deactivate.issubset(allowed_groups):
+            raise PermissionDenied(
+                _('Permission denied. Only %(groups)s roles can be assigned.'
+                  % {'groups': ', '.join(Group.objects.filter(id__in=allowed_groups).values_list('name', flat=True))})
+            )
+        Realm.objects.bulk_create([
+            Realm(user=user, country=connection.tenant, organization=organization, group_id=group_id)
+            for group_id in _to_add])
+
+        user.realms.filter(country=connection.tenant, organization=organization,
+                           group__id__in=_to_deactivate).update(is_active=False)
+        return user
 
 
 class UserPreferencesSerializer(serializers.Serializer):

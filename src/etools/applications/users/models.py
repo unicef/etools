@@ -195,7 +195,9 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
 
     @property
     def groups(self):
-        return Group.objects.filter(realms__in=self.realms.filter(is_active=True)).distinct()
+        current_country_realms = self.realms.filter(
+            country=connection.tenant, organization=self.profile.organization, is_active=True)
+        return Group.objects.filter(realms__in=current_country_realms).distinct()
 
     def get_partner_staff_member(self) -> ['PartnerStaffMember']:
         # just wrapper to avoid try...catch in place
@@ -429,7 +431,8 @@ class UserProfile(models.Model):
 
     @property
     def organizations_available(self):
-        return Organization.objects.filter(realms__in=self.user.realms.filter(is_active=True)).distinct()
+        current_country_realms = self.user.realms.filter(country=connection.tenant, is_active=True)
+        return Organization.objects.filter(realms__in=current_country_realms).distinct()
 
     def username(self):
         return self.user.username
@@ -566,4 +569,6 @@ class Realm(TimeStampedModel):
 
 IPViewer = GroupWrapper(code='ip_viewer', name='IP Viewer')
 IPEditor = GroupWrapper(code='ip_editor', name='IP Editor')
+IPAdmin = GroupWrapper(code='ip_admin', name='IP Admin')
 IPAuthorizedOfficer = GroupWrapper(code='ip_authorized_officer', name='IP Authorized Officer')
+PartnershipManager = GroupWrapper(code='partnership_manager', name='Partnership Manager')
