@@ -1,6 +1,7 @@
 from django.db import transaction
 
 from rest_framework import serializers
+from unicef_restlib.serializers import UserContextSerializerMixin
 
 from etools.applications.locations.models import Location
 from etools.applications.partners.models import (
@@ -19,6 +20,7 @@ from etools.applications.reports.models import (
     InterventionActivity,
     InterventionActivityItem,
     LowerResult,
+    Office,
     Section,
 )
 
@@ -254,7 +256,7 @@ class InterventionResultLinkSerializer(serializers.ModelSerializer):
         serializer.save(result_link=result_link)
 
 
-class InterventionSerializer(serializers.ModelSerializer):
+class InterventionSerializer(UserContextSerializerMixin, serializers.ModelSerializer):
     planned_budget = InterventionBudgetSerializer()
     management_budgets = InterventionManagementBudgetSerializer()
     result_links = InterventionResultLinkSerializer(many=True)
@@ -278,7 +280,7 @@ class InterventionSerializer(serializers.ModelSerializer):
             'equity_rating', 'equity_narrative',
             'sustainability_rating', 'sustainability_narrative',
             'ip_program_contribution', 'reference_number_year',
-            'locations', 'sections'
+            'locations', 'sections', 'offices',
         ]
 
     def create_risks(self, intervention, data):
@@ -336,6 +338,7 @@ class InterventionSerializer(serializers.ModelSerializer):
         self.update_planned_budget(self.instance, planned_budget)
         self.update_management_budgets(self.instance, management_budgets)
         self.create_result_links_structure(self.instance, result_links)
+        self.instance.unicef_focal_points.add(self.get_user())
 
         return self.instance
 
@@ -345,6 +348,7 @@ class ECNSyncSerializer(serializers.Serializer):
     agreement = serializers.PrimaryKeyRelatedField(queryset=Agreement.objects.all())
     sections = serializers.PrimaryKeyRelatedField(many=True, queryset=Section.objects.all())
     locations = serializers.PrimaryKeyRelatedField(queryset=Location.objects.all(), many=True)
+    offices = serializers.PrimaryKeyRelatedField(queryset=Office.objects.all(), many=True)
 
     class Meta:
-        fields = ['number', 'agreement', 'section', 'locations']
+        fields = ['number', 'agreement', 'section', 'locations', 'offices']
