@@ -18,7 +18,6 @@ from unicef_restlib.pagination import DynamicPageNumberPagination
 from unicef_restlib.views import QueryStringFilterMixin, SafeTenantViewSetMixin
 
 from etools.applications.organizations.models import Organization
-from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.permissions import (
     PARTNERSHIP_MANAGER_GROUP,
     PartnershipManagerPermission,
@@ -32,7 +31,6 @@ from etools.applications.users.models import (
     IPAuthorizedOfficer,
     IPEditor,
     IPViewer,
-    PartnershipManager,
     Realm,
 )
 from etools.applications.users.permissions import IsPartnershipManager
