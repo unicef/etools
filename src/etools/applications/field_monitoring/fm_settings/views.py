@@ -7,7 +7,6 @@ from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
-from unicef_locations.cache import etag_cached
 from unicef_locations.serializers import LocationLightSerializer
 
 from etools.applications.field_monitoring.fm_settings.export.renderers import (
@@ -47,6 +46,7 @@ from etools.applications.field_monitoring.permissions import IsEditAction, IsFie
 from etools.applications.field_monitoring.views import FMBaseViewSet, LinkedAttachmentsViewSet
 from etools.applications.locations.models import Location
 from etools.applications.reports.views.v2 import OutputListAPIView
+from etools.libraries.views.cache import CachedListViewSetMixin
 
 
 class MethodsViewSet(
@@ -89,7 +89,7 @@ class ResultsView(OutputListAPIView):
     serializer_class = ResultSerializer
 
 
-class LocationSitesViewSet(FMBaseViewSet, viewsets.ModelViewSet):
+class LocationSitesViewSet(CachedListViewSetMixin, FMBaseViewSet, viewsets.ModelViewSet):
     permission_classes = FMBaseViewSet.permission_classes + [
         IsReadAction | (IsEditAction & IsPME)
     ]
@@ -102,13 +102,17 @@ class LocationSitesViewSet(FMBaseViewSet, viewsets.ModelViewSet):
         'is_active', 'name',
     )
     search_fields = ('parent__name', 'parent__p_code', 'name', 'p_code')
+    list_cache_prefix = 'fm-sites-list'
 
     def get_view_name(self):
         return _('Site Specific Locations')
 
-    @etag_cached('fm-sites')
-    def list(self, request, *args, **kwargs):
-        return super().list(request, *args, **kwargs)
+    def use_cache(self, request):
+        use_cache = super().use_cache(request)
+        if not use_cache:
+            return False
+        # don't cache paginated response, just one special case with page_size=all
+        return len(request.query_params.keys()) == 1 and request.query_params.get('page_size') == 'all'
 
     @action(detail=False, methods=['get'], url_path='export')
     def export(self, request, *args, **kwargs):

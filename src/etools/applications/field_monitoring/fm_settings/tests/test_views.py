@@ -22,6 +22,7 @@ from etools.applications.field_monitoring.fm_settings.tests.factories import (
     MethodFactory,
     QuestionFactory,
 )
+from etools.applications.field_monitoring.fm_settings.views import LocationSitesViewSet
 from etools.applications.field_monitoring.planning.tests.factories import MonitoringActivityFactory
 from etools.applications.field_monitoring.tests.base import APIViewSetTestCase, FMBaseTestCaseMixin
 from etools.applications.locations.models import Location
@@ -129,6 +130,10 @@ class LocationsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
 
 class LocationSitesViewTestCase(TestExportMixin, FMBaseTestCaseMixin, BaseTenantTestCase):
+    def setUp(self):
+        super().setUp()
+        LocationSitesViewSet.invalidate_view_cache(reverse('field_monitoring_settings:sites-list'))
+
     def test_list(self):
         LocationSiteFactory()
 
@@ -140,64 +145,107 @@ class LocationSitesViewTestCase(TestExportMixin, FMBaseTestCaseMixin, BaseTenant
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 1)
 
-    def test_list_cached(self):
-        LocationSiteFactory()
-
+    def _unicef_request_full_list(self):
         response = self.forced_auth_req(
             'get', reverse('field_monitoring_settings:sites-list'),
-            user=self.unicef_user
+            user=self.unicef_user,
+            data={'page_size': 'all'},
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data['results']), 1)
-        etag = response["ETag"]
+        return response
 
-        response = self.forced_auth_req(
-            'get', reverse('field_monitoring_settings:sites-list'),
-            user=self.unicef_user, HTTP_IF_NONE_MATCH=etag
-        )
-        self.assertEqual(response.status_code, status.HTTP_304_NOT_MODIFIED)
+    def test_full_list_cached(self):
+        LocationSiteFactory()
+
+        with self.assertNumQueries(2):
+            response = self._unicef_request_full_list()
+            self.assertEqual(len(response.data), 1)
+
+        with self.assertNumQueries(0):
+            response = self._unicef_request_full_list()
+            self.assertEqual(len(response.data), 1)
+
+    def test_list_cached_on_page_size_all(self):
+        [LocationSiteFactory() for _i in range(11)]
+
+        with self.assertNumQueries(2):
+            response = self._unicef_request_full_list()
+            self.assertEqual(len(response.data), 11)
+
+        with self.assertNumQueries(0):
+            response = self._unicef_request_full_list()
+            self.assertEqual(len(response.data), 11)
+
+    def test_list_not_cached_on_pagination(self):
+        [LocationSiteFactory() for _i in range(7)]
+
+        with self.assertNumQueries(3):
+            response = self.forced_auth_req(
+                'get', reverse('field_monitoring_settings:sites-list'),
+                user=self.unicef_user,
+                data={'page_size': 5, 'page': 1}
+            )
+            self.assertEqual(len(response.data['results']), 5)
+
+        # still not cached
+        with self.assertNumQueries(3):
+            response = self.forced_auth_req(
+                'get', reverse('field_monitoring_settings:sites-list'),
+                user=self.unicef_user,
+                data={'page_size': 5, 'page': 1}
+            )
+            self.assertEqual(len(response.data['results']), 5)
+
+        # second page is fine
+        with self.assertNumQueries(3):
+            response = self.forced_auth_req(
+                'get', reverse('field_monitoring_settings:sites-list'),
+                user=self.unicef_user,
+                data={'page_size': 5, 'page': 2}
+            )
+            self.assertEqual(len(response.data['results']), 2)
 
     def test_list_modified_create(self):
         LocationSiteFactory()
 
-        response = self.forced_auth_req(
-            'get', reverse('field_monitoring_settings:sites-list'),
-            user=self.unicef_user
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data['results']), 1)
-        etag = response["ETag"]
+        with self.assertNumQueries(2):
+            response = self._unicef_request_full_list()
+            self.assertEqual(len(response.data), 1)
 
         LocationSiteFactory()
 
-        response = self.forced_auth_req(
-            'get', reverse('field_monitoring_settings:sites-list'),
-            user=self.unicef_user, HTTP_IF_NONE_MATCH=etag
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data['results']), 2)
+        with self.assertNumQueries(2):
+            response = self._unicef_request_full_list()
+            self.assertEqual(len(response.data), 2)
 
     def test_list_modified_update(self):
         location_site = LocationSiteFactory()
 
-        response = self.forced_auth_req(
-            'get', reverse('field_monitoring_settings:sites-list'),
-            user=self.unicef_user
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data['results']), 1)
-        etag = response["ETag"]
+        with self.assertNumQueries(2):
+            response = self._unicef_request_full_list()
+            self.assertEqual(len(response.data), 1)
 
         location_site.name += '_updated'
         location_site.save()
 
-        response = self.forced_auth_req(
-            'get', reverse('field_monitoring_settings:sites-list'),
-            user=self.unicef_user, HTTP_IF_NONE_MATCH=etag
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data['results']), 1)
-        self.assertEqual(response.data['results'][0]['name'], location_site.name)
+        with self.assertNumQueries(2):
+            response = self._unicef_request_full_list()
+            self.assertEqual(len(response.data), 1)
+            self.assertEqual(response.data[0]['name'], location_site.name)
+
+    def test_list_modified_delete(self):
+        LocationSiteFactory()
+        location_site = LocationSiteFactory()
+
+        with self.assertNumQueries(2):
+            response = self._unicef_request_full_list()
+            self.assertEqual(len(response.data), 2)
+
+        location_site.delete()
+
+        with self.assertNumQueries(2):
+            response = self._unicef_request_full_list()
+            self.assertEqual(len(response.data), 1)
 
     def test_create(self):
         site = LocationSiteFactory()
