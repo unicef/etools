@@ -5,6 +5,7 @@ from django.db import connection
 from django.test import TestCase
 from django.test.utils import override_settings
 
+from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.environment.apps import EnvironmentConfig
 from etools.applications.environment.helpers import tenant_flag_is_active, tenant_switch_is_active
 from etools.applications.environment.tests.factories import TenantFlagFactory, TenantSwitchFactory
@@ -17,13 +18,13 @@ class EnvironmentConfigTest(TestCase):
         self.assertEqual(apps.get_app_config('environment').name, EnvironmentConfig.name)
 
 
-class TenantFlagTest(TestCase):
+class TenantFlagTest(BaseTenantTestCase):
 
     @classmethod
     def setUpTestData(cls):
         cls.tenant_flag = TenantFlagFactory(superusers=False)
         cls.country = CountryFactory()
-        cls.user = UserFactory(profile=None)
+        cls.user = UserFactory()
 
     def setUp(self):
         self.user.refresh_from_db()
@@ -108,7 +109,7 @@ class TenantFlagTest(TestCase):
 
     def test_empty_user_set_is_cached(self):
         f = TenantFlagFactory()
-        with self.assertNumQueries(4):
+        with self.assertNumQueries(6):
             self.assertFalse(f.is_active(self.request))
         with self.assertNumQueries(1):
             # we still need to query the user's list of groups
@@ -116,7 +117,7 @@ class TenantFlagTest(TestCase):
 
     def test_group_set_is_cached(self):
         f = TenantFlagFactory()
-        group = GroupFactory()
+        group = GroupFactory(name='UNICEF User')
         f.groups.add(group)
         f.save()
         RealmFactory(
@@ -125,7 +126,7 @@ class TenantFlagTest(TestCase):
             country=CountryFactory(),
             organization=OrganizationFactory()
         )
-        with self.assertNumQueries(4):
+        with self.assertNumQueries(6):
             self.assertTrue(f.is_active(self.request))
         with self.assertNumQueries(1):
             # we still need to query the user's list of groups

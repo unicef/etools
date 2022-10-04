@@ -2259,11 +2259,15 @@ class TestInterventionReviewSendBack(BaseInterventionActionTestCase):
         self.intervention.date_sent_to_partner = datetime.date.today()
         self.intervention.status = Intervention.REVIEW
         self.intervention.save()
+        partner_org = self.intervention.partner_authorized_officer_signatory.partner.organization
         RealmFactory(
             user=self.user,
             country=CountryFactory(),
-            organization=self.intervention.partner_authorized_officer_signatory.partner.organization,
+            organization=partner_org,
             group=GroupFactory(name=PRC_SECRETARY))
+        self.user.profile.organization = partner_org
+        self.user.profile.save(update_fields=['organization'])
+
         InterventionReviewFactory(intervention=self.intervention, overall_approval=None)
 
         response = self.forced_auth_req("patch", self.url, user=self.user)
@@ -2276,11 +2280,15 @@ class TestInterventionReviewSendBack(BaseInterventionActionTestCase):
         self.intervention.date_sent_to_partner = datetime.date.today()
         self.intervention.status = Intervention.REVIEW
         self.intervention.save()
+        partner_org = self.intervention.partner_authorized_officer_signatory.partner.organization
         RealmFactory(
             user=self.user,
             country=CountryFactory(),
-            organization=self.intervention.partner_authorized_officer_signatory.partner.organization,
+            organization=partner_org,
             group=GroupFactory(name=PRC_SECRETARY))
+        self.user.profile.organization = partner_org
+        self.user.profile.save(update_fields=['organization'])
+
         InterventionReviewFactory(intervention=self.intervention, overall_approval=None)
 
         mock_send = mock.Mock(return_value=self.mock_email)
@@ -2307,6 +2315,8 @@ class TestInterventionReviews(BaseInterventionTestCase):
             country=connection.tenant,
             group=GroupFactory(name=PRC_SECRETARY)
         )
+        self.user.profile.organization = self.partner.organization
+        self.user.profile.save(update_fields=['organization'])
 
     def test_list(self):
         for __ in range(10):

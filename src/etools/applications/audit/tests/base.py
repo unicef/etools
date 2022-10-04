@@ -133,5 +133,6 @@ class EngagementTransitionsTestCaseMixin(AuditTestCaseMixin):
 
         self.non_engagement_auditor = AuditorStaffMemberFactory(
             user__first_name='Auditor 2',
-            auditor_firm=self.auditor_firm
+            auditor_firm=self.auditor_firm,
+            user__profile__organization=self.auditor_firm.organization
         ).user

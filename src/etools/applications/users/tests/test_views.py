@@ -269,46 +269,6 @@ class TestGroupViewSet(BaseTenantTestCase):
         groups = sorted(response.data, key=itemgetter('id'))
         self.assertEqual(groups[0]['id'], group.pk)
 
-    def test_api_groups_list(self):
-        response = self.forced_auth_req(
-            'get',
-            self.url,
-            user=self.unicef_staff,
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-    def test_post(self):
-        """Ensure group object is created"""
-        name = "New Group"
-        response = self.forced_auth_req(
-            "post",
-            self.url,
-            user=self.unicef_staff,
-            data={"name": name}
-        )
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertTrue(Group.objects.filter(name=name).exists())
-
-    def test_post_permission(self):
-        """Ensure group object is created and associated with
-        permissions provided
-        """
-        name = "New Group"
-        permission = Permission.objects.first()
-        response = self.forced_auth_req(
-            "post",
-            self.url,
-            user=self.unicef_staff,
-            data={
-                "name": name,
-                "permissions": [permission.pk]
-            }
-        )
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertTrue(Group.objects.filter(name=name).exists())
-        group = Group.objects.get(name=name)
-        self.assertIn(permission, group.permissions.all())
-
 
 class TestUserViewSet(BaseTenantTestCase):
     @classmethod

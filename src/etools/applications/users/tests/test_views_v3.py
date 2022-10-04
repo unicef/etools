@@ -440,6 +440,7 @@ class TestExternalUserAPIView(BaseTenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        profile.refresh_from_db()
         self.assertIn(self.tenant, profile.countries_available)
         self.assertIn(Auditor.as_group(), profile.user.groups)
 
