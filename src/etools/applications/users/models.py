@@ -185,6 +185,12 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
         return self.email.endswith(settings.UNICEF_USER_EMAIL)
 
     @cached_property
+    def is_partnership_manager(self):
+        return Realm.objects.filter(
+            user=self, country=connection.tenant,
+            group=PartnershipManager.as_group(), is_active=True).exists()
+
+    @cached_property
     def full_name(self):
         return self.get_full_name()
 

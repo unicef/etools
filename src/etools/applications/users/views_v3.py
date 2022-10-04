@@ -207,7 +207,7 @@ class PartnerOrganizationListView(ListAPIView):
     """
     Gets a list of organizations given a country id for the Partnership Manager currently logged in.
     """
-    model = PartnerOrganization
+    model = Organization
     serializer_class = SimpleOrganizationSerializer
     permission_classes = (IsAuthenticated, PartnershipManagerPermission)
 
@@ -216,14 +216,11 @@ class PartnerOrganizationListView(ListAPIView):
 
     def get_queryset(self):
         country = self.get_root_object()
-        user_realms = self.request.user.realms.filter(
-            country=country,
-            group=PartnershipManager.as_group(), is_active=True)
 
-        if not user_realms.exists():
+        if not self.request.user.is_partnership_manager:
             return self.model.objects.none()
 
-        return self.model.objects.filter(organization__realms__country=country).distinct()
+        return self.model.objects.filter(realms__country=country).distinct()
 
 
 class UserRealmView(mixins.ListModelMixin, mixins.CreateModelMixin, viewsets.GenericViewSet):
@@ -251,9 +248,9 @@ class UserRealmView(mixins.ListModelMixin, mixins.CreateModelMixin, viewsets.Gen
         return super().get_serializer_class()
 
     def get_queryset(self):
-        organization_id = self.request.query_params.get('organization')
+        organization_id = self.request.query_params.get('organization_id')
         if organization_id:
-            if is_user_in_groups(self.request.user, [PARTNERSHIP_MANAGER_GROUP]):
+            if self.request.user.is_partnership_manager:
                 organization = get_object_or_404(Organization, pk=organization_id)
             else:
                 return self.model.objects.none()

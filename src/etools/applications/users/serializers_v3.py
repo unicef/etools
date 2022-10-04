@@ -206,6 +206,8 @@ class ProfileRetrieveUpdateSerializer(serializers.ModelSerializer):
 
     preferences = UserPreferencesSerializer(source="user.preferences", allow_null=False)
 
+    is_partnership_manager = serializers.BooleanField(source='user.is_partnership_manager', read_only=True)
+
     class Meta:
         model = UserProfile
         exclude = ('id', 'old_countries_available')
