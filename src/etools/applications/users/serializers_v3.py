@@ -2,10 +2,11 @@ from django.conf.global_settings import LANGUAGES
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.db import connection
+from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, ValidationError
 
 from etools.applications.audit.models import Auditor
 from etools.applications.organizations.models import Organization
@@ -148,23 +149,26 @@ class UserRealmCreateSerializer(AMPGroupsAllowedMixin, serializers.ModelSerializ
         )
 
     def create(self, validated_data):
-        user = validated_data.get('user')
+        user = get_object_or_404(get_user_model(), pk=validated_data.get('user'))
         organization = validated_data.get('organization')
 
         requested_group_ids = set(validated_data.get('groups'))
+        realm_qs = user.realms.filter(country=connection.tenant, organization=organization)
 
         if requested_group_ids == []:
-            user.realms.update(is_active=False)
+            realm_qs.update(is_active=False)
             return
 
-        existing_group_ids = set(user.groups.values_list('id', flat=True))
+        existing_group_ids = set(user.get_all_groups_for_organization(organization).values_list('id', flat=True))
 
-        _to_add = requested_group_ids - existing_group_ids
-        _to_deactivate = existing_group_ids - requested_group_ids
+        _to_add = requested_group_ids.difference(existing_group_ids)
+        _to_deactivate = existing_group_ids.difference(requested_group_ids)
+        _to_reactivate = requested_group_ids.difference(_to_add)
 
-        allowed_groups = set(self.get_user_allowed_groups(self.context['request'].user)
-                             .values_list('id', flat=True))
-        if not _to_add.issubset(allowed_groups) or not _to_deactivate.issubset(allowed_groups):
+        allowed_groups = set(self.get_user_allowed_groups(self.context['request'].user).values_list('id', flat=True))
+
+        if not _to_add.issubset(allowed_groups) or not _to_deactivate.issubset(allowed_groups) \
+                or not _to_reactivate.issubset(allowed_groups):
             raise PermissionDenied(
                 _('Permission denied. Only %(groups)s roles can be assigned.'
                   % {'groups': ', '.join(Group.objects.filter(id__in=allowed_groups).values_list('name', flat=True))})
@@ -173,8 +177,8 @@ class UserRealmCreateSerializer(AMPGroupsAllowedMixin, serializers.ModelSerializ
             Realm(user=user, country=connection.tenant, organization=organization, group_id=group_id)
             for group_id in _to_add])
 
-        user.realms.filter(country=connection.tenant, organization=organization,
-                           group__id__in=_to_deactivate).update(is_active=False)
+        realm_qs.filter(group__id__in=_to_deactivate).update(is_active=False)
+        realm_qs.filter(group__id__in=_to_reactivate).update(is_active=True)
         return user
 
 
