@@ -259,7 +259,7 @@ class UsersDetailAPIView(RetrieveAPIView):
 
 class GroupViewSet(AMPGroupsAllowedMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
     """
-    Returns a list of all User Groups
+    Returns a list of allowed User Groups for Access Management Portal (AMP)
     """
     queryset = Group.objects.order_by('name')  # Provide consistent ordering
     serializer_class = GroupSerializer

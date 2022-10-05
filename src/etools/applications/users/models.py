@@ -187,8 +187,11 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
     @cached_property
     def is_partnership_manager(self):
         return Realm.objects.filter(
-            user=self, country=connection.tenant,
-            group=PartnershipManager.as_group(), is_active=True).exists()
+            user=self,
+            country=connection.tenant,
+            organization=Organization.objects.get(vendor_number='UNICEF'),
+            group=PartnershipManager.as_group(),
+            is_active=True).exists()
 
     @cached_property
     def full_name(self):
@@ -203,6 +206,11 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
     def groups(self):
         current_country_realms = self.realms.filter(
             country=connection.tenant, organization=self.profile.organization, is_active=True)
+        return Group.objects.filter(realms__in=current_country_realms).distinct()
+
+    def get_all_groups_for_organization(self, organization):
+        current_country_realms = self.realms.filter(
+            country=connection.tenant, organization=organization)
         return Group.objects.filter(realms__in=current_country_realms).distinct()
 
     def get_partner_staff_member(self) -> ['PartnerStaffMember']:
