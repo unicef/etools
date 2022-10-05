@@ -17,22 +17,12 @@ from rest_framework.views import APIView
 from unicef_restlib.pagination import DynamicPageNumberPagination
 from unicef_restlib.views import QueryStringFilterMixin, SafeTenantViewSetMixin
 
-from etools.applications.audit.models import Auditor, UNICEFAuditFocalPoint
+from etools.applications.audit.models import UNICEFAuditFocalPoint
 from etools.applications.organizations.models import Organization
-from etools.applications.partners.permissions import (
-    PartnershipManagerPermission,
-    user_group_permission,
-)
+from etools.applications.partners.permissions import user_group_permission
 from etools.applications.partners.views.v3 import PMPBaseViewMixin
 from etools.applications.users import views as v1, views_v2 as v2
-from etools.applications.users.models import (
-    Country,
-    IPAdmin,
-    IPAuthorizedOfficer,
-    IPEditor,
-    IPViewer,
-    Realm,
-)
+from etools.applications.users.models import Country, IPAdmin, IPAuthorizedOfficer, IPEditor, IPViewer, Realm
 from etools.applications.users.permissions import IsPartnershipManager
 from etools.applications.users.serializers import SimpleOrganizationSerializer
 from etools.applications.users.serializers_v3 import (
@@ -202,11 +192,12 @@ class CountryView(v2.CountryView):
 
 class PartnerOrganizationListView(ListAPIView):
     """
-    Gets a list of organizations given a country id for the Partnership Manager currently logged in.
+    Gets a list of organizations from partners given a country id for
+    the Partnership Manager currently logged in.
     """
     model = Organization
     serializer_class = SimpleOrganizationSerializer
-    permission_classes = (IsAuthenticated, PartnershipManagerPermission)
+    permission_classes = (IsAuthenticated, IsPartnershipManager)
 
     def get_root_object(self):
         return get_object_or_404(Country, pk=self.kwargs.get('country_pk'))
@@ -217,7 +208,9 @@ class PartnerOrganizationListView(ListAPIView):
         if not self.request.user.is_partnership_manager:
             return self.model.objects.none()
 
-        return self.model.objects.filter(realms__country=country).distinct()
+        return self.model.objects\
+            .filter(partner__isnull=False, realms__country=country)\
+            .distinct()
 
 
 class UserRealmView(mixins.ListModelMixin, mixins.CreateModelMixin, viewsets.GenericViewSet):
@@ -225,9 +218,9 @@ class UserRealmView(mixins.ListModelMixin, mixins.CreateModelMixin, viewsets.Gen
     model = get_user_model()
     permission_classes = (
         IsAuthenticated,
-        user_group_permission(IPEditor.name, IPAdmin.name,
-                              IPAuthorizedOfficer.name, UNICEFAuditFocalPoint.name)
-        | IsPartnershipManager
+        user_group_permission(
+            IPEditor.name, IPAdmin.name,
+            IPAuthorizedOfficer.name, UNICEFAuditFocalPoint.name) | IsPartnershipManager
     )
     serializer_class = UserRealmListSerializer
     pagination_class = DynamicPageNumberPagination
@@ -236,9 +229,9 @@ class UserRealmView(mixins.ListModelMixin, mixins.CreateModelMixin, viewsets.Gen
         if self.action == "list":
             self.permission_classes = (
                 IsAuthenticated,
-                user_group_permission(IPViewer.name, IPEditor.name, IPAdmin.name,
-                                      IPAuthorizedOfficer.name, UNICEFAuditFocalPoint.name)
-                | IsPartnershipManager)
+                user_group_permission(
+                    IPViewer.name, IPEditor.name, IPAdmin.name,
+                    IPAuthorizedOfficer.name, UNICEFAuditFocalPoint.name) | IsPartnershipManager)
         return super().get_permissions()
 
     def get_serializer_class(self):
