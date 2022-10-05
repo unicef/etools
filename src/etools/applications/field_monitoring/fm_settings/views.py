@@ -1,5 +1,7 @@
 from django.utils import timezone
+from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _
+from django.views.decorators.cache import cache_control, cache_page
 
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, mixins, views, viewsets
@@ -106,7 +108,9 @@ class LocationSitesViewSet(FMBaseViewSet, viewsets.ModelViewSet):
     def get_view_name(self):
         return _('Site Specific Locations')
 
+    @method_decorator(cache_control(public=True))  # reset cache control header to allow etags work with cache_page
     @etag_cached('fm-sites')
+    @method_decorator(cache_page(60 * 60 * 24, key_prefix='fm-sites'))
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
 
