@@ -2,7 +2,6 @@ import json
 from unittest import skip
 
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Permission
 from django.urls import reverse
 
 from rest_framework import status
@@ -16,7 +15,6 @@ from etools.applications.publics.tests.factories import PublicsBusinessAreaFacto
 from etools.applications.tpm.models import ThirdPartyMonitor
 from etools.applications.users.mixins import AMPGroupsAllowedMixin
 from etools.applications.users.models import (
-    Group,
     IPAdmin,
     IPAuthorizedOfficer,
     IPEditor,
