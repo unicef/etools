@@ -17,9 +17,9 @@ from rest_framework.views import APIView
 from unicef_restlib.pagination import DynamicPageNumberPagination
 from unicef_restlib.views import QueryStringFilterMixin, SafeTenantViewSetMixin
 
+from etools.applications.audit.models import Auditor, UNICEFAuditFocalPoint
 from etools.applications.organizations.models import Organization
 from etools.applications.partners.permissions import (
-    PARTNERSHIP_MANAGER_GROUP,
     PartnershipManagerPermission,
     user_group_permission,
 )
@@ -45,7 +45,6 @@ from etools.applications.users.serializers_v3 import (
     UserRealmListSerializer,
 )
 from etools.applications.utils.pagination import AppendablePageNumberPagination
-from etools.libraries.djangolib.utils import is_user_in_groups
 
 logger = logging.getLogger(__name__)
 
@@ -224,12 +223,12 @@ class PartnerOrganizationListView(ListAPIView):
 class UserRealmView(mixins.ListModelMixin, mixins.CreateModelMixin, viewsets.GenericViewSet):
 
     model = get_user_model()
-
     permission_classes = (
         IsAuthenticated,
-        user_group_permission(IPEditor, IPAdmin, IPAuthorizedOfficer) | IsPartnershipManager
+        user_group_permission(IPEditor.name, IPAdmin.name,
+                              IPAuthorizedOfficer.name, UNICEFAuditFocalPoint.name)
+        | IsPartnershipManager
     )
-
     serializer_class = UserRealmListSerializer
     pagination_class = DynamicPageNumberPagination
 
@@ -237,7 +236,9 @@ class UserRealmView(mixins.ListModelMixin, mixins.CreateModelMixin, viewsets.Gen
         if self.action == "list":
             self.permission_classes = (
                 IsAuthenticated,
-                user_group_permission(IPViewer, IPEditor, IPAdmin, IPAuthorizedOfficer) | IsPartnershipManager)
+                user_group_permission(IPViewer.name, IPEditor.name, IPAdmin.name,
+                                      IPAuthorizedOfficer.name, UNICEFAuditFocalPoint.name)
+                | IsPartnershipManager)
         return super().get_permissions()
 
     def get_serializer_class(self):
@@ -272,20 +273,20 @@ class UserRealmView(mixins.ListModelMixin, mixins.CreateModelMixin, viewsets.Gen
         organization_id = serializer.validated_data.get('organization')
         if organization_id:
             organization = get_object_or_404(Organization, pk=organization_id)
-            if not is_user_in_groups(self.request.user, [PARTNERSHIP_MANAGER_GROUP]):
+            if not self.request.user.is_partnership_manager:
                 raise ValidationError(
                     _('You do not have permissions to change groups for %(name)s organization.'
                       % {'name': organization.name}))
         else:
             organization = self.request.user.profile.organization
 
+        serializer.save(organization=organization)
+
         user = get_object_or_404(
             self.model.objects.prefetch_related(
                 Prefetch('realms', queryset=Realm.objects.filter(country=connection.tenant,
                                                                  organization=organization))),
             pk=serializer.validated_data.get('user'))
-
-        serializer.save(user=user, organization=organization)
 
         headers = self.get_success_headers(serializer.data)
         return Response(UserRealmListSerializer(instance=user).data,
