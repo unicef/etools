@@ -40,8 +40,6 @@ AUTHENTICATION_BACKENDS = (
 # Use custom locmemcache to add have .keys functionality
 CACHES = {
     'default': {
-        # 'BACKEND': 'etools.libraries.redis_cache.base.eToolsCache',
-        # 'LOCATION': get_from_secrets_or_env('REDIS_URL', 'redis://localhost:6379/0'),
         'BACKEND': 'etools.libraries.locmemcache.base.eToolsLocMemCache',
     }
 }
