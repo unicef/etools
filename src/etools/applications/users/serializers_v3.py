@@ -10,7 +10,7 @@ from rest_framework.exceptions import PermissionDenied
 
 from etools.applications.audit.models import Auditor
 from etools.applications.organizations.models import Organization
-from etools.applications.users.mixins import AMPGroupsAllowedMixin
+from etools.applications.users.mixins import GroupEditPermissionMixin
 from etools.applications.users.models import Country, Realm, UserProfile
 from etools.applications.users.serializers import GroupSerializer, SimpleCountrySerializer, SimpleOrganizationSerializer
 from etools.applications.users.validators import EmailValidator, ExternalUserValidator
@@ -135,7 +135,7 @@ class UserRealmListSerializer(serializers.ModelSerializer):
         )
 
 
-class UserRealmCreateSerializer(AMPGroupsAllowedMixin, serializers.ModelSerializer):
+class UserRealmCreateSerializer(GroupEditPermissionMixin, serializers.ModelSerializer):
     user = serializers.IntegerField(required=True, write_only=True)
     organization = serializers.IntegerField(required=False, write_only=True)
     groups = serializers.ListField(child=serializers.IntegerField(), required=True, write_only=True)

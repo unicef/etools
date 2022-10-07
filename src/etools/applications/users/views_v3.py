@@ -22,9 +22,10 @@ from etools.applications.organizations.models import Organization
 from etools.applications.partners.permissions import user_group_permission
 from etools.applications.partners.views.v3 import PMPBaseViewMixin
 from etools.applications.users import views as v1, views_v2 as v2
+from etools.applications.users.mixins import GroupEditPermissionMixin
 from etools.applications.users.models import Country, IPAdmin, IPAuthorizedOfficer, IPEditor, IPViewer, Realm
 from etools.applications.users.permissions import IsPartnershipManager
-from etools.applications.users.serializers import SimpleOrganizationSerializer
+from etools.applications.users.serializers import GroupSerializer, SimpleOrganizationSerializer
 from etools.applications.users.serializers_v3 import (
     CountryDetailSerializer,
     ExternalUserSerializer,
@@ -211,6 +212,20 @@ class PartnerOrganizationListView(ListAPIView):
         return self.model.objects\
             .filter(partner__isnull=False, realms__country=country)\
             .distinct()
+
+
+class GroupEditViewSet(GroupEditPermissionMixin, APIView):
+    """
+    Returns a list of allowed User Groups and the user add permission for Access Management Portal (AMP)
+    """
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        response_data = {
+            "groups": GroupSerializer(self.get_user_allowed_groups(), many=True, exclude_fields=['permissions']).data,
+            "can_add_user": self.can_add_user()
+        }
+        return Response(response_data)
 
 
 class UserRealmView(mixins.ListModelMixin, mixins.CreateModelMixin, viewsets.GenericViewSet):
