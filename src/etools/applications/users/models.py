@@ -186,10 +186,9 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
 
     @cached_property
     def is_partnership_manager(self):
-        return Realm.objects.filter(
-            user=self,
+        return self.realms.filter(
             country=connection.tenant,
-            organization=Organization.objects.get(vendor_number='UNICEF'),
+            organization=self.profile.organization,
             group=PartnershipManager.as_group(),
             is_active=True).exists()
 
