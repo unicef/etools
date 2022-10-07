@@ -207,7 +207,7 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
             country=connection.tenant, organization=self.profile.organization, is_active=True)
         return Group.objects.filter(realms__in=current_country_realms).distinct()
 
-    def get_all_groups_for_organization(self, organization):
+    def get_groups_for_organization(self, organization):
         current_country_realms = self.realms.filter(
             country=connection.tenant, organization=organization)
         return Group.objects.filter(realms__in=current_country_realms).distinct()

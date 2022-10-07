@@ -159,24 +159,24 @@ class UserRealmCreateSerializer(AMPGroupsAllowedMixin, serializers.ModelSerializ
             realm_qs.update(is_active=False)
             return
 
-        existing_group_ids = set(user.get_all_groups_for_organization(organization).values_list('id', flat=True))
+        # the group ids the authenticated user is allowed to update
+        allowed_group_ids = set(self.get_user_allowed_groups(self.context['request'].user).values_list('id', flat=True))
+        # the existing group ids of the user that are allowed to be updated
+        existing_group_ids = set(user.get_groups_for_organization(organization).filter(id__in=allowed_group_ids).values_list('id', flat=True))
 
         _to_add = requested_group_ids.difference(existing_group_ids)
         _to_deactivate = existing_group_ids.difference(requested_group_ids)
         _to_reactivate = requested_group_ids.difference(_to_add)
 
-        allowed_groups = set(self.get_user_allowed_groups(self.context['request'].user).values_list('id', flat=True))
-
-        if not _to_add.issubset(allowed_groups) or not _to_deactivate.issubset(allowed_groups) \
-                or not _to_reactivate.issubset(allowed_groups):
+        if not _to_add.issubset(allowed_group_ids) or not _to_deactivate.issubset(allowed_group_ids) \
+                or not _to_reactivate.issubset(allowed_group_ids):
             raise PermissionDenied(
                 _('Permission denied. Only %(groups)s roles can be assigned.'
-                  % {'groups': ', '.join(Group.objects.filter(id__in=allowed_groups).values_list('name', flat=True))})
+                  % {'groups': ', '.join(Group.objects.filter(id__in=allowed_group_ids).values_list('name', flat=True))})
             )
         Realm.objects.bulk_create([
             Realm(user=user, country=connection.tenant, organization=organization, group_id=group_id)
             for group_id in _to_add])
-
         realm_qs.filter(group__id__in=_to_deactivate).update(is_active=False)
         realm_qs.filter(group__id__in=_to_reactivate).update(is_active=True)
         return user
@@ -209,7 +209,6 @@ class ProfileRetrieveUpdateSerializer(serializers.ModelSerializer):
     _partner_staff_member = serializers.SerializerMethodField()
 
     preferences = UserPreferencesSerializer(source="user.preferences", allow_null=False)
-
 
     class Meta:
         model = UserProfile
