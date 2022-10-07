@@ -155,7 +155,8 @@ class UserRealmCreateSerializer(GroupEditPermissionMixin, serializers.ModelSeria
         organization = validated_data.get('organization')
 
         requested_group_ids = set(validated_data.get('groups'))
-        realm_qs = user.realms.filter(country=connection.tenant, organization=organization)
+        context_qs_params = {'country': connection.tenant, 'organization': organization}
+        realm_qs = user.realms.filter(**context_qs_params)
 
         if requested_group_ids == []:
             realm_qs.update(is_active=False)
@@ -181,6 +182,11 @@ class UserRealmCreateSerializer(GroupEditPermissionMixin, serializers.ModelSeria
             for group_id in _to_add])
         realm_qs.filter(group__id__in=_to_deactivate).update(is_active=False)
         realm_qs.filter(group__id__in=_to_reactivate).update(is_active=True)
+        # clean up profile organization if no realm is active for context country and organization
+        if not user.realms.filter(is_active=True, **context_qs_params).count():
+            user.profile.organization = None
+            user.profile.save(update_fields=['organization'])
+
         return user
 
 
