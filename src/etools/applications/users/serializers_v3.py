@@ -129,6 +129,8 @@ class UserRealmListSerializer(serializers.ModelSerializer):
         model = get_user_model()
         fields = (
             'id',
+            'is_active',
+            'last_login',
             'name',
             'email',
             'realms'

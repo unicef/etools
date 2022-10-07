@@ -269,7 +269,7 @@ class UserRealmView(mixins.ListModelMixin, mixins.CreateModelMixin, viewsets.Gen
             organization=organization,
         )
         return self.model.objects \
-            .filter(is_active=True, realms__in=context_realms_qs) \
+            .filter(realms__in=context_realms_qs) \
             .prefetch_related(Prefetch('realms', queryset=context_realms_qs))\
             .distinct()
 
