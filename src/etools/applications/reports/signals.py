@@ -50,7 +50,8 @@ def calc_totals_on_delete(instance, **kwargs):
         pass
     else:
         try:
-            result.result_link.intervention.planned_budget.calc_totals()
+            # update budgets
+            result.result_link.intervention.planned_budget.save()
         except InterventionBudget.DoesNotExist:
             pass
 
