@@ -40,10 +40,12 @@ from etools.applications.partners.tests.factories import (
     WorkspaceFileTypeFactory,
 )
 from etools.applications.publics.tests.factories import PublicsCurrencyFactory
+from etools.applications.reports.models import ResultType
 from etools.applications.reports.tests.factories import (
     AppliedIndicatorFactory,
     CountryProgrammeFactory,
     InterventionActivityFactory,
+    InterventionActivityItemFactory,
     LowerResultFactory,
     ResultFactory,
 )
@@ -1690,6 +1692,18 @@ class TestInterventionBudget(BaseTenantTestCase):
             "{:0.2f}".format(10 / (10 + 20 + 6) * 100),
         )
         self.assertEqual(budget.total_cash_local(), 10 + 20)
+
+    def test_calc_totals_db_queries(self):
+        intervention = InterventionFactory()
+        result_link = InterventionResultLinkFactory(
+            intervention=intervention,
+            cp_output__result_type__name=ResultType.OUTPUT,
+        )
+        pd_output = LowerResultFactory(result_link=result_link)
+        activity = InterventionActivityFactory(result=pd_output)
+        InterventionActivityItemFactory(activity=activity)
+        with self.assertNumQueries(6):
+            intervention.planned_budget.calc_totals(save=False)
 
 
 class TestInterventionManagementBudget(BaseTenantTestCase):
