@@ -401,7 +401,8 @@ class LowerResult(TimeStampedModel):
                 self.__class__.objects.filter(result_link=self.result_link).count() + 1,
             )
         super().save(*args, **kwargs)
-        self.result_link.intervention.planned_budget.calc_totals()
+        # update budgets
+        self.result_link.intervention.planned_budget.save()
 
     @classmethod
     def renumber_results_for_result_link(cls, result_link):
@@ -1085,7 +1086,8 @@ class InterventionActivity(TimeStampedModel):
                 self.__class__.objects.filter(result=self.result).count() + 1,
             )
         super().save(*args, **kwargs)
-        self.result.result_link.intervention.planned_budget.calc_totals()
+        # update budgets
+        self.result.result_link.intervention.planned_budget.save()
 
     @classmethod
     def renumber_activities_for_result(cls, result: LowerResult, start_id=None):

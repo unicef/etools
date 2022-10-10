@@ -3,6 +3,7 @@ from django.db import transaction
 from rest_framework import serializers
 from unicef_restlib.serializers import UserContextSerializerMixin
 
+from etools.applications.locations.models import Location
 from etools.applications.partners.models import (
     Agreement,
     Intervention,
@@ -19,6 +20,8 @@ from etools.applications.reports.models import (
     InterventionActivity,
     InterventionActivityItem,
     LowerResult,
+    Office,
+    Section,
 )
 
 
@@ -193,6 +196,9 @@ class AppliedIndicatorSerializer(serializers.ModelSerializer):
             blueprint = indicator_blueprint_serializer.instance
 
         validated_data['indicator'] = blueprint
+        # save section & locations manually, because PrimaryKeyRelatedField casts value to instance and then fails
+        validated_data['section'] = self.root.instance.sections.first()
+        validated_data['locations'] = self.root.instance.flat_locations.all()
 
         return super().create(validated_data)
 
@@ -250,7 +256,7 @@ class InterventionResultLinkSerializer(serializers.ModelSerializer):
         serializer.save(result_link=result_link)
 
 
-class InterventionSerializer(serializers.ModelSerializer):
+class InterventionSerializer(UserContextSerializerMixin, serializers.ModelSerializer):
     planned_budget = InterventionBudgetSerializer()
     management_budgets = InterventionManagementBudgetSerializer()
     result_links = InterventionResultLinkSerializer(many=True)
@@ -266,7 +272,6 @@ class InterventionSerializer(serializers.ModelSerializer):
             'risks',
             'supply_items',
             'management_budgets',
-            # 'creator',  # todo: how to consume creator?
             'title',
             'start', 'end',
             'context', 'implementation_strategy',
@@ -275,10 +280,7 @@ class InterventionSerializer(serializers.ModelSerializer):
             'equity_rating', 'equity_narrative',
             'sustainability_rating', 'sustainability_narrative',
             'ip_program_contribution', 'reference_number_year',
-            # 'partner_name',  # todo: search partner by name? how to choose agreement?
-            # 'partner_focal_points', # todo: search partner users by email? what if they're from different partners?
-            'locations',
-            # 'document' # todo: how to consume document file attached?
+            'locations', 'sections', 'offices',
         ]
 
     def create_risks(self, intervention, data):
@@ -325,21 +327,28 @@ class InterventionSerializer(serializers.ModelSerializer):
             validated_data['other_info'] += f'Locations: {locations}'
         else:
             validated_data['other_info'] = f'Locations: {locations}'
+        validated_data['other_info'] += f'\n\nSection {validated_data["sections"][0]} was added to all indicators, ' \
+                                        f'please review and correct if needed.'
+        validated_data['other_info'] += '\n\nAll indicators were assigned all locations, please adjust as needed.'
 
-        intervention = super().create(validated_data)
+        self.instance = super().create(validated_data)
 
-        self.create_risks(intervention, risks)
-        self.create_supply_items(intervention, supply_items)
-        self.update_planned_budget(intervention, planned_budget)
-        self.update_management_budgets(intervention, management_budgets)
-        self.create_result_links_structure(intervention, result_links)
+        self.create_risks(self.instance, risks)
+        self.create_supply_items(self.instance, supply_items)
+        self.update_planned_budget(self.instance, planned_budget)
+        self.update_management_budgets(self.instance, management_budgets)
+        self.create_result_links_structure(self.instance, result_links)
+        self.instance.unicef_focal_points.add(self.get_user())
 
-        return intervention
+        return self.instance
 
 
-class ECNSyncSerializer(UserContextSerializerMixin, serializers.Serializer):
+class ECNSyncSerializer(serializers.Serializer):
     number = serializers.CharField()
     agreement = serializers.PrimaryKeyRelatedField(queryset=Agreement.objects.all())
+    sections = serializers.PrimaryKeyRelatedField(many=True, queryset=Section.objects.all())
+    locations = serializers.PrimaryKeyRelatedField(queryset=Location.objects.all(), many=True)
+    offices = serializers.PrimaryKeyRelatedField(queryset=Office.objects.all(), many=True)
 
     class Meta:
-        fields = ['agreement']
+        fields = ['number', 'agreement', 'section', 'locations', 'offices']
