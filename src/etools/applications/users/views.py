@@ -18,7 +18,6 @@ from rest_framework.views import APIView
 from unicef_restlib.permissions import IsSuperUser
 
 from etools.applications.organizations.models import Organization
-from etools.applications.users.mixins import AMPGroupsAllowedMixin
 from etools.applications.users.models import Country, UserProfile
 from etools.applications.users.permissions import IsServiceNowUser
 from etools.applications.users.serializers import (
@@ -257,16 +256,39 @@ class UsersDetailAPIView(RetrieveAPIView):
         )
 
 
-class GroupViewSet(AMPGroupsAllowedMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
+class GroupViewSet(mixins.RetrieveModelMixin,
+                   mixins.ListModelMixin,
+                   mixins.CreateModelMixin,
+                   viewsets.GenericViewSet):
     """
-    Returns a list of allowed User Groups for Access Management Portal (AMP)
+    Returns a list of all User Groups
     """
     queryset = Group.objects.order_by('name')  # Provide consistent ordering
     serializer_class = GroupSerializer
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAdminUser,)
 
-    def get_queryset(self):
-        return self.get_user_allowed_groups()
+    def create(self, request, *args, **kwargs):
+        """
+        Add a User Group
+        :return: JSON
+        """
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        serializer.instance = serializer.save()
+        data = serializer.data
+
+        try:
+            permissions = request.data['permissions']
+            for perm in permissions:
+                serializer.instance.permissions.add(perm)
+            serializer.save()
+        except Exception:
+            pass
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(data, status=status.HTTP_201_CREATED,
+                        headers=headers)
 
 
 class UserViewSet(mixins.RetrieveModelMixin,

@@ -1630,6 +1630,17 @@ class InterventionManager(models.Manager):
         )
         return qs
 
+    def budget_qs(self):
+        from etools.applications.reports.models import InterventionActivity
+
+        qs = super().get_queryset().only().prefetch_related(
+            'management_budgets',
+            'supply_items',
+            Prefetch('result_links__ll_results__activities',
+                     queryset=InterventionActivity.objects.filter(is_active=True)),
+        )
+        return qs
+
     def full_snapshot_qs(self):
         return self.detail_qs().prefetch_related(
             'reviews',
@@ -2997,16 +3008,17 @@ class InterventionBudget(TimeStampedModel):
         )
 
     def calc_totals(self, save=True):
-        # partner and unicef totals
+        intervention = Intervention.objects.budget_qs().get(id=self.intervention_id)
 
+        # partner and unicef totals
         def init_totals():
             self.partner_contribution_local = 0
             self.total_unicef_cash_local_wo_hq = 0
 
         init = False
-        for link in self.intervention.result_links.all():
-            for result in link.ll_results.filter():
-                for activity in result.activities.filter(is_active=True):
+        for link in intervention.result_links.all():
+            for result in link.ll_results.all():
+                for activity in result.activities.all():  # activities prefetched with is_active=True in budget_qs
                     if not init:
                         init_totals()
                         init = True
@@ -3016,15 +3028,15 @@ class InterventionBudget(TimeStampedModel):
         programme_effectiveness = 0
         if not init:
             init_totals()
-        programme_effectiveness += self.intervention.management_budgets.total
-        self.partner_contribution_local += self.intervention.management_budgets.partner_total
-        self.total_unicef_cash_local_wo_hq += self.intervention.management_budgets.unicef_total
+        programme_effectiveness += intervention.management_budgets.total
+        self.partner_contribution_local += intervention.management_budgets.partner_total
+        self.total_unicef_cash_local_wo_hq += intervention.management_budgets.unicef_total
         self.unicef_cash_local = self.total_unicef_cash_local_wo_hq + self.total_hq_cash_local
 
         # in kind totals
         self.in_kind_amount_local = 0
         self.partner_supply_local = 0
-        for item in self.intervention.supply_items.all():
+        for item in intervention.supply_items.all():
             if item.provided_by == InterventionSupplyItem.PROVIDED_BY_UNICEF:
                 self.in_kind_amount_local += item.total_price
             else:
@@ -3494,7 +3506,8 @@ class InterventionManagementBudget(TimeStampedModel):
         super().save(*args, **kwargs)
         # planned budget is not created yet, so just skip; totals will be updated during planned budget creation
         if not create:
-            self.intervention.planned_budget.calc_totals()
+            # update budgets
+            self.intervention.planned_budget.save()
 
     def update_cash(self):
         aggregated_items = self.items.values('kind').order_by('kind')
@@ -3582,11 +3595,13 @@ class InterventionSupplyItem(TimeStampedModel):
     def save(self, *args, **kwargs):
         self.total_price = self.unit_number * self.unit_price
         super().save()
-        self.intervention.planned_budget.calc_totals()
+        # update budgets
+        self.intervention.planned_budget.save()
 
     def delete(self, **kwargs):
         super().delete(**kwargs)
-        self.intervention.planned_budget.calc_totals()
+        # update budgets
+        self.intervention.planned_budget.save()
 
 
 class InterventionManagementBudgetItem(models.Model):

@@ -4,6 +4,7 @@ from django.utils.encoding import force_str
 from rest_framework import serializers
 
 from etools.applications.organizations.models import Organization
+from etools.applications.users.mixins import DynamicFieldsSerializerMixin
 from etools.applications.users.models import Country, Group, Realm, UserProfile
 from etools.applications.users.validators import EmailValidator
 
@@ -77,10 +78,30 @@ class SimpleProfileSerializer(serializers.ModelSerializer):
         )
 
 
-class GroupSerializer(serializers.ModelSerializer):
+class GroupSerializer(DynamicFieldsSerializerMixin, serializers.ModelSerializer):
+
+    id = serializers.CharField(read_only=True)
+    permissions = serializers.SerializerMethodField()
+
+    def get_permissions(self, group):
+        return [perm.id for perm in group.permissions.all()]
+
+    def create(self, validated_data):
+        try:
+            group = Group.objects.create(**validated_data)
+
+        except Exception as ex:
+            raise serializers.ValidationError({'group': force_str(ex)})
+
+        return group
+
     class Meta:
         model = Group
-        fields = ('id', 'name')
+        fields = (
+            'id',
+            'name',
+            'permissions'
+        )
 
 
 class ProfileRetrieveUpdateSerializer(serializers.ModelSerializer):

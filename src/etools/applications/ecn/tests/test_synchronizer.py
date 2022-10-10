@@ -1,10 +1,13 @@
 from decimal import Decimal
 from unittest.mock import patch
 
+from unicef_locations.tests.factories import LocationFactory
+
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.ecn.synchronizer import ECNSynchronizer
 from etools.applications.ecn.tests.utils import get_example_ecn
 from etools.applications.partners.tests.factories import AgreementFactory
+from etools.applications.reports.tests.factories import OfficeFactory, SectionFactory
 from etools.applications.users.tests.factories import UserFactory
 
 
@@ -14,7 +17,10 @@ class TestSynchronizer(BaseTenantTestCase):
         request_intervention_mock.return_value = get_example_ecn()
 
         agreement = AgreementFactory()
-        intervention = ECNSynchronizer(UserFactory()).synchronize(1, agreement)
+        sections = [SectionFactory()]
+        locations = [LocationFactory() for _li in range(5)]
+        offices = [OfficeFactory() for _oi in range(4)]
+        intervention = ECNSynchronizer(UserFactory()).synchronize(1, agreement, sections, locations, offices)
 
         self.assertEqual(intervention.risks.count(), 1)
         self.assertEqual(intervention.supply_items.count(), 2)
@@ -28,3 +34,5 @@ class TestSynchronizer(BaseTenantTestCase):
         self.assertEqual(activity.items.count(), 1)
         self.assertTrue(lower_result.applied_indicators.filter(indicator__title='test indicator 1').exists())
         self.assertEqual(intervention.planned_budget.partner_contribution_local, Decimal("16615.00"))
+        self.assertEqual(intervention.flat_locations.count(), 5)
+        self.assertEqual(intervention.offices.count(), 4)

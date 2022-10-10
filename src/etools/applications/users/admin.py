@@ -184,6 +184,8 @@ class ProfileAdmin(admin.ModelAdmin):
 
 
 class RealmInline(admin.StackedInline):
+    verbose_name_plural = "Realms in current country"
+
     model = Realm
     raw_id_fields = ('country', 'organization', 'group')
     extra = 0
