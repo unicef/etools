@@ -2,7 +2,6 @@ from django.conf import settings
 
 from rest_framework.permissions import BasePermission
 
-from etools.applications.organizations.models import Organization
 from etools.applications.users.models import PartnershipManager
 
 
@@ -19,7 +18,7 @@ class IsPartnershipManager(BasePermission):
     def has_permission(self, request, view):
         return request.user.realms\
             .filter(country=request.user.profile.country,
-                    organization=Organization.objects.get(vendor_number='UNICEF'),
+                    organization=request.user.profile.organization,
                     group=PartnershipManager.as_group(),
                     is_active=True)\
             .exists()
