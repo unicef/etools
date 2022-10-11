@@ -26,7 +26,6 @@ class BaseFirm(TimeStampedModel, models.Model):
     organization = models.OneToOneField(
         Organization,
         on_delete=models.CASCADE,
-        null=True
     )
     street_address = models.CharField(
         verbose_name=_('Address'),

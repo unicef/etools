@@ -198,7 +198,7 @@ class Migration(migrations.Migration):
                 ('modified', model_utils.fields.AutoLastModifiedField(
                     default=django.utils.timezone.now, editable=False, verbose_name='modified')),
                 ('types', django.contrib.postgres.fields.ArrayField(base_field=models.CharField(choices=[
-                    ('dates', 'Dates'), ('results', 'Results'), ('budget', 'Budget'), ('other', 'Other')], max_length=50, verbose_name='Types'), size=None)),
+                 ('dates', 'Dates'), ('results', 'Results'), ('budget', 'Budget'), ('other', 'Other')], max_length=50, verbose_name='Types'), size=None)),
                 ('other_description', models.CharField(blank=True, max_length=512, null=True, verbose_name='Description')),
                 ('signed_date', models.DateField(null=True, verbose_name='Signed Date')),
                 ('amendment_number', models.IntegerField(default=0, verbose_name='Number')),
