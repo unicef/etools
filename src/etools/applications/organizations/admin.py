@@ -9,5 +9,5 @@ class OrganizationAdmin(RestrictedEditAdmin):
     list_display = ('vendor_number', 'name', 'short_name', 'parent',
                     'organization_type', 'cso_type')
     list_filter = ('organization_type',)
-    search_fields = ('vendor_number', 'name', 'short_name')
+    search_fields = ('vendor_number', '^name', '=short_name')
     autocomplete_fields = ('parent',)
