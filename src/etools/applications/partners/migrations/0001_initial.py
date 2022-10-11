@@ -198,7 +198,7 @@ class Migration(migrations.Migration):
                 ('modified', model_utils.fields.AutoLastModifiedField(
                     default=django.utils.timezone.now, editable=False, verbose_name='modified')),
                 ('types', django.contrib.postgres.fields.ArrayField(base_field=models.CharField(choices=[
-                 ('dates', 'Dates'), ('results', 'Results'), ('budget', 'Budget'), ('other', 'Other')], max_length=50, verbose_name='Types'), size=None)),
+                    ('dates', 'Dates'), ('results', 'Results'), ('budget', 'Budget'), ('other', 'Other')], max_length=50, verbose_name='Types'), size=None)),
                 ('other_description', models.CharField(blank=True, max_length=512, null=True, verbose_name='Description')),
                 ('signed_date', models.DateField(null=True, verbose_name='Signed Date')),
                 ('amendment_number', models.IntegerField(default=0, verbose_name='Number')),
@@ -325,11 +325,11 @@ class Migration(migrations.Migration):
                 ('modified', model_utils.fields.AutoLastModifiedField(
                     default=django.utils.timezone.now, editable=False, verbose_name='modified')),
                 ('partner_type', models.CharField(choices=[('Bilateral / Multilateral', 'Bilateral / Multilateral'), ('Civil Society Organization',
-                                                                                                                      'Civil Society Organization'), ('Government', 'Government'), ('UN Agency', 'UN Agency')], max_length=50, verbose_name='Partner Type', null=True)),
+                                                                                                                      'Civil Society Organization'), ('Government', 'Government'), ('UN Agency', 'UN Agency')], max_length=50, verbose_name='Partner Type')),
                 ('cso_type', models.CharField(blank=True, choices=[('International', 'International'), ('National', 'National'), (
                     'Community Based Organization', 'Community Based Organization'), ('Academic Institution', 'Academic Institution')], max_length=50, null=True, verbose_name='CSO Type')),
                 ('name', models.CharField(help_text='Please make sure this matches the name you enter in VISION',
-                                          max_length=255, verbose_name='Name', null=True)),
+                                          max_length=255, verbose_name='Name')),
                 ('short_name', models.CharField(blank=True, max_length=50, verbose_name='Short Name')),
                 ('description', models.CharField(blank=True, max_length=256, verbose_name='Description')),
                 ('shared_with', django.contrib.postgres.fields.ArrayField(base_field=models.CharField(blank=True, choices=[('DPKO', 'DPKO'), ('ECA', 'ECA'), ('ECLAC', 'ECLAC'), ('ESCWA', 'ESCWA'), ('FAO', 'FAO'), ('ILO', 'ILO'), ('IOM', 'IOM'), ('OHCHR', 'OHCHR'), ('UN', 'UN'), ('UN Women', 'UN Women'), ('UNAIDS', 'UNAIDS'), ('UNDP', 'UNDP'), (
