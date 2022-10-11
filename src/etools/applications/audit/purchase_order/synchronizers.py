@@ -15,7 +15,7 @@ def get_auditor_by_vendor_code(vendor_code):
         auditor_firm = AuditorFirm.objects.get(organization__vendor_number=vendor_code)
         return auditor_firm.pk
     except AuditorFirm.DoesNotExist:
-        logging.error(f'Organization with vendor_number {vendor_code} does not exist.')
+        logging.info(f'Organization with vendor_number {vendor_code} does not exist.')
 
 
 class POSynchronizer(VisionDataTenantSynchronizer, MultiModelDataSynchronizer):
