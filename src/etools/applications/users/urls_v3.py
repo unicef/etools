@@ -11,14 +11,14 @@ from etools.applications.users.views_v3 import (
     GroupEditViewSet,
     MyProfileAPIView,
     PartnerOrganizationListView,
-    UserRealmView,
+    UserRealmViewSet,
     UsersDetailAPIView,
     UsersListAPIView,
 )
 
 root_api = routers.SimpleRouter()
 root_api.register(r'external', ExternalUserViewSet, basename='external')
-root_api.register(r'realms', UserRealmView, basename='realms')
+root_api.register(r'amp', UserRealmViewSet, basename='realms')
 
 app_name = 'users'
 urlpatterns = (
@@ -29,7 +29,7 @@ urlpatterns = (
     re_path(r'^country/(?P<country_pk>[0-9]+)/organizations/$',
             PartnerOrganizationListView.as_view(http_method_names=['get']),
             name="partner-organizations-list"),
-    re_path(r'^myeditpermissions/$', GroupEditViewSet.as_view(http_method_names=['get']),
+    re_path(r'^amp-permissions/$', GroupEditViewSet.as_view(http_method_names=['get']),
             name="group-edit-list"),
     re_path(r'^(?P<pk>[0-9]+)/$', UsersDetailAPIView.as_view(http_method_names=['get']), name="user-detail"),
     re_path(r'^AD/(?P<username>.*)$', ADUserAPIView.as_view(http_method_names=['get', ]), name="ad-user-api-view"),
