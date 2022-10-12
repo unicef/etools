@@ -49,6 +49,7 @@ from etools.applications.field_monitoring.permissions import IsEditAction, IsFie
 from etools.applications.field_monitoring.views import FMBaseViewSet, LinkedAttachmentsViewSet
 from etools.applications.locations.models import Location
 from etools.applications.reports.views.v2 import OutputListAPIView
+from etools.libraries.tenant_support.utils import TenantSuffixedString
 
 
 class MethodsViewSet(
@@ -110,7 +111,7 @@ class LocationSitesViewSet(FMBaseViewSet, viewsets.ModelViewSet):
 
     @method_decorator(cache_control(public=True))  # reset cache control header to allow etags work with cache_page
     @etag_cached('fm-sites')
-    @method_decorator(cache_page(60 * 60 * 24, key_prefix='fm-sites'))
+    @method_decorator(cache_page(60 * 60 * 24, key_prefix=TenantSuffixedString('fm-sites')))
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
 
