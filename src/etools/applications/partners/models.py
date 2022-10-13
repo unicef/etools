@@ -330,8 +330,7 @@ class PartnerOrganization(TimeStampedModel):
     organization = models.OneToOneField(
         Organization,
         on_delete=models.CASCADE,
-        related_name='partner',
-        null=True
+        related_name='partner'
     )
     description = models.CharField(
         verbose_name=_("Description"),
