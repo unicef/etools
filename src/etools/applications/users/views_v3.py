@@ -6,7 +6,6 @@ from django.db import connection, transaction
 from django.db.models import OuterRef, Prefetch, Q, Subquery
 from django.http import HttpResponseForbidden, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
-from django.utils.translation import gettext_lazy as _
 
 from rest_framework import mixins, status, viewsets
 from rest_framework.exceptions import ValidationError
@@ -32,8 +31,8 @@ from etools.applications.users.serializers_v3 import (
     MinimalUserDetailSerializer,
     MinimalUserSerializer,
     ProfileRetrieveUpdateSerializer,
-    UserRealmCreateSerializer,
-    UserRealmListSerializer,
+    UserRealmCreateUpdateSerializer,
+    UserRealmRetrieveSerializer,
 )
 from etools.applications.utils.pagination import AppendablePageNumberPagination
 
@@ -228,7 +227,7 @@ class GroupEditViewSet(GroupEditPermissionMixin, APIView):
         return Response(response_data)
 
 
-class UserRealmView(mixins.ListModelMixin, mixins.CreateModelMixin, viewsets.GenericViewSet):
+class UserRealmViewSet(viewsets.ModelViewSet):
 
     model = get_user_model()
     permission_classes = (
@@ -237,7 +236,7 @@ class UserRealmView(mixins.ListModelMixin, mixins.CreateModelMixin, viewsets.Gen
             IPEditor.name, IPAdmin.name,
             IPAuthorizedOfficer.name, UNICEFAuditFocalPoint.name) | IsPartnershipManager
     )
-    serializer_class = UserRealmListSerializer
+    serializer_class = UserRealmRetrieveSerializer
     pagination_class = DynamicPageNumberPagination
 
     def get_permissions(self):
@@ -250,9 +249,14 @@ class UserRealmView(mixins.ListModelMixin, mixins.CreateModelMixin, viewsets.Gen
         return super().get_permissions()
 
     def get_serializer_class(self):
-        if self.request.method in ["POST"]:
-            return UserRealmCreateSerializer
+        if self.request.method in ["POST", "PATCH"]:
+            return UserRealmCreateUpdateSerializer
         return super().get_serializer_class()
+
+    def get_serializer(self, *args, **kwargs):
+        if self.action == 'partial_update':
+            kwargs.update({'fields': ['organization', 'groups']})
+        return super().get_serializer(*args, **kwargs)
 
     def get_queryset(self):
         organization_id = self.request.query_params.get('organization_id')
@@ -277,28 +281,17 @@ class UserRealmView(mixins.ListModelMixin, mixins.CreateModelMixin, viewsets.Gen
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
-        organization_id = serializer.validated_data.get('organization')
-        if organization_id:
-            organization = get_object_or_404(Organization, pk=organization_id)
-            if not self.request.user.is_partnership_manager:
-                raise ValidationError(
-                    _('You do not have permissions to change groups for %(name)s organization.'
-                      % {'name': organization.name}))
-        else:
-            organization = self.request.user.profile.organization
-
-        serializer.save(organization=organization)
-
-        user = get_object_or_404(
-            self.model.objects.prefetch_related(
-                Prefetch('realms', queryset=Realm.objects.filter(country=connection.tenant,
-                                                                 organization=organization))),
-            pk=serializer.validated_data.get('user'))
+        self.perform_create(serializer)
 
         headers = self.get_success_headers(serializer.data)
-        return Response(UserRealmListSerializer(instance=user).data,
+        return Response(UserRealmRetrieveSerializer(instance=serializer.instance).data,
                         status=status.HTTP_201_CREATED, headers=headers)
+
+    def partial_update(self, request, *args, **kwargs):
+        kwargs['partial'] = True
+        super().partial_update(request, *args, **kwargs)
+
+        return Response(UserRealmRetrieveSerializer(instance=self.get_object()).data)
 
 
 class ExternalUserViewSet(

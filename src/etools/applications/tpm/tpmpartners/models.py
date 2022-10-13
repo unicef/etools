@@ -4,7 +4,7 @@ from django.utils.translation import gettext_lazy as _
 
 from unicef_attachments.models import Attachment
 
-from etools.applications.firms.models import BaseFirm, BaseStaffMember
+from etools.applications.firms.models import BaseFirm, BaseFirmManager, BaseStaffMember
 
 
 class TPMPartnerQueryset(models.QuerySet):
@@ -20,7 +20,7 @@ class TPMPartner(BaseFirm):
 
     attachments = GenericRelation(Attachment, verbose_name=_('attachments'), blank=True)
 
-    objects = models.Manager.from_queryset(TPMPartnerQueryset)()
+    objects = BaseFirmManager.from_queryset(TPMPartnerQueryset)()
 
     def activate(self, country):
         self.countries.add(country)
