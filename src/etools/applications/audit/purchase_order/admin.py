@@ -28,6 +28,7 @@ class AuditorFirmAdmin(admin.ModelAdmin):
     ]
     list_filter = ['blocked', 'hidden', 'country', 'unicef_users_allowed', ]
     search_fields = ['vendor_number', 'name', ]
+    autocomplete_fields = ['organization']
     readonly_fields = ['unicef_users_allowed', ]
     inlines = [
         AuditorStaffMemberInlineAdmin,

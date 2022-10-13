@@ -1,7 +1,7 @@
 [
   {
     "model": "organizations.organization",
-    "pk": null,
+    "pk": 1,
     "fields": {
       "parent": null,
       "name": "UNICEF",
@@ -14,11 +14,37 @@
   },
   {
     "model": "organizations.organization",
-    "pk": null,
+    "pk": 2,
     "fields": {
       "parent": null,
       "name": "EXTERNAL PSEA ASSESSORS",
       "vendor_number": "EXTERNAL PSEA ASSESSORS",
+      "organization_type": "",
+      "cso_type": null,
+      "short_name": "",
+      "other": null
+    }
+  },
+  {
+    "model": "organizations.organization",
+    "pk": 3,
+    "fields": {
+      "parent": null,
+      "name": "EXTERNAL CONSULTANT",
+      "vendor_number": "EXTERNAL CONSULTANT",
+      "organization_type": "",
+      "cso_type": null,
+      "short_name": "",
+      "other": null
+    }
+  },
+  {
+    "model": "organizations.organization",
+    "pk": 4,
+    "fields": {
+      "parent": null,
+      "name": "INVALID ORGANIZATION",
+      "vendor_number": "INVALID ORGANIZATION",
       "organization_type": "",
       "cso_type": null,
       "short_name": "",

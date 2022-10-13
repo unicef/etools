@@ -26,7 +26,6 @@ class BaseFirm(TimeStampedModel, models.Model):
     organization = models.OneToOneField(
         Organization,
         on_delete=models.CASCADE,
-        null=True
     )
     street_address = models.CharField(
         verbose_name=_('Address'),
@@ -69,6 +68,7 @@ class BaseFirm(TimeStampedModel, models.Model):
 
     class Meta:
         abstract = True
+        # https://docs.djangoproject.com/en/3.2/topics/db/managers/#using-managers-for-related-object-access
         base_manager_name = 'objects'
         ordering = ('organization__name',)
         verbose_name = _('Organization')
