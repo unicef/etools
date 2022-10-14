@@ -112,7 +112,6 @@ class MonitoringActivityLightSerializer(serializers.ModelSerializer):
 
     visit_lead = SeparatedReadWriteField(read_field=MinimalUserSerializer())
     team_members = SeparatedReadWriteField(read_field=MinimalUserSerializer(many=True))
-
     partners = SeparatedReadWriteField(read_field=MinimalPartnerOrganizationListSerializer(many=True))
     interventions = SeparatedReadWriteField(read_field=FMInterventionListSerializer(many=True))
     cp_outputs = SeparatedReadWriteField(read_field=MinimalOutputListSerializer(many=True))

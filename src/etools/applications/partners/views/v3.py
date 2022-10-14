@@ -24,8 +24,8 @@ from etools.applications.partners.models import (
     InterventionReview,
     InterventionRisk,
     InterventionSupplyItem,
+    OrganizationType,
     PartnerOrganization,
-    PartnerType,
 )
 from etools.applications.partners.permissions import UserIsPartnerStaffMemberPermission
 from etools.applications.partners.views.v2 import choices_to_json_ready
@@ -152,7 +152,7 @@ class PMPDropdownsListApiView(APIView):
             'cp_outputs': self.get_cp_outputs(request),
             'file_types': self.get_file_types(request),
             'cso_types': self.get_cso_types(),
-            'partner_types': choices_to_json_ready(PartnerType.CHOICES),
+            'partner_types': choices_to_json_ready(OrganizationType.CHOICES),
             'agency_choices': choices_to_json_ready(
                 PartnerOrganization.AGENCY_CHOICES,
             ),

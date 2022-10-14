@@ -147,7 +147,7 @@ class ActivityQuestionsViewSet(
         IsReadAction | (IsEditAction & activity_field_is_editable_permission('activity_question_set'))
     ]
     queryset = ActivityQuestion.objects.select_related(
-        'question', 'partner', 'cp_output', 'intervention'
+        'question', 'partner', 'partner__organization', 'cp_output', 'intervention'
     ).prefetch_related(
         'cp_output__result_type',
         'question__methods',
@@ -252,6 +252,7 @@ class ChecklistFindingsViewSet(
     queryset = Finding.objects.select_related(
         'activity_question__question',
         'activity_question__partner',
+        'activity_question__partner__organization',
         'activity_question__intervention',
         'activity_question__cp_output',
     ).prefetch_related(
@@ -294,6 +295,7 @@ class ActivityFindingsViewSet(
     queryset = ActivityQuestionOverallFinding.objects.select_related(
         'activity_question__question',
         'activity_question__partner',
+        'activity_question__partner__organization',
         'activity_question__intervention',
         'activity_question__cp_output',
     ).prefetch_related(

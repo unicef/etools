@@ -140,7 +140,8 @@ class AuditUsersViewSet(generics.ListAPIView):
         queryset = super().get_queryset()
 
         if self.request.query_params.get('verbosity', 'full') != 'minimal':
-            queryset = queryset.select_related('purchase_order_auditorstaffmember__auditor_firm')
+            queryset = queryset.select_related('purchase_order_auditorstaffmember__auditor_firm',
+                                               'purchase_order_auditorstaffmember__auditor_firm__organization')
 
         return queryset
 
@@ -164,7 +165,7 @@ class AuditorFirmViewSet(
     filter_fields = ('country', 'unicef_users_allowed')
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        queryset = super().get_queryset().select_related('organization')
 
         user_groups = self.request.user.groups.all()
 
@@ -287,15 +288,15 @@ class EngagementViewSet(
         UniqueIDOrderingFilter, OrderingFilter,
     )
     search_fields = (
-        'partner__name',
-        'partner__vendor_number',
-        'partner__short_name',
-        'agreement__auditor_firm__name',
+        'partner__organization__name',
+        'partner__organization__vendor_number',
+        'partner__organization__short_name',
+        'agreement__auditor_firm__organization__name',
         'offices__name',
         '=id',
     )
-    ordering_fields = ('agreement__order_number', 'agreement__auditor_firm__name',
-                       'partner__name', 'engagement_type', 'status')
+    ordering_fields = ('agreement__order_number', 'agreement__auditor_firm__organization__name',
+                       'partner__organization__name', 'engagement_type', 'status')
     filterset_class = EngagementFilter
     export_filename = 'engagements'
 
@@ -345,7 +346,8 @@ class EngagementViewSet(
             queryset = queryset.none()
 
         queryset = queryset.prefetch_related(
-            'partner', Prefetch('agreement', PurchaseOrder.objects.prefetch_related('auditor_firm'))
+            'partner', Prefetch('agreement', PurchaseOrder.objects.prefetch_related(
+                'auditor_firm', 'auditor_firm__organization'))
         )
 
         if self.action in ['list', 'export_list_csv']:

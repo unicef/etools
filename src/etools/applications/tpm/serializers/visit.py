@@ -15,7 +15,8 @@ from unicef_restlib.serializers import (
 
 from etools.applications.action_points.serializers import ActionPointBaseSerializer, HistorySerializer
 from etools.applications.activities.serializers import ActivitySerializer
-from etools.applications.partners.models import InterventionResultLink, PartnerType
+from etools.applications.organizations.models import OrganizationType
+from etools.applications.partners.models import InterventionResultLink
 from etools.applications.partners.serializers.interventions_v2 import (
     BaseInterventionListSerializer,
     InterventionCreateUpdateSerializer,
@@ -165,7 +166,7 @@ class TPMActivitySerializer(PermissionsBasedSerializerMixin, WritableNestedSeria
         partner = validated_data.get('partner', instance.partner if instance else None)
         intervention = validated_data.get('intervention', instance.intervention if instance else None)
 
-        if partner and partner.partner_type not in [PartnerType.GOVERNMENT, PartnerType.BILATERAL_MULTILATERAL] \
+        if partner and partner.partner_type not in [OrganizationType.GOVERNMENT, OrganizationType.BILATERAL_MULTILATERAL] \
                 and not intervention:
             raise ValidationError({'intervention': _('This field is required.')})
 
