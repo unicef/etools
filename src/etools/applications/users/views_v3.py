@@ -24,15 +24,16 @@ from etools.applications.users import views as v1, views_v2 as v2
 from etools.applications.users.mixins import GroupEditPermissionMixin
 from etools.applications.users.models import Country, IPAdmin, IPAuthorizedOfficer, IPEditor, IPViewer, Realm
 from etools.applications.users.permissions import IsPartnershipManager
-from etools.applications.users.serializers import GroupSerializer, SimpleOrganizationSerializer
+from etools.applications.users.serializers import SimpleGroupSerializer, SimpleOrganizationSerializer
 from etools.applications.users.serializers_v3 import (
     CountryDetailSerializer,
     ExternalUserSerializer,
     MinimalUserDetailSerializer,
     MinimalUserSerializer,
     ProfileRetrieveUpdateSerializer,
-    UserRealmCreateUpdateSerializer,
+    UserRealmCreateSerializer,
     UserRealmRetrieveSerializer,
+    UserRealmUpdateSerializer,
 )
 from etools.applications.utils.pagination import AppendablePageNumberPagination
 
@@ -213,7 +214,7 @@ class PartnerOrganizationListView(ListAPIView):
             .distinct()
 
 
-class GroupEditViewSet(GroupEditPermissionMixin, APIView):
+class GroupPermissionsViewSet(GroupEditPermissionMixin, APIView):
     """
     Returns a list of allowed User Groups and the user add permission for Access Management Portal (AMP)
     """
@@ -221,7 +222,7 @@ class GroupEditViewSet(GroupEditPermissionMixin, APIView):
 
     def get(self, request):
         response_data = {
-            "groups": GroupSerializer(self.get_user_allowed_groups(), many=True, exclude_fields=['permissions']).data,
+            "groups": SimpleGroupSerializer(self.get_user_allowed_groups(), many=True).data,
             "can_add_user": self.can_add_user()
         }
         return Response(response_data)
@@ -246,17 +247,18 @@ class UserRealmViewSet(viewsets.ModelViewSet):
                 user_group_permission(
                     IPViewer.name, IPEditor.name, IPAdmin.name,
                     IPAuthorizedOfficer.name, UNICEFAuditFocalPoint.name) | IsPartnershipManager)
+        if self.action == 'create':
+            self.permission_classes = (
+                IsAuthenticated,
+                user_group_permission(IPAdmin.name, IPAuthorizedOfficer.name))
         return super().get_permissions()
 
     def get_serializer_class(self):
-        if self.request.method in ["POST", "PATCH"]:
-            return UserRealmCreateUpdateSerializer
+        if self.request.method == "POST":
+            return UserRealmCreateSerializer
+        if self.request.method == "PATCH":
+            return UserRealmUpdateSerializer
         return super().get_serializer_class()
-
-    def get_serializer(self, *args, **kwargs):
-        if self.action == 'partial_update':
-            kwargs.update({'fields': ['organization', 'groups']})
-        return super().get_serializer(*args, **kwargs)
 
     def get_queryset(self):
         organization_id = self.request.query_params.get('organization_id')
@@ -288,10 +290,18 @@ class UserRealmViewSet(viewsets.ModelViewSet):
                         status=status.HTTP_201_CREATED, headers=headers)
 
     def partial_update(self, request, *args, **kwargs):
-        kwargs['partial'] = True
-        super().partial_update(request, *args, **kwargs)
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+        filter_kwargs = {self.lookup_field: self.kwargs[lookup_url_kwarg]}
+        instance = get_object_or_404(self.model, **filter_kwargs)
 
-        return Response(UserRealmRetrieveSerializer(instance=self.get_object()).data)
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        if getattr(instance, '_prefetched_objects_cache', None):
+            instance._prefetched_objects_cache = {}
+
+        return Response(UserRealmRetrieveSerializer(instance=serializer.instance).data)
 
 
 class ExternalUserViewSet(
