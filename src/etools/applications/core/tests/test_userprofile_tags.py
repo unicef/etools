@@ -22,7 +22,7 @@ class TestShowCountrySelect(BaseTenantTestCase):
         self.assertEqual(show_country_select({}, None), "")
 
     def test_country_single(self):
-        res = show_country_select({}, self.profile)
+        res = show_country_select({}, self.profile.user)
         self.assertEqual(
             res,
             '<select id="country_selection">'
@@ -34,7 +34,7 @@ class TestShowCountrySelect(BaseTenantTestCase):
 
     def test_country_opts(self):
         mock_opts = Mock(app_label="reports")
-        res = show_country_select({"opts": mock_opts}, self.profile)
+        res = show_country_select({"opts": mock_opts}, self.profile.user)
         self.assertEqual(
             res,
             '<select id="country_selection">'

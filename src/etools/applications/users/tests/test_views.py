@@ -1,27 +1,17 @@
 import json
+from operator import itemgetter
 from unittest import skip
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Permission
 from django.urls import reverse
 
 from rest_framework import status
 
-from etools.applications.action_points.models import PME, UNICEFUser
-from etools.applications.audit.models import Auditor, UNICEFAuditFocalPoint
 from etools.applications.core.tests.cases import BaseTenantTestCase
-from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, UNICEF_USER
 from etools.applications.publics.tests.factories import PublicsBusinessAreaFactory
-from etools.applications.tpm.models import ThirdPartyMonitor
-from etools.applications.users.mixins import AMPGroupsAllowedMixin
-from etools.applications.users.models import (
-    IPAdmin,
-    IPAuthorizedOfficer,
-    IPEditor,
-    IPViewer,
-    PartnershipManager,
-    UserProfile,
-)
+from etools.applications.users.models import Group, UserProfile
 from etools.applications.users.tests.factories import CountryFactory, GroupFactory, UserFactory
 
 
@@ -262,41 +252,62 @@ class TestUsersDetailAPIView(BaseTenantTestCase):
 class TestGroupViewSet(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.organization = OrganizationFactory()
         cls.unicef_staff = UserFactory(is_staff=True)
 
     def setUp(self):
         super().setUp()
-        self.url = reverse("groups-list")
+        self.url = "/api/groups/"
 
-    def test_get_allowed_amp_groups(self):
-        GroupFactory(name=Auditor.name)
+    def test_get(self):
+        group = Group.objects.order_by('id').first()
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        groups = sorted(response.data, key=itemgetter('id'))
+        self.assertEqual(groups[0]['id'], group.pk)
 
-        for user_group in [IPViewer, IPEditor, IPAuthorizedOfficer, IPAdmin,
-                           PartnershipManager, UNICEFAuditFocalPoint]:
-            response = self.forced_auth_req(
-                "get",
-                self.url,
-                user=UserFactory(
-                    realms__data=[user_group.name], profile__organization=self.organization
-                )
-            )
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
-            expected_groups = sorted(AMPGroupsAllowedMixin.GROUPS_ALLOWED_MAP.get(user_group.name, []))
-            actual_groups = sorted([group['name'] for group in response.data])
-            self.assertEqual(expected_groups, actual_groups)
+    def test_api_groups_list(self):
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-    def test_get_no_groups_allowed_empty(self):
-        for user_group in [UNICEFUser, Auditor, PME, ThirdPartyMonitor]:
-            response = self.forced_auth_req(
-                "get",
-                self.url,
-                user=UserFactory(
-                    realms__data=[user_group.name], profile__organization=self.organization
-                )
-            )
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
-            self.assertEqual(response.data, [])
+    def test_post(self):
+        """Ensure group object is created"""
+        name = "New Group"
+        response = self.forced_auth_req(
+            "post",
+            self.url,
+            user=self.unicef_staff,
+            data={"name": name}
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(Group.objects.filter(name=name).exists())
+
+    def test_post_permission(self):
+        """Ensure group object is created and associated with
+        permissions provided
+        """
+        name = "New Group"
+        permission = Permission.objects.first()
+        response = self.forced_auth_req(
+            "post",
+            self.url,
+            user=self.unicef_staff,
+            data={
+                "name": name,
+                "permissions": [permission.pk]
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(Group.objects.filter(name=name).exists())
+        group = Group.objects.get(name=name)
+        self.assertIn(permission, group.permissions.all())
 
 
 class TestUserViewSet(BaseTenantTestCase):
