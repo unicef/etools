@@ -22,7 +22,7 @@ class SyncViewTestCase(BaseTenantTestCase):
         agreement = AgreementFactory()
         section = SectionFactory()
         office = OfficeFactory()
-        user = UserFactory(groups__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP])
+        user = UserFactory(realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP])
         response = self.forced_auth_req(
             'post',
             reverse('ecn_v1:intervention-import-ecn'),

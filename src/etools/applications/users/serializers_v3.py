@@ -6,11 +6,11 @@ from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
-from rest_framework.exceptions import PermissionDenied, ValidationError
+from rest_framework.exceptions import PermissionDenied
 
 from etools.applications.audit.models import Auditor
 from etools.applications.organizations.models import Organization
-from etools.applications.users.mixins import DynamicFieldsSerializerMixin, GroupEditPermissionMixin
+from etools.applications.users.mixins import GroupEditPermissionMixin
 from etools.applications.users.models import Country, Realm, UserProfile
 from etools.applications.users.serializers import GroupSerializer, SimpleCountrySerializer, SimpleOrganizationSerializer
 from etools.applications.users.validators import EmailValidator, ExternalUserValidator
@@ -137,47 +137,68 @@ class UserRealmRetrieveSerializer(serializers.ModelSerializer):
         )
 
 
-class UserRealmCreateUpdateSerializer(
-    DynamicFieldsSerializerMixin,
-    GroupEditPermissionMixin,
-    serializers.ModelSerializer
-):
-    job_title = serializers.CharField(required=False, write_only=True)
+class UserRealmBaseSerializer(GroupEditPermissionMixin, serializers.ModelSerializer):
     organization = serializers.IntegerField(required=False, allow_null=True, write_only=True)
     groups = serializers.ListField(child=serializers.IntegerField(), required=True, write_only=True)
 
     class Meta:
         model = get_user_model()
-        fields = (
-            'first_name',
-            'last_name',
-            'email',
-            'job_title',
+        fields = [
             'organization',
             'groups'
-        )
-        extra_kwargs = {
-            'first_name': {'required': True},
-            'last_name': {'required': True},
-            'email': {'required': True}
-        }
+        ]
 
     def validate_organization(self, value):
         organization_id = value
         if organization_id:
             organization = get_object_or_404(Organization, pk=organization_id)
             if not self.context['request'].user.is_partnership_manager:
-                raise ValidationError(
+                raise PermissionDenied(
                     _('You do not have permissions to change groups for %(name)s organization.'
                       % {'name': organization.name}))
         return value
 
+    def validate_groups(self, value):
+        group_ids = set(value)
+        allowed_group_ids = set(self.get_user_allowed_groups(self.context['request'].user).values_list('id', flat=True))
+        if not group_ids or not group_ids.issubset(allowed_group_ids):
+            raise PermissionDenied(
+                _('Permission denied. Only %(groups)s roles can be assigned.'
+                  % {'groups': ', '.join(Group.objects.filter(id__in=allowed_group_ids).values_list('name', flat=True))})
+            )
+        return group_ids
+
+    def create_realms(self, instance, organization_id, group_ids):
+        Realm.objects.bulk_create([
+            Realm(user=instance, country=connection.tenant, organization_id=organization_id, group_id=group_id)
+            for group_id in group_ids])
+
+
+class UserRealmCreateSerializer(UserRealmBaseSerializer):
+    job_title = serializers.CharField(required=False, write_only=True)
+    organization = serializers.IntegerField(required=False, allow_null=True, write_only=True)
+    groups = serializers.ListField(child=serializers.IntegerField(), required=True, write_only=True)
+
+    class Meta(UserRealmBaseSerializer.Meta):
+        model = get_user_model()
+        fields = UserRealmBaseSerializer.Meta.fields + [
+            'first_name',
+            'last_name',
+            'email',
+            'job_title',
+            'organization',
+            'groups'
+        ]
+        extra_kwargs = {
+            'first_name': {'required': True},
+            'last_name': {'required': True},
+            'email': {'required': True}
+        }
+
     def create(self, validated_data):
-        organization_id = validated_data.pop("organization", None)
-        if not organization_id:
-            organization_id = self.context['request'].user.profile.organization.id
-        group_ids = set(validated_data.pop("groups"))
-        job_title = validated_data.pop("job_title")
+        organization_id = self.context['request'].user.profile.organization.id
+        group_ids = validated_data.pop("groups")
+        job_title = validated_data.pop("job_title", None)
 
         validated_data.update({"username": validated_data["email"]})
         instance = super().create(validated_data)
@@ -192,21 +213,12 @@ class UserRealmCreateUpdateSerializer(
 
         return instance
 
-    def create_realms(self, instance, organization_id, group_ids):
-        allowed_group_ids = set(self.get_user_allowed_groups(self.context['request'].user).values_list('id', flat=True))
-        if not group_ids or not group_ids.issubset(allowed_group_ids):
-            raise PermissionDenied(
-                _('Permission denied. Only %(groups)s roles can be assigned.'
-                  % {'groups': ', '.join(Group.objects.filter(id__in=allowed_group_ids).values_list('name', flat=True))})
-            )
-        Realm.objects.bulk_create([
-            Realm(user=instance, country=connection.tenant, organization_id=organization_id, group_id=group_id)
-            for group_id in group_ids])
 
+class UserRealmUpdateSerializer(UserRealmBaseSerializer):
     def update(self, instance, validated_data):
-        organization = validated_data.get('organization', instance.profile.organization)
-        requested_group_ids = set(validated_data.get('groups'))
-        context_qs_params = {'country': connection.tenant, 'organization': organization}
+        organization_id = validated_data.get('organization', instance.profile.organization.id)
+        requested_group_ids = validated_data.get('groups')
+        context_qs_params = {'country': connection.tenant, 'organization_id': organization_id}
         realm_qs = instance.realms.filter(**context_qs_params)
 
         if requested_group_ids == []:
@@ -216,7 +228,8 @@ class UserRealmCreateUpdateSerializer(
         # the group ids the authenticated user is allowed to update
         allowed_group_ids = set(self.get_user_allowed_groups(self.context['request'].user).values_list('id', flat=True))
         # the existing group ids of the user that are allowed to be updated
-        existing_group_ids = set(instance.get_groups_for_organization(organization).filter(id__in=allowed_group_ids).values_list('id', flat=True))
+        existing_group_ids = set(instance.get_groups_for_organization_id(organization_id).filter(id__in=allowed_group_ids).values_list('id', flat=True))
+
         _to_add = requested_group_ids.difference(existing_group_ids)
         _to_deactivate = existing_group_ids.difference(requested_group_ids)
         _to_reactivate = requested_group_ids.difference(_to_add)
@@ -229,11 +242,10 @@ class UserRealmCreateUpdateSerializer(
                 _('Permission denied. Only %(groups)s roles can be assigned.'
                   % {'groups': ', '.join(Group.objects.filter(id__in=allowed_group_ids).values_list('name', flat=True))})
             )
-        Realm.objects.bulk_create([
-            Realm(user=instance, country=connection.tenant, organization=organization, group_id=group_id)
-            for group_id in _to_add])
+        self.create_realms(instance, organization_id, _to_add)
         realm_qs.filter(group__id__in=_to_deactivate).update(is_active=False)
         realm_qs.filter(group__id__in=_to_reactivate).update(is_active=True)
+
         # clean up profile organization if no realm is active for context country and organization
         if not instance.realms.filter(is_active=True, **context_qs_params).count():
             instance.profile.organization = None

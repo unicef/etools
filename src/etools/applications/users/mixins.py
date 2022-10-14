@@ -1,25 +1,6 @@
 from django.contrib.auth.models import Group
 
 
-class DynamicFieldsSerializerMixin:
-
-    def __init__(self, *args, **kwargs):
-        fields = kwargs.pop('fields', None)
-        exclude_fields = kwargs.pop('exclude_fields', None)
-        read_only_fields = kwargs.pop('read_only_fields', None)
-        super().__init__(*args, **kwargs)
-        if fields:
-            fields_to_delete = set(self.fields.keys()) - set(fields)
-            for field in fields_to_delete:
-                del self.fields[field]
-        if exclude_fields:
-            for field in exclude_fields:
-                del self.fields[field]
-        if read_only_fields:
-            for field in read_only_fields:
-                self.fields[field].read_only = True
-
-
 class GroupEditPermissionMixin:
 
     GROUPS_ALLOWED_MAP = {
