@@ -11,3 +11,4 @@ class OrganizationFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = Organization
+        django_get_or_create = ('vendor_number',)

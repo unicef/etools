@@ -15,9 +15,10 @@ from etools.applications.core.tests.mixins import URLAssertionMixin
 from etools.applications.organizations.models import OrganizationType
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.models import Agreement, AgreementAmendment, Intervention
+from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, UNICEF_USER
 from etools.applications.partners.tests.factories import AgreementFactory, InterventionFactory, PartnerFactory
 from etools.applications.reports.tests.factories import CountryProgrammeFactory
-from etools.applications.users.tests.factories import GroupFactory, UserFactory
+from etools.applications.users.tests.factories import UserFactory
 
 
 class URLsTestCase(URLAssertionMixin, SimpleTestCase):
@@ -40,9 +41,9 @@ class TestAgreementsAPI(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
-        cls.partnership_manager_user = UserFactory(is_staff=True)
-        cls.partnership_manager_user.groups.add(GroupFactory())
-
+        cls.partnership_manager_user = UserFactory(
+            is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]
+        )
         cls.partner1 = PartnerFactory(
             organization=OrganizationFactory(organization_type=OrganizationType.CIVIL_SOCIETY_ORGANIZATION))
         cls.country_programme = CountryProgrammeFactory()

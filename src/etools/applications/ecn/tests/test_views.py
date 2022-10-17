@@ -22,7 +22,7 @@ class SyncViewTestCase(BaseTenantTestCase):
         agreement = AgreementFactory()
         section = SectionFactory()
         office = OfficeFactory()
-        user = UserFactory(groups__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP])
+        user = UserFactory(realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP])
         response = self.forced_auth_req(
             'post',
             reverse('ecn_v1:intervention-import-ecn'),
@@ -57,7 +57,7 @@ class SyncViewTestCase(BaseTenantTestCase):
         response = self.forced_auth_req(
             'post',
             reverse('ecn_v1:intervention-import-ecn'),
-            user=UserFactory(groups__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
+            user=UserFactory(realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
             data={
                 'agreement': AgreementFactory().pk,
                 'number': 'test',
@@ -74,7 +74,7 @@ class SyncViewTestCase(BaseTenantTestCase):
         response = self.forced_auth_req(
             'post',
             reverse('ecn_v1:intervention-import-ecn'),
-            user=UserFactory(groups__data=[UNICEF_USER]),
+            user=UserFactory(realms__data=[UNICEF_USER]),
             data={
                 'agreement': agreement.pk,
                 'number': 'test',

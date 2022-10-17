@@ -1280,7 +1280,6 @@ class TestPartnerStaffMember(BaseTenantTestCase):
         staff = PartnerStaffFactory(
             partner=partner,
         )
-        staff.user.profile.countries_available.add(connection.tenant)
         self.assertTrue(staff.active)
 
         staff.active = False
@@ -1296,7 +1295,6 @@ class TestPartnerStaffMember(BaseTenantTestCase):
             partner=partner,
             active=False,
         )
-        staff.user.profile.countries_available.remove(connection.tenant)
         self.assertFalse(staff.active)
 
         staff.active = True

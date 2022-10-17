@@ -43,7 +43,7 @@ from etools.applications.partners.models import (
     OrganizationType,
     PartnerOrganization,
 )
-from etools.applications.partners.permissions import READ_ONLY_API_GROUP_NAME
+from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, READ_ONLY_API_GROUP_NAME, UNICEF_USER
 from etools.applications.partners.serializers.exports.partner_organization import PartnerOrganizationExportSerializer
 from etools.applications.partners.tests.factories import (
     AgreementAmendmentFactory,
@@ -216,8 +216,7 @@ class TestAPIPartnerOrganizationListView(BaseTenantTestCase):
 
     def test_group_permission(self):
         """Ensure a non-staff user in the correct group has access"""
-        user = UserFactory()
-        user.groups.add(self.readonly_group)
+        user = UserFactory(realms__data=[self.readonly_group.name])
         response = self.forced_auth_req('get', self.url, user=user)
         self.assertResponseFundamentals(response)
 
@@ -538,8 +537,9 @@ class TestAgreementCreateAPIView(BaseTenantTestCase):
         cls.partner = PartnerFactory(
             organization=OrganizationFactory(organization_type=OrganizationType.CIVIL_SOCIETY_ORGANIZATION))
 
-        cls.partnership_manager_user = UserFactory(is_staff=True)
-        cls.partnership_manager_user.groups.add(GroupFactory())
+        cls.partnership_manager_user = UserFactory(
+            is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]
+        )
         PartnerStaffFactory(partner=cls.partner, user=cls.partnership_manager_user)
         cls.file_type_agreement = AttachmentFileTypeFactory()
 
@@ -717,8 +717,9 @@ class TestAgreementAPIView(BaseTenantTestCase):
         cls.partner_staff_user = UserFactory(is_staff=True)
         cls.partner_staff = PartnerStaffFactory(partner=cls.partner, user=cls.partner_staff_user)
 
-        cls.partnership_manager_user = UserFactory(is_staff=True)
-        cls.partnership_manager_user.groups.add(GroupFactory())
+        cls.partnership_manager_user = UserFactory(
+            is_staff=True, realms__data=[PARTNERSHIP_MANAGER_GROUP]
+        )
         cls.partner_staff2 = PartnerStaffFactory(partner=cls.partner, user=cls.partnership_manager_user)
 
         cls.notify_path = "etools.applications.partners.utils.send_notification_with_template"
@@ -968,7 +969,7 @@ class TestAgreementAPIView(BaseTenantTestCase):
             partner_manager=self.partner_staff,
             start=datetime.date.today(),
             end=self.country_programme.to_date,
-            signed_by=None,
+            signed_by=self.unicef_staff,
         )
         # In order to auto-transition to signed, this agreement needs authorized officers
         agreement.authorized_officers.add(self.partner_staff)
@@ -978,7 +979,6 @@ class TestAgreementAPIView(BaseTenantTestCase):
         data = {
             "start": today - datetime.timedelta(days=5),
             "end": today + datetime.timedelta(days=5),
-            "signed_by": self.unicef_staff.id,
             "signed_by_unicef_date": datetime.date.today(),
         }
         mock_send = mock.Mock()
@@ -1090,8 +1090,9 @@ class TestPartnerStaffMemberAPIView(BaseTenantTestCase):
         cls.unicef_staff = UserFactory(is_staff=True)
         cls.partner = PartnerFactory(
             organization=OrganizationFactory(organization_type=OrganizationType.CIVIL_SOCIETY_ORGANIZATION))
-        cls.partner_staff_user = UserFactory(is_staff=True)
-        cls.partner_staff_user.groups.add(GroupFactory())
+        cls.partner_staff_user = UserFactory(
+            is_staff=True, realms__data=[PARTNERSHIP_MANAGER_GROUP]
+        )
         cls.partner_staff = PartnerStaffFactory(partner=cls.partner, user=cls.partner_staff_user)
         cls.url = reverse(
             "partners_api:partner-staff-members-list",
@@ -1116,7 +1117,9 @@ class TestInterventionViews(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
-        cls.partnership_manager_user = UserFactory(is_staff=True, groups__data=['Partnership Manager', 'UNICEF User'])
+        cls.partnership_manager_user = UserFactory(
+            is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]
+        )
         cls.agreement = AgreementFactory()
         cls.agreement2 = AgreementFactory(status="draft")
         cls.partnerstaff = PartnerStaffFactory(partner=cls.agreement.partner)
@@ -1805,8 +1808,9 @@ class TestInterventionReportingPeriodViews(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         # create a staff user in the Partnership Manager group
-        cls.user = UserFactory(is_staff=True)
-        cls.user.groups.add(GroupFactory())
+        cls.user = UserFactory(
+            is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]
+        )
         cls.intervention = InterventionFactory()
         cls.list_url = reverse('partners_api:intervention-reporting-periods-list', args=[cls.intervention.pk])
         cls.num_periods = 3

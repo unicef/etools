@@ -171,8 +171,8 @@ class TestPartnerStaffMemberForm(BaseTenantTestCase):
         self.assertFalse(form.is_valid())
 
     def test_save_user_assigned(self):
-        user = UserFactory(email="test@example.com")
-        user.profile.countries_available.clear()
+        user = UserFactory(email="test@example.com", realms__data=[])
+        # user.profile.countries_available.clear()
 
         form = forms.PartnerStaffMemberForm(self.data)
         self.assertTrue(form.is_valid())
