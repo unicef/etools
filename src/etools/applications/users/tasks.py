@@ -4,7 +4,8 @@ from django.db import IntegrityError, transaction
 
 from celery.utils.log import get_task_logger
 
-from etools.applications.users.models import Country, UserProfile
+from etools.applications.organizations.models import Organization
+from etools.applications.users.models import Country, Realm, UserProfile
 
 logger = get_task_logger(__name__)
 
@@ -42,6 +43,7 @@ class AzureUserMapper:
         self.countries = {}
         self.groups = {}
         self.groups['UNICEF User'] = Group.objects.get(name='UNICEF User')
+        self.unicef_organization = Organization.objects.get(name='UNICEF')
 
     def _get_country(self, business_area_code):
         if not self.countries.get('UAT', None):
@@ -67,8 +69,12 @@ class AzureUserMapper:
                 new_country = self._get_country(cleaned_value)
                 if not obj.country == new_country:
                     obj.country = self._get_country(cleaned_value)
-                    obj.countries_available.add(obj.country)
-                    obj.user.groups.set([self.groups['UNICEF User']])  # reset permission when changing country
+                    Realm.objects.get_or_create(
+                        user=obj.user,
+                        country=obj.country,
+                        organization=self.unicef_organization,
+                        group=self.groups['UNICEF User'])
+                    # TODO REALMS: discuss on reset permission when changing country
                     logger.info("Country Updated for {}".format(obj))
                     return True
 
@@ -112,7 +118,12 @@ class AzureUserMapper:
             if created:
                 status['created'] = int(created)
                 user.set_unusable_password()
-                user.groups.add(self.groups['UNICEF User'])
+                # TODO REALMS: TBD about UAT
+                Realm.objects.create(
+                    user=user,
+                    country=self._get_country('UAT'),
+                    organization=self.unicef_organization,
+                    group=self.groups['UNICEF User'])
                 logger.info('Group added to user {}'.format(user))
 
             profile, _ = UserProfile.objects.get_or_create(user=user)

@@ -3,7 +3,16 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from django.conf import settings
-from django.contrib.auth.models import AbstractBaseUser, Group, PermissionsMixin, UserManager
+from django.contrib.auth.models import (
+    _user_get_permissions,
+    _user_has_module_perms,
+    _user_has_perm,
+    AbstractBaseUser,
+    Group,
+    Permission,
+    UserManager,
+)
+from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -15,7 +24,10 @@ from django.utils.translation import gettext_lazy as _
 
 from django_tenants.models import TenantMixin
 from django_tenants.utils import get_public_schema_name, tenant_context
+from model_utils import FieldTracker
 from model_utils.models import TimeStampedModel
+
+from etools.applications.organizations.models import Organization
 
 if TYPE_CHECKING:
     from etools.applications.partners.models import PartnerStaffMember
@@ -25,6 +37,95 @@ logger = logging.getLogger(__name__)
 
 def preferences_default_dict():
     return {'language': settings.LANGUAGE_CODE}
+
+
+class PermissionsMixin(models.Model):
+    """
+    Add the fields and methods necessary to support the Group and Permission
+    models using the ModelBackend.
+    """
+    old_groups = models.ManyToManyField(
+        Group,
+        verbose_name=_('Old Groups'),
+        blank=True,
+        help_text=_(
+            'The groups this user belongs to. A user will get all permissions '
+            'granted to each of their groups.'
+        ),
+        related_name="user_set",
+        related_query_name="user",
+    )
+    user_permissions = models.ManyToManyField(
+        Permission,
+        verbose_name=_('user permissions'),
+        blank=True,
+        help_text=_('Specific permissions for this user.'),
+        related_name="user_set",
+        related_query_name="user",
+    )
+
+    class Meta:
+        abstract = True
+
+    def get_user_permissions(self, obj=None):
+        """
+        Return a list of permission strings that this user has directly.
+        Query all available auth backends. If an object is passed in,
+        return only permissions matching this object.
+        """
+        return _user_get_permissions(self, obj, 'user')
+
+    def get_group_permissions(self, obj=None):
+        """
+        Return a list of permission strings that this user has through their
+        groups. Query all available auth backends. If an object is passed in,
+        return only permissions matching this object.
+        """
+        return _user_get_permissions(self, obj, 'group')
+
+    def get_all_permissions(self, obj=None):
+        return _user_get_permissions(self, obj, 'all')
+
+    def has_perm(self, perm, obj=None):
+        """
+        Return True if the user has the specified permission. Query all
+        available auth backends, but return immediately if any backend returns
+        True. Thus, a user who has permission from a single auth backend is
+        assumed to have permission in general. If an object is provided, check
+        permissions for that object.
+        """
+        # Active superusers have all permissions.
+        if self.is_active and self.is_superuser:
+            return True
+
+        # Otherwise we need to check the backends.
+        return _user_has_perm(self, perm, obj)
+
+    def has_perms(self, perm_list, obj=None):
+        """
+        Return True if the user has each of the specified permissions. If
+        object is passed, check if the user has all required perms for it.
+        """
+        return all(self.has_perm(perm, obj) for perm in perm_list)
+
+    def has_module_perms(self, app_label):
+        """
+        Return True if the user has any permissions in the given app label.
+        Use similar logic as has_perm(), above.
+        """
+        # Active superusers have all permissions.
+        if self.is_active and self.is_superuser:
+            return True
+
+        return _user_has_module_perms(self, app_label)
+
+
+class UsersManager(UserManager):
+
+    def get_queryset(self):
+        return super().get_queryset() \
+            .select_related('profile', 'profile__country', 'profile__country_override',
+                            'profile__organization', 'profile__office')
 
 
 class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
@@ -45,7 +146,7 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
 
     preferences = models.JSONField(default=preferences_default_dict)
 
-    objects = UserManager()
+    objects = UsersManager()
 
     class Meta:
         db_table = "auth_user"
@@ -90,6 +191,10 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
     def partner(self):
         staff_member = self.get_partner_staff_member()
         return staff_member.partner if staff_member else None
+
+    @property
+    def groups(self):
+        return Group.objects.filter(realms__in=self.realms.filter(is_active=True)).distinct()
 
     def get_partner_staff_member(self) -> ['PartnerStaffMember']:
         # just wrapper to avoid try...catch in place
@@ -253,7 +358,9 @@ class Office(models.Model):
 
 class UserProfileManager(models.Manager):
     def get_queryset(self):
-        return super().get_queryset().select_related('country')
+        return super().get_queryset()\
+            .select_related('user', 'country', 'country_override', 'organization')\
+            .prefetch_related('old_countries_available')
 
 
 class UserProfile(models.Model):
@@ -282,8 +389,14 @@ class UserProfile(models.Model):
         verbose_name=_('Country Override'),
         on_delete=models.CASCADE,
     )
-    countries_available = models.ManyToManyField(Country, blank=True, related_name="accessible_by",
-                                                 verbose_name=_('Countries Available'))
+    organization = models.ForeignKey(
+        Organization, null=True, blank=True, verbose_name=_('Current Organization'),
+        on_delete=models.CASCADE
+    )
+    old_countries_available = models.ManyToManyField(
+        Country, blank=True, related_name="accessible_by",
+        verbose_name=_('Old Countries Available')
+    )
     office = models.ForeignKey(
         Office, null=True, blank=True, verbose_name=_('Office'),
         on_delete=models.CASCADE,
@@ -308,6 +421,10 @@ class UserProfile(models.Model):
     # TODO: figure this out when we need to automatically map to groups
     # vision_roles = ArrayField(models.CharField(max_length=20, blank=True, choices=VISION_ROLES),
     #                           blank=True, null=True)
+
+    @property
+    def countries_available(self):
+        return Country.objects.filter(realms__in=self.user.realms.filter(is_active=True)).distinct()
 
     def username(self):
         return self.user.username
@@ -372,7 +489,7 @@ class UserProfile(models.Model):
                 return False
 
         if new_country and new_country != sender.profile.country:
-            # TODO: add country to countries_available
+            # TODO REALMS: add country realm
             # sender.profile.countries_available.add(new_country)
             sender.profile.country = new_country
             sender.profile.save()
@@ -394,3 +511,49 @@ class UserProfile(models.Model):
 
 
 post_save.connect(UserProfile.create_user_profile, sender=settings.AUTH_USER_MODEL)
+
+
+class RealmManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().select_related('user', 'country', 'organization', 'group')
+
+
+class Realm(TimeStampedModel):
+    user = models.ForeignKey(
+        User, verbose_name=_('User'), on_delete=models.CASCADE, related_name='realms'
+    )
+    country = models.ForeignKey(
+        Country, verbose_name=_('Country'), on_delete=models.CASCADE, related_name='realms'
+    )
+    organization = models.ForeignKey(
+        Organization, verbose_name=_('Organization'), on_delete=models.CASCADE, related_name='realms'
+    )
+    group = models.ForeignKey(
+        Group, verbose_name=_('Group'), on_delete=models.CASCADE, related_name='realms'
+    )
+    is_active = models.BooleanField(_('Active'), default=True)
+
+    history = GenericRelation(
+        'unicef_snapshot.Activity', object_id_field='target_object_id',
+        content_type_field='target_content_type'
+    )
+    tracker = FieldTracker(
+        fields=['user', 'country', 'organization', 'group', 'is_active']
+    )
+
+    objects = RealmManager()
+
+    class Meta:
+        verbose_name = _("Realm")
+        verbose_name_plural = _("Realms")
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'country', 'organization', 'group'], name='unique_realm')
+        ]
+        indexes = [
+            models.Index(fields=['user', 'country', 'organization'])
+        ]
+
+    def __str__(self):
+        return f"{self.user.email} - {self.country.name} - {self.organization}: " \
+               f"{self.group.name if self.group else ''}"

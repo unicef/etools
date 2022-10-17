@@ -5,7 +5,8 @@ from django.db import connection
 from rest_framework import serializers
 
 from etools.applications.audit.models import Auditor
-from etools.applications.users.models import Country, UserProfile
+from etools.applications.organizations.models import Organization
+from etools.applications.users.models import Country, Realm, UserProfile
 from etools.applications.users.serializers import GroupSerializer, SimpleCountrySerializer
 from etools.applications.users.validators import EmailValidator, ExternalUserValidator
 
@@ -197,36 +198,52 @@ class ExternalUserSerializer(MinimalUserSerializer):
         )
         read_only_fields = ["username"]
 
-    def _get_user_qs(self, data):
+    @staticmethod
+    def _get_user_qs(data):
         return get_user_model().objects.filter(email=data.get("email"))
+
+    @staticmethod
+    def _get_external_psea_org():
+        return Organization.objects.get(vendor_number='EXTERNAL PSEA ASSESSORS')
 
     def validate(self, data):
         data = super().validate(data)
         if not self.instance:
             user_qs = self._get_user_qs(data)
             if user_qs.exists():
-                exists, __ = self._in_country(user_qs.first())
+                exists, __ = self._in_realm(user_qs.first())
                 if exists:
                     raise serializers.ValidationError("User already exists.")
         return data
 
-    def _in_country(self, instance):
+    def _in_realm(self, instance):
         country = Country.objects.get(schema_name=connection.schema_name)
-        if country not in instance.profile.countries_available.all():
-            return (False, country)
-        return (True, country)
+        realm_qs = Realm.objects.filter(
+            user=instance,
+            country=country,
+            organization=self._get_external_psea_org(),
+            group=Auditor.as_group())
+        if not realm_qs.exists():
+            return False, country
+        return True, country
 
-    def _add_to_country(self, instance):
-        exists, country = self._in_country(instance)
+    def _add_to_realm(self, instance):
+        exists, country = self._in_realm(instance)
         if not exists:
-            instance.profile.countries_available.add(country)
+            Realm.objects.create(
+                user=instance,
+                country=country,
+                organization=self._get_external_psea_org(),
+                group=Auditor.as_group(),
+            )
+        instance.profile.organization = self._get_external_psea_org()
         if instance.profile.countries_available.count() == 1:
             if (
                     not instance.profile.country_override and
                     country.schema_name.lower() not in ["uat", "public"]
             ):
                 instance.profile.country_override = country
-                instance.profile.save()
+        instance.profile.save()
 
     def create(self, validated_data):
         validated_data["username"] = validated_data.get("email")
@@ -236,6 +253,5 @@ class ExternalUserSerializer(MinimalUserSerializer):
             instance = user_qs.first()
         else:
             instance = super().create(validated_data)
-        self._add_to_country(instance)
-        instance.groups.add(Auditor.as_group())
+        self._add_to_realm(instance)
         return instance

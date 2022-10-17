@@ -145,7 +145,7 @@ class PMPDropdownsListApiView(APIView):
         Return All dropdown values used for Agreements form
         """
         signed_by_unicef = list(get_user_model().objects.filter(
-            groups__name__in=[SENIOR_MANAGEMENT_GROUP],
+            realms__group__name__in=[SENIOR_MANAGEMENT_GROUP],
             profile__country=request.user.profile.country
         ).annotate(
             name=Concat('first_name', Value(' '), 'last_name')

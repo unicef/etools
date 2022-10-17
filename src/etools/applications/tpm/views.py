@@ -79,6 +79,7 @@ from etools.applications.tpm.serializers.visit import (
 )
 from etools.applications.tpm.tpmpartners.models import TPMPartner, TPMPartnerStaffMember
 from etools.applications.tpm.tpmpartners.synchronizers import TPMPartnerSynchronizer
+from etools.applications.users.models import Realm
 
 
 class BaseTPMViewSet(
@@ -223,8 +224,12 @@ class TPMStaffMembersViewSet(
         instance = serializer.save(tpm_partner=self.get_parent_object(), **kwargs)
         if not instance.user.profile.country:
             instance.user.profile.country = self.request.user.profile.country
-        instance.user.profile.countries_available.add(self.request.user.profile.country)
-        instance.user.groups.add(ThirdPartyMonitor.as_group())
+        Realm.objects.update_or_create(
+            user=instance.user,
+            country=instance.user.profile.country,
+            organization=instance.tpm_partner.organization,
+            group=ThirdPartyMonitor.as_group()
+        )
         instance.user.profile.save()
 
     @action(detail=False, methods=['get'], url_path='export', renderer_classes=(TPMPartnerContactsCSVRenderer,))

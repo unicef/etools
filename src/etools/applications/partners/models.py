@@ -2,6 +2,7 @@ import datetime
 import decimal
 
 from django.conf import settings
+from django.contrib.auth.models import Group
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import ArrayField
 from django.core.validators import MinValueValidator
@@ -48,7 +49,7 @@ from etools.applications.partners.validation.agreements import (
 from etools.applications.reports.models import CountryProgramme, Indicator, Office, Result, Section
 from etools.applications.t2f.models import Travel, TravelActivity, TravelType
 from etools.applications.tpm.models import TPMActivity, TPMVisit
-from etools.applications.users.models import Country
+from etools.applications.users.models import Country, Realm
 from etools.libraries.djangolib.models import MaxDistinct, StringConcat
 from etools.libraries.djangolib.utils import get_environment
 from etools.libraries.pythonlib.datetime import get_current_year, get_quarter
@@ -999,18 +1000,24 @@ class PartnerStaffMember(TimeStampedModel):
                 )
 
         if self.user and self.tracker.has_changed('active'):
+
             if self.active:
                 # staff is activated
-                self.user.profile.countries_available.add(connection.tenant)
                 self.user.profile.country = connection.tenant
-                self.user.profile.save()
+                self.user.profile.save(update_fields=['country'])
             else:
                 # staff is deactivated
-                self.user.profile.countries_available.remove(connection.tenant)
                 # using first() here because public schema unavailable during testing
                 self.user.profile.country = Country.objects.filter(schema_name=get_public_schema_name()).first()
-                self.user.profile.save()
-
+                self.user.profile.save(update_fields=['country'])
+            # create or update (activate/deactivate) corresponding Realm
+            Realm.objects.update_or_create(
+                user=self.user,
+                country=connection.tenant,
+                organization=self.partner.organization,
+                group=Group.objects.get_or_create(name='IP Viewer')[0],
+                defaults={'is_active': self.active}
+            )
             self.user.is_active = self.active
             self.user.save()
 
