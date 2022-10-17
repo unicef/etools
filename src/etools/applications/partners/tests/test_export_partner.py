@@ -7,7 +7,8 @@ from rest_framework import status
 from tablib.core import Dataset
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
-from etools.applications.partners.models import PartnerType
+from etools.applications.organizations.models import OrganizationType
+from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.tests.factories import (
     AssessmentFactory,
     PartnerFactory,
@@ -22,9 +23,11 @@ class PartnerModelExportTestCase(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
         cls.partner = PartnerFactory(
-            partner_type=PartnerType.UN_AGENCY,
-            vendor_number='Vendor No',
-            short_name="Short Name",
+            organization=OrganizationFactory(
+                organization_type=OrganizationType.UN_AGENCY,
+                vendor_number='Vendor No',
+                short_name="Short Name"
+            ),
             alternate_name="Alternate Name",
             shared_with=["DPKO", "ECA"],
             address="Address 123",
@@ -197,7 +200,8 @@ class TestPartnerOrganizationModelExport(PartnerModelExportTestCase):
     def test_csv_flat_export_api_hact_value_string(self):
         partner = self.partner
         partner.pk = None
-        partner.vendor_number = "Vendor New Num"
+        organization = OrganizationFactory(vendor_number="Vendor New Num")
+        partner.organization = organization
         partner.hact_values = {"key": "random string"}
         partner.save()
         response = self.forced_auth_req(

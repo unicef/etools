@@ -10,6 +10,7 @@ from rest_framework import status
 from unicef_snapshot.models import Activity
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.models import Intervention
 from etools.applications.partners.permissions import PRC_SECRETARY, UNICEF_USER
 from etools.applications.partners.tests.factories import (
@@ -31,7 +32,7 @@ class BaseInterventionMixin:
     def setUp(self):
         super().setUp()
         self.country_programme = CountryProgrammeFactory()
-        self.partner = PartnerFactory(vendor_number=fuzzy.FuzzyText(length=20).fuzz())
+        self.partner = PartnerFactory(organization=OrganizationFactory(vendor_number=fuzzy.FuzzyText(length=20).fuzz()))
         self.partner_authorized_officer = UserFactory(is_staff=False, groups__data=[])
         self.partner_authorized_officer_staff = PartnerStaffFactory(
             partner=self.partner, email=self.partner_authorized_officer.email, user=self.partner_authorized_officer

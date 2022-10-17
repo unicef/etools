@@ -22,6 +22,7 @@ from etools.applications.audit.tests.factories import (
     PurchaseOrderFactory,
 )
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.psea.models import Answer, Assessment, AssessmentStatusHistory, Assessor, Indicator
 from etools.applications.psea.tests.factories import (
@@ -293,7 +294,7 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         for _ in range(10):
             AssessmentFactory()
 
-        firm = AuditPartnerFactory(name="Auditor")
+        firm = AuditPartnerFactory(organization=OrganizationFactory(name="Auditor"))
         assessment = AssessmentFactory()
         AssessorFactory(assessment=assessment, auditor_firm=firm)
 
@@ -447,7 +448,7 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         self.assertEqual(len(data), Assessment.objects.count())
         self.assertEqual(
             data[0]["id"],
-            Assessment.objects.order_by("partner__name").first().pk,
+            Assessment.objects.order_by("partner__organization__name").first().pk,
         )
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
@@ -467,7 +468,7 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         self.assertEqual(len(data), Assessment.objects.count())
         self.assertEqual(
             data[0]["id"],
-            Assessment.objects.order_by("-partner__name").first().pk,
+            Assessment.objects.order_by("-partner__organization__name").first().pk,
         )
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
@@ -489,7 +490,7 @@ class TestAssessmentViewSet(BaseTenantTestCase):
             data[0]["id"],
             Assessment.objects.order_by(
                 "-reference_number",
-                "partner__name",
+                "partner__organization__name",
             ).first().pk,
         )
 

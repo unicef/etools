@@ -8,7 +8,9 @@ from rest_framework import status
 from tablib.core import Dataset
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
-from etools.applications.partners.models import Intervention, PartnerOrganization, PartnerType
+from etools.applications.organizations.models import OrganizationType
+from etools.applications.organizations.tests.factories import OrganizationFactory
+from etools.applications.partners.models import Intervention, PartnerOrganization
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
     CountryProgrammeFactory,
@@ -29,9 +31,11 @@ class TestModelExport(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
         cls.partner = PartnerFactory(
-            partner_type=PartnerType.UN_AGENCY,
-            vendor_number='Vendor No',
-            short_name="Short Name",
+            organization=OrganizationFactory(
+                organization_type=OrganizationType.UN_AGENCY,
+                vendor_number='Vendor No',
+                short_name="Short Name"
+            ),
             alternate_name="Alternate Name",
             shared_with=["DPKO", "ECA"],
             address="Address 123",

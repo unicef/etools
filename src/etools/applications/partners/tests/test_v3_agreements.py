@@ -9,7 +9,9 @@ from unicef_snapshot.models import Activity
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.core.tests.mixins import URLAssertionMixin
-from etools.applications.partners.models import Agreement, PartnerType
+from etools.applications.organizations.models import OrganizationType
+from etools.applications.organizations.tests.factories import OrganizationFactory
+from etools.applications.partners.models import Agreement
 from etools.applications.partners.tests.factories import AgreementFactory, PartnerFactory, PartnerStaffFactory
 from etools.applications.reports.tests.factories import CountryProgrammeFactory
 from etools.applications.users.tests.factories import GroupFactory, UserFactory
@@ -37,7 +39,9 @@ class BaseAgreementTestCase(BaseTenantTestCase):
         cls.pme_user.groups.add(GroupFactory())
         cls.partner_user = UserFactory(is_staff=False)
         cls.partner = PartnerFactory(
-            partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION,
+            organization=OrganizationFactory(
+                organization_type=OrganizationType.CIVIL_SOCIETY_ORGANIZATION,
+            )
         )
         cls.partner_staff = PartnerStaffFactory(
             partner=cls.partner,

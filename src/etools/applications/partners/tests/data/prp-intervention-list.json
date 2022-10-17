@@ -64,7 +64,7 @@
     "partner_org": {
       "id": 0,
       "address": null,
-      "partner_type": "",
+      "partner_type": null,
       "cso_type": null,
       "total_ct_cp": null,
       "total_ct_cy": null,

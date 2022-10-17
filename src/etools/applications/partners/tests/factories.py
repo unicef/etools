@@ -4,6 +4,7 @@ import factory
 from factory import fuzzy
 
 from etools.applications.attachments.tests.factories import AttachmentFactory
+from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners import models
 from etools.applications.partners.models import InterventionManagementBudgetItem
 from etools.applications.reports.tests.factories import CountryProgrammeFactory, ResultFactory
@@ -33,7 +34,7 @@ class PartnerFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.PartnerOrganization
 
-    name = factory.Sequence(lambda n: 'Partner {}'.format(n))
+    organization = factory.SubFactory(OrganizationFactory)
     staff_members = factory.RelatedFactory(PartnerStaffFactory, 'partner')
 
 

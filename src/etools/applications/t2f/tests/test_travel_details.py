@@ -9,7 +9,8 @@ from unicef_locations.tests.factories import LocationFactory
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.core.tests.mixins import URLAssertionMixin
-from etools.applications.partners.models import PartnerType
+from etools.applications.organizations.models import OrganizationType
+from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.publics.models import DSARegion
 from etools.applications.publics.tests.factories import PublicsAirlineCompanyFactory, PublicsDSARegionFactory
@@ -306,7 +307,8 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
             'activities': [{
                 'is_primary_traveler': True,
                 'locations': [location.id, location_2.id],
-                'partner': PartnerFactory(partner_type=PartnerType.GOVERNMENT).id,
+                'partner': PartnerFactory(organization=OrganizationFactory(
+                    organization_type=OrganizationType.GOVERNMENT)).id,
                 'travel_type': TravelType.PROGRAMME_MONITORING,
                 'date': self.travel.start_date,
             }],

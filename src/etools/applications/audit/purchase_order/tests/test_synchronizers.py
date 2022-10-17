@@ -65,7 +65,7 @@ class TestPOSynchronizer(BaseTenantTestCase):
         purchase_order_item_qs = PurchaseOrderItem.objects.filter(
             number=self.data["PO_ITEM"]
         )
-        auditor_qs = AuditorFirm.objects.filter(name=self.data["VENDOR_NAME"])
+        auditor_qs = AuditorFirm.objects.filter(organization__name=self.data["VENDOR_NAME"])
         self.assertFalse(purchase_order_qs.exists())
         self.assertFalse(purchase_order_item_qs.exists())
         self.assertFalse(auditor_qs.exists())

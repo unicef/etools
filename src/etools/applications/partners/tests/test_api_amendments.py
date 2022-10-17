@@ -47,7 +47,7 @@ class TestInterventionAmendments(BaseTenantTestCase):
         self.unicef_staff = UserFactory(is_staff=True, groups__data=[UNICEF_USER])
         self.pme = UserFactory(is_staff=True, groups__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP])
 
-        self.partner = PartnerFactory(name='Partner')
+        self.partner = PartnerFactory()
         year_ago = datetime.date.today() - datetime.timedelta(days=365)
         self.active_agreement = AgreementFactory(
             partner=self.partner,
