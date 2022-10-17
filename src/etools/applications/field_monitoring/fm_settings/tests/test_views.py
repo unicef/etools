@@ -1,4 +1,5 @@
 from django.contrib.gis.geos import GEOSGeometry
+from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
 from django.urls import reverse
@@ -129,6 +130,10 @@ class LocationsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
 
 class LocationSitesViewTestCase(TestExportMixin, FMBaseTestCaseMixin, BaseTenantTestCase):
+    def setUp(self):
+        super().setUp()
+        cache.clear()
+
     def test_list(self):
         LocationSiteFactory()
 
@@ -141,21 +146,108 @@ class LocationSitesViewTestCase(TestExportMixin, FMBaseTestCaseMixin, BaseTenant
         self.assertEqual(len(response.data['results']), 1)
 
     def test_list_cached(self):
-        LocationSiteFactory()
+        [LocationSiteFactory() for _i in range(12)]
 
-        response = self.forced_auth_req(
-            'get', reverse('field_monitoring_settings:sites-list'),
-            user=self.unicef_user
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data['results']), 1)
+        with self.assertNumQueries(3):
+            response = self.forced_auth_req(
+                'get', reverse('field_monitoring_settings:sites-list'),
+                user=self.unicef_user
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(len(response.data['results']), 10)
+
         etag = response["ETag"]
 
-        response = self.forced_auth_req(
-            'get', reverse('field_monitoring_settings:sites-list'),
-            user=self.unicef_user, HTTP_IF_NONE_MATCH=etag
-        )
-        self.assertEqual(response.status_code, status.HTTP_304_NOT_MODIFIED)
+        # etag presented, so data will not be fetched from db
+        with self.assertNumQueries(0):
+            response = self.forced_auth_req(
+                'get', reverse('field_monitoring_settings:sites-list'),
+                user=self.unicef_user, HTTP_IF_NONE_MATCH=etag
+            )
+            self.assertEqual(response.status_code, status.HTTP_304_NOT_MODIFIED)
+
+        # no db queries despite no etag provided
+        with self.assertNumQueries(0):
+            response = self.forced_auth_req(
+                'get', reverse('field_monitoring_settings:sites-list'),
+                user=self.pme,
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(len(response.data['results']), 10)
+
+    def test_full_list_cached(self):
+        [LocationSiteFactory() for _i in range(12)]
+
+        with self.assertNumQueries(2):
+            response = self.forced_auth_req(
+                'get', reverse('field_monitoring_settings:sites-list'),
+                user=self.unicef_user,
+                data={'page_size': 'all'}
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(len(response.data), 12)
+
+        etag = response["ETag"]
+
+        # etag presented, so data will not be fetched from db
+        with self.assertNumQueries(0):
+            response = self.forced_auth_req(
+                'get', reverse('field_monitoring_settings:sites-list'),
+                user=self.unicef_user, HTTP_IF_NONE_MATCH=etag,
+                data={'page_size': 'all'}
+            )
+            self.assertEqual(response.status_code, status.HTTP_304_NOT_MODIFIED)
+
+        # no etag, different user, still no db queries
+        with self.assertNumQueries(0):
+            response = self.forced_auth_req(
+                'get', reverse('field_monitoring_settings:sites-list'),
+                user=self.pme,
+                data={'page_size': 'all'}
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(len(response.data), 12)
+
+        # no etag, data not cached, because previously we called full list with page_size: all
+        with self.assertNumQueries(3):
+            response = self.forced_auth_req(
+                'get', reverse('field_monitoring_settings:sites-list'),
+                user=self.pme,
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(len(response.data['results']), 10)
+
+    def test_full_list_cache_invalidation_on_create(self):
+        LocationSiteFactory()
+
+        with self.assertNumQueries(2):
+            response = self.forced_auth_req(
+                'get', reverse('field_monitoring_settings:sites-list'),
+                user=self.unicef_user,
+                data={'page_size': 'all'}
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(len(response.data), 1)
+
+        with self.assertNumQueries(0):
+            response = self.forced_auth_req(
+                'get', reverse('field_monitoring_settings:sites-list'),
+                user=self.unicef_user,
+                data={'page_size': 'all'}
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(len(response.data), 1)
+
+        LocationSiteFactory()
+
+        with self.assertNumQueries(2):
+            response = self.forced_auth_req(
+                'get', reverse('field_monitoring_settings:sites-list'),
+                user=self.unicef_user,
+                data={'page_size': 'all'}
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(len(response.data), 2)
 
     def test_list_modified_create(self):
         LocationSiteFactory()
@@ -953,3 +1045,28 @@ class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(len(response.data['options']), 3)
         self.assertTrue(question.options.filter(pk=first_option.pk).exists())
         self.assertFalse(question.options.filter(pk=second_option.pk).exists())
+
+    def test_deactivate_default_question(self):
+        question = QuestionFactory(is_custom=False, is_active=True)
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse('field_monitoring_settings:questions-detail', args=[question.id, ]),
+            user=self.pme,
+            data={'is_active': False}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_change_default_question_forbidden(self):
+        question = QuestionFactory(is_custom=False, is_active=True)
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse('field_monitoring_settings:questions-detail', args=[question.id, ]),
+            user=self.pme,
+            data={'text': 'some new text'}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("The system provided questions cannot be edited.", response.data)

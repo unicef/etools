@@ -53,3 +53,20 @@ def run_on_all_tenants(function, **kwargs):
     with every_country() as c:
         for country in c:
             function(**kwargs)
+
+
+class TenantSuffixedString:
+    """
+    could be used to provide tenant-unique string
+    """
+
+    def __init__(self, value='', delimiter='.'):
+        self.value = value
+        self.delimiter = delimiter
+
+    @staticmethod
+    def get_tenant_suffix():
+        return connection.tenant.country_short_code or ''
+
+    def __str__(self):
+        return f'{self.value}{self.delimiter}{self.get_tenant_suffix()}'

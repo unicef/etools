@@ -2,8 +2,10 @@ from redis.exceptions import ConnectionError
 from redis_cache import RedisCache
 from redis_cache.backends.base import DEFAULT_TIMEOUT
 
+from etools.libraries.cache_keys.redis import KeysListRedisCacheMixin
 
-class eToolsCache(RedisCache):
+
+class eToolsCache(KeysListRedisCacheMixin, RedisCache):
     def _get(self, client, key, default=None):
         try:
             value = super()._get(client, key, default)

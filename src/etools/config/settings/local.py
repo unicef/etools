@@ -36,10 +36,11 @@ AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
 )
 
-# No Redis for local dev
+# No Redis for local dev.
+# Use custom locmemcache to add have .keys functionality
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'BACKEND': 'etools.libraries.locmemcache.base.eToolsLocMemCache',
     }
 }
 
