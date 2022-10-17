@@ -11,6 +11,7 @@ from django.utils.translation import gettext_lazy as _
 from admin_extra_urls.decorators import button
 from admin_extra_urls.mixins import ExtraUrlMixin
 from django_tenants.admin import TenantAdminMixin
+from django_tenants.postgresql_backend.base import FakeTenant
 from django_tenants.utils import get_public_schema_name
 from unicef_snapshot.admin import ActivityInline, SnapshotModelAdmin
 
@@ -184,11 +185,15 @@ class ProfileAdmin(admin.ModelAdmin):
 
 
 class RealmInline(admin.StackedInline):
+    verbose_name_plural = "Realms in current country"
+
     model = Realm
     raw_id_fields = ('country', 'organization', 'group')
     extra = 0
 
     def get_queryset(self, request):
+        if isinstance(connection.tenant, FakeTenant):
+            return super().get_queryset(request)
         return super().get_queryset(request).filter(country=connection.tenant)
 
 

@@ -124,6 +124,8 @@ class AzureUserMapper:
                     country=self._get_country('UAT'),
                     organization=self.unicef_organization,
                     group=self.groups['UNICEF User'])
+                user.profile.organization = self.unicef_organization
+                user.profile.save(update_fields=['organization'])
                 logger.info('Group added to user {}'.format(user))
 
             profile, _ = UserProfile.objects.get_or_create(user=user)

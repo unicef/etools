@@ -17,6 +17,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from unicef_restlib.permissions import IsSuperUser
 
+from etools.applications.organizations.models import Organization
 from etools.applications.users.models import Country, UserProfile
 from etools.applications.users.permissions import IsServiceNowUser
 from etools.applications.users.serializers import (
@@ -146,8 +147,11 @@ class ChangeUserCountryView(APIView):
         if country not in user.profile.countries_available.all():
             raise DjangoValidationError(self.ERROR_MESSAGES['access_to_country_denied'],
                                         code='access_to_country_denied')
-
         user.profile.country_override = country
+
+        if user.profile.organization not in Organization.objects\
+                .filter(realms__country=country, realms__user=user):
+            user.profile.organization = None
         user.profile.save()
 
     def get_redirect_url(self):

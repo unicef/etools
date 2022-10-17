@@ -28,6 +28,7 @@ from model_utils import FieldTracker
 from model_utils.models import TimeStampedModel
 
 from etools.applications.organizations.models import Organization
+from etools.libraries.djangolib.models import GroupWrapper
 
 if TYPE_CHECKING:
     from etools.applications.partners.models import PartnerStaffMember
@@ -184,6 +185,14 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
         return self.email.endswith(settings.UNICEF_USER_EMAIL)
 
     @cached_property
+    def is_partnership_manager(self):
+        return self.realms.filter(
+            country=connection.tenant,
+            organization=self.profile.organization,
+            group=PartnershipManager.as_group(),
+            is_active=True).exists()
+
+    @cached_property
     def full_name(self):
         return self.get_full_name()
 
@@ -194,7 +203,14 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
 
     @property
     def groups(self):
-        return Group.objects.filter(realms__in=self.realms.filter(is_active=True)).distinct()
+        current_country_realms = self.realms.filter(
+            country=connection.tenant, organization=self.profile.organization, is_active=True)
+        return Group.objects.filter(realms__in=current_country_realms).distinct()
+
+    def get_groups_for_organization_id(self, organization_id):
+        current_country_realms = self.realms.filter(
+            country=connection.tenant, organization_id=organization_id)
+        return Group.objects.filter(realms__in=current_country_realms).distinct()
 
     def get_partner_staff_member(self) -> ['PartnerStaffMember']:
         # just wrapper to avoid try...catch in place
@@ -426,6 +442,11 @@ class UserProfile(models.Model):
     def countries_available(self):
         return Country.objects.filter(realms__in=self.user.realms.filter(is_active=True)).distinct()
 
+    @property
+    def organizations_available(self):
+        current_country_realms = self.user.realms.filter(country=connection.tenant, is_active=True)
+        return Organization.objects.filter(realms__in=current_country_realms).distinct()
+
     def username(self):
         return self.user.username
 
@@ -557,3 +578,10 @@ class Realm(TimeStampedModel):
     def __str__(self):
         return f"{self.user.email} - {self.country.name} - {self.organization}: " \
                f"{self.group.name if self.group else ''}"
+
+
+IPViewer = GroupWrapper(code='ip_viewer', name='IP Viewer')
+IPEditor = GroupWrapper(code='ip_editor', name='IP Editor')
+IPAdmin = GroupWrapper(code='ip_admin', name='IP Admin')
+IPAuthorizedOfficer = GroupWrapper(code='ip_authorized_officer', name='IP Authorized Officer')
+PartnershipManager = GroupWrapper(code='partnership_manager', name='Partnership Manager')
