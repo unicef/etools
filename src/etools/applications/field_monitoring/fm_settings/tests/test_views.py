@@ -953,3 +953,28 @@ class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(len(response.data['options']), 3)
         self.assertTrue(question.options.filter(pk=first_option.pk).exists())
         self.assertFalse(question.options.filter(pk=second_option.pk).exists())
+
+    def test_deactivate_default_question(self):
+        question = QuestionFactory(is_custom=False, is_active=True)
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse('field_monitoring_settings:questions-detail', args=[question.id, ]),
+            user=self.pme,
+            data={'is_active': False}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_change_default_question_forbidden(self):
+        question = QuestionFactory(is_custom=False, is_active=True)
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse('field_monitoring_settings:questions-detail', args=[question.id, ]),
+            user=self.pme,
+            data={'text': 'some new text'}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("The system provided questions cannot be edited.", response.data)
