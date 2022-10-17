@@ -7,8 +7,10 @@ from django.db.models import OuterRef, Prefetch, Q, Subquery
 from django.http import HttpResponseForbidden, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, status, viewsets
 from rest_framework.exceptions import ValidationError
+from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
@@ -228,7 +230,12 @@ class GroupPermissionsViewSet(GroupEditPermissionMixin, APIView):
         return Response(response_data)
 
 
-class UserRealmViewSet(viewsets.ModelViewSet):
+class UserRealmViewSet(
+    mixins.CreateModelMixin,
+    mixins.ListModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet
+):
 
     model = get_user_model()
     permission_classes = (
@@ -239,6 +246,11 @@ class UserRealmViewSet(viewsets.ModelViewSet):
     )
     serializer_class = UserRealmRetrieveSerializer
     pagination_class = DynamicPageNumberPagination
+    filter_backends = (SearchFilter, DjangoFilterBackend, OrderingFilter)
+
+    search_fields = ('first_name', 'last_name', 'email', 'profile__job_title')
+    filter_fields = ('is_active', )
+    ordering_fields = ('first_name', 'email', 'last_login')
 
     def get_permissions(self):
         if self.action == "list":
