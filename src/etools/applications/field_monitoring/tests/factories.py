@@ -35,8 +35,11 @@ class UserFactory(BaseUserFactory):
         if extracted:
             if "UNICEF User" in extracted:
                 organization = OrganizationFactory(name='UNICEF', vendor_number='UNICEF')
+                if hasattr(self, 'profile') and self.profile:
+                    self.profile.organization = organization
+                    self.profile.save(update_fields=['organization'])
             else:
-                organization = OrganizationFactory()
+                organization = self.profile.organization
             for group in extracted:
                 if isinstance(group, str):
                     RealmFactory(user=self,

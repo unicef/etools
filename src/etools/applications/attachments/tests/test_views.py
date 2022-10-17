@@ -129,7 +129,7 @@ class TestAttachmentListView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_non_schema_user(self):
-        user = UserFactory(profile=None)
+        user = UserFactory(profile=None, realms__data=[])
         response = self.forced_auth_req("get", self.url, user=user)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 

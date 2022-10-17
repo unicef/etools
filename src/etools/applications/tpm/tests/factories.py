@@ -139,6 +139,9 @@ class TPMUserFactory(UserFactory):
         if not extracted:
             extracted = TPMPartnerFactory()
 
+        self.profile.organization = extracted.organization
+        self.profile.save(update_fields=['organization'])
+
         TPMPartnerStaffMemberFactory(tpm_partner=extracted, user=self)
 
     @factory.post_generation

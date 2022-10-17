@@ -62,6 +62,9 @@ class AuditorUserFactory(UserFactory):
         if not extracted:
             extracted = AuditPartnerFactory()
 
+        self.profile.organization = extracted.organization
+        self.profile.save(update_fields=['organization'])
+
         AuditorStaffMemberFactory(auditor_firm=extracted, user=self)
 
 
