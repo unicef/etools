@@ -24,8 +24,8 @@ from etools.applications.partners.permissions import user_group_permission
 from etools.applications.partners.views.v3 import PMPBaseViewMixin
 from etools.applications.users import views as v1, views_v2 as v2
 from etools.applications.users.mixins import GroupEditPermissionMixin
-from etools.applications.users.models import Country, IPAdmin, IPAuthorizedOfficer, IPEditor, IPViewer, Realm
-from etools.applications.users.permissions import IsPartnershipManager
+from etools.applications.users.models import Country, IPAdmin, IPAuthorizedOfficer, IPEditor, Realm
+from etools.applications.users.permissions import IsActiveInRealm, IsPartnershipManager
 from etools.applications.users.serializers import SimpleGroupSerializer, SimpleOrganizationSerializer
 from etools.applications.users.serializers_v3 import (
     CountryDetailSerializer,
@@ -236,15 +236,7 @@ class UserRealmViewSet(
     mixins.UpdateModelMixin,
     viewsets.GenericViewSet
 ):
-
     model = get_user_model()
-    permission_classes = (
-        IsAuthenticated,
-        user_group_permission(
-            IPEditor.name, IPAdmin.name,
-            IPAuthorizedOfficer.name, UNICEFAuditFocalPoint.name) | IsPartnershipManager
-    )
-    serializer_class = UserRealmRetrieveSerializer
     pagination_class = DynamicPageNumberPagination
     filter_backends = (SearchFilter, DjangoFilterBackend, OrderingFilter)
 
@@ -255,22 +247,27 @@ class UserRealmViewSet(
     def get_permissions(self):
         if self.action == "list":
             self.permission_classes = (
-                IsAuthenticated,
-                user_group_permission(
-                    IPViewer.name, IPEditor.name, IPAdmin.name,
-                    IPAuthorizedOfficer.name, UNICEFAuditFocalPoint.name) | IsPartnershipManager)
+                IsAuthenticated, IsActiveInRealm)
         if self.action == 'create':
             self.permission_classes = (
                 IsAuthenticated,
-                user_group_permission(IPAdmin.name, IPAuthorizedOfficer.name))
+                user_group_permission(IPAdmin.name, IPAuthorizedOfficer.name) | IsPartnershipManager)
+        if self.action == 'partial_update':
+            self.permission_classes = (
+                IsAuthenticated,
+                user_group_permission(
+                    IPEditor.name, IPAdmin.name,
+                    IPAuthorizedOfficer.name, UNICEFAuditFocalPoint.name) | IsPartnershipManager
+            )
         return super().get_permissions()
 
     def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return UserRealmRetrieveSerializer
         if self.request.method == "POST":
             return UserRealmCreateSerializer
         if self.request.method == "PATCH":
             return UserRealmUpdateSerializer
-        return super().get_serializer_class()
 
     def get_queryset(self):
         organization_id = self.request.query_params.get('organization_id')

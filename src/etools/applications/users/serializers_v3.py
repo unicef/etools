@@ -175,9 +175,8 @@ class UserRealmBaseSerializer(GroupEditPermissionMixin, serializers.ModelSeriali
 
 
 class UserRealmCreateSerializer(UserRealmBaseSerializer):
+    email = serializers.CharField(required=True, write_only=True)
     job_title = serializers.CharField(required=False, write_only=True)
-    organization = serializers.IntegerField(required=False, allow_null=True, write_only=True)
-    groups = serializers.ListField(child=serializers.IntegerField(), required=True, write_only=True)
 
     class Meta(UserRealmBaseSerializer.Meta):
         model = get_user_model()
@@ -186,8 +185,6 @@ class UserRealmCreateSerializer(UserRealmBaseSerializer):
             'last_name',
             'email',
             'job_title',
-            'organization',
-            'groups'
         ]
         extra_kwargs = {
             'first_name': {'required': True},
@@ -196,12 +193,14 @@ class UserRealmCreateSerializer(UserRealmBaseSerializer):
         }
 
     def create(self, validated_data):
-        organization_id = self.context['request'].user.profile.organization.id
+        organization_id = validated_data.pop('organization', self.context['request'].user.profile.organization.id)
         group_ids = validated_data.pop("groups")
         job_title = validated_data.pop("job_title", None)
 
-        validated_data.update({"username": validated_data["email"]})
-        instance = super().create(validated_data)
+        email = validated_data.pop('email')
+        validated_data.update({"username": email})
+        instance, _ = get_user_model().objects.get_or_create(
+            email=email, defaults=validated_data)
 
         if job_title:
             instance.profile.job_title = job_title
