@@ -10,10 +10,10 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from unicef_attachments.models import FileType as AttachmentFileType
 from unicef_djangolib.fields import CURRENCIES
-from unicef_locations.models import GatewayType
 
 from etools.applications.attachments.models import AttachmentFlat
 from etools.applications.funds.models import FundsReservationItem
+from etools.applications.locations.models import Location
 from etools.applications.partners.models import (
     Agreement,
     AgreementAmendment,
@@ -184,11 +184,10 @@ class PMPDropdownsListApiView(APIView):
             ),
             'currencies': choices_to_json_ready(CURRENCIES),
             'local_currency': self.get_local_currency(),
-            'location_types': GatewayType.objects.values(
-                'id',
-                'name',
+            'location_types': Location.objects.order_by('admin_level').values(
                 'admin_level',
-            ).order_by('id'),
+                'admin_level_name'
+            ).distinct(),
             'attachment_types': AttachmentFileType.objects.values_list(
                 "label",
                 flat=True,
