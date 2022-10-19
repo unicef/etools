@@ -210,9 +210,9 @@ class PartnerOrganizationListView(ListAPIView):
 
         if not self.request.user.is_partnership_manager:
             return self.model.objects.none()
-
+        # returns only Partner Organizations that are not marked for deletion
         return self.model.objects\
-            .filter(partner__isnull=False, realms__country=country)\
+            .filter(partner__isnull=False, partner__deleted_flag=False, realms__country=country)\
             .distinct()
 
 
@@ -237,6 +237,8 @@ class UserRealmViewSet(
     viewsets.GenericViewSet
 ):
     model = get_user_model()
+    serializer_class = UserRealmRetrieveSerializer
+
     pagination_class = DynamicPageNumberPagination
     filter_backends = (SearchFilter, DjangoFilterBackend, OrderingFilter)
 
@@ -262,12 +264,11 @@ class UserRealmViewSet(
         return super().get_permissions()
 
     def get_serializer_class(self):
-        if self.request.method == 'GET':
-            return UserRealmRetrieveSerializer
         if self.request.method == "POST":
             return UserRealmCreateSerializer
         if self.request.method == "PATCH":
             return UserRealmUpdateSerializer
+        return super().get_serializer_class()
 
     def get_queryset(self):
         organization_id = self.request.query_params.get('organization_id')

@@ -510,7 +510,6 @@ class UserProfile(models.Model):
                 return False
 
         if new_country and new_country != sender.profile.country:
-            # TODO REALMS: add country realm
             # sender.profile.countries_available.add(new_country)
             sender.profile.country = new_country
             sender.profile.save()

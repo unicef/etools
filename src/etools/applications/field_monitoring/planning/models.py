@@ -338,12 +338,10 @@ class MonitoringActivity(
         # if rejected send notice
         if old_instance and old_instance.status == self.STATUSES.assigned:
             email_template = "fm/activity/reject"
-            # TODO REALMS: check logic here wrto organization
             recipients = User.objects\
                 .prefetch_related('realms')\
                 .filter(realms__group=PME.as_group(),
                         realms__country=connection.tenant,
-                        # realms__organization=old_instance.tpm_partner.organization
                         )
             for recipient in recipients:
                 self._send_email(
