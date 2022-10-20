@@ -122,7 +122,8 @@ class RealmSerializer(serializers.ModelSerializer):
 
 
 class UserRealmRetrieveSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(source='full_name')
+    phone_number = serializers.CharField(source='profile.phone_number')
+    job_title = serializers.CharField(source='profile.job_title')
     realms = RealmSerializer(many=True, read_only=True)
 
     class Meta:
@@ -131,8 +132,11 @@ class UserRealmRetrieveSerializer(serializers.ModelSerializer):
             'id',
             'is_active',
             'last_login',
-            'name',
+            'first_name',
+            'last_name',
             'email',
+            'phone_number',
+            'job_title',
             'realms'
         )
 

@@ -244,7 +244,7 @@ class UserRealmViewSet(
 
     search_fields = ('first_name', 'last_name', 'email', 'profile__job_title')
     filter_fields = ('is_active', )
-    ordering_fields = ('first_name', 'email', 'last_login')
+    ordering_fields = ('first_name', 'last_name', 'email', 'last_login')
 
     def get_permissions(self):
         if self.action == "list":
