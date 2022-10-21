@@ -26,6 +26,8 @@ def staff_member_changed(sender, instance, action, reverse, pk_set, *args, **kwa
                 group=Auditor.as_group(),
                 defaults={"is_active": True}
             )
+            member.user.profile.organization = member.auditor_firm.organization
+            member.user.profile.save(update_fields=['organization'])
 
 
 @receiver(post_save, sender=EngagementActionPoint)

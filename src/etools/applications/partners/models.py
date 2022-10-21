@@ -1004,12 +1004,14 @@ class PartnerStaffMember(TimeStampedModel):
             if self.active:
                 # staff is activated
                 self.user.profile.country = connection.tenant
-                self.user.profile.save(update_fields=['country'])
+                self.user.profile.organization = self.partner.organization
+                self.user.profile.save(update_fields=['country', 'organization'])
             else:
                 # staff is deactivated
                 # using first() here because public schema unavailable during testing
                 self.user.profile.country = Country.objects.filter(schema_name=get_public_schema_name()).first()
-                self.user.profile.save(update_fields=['country'])
+                self.user.profile.organization = None
+                self.user.profile.save(update_fields=['country', 'organization'])
             # create or update (activate/deactivate) corresponding Realm
             Realm.objects.update_or_create(
                 user=self.user,
