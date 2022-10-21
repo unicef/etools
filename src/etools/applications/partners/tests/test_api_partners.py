@@ -1112,17 +1112,16 @@ class TestPartnerOrganizationAssessmentUpdateDeleteView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
-        cls.partner = PartnerFactory(
-            organization=OrganizationFactory(
-                organization_type=OrganizationType.CIVIL_SOCIETY_ORGANIZATION,
-                cso_type="International",
-                vendor_number="DDD",
-                short_name="Short name"
-            ),
-            hidden=False,
+        cls.organization = OrganizationFactory(
+            organization_type=OrganizationType.CIVIL_SOCIETY_ORGANIZATION,
+            cso_type="International",
+            vendor_number="DDD",
+            short_name="Short name"
         )
+        cls.partner = PartnerFactory(organization=cls.organization, hidden=False)
         cls.partnership_manager_user = UserFactory(
-            is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]
+            is_staff=True, realms__data=[PARTNERSHIP_MANAGER_GROUP],
+            profile__organization=cls.organization
         )
         cls.partner_staff = PartnerStaffFactory(partner=cls.partner, user=cls.partnership_manager_user)
 

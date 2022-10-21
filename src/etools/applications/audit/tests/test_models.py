@@ -51,6 +51,7 @@ class EngagementStaffMemberTestCase(BaseTenantTestCase):
 
         self.assertSequenceEqual(staff_member.user.profile.countries_available,
                                  [Country.objects.get(schema_name=connection.schema_name)])
+        self.assertEqual(staff_member.user.profile.organization, auditor_firm.organization)
         self.assertEqual(len(mail.outbox), 1)
         mail.outbox = []
 

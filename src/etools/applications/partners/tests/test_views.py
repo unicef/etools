@@ -534,11 +534,12 @@ class TestAgreementCreateAPIView(BaseTenantTestCase):
     """Exercise the create portion of the API."""
     @classmethod
     def setUpTestData(cls):
-        cls.partner = PartnerFactory(
-            organization=OrganizationFactory(organization_type=OrganizationType.CIVIL_SOCIETY_ORGANIZATION))
+        cls.organization = OrganizationFactory(organization_type=OrganizationType.CIVIL_SOCIETY_ORGANIZATION)
+        cls.partner = PartnerFactory(organization=cls.organization)
 
         cls.partnership_manager_user = UserFactory(
-            is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]
+            is_staff=True, realms__data=[PARTNERSHIP_MANAGER_GROUP],
+            profile__organization=cls.organization
         )
         PartnerStaffFactory(partner=cls.partner, user=cls.partnership_manager_user)
         cls.file_type_agreement = AttachmentFileTypeFactory()
@@ -709,16 +710,17 @@ class TestAgreementAPIView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
-        cls.partner = PartnerFactory(
-            organization=OrganizationFactory(
-                name='Partner',
-                organization_type=OrganizationType.CIVIL_SOCIETY_ORGANIZATION))
+        cls.organization = OrganizationFactory(
+            name='Partner',
+            organization_type=OrganizationType.CIVIL_SOCIETY_ORGANIZATION)
+        cls.partner = PartnerFactory(organization=cls.organization)
 
-        cls.partner_staff_user = UserFactory(is_staff=True)
+        cls.partner_staff_user = UserFactory(is_staff=True, profile__organization=cls.organization)
         cls.partner_staff = PartnerStaffFactory(partner=cls.partner, user=cls.partner_staff_user)
 
         cls.partnership_manager_user = UserFactory(
-            is_staff=True, realms__data=[PARTNERSHIP_MANAGER_GROUP]
+            is_staff=True, realms__data=[PARTNERSHIP_MANAGER_GROUP],
+            profile__organization=cls.organization
         )
         cls.partner_staff2 = PartnerStaffFactory(partner=cls.partner, user=cls.partnership_manager_user)
 
