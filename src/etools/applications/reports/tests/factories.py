@@ -46,6 +46,7 @@ class ResultFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.Result
 
+    country_programme = factory.SubFactory(CountryProgrammeFactory)
     result_type = factory.SubFactory(ResultTypeFactory)
     name = factory.Sequence(lambda n: 'Result {}'.format(n))
     from_date = datetime.date(datetime.date.today().year, 1, 1)
