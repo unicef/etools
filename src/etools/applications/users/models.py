@@ -9,6 +9,7 @@ from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import connection, models
+from django.db.models import Q
 from django.db.models.signals import post_save
 from django.urls import reverse
 from django.utils.functional import cached_property
@@ -193,7 +194,9 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
     @property
     def groups(self):
         current_country_realms = self.realms.filter(
-            country=connection.tenant, organization=self.profile.organization, is_active=True)
+            Q(organization=self.profile.organization) |
+            Q(organization__vendor_number='UNICEF'),
+            country=connection.tenant, is_active=True)
         return Group.objects.filter(realms__in=current_country_realms).distinct()
 
     def get_groups_for_organization_id(self, organization_id):
