@@ -224,13 +224,14 @@ class TPMStaffMembersViewSet(
         instance = serializer.save(tpm_partner=self.get_parent_object(), **kwargs)
         if not instance.user.profile.country:
             instance.user.profile.country = self.request.user.profile.country
+        instance.user.profile.organization = instance.tpm_partner.organization
         Realm.objects.update_or_create(
             user=instance.user,
             country=instance.user.profile.country,
             organization=instance.tpm_partner.organization,
             group=ThirdPartyMonitor.as_group()
         )
-        instance.user.profile.save()
+        instance.user.profile.save(update_fields=['country', 'organization'])
 
     @action(detail=False, methods=['get'], url_path='export', renderer_classes=(TPMPartnerContactsCSVRenderer,))
     def export(self, request, *args, **kwargs):
