@@ -1,11 +1,13 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
-from django.db import IntegrityError, transaction
+from django.db import connection, IntegrityError, transaction
 
 from celery.utils.log import get_task_logger
+from etools.config.celery import app
 
+from etools.applications.environment.notifications import send_notification_with_template
 from etools.applications.organizations.models import Organization
-from etools.applications.users.models import Country, Realm, UserProfile
+from etools.applications.users.models import Country, Realm, User, UserProfile
 
 logger = get_task_logger(__name__)
 
@@ -190,3 +192,23 @@ class AzureUserMapper:
             profile.save()
 
         return modified
+
+
+@app.task
+def notify_user_on_realm_update(user_pk):
+    user = User.objects.get(pk=user_pk)
+    active_realms = user.realms\
+        .filter(country=connection.tenant, is_active=True)\
+        .values('country__name', 'organization__name', 'group__name')
+    if active_realms:
+        email_context = {
+            'user_full_name': user.get_full_name(),
+            'active_realms': list(active_realms),
+        }
+        recipients = [user.email]
+
+        send_notification_with_template(
+            recipients=recipients,
+            template_name='users/amp/role-update',
+            context=email_context
+        )
