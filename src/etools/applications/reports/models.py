@@ -333,7 +333,7 @@ class Result(MPTTModel):
 
     @cached_property
     def special(self):
-        return self.country_programme.special
+        return self.country_programme.special if self.country_programme else False
 
     def __str__(self):
         return '{} {}: {}'.format(
