@@ -3,11 +3,11 @@ from django.contrib.auth.models import Group
 from django.db import connection, IntegrityError, transaction
 
 from celery.utils.log import get_task_logger
-from etools.config.celery import app
 
 from etools.applications.environment.notifications import send_notification_with_template
 from etools.applications.organizations.models import Organization
 from etools.applications.users.models import Country, Realm, User, UserProfile
+from etools.config.celery import app
 
 logger = get_task_logger(__name__)
 
