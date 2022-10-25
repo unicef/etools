@@ -11,18 +11,18 @@ defaults = {
     Your role in UNICEF's Access Management Portal has been updated.
     You now have access to:
     {% for realm in active_realms %}
-        {{ realm.organization__name }} organization in {{ realm.country__name }} with the role of {{ realm.group__name }} <br/>
+        {{ realm.organization__name }} organization in {{ realm.country__name }} with the role of {{ realm.group__name }}
     {% endfor %}
     Kind regards,
     UNICEF
-    Please note that this is an automatically generated email. Responses are not monitored and cannot be replied to.</p>
+    Please note that this is an automatically generated email. Responses are not monitored and cannot be replied to.
     """),
 
     'html_content': """
     {% extends "email-templates/base" %}
 
     {% block content %}
-    Dear {{ user_full_name }}, <br/>
+    Dear {{ user_full_name }}, <br/><br/>
 
     Your role in UNICEF's Access Management Portal has been updated.
     You now have access to: <br/><br/>
