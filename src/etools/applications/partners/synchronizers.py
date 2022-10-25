@@ -12,6 +12,7 @@ from unicef_vision.utils import comp_decimals
 from etools.applications.organizations.models import Organization
 from etools.applications.partners.models import PartnerOrganization, PlannedEngagement
 from etools.applications.partners.tasks import notify_partner_hidden
+from etools.applications.users.models import Country, Realm, User
 from etools.applications.vision.synchronizers import VisionDataTenantSynchronizer
 
 logger = logging.getLogger(__name__)
@@ -236,6 +237,9 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
                 if notify_block:
                     notify_partner_hidden.delay(partner_org.pk, connection.schema_name)
 
+                if partner_org.deleted_flag:
+                    self.deactivate_staff_members(partner_org)
+
             if new:
                 PlannedEngagement.objects.get_or_create(partner=partner_org)
             # if date has changed, archive old and create a new one not archived
@@ -298,6 +302,24 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
         if partner['TYPE_OF_ASSESSMENT']:
             return type_of_assessments.get(partner['TYPE_OF_ASSESSMENT'].upper(), partner['TYPE_OF_ASSESSMENT'])
         return ''
+
+    @staticmethod
+    def deactivate_staff_members(partner_org):
+        staff_members = partner_org.staff_members.all()
+        staff_members.update(active=False)
+        # deactivate the users
+        users_deactivate = User.objects.filter(partner_staff_member__in=staff_members)
+        users_deactivate.update(is_active=False)
+        try:
+            country = Country.objects.get(schema_name=partner_org.country)
+            Realm.objects.filter(
+                user__in=users_deactivate,
+                country=country,
+                organization=partner_org.organization)\
+                .update(is_active=False)
+        except Country.DoesNotExist:
+            logging.error(f"No country with name {partner_org.country} exists. "
+                          f"Cannot deactivate realms for users.")
 
 
 class FilePartnerSynchronizer(FileDataSynchronizer, PartnerSynchronizer):
