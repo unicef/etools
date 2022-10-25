@@ -538,10 +538,8 @@ class TestAgreementCreateAPIView(BaseTenantTestCase):
         cls.partner = PartnerFactory(organization=cls.organization)
 
         cls.partnership_manager_user = UserFactory(
-            is_staff=True, realms__data=[PARTNERSHIP_MANAGER_GROUP],
-            profile__organization=cls.organization
+            is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP],
         )
-        PartnerStaffFactory(partner=cls.partner, user=cls.partnership_manager_user)
         cls.file_type_agreement = AttachmentFileTypeFactory()
 
     def test_minimal_create(self):
