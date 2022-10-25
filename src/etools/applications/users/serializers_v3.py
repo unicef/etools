@@ -205,8 +205,12 @@ class UserRealmCreateSerializer(UserRealmBaseSerializer):
 
         email = validated_data.pop('email')
         validated_data.update({"username": email})
+
         instance, _ = get_user_model().objects.get_or_create(
             email=email, defaults=validated_data)
+        if not instance.is_active:
+            instance.is_active = True
+            instance.save(update_fields=['is_active'])
 
         if job_title:
             instance.profile.job_title = job_title
