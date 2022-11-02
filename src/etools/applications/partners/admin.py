@@ -86,7 +86,8 @@ class InterventionAmendmentPRCReviewInline(AttachmentSingleInline):
     code = 'partners_intervention_amendment_internal_prc_review'
 
 
-class InterventionAmendmentsAdmin(AttachmentInlineAdminMixin, RestrictedEditAdmin):
+class InterventionAmendmentsAdmin(AttachmentInlineAdminMixin, CountryUsersAdminMixin, RestrictedEditAdmin):
+    staff_only = False
     model = InterventionAmendment
     readonly_fields = [
         'amendment_number',
@@ -284,10 +285,12 @@ class InterventionAdmin(
         'agreement',
         'flat_locations',
         'partner_authorized_officer_signatory',
+        'old_partner_authorized_officer_signatory',
         'unicef_signatory',
         'budget_owner',
         'unicef_focal_points',
         'partner_focal_points',
+        'old_partner_focal_points',
     ]
     list_filter = (
         'document_type',
@@ -307,6 +310,7 @@ class InterventionAdmin(
     filter_horizontal = (
         'sections',
         'unicef_focal_points',
+        'old_partner_focal_points',
         'partner_focal_points',
         'flat_locations'
     )
@@ -334,8 +338,10 @@ class InterventionAdmin(
                  'review_date_prc',
                  'prc_review_document',
                  'signed_pd_document',
-                 ('partner_authorized_officer_signatory', 'signed_by_partner_date',),
+                 ('old_partner_authorized_officer_signatory', 'signed_by_partner_date',),
+                 'partner_authorized_officer_signatory',
                  ('unicef_signatory', 'signed_by_unicef_date',),
+                 'old_partner_focal_points',
                  'partner_focal_points',
                  'unicef_focal_points',
                  ('start', 'end'),
@@ -726,6 +732,7 @@ class AgreementAdmin(
         RestrictedEditAdminMixin,
         SnapshotModelAdmin,
 ):
+    staff_only = False
 
     list_filter = (
         'partner',
@@ -754,15 +761,18 @@ class AgreementAdmin(
                     'attached_agreement',
                     ('start', 'end',),
                     'signed_by_partner_date',
+                    'old_partner_manager',
                     'partner_manager',
                     'signed_by_unicef_date',
                     'signed_by',
                     'authorized_officers',
+                    'old_authorized_officers',
                 )
         }),
     )
     filter_horizontal = (
         'authorized_officers',
+        'old_authorized_officers',
     )
     inlines = [
         ActivityInline,
