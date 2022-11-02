@@ -351,6 +351,7 @@ class TestDetail(BaseInterventionTestCase):
         data = response.data
         self.assertEqual(data["id"], self.intervention.pk)
         self.assertEqual(data["result_links"][0]["total"], 30)
+        self.assertIn('created', data["result_links"][0])
         self.assertEqual(data["unicef_signatory"], self.user_serialized)
         self.assertIn('confidential', data)
 

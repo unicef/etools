@@ -470,6 +470,7 @@ class BaseInterventionResultNestedSerializer(serializers.ModelSerializer):
         model = InterventionResultLink
         fields = [
             'id',
+            'created',
             'code',
             'intervention',
             'cp_output',
