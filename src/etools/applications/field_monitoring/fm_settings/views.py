@@ -109,6 +109,7 @@ class LocationSitesViewSet(FMBaseViewSet, viewsets.ModelViewSet):
     def get_view_name(self):
         return _('Site Specific Locations')
 
+    @method_decorator(cache_control(no_cache=True))  # disable browser cache
     @method_decorator(cache_control(public=True))  # reset cache control header to allow etags work with cache_page
     @etag_cached('fm-sites')
     @method_decorator(cache_page(60 * 60 * 24, key_prefix=TenantSuffixedString('fm-sites')))
