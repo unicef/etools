@@ -1,6 +1,5 @@
 import logging
 from decimal import Decimal
-from typing import TYPE_CHECKING
 
 from django.conf import settings
 from django.contrib.auth.models import _user_get_permissions, AbstractBaseUser, Group, Permission, UserManager
@@ -15,15 +14,11 @@ from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 
 from django_tenants.models import TenantMixin
-from django_tenants.utils import get_public_schema_name, tenant_context
 from model_utils import FieldTracker
 from model_utils.models import TimeStampedModel
 
 from etools.applications.organizations.models import Organization
 from etools.libraries.djangolib.models import GroupWrapper
-
-if TYPE_CHECKING:
-    from etools.applications.partners.models import PartnerStaffMember
 
 logger = logging.getLogger(__name__)
 
@@ -149,7 +144,11 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
         self.email = self.__class__.objects.normalize_email(self.email)
 
     def __str__(self):
-        return self.get_full_name()
+        return'{} {} ({})'.format(
+            self.first_name,
+            self.last_name,
+            self.profile.organization.name if self.profile.organization else '-'
+        )
 
     def get_full_name(self):
         """
@@ -187,8 +186,7 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
 
     @cached_property
     def partner(self):
-        staff_member = self.get_partner_staff_member()
-        return staff_member.partner if staff_member else None
+        return self.get_partner_staff_member()
 
     @property
     def groups(self):
@@ -201,20 +199,24 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
             country=connection.tenant, organization_id=organization_id)
         return Group.objects.filter(realms__in=current_country_realms).distinct()
 
-    def get_partner_staff_member(self) -> ['PartnerStaffMember']:
-        # just wrapper to avoid try...catch in place
-        try:
-            return self.partner_staff_member
-        except self._meta.get_field('partner_staff_member').related_model.DoesNotExist:
-            return None
+    def get_partner_staff_member(self):
+        realm = self.realms.filter(
+            country=connection.tenant,
+            organization=self.profile.organization).last()
+        if realm:
+            try:
+                return realm.organization.partner
+            except realm.organization._meta.get_field('partner').related_model.DoesNotExist:
+                return
+        return
 
-    def get_staff_member_country(self):
-        from etools.applications.partners.models import PartnerStaffMember
-        for country in Country.objects.exclude(name__in=[get_public_schema_name(), 'Global']).all():
-            with tenant_context(country):
-                if PartnerStaffMember.objects.filter(user=self).exists():
-                    return country
-        return None
+    # def get_staff_member_country(self):
+    #     from etools.applications.partners.models import PartnerStaffMember
+    #     for country in Country.objects.exclude(name__in=[get_public_schema_name(), 'Global']).all():
+    #         with tenant_context(country):
+    #             if PartnerStaffMember.objects.filter(user=self).exists():
+    #                 return country
+    #     return None
 
     def get_admin_url(self):
         info = (self._meta.app_label, self._meta.model_name)

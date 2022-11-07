@@ -322,9 +322,9 @@ class ExternalUserViewSet(
         viewsets.GenericViewSet,
 ):
     model = get_user_model()
+    # TODO REALMS clarify: only from EXTERNAL PSEA ASSESSORS org and Auditor group ?
     queryset = get_user_model().objects.exclude(
-        Q(email__endswith="@unicef.org") | Q(is_staff=True) | Q(is_superuser=True) |
-        Q(partner_staff_member__isnull=False)).all()
+        Q(email__endswith="@unicef.org") | Q(is_staff=True) | Q(is_superuser=True)).all()
     serializer_class = ExternalUserSerializer
     permission_classes = (IsAdminUser, )
 
