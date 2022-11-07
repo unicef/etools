@@ -44,7 +44,6 @@ from etools.applications.partners.tests.factories import (
     InterventionReviewFactory,
     InterventionSupplyItemFactory,
     PartnerFactory,
-    PartnerStaffFactory,
 )
 from etools.applications.partners.tests.test_api_interventions import (
     BaseAPIInterventionIndicatorsCreateMixin,
@@ -140,18 +139,17 @@ class BaseInterventionTestCase(BaseTenantTestCase):
 class TestList(BaseInterventionTestCase):
     def test_list_for_partner(self):
         intervention = InterventionFactory(date_sent_to_partner=None)
-        user = UserFactory(is_staff=False, realms__data=[])
-        user_staff_member = PartnerStaffFactory(
-            partner=intervention.agreement.partner,
-            user=user,
+        staff_member = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=intervention.agreement.partner.organization,
         )
-        intervention.partner_focal_points.add(user_staff_member)
+        intervention.partner_focal_points.add(staff_member)
 
         # not sent to partner
         response = self.forced_auth_req(
             "get",
             reverse('pmp_v3:intervention-list'),
-            user=user,
+            user=staff_member,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 0)
@@ -163,7 +161,7 @@ class TestList(BaseInterventionTestCase):
         response = self.forced_auth_req(
             "get",
             reverse('pmp_v3:intervention-list'),
-            user=user,
+            user=staff_member,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
@@ -284,7 +282,7 @@ class TestList(BaseInterventionTestCase):
         country_programme = CountryProgrammeFactory()
         intervention.country_programmes.add(country_programme)
         InterventionFactory()
-        with self.assertNumQueries(11):
+        with self.assertNumQueries(12):
             response = self.forced_auth_req(
                 "get",
                 reverse('pmp_v3:intervention-list'),
@@ -378,12 +376,15 @@ class TestDetail(BaseInterventionTestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_reporting_requirements_partner_user(self):
-        staff_member = PartnerStaffFactory(partner=self.intervention.agreement.partner)
+        staff_member = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=self.intervention.agreement.partner.organization,
+        )
         self.intervention.partner_focal_points.add(staff_member)
         response = self.forced_auth_req(
             "get",
             reverse('pmp_v3:intervention-detail', args=[self.intervention.pk]),
-            user=staff_member.user,
+            user=staff_member,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertFalse(response.data['permissions']['view']['reporting_requirements'])
@@ -400,34 +401,43 @@ class TestDetail(BaseInterventionTestCase):
         self.assertTrue(response.data['permissions']['edit']['confidential'])
 
     def test_confidential_permissions_partner_user(self):
-        staff_member = PartnerStaffFactory(partner=self.intervention.agreement.partner)
+        staff_member = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=self.intervention.agreement.partner.organization,
+        )
         self.intervention.partner_focal_points.add(staff_member)
         response = self.forced_auth_req(
             "get",
             reverse('pmp_v3:intervention-detail', args=[self.intervention.pk]),
-            user=staff_member.user,
+            user=staff_member
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertFalse(response.data['permissions']['view']['confidential'])
         self.assertFalse(response.data['permissions']['edit']['confidential'])
 
     def test_pdf_partner_user(self):
-        staff_member = PartnerStaffFactory(partner=self.intervention.agreement.partner)
+        staff_member = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=self.intervention.agreement.partner.organization,
+        )
         self.intervention.partner_focal_points.add(staff_member)
         response = self.forced_auth_req(
             "get",
             reverse('pmp_v3:intervention-detail-pdf', args=[self.intervention.pk]),
-            user=staff_member.user,
+            user=staff_member,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response['Content-Type'], 'application/pdf')
 
     def test_pdf_another_partner_user(self):
-        staff_member = PartnerStaffFactory()
+        staff_member = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=OrganizationFactory(),
+        )
         response = self.forced_auth_req(
             "get",
             reverse('pmp_v3:intervention-detail-pdf', args=[self.intervention.pk]),
-            user=staff_member.user,
+            user=staff_member,
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
@@ -530,13 +540,13 @@ class TestDetail(BaseInterventionTestCase):
         )
 
     def test_num_queries(self):
-        # clear waffle cache to avoid queries number incostintency caused by cached tenant flags
+        # clear waffle cache to avoid queries number inconsistency caused by cached tenant flags
         get_cache().clear()
 
         [InterventionManagementBudgetItemFactory(budget=self.intervention.management_budgets) for _i in range(10)]
 
         # there is a lot of queries, but no duplicates caused by budget items
-        with self.assertNumQueries(48):
+        with self.assertNumQueries(51):
             response = self.forced_auth_req(
                 "get",
                 reverse('pmp_v3:intervention-detail', args=[self.intervention.pk]),
@@ -626,8 +636,10 @@ class TestCreate(BaseInterventionTestCase):
         self.assertEqual(data.get("budget_owner"), self.user_serialized)
 
     def test_add_intervention_by_partner_member(self):
-        partner_user = UserFactory(is_staff=False, realms__data=[])
-        PartnerStaffFactory(email=partner_user.email, user=partner_user)
+        partner_user = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=self.agreement.partner.organization,
+        )
         response = self.forced_auth_req(
             "post",
             reverse('pmp_v3:intervention-list'),
@@ -825,7 +837,10 @@ class TestUpdate(BaseInterventionTestCase):
         ReportingRequirementFactory(intervention=intervention, start_date=intervention.start, end_date=intervention.end)
         intervention.flat_locations.add(LocationFactory())
         intervention.unicef_focal_points.add(self.user)
-        staff_member = PartnerStaffFactory(partner=self.partner)
+        staff_member = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=self.partner.organization
+        )
         intervention.partner_focal_points.add(staff_member)
         response = self.forced_auth_req(
             "patch",
@@ -850,7 +865,7 @@ class TestUpdate(BaseInterventionTestCase):
         response = self.forced_auth_req(
             "patch",
             reverse('pmp_v3:intervention-accept', args=[intervention.pk]),
-            user=staff_member.user,
+            user=staff_member,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         response = self.forced_auth_req(
@@ -897,12 +912,11 @@ class TestDelete(BaseInterventionTestCase):
         super().setUp()
         self.intervention = InterventionFactory()
         self.user = UserFactory(is_staff=True)
-        self.partner_user = UserFactory(is_staff=False, realms__data=[])
-        user_staff_member = PartnerStaffFactory(
-            partner=self.intervention.agreement.partner,
-            user=self.partner_user,
+        self.partner_user = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=self.intervention.agreement.partner.organization
         )
-        self.intervention.partner_focal_points.add(user_staff_member)
+        self.intervention.partner_focal_points.add(self.partner_user)
         self.intervention_qs = Intervention.objects.filter(
             pk=self.intervention.pk,
         )
@@ -1258,12 +1272,11 @@ class TestSupplyItem(BaseInterventionTestCase):
             '''.encode('utf-8'),
             content_type="multipart/form-data",
         )
-        self.partner_focal_point = UserFactory(is_staff=False, realms__data=[])
-        partner_focal_point_staff = PartnerStaffFactory(
-            partner=self.partner, email=self.partner_focal_point.email, user=self.partner_focal_point,
+        self.partner_focal_point = UserFactory(
+            is_staff=False, realms__data=['IP Viewer'],
+            profile__organization=self.partner.organization
         )
-
-        self.intervention.partner_focal_points.add(partner_focal_point_staff)
+        self.intervention.partner_focal_points.add(self.partner_focal_point)
 
     def test_list(self):
         count = 10
@@ -1694,8 +1707,14 @@ class TestInterventionUpdate(BaseInterventionTestCase):
         intervention = InterventionFactory()
         intervention.unicef_focal_points.add(self.user)
         agreement = AgreementFactory()
-        focal_1 = PartnerStaffFactory()
-        focal_2 = PartnerStaffFactory()
+        focal_1 = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=intervention.agreement.partner.organization
+        )
+        focal_2 = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=intervention.agreement.partner.organization
+        )
         response = self.forced_auth_req(
             "patch",
             reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
@@ -1803,13 +1822,15 @@ class BaseInterventionActionTestCase(BaseInterventionTestCase):
         super().setUp()
         call_command("update_notifications")
 
-        self.partner_user = UserFactory(is_staff=False, realms__data=[])
-        staff_member = PartnerStaffFactory(email=self.partner_user.email, user=self.partner_user)
+        self.partner_user = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=self.partner.organization
+        )
         office = OfficeFactory()
         section = SectionFactory()
 
         agreement = AgreementFactory(
-            partner=staff_member.partner,
+            partner=self.partner,
             signed_by_unicef_date=datetime.date.today(),
         )
         self.intervention = InterventionFactory(
@@ -1819,12 +1840,12 @@ class BaseInterventionActionTestCase(BaseInterventionTestCase):
             signed_by_unicef_date=datetime.date.today(),
             signed_by_partner_date=datetime.date.today(),
             unicef_signatory=self.user,
-            partner_authorized_officer_signatory=staff_member,
+            partner_authorized_officer_signatory=self.partner_user,
             budget_owner=UserFactory(),
         )
         self.intervention.flat_locations.add(LocationFactory())
         self.intervention.country_programmes.add(agreement.country_programme)
-        self.intervention.partner_focal_points.add(staff_member)
+        self.intervention.partner_focal_points.add(self.partner_user)
         self.intervention.unicef_focal_points.add(self.user)
         self.intervention.offices.add(office)
         self.intervention.sections.add(section)
@@ -2013,7 +2034,10 @@ class TestInterventionAcceptBehalfOfPartner(BaseInterventionActionTestCase):
         self.intervention.partner_accepted = False
         self.intervention.unicef_court = True
         self.intervention.save()
-        self.intervention.partner_focal_points.add(*[PartnerStaffFactory(partner=self.partner) for _i in range(5)])
+        self.intervention.partner_focal_points.add(*[UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=self.partner.organization
+        ) for _i in range(5)])
         self.intervention.unicef_focal_points.add(*[UserFactory(is_staff=True) for _i in range(5)])
 
         response = self.forced_auth_req(
@@ -2281,13 +2305,12 @@ class TestInterventionReviewSendBack(BaseInterventionActionTestCase):
         self.intervention.date_sent_to_partner = datetime.date.today()
         self.intervention.status = Intervention.REVIEW
         self.intervention.save()
-        partner_org = self.intervention.partner_authorized_officer_signatory.partner.organization
         RealmFactory(
             user=self.user,
             country=CountryFactory(),
-            organization=partner_org,
+            organization=self.partner.organization,
             group=GroupFactory(name=PRC_SECRETARY))
-        self.user.profile.organization = partner_org
+        self.user.profile.organization = self.partner.organization
         self.user.profile.save(update_fields=['organization'])
 
         InterventionReviewFactory(intervention=self.intervention, overall_approval=None)
@@ -2904,7 +2927,6 @@ class TestInterventionSendToUNICEF(BaseInterventionActionTestCase):
 
     def test_partner_no_access(self):
         partner_user = UserFactory(is_staff=False, realms__data=[])
-        PartnerStaffFactory(email=partner_user.email, user=partner_user)
         response = self.forced_auth_req(
             "patch",
             self.url,
@@ -2914,7 +2936,6 @@ class TestInterventionSendToUNICEF(BaseInterventionActionTestCase):
 
     def test_not_focal_point_no_access(self):
         partner_user = UserFactory(is_staff=False, realms__data=[])
-        PartnerStaffFactory(email=partner_user.email, user=partner_user, partner=self.partner)
 
         response = self.forced_auth_req(
             "patch",

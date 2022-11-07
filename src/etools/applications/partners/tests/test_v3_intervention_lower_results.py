@@ -14,7 +14,6 @@ from etools.applications.partners.tests.factories import (
     InterventionAmendmentFactory,
     InterventionFactory,
     InterventionResultLinkFactory,
-    PartnerStaffFactory,
 )
 from etools.applications.reports.models import LowerResult, ResultType
 from etools.applications.reports.tests.factories import (
@@ -35,14 +34,12 @@ class TestInterventionLowerResultsViewBase(BaseTenantTestCase):
         self.intervention = InterventionFactory(status=Intervention.DRAFT, unicef_court=True)
 
         self.partner_focal_point = UserFactory(realms__data=[])
-        self.staff_member = PartnerStaffFactory(
-            partner=self.intervention.agreement.partner,
-            user=self.partner_focal_point,
+        self.staff_member = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=self.intervention.agreement.partner.organization
         )
-        self.intervention.partner_focal_points.add(self.staff_member)
+        self.intervention.partner_focal_points.add(self.partner_focal_point)
         self.intervention.unicef_focal_points.add(self.user)
-
-        self.partner_staff_member = PartnerStaffFactory(partner=self.intervention.agreement.partner).user
 
         self.cp_output = ResultFactory(result_type__name=ResultType.OUTPUT)
         self.result_link = InterventionResultLinkFactory(intervention=self.intervention, cp_output=self.cp_output)

@@ -8,12 +8,7 @@ from tablib.core import Dataset
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.organizations.models import OrganizationType
 from etools.applications.organizations.tests.factories import OrganizationFactory
-from etools.applications.partners.tests.factories import (
-    AgreementAmendmentFactory,
-    AgreementFactory,
-    PartnerFactory,
-    PartnerStaffFactory,
-)
+from etools.applications.partners.tests.factories import AgreementAmendmentFactory, AgreementFactory, PartnerFactory
 from etools.applications.reports.tests.factories import CountryProgrammeFactory
 from etools.applications.users.tests.factories import UserFactory
 
@@ -43,7 +38,10 @@ class BaseAgreementModelExportTestCase(BaseTenantTestCase):
             type_of_assessment="Type of Assessment",
             last_assessment_date=datetime.date.today(),
         )
-        partnerstaff = PartnerStaffFactory(partner=partner)
+        partnerstaff = UserFactory(
+            profile__organization=partner.organization,
+            realms__data=['IP Viewer']
+        )
         cls.agreement = AgreementFactory(
             partner=partner,
             country_programme=CountryProgrammeFactory(wbs="random WBS"),

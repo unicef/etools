@@ -12,7 +12,6 @@ from etools.applications.partners.tests.factories import (
     InterventionFactory,
     InterventionResultLinkFactory,
     PartnerFactory,
-    PartnerStaffFactory,
 )
 from etools.applications.reports.models import Office, Section, SpecialReportingRequirement
 from etools.applications.reports.tests.factories import (
@@ -275,7 +274,10 @@ class TestSpecialReportingRequirementRetrieveUpdateDestroyView(BaseTenantTestCas
             is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]
         )
         cls.partner = PartnerFactory()
-        cls.partner_focal_point = PartnerStaffFactory(partner=cls.partner).user
+        cls.partner_focal_point = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=cls.partner.organization
+        )
 
         cls.intervention = InterventionFactory(
             start=datetime.date(2001, 1, 1),
@@ -284,7 +286,7 @@ class TestSpecialReportingRequirementRetrieveUpdateDestroyView(BaseTenantTestCas
             agreement__partner=cls.partner,
             date_sent_to_partner=datetime.date.today()
         )
-        cls.intervention.partner_focal_points.add(cls.partner_focal_point.get_partner_staff_member())
+        cls.intervention.partner_focal_points.add(cls.partner_focal_point)
         cls.intervention.unicef_focal_points.add(cls.unicef_staff)
 
     def _get_url(self, requirement):
@@ -392,13 +394,15 @@ class TestResultFrameworkView(BaseTenantTestCase):
         cls.unicef_staff = UserFactory(is_staff=True)
 
         cls.partner = PartnerFactory()
-        cls.partner_focal_point = PartnerStaffFactory(partner=cls.partner).user
-
+        cls.partner_focal_point = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=cls.partner.organization
+        )
         cls.intervention = InterventionFactory(
             agreement__partner=cls.partner,
             date_sent_to_partner=datetime.date.today()
         )
-        cls.intervention.partner_focal_points.add(cls.partner_focal_point.get_partner_staff_member())
+        cls.intervention.partner_focal_points.add(cls.partner_focal_point)
 
         cls.result_link = InterventionResultLinkFactory(
             intervention=cls.intervention,

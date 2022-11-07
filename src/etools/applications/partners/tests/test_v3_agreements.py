@@ -13,7 +13,7 @@ from etools.applications.organizations.models import OrganizationType
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.models import Agreement
 from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, UNICEF_USER
-from etools.applications.partners.tests.factories import AgreementFactory, PartnerFactory, PartnerStaffFactory
+from etools.applications.partners.tests.factories import AgreementFactory, PartnerFactory
 from etools.applications.reports.tests.factories import CountryProgrammeFactory
 from etools.applications.users.tests.factories import UserFactory
 
@@ -39,15 +39,14 @@ class BaseAgreementTestCase(BaseTenantTestCase):
         cls.pme_user = UserFactory(
             is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]
         )
-        cls.partner_user = UserFactory(is_staff=False, realms__data=['IP Viewer'])
         cls.partner = PartnerFactory(
             organization=OrganizationFactory(
                 organization_type=OrganizationType.CIVIL_SOCIETY_ORGANIZATION,
             )
         )
-        cls.partner_staff = PartnerStaffFactory(
-            partner=cls.partner,
-            user=cls.partner_user,
+        cls.partner_staff = UserFactory(
+            is_staff=False, realms__data=['IP Viewer'],
+            profile__organization=cls.partner.organization
         )
         cls.country_programme = CountryProgrammeFactory()
         cls.agreement = AgreementFactory(partner=cls.partner)
@@ -81,7 +80,10 @@ class TestList(BaseAgreementTestCase):
         self.assertEqual(len(response.data), agreement_qs.count())
 
     def test_get_by_partner_not_related(self):
-        staff = PartnerStaffFactory()
+        staff = UserFactory(
+            is_staff=False, realms__data=['IP Viewer'],
+            profile__organization=self.partner.organization
+        )
         response = self.forced_auth_req(
             "get",
             reverse("pmp_v3:agreement-list"),

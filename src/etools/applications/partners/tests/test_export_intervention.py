@@ -18,7 +18,6 @@ from etools.applications.partners.tests.factories import (
     InterventionPlannedVisitsFactory,
     InterventionResultLinkFactory,
     PartnerFactory,
-    PartnerStaffFactory,
 )
 from etools.applications.reports.tests.factories import (
     CountryProgrammeFactory,
@@ -54,7 +53,10 @@ class BaseInterventionModelExportTestCase(BaseTenantTestCase):
             type_of_assessment="Type of Assessment",
             last_assessment_date=datetime.date.today(),
         )
-        partnerstaff = PartnerStaffFactory(partner=partner)
+        partnerstaff = UserFactory(
+            profile__organization=partner.organization,
+            realms__data=['IP Viewer']
+        )
         agreement = AgreementFactory(
             partner=partner,
             country_programme=CountryProgrammeFactory(wbs="random WBS"),

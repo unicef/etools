@@ -9,7 +9,7 @@ from django.utils import timezone
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import PartnerStaffMember
 from etools.applications.partners.tasks import sync_partner_to_prp, sync_partners_staff_members_from_prp
-from etools.applications.partners.tests.factories import InterventionFactory, PartnerFactory, PartnerStaffFactory
+from etools.applications.partners.tests.factories import InterventionFactory, PartnerFactory
 from etools.applications.users.tests.factories import UserFactory
 
 
@@ -68,9 +68,10 @@ class TestPartnerStaffMembersImportTask(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.partner = PartnerFactory(staff_members=[])
-        cls.staff_member_user = UserFactory()
-        cls.staff_member = PartnerStaffFactory(partner=cls.partner, user=cls.staff_member_user)
-
+        cls.staff_member = UserFactory(
+            profile__organization=cls.partner.organization,
+            realms__data=['IP Viewer']
+        )
         cls.prp_partners_export_response_data = {
             'count': 2,
             'results': [

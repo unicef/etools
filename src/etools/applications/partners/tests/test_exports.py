@@ -19,7 +19,6 @@ from etools.applications.partners.tests.factories import (
     InterventionResultLinkFactory,
     PartnerFactory,
     PartnerPlannedVisitsFactory,
-    PartnerStaffFactory,
 )
 from etools.applications.reports.models import ResultType
 from etools.applications.reports.tests.factories import ResultFactory
@@ -53,7 +52,10 @@ class TestModelExport(BaseTenantTestCase):
             type_of_assessment="Type of Assessment",
             last_assessment_date=datetime.date.today(),
         )
-        cls.partnerstaff = PartnerStaffFactory(partner=cls.partner)
+        cls.partnerstaff = UserFactory(
+            profile__organization=cls.partner.organization,
+            realms__data=['IP Viewer']
+        )
         attachment = tempfile.NamedTemporaryFile(suffix=".pdf").name
         cls.agreement = AgreementFactory(
             partner=cls.partner,

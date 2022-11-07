@@ -9,12 +9,7 @@ from tablib.core import Dataset
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.organizations.models import OrganizationType
 from etools.applications.organizations.tests.factories import OrganizationFactory
-from etools.applications.partners.tests.factories import (
-    AssessmentFactory,
-    PartnerFactory,
-    PartnerPlannedVisitsFactory,
-    PartnerStaffFactory,
-)
+from etools.applications.partners.tests.factories import AssessmentFactory, PartnerFactory, PartnerPlannedVisitsFactory
 from etools.applications.users.tests.factories import UserFactory
 
 
@@ -83,7 +78,10 @@ class PartnerModelExportTestCase(BaseTenantTestCase):
                 }
             },
         )
-        cls.partnerstaff = PartnerStaffFactory(partner=cls.partner)
+        cls.partnerstaff = UserFactory(
+            profile__organization=cls.partner.organization,
+            realms__data=['IP Viewer']
+        )
         cls.planned_visit = PartnerPlannedVisitsFactory(partner=cls.partner)
 
 

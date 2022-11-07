@@ -54,7 +54,6 @@ from etools.applications.partners.tests.factories import (
     InterventionResultLinkFactory,
     InterventionSupplyItemFactory,
     PartnerFactory,
-    PartnerStaffFactory,
     PlannedEngagementFactory,
 )
 from etools.applications.partners.views import partner_organization_v2, v2
@@ -481,7 +480,10 @@ class TestPartnershipViews(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
         cls.partner = PartnerFactory(organization=OrganizationFactory(name='Partner'))
-        cls.partner_staff_member = PartnerStaffFactory(partner=cls.partner)
+        cls.partner_staff_member = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=cls.partner.organization,
+        )
 
         agreement = AgreementFactory(partner=cls.partner,
                                      signed_by_unicef_date=datetime.date.today(),
@@ -713,14 +715,19 @@ class TestAgreementAPIView(BaseTenantTestCase):
             organization_type=OrganizationType.CIVIL_SOCIETY_ORGANIZATION)
         cls.partner = PartnerFactory(organization=cls.organization)
 
-        cls.partner_staff_user = UserFactory(is_staff=True, profile__organization=cls.organization)
-        cls.partner_staff = PartnerStaffFactory(partner=cls.partner, user=cls.partner_staff_user)
+        cls.partner_staff_user = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=cls.organization,
+        )
 
         cls.partnership_manager_user = UserFactory(
             is_staff=True, realms__data=[PARTNERSHIP_MANAGER_GROUP],
             profile__organization=cls.organization
         )
-        cls.partner_staff2 = PartnerStaffFactory(partner=cls.partner, user=cls.partnership_manager_user)
+        cls.partner_staff2 = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=cls.organization,
+        )
 
         cls.notify_path = "etools.applications.partners.utils.send_notification_with_template"
 
@@ -731,7 +738,7 @@ class TestAgreementAPIView(BaseTenantTestCase):
 
         cls.agreement = AgreementFactory(
             partner=cls.partner,
-            partner_manager=cls.partner_staff,
+            partner_manager=cls.partner_staff_user,
             country_programme=cls.country_programme,
             start=datetime.date.today(),
             end=cls.country_programme.to_date,
@@ -739,7 +746,7 @@ class TestAgreementAPIView(BaseTenantTestCase):
             signed_by_partner_date=datetime.date.today(),
             signed_by=cls.unicef_staff,
         )
-        cls.agreement.authorized_officers.add(cls.partner_staff)
+        cls.agreement.authorized_officers.add(cls.partner_staff_user)
         cls.agreement.save()
 
         cls.amendment1 = AgreementAmendment.objects.create(
@@ -836,12 +843,12 @@ class TestAgreementAPIView(BaseTenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["authorized_officers"][0]["first_name"], self.partner_staff.first_name)
+        self.assertEqual(response.data["authorized_officers"][0]["first_name"], self.partner_staff_user.first_name)
 
     def test_agreements_update_partner_staff(self):
         data = {
             "authorized_officers": [
-                self.partner_staff.id,
+                self.partner_staff_user.id,
                 self.partner_staff2.id
             ],
         }
@@ -966,13 +973,13 @@ class TestAgreementAPIView(BaseTenantTestCase):
             agreement_type=Agreement.MOU,
             status=Agreement.DRAFT,
             partner=self.partner,
-            partner_manager=self.partner_staff,
+            partner_manager=self.partner_staff_user,
             start=datetime.date.today(),
             end=self.country_programme.to_date,
             signed_by=self.unicef_staff,
         )
         # In order to auto-transition to signed, this agreement needs authorized officers
-        agreement.authorized_officers.add(self.partner_staff)
+        agreement.authorized_officers.add(self.partner_staff_user)
         agreement.save()
 
         today = datetime.date.today()
@@ -1093,7 +1100,10 @@ class TestPartnerStaffMemberAPIView(BaseTenantTestCase):
         cls.partner_staff_user = UserFactory(
             is_staff=True, realms__data=[PARTNERSHIP_MANAGER_GROUP]
         )
-        cls.partner_staff = PartnerStaffFactory(partner=cls.partner, user=cls.partner_staff_user)
+        cls.partner_staff = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=cls.partner.organization,
+        )
         cls.url = reverse(
             "partners_api:partner-staff-members-list",
             args=[cls.partner.pk]
@@ -1122,7 +1132,10 @@ class TestInterventionViews(BaseTenantTestCase):
         )
         cls.agreement = AgreementFactory()
         cls.agreement2 = AgreementFactory(status="draft")
-        cls.partnerstaff = PartnerStaffFactory(partner=cls.agreement.partner)
+        cls.partnerstaff = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=cls.agreement.partner.organization,
+        )
         cls.planned_engagement = PlannedEngagementFactory(partner=cls.agreement.partner)
 
     def setUp(self):
@@ -1763,7 +1776,10 @@ class TestInterventionViews(BaseTenantTestCase):
         self.intervention_obj.country_programme = self.intervention_obj.agreement.country_programme
         self.intervention_obj.status = Intervention.ACTIVE
         self.intervention_obj.unicef_focal_points.add(self.unicef_staff)
-        self.intervention_obj.partner_focal_points.add(PartnerStaffFactory())
+        self.intervention_obj.partner_focal_points.add(UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=self.intervention_obj.agreement.partner.organization,
+        ))
         self.intervention_obj.budget_owner = UserFactory()
         self.intervention_obj.date_sent_to_partner = datetime.date.today()
         self.intervention_obj.ip_program_contribution = "contribution"
@@ -2028,7 +2044,10 @@ class TestPartnershipDashboardView(BaseTenantTestCase):
         self.unicef_staff = UserFactory(is_staff=True)
         self.agreement = AgreementFactory()
         self.agreement2 = AgreementFactory(status=Agreement.DRAFT)
-        self.partnerstaff = PartnerStaffFactory(partner=self.agreement.partner)
+        self.partnerstaff = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=self.agreement.partner.organization
+        )
         data = {
             "document_type": Intervention.SPD,
             "status": Intervention.DRAFT,
