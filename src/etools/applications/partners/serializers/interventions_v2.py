@@ -30,6 +30,7 @@ from etools.applications.partners.models import (
     PartnerType,
 )
 from etools.applications.partners.permissions import InterventionPermissions
+from etools.applications.partners.serializers.exports.vision.export_mixin import InterventionVisionSynchronizerMixin
 from etools.applications.partners.serializers.intervention_snapshot import FullInterventionSnapshotSerializerMixin
 from etools.applications.partners.utils import get_quarters_range
 from etools.applications.reports.models import AppliedIndicator, LowerResult, ReportingRequirement
@@ -47,7 +48,11 @@ from etools.applications.users.serializers import MinimalUserSerializer
 from etools.libraries.pythonlib.hash import h11
 
 
-class InterventionBudgetCUSerializer(FullInterventionSnapshotSerializerMixin, serializers.ModelSerializer):
+class InterventionBudgetCUSerializer(
+    InterventionVisionSynchronizerMixin,
+    FullInterventionSnapshotSerializerMixin,
+    serializers.ModelSerializer,
+):
     partner_contribution_local = serializers.DecimalField(max_digits=20, decimal_places=2)
     unicef_cash_local = serializers.DecimalField(max_digits=20, decimal_places=2)
     in_kind_amount_local = serializers.DecimalField(max_digits=20, decimal_places=2)
@@ -1039,6 +1044,7 @@ class InterventionRAMIndicatorsListSerializer(serializers.ModelSerializer):
 
 
 class InterventionReportingRequirementCreateSerializer(
+    InterventionVisionSynchronizerMixin,
     FullInterventionSnapshotSerializerMixin,
     serializers.ModelSerializer,
 ):

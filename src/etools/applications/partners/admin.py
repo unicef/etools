@@ -43,7 +43,9 @@ from etools.applications.partners.models import (  # TODO intervention sector lo
     PartnerStaffMember,
     PlannedEngagement,
 )
+from etools.applications.partners.synchronizers import PDVisionUploader
 from etools.applications.partners.tasks import sync_partner
+from etools.applications.vision.tasks import send_pd_to_vision
 from etools.libraries.djangolib.admin import RestrictedEditAdmin, RestrictedEditAdminMixin
 
 
@@ -258,6 +260,7 @@ class SignedPDAttachmentInline(AttachmentSingleInline):
 
 
 class InterventionAdmin(
+        ExtraUrlMixin,
         AttachmentInlineAdminMixin,
         CountryUsersAdminMixin,
         HiddenPartnerMixin,
@@ -376,6 +379,14 @@ class InterventionAdmin(
         InterventionPlannedVisitsInline,
         InterventionReviewInlineAdmin,
     )
+
+    @button(label='Send to Vision')
+    def send_to_vision(self, request, pk):
+        if not PDVisionUploader().validate_instance(Intervention.objects.get(pk=pk)):
+            messages.error(request, _('PD is not ready for Vision synchronization.'))
+            return
+        send_pd_to_vision.delay(pk)
+        messages.success(request, _('PD was sent to Vision.'))
 
     def created_date(self, obj):
         return obj.created_at.strftime('%d-%m-%Y')

@@ -1,16 +1,21 @@
 import logging
 from datetime import datetime
 from decimal import Decimal
+from typing import Optional, Tuple
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import connection, transaction
 
+import requests
 from unicef_vision.settings import INSIGHT_DATE_FORMAT
 from unicef_vision.synchronizers import FileDataSynchronizer
-from unicef_vision.utils import comp_decimals
+from unicef_vision.utils import base_headers, comp_decimals
 
-from etools.applications.partners.models import PartnerOrganization, PlannedEngagement
+from etools.applications.partners.models import Intervention, PartnerOrganization, PlannedEngagement
+from etools.applications.partners.serializers.exports.vision.interventions_v1 import InterventionSerializer
 from etools.applications.partners.tasks import notify_partner_hidden
+from etools.applications.reports.models import InterventionActivity
 from etools.applications.vision.synchronizers import VisionDataTenantSynchronizer
 
 logger = logging.getLogger(__name__)
@@ -374,3 +379,71 @@ class DirectCashTransferSynchronizer(VisionDataTenantSynchronizer):
         dcts = self.create_dict(filtered_records)
         processed = self._save(dcts)
         return processed
+
+
+class VisionUploader:
+    serializer_class = None
+
+    def get_endpoint(self) -> Optional[str]:
+        raise NotImplementedError
+
+    def validate_instance(self, instance) -> bool:
+        raise NotImplementedError
+
+    def serialize_instance(self, instance) -> dict:
+        return self.serializer_class(instance=instance).data
+
+    def get_authorization_headers(self):
+        username = settings.EZHACT_API_USER
+        password = settings.EZHACT_API_PASSWORD
+        return {'Authorization': f'Basic {username}:{password}'}
+
+    def get_headers(self):
+        return {**base_headers, **self.get_authorization_headers()}
+
+    def send_to_vision(self, endpoint, data) -> (int, dict):
+        response = requests.post(endpoint, json=data, headers=self.get_headers())
+        response_data = {}
+        if response.status_code in {200, 201}:
+            response_data = response.json()
+        return response.status_code, response_data
+
+    def sync(self, instance) -> Optional[Tuple[int, dict]]:
+        endpoint = self.get_endpoint()
+        if not endpoint:
+            logger.warning('Unknown endpoint value')
+
+        if not self.validate_instance(instance):
+            logger.warning('Instance is not ready to be synchronized')
+
+        data = self.serialize_instance(instance)
+        return self.send_to_vision(endpoint, data)
+
+
+class PDVisionUploader(VisionUploader):
+    serializer_class = InterventionSerializer
+
+    def get_endpoint(self):
+        return getattr(settings, 'EZHACT_PD_VISION_URL', None)
+
+    def validate_instance(self, instance):
+        """
+        # PD is not in Development, Review, Signature.
+        # We also need to make sure that this pd has InterventionActivities.
+        # The PD cannot be and amendment "amendment_open" will not pass validation.
+        """
+        if instance.status in [Intervention.DRAFT, Intervention.REVIEW, Intervention.SIGNATURE]:
+            return False
+
+        if not InterventionActivity.objects.filter(result__result_link__intervention=instance).exists():
+            return False
+
+        # amendment intervention
+        if instance.in_amendment:
+            return False
+
+        # intervention with open amendment
+        if instance.amendments.filter(is_active=True).exists():
+            return False
+
+        return True
