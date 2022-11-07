@@ -13,16 +13,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RenameField(
-            model_name='agreement',
-            old_name='authorized_officers',
-            new_name='old_authorized_officers',
-        ),
-        migrations.RenameField(
-            model_name='intervention',
-            old_name='partner_focal_points',
-            new_name='old_partner_focal_points',
-        ),
         # on FK field renaming, the old indexes are not renamed, so first drop them to avoid name collision
         # https://code.djangoproject.com/ticket/23577
         migrations.AlterField(
@@ -40,7 +30,16 @@ class Migration(migrations.Migration):
             name='partner_authorized_officer_signatory',
             field=models.ForeignKey(blank=True, db_index=False, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='+', to='partners.partnerstaffmember', verbose_name='Signed by Partner'),
         ),
-        # prefix with old_ on PartnerStaffMember FK/M2M fields
+        migrations.RenameField(
+            model_name='agreement',
+            old_name='authorized_officers',
+            new_name='old_authorized_officers',
+        ),
+        migrations.RenameField(
+            model_name='intervention',
+            old_name='partner_focal_points',
+            new_name='old_partner_focal_points',
+        ),
         migrations.RenameField(
             model_name='agreement',
             old_name='partner_manager',
@@ -58,8 +57,13 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='agreement',
-            name='authorized_officers',
+            name='officers_authorized',
             field=models.ManyToManyField(blank=True, related_name='agreement_authorizations', to=settings.AUTH_USER_MODEL, verbose_name='Partner Authorized Officer'),
+        ),
+        migrations.AddField(
+            model_name='intervention',
+            name='partners_focal_points',
+            field=models.ManyToManyField(blank=True, related_name='_partners_intervention_partner_focal_points_+', to=settings.AUTH_USER_MODEL, verbose_name='CSO Authorized Officials'),
         ),
         migrations.AddField(
             model_name='agreement',
@@ -70,11 +74,6 @@ class Migration(migrations.Migration):
             model_name='intervention',
             name='partner_authorized_officer_signatory',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='signed_interventions', to=settings.AUTH_USER_MODEL, verbose_name='Signed by Partner'),
-        ),
-        migrations.AddField(
-            model_name='intervention',
-            name='partner_focal_points',
-            field=models.ManyToManyField(blank=True, related_name='_partners_intervention_partner_focal_points_+', to=settings.AUTH_USER_MODEL, verbose_name='CSO Authorized Officials'),
         ),
         migrations.AddField(
             model_name='interventionamendment',
