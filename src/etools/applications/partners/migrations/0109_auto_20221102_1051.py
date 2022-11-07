@@ -22,7 +22,7 @@ def migrate_staff_members_to_users(apps, schema_editor):
     for agreement in Agreement.objects.all():
         users = User.objects.filter(
             id__in=agreement.old_authorized_officers.all().values_list('user_id', flat=True))
-        agreement.authorized_officers.add(*users)
+        agreement.officers_authorized.add(*users)
         if agreement.old_partner_manager:
             agreement.partner_manager = agreement.old_partner_manager.user
             agreement.save(update_fields=['partner_manager'])
@@ -31,7 +31,7 @@ def migrate_staff_members_to_users(apps, schema_editor):
     for intervention in Intervention.objects.all():
         users = User.objects.filter(
             id__in=intervention.old_partner_focal_points.all().values_list('user_id', flat=True))
-        intervention.partner_focal_points.add(*users)
+        intervention.partners_focal_points.add(*users)
         if intervention.old_partner_authorized_officer_signatory:
             intervention.partner_authorized_officer_signatory = intervention.old_partner_authorized_officer_signatory.user
             intervention.save(update_fields=['partner_authorized_officer_signatory'])
