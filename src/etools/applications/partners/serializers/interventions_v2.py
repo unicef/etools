@@ -1,6 +1,7 @@
 from datetime import date, datetime, timedelta
 from operator import itemgetter
 
+from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.db.models import Q, QuerySet
 from django.utils.functional import cached_property
@@ -27,7 +28,6 @@ from etools.applications.partners.models import (
     InterventionPlannedVisits,
     InterventionReportingPeriod,
     InterventionResultLink,
-    PartnerStaffMember,
 )
 from etools.applications.partners.permissions import InterventionPermissions
 from etools.applications.partners.serializers.intervention_snapshot import FullInterventionSnapshotSerializerMixin
@@ -91,11 +91,18 @@ class InterventionBudgetCUSerializer(FullInterventionSnapshotSerializerMixin, se
 
 
 class PartnerStaffMemberUserSerializer(serializers.ModelSerializer):
-    user = MinimalUserSerializer()
+    active = serializers.CharField(source='is_active')
+    phone = serializers.CharField(source='profile.phone_number')
+    title = serializers.CharField(source='profile.job_title')
 
     class Meta:
-        model = PartnerStaffMember
-        fields = "__all__"
+        model = get_user_model()
+        fields = (
+            'id', 'email', 'first_name', 'last_name', 'created', 'modified',
+            'active', 'phone', 'title',
+            # TODO REALMS check with frontend if partner id is used
+            # 'partner'
+        )
 
 
 class InterventionAmendmentCUSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):

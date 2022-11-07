@@ -46,7 +46,7 @@ class PMPBaseViewMixin:
         if not self.is_partner_staff():
             return []
         return PartnerOrganization.objects.filter(
-            staff_members__email=self.request.user.email,
+            organization__realms__user__email=self.request.user.email,
         )
 
     def get_pd(self, pd_pk):
