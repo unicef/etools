@@ -1,5 +1,3 @@
-import datetime
-
 from django.db import connection
 from django.utils import timezone
 
@@ -7,12 +5,7 @@ from celery.utils.log import get_task_logger
 from unicef_vision.exceptions import VisionException
 
 from etools.applications.funds.synchronizers import FundReservationsSynchronizer
-from etools.applications.partners.models import Intervention
-from etools.applications.partners.synchronizers import (
-    DirectCashTransferSynchronizer,
-    PartnerSynchronizer,
-    PDVisionUploader,
-)
+from etools.applications.partners.synchronizers import DirectCashTransferSynchronizer, PartnerSynchronizer
 from etools.applications.reports.synchronizers import ProgrammeSynchronizer, RAMSynchronizer
 from etools.applications.users.models import Country
 from etools.config.celery import app, send_to_slack
@@ -101,29 +94,3 @@ def sync_handler(self, business_area_code, handler):
             # The 'autoretry_for' in the task decorator tells Celery to
             # retry this a few times on VisionExceptions, so just re-raise it
             raise
-
-
-@app.task
-def send_pd_to_vision(intervention_pk, retry_counter=0):
-    intervention = Intervention.objects.detail_qs.get(pk=intervention_pk)
-    logger.info(f'Starting {intervention} upload to vision')
-    response = PDVisionUploader().sync(intervention)
-    if response is None:
-        logger.warning('Synchronizer internal check failed')
-        return
-
-    status_code, _data = response
-    if status_code in [200, 201]:
-        logger.info('Completed pd synchronization')
-        return
-
-    if retry_counter < 2:
-        logger.info(f'Received {status_code} from vision synchronizer. retrying')
-        send_pd_to_vision.apply_async(
-            (intervention_pk,),
-            {'retry_counter': retry_counter + 1},
-            eta=timezone.now() + datetime.timedelta(minutes=1 + retry_counter)
-        )
-    else:
-        logger.error(f'Received {status_code} from vision synchronizer after 3 attempts.')
-        logger.exception('PDVisionUploader sync failed')

@@ -11,11 +11,13 @@ class InterventionSerializer(InterventionDetailSerializer):
     business_area_code = serializers.SerializerMethodField()
     offices = serializers.SerializerMethodField()
 
-    class Meta(InterventionDetailSerializer):
-        fields = (
+    class Meta(InterventionDetailSerializer.Meta):
+        fields = [
             f for f in InterventionDetailSerializer.Meta.fields
             if f not in {'permissions', 'available_actions'}
-        )
+        ] + [
+            'business_area_code',
+        ]
 
     def get_user(self):
         """

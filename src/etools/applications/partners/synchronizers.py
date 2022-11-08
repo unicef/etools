@@ -384,14 +384,23 @@ class DirectCashTransferSynchronizer(VisionDataTenantSynchronizer):
 class VisionUploader:
     serializer_class = None
 
+    def __init__(self, instance):
+        self._is_valid = None
+        self.instance = instance
+
     def get_endpoint(self) -> Optional[str]:
         raise NotImplementedError
 
-    def validate_instance(self, instance) -> bool:
+    def validate_instance(self) -> bool:
         raise NotImplementedError
 
-    def serialize_instance(self, instance) -> dict:
-        return self.serializer_class(instance=instance).data
+    def is_valid(self) -> bool:
+        if self._is_valid is None:
+            self._is_valid = self.validate_instance()
+        return self._is_valid
+
+    def serialize(self) -> dict:
+        return self.serializer_class(instance=self.instance).data
 
     def get_authorization_headers(self):
         username = settings.EZHACT_API_USER
@@ -408,15 +417,14 @@ class VisionUploader:
             response_data = response.json()
         return response.status_code, response_data
 
-    def sync(self, instance) -> Optional[Tuple[int, dict]]:
+    def sync(self) -> Optional[Tuple[int, dict]]:
+        assert self._is_valid is not None, 'You must call `.is_valid()` before calling `.sync()`.'
+
         endpoint = self.get_endpoint()
         if not endpoint:
             logger.warning('Unknown endpoint value')
 
-        if not self.validate_instance(instance):
-            logger.warning('Instance is not ready to be synchronized')
-
-        data = self.serialize_instance(instance)
+        data = self.serialize()
         return self.send_to_vision(endpoint, data)
 
 
@@ -426,24 +434,24 @@ class PDVisionUploader(VisionUploader):
     def get_endpoint(self):
         return getattr(settings, 'EZHACT_PD_VISION_URL', None)
 
-    def validate_instance(self, instance):
+    def validate_instance(self):
         """
         # PD is not in Development, Review, Signature.
         # We also need to make sure that this pd has InterventionActivities.
         # The PD cannot be and amendment "amendment_open" will not pass validation.
         """
-        if instance.status in [Intervention.DRAFT, Intervention.REVIEW, Intervention.SIGNATURE]:
+        if self.instance.status in [Intervention.DRAFT, Intervention.REVIEW, Intervention.SIGNATURE]:
             return False
 
-        if not InterventionActivity.objects.filter(result__result_link__intervention=instance).exists():
+        if not InterventionActivity.objects.filter(result__result_link__intervention=self.instance).exists():
             return False
 
         # amendment intervention
-        if instance.in_amendment:
+        if self.instance.in_amendment:
             return False
 
         # intervention with open amendment
-        if instance.amendments.filter(is_active=True).exists():
+        if self.instance.amendments.filter(is_active=True).exists():
             return False
 
         return True
