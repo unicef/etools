@@ -676,7 +676,8 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
         ]
         self._assertCalls(mock_logger.error, expected_call_args)
 
-    def test_activate_intervention_with_task(self, _mock_db_connection, _mock_logger):
+    @mock.patch("etools.applications.partners.tasks.send_pd_to_vision.delay")
+    def test_activate_intervention_with_task(self, send_to_vision_mock, _mock_db_connection, _mock_logger):
         today = datetime.date.today()
         unicef_staff = UserFactory(is_staff=True, groups__data=[UNICEF_USER])
 
@@ -727,6 +728,7 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
         _make_intervention_status_automatic_transitions(self.country_name)
         active_intervention.refresh_from_db()
         self.assertEqual(active_intervention.status, Intervention.ACTIVE)
+        send_to_vision_mock.assert_called()
 
 
 @mock.patch('etools.applications.partners.tasks.logger', spec=['info'])

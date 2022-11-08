@@ -138,6 +138,7 @@ def _make_intervention_status_automatic_transitions(country_name):
             if validator.is_valid:
                 if intervention.status != old_status:
                     intervention.save()
+                    send_pd_to_vision.delay(country_name, intervention.pk)
                     processed += 1
             else:
                 bad_interventions.append(intervention)
@@ -545,14 +546,17 @@ def send_pd_to_vision(tenant_name: str, intervention_pk: int, retry_counter=0):
         tenant = get_tenant_model().objects.get(name=tenant_name)
         connection.set_tenant(tenant)
 
-        intervention = Intervention.objects.detail_qs().get(pk=intervention_pk)
+        # get just basic information. in case validation fail it will save us many db queries
+        intervention = Intervention.objects.get(pk=intervention_pk)
         logger.info(f'Starting {intervention} upload to vision')
 
         synchronizer = PDVisionUploader(intervention)
         if not synchronizer.is_valid():
-            logger.warning('Instance is not ready to be synchronized')
+            logger.info('Instance is not ready to be synchronized')
             return
 
+        # reload intervention with prefetched relations for serialization
+        synchronizer.instance = Intervention.objects.detail_qs().get(pk=intervention_pk)
         response = synchronizer.sync()
         if response is None:
             logger.warning('Synchronizer internal check failed')

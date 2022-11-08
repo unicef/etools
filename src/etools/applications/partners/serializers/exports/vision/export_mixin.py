@@ -1,4 +1,4 @@
-from django.db import transaction
+from django.db import connection, transaction
 
 
 class InterventionVisionSynchronizerMixin:
@@ -6,5 +6,5 @@ class InterventionVisionSynchronizerMixin:
         from etools.applications.partners.tasks import send_pd_to_vision
 
         instance = super().save(*args, **kwargs)
-        transaction.on_commit(lambda: send_pd_to_vision.delay(instance.pk))
+        transaction.on_commit(lambda: send_pd_to_vision.delay(connection.tenant.name, instance.pk))
         return instance
