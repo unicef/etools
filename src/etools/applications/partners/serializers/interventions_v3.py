@@ -326,24 +326,24 @@ class InterventionDetailSerializer(
         return [location.p_code for location in obj.flat_locations.all()]
 
     def get_donors(self, obj):
-        donors = set()
+        donors = list()
         for fr_item_qs in obj.frs.all():
             for fr_li in fr_item_qs.fr_items.all():
-                donors.add(fr_li.donor)
+                donors.append(fr_li.donor)
         return donors
 
     def get_donor_codes(self, obj):
-        donor_codes = set()
+        donor_codes = list()
         for fr_item_qs in obj.frs.all():
             for fr_li in fr_item_qs.fr_items.all():
-                donor_codes.add(fr_li.donor_code)
+                donor_codes.append(fr_li.donor_code)
         return donor_codes
 
     def get_grants(self, obj):
-        grants = set()
+        grants = list()
         for fr_item_qs in obj.frs.all():
             for fr_li in fr_item_qs.fr_items.all():
-                grants.add(fr_li.grant_number)
+                grants.append(fr_li.grant_number)
         return grants
 
     def get_permissions(self, obj):
