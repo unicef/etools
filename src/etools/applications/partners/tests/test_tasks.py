@@ -1236,7 +1236,7 @@ class SendPDToVisionTestCase(BaseTenantTestCase):
 
     def test_sync_validation_error(self, logger_mock):
         etools.applications.partners.tasks.send_pd_to_vision(connection.tenant.name, self.draft_intervention.pk)
-        logger_mock.warning.assert_called_with('Instance is not ready to be synchronized')
+        logger_mock.info.assert_called_with('Instance is not ready to be synchronized')
 
     @mock.patch(
         'etools.applications.partners.synchronizers.requests.post',
