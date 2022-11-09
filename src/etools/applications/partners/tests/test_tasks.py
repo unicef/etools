@@ -725,10 +725,12 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
         activity = InterventionActivityFactory(result=pd_output)
         activity.time_frames.add(active_intervention.quarters.first())
 
-        _make_intervention_status_automatic_transitions(self.country_name)
+        with self.captureOnCommitCallbacks(execute=True) as callbacks:
+            _make_intervention_status_automatic_transitions(self.country_name)
         active_intervention.refresh_from_db()
         self.assertEqual(active_intervention.status, Intervention.ACTIVE)
         send_to_vision_mock.assert_called()
+        self.assertEqual(len(callbacks), 1)
 
 
 @mock.patch('etools.applications.partners.tasks.logger', spec=['info'])

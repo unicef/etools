@@ -685,8 +685,11 @@ class FundingCommitmentNestedSerializer(serializers.ModelSerializer):
         )
 
 
-class InterventionCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotModelSerializer):
-
+class InterventionCreateUpdateSerializer(
+    InterventionVisionSynchronizerMixin,
+    AttachmentSerializerMixin,
+    SnapshotModelSerializer,
+):
     planned_budget = InterventionBudgetCUSerializer(read_only=True)
     partner = serializers.CharField(source='agreement.partner.name', read_only=True)
     prc_review_document_file = serializers.FileField(source='prc_review_document', read_only=True)
