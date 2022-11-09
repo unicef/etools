@@ -22,3 +22,14 @@ class IsPartnershipManager(BasePermission):
                     group=PartnershipManager.as_group(),
                     is_active=True)\
             .exists()
+
+
+class IsActiveInRealm(BasePermission):
+    """Allows access to users who are in the current realm, despite of their groups"""
+
+    def has_permission(self, request, view):
+        return request.user.realms \
+            .filter(country=request.user.profile.country,
+                    organization=request.user.profile.organization,
+                    is_active=True) \
+            .exists()

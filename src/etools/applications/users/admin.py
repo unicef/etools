@@ -210,7 +210,7 @@ class UserAdminPlus(ExtraUrlMixin, UserAdmin):
     list_filter = ('is_staff', 'is_superuser', 'is_active', 'old_groups')
     filter_horizontal = ('old_groups', 'user_permissions',)
     inlines = [ProfileInline, RealmInline]
-    readonly_fields = ('date_joined',)
+    readonly_fields = ('last_login', 'date_joined',)
 
     list_display = [
         'email',

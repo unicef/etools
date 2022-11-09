@@ -62,7 +62,9 @@ class PurchaseOrderAdmin(ExtraUrlMixin, admin.ModelAdmin):
 class AuditorStaffAdmin(admin.ModelAdmin):
     list_display = ['user', 'email', 'auditor_firm', 'hidden']
     list_filter = ['auditor_firm', 'hidden']
-    search_fields = ['user__username', 'user__email', 'user__first_name', 'user__last_name', 'auditor_firm__name', ]
+    search_fields = ['user__username', 'user__email', 'user__first_name', 'user__last_name',
+                     'auditor_firm__organization__name', ]
+    autocomplete_fields = ['auditor_firm']
     readonly_fields = 'history',
     raw_id_fields = ['user', ]
 

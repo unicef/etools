@@ -532,7 +532,9 @@ class AuditorStaffMembersViewSet(
         instance = serializer.save(auditor_firm=self.get_parent_object(), **kwargs)
         if not instance.user.profile.country:
             instance.user.profile.country = self.request.user.profile.country
-        instance.user.profile.save()
+        instance.user.profile.organization = instance.auditor_firm.organization
+        instance.user.profile.save(update_fields=['country', 'organization'])
+
         Realm.objects.update_or_create(
             user=self.request.user,
             country=self.request.user.profile.country,
@@ -563,7 +565,7 @@ class AuditorStaffMembersViewSet(
                     deleted_profile = hidden_staff.user.profile
 
                     Realm.objects.update_or_create(
-                        user=deleted_profile,
+                        user=deactivated_user,
                         country=self.request.tenant,
                         organization=hidden_staff.auditor_firm.organization,
                         group=Auditor.as_group(),
@@ -571,14 +573,16 @@ class AuditorStaffMembersViewSet(
                     )
                     if not deleted_profile.country:
                         deleted_profile.country = self.request.tenant
-                    deleted_profile.save()
+                    deleted_profile.organization = hidden_staff.auditor_firm.organization
+                    deleted_profile.save(update_fields=['country', 'organization'])
                 return
 
         super().perform_update(serializer)
         instance = serializer.save(auditor_firm=self.get_parent_object())
         if not instance.user.profile.country:
             instance.user.profile.country = self.request.user.profile.country
-        instance.user.profile.save()
+        instance.user.profile.organization = instance.auditor_firm.organization
+        instance.user.profile.save(update_fields=['country', 'organization'])
 
         Realm.objects.update_or_create(
             user=self.request.user,
@@ -599,6 +603,11 @@ class AuditorStaffMembersViewSet(
         if not instance.user.is_unicef_user():
             instance.user.is_active = False
             instance.user.save(update_fields=['is_active'])
+            instance.user.realms\
+                .filter(country=self.request.tenant,
+                        organization=instance.auditor_firm.organization,
+                        group=Auditor.as_group())\
+                .update(is_active=False)
 
     def get_permission_context(self):
         context = super().get_permission_context()

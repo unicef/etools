@@ -36,3 +36,5 @@ def tpmvisit_save_receiver(instance, created, **kwargs):
                 organization=instance.tpm_partner.organization,
                 group=ThirdPartyMonitor.as_group()
             )
+            staff.user.profile.organization = instance.tpm_partner.organization
+            staff.user.profile.save(update_fields=['organization'])

@@ -13,6 +13,7 @@ from etools.applications.organizations.models import Organization
 from etools.applications.users.mixins import GroupEditPermissionMixin
 from etools.applications.users.models import Country, Realm, UserProfile
 from etools.applications.users.serializers import GroupSerializer, SimpleCountrySerializer, SimpleOrganizationSerializer
+from etools.applications.users.tasks import notify_user_on_realm_update
 from etools.applications.users.validators import EmailValidator, ExternalUserValidator
 
 # temporary list of Countries that will use the Auditor Portal Module.
@@ -122,7 +123,8 @@ class RealmSerializer(serializers.ModelSerializer):
 
 
 class UserRealmRetrieveSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(source='full_name')
+    phone_number = serializers.CharField(source='profile.phone_number')
+    job_title = serializers.CharField(source='profile.job_title')
     realms = RealmSerializer(many=True, read_only=True)
 
     class Meta:
@@ -131,14 +133,17 @@ class UserRealmRetrieveSerializer(serializers.ModelSerializer):
             'id',
             'is_active',
             'last_login',
-            'name',
+            'first_name',
+            'last_name',
             'email',
+            'phone_number',
+            'job_title',
             'realms'
         )
 
 
 class UserRealmBaseSerializer(GroupEditPermissionMixin, serializers.ModelSerializer):
-    organization = serializers.IntegerField(required=False, allow_null=True, write_only=True)
+    organization = serializers.IntegerField(required=False, allow_null=False, write_only=True)
     groups = serializers.ListField(child=serializers.IntegerField(), required=True, write_only=True)
 
     class Meta:
@@ -169,15 +174,15 @@ class UserRealmBaseSerializer(GroupEditPermissionMixin, serializers.ModelSeriali
         return group_ids
 
     def create_realms(self, instance, organization_id, group_ids):
-        Realm.objects.bulk_create([
-            Realm(user=instance, country=connection.tenant, organization_id=organization_id, group_id=group_id)
-            for group_id in group_ids])
+        for group_id in group_ids:
+            Realm.objects.update_or_create(
+                user=instance, country=connection.tenant, organization_id=organization_id,
+                group_id=group_id, defaults={'is_active': True})
 
 
 class UserRealmCreateSerializer(UserRealmBaseSerializer):
+    email = serializers.CharField(required=True, write_only=True)
     job_title = serializers.CharField(required=False, write_only=True)
-    organization = serializers.IntegerField(required=False, allow_null=True, write_only=True)
-    groups = serializers.ListField(child=serializers.IntegerField(), required=True, write_only=True)
 
     class Meta(UserRealmBaseSerializer.Meta):
         model = get_user_model()
@@ -186,8 +191,6 @@ class UserRealmCreateSerializer(UserRealmBaseSerializer):
             'last_name',
             'email',
             'job_title',
-            'organization',
-            'groups'
         ]
         extra_kwargs = {
             'first_name': {'required': True},
@@ -196,12 +199,18 @@ class UserRealmCreateSerializer(UserRealmBaseSerializer):
         }
 
     def create(self, validated_data):
-        organization_id = self.context['request'].user.profile.organization.id
+        organization_id = validated_data.pop('organization', self.context['request'].user.profile.organization.id)
         group_ids = validated_data.pop("groups")
         job_title = validated_data.pop("job_title", None)
 
-        validated_data.update({"username": validated_data["email"]})
-        instance = super().create(validated_data)
+        email = validated_data.pop('email')
+        validated_data.update({"username": email})
+
+        instance, _ = get_user_model().objects.get_or_create(
+            email=email, defaults=validated_data)
+        if not instance.is_active:
+            instance.is_active = True
+            instance.save(update_fields=['is_active'])
 
         if job_title:
             instance.profile.job_title = job_title
@@ -210,7 +219,7 @@ class UserRealmCreateSerializer(UserRealmBaseSerializer):
         instance.profile.save(update_fields=['country', 'organization_id', 'job_title'])
 
         self.create_realms(instance, organization_id, group_ids)
-
+        notify_user_on_realm_update.delay(instance.id)
         return instance
 
 
@@ -250,7 +259,7 @@ class UserRealmUpdateSerializer(UserRealmBaseSerializer):
         if not instance.realms.filter(is_active=True, **context_qs_params).count():
             instance.profile.organization = None
             instance.profile.save(update_fields=['organization'])
-
+        notify_user_on_realm_update.delay(instance.id)
         return instance
 
 

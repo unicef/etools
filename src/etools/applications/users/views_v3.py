@@ -24,8 +24,8 @@ from etools.applications.partners.permissions import user_group_permission
 from etools.applications.partners.views.v3 import PMPBaseViewMixin
 from etools.applications.users import views as v1, views_v2 as v2
 from etools.applications.users.mixins import GroupEditPermissionMixin
-from etools.applications.users.models import Country, IPAdmin, IPAuthorizedOfficer, IPEditor, IPViewer, Realm
-from etools.applications.users.permissions import IsPartnershipManager
+from etools.applications.users.models import Country, IPAdmin, IPAuthorizedOfficer, IPEditor, Realm
+from etools.applications.users.permissions import IsActiveInRealm, IsPartnershipManager
 from etools.applications.users.serializers import SimpleGroupSerializer, SimpleOrganizationSerializer
 from etools.applications.users.serializers_v3 import (
     CountryDetailSerializer,
@@ -210,9 +210,9 @@ class PartnerOrganizationListView(ListAPIView):
 
         if not self.request.user.is_partnership_manager:
             return self.model.objects.none()
-
+        # returns only Partner Organizations that are not marked for deletion
         return self.model.objects\
-            .filter(partner__isnull=False, realms__country=country)\
+            .filter(partner__isnull=False, partner__deleted_flag=False, realms__country=country)\
             .distinct()
 
 
@@ -236,33 +236,31 @@ class UserRealmViewSet(
     mixins.UpdateModelMixin,
     viewsets.GenericViewSet
 ):
-
     model = get_user_model()
-    permission_classes = (
-        IsAuthenticated,
-        user_group_permission(
-            IPEditor.name, IPAdmin.name,
-            IPAuthorizedOfficer.name, UNICEFAuditFocalPoint.name) | IsPartnershipManager
-    )
     serializer_class = UserRealmRetrieveSerializer
+
     pagination_class = DynamicPageNumberPagination
     filter_backends = (SearchFilter, DjangoFilterBackend, OrderingFilter)
 
     search_fields = ('first_name', 'last_name', 'email', 'profile__job_title')
     filter_fields = ('is_active', )
-    ordering_fields = ('first_name', 'email', 'last_login')
+    ordering_fields = ('first_name', 'last_name', 'email', 'last_login')
 
     def get_permissions(self):
         if self.action == "list":
             self.permission_classes = (
-                IsAuthenticated,
-                user_group_permission(
-                    IPViewer.name, IPEditor.name, IPAdmin.name,
-                    IPAuthorizedOfficer.name, UNICEFAuditFocalPoint.name) | IsPartnershipManager)
+                IsAuthenticated, IsActiveInRealm)
         if self.action == 'create':
             self.permission_classes = (
                 IsAuthenticated,
-                user_group_permission(IPAdmin.name, IPAuthorizedOfficer.name))
+                user_group_permission(IPAdmin.name, IPAuthorizedOfficer.name) | IsPartnershipManager)
+        if self.action == 'partial_update':
+            self.permission_classes = (
+                IsAuthenticated,
+                user_group_permission(
+                    IPEditor.name, IPAdmin.name,
+                    IPAuthorizedOfficer.name, UNICEFAuditFocalPoint.name) | IsPartnershipManager
+            )
         return super().get_permissions()
 
     def get_serializer_class(self):

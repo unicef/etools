@@ -80,13 +80,16 @@ def user_details(strategy, details, backend, user=None, *args, **kwargs):
             country = Country.objects.get(name='UAT')
 
         if details.get("idp") == "UNICEF Azure AD" and "UNICEF User" not in user_groups:
+            unicef_org = Organization.objects.get(name='UNICEF')
             Realm.objects.create(
                 user=user,
                 country=country,
-                organization=Organization.objects.get(name='UNICEF'),
+                organization=unicef_org,
                 group=Group.objects.get(name='UNICEF User'))
             user.is_staff = True
             user.save(update_fields=['is_staff'])
+            user.profile.organization = unicef_org
+            user.profile.save(update_fields=['organization'])
 
         if not user.profile.country:
             user.profile.country = country
