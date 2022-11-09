@@ -2,6 +2,7 @@ import json
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.db import connection
 from django.urls import reverse
 
 from rest_framework import status
@@ -74,6 +75,13 @@ class TestPartnerOrganizationListView(BaseTenantTestCase):
 
     def test_get_200(self):
         partnership_manager = UserFactory(realms__data=[UNICEF_USER, PartnershipManager.name])
+        # organization without a related tenant partner will be filtered out
+        OrganizationFactory()
+
+        # marked for deletion tenant Partner will be filtered out
+        organization1 = OrganizationFactory()
+        PartnerFactory(organization=organization1, deleted_flag=True)
+
         response = self.forced_auth_req(
             "get",
             self.url,
@@ -82,15 +90,17 @@ class TestPartnerOrganizationListView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, [])
 
-        organization = OrganizationFactory()
-        PartnerFactory(organization=organization)
+        organization2 = OrganizationFactory()
+        PartnerFactory(organization=organization2)
+
         response = self.forced_auth_req(
             "get",
             self.url,
             user=partnership_manager,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data[0]['id'], organization.id)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['id'], organization2.id)
 
 
 class TestChangeUserOrganizationView(BaseTenantTestCase):
@@ -476,7 +486,7 @@ class TestGroupPermissionsViewSet(BaseTenantTestCase):
             self.assertEqual(expected_groups, actual_groups)
             self.assertEqual(
                 response.data['can_add_user'],
-                True if user_group in [IPAdmin, IPAuthorizedOfficer] else False
+                True if user_group in [IPAdmin, IPAuthorizedOfficer, PartnershipManager] else False
             )
 
     def test_get_no_groups_allowed_empty(self):
@@ -529,21 +539,23 @@ class TestUserRealmView(BaseTenantTestCase):
         return response
 
     def test_get_forbidden_403(self):
-        for auth_user in [self.user, AuditorUserFactory()]:
+        # self.user has no realm defined
+        for auth_user in [self.user]:
             response = self.make_request_list(auth_user, method='get')
             self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_get_200(self):
         # uses profile.organization = self.organization
-        for auth_user in [self.ip_viewer, self.ip_editor, self.ip_admin, self.ip_auth_officer]:
+        for auth_user in [self.ip_viewer, self.ip_editor, self.ip_admin,
+                          self.ip_auth_officer]:
             response = self.make_request_list(auth_user, method='get')
             self.assertEqual(response.status_code, status.HTTP_200_OK)
-            self.assertEqual(response.data['count'], 4)
+            self.assertEqual(response.data['count'], 4, "Number of users in realm")
         # uses profile.organization = Unicef
         for auth_user in [self.partnership_manager, self.audit_focal_point]:
             response = self.make_request_list(auth_user, method='get')
             self.assertEqual(response.status_code, status.HTTP_200_OK)
-            self.assertEqual(response.data['count'], 2)
+            self.assertEqual(response.data['count'], 2, "Number of users in realm")
 
     def test_get_by_organization_id_200(self):
         data = {"organization_id": self.organization.id}
@@ -565,7 +577,7 @@ class TestUserRealmView(BaseTenantTestCase):
 
     def test_post_forbidden_403(self):
         for auth_user, group in zip(
-                [self.ip_viewer, self.ip_editor, self.partnership_manager, self.audit_focal_point],
+                [self.ip_viewer, self.ip_editor, self.audit_focal_point],
                 [IPViewer, IPAdmin, Auditor, IPViewer]):
             self.assertEqual(self.user.realms.count(), 0)
 
@@ -573,7 +585,7 @@ class TestUserRealmView(BaseTenantTestCase):
             self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
             self.assertEqual(self.user.realms.count(), 0)
 
-    def test_post_created_201(self):
+    def test_post_create_new_201(self):
         for auth_user, group in zip(
                 [self.ip_admin, self.ip_auth_officer],
                 [IPViewer, IPEditor]):
@@ -590,6 +602,51 @@ class TestUserRealmView(BaseTenantTestCase):
             self.assertEqual(new_user.realms.count(), 1)
             self.assertEqual(group.name, response.data['realms'][0]['group_name'])
             self.assertIn(group, new_user.groups)
+
+    def test_post_user_exists_201(self):
+        for auth_user, group in zip(
+                [self.ip_admin, self.ip_auth_officer],
+                [IPViewer, IPEditor]):
+
+            existing_user = UserFactory(email=f"{auth_user.pk}_email@example.com", realms__data=[],
+                                        profile__organization=self.organization)
+            self.assertEqual(existing_user.realms.count(), 0)
+
+            data = {
+                "first_name": "First Name",
+                "last_name": f"{auth_user.id} Last Name",
+                "email": existing_user.email,
+                "job_title": "Dev",
+                "groups": [GroupFactory(name=group.name).pk],
+            }
+            response = self.make_request_list(auth_user, data=data)
+
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+            self.assertEqual(existing_user.realms.count(), 1)
+            self.assertEqual(group.name, response.data['realms'][0]['group_name'])
+            self.assertIn(group.as_group(), existing_user.groups)
+
+    def test_post_partnership_manager_201(self):
+        group = GroupFactory(name=IPEditor.name)
+        realm = RealmFactory(
+            country=connection.tenant,
+            organization=OrganizationFactory(),
+            group=Auditor.as_group())
+        email = "new_email@example.com"
+        data = {
+            "first_name": "First Name",
+            "last_name": "Last Name",
+            "email": email,
+            "job_title": "Dev",
+            "organization": realm.organization.pk,
+            "groups": [group.pk],
+        }
+        response = self.make_request_list(self.partnership_manager, data=data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        new_user = User.objects.get(email=email)
+        self.assertEqual(new_user.realms.count(), 1)
+        self.assertEqual(group.name, response.data['realms'][0]['group_name'])
+        self.assertIn(group, new_user.groups)
 
     def test_patch_reactivate_groups(self):
         self.assertEqual(self.user.realms.count(), 0)

@@ -39,7 +39,7 @@ class BaseAgreementTestCase(BaseTenantTestCase):
         cls.pme_user = UserFactory(
             is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]
         )
-        cls.partner_user = UserFactory(is_staff=False)
+        cls.partner_user = UserFactory(is_staff=False, realms__data=['IP Viewer'])
         cls.partner = PartnerFactory(
             organization=OrganizationFactory(
                 organization_type=OrganizationType.CIVIL_SOCIETY_ORGANIZATION,
@@ -190,10 +190,13 @@ class TestUpdate(BaseAgreementTestCase):
             start=datetime.date.today(),
         )
         agreement.authorized_officers.add(self.partner_staff)
+        # only UNICEF users can update reference_number_year - see agreement_permissions matrix
+        unicef_user = UserFactory(email='test@unicef.org', is_staff=True)
+
         response = self.forced_auth_req(
             "patch",
             reverse('pmp_v3:agreement-detail', args=[agreement.pk]),
-            user=self.partner_user,
+            user=unicef_user,
             data={
                 "reference_number_year": 2020,
             },

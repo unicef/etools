@@ -1,11 +1,14 @@
 import datetime
 
+from django.db import connection
+
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners import synchronizers
 from etools.applications.partners.models import PartnerOrganization
-from etools.applications.partners.tests.factories import PartnerFactory
-from etools.applications.users.models import Country
+from etools.applications.partners.tests.factories import PartnerFactory, PartnerStaffFactory
+from etools.applications.users.models import Country, IPViewer
+from etools.applications.users.tests.factories import UserFactory
 
 
 class TestPartnerSynchronizer(BaseTenantTestCase):
@@ -18,7 +21,7 @@ class TestPartnerSynchronizer(BaseTenantTestCase):
             "PARTNER_TYPE_DESC": "UN AGENCY",
             "VENDOR_NAME": "ACME Inc.",
             "VENDOR_CODE": "ACM",
-            "COUNTRY": "USD",
+            "COUNTRY": connection.tenant.schema_name,
             "TOTAL_CASH_TRANSFERRED_CP": "150.00",
             "TOTAL_CASH_TRANSFERRED_CY": "100.00",
             "NET_CASH_TRANSFERRED_CY": "90.00",
@@ -123,17 +126,24 @@ class TestPartnerSynchronizer(BaseTenantTestCase):
         deleted_flag changed
         """
         self.data["MARKED_FOR_DELETION"] = 'X'
-        partner = PartnerFactory(
-            organization=OrganizationFactory(
-                name=self.data["VENDOR_NAME"],
-                vendor_number=self.data["VENDOR_CODE"],
-            ),
-            deleted_flag=False
+        organization = OrganizationFactory(
+            name=self.data["VENDOR_NAME"], vendor_number=self.data["VENDOR_CODE"],
         )
+        partner = PartnerFactory(organization=organization, deleted_flag=False)
+        user = UserFactory(is_staff=True, realms__data=[IPViewer])
+        PartnerStaffFactory(partner=partner, user=user)
+
+        self.assertTrue(user.is_active)
+        self.assertEqual(user.realms.filter(is_active=True).count(), 1)
+
         response = self.adapter._save_records([self.data])
         self.assertEqual(response, 1)
         partner_updated = PartnerOrganization.objects.get(pk=partner.pk)
         self.assertTrue(partner_updated.deleted_flag)
+        user.refresh_from_db()
+        self.assertFalse(user.is_active)
+        active_realms = user.realms.filter(country=connection.tenant, organization=organization, is_active=True)
+        self.assertEqual(active_realms.count(), 0)
 
     def test_save_records_update_date(self):
         """Check that partner organization record is updated,

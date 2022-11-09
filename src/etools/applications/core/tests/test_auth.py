@@ -5,6 +5,7 @@ from django.test import SimpleTestCase
 
 from etools.applications.core import auth
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.organizations.models import Organization
 from etools.applications.users.tests.factories import UserFactory
 
 SOCIAL_AUTH_PATH = "etools.applications.core.auth.social_auth"
@@ -138,6 +139,10 @@ class TestUserDetails(BaseTenantTestCase):
         )
 
         country = user.profile.country
+        user.profile.organization = None
+        user.profile.save(update_fields=['organization'])
+        self.assertIsNone(user.profile.organization)
+
         self.details["business_area_code"] = country.business_area_code
         self.details["idp"] = "UNICEF Azure AD"
         self.assertFalse(user.is_staff)
@@ -152,3 +157,7 @@ class TestUserDetails(BaseTenantTestCase):
         )
         user_updated = get_user_model().objects.get(pk=user.pk)
         self.assertTrue(user_updated.is_staff)
+        self.assertEqual(
+            user_updated.profile.organization,
+            Organization.objects.get(vendor_number='UNICEF')
+        )
