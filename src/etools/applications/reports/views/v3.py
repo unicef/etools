@@ -35,7 +35,7 @@ class PMPOfficeViewSet(
     serializer_class = OfficeSerializer
     queryset = Office.objects
     module2filters = {
-        "pmp": ['office_interventions__partner_focal_points__user', ]
+        "pmp": ['office_interventions__partner_focal_points', ]
     }
 
     def get_queryset(self):
@@ -65,7 +65,7 @@ class PMPSectionViewSet(
     queryset = Section.objects
     serializer_class = SectionCreateSerializer
     module2filters = {
-        "pmp": ['interventions__partner_focal_points__user', ]
+        "pmp": ['interventions__partner_focal_points', ]
     }
     filters = (
         ('active', 'active'),

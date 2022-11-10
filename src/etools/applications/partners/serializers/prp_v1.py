@@ -68,11 +68,13 @@ class PRPPartnerOrganizationListSerializer(serializers.ModelSerializer):
 
 
 class PRPPartnerStaffMemberSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(source='get_full_name', read_only=True)
-    phone_num = serializers.CharField(source='phone', read_only=True)
+    name = serializers.CharField(source='full_name', read_only=True)
+    phone_num = serializers.CharField(source='profile.phone_number', read_only=True)
+    active = serializers.CharField(source='is_active')
+    title = serializers.CharField(source='profile.job_title')
 
     class Meta:
-        model = PartnerStaffMember
+        model = get_user_model()
         depth = 1
         fields = ('name', 'title', 'phone_num', 'email', 'active')
 

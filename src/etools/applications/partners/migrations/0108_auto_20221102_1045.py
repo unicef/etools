@@ -9,6 +9,7 @@ import etools.applications.partners.models
 class Migration(migrations.Migration):
 
     dependencies = [
+        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         ('partners', '0107_alter_partnerorganization_organization'),
     ]
 
@@ -57,12 +58,12 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='agreement',
-            name='officers_authorized',
+            name='temp_authorized_officers',
             field=models.ManyToManyField(blank=True, related_name='agreement_authorizations', to=settings.AUTH_USER_MODEL, verbose_name='Partner Authorized Officer'),
         ),
         migrations.AddField(
             model_name='intervention',
-            name='partners_focal_points',
+            name='temp_partner_focal_points',
             field=models.ManyToManyField(blank=True, related_name='_partners_intervention_partner_focal_points_+', to=settings.AUTH_USER_MODEL, verbose_name='CSO Authorized Officials'),
         ),
         migrations.AddField(
@@ -114,5 +115,15 @@ class Migration(migrations.Migration):
             model_name='interventionamendment',
             name='old_partner_authorized_officer_signatory',
             field=models.ForeignKey(blank=True, db_index=False, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='+', to='partners.partnerstaffmember', verbose_name='(old)Signed by Partner'),
+        ),
+        migrations.AlterField(
+            model_name='partnerstaffmember',
+            name='partner',
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='old_staff_members', to='partners.partnerorganization', verbose_name='Partner'),
+        ),
+        migrations.AlterField(
+            model_name='partnerstaffmember',
+            name='user',
+            field=models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, related_name='old_partner_staff_member', to=settings.AUTH_USER_MODEL, verbose_name='User'),
         ),
     ]

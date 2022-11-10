@@ -19,7 +19,7 @@ class PMPPartnerStaffMemberMixin(PMPBaseViewMixin):
     def get_queryset(self):
         qs = self.queryset
         if self.is_partner_staff():
-            qs = qs.filter(partner__in=self.partners())
+            qs = qs.filter(realms__organization__partner__in=self.partners())
         return qs
 
 

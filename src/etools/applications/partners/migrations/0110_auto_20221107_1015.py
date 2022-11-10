@@ -14,12 +14,12 @@ class Migration(migrations.Migration):
     operations = [
         migrations.RenameField(
             model_name='agreement',
-            old_name='officers_authorized',
+            old_name='temp_authorized_officers',
             new_name='authorized_officers',
         ),
         migrations.RenameField(
             model_name='intervention',
-            old_name='partners_focal_points',
+            old_name='temp_partner_focal_points',
             new_name='partner_focal_points',
         ),
         migrations.AlterField(

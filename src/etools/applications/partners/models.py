@@ -941,13 +941,13 @@ class PartnerStaffMember(TimeStampedModel):
     partner = models.ForeignKey(
         PartnerOrganization,
         verbose_name=_("Partner"),
-        related_name='staff_members',
+        related_name='old_staff_members',
         on_delete=models.CASCADE,
     )
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         verbose_name=_("User"),
-        related_name='partner_staff_member',
+        related_name='old_partner_staff_member',
         on_delete=models.PROTECT,
         null=True,
         blank=True,

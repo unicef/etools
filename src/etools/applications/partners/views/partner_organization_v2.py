@@ -37,7 +37,6 @@ from etools.applications.partners.models import (
     Intervention,
     PartnerOrganization,
     PartnerPlannedVisits,
-    PartnerStaffMember,
     PlannedEngagement,
 )
 from etools.applications.partners.permissions import (
@@ -72,6 +71,7 @@ from etools.applications.partners.serializers.partner_organization_v2 import (
 from etools.applications.partners.tasks import sync_partner
 from etools.applications.partners.views.helpers import set_tenant_or_fail
 from etools.applications.t2f.models import Travel, TravelActivity, TravelType
+from etools.applications.users.models import User
 from etools.applications.utils.pagination import AppendablePageNumberPagination
 from etools.libraries.djangolib.models import StringConcat
 from etools.libraries.djangolib.views import ExternalModuleFilterMixin
@@ -364,7 +364,7 @@ class PartnerOrganizationHactAPIView(ListAPIView):
     """
     permission_classes = (IsAdminUser,)
     queryset = PartnerOrganization.objects.select_related('planned_engagement').prefetch_related(
-        'staff_members', 'assessments').hact_active()
+        'organization__realms__users', 'assessments').hact_active()
     serializer_class = PartnerOrganizationHactSerializer
     renderer_classes = (r.JSONRenderer, PartnerOrganizationHactCsvRenderer)
     filename = 'detailed_hact_dashboard'
@@ -401,7 +401,7 @@ class PartnerStaffMemberListAPIVIew(ExternalModuleFilterMixin, ExportModelMixin,
     """
     Returns a list of all Partner staff members
     """
-    queryset = PartnerStaffMember.objects.all()
+    queryset = User.objects.all()
     serializer_class = PartnerStaffMemberDetailSerializer
     permission_classes = (AllowSafeAuthenticated,)
     filter_backends = (PartnerScopeFilter,)

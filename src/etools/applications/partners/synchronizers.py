@@ -305,15 +305,13 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
 
     @staticmethod
     def deactivate_staff_members(partner_org):
+        # deactivate the users that are staff members
         staff_members = partner_org.staff_members.all()
-        staff_members.update(active=False)
-        # deactivate the users
-        users_deactivate = User.objects.filter(partner_staff_member__in=staff_members)
-        users_deactivate.update(is_active=False)
+        staff_members.update(is_active=False)
         try:
             country = Country.objects.get(schema_name=partner_org.country)
             Realm.objects.filter(
-                user__in=users_deactivate,
+                user__in=staff_members,
                 country=country,
                 organization=partner_org.organization)\
                 .update(is_active=False)

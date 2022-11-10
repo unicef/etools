@@ -29,7 +29,7 @@ from etools.applications.partners.utils import (
 from etools.applications.partners.validation.agreements import AgreementValid
 from etools.applications.partners.validation.interventions import InterventionValid
 from etools.applications.reports.models import CountryProgramme
-from etools.applications.users.models import Country
+from etools.applications.users.models import Country, Realm, User
 from etools.config.celery import app
 from etools.libraries.djangolib.utils import get_environment
 from etools.libraries.tenant_support.utils import every_country, run_on_all_tenants
@@ -301,7 +301,7 @@ def sync_partner_to_prp(tenant: str, partner_id: int):
     connection.set_tenant(tenant)
 
     partner = PartnerOrganization.objects.filter(id=partner_id).prefetch_related(
-        Prefetch('staff_members', PartnerStaffMember.objects.filter(active=True))
+        Prefetch('organization__realms__users', User.objects.filter(is_active=True))
     ).get()
     partner_data = PRPPartnerOrganizationWithStaffMembersSerializer(instance=partner).data
     PRPAPI().send_partner_data(tenant.business_area_code, partner_data)
