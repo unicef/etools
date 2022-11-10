@@ -107,7 +107,7 @@ class TestUserModel(BaseTenantTestCase):
     def test_conversion_to_string(self):
         """Exercise converting instances to string."""
         user = UserFactory(first_name='Pel\xe9', last_name='Arantes do Nascimento')
-        self.assertEqual(str(user), 'Pel\xe9 Arantes do Nascimento')
+        self.assertEqual(str(user), 'Pel\xe9 Arantes do Nascimento (UNICEF)')
 
     def test_is_unicef_user(self):
         user = UserFactory(email='macioce@unicef.org')

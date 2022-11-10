@@ -73,7 +73,7 @@ class TestList(BaseAgreementTestCase):
         response = self.forced_auth_req(
             "get",
             reverse("pmp_v3:agreement-list"),
-            user=self.partner_user,
+            user=self.partner_staff,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(len(response.data) > 0)
@@ -87,7 +87,7 @@ class TestList(BaseAgreementTestCase):
         response = self.forced_auth_req(
             "get",
             reverse("pmp_v3:agreement-list"),
-            user=staff.user,
+            user=staff,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, [])
@@ -99,7 +99,7 @@ class TestList(BaseAgreementTestCase):
         response = self.forced_auth_req(
             "get",
             reverse("pmp_v3:agreement-list"),
-            user=self.partner_user,
+            user=self.partner_staff,
             partner_id=self.partner.pk,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -175,7 +175,7 @@ class TestCreate(BaseAgreementTestCase):
         response = self.forced_auth_req(
             "post",
             reverse('pmp_v3:agreement-list'),
-            user=self.partner_user,
+            user=self.partner_staff,
             data=data
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

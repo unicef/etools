@@ -1097,9 +1097,7 @@ class TestPartnerStaffMemberAPIView(BaseTenantTestCase):
         cls.unicef_staff = UserFactory(is_staff=True)
         cls.partner = PartnerFactory(
             organization=OrganizationFactory(organization_type=OrganizationType.CIVIL_SOCIETY_ORGANIZATION))
-        cls.partner_staff_user = UserFactory(
-            is_staff=True, realms__data=[PARTNERSHIP_MANAGER_GROUP]
-        )
+
         cls.partner_staff = UserFactory(
             realms__data=['IP Viewer'],
             profile__organization=cls.partner.organization,

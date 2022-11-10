@@ -443,7 +443,7 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
         self.assertEqual(response.data["planned_visits"]["partner"],
                          ErrorDetail(string='Planned Visit can be set only for Government partners', code='invalid'))
 
-    @skip('REALMS')
+    @skip('AMP-REALM: To be removed')
     def test_update_staffmember_inactive(self):
         partner_staff_user = UserFactory(is_staff=True, realms__data=[])
         response = self.forced_auth_req(
@@ -545,6 +545,7 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
     #         'with a different Partner Organization'
     #     )
 
+    @skip('AMP-REALM: To be removed')
     def test_assign_staff_member_creates_new_user(self):
         self.assertEqual(self.partner.staff_members.count(), 1)
         staff_email = "email@staff.com"
@@ -559,6 +560,7 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
         self.assertEqual(created_staff.first_name, created_staff.user.first_name)
         self.assertEqual(created_staff.last_name, created_staff.user.last_name)
 
+    @skip('AMP-REALM: To be removed')
     def test_assign_staff_member_to_existing_user(self):
         user = UserFactory(realms__data=[], is_staff=False)
 
@@ -571,6 +573,7 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
         self.assertIsNotNone(user.get_partner_staff_member())
         self.assertTrue(user.profile.countries_available.filter(id=connection.tenant.id).exists())
 
+    @skip('AMP-REALM: To be removed')
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_assign_staff_member_to_unicef_user(self):
         user = UserFactory()
@@ -585,20 +588,21 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
             response.data['staff_members']['non_field_errors'],
         )
 
-    # def test_assign_staff_member_to_another_staff(self):
-    #     user = UserFactory(realms__data=[], is_staff=False)
-    #     PartnerStaffFactory(user=user)
-    #     response = self.forced_auth_req(
-    #         "patch", self.url,
-    #         data={"staff_members": [{"email": user.email, "active": True, 'first_name': 'mr', 'last_name': 'smith'}]},
-    #         user=self.unicef_staff,
-    #     )
-    #     self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
-    #     self.assertIn(
-    #         'The email for the partner contact is used by another partner contact. '
-    #         'Email has to be unique to proceed {}'.format(user.email),
-    #         response.data['staff_members']['active'],
-    #     )
+    @skip('AMP-REALM: To be removed')
+    def test_assign_staff_member_to_another_staff(self):
+        user = UserFactory(realms__data=[], is_staff=False)
+        # PartnerStaffFactory(user=user)
+        response = self.forced_auth_req(
+            "patch", self.url,
+            data={"staff_members": [{"email": user.email, "active": True, 'first_name': 'mr', 'last_name': 'smith'}]},
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
+        self.assertIn(
+            'The email for the partner contact is used by another partner contact. '
+            'Email has to be unique to proceed {}'.format(user.email),
+            response.data['staff_members']['active'],
+        )
 
     def test_get_partner_monitoring_activity_groups(self):
         activity1 = MonitoringActivityFactory(partners=[self.partner])

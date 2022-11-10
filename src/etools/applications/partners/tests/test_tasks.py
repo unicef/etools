@@ -678,6 +678,10 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
         unicef_staff = UserFactory(is_staff=True)
 
         partner = PartnerFactory(organization=OrganizationFactory(name='Partner 2'))
+        partner_user = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=partner.organization
+        )
         active_agreement = AgreementFactory(
             partner=partner,
             status=Agreement.SIGNED,
@@ -702,7 +706,7 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
             cash_transfer_modalities=[Intervention.CASH_TRANSFER_DIRECT],
         )
         active_intervention.flat_locations.add(LocationFactory())
-        active_intervention.partner_focal_points.add(partner.staff_members.all().first())
+        active_intervention.partner_focal_points.add(partner_user)
         active_intervention.unicef_focal_points.add(unicef_staff)
         active_intervention.offices.add(OfficeFactory())
         active_intervention.sections.add(SectionFactory())

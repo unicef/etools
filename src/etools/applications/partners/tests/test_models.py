@@ -1816,10 +1816,10 @@ class TestStrUnicode(TestCase):
     def test_partner_staff_member(self):
         partner = PartnerFactory.build(organization=OrganizationFactory(name='partner'))
 
-        instance = UserFactory.build(first_name='xyz', partner=partner)
+        instance = UserFactory.build(first_name='xyz', profile__organization=partner.organization)
         self.assertTrue(str(instance).startswith('xyz'))
 
-        instance = UserFactory.build(first_name='R\xe4dda Barnen', partner=partner)
+        instance = UserFactory.build(first_name='R\xe4dda Barnen', profile__organization=partner.organization)
         self.assertTrue(str(instance).startswith('R\xe4dda Barnen'))
 
     def test_agreement(self):

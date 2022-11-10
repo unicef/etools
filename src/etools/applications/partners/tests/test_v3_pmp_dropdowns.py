@@ -60,7 +60,7 @@ class TestPMPDropdownsListApiView(BaseTenantTestCase):
         )
 
     def test_partner_data(self):
-        with self.assertNumQueries(8):
+        with self.assertNumQueries(2):
             response = self.forced_auth_req('get', self.url, self.partner_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertListEqual(

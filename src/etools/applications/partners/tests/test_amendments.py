@@ -763,6 +763,7 @@ class AmendmentTestCase(BaseTenantTestCase):
                 'country_programme',
                 'unicef_signatory',
                 'old_partner_authorized_officer_signatory',
+                'old_partner_focal_points',
                 'partner_authorized_officer_signatory',
                 'prc_review_attachment',
                 'signed_pd_attachment',

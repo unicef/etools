@@ -30,8 +30,10 @@ class BasePMPTestCase(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.user = UserFactory(is_staff=True)
         cls.partner = PartnerFactory()
-        cls.partner_staff = cls.partner.staff_members.all().first()
-        cls.partner_user = cls.partner_staff.user
+        cls.partner_user = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=cls.partner.organization
+        )
 
 
 class TestPMPOfficeViews(BasePMPTestCase):
@@ -44,7 +46,7 @@ class TestPMPOfficeViews(BasePMPTestCase):
             # check partner will get not receive duplicates
             pd = InterventionFactory()
             pd.offices.add(self.office)
-            pd.partner_focal_points.add(self.partner_staff)
+            pd.partner_focal_points.add(self.partner_user)
 
         self.url = reverse('offices-pmp-list')
         self.office_qs = Office.objects
@@ -97,7 +99,7 @@ class TestPMPOfficeViews(BasePMPTestCase):
         # partner
         pd = InterventionFactory()
         pd.offices.add(office)
-        pd.partner_focal_points.add(self.partner_staff)
+        pd.partner_focal_points.add(self.partner_user)
         response = self.forced_auth_req('get', url, user=self.partner_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -112,7 +114,7 @@ class TestPMPSectionViews(BasePMPTestCase):
             # check partner will get not receive duplicates
             pd = InterventionFactory()
             pd.sections.add(self.section)
-            pd.partner_focal_points.add(self.partner_staff)
+            pd.partner_focal_points.add(self.partner_user)
 
         self.url = reverse('sections-pmp-list')
         self.section_qs = Section.objects
@@ -164,7 +166,7 @@ class TestPMPSectionViews(BasePMPTestCase):
         # partner
         pd = InterventionFactory()
         pd.sections.add(section)
-        pd.partner_focal_points.add(self.partner_staff)
+        pd.partner_focal_points.add(self.partner_user)
         response = self.forced_auth_req('get', url, user=self.partner_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
