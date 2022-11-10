@@ -12,7 +12,7 @@ from unicef_vision.utils import comp_decimals
 from etools.applications.organizations.models import Organization
 from etools.applications.partners.models import PartnerOrganization, PlannedEngagement
 from etools.applications.partners.tasks import notify_partner_hidden
-from etools.applications.users.models import Country, Realm, User
+from etools.applications.users.models import Country, Realm
 from etools.applications.vision.synchronizers import VisionDataTenantSynchronizer
 
 logger = logging.getLogger(__name__)

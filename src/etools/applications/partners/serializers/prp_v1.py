@@ -6,12 +6,7 @@ from rest_framework import serializers
 from unicef_attachments.fields import AttachmentSingleFileField
 
 from etools.applications.locations.models import Location
-from etools.applications.partners.models import (
-    Intervention,
-    InterventionAmendment,
-    PartnerOrganization,
-    PartnerStaffMember,
-)
+from etools.applications.partners.models import Intervention, InterventionAmendment, PartnerOrganization
 from etools.applications.reports.models import (
     AppliedIndicator,
     Disaggregation,

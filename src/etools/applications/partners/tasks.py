@@ -15,7 +15,7 @@ from unicef_vision.exceptions import VisionException
 from unicef_vision.utils import get_data_from_insight
 
 from etools.applications.environment.notifications import send_notification_with_template
-from etools.applications.partners.models import Agreement, Intervention, PartnerOrganization, PartnerStaffMember
+from etools.applications.partners.models import Agreement, Intervention, PartnerOrganization
 from etools.applications.partners.prp_api import PRPAPI
 from etools.applications.partners.serializers.prp_v1 import PRPPartnerOrganizationWithStaffMembersSerializer
 from etools.applications.partners.utils import (
@@ -29,7 +29,7 @@ from etools.applications.partners.utils import (
 from etools.applications.partners.validation.agreements import AgreementValid
 from etools.applications.partners.validation.interventions import InterventionValid
 from etools.applications.reports.models import CountryProgramme
-from etools.applications.users.models import Country, Realm, User
+from etools.applications.users.models import Country, User
 from etools.config.celery import app
 from etools.libraries.djangolib.utils import get_environment
 from etools.libraries.tenant_support.utils import every_country, run_on_all_tenants

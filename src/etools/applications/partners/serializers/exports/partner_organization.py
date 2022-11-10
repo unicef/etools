@@ -5,7 +5,7 @@ from rest_framework import serializers
 
 from etools.applications.core.mixins import ExportSerializerMixin
 from etools.applications.organizations.models import OrganizationType
-from etools.applications.partners.models import Assessment, PartnerOrganization, PartnerStaffMember
+from etools.applications.partners.models import Assessment, PartnerOrganization
 from etools.applications.partners.serializers.fields import HactValuesField
 
 
