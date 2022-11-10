@@ -11,8 +11,10 @@ from unicef_locations.tests.factories import LocationFactory
 from etools.applications.attachments.tests.factories import AttachmentFileTypeFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
+from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners import utils
 from etools.applications.partners.models import Agreement, Intervention, InterventionResultLink
+from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, UNICEF_USER
 from etools.applications.partners.tests.factories import AgreementFactory, InterventionFactory, PartnerFactory
 from etools.applications.reports.models import AppliedIndicator, IndicatorBlueprint, LowerResult, ResultType
 from etools.applications.reports.tests.factories import (
@@ -20,16 +22,17 @@ from etools.applications.reports.tests.factories import (
     ReportingRequirementFactory,
     ResultFactory,
 )
-from etools.applications.users.tests.factories import GroupFactory, UserFactory
+from etools.applications.users.tests.factories import UserFactory
 
 
 def setup_intervention_test_data(test_case, include_results_and_indicators=False):
     today = datetime.date.today()
     test_case.unicef_staff = UserFactory(is_staff=True)
-    test_case.partnership_manager_user = UserFactory(is_staff=True)
-    test_case.partnership_manager_user.groups.add(GroupFactory())
-    test_case.partner = PartnerFactory(name='Partner 1', vendor_number="VP1")
-    test_case.partner1 = PartnerFactory(name='Partner 2')
+    test_case.partnership_manager_user = UserFactory(
+        is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]
+    )
+    test_case.partner = PartnerFactory(organization=OrganizationFactory(name='Partner 1', vendor_number="VP1"))
+    test_case.partner1 = PartnerFactory(organization=OrganizationFactory(name='Partner 2'))
     test_case.agreement = AgreementFactory(partner=test_case.partner, signed_by_unicef_date=datetime.date.today())
 
     test_case.active_agreement = AgreementFactory(

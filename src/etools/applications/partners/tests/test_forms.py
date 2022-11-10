@@ -5,43 +5,10 @@ from django.test import override_settings
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners import forms
-from etools.applications.partners.models import Intervention, PartnerOrganization, PartnerType
+from etools.applications.partners.models import Intervention
 from etools.applications.partners.tests.factories import InterventionFactory, PartnerFactory, PartnerStaffFactory
 from etools.applications.publics.models import Country
 from etools.applications.users.tests.factories import UserFactory
-
-
-class TestPartnersAdminForm(BaseTenantTestCase):
-    def setUp(self):
-        super().setUp()
-        self.data = {
-            "name": "Name",
-            "partner_type": PartnerType.UN_AGENCY,
-            "rating": "High",
-            "type_of_assessment": PartnerOrganization.MICRO_ASSESSMENT,
-        }
-
-    def test_form(self):
-        form = forms.PartnersAdminForm(self.data)
-        self.assertTrue(form.is_valid())
-
-    def test_clean_no_cso_type(self):
-        self.data["partner_type"] = PartnerType.CIVIL_SOCIETY_ORGANIZATION
-        form = forms.PartnersAdminForm(self.data)
-        self.assertFalse(form.is_valid())
-        self.assertIn(
-            "You must select a type for this CSO",
-            form.errors["__all__"]
-        )
-
-    def test_clean_cso_type(self):
-        self.data["cso_type"] = "National"
-        form = forms.PartnersAdminForm(self.data)
-        self.assertFalse(form.is_valid())
-        self.assertIn(
-            '"CSO Type" does not apply to non-CSO organizations, please remove type',
-            form.errors["__all__"]
-        )
 
 
 class TestPartnerStaffMemberForm(BaseTenantTestCase):
@@ -204,8 +171,8 @@ class TestPartnerStaffMemberForm(BaseTenantTestCase):
         self.assertFalse(form.is_valid())
 
     def test_save_user_assigned(self):
-        user = UserFactory(email="test@example.com")
-        user.profile.countries_available.clear()
+        user = UserFactory(email="test@example.com", realms__data=[])
+        # user.profile.countries_available.clear()
 
         form = forms.PartnerStaffMemberForm(self.data)
         self.assertTrue(form.is_valid())

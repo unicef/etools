@@ -208,7 +208,7 @@ class TestMonitoringActivityQuestionsFlow(BaseTenantTestCase):
         self.activity.save()
 
         self.assertListEqual(
-            [f.partner for f in self.activity.overall_findings.all()],
+            [f.partner for f in self.activity.overall_findings.order_by('partner_id')],
             [self.first_partner, self.second_partner]
         )
         self.assertEqual(

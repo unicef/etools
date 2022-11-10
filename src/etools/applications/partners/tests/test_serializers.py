@@ -5,7 +5,9 @@ from unittest import skip
 from rest_framework import serializers
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
-from etools.applications.partners.models import Agreement, PartnerType
+from etools.applications.organizations.models import OrganizationType
+from etools.applications.organizations.tests.factories import OrganizationFactory
+from etools.applications.partners.models import Agreement
 from etools.applications.partners.serializers.agreements_v2 import AgreementCreateUpdateSerializer
 from etools.applications.partners.serializers.partner_organization_v2 import PartnerOrganizationDetailSerializer
 from etools.applications.partners.tests.factories import (
@@ -28,7 +30,8 @@ class AgreementCreateUpdateSerializerBase(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.user = UserFactory()
 
-        cls.partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
+        cls.partner = PartnerFactory(
+            organization=OrganizationFactory(organization_type=OrganizationType.CIVIL_SOCIETY_ORGANIZATION))
 
         cls.today = datetime.date.today()
 
@@ -238,7 +241,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
     def test_create_with_partner_type(self):
         """Exercise create success & failure related to the rules regarding agreement type and partner type"""
         # Set partner to something other than civil society org.
-        self.partner.partner_type = PartnerType.UN_AGENCY
+        self.partner.partner_type = OrganizationType.UN_AGENCY
         self.partner.save()
 
         # Create PCA & SSFA should fail now.
@@ -278,7 +281,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
             self.assertTrue(serializer.is_valid(raise_exception=True))
 
         # Set partner to civil service org; create all agreement types should succeed
-        self.partner.partner_type = PartnerType.CIVIL_SOCIETY_ORGANIZATION
+        self.partner.partner_type = OrganizationType.CIVIL_SOCIETY_ORGANIZATION
         self.partner.save()
 
         for agreement_type in _ALL_AGREEMENT_TYPES:
@@ -689,7 +692,8 @@ class TestPartnerOrganizationDetailSerializer(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.user = UserFactory()
 
-        cls.partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
+        cls.partner = PartnerFactory(
+            organization=OrganizationFactory(organization_type=OrganizationType.CIVIL_SOCIETY_ORGANIZATION))
         cls.engagement = PlannedEngagementFactory(partner=cls.partner)
 
     def test_retrieve(self):

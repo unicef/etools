@@ -5,6 +5,7 @@ from django.utils import timezone
 
 from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.amendment_utils import INTERVENTION_AMENDMENT_RELATED_FIELDS, MergeError
 from etools.applications.partners.models import (
     Intervention,
@@ -41,10 +42,10 @@ class AmendmentTestCase(BaseTenantTestCase):
     def setUp(self):
         super().setUp()
         today = timezone.now().date()
-        self.unicef_staff = UserFactory(is_staff=True, groups__data=[UNICEF_USER])
-        self.pme = UserFactory(is_staff=True, groups__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP])
+        self.unicef_staff = UserFactory(is_staff=True)
+        self.pme = UserFactory(is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP])
 
-        self.partner1 = PartnerFactory(name='Partner 2')
+        self.partner1 = PartnerFactory(organization=OrganizationFactory(name='Partner 2'))
         self.active_agreement = AgreementFactory(
             partner=self.partner1,
             status='active',
@@ -319,7 +320,7 @@ class AmendmentTestCase(BaseTenantTestCase):
         today = timezone.now().date()
         amended_intervention.signed_by_unicef_date = today
         amended_intervention.signed_by_partner_date = today
-        amended_intervention.unicef_signatory = UserFactory(is_staff=True, groups__data=[UNICEF_USER])
+        amended_intervention.unicef_signatory = UserFactory(is_staff=True)
         amended_intervention.partner_authorized_officer_signatory = PartnerStaffFactory(partner=self.partner1)
         new_signed_document = AttachmentFactory(
             code='partners_intervention_signed_pd',

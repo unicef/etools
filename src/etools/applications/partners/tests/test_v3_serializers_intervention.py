@@ -1,11 +1,13 @@
 from unittest.mock import Mock
 
+from django.db import connection
+
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import Intervention
 from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP
 from etools.applications.partners.serializers import interventions_v3 as serializers
 from etools.applications.partners.tests.factories import InterventionFactory, PartnerFactory
-from etools.applications.users.tests.factories import GroupFactory, UserFactory
+from etools.applications.users.tests.factories import GroupFactory, RealmFactory, UserFactory
 
 
 class TestInterventionDetailSerializer(BaseTenantTestCase):
@@ -94,8 +96,11 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
 
     def test_available_actions_management(self):
         pd = InterventionFactory()
-        self.unicef_user.groups.add(
-            GroupFactory(name=PARTNERSHIP_MANAGER_GROUP),
+        RealmFactory(
+            user=self.unicef_user,
+            organization=self.partner.organization,
+            country=connection.tenant,
+            group=GroupFactory(name=PARTNERSHIP_MANAGER_GROUP)
         )
         self.assertEqual(pd.status, pd.DRAFT)
         available_actions = self.unicef_serializer.get_available_actions(pd)
@@ -112,8 +117,11 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
 
     def test_available_actions_management_unsuspend(self):
         pd = InterventionFactory(status=Intervention.SUSPENDED)
-        self.unicef_user.groups.add(
-            GroupFactory(name=PARTNERSHIP_MANAGER_GROUP),
+        RealmFactory(
+            user=self.unicef_user,
+            organization=self.partner.organization,
+            country=connection.tenant,
+            group=GroupFactory(name=PARTNERSHIP_MANAGER_GROUP)
         )
         self.assertEqual(pd.status, pd.SUSPENDED)
         available_actions = self.unicef_serializer.get_available_actions(pd)
@@ -122,8 +130,11 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
 
     def test_available_actions_management_terminate(self):
         pd = InterventionFactory(status=Intervention.ACTIVE)
-        self.unicef_user.groups.add(
-            GroupFactory(name=PARTNERSHIP_MANAGER_GROUP),
+        RealmFactory(
+            user=self.unicef_user,
+            organization=self.partner.organization,
+            country=connection.tenant,
+            group=GroupFactory(name=PARTNERSHIP_MANAGER_GROUP)
         )
         self.assertEqual(pd.status, pd.ACTIVE)
         available_actions = self.unicef_serializer.get_available_actions(pd)

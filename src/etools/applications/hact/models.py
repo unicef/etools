@@ -9,7 +9,8 @@ from django.utils.translation import gettext_lazy as _
 from model_utils.models import TimeStampedModel
 
 from etools.applications.audit.models import Audit, Engagement, MicroAssessment, SpecialAudit, SpotCheck
-from etools.applications.partners.models import PartnerOrganization, PartnerType
+from etools.applications.organizations.models import OrganizationType
+from etools.applications.partners.models import PartnerOrganization
 from etools.libraries.pythonlib.datetime import get_current_year
 from etools.libraries.pythonlib.encoders import CustomJSONEncoder
 
@@ -224,9 +225,9 @@ class AggregateHact(TimeStampedModel):
             'count': Count('total_ct_ytd')
         }
 
-        gov = self.get_queryset().filter(partner_type=PartnerType.GOVERNMENT).aggregate(**total_ct_dict)
+        gov = self.get_queryset().filter(partner_type=OrganizationType.GOVERNMENT).aggregate(**total_ct_dict)
         cso = self.get_queryset().filter(
-            partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION).aggregate(**total_ct_dict)
+            partner_type=OrganizationType.CIVIL_SOCIETY_ORGANIZATION).aggregate(**total_ct_dict)
 
         return [
             ['Partner Type', 'Total Cash Transfers', {'role': 'style'}, 'Number of Partners'],

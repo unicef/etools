@@ -17,6 +17,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from unicef_restlib.permissions import IsSuperUser
 
+from etools.applications.organizations.models import Organization
 from etools.applications.users.models import Country, UserProfile
 from etools.applications.users.permissions import IsServiceNowUser
 from etools.applications.users.serializers import (
@@ -146,8 +147,11 @@ class ChangeUserCountryView(APIView):
         if country not in user.profile.countries_available.all():
             raise DjangoValidationError(self.ERROR_MESSAGES['access_to_country_denied'],
                                         code='access_to_country_denied')
-
         user.profile.country_override = country
+
+        if user.profile.organization not in Organization.objects\
+                .filter(realms__country=country, realms__user=user):
+            user.profile.organization = None
         user.profile.save()
 
     def get_redirect_url(self):
@@ -300,15 +304,15 @@ class UserViewSet(mixins.RetrieveModelMixin,
     def get_queryset(self):
         # we should only return workspace users.
         queryset = super().get_queryset()
-        queryset = queryset.prefetch_related('profile', 'groups', 'user_permissions')
+        queryset = queryset.prefetch_related('profile', 'realms', 'user_permissions')
         # Filter for Partnership Managers only
         driver_qps = self.request.query_params.get("drivers", "")
         if driver_qps.lower() == "true":
-            queryset = queryset.filter(groups__name='Driver')
+            queryset = queryset.filter(realms__group__name='Driver')
 
         filter_param = self.request.query_params.get("partnership_managers", "")
         if filter_param.lower() == "true":
-            queryset = queryset.filter(groups__name="Partnership Manager")
+            queryset = queryset.filter(realms__group__name="Partnership Manager")
 
         if "values" in self.request.query_params.keys():
             # Used for ghost data - filter in all(), and return straight away.
@@ -323,7 +327,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
-        queryset = queryset.filter(groups__name="UNICEF User")
+        queryset = queryset.filter(realms__group__name="UNICEF User")
         filter_param = self.request.query_params.get("all", "")
         if filter_param.lower() != "true":
             queryset = queryset.filter(profile__country=self.request.user.profile.country)

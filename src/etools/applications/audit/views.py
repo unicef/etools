@@ -101,6 +101,7 @@ from etools.applications.permissions2.conditions import ObjectStatusCondition
 from etools.applications.permissions2.drf_permissions import get_permission_for_targets, NestedPermission
 from etools.applications.permissions2.metadata import BaseMetadata, PermissionBasedMetadata
 from etools.applications.permissions2.views import PermittedFSMActionMixin, PermittedSerializerMixin
+from etools.applications.users.models import Realm
 from etools.applications.users.serializers_v3 import MinimalUserSerializer
 
 
@@ -140,7 +141,8 @@ class AuditUsersViewSet(generics.ListAPIView):
         queryset = super().get_queryset()
 
         if self.request.query_params.get('verbosity', 'full') != 'minimal':
-            queryset = queryset.select_related('purchase_order_auditorstaffmember__auditor_firm')
+            queryset = queryset.select_related('purchase_order_auditorstaffmember__auditor_firm',
+                                               'purchase_order_auditorstaffmember__auditor_firm__organization')
 
         return queryset
 
@@ -164,9 +166,9 @@ class AuditorFirmViewSet(
     filter_fields = ('country', 'unicef_users_allowed')
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        queryset = super().get_queryset().select_related('organization')
 
-        user_groups = self.request.user.groups.all()
+        user_groups = self.request.user.groups
 
         if UNICEFUser.as_group() in user_groups or UNICEFAuditFocalPoint.as_group() in user_groups:
             # no need to filter queryset
@@ -287,15 +289,15 @@ class EngagementViewSet(
         UniqueIDOrderingFilter, OrderingFilter,
     )
     search_fields = (
-        'partner__name',
-        'partner__vendor_number',
-        'partner__short_name',
-        'agreement__auditor_firm__name',
+        'partner__organization__name',
+        'partner__organization__vendor_number',
+        'partner__organization__short_name',
+        'agreement__auditor_firm__organization__name',
         'offices__name',
         '=id',
     )
-    ordering_fields = ('agreement__order_number', 'agreement__auditor_firm__name',
-                       'partner__name', 'engagement_type', 'status')
+    ordering_fields = ('agreement__order_number', 'agreement__auditor_firm__organization__name',
+                       'partner__organization__name', 'engagement_type', 'status')
     filterset_class = EngagementFilter
     export_filename = 'engagements'
 
@@ -345,7 +347,8 @@ class EngagementViewSet(
             queryset = queryset.none()
 
         queryset = queryset.prefetch_related(
-            'partner', Prefetch('agreement', PurchaseOrder.objects.prefetch_related('auditor_firm'))
+            'partner', Prefetch('agreement', PurchaseOrder.objects.prefetch_related(
+                'auditor_firm', 'auditor_firm__organization'))
         )
 
         if self.action in ['list', 'export_list_csv']:
@@ -513,7 +516,7 @@ class AuditorStaffMembersViewSet(
     ordering_fields = ('user__email', 'user__first_name', 'id', )
     search_fields = ('user__first_name', 'user__email', 'user__last_name', )
     filter_fields = ('user__profile__country__schema_name', 'user__profile__country__name',
-                     'user__profile__countries_available__schema_name', 'user__profile__countries_available__name')
+                     'user__realms__country__schema_name', 'user__realms__country__name')
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -529,9 +532,15 @@ class AuditorStaffMembersViewSet(
         instance = serializer.save(auditor_firm=self.get_parent_object(), **kwargs)
         if not instance.user.profile.country:
             instance.user.profile.country = self.request.user.profile.country
-        instance.user.profile.countries_available.add(self.request.user.profile.country)
-        instance.user.groups.add(Auditor.as_group())
-        instance.user.profile.save()
+        instance.user.profile.organization = instance.auditor_firm.organization
+        instance.user.profile.save(update_fields=['country', 'organization'])
+
+        Realm.objects.update_or_create(
+            user=self.request.user,
+            country=self.request.user.profile.country,
+            organization=instance.auditor_firm.organization,
+            group=Auditor.as_group()
+        )
 
     @transaction.atomic
     def perform_update(self, serializer):
@@ -549,23 +558,39 @@ class AuditorStaffMembersViewSet(
                     hidden_staff.history.append(
                         f'requestor:{self.request.user.username},hidden:{hidden_staff.hidden},timestamp:{timestamp}'
                     )
-                    hidden_staff.save()
+                    hidden_staff.save(update_fields=['hidden', 'history'])
                     deactivated_user = hidden_staff.user
                     deactivated_user.is_active = True
-                    deactivated_user.save()
+                    deactivated_user.save(update_fields=['is_active'])
                     deleted_profile = hidden_staff.user.profile
-                    deleted_profile.countries_available.add(self.request.tenant)
+
+                    Realm.objects.update_or_create(
+                        user=deactivated_user,
+                        country=self.request.tenant,
+                        organization=hidden_staff.auditor_firm.organization,
+                        group=Auditor.as_group(),
+                        defaults={'is_active': deactivated_user.is_active}
+                    )
                     if not deleted_profile.country:
                         deleted_profile.country = self.request.tenant
-                    deleted_profile.save()
+                    deleted_profile.organization = hidden_staff.auditor_firm.organization
+                    deleted_profile.save(update_fields=['country', 'organization'])
                 return
 
         super().perform_update(serializer)
         instance = serializer.save(auditor_firm=self.get_parent_object())
         if not instance.user.profile.country:
             instance.user.profile.country = self.request.user.profile.country
-        instance.user.profile.countries_available.add(self.request.user.profile.country)
-        instance.user.profile.save()
+        instance.user.profile.organization = instance.auditor_firm.organization
+        instance.user.profile.save(update_fields=['country', 'organization'])
+
+        Realm.objects.update_or_create(
+            user=self.request.user,
+            country=self.request.tenant,
+            organization=instance.auditor_firm.organization,
+            group=Auditor.as_group(),
+            defaults={'is_active': self.request.user.is_active}
+        )
 
     def perform_destroy(self, instance):
         # deactivate staff member & user
@@ -574,10 +599,15 @@ class AuditorStaffMembersViewSet(
         instance.history.append(
             f'requestor:{self.request.user.username},hidden:{instance.hidden},timestamp:{timestamp}'
         )
-        instance.save()
+        instance.save(update_fields=['hidden', 'history'])
         if not instance.user.is_unicef_user():
             instance.user.is_active = False
-            instance.user.save()
+            instance.user.save(update_fields=['is_active'])
+            instance.user.realms\
+                .filter(country=self.request.tenant,
+                        organization=instance.auditor_firm.organization,
+                        group=Auditor.as_group())\
+                .update(is_active=False)
 
     def get_permission_context(self):
         context = super().get_permission_context()

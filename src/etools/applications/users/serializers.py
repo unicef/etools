@@ -3,7 +3,8 @@ from django.utils.encoding import force_str
 
 from rest_framework import serializers
 
-from etools.applications.users.models import Country, Group, UserProfile
+from etools.applications.organizations.models import Organization
+from etools.applications.users.models import Country, Group, Realm, UserProfile
 from etools.applications.users.validators import EmailValidator
 
 
@@ -11,6 +12,12 @@ class SimpleCountrySerializer(serializers.ModelSerializer):
     class Meta:
         model = Country
         fields = ('id', 'name', 'business_area_code')
+
+
+class SimpleOrganizationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Organization
+        fields = ('id', 'name')
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
@@ -70,10 +77,34 @@ class SimpleProfileSerializer(serializers.ModelSerializer):
         )
 
 
-class GroupSerializer(serializers.ModelSerializer):
+class SimpleGroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = Group
-        fields = ('id', 'name')
+        fields = [
+            'id',
+            'name',
+        ]
+
+
+class GroupSerializer(SimpleGroupSerializer):
+
+    permissions = serializers.SerializerMethodField()
+
+    def get_permissions(self, group):
+        return [perm.id for perm in group.permissions.all()]
+
+    def create(self, validated_data):
+        try:
+            group = Group.objects.create(**validated_data)
+
+        except Exception as ex:
+            raise serializers.ValidationError({'group': force_str(ex)})
+
+        return group
+
+    class Meta(SimpleGroupSerializer.Meta):
+        model = Group
+        fields = SimpleGroupSerializer.Meta.fields + ['permissions']
 
 
 class ProfileRetrieveUpdateSerializer(serializers.ModelSerializer):
@@ -107,32 +138,6 @@ class UserProfileCreationSerializer(serializers.ModelSerializer):
         exclude = (
             'id',
             'user',
-        )
-
-
-class GroupSerializer(serializers.ModelSerializer):
-
-    id = serializers.CharField(read_only=True)
-    permissions = serializers.SerializerMethodField()
-
-    def get_permissions(self, group):
-        return [perm.id for perm in group.permissions.all()]
-
-    def create(self, validated_data):
-        try:
-            group = Group.objects.create(**validated_data)
-
-        except Exception as ex:
-            raise serializers.ValidationError({'group': force_str(ex)})
-
-        return group
-
-    class Meta:
-        model = Group
-        fields = (
-            'id',
-            'name',
-            'permissions'
         )
 
 
@@ -186,26 +191,28 @@ class UserCreationSerializer(serializers.ModelSerializer):
         return [perm.id for perm in user.user_permissions.all()]
 
     def create(self, validated_data):
-        try:
-            user_profile = validated_data.pop('profile')
-        except KeyError:
-            user_profile = {}
-
-        try:
-            countries = user_profile.pop('countries_available')
-        except KeyError:
-            countries = []
+        user_profile = validated_data.pop('profile', {})
+        groups = validated_data.pop('groups', [])
+        countries = user_profile.pop('countries_available', [])
 
         try:
             user = get_user_model().objects.create(**validated_data)
             user.profile.country = user_profile['country']
+            user.profile.organization = user_profile['organization']
             user.profile.tenant_profile.office = user_profile['office']
             user.profile.job_title = user_profile['job_title']
             user.profile.phone_number = user_profile['phone_number']
             user.profile.country_override = user_profile['country_override']
+            realm_list = []
             for country in countries:
-                user.profile.countries_available.add(country)
-
+                for group in groups:
+                    realm_list.append(Realm(
+                        user=user,
+                        country=country,
+                        organization=user.profile.organization,
+                        group=group
+                    ))
+            Realm.objects.bulk_create(realm_list)
             user.save()
             user.profile.save()
 

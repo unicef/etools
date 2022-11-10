@@ -4,6 +4,7 @@ from django.utils.safestring import mark_safe
 
 from etools import NAME, VERSION
 from etools.applications.core.util_scripts import currency_format
+from etools.applications.users.models import Country
 
 register = template.Library()
 
@@ -19,18 +20,18 @@ def vision_url():
 
 
 @register.simple_tag(takes_context=True)
-def show_country_select(context, profile):
+def show_country_select(context, user):
 
-    if not profile:
+    if not user:
         return ''
-    countries = profile.countries_available.all().order_by('name')  # Country.objects.all()
+    countries = Country.objects.filter(realms__in=user.realms.all()).distinct().order_by('name')
 
     if 'opts' in context and context['opts'].app_label in settings.TENANT_APPS:
         countries = countries.exclude(schema_name='public')
 
     html = ''
     for country in countries:
-        if country == profile.country:
+        if country == user.profile.country:
             html += '<option value="' + str(country.id) + '" selected>' + country.name + '</option>'
         else:
             html += '<option value="' + str(country.id) + '">' + country.name + '</option>'

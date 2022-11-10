@@ -5,9 +5,13 @@ from django.db.models import signals
 import factory
 from factory.fuzzy import FuzzyText
 
+from etools.applications.action_points.models import PME
+from etools.applications.organizations.tests.factories import OrganizationFactory
+from etools.applications.partners.permissions import UNICEF_USER
 from etools.applications.publics.tests.factories import PublicsCurrencyFactory
 from etools.applications.reports.tests.factories import OfficeFactory, UserTenantProfileFactory
 from etools.applications.users import models
+from etools.applications.users.models import Realm
 
 SCHEMA_NAME = 'test'
 
@@ -42,12 +46,7 @@ class ProfileFactory(factory.django.DjangoModelFactory):
     # We pass in profile=None to prevent UserFactory from creating another profile
     # (this disables the RelatedFactory)
     user = factory.SubFactory('etools.applications.users.tests.factories.UserFactory', profile=None)
-
-    @factory.post_generation
-    def countries_available(self, create, extracted, **kwargs):
-        if extracted is not None:
-            for country in extracted:
-                self.countries_available.add(country)
+    organization = factory.SubFactory(OrganizationFactory)
 
     @factory.post_generation
     def tenant_profile(self, create, extracted, **kwargs):
@@ -65,6 +64,17 @@ class ProfileLightFactory(ProfileFactory):
         return
 
 
+class RealmFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = Realm
+        django_get_or_create = ('user', 'country', 'organization', 'group')
+
+    user = factory.SubFactory('etools.applications.users.tests.factories.UserFactory')
+    country = factory.SubFactory(CountryFactory)
+    organization = factory.SubFactory(OrganizationFactory)
+    group = factory.SubFactory(GroupFactory)
+
+
 @factory.django.mute_signals(signals.pre_save, signals.post_save)
 class UserFactory(factory.django.DjangoModelFactory):
     class Meta:
@@ -76,31 +86,40 @@ class UserFactory(factory.django.DjangoModelFactory):
     email = factory.Sequence(lambda n: "user{}@example.com".format(n))
     password = factory.PostGenerationMethodCall('set_password', 'test')
 
-    # unicef user is set as group by default, but we can easily overwrite it by passing empty list
-    groups__data = ['UNICEF User']
+    # unicef realm is set for user by default, but we can easily overwrite it by passing empty list
+    realms__data = [UNICEF_USER]
 
     # We pass in 'user' to link the generated Profile to our just-generated User
     # This will call ProfileFactory(user=our_new_user), thus skipping the SubFactory.
     profile = factory.RelatedFactory(ProfileFactory, 'user')
 
     @factory.post_generation
-    def groups(self, create, extracted, data=None, **kwargs):
+    def realms(self, create, extracted, data=None, **kwargs):
         if not create:
             return
-
         extracted = (extracted or []) + (data or [])
 
         if extracted:
-            for i, group in enumerate(extracted):
+            if UNICEF_USER in extracted:
+                organization = OrganizationFactory(name='UNICEF', vendor_number='UNICEF')
+                if hasattr(self, 'profile') and self.profile:
+                    self.profile.organization = organization
+                    self.profile.save(update_fields=['organization'])
+            else:
+                organization = self.profile.organization
+            for group in extracted:
                 if isinstance(group, str):
-                    extracted[i] = Group.objects.get_or_create(name=group)[0]
-
-            self.groups.add(*extracted)
+                    RealmFactory(
+                        user=self,
+                        country=CountryFactory(),
+                        organization=organization,
+                        group=GroupFactory(name=group)
+                    )
 
 
 class SimpleUserFactory(UserFactory):
-    groups__data = []
+    realms__data = []
 
 
 class PMEUserFactory(UserFactory):
-    groups__data = ['UNICEF User', 'PME']
+    realms__data = [UNICEF_USER, PME.name]

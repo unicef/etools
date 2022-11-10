@@ -28,6 +28,7 @@ class AuditorFirmAdmin(admin.ModelAdmin):
     ]
     list_filter = ['blocked', 'hidden', 'country', 'unicef_users_allowed', ]
     search_fields = ['vendor_number', 'name', ]
+    autocomplete_fields = ['organization']
     readonly_fields = ['unicef_users_allowed', ]
     inlines = [
         AuditorStaffMemberInlineAdmin,
@@ -48,7 +49,7 @@ class PurchaseOrderAdmin(ExtraUrlMixin, admin.ModelAdmin):
     list_filter = [
         'auditor_firm', 'contract_start_date', 'contract_end_date',
     ]
-    search_fields = ['order_number', 'auditor_firm__name', ]
+    search_fields = ['order_number', 'auditor_firm__organization__name', ]
     inlines = [PurchaseOrderItemAdmin]
 
     @button()
@@ -61,7 +62,9 @@ class PurchaseOrderAdmin(ExtraUrlMixin, admin.ModelAdmin):
 class AuditorStaffAdmin(admin.ModelAdmin):
     list_display = ['user', 'email', 'auditor_firm', 'hidden']
     list_filter = ['auditor_firm', 'hidden']
-    search_fields = ['user__username', 'user__email', 'user__first_name', 'user__last_name', 'auditor_firm__name', ]
+    search_fields = ['user__username', 'user__email', 'user__first_name', 'user__last_name',
+                     'auditor_firm__organization__name', ]
+    autocomplete_fields = ['auditor_firm']
     readonly_fields = 'history',
     raw_id_fields = ['user', ]
 

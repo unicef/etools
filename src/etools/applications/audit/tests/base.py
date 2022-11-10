@@ -6,7 +6,6 @@ from unittest.mock import Mock, patch
 from django.conf import settings
 from django.core.files import File
 from django.core.management import call_command
-from django.db import connection
 from django.utils import timezone
 
 from unicef_attachments.models import Attachment
@@ -46,14 +45,10 @@ class AuditTestCaseMixin:
 
         self.auditor_firm = AuditPartnerFactory()
 
-        self.auditor = AuditorUserFactory(partner_firm=self.auditor_firm,
-                                          profile__countries_available=[connection.tenant])
-        self.unicef_user = UserFactory(first_name='UNICEF User',
-                                       profile__countries_available=[connection.tenant])
-        self.unicef_focal_point = AuditFocalPointUserFactory(first_name='UNICEF Audit Focal Point',
-                                                             profile__countries_available=[connection.tenant])
-        self.usual_user = SimpleUserFactory(first_name='Unknown user',
-                                            profile__countries_available=[connection.tenant])
+        self.auditor = AuditorUserFactory(partner_firm=self.auditor_firm)
+        self.unicef_user = UserFactory(first_name='UNICEF User')
+        self.unicef_focal_point = AuditFocalPointUserFactory(first_name='UNICEF Audit Focal Point')
+        self.usual_user = SimpleUserFactory(first_name='Unknown user')
 
 
 class EngagementTransitionsTestCaseMixin(AuditTestCaseMixin):
@@ -138,5 +133,6 @@ class EngagementTransitionsTestCaseMixin(AuditTestCaseMixin):
 
         self.non_engagement_auditor = AuditorStaffMemberFactory(
             user__first_name='Auditor 2',
-            auditor_firm=self.auditor_firm
+            auditor_firm=self.auditor_firm,
+            user__profile__organization=self.auditor_firm.organization
         ).user

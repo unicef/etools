@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 from django_tenants.utils import schema_context
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.organizations.models import Organization
 from etools.applications.users import tasks
 from etools.applications.users.models import UserProfile
 from etools.applications.users.tests.factories import (
@@ -17,6 +18,8 @@ from etools.applications.users.tests.factories import (
 
 
 class TestUserMapper(BaseTenantTestCase):
+    fixtures = ['organizations']
+
     @classmethod
     def setUpTestData(cls):
         cls.group = GroupFactory(name="UNICEF User")
@@ -93,11 +96,11 @@ class TestUserMapper(BaseTenantTestCase):
         self.mapper.countries = {name: country, "UAT": country}
         profile = ProfileFactory(country=None)
         self.assertIsNone(profile.country)
-        self.assertFalse(profile.countries_available.count())
+        self.assertEqual(profile.countries_available.count(), 1)  # Unicef Realm exists for user
         res = self.mapper._set_special_attr(profile, "country", name)
         self.assertTrue(res)
         self.assertEqual(profile.country, country)
-        self.assertTrue(profile.countries_available.count())
+        self.assertEqual(profile.countries_available.count(), 1)
 
     def test_set_attribute_special_field(self):
         """If special field, use _set_special_attr method"""
@@ -106,7 +109,7 @@ class TestUserMapper(BaseTenantTestCase):
         self.mapper.countries = {name: country, "UAT": country}
         profile = ProfileFactory(country=None)
         self.assertIsNone(profile.country)
-        self.assertFalse(profile.countries_available.count())
+        self.assertEqual(profile.countries_available.count(), 1)  # Unicef Realm exists for user
         res = self.mapper._set_attribute(profile, "country", name)
         self.assertTrue(res)
         self.assertEqual(profile.country, country)
@@ -121,6 +124,8 @@ class TestUserMapper(BaseTenantTestCase):
 
     def test_create_or_update_user_created(self):
         """Ensure user is created and added to default group"""
+        country_uat = CountryFactory(name="UAT", business_area_code="UAT")
+        self.mapper.countries = {"UAT": country_uat}
         email = "tester@example.com"
         res = self.mapper.create_or_update_user({
             "userPrincipalName": email,
@@ -130,6 +135,7 @@ class TestUserMapper(BaseTenantTestCase):
             "surname": "Last",
             "userType": "Internal",
             "companyName": "UNICEF",
+            "extension_f4805b4021f643d0aa596e1367d432f1_extensionAttribute1": "test"
         })
         self.assertEqual(res, {'processed': 1, 'created': 1, 'updated': 0, 'skipped': 0, 'errors': 0})
         self.assertTrue(get_user_model().objects.filter(email=email).exists())
@@ -137,10 +143,16 @@ class TestUserMapper(BaseTenantTestCase):
             UserProfile.objects.filter(user__email=email).exists()
         )
         user = get_user_model().objects.get(email=email)
-        self.assertIn(self.group, user.groups.all())
+        self.assertEqual(user.realms.count(), 1)
+        self.assertEqual(
+            user.profile.organization,
+            Organization.objects.get(vendor_number='UNICEF')
+        )
 
     def test_create_or_update_user_exists(self):
         """Ensure graceful handling if user already exists"""
+        country_uat = CountryFactory(name="UAT")
+        self.mapper.countries = {"UAT": country_uat}
         email = "tester@example.com"
         UserFactory(
             email=email,
@@ -160,10 +172,12 @@ class TestUserMapper(BaseTenantTestCase):
         })
         self.assertEqual(res, {'processed': 1, 'created': 0, 'updated': 0, 'skipped': 0, 'errors': 0})
         user = get_user_model().objects.get(email=email)
-        self.assertIn(self.group, user.groups.all())
+        self.assertIn(self.group, user.groups)
 
     def test_create_or_update_user_profile_updated(self):
         """If profile field changed, then update profile record"""
+        country_uat = CountryFactory(name="UAT")
+        self.mapper.countries = {"UAT": country_uat}
         email = "tester@example.com"
         phone = "0987654321"
         res = self.mapper.create_or_update_user({

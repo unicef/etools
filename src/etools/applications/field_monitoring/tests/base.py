@@ -1,4 +1,3 @@
-from django.db import connection
 from django.urls import reverse
 
 from rest_framework import status
@@ -14,14 +13,10 @@ class FMBaseTestCaseMixin(object):
         super().setUpTestData()
         GroupWrapper.invalidate_instances()
 
-        cls.unicef_user = UserFactory(first_name='UNICEF User', unicef_user=True, is_staff=True,
-                                      profile__countries_available=[connection.tenant])
-        cls.fm_user = UserFactory(first_name='Field Monitoring User', fm_user=True, is_staff=True,
-                                  profile__countries_available=[connection.tenant])
-        cls.pme = UserFactory(first_name='PME User', pme=True, is_staff=True,
-                              profile__countries_available=[connection.tenant])
-        cls.usual_user = UserFactory(first_name='Unknown user',
-                                     profile__countries_available=[connection.tenant])
+        cls.unicef_user = UserFactory(first_name='UNICEF User', unicef_user=True, is_staff=True)
+        cls.fm_user = UserFactory(first_name='Field Monitoring User', fm_user=True, is_staff=True)
+        cls.pme = UserFactory(first_name='PME User', pme=True, is_staff=True)
+        cls.usual_user = UserFactory(first_name='Unknown user')
 
 
 class APIViewSetTestCase(BaseTenantTestCase):

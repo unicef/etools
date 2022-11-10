@@ -6,11 +6,13 @@ from django.utils import timezone
 from etools.applications.audit.models import UNICEFAuditFocalPoint
 from etools.applications.audit.tests.factories import AuditPartnerFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.organizations.tests.factories import OrganizationFactory
+from etools.applications.partners.permissions import UNICEF_USER
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.psea import serializers
 from etools.applications.psea.models import Assessment, Assessor
 from etools.applications.psea.tests.factories import AnswerFactory, AssessmentFactory, AssessorFactory, RatingFactory
-from etools.applications.users.tests.factories import GroupFactory, UserFactory
+from etools.applications.users.tests.factories import UserFactory
 
 
 def expected_status_list(statuses):
@@ -21,9 +23,8 @@ class TestAssessmentSerializer(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.mock_view = Mock(action="retrieve")
-        cls.focal_user = UserFactory()
-        cls.focal_user.groups.add(
-            GroupFactory(name=UNICEFAuditFocalPoint.name),
+        cls.focal_user = UserFactory(
+            is_staff=True, realms__data=[UNICEF_USER, UNICEFAuditFocalPoint.name]
         )
         cls.mock_request = Mock(user=cls.focal_user)
         cls.serializer = serializers.AssessmentSerializer(
@@ -93,7 +94,7 @@ class TestAssessmentSerializer(BaseTenantTestCase):
 
     def test_get_assessor_firm(self):
         assessment = AssessmentFactory()
-        firm = AuditPartnerFactory(name="Firm Name")
+        firm = AuditPartnerFactory(organization=OrganizationFactory(name="Firm Name"))
         AssessorFactory(
             assessment=assessment,
             auditor_firm=firm,

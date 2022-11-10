@@ -10,7 +10,9 @@ from unicef_locations.tests.factories import LocationFactory
 from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
+from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.models import Intervention
+from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, UNICEF_USER
 from etools.applications.partners.tests.factories import (
     InterventionFactory,
     InterventionReviewFactory,
@@ -30,21 +32,24 @@ class BaseTestCase(BaseTenantTestCase):
     def setUp(self):
         super().setUp()
 
-        self.unicef_user = UserFactory(is_staff=True, groups__data=['UNICEF User'])
-        self.partnership_manager = UserFactory(is_staff=True, groups__data=['UNICEF User', 'Partnership Manager'])
-
-        self.partner = PartnerFactory(vendor_number=fuzzy.FuzzyText(length=20).fuzz())
-        self.partner_staff_member = UserFactory(is_staff=False, groups__data=[])
+        self.unicef_user = UserFactory(is_staff=True)
+        self.partnership_manager = UserFactory(
+            is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]
+        )
+        self.partner = PartnerFactory(
+            organization=OrganizationFactory(vendor_number=fuzzy.FuzzyText(length=20).fuzz())
+        )
+        self.partner_staff_member = UserFactory(is_staff=False, realms__data=[])
         PartnerStaffFactory(
             partner=self.partner, email=self.partner_staff_member.email, user=self.partner_staff_member,
         )
 
-        self.partner_authorized_officer = UserFactory(is_staff=False, groups__data=[])
+        self.partner_authorized_officer = UserFactory(is_staff=False, realms__data=[])
         partner_authorized_officer_staff = PartnerStaffFactory(
             partner=self.partner, email=self.partner_authorized_officer.email, user=self.partner_authorized_officer
         )
 
-        self.partner_focal_point = UserFactory(is_staff=False, groups__data=[])
+        self.partner_focal_point = UserFactory(is_staff=False, realms__data=[])
         partner_focal_point_staff = PartnerStaffFactory(
             partner=self.partner, email=self.partner_focal_point.email, user=self.partner_focal_point
         )

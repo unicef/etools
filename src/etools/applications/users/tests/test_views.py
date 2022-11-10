@@ -9,6 +9,7 @@ from django.urls import reverse
 from rest_framework import status
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, UNICEF_USER
 from etools.applications.publics.tests.factories import PublicsBusinessAreaFactory
 from etools.applications.users.models import Group, UserProfile
 from etools.applications.users.tests.factories import CountryFactory, GroupFactory, UserFactory
@@ -24,9 +25,6 @@ class TestChangeUserCountry(BaseTenantTestCase):
         self.url = reverse("users:country-change")
 
     def test_post(self):
-        self.unicef_staff.profile.countries_available.add(
-            self.unicef_staff.profile.country
-        )
         response = self.forced_auth_req(
             "post",
             self.url,
@@ -61,9 +59,9 @@ class TestUserViews(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
         cls.unicef_superuser = UserFactory(is_superuser=True)
-        cls.partnership_manager_user = UserFactory(is_staff=True)
-        cls.group = GroupFactory()
-        cls.partnership_manager_user.groups.add(cls.group)
+        cls.partnership_manager_user = UserFactory(
+            is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]
+        )
 
     def test_api_users_list(self):
         response = self.forced_auth_req('get', '/api/users/', user=self.unicef_staff)
@@ -269,7 +267,7 @@ class TestGroupViewSet(BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         groups = sorted(response.data, key=itemgetter('id'))
-        self.assertEqual(groups[0]['id'], str(group.pk))
+        self.assertEqual(groups[0]['id'], group.pk)
 
     def test_api_groups_list(self):
         response = self.forced_auth_req(
@@ -317,9 +315,9 @@ class TestUserViewSet(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
         cls.unicef_superuser = UserFactory(is_superuser=True)
-        cls.partnership_manager_user = UserFactory(is_staff=True)
-        cls.group = GroupFactory()
-        cls.partnership_manager_user.groups.add(cls.group)
+        cls.partnership_manager_user = UserFactory(
+            is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]
+        )
 
     def setUp(self):
         super().setUp()
@@ -371,7 +369,7 @@ class TestUserViewSet(BaseTenantTestCase):
                     "phone_number": "123-546-7890",
                     "country_override": None,
                 },
-                "groups": [self.group.pk]
+                "groups": [GroupFactory().pk]
             }
         )
         self.assertEqual(

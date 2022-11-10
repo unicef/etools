@@ -7,6 +7,7 @@ from rest_framework import status
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import Intervention
+from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, UNICEF_USER
 from etools.applications.partners.tests.factories import (
     InterventionFactory,
     InterventionResultLinkFactory,
@@ -22,7 +23,7 @@ from etools.applications.reports.tests.factories import (
     SectionFactory,
     SpecialReportingRequirementFactory,
 )
-from etools.applications.users.tests.factories import GroupFactory, UserFactory
+from etools.applications.users.tests.factories import UserFactory
 
 
 class BasePMPTestCase(BaseTenantTestCase):
@@ -173,9 +174,9 @@ class TestPMPSpecialReportingRequirementListCreateView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
-        cls.unicef_staff = UserFactory(is_staff=True)
-        group = GroupFactory(name='Partnership Manager')
-        cls.unicef_staff.groups.add(group)
+        cls.unicef_staff = UserFactory(
+            is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]
+        )
         cls.intervention = InterventionFactory(
             start=datetime.date(2001, 1, 1),
             status=Intervention.DRAFT,
@@ -270,10 +271,9 @@ class TestPMPSpecialReportingRequirementListCreateView(BaseTenantTestCase):
 class TestSpecialReportingRequirementRetrieveUpdateDestroyView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.unicef_staff = UserFactory(is_staff=True)
-        group = GroupFactory(name='Partnership Manager')
-        cls.unicef_staff.groups.add(group)
-
+        cls.unicef_staff = UserFactory(
+            is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]
+        )
         cls.partner = PartnerFactory()
         cls.partner_focal_point = PartnerStaffFactory(partner=cls.partner).user
 

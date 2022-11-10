@@ -172,8 +172,7 @@ class MonitoringActivityOfflineBlueprintsSyncTestCase(APIViewSetTestCase, BaseTe
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
-        cls.fm_user = UserFactory(first_name='Field Monitoring User', fm_user=True, is_staff=True,
-                                  profile__countries_available=[connection.tenant])
+        cls.fm_user = UserFactory(first_name='Field Monitoring User', fm_user=True, is_staff=True)
 
     def setUp(self):
         super().setUp()

@@ -16,7 +16,7 @@ from etools.applications.attachments.tests.factories import (
     AttachmentLinkFactory,
 )
 from etools.applications.core.tests.cases import BaseTenantTestCase
-from etools.applications.partners.models import PartnerType
+from etools.applications.organizations.models import OrganizationType
 from etools.applications.partners.tests.factories import InterventionAttachmentFactory
 from etools.applications.reports.tests.factories import OfficeFactory, SectionFactory
 from etools.applications.tpm.models import ThirdPartyMonitor, TPMVisit
@@ -167,10 +167,14 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
         )
 
     def test_list_view_without_tpm_organization(self):
-        user = UserFactory()
-        user.groups.add(ThirdPartyMonitor.as_group())
+        user = UserFactory(realms__data=[ThirdPartyMonitor.name])
 
-        self._test_list_view(user, [])
+        response = self.forced_auth_req(
+            'get',
+            reverse('tpm:visits-list'),
+            user=user
+        )
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_create_empty(self):
         create_response = self.forced_auth_req(
@@ -185,7 +189,7 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
     def test_intervention_bilateral_partner(self):
         visit = TPMVisitFactory(
             tpm_activities__count=1,
-            tpm_activities__intervention__agreement__partner__partner_type=PartnerType.BILATERAL_MULTILATERAL
+            tpm_activities__intervention__agreement__partner__organization__organization_type=OrganizationType.BILATERAL_MULTILATERAL
         )
 
         existing_activity = visit.tpm_activities.first()
@@ -212,7 +216,7 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
     def test_intervention_government_partner(self):
         visit = TPMVisitFactory(
             tpm_activities__count=1,
-            tpm_activities__intervention__agreement__partner__partner_type=PartnerType.GOVERNMENT
+            tpm_activities__intervention__agreement__partner__organization__organization_type=OrganizationType.GOVERNMENT
         )
 
         existing_activity = visit.tpm_activities.first()
@@ -239,7 +243,7 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
     def test_intervention_other_partner(self):
         visit = TPMVisitFactory(
             tpm_activities__count=1,
-            tpm_activities__intervention__agreement__partner__partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION
+            tpm_activities__intervention__agreement__partner__organization__organization_type=OrganizationType.CIVIL_SOCIETY_ORGANIZATION
         )
 
         existing_activity = visit.tpm_activities.first()

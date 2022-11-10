@@ -79,6 +79,7 @@ from etools.applications.tpm.serializers.visit import (
 )
 from etools.applications.tpm.tpmpartners.models import TPMPartner, TPMPartnerStaffMember
 from etools.applications.tpm.tpmpartners.synchronizers import TPMPartnerSynchronizer
+from etools.applications.users.models import Realm
 
 
 class BaseTPMViewSet(
@@ -189,7 +190,8 @@ class TPMPartnerViewSet(
     @action(detail=False, methods=['get'], url_path='export', renderer_classes=(TPMPartnerCSVRenderer,))
     def export(self, request, *args, **kwargs):
         tpm_partners = self.filter_queryset(
-            TPMPartner.objects.filter(countries__id__contains=request.user.profile.country.id).order_by('vendor_number')
+            TPMPartner.objects.filter(
+                countries__id__contains=request.user.profile.country.id).order_by('organization__vendor_number')
         )
         serializer = TPMPartnerExportSerializer(tpm_partners, many=True)
         return Response(serializer.data, headers={
@@ -222,9 +224,14 @@ class TPMStaffMembersViewSet(
         instance = serializer.save(tpm_partner=self.get_parent_object(), **kwargs)
         if not instance.user.profile.country:
             instance.user.profile.country = self.request.user.profile.country
-        instance.user.profile.countries_available.add(self.request.user.profile.country)
-        instance.user.groups.add(ThirdPartyMonitor.as_group())
-        instance.user.profile.save()
+        instance.user.profile.organization = instance.tpm_partner.organization
+        Realm.objects.update_or_create(
+            user=instance.user,
+            country=instance.user.profile.country,
+            organization=instance.tpm_partner.organization,
+            group=ThirdPartyMonitor.as_group()
+        )
+        instance.user.profile.save(update_fields=['country', 'organization'])
 
     @action(detail=False, methods=['get'], url_path='export', renderer_classes=(TPMPartnerContactsCSVRenderer,))
     def export(self, request, *args, **kwargs):
@@ -463,7 +470,7 @@ class TPMActivityViewSet(viewsets.ReadOnlyModelViewSet):
 
     filter_backends = (SearchFilter, OrderingFilter, DjangoFilterBackend)
     search_fields = ('tpm_visit__tpm_partner__vendor_number', 'tpm_visit__tpm_partner__name',
-                     'partner__name', 'partner__vendor_number')
+                     'partner__organization__name', 'partner__vendor_number')
 
 
 class TPMActionPointViewSet(BaseTPMViewSet,

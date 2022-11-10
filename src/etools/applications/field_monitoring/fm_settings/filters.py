@@ -48,7 +48,7 @@ class LogIssueNameOrderingFilter(BaseFilterBackend):
 
         return queryset.annotate(name=Case(
             When(cp_output__isnull=False, then=F('cp_output__name')),
-            When(partner__isnull=False, then=F('partner__name')),
+            When(partner__isnull=False, then=F('partner__organization__name')),
             When(location_site__isnull=False, then=F('location_site__name')),
             When(location__isnull=False, then=F('location__name')),
             output_field=models.CharField()

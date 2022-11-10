@@ -141,11 +141,13 @@ class MonitoringActivitiesViewSet(
     """
     Retrieve and Update Agreement.
     """
-    queryset = MonitoringActivity.objects.annotate(checklists_count=Count('checklists')).select_related(
-        'tpm_partner', 'visit_lead', 'location', 'location_site',
-    ).prefetch_related(
-        'team_members', 'partners', 'interventions', 'cp_outputs'
-    ).order_by("-id")
+    queryset = MonitoringActivity.objects\
+        .annotate(checklists_count=Count('checklists'))\
+        .select_related('tpm_partner', 'tpm_partner__organization',
+                        'visit_lead', 'location', 'location_site')\
+        .prefetch_related('team_members', 'partners', 'partners__organization',
+                          'interventions', 'cp_outputs')\
+        .order_by("-id")
     serializer_class = MonitoringActivitySerializer
     serializer_action_classes = {
         'list': MonitoringActivityLightSerializer

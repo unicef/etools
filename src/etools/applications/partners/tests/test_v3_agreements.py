@@ -9,10 +9,13 @@ from unicef_snapshot.models import Activity
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.core.tests.mixins import URLAssertionMixin
-from etools.applications.partners.models import Agreement, PartnerType
+from etools.applications.organizations.models import OrganizationType
+from etools.applications.organizations.tests.factories import OrganizationFactory
+from etools.applications.partners.models import Agreement
+from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, UNICEF_USER
 from etools.applications.partners.tests.factories import AgreementFactory, PartnerFactory, PartnerStaffFactory
 from etools.applications.reports.tests.factories import CountryProgrammeFactory
-from etools.applications.users.tests.factories import GroupFactory, UserFactory
+from etools.applications.users.tests.factories import UserFactory
 
 
 class URLsTestCase(URLAssertionMixin, SimpleTestCase):
@@ -33,11 +36,14 @@ class URLsTestCase(URLAssertionMixin, SimpleTestCase):
 class BaseAgreementTestCase(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.pme_user = UserFactory(is_staff=True)
-        cls.pme_user.groups.add(GroupFactory())
-        cls.partner_user = UserFactory(is_staff=False)
+        cls.pme_user = UserFactory(
+            is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]
+        )
+        cls.partner_user = UserFactory(is_staff=False, realms__data=['IP Viewer'])
         cls.partner = PartnerFactory(
-            partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION,
+            organization=OrganizationFactory(
+                organization_type=OrganizationType.CIVIL_SOCIETY_ORGANIZATION,
+            )
         )
         cls.partner_staff = PartnerStaffFactory(
             partner=cls.partner,
@@ -184,10 +190,13 @@ class TestUpdate(BaseAgreementTestCase):
             start=datetime.date.today(),
         )
         agreement.authorized_officers.add(self.partner_staff)
+        # only UNICEF users can update reference_number_year - see agreement_permissions matrix
+        unicef_user = UserFactory(email='test@unicef.org', is_staff=True)
+
         response = self.forced_auth_req(
             "patch",
             reverse('pmp_v3:agreement-detail', args=[agreement.pk]),
-            user=self.partner_user,
+            user=unicef_user,
             data={
                 "reference_number_year": 2020,
             },

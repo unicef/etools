@@ -17,6 +17,7 @@ class TPMPartnerAdmin(admin.ModelAdmin):
     ]
     list_filter = ['blocked', 'hidden', 'country']
     search_fields = ['vendor_number', 'name', ]
+    autocomplete_fields = ['organization']
     inlines = [
         TPMPartnerStaffMemberInlineAdmin,
     ]
@@ -36,7 +37,8 @@ class TPMPartnerStaffMemberAdmin(admin.ModelAdmin):
     readonly_fields = 'history',
     list_filter = ['receive_tpm_notifications', 'user__is_active', 'tpm_partner']
     search_fields = ['user__email', 'user__first_name', 'user__last_name', 'user__profile__phone_number',
-                     'tpm_partner__name']
+                     'tpm_partner__organization__name']
+    autocomplete_fields = ['tpm_partner']
     raw_id_fields = ('user',)
 
     def email(self, obj):

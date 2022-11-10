@@ -25,13 +25,14 @@ from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.core.tests.factories import EmailFactory
 from etools.applications.core.tests.mixins import URLAssertionMixin
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory, FundsReservationItemFactory
+from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.models import (
     Intervention,
     InterventionManagementBudgetItem,
     InterventionReview,
     InterventionSupplyItem,
 )
-from etools.applications.partners.permissions import PRC_SECRETARY, UNICEF_USER
+from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, PRC_SECRETARY, UNICEF_USER
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
     FileTypeFactory,
@@ -62,7 +63,7 @@ from etools.applications.reports.tests.factories import (
     ResultFactory,
     SectionFactory,
 )
-from etools.applications.users.tests.factories import GroupFactory, UserFactory
+from etools.applications.users.tests.factories import CountryFactory, GroupFactory, RealmFactory, UserFactory
 
 PRP_PARTNER_SYNC = "etools.applications.partners.signals.sync_partner_to_prp"
 
@@ -115,12 +116,14 @@ class BaseInterventionTestCase(BaseTenantTestCase):
         super().setUp()
         # explicitly set tenant - some requests switch schema to public, so subsequent ones are failing
         connection.set_tenant(self.tenant)
-        self.user = UserFactory(is_staff=True, groups__data=['UNICEF User', 'Partnership Manager'])
-        self.user.groups.add(GroupFactory())
-        self.partner = PartnerFactory(name='Partner 1', vendor_number="VP1")
+        self.user = UserFactory(
+            is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]
+        )
+        self.partner = PartnerFactory(
+            organization=OrganizationFactory(name='Partner 1', vendor_number="VP1")
+        )
         self.agreement = AgreementFactory(
-            partner=self.partner,
-            signed_by_unicef_date=datetime.date.today(),
+            partner=self.partner, signed_by_unicef_date=datetime.date.today(),
         )
         self.user_serialized = {
             "id": self.user.pk,
@@ -137,7 +140,7 @@ class BaseInterventionTestCase(BaseTenantTestCase):
 class TestList(BaseInterventionTestCase):
     def test_list_for_partner(self):
         intervention = InterventionFactory(date_sent_to_partner=None)
-        user = UserFactory(is_staff=False, groups__data=[])
+        user = UserFactory(is_staff=False, realms__data=[])
         user_staff_member = PartnerStaffFactory(
             partner=intervention.agreement.partner,
             user=user,
@@ -201,7 +204,7 @@ class TestList(BaseInterventionTestCase):
         response = self.forced_auth_req(
             "get",
             reverse('pmp_v3:intervention-list'),
-            user=UserFactory(is_staff=False, groups__data=[]),
+            user=UserFactory(is_staff=False, realms__data=[]),
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
@@ -497,7 +500,11 @@ class TestDetail(BaseInterventionTestCase):
         self.intervention.status = Intervention.REVIEW
         self.intervention.save()
         InterventionReviewFactory(intervention=self.intervention, review_type='prc', overall_approval=None)
-        self.user.groups.add(GroupFactory(name=PRC_SECRETARY))
+        RealmFactory(
+            user=self.user,
+            country=CountryFactory(),
+            organization=self.partner.organization,
+            group=GroupFactory(name=PRC_SECRETARY))
 
         response = self.forced_auth_req(
             "get",
@@ -619,7 +626,7 @@ class TestCreate(BaseInterventionTestCase):
         self.assertEqual(data.get("budget_owner"), self.user_serialized)
 
     def test_add_intervention_by_partner_member(self):
-        partner_user = UserFactory(is_staff=False, groups__data=[])
+        partner_user = UserFactory(is_staff=False, realms__data=[])
         PartnerStaffFactory(email=partner_user.email, user=partner_user)
         response = self.forced_auth_req(
             "post",
@@ -890,7 +897,7 @@ class TestDelete(BaseInterventionTestCase):
         super().setUp()
         self.intervention = InterventionFactory()
         self.user = UserFactory(is_staff=True)
-        self.partner_user = UserFactory(is_staff=False, groups__data=[])
+        self.partner_user = UserFactory(is_staff=False, realms__data=[])
         user_staff_member = PartnerStaffFactory(
             partner=self.intervention.agreement.partner,
             user=self.partner_user,
@@ -1251,7 +1258,7 @@ class TestSupplyItem(BaseInterventionTestCase):
             '''.encode('utf-8'),
             content_type="multipart/form-data",
         )
-        self.partner_focal_point = UserFactory(is_staff=False, groups__data=[])
+        self.partner_focal_point = UserFactory(is_staff=False, realms__data=[])
         partner_focal_point_staff = PartnerStaffFactory(
             partner=self.partner, email=self.partner_focal_point.email, user=self.partner_focal_point,
         )
@@ -1796,7 +1803,7 @@ class BaseInterventionActionTestCase(BaseInterventionTestCase):
         super().setUp()
         call_command("update_notifications")
 
-        self.partner_user = UserFactory(is_staff=False, groups__data=[])
+        self.partner_user = UserFactory(is_staff=False, realms__data=[])
         staff_member = PartnerStaffFactory(email=self.partner_user.email, user=self.partner_user)
         office = OfficeFactory()
         section = SectionFactory()
@@ -2253,7 +2260,15 @@ class TestInterventionReviewSendBack(BaseInterventionActionTestCase):
         self.intervention.date_sent_to_partner = datetime.date.today()
         self.intervention.status = Intervention.REVIEW
         self.intervention.save()
-        self.user.groups.add(GroupFactory(name=PRC_SECRETARY))
+        partner_org = self.intervention.partner_authorized_officer_signatory.partner.organization
+        RealmFactory(
+            user=self.user,
+            country=CountryFactory(),
+            organization=partner_org,
+            group=GroupFactory(name=PRC_SECRETARY))
+        self.user.profile.organization = partner_org
+        self.user.profile.save(update_fields=['organization'])
+
         InterventionReviewFactory(intervention=self.intervention, overall_approval=None)
 
         response = self.forced_auth_req("patch", self.url, user=self.user)
@@ -2266,7 +2281,15 @@ class TestInterventionReviewSendBack(BaseInterventionActionTestCase):
         self.intervention.date_sent_to_partner = datetime.date.today()
         self.intervention.status = Intervention.REVIEW
         self.intervention.save()
-        self.user.groups.add(GroupFactory(name=PRC_SECRETARY))
+        partner_org = self.intervention.partner_authorized_officer_signatory.partner.organization
+        RealmFactory(
+            user=self.user,
+            country=CountryFactory(),
+            organization=partner_org,
+            group=GroupFactory(name=PRC_SECRETARY))
+        self.user.profile.organization = partner_org
+        self.user.profile.save(update_fields=['organization'])
+
         InterventionReviewFactory(intervention=self.intervention, overall_approval=None)
 
         mock_send = mock.Mock(return_value=self.mock_email)
@@ -2287,7 +2310,14 @@ class TestInterventionReviews(BaseInterventionTestCase):
             agreement__partner=self.partner,
             status=Intervention.REVIEW,
         )
-        self.user.groups.add(GroupFactory(name=PRC_SECRETARY))
+        RealmFactory(
+            user=self.user,
+            organization=self.partner.organization,
+            country=connection.tenant,
+            group=GroupFactory(name=PRC_SECRETARY)
+        )
+        self.user.profile.organization = self.partner.organization
+        self.user.profile.save(update_fields=['organization'])
 
     def test_list(self):
         for __ in range(10):
@@ -2389,7 +2419,7 @@ class TestInterventionCancel(BaseInterventionActionTestCase):
                 'pmp_v3:intervention-cancel',
                 args=[intervention.pk],
             ),
-            user=UserFactory(is_staff=True, groups__data=[UNICEF_USER]),
+            user=UserFactory(is_staff=True),
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -2473,7 +2503,7 @@ class TestInterventionTerminate(BaseInterventionActionTestCase):
                 'pmp_v3:intervention-terminate',
                 args=[intervention.pk],
             ),
-            user=UserFactory(is_staff=True, groups__data=[UNICEF_USER]),
+            user=UserFactory(is_staff=True),
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -2535,7 +2565,7 @@ class TestInterventionSuspend(BaseInterventionActionTestCase):
                 'pmp_v3:intervention-suspend',
                 args=[intervention.pk],
             ),
-            user=UserFactory(is_staff=True, groups__data=[UNICEF_USER]),
+            user=UserFactory(is_staff=True),
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -2599,7 +2629,7 @@ class TestInterventionUnsuspend(BaseInterventionActionTestCase):
                 'pmp_v3:intervention-unsuspend',
                 args=[intervention.pk],
             ),
-            user=UserFactory(is_staff=True, groups__data=[UNICEF_USER]),
+            user=UserFactory(is_staff=True),
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -2820,7 +2850,7 @@ class TestInterventionSendToPartner(BaseInterventionActionTestCase):
                 'pmp_v3:intervention-send-partner',
                 args=[intervention.pk],
             ),
-            user=UserFactory(is_staff=True, groups__data=[UNICEF_USER]),
+            user=UserFactory(is_staff=True),
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -2873,7 +2903,7 @@ class TestInterventionSendToUNICEF(BaseInterventionActionTestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_partner_no_access(self):
-        partner_user = UserFactory(is_staff=False, groups__data=[])
+        partner_user = UserFactory(is_staff=False, realms__data=[])
         PartnerStaffFactory(email=partner_user.email, user=partner_user)
         response = self.forced_auth_req(
             "patch",
@@ -2883,7 +2913,7 @@ class TestInterventionSendToUNICEF(BaseInterventionActionTestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_not_focal_point_no_access(self):
-        partner_user = UserFactory(is_staff=False, groups__data=[])
+        partner_user = UserFactory(is_staff=False, realms__data=[])
         PartnerStaffFactory(email=partner_user.email, user=partner_user, partner=self.partner)
 
         response = self.forced_auth_req(
@@ -2894,7 +2924,7 @@ class TestInterventionSendToUNICEF(BaseInterventionActionTestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_unicef_no_access(self):
-        user = UserFactory(is_staff=True, groups__data=[UNICEF_USER])
+        user = UserFactory(is_staff=True)
         self.intervention.unicef_focal_points.add(self.user)
         response = self.forced_auth_req(
             "patch",
@@ -3067,8 +3097,10 @@ class TestTimeframesValidation(BaseInterventionTestCase):
 class TestInterventionAttachments(BaseTenantTestCase):
     def setUp(self):
         self.intervention = InterventionFactory()
-        self.unicef_user = UserFactory(is_staff=True, groups__data=['UNICEF User'])
-        self.partnership_manager = UserFactory(is_staff=True, groups__data=['Partnership Manager', 'UNICEF User'])
+        self.unicef_user = UserFactory(is_staff=True)
+        self.partnership_manager = UserFactory(
+            is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]
+        )
         self.example_attachment = AttachmentFactory(file="test_file.pdf", file_type=None, code="", )
         self.list_url = reverse('pmp_v3:intervention-attachment-list', args=[self.intervention.id])
         self.intervention.unicef_focal_points.add(self.partnership_manager)
@@ -3144,7 +3176,7 @@ class TestPMPInterventionIndicatorsUpdateView(BaseTenantTestCase):
         self.user = UserFactory()
         self.partnership_manager = UserFactory(
             is_staff=True,
-            groups__data=['Partnership Manager', 'UNICEF User'],
+            realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP],
         )
         self.intervention.unicef_focal_points.add(self.partnership_manager)
 

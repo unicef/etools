@@ -36,6 +36,7 @@ from etools.applications.field_monitoring.planning.tests.factories import (
 )
 from etools.applications.field_monitoring.tests.base import APIViewSetTestCase, FMBaseTestCaseMixin
 from etools.applications.field_monitoring.tests.factories import UserFactory
+from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.models import Intervention
 from etools.applications.partners.tests.factories import (
     InterventionFactory,
@@ -350,6 +351,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
     def test_reject_as_tpm(self):
         tpm_partner = SimpleTPMPartnerFactory()
         visit_lead = TPMUserFactory(tpm_partner=tpm_partner)
+
         activity = MonitoringActivityFactory(
             monitor_type='tpm', status='assigned',
             tpm_partner=tpm_partner, visit_lead=visit_lead, team_members=[visit_lead],
@@ -836,8 +838,9 @@ class PartnersViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenantTe
 
     def test_list(self):
         PartnerFactory(deleted_flag=True)
-        PartnerFactory(name='')
-        valid_partners = [PartnerFactory(name='b'), PartnerFactory(name='a')]
+        PartnerFactory(organization=OrganizationFactory(name=''))
+        valid_partners = [PartnerFactory(organization=OrganizationFactory(name='b')),
+                          PartnerFactory(organization=OrganizationFactory(name='a'))]
         valid_partners.reverse()
 
         self._test_list(self.unicef_user, valid_partners)

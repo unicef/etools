@@ -24,16 +24,18 @@ from etools.applications.field_monitoring.planning.tests.factories import (
     MonitoringActivityGroupFactory,
 )
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
+from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.models import (
     Agreement,
     Assessment,
     CoreValuesAssessment,
     Intervention,
     InterventionAmendment,
+    OrganizationType,
     PartnerOrganization,
     PartnerPlannedVisits,
-    PartnerType,
 )
+from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, UNICEF_USER
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
     AssessmentFactory,
@@ -52,7 +54,7 @@ from etools.applications.reports.tests.factories import (
 )
 from etools.applications.t2f.tests.factories import TravelActivityFactory
 from etools.applications.users.models import Country
-from etools.applications.users.tests.factories import GroupFactory, UserFactory
+from etools.applications.users.tests.factories import UserFactory
 from etools.libraries.pythonlib.datetime import get_quarter
 
 INSIGHT_PATH = "etools.applications.partners.tasks.get_data_from_insight"
@@ -107,11 +109,13 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
         cls.partner = PartnerFactory(
-            partner_type=PartnerType.GOVERNMENT,
-            cso_type="International",
+            organization=OrganizationFactory(
+                organization_type=OrganizationType.GOVERNMENT,
+                cso_type="International",
+                vendor_number="DDD",
+                short_name="Short name",
+            ),
             hidden=False,
-            vendor_number="DDD",
-            short_name="Short name",
         )
         agreement = AgreementFactory(
             partner=cls.partner,
@@ -402,11 +406,13 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
         """Ensure update happens if no id value provided"""
         current_year = datetime.date.today().year
         cso_partner = PartnerFactory(
-            partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION,
-            cso_type="International",
+            organization=OrganizationFactory(
+                organization_type=OrganizationType.CIVIL_SOCIETY_ORGANIZATION,
+                cso_type="International",
+                vendor_number="XYZ",
+                short_name="City Hunter",
+            ),
             hidden=False,
-            vendor_number="XYZ",
-            short_name="City Hunter",
         )
 
         PartnerPlannedVisitsFactory(
@@ -440,7 +446,7 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
                          ErrorDetail(string='Planned Visit can be set only for Government partners', code='invalid'))
 
     def test_update_staffmember_inactive(self):
-        partner_staff_user = UserFactory(is_staff=True, groups__data=[])
+        partner_staff_user = UserFactory(is_staff=True, realms__data=[])
         partner_staff = PartnerStaffFactory(partner=self.partner, user=partner_staff_user)
         response = self.forced_auth_req(
             "patch",
@@ -457,7 +463,7 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_update_staffmember_invalid_email(self):
-        partner_staff_user = UserFactory(is_staff=True, groups__data=[])
+        partner_staff_user = UserFactory(is_staff=True, realms__data=[])
         partner_staff = PartnerStaffFactory(
             partner=self.partner,
             user=partner_staff_user,
@@ -482,7 +488,7 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
         )
 
     def test_update_staffmember_inactive_prp_synced_from_intervention(self):
-        partner_staff_user = UserFactory(is_staff=True, groups__data=[])
+        partner_staff_user = UserFactory(is_staff=True, realms__data=[])
         partner_staff = PartnerStaffFactory(partner=self.partner, user=partner_staff_user, active=True)
         agreement = AgreementFactory(
             status=Agreement.SIGNED,
@@ -556,8 +562,8 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
         self.assertEqual(created_staff.last_name, created_staff.user.last_name)
 
     def test_assign_staff_member_to_existing_user(self):
-        user = UserFactory(groups__data=[], is_staff=False)
-        user.profile.countries_available.clear()
+        user = UserFactory(realms__data=[], is_staff=False)
+
         response = self.forced_auth_req(
             "patch", self.url,
             data={"staff_members": [{"email": user.email, "active": True, 'first_name': 'mr', 'last_name': 'smith'}]},
@@ -582,7 +588,7 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
         )
 
     def test_assign_staff_member_to_another_staff(self):
-        user = UserFactory(groups__data=[], is_staff=False)
+        user = UserFactory(realms__data=[], is_staff=False)
         PartnerStaffFactory(user=user)
         response = self.forced_auth_req(
             "patch", self.url,
@@ -768,8 +774,9 @@ class TestPartnerOrganizationAddView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.url = reverse("partners_api:partner-add")
-        cls.user = UserFactory(is_staff=True)
-        cls.user.groups.add(GroupFactory())
+        cls.user = UserFactory(
+            is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]
+        )
 
     def setUp(self):
         super().setUp()
@@ -801,7 +808,7 @@ class TestPartnerOrganizationAddView(BaseTenantTestCase):
         self.assertEqual(response.data, {"error": "The vendor number could not be found in INSIGHT"})
 
     def test_vendor_exists(self):
-        PartnerFactory(vendor_number="321")
+        PartnerFactory(organization=OrganizationFactory(vendor_number="321"))
         mock_insight = Mock(return_value=(True, {
             "ROWSET": {
                 "ROW": {
@@ -923,7 +930,7 @@ class TestPartnerOrganizationAddView(BaseTenantTestCase):
         qs = PartnerOrganization.objects.filter(name="New Partner")
         self.assertTrue(qs.exists())
         partner = qs.first()
-        self.assertEqual(partner.partner_type, PartnerType.UN_AGENCY)
+        self.assertEqual(partner.partner_type, OrganizationType.UN_AGENCY)
         self.assertEqual(partner.cso_type, "National")
         self.assertEqual(partner.total_ct_cp, None)
         self.assertEqual(
@@ -937,11 +944,13 @@ class TestPartnerOrganizationDeleteView(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
         cls.partner = PartnerFactory(
-            partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION,
-            cso_type="International",
+            organization=OrganizationFactory(
+                organization_type=OrganizationType.CIVIL_SOCIETY_ORGANIZATION,
+                cso_type="International",
+                vendor_number="DDD",
+                short_name="Short name"
+            ),
             hidden=False,
-            vendor_number="DDD",
-            short_name="Short name",
         )
         cls.url = reverse(
             'partners_api:partner-delete',
@@ -1055,8 +1064,9 @@ class TestPartnerOrganizationDeleteView(BaseTenantTestCase):
 class TestPartnerPlannedVisitsDeleteView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.unicef_staff = UserFactory(is_staff=True)
-        cls.unicef_staff.groups.add(GroupFactory(name='Partnership Manager'))
+        cls.unicef_staff = UserFactory(
+            is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]
+        )
         cls.partner = PartnerFactory()
         cls.planned_visit = PartnerPlannedVisitsFactory(
             partner=cls.partner,
@@ -1102,15 +1112,17 @@ class TestPartnerOrganizationAssessmentUpdateDeleteView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
-        cls.partner = PartnerFactory(
-            partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION,
+        cls.organization = OrganizationFactory(
+            organization_type=OrganizationType.CIVIL_SOCIETY_ORGANIZATION,
             cso_type="International",
-            hidden=False,
             vendor_number="DDD",
-            short_name="Short name",
+            short_name="Short name"
         )
-        cls.partnership_manager_user = UserFactory(is_staff=True)
-        cls.partnership_manager_user.groups.add(GroupFactory())
+        cls.partner = PartnerFactory(organization=cls.organization, hidden=False)
+        cls.partnership_manager_user = UserFactory(
+            is_staff=True, realms__data=[PARTNERSHIP_MANAGER_GROUP],
+            profile__organization=cls.organization
+        )
         cls.partner_staff = PartnerStaffFactory(partner=cls.partner, user=cls.partnership_manager_user)
 
     def setUp(self):
@@ -1256,11 +1268,14 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
         cls.partner = PartnerFactory(
-            partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION,
-            cso_type="International",
+            organization=OrganizationFactory(
+                name='Partner',
+                organization_type=OrganizationType.CIVIL_SOCIETY_ORGANIZATION,
+                cso_type="International",
+                vendor_number="DDD",
+                short_name="Short name",
+            ),
             hidden=False,
-            vendor_number="DDD",
-            short_name="Short name",
         )
 
         report = "report.pdf"
@@ -1275,7 +1290,8 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(BaseTenantTestCase):
             completed_date=datetime.date.today()
         )
 
-        cls.partner_gov = PartnerFactory(partner_type=PartnerType.GOVERNMENT)
+        cls.partner_gov = PartnerFactory(
+            organization=OrganizationFactory(organization_type=OrganizationType.GOVERNMENT))
 
         agreement = AgreementFactory(
             partner=cls.partner,
@@ -1656,7 +1672,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(BaseTenantTestCase):
     def test_api_partners_update(self):
         self.assertFalse(Activity.objects.exists())
         data = {
-            "name": "Updated name again",
+            "alternate_name": "Updated alternate_name",
         }
         response = self.forced_auth_req(
             'patch',
@@ -1666,7 +1682,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(BaseTenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn("Updated", response.data["name"])
+        self.assertIn("Updated", response.data["alternate_name"])
         self.assertEqual(
             Activity.objects.filter(action=Activity.UPDATE).count(),
             1

@@ -92,7 +92,7 @@ class AssessmentViewSet(
     filters = (
         ('q', [
             'reference_number__icontains',
-            'assessor__auditor_firm__name__icontains',
+            'assessor__auditor_firm__organization__name__icontains',
             'assessor__user__first_name__icontains',
             'assessor__user__last_name__icontains',
         ]),
@@ -120,7 +120,7 @@ class AssessmentViewSet(
         MAP_SORT = {
             "reference_number": "reference_number",
             "assessment_date": "assessment_date",
-            "partner_name": "partner__name",
+            "partner_name": "partner__organization__name",
         }
         sort_param = self.request.GET.get("sort")
         ordering = []
