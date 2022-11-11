@@ -900,11 +900,7 @@ class PartnerOrganization(TimeStampedModel):
         return reverse(admin_url_name, args=(self.id,))
 
     def user_is_staff_member(self, user):
-        staff_member = user.get_partner_staff_member()
-        if not staff_member:
-            return False
-
-        return staff_member.id in self.staff_members.values_list('id', flat=True)
+        return user.id in self.staff_members.values_list('id', flat=True)
 
 
 class CoreValuesAssessment(TimeStampedModel):

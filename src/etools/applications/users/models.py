@@ -186,7 +186,7 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
 
     @cached_property
     def partner(self):
-        return self.get_partner_staff_member()
+        return self.get_partner()
 
     @property
     def groups(self):
@@ -199,7 +199,7 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
             country=connection.tenant, organization_id=organization_id)
         return Group.objects.filter(realms__in=current_country_realms).distinct()
 
-    def get_partner_staff_member(self):
+    def get_partner(self):
         realm = self.realms.filter(
             country=connection.tenant,
             organization=self.profile.organization).last()

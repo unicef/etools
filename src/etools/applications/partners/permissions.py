@@ -154,7 +154,7 @@ class InterventionPermissions(PMPPermissions):
         def not_ssfa(instance):
             return not is_spd_non_hum(instance)
 
-        staff_member = self.user.get_partner_staff_member()
+        staff_member = self.user
 
         # focal points are prefetched, so just cast to array to collect ids
         partner_focal_points = [fp.id for fp in self.instance.partner_focal_points.all()]
@@ -496,12 +496,12 @@ def user_group_permission(*groups):
 
 class UserIsPartnerStaffMemberPermission(BasePermission):
     def has_permission(self, request, view):
-        return request.user.get_partner_staff_member()
+        return request.user.get_partner()
 
 
 class UserIsNotPartnerStaffMemberPermission(BasePermission):
     def has_permission(self, request, view):
-        return not request.user.get_partner_staff_member()
+        return not request.user.get_partner()
 
 
 class UserIsObjectPartnerStaffMember(UserIsPartnerStaffMemberPermission):

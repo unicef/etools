@@ -305,8 +305,8 @@ class ProfileRetrieveUpdateSerializer(serializers.ModelSerializer):
         return False
 
     def get__partner_staff_member(self, obj):
-        psm = obj.user.get_partner_staff_member()
-        return psm.id if psm else None
+        partner = obj.user.get_partner()
+        return obj.user.id if partner else None
 
     def get_is_unicef_user(self, obj):
         return obj.user.is_unicef_user()
