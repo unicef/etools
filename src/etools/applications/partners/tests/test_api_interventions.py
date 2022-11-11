@@ -626,9 +626,9 @@ class TestInterventionsAPI(BaseTenantTestCase):
         self.assertCountEqual(self.ALL_FIELDS, response['permissions']['edit'].keys())
         edit_permissions = response['permissions']['edit']
         required_permissions = response['permissions']['required']
-
+        # TODO REALMS: remove perm.startswith('old')
         self.assertCountEqual(self.EDITABLE_FIELDS['draft'],
-                              [perm for perm in edit_permissions if edit_permissions[perm]])
+                              [perm for perm in edit_permissions if not perm.startswith('old') and edit_permissions[perm]])
         self.assertCountEqual(self.REQUIRED_FIELDS['draft'],
                               [perm for perm in required_permissions if required_permissions[perm]])
 

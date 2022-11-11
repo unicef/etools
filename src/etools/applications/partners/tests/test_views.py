@@ -716,7 +716,7 @@ class TestAgreementAPIView(BaseTenantTestCase):
         cls.partner = PartnerFactory(organization=cls.organization)
 
         cls.partner_staff_user = UserFactory(
-            realms__data=['IP Viewer'],
+            is_staff=True,
             profile__organization=cls.organization,
         )
 

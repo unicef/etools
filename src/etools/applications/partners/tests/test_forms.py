@@ -1,3 +1,4 @@
+from unittest import skip
 
 from django.db import connection
 from django.test import override_settings
@@ -8,6 +9,7 @@ from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.users.tests.factories import UserFactory
 
 
+@skip('TODO REALMS remove')
 class TestPartnerStaffMemberForm(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):

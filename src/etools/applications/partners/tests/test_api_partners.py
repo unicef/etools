@@ -570,7 +570,7 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
             user=self.unicef_staff,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
-        self.assertIsNotNone(user.get_partner_staff_member())
+        self.assertIsNotNone(user.get_partner())
         self.assertTrue(user.profile.countries_available.filter(id=connection.tenant.id).exists())
 
     @skip('AMP-REALM: To be removed')

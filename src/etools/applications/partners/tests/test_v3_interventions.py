@@ -546,7 +546,7 @@ class TestDetail(BaseInterventionTestCase):
         [InterventionManagementBudgetItemFactory(budget=self.intervention.management_budgets) for _i in range(10)]
 
         # there is a lot of queries, but no duplicates caused by budget items
-        with self.assertNumQueries(51):
+        with self.assertNumQueries(49):
             response = self.forced_auth_req(
                 "get",
                 reverse('pmp_v3:intervention-detail', args=[self.intervention.pk]),
@@ -1273,7 +1273,7 @@ class TestSupplyItem(BaseInterventionTestCase):
             content_type="multipart/form-data",
         )
         self.partner_focal_point = UserFactory(
-            is_staff=False, realms__data=['IP Viewer'],
+            realms__data=['IP Viewer'],
             profile__organization=self.partner.organization
         )
         self.intervention.partner_focal_points.add(self.partner_focal_point)

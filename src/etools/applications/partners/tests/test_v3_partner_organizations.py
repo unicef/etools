@@ -69,7 +69,7 @@ class TestPartnerOrganizationList(BasePartnerOrganizationTestCase):
         partner = PartnerFactory()
         user = UserFactory(
             realms__data=['IP Viewer'],
-            profile__organization=self.partner.organization
+            profile__organization=partner.organization
         )
 
         response = self.forced_auth_req(
