@@ -18,8 +18,10 @@ def cache_key(request: Request):
 
 
 class LocationsLightViewSet(views.LocationsLightViewSet):
-    @method_decorator(cache_control(no_cache=True))  # disable browser cache
-    @method_decorator(cache_control(public=True))  # reset cache control header to allow etags work with cache_page
+    @method_decorator(cache_control(
+        max_age=0,  # enable cache yet automatically treat all cached data as stale to request backend every time
+        public=True,  # reset cache control header to allow etags work with cache_page
+    ))
     @etag_cached('locations')  # etag_cached is idempotent, so it's okay to decorate view with it twice
     @method_decorator(cache_page(60 * 60 * 24, key_prefix=TenantSuffixedString('locations')))
     def list(self, request, *args, **kwargs):
@@ -27,8 +29,10 @@ class LocationsLightViewSet(views.LocationsLightViewSet):
 
 
 class LocationsViewSet(views.LocationsViewSet):
-    @method_decorator(cache_control(no_cache=True))  # disable browser cache
-    @method_decorator(cache_control(public=True))  # reset cache control header to allow etags work with cache_page
+    @method_decorator(cache_control(
+        max_age=0,  # enable cache yet automatically treat all cached data as stale to request backend every time
+        public=True,  # reset cache control header to allow etags work with cache_page
+    ))
     @etag_cached('locations')  # etag_cached is idempotent, so it's okay to decorate view with it twice
     @method_decorator(cache_page(60 * 60 * 24, key_prefix=TenantSuffixedString('locations')))
     def list(self, request, *args, **kwargs):
