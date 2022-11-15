@@ -1,6 +1,7 @@
 # Python imports
 
 import datetime
+import json
 from collections import namedtuple
 from datetime import timedelta
 from decimal import Decimal
@@ -23,6 +24,7 @@ from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
 from etools.applications.partners.models import Agreement, Intervention
 from etools.applications.partners.permissions import UNICEF_USER
+from etools.applications.partners.synchronizers import PDVisionUploader
 from etools.applications.partners.tasks import (
     _make_intervention_status_automatic_transitions,
     transfer_active_pds_to_new_cp,
@@ -1265,4 +1267,10 @@ class SendPDToVisionTestCase(BaseTenantTestCase):
     @mock.patch('etools.applications.partners.synchronizers.requests.post')
     def test_business_code_in_data(self, requests_mock, _logger_mock):
         etools.applications.partners.tasks.send_pd_to_vision(connection.tenant.name, self.active_intervention.pk)
-        self.assertIn('business_area_code', requests_mock.mock_calls[0][2]['json'])
+        self.assertIn('business_area_code', json.loads(requests_mock.mock_calls[0][2]['data']))
+
+    def test_body_rendering(self, _logger_mock):
+        synchronizer = PDVisionUploader(Intervention.objects.detail_qs().get(pk=self.active_intervention.pk))
+        str_data = synchronizer.render()
+        self.assertIsInstance(str_data, bytes)
+        self.assertGreater(len(str_data), 100)

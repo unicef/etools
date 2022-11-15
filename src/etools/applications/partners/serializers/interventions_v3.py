@@ -48,11 +48,7 @@ from etools.applications.reports.serializers.v2 import InterventionTimeFrameSeri
 from etools.applications.users.serializers_v3 import MinimalUserSerializer
 
 
-class InterventionRiskSerializer(
-    InterventionVisionSynchronizerMixin,
-    FullInterventionSnapshotSerializerMixin,
-    serializers.ModelSerializer,
-):
+class InterventionRiskSerializer(FullInterventionSnapshotSerializerMixin, serializers.ModelSerializer):
     class Meta:
         model = InterventionRisk
         fields = ('id', 'risk_type', 'mitigation_measures', 'intervention')
@@ -71,11 +67,7 @@ class InterventionRiskSerializer(
         return self.validated_data['intervention']
 
 
-class InterventionSupplyItemSerializer(
-    InterventionVisionSynchronizerMixin,
-    FullInterventionSnapshotSerializerMixin,
-    serializers.ModelSerializer,
-):
+class InterventionSupplyItemSerializer(FullInterventionSnapshotSerializerMixin, serializers.ModelSerializer):
     class Meta:
         model = InterventionSupplyItem
         fields = (
@@ -326,21 +318,21 @@ class InterventionDetailSerializer(
         return [location.p_code for location in obj.flat_locations.all()]
 
     def get_donors(self, obj):
-        donors = list()
+        donors = set()
         for fr_item_qs in obj.frs.all():
             for fr_li in fr_item_qs.fr_items.all():
                 donors.append(fr_li.donor)
         return donors
 
     def get_donor_codes(self, obj):
-        donor_codes = list()
+        donor_codes = set()
         for fr_item_qs in obj.frs.all():
             for fr_li in fr_item_qs.fr_items.all():
                 donor_codes.append(fr_li.donor_code)
         return donor_codes
 
     def get_grants(self, obj):
-        grants = list()
+        grants = set()
         for fr_item_qs in obj.frs.all():
             for fr_li in fr_item_qs.fr_items.all():
                 grants.append(fr_li.grant_number)

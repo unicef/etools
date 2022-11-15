@@ -8,6 +8,7 @@ from django.core.exceptions import ValidationError
 from django.db import connection, transaction
 
 import requests
+from rest_framework.renderers import JSONRenderer
 from unicef_vision.settings import INSIGHT_DATE_FORMAT
 from unicef_vision.synchronizers import FileDataSynchronizer
 from unicef_vision.utils import base_headers, comp_decimals
@@ -402,6 +403,9 @@ class VisionUploader:
     def serialize(self) -> dict:
         return self.serializer_class(instance=self.instance).data
 
+    def render(self) -> bytes:
+        return JSONRenderer().render(self.serialize())
+
     def get_authorization_headers(self):
         username = settings.EZHACT_API_USER
         password = settings.EZHACT_API_PASSWORD
@@ -410,8 +414,8 @@ class VisionUploader:
     def get_headers(self):
         return {**base_headers, **self.get_authorization_headers()}
 
-    def send_to_vision(self, endpoint, data) -> (int, dict):
-        response = requests.post(endpoint, json=data, headers=self.get_headers())
+    def send_to_vision(self, endpoint, data: bytes) -> (int, dict):
+        response = requests.post(endpoint, data=data, headers=self.get_headers())
         response_data = {}
         if response.status_code in {200, 201}:
             response_data = response.json()
@@ -424,7 +428,7 @@ class VisionUploader:
         if not endpoint:
             logger.warning('Unknown endpoint value')
 
-        data = self.serialize()
+        data = self.render()
         return self.send_to_vision(endpoint, data)
 
 

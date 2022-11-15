@@ -96,11 +96,7 @@ class InterventionReviewSerializer(serializers.ModelSerializer):
         instance.prc_officers.remove(*diff)
 
 
-class PRCOfficerInterventionReviewSerializer(
-    InterventionVisionSynchronizerMixin,
-    FullInterventionSnapshotSerializerMixin,
-    serializers.ModelSerializer,
-):
+class PRCOfficerInterventionReviewSerializer(FullInterventionSnapshotSerializerMixin, serializers.ModelSerializer):
     user = MinimalUserSerializer(read_only=True)
 
     class Meta:
