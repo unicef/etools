@@ -118,7 +118,7 @@ class PMPResultFrameworkView(PMPBaseViewMixin, ResultFrameworkView):
         )
         if self.is_partner_staff():
             qs = qs.filter(
-                intervention__agreement__partner__in=self.partners(),
+                intervention__agreement__partner=self.current_partner(),
                 intervention__date_sent_to_partner__isnull=False,
             )
 

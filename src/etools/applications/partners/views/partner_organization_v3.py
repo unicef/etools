@@ -10,16 +10,18 @@ class PMPPartnerOrganizationListAPIView(
         PartnerOrganizationListAPIView,
 ):
     def get_queryset(self, format=None):
+        qs = super().get_queryset(format=format)
+
         if self.is_partner_staff():
-            return self.partners()
-        return super().get_queryset(format=format)
+            return qs.filter(id=self.current_partner().id)
+        return qs
 
 
 class PMPPartnerStaffMemberMixin(PMPBaseViewMixin):
     def get_queryset(self):
         qs = self.queryset
         if self.is_partner_staff():
-            qs = qs.filter(realms__organization__partner__in=self.partners())
+            qs = qs.filter(realms__organization__partner=self.current_partner())
         return qs
 
 

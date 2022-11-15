@@ -63,7 +63,6 @@ from etools.applications.partners.serializers.partner_organization_v2 import (
     PartnerOrganizationHactSerializer,
     PartnerOrganizationListSerializer,
     PartnerPlannedVisitsSerializer,
-    PartnerStaffMemberCreateUpdateSerializer,
     PartnerStaffMemberDetailSerializer,
     PlannedEngagementNestedSerializer,
     PlannedEngagementSerializer,
@@ -105,7 +104,8 @@ class PartnerOrganizationListAPIView(ExternalModuleFilterMixin, QueryStringFilte
                     'organization__short_name__icontains')
     module2filters = {
         'tpm': ['activity__tpmactivity__tpm_visit__tpm_partner__staff_members__user', ],
-        'psea': ['psea_assessment__assessor__auditor_firm_staff__user', 'psea_assessment__assessor__user']
+        'psea': ['psea_assessment__assessor__auditor_firm_staff__user', 'psea_assessment__assessor__user'],
+        "pmp": ["organization__realms__user"],
     }
     pagination_class = AppendablePageNumberPagination
 
@@ -131,7 +131,7 @@ class PartnerOrganizationListAPIView(ExternalModuleFilterMixin, QueryStringFilte
         return super().get_serializer_class()
 
     def get_queryset(self, format=None):
-        qs = super().get_queryset()
+        qs = super().get_queryset(module='pmp')
         query_params = self.request.query_params
 
         workspace = query_params.get('workspace', None)
@@ -193,7 +193,8 @@ class PartnerOrganizationDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroy
     SERIALIZER_MAP = {
         'assessments': AssessmentDetailSerializer,
         'planned_visits': PartnerPlannedVisitsSerializer,
-        'staff_members': PartnerStaffMemberCreateUpdateSerializer,
+        # TODO REALMS: clean up
+        # 'staff_members': PartnerStaffMemberCreateUpdateSerializer,
         'planned_engagement': PlannedEngagementNestedSerializer,
         'core_values_assessments': CoreValuesAssessmentSerializer
     }
@@ -208,7 +209,7 @@ class PartnerOrganizationDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroy
     def update(self, request, *args, **kwargs):
         related_fields = [
             'assessments',
-            'staff_members',
+            # 'staff_members',    # TODO REALMS: clean up
             'planned_engagement',
             'planned_visits',
             'core_values_assessments'

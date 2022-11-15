@@ -31,10 +31,9 @@ from etools.applications.partners.models import (
     PartnerStaffMember,
 )
 from etools.applications.partners.permissions import PartnershipManagerPermission, SENIOR_MANAGEMENT_GROUP
-from etools.applications.partners.serializers.partner_organization_v2 import (
-    PartnerStaffMemberCreateUpdateSerializer,
-    PartnerStaffMemberDetailSerializer,
-)
+from etools.applications.partners.serializers.partner_organization_v2 import \
+    PartnerStaffMemberCreateUpdateSerializer  # TODO REALMS cleanup
+from etools.applications.partners.serializers.partner_organization_v2 import PartnerStaffMemberDetailSerializer
 from etools.applications.reports.models import CountryProgramme, Result, ResultType
 
 
@@ -44,6 +43,7 @@ class PartnerStaffMemberDetailAPIView(RetrieveUpdateDestroyAPIView):
     permission_classes = (PartnershipManagerPermission,)
     filter_backends = (PartnerScopeFilter,)
 
+    # TODO REALMS cleanup
     def get_serializer_class(self, format=None):
         if self.request.method in ["PUT", "PATCH"]:
             return PartnerStaffMemberCreateUpdateSerializer

@@ -89,16 +89,18 @@ from etools.applications.reports.serializers.v2 import InterventionActivityDetai
 class PMPInterventionMixin(PMPBaseViewMixin):
     def get_partner_staff_qs(self, qs):
         return qs.filter(
-            agreement__partner__in=self.partners(),
+            agreement__partner=self.current_partner(),
             date_sent_to_partner__isnull=False,
         )
 
     def get_queryset(self, format=None):
         qs = super().get_queryset()
+        if self.request.user.is_unicef_user():
+            return qs
         # if partner, limit to interventions that they are associated with
         if self.is_partner_staff():
-            qs = self.get_partner_staff_qs(qs)
-        return qs
+            return self.get_partner_staff_qs(qs)
+        return qs.none()
 
 
 class DetailedInterventionResponseMixin:
@@ -399,7 +401,7 @@ class PMPInterventionSupplyItemMixin(
 
     def get_partner_staff_qs(self, qs):
         return qs.filter(
-            intervention__agreement__partner__in=self.partners(),
+            intervention__agreement__partner=self.current_partner(),
             intervention__date_sent_to_partner__isnull=False,
         ).distinct()
 

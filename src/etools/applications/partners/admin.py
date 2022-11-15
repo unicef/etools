@@ -285,12 +285,12 @@ class InterventionAdmin(
         'agreement',
         'flat_locations',
         'partner_authorized_officer_signatory',
-        'old_partner_authorized_officer_signatory',
+        'old_partner_authorized_officer_signatory',  # TODO REALMS clean up
         'unicef_signatory',
         'budget_owner',
         'unicef_focal_points',
         'partner_focal_points',
-        'old_partner_focal_points',
+        'old_partner_focal_points',  # TODO REALMS clean up
     ]
     list_filter = (
         'document_type',
@@ -310,7 +310,7 @@ class InterventionAdmin(
     filter_horizontal = (
         'sections',
         'unicef_focal_points',
-        'old_partner_focal_points',
+        'old_partner_focal_points',  # TODO REALMS clean up
         'partner_focal_points',
         'flat_locations'
     )
@@ -338,10 +338,10 @@ class InterventionAdmin(
                  'review_date_prc',
                  'prc_review_document',
                  'signed_pd_document',
-                 ('old_partner_authorized_officer_signatory', 'signed_by_partner_date',),
+                 ('old_partner_authorized_officer_signatory', 'signed_by_partner_date',),  # TODO REALMS clean up
                  'partner_authorized_officer_signatory',
                  ('unicef_signatory', 'signed_by_unicef_date',),
-                 'old_partner_focal_points',
+                 'old_partner_focal_points',  # TODO REALMS clean up
                  'partner_focal_points',
                  'unicef_focal_points',
                  ('start', 'end'),
@@ -761,18 +761,18 @@ class AgreementAdmin(
                     'attached_agreement',
                     ('start', 'end',),
                     'signed_by_partner_date',
-                    'old_partner_manager',
+                    'old_partner_manager',  # TODO REALMS clean up
                     'partner_manager',
                     'signed_by_unicef_date',
                     'signed_by',
                     'authorized_officers',
-                    'old_authorized_officers',
+                    'old_authorized_officers',  # TODO REALMS clean up
                 )
         }),
     )
     filter_horizontal = (
         'authorized_officers',
-        'old_authorized_officers',
+        'old_authorized_officers',  # TODO REALMS clean up
     )
     inlines = [
         ActivityInline,

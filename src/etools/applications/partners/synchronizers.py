@@ -12,6 +12,7 @@ from unicef_vision.utils import comp_decimals
 from etools.applications.organizations.models import Organization
 from etools.applications.partners.models import PartnerOrganization, PlannedEngagement
 from etools.applications.partners.tasks import notify_partner_hidden
+from etools.applications.users.mixins import PARTNER_ACTIVE_GROUPS
 from etools.applications.users.models import Country, Realm
 from etools.applications.vision.synchronizers import VisionDataTenantSynchronizer
 
@@ -306,14 +307,15 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
     @staticmethod
     def deactivate_staff_members(partner_org):
         # deactivate the users that are staff members
-        staff_members = partner_org.staff_members.all()
-        staff_members.update(is_active=False)
+        staff_members_ids = list(partner_org.staff_members.values_list('id', flat=True))
+        partner_org.staff_members.update(is_active=False)
         try:
             country = Country.objects.get(schema_name=partner_org.country)
             Realm.objects.filter(
-                user__in=staff_members,
+                user_id__in=staff_members_ids,
                 country=country,
-                organization=partner_org.organization)\
+                organization=partner_org.organization,
+                group__name__in=PARTNER_ACTIVE_GROUPS)\
                 .update(is_active=False)
         except Country.DoesNotExist:
             logging.error(f"No country with name {partner_org.country} exists. "

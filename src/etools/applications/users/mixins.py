@@ -1,5 +1,7 @@
 from django.contrib.auth.models import Group
 
+PARTNER_ACTIVE_GROUPS = ["IP Viewer", "IP Editor", "IP Authorized Officer", "IP Admin"]
+
 
 class GroupEditPermissionMixin:
 

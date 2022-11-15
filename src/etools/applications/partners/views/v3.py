@@ -39,16 +39,22 @@ class PMPBaseViewMixin:
     permission_classes = [IsAuthenticated]
 
     def is_partner_staff(self):
-        """Flag indicator whether user is a partner"""
+        """Flag indicator whether user is a partner
+        any active group out of IP... , """
         return self.request.user.is_authenticated and self.request.user.get_partner()
 
-    def partners(self):
+    def current_partner(self):
         """List of partners user associated with"""
         if not self.is_partner_staff():
-            return []
-        return PartnerOrganization.objects.filter(
-            organization__realms__user=self.request.user,
-        )
+            return None
+        try:
+            return PartnerOrganization.objects.get(
+                organization=self.request.user.profile.organization,
+                organization__realms__user=self.request.user,
+                organization__realms__is_active=True,
+            )
+        except PartnerOrganization.DoesNotExist:
+            return None
 
     def get_pd(self, pd_pk):
         try:

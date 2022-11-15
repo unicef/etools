@@ -49,6 +49,7 @@ from etools.applications.partners.validation.agreements import (
 from etools.applications.reports.models import CountryProgramme, Indicator, Office, Result, Section
 from etools.applications.t2f.models import Travel, TravelActivity, TravelType
 from etools.applications.tpm.models import TPMActivity, TPMVisit
+from etools.applications.users.mixins import PARTNER_ACTIVE_GROUPS
 from etools.applications.users.models import Country, Realm, User
 from etools.libraries.djangolib.models import MaxDistinct, StringConcat
 from etools.libraries.djangolib.utils import get_environment
@@ -243,10 +244,8 @@ class PartnerOrganization(TimeStampedModel):
     Represents a partner organization
 
     related models:
+        Organization: "organization"
         Assessment: "assessments"
-        PartnerStaffMember: "staff_members"
-
-
     """
     # When cash transferred to a country programme exceeds CT_CP_AUDIT_TRIGGER_LEVEL, an audit is triggered.
     EXPIRING_ASSESSMENT_LIMIT_YEAR = 4
@@ -549,6 +548,7 @@ class PartnerOrganization(TimeStampedModel):
         return User.objects.filter(
             realms__organization=self.organization,
             realms__country=connection.tenant,
+            realms__group__name__in=PARTNER_ACTIVE_GROUPS,
             is_active=True
         )
 
@@ -922,6 +922,7 @@ class PartnerStaffMemberManager(models.Manager):
         return super().get_queryset().select_related('partner')
 
 
+# TODO REALMS clean up
 class PartnerStaffMember(TimeStampedModel):
     """
     Represents a staff member at the partner organization.
@@ -1261,6 +1262,7 @@ class Agreement(TimeStampedModel):
         null=True,
         on_delete=models.CASCADE,
     )
+    # TODO REALMS clean up
     old_authorized_officers = models.ManyToManyField(
         PartnerStaffMember,
         verbose_name=_("(old)Partner Authorized Officer"),
@@ -1339,6 +1341,7 @@ class Agreement(TimeStampedModel):
         blank=True,
     )
     # Signatory on behalf of the PartnerOrganization
+    # TODO REALMS clean up
     old_partner_manager = models.ForeignKey(
         PartnerStaffMember,
         related_name='agreements_signed',
@@ -1951,6 +1954,7 @@ class Intervention(TimeStampedModel):
         null=True,
         on_delete=models.CASCADE,
     )
+    # TODO REALMS clean up
     # part of the Agreement authorized officers
     old_partner_authorized_officer_signatory = models.ForeignKey(
         PartnerStaffMember,
@@ -1976,6 +1980,7 @@ class Intervention(TimeStampedModel):
         blank=True,
         related_name='unicef_interventions_focal_points+'
     )
+    # TODO REALMS clean up
     # any PartnerStaffMember on the PartnerOrganization
     old_partner_focal_points = models.ManyToManyField(
         PartnerStaffMember,
@@ -2722,6 +2727,7 @@ class InterventionAmendment(TimeStampedModel):
         null=True,
         on_delete=models.CASCADE,
     )
+    # TODO REALMS clean up
     # part of the Agreement authorized officers
     old_partner_authorized_officer_signatory = models.ForeignKey(
         PartnerStaffMember,

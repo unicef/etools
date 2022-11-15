@@ -11,10 +11,16 @@ from etools.applications.partners.serializers.fields import HactValuesField
 
 class PartnerStaffMemberExportSerializer(serializers.ModelSerializer):
     active = serializers.SerializerMethodField()
+    phone = serializers.CharField(source='profile.phone_number')
+    title = serializers.CharField(source='profile.job_title')
+    partner_id = serializers.CharField(source="partner.id")
 
     class Meta:
         model = get_user_model()
-        fields = "__all__"
+        fields = [
+            'id', 'email', 'first_name', 'last_name', 'created', 'modified',
+            'active', 'phone', 'title', 'partner_id'
+        ]
 
     def get_active(self, obj):
         return "Yes" if obj.is_active else "No"
@@ -25,6 +31,9 @@ class PartnerStaffMemberExportFlatSerializer(
         PartnerStaffMemberExportSerializer
 ):
     partner_name = serializers.CharField(source="partner.name")
+
+    class Meta(PartnerStaffMemberExportSerializer.Meta):
+        fields = PartnerStaffMemberExportSerializer.Meta.fields + ['partner_name']
 
 
 class PartnerOrganizationExportSerializer(serializers.ModelSerializer):

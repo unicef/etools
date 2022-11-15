@@ -293,7 +293,7 @@ class ProfileRetrieveUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserProfile
-        exclude = ('id', 'old_countries_available')
+        exclude = ('id', 'old_countries_available')  # TODO REALMS clean up
 
     # TODO remove once feature gating is in place.
     def get_show_ap(self, obj):
@@ -385,7 +385,8 @@ class ExternalUserSerializer(MinimalUserSerializer):
             user=instance,
             country=country,
             organization=self._get_external_psea_org(),
-            group=Auditor.as_group())
+            group=Auditor.as_group(),
+            is_active=True)
         if not realm_qs.exists():
             return False, country
         return True, country

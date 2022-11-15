@@ -7,7 +7,7 @@ from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.core.validators import MaxValueValidator, MinValueValidator
-from django.db import connection, models
+from django.db import connection, models, transaction
 from django.db.models.signals import post_save
 from django.urls import reverse
 from django.utils.functional import cached_property
@@ -18,6 +18,7 @@ from model_utils import FieldTracker
 from model_utils.models import TimeStampedModel
 
 from etools.applications.organizations.models import Organization
+from etools.applications.users.mixins import PARTNER_ACTIVE_GROUPS
 from etools.libraries.djangolib.models import GroupWrapper
 
 logger = logging.getLogger(__name__)
@@ -32,6 +33,7 @@ class PermissionsMixin(models.Model):
     Add the fields and methods necessary to support the Group and Permission
     models using the ModelBackend.
     """
+    # TODO REALMS clean up
     old_groups = models.ManyToManyField(
         Group,
         verbose_name=_('Old Groups'),
@@ -174,6 +176,7 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
 
     @cached_property
     def is_partnership_manager(self):
+        # TODO REALMS: clean up task: make sure it checks when the current organization is UNICEF
         return self.realms.filter(
             country=connection.tenant,
             organization=self.profile.organization,
@@ -186,6 +189,11 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
 
     @cached_property
     def partner(self):
+        """
+        To be used only when fetching the current partner for the authenticated user,
+        don't use this in validations
+        :return: Only the partner in the current organization selected by the user
+        """
         return self.get_partner()
 
     @property
@@ -200,16 +208,25 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
         return Group.objects.filter(realms__in=current_country_realms).distinct()
 
     def get_partner(self):
+        """
+        To be used only when fetching the current partner for the authenticated user,
+        don't use this in validations
+        :return: Only the partner in the current organization selected by the user
+        """
         realm = self.realms.filter(
             country=connection.tenant,
-            organization=self.profile.organization).last()
+            organization=self.profile.organization,
+            group__name__in=PARTNER_ACTIVE_GROUPS,
+            is_active=True,
+        ).last()
         if realm:
             try:
                 return realm.organization.partner
             except realm.organization._meta.get_field('partner').related_model.DoesNotExist:
-                return
-        return
+                return None
+        return None
 
+    # TODO REALMS: clean up
     # def get_staff_member_country(self):
     #     from etools.applications.partners.models import PartnerStaffMember
     #     for country in Country.objects.exclude(name__in=[get_public_schema_name(), 'Global']).all():
@@ -222,9 +239,13 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
         info = (self._meta.app_label, self._meta.model_name)
         return reverse('admin:%s_%s_change' % info, args=(self.pk,))
 
+    @transaction.atomic
     def save(self, *args, **kwargs):
         if self.email != self.email.lower():
             raise ValidationError("Email must be lowercase.")
+
+        if not self.is_active:
+            self.realms.update(is_active=False)
         super().save(*args, **kwargs)
 
 
@@ -367,7 +388,7 @@ class UserProfileManager(models.Manager):
     def get_queryset(self):
         return super().get_queryset()\
             .select_related('user', 'country', 'country_override', 'organization')\
-            .prefetch_related('old_countries_available')
+            .prefetch_related('old_countries_available')  # TODO REALMS clean up
 
 
 class UserProfile(models.Model):
@@ -400,6 +421,7 @@ class UserProfile(models.Model):
         Organization, null=True, blank=True, verbose_name=_('Current Organization'),
         on_delete=models.CASCADE
     )
+    # TODO REALMS clean up
     old_countries_available = models.ManyToManyField(
         Country, blank=True, related_name="accessible_by",
         verbose_name=_('Old Countries Available')
@@ -570,6 +592,7 @@ class Realm(TimeStampedModel):
                f"{self.group.name if self.group else ''}"
 
 
+# TODO REALMS: clean up: drop the wrappers
 IPViewer = GroupWrapper(code='ip_viewer', name='IP Viewer')
 IPEditor = GroupWrapper(code='ip_editor', name='IP Editor')
 IPAdmin = GroupWrapper(code='ip_admin', name='IP Admin')

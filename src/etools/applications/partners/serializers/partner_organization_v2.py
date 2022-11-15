@@ -106,6 +106,7 @@ class PartnerStaffMemberNestedSerializer(PartnerStaffMemberCreateSerializer):
         )
 
 
+# TODO REALMS cleanup
 class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(required=True)
 

@@ -1,6 +1,8 @@
 import logging
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.core.exceptions import PermissionDenied, ValidationError as DjangoValidationError
 from django.db import connection, transaction
 from django.db.models import OuterRef, Prefetch, Q, Subquery
@@ -173,8 +175,8 @@ class UsersListAPIView(PMPBaseViewMixin, QueryStringFilterMixin, ListAPIView):
 
         if self.is_partner_staff():
             emails = []
-            for p in self.partners():
-                emails += p.staff_members.values_list("email", flat=True)
+            p = self.current_partner()
+            emails += p.staff_members.values_list("email", flat=True)
             qs = qs.filter(email__in=emails)
         elif self.request.user.is_staff:
             qs = qs.filter(
@@ -322,9 +324,8 @@ class ExternalUserViewSet(
         viewsets.GenericViewSet,
 ):
     model = get_user_model()
-    # TODO REALMS clarify: only from EXTERNAL PSEA ASSESSORS org and Auditor group ?
     queryset = get_user_model().objects.exclude(
-        Q(email__endswith="@unicef.org") | Q(is_staff=True) | Q(is_superuser=True)).all()
+        Q(email__endswith=settings.UNICEF_USER_EMAIL) | Q(is_staff=True) | Q(is_superuser=True)).all()
     serializer_class = ExternalUserSerializer
     permission_classes = (IsAdminUser, )
 
@@ -332,8 +333,10 @@ class ExternalUserViewSet(
         from etools.applications.audit.purchase_order.models import AuditorStaffMember
         from etools.applications.tpm.tpmpartners.models import TPMPartnerStaffMember
 
+        external_psea_group, _ = Group.objects.get_or_create(name="PSEA Assessor")
         qs = self.queryset.filter(
             realms__country__schema_name=connection.schema_name,
+            realms__group=external_psea_group
         )
 
         # exclude user if connected with TPMPartnerStaffMember,
