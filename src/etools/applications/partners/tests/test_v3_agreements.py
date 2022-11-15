@@ -1,6 +1,6 @@
 import datetime
 
-from django.test import override_settings, SimpleTestCase
+from django.test import SimpleTestCase
 from django.urls import reverse
 
 from rest_framework import status
@@ -56,7 +56,6 @@ class BaseAgreementTestCase(BaseTenantTestCase):
 
 
 class TestList(BaseAgreementTestCase):
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_get(self):
         agreement_qs = Agreement.objects
         response = self.forced_auth_req(
@@ -82,15 +81,16 @@ class TestList(BaseAgreementTestCase):
     def test_get_by_partner_not_related(self):
         staff = UserFactory(
             is_staff=False, realms__data=['IP Viewer'],
-            profile__organization=self.partner.organization
+            profile__organization=OrganizationFactory()
         )
         response = self.forced_auth_req(
             "get",
             reverse("pmp_v3:agreement-list"),
             user=staff,
         )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data, [])
+        # TODO REALMS: check with frontend: instead of 200 OK empty is now forbidden:
+        #  see UserIsPartnerStaffMemberPermission
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_get_filter_partner_id(self):
         agreement = AgreementFactory(partner=self.partner)
@@ -107,7 +107,6 @@ class TestList(BaseAgreementTestCase):
         for data in response.data:
             self.assertEqual(data["partner"], self.partner.pk)
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_export_csv(self):
         AgreementFactory()
         response = self.forced_auth_req(
@@ -193,7 +192,7 @@ class TestUpdate(BaseAgreementTestCase):
         )
         agreement.authorized_officers.add(self.partner_staff)
         # only UNICEF users can update reference_number_year - see agreement_permissions matrix
-        unicef_user = UserFactory(email='test@unicef.org', is_staff=True)
+        unicef_user = UserFactory(is_staff=True)
 
         response = self.forced_auth_req(
             "patch",

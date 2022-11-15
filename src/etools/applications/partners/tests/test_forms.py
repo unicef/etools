@@ -1,7 +1,6 @@
 from unittest import skip
 
 from django.db import connection
-from django.test import override_settings
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners import forms
@@ -59,7 +58,6 @@ class TestPartnerStaffMemberForm(BaseTenantTestCase):
         form = forms.PartnerStaffMemberForm(self.data)
         self.assertTrue(form.is_valid())
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_clean_duplicate_email_no_profile_unicef(self):
         """Duplicate emails are ok, if user not unicef and not staff member already"""
         UserFactory(email="test@example.com")

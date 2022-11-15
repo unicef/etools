@@ -212,8 +212,8 @@ class TestUsersListAPIView(BaseTenantTestCase):
         self.assertEqual(len(response.data['results']), 5)
 
     def test_search(self):
-        UserFactory(is_staff=True, email='test_user_email@example.com')
-        UserFactory(is_staff=True, email='test_user@example.com')
+        UserFactory(is_staff=True, email='test_user_email@example.com', realms__data=[])
+        UserFactory(is_staff=True, email='test_user@example.com', realms__data=[])
         response = self.forced_auth_req('get', self.url, user=self.unicef_staff, data={'search': 'test_user_email'})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
@@ -699,7 +699,7 @@ class TestExternalUserAPIView(BaseTenantTestCase):
 
     @classmethod
     def setUpTestData(cls):
-        cls.user = UserFactory()
+        cls.user = UserFactory(realms__data=['PSEA Assessor'])
         cls.unicef_staff = UserFactory(is_staff=True)
         cls.unicef_superuser = UserFactory(is_superuser=True)
         cls.auditor_user = AuditorUserFactory()

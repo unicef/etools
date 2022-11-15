@@ -2,7 +2,7 @@ import datetime
 from unittest import skip
 
 from django.contrib.auth.models import AnonymousUser
-from django.test import override_settings, SimpleTestCase
+from django.test import SimpleTestCase
 from django.urls import reverse
 
 from rest_framework import status
@@ -40,7 +40,7 @@ class URLsTestCase(URLAssertionMixin, SimpleTestCase):
 class BasePartnerOrganizationTestCase(BaseTenantTestCase):
     def setUp(self):
         super().setUp()
-        self.user = UserFactory(
+        self.unicef_user = UserFactory(
             is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP],
         )
         self.partner = PartnerFactory(organization=OrganizationFactory(name='Partner 1', vendor_number="VP1"))
@@ -51,13 +51,12 @@ class BasePartnerOrganizationTestCase(BaseTenantTestCase):
 
 
 class TestPartnerOrganizationList(BasePartnerOrganizationTestCase):
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_list_for_unicef(self):
         PartnerFactory()
         response = self.forced_auth_req(
             "get",
             reverse('pmp_v3:partner-list'),
-            user=self.user,
+            user=self.unicef_user,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
@@ -110,7 +109,7 @@ class TestPartnerStaffMemberList(BasePartnerOrganizationTestCase):
         response = self.forced_auth_req(
             "get",
             reverse('pmp_v3:partner-staff-members-list', args=[partner.pk]),
-            user=self.user,
+            user=self.unicef_user,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(

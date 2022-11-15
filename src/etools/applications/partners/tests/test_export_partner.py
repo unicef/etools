@@ -1,6 +1,5 @@
 import datetime
 
-from django.test import override_settings
 from django.urls import reverse
 
 from rest_framework import status
@@ -82,6 +81,10 @@ class PartnerModelExportTestCase(BaseTenantTestCase):
             profile__organization=cls.partner.organization,
             realms__data=['IP Viewer']
         )
+        cls.partnerstaff2 = UserFactory(
+            profile__organization=cls.partner.organization,
+            realms__data=['IP Editor']
+        )
         cls.planned_visit = PartnerPlannedVisitsFactory(partner=cls.partner)
 
 
@@ -96,7 +99,6 @@ class TestPartnerOrganizationModelExport(PartnerModelExportTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_csv_export_api(self):
         response = self.forced_auth_req(
             'get',
@@ -179,7 +181,6 @@ class TestPartnerOrganizationModelExport(PartnerModelExportTestCase):
             ),
         ))
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_csv_flat_export_api(self):
         response = self.forced_auth_req(
             'get',
@@ -194,7 +195,6 @@ class TestPartnerOrganizationModelExport(PartnerModelExportTestCase):
         self.assertEqual(len(dataset._get_headers()), 55)
         self.assertEqual(len(dataset[0]), 55)
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_csv_flat_export_api_hact_value_string(self):
         partner = self.partner
         partner.pk = None
@@ -215,7 +215,6 @@ class TestPartnerOrganizationModelExport(PartnerModelExportTestCase):
         self.assertEqual(len(dataset._get_headers()), 55)
         self.assertEqual(len(dataset[0]), 55)
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_csv_flat_export_api_hidden(self):
         response = self.forced_auth_req(
             'get',
@@ -242,7 +241,6 @@ class TestPartnerStaffMemberModelExport(PartnerModelExportTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_csv_export_api(self):
         response = self.forced_auth_req(
             'get',
@@ -254,10 +252,9 @@ class TestPartnerStaffMemberModelExport(PartnerModelExportTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 2)
-        self.assertEqual(len(dataset._get_headers()), 11)
-        self.assertEqual(len(dataset[0]), 11)
+        self.assertEqual(len(dataset._get_headers()), 10)
+        self.assertEqual(len(dataset[0]), 10)
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_csv_flat_export_api(self):
         response = self.forced_auth_req(
             'get',

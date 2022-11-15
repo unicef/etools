@@ -762,8 +762,8 @@ class AmendmentTestCase(BaseTenantTestCase):
                 'monitoring_activities',
                 'country_programme',
                 'unicef_signatory',
-                'old_partner_authorized_officer_signatory',
-                'old_partner_focal_points',
+                'old_partner_authorized_officer_signatory',  # TODO REALMS clean up
+                'old_partner_focal_points',  # TODO REALMS clean up
                 'partner_authorized_officer_signatory',
                 'prc_review_attachment',
                 'signed_pd_attachment',

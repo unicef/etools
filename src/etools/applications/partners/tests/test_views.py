@@ -8,7 +8,7 @@ from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
 from django.db import connection
-from django.test import override_settings, SimpleTestCase
+from django.test import SimpleTestCase
 from django.urls import resolve, reverse
 from django.utils import timezone
 
@@ -150,7 +150,7 @@ class TestAPIPartnerOrganizationListView(BaseTenantTestCase):
     """Exercise the list view for PartnerOrganization"""
     @classmethod
     def setUpTestData(cls):
-        cls.user = UserFactory(is_staff=True)
+        cls.unicef_user = UserFactory(is_staff=True)
 
         cls.partner = PartnerFactory(
             organization=OrganizationFactory(
@@ -193,15 +193,22 @@ class TestAPIPartnerOrganizationListView(BaseTenantTestCase):
         self.assertIn('id', response_json[0].keys())
         self.assertEqual(response_json[0]['id'], self.partner.id)
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_simple(self):
         """exercise simple fetch"""
-        response = self.forced_auth_req('get', self.url)
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            user=self.unicef_user
+        )
         self.assertResponseFundamentals(response)
 
     def test_no_permission_user_forbidden(self):
         """Ensure a non-staff user gets no data"""
-        response = self.forced_auth_req('get', self.url, user=UserFactory())
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            user=UserFactory(realms__data=[])
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, [])
 
@@ -216,51 +223,78 @@ class TestAPIPartnerOrganizationListView(BaseTenantTestCase):
     def test_group_permission(self):
         """Ensure a non-staff user in the correct group has access"""
         user = UserFactory(realms__data=[self.readonly_group.name])
-        response = self.forced_auth_req('get', self.url, user=user)
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            user=user
+        )
         self.assertResponseFundamentals(response)
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_staff_access(self):
         """Ensure a staff user has access"""
-        response = self.forced_auth_req('get', self.url, user=self.user)
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            user=self.unicef_user
+        )
         self.assertResponseFundamentals(response)
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_verbosity_minimal(self):
         """Exercise behavior when verbosity=minimal"""
-        response = self.forced_auth_req('get', self.url, data={"verbosity": "minimal"})
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            data={"verbosity": "minimal"},
+            user=self.unicef_user
+        )
         self.assertResponseFundamentals(response, sorted(("id", "name")))
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_verbosity_other(self):
         """Exercise behavior when verbosity != minimal. ('minimal' is the only accepted value for verbosity;
         other values are ignored.)
         """
-        response = self.forced_auth_req('get', self.url, data={"verbosity": "banana"})
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            data={"verbosity": "banana"},
+            user=self.unicef_user
+        )
         self.assertResponseFundamentals(response)
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_filter_partner_type(self):
         """Ensure filtering by partner type works as expected"""
         # Make another partner that should be excluded from the search results.
         PartnerFactory(organization=OrganizationFactory(organization_type=OrganizationType.GOVERNMENT))
-        response = self.forced_auth_req('get', self.url, data={"partner_type": OrganizationType.UN_AGENCY})
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            data={"partner_type": OrganizationType.UN_AGENCY},
+            user=self.unicef_user
+        )
         self.assertResponseFundamentals(response)
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_filter_cso_type(self):
         """Ensure filtering by CSO type works as expected"""
         # Make another partner that should be excluded from the search results.
         PartnerFactory(organization=OrganizationFactory(cso_type="National"))
-        response = self.forced_auth_req('get', self.url, data={"cso_type": "International"})
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            data={"cso_type": "International"},
+            user=self.unicef_user
+        )
         self.assertResponseFundamentals(response)
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_filter_hidden(self):
         """Ensure filtering by the hidden flag works as expected"""
         # Make another partner that should be excluded from the search results.
         PartnerFactory(hidden=True)
-        response = self.forced_auth_req('get', self.url, data={"hidden": False})
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            data={"hidden": False},
+            user=self.unicef_user
+        )
         self.assertResponseFundamentals(response)
 
     def test_filter_multiple(self):
@@ -271,14 +305,17 @@ class TestAPIPartnerOrganizationListView(BaseTenantTestCase):
             "cso_type": "National",
             "partner_type": OrganizationType.CIVIL_SOCIETY_ORGANIZATION,
         }
-        response = self.forced_auth_req('get', self.url, data=params)
-
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            data=params,
+            user=self.unicef_user
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_json = json.loads(response.rendered_content)
         self.assertIsInstance(response_json, list)
         self.assertEqual(len(response_json), 0)
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_filter_sea_risk_rating(self):
         """Ensure filtering by the sea_risk_rating works as expected"""
         sea_risk_rating = "High"
@@ -289,10 +326,10 @@ class TestAPIPartnerOrganizationListView(BaseTenantTestCase):
             'get',
             self.url,
             data={"sea_risk_rating": sea_risk_rating},
+            user=self.unicef_user
         )
         self.assertResponseFundamentals(response)
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_filter_psea_assessment_date_before(self):
         """Ensure filtering by the psea_assessment_date_before works
         as expected"""
@@ -307,10 +344,10 @@ class TestAPIPartnerOrganizationListView(BaseTenantTestCase):
             data={
                 "psea_assessment_date_before": date + datetime.timedelta(days=1),
             },
+            user=self.unicef_user
         )
         self.assertResponseFundamentals(response)
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_filter_psea_assessment_date_after(self):
         """Ensure filtering by the psea_assessment_date_after works
         as expected"""
@@ -325,26 +362,34 @@ class TestAPIPartnerOrganizationListView(BaseTenantTestCase):
             data={
                 "psea_assessment_date_after": date - datetime.timedelta(days=1),
             },
+            user=self.unicef_user
         )
         self.assertResponseFundamentals(response)
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_search_name(self):
         """Test that name search matches substrings and is case-independent"""
         # Make another partner that should be excluded from the search results.
         PartnerFactory(organization=OrganizationFactory(name="Somethingelse"))
-        response = self.forced_auth_req('get', self.url, data={"search": "PARTNER"})
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            data={"search": "PARTNER"},
+            user=self.unicef_user
+        )
         self.assertResponseFundamentals(response)
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_search_short_name(self):
         """Test that short name search matches substrings and is case-independent"""
         # Make another partner that should be excluded from the search results.
         PartnerFactory(organization=OrganizationFactory(short_name="foo"))
-        response = self.forced_auth_req('get', self.url, data={"search": "SHORT"})
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            data={"search": "SHORT"},
+            user=self.unicef_user
+        )
         self.assertResponseFundamentals(response)
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_values_positive(self):
         """Ensure that passing the values param w/partner ids returns only data for those partners"""
         # In contrast to the other tests, this test uses the two partners I create here and filters out self.partner.
@@ -355,8 +400,12 @@ class TestAPIPartnerOrganizationListView(BaseTenantTestCase):
         while PartnerOrganization.objects.filter(pk=unused_id).exists():
             unused_id += 1
 
-        response = self.forced_auth_req('get', self.url, data={"values": "{},{},{}".format(p1.id, p2.id, unused_id)})
-
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            data={"values": "{},{},{}".format(p1.id, p2.id, unused_id)},
+            user=self.unicef_user
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_json = json.loads(response.rendered_content)
         self.assertIsInstance(response_json, list)
@@ -368,16 +417,24 @@ class TestAPIPartnerOrganizationListView(BaseTenantTestCase):
 
         self.assertCountEqual(ids_in_response, (p1.id, p2.id))
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_values_negative(self):
         """Ensure that garbage values are handled properly"""
-        response = self.forced_auth_req('get', self.url, data={"values": "banana"})
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            data={"values": "banana"},
+            user=self.unicef_user
+        )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_switchable_pagination(self):
         [PartnerFactory() for _i in range(15)]
-        response = self.forced_auth_req('get', self.url, data={'page': 1})
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            data={'page': 1},
+            user=self.unicef_user
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 16)
 
@@ -412,7 +469,6 @@ class TestPartnerOrganizationListViewForCSV(BaseTenantTestCase):
         # Undo the monkey patch.
         partner_organization_v2.PartnerOrganizationExportSerializer = PartnerOrganizationExportSerializer
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_format_csv(self):
         """Exercise the view-specific aspects of passing query param format=csv. This does not test the serializer
         function, it only tests that the expected serializer is invoked and returns something CSV-like.
@@ -500,7 +556,6 @@ class TestPartnershipViews(BaseTenantTestCase):
             types=[InterventionAmendment.RESULTS],
         )
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_api_partners_list(self):
         response = self.forced_auth_req('get', '/api/v2/partners/', user=self.unicef_staff)
 
@@ -508,7 +563,6 @@ class TestPartnershipViews(BaseTenantTestCase):
         self.assertEqual(len(response.data), 1)
         self.assertIn("Partner", response.data[0]["name"])
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_api_partners_list_specify_workspace(self):
         # specifying current tenant works
         response = self.forced_auth_req('get', '/api/v2/partners/', user=self.unicef_staff,
@@ -1107,7 +1161,6 @@ class TestPartnerStaffMemberAPIView(BaseTenantTestCase):
             args=[cls.partner.pk]
         )
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_get(self):
         response = self.forced_auth_req(
             'get',

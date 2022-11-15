@@ -1,6 +1,5 @@
 import datetime
 
-from django.test import override_settings
 from django.urls import reverse
 
 from rest_framework import status
@@ -52,7 +51,6 @@ class TestPMPOfficeViews(BasePMPTestCase):
         self.office_qs = Office.objects
         self.assertTrue(self.office_qs.count() > 10)
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_list(self):
         # unicef staff
         self.assertTrue(self.user.is_unicef_user())
@@ -72,12 +70,11 @@ class TestPMPOfficeViews(BasePMPTestCase):
         self.assertEqual(str(response.data[0]["id"]), str(self.office.pk))
 
         # partner no interventions
-        user = UserFactory(is_staff=False)
+        user = UserFactory(realms__data=[])
         response = self.forced_auth_req('get', self.url, user=user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, [])
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_detail(self):
         office = OfficeFactory()
 
@@ -120,7 +117,6 @@ class TestPMPSectionViews(BasePMPTestCase):
         self.section_qs = Section.objects
         self.assertTrue(self.section_qs.count() > 10)
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_list(self):
         # unicef staff
         response = self.forced_auth_req('get', self.url)
@@ -139,12 +135,11 @@ class TestPMPSectionViews(BasePMPTestCase):
         self.assertEqual(str(response.data[0]["id"]), str(self.section.pk))
 
         # partner no relationship
-        user = UserFactory(is_staff=False)
+        user = UserFactory(realms__data=[])
         response = self.forced_auth_req('get', self.url, user=user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, [])
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_detail(self):
         section = SectionFactory()
 

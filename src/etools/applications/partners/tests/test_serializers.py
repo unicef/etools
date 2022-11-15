@@ -692,10 +692,13 @@ class TestAgreementSerializerTransitions(AgreementCreateUpdateSerializerBase):
 class TestPartnerOrganizationDetailSerializer(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.user = UserFactory()
-
         cls.partner = PartnerFactory(
             organization=OrganizationFactory(organization_type=OrganizationType.CIVIL_SOCIETY_ORGANIZATION))
+        cls.user = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=cls.partner.organization
+        )
+
         cls.engagement = PlannedEngagementFactory(partner=cls.partner)
 
     def test_retrieve(self):
@@ -725,5 +728,5 @@ class TestPartnerOrganizationDetailSerializer(BaseTenantTestCase):
         self.assertEquals(len(data['staff_members']), 1)
         self.assertCountEqual(data['staff_members'][0].keys(), [
             'active', 'created', 'email', 'first_name', 'id',
-            'last_name', 'modified', 'partner', 'phone', 'title', 'user',
+            'last_name', 'modified', 'phone', 'title'
         ])

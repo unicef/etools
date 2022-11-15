@@ -5,7 +5,7 @@ from unittest import skip
 from unittest.mock import Mock, patch
 
 from django.db import connection
-from django.test import override_settings, SimpleTestCase
+from django.test import SimpleTestCase
 from django.urls import reverse
 
 from rest_framework import status
@@ -76,7 +76,6 @@ class TestPartnerOrganizationListAPIView(BaseTenantTestCase):
         cls.unicef_staff = UserFactory(is_staff=True)
         cls.url = reverse("partners_api:partner-list")
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_list(self):
         PartnerFactory()
         PartnerFactory()
@@ -87,7 +86,6 @@ class TestPartnerOrganizationListAPIView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_filter_by_lead_section(self):
         section = SectionFactory()
         partner = PartnerFactory(lead_section=section)
@@ -443,7 +441,7 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
         self.assertEqual(response.data["planned_visits"]["partner"],
                          ErrorDetail(string='Planned Visit can be set only for Government partners', code='invalid'))
 
-    @skip('AMP-REALM: To be removed')
+    @skip('TODO REALMS clean up ')
     def test_update_staffmember_inactive(self):
         partner_staff_user = UserFactory(is_staff=True, realms__data=[])
         response = self.forced_auth_req(
@@ -545,7 +543,7 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
     #         'with a different Partner Organization'
     #     )
 
-    @skip('AMP-REALM: To be removed')
+    @skip('TODO REALMS clean up ')
     def test_assign_staff_member_creates_new_user(self):
         self.assertEqual(self.partner.staff_members.count(), 1)
         staff_email = "email@staff.com"
@@ -560,7 +558,7 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
         self.assertEqual(created_staff.first_name, created_staff.user.first_name)
         self.assertEqual(created_staff.last_name, created_staff.user.last_name)
 
-    @skip('AMP-REALM: To be removed')
+    @skip('TODO REALMS clean up ')
     def test_assign_staff_member_to_existing_user(self):
         user = UserFactory(realms__data=[], is_staff=False)
 
@@ -573,8 +571,7 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
         self.assertIsNotNone(user.get_partner())
         self.assertTrue(user.profile.countries_available.filter(id=connection.tenant.id).exists())
 
-    @skip('AMP-REALM: To be removed')
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    @skip('TODO REALMS clean up ')
     def test_assign_staff_member_to_unicef_user(self):
         user = UserFactory()
         response = self.forced_auth_req(
@@ -588,7 +585,7 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
             response.data['staff_members']['non_field_errors'],
         )
 
-    @skip('AMP-REALM: To be removed')
+    @skip('TODO REALMS clean up ')
     def test_assign_staff_member_to_another_staff(self):
         user = UserFactory(realms__data=[], is_staff=False)
         # PartnerStaffFactory(user=user)
@@ -1282,6 +1279,10 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(BaseTenantTestCase):
             ),
             hidden=False,
         )
+        cls.staff_user = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=cls.partner.organization
+        )
 
         report = "report.pdf"
         cls.assessment1 = Assessment.objects.create(
@@ -1320,6 +1321,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(BaseTenantTestCase):
         cls.cp = CountryProgrammeFactory(__sequence=10)
         cls.cp_output = ResultFactory(result_type=cls.output_res_type)
 
+    @skip('TODO REALMS: cleanup')
     def test_api_partners_update_with_members(self):
         self.assertFalse(Activity.objects.exists())
         response = self.forced_auth_req(
@@ -1359,6 +1361,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(BaseTenantTestCase):
             1
         )
 
+    @skip('TODO REALMS: cleanup')
     def test_api_partners_update_with_members_exists(self):
         self.assertFalse(Activity.objects.exists())
         detail_response = self.forced_auth_req(
@@ -1520,6 +1523,7 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(BaseTenantTestCase):
             1
         )
 
+    @skip('TODO REALMS: cleanup')
     def test_api_partners_update_with_members_empty_phone(self):
         self.assertFalse(Activity.objects.exists())
         response = self.forced_auth_req(
