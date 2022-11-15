@@ -610,13 +610,19 @@ def sync_partner_staff_member(partner: PartnerOrganization, staff_member_data: P
     profile.phone_number = staff_member_data.phone_number
     profile.country = profile.country or connection.tenant
     profile.save()
-    Realm.objects.update_or_create(
-        user=user,
-        country=connection.tenant,
-        organization=partner.organization,
-        group=Group.objects.get_or_create(name='IP Viewer')[0],
-        defaults={'is_active': user.is_active}
-    )
+    if user.is_active:
+        Realm.objects.get_or_create(
+            user=user,
+            country=connection.tenant,
+            organization=partner.organization,
+            group=Group.objects.get_or_create(name='IP Viewer')[0],
+        )
+    else:
+        user.realms.filter(
+            country=connection.tenant,
+            organization=partner.organization,
+            group=Group.objects.get_or_create(name='IP Viewer')[0],
+        ).delete()
 
     staff_member_update_fields = {
         'user': user,

@@ -92,9 +92,7 @@ class TPMPartnerSynchronizer(VisionDataTenantSynchronizer):
         users_deactivate.update(is_active=False)
         try:
             country = Country.objects.get(name=partner.country)
-            Realm.objects\
-                .filter(user__in=users_deactivate, country=country, organization=partner.organization)\
-                .update(is_active=False)
+            Realm.objects.filter(user__in=users_deactivate, country=country, organization=partner.organization).delete()
         except Country.DoesNotExist:
             logging.error(f"No country with name {partner.country} exists. "
                           f"Cannot deactivate realms for users.")

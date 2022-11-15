@@ -198,7 +198,7 @@ class AzureUserMapper:
 def notify_user_on_realm_update(user_pk):
     user = User.objects.get(pk=user_pk)
     active_realms = user.realms\
-        .filter(country=connection.tenant, is_active=True)\
+        .filter(country=connection.tenant)\
         .values('country__name', 'organization__name', 'group__name')
     if active_realms:
         email_context = {

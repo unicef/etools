@@ -19,8 +19,7 @@ class IsPartnershipManager(BasePermission):
         return request.user.realms\
             .filter(country=request.user.profile.country,
                     organization=request.user.profile.organization,
-                    group=PartnershipManager.as_group(),
-                    is_active=True)\
+                    group=PartnershipManager.as_group())\
             .exists()
 
 
@@ -30,6 +29,5 @@ class IsActiveInRealm(BasePermission):
     def has_permission(self, request, view):
         return request.user.realms \
             .filter(country=request.user.profile.country,
-                    organization=request.user.profile.organization,
-                    is_active=True) \
+                    organization=request.user.profile.organization) \
             .exists()

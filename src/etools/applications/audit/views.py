@@ -535,8 +535,8 @@ class AuditorStaffMembersViewSet(
         instance.user.profile.organization = instance.auditor_firm.organization
         instance.user.profile.save(update_fields=['country', 'organization'])
 
-        Realm.objects.update_or_create(
-            user=self.request.user,
+        Realm.objects.get_or_create(
+            user=instance.user,
             country=self.request.user.profile.country,
             organization=instance.auditor_firm.organization,
             group=Auditor.as_group()
@@ -564,12 +564,11 @@ class AuditorStaffMembersViewSet(
                     deactivated_user.save(update_fields=['is_active'])
                     deleted_profile = hidden_staff.user.profile
 
-                    Realm.objects.update_or_create(
+                    Realm.objects.get_or_create(
                         user=deactivated_user,
                         country=self.request.tenant,
                         organization=hidden_staff.auditor_firm.organization,
-                        group=Auditor.as_group(),
-                        defaults={'is_active': deactivated_user.is_active}
+                        group=Auditor.as_group()
                     )
                     if not deleted_profile.country:
                         deleted_profile.country = self.request.tenant
@@ -584,13 +583,19 @@ class AuditorStaffMembersViewSet(
         instance.user.profile.organization = instance.auditor_firm.organization
         instance.user.profile.save(update_fields=['country', 'organization'])
 
-        Realm.objects.update_or_create(
-            user=self.request.user,
-            country=self.request.tenant,
-            organization=instance.auditor_firm.organization,
-            group=Auditor.as_group(),
-            defaults={'is_active': self.request.user.is_active}
-        )
+        if instance.user.is_active:
+            Realm.objects.get_or_create(
+                user=self.request.user,
+                country=self.request.tenant,
+                organization=instance.auditor_firm.organization,
+                group=Auditor.as_group()
+            )
+        else:
+            instance.user.filter(
+                country=self.request.tenant,
+                organization=instance.auditor_firm.organization,
+                group=Auditor.as_group()
+            ).delete()
 
     def perform_destroy(self, instance):
         # deactivate staff member & user
@@ -606,8 +611,7 @@ class AuditorStaffMembersViewSet(
             instance.user.realms\
                 .filter(country=self.request.tenant,
                         organization=instance.auditor_firm.organization,
-                        group=Auditor.as_group())\
-                .update(is_active=False)
+                        group=Auditor.as_group()).delete()
 
     def get_permission_context(self):
         context = super().get_permission_context()

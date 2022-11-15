@@ -1006,20 +1006,25 @@ class PartnerStaffMember(TimeStampedModel):
                 self.user.profile.country = connection.tenant
                 self.user.profile.organization = self.partner.organization
                 self.user.profile.save(update_fields=['country', 'organization'])
+                Realm.objects.get_or_create(
+                    user=self.user,
+                    country=connection.tenant,
+                    organization=self.partner.organization,
+                    group=Group.objects.get_or_create(name='IP Viewer')[0]
+                )
             else:
                 # staff is deactivated
                 # using first() here because public schema unavailable during testing
                 self.user.profile.country = Country.objects.filter(schema_name=get_public_schema_name()).first()
                 self.user.profile.organization = None
                 self.user.profile.save(update_fields=['country', 'organization'])
-            # create or update (activate/deactivate) corresponding Realm
-            Realm.objects.update_or_create(
-                user=self.user,
-                country=connection.tenant,
-                organization=self.partner.organization,
-                group=Group.objects.get_or_create(name='IP Viewer')[0],
-                defaults={'is_active': self.active}
-            )
+                # create or update (activate/deactivate) corresponding Realm
+                Realm.objects.filter(
+                    user=self.user,
+                    country=connection.tenant,
+                    organization=self.partner.organization,
+                    group=Group.objects.get_or_create(name='IP Viewer')[0]
+                ).delete()
             self.user.is_active = self.active
             self.user.save()
 

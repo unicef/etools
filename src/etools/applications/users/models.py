@@ -179,7 +179,7 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
             country=connection.tenant,
             organization=self.profile.organization,
             group=PartnershipManager.as_group(),
-            is_active=True).exists()
+        ).exists()
 
     @cached_property
     def full_name(self):
@@ -193,7 +193,7 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
     @property
     def groups(self):
         current_country_realms = self.realms.filter(
-            country=connection.tenant, organization=self.profile.organization, is_active=True)
+            country=connection.tenant, organization=self.profile.organization)
         return Group.objects.filter(realms__in=current_country_realms).distinct()
 
     def get_groups_for_organization_id(self, organization_id):
@@ -429,11 +429,11 @@ class UserProfile(models.Model):
 
     @property
     def countries_available(self):
-        return Country.objects.filter(realms__in=self.user.realms.filter(is_active=True)).distinct()
+        return Country.objects.filter(pk__in=self.user.realms.values_list('country', flat=True))
 
     @property
     def organizations_available(self):
-        current_country_realms = self.user.realms.filter(country=connection.tenant, is_active=True)
+        current_country_realms = self.user.realms.filter(country=connection.tenant)
         return Organization.objects.filter(realms__in=current_country_realms).distinct()
 
     def username(self):
@@ -540,14 +540,13 @@ class Realm(TimeStampedModel):
     group = models.ForeignKey(
         Group, verbose_name=_('Group'), on_delete=models.CASCADE, related_name='realms'
     )
-    is_active = models.BooleanField(_('Active'), default=True)
 
     history = GenericRelation(
         'unicef_snapshot.Activity', object_id_field='target_object_id',
         content_type_field='target_content_type'
     )
     tracker = FieldTracker(
-        fields=['user', 'country', 'organization', 'group', 'is_active']
+        fields=['user', 'country', 'organization', 'group']
     )
 
     objects = RealmManager()

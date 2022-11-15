@@ -19,12 +19,11 @@ def staff_member_changed(sender, instance, action, reverse, pk_set, *args, **kwa
 
         country = Country.objects.get(schema_name=connection.schema_name)
         for member in new_members:
-            Realm.objects.update_or_create(
+            Realm.objects.get_or_create(
                 user=member.user,
                 country=country,
                 organization=member.auditor_firm.organization,
-                group=Auditor.as_group(),
-                defaults={"is_active": True}
+                group=Auditor.as_group()
             )
             member.user.profile.organization = member.auditor_firm.organization
             member.user.profile.save(update_fields=['organization'])

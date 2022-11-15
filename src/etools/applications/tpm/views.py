@@ -225,7 +225,7 @@ class TPMStaffMembersViewSet(
         if not instance.user.profile.country:
             instance.user.profile.country = self.request.user.profile.country
         instance.user.profile.organization = instance.tpm_partner.organization
-        Realm.objects.update_or_create(
+        Realm.objects.get_or_create(
             user=instance.user,
             country=instance.user.profile.country,
             organization=instance.tpm_partner.organization,

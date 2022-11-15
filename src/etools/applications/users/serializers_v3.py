@@ -118,7 +118,6 @@ class RealmSerializer(serializers.ModelSerializer):
             'id',
             'group_id',
             'group_name',
-            'is_active'
         )
 
 
@@ -174,10 +173,10 @@ class UserRealmBaseSerializer(GroupEditPermissionMixin, serializers.ModelSeriali
         return group_ids
 
     def create_realms(self, instance, organization_id, group_ids):
-        for group_id in group_ids:
-            Realm.objects.update_or_create(
-                user=instance, country=connection.tenant, organization_id=organization_id,
-                group_id=group_id, defaults={'is_active': True})
+        Realm.objects.bulk_create([
+            Realm(user=instance, country=connection.tenant, organization_id=organization_id, group_id=group_id)
+            for group_id in group_ids
+        ])
 
 
 class UserRealmCreateSerializer(UserRealmBaseSerializer):
@@ -241,22 +240,19 @@ class UserRealmUpdateSerializer(UserRealmBaseSerializer):
 
         _to_add = requested_group_ids.difference(existing_group_ids)
         _to_deactivate = existing_group_ids.difference(requested_group_ids)
-        _to_reactivate = requested_group_ids.difference(_to_add)
 
         if not allowed_group_ids or \
                 not _to_add.issubset(allowed_group_ids) or \
-                not _to_deactivate.issubset(allowed_group_ids) or \
-                not _to_reactivate.issubset(allowed_group_ids):
+                not _to_deactivate.issubset(allowed_group_ids):
             raise PermissionDenied(
                 _('Permission denied. Only %(groups)s roles can be assigned.'
                   % {'groups': ', '.join(Group.objects.filter(id__in=allowed_group_ids).values_list('name', flat=True))})
             )
         self.create_realms(instance, organization_id, _to_add)
-        realm_qs.filter(group__id__in=_to_deactivate).update(is_active=False)
-        realm_qs.filter(group__id__in=_to_reactivate).update(is_active=True)
+        realm_qs.filter(group__id__in=_to_deactivate).delete()
 
         # clean up profile organization if no realm is active for context country and organization
-        if not instance.realms.filter(is_active=True, **context_qs_params).count():
+        if not instance.realms.filter(**context_qs_params).count():
             instance.profile.organization = None
             instance.profile.save(update_fields=['organization'])
         notify_user_on_realm_update.delay(instance.id)

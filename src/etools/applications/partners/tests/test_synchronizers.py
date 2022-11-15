@@ -134,7 +134,7 @@ class TestPartnerSynchronizer(BaseTenantTestCase):
         PartnerStaffFactory(partner=partner, user=user)
 
         self.assertTrue(user.is_active)
-        self.assertEqual(user.realms.filter(is_active=True).count(), 1)
+        self.assertEqual(user.realms.count(), 1)
 
         response = self.adapter._save_records([self.data])
         self.assertEqual(response, 1)
@@ -142,7 +142,7 @@ class TestPartnerSynchronizer(BaseTenantTestCase):
         self.assertTrue(partner_updated.deleted_flag)
         user.refresh_from_db()
         self.assertFalse(user.is_active)
-        active_realms = user.realms.filter(country=connection.tenant, organization=organization, is_active=True)
+        active_realms = user.realms.filter(country=connection.tenant, organization=organization)
         self.assertEqual(active_realms.count(), 0)
 
     def test_save_records_update_date(self):

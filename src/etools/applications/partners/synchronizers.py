@@ -315,8 +315,8 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
             Realm.objects.filter(
                 user__in=users_deactivate,
                 country=country,
-                organization=partner_org.organization)\
-                .update(is_active=False)
+                organization=partner_org.organization
+            ).delete()
         except Country.DoesNotExist:
             logging.error(f"No country with name {partner_org.country} exists. "
                           f"Cannot deactivate realms for users.")
