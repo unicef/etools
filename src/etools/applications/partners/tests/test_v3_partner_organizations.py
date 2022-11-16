@@ -10,7 +10,7 @@ from rest_framework import status
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.core.tests.mixins import URLAssertionMixin
 from etools.applications.organizations.tests.factories import OrganizationFactory
-from etools.applications.partners.models import PartnerOrganization, PartnerStaffMember
+from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, UNICEF_USER
 from etools.applications.partners.tests.factories import AgreementFactory, PartnerFactory
 from etools.applications.users.tests.factories import UserFactory
@@ -114,7 +114,7 @@ class TestPartnerStaffMemberList(BasePartnerOrganizationTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
             len(response.data),
-            PartnerStaffMember.objects.filter(partner=partner).count(),
+            partner.staff_members.count(),
         )
 
     def test_list_for_partner(self):
@@ -133,7 +133,7 @@ class TestPartnerStaffMemberList(BasePartnerOrganizationTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
             len(response.data),
-            PartnerStaffMember.objects.filter(partner=partner).count(),
+            partner.staff_members.count(),
         )
 
         # partner user not able to view another partners users
