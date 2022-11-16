@@ -37,6 +37,7 @@ from etools.applications.partners.serializers.partner_organization_v2 import Par
 from etools.applications.reports.models import CountryProgramme, Result, ResultType
 
 
+# TODO REALMS clean up
 class PartnerStaffMemberDetailAPIView(RetrieveUpdateDestroyAPIView):
     queryset = PartnerStaffMember.objects.all()
     serializer_class = PartnerStaffMemberDetailSerializer

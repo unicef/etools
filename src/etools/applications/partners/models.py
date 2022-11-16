@@ -1734,7 +1734,6 @@ class Intervention(TimeStampedModel):
     Relates to :model:`partners.Agreement`
     Relates to :model:`reports.CountryProgramme`
     Relates to :model:`AUTH_USER_MODEL`
-    Relates to :model:`partners.PartnerStaffMember`
     Relates to :model:`reports.Office`
     """
 

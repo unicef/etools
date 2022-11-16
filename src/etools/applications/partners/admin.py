@@ -447,6 +447,7 @@ class AssessmentAdmin(AttachmentInlineAdminMixin, RestrictedEditAdmin):
     ]
 
 
+# TODO REALMS clean up
 class PartnerStaffMemberAdmin(RestrictedEditAdminMixin, SnapshotModelAdmin):
     model = PartnerStaffMember
     form = PartnerStaffMemberForm
@@ -848,7 +849,7 @@ class InterventionSupplyItemAdmin(RestrictedEditAdmin):
 
 admin.site.register(PartnerOrganization, PartnerAdmin)
 admin.site.register(Assessment, AssessmentAdmin)
-admin.site.register(PartnerStaffMember, PartnerStaffMemberAdmin)
+admin.site.register(PartnerStaffMember, PartnerStaffMemberAdmin)  # TODO REALMS clean up
 admin.site.register(PlannedEngagement, PlannedEngagementAdmin)
 
 admin.site.register(Agreement, AgreementAdmin)

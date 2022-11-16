@@ -39,6 +39,7 @@ class CoreValuesAssessmentSerializer(AttachmentSerializerMixin, serializers.Mode
         fields = "__all__"
 
 
+# TODO REALMS clean up
 class PartnerStaffMemberCreateSerializer(serializers.ModelSerializer):
     # legacy serializer; not actually being used for creating
 
@@ -71,14 +72,11 @@ class PartnerStaffMemberCreateSerializer(serializers.ModelSerializer):
         return data
 
 
-class SimpleStaffMemberSerializer(PartnerStaffMemberCreateSerializer):
-    """
-    A serializer to be used for nested staff member handling. The 'partner' field
-    is removed in this case to avoid validation errors for e.g. when creating
-    the partner and the member at the same time.
-    """
+class PartnerManagerSerializer(serializers.ModelSerializer):
+    title = serializers.CharField(source='profile.job_title')
+
     class Meta:
-        model = PartnerStaffMember
+        model = get_user_model()
         fields = (
             "id",
             "title",
@@ -204,7 +202,7 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
 
 
 class PartnerStaffMemberDetailSerializer(serializers.ModelSerializer):
-    active = serializers.CharField(source='is_active')
+    active = serializers.BooleanField(source='is_active')
     phone = serializers.CharField(source='profile.phone_number')
     title = serializers.CharField(source='profile.job_title')
 

@@ -91,7 +91,7 @@ class InterventionBudgetCUSerializer(FullInterventionSnapshotSerializerMixin, se
 
 
 class PartnerStaffMemberUserSerializer(serializers.ModelSerializer):
-    active = serializers.CharField(source='is_active')
+    active = serializers.BooleanField(source='is_active')
     phone = serializers.CharField(source='profile.phone_number')
     title = serializers.CharField(source='profile.job_title')
 

@@ -11,6 +11,7 @@ from etools.applications.partners.models import Intervention, InterventionAttach
 logger = logging.getLogger('partners.forms')
 
 
+# TODO REALMS clean up
 class PartnerStaffMemberForm(forms.ModelForm):
     ERROR_MESSAGES = {
         'active_by_default': 'New Staff Member needs to be active at the moment of creation',
