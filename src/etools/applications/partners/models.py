@@ -3271,6 +3271,10 @@ class FileType(models.Model):
     FINAL_PARTNERSHIP_REVIEW = 'Final Partnership Review'
     CORRESPONDENCE = 'Correspondence'
     SUPPLY_PLAN = 'Supply/Distribution Plan'
+    DATA_PROCESSING_AGREEMENT = "Data Processing Agreement"
+    ACTIVITIES_INVOLVING_CHILDREN = "Activities involving children and young people"
+    SPECIAL_CONDITIONS_FOR_CONSTRUCTION = "Special Conditions for Construction Works by IP"
+    SPECIAL_CONDITIONS_FOR_CONSTRUCTION_DISPLAY = "Special Conditions for Construction Works by Implementing Partners"
     OTHER = 'Other'
 
     NAME_CHOICES = Choices(
@@ -3279,6 +3283,9 @@ class FileType(models.Model):
         (FINAL_PARTNERSHIP_REVIEW, FINAL_PARTNERSHIP_REVIEW),
         (CORRESPONDENCE, CORRESPONDENCE),
         (SUPPLY_PLAN, SUPPLY_PLAN),
+        (DATA_PROCESSING_AGREEMENT, DATA_PROCESSING_AGREEMENT),
+        (ACTIVITIES_INVOLVING_CHILDREN, ACTIVITIES_INVOLVING_CHILDREN),
+        (SPECIAL_CONDITIONS_FOR_CONSTRUCTION, SPECIAL_CONDITIONS_FOR_CONSTRUCTION_DISPLAY),
         (OTHER, OTHER),
     )
     name = models.CharField(max_length=64, choices=NAME_CHOICES, unique=True, verbose_name=_('Name'))

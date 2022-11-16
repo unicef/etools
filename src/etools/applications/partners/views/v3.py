@@ -28,6 +28,7 @@ from etools.applications.partners.models import (
     PartnerType,
 )
 from etools.applications.partners.permissions import UserIsPartnerStaffMemberPermission
+from etools.applications.partners.serializers.v3 import FileTypeDropdownSerializer
 from etools.applications.partners.views.v2 import choices_to_json_ready
 from etools.applications.reports.models import CountryProgramme, Result, ResultType
 
@@ -109,7 +110,14 @@ class PMPDropdownsListApiView(APIView):
         ]
 
     def get_file_types(self, request) -> list:
-        return list(FileType.objects.filter(name__in=[i[0] for i in FileType.NAME_CHOICES]).all().values())
+        data = FileTypeDropdownSerializer(
+            instance=FileType.objects.filter(name__in=[i[0] for i in FileType.NAME_CHOICES]),
+            many=True
+        ).data
+        # order items according to their presence in choices list
+        display_name_choices = list(dict(FileType.NAME_CHOICES).values())
+        sorted_data = list(sorted(data, key=lambda x: display_name_choices.index(x['name'])))
+        return sorted_data
 
     def get_donors(self, request) -> list:
         return choices_to_json_ready(

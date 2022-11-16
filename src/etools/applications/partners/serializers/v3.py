@@ -5,7 +5,12 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from unicef_restlib.fields import SeparatedReadWriteField
 
-from etools.applications.partners.models import InterventionResultLink, InterventionReview, PRCOfficerInterventionReview
+from etools.applications.partners.models import (
+    FileType,
+    InterventionResultLink,
+    InterventionReview,
+    PRCOfficerInterventionReview,
+)
 from etools.applications.partners.serializers.intervention_snapshot import FullInterventionSnapshotSerializerMixin
 from etools.applications.reports.models import (
     InterventionActivity,
@@ -243,3 +248,11 @@ class UNICEFInterventionLowerResultSerializer(
 
     def get_intervention(self):
         return self.intervention
+
+
+class FileTypeDropdownSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(source='get_name_display')
+
+    class Meta:
+        model = FileType
+        fields = ('id', 'name')
