@@ -300,7 +300,7 @@ class TestUsersListAPIView(BaseTenantTestCase):
         partner_user = UserFactory(
             realms__data=['IP Viewer'], profile__organization=partner.organization
         )
-        self.assertEqual(partner_user, partner.staff_members.all().first())
+        self.assertEqual(partner_user, partner.active_staff_members.all().first())
         self.assertTrue(get_user_model().objects.count() > 1)
         response = self.forced_auth_req(
             'get',

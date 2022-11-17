@@ -143,7 +143,7 @@ class TestPartnerOrganizationModelExport(PartnerModelExportTestCase):
 
         # the order of staff members in the results is hard to determine
         # so just ensuring that all relevant staff members are in the results
-        for sm in self.partner.staff_members.filter(is_active=True).all():
+        for sm in self.partner.active_staff_members.all():
             member = "{} ({})".format(sm.get_full_name(), sm.email)
             self.assertIn(member, test_option[22])
 

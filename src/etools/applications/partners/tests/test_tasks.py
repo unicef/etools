@@ -702,7 +702,7 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
             signed_by_unicef_date=today - datetime.timedelta(days=1),
             signed_by_partner_date=today - datetime.timedelta(days=1),
             unicef_signatory=unicef_staff,
-            partner_authorized_officer_signatory=partner.staff_members.all().first(),
+            partner_authorized_officer_signatory=partner.active_staff_members.all().first(),
             cash_transfer_modalities=[Intervention.CASH_TRANSFER_DIRECT],
         )
         active_intervention.flat_locations.add(LocationFactory())

@@ -115,7 +115,7 @@ class TestPartnerStaffMembersImportTask(BaseTenantTestCase):
     @override_settings(PRP_API_ENDPOINT='http://example.com/api/')
     @patch('etools.applications.partners.prp_api.requests.get')
     def test_sync(self, request_mock):
-        self.assertEqual(self.partner.staff_members.count(), 1)
+        self.assertEqual(self.partner.active_staff_members.count(), 1)
 
         self.staff_member.active = False
         self.staff_member.save()
@@ -123,7 +123,7 @@ class TestPartnerStaffMembersImportTask(BaseTenantTestCase):
         request_mock.side_effect = self.get_prp_export_response
         sync_partners_staff_members_from_prp()
 
-        self.assertTrue(self.partner.staff_members.count(), 2)
+        self.assertTrue(self.partner.active_staff_members.count(), 2)
 
         # check second user created
         self.assertTrue(User.objects.filter(email='anonymous@example.com').exists())

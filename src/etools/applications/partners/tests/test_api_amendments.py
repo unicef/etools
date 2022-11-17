@@ -72,7 +72,7 @@ class TestInterventionAmendments(BaseTenantTestCase):
             signed_by_unicef_date=today - datetime.timedelta(days=1),
             signed_by_partner_date=today - datetime.timedelta(days=1),
             unicef_signatory=self.unicef_staff,
-            partner_authorized_officer_signatory=self.partner.staff_members.all().first(),
+            partner_authorized_officer_signatory=self.partner.active_staff_members.all().first(),
             budget_owner=self.pme,
         )
         self.active_intervention.flat_locations.add(LocationFactory())

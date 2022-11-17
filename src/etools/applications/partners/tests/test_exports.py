@@ -455,7 +455,7 @@ class TestModelExport(BaseTenantTestCase):
             '{}'.format(self.partner.last_assessment_date),
             '',
             ', '.join(["{} ({})".format(sm.get_full_name(), sm.email)
-                       for sm in self.partner.staff_members.filter(is_active=True).all()]),
+                       for sm in self.partner.active_staff_members.all()]),
             'https://testserver/pmp/partners/{}/details/'.format(self.partner.id),
             '{} (Q1:{} Q2:{}, Q3:{}, Q4:{})'.format(
                 self.planned_visit.year,

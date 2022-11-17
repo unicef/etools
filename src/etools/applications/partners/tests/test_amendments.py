@@ -63,7 +63,7 @@ class AmendmentTestCase(BaseTenantTestCase):
             signed_by_unicef_date=today - datetime.timedelta(days=1),
             signed_by_partner_date=today - datetime.timedelta(days=1),
             unicef_signatory=self.unicef_staff,
-            partner_authorized_officer_signatory=self.partner1.staff_members.all().first(),
+            partner_authorized_officer_signatory=self.partner1.active_staff_members.all().first(),
             cash_transfer_modalities=[Intervention.CASH_TRANSFER_DIRECT],
         )
         ReportingRequirementFactory(intervention=self.active_intervention)

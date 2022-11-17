@@ -114,7 +114,7 @@ class TestPartnerStaffMemberList(BasePartnerOrganizationTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
             len(response.data),
-            partner.staff_members.count(),
+            partner.all_staff_members.count(),
         )
 
     def test_list_for_partner(self):
@@ -133,7 +133,7 @@ class TestPartnerStaffMemberList(BasePartnerOrganizationTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
             len(response.data),
-            partner.staff_members.count(),
+            partner.all_staff_members.count(),
         )
 
         # partner user not able to view another partners users

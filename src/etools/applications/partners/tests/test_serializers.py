@@ -703,7 +703,14 @@ class TestPartnerOrganizationDetailSerializer(BaseTenantTestCase):
 
     def test_retrieve(self):
         serializer = PartnerOrganizationDetailSerializer(instance=self.partner)
-
+        inactive_partner_user2 = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=self.partner.organization,
+        )
+        inactive_partner_user2.realms.update(is_active=False)
+        # user is overall active, but not active in the context realm
+        self.assertEqual(inactive_partner_user2.is_active, True)
+        self.assertEqual(inactive_partner_user2.realms.filter(is_active=True).count(), 0)
         data = serializer.data
         self.assertCountEqual(data.keys(), [
             'address', 'alternate_id', 'alternate_name', 'assessments', 'basis_for_risk_rating', 'blocked', 'city',
@@ -724,8 +731,8 @@ class TestPartnerOrganizationDetailSerializer(BaseTenantTestCase):
             'total_spot_check_planned', 'required_audit'
         ])
         self.assertNotEqual(data['planned_engagement']['spot_check_planned_q1'], '')
-
-        self.assertEquals(len(data['staff_members']), 1)
+        # active & inactive partner staff members
+        self.assertEquals(len(data['staff_members']), 2)
         self.assertCountEqual(data['staff_members'][0].keys(), [
             'active', 'created', 'email', 'first_name', 'id',
             'last_name', 'modified', 'phone', 'title'
