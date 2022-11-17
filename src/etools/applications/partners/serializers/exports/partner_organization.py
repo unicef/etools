@@ -97,7 +97,7 @@ class PartnerOrganizationExportSerializer(serializers.ModelSerializer):
 
     def get_staff_members(self, obj):
         return ', '.join(['{} ({})'.format(sm.get_full_name(), sm.email)
-                          for sm in obj.staff_members.filter(is_active=True).all()])
+                          for sm in obj.active_staff_members.all()])
 
     def get_assessments(self, obj):
         return ', '.join(["{} ({})".format(a.type, a.completed_date) for a in obj.assessments.all()])

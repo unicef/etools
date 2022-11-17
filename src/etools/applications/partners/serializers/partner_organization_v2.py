@@ -287,7 +287,7 @@ class PartnerOrgPSEADetailsSerializer(serializers.ModelSerializer):
     cso_type = serializers.CharField(source='organization.cso_type')
 
     def get_staff_members(self, obj):
-        return [s.get_full_name() for s in obj.staff_members.all()]
+        return [s.get_full_name() for s in obj.active_staff_members.all()]
 
     class Meta:
         model = PartnerOrganization
@@ -441,7 +441,7 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
     short_name = serializers.CharField(source='organization.short_name', read_only=True)
     partner_type = serializers.CharField(source='organization.organization_type', read_only=True)
     cso_type = serializers.CharField(source='organization.cso_type', read_only=True)
-    staff_members = PartnerStaffMemberDetailSerializer(many=True, read_only=True)
+    staff_members = PartnerStaffMemberDetailSerializer(source='all_staff_members', many=True, read_only=True)
     assessments = AssessmentDetailSerializer(many=True, read_only=True)
     planned_engagement = PlannedEngagementSerializer(read_only=True)
     interventions = serializers.SerializerMethodField(read_only=True)

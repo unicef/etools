@@ -75,11 +75,11 @@ class PRPPartnerStaffMemberSerializer(serializers.ModelSerializer):
 
 
 class PRPPartnerOrganizationWithStaffMembersSerializer(PRPPartnerOrganizationListSerializer):
-    staff_members = PRPPartnerStaffMemberSerializer(read_only=True, many=True)
+    all_staff_members = PRPPartnerStaffMemberSerializer(read_only=True, many=True)
 
     class Meta(PRPPartnerOrganizationListSerializer.Meta):
         fields = PRPPartnerOrganizationListSerializer.Meta.fields + (
-            'staff_members',
+            'all_staff_members',
         )
 
 

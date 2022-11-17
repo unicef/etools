@@ -176,7 +176,7 @@ class UsersListAPIView(PMPBaseViewMixin, QueryStringFilterMixin, ListAPIView):
         if self.is_partner_staff():
             emails = []
             p = self.current_partner()
-            emails += p.staff_members.values_list("email", flat=True)
+            emails += p.active_staff_members.values_list("email", flat=True)
             qs = qs.filter(email__in=emails)
         elif self.request.user.is_staff:
             qs = qs.filter(

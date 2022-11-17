@@ -544,12 +544,18 @@ class PartnerOrganization(TimeStampedModel):
         return self.organization.cso_type
 
     @cached_property
-    def staff_members(self):
+    def all_staff_members(self):
         return User.objects.filter(
             realms__organization=self.organization,
             realms__country=connection.tenant,
             realms__group__name__in=PARTNER_ACTIVE_GROUPS,
-            is_active=True
+        )
+
+    @cached_property
+    def active_staff_members(self):
+        return self.all_staff_members.filter(
+            is_active=True,
+            realms__is_active=True
         )
 
     def get_object_url(self):
@@ -900,7 +906,7 @@ class PartnerOrganization(TimeStampedModel):
         return reverse(admin_url_name, args=(self.id,))
 
     def user_is_staff_member(self, user):
-        return user.id in self.staff_members.values_list('id', flat=True)
+        return user.id in self.active_staff_members.values_list('id', flat=True)
 
 
 class CoreValuesAssessment(TimeStampedModel):
