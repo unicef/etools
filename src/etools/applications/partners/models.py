@@ -2168,6 +2168,18 @@ class Intervention(TimeStampedModel):
         blank=True,
         null=True,
     )
+    has_data_processing_agreement = models.BooleanField(
+        verbose_name=_("Data Processing Agreement"),
+        default=False,
+    )
+    has_activities_involving_children = models.BooleanField(
+        verbose_name=_("Activities involving children and young people"),
+        default=False,
+    )
+    has_special_conditions_for_construction = models.BooleanField(
+        verbose_name=_("Special Conditions for Construction Works by Implementing Partners"),
+        default=False,
+    )
 
     # Flag if this has been migrated to a status that is not correct
     # previous status
@@ -3273,8 +3285,7 @@ class FileType(models.Model):
     SUPPLY_PLAN = 'Supply/Distribution Plan'
     DATA_PROCESSING_AGREEMENT = "Data Processing Agreement"
     ACTIVITIES_INVOLVING_CHILDREN = "Activities involving children and young people"
-    SPECIAL_CONDITIONS_FOR_CONSTRUCTION = "Special Conditions for Construction Works by IP"
-    SPECIAL_CONDITIONS_FOR_CONSTRUCTION_DISPLAY = "Special Conditions for Construction Works by Implementing Partners"
+    SPECIAL_CONDITIONS_FOR_CONSTRUCTION = "Special Conditions for Construction Works"
     OTHER = 'Other'
 
     NAME_CHOICES = Choices(
@@ -3285,7 +3296,7 @@ class FileType(models.Model):
         (SUPPLY_PLAN, SUPPLY_PLAN),
         (DATA_PROCESSING_AGREEMENT, DATA_PROCESSING_AGREEMENT),
         (ACTIVITIES_INVOLVING_CHILDREN, ACTIVITIES_INVOLVING_CHILDREN),
-        (SPECIAL_CONDITIONS_FOR_CONSTRUCTION, SPECIAL_CONDITIONS_FOR_CONSTRUCTION_DISPLAY),
+        (SPECIAL_CONDITIONS_FOR_CONSTRUCTION, SPECIAL_CONDITIONS_FOR_CONSTRUCTION),
         (OTHER, OTHER),
     )
     name = models.CharField(max_length=64, choices=NAME_CHOICES, unique=True, verbose_name=_('Name'))

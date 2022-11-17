@@ -28,6 +28,12 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.3.5,cfei_number,Unicef Focal Point,,Draft,Edit,TRUE
 3.3.5,context,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
 3.3.5,context,Partner User,partner_court,Draft,Edit,TRUE
+,has_data_processing_agreement,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
+,has_data_processing_agreement,Partner User,partner_court,Draft,Edit,TRUE
+,has_activities_involving_children,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
+,has_activities_involving_children,Partner User,partner_court,Draft,Edit,TRUE
+,has_special_conditions_for_construction,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
+,has_special_conditions_for_construction,Partner User,partner_court,Draft,Edit,TRUE
 3.4.1,contingency_pd,Unicef Focal Point,,Draft,Edit,TRUE
 3.5,country_programme,Unicef Focal Point,,Draft,Edit,TRUE
 3.5,country_programme,Unicef Focal Point,user_adds_amendment,*,Edit,TRUE

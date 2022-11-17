@@ -1681,6 +1681,7 @@ class TestInterventionUpdate(BaseInterventionTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         intervention.refresh_from_db()
         for field, value in mapping:
+            self.assertIn(field, response.data)
             self.assertEqual(getattr(intervention, field), value)
 
     def test_partner_details(self):
@@ -1746,6 +1747,9 @@ class TestInterventionUpdate(BaseInterventionTestCase):
             ("context", "Context"),
             ("implementation_strategy", "Implementation strategy"),
             ("ip_program_contribution", "Non-Contribution from partner"),
+            ("has_data_processing_agreement", True),
+            ("has_activities_involving_children", True),
+            ("has_special_conditions_for_construction", True),
         )
         self._test_patch(mapping)
 
