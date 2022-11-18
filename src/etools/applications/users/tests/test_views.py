@@ -56,6 +56,64 @@ class TestChangeUserCountry(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
+class TestChangeUserRoleView(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.superuser = UserFactory(is_superuser=True)
+
+    def setUp(self):
+        super().setUp()
+        self.url = reverse("users:user-change")
+
+    def test_post_revoke_200(self):
+        partnership_manager = UserFactory(groups__data=["Partnership Manager"], email='test@unicef.org')
+        response = self.forced_auth_req(
+            "post",
+            self.url,
+            user=self.superuser,
+            data={
+                "user_email": partnership_manager.email,
+                "roles": ["Partnership Manager"],
+                "workspace": f"{self.tenant.business_area_code}",
+                "access_type": "revoke"
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        response = json.loads(response.content)
+        self.assertEqual(response['status'], 'success')
+        self.assertEqual(response['details']['previous_roles'], ["Partnership Manager"])
+        self.assertEqual(response['details']['current_roles'], [])
+
+    def test_post_invalid_uppercase_email(self):
+        response = self.forced_auth_req(
+            "post",
+            self.url,
+            user=self.superuser,
+            data={
+                "user_email": "NOTALOWERCASE@unicef.org",
+                "roles": ["Partnership Manager"],
+                "workspace": f"{self.tenant.business_area_code}",
+                "access_type": "revoke"
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_post_invalid_not_unicef(self):
+        response = self.forced_auth_req(
+            "post",
+            self.url,
+            user=self.superuser,
+            data={
+                "user_email": "test@example.org",
+                "roles": ["Partnership Manager"],
+                "workspace": f"{self.tenant.business_area_code}",
+                "access_type": "revoke"
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
 class TestUserViews(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
