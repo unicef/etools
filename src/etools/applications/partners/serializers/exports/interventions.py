@@ -338,6 +338,15 @@ class InterventionExportSerializer(serializers.ModelSerializer):
     total_attachments = serializers.SerializerMethodField(
         label=_("# of attachments"),
     )
+    has_data_processing_agreement = serializers.SerializerMethodField(
+        label="Data Processing Agreement"
+    )
+    has_activities_involving_children = serializers.SerializerMethodField(
+        label="Activities involving children and young people"
+    )
+    has_special_conditions_for_construction = serializers.SerializerMethodField(
+        label="Special Conditions for Construction Works by Implementing Partners"
+    )
 
     class Meta:
         model = Intervention
@@ -389,6 +398,9 @@ class InterventionExportSerializer(serializers.ModelSerializer):
             "cp_outputs",
             "url",
             "cfei_number",
+            "has_data_processing_agreement",
+            "has_activities_involving_children",
+            "has_special_conditions_for_construction",
         )
 
     def get_unicef_signatory(self, obj):
@@ -480,6 +492,15 @@ class InterventionExportSerializer(serializers.ModelSerializer):
         return ', '.join(['{} (Q1:{} Q2:{}, Q3:{}, Q4:{})'.format(
             pv.year, pv.programmatic_q1, pv.programmatic_q2, pv.programmatic_q3, pv.programmatic_q4
         ) for pv in obj.planned_visits.all()])
+
+    def get_has_data_processing_agreement(self, obj):
+        return "Yes" if obj.contingency_pd else "No"
+
+    def get_has_activities_involving_children(self, obj):
+        return "Yes" if obj.contingency_pd else "No"
+
+    def get_has_special_conditions_for_construction(self, obj):
+        return "Yes" if obj.contingency_pd else "No"
 
 
 class InterventionExportFlatSerializer(ExportSerializerMixin, InterventionExportSerializer):
