@@ -249,7 +249,7 @@ class PartnerOrganization(TimeStampedModel):
         (RATING_SIGNIFICANT, 'Significant'),
         (RATING_MEDIUM, 'Medium'),
         (RATING_LOW, 'Low'),
-    (RATING_NOT_REQUIRED, 'Not Required'),
+        (RATING_NOT_REQUIRED, 'Not Required'),
     )
 
     # PSEA Risk Ratings
