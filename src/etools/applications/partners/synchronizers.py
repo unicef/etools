@@ -259,7 +259,8 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
             'INTERNATIONAL NGO': 'International',
             'NATIONAL NGO': 'National',
             'COMMUNITY BASED ORGANIZATION': 'Community Based Organization',
-            'ACADEMIC INSTITUTION': 'Academic Institution'
+            'ACADEMIC INSTITUTION': 'Academic Institution',
+            'RED CROSS/RED CRESCENT NATIONAL SOCIETIES': "Red Cross/Red Crescent National Societies"
         }
         if partner['CSO_TYPE'] and partner['CSO_TYPE'].upper() in cso_type_mapping:
             return cso_type_mapping[partner['CSO_TYPE'].upper()]
@@ -282,7 +283,7 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
 
     @staticmethod
     def get_partner_higest_rating(partner):
-        allowed_risk_rating = dict([(x[1], x[0]) for x in PartnerOrganization.PSEA_RISK_RATING])
+        allowed_risk_rating = dict([(x[1], x[0]) for x in PartnerOrganization.ALL_COMBINED_RISK_RATING])
         return allowed_risk_rating.get(partner.get('HIGEST_RISK_RATING', ''), '')
 
     @staticmethod
