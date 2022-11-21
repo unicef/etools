@@ -718,5 +718,38 @@
             "code": "special_audit_final_report",
             "group": ["special_audit_final_report"]
         }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 2104,
+        "fields": {
+            "order": 5,
+            "name": "Data Processing Agreement",
+            "label": "Data Processing Agreement",
+            "code": "data_processing_agreement",
+            "group": ["pmp_documents"]
+        }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 2105,
+        "fields": {
+            "order": 5,
+            "name": "Activities involving children and young people",
+            "label": "Activities involving children and young people",
+            "code": "activities_involving_children",
+            "group": ["pmp_documents"]
+        }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 2106,
+        "fields": {
+            "order": 5,
+            "name": "Special Conditions for Construction Works",
+            "label": "Special Conditions for Construction Works",
+            "code": "special_conditions_for_construction",
+            "group": ["pmp_documents"]
+        }
     }
 ]

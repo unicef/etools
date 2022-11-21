@@ -16,7 +16,7 @@ from django_fsm import FSMField, transition
 from django_tenants.utils import get_public_schema_name
 from model_utils import Choices, FieldTracker
 from model_utils.models import TimeStampedModel
-from unicef_attachments.models import Attachment
+from unicef_attachments.models import Attachment, FileType as AttachmentFileType
 from unicef_djangolib.fields import CodedGenericRelation, CurrencyField
 from unicef_snapshot.models import Activity
 
@@ -3341,6 +3341,19 @@ class InterventionAttachment(TimeStampedModel):
 
     class Meta:
         ordering = ['-created']
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+        # synchronize type to .attachment_file.file_type when possible
+        attachment_file = self.attachment_file.last()
+        if attachment_file:
+            file_type = AttachmentFileType.objects.filter(
+                Q(label__iexact=self.type.name) | Q(name__iexact=self.type.name)
+            ).first()
+            if file_type:
+                attachment_file.file_type = file_type
+                attachment_file.save()
 
     def __str__(self):
         return self.attachment.name

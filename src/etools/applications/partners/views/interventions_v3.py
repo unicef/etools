@@ -84,6 +84,7 @@ from etools.applications.partners.views.interventions_v2 import (
 from etools.applications.partners.views.v3 import PMPBaseViewMixin
 from etools.applications.reports.models import InterventionActivity, LowerResult
 from etools.applications.reports.serializers.v2 import InterventionActivityDetailSerializer
+from etools.libraries.djangolib.utils import get_current_site
 
 
 class PMPInterventionMixin(PMPBaseViewMixin):
@@ -213,6 +214,7 @@ class PMPInterventionPDFView(PMPInterventionMixin, RetrieveAPIView):
         font_path = settings.PACKAGE_ROOT + '/assets/fonts/'
 
         data = {
+            "domain": 'https://{}'.format(get_current_site().domain),
             "pd": pd,
             "pd_offices": [o.name for o in pd.offices.all()],
             "pd_locations": [location.name for location in pd.flat_locations.all()],
