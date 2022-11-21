@@ -621,10 +621,12 @@ class PartnerOrganization(TimeStampedModel):
                                                      PartnerOrganization.RATING_HIGH_RISK_ASSUMED,
                                                      PartnerOrganization.RATING_SIGNIFICANT]:
                     programme_visits = 3
-                elif self.highest_risk_rating_name in [PartnerOrganization.RATING_MEDIUM, ]:
+                elif self.highest_risk_rating_name in [PartnerOrganization.RATING_MEDIUM,
+                                                       PartnerOrganization.PSEA_RATING_MEDIUM]:
                     programme_visits = 2
                 elif self.highest_risk_rating_name in [PartnerOrganization.RATING_LOW,
-                                                       PartnerOrganization.RATING_LOW_RISK_ASSUMED]:
+                                                       PartnerOrganization.RATING_LOW_RISK_ASSUMED,
+                                                       PartnerOrganization.PSEA_RATING_LOW]:
                     programme_visits = 1
             else:
                 if self.highest_risk_rating_name in [PartnerOrganization.RATING_HIGH,
@@ -632,10 +634,12 @@ class PartnerOrganization(TimeStampedModel):
                                                      PartnerOrganization.RATING_HIGH_RISK_ASSUMED,
                                                      PartnerOrganization.RATING_SIGNIFICANT]:
                     programme_visits = 4
-                elif self.highest_risk_rating_name in [PartnerOrganization.RATING_MEDIUM, ]:
+                elif self.highest_risk_rating_name in [PartnerOrganization.RATING_MEDIUM,
+                                                       PartnerOrganization.PSEA_RATING_MEDIUM]:
                     programme_visits = 3
                 elif self.highest_risk_rating_name in [PartnerOrganization.RATING_LOW,
-                                                       PartnerOrganization.RATING_LOW_RISK_ASSUMED]:
+                                                       PartnerOrganization.RATING_LOW_RISK_ASSUMED,
+                                                       PartnerOrganization.PSEA_RATING_LOW]:
                     programme_visits = 2
         return programme_visits
 
