@@ -744,6 +744,11 @@ class AgreementAdmin(
         'agreement_number',
         'partner__name',
     )
+    raw_id_fields = (
+        'partner_manager',
+        'signed_by',
+        'terms_acknowledged_by',
+    )
     fieldsets = (
         (_('Agreement Details'), {
             'fields':
@@ -759,6 +764,7 @@ class AgreementAdmin(
                     'partner_manager',
                     'signed_by_unicef_date',
                     'signed_by',
+                    'terms_acknowledged_by',
                     'authorized_officers',
                 )
         }),

@@ -29,6 +29,12 @@ class PCAPDFView(LoginRequiredMixin, PDFTemplateView):
         "ifrc_french": "pca/ifrc_french_pdf.html"
     }
 
+    def dispatch(self, request, *args, **kwargs):
+        # increase permissions since we save current user to agreement
+        if not (request.user.is_authenticated and request.user.is_staff):
+            return self.handle_no_permission()
+        return super().dispatch(request, *args, **kwargs)
+
     def get_pdf_filename(self):
         if self.agreement:
             return '{0.reference_number}-{0.partner}.pdf'.format(self.agreement)
@@ -37,7 +43,11 @@ class PCAPDFView(LoginRequiredMixin, PDFTemplateView):
     def get_context_data(self, **kwargs):
         agr_id = self.kwargs.get('agr')
         lang = self.request.GET.get('lang', 'english') or 'english'
+        terms_acknowledged = self.request.GET.get('terms_acknowledged', 'false')
         error = None
+
+        if terms_acknowledged.lower() != 'true':
+            return {"error": "Terms to be acknowledged"}
 
         try:
             self.template_name = self.language_templates_mapping[lang]
@@ -106,6 +116,9 @@ class PCAPDFView(LoginRequiredMixin, PDFTemplateView):
             )
 
         font_path = settings.PACKAGE_ROOT + '/assets/fonts/'
+
+        self.agreement.terms_acknowledged_by = self.request.user
+        self.agreement.save()
 
         return super().get_context_data(
             error=error,
