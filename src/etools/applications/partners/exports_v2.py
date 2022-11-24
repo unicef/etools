@@ -210,6 +210,7 @@ class AgreementCSVRenderer(r.CSVRenderer):
         "amendments",
         "url",
         "special_conditions_pca",
+        "terms_acknowledged_by",
     ]
 
     labels = {
@@ -228,6 +229,7 @@ class AgreementCSVRenderer(r.CSVRenderer):
         "amendments": 'Amendments',
         "url": "URL",
         "special_conditions_pca": "Special Conditions PCA",
+        "terms_acknowledged_by": "Terms Acknowledged By",
     }
 
 
