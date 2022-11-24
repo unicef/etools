@@ -184,19 +184,19 @@ def transition_to_signed(i):
         ])
 
     if i.has_data_processing_agreement and \
-            not i.attachments.filter(type__name=FileType.DATA_PROCESSING_AGREEMENT).exists():
+            not i.attachments.filter(type__name=FileType.DATA_PROCESSING_AGREEMENT, active=True).exists():
         raise TransitionError([
             _('{} should be provided in attachments.').format(FileType.DATA_PROCESSING_AGREEMENT)
         ])
 
     if i.has_activities_involving_children and \
-            not i.attachments.filter(type__name=FileType.ACTIVITIES_INVOLVING_CHILDREN).exists():
+            not i.attachments.filter(type__name=FileType.ACTIVITIES_INVOLVING_CHILDREN, active=True).exists():
         raise TransitionError([
             _('{} should be provided in attachments.').format(FileType.ACTIVITIES_INVOLVING_CHILDREN)
         ])
 
     if i.has_special_conditions_for_construction and \
-            not i.attachments.filter(type__name=FileType.SPECIAL_CONDITIONS_FOR_CONSTRUCTION).exists():
+            not i.attachments.filter(type__name=FileType.SPECIAL_CONDITIONS_FOR_CONSTRUCTION, active=True).exists():
         raise TransitionError([
             _('{} should be provided in attachments.').format(FileType.SPECIAL_CONDITIONS_FOR_CONSTRUCTION)
         ])
@@ -369,19 +369,19 @@ def check_flagged_document_provided(i):
     from etools.applications.partners.models import FileType
 
     if i.has_data_processing_agreement and \
-            not i.attachments.filter(type__name=FileType.DATA_PROCESSING_AGREEMENT).exists():
+            not i.attachments.filter(type__name=FileType.DATA_PROCESSING_AGREEMENT, active=True).exists():
         raise BasicValidationError([
             _('{} should be provided in attachments.').format(FileType.DATA_PROCESSING_AGREEMENT)
         ])
 
     if i.has_activities_involving_children and \
-            not i.attachments.filter(type__name=FileType.ACTIVITIES_INVOLVING_CHILDREN).exists():
+            not i.attachments.filter(type__name=FileType.ACTIVITIES_INVOLVING_CHILDREN, active=True).exists():
         raise BasicValidationError([
             _('{} should be provided in attachments.').format(FileType.ACTIVITIES_INVOLVING_CHILDREN)
         ])
 
     if i.has_special_conditions_for_construction and \
-            not i.attachments.filter(type__name=FileType.SPECIAL_CONDITIONS_FOR_CONSTRUCTION).exists():
+            not i.attachments.filter(type__name=FileType.SPECIAL_CONDITIONS_FOR_CONSTRUCTION, active=True).exists():
         raise BasicValidationError([
             _('{} should be provided in attachments.').format(FileType.SPECIAL_CONDITIONS_FOR_CONSTRUCTION)
         ])
