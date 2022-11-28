@@ -385,12 +385,14 @@ class InterventionLocationCSVRenderer(r.CSVRenderer):
 class InterventionXLSRenderer:
     def __init__(self, intervention: Intervention):
         self.intervention = intervention
+        self.color_black = '00000000'
         self.color_gray = '00C0C0C0'
         self.color_gray_dark = '00808080'
-        self.color_blue = '00003D73'
+        self.color_blue = '00305496'
         self.color_blue_light = '0099CCFF'
         self.color_blue_pale = '00A6DBFE'
         self.color_blue_pale_light = '00CCEBFF'
+        self.color_blue_border = '00B8CCE4'
         self.color_yellow = '00FFCC00'
         self.color_yellow_light = '00FDF0D2'
 
@@ -425,19 +427,18 @@ class InterventionXLSRenderer:
 
         self.align_right = ["alignment", Alignment(horizontal='right')]
         self.align_center = ["alignment", Alignment(horizontal='center')]
+        self.align_center_and_wrap = ["alignment", Alignment(horizontal='center', vertical='center', wrap_text=True)]
 
-        self.border_blue = ['border', Border(
-            left=Side(border_style='thick', color=self.color_blue),
-            right=Side(border_style='thick', color=self.color_blue),
-            top=Side(border_style='thick', color=self.color_blue),
-            bottom=Side(border_style='thick', color=self.color_blue),
-        )]
-        self.border_gray_dark = ['border', Border(
-            left=Side(border_style='thick', color=self.color_gray_dark),
-            right=Side(border_style='thick', color=self.color_gray_dark),
-            top=Side(border_style='thick', color=self.color_gray_dark),
-            bottom=Side(border_style='thick', color=self.color_gray_dark),
-        )]
+        self.border_blue_top_right = self.border(self.color_blue_border, 'thin', ['top', 'right'])
+        self.border_blue_top_left_right = self.border(self.color_blue_border, 'thin', ['top', 'left', 'right'])
+        self.border_blue_all = self.border(self.color_blue_border, 'thin', ['bottom', 'top', 'left', 'right'])
+
+        self.border_black_top_right = self.border(self.color_black, 'thin', ['top', 'right'])
+        self.border_black_top_left_right = self.border(self.color_black, 'thin', ['top', 'left', 'right'])
+        self.border_black_all = self.border(self.color_black, 'thin', ['bottom', 'top', 'left', 'right'])
+
+    def border(self, color, border_style, borders):
+        return ['border', Border(**{side: Side(color=color, border_style=border_style) for side in borders})]
 
     def td_format(self, td_object):
         seconds = int(td_object.total_seconds())
@@ -474,6 +475,14 @@ class InterventionXLSRenderer:
                     maximum_value = val_to_check
             worksheet.column_dimensions[get_column_letter(letter)].width = maximum_value + 1
 
+    def apply_properties_to_columns(self, worksheet, start_column=1, column_count=1, properties=None):
+        start_column = min(start_column, start_column + column_count - 1)
+        end_column = max(start_column, start_column + column_count - 1)
+        for i in range(start_column, end_column + 1):
+            cell = worksheet.column_dimensions[get_column_letter(i)]
+            for name, value in properties:
+                setattr(cell, name, value)
+
     def sheet_header(self, worksheet, header_title):
         worksheet.append([header_title])
         worksheet.merge_cells(start_row=worksheet.max_row, start_column=1, end_row=worksheet.max_row, end_column=2)
@@ -482,13 +491,13 @@ class InterventionXLSRenderer:
         worksheet.append([
             'Partner',
             self.intervention.agreement.partner.name,
-            'Start date', self.intervention.start,
+            'Start date', self.intervention.start.strftime('%d-%b-%y'),
             f"Currency {self.intervention.planned_budget.currency}"
         ])
         worksheet.append([
             '',
             'Vendor #: ' + self.intervention.agreement.partner.vendor_number,
-            'End date', self.intervention.end
+            'End date', self.intervention.end.strftime('%d-%b-%y')
         ])
         worksheet.append([
             'PD Reference',
@@ -585,6 +594,19 @@ class InterventionXLSRenderer:
         self.apply_styles_to_cells(worksheet, worksheet.max_row - 1, 3, worksheet.max_row, 3, [self.font_italic])
         self.apply_styles_to_cells(worksheet, worksheet.max_row - 9, 2, worksheet.max_row, 3, [self.align_right])
 
+        self.apply_styles_to_cells(
+            worksheet, 7, 2, worksheet.max_row, 3, [self.border_black_top_right]
+        )
+        self.apply_styles_to_cells(
+            worksheet, 7, 1, worksheet.max_row, 1, [self.border_black_top_left_right]
+        )
+        self.apply_styles_to_cells(
+            worksheet, worksheet.max_row, 1, worksheet.max_row, 3, [self.border_black_all]
+        )
+        self.apply_styles_to_cells(
+            worksheet, 6, 1, 6, 3, [self.border_blue_all]
+        )
+
         worksheet.append([''])
 
         self.render_others_section(worksheet)
@@ -607,14 +629,22 @@ class InterventionXLSRenderer:
         )
         self.apply_styles_to_cells(
             worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns,
-            [self.fill_blue, self.font_white_bold, self.align_center]
+            [self.fill_blue, self.font_white_bold, self.border_blue_top_right, self.align_center]
+        )
+        self.apply_styles_to_cells(
+            worksheet, worksheet.max_row, 1, worksheet.max_row, 1,
+            [self.border_blue_top_left_right]
         )
         worksheet.append([
             'Result Level', '', '', '', ''
         ] + [f'Q{q.quarter}' for q in quarters])
         self.apply_styles_to_cells(
             worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns,
-            [self.fill_blue, self.font_white_bold, self.align_center]
+            [self.fill_blue, self.font_white_bold, self.align_center, self.border_blue_top_right]
+        )
+        self.apply_styles_to_cells(
+            worksheet, worksheet.max_row, 1, worksheet.max_row, 1,
+            [self.border_blue_top_left_right]
         )
 
         for result_link in self.intervention.result_links.all():
@@ -623,7 +653,12 @@ class InterventionXLSRenderer:
                 result_link.cp_output.name if result_link.cp_output else ""
             ])
             self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns,
-                                       [self.fill_blue_pale])
+                                       [self.fill_blue_pale, self.font_bold, self.border_black_top_right])
+            self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, 1,
+                                       [self.border_black_top_left_right])
+            worksheet.merge_cells(
+                start_row=worksheet.max_row, start_column=1, end_row=worksheet.max_row, end_column=total_columns
+            )
             for pd_output in result_link.ll_results.all():
                 worksheet.append([
                     "PD Output\n" + pd_output.code + ":",
@@ -633,13 +668,28 @@ class InterventionXLSRenderer:
                     currency_format(pd_output.total_unicef()),
                 ])
                 self.apply_styles_to_cells(
-                    worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns, [self.fill_blue_pale_light]
+                    worksheet,
+                    worksheet.max_row,
+                    1,
+                    worksheet.max_row,
+                    total_columns,
+                    [self.fill_blue_pale_light, self.border_black_top_right]
+                )
+                self.apply_styles_to_cells(
+                    worksheet, worksheet.max_row, 1, worksheet.max_row, 1, [self.border_black_top_left_right]
+                )
+                self.apply_styles_to_cells(
+                    worksheet, worksheet.max_row, 3, worksheet.max_row, total_columns, [self.font_bold]
+                )
+                worksheet.merge_cells(
+                    start_row=worksheet.max_row, start_column=6, end_row=worksheet.max_row, end_column=total_columns
                 )
 
-                for activity in pd_output.activities.all():
+                activities = pd_output.activities.all()
+                for idx, activity in enumerate(activities):
                     time_frames = activity.time_frames.all()
                     worksheet.append([
-                        activity.code,
+                        activity.code + ' ' + str(idx) + ' ' + str(len(activities)),
                         activity.name,
                         currency_format(activity.total),
                         currency_format(activity.cso_cash),
@@ -648,6 +698,28 @@ class InterventionXLSRenderer:
                         ['x' if any(t.quarter == q.quarter for t in time_frames) else '' for q in quarters]
                     )
 
+                    if idx < len(activities) - 1:
+                        self.apply_styles_to_cells(
+                            worksheet,
+                            worksheet.max_row,
+                            1,
+                            worksheet.max_row,
+                            total_columns,
+                            [self.border_black_top_right]
+                        )
+                        self.apply_styles_to_cells(
+                            worksheet, worksheet.max_row, 1, worksheet.max_row, 1, [self.border_black_top_left_right]
+                        )
+                    else:
+                        self.apply_styles_to_cells(
+                            worksheet,
+                            worksheet.max_row,
+                            1,
+                            worksheet.max_row,
+                            total_columns,
+                            [self.border_black_all]
+                        )
+
         worksheet.append([
             'EEPM', 'Effective and efficient programme management',
             currency_format(self.intervention.management_budgets.total),
@@ -655,7 +727,21 @@ class InterventionXLSRenderer:
             currency_format(self.intervention.management_budgets.unicef_total),
         ])
         self.apply_styles_to_cells(
-            worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns, [self.fill_blue_pale_light]
+            worksheet,
+            worksheet.max_row,
+            1,
+            worksheet.max_row,
+            total_columns,
+            [self.fill_blue_pale_light, self.border_black_top_right]
+        )
+        self.apply_styles_to_cells(
+            worksheet, worksheet.max_row, 1, worksheet.max_row, 1, [self.border_black_top_left_right]
+        )
+        self.apply_styles_to_cells(
+            worksheet, worksheet.max_row, 3, worksheet.max_row, total_columns, [self.font_bold]
+        )
+        worksheet.merge_cells(
+            start_row=worksheet.max_row, start_column=6, end_row=worksheet.max_row, end_column=total_columns
         )
 
         worksheet.append([
@@ -665,6 +751,12 @@ class InterventionXLSRenderer:
             currency_format(self.intervention.management_budgets.act1_partner),
             currency_format(self.intervention.management_budgets.act1_unicef),
         ])
+        self.apply_styles_to_cells(
+            worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns, [self.border_black_top_right]
+        )
+        self.apply_styles_to_cells(
+            worksheet, worksheet.max_row, 1, worksheet.max_row, 1, [self.border_black_top_left_right]
+        )
         worksheet.append([
             'EEPM.2', 'Operational costs',
             currency_format(self.intervention.management_budgets.act2_unicef +
@@ -672,6 +764,12 @@ class InterventionXLSRenderer:
             currency_format(self.intervention.management_budgets.act2_partner),
             currency_format(self.intervention.management_budgets.act2_unicef),
         ])
+        self.apply_styles_to_cells(
+            worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns, [self.border_black_top_right]
+        )
+        self.apply_styles_to_cells(
+            worksheet, worksheet.max_row, 1, worksheet.max_row, 1, [self.border_black_top_left_right]
+        )
         worksheet.append([
             'EEPM.3', 'Planning, monitoring, evaluation, and communication',
             currency_format(self.intervention.management_budgets.act3_unicef +
@@ -679,6 +777,9 @@ class InterventionXLSRenderer:
             currency_format(self.intervention.management_budgets.act3_partner),
             currency_format(self.intervention.management_budgets.act3_unicef),
         ])
+        self.apply_styles_to_cells(
+            worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns, [self.border_black_all]
+        )
         worksheet.append([
             'Subtotal for the programme costs', '',
             currency_format(self.intervention.planned_budget.partner_contribution_local +
@@ -687,7 +788,18 @@ class InterventionXLSRenderer:
             currency_format(self.intervention.planned_budget.total_unicef_cash_local_wo_hq),
         ])
         self.apply_styles_to_cells(
-            worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns, [self.fill_blue, self.font_white_bold]
+            worksheet,
+            worksheet.max_row,
+            1,
+            worksheet.max_row,
+            total_columns,
+            [self.fill_blue, self.font_white_bold, self.border_blue_top_right]
+        )
+        self.apply_styles_to_cells(
+            worksheet, worksheet.max_row, 1, worksheet.max_row, 1, [self.border_blue_top_left_right]
+        )
+        worksheet.merge_cells(
+            start_row=worksheet.max_row, start_column=6, end_row=worksheet.max_row, end_column=total_columns
         )
         worksheet.append([
             'HQ Support/Capacity Building  ({0}% of UNICEF the cash component)'.format(
@@ -697,20 +809,42 @@ class InterventionXLSRenderer:
             currency_format(self.intervention.planned_budget.total_hq_cash_local),
         ])
         self.apply_styles_to_cells(
-            worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns, [self.fill_blue_pale_light]
+            worksheet,
+            worksheet.max_row,
+            1,
+            worksheet.max_row,
+            total_columns,
+            [self.fill_blue_pale_light, self.border_black_top_right, self.font_bold]
+        )
+        self.apply_styles_to_cells(
+            worksheet, worksheet.max_row, 1, worksheet.max_row, 1, [self.border_black_top_left_right]
+        )
+        worksheet.merge_cells(
+            start_row=worksheet.max_row, start_column=6, end_row=worksheet.max_row, end_column=total_columns
         )
         worksheet.append([
-            'Total', '',
+            'Total PD budget cash', '',
             currency_format(self.intervention.planned_budget.total_cash_local()),
             currency_format(self.intervention.planned_budget.partner_contribution_local),
             currency_format(self.intervention.planned_budget.unicef_cash_local),
         ])
         self.apply_styles_to_cells(
-            worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns, [self.fill_blue, self.font_white_bold]
+            worksheet,
+            worksheet.max_row,
+            1,
+            worksheet.max_row,
+            total_columns,
+            [self.fill_blue, self.font_white_bold, self.border_blue_all]
         )
-        self.apply_styles_to_cells(worksheet, 6, 3, worksheet.max_row, 5, [self.align_right])
+        worksheet.merge_cells(
+            start_row=worksheet.max_row, start_column=6, end_row=worksheet.max_row, end_column=total_columns
+        )
+
+        self.apply_styles_to_cells(worksheet, 6, 1, 7, total_columns, [self.align_center_and_wrap])
+        self.apply_styles_to_cells(worksheet, 7, 3, worksheet.max_row, 5, [self.align_right])
         self.auto_format_cell_width(worksheet)
         worksheet.column_dimensions['A'].width = 15
+        self.apply_properties_to_columns(worksheet, 6, len(quarters), [['width', 5]])
 
     def render_detailed_workplan_budget(self, worksheet):
         quarters = get_quarters_range(self.intervention.start, self.intervention.end)
@@ -722,7 +856,7 @@ class InterventionXLSRenderer:
             'Price/Unit',
             'CSO\ncontribution',
             'UNICEF\ncontribution',
-            f'Total ({self.intervention.planned_budget.currency})\n(CSO+ UNICEF)',
+            'Total',
             'PD Quarters',
         ] + [''] * (len(quarters) - 1) + ['Other Notes'])
 
@@ -732,14 +866,16 @@ class InterventionXLSRenderer:
         )
         self.apply_styles_to_cells(
             worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns,
-            [self.fill_blue, self.font_white_bold, self.align_center]
+            [self.fill_blue, self.font_white_bold, self.align_center, self.border_blue_top_left_right]
         )
         worksheet.append(['', '', '', '', '', '', '', ''] + [f'Q{q.quarter}' for q in quarters] + [''])
+        self.apply_properties_to_columns(worksheet, total_columns, total_columns, [['width', 50]])
 
         for i in range(1, 9):
             worksheet.merge_cells(
                 start_row=worksheet.max_row - 1, start_column=i, end_row=worksheet.max_row, end_column=i
             )
+
         worksheet.merge_cells(
             start_row=worksheet.max_row - 1, start_column=total_columns,
             end_row=worksheet.max_row, end_column=total_columns
@@ -747,20 +883,29 @@ class InterventionXLSRenderer:
 
         self.apply_styles_to_cells(
             worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns,
-            [self.fill_blue, self.font_white_bold, self.align_center]
+            [self.fill_blue, self.font_white_bold, self.align_center, self.border_blue_all]
         )
         for result_link in self.intervention.result_links.all():
             worksheet.append([
                 result_link.code,
-                result_link.cp_output.name if result_link.cp_output else ""
+                "CP Output " + result_link.code + ": " + result_link.cp_output.name if result_link.cp_output else ""
             ])
             self.apply_styles_to_cells(
-                worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns, [self.fill_blue_pale]
+                worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns, [self.fill_blue_pale, self.font_bold]
+            )
+            self.apply_styles_to_cells(
+                worksheet, worksheet.max_row, 1, worksheet.max_row, 1, [self.border_black_top_left_right]
+            )
+            worksheet.merge_cells(
+                start_row=worksheet.max_row,
+                start_column=2,
+                end_row=worksheet.max_row,
+                end_column=total_columns - 1
             )
             for pd_output in result_link.ll_results.all():
                 worksheet.append([
                     pd_output.code,
-                    "PD OUTPUT " + pd_output.code + ":" + pd_output.name,
+                    "PD OUTPUT " + pd_output.code + ": " + pd_output.name,
                     '',
                     '',
                     '',
@@ -769,7 +914,15 @@ class InterventionXLSRenderer:
                     currency_format(pd_output.total())
                 ])
                 self.apply_styles_to_cells(
-                    worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns, [self.fill_blue_pale_light]
+                    worksheet,
+                    worksheet.max_row,
+                    1,
+                    worksheet.max_row,
+                    total_columns,
+                    [self.fill_blue_pale_light, self.font_bold]
+                )
+                worksheet.merge_cells(
+                    start_row=worksheet.max_row, start_column=2, end_row=worksheet.max_row, end_column=5
                 )
 
                 for activity in pd_output.activities.all():
@@ -790,7 +943,15 @@ class InterventionXLSRenderer:
                     )
 
                     self.apply_styles_to_cells(
-                        worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns, [self.fill_yellow_light]
+                        worksheet,
+                        worksheet.max_row,
+                        1,
+                        worksheet.max_row,
+                        total_columns,
+                        [self.fill_yellow_light, self.font_bold]
+                    )
+                    worksheet.merge_cells(
+                        start_row=worksheet.max_row, start_column=2, end_row=worksheet.max_row, end_column=5
                     )
 
                     for item in activity.items.all():
@@ -800,10 +961,13 @@ class InterventionXLSRenderer:
                             item.unit,
                             item.no_units,
                             item.unit_price,
-                            item.cso_cash,
-                            item.unicef_cash,
-                            item.unicef_cash + item.cso_cash,
+                            currency_format(item.cso_cash),
+                            currency_format(item.unicef_cash),
+                            currency_format(item.unicef_cash + item.cso_cash),
                         ])
+                        self.apply_styles_to_cells(
+                            worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns, []
+                        )
 
         worksheet.append([
             'EEPM', 'Effective and efficient programme management',
@@ -814,6 +978,9 @@ class InterventionXLSRenderer:
         ])
         self.apply_styles_to_cells(
             worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns, [self.fill_blue_pale_light]
+        )
+        worksheet.merge_cells(
+            start_row=worksheet.max_row, start_column=2, end_row=worksheet.max_row, end_column=5
         )
 
         worksheet.append([
@@ -827,6 +994,10 @@ class InterventionXLSRenderer:
         self.apply_styles_to_cells(
             worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns, [self.fill_yellow_light]
         )
+        worksheet.merge_cells(
+            start_row=worksheet.max_row, start_column=2, end_row=worksheet.max_row, end_column=5
+        )
+
         for i, item in enumerate(self.intervention.management_budgets.items.filter(kind='in_country')):
             worksheet.append([
                 'EEPM.1.{0}'.format(i + 1),
@@ -848,6 +1019,10 @@ class InterventionXLSRenderer:
         self.apply_styles_to_cells(
             worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns, [self.fill_yellow_light]
         )
+        worksheet.merge_cells(
+            start_row=worksheet.max_row, start_column=2, end_row=worksheet.max_row, end_column=5
+        )
+
         for i, item in enumerate(self.intervention.management_budgets.items.filter(kind='operational')):
             worksheet.append([
                 'EEPM.2.{0}'.format(i + 1),
@@ -869,6 +1044,10 @@ class InterventionXLSRenderer:
         self.apply_styles_to_cells(
             worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns, [self.fill_yellow_light]
         )
+        worksheet.merge_cells(
+            start_row=worksheet.max_row, start_column=2, end_row=worksheet.max_row, end_column=5
+        )
+
         for i, item in enumerate(self.intervention.management_budgets.items.filter(kind='planning')):
             worksheet.append([
                 'EEPM.3.{0}'.format(i + 1),
@@ -879,6 +1058,10 @@ class InterventionXLSRenderer:
                 currency_format(item.unicef_cash + item.cso_cash),
             ])
 
+        self.apply_styles_to_cells(
+            worksheet, 8, 1, worksheet.max_row, total_columns, [self.border_black_top_right]
+        )
+
         worksheet.append([
             'Total Cost for all outputs', '', '', '', '',
             currency_format(self.intervention.planned_budget.partner_contribution_local +
@@ -887,11 +1070,25 @@ class InterventionXLSRenderer:
             currency_format(self.intervention.planned_budget.total_unicef_cash_local_wo_hq),
         ])
         self.apply_styles_to_cells(
-            worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns, [self.fill_blue, self.font_white_bold]
+            worksheet,
+            worksheet.max_row,
+            1,
+            worksheet.max_row,
+            total_columns,
+            [self.fill_blue, self.font_white_bold, self.border_blue_all]
         )
-        self.apply_styles_to_cells(worksheet, 6, 3, worksheet.max_row, 8, [self.align_right])
+        worksheet.merge_cells(
+            start_row=worksheet.max_row, start_column=9, end_row=worksheet.max_row, end_column=total_columns - 1
+        )
+        worksheet.merge_cells(
+            start_row=worksheet.max_row, start_column=1, end_row=worksheet.max_row, end_column=5
+        )
+        self.apply_styles_to_cells(worksheet, 6, 1, 6, total_columns, [self.align_center_and_wrap])
+        self.apply_styles_to_cells(worksheet, 7, 3, worksheet.max_row, 8, [self.align_right])
         self.auto_format_cell_width(worksheet)
         worksheet.column_dimensions['A'].width = 15
+        self.apply_properties_to_columns(worksheet, 9, len(quarters), [['width', 5]])
+        self.apply_properties_to_columns(worksheet, total_columns, total_columns, [['width', 50]])
 
     def render_supply_plan(self, worksheet):
         worksheet.append([
