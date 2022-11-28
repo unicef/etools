@@ -1,10 +1,12 @@
 import datetime
 import json
 import random
+from unittest import skip
 from unittest.mock import Mock, patch
 
 from django.contrib.contenttypes.models import ContentType
 from django.core.management import call_command
+from django.db import connection
 from django.urls import reverse
 
 from factory import fuzzy
@@ -35,7 +37,7 @@ from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.organizations.models import OrganizationType
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.reports.tests.factories import SectionFactory
-from etools.applications.users.tests.factories import OfficeFactory
+from etools.applications.users.tests.factories import CountryFactory, OfficeFactory, RealmFactory
 
 
 class BaseTestCategoryRisksViewSet(EngagementTransitionsTestCaseMixin):
@@ -971,6 +973,25 @@ class TestAuditorFirmViewSet(AuditTestCaseMixin, BaseTenantTestCase):
     def test_auditor_list_view(self):
         self._test_list_view(self.auditor, [self.auditor_firm])
 
+    def test_inactive_auditor_list_view(self):
+        # the user belongs to two organizations; just one of them is active
+        second_auditor = UserFactory(realms__data=[])
+        second_auditor.profile.organization = self.second_auditor_firm.organization
+        second_auditor.profile.save()
+        RealmFactory(
+            user=second_auditor,
+            country=connection.tenant,
+            organization=self.auditor_firm.organization,
+            group=Auditor.as_group(),
+        )
+        RealmFactory(
+            user=second_auditor,
+            country=connection.tenant,
+            organization=self.second_auditor_firm.organization,
+            group=Auditor.as_group(),
+        )
+        self._test_list_view(second_auditor, [self.second_auditor_firm])
+
     def test_usual_user_list_view(self):
         self._test_list_view(self.usual_user, expected_status=status.HTTP_403_FORBIDDEN)
 
@@ -1001,6 +1022,22 @@ class TestAuditorFirmViewSet(AuditTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         self.assertIsNone(response.data[0]['auditor_firm'])
+
+    def test_unicef_users_filter_view(self):
+        AuditorUserFactory(partner_firm=self.auditor_firm)
+        another_unicef_user = UserFactory(email='test@unicef.com')
+
+        response = self.forced_auth_req(
+            'get',
+            '/api/audit/audit-firms/users/',
+            user=self.unicef_user,
+            data={'purchase_order_auditorstaffmember__auditor_firm__unicef_users_allowed': 'true'}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertCountEqual(
+            [u['email'] for u in response.data],
+            [self.unicef_user.email, self.unicef_focal_point.email, another_unicef_user.email],
+        )
 
     def test_users_list_queries(self):
         [UserFactory() for _i in range(10)]
@@ -1072,7 +1109,29 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.data['count'], 1)
         self.assertEqual(response.data['results'][0]['user']['email'], user.email)
 
+    def test_countries_filter(self):
+        AuditorUserFactory(partner_firm=self.auditor_firm)
+        user = AuditorUserFactory(partner_firm=self.auditor_firm)
+        another_country = CountryFactory(name=fuzzy.FuzzyText(length=20))
+        RealmFactory(
+            user=user,
+            country=another_country,
+            organization=self.auditor_firm.organization,
+            group=Auditor.as_group()
+        )
+
+        response = self.forced_auth_req(
+            'get',
+            '/api/audit/audit-firms/{}/staff-members/'.format(self.auditor_firm.id),
+            data={'user__profile__countries_available__name': 'QQQQQQQQQQQQQQQQ'},
+            user=self.unicef_focal_point,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # since we cannot create country to test it properly, just check filter excludes everything from response
+        self.assertEqual(response.data['count'], 0)
+
     def test_detail_view(self):
+        # todo: get rid of staff_members
         response = self.forced_auth_req(
             'get',
             '/api/audit/audit-firms/{0}/staff-members/{1}/'.format(
@@ -1093,6 +1152,7 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
+    @skip('TODO: REALMS - users are not editable through auditor portal anymore')
     def test_unicef_create_view(self):
         response = self.forced_auth_req(
             'post',
@@ -1108,6 +1168,7 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
+    @skip('TODO: REALMS - users are not editable through auditor portal anymore')
     def test_assign_existing_user(self):
         user = UserFactory()
 
@@ -1122,6 +1183,7 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['user']['email'], user.email)
 
+    @skip('TODO: REALMS - users are not editable through auditor portal anymore')
     def test_assign_existing_auditor(self):
         user = AuditorUserFactory()
 
@@ -1137,6 +1199,7 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
         self.assertIn('user', response.data)
         self.assertIn('User is already assigned to', response.data['user'][0])
 
+    @skip('TODO: REALMS - users are not editable through auditor portal anymore')
     def test_deactivate_auditor_flow(self):
         user = AuditorUserFactory(partner_firm=self.auditor_firm, is_active=True)
 
@@ -1148,14 +1211,14 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
 
         self.assertEqual(list_response.status_code, status.HTTP_200_OK)
         self.assertIn(
-            user.purchase_order_auditorstaffmember.id,
+            user.id,
             [r['id'] for r in list_response.data['results']]
         )
 
         del_response = self.forced_auth_req(
             'delete',
             '/api/audit/audit-firms/{}/staff-members/{}/'.format(self.auditor_firm.id,
-                                                                 user.purchase_order_auditorstaffmember.id),
+                                                                 user.id),
             user=self.unicef_focal_point
         )
         self.assertEqual(del_response.status_code, status.HTTP_204_NO_CONTENT)
@@ -1168,14 +1231,14 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
 
         self.assertEqual(deleted_list_response.status_code, status.HTTP_200_OK)
         self.assertNotIn(
-            user.purchase_order_auditorstaffmember.id,
+            user.id,
             [r['id'] for r in deleted_list_response.data['results']]
         )
 
         activate_response = self.forced_auth_req(
             'patch',
             '/api/audit/audit-firms/{}/staff-members/{}/'.format(self.auditor_firm.id,
-                                                                 user.purchase_order_auditorstaffmember.id),
+                                                                 user.id),
             user=self.unicef_focal_point,
             data={
                 'hidden': False,
@@ -1184,7 +1247,7 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
                 }
             }
         )
-        self.assertEqual(activate_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(activate_response.status_code, status.HTTP_200_OK, activate_response.data)
 
         updated_list_response = self.forced_auth_req(
             'get',
@@ -1194,10 +1257,11 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
 
         self.assertEqual(updated_list_response.status_code, status.HTTP_200_OK)
         self.assertIn(
-            user.purchase_order_auditorstaffmember.id,
+            user.id,
             [r['id'] for r in list_response.data['results']]
         )
 
+    @skip('TODO: REALMS - users are not editable through auditor portal anymore')
     def test_assign_none_provided(self):
         response = self.forced_auth_req(
             'post',
@@ -1209,6 +1273,7 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
         self.assertIn('user', response.data)
         self.assertEqual(response.data['user'][0], 'This field is required.')
 
+    @skip('TODO: REALMS - users are not editable through auditor portal anymore')
     def test_usual_user_create_view(self):
         response = self.forced_auth_req(
             'post',
@@ -1224,6 +1289,7 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
+    @skip('TODO: REALMS - users are not editable through auditor portal anymore')
     def test_unicef_update_view(self):
         response = self.forced_auth_req(
             'patch',
@@ -1242,6 +1308,7 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+    @skip('TODO: REALMS - users are not editable through auditor portal anymore')
     def test_usual_user_update_view(self):
         response = self.forced_auth_req(
             'patch',

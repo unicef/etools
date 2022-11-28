@@ -196,9 +196,9 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
             country=connection.tenant, organization=self.profile.organization, is_active=True)
         return Group.objects.filter(realms__in=current_country_realms).distinct()
 
-    def get_groups_for_organization_id(self, organization_id):
+    def get_groups_for_organization_id(self, organization_id, **extra_filters):
         current_country_realms = self.realms.filter(
-            country=connection.tenant, organization_id=organization_id)
+            country=connection.tenant, organization_id=organization_id, **extra_filters)
         return Group.objects.filter(realms__in=current_country_realms).distinct()
 
     def get_partner_staff_member(self) -> ['PartnerStaffMember']:
@@ -564,8 +564,11 @@ class Realm(TimeStampedModel):
         ]
 
     def __str__(self):
-        return f"{self.user.email} - {self.country.name} - {self.organization}: " \
+        data = f"{self.user.email} - {self.country.name} - {self.organization}: " \
                f"{self.group.name if self.group else ''}"
+        if not self.is_active:
+            data = "[Inactive] " + data
+        return data
 
 
 IPViewer = GroupWrapper(code='ip_viewer', name='IP Viewer')

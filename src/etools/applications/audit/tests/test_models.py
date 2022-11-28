@@ -42,16 +42,17 @@ class EngagementStaffMemberTestCase(BaseTenantTestCase):
         auditor_firm = AuditPartnerFactory()
         staff_member = auditor_firm.staff_members.first()
 
-        self.assertEqual(staff_member.user.realms.count(), 1)
-        staff_member.user.realms.all().delete()
-        self.assertEqual(staff_member.user.realms.count(), 0)
+        self.assertEqual(staff_member.realms.count(), 1)
+        staff_member.realms.all().delete()
+        self.assertEqual(staff_member.realms.count(), 0)
 
         engagement = EngagementFactory(staff_members=[], agreement__auditor_firm=auditor_firm)
         engagement.staff_members.add(staff_member)
 
-        self.assertSequenceEqual(staff_member.user.profile.countries_available,
+        staff_member.profile.refresh_from_db()
+        self.assertSequenceEqual(staff_member.profile.countries_available,
                                  [Country.objects.get(schema_name=connection.schema_name)])
-        self.assertEqual(staff_member.user.profile.organization, auditor_firm.organization)
+        self.assertEqual(staff_member.profile.organization, auditor_firm.organization)
         self.assertEqual(len(mail.outbox), 1)
         mail.outbox = []
 

@@ -18,7 +18,7 @@ from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation, CurrencyField
 
 from etools.applications.action_points.models import ActionPoint
-from etools.applications.audit.purchase_order.models import AuditorStaffMember, PurchaseOrder, PurchaseOrderItem
+from etools.applications.audit.purchase_order.models import PurchaseOrder, PurchaseOrderItem
 from etools.applications.audit.transitions.conditions import (
     AuditSubmitReportRequiredFieldsCheck,
     EngagementHasReportAttachmentsCheck,
@@ -163,7 +163,10 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
         max_length=20, choices=PartnerOrganization.AGENCY_CHOICES
     ), blank=True, default=list, verbose_name=_('Shared Audit with'))
 
-    staff_members = models.ManyToManyField(AuditorStaffMember, verbose_name=_('Staff Members'))
+    # TODO: REALMS - migrate staff members to new relation. update 0024 & 0025 migrations
+    # staff_members_old = models.ManyToManyField(AuditorStaffMember, verbose_name=_('Staff Members'))
+    staff_members = models.ManyToManyField(get_user_model(), verbose_name=_('Staff Members'), related_name='engagements')
+    # staff_members = models.ManyToManyField(AuditorStaffMember, verbose_name=_('Staff Members'))
     users_notified = models.ManyToManyField(get_user_model(), blank=True, verbose_name=_('Notified When Completed'))
 
     cancel_comment = models.TextField(blank=True, verbose_name=_('Cancel Comment'))
