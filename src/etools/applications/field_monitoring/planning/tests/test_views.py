@@ -738,6 +738,16 @@ class CPOutputsViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenantT
             }
         )
 
+    def test_output_name_contains_wbs_code(self):
+        result = ResultFactory(result_type__name=ResultType.OUTPUT, wbs='wbs-code')
+        response = self._test_list(self.unicef_user, [result])
+        self.assertIn('wbs-code', response.data['results'][0]['name'])
+
+    def test_queries_number(self):
+        results = [ResultFactory(result_type__name=ResultType.OUTPUT) for _i in range(9)]
+        with self.assertNumQueries(2):
+            self._test_list(self.unicef_user, results)
+
 
 class InterventionsViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenantTestCase):
     base_view = 'field_monitoring_planning:interventions'
