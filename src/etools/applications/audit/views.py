@@ -627,9 +627,11 @@ class AuditorStaffMembersViewSet(
 
     def get_permission_context(self):
         context = super().get_permission_context()
-        context += [
-            AuditStaffMemberCondition(self.get_parent_object().organization, self.request.user),
-        ]
+        parent = self.get_parent_object()
+        if parent:
+            context += [
+                AuditStaffMemberCondition(parent.organization, self.request.user),
+            ]
         return context
 
     def get_obj_permission_context(self, obj):
