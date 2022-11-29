@@ -51,9 +51,14 @@ def migrate_partnerstaffmembers(apps, schema_editor):
                 is_active=partner_staff.active
             ))
 
-        # update user profile with organization from last realm
-        profile.organization_id = partner_staff.partner.organization.id
-        profile.save(update_fields=['organization_id'])
+        if user.profile.country:
+            user_active_country = user.profile.country
+        else:
+            user_active_country = user.profile.country_override
+
+        if user_active_country == country:
+            profile.organization_id = partner_staff.partner.organization.id
+            profile.save(update_fields=['organization_id'])
 
     unique_realms = [dict(t) for t in {tuple(sorted(d.items())) for d in realm_list}]
     Realm.objects.bulk_create([Realm(**realm_dict) for realm_dict in unique_realms])

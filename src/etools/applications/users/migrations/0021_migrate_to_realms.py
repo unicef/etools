@@ -5,42 +5,36 @@ import logging
 from django.db import migrations, transaction, connection, models
 
 
-def get_user_profile(apps, user, no_profile):
+def check_user_profile_exists(apps, user):
     UserProfile = apps.get_model('users', 'UserProfile')
 
     if not hasattr(user, 'profile'):
-        no_profile += 1
         logging.warning(f"User {user.id}: {user.username} has no profile. "
                         f"Adding a user profile..")
-        return UserProfile.objects.create(user=user)
-    return user.profile
+        user.profile = UserProfile.objects.create(user=user)
+        return False
+    return True
 
 
-def get_user_countries(apps, profile, uat_country):
+def get_user_countries(apps, user):
     Country = apps.get_model('users', 'Country')
-    filters = models.Q()
-    if profile.country:
-        filters |= models.Q(id=profile.country.id)
-    if profile.country_override:
-        filters |= models.Q(id=profile.country_override.id)
-    if profile.countries_available.exists():
-        filters |= models.Q(id__in=profile.countries_available.values_list('pk', flat=True))
+    countries_qs = Country.objects.filter(
+        models.Q(id=user.profile.country_id) |
+        models.Q(id=user.profile.country_override_id) |
+        models.Q(id__in=user.profile.countries_available.values_list('pk', flat=True))
+    ).exclude(name__in=['Global'])
+    return countries_qs
 
-    countries_qs = Country.objects \
-        .filter(filters) \
-        .exclude(name__in=['Global'])
 
-    if not filters:
-        # If the user has no country set, add UAT to country and deactivate the user..")
-        profile.country_override = uat_country
-        profile.save(update_fields=['country_override'])
-        profile.countries_available.add(uat_country)
+def set_user_country_to_uat(user, uat_country):
+    # If the user has no country set, add UAT to country and deactivate the user..")
+    user.profile.country = uat_country
+    user.profile.country_override = uat_country
+    user.profile.save(update_fields=['country_override'])
+    user.profile.countries_available.add(uat_country)
 
-        profile.user.is_active = False
-        profile.user.save(update_fields=['is_active'])
-
-        return Country.objects.filter(id=uat_country.id), True
-    return countries_qs, False
+    user.is_active = False
+    user.save(update_fields=['is_active'])
 
 
 def fwd_migrate_to_user_realms(apps, schema_editor):
@@ -82,11 +76,13 @@ def fwd_migrate_to_user_realms(apps, schema_editor):
                             'tpmpartners_tpmpartnerstaffmember') \
             .prefetch_related('groups', 'profile__countries_available'):
 
-        profile = get_user_profile(apps, user, no_profile)
-        countries, added_uat = get_user_countries(apps, profile, uat_country)
-        if added_uat:
+        if not check_user_profile_exists(apps, user):
+            no_profile += 1
+
+        countries = list(get_user_countries(apps, user))
+        if not countries:
+            set_user_country_to_uat(user, uat_country)
             no_countries += 1
-        user.refresh_from_db()
 
         groups = list(user.groups.all())
         is_unicef_user = user.groups.filter(name__contains='UNICEF').count() > 0 or user.email.endswith('@unicef.org')
@@ -200,17 +196,26 @@ def fwd_migrate_to_user_realms(apps, schema_editor):
                     is_active=user.is_active
                 ))
 
+        if user.profile.country:
+            user_active_country = user.profile.country
+        else:
+            user_active_country = user.profile.country_override
+
         if not realm_list:
-            logging.info(f'No realms available for user {user.id} on country: '
-                         f'{profile.country.name or profile.country_override.name}')
+            logging.info(f'No realms available for user {user.id} on country: {user_active_country.name}')
             no_realms += 1
         else:
             unique_realms = [dict(t) for t in {tuple(sorted(d.items())) for d in realm_list}]
             Realm.objects.bulk_create([Realm(**realm_dict) for realm_dict in unique_realms])
 
-            # update user profile with organization from last realm
-            profile.organization = Organization.objects.get(id=unique_realms[-1]['organization_id'])
-            profile.save(update_fields=['organization'])
+            # update user profile with organization from current country
+            active_country_realm = user.realms.filter(country=user_active_country).first()
+            if active_country_realm is None:
+                # update user profile with organization from last realm
+                user.profile.organization = Organization.objects.get(id=unique_realms[-1]['organization_id'])
+            else:
+                user.profile.organization = active_country_realm.organization
+            user.profile.save(update_fields=['organization'])
 
     logging.info(f'{no_realms} users had no realms created because they are on Global country '
                  f'or the organization of the partner where is staff is None - no vendor_number')
