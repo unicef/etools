@@ -805,6 +805,17 @@ class MonitoringActivityActionPointsViewTestCase(FMBaseTestCaseMixin, APIViewSet
         super().setUpTestData()
         cls.activity = MonitoringActivityFactory(status='completed')
         call_command('update_notifications')
+        cls.create_data = {
+            'description': 'do something',
+            'due_date': date.today(),
+            'assigned_to': cls.unicef_user.id,
+            'partner': PartnerFactory().id,
+            'intervention': InterventionFactory().id,
+            'cp_output': ResultFactory(result_type__name=ResultType.OUTPUT).id,
+            'category': ActionPointCategoryFactory(module='fm').id,
+            'section': SectionFactory().id,
+            'office': OfficeFactory().id,
+        }
 
     def get_list_args(self):
         return [self.activity.pk]
@@ -819,19 +830,12 @@ class MonitoringActivityActionPointsViewTestCase(FMBaseTestCaseMixin, APIViewSet
     def test_create(self):
         response = self._test_create(
             self.fm_user,
-            data={
-                'description': 'do something',
-                'due_date': date.today(),
-                'assigned_to': self.unicef_user.id,
-                'partner': PartnerFactory().id,
-                'intervention': InterventionFactory().id,
-                'cp_output': ResultFactory(result_type__name=ResultType.OUTPUT).id,
-                'category': ActionPointCategoryFactory(module='fm').id,
-                'section': SectionFactory().id,
-                'office': OfficeFactory().id,
-            }
+            data=self.create_data,
         )
         self.assertEqual(len(response.data['history']), 1)
+
+    def test_create_visit_lead(self):
+        self._test_create(self.activity.visit_lead, data=self.create_data)
 
     def test_create_unicef_user(self):
         self._test_create(self.unicef_user, data={}, expected_status=status.HTTP_403_FORBIDDEN)
