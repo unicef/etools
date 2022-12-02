@@ -43,6 +43,11 @@ class SyncViewTestCase(BaseTenantTestCase):
         self.assertEqual(intervention.offices.first().pk, office.pk)
         self.assertEqual(intervention.unicef_focal_points.count(), 1)
         self.assertEqual(intervention.unicef_focal_points.first().pk, user.pk)
+        self.assertIn(f'Section {section} was added to all indicators', intervention.other_info)
+        self.assertIn('All indicators were assigned all locations', intervention.other_info)
+        applied_indicator = intervention.result_links.first().ll_results.first().applied_indicators.first()
+        self.assertEqual(applied_indicator.locations.count(), 10)
+        self.assertEqual(applied_indicator.section, section)
 
     @patch('etools.applications.ecn.api.ECNAPI.get_intervention')
     def test_sync_no_locations_text_if_empty(self, request_intervention_mock):
