@@ -345,10 +345,11 @@ class InterventionSerializer(UserContextSerializerMixin, serializers.ModelSerial
 
 class ECNSyncSerializer(serializers.Serializer):
     number = serializers.CharField()
+    cfei_number = serializers.CharField()
     agreement = serializers.PrimaryKeyRelatedField(queryset=Agreement.objects.all())
     sections = serializers.PrimaryKeyRelatedField(many=True, queryset=Section.objects.all())
     locations = serializers.PrimaryKeyRelatedField(queryset=Location.objects.all(), many=True)
     offices = serializers.PrimaryKeyRelatedField(queryset=Office.objects.all(), many=True)
 
     class Meta:
-        fields = ['number', 'agreement', 'section', 'locations', 'offices']
+        fields = ['number', 'cfei_number', 'agreement', 'section', 'locations', 'offices']
