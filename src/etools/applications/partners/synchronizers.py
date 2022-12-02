@@ -412,7 +412,7 @@ class VisionUploader:
     def send_to_vision(self, endpoint, data: bytes) -> (int, dict):
         # if the integration is disabled don't send requests. with tenant switch we can turn on integration by CO
         if settings.EZHACT_INTEGRATION_DISABLED or tenant_switch_is_active('ezhact_integration_disabled'):
-            return 500, _('EZHACT Vision integration disabled')
+            return 500, {'error': _('EZHACT Vision integration disabled')}
 
         basic_auth = HTTPBasicAuth(settings.EZHACT_API_USER, settings.EZHACT_API_PASSWORD)
         json_header = {'Content-Type': 'application/json'}
