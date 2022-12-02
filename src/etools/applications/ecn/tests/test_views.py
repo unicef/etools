@@ -45,6 +45,7 @@ class SyncViewTestCase(BaseTenantTestCase):
         self.assertEqual(intervention.unicef_focal_points.first().pk, user.pk)
         self.assertIn(f'Section {section} was added to all indicators', intervention.other_info)
         self.assertIn('All indicators were assigned all locations', intervention.other_info)
+        self.assertIn('Locations: ', intervention.other_info)
         applied_indicator = intervention.result_links.first().ll_results.first().applied_indicators.first()
         self.assertEqual(applied_indicator.locations.count(), 10)
         self.assertEqual(applied_indicator.section, section)
@@ -70,7 +71,7 @@ class SyncViewTestCase(BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
         intervention = Intervention.objects.get(pk=response.data['id'])
-        self.assertNotIn(f'Locations: ', intervention.other_info)
+        self.assertNotIn('Locations: ', intervention.other_info)
 
     @patch('etools.applications.ecn.api.ECNAPI.get_intervention')
     def test_sync_bad_status(self, request_intervention_mock):
