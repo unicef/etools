@@ -494,13 +494,13 @@ class InterventionExportSerializer(serializers.ModelSerializer):
         ) for pv in obj.planned_visits.all()])
 
     def get_has_data_processing_agreement(self, obj):
-        return "Yes" if obj.contingency_pd else "No"
+        return "Yes" if obj.has_data_processing_agreement else "No"
 
     def get_has_activities_involving_children(self, obj):
-        return "Yes" if obj.contingency_pd else "No"
+        return "Yes" if obj.has_activities_involving_children else "No"
 
     def get_has_special_conditions_for_construction(self, obj):
-        return "Yes" if obj.contingency_pd else "No"
+        return "Yes" if obj.has_special_conditions_for_construction else "No"
 
 
 class InterventionExportFlatSerializer(ExportSerializerMixin, InterventionExportSerializer):
