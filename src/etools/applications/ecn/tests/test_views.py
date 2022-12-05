@@ -28,6 +28,7 @@ class SyncViewTestCase(BaseTenantTestCase):
             reverse('ecn_v1:intervention-import-ecn'),
             user=user,
             data={
+                'cfei_number': 'test_cfei',
                 'agreement': agreement.pk,
                 'number': 'test',
                 'sections': [section.pk],
@@ -46,6 +47,7 @@ class SyncViewTestCase(BaseTenantTestCase):
         self.assertIn(f'Section {section} was added to all indicators', intervention.other_info)
         self.assertIn('All indicators were assigned all locations', intervention.other_info)
         self.assertIn('Locations: ', intervention.other_info)
+        self.assertEqual('test_cfei', intervention.cfei_number)
         applied_indicator = intervention.result_links.first().ll_results.first().applied_indicators.first()
         self.assertEqual(applied_indicator.locations.count(), 10)
         self.assertEqual(applied_indicator.section, section)
@@ -85,6 +87,7 @@ class SyncViewTestCase(BaseTenantTestCase):
             data={
                 'agreement': AgreementFactory().pk,
                 'number': 'test',
+                'cfei_number': 'test',
                 'sections': [SectionFactory().pk],
                 'locations': [LocationFactory().pk for _i in range(10)],
                 'offices': [OfficeFactory().pk],

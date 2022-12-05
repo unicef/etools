@@ -138,6 +138,7 @@ def _make_intervention_status_automatic_transitions(country_name):
             if validator.is_valid:
                 if intervention.status != old_status:
                     intervention.save()
+                    transaction.on_commit(lambda: send_pd_to_vision.delay(country_name, intervention.pk))
                     processed += 1
             else:
                 bad_interventions.append(intervention)
@@ -533,3 +534,48 @@ def update_interventions_task_chain():
     # because both of them handle similar cases yet in different way
     transfer_active_pds_to_new_cp()
     intervention_expired()
+
+
+@app.task
+def send_pd_to_vision(tenant_name: str, intervention_pk: int, retry_counter=0):
+    from etools.applications.partners.synchronizers import PDVisionUploader
+
+    original_tenant = connection.tenant
+
+    try:
+        tenant = get_tenant_model().objects.get(name=tenant_name)
+        connection.set_tenant(tenant)
+
+        # get just basic information. in case validation fail it will save us many db queries
+        intervention = Intervention.objects.get(pk=intervention_pk)
+        logger.info(f'Starting {intervention} upload to vision')
+
+        synchronizer = PDVisionUploader(intervention)
+        if not synchronizer.is_valid():
+            logger.info('Instance is not ready to be synchronized')
+            return
+
+        # reload intervention with prefetched relations for serialization
+        synchronizer.instance = Intervention.objects.detail_qs().get(pk=intervention_pk)
+        response = synchronizer.sync()
+        if response is None:
+            logger.warning('Synchronizer internal check failed')
+            return
+
+        status_code, _data = response
+        if status_code in [200, 201]:
+            logger.info('Completed pd synchronization')
+            return
+
+        if retry_counter < 2:
+            logger.info(f'Received {status_code} from vision synchronizer. retrying')
+            send_pd_to_vision.apply_async(
+                (tenant.name, intervention_pk,),
+                {'retry_counter': retry_counter + 1},
+                eta=timezone.now() + datetime.timedelta(minutes=1 + retry_counter)
+            )
+        else:
+            logger.exception(f'Received {status_code} from vision synchronizer after 3 attempts. '
+                             f'PD number: {intervention_pk}. Business area code: {tenant.business_area_code}')
+    finally:
+        connection.set_tenant(original_tenant)

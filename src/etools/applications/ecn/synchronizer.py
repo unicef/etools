@@ -19,7 +19,7 @@ class ECNSynchronizer:
         serializer.is_valid(raise_exception=True)
         return serializer.save(**kwargs)
 
-    def synchronize(self, number, agreement, sections, locations, offices):
+    def synchronize(self, number, cfei_number, agreement, sections, locations, offices):
         data = self.request_ecn(number)
         if not data:
             return None
@@ -34,6 +34,7 @@ class ECNSynchronizer:
             'sections': sections,
             'offices': offices,
             'flat_locations': locations,
+            'cfei_number': cfei_number,
         }
         intervention = self.parse(data, **save_extra_kwargs)
         # reload instance to properly fetch all related objects

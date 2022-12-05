@@ -1,6 +1,8 @@
 # Python imports
 
 import datetime
+import json
+from collections import namedtuple
 from datetime import timedelta
 from decimal import Decimal
 from pprint import pformat
@@ -9,6 +11,8 @@ from unittest import mock
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.management import call_command
+from django.db import connection
+from django.test import override_settings
 from django.utils import timezone
 
 from unicef_attachments.models import Attachment
@@ -20,6 +24,7 @@ from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
 from etools.applications.partners.models import Agreement, Intervention
 from etools.applications.partners.permissions import UNICEF_USER
+from etools.applications.partners.synchronizers import PDVisionUploader
 from etools.applications.partners.tasks import (
     _make_intervention_status_automatic_transitions,
     transfer_active_pds_to_new_cp,
@@ -673,7 +678,8 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
         ]
         self._assertCalls(mock_logger.error, expected_call_args)
 
-    def test_activate_intervention_with_task(self, _mock_db_connection, _mock_logger):
+    @mock.patch("etools.applications.partners.tasks.send_pd_to_vision.delay")
+    def test_activate_intervention_with_task(self, send_to_vision_mock, _mock_db_connection, _mock_logger):
         today = datetime.date.today()
         unicef_staff = UserFactory(is_staff=True, groups__data=[UNICEF_USER])
 
@@ -721,9 +727,12 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
         activity = InterventionActivityFactory(result=pd_output)
         activity.time_frames.add(active_intervention.quarters.first())
 
-        _make_intervention_status_automatic_transitions(self.country_name)
+        with self.captureOnCommitCallbacks(execute=True) as callbacks:
+            _make_intervention_status_automatic_transitions(self.country_name)
         active_intervention.refresh_from_db()
         self.assertEqual(active_intervention.status, Intervention.ACTIVE)
+        send_to_vision_mock.assert_called()
+        self.assertEqual(len(callbacks), 1)
 
 
 @mock.patch('etools.applications.partners.tasks.logger', spec=['info'])
@@ -1208,3 +1217,60 @@ class ActivePDTransferToNewCPTestCase(BaseTenantTestCase):
 
         pd.refresh_from_db()
         self.assertListEqual(list(pd.country_programmes.all()), [self.old_cp, second_active_cp])
+
+
+@mock.patch('etools.applications.partners.tasks.logger', spec=['info', 'warning', 'error', 'exception'])
+@override_settings(
+    EZHACT_PD_VISION_URL='https://example.com/upload/pd/',
+    CELERY_TASK_ALWAYS_EAGER=True,
+    CELERY_EAGER_PROPAGATES_EXCEPTIONS=True,
+)
+class SendPDToVisionTestCase(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.draft_intervention = InterventionFactory()
+        cls.active_intervention = InterventionFactory(status=Intervention.ACTIVE)
+        cls.result_link = InterventionResultLinkFactory(
+            intervention=cls.active_intervention,
+            cp_output__result_type__name=ResultType.OUTPUT,
+        )
+        cls.pd_output = LowerResultFactory(result_link=cls.result_link)
+        cls.activity = InterventionActivityFactory(result=cls.pd_output)
+
+    def test_sync_validation_error(self, logger_mock):
+        etools.applications.partners.tasks.send_pd_to_vision(connection.tenant.name, self.draft_intervention.pk)
+        logger_mock.info.assert_called_with('Instance is not ready to be synchronized')
+
+    @mock.patch(
+        'etools.applications.partners.synchronizers.requests.post',
+        return_value=namedtuple('Response', ['status_code', 'text', 'json'])(502, '', lambda: None)
+    )
+    def test_sync_bad_response(self, _requests_mock, logger_mock):
+        etools.applications.partners.tasks.send_pd_to_vision(connection.tenant.name, self.active_intervention.pk)
+        self.assertTrue(mock.call('Received 502 from vision synchronizer. retrying') in logger_mock.info.mock_calls)
+        self.assertTrue(
+            mock.call(
+                f'Received 502 from vision synchronizer after 3 attempts. '
+                f'PD number: {self.active_intervention.pk}. Business area code: {connection.tenant.business_area_code}'
+            ) in logger_mock.exception.mock_calls
+        )
+
+    @mock.patch(
+        'etools.applications.partners.synchronizers.requests.post',
+        return_value=namedtuple('Response', ['status_code', 'text', 'json'])(200, '{}', lambda: {})
+    )
+    def test_sync_success(self, _requests_mock, logger_mock):
+        etools.applications.partners.tasks.send_pd_to_vision(connection.tenant.name, self.active_intervention.pk)
+        self.assertTrue(mock.call('Completed pd synchronization') in logger_mock.info.mock_calls)
+
+    @mock.patch('etools.applications.partners.synchronizers.requests.post')
+    def test_business_code_in_data(self, requests_mock, _logger_mock):
+        etools.applications.partners.tasks.send_pd_to_vision(connection.tenant.name, self.active_intervention.pk)
+        self.assertIn('business_area_code', json.loads(requests_mock.mock_calls[0][2]['data']))
+
+    def test_body_rendering(self, _logger_mock):
+        synchronizer = PDVisionUploader(Intervention.objects.detail_qs().get(pk=self.active_intervention.pk))
+        str_data = synchronizer.render()
+        self.assertIsInstance(str_data, bytes)
+        self.assertGreater(len(str_data), 100)

@@ -1,16 +1,25 @@
 import logging
 from datetime import datetime
 from decimal import Decimal
+from typing import Optional, Tuple
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import connection, transaction
+from django.utils.translation import gettext as _
 
+import requests
+from requests.auth import HTTPBasicAuth
+from rest_framework.renderers import JSONRenderer
 from unicef_vision.settings import INSIGHT_DATE_FORMAT
 from unicef_vision.synchronizers import FileDataSynchronizer
 from unicef_vision.utils import comp_decimals
 
-from etools.applications.partners.models import PartnerOrganization, PlannedEngagement
+from etools.applications.environment.helpers import tenant_switch_is_active
+from etools.applications.partners.models import Intervention, PartnerOrganization, PlannedEngagement
+from etools.applications.partners.serializers.exports.vision.interventions_v1 import InterventionSerializer
 from etools.applications.partners.tasks import notify_partner_hidden
+from etools.applications.reports.models import InterventionActivity
 from etools.applications.vision.synchronizers import VisionDataTenantSynchronizer
 
 logger = logging.getLogger(__name__)
@@ -374,3 +383,84 @@ class DirectCashTransferSynchronizer(VisionDataTenantSynchronizer):
         dcts = self.create_dict(filtered_records)
         processed = self._save(dcts)
         return processed
+
+
+class VisionUploader:
+    serializer_class = None
+
+    def __init__(self, instance):
+        self._is_valid = None
+        self.instance = instance
+
+    def get_endpoint(self) -> Optional[str]:
+        raise NotImplementedError
+
+    def validate_instance(self) -> bool:
+        raise NotImplementedError
+
+    def is_valid(self) -> bool:
+        if self._is_valid is None:
+            self._is_valid = self.validate_instance()
+        return self._is_valid
+
+    def serialize(self) -> dict:
+        return self.serializer_class(instance=self.instance).data
+
+    def render(self) -> bytes:
+        return JSONRenderer().render(self.serialize())
+
+    def send_to_vision(self, endpoint, data: bytes) -> (int, dict):
+        # if the integration is disabled don't send requests. with tenant switch we can turn on integration by CO
+        if settings.EZHACT_INTEGRATION_DISABLED or tenant_switch_is_active('ezhact_integration_disabled'):
+            return 500, {'error': _('EZHACT Vision integration disabled')}
+
+        basic_auth = HTTPBasicAuth(settings.EZHACT_API_USER, settings.EZHACT_API_PASSWORD)
+        json_header = {'Content-Type': 'application/json'}
+        response = requests.post(endpoint,
+                                 data=data,
+                                 headers=json_header,
+                                 auth=basic_auth,
+                                 cert=(settings.EZHACT_CERT_PATH, settings.EZHACT_KEY_PATH))
+        response_data = {}
+        if response.status_code in {200, 201}:
+            response_data = response.json()
+        return response.status_code, response_data
+
+    def sync(self) -> Optional[Tuple[int, dict]]:
+        assert self._is_valid is not None, 'You must call `.is_valid()` before calling `.sync()`.'
+
+        endpoint = self.get_endpoint()
+        if not endpoint:
+            logger.warning('Unknown endpoint value')
+
+        data = self.render()
+        return self.send_to_vision(endpoint, data)
+
+
+class PDVisionUploader(VisionUploader):
+    serializer_class = InterventionSerializer
+
+    def get_endpoint(self):
+        return getattr(settings, 'EZHACT_PD_VISION_URL', None)
+
+    def validate_instance(self):
+        """
+        # PD is not in Development, Review, Signature.
+        # We also need to make sure that this pd has InterventionActivities.
+        # The PD cannot be and amendment "amendment_open" will not pass validation.
+        """
+        if self.instance.status in [Intervention.DRAFT, Intervention.REVIEW, Intervention.SIGNATURE]:
+            return False
+
+        if not InterventionActivity.objects.filter(result__result_link__intervention=self.instance).exists():
+            return False
+
+        # amendment intervention
+        if self.instance.in_amendment:
+            return False
+
+        # intervention with open amendment
+        if self.instance.amendments.filter(is_active=True).exists():
+            return False
+
+        return True
