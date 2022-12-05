@@ -6,13 +6,16 @@ from typing import Optional, Tuple
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import connection, transaction
+from django.utils.translation import gettext as _
 
 import requests
+from requests.auth import HTTPBasicAuth
 from rest_framework.renderers import JSONRenderer
 from unicef_vision.settings import INSIGHT_DATE_FORMAT
 from unicef_vision.synchronizers import FileDataSynchronizer
-from unicef_vision.utils import base_headers, comp_decimals
+from unicef_vision.utils import comp_decimals
 
+from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.partners.models import Intervention, PartnerOrganization, PlannedEngagement
 from etools.applications.partners.serializers.exports.vision.interventions_v1 import InterventionSerializer
 from etools.applications.partners.tasks import notify_partner_hidden
@@ -406,16 +409,18 @@ class VisionUploader:
     def render(self) -> bytes:
         return JSONRenderer().render(self.serialize())
 
-    def get_authorization_headers(self):
-        username = settings.EZHACT_API_USER
-        password = settings.EZHACT_API_PASSWORD
-        return {'Authorization': f'Basic {username}:{password}'}
-
-    def get_headers(self):
-        return {**base_headers, **self.get_authorization_headers()}
-
     def send_to_vision(self, endpoint, data: bytes) -> (int, dict):
-        response = requests.post(endpoint, data=data, headers=self.get_headers())
+        # if the integration is disabled don't send requests. with tenant switch we can turn on integration by CO
+        if settings.EZHACT_INTEGRATION_DISABLED or tenant_switch_is_active('ezhact_integration_disabled'):
+            return 500, {'error': _('EZHACT Vision integration disabled')}
+
+        basic_auth = HTTPBasicAuth(settings.EZHACT_API_USER, settings.EZHACT_API_PASSWORD)
+        json_header = {'Content-Type': 'application/json'}
+        response = requests.post(endpoint,
+                                 data=data,
+                                 headers=json_header,
+                                 auth=basic_auth,
+                                 cert=(settings.EZHACT_CERT_PATH, settings.EZHACT_KEY_PATH))
         response_data = {}
         if response.status_code in {200, 201}:
             response_data = response.json()
