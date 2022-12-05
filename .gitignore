@@ -45,6 +45,7 @@ saml/FederationMetadata.xml
 *.gz
 
 # no keys
+*.pfx
 *.key
 *.crt
 
