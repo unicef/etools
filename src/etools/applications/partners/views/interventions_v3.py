@@ -71,6 +71,7 @@ from etools.applications.partners.serializers.v3 import (
     PRCOfficerInterventionReviewSerializer,
     UNICEFInterventionLowerResultSerializer,
 )
+from etools.applications.partners.validation.interventions import InterventionValid
 from etools.applications.partners.views.intervention_snapshot import FullInterventionSnapshotDeleteMixin
 from etools.applications.partners.views.interventions_v2 import (
     InterventionAttachmentUpdateDeleteView,
@@ -117,6 +118,13 @@ class DetailedInterventionResponseMixin:
                 context=self.get_serializer_context(),
             ).data
         return response
+
+
+class InterventionAutoTransitionsMixin:
+    @staticmethod
+    def perform_auto_transitions(intervention, user):
+        validator = InterventionValid(intervention, old=intervention, user=user, disable_rigid_check=True)
+        validator.total_validation
 
 
 class PMPInterventionListCreateView(PMPInterventionMixin, InterventionListAPIView):
@@ -564,7 +572,11 @@ class InterventionRiskDeleteView(FullInterventionSnapshotDeleteMixin, DestroyAPI
         return super().get_queryset().filter(intervention=self.get_root_object())
 
 
-class PMPInterventionAttachmentListCreateView(DetailedInterventionResponseMixin, ListCreateAPIView):
+class PMPInterventionAttachmentListCreateView(
+    InterventionAutoTransitionsMixin,
+    DetailedInterventionResponseMixin,
+    ListCreateAPIView,
+):
     serializer_class = PMPInterventionAttachmentSerializer
     permission_classes = [
         IsAuthenticated,
@@ -580,14 +592,18 @@ class PMPInterventionAttachmentListCreateView(DetailedInterventionResponseMixin,
     def get_queryset(self):
         return super().get_queryset().filter(intervention=self.get_root_object())
 
+    @transaction.atomic
     def perform_create(self, serializer):
-        serializer.save(intervention=self.get_root_object())
+        intervention = self.get_root_object()
+        serializer.save(intervention=intervention)
+        self.perform_auto_transitions(intervention, self.request.user)
 
     def get_intervention(self):
         return self.get_root_object()
 
 
 class PMPInterventionAttachmentUpdateDeleteView(
+    InterventionAutoTransitionsMixin,
     DetailedInterventionResponseMixin,
     InterventionAttachmentUpdateDeleteView,
 ):
@@ -608,6 +624,11 @@ class PMPInterventionAttachmentUpdateDeleteView(
 
     def get_intervention(self):
         return self.get_root_object()
+
+    @transaction.atomic
+    def perform_update(self, serializer):
+        super().perform_update(serializer)
+        self.perform_auto_transitions(self.get_root_object(), self.request.user)
 
 
 class PMPInterventionIndicatorsUpdateView(
