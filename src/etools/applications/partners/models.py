@@ -1711,7 +1711,7 @@ def side_effect_two(i, old_instance=None, user=None):
 
 
 def get_default_cash_transfer_modalities():
-    return [Intervention.CASH_TRANSFER_DIRECT]
+    return [Intervention.CASH_TRANSFER_DIRECT, Intervention.CASH_TRANSFER_REIMBURSEMENT]
 
 
 class Intervention(TimeStampedModel):

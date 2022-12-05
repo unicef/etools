@@ -1,7 +1,7 @@
 from django.contrib import admin, messages
 from django.contrib.admin.utils import quote
 from django.contrib.contenttypes.models import ContentType
-from django.db import models
+from django.db import connection, models
 from django.forms import SelectMultiple
 from django.http.response import HttpResponseRedirect
 from django.urls import reverse
@@ -43,7 +43,8 @@ from etools.applications.partners.models import (  # TODO intervention sector lo
     PartnerStaffMember,
     PlannedEngagement,
 )
-from etools.applications.partners.tasks import sync_partner
+from etools.applications.partners.synchronizers import PDVisionUploader
+from etools.applications.partners.tasks import send_pd_to_vision, sync_partner
 from etools.libraries.djangolib.admin import RestrictedEditAdmin, RestrictedEditAdminMixin
 
 
@@ -258,6 +259,7 @@ class SignedPDAttachmentInline(AttachmentSingleInline):
 
 
 class InterventionAdmin(
+        ExtraUrlMixin,
         AttachmentInlineAdminMixin,
         CountryUsersAdminMixin,
         HiddenPartnerMixin,
@@ -381,6 +383,14 @@ class InterventionAdmin(
         InterventionPlannedVisitsInline,
         InterventionReviewInlineAdmin,
     )
+
+    @button(label='Send to Vision')
+    def send_to_vision(self, request, pk):
+        if not PDVisionUploader(Intervention.objects.get(pk=pk)).is_valid():
+            messages.error(request, _('PD is not ready for Vision synchronization.'))
+            return
+        send_pd_to_vision.delay(connection.tenant.name, pk)
+        messages.success(request, _('PD was sent to Vision.'))
 
     def created_date(self, obj):
         return obj.created_at.strftime('%d-%m-%Y')
