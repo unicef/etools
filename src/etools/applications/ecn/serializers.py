@@ -262,7 +262,7 @@ class InterventionSerializer(UserContextSerializerMixin, serializers.ModelSerial
     result_links = InterventionResultLinkSerializer(many=True)
     risks = InterventionRiskSerializer(many=True)
     supply_items = InterventionSupplyItemSerializer(many=True)
-    locations = serializers.CharField()
+    locations = serializers.CharField(required=False, allow_null=True)
 
     class Meta:
         model = Intervention
@@ -321,15 +321,14 @@ class InterventionSerializer(UserContextSerializerMixin, serializers.ModelSerial
         management_budgets = validated_data.pop('management_budgets')
         result_links = validated_data.pop('result_links')
 
-        locations = validated_data.pop('locations')
-        if validated_data['other_info']:
-            validated_data['other_info'] += '\n\n'
-            validated_data['other_info'] += f'Locations: {locations}'
-        else:
-            validated_data['other_info'] = f'Locations: {locations}'
-        validated_data['other_info'] += f'\n\nSection {validated_data["sections"][0]} was added to all indicators, ' \
-                                        f'please review and correct if needed.'
-        validated_data['other_info'] += '\n\nAll indicators were assigned all locations, please adjust as needed.'
+        validated_data['other_info'] = validated_data['other_info'] or ''
+
+        locations = validated_data.pop('locations', None)
+        if locations:
+            validated_data['other_info'] += f'Locations: {locations}\n\n'
+        validated_data['other_info'] += f'Section {validated_data["sections"][0]} was added to all indicators, ' \
+                                        f'please review and correct if needed.\n\n'
+        validated_data['other_info'] += 'All indicators were assigned all locations, please adjust as needed.\n\n'
 
         self.instance = super().create(validated_data)
 
