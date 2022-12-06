@@ -44,7 +44,7 @@ from etools.applications.partners.models import (
     PartnerOrganization,
     PartnerType,
 )
-from etools.applications.partners.permissions import READ_ONLY_API_GROUP_NAME, UNICEF_USER, PARTNERSHIP_MANAGER_GROUP
+from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, READ_ONLY_API_GROUP_NAME, UNICEF_USER
 from etools.applications.partners.serializers.exports.partner_organization import PartnerOrganizationExportSerializer
 from etools.applications.partners.tests.factories import (
     AgreementAmendmentFactory,
