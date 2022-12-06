@@ -6,6 +6,7 @@ from rest_framework.exceptions import ValidationError
 from unicef_rest_export.serializers import ExportSerializer
 
 from etools.applications.partners.models import Intervention
+from etools.applications.partners.serializers.exports.vision.export_mixin import InterventionVisionSynchronizerMixin
 from etools.applications.partners.serializers.intervention_snapshot import FullInterventionSnapshotSerializerMixin
 from etools.applications.reports.models import (
     AppliedIndicator,
@@ -41,7 +42,7 @@ class MinimalOutputListSerializer(serializers.ModelSerializer):
         )
 
     def get_name(self, obj):
-        if obj.result_type == ResultType.OUTPUT:
+        if obj.result_type.name == ResultType.OUTPUT:
             return obj.output_name
         else:
             return obj.result_name
@@ -635,7 +636,11 @@ class InterventionTimeFrameSerializer(serializers.ModelSerializer):
         return 'Q{}'.format(obj.quarter)
 
 
-class InterventionActivityDetailSerializer(FullInterventionSnapshotSerializerMixin, serializers.ModelSerializer):
+class InterventionActivityDetailSerializer(
+    InterventionVisionSynchronizerMixin,
+    FullInterventionSnapshotSerializerMixin,
+    serializers.ModelSerializer,
+):
     items = InterventionActivityItemBulkUpdateSerializer(many=True, required=False)
     partner_percentage = serializers.DecimalField(max_digits=5, decimal_places=2, read_only=True)
 
