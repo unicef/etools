@@ -109,7 +109,11 @@ class PMPDropdownsListApiView(APIView):
         ]
 
     def get_file_types(self, request) -> list:
-        return list(FileType.objects.filter(name__in=[i[0] for i in FileType.NAME_CHOICES]).all().values())
+        data = FileType.objects.filter(name__in=[i[0] for i in FileType.NAME_CHOICES]).values('id', 'name')
+        # order items according to their presence in choices list
+        display_name_choices = list(dict(FileType.NAME_CHOICES).values())
+        sorted_data = list(sorted(data, key=lambda x: display_name_choices.index(x['name'])))
+        return sorted_data
 
     def get_donors(self, request) -> list:
         return choices_to_json_ready(
