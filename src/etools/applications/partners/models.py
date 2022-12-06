@@ -16,7 +16,7 @@ from django_fsm import FSMField, transition
 from django_tenants.utils import get_public_schema_name
 from model_utils import Choices, FieldTracker
 from model_utils.models import TimeStampedModel
-from unicef_attachments.models import Attachment
+from unicef_attachments.models import Attachment, FileType as AttachmentFileType
 from unicef_djangolib.fields import CodedGenericRelation, CurrencyField
 from unicef_snapshot.models import Activity
 
@@ -2176,6 +2176,18 @@ class Intervention(TimeStampedModel):
         blank=True,
         null=True,
     )
+    has_data_processing_agreement = models.BooleanField(
+        verbose_name=_("Data Processing Agreement"),
+        default=False,
+    )
+    has_activities_involving_children = models.BooleanField(
+        verbose_name=_("Activities involving children and young people"),
+        default=False,
+    )
+    has_special_conditions_for_construction = models.BooleanField(
+        verbose_name=_("Special Conditions for Construction Works by Implementing Partners"),
+        default=False,
+    )
 
     # Flag if this has been migrated to a status that is not correct
     # previous status
@@ -3279,6 +3291,9 @@ class FileType(models.Model):
     FINAL_PARTNERSHIP_REVIEW = 'Final Partnership Review'
     CORRESPONDENCE = 'Correspondence'
     SUPPLY_PLAN = 'Supply/Distribution Plan'
+    DATA_PROCESSING_AGREEMENT = "Data Processing Agreement"
+    ACTIVITIES_INVOLVING_CHILDREN = "Activities involving children and young people"
+    SPECIAL_CONDITIONS_FOR_CONSTRUCTION = "Special Conditions for Construction Works"
     OTHER = 'Other'
 
     NAME_CHOICES = Choices(
@@ -3287,6 +3302,9 @@ class FileType(models.Model):
         (FINAL_PARTNERSHIP_REVIEW, FINAL_PARTNERSHIP_REVIEW),
         (CORRESPONDENCE, CORRESPONDENCE),
         (SUPPLY_PLAN, SUPPLY_PLAN),
+        (DATA_PROCESSING_AGREEMENT, DATA_PROCESSING_AGREEMENT),
+        (ACTIVITIES_INVOLVING_CHILDREN, ACTIVITIES_INVOLVING_CHILDREN),
+        (SPECIAL_CONDITIONS_FOR_CONSTRUCTION, SPECIAL_CONDITIONS_FOR_CONSTRUCTION),
         (OTHER, OTHER),
     )
     name = models.CharField(max_length=64, choices=NAME_CHOICES, unique=True, verbose_name=_('Name'))
@@ -3331,6 +3349,19 @@ class InterventionAttachment(TimeStampedModel):
 
     class Meta:
         ordering = ['-created']
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+        # synchronize type to .attachment_file.file_type when possible
+        attachment_file = self.attachment_file.last()
+        if attachment_file:
+            file_type = AttachmentFileType.objects.filter(
+                Q(label__iexact=self.type.name) | Q(name__iexact=self.type.name)
+            ).first()
+            if file_type:
+                attachment_file.file_type = file_type
+                attachment_file.save()
 
     def __str__(self):
         return self.attachment.name

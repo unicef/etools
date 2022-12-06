@@ -163,6 +163,9 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
             "CP Outputs",
             "URL",
             "UNPP Number",
+            "Data Processing Agreement",
+            "Activities involving children and young people",
+            "Special Conditions for Construction Works by Implementing Partners",
         ])
 
         self.assertEqual(dataset[0], (
@@ -216,6 +219,9 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
             '',
             'https://testserver/pmp/interventions/{}/details/'.format(self.intervention.id),
             'cfei',
+            str("Yes" if self.intervention.has_data_processing_agreement else "No"),
+            str("Yes" if self.intervention.has_activities_involving_children else "No"),
+            str("Yes" if self.intervention.has_special_conditions_for_construction else "No"),
         ))
 
     def test_agreement_country_programmes_used(self):
@@ -243,8 +249,8 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 96)
-        self.assertEqual(len(dataset[0]), 96)
+        self.assertEqual(len(dataset._get_headers()), 99)
+        self.assertEqual(len(dataset[0]), 99)
 
 
 class TestInterventionAmendmentModelExport(BaseInterventionModelExportTestCase):

@@ -16,6 +16,12 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.3.7,attachments,Partner User,not_in_amendment_mode,Draft,Edit,TRUE
 3.3.7,attachments,Senior Management Team,not_in_amendment_mode,Draft,Edit,TRUE
 3.3.2,attachments,Representative Office,not_in_amendment_mode,Draft,Edit,TRUE
+3.3.7,attachments,Unicef Focal Point,not_in_amendment_mode,Review,Edit,TRUE
+3.3.7,attachments,Senior Management Team,not_in_amendment_mode,Review,Edit,TRUE
+3.3.2,attachments,Representative Office,not_in_amendment_mode,Review,Edit,TRUE
+3.3.7,attachments,Unicef Focal Point,not_in_amendment_mode,Signature,Edit,TRUE
+3.3.7,attachments,Senior Management Team,not_in_amendment_mode,Signature,Edit,TRUE
+3.3.2,attachments,Representative Office,not_in_amendment_mode,Signature,Edit,TRUE
 3.3.2,budget_owner,Unicef Focal Point,,Draft,Edit,TRUE
 3.3.2,budget_owner,*,unicef_not_accepted,Draft,Required,FALSE
 3.3.3,capacity_development,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
@@ -28,6 +34,12 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.3.5,cfei_number,Unicef Focal Point,,Draft,Edit,TRUE
 3.3.5,context,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
 3.3.5,context,Partner User,partner_court,Draft,Edit,TRUE
+,has_data_processing_agreement,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
+,has_data_processing_agreement,Partner User,partner_court,Draft,Edit,TRUE
+,has_activities_involving_children,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
+,has_activities_involving_children,Partner User,partner_court,Draft,Edit,TRUE
+,has_special_conditions_for_construction,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
+,has_special_conditions_for_construction,Partner User,partner_court,Draft,Edit,TRUE
 3.4.1,contingency_pd,Unicef Focal Point,,Draft,Edit,TRUE
 3.5,country_programme,Unicef Focal Point,,Draft,Edit,TRUE
 3.5,country_programme,Unicef Focal Point,user_adds_amendment,*,Edit,TRUE

@@ -366,6 +366,11 @@ class InterventionAdmin(
                 'other_info',
                 'other_partners_involved',
                 'technical_guidance',
+                (
+                    'has_data_processing_agreement',
+                    'has_activities_involving_children',
+                    'has_special_conditions_for_construction',
+                ),
             )
         }),
     )
