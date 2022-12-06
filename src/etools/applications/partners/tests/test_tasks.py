@@ -25,10 +25,7 @@ from etools.applications.funds.tests.factories import FundsReservationHeaderFact
 from etools.applications.partners.models import Agreement, Intervention
 from etools.applications.partners.permissions import UNICEF_USER
 from etools.applications.partners.synchronizers import PDVisionUploader
-from etools.applications.partners.tasks import (
-    _make_intervention_status_automatic_transitions,
-    transfer_active_pds_to_new_cp,
-)
+from etools.applications.partners.tasks import transfer_active_pds_to_new_cp
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
     CoreValuesAssessmentFactory,
@@ -728,7 +725,7 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
         activity.time_frames.add(active_intervention.quarters.first())
 
         with self.captureOnCommitCallbacks(execute=True) as callbacks:
-            _make_intervention_status_automatic_transitions(self.country_name)
+            etools.applications.partners.tasks._make_intervention_status_automatic_transitions(self.country_name)
         active_intervention.refresh_from_db()
         self.assertEqual(active_intervention.status, Intervention.ACTIVE)
         send_to_vision_mock.assert_called()

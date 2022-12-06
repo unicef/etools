@@ -42,7 +42,7 @@ class MinimalOutputListSerializer(serializers.ModelSerializer):
         )
 
     def get_name(self, obj):
-        if obj.result_type == ResultType.OUTPUT:
+        if obj.result_type.name == ResultType.OUTPUT:
             return obj.output_name
         else:
             return obj.result_name
