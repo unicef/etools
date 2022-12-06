@@ -8,11 +8,13 @@ from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
 from django.db import connection
+from django.http import HttpResponse
 from django.test import override_settings, SimpleTestCase
 from django.urls import resolve, reverse
 from django.utils import timezone
 
 import mock
+from factory import fuzzy
 from model_utils import Choices
 from pytz import UTC
 from rest_framework import status
@@ -42,7 +44,7 @@ from etools.applications.partners.models import (
     PartnerOrganization,
     PartnerType,
 )
-from etools.applications.partners.permissions import READ_ONLY_API_GROUP_NAME
+from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, READ_ONLY_API_GROUP_NAME, UNICEF_USER
 from etools.applications.partners.serializers.exports.partner_organization import PartnerOrganizationExportSerializer
 from etools.applications.partners.tests.factories import (
     AgreementAmendmentFactory,
@@ -703,8 +705,11 @@ class TestAgreementAPIFileAttachments(BaseTenantTestCase):
 class TestAgreementAPIView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.unicef_staff = UserFactory(is_staff=True)
-        cls.partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
+        cls.unicef_staff = UserFactory(is_staff=True, groups__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP])
+        cls.partner = PartnerFactory(
+            partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION,
+            vendor_number=fuzzy.FuzzyText(length=30),
+        )
 
         cls.partner_staff_user = UserFactory(is_staff=True)
         cls.partner_staff = PartnerStaffFactory(partner=cls.partner, user=cls.partner_staff_user)
@@ -756,6 +761,25 @@ class TestAgreementAPIView(BaseTenantTestCase):
             agreement=cls.agreement,
             document_type=Intervention.PD)
         cls.file_type_agreement = AttachmentFileTypeFactory()
+
+        cls.fake_insight_data = {
+            "ROWSET": {
+                "ROW": {
+                    "VENDOR_BANK": {
+                        "VENDOR_BANK_ROW": {
+                            "STREET": "test",
+                            "CITY": "test",
+                            "ACCT_HOLDER": "test",
+                            "BANK_ACCOUNT_CURRENCY": "test",
+                            "BANK_NAME": "test",
+                            "SWIFT_CODE": "test",
+                            "BANK_ACCOUNT_NO": "test",
+                            "TAX_NUMBER_5": "test",
+                        }
+                    }
+                }
+            }
+        }
 
     def test_cp_end_date_update(self):
         data = {
@@ -1021,39 +1045,101 @@ class TestAgreementAPIView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data, ["Cannot delete a signed amendment"])
 
+    def test_agreement_generate_pdf_terms_required(self):
+        self.client.force_login(self.unicef_staff)
+        self.agreement.terms_acknowledged_by = None
+        self.agreement.save()
+        self.assertEqual(self.agreement.terms_acknowledged_by, None)
+
+        with mock.patch('easy_pdf.views.PDFTemplateView.render_to_response') as render_mock:
+            render_mock.return_value = HttpResponse(200)
+            with mock.patch('etools.applications.partners.views.v1.get_data_from_insight') as mock_get_insight:
+                mock_get_insight.return_value = (True, self.fake_insight_data)
+                self.client.get(
+                    reverse('partners_api:pca_pdf', args=[self.agreement.pk]),
+                    data={}
+                )
+        render_mock.assert_called()
+        context = render_mock.mock_calls[0][1][0]
+        self.assertDictEqual(context, {'error': 'Terms to be acknowledged'})
+        self.agreement.refresh_from_db()
+        self.assertEqual(self.agreement.terms_acknowledged_by, None)
+
+    def test_agreement_generate_pdf_partnership_manager_required(self):
+        self.client.force_login(UserFactory(is_staff=True))
+        self.agreement.terms_acknowledged_by = None
+        self.agreement.save()
+        self.assertEqual(self.agreement.terms_acknowledged_by, None)
+
+        with mock.patch('easy_pdf.views.PDFTemplateView.render_to_response') as render_mock:
+            render_mock.return_value = HttpResponse(200)
+            with mock.patch('etools.applications.partners.views.v1.get_data_from_insight') as mock_get_insight:
+                mock_get_insight.return_value = (True, self.fake_insight_data)
+                self.client.get(
+                    reverse('partners_api:pca_pdf', args=[self.agreement.pk]),
+                    data={'terms_acknowledged': 'true'}
+                )
+        render_mock.assert_called()
+        context = render_mock.mock_calls[0][1][0]
+        self.assertDictEqual(context, {'error': 'Partnership Manager role required for pca export.'})
+        self.agreement.refresh_from_db()
+        self.assertEqual(self.agreement.terms_acknowledged_by, None)
+
     def test_agreement_generate_pdf_default(self):
         self.client.force_login(self.unicef_staff)
+        self.agreement.terms_acknowledged_by = None
+        self.agreement.save()
+        self.assertEqual(self.agreement.terms_acknowledged_by, None)
+
         with mock.patch('etools.applications.partners.views.v1.get_data_from_insight') as mock_get_insight:
-            # FIXME: need to return some fake data here (not just {}) to actually get a PDF that
-            # has more in it than an error message
-            mock_get_insight.return_value = (True, {})
+            mock_get_insight.return_value = (True, self.fake_insight_data)
             response = self.client.get(
-                reverse('partners_api:pca_pdf', args=[self.agreement.pk])
+                reverse('partners_api:pca_pdf', args=[self.agreement.pk]),
+                data={'terms_acknowledged': 'true'}
             )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response['Content-Type'], 'application/pdf')
-        # FIXME: find a way to verify the pdf has the right content,
-        # or at least not an error message
+        self.agreement.refresh_from_db()
+        self.assertEqual(self.agreement.terms_acknowledged_by, self.unicef_staff)
 
-    @skip('figure out why this is failing with a random vendor number')
+    def test_agreement_generate_pdf_valid(self):
+        self.client.force_login(self.unicef_staff)
+
+        with mock.patch('easy_pdf.views.PDFTemplateView.render_to_response') as render_mock:
+            render_mock.return_value = HttpResponse(200)
+            with mock.patch('etools.applications.partners.views.v1.get_data_from_insight') as mock_get_insight:
+                mock_get_insight.return_value = (True, self.fake_insight_data)
+                self.client.get(
+                    reverse('partners_api:pca_pdf', args=[self.agreement.pk]),
+                    data={'terms_acknowledged': 'true'}
+                )
+
+        render_mock.assert_called()
+        context = render_mock.mock_calls[0][1][0]
+        self.assertIsNone(context['error'])
+        self.assertEqual(context['pagesize'], 'Letter')
+
     def test_agreement_generate_pdf_lang(self):
         self.client.force_login(self.unicef_staff)
         params = {
             "lang": "spanish",
+            "terms_acknowledged": "true",
         }
-        with mock.patch('etools.applications.partners.views.v1.get_data_from_insight') as mock_get_insight:
-            # FIXME: need to return some fake data here (not just {}) to actually get a PDF that
-            # has more in it than an error message
-            mock_get_insight.return_value = (True, {})
-            response = self.client.get(
-                reverse('partners_api:pca_pdf', args=[self.agreement.pk]),
-                data=params
-            )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response['Content-Type'], 'application/pdf')
-        # FIXME: find a way to verify the pdf has the right content
-        # or at least not an error message
+
+        with mock.patch('easy_pdf.views.PDFTemplateView.render_to_response') as render_mock:
+            render_mock.return_value = HttpResponse(200)
+            with mock.patch('etools.applications.partners.views.v1.get_data_from_insight') as mock_get_insight:
+                mock_get_insight.return_value = (True, self.fake_insight_data)
+                self.client.get(
+                    reverse('partners_api:pca_pdf', args=[self.agreement.pk]),
+                    data=params
+                )
+
+        render_mock.assert_called()
+        context = render_mock.mock_calls[0][1][0]
+        self.assertIsNone(context['error'])
+        self.assertEqual(context['view'].template_name, 'pca/spanish_pdf.html')
 
     def test_agreement_add_amendment_type(self):
         amd_types = self.amendment1.types

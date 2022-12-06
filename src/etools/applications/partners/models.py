@@ -1346,6 +1346,14 @@ class Agreement(TimeStampedModel):
         on_delete=models.CASCADE,
     )
 
+    terms_acknowledged_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name=_("Terms Acknowledged By"),
+        related_name='agreements_acknowledged+',
+        null=True, blank=True,
+        on_delete=models.CASCADE,
+    )
+
     # TODO: Write a script that sets a status to each existing record
     status = FSMField(
         verbose_name=_("Status"),

@@ -374,6 +374,7 @@ class TestModelExport(BaseTenantTestCase):
             'Amendments',
             'URL',
             'Special Conditions PCA',
+            'Terms Acknowledged By',
         ])
 
         # we're interested in the first agreement, so it will be last in the exported list
@@ -394,6 +395,7 @@ class TestModelExport(BaseTenantTestCase):
             '',
             'https://testserver/pmp/agreements/{}/details/'.format(self.agreement.id),
             'No',
+            '',
         )
         )
 
