@@ -11,6 +11,7 @@ from rest_framework import mixins, viewsets
 from unicef_vision.utils import get_data_from_insight
 
 from etools.applications.partners.models import Agreement, FileType
+from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP
 from etools.applications.partners.serializers.v1 import FileTypeSerializer
 
 
@@ -28,12 +29,6 @@ class PCAPDFView(LoginRequiredMixin, PDFTemplateView):
         "ifrc_english": "pca/ifrc_english_pdf.html",
         "ifrc_french": "pca/ifrc_french_pdf.html"
     }
-
-    def dispatch(self, request, *args, **kwargs):
-        # increase permissions since we save current user to agreement
-        if not (request.user.is_authenticated and request.user.is_staff):
-            return self.handle_no_permission()
-        return super().dispatch(request, *args, **kwargs)
 
     def get_pdf_filename(self):
         if self.agreement:
@@ -116,6 +111,9 @@ class PCAPDFView(LoginRequiredMixin, PDFTemplateView):
             )
 
         font_path = settings.PACKAGE_ROOT + '/assets/fonts/'
+
+        if not self.request.user.groups.filter(name=PARTNERSHIP_MANAGER_GROUP).exists():
+            return {"error": 'Partnership Manager role required for pca export.'}
 
         self.agreement.terms_acknowledged_by = self.request.user
         self.agreement.save()

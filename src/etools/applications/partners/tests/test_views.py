@@ -44,7 +44,7 @@ from etools.applications.partners.models import (
     PartnerOrganization,
     PartnerType,
 )
-from etools.applications.partners.permissions import READ_ONLY_API_GROUP_NAME
+from etools.applications.partners.permissions import READ_ONLY_API_GROUP_NAME, UNICEF_USER, PARTNERSHIP_MANAGER_GROUP
 from etools.applications.partners.serializers.exports.partner_organization import PartnerOrganizationExportSerializer
 from etools.applications.partners.tests.factories import (
     AgreementAmendmentFactory,
@@ -705,7 +705,7 @@ class TestAgreementAPIFileAttachments(BaseTenantTestCase):
 class TestAgreementAPIView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.unicef_staff = UserFactory(is_staff=True, groups__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP])
         cls.partner = PartnerFactory(
             partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION,
             vendor_number=fuzzy.FuzzyText(length=30),
@@ -1065,6 +1065,26 @@ class TestAgreementAPIView(BaseTenantTestCase):
         self.agreement.refresh_from_db()
         self.assertEqual(self.agreement.terms_acknowledged_by, None)
 
+    def test_agreement_generate_pdf_partnership_manager_required(self):
+        self.client.force_login(UserFactory(is_staff=True))
+        self.agreement.terms_acknowledged_by = None
+        self.agreement.save()
+        self.assertEqual(self.agreement.terms_acknowledged_by, None)
+
+        with mock.patch('easy_pdf.views.PDFTemplateView.render_to_response') as render_mock:
+            render_mock.return_value = HttpResponse(200)
+            with mock.patch('etools.applications.partners.views.v1.get_data_from_insight') as mock_get_insight:
+                mock_get_insight.return_value = (True, self.fake_insight_data)
+                self.client.get(
+                    reverse('partners_api:pca_pdf', args=[self.agreement.pk]),
+                    data={'terms_acknowledged': 'true'}
+                )
+        render_mock.assert_called()
+        context = render_mock.mock_calls[0][1][0]
+        self.assertDictEqual(context, {'error': 'Partnership Manager role required for pca export.'})
+        self.agreement.refresh_from_db()
+        self.assertEqual(self.agreement.terms_acknowledged_by, None)
+
     def test_agreement_generate_pdf_default(self):
         self.client.force_login(self.unicef_staff)
         self.agreement.terms_acknowledged_by = None
@@ -1118,6 +1138,7 @@ class TestAgreementAPIView(BaseTenantTestCase):
 
         render_mock.assert_called()
         context = render_mock.mock_calls[0][1][0]
+        self.assertIsNone(context['error'])
         self.assertEqual(context['view'].template_name, 'pca/spanish_pdf.html')
 
     def test_agreement_add_amendment_type(self):
