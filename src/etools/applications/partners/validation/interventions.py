@@ -279,9 +279,9 @@ def sections_valid(i):
     intervention_sections = set(s for s in i.sections.all())
     if not ind_sections.issubset(intervention_sections):
         draft_status_err = ' without deleting the indicators first' if i.status == i.DRAFT else ''
-        raise BasicValidationError(_('The following sections have been selected on '
-                                     'the PD/SPD indicators and cannot be removed{}: '.format(draft_status_err)) +
-                                   ', '.join([s.name for s in ind_sections - intervention_sections]))
+        raise BasicValidationError(
+            _('The following sections have been selected on the PD/SPD indicators and cannot be removed '
+              '%(sections)s ') % {'sections': draft_status_err + ', '.join([s.name for s in ind_sections - intervention_sections])})
     return True
 
 
@@ -293,10 +293,10 @@ def locations_valid(i):
             ind_locations.add(loc)
     intervention_locations = set(i.flat_locations.all())
     if not ind_locations.issubset(intervention_locations):
-        raise BasicValidationError(_('The following locations have been selected on '
-                                     'the PD/SPD indicators and cannot be removed'
-                                     ' without removing them from the indicators first: ') +
-                                   ', '.join([str(loc) for loc in ind_locations - intervention_locations]))
+        raise BasicValidationError(
+            _('The following locations have been selected on the PD/SPD indicators and '
+              'cannot be removed without removing them from the indicators first: %(locations)s') %
+            {'locations': ', '.join([str(loc) for loc in ind_locations - intervention_locations])})
     return True
 
 
@@ -312,10 +312,8 @@ def cp_structure_valid(i):
 
         if invalid:
             raise BasicValidationError(
-                _('The Country Programme selected on this PD is not the same '
-                  'as the Country Programme selected on the Agreement, '
-                  'please select "{}"'.format(i.agreement.country_programme)),
-            )
+                _('The Country Programme selected on this PD is not the same as the Country Programme selected '
+                  'on the Agreement, please select %(cp)s') % {'cp': i.agreement.country_programme})
     return True
 
 
@@ -364,20 +362,20 @@ class InterventionValid(CompleteValidation):
     ]
 
     VALID_ERRORS = {
-        'suspended_expired_error': 'State suspended cannot be modified since the end date of '
-                                   'the intervention surpasses today',
-        'start_end_dates_valid': 'Start date must precede end date',
-        'signed_date_valid': 'Signatures cannot be dated in the future',
-        'document_type_pca_valid': 'Document type PD or HPD can only be associated with a PCA agreement.',
-        'ssfa_agreement_has_no_other_intervention': 'The agreement selected has at least one '
-                                                    'other SSFA Document connected',
-        'start_date_signed_valid': 'The start date cannot be before the later of signature dates.',
-        'start_date_related_agreement_valid': 'PD start date cannot be earlier than the Start Date of the related PCA',
-        'rigid_in_amendment_flag': 'Amendment Flag cannot be turned on without adding an amendment',
-        'sections_valid': "The sections selected on the PD/SPD are not a subset of all sections selected "
-                          "for this PD/SPD's indicators",
-        'locations_valid': "The locations selected on the PD/SPD are not a subset of all locations selected "
-                          "for this PD/SPD's indicators",
+        'suspended_expired_error': _('State suspended cannot be modified since the end date of '
+                                     'the intervention surpasses today'),
+        'start_end_dates_valid': _('Start date must precede end date'),
+        'signed_date_valid': _('Signatures cannot be dated in the future'),
+        'document_type_pca_valid': _('Document type PD or HPD can only be associated with a PCA agreement.'),
+        'ssfa_agreement_has_no_other_intervention': _('The agreement selected has at least one '
+                                                      'other SSFA Document connected'),
+        'start_date_signed_valid': _('The start date cannot be before the later of signature dates.'),
+        'start_date_related_agreement_valid': _('PD start date cannot be earlier than the Start Date of the related PCA'),
+        'rigid_in_amendment_flag': _('Amendment Flag cannot be turned on without adding an amendment'),
+        'sections_valid': _("The sections selected on the PD/SPD are not a subset of all sections selected "
+                            "for this PD/SPD's indicators"),
+        'locations_valid': _("The locations selected on the PD/SPD are not a subset of all locations selected "
+                             "for this PD/SPD's indicators"),
     }
 
     PERMISSIONS_CLASS = InterventionPermissions
@@ -388,7 +386,8 @@ class InterventionValid(CompleteValidation):
         if not required_valid:
             raise DetailedStateValidationError(
                 'required_in_status',
-                'Required fields not completed in {}: {}'.format(intervention.status, ', '.join(f for f in fields)),
+                _('Required fields not completed in %(status)s: %(fields)s') %
+                {'status': intervention.status, 'fields': ', '.join(f for f in fields)},
                 {'fields': fields, 'status': intervention.status},
             )
 
@@ -399,7 +398,8 @@ class InterventionValid(CompleteValidation):
         rigid_fields = [f for f in self.permissions['edit'] if self.permissions['edit'][f] is False]
         rigid_valid, field = check_rigid_fields(intervention, rigid_fields, related=related)
         if not rigid_valid:
-            raise StateValidationError(['Cannot change fields while in {}: {}'.format(intervention.status, field)])
+            raise StateValidationError([
+                _('Cannot change fields while in %(status)s: %(field)s') % {'status': intervention.status, 'field': field}])
 
     def state_draft_valid(self, intervention, user=None):
         self.check_required_fields(intervention)
