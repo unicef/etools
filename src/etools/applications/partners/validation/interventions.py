@@ -92,11 +92,11 @@ def transition_to_closed(i):
                        ', and Total Outstanding DCTs need to equal to 0')]
                 )
 
-    # If total_actual_amt_usd >100,000 then attachments has to include
-    # at least 1 record with type: "Final Partnership Review"
-    if i.total_frs['total_actual_amt_usd'] >= 100000 and not i.final_partnership_review.exists():
-        raise TransitionError([_('Total amount transferred greater than 100,000 and no Final Partnership Review '
-                                 'was attached')])
+    # If total_actual_amt_usd >100,000 then PD final review should be approved
+    if i.total_frs['total_actual_amt_usd'] >= 100000 and not i.final_review_approved:
+        raise TransitionError([
+            _('Final Review must be approved for documents having amount transferred greater than 100,000')
+        ])
 
     # TODO: figure out Action Point Validation once the spec is completed
 
