@@ -43,13 +43,19 @@ if AZURE_ACCOUNT_NAME and AZURE_ACCOUNT_KEY and AZURE_CONTAINER:
     from storages.backends.azure_storage import AzureStorage
     storage = AzureStorage()
     with storage.open('keys/jwt/key.pem') as jwt_key, \
-            storage.open('keys/jwt/certificate.pem') as jwt_cert:
+            storage.open('keys/jwt/certificate.pem') as jwt_cert, \
+            storage.open('keys/vision/ezhact_cert.pem') as ezhact_cert, \
+            storage.open('keys/vision/ezhact_key.pem') as ezhact_key:
 
         with open(os.path.join(CONFIG_ROOT, 'keys/jwt/key.pem'), 'wb+') as new_jwt_key, \
-                open(os.path.join(CONFIG_ROOT, 'keys/jwt/certificate.pem'), 'wb+') as new_jwt_cert:
+                open(os.path.join(CONFIG_ROOT, 'keys/jwt/certificate.pem'), 'wb+') as new_jwt_cert, \
+                open(EZHACT_CERT_PATH, 'wb+') as new_ezhact_cert, \
+                open(EZHACT_KEY_PATH, 'wb+') as new_ezhact_key:
 
             new_jwt_key.write(jwt_key.read())
             new_jwt_cert.write(jwt_cert.read())
+            new_ezhact_cert.write(ezhact_cert.read())
+            new_ezhact_key.write(ezhact_key.read())
 
 # production overrides for django-rest-framework-jwt
 if not get_from_secrets_or_env('DISABLE_JWT_LOGIN', False):

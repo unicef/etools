@@ -154,6 +154,9 @@ class TestModelExport(BaseTenantTestCase):
             "CP Outputs",
             "URL",
             "UNPP Number",
+            "Data Processing Agreement",
+            "Activities involving children and young people",
+            "Special Conditions for Construction Works by Implementing Partners",
         ])
 
         self.assertEqual(dataset[0], (
@@ -211,6 +214,9 @@ class TestModelExport(BaseTenantTestCase):
             '',
             'https://testserver/pmp/interventions/{}/details/'.format(self.intervention.id),
             '',
+            str("Yes" if self.intervention.has_data_processing_agreement else "No"),
+            str("Yes" if self.intervention.has_activities_involving_children else "No"),
+            str("Yes" if self.intervention.has_special_conditions_for_construction else "No"),
         ))
 
     def test_v3_intervention_export_api(self):
@@ -276,6 +282,9 @@ class TestModelExport(BaseTenantTestCase):
             "CP Outputs",
             "URL",
             "UNPP Number",
+            "Data Processing Agreement",
+            "Activities involving children and young people",
+            "Special Conditions for Construction Works by Implementing Partners",
         ])
 
         self.assertEqual(dataset[0], (
@@ -333,6 +342,9 @@ class TestModelExport(BaseTenantTestCase):
             finalized_result_link.cp_output.name,
             'https://testserver/pmp/interventions/{}/details/'.format(self.intervention.id),
             '',
+            str("Yes" if self.intervention.has_data_processing_agreement else "No"),
+            str("Yes" if self.intervention.has_activities_involving_children else "No"),
+            str("Yes" if self.intervention.has_special_conditions_for_construction else "No"),
         ))
 
     def test_agreement_export_api(self):
@@ -362,6 +374,7 @@ class TestModelExport(BaseTenantTestCase):
             'Amendments',
             'URL',
             'Special Conditions PCA',
+            'Terms Acknowledged By',
         ])
 
         # we're interested in the first agreement, so it will be last in the exported list
@@ -382,6 +395,7 @@ class TestModelExport(BaseTenantTestCase):
             '',
             'https://testserver/pmp/agreements/{}/details/'.format(self.agreement.id),
             'No',
+            '',
         )
         )
 

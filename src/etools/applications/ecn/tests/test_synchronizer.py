@@ -20,8 +20,12 @@ class TestSynchronizer(BaseTenantTestCase):
         sections = [SectionFactory()]
         locations = [LocationFactory() for _li in range(5)]
         offices = [OfficeFactory() for _oi in range(4)]
-        intervention = ECNSynchronizer(UserFactory()).synchronize(1, agreement, sections, locations, offices)
+        intervention = ECNSynchronizer(UserFactory()).synchronize(
+            1, 'test_unpp', agreement,
+            sections, locations, offices,
+        )
 
+        self.assertEqual(intervention.cfei_number, 'test_unpp')
         self.assertEqual(intervention.risks.count(), 1)
         self.assertEqual(intervention.supply_items.count(), 2)
         self.assertEqual(intervention.result_links.count(), 1)

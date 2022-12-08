@@ -1,3 +1,4 @@
+from django.core.cache import cache
 from django.urls import reverse
 
 from rest_framework import status
@@ -18,6 +19,10 @@ class TestLocationViews(BaseTenantTestCase):
         cls.heavy_detail_expected_keys = sorted(
             ('admin_level', 'admin_level_name', 'id', 'name', 'name_display', 'p_code', 'parent', 'geo_point')
         )
+
+    def setUp(self):
+        super().setUp()
+        cache.clear()
 
     def test_api_location_light_list(self):
         response = self.forced_auth_req('get', reverse('locations-light-list'), user=self.unicef_staff)
@@ -83,7 +88,7 @@ class TestLocationViews(BaseTenantTestCase):
         response = self.forced_auth_req('get', url, user=self.unicef_staff)
         self._assert_heavy_detail_view_fundamentals(response)
 
-    def test_api_location_list_cached(self):
+    def test_api_location_list_etag(self):
         response = self.forced_auth_req('get', reverse('locations-list'), user=self.unicef_staff)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 6)
@@ -93,7 +98,7 @@ class TestLocationViews(BaseTenantTestCase):
                                         user=self.unicef_staff, HTTP_IF_NONE_MATCH=etag)
         self.assertEqual(response.status_code, status.HTTP_304_NOT_MODIFIED)
 
-    def test_api_location_list_modified(self):
+    def test_api_location_list_etag_modified(self):
         response = self.forced_auth_req('get', reverse('locations-list'), user=self.unicef_staff)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 6)
@@ -105,7 +110,36 @@ class TestLocationViews(BaseTenantTestCase):
                                         user=self.unicef_staff, HTTP_IF_NONE_MATCH=etag)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 7)
-        # self.assertEqual(response.status_code, status.HTTP_304_NOT_MODIFIED)
+
+    def test_list_cached(self):
+        [LocationFactory() for _i in range(6)]
+
+        with self.assertNumQueries(1):
+            response = self.forced_auth_req(
+                'get', reverse('locations-list'),
+                user=self.unicef_staff
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(len(response.data), 12)
+
+        etag = response["ETag"]
+
+        # etag presented, so data will not be fetched from db
+        with self.assertNumQueries(0):
+            response = self.forced_auth_req(
+                'get', reverse('locations-list'),
+                user=self.unicef_staff, HTTP_IF_NONE_MATCH=etag
+            )
+            self.assertEqual(response.status_code, status.HTTP_304_NOT_MODIFIED)
+
+        # no db queries despite no etag provided
+        with self.assertNumQueries(0):
+            response = self.forced_auth_req(
+                'get', reverse('locations-list'),
+                user=self.unicef_staff,
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(len(response.data), 12)
 
     def test_api_location_autocomplete(self):
         response = self.forced_auth_req('get', reverse('unicef_locations:locations_autocomplete'),
