@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-12-08 10:12+0000\n"
+"POT-Creation-Date: 2022-12-08 14:20+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -313,7 +313,7 @@ msgstr "Biroul principal"
 
 #: models.py:551
 msgid "Lead Section"
-msgstr "Secțiunea de plumb"
+msgstr "Secțiunea principală"
 
 #: models.py:920 models.py:952 models.py:1040 models.py:1115 models.py:1261
 #: models.py:3425 models.py:3581 serializers/exports/interventions.py:227
@@ -450,7 +450,7 @@ msgstr "Memorandum de înțelegere"
 
 #: models.py:1246
 msgid "Draft"
-msgstr "Draft"
+msgstr ""
 
 #: models.py:1247 models.py:1776
 msgid "Signed"

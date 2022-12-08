@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-12-08 10:12+0000\n"
+"POT-Creation-Date: 2022-12-08 14:20+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -450,7 +450,7 @@ msgstr "Protocole d'entente"
 
 #: models.py:1246
 msgid "Draft"
-msgstr "Brouillon"
+msgstr ""
 
 #: models.py:1247 models.py:1776
 msgid "Signed"
@@ -1037,7 +1037,9 @@ msgstr ""
 msgid ""
 "The results framework of the proposed PD/SPD has been guided by M&E feedback "
 "during the drafting process"
-msgstr "Le cadre de résultats du PD/DOCUP proposé a été guidé par M"
+msgstr ""
+"Le cadre de résultats du PD/DOCUP proposé a été guidé par les commentaires "
+"de M&E au cours du processus de rédaction"
 
 #: models.py:3128
 msgid ""
@@ -1726,8 +1728,9 @@ msgstr "PD ne peut pas passer à signé si le partenaire est bloqué dans Vision
 #: validation/interventions.py:189 validation/interventions.py:195
 #: validation/interventions.py:201 validation/interventions.py:372
 #: validation/interventions.py:378 validation/interventions.py:384
-#, python-format
-msgid "%(file_type)s should be provided in attachments."
+#, fuzzy, python-format
+#| msgid "%(file_type)s should be provided in attachments."
+msgid " %(file_type)s should be provided in attachments."
 msgstr "%(file_type)s doivent être fournis dans les pièces jointes."
 
 #: validation/interventions.py:217

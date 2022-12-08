@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-12-08 10:12+0000\n"
+"POT-Creation-Date: 2022-12-08 14:20+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -450,7 +450,7 @@ msgstr "Memorándum de Entendimiento"
 
 #: models.py:1246
 msgid "Draft"
-msgstr "Borrador"
+msgstr ""
 
 #: models.py:1247 models.py:1776
 msgid "Signed"
@@ -1717,9 +1717,9 @@ msgid ""
 "Programme Document will not change status until the related PCA is in Signed "
 "status"
 msgstr ""
-"El PCA relacionado con este registro es Borrador, Suspendido o Terminado. "
-"Este Documento de programa no cambiará de estado hasta que el PCA "
-"relacionado esté en estado Firmado "
+"El PCA relacionado con este registro es Draft, Suspendido o Terminado. Este "
+"Documento de programa no cambiará de estado hasta que el PCA relacionado "
+"esté en estado Firmado "
 
 #: validation/interventions.py:183
 msgid "PD cannot transition to signed if the Partner is Blocked in Vision"
