@@ -3405,7 +3405,7 @@ class DirectCashTransfer(models.Model):
     outstanding_balance_usd = models.DecimalField(decimal_places=2, max_digits=20,
                                                   verbose_name=_('Outstanding Balance (USD)'))
     amount_less_than_3_Months_usd = models.DecimalField(decimal_places=2, max_digits=20,
-                                                        verbose_name=_('Amount mess than 3 months (USD)'))
+                                                        verbose_name=_('Amount less than 3 months (USD)'))
     amount_3_to_6_months_usd = models.DecimalField(decimal_places=2, max_digits=20,
                                                    verbose_name=_('Amount between 3 and 6 months (USD)'))
     amount_6_to_9_months_usd = models.DecimalField(decimal_places=2, max_digits=20,

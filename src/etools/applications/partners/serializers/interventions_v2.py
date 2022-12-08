@@ -789,9 +789,9 @@ class InterventionCreateUpdateSerializer(
                         'Q{}'.format(q.quarter)
                         for q in old_quarters[len(new_quarters):]
                     ])
-                    error_text = _('Please adjust activities to not use the quarters to be removed ({}).').format(
-                        names_to_be_removed
-                    )
+                    error_text = _('Please adjust activities to not use the '
+                                   'quarters to be removed (%(names)s).') % {'names': names_to_be_removed}
+
                     bad_keys = set(validated_data.keys()).intersection({'start', 'end'})
                     raise ValidationError({key: [error_text] for key in bad_keys})
 
