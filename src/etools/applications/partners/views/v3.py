@@ -111,8 +111,10 @@ class PMPDropdownsListApiView(APIView):
     def get_file_types(self, request) -> list:
         data = FileType.objects.filter(name__in=[i[0] for i in FileType.NAME_CHOICES]).values('id', 'name')
         # order items according to their presence in choices list
-        display_name_choices = list(dict(FileType.NAME_CHOICES).values())
+        display_name_choices = list(dict(FileType.NAME_CHOICES).keys())
         sorted_data = list(sorted(data, key=lambda x: display_name_choices.index(x['name'])))
+        for d in sorted_data:
+            d['name'] = FileType.NAME_CHOICES[d['name']]
         return sorted_data
 
     def get_donors(self, request) -> list:
@@ -140,7 +142,7 @@ class PMPDropdownsListApiView(APIView):
         ).exclude(
             cso_type__exact='',
         ).order_by('cso_type').distinct('cso_type')
-        return choices_to_json_ready(list(cso_types))
+        return choices_to_json_ready([(ct, PartnerOrganization.CSO_TYPES[ct]) for ct in cso_types])
 
     def get_local_currency(self):
         local_workspace = self.request.user.profile.country
