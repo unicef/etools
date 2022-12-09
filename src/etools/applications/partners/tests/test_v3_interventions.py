@@ -24,6 +24,7 @@ from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.core.tests.factories import EmailFactory
 from etools.applications.core.tests.mixins import URLAssertionMixin
+from etools.applications.field_monitoring.fm_settings.tests.factories import LocationSiteFactory
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory, FundsReservationItemFactory
 from etools.applications.partners.models import (
     Agreement,
@@ -560,6 +561,23 @@ class TestDetail(BaseInterventionTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertFalse(response.data['permissions']['required']['budget_owner'])
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_permissions_sites(self):
+        # both 'UNICEF User' and 'Partnership Manager' have permissions to update sites
+        for role in ['UNICEF User', 'Partnership Manager']:
+            intervention = InterventionFactory()
+            user = UserFactory(is_staff=True, groups__data=[role])
+            if role == 'UNICEF User':
+                intervention.unicef_focal_points.add(user)
+            response = self.forced_auth_req(
+                'get',
+                reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+                user
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertTrue(response.data['permissions']['view']['sites'])
+            self.assertTrue(response.data['permissions']['edit']['sites'])
 
     def test_planned_budget_total_supply(self):
         count = 5
@@ -1795,6 +1813,26 @@ class TestInterventionUpdate(BaseInterventionTestCase):
             list(intervention.flat_locations.all()),
             [loc1, loc2],
         )
+
+    def test_sites(self):
+        # both 'UNICEF User' and 'Partnership Manager' have permissions to update sites
+        for role in ['UNICEF User', 'Partnership Manager']:
+            intervention = InterventionFactory()
+            self.assertEqual(intervention.sites.count(), 0)
+
+            user = UserFactory(is_staff=True, groups__data=[role])
+            if role == 'UNICEF User':
+                intervention.unicef_focal_points.add(user)
+            data = {"sites": [LocationSiteFactory().id, LocationSiteFactory().id]}
+
+            response = self.forced_auth_req(
+                "patch",
+                reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+                user=user,
+                data=data
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(intervention.sites.count(), 2)
 
     def test_gender(self):
         mapping = (
