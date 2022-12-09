@@ -592,6 +592,7 @@ class InterventionDetailSerializer(
             "equity_narrative",
             "equity_rating",
             "final_partnership_review",
+            "final_review_approved",
             "flagged_sections",
             "flat_locations",
             "frs",
