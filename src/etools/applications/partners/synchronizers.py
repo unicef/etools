@@ -423,7 +423,7 @@ class VisionUploader:
                                  cert=(settings.EZHACT_CERT_PATH, settings.EZHACT_KEY_PATH))
         response_data = {}
         if response.status_code in {200, 201}:
-            response_data = response.json()
+            response_data = response.content
         return response.status_code, response_data
 
     def sync(self) -> Optional[Tuple[int, dict]]:
