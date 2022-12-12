@@ -1916,6 +1916,7 @@ class Intervention(TimeStampedModel):
         blank=True,
         null=True
     )
+    final_review_approved = models.BooleanField(verbose_name=_('Final Review Approved'), default=False)
     # TODO remove this when migration is stable
     signed_pd_document = models.FileField(
         verbose_name=_("Signed PD Document"),
@@ -3288,7 +3289,7 @@ class FileType(models.Model):
     """
     FACE = 'FACE'
     PROGRESS_REPORT = 'Progress Report'
-    FINAL_PARTNERSHIP_REVIEW = 'Final Partnership Review'
+    FINAL_PARTNERSHIP_REVIEW = '(Legacy) Final Partnership Review'
     CORRESPONDENCE = 'Correspondence'
     SUPPLY_PLAN = 'Supply/Distribution Plan'
     DATA_PROCESSING_AGREEMENT = "Data Processing Agreement"
