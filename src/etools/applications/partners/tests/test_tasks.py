@@ -1261,7 +1261,8 @@ class SendPDToVisionTestCase(BaseTenantTestCase):
         etools.applications.partners.tasks.send_pd_to_vision(connection.tenant.name, self.active_intervention.pk)
         self.assertTrue(mock.call('Completed pd synchronization') in logger_mock.info.mock_calls)
 
-    @mock.patch('etools.applications.partners.synchronizers.requests.post')
+    @mock.patch('etools.applications.partners.synchronizers.requests.post',
+                return_value=namedtuple('Response', ['status_code', 'text', 'json'])(200, '', lambda: None))
     def test_business_code_in_data(self, requests_mock, _logger_mock):
         etools.applications.partners.tasks.send_pd_to_vision(connection.tenant.name, self.active_intervention.pk)
         self.assertIn('business_area', json.loads(requests_mock.mock_calls[0][2]['data']))

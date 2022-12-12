@@ -20,7 +20,7 @@ from etools.applications.partners.models import Intervention, PartnerOrganizatio
 from etools.applications.partners.serializers.exports.vision.interventions_v1 import InterventionSerializer
 from etools.applications.partners.tasks import notify_partner_hidden
 from etools.applications.reports.models import InterventionActivity
-from etools.applications.vision.synchronizers import VisionDataTenantSynchronizer
+from etools.applications.vision.synchronizers import VisionDataTenantSynchronizer, VisionSyncLog
 
 logger = logging.getLogger(__name__)
 
@@ -421,10 +421,22 @@ class VisionUploader:
                                  headers=json_header,
                                  auth=basic_auth,
                                  cert=(settings.EZHACT_CERT_PATH, settings.EZHACT_KEY_PATH))
-        response_data = {}
+
+        log = VisionSyncLog(
+            country=connection.tenant,
+            handler_name=self.__class__.__name__,
+            business_area_code=connection.tenant.business_area_code,
+            total_records=1
+        )
+
         if response.status_code in {200, 201}:
-            response_data = response.text
-        return response.status_code, response_data
+            log.processed = 1
+            log.successful = True
+            log.details = response.text
+        else:
+            log.exception_message = response.text
+        log.save()
+        return response.status_code, response.text
 
     def sync(self) -> Optional[Tuple[int, dict]]:
         assert self._is_valid is not None, 'You must call `.is_valid()` before calling `.sync()`.'
