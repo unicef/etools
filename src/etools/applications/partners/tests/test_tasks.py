@@ -1264,7 +1264,7 @@ class SendPDToVisionTestCase(BaseTenantTestCase):
     @mock.patch('etools.applications.partners.synchronizers.requests.post')
     def test_business_code_in_data(self, requests_mock, _logger_mock):
         etools.applications.partners.tasks.send_pd_to_vision(connection.tenant.name, self.active_intervention.pk)
-        self.assertIn('business_area_code', json.loads(requests_mock.mock_calls[0][2]['data']))
+        self.assertIn('business_area', json.loads(requests_mock.mock_calls[0][2]['data']))
 
     def test_body_rendering(self, _logger_mock):
         synchronizer = PDVisionUploader(Intervention.objects.detail_qs().get(pk=self.active_intervention.pk))
