@@ -43,6 +43,7 @@ from etools.applications.audit.filters import (
     AuditorStaffMembersFilterSet,
     DisplayStatusFilter,
     EngagementFilter,
+    StaffMembersOrderingFilter,
     UnicefUsersAllowedFilter,
     UniqueIDOrderingFilter,
 )
@@ -500,6 +501,7 @@ class SpecialAuditViewSet(EngagementManagementMixin, EngagementViewSet):
 class AuditorStaffMembersViewSet(
     BaseAuditViewSet,
     mixins.ListModelMixin,
+    # TODO: REALMS - cleanup. users management to be moved outside of auditor portal
     # mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
     # mixins.UpdateModelMixin,
@@ -508,13 +510,13 @@ class AuditorStaffMembersViewSet(
     viewsets.GenericViewSet
 ):
     metadata_class = PermissionBasedMetadata
-    queryset = get_user_model().objects.prefetch_related('realms').order_by('id').distinct('id')
+    queryset = get_user_model().objects.prefetch_related('realms').distinct()
     serializer_class = AuditorStaffMemberSerializer
     permission_classes = BaseAuditViewSet.permission_classes + [
         get_permission_for_targets('purchase_order.auditorfirm.staff_members')
     ]
-    filter_backends = (OrderingFilter, SearchFilter, DjangoFilterBackend, )
-    # ordering_fields = ('user__email', 'user__first_name', 'id', )
+    filter_backends = (StaffMembersOrderingFilter, SearchFilter, DjangoFilterBackend, )
+    ordering_fields = ('user__email', 'user__first_name', 'id', )
     search_fields = ('first_name', 'email', 'last_name', )
     filterset_class = AuditorStaffMembersFilterSet
 

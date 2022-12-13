@@ -26,6 +26,7 @@ class UserSerializer(BaseUserSerializer):
 
 class AuditorStaffMemberSerializer(UserSerializer):
     user = UserSerializer(required=False, source='*')
+    # TODO: REALMS - do cleanup
     # user_pk = serializers.PrimaryKeyRelatedField(
     #     write_only=True, required=False,
     #     queryset=get_user_model().objects.all()
@@ -35,7 +36,7 @@ class AuditorStaffMemberSerializer(UserSerializer):
     def get_hidden(self, obj):
         return False
 
-    # TODO: REALMS
+    # TODO: REALMS - do cleanup
     # # TODO: make sure email provided is lower_case
     # def validate(self, attrs):
     #     validated_data = super().validate(attrs)

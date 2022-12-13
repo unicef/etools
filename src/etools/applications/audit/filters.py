@@ -3,7 +3,7 @@ from django.db import models
 from django.db.models.functions import TruncYear
 
 from django_filters import rest_framework as filters
-from rest_framework.filters import BaseFilterBackend
+from rest_framework.filters import BaseFilterBackend, OrderingFilter
 
 from etools.applications.audit.models import Engagement
 from etools.applications.organizations.models import Organization
@@ -110,3 +110,13 @@ class UnicefUsersAllowedFilter(BaseFilterBackend):
             return queryset.filter(unicef_filter)
         else:
             return queryset.filter(~unicef_filter)
+
+
+class StaffMembersOrderingFilter(OrderingFilter):
+    """
+    backwards compatible staff members ordering: since we're using user instead of extra model, `user__` is not needed
+    """
+
+    def get_ordering(self, request, queryset, view):
+        ordering = super().get_ordering(request, queryset, view)
+        return [param.replace('user__', '') for param in ordering]
