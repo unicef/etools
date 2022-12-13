@@ -119,4 +119,6 @@ class StaffMembersOrderingFilter(OrderingFilter):
 
     def get_ordering(self, request, queryset, view):
         ordering = super().get_ordering(request, queryset, view)
+        if not ordering:
+            return ordering
         return [param.replace('user__', '') for param in ordering]
