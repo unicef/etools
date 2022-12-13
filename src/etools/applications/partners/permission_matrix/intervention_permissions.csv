@@ -283,3 +283,6 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,signed_by_partner_date,Unicef Focal Point,,signature,Edit,TRUE
 ,confidential,Unicef Focal Point,,Draft,Edit,TRUE
 ,confidential,UNICEF User,,*,View,TRUE
+,final_review_approved,UNICEF User,,Ended,View,TRUE
+,final_review_approved,UNICEF User,,Closed,View,TRUE
+,final_review_approved,Unicef Users Involved,,Ended,Edit,TRUE

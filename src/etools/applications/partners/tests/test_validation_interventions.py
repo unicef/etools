@@ -10,7 +10,6 @@ from etools.applications.funds.tests.factories import FundsReservationHeaderFact
 from etools.applications.partners.models import Agreement, FileType, Intervention, InterventionAmendment
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
-    FileTypeFactory,
     InterventionAmendmentFactory,
     InterventionAttachmentFactory,
     InterventionFactory,
@@ -51,16 +50,9 @@ class TestTransitionOk(BaseTenantTestCase):
 
 
 class TestTransitionToClosed(BaseTenantTestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.intervention = InterventionFactory(
-            end=datetime.date(2001, 1, 1),
-        )
-
-        cls.file_parnership_file_type = FileTypeFactory(name=FileType.FINAL_PARTNERSHIP_REVIEW)
-
     def setUp(self):
         super().setUp()
+        self.intervention = InterventionFactory(end=datetime.date(2001, 1, 1))
         self.expected = {
             'total_frs_amt': 0,
             'total_frs_amt_usd': 0,
@@ -190,9 +182,8 @@ class TestTransitionToClosed(BaseTenantTestCase):
         self.expected["latest_end_date"] = frs.end_date
         self.assertFundamentals(self.intervention.total_frs)
 
-    def test_attachment_invalid(self):
-        """If Total actual amount > 100,000 need active attachment with
-        type Final Partnership Review
+    def test_final_review_flag_invalid(self):
+        """If Total actual amount > 100,000 need final_review_approved=True
         """
         frs = FundsReservationHeaderFactory(
             intervention=self.intervention,
@@ -204,16 +195,10 @@ class TestTransitionToClosed(BaseTenantTestCase):
             outstanding_amt=0.00,
             intervention_amt=0.00,
         )
-        InterventionAttachmentFactory(
-            intervention=self.intervention,
-            type=self.file_parnership_file_type,
-            active=False,
-        )
 
         with self.assertRaisesRegexp(
                 TransitionError,
-                'Total amount transferred greater than 100,000 and no '
-                'Final Partnership Review was attached'
+                'Final Review must be approved for documents having amount transferred greater than 100,000'
         ):
             transition_to_closed(self.intervention)
         self.expected["total_actual_amt"] = 120000.00
@@ -223,15 +208,12 @@ class TestTransitionToClosed(BaseTenantTestCase):
         self.expected["latest_end_date"] = frs.end_date
         self.assertFundamentals(self.intervention.total_frs)
 
-    def test_attachment(self):
+    def test_final_review_flag(self):
         """If Total actual amount > 100,000 need attachment with
         type Final Partnership Review
         """
-        file_type = self.file_parnership_file_type
-        InterventionAttachmentFactory(
-            intervention=self.intervention,
-            type=file_type
-        )
+        self.intervention.final_review_approved = True
+        self.intervention.save()
         frs = FundsReservationHeaderFactory(
             intervention=self.intervention,
             total_amt=0.00,

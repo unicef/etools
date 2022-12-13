@@ -928,6 +928,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "donor_codes",
             "donors",
             "end",
+            "final_review_approved",
             "flagged_sections",
             "flat_locations",
             "frs_details",
