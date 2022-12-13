@@ -510,7 +510,7 @@ class AuditorStaffMembersViewSet(
     viewsets.GenericViewSet
 ):
     metadata_class = PermissionBasedMetadata
-    queryset = get_user_model().objects.prefetch_related('realms').distinct()
+    queryset = get_user_model().objects.prefetch_related('realms').filter(is_active=True).distinct()
     serializer_class = AuditorStaffMemberSerializer
     permission_classes = BaseAuditViewSet.permission_classes + [
         get_permission_for_targets('purchase_order.auditorfirm.staff_members')
