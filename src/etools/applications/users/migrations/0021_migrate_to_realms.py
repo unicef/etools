@@ -93,22 +93,12 @@ def fwd_migrate_to_user_realms(apps, schema_editor):
 
         if is_unicef_user:
             for country in countries:
-                if groups:
-                    for group in groups:
-                        realm_list.append(dict(
-                            user_id=user.id,
-                            country_id=country.id,
-                            organization_id=unicef_org.id,
-                            group_id=group.id,
-                            is_active=user.is_active
-                        ))
-                # if unicef user has no groups, set UNICEF User group
-                else:
+                for group in groups + [unicef_user_group]:
                     realm_list.append(dict(
                         user_id=user.id,
                         country_id=country.id,
                         organization_id=unicef_org.id,
-                        group_id=unicef_user_group.id,
+                        group_id=group.id,
                         is_active=user.is_active
                     ))
 
@@ -120,33 +110,13 @@ def fwd_migrate_to_user_realms(apps, schema_editor):
                     f"has no organization set. Skipping..")
             else:
                 for country in countries:
-                    if groups:
-                        for group in groups:
-                            realm_list.append(dict(
-                                user_id=user.id,
-                                country_id=country.id,
-                                organization_id=auditor_organization.id,
-                                group_id=group.id,
-                                is_active=not auditor_staff.hidden
-                            ))
-                        # add Auditor group for the case when user is an auditor staff,
-                        # but the Auditor group is not set
-                        if auditor_group not in groups:
-                            realm_list.append(dict(
-                                user_id=user.id,
-                                country_id=country.id,
-                                organization_id=auditor_organization.id,
-                                group_id=auditor_group.id,
-                                is_active=not auditor_staff.hidden
-                            ))
-                    # if audit staff member has no groups, add Auditor group
-                    else:
+                    for group in groups + [auditor_group]:
                         realm_list.append(dict(
                             user_id=user.id,
                             country_id=country.id,
                             organization_id=auditor_organization.id,
-                            group_id=auditor_group.id,
-                            is_active=user.is_active
+                            group_id=group.id,
+                            is_active=not auditor_staff.hidden
                         ))
 
         if tpm_staff:
@@ -157,35 +127,17 @@ def fwd_migrate_to_user_realms(apps, schema_editor):
                     f"has no organization set. Skipping..")
             else:
                 for country in countries:
-                    if groups:
-                        for group in groups:
-                            realm_list.append(dict(
-                                user_id=user.id,
-                                country_id=country.id,
-                                organization_id=tpm_organization.id,
-                                group_id=group.id,
-                                is_active=user.is_active
-                            ))
-                        # add Third Party Monitor group for the case when user is an tpm staff,
-                        # but the Third Party Monitor group is not set
-                        if tpm_group not in groups:
-                            realm_list.append(dict(
-                                user_id=user.id,
-                                country_id=country.id,
-                                organization_id=tpm_organization.id,
-                                group_id=tpm_group.id,
-                                is_active=user.is_active
-                            ))
-                    # if TPM staff member has no group set, add Third Party Monitor group
-                    else:
+                    for group in groups + [tpm_group]:
                         realm_list.append(dict(
                             user_id=user.id,
                             country_id=country.id,
                             organization_id=tpm_organization.id,
-                            group_id=tpm_group.id,
+                            group_id=group.id,
                             is_active=user.is_active
                         ))
 
+        # assign external pca group even for partner staff members since we cannot access tenants from here.
+        # partners.0108 will remove this group if staff member exists
         if not any([is_unicef_user, auditor_staff, tpm_staff]):
             for country in countries:
                 realm_list.append(dict(
