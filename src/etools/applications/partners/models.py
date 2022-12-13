@@ -3302,7 +3302,7 @@ class FileType(models.Model):
     NAME_CHOICES = Choices(
         (FACE, _('FACE')),
         (PROGRESS_REPORT, _('Progress Report')),
-        (FINAL_PARTNERSHIP_REVIEW, _('Final Partnership Review')),
+        (FINAL_PARTNERSHIP_REVIEW, _('(Legacy) Final Partnership Review')),
         (CORRESPONDENCE, _('Correspondence')),
         (SUPPLY_PLAN, _('Supply/Distribution Plan')),
         (DATA_PROCESSING_AGREEMENT, _("Data Processing Agreement")),
