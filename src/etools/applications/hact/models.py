@@ -91,7 +91,9 @@ class AggregateHact(TimeStampedModel):
             ct_amount_first.filter(highest_risk_rating_name=PartnerOrganization.RATING_SIGNIFICANT).aggregate(
                 total=Coalesce(Sum('total_ct_ytd'), Decimal(0.0)))['total'],
             ct_amount_first.filter(highest_risk_rating_name__in=[
-                PartnerOrganization.RATING_HIGH, PartnerOrganization.RATING_HIGH_RISK_ASSUMED
+                PartnerOrganization.RATING_HIGH,
+                PartnerOrganization.RATING_HIGH_RISK_ASSUMED,
+                PartnerOrganization.PSEA_RATING_HIGH
             ]).aggregate(total=Coalesce(Sum('total_ct_ytd'), Decimal(0.0)))['total'],
             ct_amount_first.aggregate(count=Count('total_ct_ytd'))['count'],
         ]
@@ -112,7 +114,9 @@ class AggregateHact(TimeStampedModel):
             ct_amount_second.filter(highest_risk_rating_name=PartnerOrganization.RATING_SIGNIFICANT).aggregate(
                 total=Coalesce(Sum('total_ct_ytd'), Decimal(0.0)))['total'],
             ct_amount_second.filter(highest_risk_rating_name__in=[
-                PartnerOrganization.RATING_HIGH, PartnerOrganization.RATING_HIGH_RISK_ASSUMED
+                PartnerOrganization.RATING_HIGH,
+                PartnerOrganization.RATING_HIGH_RISK_ASSUMED,
+                PartnerOrganization.PSEA_RATING_HIGH
             ]).aggregate(total=Coalesce(Sum('total_ct_ytd'), Decimal(0.0)))['total'],
             ct_amount_second.aggregate(count=Count('total_ct_ytd'))['count'],
         ]
@@ -133,7 +137,9 @@ class AggregateHact(TimeStampedModel):
             ct_amount_third.filter(highest_risk_rating_name=PartnerOrganization.RATING_SIGNIFICANT).aggregate(
                 total=Coalesce(Sum('total_ct_ytd'), Decimal(0.0)))['total'],
             ct_amount_third.filter(highest_risk_rating_name__in=[
-                PartnerOrganization.RATING_HIGH, PartnerOrganization.RATING_HIGH_RISK_ASSUMED
+                PartnerOrganization.RATING_HIGH,
+                PartnerOrganization.RATING_HIGH_RISK_ASSUMED,
+                PartnerOrganization.PSEA_RATING_HIGH
             ]).aggregate(total=Coalesce(Sum('total_ct_ytd'), Decimal(0.0)))['total'],
             ct_amount_third.aggregate(count=Count('total_ct_ytd'))['count'],
         ]
@@ -154,7 +160,9 @@ class AggregateHact(TimeStampedModel):
             ct_amount_fourth.filter(highest_risk_rating_name=PartnerOrganization.RATING_SIGNIFICANT).aggregate(
                 total=Coalesce(Sum('total_ct_ytd'), Decimal(0.0)))['total'],
             ct_amount_fourth.filter(highest_risk_rating_name__in=[
-                PartnerOrganization.RATING_HIGH, PartnerOrganization.RATING_HIGH_RISK_ASSUMED
+                PartnerOrganization.RATING_HIGH,
+                PartnerOrganization.RATING_HIGH_RISK_ASSUMED,
+                PartnerOrganization.PSEA_RATING_HIGH
             ]).aggregate(total=Coalesce(Sum('total_ct_ytd'), Decimal(0.0)))['total'],
             ct_amount_fourth.aggregate(count=Count('total_ct_ytd'))['count'],
         ]
@@ -175,7 +183,9 @@ class AggregateHact(TimeStampedModel):
             ct_amount_fifth.filter(highest_risk_rating_name__in=PartnerOrganization.RATING_SIGNIFICANT).aggregate(
                 total=Coalesce(Sum('total_ct_ytd'), Decimal(0.0)))['total'],
             ct_amount_fifth.filter(highest_risk_rating_name__in=[
-                PartnerOrganization.RATING_HIGH, PartnerOrganization.RATING_HIGH_RISK_ASSUMED
+                PartnerOrganization.RATING_HIGH,
+                PartnerOrganization.RATING_HIGH_RISK_ASSUMED,
+                PartnerOrganization.PSEA_RATING_HIGH
             ]).aggregate(total=Coalesce(Sum('total_ct_ytd'), Decimal(0.0)))['total'],
             ct_amount_fifth.aggregate(count=Count('total_ct_ytd'))['count'],
         ]
@@ -196,7 +206,9 @@ class AggregateHact(TimeStampedModel):
         }
 
         high = self.get_queryset().filter(
-            highest_risk_rating_name__in=[PartnerOrganization.RATING_HIGH, PartnerOrganization.RATING_HIGH_RISK_ASSUMED]
+            highest_risk_rating_name__in=[PartnerOrganization.RATING_HIGH,
+                                          PartnerOrganization.RATING_HIGH_RISK_ASSUMED,
+                                          PartnerOrganization.PSEA_RATING_HIGH]
         ).aggregate(**total_ct_dict)
         significant = self.get_queryset().filter(
             highest_risk_rating_name__in=PartnerOrganization.RATING_SIGNIFICANT).aggregate(**total_ct_dict)
