@@ -249,7 +249,9 @@ class InterventionPermissions(PMPPermissions):
                               "cancel_justification",
                               "population_focus",
                               "risks",
-                              "sites"]
+                              "sites",
+                              "reporting_requirements",  # these last two fields avoids errors on existing SSFA valid
+                              "reference_number_year"]
         ps = self.permission_structure
         my_permissions = {}
         for action in self.possible_actions:

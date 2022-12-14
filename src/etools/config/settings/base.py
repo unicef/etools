@@ -492,6 +492,13 @@ INSIGHT_SUB_KEY = get_from_secrets_or_env('INSIGHT_SUB_KEY', 'invalid_key')
 INSIGHT_URL = get_from_secrets_or_env('INSIGHT_URL', 'http://invalid_vision_url')
 INSIGHT_BANK_KEY = get_from_secrets_or_env('INSIGHT_BANK_KEY', None)
 
+# Vision data uploader
+EZHACT_PD_VISION_URL = get_from_secrets_or_env('EZHACT_PD_VISION_URL', '')  # example: http://172.18.0.1:8083/upload/pd/
+EZHACT_API_USER = get_from_secrets_or_env('EZHACT_API_USER', '')
+EZHACT_API_PASSWORD = get_from_secrets_or_env('EZHACT_API_PASSWORD', '')
+EZHACT_INTEGRATION_DISABLED = bool(get_from_secrets_or_env('EZHACT_INTEGRATION_DISABLED', False))
+EZHACT_CERT_PATH = os.path.join(CONFIG_ROOT, 'keys/vision/ezhact_cert.pem')
+EZHACT_KEY_PATH = os.path.join(CONFIG_ROOT, 'keys/vision/ezhact_key.pem')
 
 # ALLOW BASIC AUTH FOR DEMO SITE
 ALLOW_BASIC_AUTH = get_from_secrets_or_env('ALLOW_BASIC_AUTH', False)
