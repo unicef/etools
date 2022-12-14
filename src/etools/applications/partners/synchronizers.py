@@ -20,8 +20,8 @@ from etools.applications.organizations.models import Organization
 from etools.applications.partners.models import Intervention, PartnerOrganization, PlannedEngagement
 from etools.applications.partners.serializers.exports.vision.interventions_v1 import InterventionSerializer
 from etools.applications.partners.tasks import notify_partner_hidden
-from etools.applications.users.mixins import PARTNER_ACTIVE_GROUPS
 from etools.applications.reports.models import InterventionActivity
+from etools.applications.users.mixins import PARTNER_ACTIVE_GROUPS
 from etools.applications.users.models import Country, Realm
 from etools.applications.vision.synchronizers import VisionDataTenantSynchronizer, VisionSyncLog
 
