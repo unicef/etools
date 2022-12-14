@@ -18,7 +18,6 @@ from etools.applications.attachments.tests.factories import AttachmentFactory, A
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
 from etools.applications.partners.models import Agreement, Intervention, InterventionBudget
-from etools.applications.partners.tasks import _make_intervention_status_automatic_transitions
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
     CoreValuesAssessmentFactory,
@@ -726,7 +725,7 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
         # activity = InterventionActivityFactory(result=pd_output) # epd related stuff
         # activity.time_frames.add(active_intervention.quarters.first())
 
-        _make_intervention_status_automatic_transitions(self.country_name)
+        etools.applications.partners.tasks._make_intervention_status_automatic_transitions(self.country_name)
         active_intervention.refresh_from_db()
         self.assertEqual(active_intervention.status, Intervention.ACTIVE)
 
