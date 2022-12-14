@@ -136,6 +136,7 @@ class TestList(BaseAgreementTestCase):
                 'amendments',
                 'url',
                 'Special Conditions PCA',
+                'terms_acknowledged_by',
             ]
         )
 

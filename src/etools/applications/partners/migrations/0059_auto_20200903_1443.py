@@ -41,6 +41,23 @@ def migrate_ssfa(apps, schema_editor):
     ).update(
         status='closed'
     )
+# In order to avoid skipping active here and checking for extra issues on subsequent migrations
+# run the following script on deploy.
+# from etools.libraries.tenant_support.utils import run_on_all_tenants as rot
+# import datetime
+# today = datetime.datetime.now().date()
+# def move_ssfas_to_active():
+#     print(connection.tenant)
+#     interventions = Intervention.objects.filter(
+#         agreement__agreement_type="SSFA",
+#         start__lte=today,
+#         end__gte=today,
+#         status=Intervention.CLOSED)
+#     print(interventions.values_list("id", flat=True))
+#     for i in interventions.all():
+#         i.status = i.ACTIVE
+#         i.save()
+# rot(move_ssfas_to_active)
 
 
 def revert_hpd(apps, schema_editor):

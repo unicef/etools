@@ -51,7 +51,8 @@ class BaseAgreementModelExportTestCase(BaseTenantTestCase):
             end=datetime.date.today(),
             signed_by_unicef_date=datetime.date.today(),
             signed_by=cls.unicef_staff,
-            signed_by_partner_date=datetime.date.today()
+            signed_by_partner_date=datetime.date.today(),
+            terms_acknowledged_by=cls.unicef_staff,
         )
         cls.agreement.authorized_officers.add(partnerstaff)
         cls.agreement.save()
@@ -86,6 +87,7 @@ class TestAgreementModelExport(BaseAgreementModelExportTestCase):
             'Amendments',
             'URL',
             'Special Conditions PCA',
+            'Terms Acknowledged By',
         ])
 
         exported_agreement = dataset[0]
@@ -105,6 +107,7 @@ class TestAgreementModelExport(BaseAgreementModelExportTestCase):
             '',
             'https://testserver/pmp/agreements/{}/details/'.format(self.agreement.id),
             'No',
+            self.unicef_staff.get_full_name(),
         ))
 
     @skip('TODO REALMS unskip once old_partner_manager FK field is removed')
@@ -119,8 +122,8 @@ class TestAgreementModelExport(BaseAgreementModelExportTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 27)
-        self.assertEqual(len(dataset[0]), 27)
+        self.assertEqual(len(dataset._get_headers()), 28)
+        self.assertEqual(len(dataset[0]), 28)
 
     def test_invalid_format_export_api(self):
         response = self.forced_auth_req(
