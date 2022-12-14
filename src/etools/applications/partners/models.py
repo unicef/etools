@@ -252,15 +252,24 @@ class PartnerOrganization(TimeStampedModel):
         (RATING_NOT_REQUIRED, 'Not Required'),
     )
 
-    RATING_HIGH_RISK_ASSUMED = 'High Risk Assumed'
-    RATING_LOW_RISK_ASSUMED = 'Low Risk Assumed'
+    # PSEA Risk Ratings
+    PSEA_RATING_HIGH = 'Low Capacity (High Risk)'
+    PSEA_RATING_MEDIUM = 'Medium Capacity (Moderate Risk)'
+    PSEA_RATING_LOW = 'Full Capacity (Low Risk)'
+    RATING_HIGH_RISK_ASSUMED = 'Low Capacity Assumed - Emergency'
+    RATING_LOW_RISK_ASSUMED = 'No Contact with Beneficiaries'
     RATING_NOT_ASSESSED = 'Not Assessed'
 
-    PSEA_RISK_RATING = RISK_RATINGS + (
+    PSEA_RISK_RATINGS = (
+        (PSEA_RATING_HIGH, PSEA_RATING_HIGH),
+        (PSEA_RATING_MEDIUM, PSEA_RATING_MEDIUM),
+        (PSEA_RATING_LOW, PSEA_RATING_LOW),
         (RATING_HIGH_RISK_ASSUMED, RATING_HIGH_RISK_ASSUMED),
         (RATING_LOW_RISK_ASSUMED, RATING_LOW_RISK_ASSUMED),
-        (RATING_NOT_ASSESSED, RATING_NOT_ASSESSED),
+        (RATING_NOT_ASSESSED, RATING_NOT_ASSESSED)
     )
+
+    ALL_COMBINED_RISK_RATING = RISK_RATINGS + PSEA_RISK_RATINGS
 
     MICRO_ASSESSMENT = 'MICRO ASSESSMENT'
     HIGH_RISK_ASSUMED = 'HIGH RISK ASSUMED'
@@ -311,6 +320,7 @@ class PartnerOrganization(TimeStampedModel):
         'National',
         'Community Based Organization',
         'Academic Institution',
+        'Red Cross/Red Crescent National Societies'
     )
 
     ASSURANCE_VOID = 'void'
@@ -520,7 +530,7 @@ class PartnerOrganization(TimeStampedModel):
     highest_risk_rating_name = models.CharField(
         max_length=150,
         verbose_name=_("Highest Risk Rating Name"),
-        choices=PSEA_RISK_RATING,
+        choices=ALL_COMBINED_RISK_RATING,
         blank=True,
         default='',
     )
@@ -607,23 +617,29 @@ class PartnerOrganization(TimeStampedModel):
                 programme_visits = 1
             elif PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL2 < ct <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL3:
                 if self.highest_risk_rating_name in [PartnerOrganization.RATING_HIGH,
+                                                     PartnerOrganization.PSEA_RATING_HIGH,
                                                      PartnerOrganization.RATING_HIGH_RISK_ASSUMED,
                                                      PartnerOrganization.RATING_SIGNIFICANT]:
                     programme_visits = 3
-                elif self.highest_risk_rating_name in [PartnerOrganization.RATING_MEDIUM, ]:
+                elif self.highest_risk_rating_name in [PartnerOrganization.RATING_MEDIUM,
+                                                       PartnerOrganization.PSEA_RATING_MEDIUM]:
                     programme_visits = 2
                 elif self.highest_risk_rating_name in [PartnerOrganization.RATING_LOW,
-                                                       PartnerOrganization.RATING_LOW_RISK_ASSUMED]:
+                                                       PartnerOrganization.RATING_LOW_RISK_ASSUMED,
+                                                       PartnerOrganization.PSEA_RATING_LOW]:
                     programme_visits = 1
             else:
                 if self.highest_risk_rating_name in [PartnerOrganization.RATING_HIGH,
+                                                     PartnerOrganization.PSEA_RATING_HIGH,
                                                      PartnerOrganization.RATING_HIGH_RISK_ASSUMED,
                                                      PartnerOrganization.RATING_SIGNIFICANT]:
                     programme_visits = 4
-                elif self.highest_risk_rating_name in [PartnerOrganization.RATING_MEDIUM, ]:
+                elif self.highest_risk_rating_name in [PartnerOrganization.RATING_MEDIUM,
+                                                       PartnerOrganization.PSEA_RATING_MEDIUM]:
                     programme_visits = 3
                 elif self.highest_risk_rating_name in [PartnerOrganization.RATING_LOW,
-                                                       PartnerOrganization.RATING_LOW_RISK_ASSUMED]:
+                                                       PartnerOrganization.RATING_LOW_RISK_ASSUMED,
+                                                       PartnerOrganization.PSEA_RATING_LOW]:
                     programme_visits = 2
         return programme_visits
 
