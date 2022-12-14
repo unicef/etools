@@ -219,6 +219,15 @@
           <td class=""><span class="bold">Other Partners involved:</span> {{ pd.other_partners_involved|escape|linebreaks }}</td>
         </tr>
         <tr>
+            <td class=""><span class="bold">Data Processing Agreement:</span> {% if pd.has_data_processing_agreement %}Yes{% else %}No{% endif %}</td>
+        </tr>
+        <tr>
+            <td class=""><span class="bold">Activities involving children and young people:</span> {% if pd.has_activities_involving_children %}Yes{% else %}No{% endif %}</td>
+        </tr>
+        <tr>
+            <td class=""><span class="bold">Special Conditions for Construction Works by Implementing Partners:</span> {% if pd.has_special_conditions_for_construction %}Yes{% else %}No{% endif %}</td>
+        </tr>
+        <tr>
           <td class=""><span class="bold">Gender Rating: </span>{{ pd.get_gender_rating_display }} <br>
             {{ pd.gender_narrative|escape|linebreaks }}
           </td>
@@ -456,6 +465,28 @@
               <span>Date: </span>
             </td>
           </tr>
+        <tbody>
+      </table>
+
+      <table class="just-border mt-20">
+        <tbody>
+          <tr>
+            <td colspan="4" class="b-navy">Signatures and date</td>
+          </tr>
+          <tr>
+            <td class="bold w-p20">Date Uploaded</td>
+            <td class="bold w-p30">Document Type</td>
+            <td class="bold w-p40">Document</td>
+            <td class="bold w-p10">Invalid</td>
+          </tr>
+          {% for attachment in pd.attachments.all %}
+            <tr>
+              <td>{{ attachment.created }}</td>
+              <td>{{ attachment.type.get_name_display }}</td>
+              <td>{% if attachment.attachment_file.last %}{{ domain }}{{ attachment.attachment_file.last.file_link }}{% else %}{{ attachment.attachment.url }}{% endif %}</td>
+              <td>{% if not attachment.active %}Yes{% else %}No{% endif %}</td>
+            </tr>
+          {% endfor %}
         <tbody>
       </table>
     </div>

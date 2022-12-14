@@ -145,6 +145,42 @@ class LocationSitesViewTestCase(TestExportMixin, FMBaseTestCaseMixin, BaseTenant
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 1)
 
+    def test_cache_headers_valid(self):
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_settings:sites-list'),
+            user=self.unicef_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertIn('Cache-Control', response)
+        self.assertIn('ETag', response)
+        self.assertIsNotNone(response['ETag'])
+        self.assertEqual('must-revalidate, max-age=0, public', response['Cache-Control'])
+
+    def test_cache_plus_etag(self):
+        [LocationSiteFactory() for _i in range(10)]
+        user = self.unicef_user
+        url = reverse('field_monitoring_settings:sites-list')
+
+        # first request. etag available in response
+        with self.assertNumQueries(3):
+            response = self.forced_auth_req('get', url, user=user)
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertIn('ETag', response)
+            etag = response['ETag']
+
+        # no etag in request, 200 response with no db requests
+        with self.assertNumQueries(0):
+            response = self.forced_auth_req('get', url, user=user)
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertIn('ETag', response)
+            self.assertEqual(response['ETag'], etag)
+
+        # etag provided in request, 304 response
+        with self.assertNumQueries(0):
+            response = self.forced_auth_req('get', url, user=user, HTTP_IF_NONE_MATCH=etag)
+            self.assertEqual(response.status_code, status.HTTP_304_NOT_MODIFIED)
+
     def test_list_cached(self):
         [LocationSiteFactory() for _i in range(12)]
 
