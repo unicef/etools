@@ -64,7 +64,7 @@ class TestChangeUserRoleView(BaseTenantTestCase):
         self.url = reverse("users:user-change")
 
     def test_post_revoke_200(self):
-        partnership_manager = UserFactory(groups__data=["Partnership Manager"], email='test@unicef.org')
+        partnership_manager = UserFactory(realms__data=["Partnership Manager"], email='test@unicef.org')
         response = self.forced_auth_req(
             "post",
             self.url,

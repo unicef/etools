@@ -18,7 +18,7 @@ from rest_framework.views import APIView
 from unicef_restlib.permissions import IsSuperUser
 
 from etools.applications.organizations.models import Organization
-from etools.applications.users.models import Country, UserProfile
+from etools.applications.users.models import Country, Realm, UserProfile
 from etools.applications.users.permissions import IsServiceNowUser
 from etools.applications.users.serializers import (
     CountrySerializer,
@@ -83,17 +83,33 @@ class ChangeUserRoleView(CreateAPIView, GenericAPIView):
             raise ValidationError({"error": "only users with UNICEF email addresses can be updated"})
 
         details["previous_roles"] = list(user.groups.all().values_list("name", flat=True))
-
+        realms = []
+        for role in roles:
+            realms.append(Realm.objects.get_or_create(
+                user=user,
+                country=workspace,
+                organization=user.profile.organization,
+                group=role)[0])
         if data["access_type"] == "grant":
             # add unicef user role to roles list by default
-            roles.append(Group.objects.get(name="UNICEF User"))
-            user.groups.add(*roles)
+            realms.append(Realm.objects.get_or_create(
+                user=user,
+                country=workspace,
+                organization=user.profile.organization,
+                group=Group.objects.get(name="UNICEF User"))[0])
+            user.realms.add(*realms)
         elif data["access_type"] == "set":
             # add unicef user role to roles list by default
-            roles.append(Group.objects.get(name="UNICEF User"))
-            user.groups.set(roles)
+            realms.append(Realm.objects.get_or_create(
+                user=user,
+                country=workspace,
+                organization=user.profile.organization,
+                group=Group.objects.get(name="UNICEF User"))[0])
+            user.realms_set.set(realms)
         else:
-            user.groups.remove(*roles)
+            user.realms\
+                .filter(group__in=roles, country=workspace, organization=user.profile.organization)\
+                .update(is_active=False)
 
         if user.profile.country_override and user.profile.country_override != workspace:
             user.profile.country_override = None
@@ -102,7 +118,6 @@ class ChangeUserRoleView(CreateAPIView, GenericAPIView):
             details["country"] = "The user has been moved from {} to {}".format(user.profile.country.name,
                                                                                 workspace.name)
         user.profile.country = workspace
-        user.profile.countries_available.set([workspace])
         user.profile.save()
         details["current_roles"] = list(user.groups.filter().values_list("name", flat=True))
         return JsonResponse({'email': user.email, "status": "success", "details": details},

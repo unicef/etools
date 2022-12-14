@@ -3174,10 +3174,10 @@ class TestInterventionAttachments(BaseTenantTestCase):
 
     def test_transition_intervention_to_signed_through_attachments(self):
         partner = PartnerFactory()
-        partner_user = UserFactory(is_staff=False, groups__data=[])
+        partner_user = UserFactory(is_staff=False, realms__data=[])
         partner_staff_member = PartnerStaffFactory(partner=partner, email=partner_user.email, user=partner_user)
         country_programme = CountryProgrammeFactory()
-        user = UserFactory(is_staff=True, groups__data=['UNICEF User', 'Partnership Manager'])
+        user = UserFactory(is_staff=True, realms__data=['UNICEF User', 'Partnership Manager'])
 
         intervention = InterventionFactory(
             status=Intervention.SIGNATURE,
