@@ -10,7 +10,7 @@ from django.db.models import Case, CharField, Count, F, Max, Min, OuterRef, Pref
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.functional import cached_property
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 
 from django_fsm import FSMField, transition
 from django_tenants.utils import get_public_schema_name
@@ -162,10 +162,12 @@ class PartnerType:
     GOVERNMENT = 'Government'
     UN_AGENCY = 'UN Agency'
 
-    CHOICES = Choices(BILATERAL_MULTILATERAL,
-                      CIVIL_SOCIETY_ORGANIZATION,
-                      GOVERNMENT,
-                      UN_AGENCY)
+    CHOICES = Choices(
+        (BILATERAL_MULTILATERAL, _('Bilateral / Multilateral')),
+        (CIVIL_SOCIETY_ORGANIZATION, _('Civil Society Organization')),
+        (GOVERNMENT, _('Government')),
+        (UN_AGENCY, _('UN Agency'))
+    )
 
 
 def hact_default():
@@ -261,11 +263,11 @@ class PartnerOrganization(TimeStampedModel):
     RATING_NOT_REQUIRED = 'Not Required'
 
     RISK_RATINGS = (
-        (RATING_HIGH, 'High'),
-        (RATING_SIGNIFICANT, 'Significant'),
-        (RATING_MEDIUM, 'Medium'),
-        (RATING_LOW, 'Low'),
-        (RATING_NOT_REQUIRED, 'Not Required'),
+        (RATING_HIGH, _('High')),
+        (RATING_SIGNIFICANT, _('Significant')),
+        (RATING_MEDIUM, _('Medium')),
+        (RATING_LOW, _('Low')),
+        (RATING_NOT_REQUIRED, _('Not Required')),
     )
 
     RATING_HIGH_RISK_ASSUMED = 'High Risk Assumed'
@@ -327,10 +329,10 @@ class PartnerOrganization(TimeStampedModel):
     CSO_TYPE_COMMUNITY = 'Community Based Organization'
     CSO_TYPE_ACADEMIC = 'Academic Institution'
     CSO_TYPES = Choices(
-        CSO_TYPE_INTERNATIONAL,
-        CSO_TYPE_NATIONAL,
-        CSO_TYPE_COMMUNITY,
-        CSO_TYPE_ACADEMIC,
+        (CSO_TYPE_INTERNATIONAL, _('International')),
+        (CSO_TYPE_NATIONAL, _('National')),
+        (CSO_TYPE_COMMUNITY, _('Community Based Organization')),
+        (CSO_TYPE_ACADEMIC, _('Academic Institution'))
     )
 
     ASSURANCE_VOID = 'void'
@@ -1101,11 +1103,11 @@ class Assessment(TimeStampedModel):
     TYPE_SPECIAL = 'Special Audit report'
     TYPE_OTHER = 'Other'
     ASSESSMENT_TYPES = (
-        (TYPE_MICRO, 'Micro Assessment'),
-        (TYPE_SIMPLIFIED, 'Simplified Checklist'),
-        (TYPE_SCHEDULED, 'Scheduled Audit report'),
-        (TYPE_SPECIAL, 'Special Audit report'),
-        (TYPE_OTHER, 'Other'),
+        (TYPE_MICRO, _('Micro Assessment')),
+        (TYPE_SIMPLIFIED, _('Simplified Checklist')),
+        (TYPE_SCHEDULED, _('Scheduled Audit report')),
+        (TYPE_SPECIAL, _('Special Audit report')),
+        (TYPE_OTHER, _('Other')),
     )
 
     partner = models.ForeignKey(
@@ -1230,9 +1232,9 @@ class Agreement(TimeStampedModel):
     MOU = 'MOU'
     SSFA = 'SSFA'
     AGREEMENT_TYPES = (
-        (PCA, "Programme Cooperation Agreement"),
-        (SSFA, 'Small Scale Funding Agreement'),
-        (MOU, 'Memorandum of Understanding'),
+        (PCA, _("Programme Cooperation Agreement")),
+        (SSFA, _('Small Scale Funding Agreement')),
+        (MOU, _('Memorandum of Understanding')),
     )
 
     DRAFT = "draft"
@@ -1241,11 +1243,11 @@ class Agreement(TimeStampedModel):
     SUSPENDED = "suspended"
     TERMINATED = "terminated"
     STATUS_CHOICES = (
-        (DRAFT, "Draft"),
-        (SIGNED, "Signed"),
-        (ENDED, "Ended"),
-        (SUSPENDED, "Suspended"),
-        (TERMINATED, "Terminated"),
+        (DRAFT, _("Draft")),
+        (SIGNED, _("Signed")),
+        (ENDED, _("Ended")),
+        (SUSPENDED, _("Suspended")),
+        (TERMINATED, _("Terminated")),
     )
     AUTO_TRANSITIONS = {
         DRAFT: [SIGNED],
@@ -1535,10 +1537,10 @@ class AgreementAmendment(TimeStampedModel):
     CLAUSE = 'Change in clause'
 
     AMENDMENT_TYPES = Choices(
-        (IP_NAME, 'Change in Legal Name of Implementing Partner'),
-        (AUTHORIZED_OFFICER, 'Change Authorized Officer(s)'),
-        (BANKING_INFO, 'Banking Information'),
-        (CLAUSE, 'Change in clause'),
+        (IP_NAME, _('Change in Legal Name of Implementing Partner')),
+        (AUTHORIZED_OFFICER, _('Change Authorized Officer(s)')),
+        (BANKING_INFO, _('Banking Information')),
+        (CLAUSE, _('Change in clause')),
     )
 
     number = models.CharField(verbose_name=_("Number"), max_length=5)
@@ -1768,24 +1770,24 @@ class Intervention(TimeStampedModel):
     }
 
     INTERVENTION_STATUS = (
-        (DRAFT, "Development"),
-        (REVIEW, "Review"),
-        (SIGNATURE, "Signature"),
-        (SIGNED, 'Signed'),
-        (ACTIVE, "Active"),
-        (CANCELLED, "Cancelled"),
-        (ENDED, "Ended"),
-        (CLOSED, "Closed"),
-        (SUSPENDED, "Suspended"),
-        (TERMINATED, "Terminated"),
-        (EXPIRED, "Expired"),
+        (DRAFT, _("Development")),
+        (REVIEW, _("Review")),
+        (SIGNATURE, _("Signature")),
+        (SIGNED, _('Signed')),
+        (ACTIVE, _("Active")),
+        (CANCELLED, _("Cancelled")),
+        (ENDED, _("Ended")),
+        (CLOSED, _("Closed")),
+        (SUSPENDED, _("Suspended")),
+        (TERMINATED, _("Terminated")),
+        (EXPIRED, _("Expired")),
     )
     PD = 'PD'
     SPD = 'SPD'
     SSFA = 'SSFA'
     INTERVENTION_TYPES = (
-        (PD, 'Programme Document'),
-        (SPD, 'Simplified Programme Document'),
+        (PD, _('Programme Document')),
+        (SPD, _('Simplified Programme Document')),
         # (SSFA, 'SSFA'),
     )
 
@@ -1794,19 +1796,19 @@ class Intervention(TimeStampedModel):
     RATING_SIGNIFICANT = "significant"
     RATING_PRINCIPAL = "principal"
     RATING_CHOICES = (
-        (RATING_NONE, "None"),
-        (RATING_MARGINAL, "Marginal"),
-        (RATING_SIGNIFICANT, "Significant"),
-        (RATING_PRINCIPAL, "Principal"),
+        (RATING_NONE, _("None")),
+        (RATING_MARGINAL, _("Marginal")),
+        (RATING_SIGNIFICANT, _("Significant")),
+        (RATING_PRINCIPAL, _("Principal")),
     )
 
     CASH_TRANSFER_PAYMENT = "payment"
     CASH_TRANSFER_REIMBURSEMENT = "reimbursement"
     CASH_TRANSFER_DIRECT = "dct"
     CASH_TRANSFER_CHOICES = (
-        (CASH_TRANSFER_PAYMENT, "Direct Payment"),
-        (CASH_TRANSFER_REIMBURSEMENT, "Reimbursement"),
-        (CASH_TRANSFER_DIRECT, "Direct Cash Transfer"),
+        (CASH_TRANSFER_PAYMENT, _("Direct Payment")),
+        (CASH_TRANSFER_REIMBURSEMENT, _("Reimbursement")),
+        (CASH_TRANSFER_DIRECT, _("Direct Cash Transfer")),
     )
 
     REVIEW_TYPE_NONE = "none"
@@ -2600,7 +2602,7 @@ class Intervention(TimeStampedModel):
 
     def get_cash_transfer_modalities_display(self):
         choices = dict(self.CASH_TRANSFER_CHOICES)
-        return ', '.join(choices.get(m, 'Unknown') for m in self.cash_transfer_modalities)
+        return ', '.join(choices.get(choices[m], 'Unknown') for m in self.cash_transfer_modalities)
 
     def was_active_before(self):
         """
@@ -2633,12 +2635,12 @@ class InterventionAmendment(TimeStampedModel):
     TYPE_NO_COST = 'no_cost'
 
     AMENDMENT_TYPES = Choices(
-        (TYPE_ADMIN_ERROR, 'Type 1: Administrative error (correction)'),
-        (TYPE_BUDGET_LTE_20, 'Type 2: Budget <= 20%'),
-        (TYPE_BUDGET_GT_20, 'Type 3: Budget > 20%'),
-        (TYPE_CHANGE, 'Type 4: Changes to planned results'),
-        (TYPE_NO_COST, 'Type 5: No cost extension'),
-        (OTHER, 'Type 6: Other')
+        (TYPE_ADMIN_ERROR, _('Type 1: Administrative error (correction)')),
+        (TYPE_BUDGET_LTE_20, _('Type 2: Budget <= 20%')),
+        (TYPE_BUDGET_GT_20, _('Type 3: Budget > 20%')),
+        (TYPE_CHANGE, _('Type 4: Changes to planned results')),
+        (TYPE_NO_COST, _('Type 5: No cost extension')),
+        (OTHER, _('Type 6: Other'))
     )
     AMENDMENT_TYPES_OLD = [
         (DATES, 'Dates'),
@@ -3152,14 +3154,14 @@ class InterventionReview(InterventionReviewQuestionnaire, TimeStampedModel):
     NORV = 'no-review'
 
     INTERVENTION_REVIEW_TYPES = Choices(
-        (PRC, 'PRC Review'),
-        (NPRC, 'Non-PRC Review'),
+        (PRC, _('PRC Review')),
+        (NPRC, _('Non-PRC Review')),
     )
     # no review is available only for amendment
     ALL_REVIEW_TYPES = Choices(
         *(
             INTERVENTION_REVIEW_TYPES +
-            ((NORV, 'No Review Required'),)
+            ((NORV, _('No Review Required')),)
         )
     )
 
@@ -3298,15 +3300,15 @@ class FileType(models.Model):
     OTHER = 'Other'
 
     NAME_CHOICES = Choices(
-        (FACE, FACE),
-        (PROGRESS_REPORT, PROGRESS_REPORT),
-        (FINAL_PARTNERSHIP_REVIEW, FINAL_PARTNERSHIP_REVIEW),
-        (CORRESPONDENCE, CORRESPONDENCE),
-        (SUPPLY_PLAN, SUPPLY_PLAN),
-        (DATA_PROCESSING_AGREEMENT, DATA_PROCESSING_AGREEMENT),
-        (ACTIVITIES_INVOLVING_CHILDREN, ACTIVITIES_INVOLVING_CHILDREN),
-        (SPECIAL_CONDITIONS_FOR_CONSTRUCTION, SPECIAL_CONDITIONS_FOR_CONSTRUCTION),
-        (OTHER, OTHER),
+        (FACE, _('FACE')),
+        (PROGRESS_REPORT, _('Progress Report')),
+        (FINAL_PARTNERSHIP_REVIEW, _('(Legacy) Final Partnership Review')),
+        (CORRESPONDENCE, _('Correspondence')),
+        (SUPPLY_PLAN, _('Supply/Distribution Plan')),
+        (DATA_PROCESSING_AGREEMENT, _("Data Processing Agreement")),
+        (ACTIVITIES_INVOLVING_CHILDREN, _("Activities involving children and young people")),
+        (SPECIAL_CONDITIONS_FOR_CONSTRUCTION, _("Special Conditions for Construction Works")),
+        (OTHER, _('Other')),
     )
     name = models.CharField(max_length=64, choices=NAME_CHOICES, unique=True, verbose_name=_('Name'))
 
@@ -3404,7 +3406,7 @@ class DirectCashTransfer(models.Model):
     outstanding_balance_usd = models.DecimalField(decimal_places=2, max_digits=20,
                                                   verbose_name=_('Outstanding Balance (USD)'))
     amount_less_than_3_Months_usd = models.DecimalField(decimal_places=2, max_digits=20,
-                                                        verbose_name=_('Amount mess than 3 months (USD)'))
+                                                        verbose_name=_('Amount less than 3 months (USD)'))
     amount_3_to_6_months_usd = models.DecimalField(decimal_places=2, max_digits=20,
                                                    verbose_name=_('Amount between 3 and 6 months (USD)'))
     amount_6_to_9_months_usd = models.DecimalField(decimal_places=2, max_digits=20,
@@ -3463,13 +3465,13 @@ class InterventionRisk(TimeStampedModel):
     RISK_TYPE_STRATEGIC = "strategic"
     RISK_TYPE_SECURITY = "security"
     RISK_TYPE_CHOICES = (
-        (RISK_TYPE_ENVIRONMENTAL, "Social & Environmental"),
-        (RISK_TYPE_FINANCIAL, "Financial"),
-        (RISK_TYPE_OPERATIONAL, "Operational"),
-        (RISK_TYPE_ORGANIZATIONAL, "Organizational"),
-        (RISK_TYPE_POLITICAL, "Political"),
-        (RISK_TYPE_STRATEGIC, "Strategic"),
-        (RISK_TYPE_SECURITY, "Safety & security"),
+        (RISK_TYPE_ENVIRONMENTAL, _("Social & Environmental")),
+        (RISK_TYPE_FINANCIAL, _("Financial")),
+        (RISK_TYPE_OPERATIONAL, _("Operational")),
+        (RISK_TYPE_ORGANIZATIONAL, _("Organizational")),
+        (RISK_TYPE_POLITICAL, _("Political")),
+        (RISK_TYPE_STRATEGIC, _("Strategic")),
+        (RISK_TYPE_SECURITY, _("Safety & security")),
     )
 
     intervention = models.ForeignKey(
