@@ -708,7 +708,10 @@ class TestAgreementAPIFileAttachments(BaseTenantTestCase):
 class TestAgreementAPIView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.unicef_staff = UserFactory(is_staff=True)
+        cls.unicef_staff = UserFactory(
+            is_staff=True,
+            realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]
+        )
         cls.organization = OrganizationFactory(
             name='Partner',
             organization_type=OrganizationType.CIVIL_SOCIETY_ORGANIZATION)
