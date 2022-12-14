@@ -3222,7 +3222,7 @@ class TestInterventionAttachments(BaseTenantTestCase):
             profile__organization=partner.organization
         )
         country_programme = CountryProgrammeFactory()
-        user = UserFactory(is_staff=True, groups__data=['UNICEF User', 'Partnership Manager'])
+        user = UserFactory(is_staff=True, realms__data=['UNICEF User', 'Partnership Manager'])
 
         intervention = InterventionFactory(
             status=Intervention.SIGNATURE,
