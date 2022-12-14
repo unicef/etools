@@ -57,3 +57,9 @@ class IssueJWTRedirectView(APIView):
 def logout_view(request):
     logout(request)
     return HttpResponseRedirect(reverse("main"))
+
+
+class SocialLogoutView(RedirectView):
+
+    def get_redirect_url(self, *args, **kwargs):
+        return settings.SOCIAL_LOGOUT_URL
