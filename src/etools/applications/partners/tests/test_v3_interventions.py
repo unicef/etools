@@ -768,13 +768,13 @@ class TestUpdate(BaseInterventionTestCase):
     )
     def test_send_pd_to_vision(self, logger_mock):
         intervention = InterventionFactory()
-        intervention.unicef_focal_points.add(self.user)
+        intervention.unicef_focal_points.add(self.unicef_user)
 
         with self.captureOnCommitCallbacks(execute=True) as callbacks:
             response = self.forced_auth_req(
                 "patch",
                 reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
-                user=self.user,
+                user=self.unicef_user,
                 data={'start': datetime.date(year=1970, month=5, day=1)}
             )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
