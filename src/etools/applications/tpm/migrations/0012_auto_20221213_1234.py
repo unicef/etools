@@ -10,8 +10,10 @@ def migrate_visit_staff_members_to_users(apps, schema_editor):
 
     TPMVisit = apps.get_model('tpm', 'TPMVisit')
 
-    for v in TPMVisit.objects.all():
-        v.staff_members.add(*[staff_member.user for staff_member in v.old_staff_members.all().select_related('user')])
+    for v in TPMVisit.admin_objects.all():
+        v.tpm_partner_focal_points.add(*[
+            staff_member.user for staff_member in v.old_tpm_partner_focal_points.all().select_related('user')
+        ])
 
 
 class Migration(migrations.Migration):
