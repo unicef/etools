@@ -1,4 +1,6 @@
+from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
+from django.db import connection
 from django.db.models import Q
 from django.http import Http404
 from django.utils import timezone
@@ -53,7 +55,13 @@ from etools.applications.tpm.export.serializers import (
     TPMPartnerExportSerializer,
     TPMVisitExportSerializer,
 )
-from etools.applications.tpm.filters import ReferenceNumberOrderingFilter, TPMActivityFilter, TPMVisitFilter
+from etools.applications.tpm.filters import (
+    ReferenceNumberOrderingFilter,
+    StaffMembersOrderingFilter,
+    TPMActivityFilter,
+    TPMStaffMembersFilterSet,
+    TPMVisitFilter,
+)
 from etools.applications.tpm.models import PME, ThirdPartyMonitor, TPMActionPoint, TPMActivity, TPMVisit, UNICEFUser
 from etools.applications.tpm.serializers.attachments import (
     ActivityAttachmentsSerializer,
@@ -77,9 +85,8 @@ from etools.applications.tpm.serializers.visit import (
     TPMVisitLightSerializer,
     TPMVisitSerializer,
 )
-from etools.applications.tpm.tpmpartners.models import TPMPartner, TPMPartnerStaffMember
+from etools.applications.tpm.tpmpartners.models import TPMPartner
 from etools.applications.tpm.tpmpartners.synchronizers import TPMPartnerSynchronizer
-from etools.applications.users.models import Realm
 
 
 class BaseTPMViewSet(
@@ -132,7 +139,7 @@ class TPMPartnerViewSet(
             # no need to filter queryset
             pass
         elif ThirdPartyMonitor.as_group() in user_groups:
-            queryset = queryset.filter(staff_members__user=self.request.user)
+            queryset = queryset.filter(organization=self.request.user.profile.organization)
         else:
             queryset = queryset.none()
 
@@ -141,13 +148,9 @@ class TPMPartnerViewSet(
     def get_permission_context(self):
         context = super().get_permission_context()
 
-        if ThirdPartyMonitor.as_group() in self.request.user.groups.all() and \
-           hasattr(self.request.user, 'tpmpartners_tpmpartnerstaffmember'):
+        if ThirdPartyMonitor.as_group() in self.request.user.groups.all():
             context += [
-                TPMStaffMemberCondition(
-                    self.request.user.tpmpartners_tpmpartnerstaffmember.tpm_partner,
-                    self.request.user
-                ),
+                TPMStaffMemberCondition(self.request.user.profile.organization, self.request.user),
             ]
 
         return context
@@ -155,7 +158,7 @@ class TPMPartnerViewSet(
     def get_obj_permission_context(self, obj):
         context = super().get_obj_permission_context(obj)
         context.extend([
-            TPMStaffMemberCondition(obj, self.request.user),
+            TPMStaffMemberCondition(obj.organization, self.request.user),
         ])
         return context
 
@@ -202,36 +205,74 @@ class TPMPartnerViewSet(
 class TPMStaffMembersViewSet(
     BaseTPMViewSet,
     mixins.ListModelMixin,
-    mixins.CreateModelMixin,
+    # TODO: REALMS - do cleanup. users management moved to separate moved
+    # mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
-    mixins.UpdateModelMixin,
-    mixins.DestroyModelMixin,
+    # mixins.UpdateModelMixin,
+    # mixins.DestroyModelMixin,
     NestedViewSetMixin,
     viewsets.GenericViewSet
 ):
     metadata_class = PermissionBasedMetadata
-    queryset = TPMPartnerStaffMember.objects.all()
+    queryset = get_user_model().objects.prefetch_related('realms').filter(is_active=True).distinct()
     serializer_class = TPMPartnerStaffMemberSerializer
-    permission_classes = BaseTPMViewSet.permission_classes + [NestedPermission]
+    permission_classes = BaseTPMViewSet.permission_classes + [
+        get_permission_for_targets('tpmpartners.tpmpartner.staff_members')
+    ]
 
-    filter_backends = (OrderingFilter, SearchFilter, DjangoFilterBackend, )
+    filter_backends = (StaffMembersOrderingFilter, SearchFilter, DjangoFilterBackend, )
     ordering_fields = ('user__email', 'user__first_name', 'id', )
-    search_fields = ('user__first_name', 'user__email', 'user__last_name', )
-    filter_fields = ('user__is_active', )
+    search_fields = ('first_name', 'email', 'last_name', )
+    filterset_class = TPMStaffMembersFilterSet
 
-    def perform_create(self, serializer, **kwargs):
-        self.check_serializer_permissions(serializer, edit=True)
-        instance = serializer.save(tpm_partner=self.get_parent_object(), **kwargs)
-        if not instance.user.profile.country:
-            instance.user.profile.country = self.request.user.profile.country
-        instance.user.profile.organization = instance.tpm_partner.organization
-        Realm.objects.update_or_create(
-            user=instance.user,
-            country=instance.user.profile.country,
-            organization=instance.tpm_partner.organization,
-            group=ThirdPartyMonitor.as_group()
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        queryset = queryset.filter(
+            realms__country=connection.tenant,
+            realms__organization=self.get_parent_object().organization,
+            realms__group=ThirdPartyMonitor.as_group(),
         )
-        instance.user.profile.save(update_fields=['country', 'organization'])
+        return queryset
+
+    def get_parent_filter(self):
+        parent = self.get_parent_object()
+        if not parent:
+            return {}
+
+        return {'realms__organization': parent.organization}
+
+    def get_permission_context(self):
+        context = super().get_permission_context()
+
+        parent = self.get_parent_object()
+        if parent:
+            context += [
+                TPMStaffMemberCondition(parent.organization, self.request.user),
+            ]
+
+        return context
+
+    def get_obj_permission_context(self, obj):
+        context = super().get_obj_permission_context(obj)
+        context.extend([
+            TPMStaffMemberCondition(obj.profile.organization, self.request.user),
+        ])
+        return context
+
+    # TODO: REALMS - do cleanup
+    # def perform_create(self, serializer, **kwargs):
+    #     self.check_serializer_permissions(serializer, edit=True)
+    #     instance = serializer.save(tpm_partner=self.get_parent_object(), **kwargs)
+    #     if not instance.user.profile.country:
+    #         instance.user.profile.country = self.request.user.profile.country
+    #     instance.user.profile.organization = instance.tpm_partner.organization
+    #     Realm.objects.update_or_create(
+    #         user=instance.user,
+    #         country=instance.user.profile.country,
+    #         organization=instance.tpm_partner.organization,
+    #         group=ThirdPartyMonitor.as_group()
+    #     )
+    #     instance.user.profile.save(update_fields=['country', 'organization'])
 
     @action(detail=False, methods=['get'], url_path='export', renderer_classes=(TPMPartnerContactsCSVRenderer,))
     def export(self, request, *args, **kwargs):
@@ -342,9 +383,9 @@ class TPMVisitViewSet(
             # no need to filter queryset
             pass
         elif ThirdPartyMonitor.as_group() in user_groups and \
-                hasattr(self.request.user, 'tpmpartners_tpmpartnerstaffmember'):
+                hasattr(self.request.user.profile.organization, 'tpmpartner'):
             queryset = queryset.filter(
-                tpm_partner=self.request.user.tpmpartners_tpmpartnerstaffmember.tpm_partner
+                tpm_partner=self.request.user.profile.organization.tpmpartner
             ).exclude(
                 Q(status=TPMVisit.STATUSES.draft) |
                 Q(status=TPMVisit.STATUSES.cancelled, date_of_assigned__isnull=True)  # cancelled draft
@@ -391,14 +432,8 @@ class TPMVisitViewSet(
     def get_permission_context(self):
         context = super().get_permission_context()
 
-        if ThirdPartyMonitor.as_group() in self.request.user.groups.all() and \
-           hasattr(self.request.user, 'tpmpartners_tpmpartnerstaffmember'):
-            context += [
-                TPMStaffMemberCondition(
-                    self.request.user.tpmpartners_tpmpartnerstaffmember.tpm_partner,
-                    self.request.user
-                ),
-            ]
+        if ThirdPartyMonitor.as_group() in self.request.user.groups:
+            context.append(TPMStaffMemberCondition(self.request.user.profile.organization, self.request.user))
 
         return context
 
@@ -406,7 +441,7 @@ class TPMVisitViewSet(
         context = super().get_obj_permission_context(obj)
         context.extend([
             ObjectStatusCondition(obj),
-            TPMStaffMemberCondition(obj.tpm_partner, self.request.user),
+            TPMStaffMemberCondition(obj.tpm_partner.organization, self.request.user),
             TPMVisitUNICEFFocalPointCondition(obj, self.request.user),
             TPMVisitTPMFocalPointCondition(obj, self.request.user),
         ])

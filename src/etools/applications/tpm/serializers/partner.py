@@ -3,17 +3,18 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from unicef_restlib.serializers import WritableNestedSerializerMixin
 
-from etools.applications.firms.serializers import BaseStaffMemberSerializer
+from etools.applications.firms.serializers import UserSerializer
 from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
-from etools.applications.tpm.models import TPMPartnerStaffMember
 from etools.applications.tpm.tpmpartners.models import TPMPartner
 
 
-class TPMPartnerStaffMemberSerializer(PermissionsBasedSerializerMixin, BaseStaffMemberSerializer):
-    class Meta(BaseStaffMemberSerializer.Meta):
-        model = TPMPartnerStaffMember
-        fields = BaseStaffMemberSerializer.Meta.fields + [
-            'receive_tpm_notifications',
+class TPMPartnerStaffMemberSerializer(UserSerializer):
+    user = UserSerializer(required=False, source='*')
+    receive_tpm_notifications = serializers.BooleanField(source='profile.receive_tpm_notifications', required=False)
+
+    class Meta(UserSerializer.Meta):
+        fields = UserSerializer.Meta.fields + [
+            'user', 'receive_tpm_notifications',
         ]
 
 

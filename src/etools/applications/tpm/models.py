@@ -17,7 +17,7 @@ from etools.applications.action_points.models import ActionPoint
 from etools.applications.activities.models import Activity
 from etools.applications.core.urlresolvers import build_frontend_url
 from etools.applications.environment.notifications import send_notification_with_template
-from etools.applications.tpm.tpmpartners.models import TPMPartner, TPMPartnerStaffMember
+from etools.applications.tpm.tpmpartners.models import TPMPartner
 from etools.applications.tpm.transitions.conditions import (
     TPMVisitAssignRequiredFieldsCheck,
     TPMVisitReportValidations,
@@ -98,7 +98,7 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
     date_of_unicef_approved = models.DateField(blank=True, null=True, verbose_name=_('Date of UNICEF Approved'))
 
     tpm_partner_focal_points = models.ManyToManyField(
-        TPMPartnerStaffMember, verbose_name=_('TPM Focal Points'), related_name='tpm_visits', blank=True
+        settings.AUTH_USER_MODEL, verbose_name=_('TPM Focal Points'), related_name='tpm_visits', blank=True
     )
 
     tpm_partner_tracker = FieldTracker(fields=['tpm_partner', ])
@@ -216,9 +216,9 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
     def _get_tpm_focal_points_as_email_recipients(self):
         return list(
             self.tpm_partner_focal_points.filter(
-                user__email__isnull=False,
-                user__is_active=True
-            ).values_list('user__email', flat=True)
+                email__isnull=False,
+                is_active=True
+            ).values_list('email', flat=True)
         )
 
     @transition(
@@ -241,11 +241,11 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
                 cc=self._get_unicef_focal_points_and_pme_as_email_recipients()
             )
 
-        for staff_member in self.tpm_partner_focal_points.filter(user__email__isnull=False, user__is_active=True):
+        for staff_member in self.tpm_partner_focal_points.filter(email__isnull=False, is_active=True):
             self._send_email(
-                staff_member.user.email, 'tpm/visit/assign_staff_member',
-                context={'recipient': staff_member.user.get_full_name()},
-                user=staff_member.user
+                staff_member.email, 'tpm/visit/assign_staff_member',
+                context={'recipient': staff_member.get_full_name()},
+                user=staff_member
             )
 
     @transition(
@@ -315,11 +315,11 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
         self.date_of_tpm_report_rejected = timezone.now()
         TPMVisitReportRejectComment.objects.create(reject_reason=reject_comment, tpm_visit=self)
 
-        for staff_user in self.tpm_partner_focal_points.filter(user__email__isnull=False, user__is_active=True):
+        for staff_user in self.tpm_partner_focal_points.filter(email__isnull=False, is_active=True):
             self._send_email(
-                [staff_user.user.email], 'tpm/visit/report_rejected',
-                context={'recipient': staff_user.user.get_full_name()},
-                user=staff_user.user
+                [staff_user.email], 'tpm/visit/report_rejected',
+                context={'recipient': staff_user.get_full_name()},
+                user=staff_user
             )
 
     @transition(status, source=[STATUSES.tpm_reported], target=STATUSES.unicef_approved,
@@ -342,11 +342,11 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
 
         if notify_tpm_partner:
             # TODO: Generate report as PDF attachment.
-            for staff_user in self.tpm_partner_focal_points.filter(user__email__isnull=False, user__is_active=True):
+            for staff_user in self.tpm_partner_focal_points.filter(email__isnull=False, is_active=True):
                 self._send_email(
-                    [staff_user.user.email, ], 'tpm/visit/approve_report_tpm',
-                    context={'recipient': staff_user.user.get_full_name()},
-                    user=staff_user.user
+                    [staff_user.email, ], 'tpm/visit/approve_report_tpm',
+                    context={'recipient': staff_user.get_full_name()},
+                    user=staff_user
                 )
 
         if approval_comment:

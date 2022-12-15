@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import connection, models
 from django.utils.translation import gettext_lazy as _
@@ -29,10 +30,19 @@ class TPMPartner(BaseFirm):
             self.hidden = False
             self.save()
 
+    @property
+    def staff_members(self) -> models.QuerySet:
+        return get_user_model().objects.filter(
+            pk__in=self.organization.realms.filter(
+                is_active=True,
+                country=connection.tenant,
+            ).values_list('user_id', flat=True)
+        )
+
 
 class TPMPartnerStaffMember(BaseStaffMember):
     tpm_partner = models.ForeignKey(
-        TPMPartner, verbose_name=_('TPM Vendor'), related_name='staff_members',
+        TPMPartner, verbose_name=_('TPM Vendor'), related_name='old_staff_members',
         on_delete=models.CASCADE,
     )
 

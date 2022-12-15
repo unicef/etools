@@ -1,7 +1,8 @@
+from django.contrib.auth import get_user_model
 from django.db.models.functions import TruncYear
 
 from django_filters import rest_framework as filters
-from rest_framework.filters import BaseFilterBackend
+from rest_framework.filters import BaseFilterBackend, OrderingFilter
 
 from etools.applications.tpm.models import TPMActivity, TPMVisit
 
@@ -55,3 +56,23 @@ class TPMActivityFilter(filters.FilterSet):
             'date': ['exact', 'year'],
             'intervention': ['exact', 'in'],
         }
+
+
+class TPMStaffMembersFilterSet(filters.FilterSet):
+    user__is_active = filters.CharFilter(field_name='is_active')
+
+    class Meta:
+        model = get_user_model()
+        fields = {}
+
+
+class StaffMembersOrderingFilter(OrderingFilter):
+    """
+    backwards compatible staff members ordering: since we're using user instead of extra model, `user__` is not needed
+    """
+
+    def get_ordering(self, request, queryset, view):
+        ordering = super().get_ordering(request, queryset, view)
+        if not ordering:
+            return ordering
+        return [param.replace('user__', '') for param in ordering]

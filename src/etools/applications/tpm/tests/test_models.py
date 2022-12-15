@@ -1,11 +1,8 @@
-from django.contrib.auth import get_user_model
-from django.core.management import call_command
-
 from unicef_attachments.utils import get_denormalize_func
 
 from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
-from etools.applications.tpm.tests.factories import TPMPartnerFactory, TPMPartnerStaffMemberFactory, TPMVisitFactory
+from etools.applications.tpm.tests.factories import TPMVisitFactory
 
 
 class TestTPMVisit(BaseTenantTestCase):
@@ -44,20 +41,21 @@ class TestTPMActivity(BaseTenantTestCase):
         get_denormalize_func()(attachment)
 
 
-class TPMStaffMemberTestCase(BaseTenantTestCase):
-
-    @classmethod
-    def setUpTestData(cls):
-        cls.firm = TPMPartnerFactory()
-        call_command('update_notifications')
-
-    def test_post_delete(self):
-        staff_member = TPMPartnerStaffMemberFactory(
-            tpm_partner=self.firm, user__profile__organization=self.firm.organization
-        )
-        staff_member.delete()
-
-        user = get_user_model().objects.filter(email=staff_member.user.email).first()
-        self.assertIsNotNone(user)
-        self.assertEqual(user.is_active, False)
-        self.assertEqual(user.profile.organization, self.firm.organization)
+# TODO: REALMS - do cleanup
+# class TPMStaffMemberTestCase(BaseTenantTestCase):
+#
+#     @classmethod
+#     def setUpTestData(cls):
+#         cls.firm = TPMPartnerFactory()
+#         call_command('update_notifications')
+#
+#     def test_post_delete(self):
+#         staff_member = TPMPartnerStaffMemberFactory(
+#             tpm_partner=self.firm, user__profile__organization=self.firm.organization
+#         )
+#         staff_member.delete()
+#
+#         user = get_user_model().objects.filter(email=staff_member.user.email).first()
+#         self.assertIsNotNone(user)
+#         self.assertEqual(user.is_active, False)
+#         self.assertEqual(user.profile.organization, self.firm.organization)

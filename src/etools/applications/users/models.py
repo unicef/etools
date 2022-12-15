@@ -196,9 +196,9 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
             country=connection.tenant, organization=self.profile.organization, is_active=True)
         return Group.objects.filter(realms__in=current_country_realms).distinct()
 
-    def get_groups_for_organization_id(self, organization_id):
+    def get_groups_for_organization_id(self, organization_id, **extra_filters):
         current_country_realms = self.realms.filter(
-            country=connection.tenant, organization_id=organization_id)
+            country=connection.tenant, organization_id=organization_id, **extra_filters)
         return Group.objects.filter(realms__in=current_country_realms).distinct()
 
     def get_partner_staff_member(self) -> ['PartnerStaffMember']:
@@ -422,6 +422,8 @@ class UserProfile(models.Model):
                                    blank=True, null=True, verbose_name=_('Supervisor'))
     oic = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, verbose_name=_('OIC'),
                             null=True, blank=True)  # related oic_set
+
+    receive_tpm_notifications = models.BooleanField(verbose_name=_('Receive Notifications on TPM Tasks'), default=False)
 
     # TODO: figure this out when we need to automatically map to groups
     # vision_roles = ArrayField(models.CharField(max_length=20, blank=True, choices=VISION_ROLES),
