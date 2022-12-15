@@ -102,12 +102,12 @@ class PCAPDFView(LoginRequiredMixin, PDFTemplateView):
                 bank_objects.append(Bank(*[b[i[1]] for i in bank_key_values]))
 
         officers_list = []
-        for officer in self.agreement.authorized_officers.filter(active=True):
+        for officer in self.agreement.authorized_officers.filter(is_active=True):
             officers_list.append(
                 {'first_name': officer.first_name,
                  'last_name': officer.last_name,
                  'email': officer.email,
-                 'title': officer.title}
+                 'title': officer.profile.job_title}
             )
 
         font_path = settings.PACKAGE_ROOT + '/assets/fonts/'
