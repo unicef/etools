@@ -4,7 +4,7 @@ from django.utils.encoding import force_str
 from rest_framework import serializers
 
 from etools.applications.users.models import Country, Group, UserProfile
-from etools.applications.users.validators import EmailValidator
+from etools.applications.users.validators import EmailValidator, LowerCaseEmailValidator
 
 
 class SimpleCountrySerializer(serializers.ModelSerializer):
@@ -33,19 +33,17 @@ class UserProfileSerializer(serializers.ModelSerializer):
 class UserManagementSerializer(serializers.Serializer):
     user_email = serializers.EmailField(
         required=True,
-        validators=[EmailValidator()],
+        validators=[LowerCaseEmailValidator()],
     )
     roles = serializers.ListSerializer(child=serializers.ChoiceField(choices=["Partnership Manager",
                                                                               "PME",
                                                                               "Travel Administrator",
                                                                               "UNICEF Audit Focal Point",
+                                                                              "Travel Focal Point",
                                                                               "FM User",
                                                                               "Driver"]), required=True)
     workspace = serializers.CharField(required=True)
     access_type = serializers.ChoiceField(choices=["grant", "revoke", "set"], required=True)
-
-    class Meta:
-        fields = "__all__"
 
 
 class SimpleProfileSerializer(serializers.ModelSerializer):
@@ -53,7 +51,7 @@ class SimpleProfileSerializer(serializers.ModelSerializer):
     user_id = serializers.CharField(source="user.id")
     email = serializers.EmailField(
         source="user.email",
-        validators=[EmailValidator()],
+        validators=[EmailValidator(), LowerCaseEmailValidator()],
     )
     full_name = serializers.SerializerMethodField()
 
@@ -145,7 +143,7 @@ class SimpleNestedProfileSerializer(serializers.ModelSerializer):
 
 
 class SimpleUserSerializer(serializers.ModelSerializer):
-    email = serializers.EmailField(validators=[EmailValidator()])
+    email = serializers.EmailField(validators=[EmailValidator(), LowerCaseEmailValidator()])
     profile = SimpleNestedProfileSerializer()
 
     class Meta:
@@ -177,7 +175,7 @@ class UserCreationSerializer(serializers.ModelSerializer):
     groups = serializers.SerializerMethodField()
     user_permissions = serializers.SerializerMethodField()
     profile = UserProfileCreationSerializer()
-    email = serializers.EmailField(validators=[EmailValidator()])
+    email = serializers.EmailField(validators=[EmailValidator(), LowerCaseEmailValidator()])
 
     def get_groups(self, user):
         return [grp.id for grp in user.groups.all()]
