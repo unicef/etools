@@ -22,16 +22,11 @@ from etools.applications.audit.models import (
     UNICEFAuditFocalPoint,
     UNICEFUser,
 )
-from etools.applications.audit.purchase_order.models import (
-    AuditorFirm,
-    AuditorStaffMember,
-    PurchaseOrder,
-    PurchaseOrderItem,
-)
-from etools.applications.firms.tests.factories import BaseFirmFactory, BaseStaffMemberFactory
+from etools.applications.audit.purchase_order.models import AuditorFirm, PurchaseOrder, PurchaseOrderItem
+from etools.applications.firms.tests.factories import BaseFirmFactory
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.tests.factories import AgreementFactory, InterventionFactory, PartnerFactory
-from etools.applications.users.tests.factories import CountryFactory, RealmFactory, UserFactory
+from etools.applications.users.tests.factories import CountryFactory, GroupFactory, RealmFactory, UserFactory
 
 
 class FuzzyBooleanField(fuzzy.BaseFuzzyAttribute):
@@ -65,29 +60,44 @@ class AuditorUserFactory(UserFactory):
         self.profile.organization = extracted.organization
         self.profile.save(update_fields=['organization'])
 
-        AuditorStaffMemberFactory(auditor_firm=extracted, user=self)
-
-
-class AuditorStaffMemberFactory(BaseStaffMemberFactory):
-    class Meta:
-        model = AuditorStaffMember
-
     @factory.post_generation
-    def realms(self, create, extracted, **kwargs):
-        if create:
-            RealmFactory(
-                user=self.user,
-                country=CountryFactory(),
-                organization=self.auditor_firm.organization,
-                group=Auditor.as_group()
-            )
+    def realms(self, create, extracted, data=None, **kwargs):
+        if not create:
+            return
+
+        extracted = (extracted or []) + (data or [])
+        if extracted:
+            organization = self.profile.organization
+            for group in extracted:
+                if isinstance(group, str):
+                    RealmFactory(
+                        user=self,
+                        country=CountryFactory(),
+                        organization=organization,
+                        group=GroupFactory(name=group)
+                    )
+
+# TODO: REALMS - do cleanup
+# class AuditorStaffMemberFactory(BaseStaffMemberFactory):
+#     class Meta:
+#         model = AuditorStaffMember
+#
+#     @factory.post_generation
+#     def realms(self, create, extracted, **kwargs):
+#         if create:
+#             RealmFactory(
+#                 user=self.user,
+#                 country=CountryFactory(),
+#                 organization=self.auditor_firm.organization,
+#                 group=Auditor.as_group()
+#             )
 
 
 class AuditPartnerFactory(BaseFirmFactory):
     class Meta:
         model = AuditorFirm
 
-    staff_members = factory.RelatedFactory(AuditorStaffMemberFactory, 'auditor_firm')
+    staff_members = factory.RelatedFactory(AuditorUserFactory, 'partner_firm')
 
 
 class PurchaseOrderItemFactory(factory.django.DjangoModelFactory):

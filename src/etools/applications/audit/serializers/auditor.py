@@ -26,7 +26,7 @@ class UserSerializer(BaseUserSerializer):
 
 class AuditorStaffMemberSerializer(UserSerializer):
     user = UserSerializer(required=False, source='*')
-    # TODO: REALMS - do cleanup
+    # TODO: REALMS - do cleanup - we don't need this field since this serializer is not to be used for editing anymore
     # user_pk = serializers.PrimaryKeyRelatedField(
     #     write_only=True, required=False,
     #     queryset=get_user_model().objects.all()
@@ -90,7 +90,6 @@ class AuditorFirmLightSerializer(PermissionsBasedSerializerMixin, serializers.Mo
         ]
 
 
-# TODO: REALM
 class AuditorFirmSerializer(WritableNestedSerializerMixin, AuditorFirmLightSerializer):
     staff_members = AuditorStaffMemberSerializer(many=True, read_only=True)
 

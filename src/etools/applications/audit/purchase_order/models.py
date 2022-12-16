@@ -1,3 +1,5 @@
+import warnings
+
 from django.contrib.auth import get_user_model
 from django.db import connection, models
 from django.utils.translation import gettext_lazy as _
@@ -37,8 +39,15 @@ class AuditorFirm(BaseFirm):
         )
 
 
-# TODO: REALMS - do cleanup
 class AuditorStaffMember(BaseStaffMember):
+    """
+    legacy auditor staff member model - shouldn't be used
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        warnings.warn('AuditorStaffMember was deprecated in favor of Realms')
+
     auditor_firm = models.ForeignKey(
         AuditorFirm, verbose_name=_('Auditor'), related_name='old_staff_members',
         on_delete=models.CASCADE,

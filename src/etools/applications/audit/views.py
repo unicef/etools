@@ -359,11 +359,9 @@ class EngagementViewSet(
     def get_permission_context(self):
         context = super().get_permission_context()
 
-        if Auditor.as_group() in self.request.user.groups.all() and \
-           hasattr(self.request.user, 'purchase_order_auditorstaffmember'):
+        if Auditor.as_group() in self.request.user.groups.all():
             context += [
-                AuditStaffMemberCondition(self.request.user.purchase_order_auditorstaffmember.auditor_firm.organization,
-                                          self.request.user),
+                AuditStaffMemberCondition(self.request.user.profile.organization, self.request.user),
             ]
 
         return context

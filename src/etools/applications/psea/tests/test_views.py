@@ -16,11 +16,7 @@ from unicef_rest_export import renderers
 from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.audit.models import UNICEFAuditFocalPoint, UNICEFUser
-from etools.applications.audit.tests.factories import (
-    AuditorStaffMemberFactory,
-    AuditPartnerFactory,
-    PurchaseOrderFactory,
-)
+from etools.applications.audit.tests.factories import AuditorUserFactory, AuditPartnerFactory, PurchaseOrderFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.permissions import UNICEF_USER
@@ -662,7 +658,7 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         assessment = AssessmentFactory(partner=self.partner)
         self.assertEqual(assessment.status, assessment.STATUS_DRAFT)
         firm = AuditPartnerFactory()
-        staff = AuditorStaffMemberFactory(auditor_firm=firm)
+        staff = AuditorUserFactory(partner_firm=firm)
         assessor = AssessorFactory(
             assessment=assessment,
             assessor_type=Assessor.TYPE_VENDOR,
@@ -1329,8 +1325,8 @@ class TestAssessorViewSet(BaseTenantTestCase):
 
     def test_patch_vendor_staff(self):
         firm = AuditPartnerFactory()
-        staff_1 = AuditorStaffMemberFactory(auditor_firm=firm)
-        staff_2 = AuditorStaffMemberFactory(auditor_firm=firm)
+        staff_1 = AuditorUserFactory(partner_firm=firm)
+        staff_2 = AuditorUserFactory(partner_firm=firm)
         assessor = AssessorFactory(
             assessor_type=Assessor.TYPE_VENDOR,
             auditor_firm=firm,
@@ -1358,8 +1354,8 @@ class TestAssessorViewSet(BaseTenantTestCase):
 
     def test_patch_vendor_to_unicef(self):
         firm = AuditPartnerFactory()
-        staff_1 = AuditorStaffMemberFactory(auditor_firm=firm)
-        staff_2 = AuditorStaffMemberFactory(auditor_firm=firm)
+        staff_1 = AuditorUserFactory(partner_firm=firm)
+        staff_2 = AuditorUserFactory(partner_firm=firm)
         assessment = AssessmentFactory()
         assessor = AssessorFactory(
             assessment=assessment,
@@ -1390,8 +1386,8 @@ class TestAssessorViewSet(BaseTenantTestCase):
     def test_patch_unicef_to_vendor(self):
         firm = AuditPartnerFactory()
         purchase_order = PurchaseOrderFactory(auditor_firm=firm)
-        staff_1 = AuditorStaffMemberFactory(auditor_firm=firm)
-        staff_2 = AuditorStaffMemberFactory(auditor_firm=firm)
+        staff_1 = AuditorUserFactory(partner_firm=firm)
+        staff_2 = AuditorUserFactory(partner_firm=firm)
         assessment = AssessmentFactory()
         assessor = AssessorFactory(
             assessment=assessment,
