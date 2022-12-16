@@ -1,20 +1,18 @@
 
 from django.db import connection
-from django.db.models.signals import post_delete, post_save
+from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 from etools.applications.tpm.models import ThirdPartyMonitor, TPMActionPoint, TPMVisit
-from etools.applications.tpm.tpmpartners.models import TPMPartnerStaffMember
 from etools.applications.users.models import Country, Realm
 
-
 # todo: remove this signal after staff members model remove
-@receiver(post_delete, sender=TPMPartnerStaffMember)
-def delete_user_receiver(instance, **kwargs):
-    user = instance.user
-    if not user.is_unicef_user():
-        user.is_active = False
-        user.save()
+# @receiver(post_delete, sender=TPMPartnerStaffMember)
+# def delete_user_receiver(instance, **kwargs):
+#     user = instance.user
+#     if not user.is_unicef_user():
+#         user.is_active = False
+#         user.save()
 
 
 @receiver(post_save, sender=TPMActionPoint)

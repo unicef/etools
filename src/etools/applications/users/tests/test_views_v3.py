@@ -15,7 +15,7 @@ from etools.applications.organizations.tests.factories import OrganizationFactor
 from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, UNICEF_USER
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.tpm.models import ThirdPartyMonitor
-from etools.applications.tpm.tests.factories import SimpleTPMPartnerFactory, TPMPartnerStaffMemberFactory
+from etools.applications.tpm.tests.factories import SimpleTPMPartnerFactory, TPMUserFactory
 from etools.applications.users.mixins import GroupEditPermissionMixin
 from etools.applications.users.models import (
     IPAdmin,
@@ -701,7 +701,7 @@ class TestExternalUserAPIView(BaseTenantTestCase):
         cls.unicef_superuser = UserFactory(is_superuser=True)
         cls.auditor_user = AuditorUserFactory()
         cls.tpmpartner = SimpleTPMPartnerFactory()
-        cls.tpmpartner_user = TPMPartnerStaffMemberFactory(
+        cls.tpmpartner_user = TPMUserFactory(
             tpm_partner=cls.tpmpartner,
         )
 

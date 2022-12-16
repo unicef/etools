@@ -46,12 +46,7 @@ from etools.applications.partners.tests.factories import (
 from etools.applications.reports.models import ResultType
 from etools.applications.reports.tests.factories import OfficeFactory, ResultFactory, SectionFactory
 from etools.applications.tpm.models import PME
-from etools.applications.tpm.tests.factories import (
-    SimpleTPMPartnerFactory,
-    TPMPartnerFactory,
-    TPMPartnerStaffMemberFactory,
-    TPMUserFactory,
-)
+from etools.applications.tpm.tests.factories import SimpleTPMPartnerFactory, TPMPartnerFactory, TPMUserFactory
 
 
 class YearPlanViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
@@ -236,7 +231,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
     def test_dont_auto_accept_activity_if_tpm(self):
         tpm_partner = SimpleTPMPartnerFactory()
         team_members = [
-            staff.user for staff in TPMPartnerStaffMemberFactory.create_batch(size=2, tpm_partner=tpm_partner)
+            staff for staff in TPMUserFactory.create_batch(size=2, tpm_partner=tpm_partner)
         ]
 
         activity = MonitoringActivityFactory(
@@ -717,7 +712,7 @@ class FMUsersViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase):
         self.assertEqual(response.data['results'][1]['user_type'], 'tpm')
 
     def test_filter_tpm_partner(self):
-        tpm_partner = self.tpm_user.tpmpartners_tpmpartnerstaffmember.tpm_partner.id
+        tpm_partner = self.tpm_user.profile.organization.tpmpartner.id
 
         response = self._test_list(self.unicef_user, [self.tpm_user],
                                    data={'user_type': 'tpm', 'tpm_partner': tpm_partner})

@@ -1,3 +1,5 @@
+import warnings
+
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import connection, models
@@ -41,6 +43,14 @@ class TPMPartner(BaseFirm):
 
 
 class TPMPartnerStaffMember(BaseStaffMember):
+    """
+    legacy tpm staff member model - shouldn't be used
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        warnings.warn('TPMPartnerStaffMember was deprecated in favor of Realms')
+
     tpm_partner = models.ForeignKey(
         TPMPartner, verbose_name=_('TPM Vendor'), related_name='old_staff_members',
         on_delete=models.CASCADE,
