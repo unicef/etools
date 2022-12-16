@@ -73,6 +73,7 @@ class AgreementDetailSerializer(serializers.ModelSerializer):
     attachment = AttachmentSingleFileField(read_only=True)
     termination_doc = AttachmentSingleFileField()
     permissions = serializers.SerializerMethodField(read_only=True)
+    terms_acknowledged_by = SimpleUserSerializer(read_only=True)
 
     def get_permissions(self, obj):
         user = self.context['request'].user

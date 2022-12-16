@@ -735,6 +735,16 @@ class CPOutputsViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenantT
             }
         )
 
+    def test_output_name_contains_wbs_code(self):
+        result = ResultFactory(result_type__name=ResultType.OUTPUT, wbs='wbs-code')
+        response = self._test_list(self.unicef_user, [result])
+        self.assertIn('wbs-code', response.data['results'][0]['name'])
+
+    def test_queries_number(self):
+        results = [ResultFactory(result_type__name=ResultType.OUTPUT) for _i in range(9)]
+        with self.assertNumQueries(2):
+            self._test_list(self.unicef_user, results)
+
 
 class InterventionsViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenantTestCase):
     base_view = 'field_monitoring_planning:interventions'
@@ -792,6 +802,17 @@ class MonitoringActivityActionPointsViewTestCase(FMBaseTestCaseMixin, APIViewSet
         super().setUpTestData()
         cls.activity = MonitoringActivityFactory(status='completed')
         call_command('update_notifications')
+        cls.create_data = {
+            'description': 'do something',
+            'due_date': date.today(),
+            'assigned_to': cls.unicef_user.id,
+            'partner': PartnerFactory().id,
+            'intervention': InterventionFactory().id,
+            'cp_output': ResultFactory(result_type__name=ResultType.OUTPUT).id,
+            'category': ActionPointCategoryFactory(module='fm').id,
+            'section': SectionFactory().id,
+            'office': OfficeFactory().id,
+        }
 
     def get_list_args(self):
         return [self.activity.pk]
@@ -806,19 +827,12 @@ class MonitoringActivityActionPointsViewTestCase(FMBaseTestCaseMixin, APIViewSet
     def test_create(self):
         response = self._test_create(
             self.fm_user,
-            data={
-                'description': 'do something',
-                'due_date': date.today(),
-                'assigned_to': self.unicef_user.id,
-                'partner': PartnerFactory().id,
-                'intervention': InterventionFactory().id,
-                'cp_output': ResultFactory(result_type__name=ResultType.OUTPUT).id,
-                'category': ActionPointCategoryFactory(module='fm').id,
-                'section': SectionFactory().id,
-                'office': OfficeFactory().id,
-            }
+            data=self.create_data,
         )
         self.assertEqual(len(response.data['history']), 1)
+
+    def test_create_visit_lead(self):
+        self._test_create(self.activity.visit_lead, data=self.create_data)
 
     def test_create_unicef_user(self):
         self._test_create(self.unicef_user, data={}, expected_status=status.HTTP_403_FORBIDDEN)

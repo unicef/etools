@@ -27,6 +27,7 @@ from etools.applications.core.tests.mixins import URLAssertionMixin
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory, FundsReservationItemFactory
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.models import (
+    Agreement,
     Intervention,
     InterventionManagementBudgetItem,
     InterventionReview,
@@ -746,6 +747,27 @@ class TestUpdate(BaseInterventionTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         budget.refresh_from_db()
         self.assertEqual(budget.currency, "PEN")
+
+    @mock.patch('etools.applications.partners.tasks.logger', spec=['info'])
+    @override_settings(
+        EZHACT_PD_VISION_URL='https://example.com/upload/pd/',
+        CELERY_TASK_ALWAYS_EAGER=True,
+        CELERY_EAGER_PROPAGATES_EXCEPTIONS=True,
+    )
+    def test_send_pd_to_vision(self, logger_mock):
+        intervention = InterventionFactory()
+        intervention.unicef_focal_points.add(self.user)
+
+        with self.captureOnCommitCallbacks(execute=True) as callbacks:
+            response = self.forced_auth_req(
+                "patch",
+                reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+                user=self.user,
+                data={'start': datetime.date(year=1970, month=5, day=1)}
+            )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(callbacks), 1)
+        self.assertTrue(mock.call(f'Starting {intervention} upload to vision') in logger_mock.info.mock_calls)
 
     def test_patch_country_programme(self):
         intervention = InterventionFactory()
@@ -1688,6 +1710,7 @@ class TestInterventionUpdate(BaseInterventionTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         intervention.refresh_from_db()
         for field, value in mapping:
+            self.assertIn(field, response.data)
             self.assertEqual(getattr(intervention, field), value)
 
     def test_partner_details(self):
@@ -1753,6 +1776,9 @@ class TestInterventionUpdate(BaseInterventionTestCase):
             ("context", "Context"),
             ("implementation_strategy", "Implementation strategy"),
             ("ip_program_contribution", "Non-Contribution from partner"),
+            ("has_data_processing_agreement", True),
+            ("has_activities_involving_children", True),
+            ("has_special_conditions_for_construction", True),
         )
         self._test_patch(mapping)
 
@@ -3145,6 +3171,67 @@ class TestInterventionAttachments(BaseTenantTestCase):
             user=self.partnership_manager,
         )
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_transition_intervention_to_signed_through_attachments(self):
+        partner = PartnerFactory()
+        partner_user = UserFactory(is_staff=False, realms__data=[])
+        partner_staff_member = PartnerStaffFactory(partner=partner, email=partner_user.email, user=partner_user)
+        country_programme = CountryProgrammeFactory()
+        user = UserFactory(is_staff=True, realms__data=['UNICEF User', 'Partnership Manager'])
+
+        intervention = InterventionFactory(
+            status=Intervention.SIGNATURE,
+            agreement__partner=partner,
+            agreement__status=Agreement.SIGNED,
+            partner_authorized_officer_signatory=partner_staff_member,
+            country_programme=country_programme,
+            start=datetime.date.today() + datetime.timedelta(days=1),
+            end=datetime.date.today() + datetime.timedelta(days=365),
+            date_sent_to_partner=datetime.date.today(),
+            agreement__country_programme=country_programme,
+            cash_transfer_modalities=[Intervention.CASH_TRANSFER_DIRECT],
+            budget_owner=UserFactory(),
+            partner_accepted=True,
+            unicef_accepted=True,
+            signed_by_partner_date=datetime.date(year=1970, month=1, day=1),
+            signed_by_unicef_date=datetime.date(year=1970, month=1, day=1),
+            unicef_signatory=UserFactory(),
+        )
+        intervention.planned_budget.total_hq_cash_local = 1
+        intervention.planned_budget.save()
+        intervention.flat_locations.add(LocationFactory())
+        ReportingRequirementFactory(intervention=intervention)
+        InterventionReviewFactory(
+            intervention=intervention,
+            overall_approval=True,
+            submitted_by=UserFactory(),
+            review_type='prc',
+        )
+        intervention.sections.add(SectionFactory())
+        intervention.offices.add(OfficeFactory())
+        intervention.partner_focal_points.add(partner_staff_member)
+        intervention.unicef_focal_points.add(user)
+        ReportingRequirementFactory(intervention=intervention)
+        FundsReservationHeaderFactory(intervention=intervention)
+        AttachmentFactory(
+            file=SimpleUploadedFile('test.txt', b'test'),
+            code='partners_intervention_signed_pd',
+            content_object=intervention,
+        )
+
+        response = self.forced_auth_req(
+            'post',
+            reverse('pmp_v3:intervention-attachment-list', args=[intervention.id]),
+            user=user,
+            data={
+                "type": FileTypeFactory().pk,
+                "attachment_document": AttachmentFactory(file="test_file.pdf", file_type=None, code="").pk,
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
+
+        intervention.refresh_from_db()
+        self.assertEqual(intervention.status, Intervention.SIGNED)
 
 
 class TestPMPInterventionIndicatorsUpdateView(BaseTenantTestCase):
