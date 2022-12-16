@@ -6,12 +6,17 @@ from rest_framework.exceptions import ValidationError
 from unicef_rest_export.serializers import ExportSerializer
 
 from etools.applications.partners.models import Intervention
+from etools.applications.partners.serializers.exports.vision.export_mixin import InterventionVisionSynchronizerMixin
+from etools.applications.partners.serializers.intervention_snapshot import FullInterventionSnapshotSerializerMixin
 from etools.applications.reports.models import (
     AppliedIndicator,
     Disaggregation,
     DisaggregationValue,
     Indicator,
     IndicatorBlueprint,
+    InterventionActivity,
+    InterventionActivityItem,
+    InterventionTimeFrame,
     LowerResult,
     Office,
     ReportingRequirement,
@@ -64,7 +69,16 @@ class IndicatorBlueprintCUSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         # always try to get first
-        return IndicatorBlueprint.objects.get_or_create(**validated_data)[0]
+        indicator = IndicatorBlueprint.objects.filter(**validated_data).first()
+        if not indicator:
+            indicator = super().create(validated_data)
+        return indicator
+
+
+class IndicatorBlueprintUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = IndicatorBlueprint
+        fields = ('id', 'title')
 
 
 class DisaggregationValueSerializer(serializers.ModelSerializer):
@@ -93,6 +107,8 @@ class DisaggregationSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         values_data = validated_data.pop('disaggregation_values')
+        if not values_data or len(values_data) == 1:
+            raise ValidationError('At least 2 Disaggregation Groups must be set.')
         disaggregation = Disaggregation.objects.create(**validated_data)
         for value_data in values_data:
             if 'id' in value_data:
@@ -156,7 +172,6 @@ class AppliedIndicatorSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         lower_result = attrs.get('lower_result', getattr(self.instance, 'lower_result', None))
-        blueprint_data = attrs.get('indicator', getattr(self.instance, 'indicator', None))
 
         # allowed to change target "v" denominator only if intervention is draft or signed
         # or active and in amendment mode
@@ -168,7 +183,7 @@ class AppliedIndicatorSerializer(serializers.ModelSerializer):
                and not (status in [Intervention.DRAFT, Intervention.SIGNED] or
                         (status == Intervention.ACTIVE and in_amendment)):
                 raise ValidationError(_(
-                    'You cannot change the Indicator Target Denominator if PD/SSFA is '
+                    'You cannot change the Indicator Target Denominator if PD/SPD is '
                     'not in status Draft or Signed'
                 ))
             if attrs['target']['d'] != self.instance.target_display[1] and not (
@@ -181,7 +196,7 @@ class AppliedIndicatorSerializer(serializers.ModelSerializer):
                     )
             ):
                 raise ValidationError(_(
-                    'You cannot change the Indicator Target Denominator if PD/SSFA is '
+                    'You cannot change the Indicator Target Denominator if PD/SPD is '
                     'not in status Draft or Signed'
                 ))
 
@@ -202,29 +217,62 @@ class AppliedIndicatorSerializer(serializers.ModelSerializer):
             raise ValidationError(_('This indicator can only have a section that was '
                                     'previously saved on the intervention'))
 
-        if self.partial:
-            if not isinstance(blueprint_data, IndicatorBlueprint):
-                raise ValidationError(
-                    _('Indicator blueprint cannot be updated after first use, '
-                      'please remove this indicator and add another or contact the eTools Focal Point in '
-                      'your office for assistance')
-                )
-
-        elif not attrs.get('cluster_indicator_id'):
-            indicator_blueprint = IndicatorBlueprintCUSerializer(data=blueprint_data)
-            indicator_blueprint.is_valid(raise_exception=True)
-            indicator_blueprint.save()
-
-            attrs["indicator"] = indicator_blueprint.instance
-            if lower_result.applied_indicators.filter(indicator__id=attrs['indicator'].id).exists():
-                raise ValidationError(_('This indicator is already being monitored for this Result'))
-
         if lower_result.result_link.intervention.agreement.partner.blocked is True:
             raise ValidationError(_('The Indicators cannot be updated while the Partner is blocked in Vision'))
         return super().validate(attrs)
 
+    @transaction.atomic
     def create(self, validated_data):
+        if 'indicator' in validated_data and not validated_data.get('cluster_indicator_id'):
+            lower_result = validated_data['lower_result']
+            indicator_data = validated_data.pop('indicator')
+
+            # give priority to blueprints linked with current lower result
+            blueprint = IndicatorBlueprint.objects.filter(
+                appliedindicator__lower_result=lower_result,
+                **indicator_data,
+            ).first()
+
+            if not blueprint:
+                indicator_blueprint_serializer = IndicatorBlueprintCUSerializer(data=indicator_data)
+                indicator_blueprint_serializer.is_valid(raise_exception=True)
+                indicator_blueprint_serializer.save()
+                blueprint = indicator_blueprint_serializer.instance
+
+            validated_data['indicator'] = blueprint
+
+            if lower_result.applied_indicators.filter(indicator__id=blueprint.id).exists():
+                raise ValidationError({
+                    'non_field_errors': [_('This indicator is already being monitored for this Result')],
+                })
+
         return super().create(validated_data)
+
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        if validated_data.get('indicator') and self.partial and instance.indicator:
+            indicator_data = validated_data.pop('indicator')
+
+            # if instance was signed, it was reported to PRP. it means we cannot just edit blueprint
+            # and only option is to deactivate previous indicator as inactive
+            instance_copy = instance.make_copy()
+
+            intervention = instance.lower_result.result_link.intervention
+            was_active_before = intervention.was_active_before()
+            in_amendment = intervention.in_amendment
+            if was_active_before or in_amendment:
+                instance.is_active = False
+                instance.save()
+            else:
+                instance.delete()
+
+            instance = instance_copy
+
+            blueprint_serializer = IndicatorBlueprintUpdateSerializer(instance=instance.indicator, data=indicator_data)
+            blueprint_serializer.is_valid(raise_exception=True)
+            blueprint_serializer.save()
+
+        return super().update(instance, validated_data)
 
 
 class AppliedIndicatorCUSerializer(serializers.ModelSerializer):
@@ -280,7 +328,16 @@ class LowerResultSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = LowerResult
-        fields = '__all__'
+        fields = [
+            "id",
+            "name",
+            "code",
+            "result_link",
+            "total",
+            "applied_indicators",
+            "created",
+            "modified",
+        ]
 
 
 class LowerResultCUSerializer(serializers.ModelSerializer):
@@ -448,3 +505,232 @@ class OfficeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Office
         fields = "__all__"
+
+
+class InterventionActivityItemSerializer(serializers.ModelSerializer):
+    default_error_messages = {
+        'invalid_budget': _('Invalid budget data. Total cash should be equal to items number * price per item.')
+    }
+
+    id = serializers.IntegerField(required=False)
+
+    class Meta:
+        model = InterventionActivityItem
+        fields = (
+            'id',
+            'code',
+            'name',
+            'unit',
+            'unit_price',
+            'no_units',
+            'unicef_cash',
+            'cso_cash',
+        )
+
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+
+        unit_price = attrs.get('unit_price', self.instance.unit_price if self.instance else None)
+        no_units = attrs.get('no_units', self.instance.no_units if self.instance else None)
+        unicef_cash = attrs.get('unicef_cash', self.instance.unicef_cash if self.instance else None)
+        cso_cash = attrs.get('cso_cash', self.instance.cso_cash if self.instance else None)
+
+        # unit_price * no_units can contain more decimal places than we're able to save
+        if abs((unit_price * no_units) - (unicef_cash + cso_cash)) > 0.01:
+            self.fail('invalid_budget')
+
+        return attrs
+
+
+class InterventionActivityItemBulkUpdateListSerializer(serializers.ListSerializer):
+    """
+    The purpose of this serializer is to wrap items update logic for activity
+    yet having db queries optimized: reuse prefetched objects when it's possible + use bulk_create instead of each .save
+    """
+    @property
+    def activity(self):
+        return self.root.instance
+
+    def get_instance(self, instance_id):
+        assert hasattr(self.activity, '_prefetched_objects_cache'), 'items has to be prefetched for activity'
+        assert 'items' in self.activity._prefetched_objects_cache, 'items has to be prefetched for activity'
+
+        try:
+            return [i for i in self.activity.items.all() if i.id == instance_id][0]
+        except IndexError:
+            raise ValidationError([_('Unable to find item for id: {}').format(instance_id)])
+
+    def save(self, items, **kwargs):
+        items = [
+            {**attrs, **kwargs} for attrs in items
+        ]
+
+        pks_to_update = [item['id'] for item in items if 'id' in item]
+        instances_to_create = []
+        instances_to_update = {pk: self.get_instance(pk) for pk in pks_to_update}
+        missing_pks_to_update = set(pks_to_update) - set(instances_to_update.keys())
+        if missing_pks_to_update:
+            raise ValidationError({'items': [_('Unable to find items: {}'.format(', '.join(missing_pks_to_update)))]})
+
+        # items already validated, so we're free to use bulk operations instead of serializer.save
+        for item in items:
+            if 'id' in item:
+                for key, value in item.items():
+                    setattr(instances_to_update[item['id']], key, value)
+            else:
+                instances_to_create.append(InterventionActivityItem(**item))
+
+        fields_to_update = list(InterventionActivityItemSerializer.Meta.fields)
+        fields_to_update.remove('id')
+        InterventionActivityItem.objects.bulk_update(instances_to_update.values(), fields=fields_to_update)
+        created_instances = InterventionActivityItem.objects.bulk_create(instances_to_create)
+
+        # cleanup, remove unused options
+        updated_pks = list(instances_to_update.keys()) + [i.id for i in created_instances]
+        removed_items = self.activity.items.exclude(pk__in=updated_pks).delete()
+        if removed_items:
+            # if items are removed, cash also should be recalculated
+            self.activity.update_cash()
+        InterventionActivityItem.renumber_items_for_activity(self.activity)
+
+
+class InterventionActivityItemBulkUpdateSerializer(InterventionActivityItemSerializer):
+    class Meta(InterventionActivityItemSerializer.Meta):
+        list_serializer_class = InterventionActivityItemBulkUpdateListSerializer
+
+    @property
+    def instance(self):
+        """
+        list serializer don't set instance for children directly, so we need to get it manually
+        """
+        if getattr(self, '_instance', None):
+            return self._instance
+
+        if 'id' not in self.initial_data:
+            return None
+        return self.parent.get_instance(self.initial_data['id'])
+
+    @instance.setter
+    def instance(self, value):
+        """
+        just dummy setter, to bypass `self.instance = None` step during initialization
+        """
+        self._instance = value
+
+    def validate(self, attrs):
+        # remember data to use for fetching instance
+        self.initial_data = attrs
+        return super().validate(attrs)
+
+
+class InterventionTimeFrameSerializer(serializers.ModelSerializer):
+    name = serializers.SerializerMethodField()
+    start = serializers.DateField(source='start_date')
+    end = serializers.DateField(source='end_date')
+
+    class Meta:
+        model = InterventionTimeFrame
+        fields = ('id', 'name', 'start', 'end',)
+
+    def get_name(self, obj: InterventionTimeFrame):
+        return 'Q{}'.format(obj.quarter)
+
+
+class InterventionActivityDetailSerializer(
+    InterventionVisionSynchronizerMixin,
+    FullInterventionSnapshotSerializerMixin,
+    serializers.ModelSerializer,
+):
+    items = InterventionActivityItemBulkUpdateSerializer(many=True, required=False)
+    partner_percentage = serializers.DecimalField(max_digits=5, decimal_places=2, read_only=True)
+
+    class Meta:
+        model = InterventionActivity
+        fields = (
+            'id',
+            'name',
+            'code',
+            'created',
+            'context_details',
+            'unicef_cash',
+            'cso_cash',
+            'items',
+            'time_frames',
+            'partner_percentage',
+            'is_active',
+        )
+        read_only_fields = ['code']
+
+    def __init__(self, *args, **kwargs):
+        self.intervention = kwargs.pop('intervention', None)
+        super().__init__(*args, **kwargs)
+
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+        if self.instance and self.partial and 'items' not in attrs and self.instance.items.exists():
+            # when we do partial update for activity having items attached without items provided in request
+            # it's easy to break total values, so we ignore them
+            attrs.pop('unicef_cash', None)
+            attrs.pop('cso_cash', None)
+        return attrs
+
+    @transaction.atomic
+    def create(self, validated_data):
+        options = validated_data.pop('items', None)
+        time_frames = validated_data.pop('time_frames', None)
+        self.instance = super().create(validated_data)
+        self.set_items(self.instance, options)
+        self.set_time_frames(self.instance, time_frames)
+        return self.instance
+
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        options = validated_data.pop('items', None)
+        time_frames = validated_data.pop('time_frames', None)
+        self.instance = super().update(instance, validated_data)
+        self.set_items(self.instance, options)
+        self.set_time_frames(self.instance, time_frames)
+        return self.instance
+
+    def set_items(self, instance, items):
+        if items is None:
+            return
+        self.fields['items'].save(items, activity=instance)
+
+    def set_time_frames(self, instance, time_frames):
+        if time_frames is None:
+            return
+
+        new_time_frames = self.intervention.quarters.filter(id__in=[t.id for t in time_frames])
+        instance.time_frames.clear()
+        instance.time_frames.add(*new_time_frames)
+
+    def get_intervention(self):
+        return self.intervention
+
+
+class InterventionActivitySerializer(serializers.ModelSerializer):
+    partner_percentage = serializers.DecimalField(max_digits=5, decimal_places=2, read_only=True)
+
+    class Meta:
+        model = InterventionActivity
+        fields = (
+            'id', 'name', 'code', 'context_details',
+            'unicef_cash', 'cso_cash', 'partner_percentage',
+            'time_frames', 'is_active', 'created',
+        )
+        read_only_fields = ['code']
+
+
+class LowerResultWithActivitiesSerializer(LowerResultSerializer):
+    activities = InterventionActivitySerializer(read_only=True, many=True)
+
+    class Meta(LowerResultSerializer.Meta):
+        fields = LowerResultSerializer.Meta.fields + ["activities"]
+
+
+class LowerResultWithActivityItemsSerializer(LowerResultSerializer):
+    activities = InterventionActivityDetailSerializer(read_only=True, many=True)
+
+    class Meta(LowerResultSerializer.Meta):
+        fields = LowerResultSerializer.Meta.fields + ["activities"]

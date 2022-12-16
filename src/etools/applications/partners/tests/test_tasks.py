@@ -1,6 +1,9 @@
 # Python imports
 
 import datetime
+import json
+from collections import namedtuple
+from datetime import timedelta
 from decimal import Decimal
 from pprint import pformat
 from unittest import mock
@@ -8,6 +11,8 @@ from unittest import mock
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.management import call_command
+from django.db import connection
+from django.test import override_settings
 from django.utils import timezone
 
 from unicef_attachments.models import Attachment
@@ -17,7 +22,10 @@ import etools.applications.partners.tasks
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
-from etools.applications.partners.models import Agreement, Intervention, InterventionBudget
+from etools.applications.partners.models import Agreement, Intervention
+from etools.applications.partners.permissions import UNICEF_USER
+from etools.applications.partners.synchronizers import PDVisionUploader
+from etools.applications.partners.tasks import transfer_active_pds_to_new_cp
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
     CoreValuesAssessmentFactory,
@@ -28,6 +36,7 @@ from etools.applications.partners.tests.factories import (
 from etools.applications.reports.models import ResultType
 from etools.applications.reports.tests.factories import (
     CountryProgrammeFactory,
+    InterventionActivityFactory,
     LowerResultFactory,
     OfficeFactory,
     ReportingRequirementFactory,
@@ -63,7 +72,7 @@ class TestGetInterventionContext(BaseTenantTestCase):
 
     def setUp(self):
         super().setUp()
-        self.intervention = InterventionFactory()
+        self.intervention = InterventionFactory(start=None, end=None)
         self.focal_point_user = UserFactory()
 
     def test_simple_intervention(self):
@@ -666,9 +675,10 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
         ]
         self._assertCalls(mock_logger.error, expected_call_args)
 
-    def test_activate_intervention_with_task(self, _mock_db_connection, _mock_logger):
+    @mock.patch("etools.applications.partners.tasks.send_pd_to_vision.delay")
+    def test_activate_intervention_with_task(self, send_to_vision_mock, _mock_db_connection, _mock_logger):
         today = datetime.date.today()
-        unicef_staff = UserFactory(is_staff=True, groups__data=['UNICEF User'])
+        unicef_staff = UserFactory(is_staff=True, groups__data=[UNICEF_USER])
 
         partner = PartnerFactory(name='Partner 2')
         active_agreement = AgreementFactory(
@@ -686,24 +696,13 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
             start=today - datetime.timedelta(days=1),
             end=today + datetime.timedelta(days=365),
             status=Intervention.SIGNED,
-            country_programme=active_agreement.country_programme,
-            # budget_owner=unicef_staff,
-            # date_sent_to_partner=today - datetime.timedelta(days=1),
+            budget_owner=unicef_staff,
+            date_sent_to_partner=today - datetime.timedelta(days=1),
             signed_by_unicef_date=today - datetime.timedelta(days=1),
             signed_by_partner_date=today - datetime.timedelta(days=1),
             unicef_signatory=unicef_staff,
             partner_authorized_officer_signatory=partner.staff_members.all().first(),
-            # cash_transfer_modalities=[Intervention.CASH_TRANSFER_DIRECT],
-        )
-        InterventionBudget.objects.get_or_create(
-            intervention=active_intervention,
-            defaults={
-                'unicef_cash': 100,
-                'unicef_cash_local': 10,
-                'partner_contribution': 200,
-                'partner_contribution_local': 20,
-                'in_kind_amount_local': 10,
-            }
+            cash_transfer_modalities=[Intervention.CASH_TRANSFER_DIRECT],
         )
         active_intervention.flat_locations.add(LocationFactory())
         active_intervention.partner_focal_points.add(partner.staff_members.all().first())
@@ -721,13 +720,16 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
             intervention=active_intervention,
             cp_output__result_type__name=ResultType.OUTPUT,
         )
-        LowerResultFactory(result_link=result_link)
-        # activity = InterventionActivityFactory(result=pd_output) # epd related stuff
-        # activity.time_frames.add(active_intervention.quarters.first())
+        pd_output = LowerResultFactory(result_link=result_link)
+        activity = InterventionActivityFactory(result=pd_output)
+        activity.time_frames.add(active_intervention.quarters.first())
 
-        etools.applications.partners.tasks._make_intervention_status_automatic_transitions(self.country_name)
+        with self.captureOnCommitCallbacks(execute=True) as callbacks:
+            etools.applications.partners.tasks._make_intervention_status_automatic_transitions(self.country_name)
         active_intervention.refresh_from_db()
         self.assertEqual(active_intervention.status, Intervention.ACTIVE)
+        send_to_vision_mock.assert_called()
+        self.assertEqual(len(callbacks), 1)
 
 
 @mock.patch('etools.applications.partners.tasks.logger', spec=['info'])
@@ -1112,3 +1114,161 @@ class TestCheckInterventionPastStartStatus(BaseTenantTestCase):
         with mock.patch(send_path, mock_send):
             etools.applications.partners.tasks.check_intervention_past_start()
         self.assertEqual(mock_send.call_count, 1)
+
+
+class TestInterventionExpired(BaseTenantTestCase):
+    def test_task(self):
+        today = timezone.now().date()
+        old_cp = CountryProgrammeFactory(
+            from_date=today - datetime.timedelta(days=5),
+            to_date=today - datetime.timedelta(days=2),
+        )
+        active_cp = CountryProgrammeFactory(
+            from_date=today - datetime.timedelta(days=1),
+            to_date=today + datetime.timedelta(days=10),
+        )
+
+        today = datetime.date.today()
+        intervention_1 = InterventionFactory(
+            contingency_pd=True,
+            status=Intervention.SIGNED,
+            start=today - datetime.timedelta(days=2),
+            country_programmes=[old_cp],
+        )
+        intervention_2 = InterventionFactory(
+            contingency_pd=True,
+            status=Intervention.SIGNED,
+            start=today - datetime.timedelta(days=2),
+            country_programmes=[old_cp, active_cp],
+        )
+        etools.applications.partners.tasks.intervention_expired()
+        intervention_1.refresh_from_db()
+        intervention_2.refresh_from_db()
+        self.assertEqual(intervention_1.status, Intervention.EXPIRED)
+        self.assertEqual(intervention_2.status, Intervention.SIGNED)
+
+
+class ActivePDTransferToNewCPTestCase(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.today = timezone.now().date()
+        cls.old_cp = CountryProgrammeFactory(
+            from_date=cls.today - timedelta(days=5),
+            to_date=cls.today - timedelta(days=2),
+        )
+        cls.partner = PartnerFactory()
+        cls.old_agreement = AgreementFactory(partner=cls.partner, country_programme=cls.old_cp)
+
+    def _init_new_cp(self):
+        self.active_cp = CountryProgrammeFactory(
+            from_date=self.today - timedelta(days=1),
+            to_date=self.today + timedelta(days=10),
+        )
+
+    def test_transfer_without_active_cp(self):
+        pd = InterventionFactory(
+            agreement=self.old_agreement,
+            status=Intervention.ACTIVE,
+            start=self.today - timedelta(days=4),
+            end=self.today + timedelta(days=4),
+            country_programmes=[self.old_cp],
+        )
+
+        transfer_active_pds_to_new_cp()
+
+        pd.refresh_from_db()
+        self.assertListEqual(list(pd.country_programmes.all()), [self.old_cp])
+
+    def test_transfer(self):
+        pd = InterventionFactory(
+            agreement=self.old_agreement,
+            status=Intervention.ACTIVE,
+            start=self.today - timedelta(days=4),
+            end=self.today + timedelta(days=4),
+            country_programmes=[self.old_cp],
+        )
+        self._init_new_cp()
+
+        transfer_active_pds_to_new_cp()
+
+        pd.refresh_from_db()
+        self.assertListEqual(list(pd.country_programmes.all()), [self.old_cp, self.active_cp])
+
+    def test_skip_transfer_if_one_programme_already_active(self):
+        second_active_cp = CountryProgrammeFactory(
+            from_date=self.today - timedelta(days=1),
+            to_date=self.today + timedelta(days=10),
+        )
+
+        pd = InterventionFactory(
+            agreement=self.old_agreement,
+            status=Intervention.ACTIVE,
+            start=self.today - timedelta(days=4),
+            end=self.today + timedelta(days=4),
+            country_programmes=[self.old_cp, second_active_cp],
+        )
+        self._init_new_cp()
+
+        transfer_active_pds_to_new_cp()
+
+        pd.refresh_from_db()
+        self.assertListEqual(list(pd.country_programmes.all()), [self.old_cp, second_active_cp])
+
+
+@mock.patch('etools.applications.partners.tasks.logger', spec=['info', 'warning', 'error', 'exception'])
+@override_settings(
+    EZHACT_PD_VISION_URL='https://example.com/upload/pd/',
+    CELERY_TASK_ALWAYS_EAGER=True,
+    CELERY_EAGER_PROPAGATES_EXCEPTIONS=True,
+)
+class SendPDToVisionTestCase(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.draft_intervention = InterventionFactory()
+        cls.active_intervention = InterventionFactory(status=Intervention.ACTIVE)
+        cls.result_link = InterventionResultLinkFactory(
+            intervention=cls.active_intervention,
+            cp_output__result_type__name=ResultType.OUTPUT,
+        )
+        cls.pd_output = LowerResultFactory(result_link=cls.result_link)
+        cls.activity = InterventionActivityFactory(result=cls.pd_output)
+
+    def test_sync_validation_error(self, logger_mock):
+        etools.applications.partners.tasks.send_pd_to_vision(connection.tenant.name, self.draft_intervention.pk)
+        logger_mock.info.assert_called_with('Instance is not ready to be synchronized')
+
+    @mock.patch(
+        'etools.applications.partners.synchronizers.requests.post',
+        return_value=namedtuple('Response', ['status_code', 'text', 'json'])(502, '', lambda: None)
+    )
+    def test_sync_bad_response(self, _requests_mock, logger_mock):
+        etools.applications.partners.tasks.send_pd_to_vision(connection.tenant.name, self.active_intervention.pk)
+        self.assertTrue(mock.call('Received 502 from vision synchronizer. retrying') in logger_mock.info.mock_calls)
+        self.assertTrue(
+            mock.call(
+                f'Received 502 from vision synchronizer after 3 attempts. '
+                f'PD number: {self.active_intervention.pk}. Business area code: {connection.tenant.business_area_code}'
+            ) in logger_mock.exception.mock_calls
+        )
+
+    @mock.patch(
+        'etools.applications.partners.synchronizers.requests.post',
+        return_value=namedtuple('Response', ['status_code', 'text', 'json'])(200, '{}', lambda: {})
+    )
+    def test_sync_success(self, _requests_mock, logger_mock):
+        etools.applications.partners.tasks.send_pd_to_vision(connection.tenant.name, self.active_intervention.pk)
+        self.assertTrue(mock.call('Completed pd synchronization') in logger_mock.info.mock_calls)
+
+    @mock.patch('etools.applications.partners.synchronizers.requests.post',
+                return_value=namedtuple('Response', ['status_code', 'text', 'json'])(200, '', lambda: None))
+    def test_business_code_in_data(self, requests_mock, _logger_mock):
+        etools.applications.partners.tasks.send_pd_to_vision(connection.tenant.name, self.active_intervention.pk)
+        self.assertIn('business_area', json.loads(requests_mock.mock_calls[0][2]['data']))
+
+    def test_body_rendering(self, _logger_mock):
+        synchronizer = PDVisionUploader(Intervention.objects.detail_qs().get(pk=self.active_intervention.pk))
+        str_data = synchronizer.render()
+        self.assertIsInstance(str_data, bytes)
+        self.assertGreater(len(str_data), 100)

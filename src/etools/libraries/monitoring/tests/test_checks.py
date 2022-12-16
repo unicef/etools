@@ -1,9 +1,9 @@
 
+from unittest.mock import Mock, patch
+
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.test import SimpleTestCase
-
-from mock import Mock, patch
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.users.tests.factories import UserFactory

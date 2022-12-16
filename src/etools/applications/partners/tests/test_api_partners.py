@@ -1,12 +1,12 @@
 import datetime
 import json
 from decimal import Decimal
+from unittest.mock import Mock, patch
 
 from django.db import connection
 from django.test import override_settings, SimpleTestCase
 from django.urls import reverse
 
-from mock import Mock, patch
 from rest_framework import status
 from rest_framework.exceptions import ErrorDetail
 from unicef_snapshot.models import Activity
@@ -30,7 +30,6 @@ from etools.applications.partners.models import (
     CoreValuesAssessment,
     Intervention,
     InterventionAmendment,
-    InterventionBudget,
     PartnerOrganization,
     PartnerPlannedVisits,
     PartnerType,
@@ -541,6 +540,20 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
             'The Partner Staff member you are trying to activate is associated '
             'with a different Partner Organization'
         )
+
+    def test_assign_staff_member_creates_new_user(self):
+        self.assertEqual(self.partner.staff_members.count(), 1)
+        staff_email = "email@staff.com"
+        response = self.forced_auth_req(
+            "patch", self.url,
+            data={"staff_members": [{"email": staff_email, "active": True, 'first_name': 'First', 'last_name': 'Last'}]},
+            user=self.unicef_staff
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(self.partner.staff_members.count(), 2)
+        created_staff = self.partner.staff_members.get(email=staff_email)
+        self.assertEqual(created_staff.first_name, created_staff.user.first_name)
+        self.assertEqual(created_staff.last_name, created_staff.user.last_name)
 
     def test_assign_staff_member_to_existing_user(self):
         user = UserFactory(groups__data=[], is_staff=False)
@@ -1268,20 +1281,16 @@ class TestPartnerOrganizationRetrieveUpdateDeleteViews(BaseTenantTestCase):
             partner=cls.partner,
             signed_by_unicef_date=datetime.date.today())
 
-        cls.intervention = InterventionFactory(agreement=agreement)
+        cls.intervention = InterventionFactory(
+            agreement=agreement,
+            status=Intervention.DRAFT,
+        )
         cls.output_res_type = ResultTypeFactory(name=ResultType.OUTPUT)
 
         cls.result = ResultFactory(
             result_type=cls.output_res_type,)
 
-        cls.partnership_budget = InterventionBudget.objects.create(
-            intervention=cls.intervention,
-            unicef_cash=100,
-            unicef_cash_local=10,
-            partner_contribution=200,
-            partner_contribution_local=20,
-            in_kind_amount_local=10,
-        )
+        cls.partnership_budget = cls.intervention.planned_budget
         cls.amendment = InterventionAmendment.objects.create(
             intervention=cls.intervention,
             types=[InterventionAmendment.RESULTS]

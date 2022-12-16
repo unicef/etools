@@ -1,8 +1,8 @@
 import datetime
 from unittest import skip
+from unittest.mock import Mock, patch
 
 from etools_validator.exceptions import BasicValidationError, StateValidationError, TransitionError
-from mock import Mock, patch
 
 from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
@@ -10,7 +10,6 @@ from etools.applications.funds.tests.factories import FundsReservationHeaderFact
 from etools.applications.partners.models import Agreement, FileType, Intervention, InterventionAmendment
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
-    FileTypeFactory,
     InterventionAmendmentFactory,
     InterventionAttachmentFactory,
     InterventionFactory,
@@ -51,16 +50,9 @@ class TestTransitionOk(BaseTenantTestCase):
 
 
 class TestTransitionToClosed(BaseTenantTestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.intervention = InterventionFactory(
-            end=datetime.date(2001, 1, 1),
-        )
-
-        cls.file_parnership_file_type = FileTypeFactory(name=FileType.FINAL_PARTNERSHIP_REVIEW)
-
     def setUp(self):
         super().setUp()
+        self.intervention = InterventionFactory(end=datetime.date(2001, 1, 1))
         self.expected = {
             'total_frs_amt': 0,
             'total_frs_amt_usd': 0,
@@ -190,9 +182,8 @@ class TestTransitionToClosed(BaseTenantTestCase):
         self.expected["latest_end_date"] = frs.end_date
         self.assertFundamentals(self.intervention.total_frs)
 
-    def test_attachment_invalid(self):
-        """If Total actual amount > 100,000 need attachment with
-        type Final Partnership Review
+    def test_final_review_flag_invalid(self):
+        """If Total actual amount > 100,000 need final_review_approved=True
         """
         frs = FundsReservationHeaderFactory(
             intervention=self.intervention,
@@ -207,8 +198,7 @@ class TestTransitionToClosed(BaseTenantTestCase):
 
         with self.assertRaisesRegexp(
                 TransitionError,
-                'Total amount transferred greater than 100,000 and no '
-                'Final Partnership Review was attached'
+                'Final Review must be approved for documents having amount transferred greater than 100,000'
         ):
             transition_to_closed(self.intervention)
         self.expected["total_actual_amt"] = 120000.00
@@ -218,15 +208,12 @@ class TestTransitionToClosed(BaseTenantTestCase):
         self.expected["latest_end_date"] = frs.end_date
         self.assertFundamentals(self.intervention.total_frs)
 
-    def test_attachment(self):
+    def test_final_review_flag(self):
         """If Total actual amount > 100,000 need attachment with
         type Final Partnership Review
         """
-        file_type = self.file_parnership_file_type
-        InterventionAttachmentFactory(
-            intervention=self.intervention,
-            type=file_type
-        )
+        self.intervention.final_review_approved = True
+        self.intervention.save()
         frs = FundsReservationHeaderFactory(
             intervention=self.intervention,
             total_amt=0.00,
@@ -317,7 +304,7 @@ class TestTransitionToSigned(BaseTenantTestCase):
         """Certain document types with agreement in certain status
         cannot be signed
         """
-        document_type_list = [Intervention.PD, Intervention.SHPD]
+        document_type_list = [Intervention.PD, Intervention.SPD]
         status_list = [Agreement.SUSPENDED, Agreement.TERMINATED]
         for s in status_list:
             agreement = AgreementFactory(status=s)
@@ -332,6 +319,31 @@ class TestTransitionToSigned(BaseTenantTestCase):
                 ):
                     transition_to_signed(intervention)
 
+    def test_data_processing_agreement_flag_require_attachment(self):
+        intervention = InterventionFactory(agreement__status=Agreement.DRAFT,
+                                           has_data_processing_agreement=True)
+        with self.assertRaisesRegexp(TransitionError, r".* should be provided in attachments."):
+            transition_to_signed(intervention)
+        InterventionAttachmentFactory(intervention=intervention, type__name=FileType.DATA_PROCESSING_AGREEMENT)
+        self.assertTrue(transition_to_signed(intervention))
+
+    def test_activities_involving_children_flag_require_attachment(self):
+        intervention = InterventionFactory(agreement__status=Agreement.DRAFT,
+                                           has_activities_involving_children=True)
+        with self.assertRaisesRegexp(TransitionError, r".* should be provided in attachments."):
+            transition_to_signed(intervention)
+        InterventionAttachmentFactory(intervention=intervention, type__name=FileType.ACTIVITIES_INVOLVING_CHILDREN)
+        self.assertTrue(transition_to_signed(intervention))
+
+    def test_special_conditions_for_construction_flag_require_attachment(self):
+        intervention = InterventionFactory(agreement__status=Agreement.DRAFT,
+                                           has_special_conditions_for_construction=True)
+        with self.assertRaisesRegexp(TransitionError, r".* should be provided in attachments."):
+            transition_to_signed(intervention)
+        InterventionAttachmentFactory(intervention=intervention,
+                                      type__name=FileType.SPECIAL_CONDITIONS_FOR_CONSTRUCTION)
+        self.assertTrue(transition_to_signed(intervention))
+
     def test_valid(self):
         agreement = AgreementFactory(status=Agreement.DRAFT)
         intervention = InterventionFactory(agreement=agreement)
@@ -343,7 +355,7 @@ class TestTransitionToActive(BaseTenantTestCase):
         """Certain document types with agreement not in signed status
         cannot be made active
         """
-        document_type_list = [Intervention.PD, Intervention.SHPD]
+        document_type_list = [Intervention.PD, Intervention.SPD]
         agreement = AgreementFactory(status=Agreement.DRAFT)
         for d in document_type_list:
             intervention = InterventionFactory(
@@ -373,7 +385,7 @@ class TestTransitionToSuspended(BaseTenantTestCase):
             )
             self.assertTrue(transition_to_suspended(intervention))
 
-            intervention.in_amendment = True
+            InterventionAmendmentFactory(intervention=intervention)
             with self.assertRaises(TransitionError):
                 transition_to_suspended(intervention)
 
@@ -407,7 +419,7 @@ class TestTransitionToTerminated(BaseTenantTestCase):
             intervention.termination_doc_attachment.add(a)
             self.assertTrue(transition_to_terminated(intervention))
 
-            intervention.in_amendment = True
+            InterventionAmendmentFactory(intervention=intervention)
             with self.assertRaises(TransitionError):
                 transition_to_terminated(intervention)
 
@@ -486,7 +498,7 @@ class TestStateDateRelatedAgreementValid(BaseTenantTestCase):
         agreement = AgreementFactory(
             start=datetime.date(2002, 1, 1)
         )
-        for document_type in [Intervention.PD, Intervention.SHPD]:
+        for document_type in [Intervention.PD, Intervention.SPD]:
             intervention = InterventionFactory(
                 agreement=agreement,
                 signed_pd_document="random.pdf",
@@ -503,7 +515,7 @@ class TestStateDateRelatedAgreementValid(BaseTenantTestCase):
         agreement = AgreementFactory(
             start=datetime.date(2002, 1, 1)
         )
-        for document_type in [Intervention.PD, Intervention.SHPD]:
+        for document_type in [Intervention.PD, Intervention.SPD]:
             intervention = InterventionFactory(
                 agreement=agreement,
                 start=datetime.date(2001, 1, 1),

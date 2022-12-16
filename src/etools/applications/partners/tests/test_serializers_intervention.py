@@ -6,6 +6,7 @@ from etools.applications.partners.serializers.interventions_v2 import Interventi
 from etools.applications.partners.tests.factories import InterventionFactory, InterventionResultLinkFactory
 from etools.applications.reports.models import ReportingRequirement
 from etools.applications.reports.tests.factories import AppliedIndicatorFactory, LowerResultFactory
+from etools.applications.users.tests.factories import UserFactory
 
 
 class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
@@ -13,6 +14,7 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.intervention = InterventionFactory(
             start=datetime.date(2001, 1, 1),
+            end=datetime.date(2001, 12, 31),
             in_amendment=True,
         )
         cls.result_link = InterventionResultLinkFactory(
@@ -20,7 +22,7 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         )
         cls.lower_result = LowerResultFactory(result_link=cls.result_link)
         cls.indicator = AppliedIndicatorFactory(lower_result=cls.lower_result)
-        cls.context = {"intervention": cls.intervention}
+        cls.context = {"user": UserFactory(), "intervention": cls.intervention}
 
     def test_validation_invalid_report_type(self):
         data = {
@@ -74,7 +76,7 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         )
 
     def test_validation_pd_has_no_start(self):
-        intervention = InterventionFactory(in_amendment=True)
+        intervention = InterventionFactory(in_amendment=True, start=None, end=None)
         result_link = InterventionResultLinkFactory(intervention=intervention)
         lower_result = LowerResultFactory(result_link=result_link)
         AppliedIndicatorFactory(lower_result=lower_result)
@@ -312,6 +314,67 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         self.assertEqual(
             serializer.errors['reporting_requirements'],
             {"start_date": 'Next start date needs to be one day after previous end date.'}
+        )
+
+    def test_validation_hr_start_equals_previous_end(self):
+        AppliedIndicatorFactory(
+            is_high_frequency=True,
+            lower_result=self.lower_result
+        )
+        data = {
+            "report_type": ReportingRequirement.TYPE_HR,
+            "reporting_requirements": [{
+                "start_date": datetime.date(2001, 1, 1),
+                "due_date": datetime.date(2001, 4, 15),
+                "end_date": datetime.date(2001, 4, 15),
+            }, {
+                "start_date": datetime.date(2001, 4, 15),
+                "due_date": datetime.date(2001, 5, 15),
+                "end_date": datetime.date(2001, 5, 15),
+            }]
+        }
+        serializer = InterventionReportingRequirementCreateSerializer(
+            data=data,
+            context=self.context
+        )
+        self.assertFalse(serializer.is_valid())
+        self.assertEqual(
+            serializer.errors['reporting_requirements'],
+            {"start_date": 'Next start date needs to be one day after previous end date.'}
+        )
+
+        data['reporting_requirements'][1]['start_date'] = datetime.date(2001, 4, 16)
+        serializer = InterventionReportingRequirementCreateSerializer(
+            data=data,
+            context=self.context
+        )
+        self.assertTrue(serializer.is_valid())
+
+    def test_validation_hr_end_after_pd_end(self):
+        AppliedIndicatorFactory(
+            is_high_frequency=True,
+            lower_result=self.lower_result
+        )
+        data = {
+            "report_type": ReportingRequirement.TYPE_HR,
+            "reporting_requirements": [{
+                "start_date": datetime.date(2001, 4, 15),
+                "due_date": datetime.date(2001, 5, 1),
+                "end_date": datetime.date(2001, 5, 1),
+            }, {
+                "start_date": datetime.date(2001, 5, 2),
+                "due_date": datetime.date(2001, 5, 15),
+                "end_date": datetime.date(2002, 1, 1),
+            }]
+        }
+        serializer = InterventionReportingRequirementCreateSerializer(
+            data=data,
+            context=self.context
+        )
+        self.assertFalse(serializer.is_valid())
+        self.assertEqual(
+            serializer.errors['reporting_requirements'],
+            {'end_date': 'End date needs to be on or before PD end date.'}
         )
 
     def test_validation_hr_with_gaps(self):

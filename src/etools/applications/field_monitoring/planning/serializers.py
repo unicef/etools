@@ -216,7 +216,7 @@ class MonitoringActivityActionPointSerializer(ActionPointBaseSerializer):
         label=_('Related Partner'), read_field=MinimalPartnerOrganizationListSerializer(), required=False,
     )
     intervention = SeparatedReadWriteField(
-        label=_('Related PD/SSFA'), read_field=FMInterventionListSerializer(), required=False,
+        label=_('Related PD/SPD'), read_field=FMInterventionListSerializer(), required=False,
     )
     cp_output = SeparatedReadWriteField(
         label=_('Related CP Output'), read_field=MinimalOutputListSerializer(), required=False,

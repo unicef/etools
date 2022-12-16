@@ -11,6 +11,7 @@ from rest_framework import mixins, viewsets
 from unicef_vision.utils import get_data_from_insight
 
 from etools.applications.partners.models import Agreement, FileType
+from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP
 from etools.applications.partners.serializers.v1 import FileTypeSerializer
 
 
@@ -37,7 +38,11 @@ class PCAPDFView(LoginRequiredMixin, PDFTemplateView):
     def get_context_data(self, **kwargs):
         agr_id = self.kwargs.get('agr')
         lang = self.request.GET.get('lang', 'english') or 'english'
+        terms_acknowledged = self.request.GET.get('terms_acknowledged', 'false')
         error = None
+
+        if terms_acknowledged.lower() != 'true':
+            return {"error": "Terms to be acknowledged"}
 
         try:
             self.template_name = self.language_templates_mapping[lang]
@@ -106,6 +111,12 @@ class PCAPDFView(LoginRequiredMixin, PDFTemplateView):
             )
 
         font_path = settings.PACKAGE_ROOT + '/assets/fonts/'
+
+        if not self.request.user.groups.filter(name=PARTNERSHIP_MANAGER_GROUP).exists():
+            return {"error": 'Partnership Manager role required for pca export.'}
+
+        self.agreement.terms_acknowledged_by = self.request.user
+        self.agreement.save()
 
         return super().get_context_data(
             error=error,

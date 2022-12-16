@@ -56,6 +56,11 @@ class AgreementExportSerializer(serializers.ModelSerializer):
     special_conditions_pca = serializers.SerializerMethodField(
         label=_("Special Conditions PCA"),
     )
+    terms_acknowledged_by = serializers.CharField(
+        label=_("Terms Acknowledged By"),
+        source='terms_acknowledged_by.get_full_name',
+        read_only=True,
+    )
 
     class Meta:
         model = Agreement
@@ -75,6 +80,7 @@ class AgreementExportSerializer(serializers.ModelSerializer):
             "amendments",
             "url",
             "special_conditions_pca",
+            "terms_acknowledged_by",
         )
 
     def get_staff_members(self, obj):

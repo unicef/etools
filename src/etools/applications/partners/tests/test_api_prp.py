@@ -75,6 +75,8 @@ class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, BaseTenantTestCase):
             del actual_intervention['partner_org']['unicef_vendor_number']
             del expected_intervention['reporting_requirements']
             del actual_intervention['reporting_requirements']
+            del expected_intervention['unicef_focal_points']
+            del actual_intervention['unicef_focal_points']
 
             for j in range(len(expected_intervention['expected_results'])):
                 del expected_intervention['expected_results'][j]['id']
@@ -124,7 +126,7 @@ class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, BaseTenantTestCase):
             self.assertEqual(expected_results, len(response['results']))
 
     def test_prp_api_performance(self):
-        EXPECTED_QUERIES = 25
+        EXPECTED_QUERIES = 26
         with self.assertNumQueries(EXPECTED_QUERIES):
             self.run_prp_v1(
                 user=self.unicef_staff, method='get'
