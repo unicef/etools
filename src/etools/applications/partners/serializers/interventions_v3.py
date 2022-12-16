@@ -28,6 +28,7 @@ from etools.applications.partners.permissions import (
     PRC_SECRETARY,
     SENIOR_MANAGEMENT_GROUP,
 )
+from etools.applications.partners.serializers.exports.vision.export_mixin import InterventionVisionSynchronizerMixin
 from etools.applications.partners.serializers.intervention_snapshot import FullInterventionSnapshotSerializerMixin
 from etools.applications.partners.serializers.interventions_v2 import (
     FRsSerializer,
@@ -183,7 +184,11 @@ class InterventionManagementBudgetItemSerializer(serializers.ModelSerializer):
         return attrs
 
 
-class InterventionManagementBudgetSerializer(FullInterventionSnapshotSerializerMixin, serializers.ModelSerializer):
+class InterventionManagementBudgetSerializer(
+    InterventionVisionSynchronizerMixin,
+    FullInterventionSnapshotSerializerMixin,
+    serializers.ModelSerializer,
+):
     items = InterventionManagementBudgetItemSerializer(many=True, required=False)
     act1_total = serializers.SerializerMethodField()
     act2_total = serializers.SerializerMethodField()
@@ -254,7 +259,11 @@ class InterventionManagementBudgetSerializer(FullInterventionSnapshotSerializerM
         return self.instance.intervention
 
 
-class InterventionDetailSerializer(FullInterventionSnapshotSerializerMixin, serializers.ModelSerializer):
+class InterventionDetailSerializer(
+    InterventionVisionSynchronizerMixin,
+    FullInterventionSnapshotSerializerMixin,
+    serializers.ModelSerializer,
+):
     activation_letter_attachment = AttachmentSingleFileField(read_only=True)
     activation_letter_file = serializers.FileField(source='activation_letter', read_only=True)
     amendments = InterventionAmendmentCUSerializer(many=True, read_only=True, required=False)
@@ -583,6 +592,7 @@ class InterventionDetailSerializer(FullInterventionSnapshotSerializerMixin, seri
             "equity_narrative",
             "equity_rating",
             "final_partnership_review",
+            "final_review_approved",
             "flagged_sections",
             "flat_locations",
             "frs",
@@ -595,6 +605,9 @@ class InterventionDetailSerializer(FullInterventionSnapshotSerializerMixin, seri
             "gender_narrative",
             "gender_rating",
             "grants",
+            "has_data_processing_agreement",
+            "has_activities_involving_children",
+            "has_special_conditions_for_construction",
             "hq_support_cost",
             "humanitarian_flag",
             "id",

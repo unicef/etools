@@ -30,6 +30,7 @@ from etools.applications.partners.models import (
     PartnerStaffMember,
 )
 from etools.applications.partners.permissions import InterventionPermissions
+from etools.applications.partners.serializers.exports.vision.export_mixin import InterventionVisionSynchronizerMixin
 from etools.applications.partners.serializers.intervention_snapshot import FullInterventionSnapshotSerializerMixin
 from etools.applications.partners.utils import get_quarters_range
 from etools.applications.reports.models import AppliedIndicator, LowerResult, ReportingRequirement
@@ -47,7 +48,11 @@ from etools.applications.users.serializers import MinimalUserSerializer
 from etools.libraries.pythonlib.hash import h11
 
 
-class InterventionBudgetCUSerializer(FullInterventionSnapshotSerializerMixin, serializers.ModelSerializer):
+class InterventionBudgetCUSerializer(
+    InterventionVisionSynchronizerMixin,
+    FullInterventionSnapshotSerializerMixin,
+    serializers.ModelSerializer,
+):
     partner_contribution_local = serializers.DecimalField(max_digits=20, decimal_places=2)
     unicef_cash_local = serializers.DecimalField(max_digits=20, decimal_places=2)
     in_kind_amount_local = serializers.DecimalField(max_digits=20, decimal_places=2)
@@ -680,8 +685,11 @@ class FundingCommitmentNestedSerializer(serializers.ModelSerializer):
         )
 
 
-class InterventionCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotModelSerializer):
-
+class InterventionCreateUpdateSerializer(
+    InterventionVisionSynchronizerMixin,
+    AttachmentSerializerMixin,
+    SnapshotModelSerializer,
+):
     planned_budget = InterventionBudgetCUSerializer(read_only=True)
     partner = serializers.CharField(source='agreement.partner.name', read_only=True)
     prc_review_document_file = serializers.FileField(source='prc_review_document', read_only=True)
@@ -920,6 +928,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "donor_codes",
             "donors",
             "end",
+            "final_review_approved",
             "flagged_sections",
             "flat_locations",
             "frs_details",
@@ -1040,6 +1049,7 @@ class InterventionRAMIndicatorsListSerializer(serializers.ModelSerializer):
 
 
 class InterventionReportingRequirementCreateSerializer(
+    InterventionVisionSynchronizerMixin,
     FullInterventionSnapshotSerializerMixin,
     serializers.ModelSerializer,
 ):
