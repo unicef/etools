@@ -67,7 +67,7 @@ class PRPPartnerOrganizationListSerializer(serializers.ModelSerializer):
         )
 
 
-class AuthOfficerSerializer(serializers.ModelSerializer):
+class PRPPartnerStaffMemberSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='get_full_name', read_only=True)
     phone_num = serializers.CharField(source='phone', read_only=True)
 
@@ -77,6 +77,15 @@ class AuthOfficerSerializer(serializers.ModelSerializer):
         fields = ('name', 'title', 'phone_num', 'email', 'active')
 
 
+class PRPPartnerOrganizationWithStaffMembersSerializer(PRPPartnerOrganizationListSerializer):
+    staff_members = PRPPartnerStaffMemberSerializer(read_only=True, many=True)
+
+    class Meta(PRPPartnerOrganizationListSerializer.Meta):
+        fields = PRPPartnerOrganizationListSerializer.Meta.fields + (
+            'staff_members',
+        )
+
+
 class UserFocalPointSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='get_full_name', read_only=True)
 
@@ -84,15 +93,6 @@ class UserFocalPointSerializer(serializers.ModelSerializer):
         model = get_user_model()
         depth = 1
         fields = ('name', 'email')
-
-
-class PartnerFocalPointSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(source='get_full_name', read_only=True)
-
-    class Meta:
-        model = PartnerStaffMember
-        depth = 1
-        fields = ('name', 'email', 'active')
 
 
 class InterventionAmendmentSerializer(serializers.ModelSerializer):
@@ -243,9 +243,9 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
     partner_org = PRPPartnerOrganizationListSerializer(read_only=True, source='agreement.partner')
     agreement = serializers.CharField(read_only=True, source='agreement.agreement_number')
     unicef_focal_points = UserFocalPointSerializer(many=True, read_only=True)
-    agreement_auth_officers = AuthOfficerSerializer(many=True, read_only=True,
-                                                    source='agreement.authorized_officers')
-    focal_points = PartnerFocalPointSerializer(many=True, read_only=True, source='partner_focal_points')
+    agreement_auth_officers = PRPPartnerStaffMemberSerializer(many=True, read_only=True,
+                                                              source='agreement.authorized_officers')
+    focal_points = PRPPartnerStaffMemberSerializer(many=True, read_only=True, source='partner_focal_points')
     start_date = serializers.DateField(source='start')
     end_date = serializers.DateField(source='end')
     cso_budget = serializers.DecimalField(source='total_partner_contribution', read_only=True,

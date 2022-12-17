@@ -18,8 +18,8 @@ class Command(BaseCommand):
 
     def run(self):
         logger.info('Initialization for %s' % connection.schema_name)
-        for _, name in FileType.NAME_CHOICES:
-            FileType.objects.get_or_create(name=name)
+        for code, _display_name in FileType.NAME_CHOICES:
+            FileType.objects.get_or_create(name=code)
 
     def handle(self, *args, **options):
 

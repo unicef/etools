@@ -128,7 +128,7 @@ class AuditUsersViewSet(generics.ListAPIView):
     filter_backends = (SearchFilter, DjangoFilterBackend)
     filter_fields = ('email', 'purchase_order_auditorstaffmember__auditor_firm__unicef_users_allowed', )
     search_fields = ('email',)
-    queryset = get_user_model().objects.all()
+    queryset = get_user_model().objects.all().select_related('profile')
     serializer_class = AuditUserSerializer
 
     def get_serializer_class(self):
@@ -140,7 +140,7 @@ class AuditUsersViewSet(generics.ListAPIView):
         queryset = super().get_queryset()
 
         if self.request.query_params.get('verbosity', 'full') != 'minimal':
-            queryset = queryset.select_related('profile', 'purchase_order_auditorstaffmember__auditor_firm')
+            queryset = queryset.select_related('purchase_order_auditorstaffmember__auditor_firm')
 
         return queryset
 

@@ -1,3 +1,5 @@
+from django.conf import settings
+from django.contrib import admin
 from django.db.models import ForeignKey, ManyToManyField, OneToOneField
 
 from etools.libraries.djangolib.models import EPOCH_ZERO
@@ -28,3 +30,18 @@ class AdminListMixin:
 
     is_deleted.short_description = 'Deleted'
     is_deleted.boolean = True
+
+
+class RestrictedEditAdminMixin:
+    def has_add_permission(self, request, obj=None):
+        return request.user.email in settings.ADMIN_EDIT_EMAILS
+
+    def has_change_permission(self, request, obj=None):
+        return request.user.email in settings.ADMIN_EDIT_EMAILS
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.email in settings.ADMIN_EDIT_EMAILS
+
+
+class RestrictedEditAdmin(RestrictedEditAdminMixin, admin.ModelAdmin):
+    pass

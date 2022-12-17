@@ -17,12 +17,13 @@ class ExternalModuleFilterMixin:
     param_name = 'externals_module'
     module2filters = {}
 
-    def get_queryset(self):
+    def get_queryset(self, module=None):
         qs = super().get_queryset()
-        query_params = self.request.query_params
-        module = query_params.get(self.param_name, None)
         user = self.request.user
-        if not user.is_unicef_user() and not user.groups.filter(name="Read-Only API").exists():
+        if not (user.is_unicef_user() or user.groups.filter(name="Read-Only API").exists()):
+            if module is None:
+                query_params = self.request.query_params
+                module = query_params.get(self.param_name, None)
             if module in self.module2filters:
                 queries = []
                 for user_filter in self.module2filters[module]:

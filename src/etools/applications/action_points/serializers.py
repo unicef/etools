@@ -73,7 +73,7 @@ class ActionPointListSerializer(PermissionsBasedSerializerMixin, ActionPointBase
         read_field=MinimalPartnerOrganizationListSerializer(read_only=True, label=_('Partner')),
     )
     intervention = SeparatedReadWriteField(
-        read_field=MinimalInterventionListSerializer(read_only=True, label=_('PD/SSFA')),
+        read_field=MinimalInterventionListSerializer(read_only=True, label=_('PD/SPD')),
         required=False,
     )
 

@@ -94,7 +94,7 @@ class Question(models.Model):
     LEVELS = Choices(
         ('partner', _('Partner')),
         ('output', _('Output')),
-        ('intervention', _('PD/SSFA')),
+        ('intervention', _('PD/SPD')),
     )
 
     answer_type = models.CharField(max_length=15, choices=ANSWER_TYPES, verbose_name=_('Answer Type'))

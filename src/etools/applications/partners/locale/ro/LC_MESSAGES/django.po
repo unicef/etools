@@ -1,0 +1,1894 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-12-14 11:27+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n==1?0:(((n%100>19)||((n%100==0)&&(n!=0)))?"
+"2:1));\n"
+
+#: admin.py:82
+msgid "Signed Attachment"
+msgstr "Atașament semnat"
+
+#: admin.py:87
+msgid "PRC Reviewed Attachment"
+msgstr "PRC revizuit atașament"
+
+#: admin.py:188 admin.py:734 models.py:3340
+msgid "Attachment"
+msgstr "Atașament"
+
+#: admin.py:252 models.py:1908 models.py:1916
+msgid "Review Document by PRC"
+msgstr "Document de revizuire de către RPC"
+
+#: admin.py:257 models.py:1924 models.py:1932
+msgid "Signed PD Document"
+msgstr "Document PD semnat"
+
+#: admin.py:317
+msgid "Intervention Details"
+msgstr "Detalii intervenție"
+
+#: admin.py:334
+msgid "Dates and Signatures"
+msgstr "Date și semnături"
+
+#: admin.py:350
+msgid "ePD"
+msgstr "ePD"
+
+#: admin.py:390
+msgid "PD is not ready for Vision synchronization."
+msgstr "PD-ul nu este pregătit pentru sincronizarea Vision."
+
+#: admin.py:393
+msgid "PD was sent to Vision."
+msgstr "Pd-ul a fost trimis in Vision"
+
+#: admin.py:438 models.py:1178 models.py:1186
+msgid "Report"
+msgstr "Raport"
+
+#: admin.py:575
+msgid "Partner Details"
+msgstr "Detalii partener"
+
+#: admin.py:604
+msgid "Hact"
+msgstr "Hact"
+
+#: admin.py:693 models.py:1554 models.py:1561
+msgid "Signed Amendment"
+msgstr "Amendament semnat"
+
+#: admin.py:768
+msgid "Agreement Details"
+msgstr "Detalii acord"
+
+#: admin.py:804
+msgid ""
+"Please delete all interventions associated with the selected Agreements "
+"before deleting them."
+msgstr ""
+"Vă rugăm să ștergeți toate intervențiile asociate cu acordurile selectate "
+"înainte de a le șterge."
+
+#: admin.py:810
+msgid ""
+"Please delete all interventions associated with this Agreement before "
+"deleting the agreement."
+msgstr ""
+"Vă rugăm să ștergeți toate intervențiile asociate cu acest Acord înainte de "
+"a șterge acordul."
+
+#: forms.py:38
+msgid "You must select a type for this CSO"
+msgstr "Trebuie să selectați un tip pentru acest CSO"
+
+#: forms.py:42
+msgid ""
+"\"CSO Type\" does not apply to non-CSO organizations, please remove type"
+msgstr ""
+"„Tipul OSC” nu se aplică organizațiilor non-OSC, vă rugăm să eliminați tipul"
+
+#: models.py:153 models.py:357 models.py:3313 models.py:3671
+#: serializers/exports/interventions.py:108
+msgid "Name"
+msgstr "Nume"
+
+#: models.py:166
+msgid "Bilateral / Multilateral"
+msgstr "Bilateral / Multilateral"
+
+#: models.py:167
+msgid "Civil Society Organization"
+msgstr "Organizația Societății Civile"
+
+#: models.py:168
+msgid "Government"
+msgstr "Guvernul"
+
+#: models.py:169
+msgid "UN Agency"
+msgstr "Agenția ONU"
+
+#: models.py:266
+msgid "High"
+msgstr "ridicat"
+
+#: models.py:267 models.py:1801
+msgid "Significant"
+msgstr "Semnificativ"
+
+#: models.py:268
+msgid "Medium"
+msgstr "Mediu"
+
+#: models.py:269
+msgid "Low"
+msgstr "Scăzut"
+
+#: models.py:270
+msgid "Not Required"
+msgstr "Nu este necesar"
+
+#: models.py:332
+msgid "International"
+msgstr "Internațional"
+
+#: models.py:333
+msgid "National"
+msgstr "Național"
+
+#: models.py:334
+msgid "Community Based Organization"
+msgstr "Organizație comunitară"
+
+#: models.py:335
+msgid "Academic Institution"
+msgstr "Instituție Academică"
+
+#: models.py:343 serializers/exports/interventions.py:237
+#: serializers/exports/partner_organization.py:69
+msgid "Partner Type"
+msgstr "Tip de partener"
+
+#: models.py:350 serializers/exports/interventions.py:242
+msgid "CSO Type"
+msgstr "Tip CSO"
+
+#: models.py:362
+msgid "Short Name"
+msgstr "Nume scurt"
+
+#: models.py:367 models.py:2681
+msgid "Description"
+msgstr "Descriere"
+
+#: models.py:373 serializers/exports/partner_organization.py:68
+msgid "Shared Partner"
+msgstr "Partener comun"
+
+#: models.py:378
+msgid "Street Address"
+msgstr "Adresa stradă"
+
+#: models.py:384
+msgid "City"
+msgstr "Oraș"
+
+#: models.py:390
+msgid "Postal Code"
+msgstr "Codul Poștal"
+
+#: models.py:396
+msgid "Country"
+msgstr "Țara"
+
+#: models.py:405
+msgid "Address"
+msgstr "Adresa"
+
+#: models.py:412 models.py:973 serializers/exports/partner_organization.py:38
+msgid "Email Address"
+msgstr "Adresă de e-mail"
+
+#: models.py:417 models.py:979
+msgid "Phone Number"
+msgstr "Număr de telefon"
+
+#: models.py:423 serializers/exports/interventions.py:232
+msgid "Vendor Number"
+msgstr "Numărul furnizorului"
+
+#: models.py:430
+msgid "Alternate ID"
+msgstr "ID alternativ"
+
+#: models.py:435
+msgid "Alternate Name"
+msgstr "Nume alternativ"
+
+#: models.py:441
+msgid "Risk Rating"
+msgstr "Evaluare de risc"
+
+#: models.py:448
+msgid "Assessment Type"
+msgstr "Tipul de evaluare"
+
+#: models.py:453
+msgid "Last Assessment Date"
+msgstr "Data ultimei evaluări"
+
+#: models.py:458 models.py:923
+msgid "Date positively assessed against core values"
+msgstr "Data evaluată pozitiv în raport cu valorile de bază"
+
+#: models.py:463 serializers/exports/partner_organization.py:125
+msgid "VISION Synced"
+msgstr "VISION Sincronizat"
+
+#: models.py:466 serializers/exports/partner_organization.py:62
+msgid "Blocked"
+msgstr "Blocat"
+
+#: models.py:468
+msgid "Marked for deletion"
+msgstr "Marcat pentru ștergere"
+
+#: models.py:471
+msgid "Manually Hidden"
+msgstr "Ascuns manual"
+
+#: models.py:473 serializers/exports/partner_organization.py:126
+msgid "Hidden"
+msgstr "Ascuns"
+
+#: models.py:476
+msgid "Total Cash Transferred for Country Programme"
+msgstr "Total numerar transferat pentru programul de țară"
+
+#: models.py:484
+msgid "Total Cash Transferred per Current Year"
+msgstr "Total numerar transferat pe anul curent"
+
+#: models.py:495
+msgid "Net Cash Transferred"
+msgstr "Numerar net transferat"
+
+#: models.py:501
+msgid "Liquidation"
+msgstr "Lichidarea"
+
+#: models.py:507
+msgid "Cash Transfer Jan - Dec"
+msgstr "Transfer numerar ian. - dec"
+
+#: models.py:513
+msgid "Outstanding DCT 6/9 months"
+msgstr "DCT remarcabil 6/9 luni"
+
+#: models.py:519
+msgid "Outstanding DCT more than 9 months"
+msgstr "DCT remarcabil mai mult de 9 luni"
+
+#: models.py:524
+msgid "Basis for Risk Rating"
+msgstr "Baza pentru evaluarea riscului"
+
+#: models.py:526
+msgid "Last PSEA Assess. Date"
+msgstr "Ultima evaluare PSEA. "
+
+#: models.py:532
+msgid "PSEA Risk Rating"
+msgstr "Evaluare de risc PSEA"
+
+#: models.py:538
+msgid "Highest Risk Rating Type"
+msgstr "Tipul de evaluare a riscului cel mai ridicat"
+
+#: models.py:544
+msgid "Highest Risk Rating Name"
+msgstr "Denumire cu cea mai mare evaluare a riscului"
+
+#: models.py:549
+msgid "Lead Office"
+msgstr "Biroul principal"
+
+#: models.py:551
+msgid "Lead Section"
+msgstr "Secțiunea principală"
+
+#: models.py:920 models.py:952 models.py:1040 models.py:1115 models.py:1261
+#: models.py:3426 models.py:3582 serializers/exports/interventions.py:227
+msgid "Partner"
+msgstr "Partener"
+
+#: models.py:924 models.py:927
+msgid "Core Values Assessment"
+msgstr "Evaluarea valorilor de bază"
+
+#: models.py:958 models.py:3232 models.py:3276
+msgid "User"
+msgstr "Utilizator"
+
+#: models.py:965 models.py:3592
+msgid "Title"
+msgstr "Titlu"
+
+#: models.py:970
+msgid "First Name"
+msgstr "Prenume"
+
+#: models.py:971
+msgid "Last Name"
+msgstr "Nume"
+
+#: models.py:986 models.py:1777
+msgid "Active"
+msgstr "Activ"
+
+#: models.py:1042
+msgid "Spot Check Follow Up Required"
+msgstr "Verificarea locală este necesară"
+
+#: models.py:1043
+msgid "Spot Check Q1"
+msgstr "Verificare la fața locului Q1"
+
+#: models.py:1044
+msgid "Spot Check Q2"
+msgstr "Verificare la fața locului Q2"
+
+#: models.py:1045
+msgid "Spot Check Q3"
+msgstr "Verificare la fața locului Q3"
+
+#: models.py:1046
+msgid "Spot Check Q4"
+msgstr "Verificare la fața locului Q4"
+
+#: models.py:1047
+msgid "Scheduled Audit"
+msgstr "Audit programat"
+
+#: models.py:1048
+msgid "Special Audit"
+msgstr "Audit special"
+
+#: models.py:1106
+msgid "Micro Assessment"
+msgstr "Microevaluare"
+
+#: models.py:1107
+msgid "Simplified Checklist"
+msgstr "Lista de verificare simplificată"
+
+#: models.py:1108
+msgid "Scheduled Audit report"
+msgstr "Raport de audit programat"
+
+#: models.py:1109
+msgid "Special Audit report"
+msgstr "Raport de audit special"
+
+#: models.py:1110 models.py:3311
+msgid "Other"
+msgstr "Altele"
+
+#: models.py:1120 models.py:3333
+msgid "Type"
+msgstr "Tip"
+
+#: models.py:1125
+msgid "Other Agencies"
+msgstr "Alte agenții"
+
+#: models.py:1132
+msgid "Planned amount"
+msgstr "Suma planificată"
+
+#: models.py:1138
+msgid "Special requests"
+msgstr "Cereri speciale"
+
+#: models.py:1142
+msgid "Requested Date"
+msgstr "Data solicitată"
+
+#: models.py:1147
+msgid "Requesting Officer"
+msgstr "Ofițer solicitant"
+
+#: models.py:1155
+msgid "Approving Officer"
+msgstr "Ofițer de aprobare"
+
+#: models.py:1161
+msgid "Planned Date"
+msgstr "Data planificată"
+
+#: models.py:1166
+msgid "Completed Date"
+msgstr "Data de finalizare"
+
+#: models.py:1171
+msgid "Rating"
+msgstr "Evaluare"
+
+#: models.py:1193
+msgid "Basis for risk rating"
+msgstr "Baza pentru evaluarea riscului"
+
+#: models.py:1235
+msgid "Programme Cooperation Agreement"
+msgstr "Acord de Cooperare în Program"
+
+#: models.py:1236
+msgid "Small Scale Funding Agreement"
+msgstr "Acord de finanțare la scară mică"
+
+#: models.py:1237
+msgid "Memorandum of Understanding"
+msgstr "Memorandum de înțelegere"
+
+#: models.py:1246
+msgid "Draft"
+msgstr ""
+
+#: models.py:1247 models.py:1776
+msgid "Signed"
+msgstr "Semnat"
+
+#: models.py:1248 models.py:1779
+msgid "Ended"
+msgstr "Încheiat"
+
+#: models.py:1249 models.py:1781
+msgid "Suspended"
+msgstr "Suspendat"
+
+#: models.py:1250 models.py:1782
+msgid "Terminated"
+msgstr "Terminat"
+
+#: models.py:1266 models.py:1842 serializers/exports/agreements.py:114
+#: serializers/exports/interventions.py:91
+#: serializers/exports/interventions.py:509
+msgid "Country Programme"
+msgstr "Programul de țară"
+
+#: models.py:1274 serializers/exports/agreements.py:31
+msgid "Partner Authorized Officer"
+msgstr "Ofițer autorizat partener"
+
+#: models.py:1278
+msgid "Agreement Type"
+msgstr "Tip de acord"
+
+#: models.py:1283 models.py:1856 models.py:2661
+#: serializers/exports/interventions.py:48
+#: serializers/exports/interventions.py:86
+#: serializers/exports/interventions.py:197
+#: serializers/exports/interventions.py:209
+msgid "Reference Number"
+msgstr "Număr de referință"
+
+#: models.py:1290 models.py:1297 serializers/exports/agreements.py:109
+msgid "Attached Agreement"
+msgstr "Acord atașat"
+
+#: models.py:1303
+msgid "Termination document for PCAs"
+msgstr "Document de încetare pentru APC"
+
+#: models.py:1309 models.py:1872
+msgid "Start Date"
+msgstr "Data de începere"
+
+#: models.py:1314 models.py:1878
+msgid "End Date"
+msgstr "Data de încheiere"
+
+#: models.py:1320 serializers/exports/agreements.py:57
+msgid "Special Conditions PCA"
+msgstr "Condiții speciale PCA"
+
+#: models.py:1323
+msgid "Signed By UNICEF Date"
+msgstr "Semnat de UNICEF Data"
+
+#: models.py:1332 serializers/exports/agreements.py:50
+msgid "Signed By UNICEF"
+msgstr "Semnat de UNICEF"
+
+#: models.py:1338
+msgid "Signed By Partner Date"
+msgstr "Semnat de data partenerului"
+
+#: models.py:1346
+msgid "Signed by partner"
+msgstr "Semnat de partener"
+
+#: models.py:1353 serializers/exports/agreements.py:60
+msgid "Terms Acknowledged By"
+msgstr "Termenii recunoscuți de catre"
+
+#: models.py:1361 models.py:1864
+msgid "Status"
+msgstr "Stare"
+
+#: models.py:1540
+msgid "Change in Legal Name of Implementing Partner"
+msgstr "Schimbarea numelui juridic al partenerului de implementare"
+
+#: models.py:1541
+msgid "Change Authorized Officer(s)"
+msgstr "Schimbați funcționar(i) autorizat(i)"
+
+#: models.py:1542
+msgid "Banking Information"
+msgstr "Informații bancare"
+
+#: models.py:1543
+msgid "Change in clause"
+msgstr "Modificarea clauzei"
+
+#: models.py:1546 models.py:2693
+msgid "Number"
+msgstr "Număr"
+
+#: models.py:1549 models.py:1833 serializers/exports/interventions.py:247
+msgid "Agreement"
+msgstr "Acord"
+
+#: models.py:1568 models.py:2677 models.py:3186
+#: serializers/exports/interventions.py:17
+msgid "Types"
+msgstr "Tipuri"
+
+#: models.py:1571 models.py:2688
+msgid "Signed Date"
+msgstr "Data semnării"
+
+#: models.py:1582 models.py:2798 models.py:3179
+msgid "Amendment"
+msgstr "Amendament"
+
+#: models.py:1583
+msgid "Agreement amendments"
+msgstr "Modificări la acord"
+
+#: models.py:1773
+msgid "Development"
+msgstr "Dezvoltare"
+
+#: models.py:1774
+msgid "Review"
+msgstr "Recenzie"
+
+#: models.py:1775
+msgid "Signature"
+msgstr "Semnătura"
+
+#: models.py:1778
+msgid "Cancelled"
+msgstr "Anulat"
+
+#: models.py:1780
+msgid "Closed"
+msgstr "Închis"
+
+#: models.py:1783
+msgid "Expired"
+msgstr "Expirat"
+
+#: models.py:1789
+msgid "Programme Document"
+msgstr "Documentul programului"
+
+#: models.py:1790
+msgid "Simplified Programme Document"
+msgstr "Document de program simplificat"
+
+#: models.py:1799
+msgid "None"
+msgstr "Niciuna"
+
+#: models.py:1800
+msgid "Marginal"
+msgstr "Marginal"
+
+#: models.py:1802
+msgid "Principal"
+msgstr "Principal"
+
+#: models.py:1809
+msgid "Direct Payment"
+msgstr "Plata directă"
+
+#: models.py:1810
+msgid "Reimbursement"
+msgstr "Rambursare"
+
+#: models.py:1811
+msgid "Direct Cash Transfer"
+msgstr "Transfer direct de numerar"
+
+#: models.py:1827
+msgid "Document Type"
+msgstr "Tip de document"
+
+#: models.py:1850 serializers/exports/interventions.py:252
+msgid "Country Programmes"
+msgstr "Programe de țară"
+
+#: models.py:1862
+msgid "Document Title"
+msgstr "Titlul documentului"
+
+#: models.py:1884
+msgid "Document Submission Date by CSO"
+msgstr "Data depunerii documentului de către CSO"
+
+#: models.py:1890
+msgid "Submission Date to PRC"
+msgstr "Data transmiterii către RPC"
+
+#: models.py:1897
+msgid "Date Final Partnership Review Performed"
+msgstr "Data efectuată revizuirea finală a parteneriatului"
+
+#: models.py:1902
+msgid "Review Date by PRC"
+msgstr "Data revizuirii de către RPC"
+
+#: models.py:1921
+msgid "Final Review Approved"
+msgstr ""
+
+#: models.py:1938 models.py:2707
+msgid "Signed by UNICEF Date"
+msgstr "Semnat de UNICEF Data"
+
+#: models.py:1943 models.py:2712
+msgid "Signed by Partner Date"
+msgstr "Semnat de Partener Data"
+
+#: models.py:1950 models.py:2719 serializers/exports/interventions.py:310
+msgid "Signed by UNICEF"
+msgstr "Semnat de UNICEF"
+
+#: models.py:1959 models.py:2728 serializers/exports/interventions.py:319
+msgid "Signed by Partner"
+msgstr "Semnat de partener"
+
+#: models.py:1968 serializers/exports/interventions.py:316
+msgid "UNICEF Focal Points"
+msgstr "Puncte focale UNICEF"
+
+#: models.py:1975 serializers/exports/interventions.py:313
+msgid "CSO Authorized Officials"
+msgstr "Funcționari autorizați CSO"
+
+#: models.py:1981 serializers/exports/interventions.py:257
+msgid "Contingency PD"
+msgstr "PD de urgență"
+
+#: models.py:1985 models.py:1993
+msgid "Activation Document for Contingency PDs"
+msgstr "Document de activare pentru PD de urgență"
+
+#: models.py:1999
+msgid "Activation Protocol"
+msgstr "Protocol de activare"
+
+#: models.py:2003 models.py:2011
+msgid "Termination document for PDs"
+msgstr "Act de încetare pentru PD"
+
+#: models.py:2018 serializers/exports/interventions.py:255
+msgid "Sections"
+msgstr "Secțiuni"
+
+#: models.py:2024
+msgid "Office"
+msgstr "Birou"
+
+#: models.py:2029 serializers/exports/interventions.py:256
+msgid "Locations"
+msgstr "Locații"
+
+#: models.py:2034
+msgid "Sites"
+msgstr "Site-uri"
+
+#: models.py:2037
+msgid "Population Focus"
+msgstr "Focalizarea populației"
+
+#: models.py:2045
+msgid "Amendment Open"
+msgstr "Amendament deschis"
+
+#: models.py:2050
+msgid "Humanitarian"
+msgstr "Umanitar"
+
+#: models.py:2058
+msgid "Date first sent to Partner"
+msgstr "Data pentru prima trimitere către partener"
+
+#: models.py:2075
+msgid "UNPP Number"
+msgstr "Număr UNPP"
+
+#: models.py:2082
+msgid "Context"
+msgstr "Context"
+
+#: models.py:2087
+msgid "Implementation Strategy"
+msgstr "Strategia de implementare"
+
+#: models.py:2092
+msgid "Gender Rating"
+msgstr "Evaluare de gen"
+
+#: models.py:2098
+msgid "Gender Narrative"
+msgstr "Narațiune de gen"
+
+#: models.py:2103
+msgid "Equity Rating"
+msgstr "Ratingul capitalului propriu"
+
+#: models.py:2109
+msgid "Equity Narrative"
+msgstr "Narațiune de echitate"
+
+#: models.py:2114
+msgid "Sustainability Rating"
+msgstr "Evaluare de durabilitate"
+
+#: models.py:2120
+msgid "Sustainability Narrative"
+msgstr "Narațiune de sustenabilitate"
+
+#: models.py:2125
+msgid "Partner Non-Financial Contribution to Programme"
+msgstr "Contribuție non-financiară a partenerului la program"
+
+#: models.py:2131
+msgid "Budget Owner"
+msgstr "Proprietar de buget"
+
+#: models.py:2138
+msgid "HQ Support Cost"
+msgstr "Costul suportului HQ"
+
+#: models.py:2145
+msgid "Cash Transfer Modalities"
+msgstr "Modalitate de transfer de numerar"
+
+#: models.py:2152
+msgid "UNICEF Review Type"
+msgstr "Tipul de revizuire UNICEF"
+
+#: models.py:2158
+msgid "Capacity Development"
+msgstr "Dezvoltarea capacității"
+
+#: models.py:2163
+msgid "Other Info"
+msgstr "Alte informații"
+
+#: models.py:2168
+msgid "Other Partners Involved"
+msgstr "Alți parteneri implicați"
+
+#: models.py:2173
+msgid "Technical Guidance"
+msgstr "Ghid tehnic"
+
+#: models.py:2178
+msgid "Cancel Justification"
+msgstr "Anulează justificarea"
+
+#: models.py:2183 models.py:3308
+msgid "Data Processing Agreement"
+msgstr "Acord de prelucrare a datelor"
+
+#: models.py:2187 models.py:3309
+msgid "Activities involving children and young people"
+msgstr "Activități care implică copii și tineri"
+
+#: models.py:2191
+msgid "Special Conditions for Construction Works by Implementing Partners"
+msgstr ""
+"Condiții speciale pentru lucrările de construcție de către partenerii de "
+"implementare"
+
+#: models.py:2198
+msgid "Metadata"
+msgstr "Metadate"
+
+#: models.py:2204
+msgid "Confidential"
+msgstr "Confidenţial"
+
+#: models.py:2638
+msgid "Type 1: Administrative error (correction)"
+msgstr "Tip 1: Eroare administrativă (corecție)"
+
+#: models.py:2639
+msgid "Type 2: Budget <= 20%"
+msgstr "Tipul 2: Buget <= 20%"
+
+#: models.py:2640
+msgid "Type 3: Budget > 20%"
+msgstr "Tipul 3: Buget > 20%"
+
+#: models.py:2641
+msgid "Type 4: Changes to planned results"
+msgstr "Tip 4: Modificări ale rezultatelor planificate"
+
+#: models.py:2642
+msgid "Type 5: No cost extension"
+msgstr "Tip 5: Fără extensie de cost"
+
+#: models.py:2643
+msgid "Type 6: Other"
+msgstr "Tip 6: Altele"
+
+#: models.py:2655
+msgid "Normal"
+msgstr "Normal"
+
+#: models.py:2656
+msgid "Contingency"
+msgstr "Contingenta"
+
+#: models.py:2668 models.py:3689
+msgid "Kind"
+msgstr "Amabil"
+
+#: models.py:2699 models.py:2736
+msgid "Amendment Document"
+msgstr "Documentul de modificare"
+
+#: models.py:2743
+msgid "Internal PRC Review"
+msgstr "Revizuire internă PRC"
+
+#: models.py:2749
+msgid "Amended Intervention"
+msgstr "Intervenție modificată"
+
+#: models.py:2799
+msgid "Intervention amendments"
+msgstr "Modificări de intervenție"
+
+#: models.py:2863 models.py:2885 models.py:2940 models.py:3170 models.py:3329
+#: models.py:3382 models.py:3479 models.py:3500 models.py:3587
+msgid "Intervention"
+msgstr "Interventie"
+
+#: models.py:2866 models.py:3429
+msgid "Year"
+msgstr "Anul"
+
+#: models.py:2867 models.py:3430
+msgid "Programmatic Q1"
+msgstr "Q1 programatic"
+
+#: models.py:2868 models.py:3431
+msgid "Programmatic Q2"
+msgstr "Q2 programatic"
+
+#: models.py:2869 models.py:3432
+msgid "Programmatic Q3"
+msgstr "Q3 programatic"
+
+#: models.py:2870 models.py:3433
+msgid "Programmatic Q4"
+msgstr "Q4 programatic"
+
+#: models.py:2876
+msgid "Intervention Planned Visits"
+msgstr "Vizite planificate de intervenție"
+
+#: models.py:2883 serializers/exports/interventions.py:113
+msgid "Code"
+msgstr "Cod"
+
+#: models.py:2889
+msgid "CP Output"
+msgstr "Ieșire CP"
+
+#: models.py:2892
+msgid "RAM Indicators"
+msgstr "Indicatori RAM"
+
+#: models.py:2944
+msgid "Partner Contribution"
+msgstr "Contribuția partenerului"
+
+#: models.py:2945
+msgid "Unicef Cash"
+msgstr "Unicef ​​Cash"
+
+#: models.py:2950
+msgid "UNICEF Supplies"
+msgstr "Rechizite UNICEF"
+
+#: models.py:2952 serializers/exports/interventions.py:557
+msgid "Total"
+msgstr "Total"
+
+#: models.py:2956
+msgid "Partner Contribution Local"
+msgstr "Contribuția partenerului local"
+
+#: models.py:2960
+msgid "Partner Supplies Local"
+msgstr "Rechizite pentru parteneri local"
+
+#: models.py:2964
+msgid "Total Partner Contribution"
+msgstr "Contribuția totală a partenerului"
+
+#: models.py:2969 models.py:2973
+msgid "Total HQ Cash Local"
+msgstr "Numerar total al sediului central"
+
+#: models.py:2977
+msgid "Unicef Cash Local"
+msgstr "Unicef ​​Cash Local"
+
+#: models.py:2981
+msgid "UNICEF Supplies Local"
+msgstr "UNICEF Rechizite Local"
+
+#: models.py:2983 serializers/exports/interventions.py:551
+msgid "Currency"
+msgstr "Moneda"
+
+#: models.py:2984
+msgid "Total Local"
+msgstr "Total local"
+
+#: models.py:2988
+msgid "Programme Effectiveness (%)"
+msgstr "Eficacitatea programului (%)"
+
+#: models.py:2995
+msgid "Intervention budget"
+msgstr "Buget de interventie"
+
+#: models.py:3090
+msgid "Not decided yet"
+msgstr "Nu s-a decis încă"
+
+#: models.py:3091
+msgid "Yes, strongly agree"
+msgstr "Da, foarte de acord"
+
+#: models.py:3092
+msgid "Yes, agree"
+msgstr "Da, de acord"
+
+#: models.py:3093
+msgid "No, disagree"
+msgstr "Nu, nu sunt de acord"
+
+#: models.py:3094
+msgid "No, strongly disagree"
+msgstr "Nu, total dezacord"
+
+#: models.py:3099
+msgid ""
+"The proposed relationship is best represented and regulated by partnership "
+"(as opposed to procurement), with both UNICEF and the CSO making clear "
+"contributions to the PD/SPD"
+msgstr ""
+"Relația propusă este cel mai bine reprezentată și reglementată prin "
+"parteneriat (spre deosebire de achiziții), atât UNICEF, cât și OSC-ul "
+"aducând contribuții clare la PD/SPD"
+
+#: models.py:3106
+msgid ""
+"The partner selection evidences the CSO’s comparative advantage and value "
+"for money in relation to the planned results"
+msgstr ""
+"Selectarea partenerilor evidențiază avantajul comparativ și raportul "
+"calitate-preț al OSC-ului în raport cu rezultatele planificate"
+
+#: models.py:3112
+msgid ""
+"Previous UNICEF/UN relationships with the proposed CSO have been positive"
+msgstr "Relațiile anterioare UNICEF/ONU cu OSC propusă au fost pozitive"
+
+#: models.py:3117
+msgid ""
+"The proposed PD/SPD is relevant to achieving results in the country "
+"programme document, the relevant sector workplan and or humanitarian "
+"response plan"
+msgstr ""
+"PD/SPD propus este relevant pentru obținerea de rezultate în documentul "
+"programului de țară, planul de lucru sectorial relevant și sau planul de "
+"răspuns umanitar"
+
+#: models.py:3123
+msgid ""
+"The results framework of the proposed PD/SPD has been guided by M&E feedback "
+"during the drafting process"
+msgstr ""
+"Cadrul de rezultate al PD/SPD propus a fost ghidat de feedback-ul M&E în "
+"timpul procesului de redactare"
+
+#: models.py:3129
+msgid ""
+"Gender, equity and sustainability have been considered in the programme "
+"design process"
+msgstr ""
+"Genul, echitatea și sustenabilitatea au fost luate în considerare în "
+"procesul de concepere a programului"
+
+#: models.py:3134
+msgid ""
+"The budget of the proposed PD/SPD is aligned with the principles of value "
+"for money with the effective and efficient programme management costs "
+"adhering to office defined limits"
+msgstr ""
+"Bugetul PD/SPD propus este aliniat cu principiile raportului calitate/preț "
+"cu costurile de gestionare a programelor eficiente și eficiente, respectând "
+"limitele definite de birou."
+
+#: models.py:3140
+msgid "The relevant supply issues have been duly considered"
+msgstr ""
+"Problemele relevante de aprovizionare au fost luate în considerare în mod "
+"corespunzător"
+
+#: models.py:3157
+msgid "PRC Review"
+msgstr "Revizuirea PRC"
+
+#: models.py:3158
+msgid "Non-PRC Review"
+msgstr "Revizuire non-PRC"
+
+#: models.py:3164
+msgid "No Review Required"
+msgstr "Nu este necesară nicio revizuire"
+
+#: models.py:3190
+msgid "Actions List"
+msgstr "Lista de acțiuni"
+
+#: models.py:3194
+msgid "PRC Submitted By"
+msgstr "PRC trimis de"
+
+#: models.py:3200 models.py:3282
+msgid "Review Date"
+msgstr "Data revizuirii"
+
+#: models.py:3202
+msgid "Meeting Date"
+msgstr "Data întâlnirii"
+
+#: models.py:3205
+msgid "PRC Officers"
+msgstr "Ofițeri PRC"
+
+#: models.py:3211
+msgid "Overall Approver"
+msgstr "Aprobator general"
+
+#: models.py:3218
+msgid "Sent Back by Secretary Comment"
+msgstr "Trimis înapoi de secretar Comentariu"
+
+#: models.py:3303
+msgid "FACE"
+msgstr "FATA"
+
+#: models.py:3304
+msgid "Progress Report"
+msgstr "Raport de progres"
+
+#: models.py:3305
+msgid "(Legacy) Final Partnership Review"
+msgstr "Revizuirea finală a parteneriatului (moștenire)."
+
+#: models.py:3306
+msgid "Correspondence"
+msgstr "Corespondență"
+
+#: models.py:3307
+msgid "Supply/Distribution Plan"
+msgstr "Plan de aprovizionare/distributie"
+
+#: models.py:3310
+msgid "Special Conditions for Construction Works"
+msgstr "Condiții speciale pentru lucrări de construcții"
+
+#: models.py:3344
+msgid "Intervention Attachment"
+msgstr "Atașament de intervenție"
+
+#: models.py:3403
+msgid "Fund Commitment Reference"
+msgstr "Referință privind angajamentul fondului"
+
+#: models.py:3404
+msgid "Amount (USD)"
+msgstr "Suma (USD)"
+
+#: models.py:3405
+msgid "Liquidation (USD)"
+msgstr "Lichidare (USD)"
+
+#: models.py:3407
+msgid "Outstanding Balance (USD)"
+msgstr "Sold restante (USD)"
+
+#: models.py:3409
+msgid "Amount less than 3 months (USD)"
+msgstr "Sumă sub 3 luni (USD)"
+
+#: models.py:3411
+msgid "Amount between 3 and 6 months (USD)"
+msgstr "Sumă între 3 și 6 luni (USD)"
+
+#: models.py:3413
+msgid "Amount between 6 and 9 months (USD)"
+msgstr "Sumă între 6 și 9 luni (USD)"
+
+#: models.py:3415
+msgid "Amount more than 9 months (USD)"
+msgstr "Sumă mai mare de 9 luni (USD)"
+
+#: models.py:3439
+msgid "Partner Planned Visits"
+msgstr "Vizite planificate ale partenerilor"
+
+#: models.py:3468
+msgid "Social & Environmental"
+msgstr "Social & Mediu"
+
+#: models.py:3469
+msgid "Financial"
+msgstr "Financiar"
+
+#: models.py:3470
+msgid "Operational"
+msgstr "Operațional"
+
+#: models.py:3471
+msgid "Organizational"
+msgstr "Organizațional"
+
+#: models.py:3472
+msgid "Political"
+msgstr "Politic"
+
+#: models.py:3473
+msgid "Strategic"
+msgstr "Strategic"
+
+#: models.py:3474
+msgid "Safety & security"
+msgstr "Siguranță & securitate"
+
+#: models.py:3484
+msgid "Risk Type"
+msgstr "Tip de risc"
+
+#: models.py:3505
+msgid ""
+"UNICEF contribution for In-country management and support staff prorated to "
+"their contribution to the programme (representation, planning, coordination, "
+"logistics, administration, finance)"
+msgstr ""
+"Contribuția UNICEF pentru managementul din țară și personalul de asistență "
+"proporțională la contribuția lor la program (reprezentare, planificare, "
+"coordonare, logistică, administrație, finanțe)"
+
+#: models.py:3511
+msgid ""
+"Partner contribution for In-country management and support staff prorated to "
+"their contribution to the programme (representation, planning, coordination, "
+"logistics, administration, finance)"
+msgstr ""
+"Contribuția partenerilor pentru managementul din țară și personalul de "
+"asistență proporțională la contribuția lor la program (reprezentare, "
+"planificare, coordonare, logistică, administrație, finanțe)"
+
+#: models.py:3517
+msgid ""
+"UNICEF contribution for Operational costs prorated to their contribution to "
+"the programme (office space, equipment, office supplies, maintenance)"
+msgstr ""
+"Contribuția UNICEF pentru costurile operaționale proporțional cu contribuția "
+"lor la programul (spațiu de birou, echipamente, rechizite de birou, "
+"întreținere)"
+
+#: models.py:3523
+msgid ""
+"Partner contribution for Operational costs prorated to their contribution to "
+"the programme (office space, equipment, office supplies, maintenance)"
+msgstr ""
+"Contribuția partenerului pentru costurile operaționale proporțional cu "
+"contribuția lor la program (spațiu de birou, echipamente, rechizite de "
+"birou, întreținere)"
+
+#: models.py:3529
+msgid ""
+"UNICEF contribution for Planning, monitoring, evaluation and communication, "
+"prorated to their contribution to the programme (venue, travels, etc.)"
+msgstr ""
+"Contribuția UNICEF pentru planificare, monitorizare, evaluare și comunicare, "
+"prorata proporțional cu contribuția lor la program (loc, călătorii etc.)"
+
+#: models.py:3535
+msgid ""
+"Partner contribution for Planning, monitoring, evaluation and communication, "
+"prorated to their contribution to the programme (venue, travels, etc.)"
+msgstr ""
+"Contribuția partenerilor pentru planificare, monitorizare, evaluare și "
+"comunicare, prorata proporțional cu contribuția lor la program (loc, "
+"călătorii etc.)\""
+
+#: models.py:3581
+msgid "UNICEF"
+msgstr "UNICEF"
+
+#: models.py:3596
+msgid "Unit Number"
+msgstr "Numar unitar"
+
+#: models.py:3602 models.py:3679
+msgid "Unit Price"
+msgstr "Pret unitar"
+
+#: models.py:3609
+msgid "Result"
+msgstr "Rezultat"
+
+#: models.py:3615
+msgid "Total Price"
+msgstr "Pretul total"
+
+#: models.py:3622
+msgid "Other Mentions"
+msgstr "Alte mentiuni"
+
+#: models.py:3629
+msgid "Provided By"
+msgstr "Furnizat de"
+
+#: models.py:3632
+msgid "UNICEF Product Number"
+msgstr "Numarul produsului UNICEF"
+
+#: models.py:3658
+msgid ""
+"In-country management and support staff prorated to their contribution to "
+"the programme (representation, planning, coordination, logistics, "
+"administration, finance)"
+msgstr ""
+"Managementul din țară și personalul de asistență proporțional cu contribuția "
+"lor la program (reprezentare, planificare, coordonare, logistică, "
+"administrație, finanțe)"
+
+#: models.py:3660
+msgid ""
+"Operational costs prorated to their contribution to the programme (office "
+"space, equipment, office supplies, maintenance)"
+msgstr ""
+"Costurile operaționale proporționale cu contribuția lor la program (birou "
+"spațiu, echipamente, rechizite de birou, întreținere)"
+
+#: models.py:3662
+msgid ""
+"Planning, monitoring, evaluation and communication, prorated to their "
+"contribution to the programme (venue, travels, etc.)"
+msgstr ""
+"Planificarea, monitorizarea, evaluarea și comunicarea, proporțional cu "
+"contribuția lor la program (locație, călătorii etc.)"
+
+#: models.py:3667
+msgid "Budget"
+msgstr "Buget"
+
+#: models.py:3675
+msgid "Unit"
+msgstr "Unitate"
+
+#: models.py:3684
+msgid "Units Number"
+msgstr "Numarul de unitati"
+
+#: models.py:3691
+msgid "UNICEF Cash Local"
+msgstr "Numerar UNICEF Local"
+
+#: models.py:3697
+msgid "CSO Cash Local"
+msgstr "Numerar CSO Local"
+
+#: permissions.py:329 permissions.py:365 permissions.py:388
+msgid "Accessing this item is not allowed."
+msgstr "Accesarea acestui element nu este permisa."
+
+#: serializers/exports/agreements.py:44
+msgid "Signed By Partner"
+msgstr "Semnat de către Partener"
+
+#: serializers/exports/agreements.py:54
+msgid "Amendments"
+msgstr "Modificări"
+
+#: serializers/exports/agreements.py:55
+#: serializers/exports/interventions.py:322
+#: serializers/exports/partner_organization.py:67
+msgid "URL"
+msgstr "URL"
+
+#: serializers/exports/interventions.py:97
+msgid "Result Type"
+msgstr "Tipul rezultatului"
+
+#: serializers/exports/interventions.py:102
+msgid "Section"
+msgstr "Sectiune"
+
+#: serializers/exports/interventions.py:118
+msgid "From Date"
+msgstr "De la data"
+
+#: serializers/exports/interventions.py:123
+msgid "To Date"
+msgstr "Pana la data"
+
+#: serializers/exports/interventions.py:128
+#: serializers/exports/interventions.py:184
+msgid "Parent"
+msgstr "Parinte"
+
+#: serializers/exports/interventions.py:134
+msgid "WBS"
+msgstr "WBS"
+
+#: serializers/exports/interventions.py:139
+msgid "VISION ID"
+msgstr "ID VIZIUNE"
+
+#: serializers/exports/interventions.py:144
+msgid "GIC Code"
+msgstr "Codul GIC"
+
+#: serializers/exports/interventions.py:149
+msgid "GIC Name"
+msgstr "Numele GIC"
+
+#: serializers/exports/interventions.py:154
+msgid "SIC Code"
+msgstr "Cod SIC"
+
+#: serializers/exports/interventions.py:159
+msgid "SIC Name"
+msgstr "Numele SIC"
+
+#: serializers/exports/interventions.py:164
+msgid "Activity Focus Code"
+msgstr "Cod de focalizare pe activitate"
+
+#: serializers/exports/interventions.py:169
+msgid "Activity Focus Name"
+msgstr "Nume focus activitate"
+
+#: serializers/exports/interventions.py:254
+msgid "UNICEF Office"
+msgstr "Biroul UNICEF"
+
+#: serializers/exports/interventions.py:259
+msgid "Cluster"
+msgstr "Cluster"
+
+#: serializers/exports/interventions.py:261
+msgid "FR Number(s)"
+msgstr "Numerele FR"
+
+#: serializers/exports/interventions.py:262
+msgid "FR Currency"
+msgstr "FR Moneda"
+
+#: serializers/exports/interventions.py:263
+msgid "FR Posting Date"
+msgstr "FR Data afisarii"
+
+#: serializers/exports/interventions.py:265
+msgid "FR Amount"
+msgstr "FR Sumă"
+
+#: serializers/exports/interventions.py:268
+msgid "FR Actual CT"
+msgstr "FR CT real"
+
+#: serializers/exports/interventions.py:271
+msgid "Outstanding DCT"
+msgstr "DCT remarcabil"
+
+#: serializers/exports/interventions.py:274
+#: serializers/exports/interventions.py:563
+#: serializers/exports/partner_organization.py:71
+msgid "Planned Programmatic Visits"
+msgstr "Vizite programatice planificate"
+
+#: serializers/exports/interventions.py:277
+msgid "Budget Currency"
+msgstr "Moneda bugetului"
+
+#: serializers/exports/interventions.py:282
+msgid "Total CSO Contribution"
+msgstr "Contribuția totală a CSO"
+
+#: serializers/exports/interventions.py:289
+#: serializers/exports/interventions.py:521
+msgid "UNICEF Cash"
+msgstr "Numerar UNICEF"
+
+#: serializers/exports/interventions.py:296
+msgid "UNICEF Supply"
+msgstr "Aprovizionare UNICEF"
+
+#: serializers/exports/interventions.py:303
+msgid "Total PD/SPD Budget"
+msgstr "Bugetul total al PD/SPD"
+
+#: serializers/exports/interventions.py:321
+msgid "CP Outputs"
+msgstr "Ieșiri CP"
+
+#: serializers/exports/interventions.py:324
+msgid "Days from Submission to Signed"
+msgstr "Zile de la depunere la semnare"
+
+#: serializers/exports/interventions.py:327
+msgid "Days from Review to Signed"
+msgstr "Zile de la revizuire la semnare"
+
+#: serializers/exports/interventions.py:330
+msgid "Total no. of amendments"
+msgstr "Nr total. de modificări"
+
+#: serializers/exports/interventions.py:333
+msgid "Last amendment date"
+msgstr "Data ultimei modificări"
+
+#: serializers/exports/interventions.py:336
+msgid "Attachment type"
+msgstr "Tip de atașament"
+
+#: serializers/exports/interventions.py:339
+msgid "# of attachments"
+msgstr "Nr de atasamente"
+
+#: serializers/exports/interventions.py:491
+#: serializers/exports/interventions.py:578
+msgid "N/A"
+msgstr "Indisponibil"
+
+#: serializers/exports/interventions.py:507
+msgid "Attachments"
+msgstr "Atasamente"
+
+#: serializers/exports/interventions.py:515
+msgid "CSO Contribution"
+msgstr "Contribuția CSO"
+
+#: serializers/exports/interventions.py:527
+msgid "In Kind Amount"
+msgstr "Sumă în natură"
+
+#: serializers/exports/interventions.py:533
+msgid "CSO Contribution (Local)"
+msgstr "Contribuția CSO (Local)"
+
+#: serializers/exports/interventions.py:539
+msgid "UNICEF Cash (Local)"
+msgstr "Numerar UNICEF (Local)"
+
+#: serializers/exports/interventions.py:545
+msgid "In Kind Amount (Local)"
+msgstr "Sumă în natură (local)"
+
+#: serializers/exports/partner_organization.py:29
+msgid "Staff Members"
+msgstr "Membrii personalului"
+
+#: serializers/exports/partner_organization.py:31
+msgid "Assessment Type (Date Assessed)"
+msgstr "Tipul de evaluare (Data evaluarii)"
+
+#: serializers/exports/partner_organization.py:34
+msgid "Organizations Full Name"
+msgstr "Numele complet al organizației"
+
+#: serializers/exports/partner_organization.py:41
+msgid "HACT Risk Rating"
+msgstr "Evaluare de risc HACT"
+
+#: serializers/exports/partner_organization.py:42
+msgid "SEA Risk Rating"
+msgstr "Evaluare de risc SEA"
+
+#: serializers/exports/partner_organization.py:48
+msgid "Date Last Assessed Against Core Values"
+msgstr "Data ultimei evaluări în raport cu valorile de bază"
+
+#: serializers/exports/partner_organization.py:52
+msgid "Actual Cash Transfer for CP (USD)"
+msgstr "Transfer efectiv de numerar pentru CP (USD)"
+
+#: serializers/exports/partner_organization.py:56
+msgid "Actual Cash Transfer for Current Year (USD)"
+msgstr "Transfer efectiv de numerar pentru anul curent (USD)"
+
+#: serializers/exports/partner_organization.py:60
+msgid "Marked for Deletion"
+msgstr "Marcat pentru ștergere"
+
+#: serializers/exports/partner_organization.py:64
+msgid "Date Assessed"
+msgstr "Data evaluarii"
+
+#: serializers/exports/partner_organization.py:127
+msgid "HACT"
+msgstr "HACT"
+
+#: serializers/interventions_v2.py:141
+msgid ""
+"Cannot add a new amendment while another amendment of same kind is in "
+"progress."
+msgstr ""
+"Nu se poate adăuga un nou amendament în timp ce un alt amendament de același "
+"tip este în curs."
+
+#: serializers/interventions_v2.py:532 serializers/v3.py:34
+msgid "Invalid CP Output provided."
+msgstr "Ieșire CP nevalidă furnizată."
+
+#: serializers/interventions_v2.py:792
+#, python-format
+msgid ""
+"Please adjust activities to not use the quarters to be removed (%(names)s)."
+msgstr ""
+"Vă rugăm să ajustați activitățile pentru a nu folosi sferturile de eliminat "
+"(%(names)s)."
+
+#: serializers/interventions_v2.py:1080
+msgid "Indicator needs to be either cluster or high frequency."
+msgstr "Indicatorul trebuie să fie de tip cluster sau de înaltă frecvență."
+
+#: serializers/interventions_v2.py:1094
+msgid "Start date needs to be on or after PD start date."
+msgstr "Data de începere trebuie să fie la sau după data de începere a PD."
+
+#: serializers/interventions_v2.py:1106
+msgid "End date needs to be on or before PD end date."
+msgstr ""
+"Data de încheiere trebuie să fie la sau înainte de data de încheiere a PD."
+
+#: serializers/interventions_v2.py:1118
+msgid "End date needs to be after the start date."
+msgstr "Data de încheiere trebuie să fie după data de început."
+
+#: serializers/interventions_v2.py:1128
+msgid "Next start date needs to be one day after previous end date."
+msgstr ""
+"Următoarea dată de începere trebuie să fie la o zi după data de încheiere "
+"anterioară."
+
+#: serializers/interventions_v2.py:1202
+msgid "Changes not allowed when PD is terminated."
+msgstr "Schimbările nu sunt permise când un PD este terminat."
+
+#: serializers/interventions_v2.py:1209
+msgid "Changes not allowed when PD not in amendment state."
+msgstr ""
+"Modificările nu sunt permise când un PD nu este în stare de modificare."
+
+#: serializers/interventions_v2.py:1214
+msgid "PD needs to have a start date."
+msgstr "PD trebuie să aibă o dată de începere."
+
+#: serializers/interventions_v2.py:1220
+msgid "This field cannot be empty."
+msgstr "Acest câmp nu poate fi gol."
+
+#: serializers/interventions_v3.py:155
+msgid ""
+"Invalid budget data. Total cash should be equal to items number * price per "
+"item."
+msgstr ""
+"Datele bugetare nevalide. Numerarul total ar trebui să fie egal cu numărul "
+"articolelor * prețul pe articol."
+
+#: serializers/v3.py:150 serializers/v3.py:189
+msgid "Unknown intervention."
+msgstr "Intervenție necunoscută."
+
+#: synchronizers.py:415
+msgid "EZHACT Vision integration disabled"
+msgstr "Integrarea EZHACT Vision este dezactivată"
+
+#: validation/agreements.py:49 validation/interventions.py:117
+msgid "Cannot Transition without termination doc attached"
+msgstr "Nu se poate face tranziția fără documentul de terminare atașat"
+
+#: validation/agreements.py:103
+msgid "None of the signatures can be dated in the future"
+msgstr "Niciuna dintre semnături nu poate fi datată în viitor"
+
+#: validation/agreements.py:120
+msgid "Start and end dates don't match the Document's start and end"
+msgstr ""
+"Datele de început și de sfârșit nu se potrivesc cu începutul și sfârșitul "
+"documentului"
+
+#: validation/agreements.py:206 validation/interventions.py:524
+msgid "Today is not after the end date"
+msgstr "Azi nu este după data de încheiere"
+
+#: validation/interventions.py:74
+msgid "End date is in the future"
+msgstr "Data de încheiere este în viitor"
+
+#: validation/interventions.py:82
+msgid "Total Outstanding DCTs need to equal to 0"
+msgstr "Totalul DCT restante trebuie să fie egal cu 0"
+
+#: validation/interventions.py:91
+msgid ""
+"Total FR amount needs to equal total actual amount, and Total Outstanding "
+"DCTs need to equal to 0"
+msgstr ""
+"Suma totală FR trebuie să fie egală cu valoarea totală reală, iar totalul "
+"DCT restante trebuie să fie egal cu 0"
+
+#: validation/interventions.py:98
+msgid ""
+"Final Review must be approved for documents having amount transferred "
+"greater than 100,000"
+msgstr ""
+
+#: validation/interventions.py:104 validation/interventions.py:119
+#: validation/interventions.py:129 validation/interventions.py:143
+#: validation/interventions.py:173
+msgid "Cannot Transition status while adding an amendment"
+msgstr "Nu se poate face tranziție în timpul adăugării unui amendament"
+
+#: validation/interventions.py:108
+msgid "PD cannot be closed if the Partner is Blocked in Vision"
+msgstr "PD-ul nu poate fi închis dacă Partenerul este Blocat în Vision"
+
+#: validation/interventions.py:127 validation/interventions.py:212
+msgid "Cannot Transition to ended if termination_doc attached"
+msgstr ""
+"Nu se poate trece la statusul Terminat dacă este atașat termination_doc"
+
+#: validation/interventions.py:133
+msgid "PD cannot transition to ended if the Partner is Blocked in Vision"
+msgstr ""
+"PD-ul nu poate trece la statusul Terminat dacă Partenerul este Blocat în "
+"Vision"
+
+#: validation/interventions.py:147
+msgid "PD cannot be suspended if the Partner is Blocked in Vision"
+msgstr "PD-ul nu poate fi suspendat dacă partenerul este blocat în viziune"
+
+#: validation/interventions.py:159
+msgid "Justification required for cancellation"
+msgstr "Justificarea este necesară pentru anulare"
+
+#: validation/interventions.py:177
+msgid ""
+"The PCA related to this record is Draft, Suspended or Terminated. This "
+"Programme Document will not change status until the related PCA is in Signed "
+"status"
+msgstr ""
+"PCA-ul aferent acestei înregistrări este draft, suspendat sau terminat. "
+"Acest document de program nu se va schimba până când PCA-ul aferent este în "
+"starea Semnat"
+
+#: validation/interventions.py:183
+msgid "PD cannot transition to signed if the Partner is Blocked in Vision"
+msgstr "PD-ul nu poate trece la semnat dacă Partenerul este Blocat în Vision"
+
+#: validation/interventions.py:189 validation/interventions.py:195
+#: validation/interventions.py:201 validation/interventions.py:372
+#: validation/interventions.py:378 validation/interventions.py:384
+#, python-format
+msgid " %(file_type)s should be provided in attachments."
+msgstr "%(file_type)s ar trebui să fie furnizat în atașamente."
+
+#: validation/interventions.py:217
+msgid "PD cannot be activated if the associated Agreement is not active"
+msgstr "PD-ul nu poate fi activat dacă acordul asociat nu este activ"
+
+#: validation/interventions.py:222
+msgid "PD cannot be activated if the Partner is Blocked in Vision"
+msgstr "PD-ul nu poate fi activat dacă Partenerul este Blocat în Vision"
+
+#: validation/interventions.py:281
+msgid "Agreement selected is not of type SSFA"
+msgstr "Acordul selectat nu este de tip SSFA"
+
+#: validation/interventions.py:301
+#, python-format
+msgid ""
+"The following sections have been selected on the PD/SPD indicators and "
+"cannot be removed %(sections)s "
+msgstr ""
+"Următoarele secțiuni au fost selectate pe indicatorii PD/SPD și nu poate fi "
+"eliminat %(sections)s"
+
+#: validation/interventions.py:315
+#, python-format
+msgid ""
+"The following locations have been selected on the PD/SPD indicators and "
+"cannot be removed without removing them from the indicators first: "
+"%(locations)s"
+msgstr ""
+"Următoarele locații au fost selectate pe indicatorii PD/SPD și nu pot fi "
+"eliminate fără a le scoate mai întâi din indicatoare: %(locations)s"
+
+#: validation/interventions.py:333
+#, python-format
+msgid ""
+"The Country Programme selected on this PD is not the same as the Country "
+"Programme selected on the Agreement, please select %(cp)s"
+msgstr ""
+"Programul de țară selectat în acest PD nu este același cu Programul de țară "
+"selectat în acord, vă rugăm să selectați %(cp)s"
+
+#: validation/interventions.py:407
+msgid ""
+"State suspended cannot be modified since the end date of the intervention "
+"surpasses today"
+msgstr ""
+"Starea suspendată nu poate fi modificată pentru că data încheierii "
+"intervenției depășește data curentă"
+
+#: validation/interventions.py:409
+msgid "Start date must precede end date"
+msgstr "Data de început trebuie să fie înainte de data de încheiere"
+
+#: validation/interventions.py:410
+msgid "Signatures cannot be dated in the future"
+msgstr "Semnăturile nu pot fi datate în viitor"
+
+#: validation/interventions.py:411
+msgid "Document type PD or HPD can only be associated with a PCA agreement."
+msgstr "Tipul de document PD sau HPD poate fi asociat doar cu un acord PCA."
+
+#: validation/interventions.py:412
+msgid "The agreement selected has at least one other SSFA Document connected"
+msgstr "Acordul selectat are cel puțin un alt document SSFA conectat"
+
+#: validation/interventions.py:414
+msgid "The start date cannot be before the later of signature dates."
+msgstr ""
+"Data de începere nu poate fi anterioară datei ulterioare ale semnăturii."
+
+#: validation/interventions.py:415
+msgid "PD start date cannot be earlier than the Start Date of the related PCA"
+msgstr ""
+"Data de începere a PD nu poate fi anterioară datei de începere a PCA aferentă"
+
+#: validation/interventions.py:416
+msgid "Amendment Flag cannot be turned on without adding an amendment"
+msgstr ""
+"Indicatorul amendamentului nu poate fi activat fără adăugarea unui amendament"
+
+#: validation/interventions.py:417
+msgid ""
+"The sections selected on the PD/SPD are not a subset of all sections "
+"selected for this PD/SPD's indicators"
+msgstr ""
+"Secțiunile selectate pe PD/SPD nu sunt un subset al tuturor locațiilor "
+"selectate pentru indicatorii acestui PD/SPD"
+
+#: validation/interventions.py:419
+msgid ""
+"The locations selected on the PD/SPD are not a subset of all locations "
+"selected for this PD/SPD's indicators"
+msgstr ""
+"Locațiile selectate pe PD/SPD nu sunt un subset al tuturor locațiilor "
+"selectate pentru indicatorii acestui PD/SPD"
+
+#: validation/interventions.py:431
+#, python-format
+msgid "Required fields not completed in %(status)s: %(fields)s"
+msgstr "Câmpurile obligatorii nu au fost completate în %(status)s: %(fields)s"
+
+#: validation/interventions.py:444
+#, python-format
+msgid "Cannot change fields while in %(status)s: %(field)s"
+msgstr "Nu se pot schimba câmpurile în %(status)s: %(field)s"
+
+#: validation/interventions.py:451 validation/interventions.py:469
+#: validation/interventions.py:486 validation/interventions.py:504
+#: validation/interventions.py:518
+msgid "All activities must have at least one time frame"
+msgstr "Toate activitățile trebuie să aibă cel puțin un interval de timp"
+
+#: validation/interventions.py:453
+msgid "Results section is empty"
+msgstr "Secțiunea de rezultate este goală"
+
+#: validation/interventions.py:455
+msgid "All PD Outputs need to have at least one indicator"
+msgstr "Toate ieșirile PD trebuie să aibă cel puțin un indicator"
+
+#: validation/interventions.py:457
+msgid "Total UNICEF Contribution must be greater than 0"
+msgstr "Contribuția totală UNICEF trebuie să fie mai mare de 0"
+
+#: validation/interventions.py:460 validation/interventions.py:471
+#: validation/interventions.py:488 validation/interventions.py:506
+#: validation/interventions.py:520
+msgid "All PD Outputs need to be associated to a CP Output"
+msgstr "Toate ieșirile PD trebuie asociate unei ieșiri CP"
+
+#: validation/interventions.py:467
+msgid "Unicef and Partner both need to accept"
+msgstr "Atat Unicef cat și Partenerul trebuie să accepte"
+
+#: validation/interventions.py:478
+msgid "Review needs to be approved"
+msgstr "Revizuirea trebuie aprobată"
+
+#: validation/interventions.py:490 validation/interventions.py:511
+msgid "UNICEF Cash $ or UNICEF Supplies $ should not be 0"
+msgstr "UNICEF Cash $ sau UNICEF Supplies $ nu trebuie să fie 0"
+
+#: validation/interventions.py:502
+msgid "Only original PD can be active"
+msgstr "Numai PD-ul original poate fi activ"
+
+#: validation/interventions.py:509
+msgid "Today is not after the start date"
+msgstr "Azi nu este după data de începere"
+
+#: views/interventions_v3.py:358
+msgid "Meeting date is not available."
+msgstr "Data întâlnirii nu este disponibilă."
+
+#~ msgid ""
+#~ "Total amount transferred greater than 100,000 and no Final Partnership "
+#~ "Review was attached"
+#~ msgstr ""
+#~ "Suma totală transferată este mai mare de 100.000 și nu a fost atașată "
+#~ "nicio evaluare finală a parteneriatului"

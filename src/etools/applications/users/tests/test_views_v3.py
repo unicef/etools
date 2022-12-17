@@ -9,6 +9,7 @@ from rest_framework import status
 from etools.applications.audit.models import Auditor
 from etools.applications.audit.tests.factories import AuditorUserFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.tpm.tests.factories import SimpleTPMPartnerFactory, TPMPartnerStaffMemberFactory
 from etools.applications.users.models import UserProfile
 from etools.applications.users.serializers_v3 import AP_ALLOWED_COUNTRIES
@@ -80,6 +81,15 @@ class TestUsersListAPIView(BaseTenantTestCase):
         self.group = GroupFactory()
         self.partnership_manager_user.groups.add(self.group)
         self.url = reverse("users_v3:users-list")
+
+    def test_not_admin(self):
+        user = UserFactory()
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            user=user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_api_users_list(self):
         response = self.forced_auth_req('get', self.url, user=self.unicef_staff)
@@ -183,6 +193,21 @@ class TestUsersListAPIView(BaseTenantTestCase):
         response_json = json.loads(response.rendered_content)
         self.assertEqual(len(response_json), 1)
 
+    def test_partner_user(self):
+        partner = PartnerFactory()
+        partner_staff = partner.staff_members.all().first()
+        partner_user = partner_staff.user
+
+        self.assertTrue(get_user_model().objects.count() > 1)
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            user=partner_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["id"], partner_user.pk)
+
 
 class TestMyProfileAPIView(BaseTenantTestCase):
     def setUp(self):
@@ -202,7 +227,7 @@ class TestMyProfileAPIView(BaseTenantTestCase):
             response.data["name"],
             self.unicef_staff.get_full_name()
         )
-        self.assertEqual(response.data["is_superuser"], "False")
+        self.assertEqual(response.data["is_superuser"], False)
 
     def test_get_no_profile(self):
         """Ensure profile is created for user, if it does not exist"""
@@ -246,7 +271,7 @@ class TestMyProfileAPIView(BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["oic"], self.unicef_superuser.id)
-        self.assertEqual(response.data["is_superuser"], "False")
+        self.assertEqual(response.data["is_superuser"], False)
 
         response = self.forced_auth_req(
             'get',
@@ -256,7 +281,7 @@ class TestMyProfileAPIView(BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["oic"], self.unicef_superuser.id)
-        self.assertEqual(response.data["is_superuser"], "False")
+        self.assertEqual(response.data["is_superuser"], False)
 
     def test_patch_preferences(self):
         self.assertEqual(

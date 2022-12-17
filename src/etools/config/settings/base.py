@@ -95,7 +95,7 @@ DEBUG = str2bool(get_from_secrets_or_env('DJANGO_DEBUG'))
 SERVICE_NOW_USER = get_from_secrets_or_env('SERVICE_NOW_USER', 'api_servicenow_etools@unicef.org')
 
 # DJANGO: EMAIL
-DEFAULT_FROM_EMAIL = "no-reply@unicef.org"
+DEFAULT_FROM_EMAIL = get_from_secrets_or_env('DEFAULT_FROM_EMAIL', "no-reply@unicef.org")
 EMAIL_BACKEND = 'unicef_notification.backends.EmailBackend'
 EMAIL_HOST = get_from_secrets_or_env('EMAIL_HOST', '')
 EMAIL_HOST_USER = get_from_secrets_or_env('EMAIL_HOST_USER', '')
@@ -114,6 +114,11 @@ LANGUAGE_CODE = 'en-us'
 LANGUAGES = [
     ('en', _('English')),
     ('fr', _('Français')),
+    ('ro', _('Romanian')),
+    ('ru', _('Russian')),
+    ('pt', _('Portuguese')),
+    ('es', _('Spanish')),
+    ('ar', _('Arabic')),
 ]
 
 TIME_ZONE = 'UTC'
@@ -231,7 +236,9 @@ TENANT_APPS = (
     'etools.applications.field_monitoring.planning',
     'etools.applications.field_monitoring.data_collection',
     'etools.applications.field_monitoring.analyze',
+    'etools.applications.comments',
     'etools.applications.travel',
+    'etools.applications.ecn',
     'unicef_snapshot',
     'unicef_attachments',
     'unicef_vision',
@@ -489,6 +496,13 @@ INSIGHT_SUB_KEY = get_from_secrets_or_env('INSIGHT_SUB_KEY', 'invalid_key')
 INSIGHT_URL = get_from_secrets_or_env('INSIGHT_URL', 'http://invalid_vision_url')
 INSIGHT_BANK_KEY = get_from_secrets_or_env('INSIGHT_BANK_KEY', None)
 
+# Vision data uploader
+EZHACT_PD_VISION_URL = get_from_secrets_or_env('EZHACT_PD_VISION_URL', '')  # example: http://172.18.0.1:8083/upload/pd/
+EZHACT_API_USER = get_from_secrets_or_env('EZHACT_API_USER', '')
+EZHACT_API_PASSWORD = get_from_secrets_or_env('EZHACT_API_PASSWORD', '')
+EZHACT_INTEGRATION_DISABLED = bool(get_from_secrets_or_env('EZHACT_INTEGRATION_DISABLED', False))
+EZHACT_CERT_PATH = os.path.join(CONFIG_ROOT, 'keys/vision/ezhact_cert.pem')
+EZHACT_KEY_PATH = os.path.join(CONFIG_ROOT, 'keys/vision/ezhact_key.pem')
 
 # ALLOW BASIC AUTH FOR DEMO SITE
 ALLOW_BASIC_AUTH = get_from_secrets_or_env('ALLOW_BASIC_AUTH', False)
@@ -585,3 +599,22 @@ ETOOLS_OFFLINE_TOKEN = get_from_secrets_or_env('ETOOLS_OFFLINE_TOKEN', '')
 ETOOLS_OFFLINE_TASK_APP = "etools.config.celery.get_task_app"
 
 UNICEF_LOCATIONS_MODEL = 'locations.Location'
+
+# PRP Integration
+# https://github.com/unicef/etools-partner-reporting-portal
+PRP_API_ENDPOINT = get_from_secrets_or_env('PRP_API_ENDPOINT', '')  # example: http://172.18.0.1:8083/api
+PRP_API_USER = get_from_secrets_or_env('PRP_API_USER', '')
+PRP_API_PASSWORD = get_from_secrets_or_env('PRP_API_PASSWORD', '')
+
+
+# EPD settings
+PMP_V2_RELEASE_DATE = get_from_secrets_or_env('PMP_PD_V2_RELEASE_DATE', '2020-10-01')
+PMP_V2_RELEASE_DATE = datetime.datetime.strptime(PMP_V2_RELEASE_DATE, '%Y-%m-%d').date()
+
+
+# ECN Integration
+# https://github.com/unicef/etools-ecn
+ECN_API_ENDPOINT = get_from_secrets_or_env('ECN_API_ENDPOINT', '')  # example: http://172.18.0.1:8086/api
+
+# Emails allowed to edit admin models in Partners and Reports apps
+ADMIN_EDIT_EMAILS = get_from_secrets_or_env('ADMIN_EDIT_EMAILS', '')

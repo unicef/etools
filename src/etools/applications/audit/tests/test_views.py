@@ -1,13 +1,13 @@
 import datetime
 import json
 import random
+from unittest.mock import Mock, patch
 
 from django.contrib.contenttypes.models import ContentType
 from django.core.management import call_command
 from django.urls import reverse
 
 from factory import fuzzy
-from mock import Mock, patch
 from rest_framework import status
 from unicef_attachments.models import Attachment
 

@@ -1,7 +1,7 @@
 from django.contrib import admin, messages
 from django.contrib.admin.utils import quote
 from django.contrib.contenttypes.models import ContentType
-from django.db import models
+from django.db import connection, models
 from django.forms import SelectMultiple
 from django.http.response import HttpResponseRedirect
 from django.urls import reverse
@@ -33,16 +33,33 @@ from etools.applications.partners.models import (  # TODO intervention sector lo
     InterventionAmendment,
     InterventionAttachment,
     InterventionBudget,
+    InterventionManagementBudget,
+    InterventionManagementBudgetItem,
     InterventionPlannedVisits,
     InterventionResultLink,
+    InterventionReview,
+    InterventionSupplyItem,
     PartnerOrganization,
     PartnerStaffMember,
     PlannedEngagement,
 )
-from etools.applications.partners.tasks import sync_partner
+from etools.applications.partners.synchronizers import PDVisionUploader
+from etools.applications.partners.tasks import send_pd_to_vision, sync_partner
+from etools.libraries.djangolib.admin import RestrictedEditAdmin, RestrictedEditAdminMixin
 
 
-class AttachmentSingleInline(AttachmentSingleInline):
+class InterventionReviewInlineAdmin(RestrictedEditAdminMixin, admin.TabularInline):
+    model = InterventionReview
+    extra = 0
+
+    raw_id_fields = [
+        "prc_officers",
+        "submitted_by",
+        "overall_approver"
+    ]
+
+
+class AttachmentSingleInline(RestrictedEditAdminMixin, AttachmentSingleInline):
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         return qs.filter(code=self.code)
@@ -51,9 +68,6 @@ class AttachmentSingleInline(AttachmentSingleInline):
         formset = super().get_formset(request, obj, **kwargs)
         formset.code = self.code
         return formset
-
-    def has_add_permission(self, request, obj):
-        return True
 
 
 class AttachmentInlineAdminMixin:
@@ -74,11 +88,10 @@ class InterventionAmendmentPRCReviewInline(AttachmentSingleInline):
     code = 'partners_intervention_amendment_internal_prc_review'
 
 
-class InterventionAmendmentsAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
+class InterventionAmendmentsAdmin(AttachmentInlineAdminMixin, RestrictedEditAdmin):
     model = InterventionAmendment
     readonly_fields = [
         'amendment_number',
-        'signed_amendment',
     ]
     list_display = (
         'intervention',
@@ -108,7 +121,7 @@ class InterventionAmendmentsAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
         return 0
 
 
-class InterventionBudgetAdmin(admin.ModelAdmin):
+class InterventionBudgetAdmin(RestrictedEditAdmin):
     model = InterventionBudget
     fields = (
         'intervention',
@@ -135,7 +148,7 @@ class InterventionBudgetAdmin(admin.ModelAdmin):
     extra = 0
 
 
-class InterventionPlannedVisitsAdmin(admin.ModelAdmin):
+class InterventionPlannedVisitsAdmin(RestrictedEditAdmin):
     model = InterventionPlannedVisits
     fields = (
         'intervention',
@@ -158,7 +171,7 @@ class InterventionPlannedVisitsAdmin(admin.ModelAdmin):
     )
 
 
-class InterventionPlannedVisitsInline(admin.TabularInline):
+class InterventionPlannedVisitsInline(RestrictedEditAdminMixin, admin.TabularInline):
     model = InterventionPlannedVisits
     fields = (
         'intervention',
@@ -176,7 +189,7 @@ class AttachmentFileInline(AttachmentSingleInline):
     code = 'partners_intervention_attachment'
 
 
-class InterventionAttachmentAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
+class InterventionAttachmentAdmin(AttachmentInlineAdminMixin, RestrictedEditAdmin):
     model = InterventionAttachment
     list_display = (
         'intervention',
@@ -195,7 +208,7 @@ class InterventionAttachmentAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
     ]
 
 
-class InterventionAttachmentsInline(admin.TabularInline):
+class InterventionAttachmentsInline(RestrictedEditAdminMixin, admin.TabularInline):
     model = InterventionAttachment
     form = InterventionAttachmentForm
     fields = (
@@ -211,7 +224,7 @@ class InterventionAttachmentsInline(admin.TabularInline):
         return formset
 
 
-class InterventionResultsLinkAdmin(admin.ModelAdmin):
+class InterventionResultsLinkAdmin(RestrictedEditAdmin):
 
     model = InterventionResultLink
     fields = (
@@ -246,9 +259,11 @@ class SignedPDAttachmentInline(AttachmentSingleInline):
 
 
 class InterventionAdmin(
+        ExtraUrlMixin,
         AttachmentInlineAdminMixin,
         CountryUsersAdminMixin,
         HiddenPartnerMixin,
+        RestrictedEditAdminMixin,
         SnapshotModelAdmin
 ):
     model = Intervention
@@ -273,6 +288,7 @@ class InterventionAdmin(
         'flat_locations',
         'partner_authorized_officer_signatory',
         'unicef_signatory',
+        'budget_owner',
         'unicef_focal_points',
         'partner_focal_points',
     ]
@@ -308,7 +324,7 @@ class InterventionAdmin(
                     'reference_number_year',
                     'title',
                     'status',
-                    'country_programme',
+                    'country_programmes',
                     'submission_date',
                     'sections',
                     'flat_locations',
@@ -328,7 +344,34 @@ class InterventionAdmin(
                  ('start', 'end'),
                  'population_focus',
                  'activation_letter',
+                 'activation_protocol'
                  ),
+        }),
+        (_('ePD'), {
+            'fields': (
+                'unicef_court',
+                'date_sent_to_partner',
+                ('unicef_accepted', 'partner_accepted'),
+                'cfei_number',
+                'context',
+                'implementation_strategy',
+                ('gender_rating', 'gender_narrative'),
+                ('equity_rating', 'equity_narrative'),
+                ('sustainability_rating', 'sustainability_narrative'),
+                'budget_owner',
+                'hq_support_cost',
+                'cash_transfer_modalities',
+                'unicef_review_type',
+                'capacity_development',
+                'other_info',
+                'other_partners_involved',
+                'technical_guidance',
+                (
+                    'has_data_processing_agreement',
+                    'has_activities_involving_children',
+                    'has_special_conditions_for_construction',
+                ),
+            )
         }),
     )
 
@@ -338,7 +381,16 @@ class InterventionAdmin(
         PRCReviewAttachmentInline,
         SignedPDAttachmentInline,
         InterventionPlannedVisitsInline,
+        InterventionReviewInlineAdmin,
     )
+
+    @button(label='Send to Vision')
+    def send_to_vision(self, request, pk):
+        if not PDVisionUploader(Intervention.objects.get(pk=pk)).is_valid():
+            messages.error(request, _('PD is not ready for Vision synchronization.'))
+            return
+        send_pd_to_vision.delay(connection.tenant.name, pk)
+        messages.success(request, _('PD was sent to Vision.'))
 
     def created_date(self, obj):
         return obj.created_at.strftime('%d-%m-%Y')
@@ -387,7 +439,7 @@ class AssessmentReportInline(AttachmentSingleInline):
     code = 'partners_assessment_report'
 
 
-class AssessmentAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
+class AssessmentAdmin(AttachmentInlineAdminMixin, RestrictedEditAdmin):
     model = Assessment
     fields = (
         'partner',
@@ -405,9 +457,10 @@ class AssessmentAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
     ]
 
 
-class PartnerStaffMemberAdmin(SnapshotModelAdmin):
+class PartnerStaffMemberAdmin(RestrictedEditAdminMixin, SnapshotModelAdmin):
     model = PartnerStaffMember
     form = PartnerStaffMemberForm
+    raw_id_fields = ("partner", "user",)
 
     # display_staff_member_name() is used only in list_display. It could be replaced by this simple lambda --
     #     lambda instance: str(instance)
@@ -422,11 +475,15 @@ class PartnerStaffMemberAdmin(SnapshotModelAdmin):
         display_staff_member_name,
         'title',
         'email',
+        'user',
     )
     search_fields = (
         'first_name',
         'last_name',
-        'email'
+        'email',
+        'user__first_name',
+        'user__last_name',
+        'partner__name'
     )
     inlines = [
         ActivityInline,
@@ -456,12 +513,12 @@ class HiddenPartnerFilter(admin.SimpleListFilter):
         return queryset.filter(hidden=False)
 
 
-class CoreValueAssessmentInline(admin.StackedInline):
+class CoreValueAssessmentInline(RestrictedEditAdminMixin, admin.StackedInline):
     model = CoreValuesAssessment
     extra = 0
 
 
-class PartnerAdmin(ExtraUrlMixin, ExportMixin, admin.ModelAdmin):
+class PartnerAdmin(ExtraUrlMixin, ExportMixin, RestrictedEditAdmin):
     form = PartnersAdminForm
     resource_class = PartnerExport
     search_fields = (
@@ -599,7 +656,7 @@ class PartnerAdmin(ExtraUrlMixin, ExportMixin, admin.ModelAdmin):
         obj.update_min_requirements()
 
 
-class PlannedEngagementAdmin(admin.ModelAdmin):
+class PlannedEngagementAdmin(RestrictedEditAdmin):
     model = PlannedEngagement
     search_fields = (
         'partner__name',
@@ -637,7 +694,7 @@ class SignedAmendmentInline(AttachmentSingleInline):
     code = 'partners_agreement_amendment'
 
 
-class AgreementAmendmentAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
+class AgreementAmendmentAdmin(AttachmentInlineAdminMixin, RestrictedEditAdmin):
     model = AgreementAmendment
     fields = (
         'agreement',
@@ -683,6 +740,7 @@ class AgreementAdmin(
         ExportMixin,
         HiddenPartnerMixin,
         CountryUsersAdminMixin,
+        RestrictedEditAdminMixin,
         SnapshotModelAdmin,
 ):
 
@@ -701,6 +759,11 @@ class AgreementAdmin(
         'agreement_number',
         'partner__name',
     )
+    raw_id_fields = (
+        'partner_manager',
+        'signed_by',
+        'terms_acknowledged_by',
+    )
     fieldsets = (
         (_('Agreement Details'), {
             'fields':
@@ -716,6 +779,7 @@ class AgreementAdmin(
                     'partner_manager',
                     'signed_by_unicef_date',
                     'signed_by',
+                    'terms_acknowledged_by',
                     'authorized_officers',
                 )
         }),
@@ -772,10 +836,27 @@ class AgreementAdmin(
         return urls
 
 
-class FileTypeAdmin(admin.ModelAdmin):
+class FileTypeAdmin(RestrictedEditAdmin):
 
     def has_module_permission(self, request):
         return request.user.is_superuser or request.user.groups.filter(name='Country Office Administrator').exists()
+
+
+class InterventionManagementBudgetItemAdmin(RestrictedEditAdminMixin, admin.StackedInline):
+    model = InterventionManagementBudgetItem
+
+
+class InterventionManagementBudgetAdmin(RestrictedEditAdmin):
+    list_display = ('intervention',)
+    list_select_related = ('intervention',)
+    inlines = (InterventionManagementBudgetItemAdmin,)
+
+
+class InterventionSupplyItemAdmin(RestrictedEditAdmin):
+    list_display = ('intervention', 'title', 'unit_number', 'unit_price', 'provided_by')
+    list_select_related = ('intervention',)
+    list_filter = ('provided_by',)
+    search_fields = ('title',)
 
 
 admin.site.register(PartnerOrganization, PartnerAdmin)
@@ -792,5 +873,7 @@ admin.site.register(InterventionResultLink, InterventionResultsLinkAdmin)
 admin.site.register(InterventionBudget, InterventionBudgetAdmin)
 admin.site.register(InterventionPlannedVisits, InterventionPlannedVisitsAdmin)
 admin.site.register(InterventionAttachment, InterventionAttachmentAdmin)
+admin.site.register(InterventionManagementBudget, InterventionManagementBudgetAdmin)
+admin.site.register(InterventionSupplyItem, InterventionSupplyItemAdmin)
 
 admin.site.register(FileType, FileTypeAdmin)

@@ -25,11 +25,12 @@ from etools.applications.partners.models import (
     FileType,
     Intervention,
     InterventionAmendment,
+    InterventionRisk,
     PartnerOrganization,
     PartnerStaffMember,
     PartnerType,
 )
-from etools.applications.partners.permissions import PartnershipManagerPermission
+from etools.applications.partners.permissions import PartnershipManagerPermission, SENIOR_MANAGEMENT_GROUP
 from etools.applications.partners.serializers.partner_organization_v2 import (
     PartnerStaffMemberCreateUpdateSerializer,
     PartnerStaffMemberDetailSerializer,
@@ -102,6 +103,9 @@ class PMPStaticDropdownsListAPIView(APIView):
         attachment_types_active = AttachmentFlat.get_file_types()
         partner_file_types = FileType.objects.values_list("name", flat=True)
         sea_risk_ratings = choices_to_json_ready(PartnerOrganization.ALL_COMBINED_RISK_RATING)
+        gender_equity_sustainability_ratings = choices_to_json_ready(Intervention.RATING_CHOICES, sort_choices=False)
+        risk_types = choices_to_json_ready(InterventionRisk.RISK_TYPE_CHOICES, sort_choices=False)
+        cash_transfer_modalities = choices_to_json_ready(Intervention.CASH_TRANSFER_CHOICES, sort_choices=False)
 
         local_currency = local_workspace.local_currency.id if local_workspace.local_currency else None
 
@@ -125,6 +129,9 @@ class PMPStaticDropdownsListAPIView(APIView):
                 'attachment_types_active': attachment_types_active,
                 'partner_file_types': partner_file_types,
                 'sea_risk_ratings': sea_risk_ratings,
+                'gender_equity_sustainability_ratings': gender_equity_sustainability_ratings,
+                'risk_types': risk_types,
+                'cash_transfer_modalities': cash_transfer_modalities,
             },
             status=status.HTTP_200_OK
         )
@@ -138,7 +145,7 @@ class PMPDropdownsListApiView(APIView):
         Return All dropdown values used for Agreements form
         """
         signed_by_unicef = list(get_user_model().objects.filter(
-            groups__name__in=['Senior Management Team'],
+            groups__name__in=[SENIOR_MANAGEMENT_GROUP],
             profile__country=request.user.profile.country
         ).annotate(
             name=Concat('first_name', Value(' '), 'last_name')

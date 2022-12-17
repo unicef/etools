@@ -28,6 +28,7 @@ from etools.applications.partners.serializers.interventions_v2 import (
     InterventionListSerializer,
     InterventionMonitorSerializer,
 )
+from etools.applications.users.serializers import MinimalUserSerializer
 
 
 class CoreValuesAssessmentSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
@@ -173,7 +174,7 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
             # disabled is unavailable if user already synced to PRP to avoid data inconsistencies
             if self.instance.active and not active:
                 if Intervention.objects.filter(
-                    # todo epd: Q(date_sent_to_partner__isnull=False, agreement__partner__staff_members=self.instance) |
+                    Q(date_sent_to_partner__isnull=False, agreement__partner__staff_members=self.instance) |
                     Q(
                         ~Q(status=Intervention.DRAFT),
                         Q(partner_focal_points=self.instance) | Q(partner_authorized_officer_signatory=self.instance),
@@ -189,7 +190,7 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
         if 'user' not in validated_data:
             validated_data['user'] = User.objects.create(
                 first_name=validated_data.get('first_name'),
-                last_name=validated_data.get('first_name'),
+                last_name=validated_data.get('last_name'),
                 username=validated_data['email'],
                 email=validated_data['email'],
                 is_staff=False,
@@ -219,6 +220,14 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
 
 
 class PartnerStaffMemberDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PartnerStaffMember
+        fields = "__all__"
+
+
+class PartnerStaffMemberUserSerializer(serializers.ModelSerializer):
+    user = MinimalUserSerializer()
+
     class Meta:
         model = PartnerStaffMember
         fields = "__all__"

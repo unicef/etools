@@ -25,10 +25,25 @@ AP_ALLOWED_COUNTRIES = [
 class MinimalUserSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='get_full_name', read_only=True)
     email = serializers.EmailField(validators=[EmailValidator()])
+    phone = serializers.SerializerMethodField()
 
     class Meta:
         model = get_user_model()
-        fields = ('id', 'name', 'first_name', 'middle_name', 'last_name', 'username', 'email', )
+        fields = (
+            'id',
+            'name',
+            'first_name',
+            'middle_name',
+            'last_name',
+            'username',
+            'email',
+            'phone',
+        )
+
+    def get_phone(self, obj):
+        if obj.profile:
+            return obj.profile.phone_number
+        return None
 
 
 # used for user detail view
@@ -92,23 +107,23 @@ class UserPreferencesSerializer(serializers.Serializer):
 
 class ProfileRetrieveUpdateSerializer(serializers.ModelSerializer):
     countries_available = SimpleCountrySerializer(many=True, read_only=True)
-
-    supervisor = serializers.CharField(read_only=True)
+    supervisor = serializers.PrimaryKeyRelatedField(read_only=True)
     groups = GroupSerializer(source="user.groups", read_only=True, many=True)
     supervisees = serializers.PrimaryKeyRelatedField(source='user.supervisee', many=True, read_only=True)
     name = serializers.CharField(source='user.get_full_name', read_only=True)
-    last_login = serializers.CharField(source='user.last_login', read_only=True)
-    is_superuser = serializers.CharField(source='user.is_superuser', read_only=True)
+    last_login = serializers.DateTimeField(source='user.last_login', read_only=True)
+    is_superuser = serializers.BooleanField(source='user.is_superuser', read_only=True)
     username = serializers.CharField(source='user.username', read_only=True)
     first_name = serializers.CharField(source='user.first_name', read_only=True)
     middle_name = serializers.CharField(source='user.middle_name', read_only=True)
     last_name = serializers.CharField(source='user.last_name', read_only=True)
     email = serializers.CharField(source='user.email', read_only=True)
-    is_staff = serializers.CharField(source='user.is_staff', read_only=True)
-    is_active = serializers.CharField(source='user.is_active', read_only=True)
+    is_staff = serializers.BooleanField(source='user.is_staff', read_only=True)
+    is_active = serializers.BooleanField(source='user.is_active', read_only=True)
     country = DashboardCountrySerializer(read_only=True)
     show_ap = serializers.SerializerMethodField()
     is_unicef_user = serializers.SerializerMethodField()
+    _partner_staff_member = serializers.SerializerMethodField()
 
     preferences = UserPreferencesSerializer(source="user.preferences", allow_null=False)
 
@@ -124,6 +139,10 @@ class ProfileRetrieveUpdateSerializer(serializers.ModelSerializer):
         if obj.country and obj.country.name in AP_ALLOWED_COUNTRIES:
             return True
         return False
+
+    def get__partner_staff_member(self, obj):
+        psm = obj.user.get_partner_staff_member()
+        return psm.id if psm else None
 
     def get_is_unicef_user(self, obj):
         return obj.user.is_unicef_user()

@@ -6,7 +6,7 @@ from django.core.exceptions import ValidationError
 from django.db import connection, models
 from django.db.transaction import atomic
 from django.utils import timezone
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 from django.utils.translation import gettext_lazy as _
 
 from django_fsm import FSMField, transition
@@ -244,8 +244,8 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
             'reference_number': self.reference_number,
             'engagement_type': self.get_engagement_type_display(),
             'object_url': object_url,
-            'partner': force_text(self.partner),
-            'auditor_firm': force_text(self.agreement.auditor_firm),
+            'partner': force_str(self.partner),
+            'auditor_firm': force_str(self.agreement.auditor_firm),
         }
 
     def _notify_focal_points(self, template_name, context=None):

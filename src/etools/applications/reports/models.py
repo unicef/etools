@@ -1,6 +1,10 @@
+import random
 from datetime import date
+from string import ascii_lowercase
 
+from django.core.validators import MinValueValidator
 from django.db import models, transaction
+from django.db.models import Q, Sum
 from django.utils.functional import cached_property
 from django.utils.translation import gettext as _
 
@@ -371,11 +375,15 @@ class LowerResult(TimeStampedModel):
     )
 
     name = models.CharField(verbose_name=_("Name"), max_length=500)
+    code = models.CharField(verbose_name=_("Code"), max_length=50, blank=True, null=True)
 
-    # automatically assigned unless assigned manually in the UI (Lower level WBS - like code)
-    code = models.CharField(verbose_name=_("Code"), max_length=50)
+    # not being used. does not affect result link budget since d3693d2fbf7b66f5468fefbe4bc2e9685eeb4348
+    is_active = models.BooleanField(default=True)
 
     def __str__(self):
+        if not self.code:
+            return self.name
+
         return '{}: {}'.format(
             self.code,
             self.name
@@ -385,18 +393,43 @@ class LowerResult(TimeStampedModel):
         unique_together = (('result_link', 'code'),)
         ordering = ('created',)
 
-    def save(self, **kwargs):
+    def save(self, *args, **kwargs):
         if not self.code:
-            try:
-                latest_ll_id = self.result_link.ll_results.latest('id').id
-            except LowerResult.DoesNotExist:
-                latest_ll_id = 0
-
-            self.code = '{}-{}'.format(
-                self.result_link.intervention.id,
-                latest_ll_id + 1
+            self.code = '{0}.{1}'.format(
+                self.result_link.code,
+                # explicitly perform model.objects.count to avoid caching
+                self.__class__.objects.filter(result_link=self.result_link).count() + 1,
             )
-        super().save(**kwargs)
+        super().save(*args, **kwargs)
+        # update budgets
+        self.result_link.intervention.planned_budget.save()
+
+    @classmethod
+    def renumber_results_for_result_link(cls, result_link):
+        results = result_link.ll_results.all()
+        # drop codes because in another case we'll face to UniqueViolation exception
+        results.update(code=None)
+        for i, result in enumerate(results):
+            result.code = '{0}.{1}'.format(result_link.code, i + 1)
+        cls.objects.bulk_update(results, fields=['code'])
+
+    def total(self):
+        results = self.activities.aggregate(
+            total=Sum("unicef_cash", filter=Q(is_active=True)) + Sum("cso_cash", filter=Q(is_active=True)),
+        )
+        return results["total"] if results["total"] is not None else 0
+
+    def total_cso(self):
+        results = self.activities.aggregate(
+            total=Sum("cso_cash", filter=Q(is_active=True)),
+        )
+        return results["total"] if results["total"] is not None else 0
+
+    def total_unicef(self):
+        results = self.activities.aggregate(
+            total=Sum("unicef_cash", filter=Q(is_active=True)),
+        )
+        return results["total"] if results["total"] is not None else 0
 
 
 class Unit(models.Model):
@@ -517,6 +550,24 @@ class IndicatorBlueprint(TimeStampedModel):
 
     def __str__(self):
         return self.title
+
+    def make_copy(self):
+        new_code = None
+        if self.code:
+            # code is unique, so we need to make inherited copy
+            new_code = self.code[:40] + '-' + ''.join([random.choice(ascii_lowercase) for _i in range(9)])
+
+        return IndicatorBlueprint.objects.create(
+            title=self.title,
+            unit=self.unit,
+            description=self.description,
+            code=new_code,
+            subdomain=self.subdomain,
+            disaggregatable=self.disaggregatable,
+            calculation_formula_across_periods=self.calculation_formula_across_periods,
+            calculation_formula_across_locations=self.calculation_formula_across_locations,
+            display_type=self.display_type,
+        )
 
 
 class Disaggregation(TimeStampedModel):
@@ -678,13 +729,38 @@ class AppliedIndicator(TimeStampedModel):
         return numerator, denominator
 
     @cached_property
+    def target_display_string(self):
+        if self.target_display[1] == '-':
+            target = str(self.target_display[0])
+        else:
+            target = '/'.join(map(str, self.target_display))
+        return target
+
+    @cached_property
     def baseline_display(self):
         ind_type = self.indicator.display_type
-        numerator = self.baseline.get('v', self.baseline)
+        if self.baseline is None:
+            numerator = None
+        else:
+            numerator = self.baseline.get('v', self.baseline)
         denominator = '-'
         if ind_type == IndicatorBlueprint.RATIO:
-            denominator = self.baseline.get('d', '')
+            if self.baseline is None:
+                denominator = ''
+            else:
+                denominator = self.baseline.get('d', '')
         return numerator, denominator
+
+    @cached_property
+    def baseline_display_string(self):
+        if self.baseline_display[0] is None:
+            return _('Unknown')
+
+        if self.baseline_display[1] == '-':
+            baseline = str(self.baseline_display[0])
+        else:
+            baseline = '/'.join(map(str, self.baseline_display))
+        return baseline
 
     class Meta:
         unique_together = (("indicator", "lower_result"),)
@@ -692,6 +768,35 @@ class AppliedIndicator(TimeStampedModel):
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
+
+    def get_amended_name(self):
+        return f'{self.indicator}: {self.baseline_display_string} - {self.target_display_string}'
+
+    def make_copy(self):
+        indicator_copy = AppliedIndicator.objects.create(
+            indicator=self.indicator.make_copy(),
+            measurement_specifications=self.measurement_specifications,
+            label=self.label,
+            numerator_label=self.numerator_label,
+            denominator_label=self.denominator_label,
+            section=self.section,
+            cluster_indicator_id=self.cluster_indicator_id,
+            response_plan_name=self.response_plan_name,
+            cluster_name=self.cluster_name,
+            cluster_indicator_title=self.cluster_indicator_title,
+            lower_result=self.lower_result,
+            context_code=self.context_code,
+            target=self.target,
+            baseline=self.baseline,
+            assumptions=self.assumptions,
+            means_of_verification=self.means_of_verification,
+            total=self.total,
+            is_high_frequency=self.is_high_frequency,
+            is_active=self.is_active,
+        )
+        indicator_copy.disaggregation.add(*self.disaggregation.all())
+        indicator_copy.locations.add(*self.locations.all())
+        return indicator_copy
 
 
 class Indicator(TimeStampedModel):
@@ -895,3 +1000,205 @@ class UserTenantProfile(models.Model):
         verbose_name=_('Office'),
         on_delete=models.CASCADE,
     )
+
+
+class InterventionActivity(TimeStampedModel):
+    result = models.ForeignKey(
+        'reports.LowerResult',
+        verbose_name=_("Result"),
+        related_name="activities",
+        on_delete=models.CASCADE,
+    )
+    name = models.CharField(
+        verbose_name=_("Name"),
+        max_length=150,
+    )
+    code = models.CharField(
+        verbose_name=_("Code"),
+        max_length=50,
+        blank=True,
+        null=True
+    )
+    context_details = models.TextField(
+        verbose_name=_("Context Details"),
+        blank=True,
+        null=True,
+    )
+    unicef_cash = models.DecimalField(
+        verbose_name=_("UNICEF Cash"),
+        decimal_places=2,
+        max_digits=20,
+        default=0,
+    )
+    cso_cash = models.DecimalField(
+        verbose_name=_("CSO Cash"),
+        decimal_places=2,
+        max_digits=20,
+        default=0,
+    )
+
+    time_frames = models.ManyToManyField(
+        'InterventionTimeFrame',
+        verbose_name=_('Time Frames Enabled'),
+        blank=True,
+        related_name='activities',
+    )
+
+    is_active = models.BooleanField(default=True, verbose_name=_('Is Active'))
+
+    class Meta:
+        verbose_name = _('Intervention Activity')
+        verbose_name_plural = _('Intervention Activities')
+        ordering = ('id',)
+
+    def __str__(self):
+        return "{} {}".format(self.result, self.name)
+
+    def update_cash(self):
+        items = InterventionActivityItem.objects.filter(activity=self)
+        items_exists = items.exists()
+        if not items_exists:
+            return
+
+        aggregates = items.aggregate(
+            unicef_cash=Sum('unicef_cash'),
+            cso_cash=Sum('cso_cash'),
+        )
+        self.unicef_cash = aggregates['unicef_cash']
+        self.cso_cash = aggregates['cso_cash']
+        self.save()
+
+    @property
+    def total(self):
+        return self.unicef_cash + self.cso_cash
+
+    @property
+    def partner_percentage(self):
+        if not self.total:
+            return 0
+        return self.cso_cash / self.total * 100
+
+    def save(self, *args, **kwargs):
+        if not self.code:
+            self.code = '{0}.{1}'.format(
+                self.result.code,
+                # explicitly perform model.objects.count to avoid caching
+                self.__class__.objects.filter(result=self.result).count() + 1,
+            )
+        super().save(*args, **kwargs)
+        # update budgets
+        self.result.result_link.intervention.planned_budget.save()
+
+    @classmethod
+    def renumber_activities_for_result(cls, result: LowerResult, start_id=None):
+        activities = result.activities.all()
+        # drop codes because in another case we'll face to UniqueViolation exception
+        activities.update(code=None)
+        for i, activity in enumerate(activities):
+            activity.code = '{0}.{1}'.format(result.code, i + 1)
+        cls.objects.bulk_update(activities, fields=['code'])
+
+    def get_amended_name(self):
+        return f'{self.result} {self.name} (Total: {self.total}, UNICEF: {self.unicef_cash}, Partner: {self.cso_cash})'
+
+    def get_time_frames_display(self):
+        return ', '.join([f'{tf.start_date.year} Q{tf.quarter}' for tf in self.time_frames.all()])
+
+
+class InterventionActivityItem(TimeStampedModel):
+    activity = models.ForeignKey(
+        InterventionActivity,
+        verbose_name=_("Activity"),
+        related_name="items",
+        on_delete=models.CASCADE,
+    )
+    code = models.CharField(
+        verbose_name=_("Code"),
+        max_length=50,
+        blank=True,
+        null=True
+    )
+    name = models.CharField(
+        verbose_name=_("Name"),
+        max_length=150,
+    )
+    unit = models.CharField(
+        verbose_name=_("Unit"),
+        max_length=150,
+    )
+    unit_price = models.DecimalField(
+        verbose_name=_("Unit Price"),
+        decimal_places=2,
+        max_digits=20,
+    )
+    no_units = models.DecimalField(
+        verbose_name=_("Units Number"),
+        decimal_places=2,
+        max_digits=20,
+        validators=[MinValueValidator(0)],
+    )
+    unicef_cash = models.DecimalField(
+        verbose_name=_("UNICEF Cash"),
+        decimal_places=2,
+        max_digits=20,
+        default=0,
+    )
+    cso_cash = models.DecimalField(
+        verbose_name=_("CSO Cash"),
+        decimal_places=2,
+        max_digits=20,
+        default=0,
+    )
+
+    class Meta:
+        verbose_name = _('Intervention Activity Item')
+        verbose_name_plural = _('Intervention Activity Items')
+        ordering = ('id',)
+
+    def __str__(self):
+        return "{} {}".format(self.activity, self.name)
+
+    def save(self, **kwargs):
+        if not self.code:
+            self.code = '{0}.{1}'.format(
+                self.activity.code,
+                # explicitly perform model.objects.count to avoid caching
+                self.__class__.objects.filter(activity=self.activity).count() + 1,
+            )
+        super().save(**kwargs)
+        self.activity.update_cash()
+
+    @classmethod
+    def renumber_items_for_activity(cls, activity: InterventionActivity, start_id=None):
+        items = activity.items.all()
+        # drop codes because in another case we'll face to UniqueViolation exception
+        items.update(code=None)
+        for i, item in enumerate(items):
+            item.code = '{0}.{1}'.format(activity.code, i + 1)
+        cls.objects.bulk_update(items, fields=['code'])
+
+
+class InterventionTimeFrame(TimeStampedModel):
+    intervention = models.ForeignKey(
+        'partners.Intervention',
+        verbose_name=_("Intervention"),
+        related_name="quarters",
+        on_delete=models.CASCADE,
+    )
+    quarter = models.PositiveSmallIntegerField()
+    start_date = models.DateField(
+        verbose_name=_("Start Date"),
+    )
+    end_date = models.DateField(
+        verbose_name=_("End Date"),
+    )
+
+    def __str__(self):
+        return "{} {} - {}".format(
+            self.intervention,
+            self.start_date,
+            self.end_date,
+        )
+
+    class Meta:
+        ordering = ('intervention', 'start_date',)

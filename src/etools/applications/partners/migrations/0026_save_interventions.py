@@ -19,5 +19,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(migrations.RunPython.noop, migrations.RunPython.noop)
+        # Migration is commented out due to changes in model and subsequent
+        # migrations needed to have run
+        # migrations.RunPython(migrations.RunPython.noop, migrations.RunPython.noop)
     ]
