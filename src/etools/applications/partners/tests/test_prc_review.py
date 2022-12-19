@@ -13,12 +13,7 @@ from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.models import Intervention
 from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, PRC_SECRETARY, UNICEF_USER
-from etools.applications.partners.tests.factories import (
-    InterventionFactory,
-    InterventionReviewFactory,
-    PartnerFactory,
-    PartnerStaffFactory,
-)
+from etools.applications.partners.tests.factories import InterventionFactory, InterventionReviewFactory, PartnerFactory
 from etools.applications.reports.tests.factories import (
     CountryProgrammeFactory,
     OfficeFactory,
@@ -33,13 +28,13 @@ class BaseInterventionMixin:
         super().setUp()
         self.country_programme = CountryProgrammeFactory()
         self.partner = PartnerFactory(organization=OrganizationFactory(vendor_number=fuzzy.FuzzyText(length=20).fuzz()))
-        self.partner_authorized_officer = UserFactory(is_staff=False, realms__data=[])
-        self.partner_authorized_officer_staff = PartnerStaffFactory(
-            partner=self.partner, email=self.partner_authorized_officer.email, user=self.partner_authorized_officer
+        self.partner_authorized_officer = UserFactory(
+            realms__data=['IP Authorized Officer'],
+            profile__organization=self.partner.organization,
         )
-        self.partner_focal_point = UserFactory(is_staff=False, realms__data=[])
-        self.partner_focal_point_staff = PartnerStaffFactory(
-            partner=self.partner, email=self.partner_focal_point.email, user=self.partner_focal_point
+        self.partner_focal_point = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=self.partner.organization,
         )
 
 
@@ -49,7 +44,7 @@ class DevelopInterventionMixin(BaseInterventionMixin):
         self.develop_intervention = InterventionFactory(
             agreement__partner=self.partner,
             status=Intervention.DRAFT,
-            partner_authorized_officer_signatory=self.partner_authorized_officer_staff,
+            partner_authorized_officer_signatory=self.partner_authorized_officer,
             country_programme=self.country_programme,
             start=date(year=1970, month=2, day=1),
             end=date(year=1970, month=3, day=1),
@@ -57,7 +52,7 @@ class DevelopInterventionMixin(BaseInterventionMixin):
             cash_transfer_modalities=[Intervention.CASH_TRANSFER_DIRECT],
             budget_owner=UserFactory(),
         )
-        self.develop_intervention.partner_focal_points.add(self.partner_focal_point_staff)
+        self.develop_intervention.partner_focal_points.add(self.partner_focal_point)
 
 
 class ReviewInterventionMixin(BaseInterventionMixin):
@@ -66,7 +61,7 @@ class ReviewInterventionMixin(BaseInterventionMixin):
         self.review_intervention = InterventionFactory(
             agreement__partner=self.partner,
             status=Intervention.REVIEW,
-            partner_authorized_officer_signatory=self.partner_authorized_officer_staff,
+            partner_authorized_officer_signatory=self.partner_authorized_officer,
             country_programme=self.country_programme,
             start=date(year=1970, month=2, day=1),
             end=date(year=1970, month=3, day=1),
@@ -89,7 +84,7 @@ class ReviewInterventionMixin(BaseInterventionMixin):
         self.review_intervention.unicef_focal_points.add(UserFactory())
         self.review_intervention.sections.add(SectionFactory())
         self.review_intervention.offices.add(OfficeFactory())
-        self.review_intervention.partner_focal_points.add(self.partner_focal_point_staff)
+        self.review_intervention.partner_focal_points.add(self.partner_focal_point)
 
 
 class TestPermissionsMixin:

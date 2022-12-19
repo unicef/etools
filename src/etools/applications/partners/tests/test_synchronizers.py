@@ -6,8 +6,8 @@ from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners import synchronizers
 from etools.applications.partners.models import PartnerOrganization
-from etools.applications.partners.tests.factories import PartnerFactory, PartnerStaffFactory
-from etools.applications.users.models import Country, IPViewer
+from etools.applications.partners.tests.factories import PartnerFactory
+from etools.applications.users.models import Country
 from etools.applications.users.tests.factories import UserFactory
 
 
@@ -130,19 +130,24 @@ class TestPartnerSynchronizer(BaseTenantTestCase):
             name=self.data["VENDOR_NAME"], vendor_number=self.data["VENDOR_CODE"],
         )
         partner = PartnerFactory(organization=organization, deleted_flag=False)
-        user = UserFactory(is_staff=True, realms__data=[IPViewer])
-        PartnerStaffFactory(partner=partner, user=user)
+        user = UserFactory(
+            is_staff=True, realms__data=['IP Viewer'], profile__organization=organization
+        )
+
+        qs_params = dict(country=connection.tenant, organization=organization, is_active=True)
 
         self.assertTrue(user.is_active)
-        self.assertEqual(user.realms.filter(is_active=True).count(), 1)
+        self.assertEqual(user.realms.filter(**qs_params).count(), 1)
 
         response = self.adapter._save_records([self.data])
         self.assertEqual(response, 1)
+
         partner_updated = PartnerOrganization.objects.get(pk=partner.pk)
         self.assertTrue(partner_updated.deleted_flag)
+
         user.refresh_from_db()
         self.assertFalse(user.is_active)
-        active_realms = user.realms.filter(country=connection.tenant, organization=organization, is_active=True)
+        active_realms = user.realms.filter(**qs_params)
         self.assertEqual(active_realms.count(), 0)
 
     def test_save_records_update_date(self):

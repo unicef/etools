@@ -18,24 +18,11 @@ class WorkspaceFileTypeFactory(factory.django.DjangoModelFactory):
     name = factory.Sequence(lambda n: 'workspace file type {}'.format(n))
 
 
-class PartnerStaffFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = models.PartnerStaffMember
-
-    user = factory.SubFactory(UserFactory, realms__data=[], is_staff=False)
-    partner = factory.SubFactory('etools.applications.partners.tests.factories.PartnerFactory')
-    title = 'Jedi Master'
-    first_name = 'Mace'
-    last_name = 'Windu'
-    email = factory.SelfAttribute('user.email')
-
-
 class PartnerFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.PartnerOrganization
 
     organization = factory.SubFactory(OrganizationFactory)
-    staff_members = factory.RelatedFactory(PartnerStaffFactory, 'partner')
 
 
 class CoreValuesAssessmentFactory(factory.django.DjangoModelFactory):
