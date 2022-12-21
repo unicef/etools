@@ -7,9 +7,9 @@ from django.test import override_settings
 from django.utils import timezone
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
-from etools.applications.partners.models import PartnerStaffMember
 from etools.applications.partners.tasks import sync_partner_to_prp, sync_partners_staff_members_from_prp
-from etools.applications.partners.tests.factories import InterventionFactory, PartnerFactory, PartnerStaffFactory
+from etools.applications.partners.tests.factories import InterventionFactory, PartnerFactory
+from etools.applications.users.models import User
 from etools.applications.users.tests.factories import UserFactory
 
 
@@ -67,10 +67,11 @@ class TestPartnerStaffMembersImportTask(BaseTenantTestCase):
 
     @classmethod
     def setUpTestData(cls):
-        cls.partner = PartnerFactory(staff_members=[])
-        cls.staff_member_user = UserFactory()
-        cls.staff_member = PartnerStaffFactory(partner=cls.partner, user=cls.staff_member_user)
-
+        cls.partner = PartnerFactory()
+        cls.staff_member = UserFactory(
+            profile__organization=cls.partner.organization,
+            realms__data=['IP Viewer']
+        )
         cls.prp_partners_export_response_data = {
             'count': 2,
             'results': [
@@ -85,9 +86,9 @@ class TestPartnerStaffMembersImportTask(BaseTenantTestCase):
             'count': 2,
             'results': [
                 {
-                    'email': cls.staff_member.email.upper(), 'title': cls.staff_member.title,
+                    'email': cls.staff_member.email.upper(), 'title': cls.staff_member.profile.job_title,
                     'first_name': cls.staff_member.first_name, 'last_name': cls.staff_member.last_name,
-                    'phone_number': cls.staff_member.phone, 'is_active': True,
+                    'phone_number': cls.staff_member.profile.phone_number, 'is_active': True,
                 },
                 {
                     'email': 'anonymous@example.com', 'title': 'Unknown User',
@@ -114,7 +115,7 @@ class TestPartnerStaffMembersImportTask(BaseTenantTestCase):
     @override_settings(PRP_API_ENDPOINT='http://example.com/api/')
     @patch('etools.applications.partners.prp_api.requests.get')
     def test_sync(self, request_mock):
-        self.assertEqual(self.partner.staff_members.count(), 1)
+        self.assertEqual(self.partner.active_staff_members.count(), 1)
 
         self.staff_member.active = False
         self.staff_member.save()
@@ -122,13 +123,13 @@ class TestPartnerStaffMembersImportTask(BaseTenantTestCase):
         request_mock.side_effect = self.get_prp_export_response
         sync_partners_staff_members_from_prp()
 
-        self.assertTrue(self.partner.staff_members.count(), 2)
+        self.assertTrue(self.partner.active_staff_members.count(), 2)
 
         # check second user created
-        self.assertTrue(PartnerStaffMember.objects.filter(email='anonymous@example.com', partner=self.partner).exists())
+        self.assertTrue(User.objects.filter(email='anonymous@example.com').exists())
 
         # check first user was updated
         self.staff_member.refresh_from_db()
-        self.assertTrue(self.staff_member.active)
+        self.assertTrue(self.staff_member.is_active)
         # and email was not changed even if provided in uppercase
         self.assertNotEqual(self.staff_member.email, self.staff_member.email.upper())

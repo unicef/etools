@@ -37,7 +37,6 @@ from etools.applications.partners.models import (
     Intervention,
     PartnerOrganization,
     PartnerPlannedVisits,
-    PartnerStaffMember,
     PlannedEngagement,
 )
 from etools.applications.partners.permissions import (
@@ -64,7 +63,6 @@ from etools.applications.partners.serializers.partner_organization_v2 import (
     PartnerOrganizationHactSerializer,
     PartnerOrganizationListSerializer,
     PartnerPlannedVisitsSerializer,
-    PartnerStaffMemberCreateUpdateSerializer,
     PartnerStaffMemberDetailSerializer,
     PlannedEngagementNestedSerializer,
     PlannedEngagementSerializer,
@@ -72,6 +70,7 @@ from etools.applications.partners.serializers.partner_organization_v2 import (
 from etools.applications.partners.tasks import sync_partner
 from etools.applications.partners.views.helpers import set_tenant_or_fail
 from etools.applications.t2f.models import Travel, TravelActivity, TravelType
+from etools.applications.users.models import User
 from etools.applications.utils.pagination import AppendablePageNumberPagination
 from etools.libraries.djangolib.models import StringConcat
 from etools.libraries.djangolib.views import ExternalModuleFilterMixin
@@ -105,7 +104,8 @@ class PartnerOrganizationListAPIView(ExternalModuleFilterMixin, QueryStringFilte
                     'organization__short_name__icontains')
     module2filters = {
         'tpm': ['activity__tpmactivity__tpm_visit__tpm_partner__staff_members__user', ],
-        'psea': ['psea_assessment__assessor__auditor_firm_staff__user', 'psea_assessment__assessor__user']
+        'psea': ['psea_assessment__assessor__auditor_firm_staff__user', 'psea_assessment__assessor__user'],
+        "pmp": ["organization__realms__user"],
     }
     pagination_class = AppendablePageNumberPagination
 
@@ -131,7 +131,7 @@ class PartnerOrganizationListAPIView(ExternalModuleFilterMixin, QueryStringFilte
         return super().get_serializer_class()
 
     def get_queryset(self, format=None):
-        qs = super().get_queryset()
+        qs = super().get_queryset(module='pmp')
         query_params = self.request.query_params
 
         workspace = query_params.get('workspace', None)
@@ -193,7 +193,8 @@ class PartnerOrganizationDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroy
     SERIALIZER_MAP = {
         'assessments': AssessmentDetailSerializer,
         'planned_visits': PartnerPlannedVisitsSerializer,
-        'staff_members': PartnerStaffMemberCreateUpdateSerializer,
+        # TODO REALMS: clean up
+        # 'staff_members': PartnerStaffMemberCreateUpdateSerializer,
         'planned_engagement': PlannedEngagementNestedSerializer,
         'core_values_assessments': CoreValuesAssessmentSerializer
     }
@@ -208,7 +209,7 @@ class PartnerOrganizationDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroy
     def update(self, request, *args, **kwargs):
         related_fields = [
             'assessments',
-            'staff_members',
+            # 'staff_members',    # TODO REALMS: clean up
             'planned_engagement',
             'planned_visits',
             'core_values_assessments'
@@ -364,7 +365,7 @@ class PartnerOrganizationHactAPIView(ListAPIView):
     """
     permission_classes = (IsAdminUser,)
     queryset = PartnerOrganization.objects.select_related('planned_engagement').prefetch_related(
-        'staff_members', 'assessments').hact_active()
+        'organization__realms__users', 'assessments').hact_active()
     serializer_class = PartnerOrganizationHactSerializer
     renderer_classes = (r.JSONRenderer, PartnerOrganizationHactCsvRenderer)
     filename = 'detailed_hact_dashboard'
@@ -401,7 +402,7 @@ class PartnerStaffMemberListAPIVIew(ExternalModuleFilterMixin, ExportModelMixin,
     """
     Returns a list of all Partner staff members
     """
-    queryset = PartnerStaffMember.objects.all()
+    queryset = User.objects.all()
     serializer_class = PartnerStaffMemberDetailSerializer
     permission_classes = (AllowSafeAuthenticated,)
     filter_backends = (PartnerScopeFilter,)

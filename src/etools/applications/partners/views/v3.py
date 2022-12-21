@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.db import connection
 from django.db.models import Value
 from django.db.models.functions import Concat
 from django.http import Http404
@@ -38,16 +39,22 @@ class PMPBaseViewMixin:
     permission_classes = [IsAuthenticated]
 
     def is_partner_staff(self):
-        """Flag indicator whether user is a partner"""
-        return self.request.user.is_authenticated and self.request.user.get_partner_staff_member()
+        """Flag indicator whether user is a partner
+        any active group out of IP... , """
+        return self.request.user.is_authenticated and self.request.user.get_partner()
 
-    def partners(self):
+    def current_partner(self):
         """List of partners user associated with"""
         if not self.is_partner_staff():
-            return []
-        return PartnerOrganization.objects.filter(
-            staff_members__email=self.request.user.email,
-        )
+            return None
+        try:
+            return PartnerOrganization.objects.get(
+                organization=self.request.user.profile.organization,
+                organization__realms__user=self.request.user,
+                organization__realms__is_active=True,
+            )
+        except PartnerOrganization.DoesNotExist:
+            return None
 
     def get_pd(self, pd_pk):
         try:
@@ -85,7 +92,10 @@ class PMPDropdownsListApiView(APIView):
 
     @cached_property
     def partner(self):
-        return PartnerOrganization.objects.filter(staff_members__email=self.request.user.email).first()
+        return PartnerOrganization.objects.filter(
+            organization=self.request.user.profile.organization,
+            organization__realms__country=connection.tenant,
+            organization__realms__user=self.request.user).first()
 
     def get_signed_by_unicef_users(self, request) -> list:
         return list(get_user_model().objects.filter(

@@ -87,7 +87,8 @@ class InterventionAmendmentPRCReviewInline(AttachmentSingleInline):
     code = 'partners_intervention_amendment_internal_prc_review'
 
 
-class InterventionAmendmentsAdmin(AttachmentInlineAdminMixin, RestrictedEditAdmin):
+class InterventionAmendmentsAdmin(AttachmentInlineAdminMixin, CountryUsersAdminMixin, RestrictedEditAdmin):
+    staff_only = False
     model = InterventionAmendment
     readonly_fields = [
         'amendment_number',
@@ -286,10 +287,12 @@ class InterventionAdmin(
         'agreement',
         'flat_locations',
         'partner_authorized_officer_signatory',
+        'old_partner_authorized_officer_signatory',  # TODO REALMS clean up
         'unicef_signatory',
         'budget_owner',
         'unicef_focal_points',
         'partner_focal_points',
+        'old_partner_focal_points',  # TODO REALMS clean up
     ]
     list_filter = (
         'document_type',
@@ -309,6 +312,7 @@ class InterventionAdmin(
     filter_horizontal = (
         'sections',
         'unicef_focal_points',
+        'old_partner_focal_points',  # TODO REALMS clean up
         'partner_focal_points',
         'flat_locations'
     )
@@ -336,8 +340,10 @@ class InterventionAdmin(
                  'review_date_prc',
                  'prc_review_document',
                  'signed_pd_document',
-                 ('partner_authorized_officer_signatory', 'signed_by_partner_date',),
+                 ('old_partner_authorized_officer_signatory', 'signed_by_partner_date',),  # TODO REALMS clean up
+                 'partner_authorized_officer_signatory',
                  ('unicef_signatory', 'signed_by_unicef_date',),
+                 'old_partner_focal_points',  # TODO REALMS clean up
                  'partner_focal_points',
                  'unicef_focal_points',
                  ('start', 'end'),
@@ -456,6 +462,7 @@ class AssessmentAdmin(AttachmentInlineAdminMixin, RestrictedEditAdmin):
     ]
 
 
+# TODO REALMS clean up
 class PartnerStaffMemberAdmin(RestrictedEditAdminMixin, SnapshotModelAdmin):
     model = PartnerStaffMember
     form = PartnerStaffMemberForm
@@ -741,6 +748,7 @@ class AgreementAdmin(
         RestrictedEditAdminMixin,
         SnapshotModelAdmin,
 ):
+    staff_only = False
 
     list_filter = (
         'partner',
@@ -774,16 +782,19 @@ class AgreementAdmin(
                     'attached_agreement',
                     ('start', 'end',),
                     'signed_by_partner_date',
+                    'old_partner_manager',  # TODO REALMS clean up
                     'partner_manager',
                     'signed_by_unicef_date',
                     'signed_by',
                     'terms_acknowledged_by',
                     'authorized_officers',
+                    'old_authorized_officers',  # TODO REALMS clean up
                 )
         }),
     )
     filter_horizontal = (
         'authorized_officers',
+        'old_authorized_officers',  # TODO REALMS clean up
     )
     inlines = [
         ActivityInline,
@@ -859,7 +870,7 @@ class InterventionSupplyItemAdmin(RestrictedEditAdmin):
 
 admin.site.register(PartnerOrganization, PartnerAdmin)
 admin.site.register(Assessment, AssessmentAdmin)
-admin.site.register(PartnerStaffMember, PartnerStaffMemberAdmin)
+admin.site.register(PartnerStaffMember, PartnerStaffMemberAdmin)  # TODO REALMS clean up
 admin.site.register(PlannedEngagement, PlannedEngagementAdmin)
 
 admin.site.register(Agreement, AgreementAdmin)

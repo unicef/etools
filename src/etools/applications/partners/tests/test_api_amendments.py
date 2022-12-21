@@ -23,7 +23,6 @@ from etools.applications.partners.tests.factories import (
     InterventionReviewFactory,
     InterventionSupplyItemFactory,
     PartnerFactory,
-    PartnerStaffFactory,
 )
 from etools.applications.reports.tests.factories import (
     CountryProgrammeFactory,
@@ -48,6 +47,11 @@ class TestInterventionAmendments(BaseTenantTestCase):
         self.pme = UserFactory(is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP])
 
         self.partner = PartnerFactory()
+        self.partner_staff = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=self.partner.organization
+        )
+
         year_ago = datetime.date.today() - datetime.timedelta(days=365)
         self.active_agreement = AgreementFactory(
             partner=self.partner,
@@ -68,11 +72,11 @@ class TestInterventionAmendments(BaseTenantTestCase):
             signed_by_unicef_date=today - datetime.timedelta(days=1),
             signed_by_partner_date=today - datetime.timedelta(days=1),
             unicef_signatory=self.unicef_staff,
-            partner_authorized_officer_signatory=self.partner.staff_members.all().first(),
+            partner_authorized_officer_signatory=self.partner.active_staff_members.all().first(),
             budget_owner=self.pme,
         )
         self.active_intervention.flat_locations.add(LocationFactory())
-        self.active_intervention.partner_focal_points.add(self.partner.staff_members.all().first())
+        self.active_intervention.partner_focal_points.add(self.partner_staff)
         self.active_intervention.unicef_focal_points.add(self.unicef_staff)
         self.active_intervention.offices.add(OfficeFactory())
         self.active_intervention.sections.add(SectionFactory())
@@ -244,8 +248,9 @@ class TestInterventionAmendments(BaseTenantTestCase):
         country_programme = CountryProgrammeFactory()
         intervention = InterventionFactory(
             agreement__partner=self.partner,
-            partner_authorized_officer_signatory=PartnerStaffFactory(
-                partner=self.partner, user__is_staff=False, user__realms__data=[]
+            partner_authorized_officer_signatory=UserFactory(
+                profile__organization=self.partner.organization,
+                is_staff=False, realms__data=['IP Authorized Officer']
             ),
             unicef_signatory=UserFactory(),
             country_programme=country_programme,
@@ -270,8 +275,9 @@ class TestInterventionAmendments(BaseTenantTestCase):
         intervention.unicef_focal_points.add(unicef_user)
         intervention.sections.add(SectionFactory())
         intervention.offices.add(OfficeFactory())
-        intervention.partner_focal_points.add(PartnerStaffFactory(
-            partner=self.partner, user__is_staff=False, user__realms__data=[]
+        intervention.partner_focal_points.add(UserFactory(
+            profile__organization=self.partner.organization,
+            is_staff=False, realms__data=[]
         ))
         ReportingRequirementFactory(intervention=intervention)
 

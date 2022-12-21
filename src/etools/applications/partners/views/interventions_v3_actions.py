@@ -39,10 +39,7 @@ class PMPInterventionActionView(PMPInterventionMixin, InterventionDetailAPIView)
         return response
 
     def is_partner_focal_point(self, pd):
-        psm = self.request.user.partner_staff_member
-        if psm is None:
-            return False
-        return psm in pd.partner_focal_points.all()
+        return self.request.user in pd.partner_focal_points.all()
 
     def send_notification(self, pd, recipients, template_name, context):
         unicef_rec = [r for r in recipients if r.endswith("unicef.org")]

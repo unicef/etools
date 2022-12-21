@@ -63,20 +63,27 @@ class AzureUserMapper:
         return False
 
     def _set_special_attr(self, obj, attr, cleaned_value):
-
         if attr == 'country':
             # ONLY SYNC WORKSPACE IF IT HASN'T BEEN SET ALREADY
             if not obj.country_override:
                 # cleaned value is actually business area code -> see mapper
                 new_country = self._get_country(cleaned_value)
                 if not obj.country == new_country:
-                    obj.country = self._get_country(cleaned_value)
+                    obj.organization = self.unicef_organization
                     Realm.objects.get_or_create(
                         user=obj.user,
-                        country=obj.country,
+                        country=new_country,
                         organization=self.unicef_organization,
                         group=self.groups['UNICEF User'])
-                    # TODO REALMS: discuss on reset permission when changing country
+                    logger.info('UNICEF User Group added to user {}'.format(obj.user))
+
+                    # deactivate realms from previous user country
+                    Realm.objects.filter(
+                        user=obj.user,
+                        country=obj.country,
+                        organization=self.unicef_organization).update(is_active=False)
+
+                    obj.country = self._get_country(cleaned_value)
                     logger.info("Country Updated for {}".format(obj))
                     return True
 
@@ -120,15 +127,9 @@ class AzureUserMapper:
             if created:
                 status['created'] = int(created)
                 user.set_unusable_password()
-                # TODO REALMS: TBD about UAT
-                Realm.objects.create(
-                    user=user,
-                    country=self._get_country('UAT'),
-                    organization=self.unicef_organization,
-                    group=self.groups['UNICEF User'])
+
                 user.profile.organization = self.unicef_organization
                 user.profile.save(update_fields=['organization'])
-                logger.info('Group added to user {}'.format(user))
 
             profile, _ = UserProfile.objects.get_or_create(user=user)
             user_updated = self.update_user(user, record)

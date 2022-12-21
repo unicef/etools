@@ -826,7 +826,7 @@ class MonitoringActivityActionPointsViewTestCase(FMBaseTestCaseMixin, APIViewSet
         action_points = MonitoringActivityActionPointFactory.create_batch(size=10, monitoring_activity=self.activity)
         MonitoringActivityActionPointFactory()
 
-        with self.assertNumQueries(15):  # prefetched 13 queries
+        with self.assertNumQueries(14):  # prefetched 13 queries
             self._test_list(self.unicef_user, action_points)
 
     def test_create(self):

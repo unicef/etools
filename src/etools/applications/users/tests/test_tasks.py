@@ -154,12 +154,14 @@ class TestUserMapper(BaseTenantTestCase):
         country_uat = CountryFactory(name="UAT")
         self.mapper.countries = {"UAT": country_uat}
         email = "tester@example.com"
-        UserFactory(
+        user = UserFactory(
             email=email,
             username=email,
             first_name="Tester",
             last_name="Last",
         )
+        user.email = email
+        user.save()
         res = self.mapper.create_or_update_user({
             "userPrincipalName": email,
             "internetaddress": email,
