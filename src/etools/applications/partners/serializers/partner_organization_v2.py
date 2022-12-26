@@ -2,7 +2,6 @@ import datetime
 import itertools
 
 from django.contrib.auth import get_user_model
-from django.db import connection
 from django.db.models import Q
 from django.utils import timezone
 
@@ -28,7 +27,6 @@ from etools.applications.partners.serializers.interventions_v2 import (
     InterventionListSerializer,
     InterventionMonitorSerializer,
 )
-from etools.applications.users.serializers import MinimalUserSerializer
 
 
 class CoreValuesAssessmentSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
@@ -41,6 +39,7 @@ class CoreValuesAssessmentSerializer(AttachmentSerializerMixin, serializers.Mode
         fields = "__all__"
 
 
+# TODO REALMS clean up
 class PartnerStaffMemberCreateSerializer(serializers.ModelSerializer):
     # legacy serializer; not actually being used for creating
 
@@ -73,14 +72,11 @@ class PartnerStaffMemberCreateSerializer(serializers.ModelSerializer):
         return data
 
 
-class SimpleStaffMemberSerializer(PartnerStaffMemberCreateSerializer):
-    """
-    A serializer to be used for nested staff member handling. The 'partner' field
-    is removed in this case to avoid validation errors for e.g. when creating
-    the partner and the member at the same time.
-    """
+class PartnerManagerSerializer(serializers.ModelSerializer):
+    title = serializers.CharField(source='profile.job_title')
+
     class Meta:
-        model = PartnerStaffMember
+        model = get_user_model()
         fields = (
             "id",
             "title",
@@ -108,6 +104,7 @@ class PartnerStaffMemberNestedSerializer(PartnerStaffMemberCreateSerializer):
         )
 
 
+# TODO REALMS cleanup
 class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(required=True)
 
@@ -137,14 +134,6 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
                 if user.is_unicef_user():
                     raise ValidationError('Unable to associate staff member to UNICEF user')
 
-                if bool(user.get_staff_member_country()):
-                    raise ValidationError(
-                        {
-                            'active': 'The email for the partner contact is used by another partner contact. '
-                                      'Email has to be unique to proceed {}'.format(email)
-                        }
-                    )
-
                 data['user'] = user
         else:
             # make sure email addresses are not editable after creation.. user must be removed and re-added
@@ -163,13 +152,6 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
                     user = User.objects.get(email=email)
                 except User.DoesNotExist:
                     pass
-                else:
-                    psm_country = user.get_staff_member_country()
-                    if psm_country and psm_country != connection.tenant:
-                        raise ValidationError({
-                            'active': 'The Partner Staff member you are trying to activate is associated '
-                                      'with a different Partner Organization'
-                        })
 
             # disabled is unavailable if user already synced to PRP to avoid data inconsistencies
             if self.instance.active and not active:
@@ -220,17 +202,22 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
 
 
 class PartnerStaffMemberDetailSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = PartnerStaffMember
-        fields = "__all__"
-
-
-class PartnerStaffMemberUserSerializer(serializers.ModelSerializer):
-    user = MinimalUserSerializer()
+    active = serializers.BooleanField(source='is_active')
+    phone = serializers.CharField(source='profile.phone_number')
+    title = serializers.CharField(source='profile.job_title')
 
     class Meta:
-        model = PartnerStaffMember
-        fields = "__all__"
+        model = get_user_model()
+        fields = (
+            'id', 'email', 'first_name', 'last_name', 'created', 'modified',
+            'active', 'phone', 'title',
+            # TODO REALMS check with frontend if partner id is used
+            # 'partner'
+        )
+
+
+class PartnerStaffMemberUserSerializer(PartnerStaffMemberDetailSerializer):
+    pass
 
 
 class AssessmentDetailSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
@@ -300,7 +287,7 @@ class PartnerOrgPSEADetailsSerializer(serializers.ModelSerializer):
     cso_type = serializers.CharField(source='organization.cso_type')
 
     def get_staff_members(self, obj):
-        return [s.get_full_name() for s in obj.staff_members.all()]
+        return [s.get_full_name() for s in obj.active_staff_members.all()]
 
     class Meta:
         model = PartnerOrganization
@@ -454,7 +441,7 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
     short_name = serializers.CharField(source='organization.short_name', read_only=True)
     partner_type = serializers.CharField(source='organization.organization_type', read_only=True)
     cso_type = serializers.CharField(source='organization.cso_type', read_only=True)
-    staff_members = PartnerStaffMemberDetailSerializer(many=True, read_only=True)
+    staff_members = PartnerStaffMemberDetailSerializer(source='all_staff_members', many=True, read_only=True)
     assessments = AssessmentDetailSerializer(many=True, read_only=True)
     planned_engagement = PlannedEngagementSerializer(read_only=True)
     interventions = serializers.SerializerMethodField(read_only=True)

@@ -7,6 +7,7 @@ from etools_validator.exceptions import BasicValidationError, StateValidationErr
 from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
+from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.models import Agreement, FileType, Intervention, InterventionAmendment
 from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP
 from etools.applications.partners.tests.factories import (
@@ -14,7 +15,6 @@ from etools.applications.partners.tests.factories import (
     InterventionAmendmentFactory,
     InterventionAttachmentFactory,
     InterventionFactory,
-    PartnerStaffFactory,
 )
 from etools.applications.partners.validation.interventions import (
     InterventionValid,
@@ -568,7 +568,10 @@ class TestSignedDateValid(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_user = UserFactory()
-        cls.partner_user = PartnerStaffFactory()
+        cls.partner_user = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=OrganizationFactory()
+        )
         cls.future_date = datetime.date.today() + datetime.timedelta(days=2)
 
     def test_valid(self):

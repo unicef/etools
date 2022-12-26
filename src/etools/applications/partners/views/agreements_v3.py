@@ -20,7 +20,7 @@ class PMPAgreementViewMixin(
         ExternalModuleFilterMixin,
 ):
     module2filters = {
-        "pmp": ["partner__staff_members__user"],
+        "pmp": ["partner__organization__realms__user"],
     }
 
     def get_queryset(self, format=None):

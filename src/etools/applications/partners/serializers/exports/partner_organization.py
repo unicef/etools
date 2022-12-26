@@ -1,22 +1,29 @@
+from django.contrib.auth import get_user_model
 from django.utils.translation import gettext as _
 
 from rest_framework import serializers
 
 from etools.applications.core.mixins import ExportSerializerMixin
 from etools.applications.organizations.models import OrganizationType
-from etools.applications.partners.models import Assessment, PartnerOrganization, PartnerStaffMember
+from etools.applications.partners.models import Assessment, PartnerOrganization
 from etools.applications.partners.serializers.fields import HactValuesField
 
 
 class PartnerStaffMemberExportSerializer(serializers.ModelSerializer):
     active = serializers.SerializerMethodField()
+    phone = serializers.CharField(source='profile.phone_number')
+    title = serializers.CharField(source='profile.job_title')
+    partner_id = serializers.CharField(source="partner.id")
 
     class Meta:
-        model = PartnerStaffMember
-        fields = "__all__"
+        model = get_user_model()
+        fields = [
+            'id', 'email', 'first_name', 'last_name', 'created', 'modified',
+            'active', 'phone', 'title', 'partner_id'
+        ]
 
     def get_active(self, obj):
-        return "Yes" if obj.active else "No"
+        return "Yes" if obj.is_active else "No"
 
 
 class PartnerStaffMemberExportFlatSerializer(
@@ -24,6 +31,9 @@ class PartnerStaffMemberExportFlatSerializer(
         PartnerStaffMemberExportSerializer
 ):
     partner_name = serializers.CharField(source="partner.name")
+
+    class Meta(PartnerStaffMemberExportSerializer.Meta):
+        fields = PartnerStaffMemberExportSerializer.Meta.fields + ['partner_name']
 
 
 class PartnerOrganizationExportSerializer(serializers.ModelSerializer):
@@ -87,7 +97,7 @@ class PartnerOrganizationExportSerializer(serializers.ModelSerializer):
 
     def get_staff_members(self, obj):
         return ', '.join(['{} ({})'.format(sm.get_full_name(), sm.email)
-                          for sm in obj.staff_members.filter(active=True).all()])
+                          for sm in obj.active_staff_members.all()])
 
     def get_assessments(self, obj):
         return ', '.join(["{} ({})".format(a.type, a.completed_date) for a in obj.assessments.all()])

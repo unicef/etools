@@ -92,6 +92,8 @@ class TestPartnerOrganizationListView(BaseTenantTestCase):
 
         organization2 = OrganizationFactory()
         PartnerFactory(organization=organization2)
+        # add a user with realm for organization2
+        UserFactory(realms__data=['IP Viewer'], profile__organization=organization2)
 
         response = self.forced_auth_req(
             "get",
@@ -210,8 +212,8 @@ class TestUsersListAPIView(BaseTenantTestCase):
         self.assertEqual(len(response.data['results']), 5)
 
     def test_search(self):
-        UserFactory(is_staff=True, email='test_user_email@example.com')
-        UserFactory(is_staff=True, email='test_user@example.com')
+        UserFactory(is_staff=True, email='test_user_email@example.com', realms__data=[])
+        UserFactory(is_staff=True, email='test_user@example.com', realms__data=[])
         response = self.forced_auth_req('get', self.url, user=self.unicef_staff, data={'search': 'test_user_email'})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
@@ -295,9 +297,10 @@ class TestUsersListAPIView(BaseTenantTestCase):
 
     def test_partner_user(self):
         partner = PartnerFactory()
-        partner_staff = partner.staff_members.all().first()
-        partner_user = partner_staff.user
-
+        partner_user = UserFactory(
+            realms__data=['IP Viewer'], profile__organization=partner.organization
+        )
+        self.assertEqual(partner_user, partner.active_staff_members.all().first())
         self.assertTrue(get_user_model().objects.count() > 1)
         response = self.forced_auth_req(
             'get',
@@ -696,7 +699,7 @@ class TestExternalUserAPIView(BaseTenantTestCase):
 
     @classmethod
     def setUpTestData(cls):
-        cls.user = UserFactory()
+        cls.user = UserFactory(realms__data=['PSEA Assessor'])
         cls.unicef_staff = UserFactory(is_staff=True)
         cls.unicef_superuser = UserFactory(is_superuser=True)
         cls.auditor_user = AuditorUserFactory()

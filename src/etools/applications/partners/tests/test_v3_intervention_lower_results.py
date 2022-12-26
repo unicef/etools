@@ -14,7 +14,6 @@ from etools.applications.partners.tests.factories import (
     InterventionAmendmentFactory,
     InterventionFactory,
     InterventionResultLinkFactory,
-    PartnerStaffFactory,
 )
 from etools.applications.reports.models import LowerResult, ResultType
 from etools.applications.reports.tests.factories import (
@@ -35,14 +34,12 @@ class TestInterventionLowerResultsViewBase(BaseTenantTestCase):
         self.intervention = InterventionFactory(status=Intervention.DRAFT, unicef_court=True)
 
         self.partner_focal_point = UserFactory(realms__data=[])
-        self.staff_member = PartnerStaffFactory(
-            partner=self.intervention.agreement.partner,
-            user=self.partner_focal_point,
+        self.staff_member = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=self.intervention.agreement.partner.organization
         )
-        self.intervention.partner_focal_points.add(self.staff_member)
+        self.intervention.partner_focal_points.add(self.partner_focal_point)
         self.intervention.unicef_focal_points.add(self.user)
-
-        self.partner_staff_member = PartnerStaffFactory(partner=self.intervention.agreement.partner).user
 
         self.cp_output = ResultFactory(result_type__name=ResultType.OUTPUT)
         self.result_link = InterventionResultLinkFactory(intervention=self.intervention, cp_output=self.cp_output)
@@ -559,7 +556,7 @@ class TestAppliedIndicatorsCreate(TestInterventionLowerResultsViewBase):
     def test_create_partner_user(self):
         self.intervention.unicef_court = False
         self.intervention.save()
-        response = self.forced_auth_req('post', self.list_url, self.partner_staff_member, data=self.create_data)
+        response = self.forced_auth_req('post', self.list_url, self.staff_member, data=self.create_data)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
 
 
@@ -599,7 +596,7 @@ class TestAppliedIndicatorsUpdate(TestInterventionLowerResultsViewBase):
     def test_update_partner_user(self):
         self.intervention.unicef_court = False
         self.intervention.save()
-        response = self.forced_auth_req('patch', self.detail_url, self.partner_staff_member, data={})
+        response = self.forced_auth_req('patch', self.detail_url, self.staff_member, data={})
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
 
     def test_destroy_unicef(self):
@@ -631,5 +628,5 @@ class TestAppliedIndicatorsUpdate(TestInterventionLowerResultsViewBase):
     def test_destroy_partner_user(self):
         self.intervention.unicef_court = False
         self.intervention.save()
-        response = self.forced_auth_req('delete', self.detail_url, self.partner_staff_member)
+        response = self.forced_auth_req('delete', self.detail_url, self.staff_member)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)

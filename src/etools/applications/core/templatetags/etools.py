@@ -4,7 +4,6 @@ from django.utils.safestring import mark_safe
 
 from etools import NAME, VERSION
 from etools.applications.core.util_scripts import currency_format
-from etools.applications.users.models import Country
 
 register = template.Library()
 
@@ -24,7 +23,8 @@ def show_country_select(context, user):
 
     if not user:
         return ''
-    countries = Country.objects.filter(realms__in=user.realms.all()).distinct().order_by('name')
+    # only countries from active realms are in the dropdown list
+    countries = user.profile.countries_available.order_by('name')
 
     if 'opts' in context and context['opts'].app_label in settings.TENANT_APPS:
         countries = countries.exclude(schema_name='public')

@@ -19,8 +19,7 @@ class IsPartnershipManager(BasePermission):
         return request.user.realms\
             .filter(country=request.user.profile.country,
                     organization=request.user.profile.organization,
-                    group=PartnershipManager.as_group(),
-                    is_active=True)\
+                    group=PartnershipManager.as_group())\
             .exists()
 
 

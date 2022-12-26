@@ -6,7 +6,7 @@ from django.contrib.auth.models import Group
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import ArrayField
 from django.core.validators import MinValueValidator
-from django.db import connection, IntegrityError, models, transaction
+from django.db import connection, models, transaction
 from django.db.models import Case, CharField, Count, F, Max, Min, OuterRef, Prefetch, Q, Subquery, Sum, When
 from django.urls import reverse
 from django.utils import timezone
@@ -49,7 +49,8 @@ from etools.applications.partners.validation.agreements import (
 from etools.applications.reports.models import CountryProgramme, Indicator, Office, Result, Section
 from etools.applications.t2f.models import Travel, TravelActivity, TravelType
 from etools.applications.tpm.models import TPMActivity, TPMVisit
-from etools.applications.users.models import Country, Realm
+from etools.applications.users.mixins import PARTNER_ACTIVE_GROUPS
+from etools.applications.users.models import Country, Realm, User
 from etools.libraries.djangolib.models import MaxDistinct, StringConcat
 from etools.libraries.djangolib.utils import get_environment
 from etools.libraries.pythonlib.datetime import get_current_year, get_quarter
@@ -243,10 +244,8 @@ class PartnerOrganization(TimeStampedModel):
     Represents a partner organization
 
     related models:
+        Organization: "organization"
         Assessment: "assessments"
-        PartnerStaffMember: "staff_members"
-
-
     """
     # When cash transferred to a country programme exceeds CT_CP_AUDIT_TRIGGER_LEVEL, an audit is triggered.
     EXPIRING_ASSESSMENT_LIMIT_YEAR = 4
@@ -543,6 +542,21 @@ class PartnerOrganization(TimeStampedModel):
     @cached_property
     def cso_type(self):
         return self.organization.cso_type
+
+    @cached_property
+    def all_staff_members(self):
+        return User.objects.filter(
+            realms__organization=self.organization,
+            realms__country=connection.tenant,
+            realms__group__name__in=PARTNER_ACTIVE_GROUPS,
+        )
+
+    @cached_property
+    def active_staff_members(self):
+        return self.all_staff_members.filter(
+            is_active=True,
+            realms__is_active=True
+        )
 
     def get_object_url(self):
         return reverse("partners_api:partner-detail", args=[self.pk])
@@ -892,11 +906,7 @@ class PartnerOrganization(TimeStampedModel):
         return reverse(admin_url_name, args=(self.id,))
 
     def user_is_staff_member(self, user):
-        staff_member = user.get_partner_staff_member()
-        if not staff_member:
-            return False
-
-        return staff_member.id in self.staff_members.values_list('id', flat=True)
+        return user.id in self.active_staff_members.values_list('id', flat=True)
 
 
 class CoreValuesAssessment(TimeStampedModel):
@@ -918,6 +928,7 @@ class PartnerStaffMemberManager(models.Manager):
         return super().get_queryset().select_related('partner')
 
 
+# TODO REALMS clean up
 class PartnerStaffMember(TimeStampedModel):
     """
     Represents a staff member at the partner organization.
@@ -933,13 +944,13 @@ class PartnerStaffMember(TimeStampedModel):
     partner = models.ForeignKey(
         PartnerOrganization,
         verbose_name=_("Partner"),
-        related_name='staff_members',
+        related_name='old_staff_members',
         on_delete=models.CASCADE,
     )
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         verbose_name=_("User"),
-        related_name='partner_staff_member',
+        related_name='old_partner_staff_member',
         on_delete=models.PROTECT,
         null=True,
         blank=True,
@@ -991,13 +1002,6 @@ class PartnerStaffMember(TimeStampedModel):
         1. user with profile should exists on create if staff member activation status is being changed
         2. only one user staff member can be active through all tenants
         """
-
-        # make sure no other partner staff records exist with matching email
-        if not self.pk and self.user:
-            if bool(self.user.get_staff_member_country()):
-                raise IntegrityError(
-                    "Partner Staff Member record already exists with matching email.",
-                )
 
         if self.user and self.tracker.has_changed('active'):
 
@@ -1204,6 +1208,10 @@ class AgreementManager(models.Manager):
         return super().get_queryset().select_related('partner', 'partner__organization')
 
 
+class MainAgreementManager(models.Manager):
+    use_in_migrations = True
+
+
 def activity_to_active_side_effects(i, old_instance=None, user=None):
     # here we can make any updates to the object as we need as part of the auto transition change
     # obj.end = datetime.date.today()
@@ -1260,11 +1268,19 @@ class Agreement(TimeStampedModel):
         null=True,
         on_delete=models.CASCADE,
     )
-    authorized_officers = models.ManyToManyField(
+    # TODO REALMS clean up
+    old_authorized_officers = models.ManyToManyField(
         PartnerStaffMember,
+        verbose_name=_("(old)Partner Authorized Officer"),
+        blank=True,
+        related_name="agreement_authorizations"
+    )
+    authorized_officers = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
         verbose_name=_("Partner Authorized Officer"),
         blank=True,
-        related_name="agreement_authorizations")
+        related_name="agreement_authorizations"
+    )
     agreement_type = models.CharField(
         verbose_name=_("Agreement Type"),
         max_length=10,
@@ -1331,8 +1347,17 @@ class Agreement(TimeStampedModel):
         blank=True,
     )
     # Signatory on behalf of the PartnerOrganization
-    partner_manager = models.ForeignKey(
+    # TODO REALMS clean up
+    old_partner_manager = models.ForeignKey(
         PartnerStaffMember,
+        related_name='agreements_signed',
+        verbose_name=_('(old)Signed by partner'),
+        blank=True, null=True,
+        db_index=False,
+        on_delete=models.CASCADE,
+    )
+    partner_manager = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
         related_name='agreements_signed',
         verbose_name=_('Signed by partner'),
         blank=True, null=True,
@@ -1358,7 +1383,7 @@ class Agreement(TimeStampedModel):
 
     tracker = FieldTracker()
     view_objects = AgreementManager()
-    objects = models.Manager()
+    objects = MainAgreementManager()
 
     class Meta:
         ordering = ['-created']
@@ -1724,7 +1749,6 @@ class Intervention(TimeStampedModel):
     Relates to :model:`partners.Agreement`
     Relates to :model:`reports.CountryProgramme`
     Relates to :model:`AUTH_USER_MODEL`
-    Relates to :model:`partners.PartnerStaffMember`
     Relates to :model:`reports.Office`
     """
 
@@ -1945,9 +1969,19 @@ class Intervention(TimeStampedModel):
         null=True,
         on_delete=models.CASCADE,
     )
+    # TODO REALMS clean up
     # part of the Agreement authorized officers
-    partner_authorized_officer_signatory = models.ForeignKey(
+    old_partner_authorized_officer_signatory = models.ForeignKey(
         PartnerStaffMember,
+        verbose_name=_("(old)Signed by Partner"),
+        related_name='signed_interventions',
+        blank=True,
+        null=True,
+        db_index=False,
+        on_delete=models.CASCADE,
+    )
+    partner_authorized_officer_signatory = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
         verbose_name=_("Signed by Partner"),
         related_name='signed_interventions',
         blank=True,
@@ -1961,14 +1995,20 @@ class Intervention(TimeStampedModel):
         blank=True,
         related_name='unicef_interventions_focal_points+'
     )
-    # any PartnerStaffMember on the ParterOrganization
-    partner_focal_points = models.ManyToManyField(
+    # TODO REALMS clean up
+    # any PartnerStaffMember on the PartnerOrganization
+    old_partner_focal_points = models.ManyToManyField(
         PartnerStaffMember,
+        verbose_name=_("(old)CSO Authorized Officials"),
+        related_name='interventions_focal_points+',
+        blank=True
+    )
+    partner_focal_points = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
         verbose_name=_("CSO Authorized Officials"),
         related_name='interventions_focal_points+',
         blank=True
     )
-
     contingency_pd = models.BooleanField(
         verbose_name=_("Contingency PD"),
         default=False,
@@ -2714,9 +2754,19 @@ class InterventionAmendment(TimeStampedModel):
         null=True,
         on_delete=models.CASCADE,
     )
+    # TODO REALMS clean up
     # part of the Agreement authorized officers
-    partner_authorized_officer_signatory = models.ForeignKey(
+    old_partner_authorized_officer_signatory = models.ForeignKey(
         PartnerStaffMember,
+        verbose_name=_("(old)Signed by Partner"),
+        related_name='+',
+        blank=True,
+        null=True,
+        db_index=False,
+        on_delete=models.CASCADE,
+    )
+    partner_authorized_officer_signatory = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
         verbose_name=_("Signed by Partner"),
         related_name='+',
         blank=True,
