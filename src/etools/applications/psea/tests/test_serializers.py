@@ -89,7 +89,7 @@ class TestAssessmentSerializer(BaseTenantTestCase):
         )
         self.assertEqual(
             self.serializer.get_assessor(assessment),
-            "First Last",
+            "First Last (UNICEF)",
         )
 
     def test_get_assessor_firm(self):

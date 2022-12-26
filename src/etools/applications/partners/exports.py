@@ -31,4 +31,4 @@ class PartnerExport(resources.ModelResource):
             filter(agreement__partner__id=partner_organization.id).count()
 
     def dehydrate_active_staff_members(self, partner_organization):
-        return ', '.join([sm.get_full_name() for sm in partner_organization.staff_members.all()])
+        return ', '.join([sm.get_full_name() for sm in partner_organization.active_staff_members.all()])

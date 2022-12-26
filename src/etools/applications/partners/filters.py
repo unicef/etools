@@ -1,10 +1,18 @@
+from django.db import connection
+from django.shortcuts import get_object_or_404
+
 from rest_framework.filters import BaseFilterBackend
+
+from etools.applications.partners.models import PartnerOrganization
 
 
 class PartnerScopeFilter(BaseFilterBackend):
     def filter_queryset(self, request, queryset, view):
         if request.parser_context['kwargs'] and 'partner_pk' in request.parser_context['kwargs']:
-            return queryset.filter(partner__pk=request.parser_context['kwargs']['partner_pk'])
+            partner = get_object_or_404(PartnerOrganization, pk=request.parser_context['kwargs']['partner_pk'])
+            return queryset.filter(
+                realms__country=connection.tenant,
+                realms__organization=partner.organization)
         return queryset
 
 

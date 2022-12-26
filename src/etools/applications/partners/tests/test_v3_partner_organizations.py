@@ -2,7 +2,7 @@ import datetime
 from unittest import skip
 
 from django.contrib.auth.models import AnonymousUser
-from django.test import override_settings, SimpleTestCase
+from django.test import SimpleTestCase
 from django.urls import reverse
 
 from rest_framework import status
@@ -10,9 +10,9 @@ from rest_framework import status
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.core.tests.mixins import URLAssertionMixin
 from etools.applications.organizations.tests.factories import OrganizationFactory
-from etools.applications.partners.models import PartnerOrganization, PartnerStaffMember
+from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, UNICEF_USER
-from etools.applications.partners.tests.factories import AgreementFactory, PartnerFactory, PartnerStaffFactory
+from etools.applications.partners.tests.factories import AgreementFactory, PartnerFactory
 from etools.applications.users.tests.factories import UserFactory
 
 
@@ -40,7 +40,7 @@ class URLsTestCase(URLAssertionMixin, SimpleTestCase):
 class BasePartnerOrganizationTestCase(BaseTenantTestCase):
     def setUp(self):
         super().setUp()
-        self.user = UserFactory(
+        self.unicef_user = UserFactory(
             is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP],
         )
         self.partner = PartnerFactory(organization=OrganizationFactory(name='Partner 1', vendor_number="VP1"))
@@ -51,13 +51,12 @@ class BasePartnerOrganizationTestCase(BaseTenantTestCase):
 
 
 class TestPartnerOrganizationList(BasePartnerOrganizationTestCase):
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_list_for_unicef(self):
         PartnerFactory()
         response = self.forced_auth_req(
             "get",
             reverse('pmp_v3:partner-list'),
-            user=self.user,
+            user=self.unicef_user,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
@@ -67,7 +66,10 @@ class TestPartnerOrganizationList(BasePartnerOrganizationTestCase):
 
     def test_list_for_partner(self):
         partner = PartnerFactory()
-        user = PartnerStaffFactory(partner=partner).user
+        user = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=partner.organization
+        )
 
         response = self.forced_auth_req(
             "get",
@@ -100,29 +102,28 @@ class TestPartnerStaffMemberList(BasePartnerOrganizationTestCase):
     def test_list_for_unicef(self):
         partner = PartnerFactory()
         for __ in range(10):
-            user = UserFactory(is_staff=False, realms__data=[])
-            user_staff_member = PartnerStaffFactory(
-                partner=partner,
-                email=user.email,
+            UserFactory(
+                realms__data=['IP Viewer'],
+                profile__organization=self.partner.organization
             )
-            user.profile.partner_staff_member = user_staff_member.pk
-            user.profile.save()
-
         response = self.forced_auth_req(
             "get",
             reverse('pmp_v3:partner-staff-members-list', args=[partner.pk]),
-            user=self.user,
+            user=self.unicef_user,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
             len(response.data),
-            PartnerStaffMember.objects.filter(partner=partner).count(),
+            partner.all_staff_members.count(),
         )
 
     def test_list_for_partner(self):
         partner = PartnerFactory()
         for __ in range(10):
-            user = PartnerStaffFactory(partner=partner).user
+            user = UserFactory(
+                realms__data=['IP Viewer'],
+                profile__organization=self.partner.organization
+            )
 
         response = self.forced_auth_req(
             "get",
@@ -132,15 +133,14 @@ class TestPartnerStaffMemberList(BasePartnerOrganizationTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
             len(response.data),
-            PartnerStaffMember.objects.filter(partner=partner).count(),
+            partner.all_staff_members.count(),
         )
 
         # partner user not able to view another partners users
         partner_2 = PartnerFactory()
-        user_2 = UserFactory(is_staff=False, realms__data=[])
-        PartnerStaffFactory(
-            partner=partner_2,
-            user=user_2,
+        user_2 = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=partner_2.organization
         )
         response = self.forced_auth_req(
             "get",

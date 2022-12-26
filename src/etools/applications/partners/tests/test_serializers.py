@@ -15,7 +15,6 @@ from etools.applications.partners.tests.factories import (
     AgreementFactory,
     InterventionFactory,
     PartnerFactory,
-    PartnerStaffFactory,
     PlannedEngagementFactory,
 )
 from etools.applications.reports.tests.factories import CountryProgrammeFactory
@@ -319,7 +318,10 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
     def test_create_ok_and_fail_due_to_signatures_non_SSFA(self):
         """Ensure signature validation works correctly for non-SSFA types"""
         signatory = UserFactory()
-        partner_signatory = PartnerStaffFactory(partner=self.partner)
+        partner_signatory = UserFactory(
+            profile__organization=self.partner.organization,
+            realms__data=['IP Viewer']
+        )
 
         # This should succeed; it's OK to have only one set of signatures (UNICEF)
         data = {
@@ -690,15 +692,25 @@ class TestAgreementSerializerTransitions(AgreementCreateUpdateSerializerBase):
 class TestPartnerOrganizationDetailSerializer(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.user = UserFactory()
-
         cls.partner = PartnerFactory(
             organization=OrganizationFactory(organization_type=OrganizationType.CIVIL_SOCIETY_ORGANIZATION))
+        cls.user = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=cls.partner.organization
+        )
+
         cls.engagement = PlannedEngagementFactory(partner=cls.partner)
 
     def test_retrieve(self):
         serializer = PartnerOrganizationDetailSerializer(instance=self.partner)
-
+        inactive_partner_user2 = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=self.partner.organization,
+        )
+        inactive_partner_user2.realms.update(is_active=False)
+        # user is overall active, but not active in the context realm
+        self.assertEqual(inactive_partner_user2.is_active, True)
+        self.assertEqual(inactive_partner_user2.realms.filter(is_active=True).count(), 0)
         data = serializer.data
         self.assertCountEqual(data.keys(), [
             'address', 'alternate_id', 'alternate_name', 'assessments', 'basis_for_risk_rating', 'blocked', 'city',
@@ -719,9 +731,9 @@ class TestPartnerOrganizationDetailSerializer(BaseTenantTestCase):
             'total_spot_check_planned', 'required_audit'
         ])
         self.assertNotEqual(data['planned_engagement']['spot_check_planned_q1'], '')
-
-        self.assertEquals(len(data['staff_members']), 1)
+        # active & inactive partner staff members
+        self.assertEquals(len(data['staff_members']), 2)
         self.assertCountEqual(data['staff_members'][0].keys(), [
             'active', 'created', 'email', 'first_name', 'id',
-            'last_name', 'modified', 'partner', 'phone', 'title', 'user',
+            'last_name', 'modified', 'phone', 'title'
         ])

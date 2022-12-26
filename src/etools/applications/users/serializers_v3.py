@@ -293,7 +293,7 @@ class ProfileRetrieveUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserProfile
-        exclude = ('id', 'old_countries_available')
+        exclude = ('id', 'old_countries_available')  # TODO REALMS clean up
 
     # TODO remove once feature gating is in place.
     def get_show_ap(self, obj):
@@ -305,8 +305,8 @@ class ProfileRetrieveUpdateSerializer(serializers.ModelSerializer):
         return False
 
     def get__partner_staff_member(self, obj):
-        psm = obj.user.get_partner_staff_member()
-        return psm.id if psm else None
+        partner = obj.user.get_partner()
+        return obj.user.id if partner else None
 
     def get_is_unicef_user(self, obj):
         return obj.user.is_unicef_user()
@@ -385,7 +385,8 @@ class ExternalUserSerializer(MinimalUserSerializer):
             user=instance,
             country=country,
             organization=self._get_external_psea_org(),
-            group=Auditor.as_group())
+            group=Auditor.as_group(),
+            is_active=True)
         if not realm_qs.exists():
             return False, country
         return True, country

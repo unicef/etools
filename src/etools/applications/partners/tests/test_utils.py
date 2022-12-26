@@ -66,7 +66,7 @@ def setup_intervention_test_data(test_case, include_results_and_indicators=False
         signed_by_unicef_date=today - datetime.timedelta(days=1),
         signed_by_partner_date=today - datetime.timedelta(days=1),
         unicef_signatory=test_case.unicef_staff,
-        partner_authorized_officer_signatory=test_case.partner1.staff_members.all().first()
+        partner_authorized_officer_signatory=test_case.partner1.active_staff_members.all().first()
     )
     test_case.active_intervention.unicef_focal_points.add(test_case.partnership_manager_user)
     test_case.reporting_requirement = ReportingRequirementFactory(intervention=test_case.active_intervention)

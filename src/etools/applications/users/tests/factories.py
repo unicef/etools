@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.db.models import signals
@@ -101,6 +102,9 @@ class UserFactory(factory.django.DjangoModelFactory):
 
         if extracted:
             if UNICEF_USER in extracted:
+                self.email = f"user{self.id}{settings.UNICEF_USER_EMAIL}"
+                self.save(update_fields=['email'])
+
                 organization = OrganizationFactory(name='UNICEF', vendor_number='UNICEF')
                 if hasattr(self, 'profile') and self.profile:
                     self.profile.organization = organization

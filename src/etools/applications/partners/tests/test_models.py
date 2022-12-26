@@ -35,7 +35,6 @@ from etools.applications.partners.tests.factories import (
     InterventionSupplyItemFactory,
     PartnerFactory,
     PartnerPlannedVisitsFactory,
-    PartnerStaffFactory,
     PlannedEngagementFactory,
     WorkspaceFileTypeFactory,
 )
@@ -1275,34 +1274,34 @@ class TestPartnerStaffMember(BaseTenantTestCase):
         )
         self.assertEqual(str(staff), "First Last (Partner)")
 
-    def test_save_update_deactivate(self):
-        partner = PartnerFactory()
-        staff = PartnerStaffFactory(
-            partner=partner,
-        )
-        self.assertTrue(staff.active)
-
-        staff.active = False
-        staff.save()
-
-        self.assertEqual(staff.user.is_active, False)
-        self.assertEqual(staff.user.profile.country, None)
-        self.assertEqual(staff.user.profile.countries_available.filter(id=connection.tenant.id).exists(), False)
-
-    def test_save_update_reactivate(self):
-        partner = PartnerFactory()
-        staff = PartnerStaffFactory(
-            partner=partner,
-            active=False,
-        )
-        self.assertFalse(staff.active)
-
-        staff.active = True
-        staff.save()
-
-        self.assertEqual(staff.user.is_active, True)
-        self.assertEqual(staff.user.profile.country, connection.tenant)
-        self.assertEqual(staff.user.profile.countries_available.filter(id=connection.tenant.id).exists(), True)
+    # def test_save_update_deactivate(self):
+    #     partner = PartnerFactory()
+    #     staff = PartnerStaffFactory(
+    #         partner=partner,
+    #     )
+    #     self.assertTrue(staff.active)
+    #
+    #     staff.active = False
+    #     staff.save()
+    #
+    #     self.assertEqual(staff.user.is_active, False)
+    #     self.assertEqual(staff.user.profile.country, None)
+    #     self.assertEqual(staff.user.profile.countries_available.filter(id=connection.tenant.id).exists(), False)
+    #
+    # def test_save_update_reactivate(self):
+    #     partner = PartnerFactory()
+    #     staff = PartnerStaffFactory(
+    #         partner=partner,
+    #         active=False,
+    #     )
+    #     self.assertFalse(staff.active)
+    #
+    #     staff.active = True
+    #     staff.save()
+    #
+    #     self.assertEqual(staff.user.is_active, True)
+    #     self.assertEqual(staff.user.profile.country, connection.tenant)
+    #     self.assertEqual(staff.user.profile.countries_available.filter(id=connection.tenant.id).exists(), True)
 
 
 class TestAssessment(BaseTenantTestCase):
@@ -1817,10 +1816,10 @@ class TestStrUnicode(TestCase):
     def test_partner_staff_member(self):
         partner = PartnerFactory.build(organization=OrganizationFactory(name='partner'))
 
-        instance = PartnerStaffFactory.build(first_name='xyz', partner=partner)
+        instance = UserFactory.build(first_name='xyz', profile__organization=partner.organization)
         self.assertTrue(str(instance).startswith('xyz'))
 
-        instance = PartnerStaffFactory.build(first_name='R\xe4dda Barnen', partner=partner)
+        instance = UserFactory.build(first_name='R\xe4dda Barnen', profile__organization=partner.organization)
         self.assertTrue(str(instance).startswith('R\xe4dda Barnen'))
 
     def test_agreement(self):

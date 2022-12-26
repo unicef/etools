@@ -4,7 +4,8 @@ from django.urls import reverse
 from rest_framework import status
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
-from etools.applications.partners.tests.factories import PartnerStaffFactory
+from etools.applications.organizations.tests.factories import OrganizationFactory
+from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.users.tests.factories import UserFactory
 
 
@@ -12,8 +13,12 @@ class TestPMPDropdownsListApiView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
-        cls.partner_user = UserFactory(is_staff=False)
-        PartnerStaffFactory(email=cls.partner_user.email, user=cls.partner_user)
+        cls.organization = OrganizationFactory()
+        PartnerFactory(organization=cls.organization)
+        cls.partner_user = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=cls.organization
+        )
         cls.url = reverse('pmp_v3:dropdown-dynamic-list')
         cls.default_elements = [
             'agency_choices',
@@ -58,7 +63,7 @@ class TestPMPDropdownsListApiView(BaseTenantTestCase):
         )
 
     def test_partner_data(self):
-        with self.assertNumQueries(8):
+        with self.assertNumQueries(10):
             response = self.forced_auth_req('get', self.url, self.partner_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertListEqual(
