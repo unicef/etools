@@ -14,6 +14,16 @@ def migrate_engagement_staff_members_to_users(apps, schema_editor):
         e.staff_members.add(*[staff_member.user for staff_member in e.old_staff_members.all().select_related('user')])
 
 
+def migrate_engagement_authorized_officers_to_users(apps, schema_editor):
+    if connection.tenant.schema_name in ["public", "test"]:
+        return
+
+    Engagement = apps.get_model('audit', 'Engagement')
+
+    for e in Engagement.objects.all():
+        e.authorized_officers.add(*[staff_member.user for staff_member in e.old_authorized_officers.all().select_related('user')])
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -29,9 +39,19 @@ class Migration(migrations.Migration):
             name='staff_members',
             field=models.ManyToManyField(related_name='engagements', to=settings.AUTH_USER_MODEL, verbose_name='Staff Members'),
         ),
+        migrations.AddField(
+            model_name='engagement',
+            name='authorized_officers',
+            field=models.ManyToManyField(related_name='engagement_authorizations', to=settings.AUTH_USER_MODEL, verbose_name='Authorized Officers', blank=True),
+        ),
         migrations.RunPython(migrate_engagement_staff_members_to_users, migrations.RunPython.noop),
+        migrations.RunPython(migrate_engagement_authorized_officers_to_users, migrations.RunPython.noop),
         migrations.RemoveField(
             model_name='engagement',
             name='old_staff_members',
+        ),
+        migrations.RemoveField(
+            model_name='engagement',
+            name='old_authorized_officers',
         ),
     ]

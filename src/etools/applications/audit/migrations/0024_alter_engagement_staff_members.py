@@ -17,4 +17,9 @@ class Migration(migrations.Migration):
             old_name='staff_members',
             new_name='old_staff_members',
         ),
+        migrations.RenameField(
+            model_name='engagement',
+            old_name='authorized_officers',
+            new_name='old_authorized_officers',
+        ),
     ]
