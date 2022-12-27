@@ -131,9 +131,7 @@ msgid "Output"
 msgstr "Produit"
 
 #: models.py:97
-#, fuzzy
-#| msgid "PD/SSFA"
-msgid "PD/SPD"
+msgid "PD/SSFA"
 msgstr "PD/SSFA"
 
 #: models.py:100

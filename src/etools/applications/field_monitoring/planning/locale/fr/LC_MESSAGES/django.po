@@ -23,46 +23,34 @@ msgid "TPM Partner selected for staff activity"
 msgstr "Partenaire TPM sélectionné pour l'activité du personnel"
 
 #: activity_validation/validations/basic.py:23
-#, fuzzy
-#| msgid "Staff members doesn't belong to the selected partner"
 msgid "Staff members do not belong to the selected partner"
 msgstr "Les membres du personnel n'appartiennent pas au partenaire sélectionné"
 
 #: activity_validation/validations/basic.py:36
-#, fuzzy, python-format
-#| msgid ""
-#| "You've selected a PD/SSFA and unselected some of it's corresponding "
-#| "partners, please either remove the PD or add the partners back before "
-#| "saving: {}"
+#, python-format
 msgid ""
 "You've selected a PD/SPD and unselected some of it's corresponding partners, "
 "please either remove the PD or add the partners back before saving: %s"
 msgstr ""
 "Vous avez sélectionné un PD/SSFA et désélectionné certains de ses "
 "partenaires correspondants, veuillez supprimer le PD ou rajouter les "
-"partenaires avant de sauvegarder: {}"
+"partenaires avant de sauvegarder: %s"
 
 #: activity_validation/validations/basic.py:55
-#, fuzzy, python-format
-#| msgid ""
-#| "You've selected a PD/SSFA and unselected some of it's corresponding "
-#| "outputs, please either remove the PD or add the outputs back before "
-#| "saving: {}"
+#, python-format
 msgid ""
 "You've selected a PD/SPD and unselected some of it's corresponding outputs, "
 "please either remove the PD or add the outputs back before saving: %s"
 msgstr ""
 "Vous avez sélectionné un PD/SSFA et désélectionné certaines de ses produits "
 "correspondantes, veuillez supprimer le PD ou rajouter les produits avant "
-"d'enregistrer: {}"
+"d'enregistrer: %s"
 
 #: activity_validation/validations/state.py:11
 msgid "Partner is not defined for TPM activity"
 msgstr "Le partenaire n'est pas défini pour l'activité TPM"
 
 #: activity_validation/validations/state.py:17
-#, fuzzy
-#| msgid "At least one Partner, CP Output, or PD/SSFA should be added"
 msgid "At least one Partner, CP Output or PD/SPD should be added"
 msgstr ""
 "Au moins un partenaire, un produit du CP ou un PD/SSFA doit être ajouté"
@@ -246,8 +234,6 @@ msgid "Site"
 msgstr "Site"
 
 #: models.py:255
-#, fuzzy
-#| msgid "PD/SSFA"
 msgid "PD/SPD"
 msgstr "PD/SSFA"
 
@@ -308,10 +294,9 @@ msgid "Document Type"
 msgstr "Type de document"
 
 #: serializers.py:191
-#, fuzzy, python-format
-#| msgid "[Inactive] {}"
+#, python-format
 msgid "[Inactive] %s"
-msgstr "[Inactif] {}"
+msgstr "[Inactif] %s"
 
 #: serializers.py:213
 msgid "Reference No."

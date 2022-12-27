@@ -156,16 +156,12 @@ msgid "Workspace code provided is not a valid business_area_code: %s"
 msgstr ""
 
 #: views.py:92
-#, fuzzy
-#| msgid "Information source is required"
 msgid "Workspace is required"
-msgstr "La source d'information est requise"
+msgstr ""
 
 #: views.py:102
-#, fuzzy
-#| msgid "Information source is required"
 msgid "User is required"
-msgstr "La source d'information est requise"
+msgstr ""
 
 #: views.py:114
 msgid "Unable to fill checklists for current activity"
