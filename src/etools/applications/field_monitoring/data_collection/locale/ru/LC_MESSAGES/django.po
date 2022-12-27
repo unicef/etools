@@ -16,63 +16,65 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"Plural-Forms: nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
+"%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || (n"
+"%100>=11 && n%100<=14)? 2 : 3);\n"
 
 #: models.py:25 models.py:49 models.py:135 models.py:182
 msgid "Activity"
-msgstr "Activité"
+msgstr ""
 
 #: models.py:27
 msgid "Question"
-msgstr "Question"
+msgstr ""
 
 #: models.py:31
 msgid "Question Text"
-msgstr "Texte de la question"
+msgstr ""
 
 #: models.py:32
 msgid "Count as HACT"
-msgstr "Compter comme HACT"
+msgstr ""
 
 #: models.py:34
 msgid "Specific Details To Probe"
-msgstr "Détails spécifiques à sonder"
+msgstr ""
 
 #: models.py:35
 msgid "Enabled"
-msgstr "Activé"
+msgstr ""
 
 #: models.py:40 models.py:113
 msgid "Activity Question"
-msgstr "Question d'activité"
+msgstr ""
 
 #: models.py:41
 msgid "Activity Questions"
-msgstr "Questions d'activité"
+msgstr ""
 
 #: models.py:51
 msgid "Methods"
-msgstr "Méthodes"
+msgstr ""
 
 #: models.py:52
 msgid "Information Source"
-msgstr "Source d'informatioon"
+msgstr ""
 
 #: models.py:53
 msgid "Author"
-msgstr "Auteur"
+msgstr ""
 
 #: models.py:57
 msgid "Started Checklist"
-msgstr "Liste de contrôle commencée"
+msgstr ""
 
 #: models.py:58
 msgid "Started Checklists"
-msgstr "Listes de contrôle commencées"
+msgstr ""
 
 #: models.py:110 models.py:157
 msgid "Checklist"
-msgstr "Liste de contrôle"
+msgstr ""
 
 #: models.py:114 models.py:136
 msgid "Value"
@@ -80,51 +82,51 @@ msgstr ""
 
 #: models.py:119
 msgid "Checklist Finding"
-msgstr "Liste de vérification"
+msgstr ""
 
 #: models.py:120
 msgid "Checklist Findings"
-msgstr "Liste de vérifications"
+msgstr ""
 
 #: models.py:139
 msgid "Overall Activity Question Finding"
-msgstr "Conclusion générale relative à la question"
+msgstr ""
 
 #: models.py:140
 msgid "Overall Activity Question Findings"
-msgstr "Conclusions générales relatives à la question"
+msgstr ""
 
 #: models.py:158 models.py:183
 msgid "Narrative Finding"
-msgstr "Conclusion narrative"
+msgstr ""
 
 #: models.py:159
 msgid "Attachments"
-msgstr "Pièces jointes"
+msgstr ""
 
 #: models.py:164
 msgid "Checklist Overall Finding"
-msgstr "Liste de conclusion générale"
+msgstr ""
 
 #: models.py:165
 msgid "Checklist Overall Findings"
-msgstr "Liste de conclusions générales"
+msgstr ""
 
 #: models.py:189
 msgid "Activity Overall Finding"
-msgstr "Conclusion générale de l'activité"
+msgstr ""
 
 #: models.py:190
 msgid "Activity Overall Findings"
-msgstr "Conclusions générales de l'activité"
+msgstr ""
 
 #: offline/blueprint.py:48
 msgid "Source of Information"
-msgstr "Source d'information"
+msgstr ""
 
 #: offline/blueprint.py:70
 msgid "Overall Finding"
-msgstr "Conclusion générale"
+msgstr ""
 
 #: offline/helpers.py:55
 #, python-format
@@ -144,11 +146,11 @@ msgstr ""
 
 #: serializers.py:79
 msgid "Document Type"
-msgstr "Type de document"
+msgstr ""
 
 #: serializers.py:102
 msgid "Information source is required"
-msgstr "La source d'information est requise"
+msgstr ""
 
 #: views.py:84
 #, python-format
@@ -156,16 +158,12 @@ msgid "Workspace code provided is not a valid business_area_code: %s"
 msgstr ""
 
 #: views.py:92
-#, fuzzy
-#| msgid "Information source is required"
 msgid "Workspace is required"
-msgstr "La source d'information est requise"
+msgstr ""
 
 #: views.py:102
-#, fuzzy
-#| msgid "Information source is required"
 msgid "User is required"
-msgstr "La source d'information est requise"
+msgstr ""
 
 #: views.py:114
 msgid "Unable to fill checklists for current activity"
@@ -173,4 +171,4 @@ msgstr ""
 
 #: views.py:136
 msgid "Report Attachments"
-msgstr "Pièces jointes du rapport"
+msgstr ""

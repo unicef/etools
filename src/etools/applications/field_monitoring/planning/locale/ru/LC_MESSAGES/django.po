@@ -16,80 +16,63 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"Plural-Forms: nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
+"%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || (n"
+"%100>=11 && n%100<=14)? 2 : 3);\n"
 
 #: activity_validation/validations/basic.py:12
 msgid "TPM Partner selected for staff activity"
-msgstr "Partenaire TPM sélectionné pour l'activité du personnel"
+msgstr ""
 
 #: activity_validation/validations/basic.py:23
-#, fuzzy
-#| msgid "Staff members doesn't belong to the selected partner"
 msgid "Staff members do not belong to the selected partner"
-msgstr "Les membres du personnel n'appartiennent pas au partenaire sélectionné"
+msgstr ""
 
 #: activity_validation/validations/basic.py:36
-#, fuzzy, python-format
-#| msgid ""
-#| "You've selected a PD/SSFA and unselected some of it's corresponding "
-#| "partners, please either remove the PD or add the partners back before "
-#| "saving: {}"
+#, python-format
 msgid ""
 "You've selected a PD/SPD and unselected some of it's corresponding partners, "
 "please either remove the PD or add the partners back before saving: %s"
 msgstr ""
-"Vous avez sélectionné un PD/SSFA et désélectionné certains de ses "
-"partenaires correspondants, veuillez supprimer le PD ou rajouter les "
-"partenaires avant de sauvegarder: {}"
 
 #: activity_validation/validations/basic.py:55
-#, fuzzy, python-format
-#| msgid ""
-#| "You've selected a PD/SSFA and unselected some of it's corresponding "
-#| "outputs, please either remove the PD or add the outputs back before "
-#| "saving: {}"
+#, python-format
 msgid ""
 "You've selected a PD/SPD and unselected some of it's corresponding outputs, "
 "please either remove the PD or add the outputs back before saving: %s"
 msgstr ""
-"Vous avez sélectionné un PD/SSFA et désélectionné certaines de ses produits "
-"correspondantes, veuillez supprimer le PD ou rajouter les produits avant "
-"d'enregistrer: {}"
 
 #: activity_validation/validations/state.py:11
 msgid "Partner is not defined for TPM activity"
-msgstr "Le partenaire n'est pas défini pour l'activité TPM"
+msgstr ""
 
 #: activity_validation/validations/state.py:17
-#, fuzzy
-#| msgid "At least one Partner, CP Output, or PD/SSFA should be added"
 msgid "At least one Partner, CP Output or PD/SPD should be added"
 msgstr ""
-"Au moins un partenaire, un produit du CP ou un PD/SSFA doit être ajouté"
 
 #: activity_validation/validations/state.py:23
 msgid "Rejection reason should be provided."
-msgstr "La raison du rejet doit être fournie."
+msgstr ""
 
 #: activity_validation/validations/state.py:29
 msgid "Cancellation reason should be provided."
-msgstr "Le motif de l'annulation doit être fourni."
+msgstr ""
 
 #: activity_validation/validations/state.py:35
 msgid "Report reject reason should be provided."
-msgstr "Le motif du rejet du rapport doit être fourni."
+msgstr ""
 
 #: activity_validation/validations/state.py:41
 msgid "At least one question should be enabled."
-msgstr "Au moins une question doit être activée."
+msgstr ""
 
 #: activity_validation/validations/state.py:47
 msgid "At least one checklist should be completed."
-msgstr "Au moins une liste de contrôle doit être complétée."
+msgstr ""
 
 #: activity_validation/validations/state.py:59
 msgid "At least one summary finding should be completed."
-msgstr "Au moins une conclusion sommaire doit être complétée."
+msgstr ""
 
 #: activity_validation/validator.py:42
 #, python-format
@@ -103,219 +86,216 @@ msgstr ""
 
 #: models.py:44
 msgid "Prioritization Criteria"
-msgstr "Critères de priorisation"
+msgstr ""
 
 #: models.py:45
 msgid "Methodology Notes & Standards"
-msgstr "Notes et normes méthodologiques"
+msgstr ""
 
 #: models.py:46
 msgid "Target Visits For The Year"
-msgstr "Visites cibles pour l'année"
+msgstr ""
 
 #: models.py:48
 msgid "Modalities"
-msgstr "Modalités"
+msgstr ""
 
 #: models.py:49
 msgid "Partner Engagement"
-msgstr "Engagement du partenaire"
+msgstr ""
 
 #: models.py:50
 msgid "Other Aspects of the Field Monitoring Plan"
-msgstr "Autres aspects du plan de suivi sur le terrain"
+msgstr ""
 
 #: models.py:55
 msgid "Year Plan"
-msgstr "Plan annuel"
+msgstr ""
 
 #: models.py:56
 msgid "Year Plans"
-msgstr "Plans annuels"
+msgstr ""
 
 #: models.py:76 models.py:252
 msgid "Partner"
-msgstr "Partenaires"
+msgstr ""
 
 #: models.py:78
 msgid "CP Output"
-msgstr "Produit du CP"
+msgstr ""
 
 #: models.py:80
 msgid "Intervention"
-msgstr "Intervention"
+msgstr ""
 
 #: models.py:92
 msgid "Question"
-msgstr "Question"
+msgstr ""
 
 #: models.py:94
 msgid "Is Active"
-msgstr "Est actif"
+msgstr ""
 
 #: models.py:95
 msgid "Specific Details To Probe"
-msgstr "Détails spécifiques à vérifier"
+msgstr ""
 
 #: models.py:98
 msgid "Question Template"
-msgstr "Modèle de questions"
+msgstr ""
 
 #: models.py:99
 msgid "Question Templates"
-msgstr "Modèles de questions"
+msgstr ""
 
 #: models.py:149
 msgid "Staff"
-msgstr "Personnel"
+msgstr ""
 
 #: models.py:150
 msgid "TPM"
-msgstr "TPM"
+msgstr ""
 
 #: models.py:163
 msgid "Draft"
-msgstr "Draft"
+msgstr ""
 
 #: models.py:164
 msgid "Checklist"
-msgstr "Liste de contrôle"
+msgstr ""
 
 #: models.py:165
 msgid "Review"
-msgstr "Examen"
+msgstr ""
 
 #: models.py:166
 msgid "Assigned"
-msgstr "Assigné"
+msgstr ""
 
 #: models.py:167
 msgid "Data Collection"
-msgstr "Collecte de données"
+msgstr ""
 
 #: models.py:168
 msgid "Report Finalization"
-msgstr "Finalisation du rapport"
+msgstr ""
 
 #: models.py:169
 msgid "Submitted"
-msgstr "Soumis"
+msgstr ""
 
 #: models.py:170
 msgid "Completed"
-msgstr "Complété"
+msgstr ""
 
 #: models.py:171
 msgid "Cancelled"
-msgstr "Annulé"
+msgstr ""
 
 #: models.py:223
 msgid "Reference Number"
-msgstr "Numéro de réference"
+msgstr ""
 
 #: models.py:233
 msgid "TPM Partner"
-msgstr "Partenaire TPM"
+msgstr ""
 
 #: models.py:235
 msgid "Team Members"
-msgstr "Membres de l'équipe"
+msgstr ""
 
 #: models.py:238
 msgid "Person Responsible"
-msgstr "Personne responsable"
+msgstr ""
 
 #: models.py:241
 msgid "Field Office"
-msgstr "Bureau de terrain"
+msgstr ""
 
 #: models.py:243
 msgid "Field Offices"
-msgstr "Bureaux de terrain"
+msgstr ""
 
 #: models.py:245
 msgid "Sections"
-msgstr "Sections"
+msgstr ""
 
 #: models.py:247
 msgid "Location"
-msgstr "Localisation"
+msgstr ""
 
 #: models.py:249
 msgid "Site"
-msgstr "Site"
+msgstr ""
 
 #: models.py:255
-#, fuzzy
-#| msgid "PD/SSFA"
 msgid "PD/SPD"
-msgstr "PD/SSFA"
+msgstr ""
 
 #: models.py:256
 msgid "Outputs"
-msgstr "Produits"
+msgstr ""
 
 #: models.py:259
 msgid "Start Date"
-msgstr "Date de début"
+msgstr ""
 
 #: models.py:260
 msgid "End Date"
-msgstr "Date de fin"
+msgstr ""
 
 #: models.py:262
 msgid "Status"
-msgstr "Statut"
+msgstr ""
 
 #: models.py:264 models.py:266
 msgid "Activity Attachments"
-msgstr "Pièces jointes d'activité"
+msgstr ""
 
 #: models.py:269
 msgid "Rejection reason"
-msgstr "Motif de rejet"
+msgstr ""
 
 #: models.py:270
 msgid "Report rejection reason"
-msgstr "Signaler le motif du rejet"
+msgstr ""
 
 #: models.py:271
 msgid "Cancellation reason"
-msgstr "Motif d'annulation"
+msgstr ""
 
 #: models.py:278
 msgid "Monitoring Activity"
-msgstr "Activité de suivi"
+msgstr ""
 
 #: models.py:279
 msgid "Monitoring Activities"
-msgstr "Activités de suivi"
+msgstr ""
 
 #: models.py:719
 msgid "Monitoring Activity Action Point"
-msgstr "Point d'action de l'activité de suivi"
+msgstr ""
 
 #: models.py:720
 msgid "Monitoring Activity Action Points"
-msgstr "Points d'action de l'activité de suivi"
+msgstr ""
 
 #: serializers.py:36 serializers.py:238
 msgid "History"
-msgstr "Historique"
+msgstr ""
 
 #: serializers.py:163
 msgid "Document Type"
-msgstr "Type de document"
+msgstr ""
 
 #: serializers.py:191
-#, fuzzy, python-format
-#| msgid "[Inactive] {}"
+#, python-format
 msgid "[Inactive] %s"
-msgstr "[Inactif] {}"
+msgstr ""
 
 #: serializers.py:213
 msgid "Reference No."
-msgstr "Numéro de référence."
+msgstr ""
 
 #: serializers.py:216
 msgid "Related Partner"
@@ -327,36 +307,36 @@ msgstr ""
 
 #: serializers.py:222
 msgid "Related CP Output"
-msgstr "Produits du CP associée"
+msgstr ""
 
 #: serializers.py:227
 msgid "Section of Assignee"
-msgstr "Section du Destinataire"
+msgstr ""
 
 #: serializers.py:231
 msgid "Office of Assignee"
-msgstr "Bureau du Destinataire"
+msgstr ""
 
 #: serializers.py:234
 msgid "Action Point Category"
-msgstr "Catégorie de point d'action"
+msgstr ""
 
 #: serializers.py:240
 msgid "Link"
-msgstr "Lien"
+msgstr ""
 
 #: serializers.py:249
 msgid "Priority"
-msgstr "Priorité"
+msgstr ""
 
 #: views.py:77
 msgid "Annual Field Monitoring Rationale"
-msgstr "Justification du suivi annuel sur le terrain"
+msgstr ""
 
 #: views.py:133
 msgid "Templates"
-msgstr "Modèles"
+msgstr ""
 
 #: views.py:329
 msgid "Attachments"
-msgstr "Pièces jointes"
+msgstr ""
