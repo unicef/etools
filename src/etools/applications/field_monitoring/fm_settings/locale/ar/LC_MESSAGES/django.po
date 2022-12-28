@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-12-27 09:27+0000\n"
+"POT-Creation-Date: 2022-12-28 09:02+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -21,179 +21,179 @@ msgstr ""
 
 #: admin.py:39 models.py:46 models.py:103
 msgid "Methods"
-msgstr ""
+msgstr "أساليب"
 
 #: export/renderers.py:14
 msgid "Site ID"
-msgstr ""
+msgstr "معرف الموقع"
 
 #: export/renderers.py:20
-msgid "Admin {} - Name"
-msgstr ""
+msgid "Admin %s - Name"
+msgstr "المسؤول %s - الاسم"
 
 #: export/renderers.py:21
-msgid "Admin {} - Type"
-msgstr ""
+msgid "Admin %s - Type"
+msgstr "المسؤول %s - النوع"
 
 #: export/renderers.py:22
-msgid "Admin {} - Pcode"
-msgstr ""
+msgid "Admin %s - Pcode"
+msgstr "المسؤول %s - Pcode"
 
 #: export/renderers.py:26 models.py:245
 msgid "Site"
-msgstr ""
+msgstr "موقع"
 
 #: export/renderers.py:27
 msgid "Lat"
-msgstr ""
+msgstr "لات"
 
 #: export/renderers.py:28
 msgid "Long"
-msgstr ""
+msgstr "طويل"
 
 #: export/renderers.py:29 models.py:189 serializers.py:130
 msgid "Active"
-msgstr ""
+msgstr "نشيط"
 
 #: export/renderers.py:40
 msgid "Related To"
-msgstr ""
+msgstr "متعلق ب"
 
 #: export/renderers.py:41 models.py:39 models.py:54 models.py:180
 msgid "Name"
-msgstr ""
+msgstr "اسم"
 
 #: export/renderers.py:42
 msgid "Issue for Attention"
-msgstr ""
+msgstr "قضية للانتباه"
 
 #: export/renderers.py:43 serializers.py:132
 msgid "Status"
-msgstr ""
+msgstr "حالة"
 
 #: export/renderers.py:44 models.py:251 views.py:206
 msgid "Attachments"
-msgstr ""
+msgstr "المرفقات"
 
 #: models.py:22 views.py:76
 msgid "Global Attachments"
-msgstr ""
+msgstr "المرفقات العالمية"
 
 #: models.py:25
 msgid "Global Config"
-msgstr ""
+msgstr "التكوين العام"
 
 #: models.py:26
 msgid "Global Configs"
-msgstr ""
+msgstr "التكوينات العالمية"
 
 #: models.py:40
 msgid "Short Name"
-msgstr ""
+msgstr "اسم قصير"
 
 #: models.py:41
 msgid "Ask for information source in checklist?"
-msgstr ""
+msgstr "اسأل عن مصدر المعلومات في قائمة التحقق؟"
 
 #: models.py:45
 msgid "Method"
-msgstr ""
+msgstr "طريقة"
 
 #: models.py:57
 msgid "Question Category"
-msgstr ""
+msgstr "فئة السؤال"
 
 #: models.py:58
 msgid "Questions Categories"
-msgstr ""
+msgstr "فئات الأسئلة"
 
 #: models.py:88
 msgid "Text"
-msgstr ""
+msgstr "نص"
 
 #: models.py:89
 msgid "Number"
-msgstr ""
+msgstr "عدد"
 
 #: models.py:90
 msgid "Boolean"
-msgstr ""
+msgstr "قيمة منطقية"
 
 #: models.py:91
 msgid "Likert Scale"
-msgstr ""
+msgstr "مقياس ليكرت"
 
 #: models.py:95 models.py:232 models.py:241
 msgid "Partner"
-msgstr ""
+msgstr "شريك"
 
 #: models.py:96
 msgid "Output"
-msgstr ""
+msgstr "انتاج |"
 
 #: models.py:97
 msgid "PD/SPD"
-msgstr ""
+msgstr "PD/SPD"
 
 #: models.py:100
 msgid "Answer Type"
-msgstr ""
+msgstr "نوع الإجابة"
 
 #: models.py:101
 msgid "Choices Size"
-msgstr ""
+msgstr "حجم الاختيارات"
 
 #: models.py:102
 msgid "Level"
-msgstr ""
+msgstr "مستوى"
 
 #: models.py:104
 msgid "Category"
-msgstr ""
+msgstr "فئة"
 
 #: models.py:105
 msgid "Sections"
-msgstr ""
+msgstr "الأقسام"
 
 #: models.py:106
 msgid "Question Text"
-msgstr ""
+msgstr "نص السؤال"
 
 #: models.py:107
 msgid "Count as HACT"
-msgstr ""
+msgstr "عد على أنها HACT"
 
 #: models.py:108
 msgid "Is Custom"
-msgstr ""
+msgstr "هو العرف"
 
 #: models.py:109
 msgid "Is Active"
-msgstr ""
+msgstr "نشط"
 
 #: models.py:114 models.py:151
 msgid "Question"
-msgstr ""
+msgstr "سؤال"
 
 #: models.py:115
 msgid "Questions"
-msgstr ""
+msgstr "أسئلة"
 
 #: models.py:152
 msgid "Label"
-msgstr ""
+msgstr "مُلصَق"
 
 #: models.py:155
 msgid "Value"
-msgstr ""
+msgstr "قيمة"
 
 #: models.py:158 models.py:159
 msgid "Option"
-msgstr ""
+msgstr "خيار"
 
 #: models.py:175
 msgid "Parent Location"
-msgstr ""
+msgstr "موقع الوالد"
 
 #: models.py:182
 msgid "P Code"
@@ -201,76 +201,76 @@ msgstr ""
 
 #: models.py:188
 msgid "Point"
-msgstr ""
+msgstr "نقطة"
 
 #: models.py:194
 msgid "Location Site"
-msgstr ""
+msgstr "موقع الموقع"
 
 #: models.py:195
 msgid "Location Sites"
-msgstr ""
+msgstr "مواقع الموقع"
 
 #: models.py:231 models.py:239
 msgid "CP Output"
-msgstr ""
+msgstr "خرج CP"
 
 #: models.py:233
 msgid "Location/Site"
-msgstr ""
+msgstr "الموقع / الموقع"
 
 #: models.py:237
 msgid "Issue Raised By"
-msgstr ""
+msgstr "قضية أثارها"
 
 #: models.py:243
 msgid "Location"
-msgstr ""
+msgstr "موقع"
 
 #: models.py:248
 msgid "Issue For Attention/Probing"
-msgstr ""
+msgstr "قضية للاهتمام / التحقيق"
 
 #: models.py:256
 msgid "Log Issue"
-msgstr ""
+msgstr "مشكلة في السجل"
 
 #: models.py:257
 msgid "Log Issues"
-msgstr ""
+msgstr "قضايا السجل"
 
 #: models.py:268
 msgid "Related object not provided"
-msgstr ""
+msgstr "لم يتم توفير الكائن ذي الصلة"
 
 #: models.py:271
 msgid "Maximum one related object should be provided"
-msgstr ""
+msgstr "يجب توفير كائن واحد مرتبط كحد أقصى"
 
 #: serializers.py:85
 msgid "HACT questions can only be related at the Partner Organization Level"
-msgstr ""
+msgstr "لا يمكن ربط أسئلة HACT إلا على مستوى المؤسسة الشريكة"
 
 #: serializers.py:88
 msgid "Only one hact question can be active at any time."
-msgstr ""
+msgstr "يمكن أن يكون سؤال hact واحد فقط نشطًا في أي وقت."
 
 #: serializers.py:102
 msgid "The system provided questions cannot be edited."
-msgstr ""
+msgstr "لا يمكن تحرير الأسئلة المقدمة من النظام."
 
 #: serializers.py:131
 msgid "Inactive"
-msgstr ""
+msgstr "غير نشط"
 
 #: serializers.py:188
 msgid "Issue Closed By"
-msgstr ""
+msgstr "تم إغلاق الإصدار من قبل"
 
 #: serializers.py:190
 msgid "Issue Related To"
-msgstr ""
+msgstr "قضية متعلقة ب"
 
 #: views.py:110
 msgid "Site Specific Locations"
-msgstr ""
+msgstr "مواقع محددة الموقع"

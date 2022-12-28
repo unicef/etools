@@ -17,9 +17,9 @@ class LocationSiteCSVRenderer(CSVRenderer):
         for i in range(self.max_admin_level):
             level = i + 1
             labels.update({
-                'parents_info.admin_{}_name'.format(level): _('Admin {} - Name').format(level),
-                'parents_info.admin_{}_type'.format(level): _('Admin {} - Type').format(level),
-                'parents_info.admin_{}_pcode'.format(level): _('Admin {} - Pcode').format(level),
+                'parents_info.admin_{}_name'.format(level): _('Admin %s - Name') % level,
+                'parents_info.admin_{}_type'.format(level): _('Admin %s - Type') % level,
+                'parents_info.admin_{}_pcode'.format(level): _('Admin %s - Pcode') % level,
             })
 
         labels.update({

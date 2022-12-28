@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-12-27 09:27+0000\n"
+"POT-Creation-Date: 2022-12-28 09:02+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -20,256 +20,256 @@ msgstr ""
 
 #: admin.py:39 models.py:46 models.py:103
 msgid "Methods"
-msgstr ""
+msgstr "Métodos"
 
 #: export/renderers.py:14
 msgid "Site ID"
-msgstr ""
+msgstr "Identificação do sítio"
 
 #: export/renderers.py:20
-msgid "Admin {} - Name"
-msgstr ""
+msgid "Admin %s - Name"
+msgstr "Admin %s - Nome"
 
 #: export/renderers.py:21
-msgid "Admin {} - Type"
-msgstr ""
+msgid "Admin %s - Type"
+msgstr "Admin %s - Tipo"
 
 #: export/renderers.py:22
-msgid "Admin {} - Pcode"
-msgstr ""
+msgid "Admin %s - Pcode"
+msgstr "Admin %s - Pcode"
 
 #: export/renderers.py:26 models.py:245
 msgid "Site"
-msgstr ""
+msgstr "Sítio"
 
 #: export/renderers.py:27
 msgid "Lat"
-msgstr ""
+msgstr "Lat"
 
 #: export/renderers.py:28
 msgid "Long"
-msgstr ""
+msgstr "Longo"
 
 #: export/renderers.py:29 models.py:189 serializers.py:130
 msgid "Active"
-msgstr ""
+msgstr "Activo"
 
 #: export/renderers.py:40
 msgid "Related To"
-msgstr ""
+msgstr "Relacionado com"
 
 #: export/renderers.py:41 models.py:39 models.py:54 models.py:180
 msgid "Name"
-msgstr ""
+msgstr "Nome"
 
 #: export/renderers.py:42
 msgid "Issue for Attention"
-msgstr ""
+msgstr "Questão a ter em atenção"
 
 #: export/renderers.py:43 serializers.py:132
 msgid "Status"
-msgstr ""
+msgstr "Estado"
 
 #: export/renderers.py:44 models.py:251 views.py:206
 msgid "Attachments"
-msgstr ""
+msgstr "Anexos"
 
 #: models.py:22 views.py:76
 msgid "Global Attachments"
-msgstr ""
+msgstr "Anexos Globais"
 
 #: models.py:25
 msgid "Global Config"
-msgstr ""
+msgstr "Configuração global"
 
 #: models.py:26
 msgid "Global Configs"
-msgstr ""
+msgstr "Configuração global"
 
 #: models.py:40
 msgid "Short Name"
-msgstr ""
+msgstr "Nome curto"
 
 #: models.py:41
 msgid "Ask for information source in checklist?"
-msgstr ""
+msgstr "Pedir fonte de informação na lista de verificação?"
 
 #: models.py:45
 msgid "Method"
-msgstr ""
+msgstr "Método"
 
 #: models.py:57
 msgid "Question Category"
-msgstr ""
+msgstr "Categoria da pergunta"
 
 #: models.py:58
 msgid "Questions Categories"
-msgstr ""
+msgstr "Perguntas Categorias"
 
 #: models.py:88
 msgid "Text"
-msgstr ""
+msgstr "Texto"
 
 #: models.py:89
 msgid "Number"
-msgstr ""
+msgstr "Número"
 
 #: models.py:90
 msgid "Boolean"
-msgstr ""
+msgstr "Booleano"
 
 #: models.py:91
 msgid "Likert Scale"
-msgstr ""
+msgstr "Escala de Likert"
 
 #: models.py:95 models.py:232 models.py:241
 msgid "Partner"
-msgstr ""
+msgstr "Parceiro"
 
 #: models.py:96
 msgid "Output"
-msgstr ""
+msgstr "Saída"
 
 #: models.py:97
 msgid "PD/SPD"
-msgstr ""
+msgstr "PD/SPD"
 
 #: models.py:100
 msgid "Answer Type"
-msgstr ""
+msgstr "Tipo de resposta"
 
 #: models.py:101
 msgid "Choices Size"
-msgstr ""
+msgstr "Escolha Tamanho"
 
 #: models.py:102
 msgid "Level"
-msgstr ""
+msgstr "Nível"
 
 #: models.py:104
 msgid "Category"
-msgstr ""
+msgstr "Categoria"
 
 #: models.py:105
 msgid "Sections"
-msgstr ""
+msgstr "Secções"
 
 #: models.py:106
 msgid "Question Text"
-msgstr ""
+msgstr "Texto da Pergunta"
 
 #: models.py:107
 msgid "Count as HACT"
-msgstr ""
+msgstr "Conte como HACT"
 
 #: models.py:108
 msgid "Is Custom"
-msgstr ""
+msgstr "É Personalizado"
 
 #: models.py:109
 msgid "Is Active"
-msgstr ""
+msgstr "Está activo"
 
 #: models.py:114 models.py:151
 msgid "Question"
-msgstr ""
+msgstr "Pergunta"
 
 #: models.py:115
 msgid "Questions"
-msgstr ""
+msgstr "Perguntas"
 
 #: models.py:152
 msgid "Label"
-msgstr ""
+msgstr "Etiqueta"
 
 #: models.py:155
 msgid "Value"
-msgstr ""
+msgstr "Valor"
 
 #: models.py:158 models.py:159
 msgid "Option"
-msgstr ""
+msgstr "Opção"
 
 #: models.py:175
 msgid "Parent Location"
-msgstr ""
+msgstr "Localização dos pais"
 
 #: models.py:182
 msgid "P Code"
-msgstr ""
+msgstr "Código P"
 
 #: models.py:188
 msgid "Point"
-msgstr ""
+msgstr "Ponto"
 
 #: models.py:194
 msgid "Location Site"
-msgstr ""
+msgstr "Localização"
 
 #: models.py:195
 msgid "Location Sites"
-msgstr ""
+msgstr "Localizações"
 
 #: models.py:231 models.py:239
 msgid "CP Output"
-msgstr ""
+msgstr "CP Saída"
 
 #: models.py:233
 msgid "Location/Site"
-msgstr ""
+msgstr "Localização/local"
 
 #: models.py:237
 msgid "Issue Raised By"
-msgstr ""
+msgstr "Edição Criada por"
 
 #: models.py:243
 msgid "Location"
-msgstr ""
+msgstr "Localização"
 
 #: models.py:248
 msgid "Issue For Attention/Probing"
-msgstr ""
+msgstr "Questão para atenção/Probing"
 
 #: models.py:256
 msgid "Log Issue"
-msgstr ""
+msgstr "Emissão de log"
 
 #: models.py:257
 msgid "Log Issues"
-msgstr ""
+msgstr "Questões de registo"
 
 #: models.py:268
 msgid "Related object not provided"
-msgstr ""
+msgstr "Objecto relacionado não fornecido"
 
 #: models.py:271
 msgid "Maximum one related object should be provided"
-msgstr ""
+msgstr "Deve ser fornecido, no máximo, um objecto relacionado"
 
 #: serializers.py:85
 msgid "HACT questions can only be related at the Partner Organization Level"
-msgstr ""
+msgstr "As perguntas HACT só podem ser relacionadas ao nível da Organização Parceira"
 
 #: serializers.py:88
 msgid "Only one hact question can be active at any time."
-msgstr ""
+msgstr "Apenas uma pergunta de facto pode estar activa em qualquer altura."
 
 #: serializers.py:102
 msgid "The system provided questions cannot be edited."
-msgstr ""
+msgstr "O sistema previa que as perguntas não podiam ser editadas."
 
 #: serializers.py:131
 msgid "Inactive"
-msgstr ""
+msgstr "Inactivo"
 
 #: serializers.py:188
 msgid "Issue Closed By"
-msgstr ""
+msgstr "Edição Encerrada por"
 
 #: serializers.py:190
 msgid "Issue Related To"
-msgstr ""
+msgstr "Questão relacionada com"
 
 #: views.py:110
 msgid "Site Specific Locations"
-msgstr ""
+msgstr "Localizações específicas do local"
