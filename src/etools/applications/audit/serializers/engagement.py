@@ -43,7 +43,6 @@ from etools.applications.partners.serializers.interventions_v2 import BaseInterv
 from etools.applications.partners.serializers.partner_organization_v2 import (
     MinimalPartnerOrganizationListSerializer,
     PartnerOrganizationListSerializer,
-    PartnerStaffMemberNestedSerializer,
 )
 from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
 from etools.applications.reports.serializers.v1 import SectionSerializer
@@ -262,7 +261,7 @@ class EngagementSerializer(
         label=_('Programme Document(s) or SSFA(s) - (optional)'), required=False
     )
     authorized_officers = SeparatedReadWriteField(
-        read_field=PartnerStaffMemberNestedSerializer(many=True, read_only=True), label=_('Authorized Officers')
+        read_field=MinimalUserSerializer(many=True, read_only=True), label=_('Authorized Officers')
     )
     users_notified = SeparatedReadWriteField(
         read_field=MinimalUserSerializer(many=True, read_only=True), required=False, label=_('Notified When Completed')

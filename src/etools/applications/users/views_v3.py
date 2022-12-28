@@ -330,12 +330,11 @@ class ExternalUserViewSet(
     permission_classes = (IsAdminUser, )
 
     def get_queryset(self):
-        from etools.applications.audit.purchase_order.models import AuditorStaffMember
         from etools.applications.tpm.tpmpartners.models import TPMPartnerStaffMember
 
         external_psea_group, _ = Group.objects.get_or_create(name="PSEA Assessor")
         qs = self.queryset.filter(
-            realms__country__schema_name=connection.schema_name,
+            realms__country=connection.tenant,
             realms__group=external_psea_group
         )
 
@@ -344,13 +343,15 @@ class ExternalUserViewSet(
         tpm_staff = TPMPartnerStaffMember.objects.filter(
             user__pk=OuterRef("pk"),
         )
-        audit_staff = AuditorStaffMember.objects.filter(
-            user__pk=OuterRef("pk"),
+        audit_staff = get_user_model().objects.filter(
+            pk=OuterRef("pk"),
+            realms__country=connection.tenant,
+            realms__organization__auditorfirm__isnull=False,
         )
         qs = qs.exclude(
             pk__in=Subquery(tpm_staff.values("user_id"))
         ).exclude(
-            pk__in=Subquery(audit_staff.values("user_id"))
+            pk__in=Subquery(audit_staff.values("pk"))
         )
 
         return qs

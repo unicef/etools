@@ -15,7 +15,6 @@ from etools.applications.attachments.tests.factories import AttachmentFileTypeFa
 from etools.applications.audit.models import RiskBluePrint
 from etools.applications.audit.tests.factories import (
     AuditFocalPointUserFactory,
-    AuditorStaffMemberFactory,
     AuditorUserFactory,
     AuditPartnerFactory,
     RiskFactory,
@@ -71,8 +70,7 @@ class EngagementTransitionsTestCaseMixin(AuditTestCaseMixin):
         self.engagement.save()
 
     def _add_attachment(self, code, name='audit'):
-        with tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix=".trash",
-                                         dir=settings.MEDIA_ROOT) as temporary_file:
+        with tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix=".trash") as temporary_file:
             try:
                 temporary_file.write(b'\x04\x02')
                 temporary_file.seek(0)
@@ -131,8 +129,8 @@ class EngagementTransitionsTestCaseMixin(AuditTestCaseMixin):
         self.engagement = self.engagement_factory(agreement__auditor_firm=self.auditor_firm)
         self.engagement.users_notified.add(SimpleUserFactory(first_name='To be Notified'))
 
-        self.non_engagement_auditor = AuditorStaffMemberFactory(
-            user__first_name='Auditor 2',
-            auditor_firm=self.auditor_firm,
-            user__profile__organization=self.auditor_firm.organization
-        ).user
+        self.non_engagement_auditor = AuditorUserFactory(
+            first_name='Auditor 2',
+            partner_firm=self.auditor_firm,
+            profile__organization=self.auditor_firm.organization
+        )

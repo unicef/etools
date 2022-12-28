@@ -142,7 +142,7 @@ class AssessmentViewSet(
         user = self.request.user
         # if the user is not unicef, filter only what they can see
         if not user.is_unicef_user():
-            qs = qs.filter(Q(assessor__auditor_firm_staff__user=user) | Q(assessor__user=user))
+            qs = qs.filter(Q(assessor__auditor_firm_staff=user) | Q(assessor__user=user))
         if "sort" in self.request.GET:
             qs = qs.order_by(*self.parse_sort_params())
         return qs
