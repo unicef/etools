@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-12-27 09:58+0000\n"
+"POT-Creation-Date: 2022-12-28 10:16+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -21,11 +21,11 @@ msgstr ""
 
 #: activity_validation/validations/basic.py:12
 msgid "TPM Partner selected for staff activity"
-msgstr ""
+msgstr "اختيار شريك TPM لنشاط الموظفين"
 
 #: activity_validation/validations/basic.py:23
 msgid "Staff members do not belong to the selected partner"
-msgstr ""
+msgstr "لا ينتمي الموظفون إلى الشريك المختار"
 
 #: activity_validation/validations/basic.py:36
 #, python-format
@@ -33,6 +33,8 @@ msgid ""
 "You've selected a PD/SPD and unselected some of it's corresponding partners, "
 "please either remove the PD or add the partners back before saving: %s"
 msgstr ""
+"لقد حددت PD / SPD وألغيت تحديد بعض الشركاء المطابقين لها ، يرجى إما إزالة PD "
+"أو إضافة الشركاء مرة أخرى قبل الحفظ:%s"
 
 #: activity_validation/validations/basic.py:55
 #, python-format
@@ -40,116 +42,118 @@ msgid ""
 "You've selected a PD/SPD and unselected some of it's corresponding outputs, "
 "please either remove the PD or add the outputs back before saving: %s"
 msgstr ""
+"لقد حددت PD / SPD وألغيت تحديد بعض النواتج المقابلة لها ، يرجى إما إزالة PD "
+"أو إضافة النواتج مرة أخرى قبل الحفظ:%s"
 
 #: activity_validation/validations/state.py:11
 msgid "Partner is not defined for TPM activity"
-msgstr ""
+msgstr "لم يتم تعريف الشريك لنشاط TPM"
 
 #: activity_validation/validations/state.py:17
 msgid "At least one Partner, CP Output or PD/SPD should be added"
-msgstr ""
+msgstr "يجب إضافة شريك واحد على الأقل أو إخراج CP أو PD / SPD"
 
 #: activity_validation/validations/state.py:23
 msgid "Rejection reason should be provided."
-msgstr ""
+msgstr "يجب تقديم سبب الرفض."
 
 #: activity_validation/validations/state.py:29
 msgid "Cancellation reason should be provided."
-msgstr ""
+msgstr "يجب تقديم سبب الإلغاء."
 
 #: activity_validation/validations/state.py:35
 msgid "Report reject reason should be provided."
-msgstr ""
+msgstr "يجب تقديم سبب رفض التقرير."
 
 #: activity_validation/validations/state.py:41
 msgid "At least one question should be enabled."
-msgstr ""
+msgstr "يجب تمكين سؤال واحد على الأقل."
 
 #: activity_validation/validations/state.py:47
 msgid "At least one checklist should be completed."
-msgstr ""
+msgstr "يجب إكمال قائمة تحقق واحدة على الأقل."
 
 #: activity_validation/validations/state.py:59
 msgid "At least one summary finding should be completed."
-msgstr ""
+msgstr "يجب إكمال نتيجة موجزة واحدة على الأقل."
 
 #: activity_validation/validator.py:42
 #, python-format
 msgid "Required fields not completed in %(status)s: %(fields)s"
-msgstr ""
+msgstr "الحقول المطلوبة غير مكتملة في %(status)s: %(fields)s "
 
 #: activity_validation/validator.py:55
 #, python-format
 msgid "Cannot change fields while in %(status)s: %(field)s"
-msgstr ""
+msgstr "لا يمكن تغيير الحقول أثناء وجودك في %(status)s: %(field)s"
 
 #: models.py:44
 msgid "Prioritization Criteria"
-msgstr ""
+msgstr "معايير ترتيب الأولويات"
 
 #: models.py:45
 msgid "Methodology Notes & Standards"
-msgstr ""
+msgstr "ملاحظات المنهجية"
 
 #: models.py:46
 msgid "Target Visits For The Year"
-msgstr ""
+msgstr "الزيارات المستهدفة للعام"
 
 #: models.py:48
 msgid "Modalities"
-msgstr ""
+msgstr "الطرائق"
 
 #: models.py:49
 msgid "Partner Engagement"
-msgstr ""
+msgstr "مشاركة الشريك"
 
 #: models.py:50
 msgid "Other Aspects of the Field Monitoring Plan"
-msgstr ""
+msgstr "جوانب أخرى لخطة الرصد الميداني"
 
 #: models.py:55
 msgid "Year Plan"
-msgstr ""
+msgstr "الخطة السنوية"
 
 #: models.py:56
 msgid "Year Plans"
-msgstr ""
+msgstr "الخطط السنوية"
 
 #: models.py:76 models.py:252
 msgid "Partner"
-msgstr ""
+msgstr "شريك"
 
 #: models.py:78
 msgid "CP Output"
-msgstr ""
+msgstr "إخراج CP"
 
 #: models.py:80
 msgid "Intervention"
-msgstr ""
+msgstr "التدخل"
 
 #: models.py:92
 msgid "Question"
-msgstr ""
+msgstr "سؤال"
 
 #: models.py:94
 msgid "Is Active"
-msgstr ""
+msgstr "نشط"
 
 #: models.py:95
 msgid "Specific Details To Probe"
-msgstr ""
+msgstr "تفاصيل محددة للتحقيق"
 
 #: models.py:98
 msgid "Question Template"
-msgstr ""
+msgstr "نموذج السؤال"
 
 #: models.py:99
 msgid "Question Templates"
-msgstr ""
+msgstr "قوالب الأسئلة"
 
 #: models.py:149
 msgid "Staff"
-msgstr ""
+msgstr "الطاقم"
 
 #: models.py:150
 msgid "TPM"
@@ -161,181 +165,181 @@ msgstr ""
 
 #: models.py:164
 msgid "Checklist"
-msgstr ""
+msgstr "قائمة التحقق"
 
 #: models.py:165
 msgid "Review"
-msgstr ""
+msgstr "مراجعة"
 
 #: models.py:166
 msgid "Assigned"
-msgstr ""
+msgstr "معين"
 
 #: models.py:167
 msgid "Data Collection"
-msgstr ""
+msgstr "جمع البيانات"
 
 #: models.py:168
 msgid "Report Finalization"
-msgstr ""
+msgstr "إنهاء التقرير"
 
 #: models.py:169
 msgid "Submitted"
-msgstr ""
+msgstr "مقدم"
 
 #: models.py:170
 msgid "Completed"
-msgstr ""
+msgstr "اكتمل"
 
 #: models.py:171
 msgid "Cancelled"
-msgstr ""
+msgstr "ملغاة"
 
 #: models.py:223
 msgid "Reference Number"
-msgstr ""
+msgstr "الرقم المرجعي"
 
 #: models.py:233
 msgid "TPM Partner"
-msgstr ""
+msgstr "شريك TPM"
 
 #: models.py:235
 msgid "Team Members"
-msgstr ""
+msgstr "أعضاء الفريق"
 
 #: models.py:238
 msgid "Person Responsible"
-msgstr ""
+msgstr "الشخص المسؤول"
 
 #: models.py:241
 msgid "Field Office"
-msgstr ""
+msgstr "المكتب الميداني"
 
 #: models.py:243
 msgid "Field Offices"
-msgstr ""
+msgstr "المكاتب الميدانية"
 
 #: models.py:245
 msgid "Sections"
-msgstr ""
+msgstr "الأقسام"
 
 #: models.py:247
 msgid "Location"
-msgstr ""
+msgstr "الموقع"
 
 #: models.py:249
 msgid "Site"
-msgstr ""
+msgstr "موقع"
 
 #: models.py:255
 msgid "PD/SPD"
-msgstr ""
+msgstr "PD / SPD"
 
 #: models.py:256
 msgid "Outputs"
-msgstr ""
+msgstr "النواتج"
 
 #: models.py:259
 msgid "Start Date"
-msgstr ""
+msgstr "تاريخ البدء"
 
 #: models.py:260
 msgid "End Date"
-msgstr ""
+msgstr "تاريخ الانتهاء"
 
 #: models.py:262
 msgid "Status"
-msgstr ""
+msgstr "الحالة"
 
 #: models.py:264 models.py:266
 msgid "Activity Attachments"
-msgstr ""
+msgstr "مرفقات النشاط"
 
 #: models.py:269
 msgid "Rejection reason"
-msgstr ""
+msgstr "سبب الرفض"
 
 #: models.py:270
 msgid "Report rejection reason"
-msgstr ""
+msgstr "الإبلاغ عن سبب الرفض"
 
 #: models.py:271
 msgid "Cancellation reason"
-msgstr ""
+msgstr "سبب الإلغاء"
 
 #: models.py:278
 msgid "Monitoring Activity"
-msgstr ""
+msgstr "نشاط المراقبة"
 
 #: models.py:279
 msgid "Monitoring Activities"
-msgstr ""
+msgstr "أنشطة المراقبة"
 
 #: models.py:719
 msgid "Monitoring Activity Action Point"
-msgstr ""
+msgstr "مراقبة نشاط نقطة العمل"
 
 #: models.py:720
 msgid "Monitoring Activity Action Points"
-msgstr ""
+msgstr "مراقبة نقاط عمل النشاط"
 
 #: serializers.py:36 serializers.py:238
 msgid "History"
-msgstr ""
+msgstr "التاريخ"
 
 #: serializers.py:163
 msgid "Document Type"
-msgstr ""
+msgstr "نوع الوثيقة"
 
 #: serializers.py:191
 #, python-format
 msgid "[Inactive] %s"
-msgstr ""
+msgstr "[غير نشط] %s"
 
 #: serializers.py:213
 msgid "Reference No."
-msgstr ""
+msgstr "رقم المرجع."
 
 #: serializers.py:216
 msgid "Related Partner"
-msgstr ""
+msgstr "الشريك المرتبط"
 
 #: serializers.py:219
 msgid "Related PD/SPD"
-msgstr ""
+msgstr "PD / SPD ذات الصلة"
 
 #: serializers.py:222
 msgid "Related CP Output"
-msgstr ""
+msgstr "مخرجات CP ذات الصلة"
 
 #: serializers.py:227
 msgid "Section of Assignee"
-msgstr ""
+msgstr "قسم الوكيل"
 
 #: serializers.py:231
 msgid "Office of Assignee"
-msgstr ""
+msgstr "مكتب الوكيل"
 
 #: serializers.py:234
 msgid "Action Point Category"
-msgstr ""
+msgstr "فئة نقطة العمل"
 
 #: serializers.py:240
 msgid "Link"
-msgstr ""
+msgstr "رابط"
 
 #: serializers.py:249
 msgid "Priority"
-msgstr ""
+msgstr "الأولوية"
 
 #: views.py:77
 msgid "Annual Field Monitoring Rationale"
-msgstr ""
+msgstr "مسوغات المراقبة الميدانية السنوية"
 
 #: views.py:133
 msgid "Templates"
-msgstr ""
+msgstr "القوالب"
 
 #: views.py:329
 msgid "Attachments"
-msgstr ""
+msgstr "المرفقات"

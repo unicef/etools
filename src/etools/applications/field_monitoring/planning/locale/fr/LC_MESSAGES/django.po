@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-12-27 09:58+0000\n"
+"POT-Creation-Date: 2022-12-28 10:16+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -82,12 +82,12 @@ msgstr "Au moins une conclusion sommaire doit être complétée."
 #: activity_validation/validator.py:42
 #, python-format
 msgid "Required fields not completed in %(status)s: %(fields)s"
-msgstr ""
+msgstr "Champs obligatoires non renseignés dans %(status)s: %(fields)s"
 
 #: activity_validation/validator.py:55
 #, python-format
 msgid "Cannot change fields while in %(status)s: %(field)s"
-msgstr ""
+msgstr "Impossible de modifier les champs dans %(status)s: %(field)s"
 
 #: models.py:44
 msgid "Prioritization Criteria"
@@ -304,11 +304,11 @@ msgstr "Numéro de référence."
 
 #: serializers.py:216
 msgid "Related Partner"
-msgstr ""
+msgstr "Partenaire associé"
 
 #: serializers.py:219
 msgid "Related PD/SPD"
-msgstr ""
+msgstr "PD/SPD associés"
 
 #: serializers.py:222
 msgid "Related CP Output"

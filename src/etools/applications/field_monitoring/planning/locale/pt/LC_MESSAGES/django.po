@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-12-27 09:58+0000\n"
+"POT-Creation-Date: 2022-12-28 10:16+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -20,11 +20,11 @@ msgstr ""
 
 #: activity_validation/validations/basic.py:12
 msgid "TPM Partner selected for staff activity"
-msgstr ""
+msgstr "Parceiro TPM selecionado para atividade de equipe"
 
 #: activity_validation/validations/basic.py:23
 msgid "Staff members do not belong to the selected partner"
-msgstr ""
+msgstr "Os funcionários não pertencem ao parceiro selecionado"
 
 #: activity_validation/validations/basic.py:36
 #, python-format
@@ -32,6 +32,8 @@ msgid ""
 "You've selected a PD/SPD and unselected some of it's corresponding partners, "
 "please either remove the PD or add the partners back before saving: %s"
 msgstr ""
+"Você selecionou um PD/SPD e desmarcou alguns de seus parceiros "
+"correspondentes, remova o PD ou adicione os parceiros antes de salvar: %s"
 
 #: activity_validation/validations/basic.py:55
 #, python-format
@@ -39,116 +41,118 @@ msgid ""
 "You've selected a PD/SPD and unselected some of it's corresponding outputs, "
 "please either remove the PD or add the outputs back before saving: %s"
 msgstr ""
+"Você selecionou um PD/SPD e desmarcou algumas de suas saídas "
+"correspondentes, remova o PD ou adicione as saídas antes de salvar: %s"
 
 #: activity_validation/validations/state.py:11
 msgid "Partner is not defined for TPM activity"
-msgstr ""
+msgstr "Parceiro não está definido para atividade TPM"
 
 #: activity_validation/validations/state.py:17
 msgid "At least one Partner, CP Output or PD/SPD should be added"
-msgstr ""
+msgstr "Pelo menos um Parceiro, Saída CP ou PD/SPD deve ser adicionado"
 
 #: activity_validation/validations/state.py:23
 msgid "Rejection reason should be provided."
-msgstr ""
+msgstr "O motivo da rejeição deve ser fornecido."
 
 #: activity_validation/validations/state.py:29
 msgid "Cancellation reason should be provided."
-msgstr ""
+msgstr "O motivo do cancelamento deve ser fornecido."
 
 #: activity_validation/validations/state.py:35
 msgid "Report reject reason should be provided."
-msgstr ""
+msgstr "O motivo da rejeição do relatório deve ser fornecido."
 
 #: activity_validation/validations/state.py:41
 msgid "At least one question should be enabled."
-msgstr ""
+msgstr "Pelo menos uma pergunta deve ser habilitada."
 
 #: activity_validation/validations/state.py:47
 msgid "At least one checklist should be completed."
-msgstr ""
+msgstr "Pelo menos uma lista de verificação deve ser concluída."
 
 #: activity_validation/validations/state.py:59
 msgid "At least one summary finding should be completed."
-msgstr ""
+msgstr "Pelo menos uma constatação resumida deve ser concluída."
 
 #: activity_validation/validator.py:42
 #, python-format
 msgid "Required fields not completed in %(status)s: %(fields)s"
-msgstr ""
+msgstr "Campos obrigatórios não preenchidos em %(status)s: %(fields)s"
 
 #: activity_validation/validator.py:55
 #, python-format
 msgid "Cannot change fields while in %(status)s: %(field)s"
-msgstr ""
+msgstr "Não é possível alterar os campos enquanto em %(status)s: %(field)s"
 
 #: models.py:44
 msgid "Prioritization Criteria"
-msgstr ""
+msgstr "Critérios de Priorização"
 
 #: models.py:45
 msgid "Methodology Notes & Standards"
-msgstr ""
+msgstr "Notas Metodológicas"
 
 #: models.py:46
 msgid "Target Visits For The Year"
-msgstr ""
+msgstr "Visitas-alvo para o ano"
 
 #: models.py:48
 msgid "Modalities"
-msgstr ""
+msgstr "Modalidades"
 
 #: models.py:49
 msgid "Partner Engagement"
-msgstr ""
+msgstr "Engajamento do Parceiro"
 
 #: models.py:50
 msgid "Other Aspects of the Field Monitoring Plan"
-msgstr ""
+msgstr "Outros Aspectos do Plano de Monitoramento de Campo"
 
 #: models.py:55
 msgid "Year Plan"
-msgstr ""
+msgstr "Plano Anual"
 
 #: models.py:56
 msgid "Year Plans"
-msgstr ""
+msgstr "Planos Anuais"
 
 #: models.py:76 models.py:252
 msgid "Partner"
-msgstr ""
+msgstr "Parceiro"
 
 #: models.py:78
 msgid "CP Output"
-msgstr ""
+msgstr "Saída CP"
 
 #: models.py:80
 msgid "Intervention"
-msgstr ""
+msgstr "Intervenção"
 
 #: models.py:92
 msgid "Question"
-msgstr ""
+msgstr "Pergunta"
 
 #: models.py:94
 msgid "Is Active"
-msgstr ""
+msgstr "Está Ativo"
 
 #: models.py:95
 msgid "Specific Details To Probe"
-msgstr ""
+msgstr "Detalhes específicos para sondar"
 
 #: models.py:98
 msgid "Question Template"
-msgstr ""
+msgstr "Modelo de Pergunta"
 
 #: models.py:99
 msgid "Question Templates"
-msgstr ""
+msgstr "Modelos de Pergunta"
 
 #: models.py:149
 msgid "Staff"
-msgstr ""
+msgstr "Pessoal"
 
 #: models.py:150
 msgid "TPM"
@@ -160,67 +164,67 @@ msgstr ""
 
 #: models.py:164
 msgid "Checklist"
-msgstr ""
+msgstr "Lista de verificação"
 
 #: models.py:165
 msgid "Review"
-msgstr ""
+msgstr "Revisão"
 
 #: models.py:166
 msgid "Assigned"
-msgstr ""
+msgstr "Atribuído"
 
 #: models.py:167
 msgid "Data Collection"
-msgstr ""
+msgstr "Coleta de dados"
 
 #: models.py:168
 msgid "Report Finalization"
-msgstr ""
+msgstr "Finalização do relatório"
 
 #: models.py:169
 msgid "Submitted"
-msgstr ""
+msgstr "Enviado"
 
 #: models.py:170
 msgid "Completed"
-msgstr ""
+msgstr "Concluído"
 
 #: models.py:171
 msgid "Cancelled"
-msgstr ""
+msgstr "Cancelado"
 
 #: models.py:223
 msgid "Reference Number"
-msgstr ""
+msgstr "Número de referência"
 
 #: models.py:233
 msgid "TPM Partner"
-msgstr ""
+msgstr "Parceiro TPM"
 
 #: models.py:235
 msgid "Team Members"
-msgstr ""
+msgstr "Membros da Equipe"
 
 #: models.py:238
 msgid "Person Responsible"
-msgstr ""
+msgstr "Pessoa Responsável"
 
 #: models.py:241
 msgid "Field Office"
-msgstr ""
+msgstr "Escritório de campo"
 
 #: models.py:243
 msgid "Field Offices"
-msgstr ""
+msgstr "Escritórios de campo"
 
 #: models.py:245
 msgid "Sections"
-msgstr ""
+msgstr "Seções"
 
 #: models.py:247
 msgid "Location"
-msgstr ""
+msgstr "Localização"
 
 #: models.py:249
 msgid "Site"
@@ -232,92 +236,92 @@ msgstr ""
 
 #: models.py:256
 msgid "Outputs"
-msgstr ""
+msgstr "Saídas"
 
 #: models.py:259
 msgid "Start Date"
-msgstr ""
+msgstr "Data de início"
 
 #: models.py:260
 msgid "End Date"
-msgstr ""
+msgstr "Data Final"
 
 #: models.py:262
 msgid "Status"
-msgstr ""
+msgstr "Estado"
 
 #: models.py:264 models.py:266
 msgid "Activity Attachments"
-msgstr ""
+msgstr "Anexos de Atividade"
 
 #: models.py:269
 msgid "Rejection reason"
-msgstr ""
+msgstr "Motivo da rejeição"
 
 #: models.py:270
 msgid "Report rejection reason"
-msgstr ""
+msgstr "Motivo da rejeição do relatório"
 
 #: models.py:271
 msgid "Cancellation reason"
-msgstr ""
+msgstr "Motivo do cancelamento"
 
 #: models.py:278
 msgid "Monitoring Activity"
-msgstr ""
+msgstr "Atividade de Monitoramento"
 
 #: models.py:279
 msgid "Monitoring Activities"
-msgstr ""
+msgstr "Atividades de Monitoramento"
 
 #: models.py:719
 msgid "Monitoring Activity Action Point"
-msgstr ""
+msgstr "Ponto de Ação da Atividade de Monitoramento"
 
 #: models.py:720
 msgid "Monitoring Activity Action Points"
-msgstr ""
+msgstr "Pontos de Ação da Atividade de Monitoramento"
 
 #: serializers.py:36 serializers.py:238
 msgid "History"
-msgstr ""
+msgstr "História"
 
 #: serializers.py:163
 msgid "Document Type"
-msgstr ""
+msgstr "Tipo de Documento"
 
 #: serializers.py:191
 #, python-format
 msgid "[Inactive] %s"
-msgstr ""
+msgstr "[Inativo] %s"
 
 #: serializers.py:213
 msgid "Reference No."
-msgstr ""
+msgstr "Nº de referência"
 
 #: serializers.py:216
 msgid "Related Partner"
-msgstr ""
+msgstr "Parceiro Relacionado"
 
 #: serializers.py:219
 msgid "Related PD/SPD"
-msgstr ""
+msgstr "PD/SPD relacionados"
 
 #: serializers.py:222
 msgid "Related CP Output"
-msgstr ""
+msgstr "Saída CP Relacionada"
 
 #: serializers.py:227
 msgid "Section of Assignee"
-msgstr ""
+msgstr "Seção do Cessionário"
 
 #: serializers.py:231
 msgid "Office of Assignee"
-msgstr ""
+msgstr "Escritório do Cessionário"
 
 #: serializers.py:234
 msgid "Action Point Category"
-msgstr ""
+msgstr "Categoria de Ponto de Ação"
 
 #: serializers.py:240
 msgid "Link"
@@ -325,16 +329,16 @@ msgstr ""
 
 #: serializers.py:249
 msgid "Priority"
-msgstr ""
+msgstr "Prioridade"
 
 #: views.py:77
 msgid "Annual Field Monitoring Rationale"
-msgstr ""
+msgstr "Justificativa do Monitoramento de Campo Anual"
 
 #: views.py:133
 msgid "Templates"
-msgstr ""
+msgstr "Modelos"
 
 #: views.py:329
 msgid "Attachments"
-msgstr ""
+msgstr "Anexos"
