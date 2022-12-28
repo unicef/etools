@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-12-27 09:58+0000\n"
+"POT-Creation-Date: 2022-12-28 09:43+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -22,116 +22,116 @@ msgstr ""
 
 #: models.py:25 models.py:49 models.py:135 models.py:182
 msgid "Activity"
-msgstr ""
+msgstr "Активность"
 
 #: models.py:27
 msgid "Question"
-msgstr ""
+msgstr "Вопрос"
 
 #: models.py:31
 msgid "Question Text"
-msgstr ""
+msgstr "Текст вопроса"
 
 #: models.py:32
 msgid "Count as HACT"
-msgstr ""
+msgstr "Считать как HACT"
 
 #: models.py:34
 msgid "Specific Details To Probe"
-msgstr ""
+msgstr "Конкретные детали для исследования"
 
 #: models.py:35
 msgid "Enabled"
-msgstr ""
+msgstr "Включено"
 
 #: models.py:40 models.py:113
 msgid "Activity Question"
-msgstr ""
+msgstr "Вопрос об активности"
 
 #: models.py:41
 msgid "Activity Questions"
-msgstr ""
+msgstr "Вопросы об активности"
 
 #: models.py:51
 msgid "Methods"
-msgstr ""
+msgstr "Методы"
 
 #: models.py:52
 msgid "Information Source"
-msgstr ""
+msgstr "Источник информации"
 
 #: models.py:53
 msgid "Author"
-msgstr ""
+msgstr "Автор"
 
 #: models.py:57
 msgid "Started Checklist"
-msgstr ""
+msgstr "Начат контрольный список"
 
 #: models.py:58
 msgid "Started Checklists"
-msgstr ""
+msgstr "Начатые контрольные списки"
 
 #: models.py:110 models.py:157
 msgid "Checklist"
-msgstr ""
+msgstr "Контрольный список"
 
 #: models.py:114 models.py:136
 msgid "Value"
-msgstr ""
+msgstr "Стоимость"
 
 #: models.py:119
 msgid "Checklist Finding"
-msgstr ""
+msgstr "Контрольный список"
 
 #: models.py:120
 msgid "Checklist Findings"
-msgstr ""
+msgstr "Контрольный список результатов"
 
 #: models.py:139
 msgid "Overall Activity Question Finding"
-msgstr ""
+msgstr "Общий поиск вопросов по активности"
 
 #: models.py:140
 msgid "Overall Activity Question Findings"
-msgstr ""
+msgstr "Общие выводы по вопросам деятельности"
 
 #: models.py:158 models.py:183
 msgid "Narrative Finding"
-msgstr ""
+msgstr "Повествование"
 
 #: models.py:159
 msgid "Attachments"
-msgstr ""
+msgstr "Вложения"
 
 #: models.py:164
 msgid "Checklist Overall Finding"
-msgstr ""
+msgstr "Общий вывод контрольного списка"
 
 #: models.py:165
 msgid "Checklist Overall Findings"
-msgstr ""
+msgstr "Контрольный список общих выводов"
 
 #: models.py:189
 msgid "Activity Overall Finding"
-msgstr ""
+msgstr "Общий вывод о деятельности"
 
 #: models.py:190
 msgid "Activity Overall Findings"
-msgstr ""
+msgstr "Общие результаты деятельности"
 
 #: offline/blueprint.py:48
 msgid "Source of Information"
-msgstr ""
+msgstr "Источник информации"
 
 #: offline/blueprint.py:70
 msgid "Overall Finding"
-msgstr ""
+msgstr "Общий вывод"
 
 #: offline/helpers.py:55
 #, python-format
 msgid "Unable to find %(level)s with id %(target_id)s"
-msgstr ""
+msgstr "Не удалось найти %(level)s с идентификатором %(target_id)s"
 
 #: offline/helpers.py:74
 #, python-format
@@ -139,36 +139,39 @@ msgid ""
 "Unable to find finding for question %(question_id)s for %(level)s "
 "%(target_id)s"
 msgstr ""
+"Не удалось найти ответ на вопрос %(question_id)s для %(level)s %(target_id)s"
 
 #: offline/helpers.py:91
 msgid "Ensure this field has no more than 100 characters."
-msgstr ""
+msgstr "Убедитесь, что это поле содержит не более 100 символов."
 
 #: serializers.py:79
 msgid "Document Type"
-msgstr ""
+msgstr "тип документа"
 
 #: serializers.py:102
 msgid "Information source is required"
-msgstr ""
+msgstr "Укажите источник информации."
 
 #: views.py:84
 #, python-format
 msgid "Workspace code provided is not a valid business_area_code: %s"
 msgstr ""
+"Предоставленный код рабочей области не является допустимым "
+"business_area_code: %s"
 
 #: views.py:92
 msgid "Workspace is required"
-msgstr ""
+msgstr "Требуется рабочее место"
 
 #: views.py:102
 msgid "User is required"
-msgstr ""
+msgstr "Требуется пользователь"
 
 #: views.py:114
 msgid "Unable to fill checklists for current activity"
-msgstr ""
+msgstr "Невозможно заполнить контрольные списки для текущей деятельности"
 
 #: views.py:136
 msgid "Report Attachments"
-msgstr ""
+msgstr "Приложения к отчету"

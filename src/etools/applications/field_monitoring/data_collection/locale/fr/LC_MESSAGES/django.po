@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-12-27 09:58+0000\n"
+"POT-Creation-Date: 2022-12-28 09:43+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -76,7 +76,7 @@ msgstr "Liste de contrôle"
 
 #: models.py:114 models.py:136
 msgid "Value"
-msgstr ""
+msgstr "Valeur"
 
 #: models.py:119
 msgid "Checklist Finding"
@@ -129,7 +129,7 @@ msgstr "Conclusion générale"
 #: offline/helpers.py:55
 #, python-format
 msgid "Unable to find %(level)s with id %(target_id)s"
-msgstr ""
+msgstr "Impossible de trouver %(level)s avec id %(target_id)s"
 
 #: offline/helpers.py:74
 #, python-format
@@ -137,10 +137,12 @@ msgid ""
 "Unable to find finding for question %(question_id)s for %(level)s "
 "%(target_id)s"
 msgstr ""
+"Impossible de trouver les résultats pour la question %(question_id)s pour "
+"%(niveau)s %(target_id)s"
 
 #: offline/helpers.py:91
 msgid "Ensure this field has no more than 100 characters."
-msgstr ""
+msgstr "Assurez-vous que ce champ ne comporte pas plus de 100 caractères."
 
 #: serializers.py:79
 msgid "Document Type"
@@ -154,18 +156,20 @@ msgstr "La source d'information est requise"
 #, python-format
 msgid "Workspace code provided is not a valid business_area_code: %s"
 msgstr ""
+"Le code d'espace de travail fourni n'est pas un code de zone d'activité "
+"valide : %s"
 
 #: views.py:92
 msgid "Workspace is required"
-msgstr ""
+msgstr "Un espace de travail est nécessaire"
 
 #: views.py:102
 msgid "User is required"
-msgstr ""
+msgstr "L'utilisateur est requis"
 
 #: views.py:114
 msgid "Unable to fill checklists for current activity"
-msgstr ""
+msgstr "Impossible de remplir les listes de contrôle pour l'activité en cours"
 
 #: views.py:136
 msgid "Report Attachments"

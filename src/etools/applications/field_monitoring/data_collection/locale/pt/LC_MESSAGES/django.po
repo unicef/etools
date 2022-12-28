@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-12-27 09:58+0000\n"
+"POT-Creation-Date: 2022-12-28 09:43+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -20,116 +20,116 @@ msgstr ""
 
 #: models.py:25 models.py:49 models.py:135 models.py:182
 msgid "Activity"
-msgstr ""
+msgstr "Atividade"
 
 #: models.py:27
 msgid "Question"
-msgstr ""
+msgstr "Pergunta"
 
 #: models.py:31
 msgid "Question Text"
-msgstr ""
+msgstr "Texto da pergunta"
 
 #: models.py:32
 msgid "Count as HACT"
-msgstr ""
+msgstr "Contar como HACT"
 
 #: models.py:34
 msgid "Specific Details To Probe"
-msgstr ""
+msgstr "Detalhes específicos para sondar"
 
 #: models.py:35
 msgid "Enabled"
-msgstr ""
+msgstr "Habilitado"
 
 #: models.py:40 models.py:113
 msgid "Activity Question"
-msgstr ""
+msgstr "Questão de atividade"
 
 #: models.py:41
 msgid "Activity Questions"
-msgstr ""
+msgstr "Questões de atividades"
 
 #: models.py:51
 msgid "Methods"
-msgstr ""
+msgstr "Métodos"
 
 #: models.py:52
 msgid "Information Source"
-msgstr ""
+msgstr "Fonte de informação"
 
 #: models.py:53
 msgid "Author"
-msgstr ""
+msgstr "Autor"
 
 #: models.py:57
 msgid "Started Checklist"
-msgstr ""
+msgstr "Lista de verificação iniciada"
 
 #: models.py:58
 msgid "Started Checklists"
-msgstr ""
+msgstr "Listas de verificação iniciadas"
 
 #: models.py:110 models.py:157
 msgid "Checklist"
-msgstr ""
+msgstr "Lista de controle"
 
 #: models.py:114 models.py:136
 msgid "Value"
-msgstr ""
+msgstr "Valor"
 
 #: models.py:119
 msgid "Checklist Finding"
-msgstr ""
+msgstr "Verificação da lista de verificação"
 
 #: models.py:120
 msgid "Checklist Findings"
-msgstr ""
+msgstr "Descobertas da lista de verificação"
 
 #: models.py:139
 msgid "Overall Activity Question Finding"
-msgstr ""
+msgstr "Descoberta geral da pergunta sobre a atividade"
 
 #: models.py:140
 msgid "Overall Activity Question Findings"
-msgstr ""
+msgstr "Descobertas gerais das perguntas sobre atividades"
 
 #: models.py:158 models.py:183
 msgid "Narrative Finding"
-msgstr ""
+msgstr "Descoberta Narrativa"
 
 #: models.py:159
 msgid "Attachments"
-msgstr ""
+msgstr "Anexos"
 
 #: models.py:164
 msgid "Checklist Overall Finding"
-msgstr ""
+msgstr "Verificação geral da lista de verificação"
 
 #: models.py:165
 msgid "Checklist Overall Findings"
-msgstr ""
+msgstr "Descobertas gerais da lista de verificação"
 
 #: models.py:189
 msgid "Activity Overall Finding"
-msgstr ""
+msgstr "Descoberta geral da atividade"
 
 #: models.py:190
 msgid "Activity Overall Findings"
-msgstr ""
+msgstr "Descobertas Gerais da Atividade"
 
 #: offline/blueprint.py:48
 msgid "Source of Information"
-msgstr ""
+msgstr "Fonte de informação"
 
 #: offline/blueprint.py:70
 msgid "Overall Finding"
-msgstr ""
+msgstr "Descoberta geral"
 
 #: offline/helpers.py:55
 #, python-format
 msgid "Unable to find %(level)s with id %(target_id)s"
-msgstr ""
+msgstr "Não foi possível encontrar %(level)s com id %(target_id)s"
 
 #: offline/helpers.py:74
 #, python-format
@@ -137,36 +137,40 @@ msgid ""
 "Unable to find finding for question %(question_id)s for %(level)s "
 "%(target_id)s"
 msgstr ""
+"Não foi possível encontrar a resposta para a pergunta %(question_id)s para "
+"%(level)s %(target_id)s"
 
 #: offline/helpers.py:91
 msgid "Ensure this field has no more than 100 characters."
-msgstr ""
+msgstr "Certifique-se de que este campo não tenha mais de 100 caracteres."
 
 #: serializers.py:79
 msgid "Document Type"
-msgstr ""
+msgstr "tipo de documento"
 
 #: serializers.py:102
 msgid "Information source is required"
-msgstr ""
+msgstr "A fonte da informação é obrigatória"
 
 #: views.py:84
 #, python-format
 msgid "Workspace code provided is not a valid business_area_code: %s"
 msgstr ""
+"O código do espaço de trabalho fornecido não é um business_area_code válido: "
+"%s"
 
 #: views.py:92
 msgid "Workspace is required"
-msgstr ""
+msgstr "O espaço de trabalho é obrigatório"
 
 #: views.py:102
 msgid "User is required"
-msgstr ""
+msgstr "O usuário é obrigatório"
 
 #: views.py:114
 msgid "Unable to fill checklists for current activity"
-msgstr ""
+msgstr "Incapaz de preencher as listas de verificação para a atividade atual"
 
 #: views.py:136
 msgid "Report Attachments"
-msgstr ""
+msgstr "Anexos do relatório"
