@@ -13,6 +13,8 @@ from ordered_model.models import OrderedModel
 from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation
 
+from etools.applications.core.i18n.fields import TranslatedTextField
+from etools.applications.core.i18n.utils import get_default_field_value
 from etools.applications.locations.models import Location
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.reports.models import Result, Section
@@ -103,7 +105,8 @@ class Question(models.Model):
     methods = models.ManyToManyField(Method, verbose_name=_('Methods'))
     category = models.ForeignKey(Category, on_delete=models.CASCADE, verbose_name=_('Category'))
     sections = models.ManyToManyField(Section, verbose_name=_('Sections'), blank=True)
-    text = models.TextField(verbose_name=_('Question Text'))
+    old_text = models.TextField(verbose_name=_('Question Text'))
+    text = TranslatedTextField(verbose_name=_('Question Text'), default=get_default_field_value())
     is_hact = models.BooleanField(default=False, verbose_name=_('Count as HACT'))
     is_custom = models.BooleanField(default=False, verbose_name=_('Is Custom'))
     is_active = models.BooleanField(default=True, verbose_name=_('Is Active'))
