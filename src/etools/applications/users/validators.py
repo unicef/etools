@@ -10,8 +10,6 @@ from etools.applications.users.models import Realm
 
 class ExternalUserValidator:
     def __call__(self, value):
-        from etools.applications.audit.purchase_order.models import AuditorStaffMember
-
         # email cannot end with UNICEF domain
         if value.endswith("@unicef.org"):
             raise ValidationError(
@@ -27,7 +25,11 @@ class ExternalUserValidator:
             country=connection.tenant,
             organization__tpmpartner__isnull=False,
         )
-        audit_staff = AuditorStaffMember.objects.filter(user__email=value)
+        audit_staff = Realm.objects.filter(
+            user__email=value,
+            country=connection.tenant,
+            organization__auditorfirm__isnull=False,
+        )
         if tpm_staff_qs.exists() or audit_staff.exists():
             raise ValidationError(_("User is a staff member."))
 

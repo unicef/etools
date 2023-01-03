@@ -590,8 +590,11 @@ class Realm(TimeStampedModel):
         ]
 
     def __str__(self):
-        return f"{self.user.email} - {self.country.name} - {self.organization}: " \
+        data = f"{self.user.email} - {self.country.name} - {self.organization}: " \
                f"{self.group.name if self.group else ''}"
+        if not self.is_active:
+            data = "[Inactive] " + data
+        return data
 
 
 # TODO REALMS: clean up: drop the wrappers

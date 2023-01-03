@@ -1,10 +1,12 @@
+from django.contrib.auth import get_user_model
 from django.db import models
 from django.db.models.functions import TruncYear
 
 from django_filters import rest_framework as filters
-from rest_framework.filters import BaseFilterBackend
+from rest_framework.filters import BaseFilterBackend, OrderingFilter
 
 from etools.applications.audit.models import Engagement
+from etools.applications.organizations.models import Organization
 
 
 class DisplayStatusFilter(BaseFilterBackend):
@@ -65,6 +67,9 @@ class UniqueIDOrderingFilter(BaseFilterBackend):
 class EngagementFilter(filters.FilterSet):
     sections__in = filters.BaseInFilter(field_name="sections")
     offices__in = filters.BaseInFilter(field_name="offices")
+    # TODO: REALMS - test updated filters
+    staff_members__user__exact = filters.CharFilter(field_name="staff_members__id")
+    staff_members__user__in = filters.BaseInFilter(field_name="staff_members")
 
     class Meta:
         model = Engagement
@@ -75,9 +80,45 @@ class EngagementFilter(filters.FilterSet):
             'engagement_type': ['exact', 'in'],
             'joint_audit': ['exact'],
             'agreement__auditor_firm__unicef_users_allowed': ['exact'],
-            'staff_members__user': ['exact', 'in'],
             'partner_contacted_at': ['lte', 'gte', 'gt', 'lt'],
             'date_of_draft_report_to_ip': ['lte', 'gte', 'gt', 'lt'],
             'offices': ['exact', 'in'],
             'sections': ['exact', 'in'],
         }
+
+
+class AuditorStaffMembersFilterSet(filters.FilterSet):
+    user__profile__countries_available__name = filters.CharFilter(field_name='realms__country__name', distinct=True)
+
+    class Meta:
+        model = get_user_model()
+        fields = {}
+
+
+class UnicefUsersAllowedFilter(BaseFilterBackend):
+    def filter_queryset(self, request, queryset, view):
+        unicef_users_allowed = request.query_params.get(
+            'purchase_order_auditorstaffmember__auditor_firm__unicef_users_allowed',
+            '',
+        ).lower()
+        if unicef_users_allowed not in ['true', 'false']:
+            return queryset
+
+        unicef_filter = models.Q(profile__organization=Organization.objects.get(name='UNICEF'))
+
+        if unicef_users_allowed == 'true':
+            return queryset.filter(unicef_filter)
+        else:
+            return queryset.filter(~unicef_filter)
+
+
+class StaffMembersOrderingFilter(OrderingFilter):
+    """
+    backwards compatible staff members ordering: since we're using user instead of extra model, `user__` is not needed
+    """
+
+    def get_ordering(self, request, queryset, view):
+        ordering = super().get_ordering(request, queryset, view)
+        if not ordering:
+            return ordering
+        return [param.replace('user__', '') for param in ordering]

@@ -13,7 +13,6 @@ from etools.applications.audit.models import Engagement, RiskCategory
 from etools.applications.audit.purchase_order.models import PurchaseOrder, PurchaseOrderItem
 from etools.applications.audit.tests.factories import (
     AuditFactory,
-    AuditorStaffMemberFactory,
     AuditPartnerFactory,
     DetailedFindingInfoFactory,
     EngagementFactory,
@@ -28,7 +27,6 @@ from etools.applications.audit.tests.factories import (
     SpotCheckFactory,
 )
 from etools.applications.core.tests.cases import BaseTenantTestCase
-from etools.applications.firms.tests.factories import BaseUserFactory
 from etools.applications.users.models import Country
 
 
@@ -42,16 +40,17 @@ class EngagementStaffMemberTestCase(BaseTenantTestCase):
         auditor_firm = AuditPartnerFactory()
         staff_member = auditor_firm.staff_members.first()
 
-        self.assertEqual(staff_member.user.realms.count(), 1)
-        staff_member.user.realms.all().delete()
-        self.assertEqual(staff_member.user.realms.count(), 0)
+        self.assertEqual(staff_member.realms.count(), 1)
+        staff_member.realms.all().delete()
+        self.assertEqual(staff_member.realms.count(), 0)
 
         engagement = EngagementFactory(staff_members=[], agreement__auditor_firm=auditor_firm)
         engagement.staff_members.add(staff_member)
 
-        self.assertSequenceEqual(staff_member.user.profile.countries_available,
+        staff_member.profile.refresh_from_db()
+        self.assertSequenceEqual(staff_member.profile.countries_available,
                                  [Country.objects.get(schema_name=connection.schema_name)])
-        self.assertEqual(staff_member.user.profile.organization, auditor_firm.organization)
+        self.assertEqual(staff_member.profile.organization, auditor_firm.organization)
         self.assertEqual(len(mail.outbox), 1)
         mail.outbox = []
 
@@ -61,16 +60,6 @@ class TestStrUnicode(SimpleTestCase):
     """
     Ensure calling str on model instances returns unicode.
     """
-
-    def test_auditor_staff_member(self):
-        user = BaseUserFactory.build(first_name='Bugs', last_name='Bunny')
-        instance = AuditorStaffMemberFactory.build(user=user)
-        self.assertEqual(str(instance), 'Bugs Bunny')
-
-        user = BaseUserFactory.build(first_name='Harald', last_name='H\xe5rdr\xe5da')
-        instance = AuditorStaffMemberFactory.build(user=user)
-        self.assertEqual(str(instance), 'Harald H\xe5rdr\xe5da')
-
     def test_purchase_order(self):
         instance = PurchaseOrderFactory.build(order_number=b'two')
         self.assertEqual(str(instance), 'two')
