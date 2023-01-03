@@ -14,7 +14,7 @@ class TPMPartnerStaffMemberSerializer(UserSerializer):
 
     class Meta(UserSerializer.Meta):
         fields = UserSerializer.Meta.fields + [
-            'user', 'receive_tpm_notifications',
+            'id', 'user', 'receive_tpm_notifications',
         ]
 
 

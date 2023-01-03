@@ -59,7 +59,7 @@ class TPMActivityFilter(filters.FilterSet):
 
 
 class TPMStaffMembersFilterSet(filters.FilterSet):
-    user__is_active = filters.CharFilter(field_name='is_active')
+    user__is_active = filters.BooleanFilter(field_name='is_active')
 
     class Meta:
         model = get_user_model()
