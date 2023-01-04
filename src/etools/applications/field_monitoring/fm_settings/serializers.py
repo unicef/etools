@@ -17,6 +17,7 @@ from unicef_restlib.serializers import UserContextSerializerMixin
 from unicef_snapshot.serializers import SnapshotModelSerializer
 
 from etools.applications.action_points.serializers import HistorySerializer
+from etools.applications.core.i18n.utils import get_translated_field
 from etools.applications.field_monitoring.fm_settings.models import (
     Category,
     LocationSite,
@@ -60,6 +61,8 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class QuestionLightSerializer(serializers.ModelSerializer):
+    text = serializers.SerializerMethodField()
+
     class Meta:
         model = Question
         fields = (
@@ -67,6 +70,9 @@ class QuestionLightSerializer(serializers.ModelSerializer):
             'methods', 'category', 'sections', 'text',
             'is_hact', 'is_active', 'is_custom'
         )
+
+    def get_text(self, obj):
+        return get_translated_field(obj, 'text')
 
 
 class QuestionSerializer(QuestionLightSerializer):

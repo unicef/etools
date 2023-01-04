@@ -2,6 +2,7 @@
 
 from django.db import migrations
 import etools.applications.core.i18n.fields
+import etools.applications.core.i18n.utils
 
 
 class Migration(migrations.Migration):
@@ -19,7 +20,10 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='question',
             name='text',
-            field=etools.applications.core.i18n.fields.TranslatedTextField(blank=True, null=True,
-                                                                           verbose_name='Question Text'),
+            field=etools.applications.core.i18n.fields.TranslatedTextField(default=etools.applications.core.i18n.utils.get_default_translated, verbose_name='Question Text'),
+        ),
+        migrations.RemoveField(
+            model_name='question',
+            name='old_text',
         ),
     ]
