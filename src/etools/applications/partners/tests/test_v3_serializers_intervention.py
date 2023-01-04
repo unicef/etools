@@ -99,7 +99,7 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
         )
         self.assertEqual(pd.status, pd.DRAFT)
         available_actions = self.unicef_serializer.get_available_actions(pd)
-        expected_actions = self.default_actions
+        expected_actions = self.default_actions + ["delete"]
         self.assertEqual(sorted(available_actions), sorted(expected_actions))
 
     def test_available_actions_focal_point_cancel(self):

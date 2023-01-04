@@ -784,7 +784,6 @@ class InterventionLocationListAPIView(QueryStringFilterMixin, ListAPIView):
 
 
 class InterventionDeleteView(DestroyAPIView):
-    # todo: permission_classes are ignored here. see comments in InterventionAmendmentDeleteView.delete
     permission_classes = (PartnershipManagerRepPermission,)
     queryset = Intervention.objects
 
@@ -795,6 +794,9 @@ class InterventionDeleteView(DestroyAPIView):
 
         if intervention.travel_activities.count():
             raise ValidationError("Cannot delete a PD or SSFA that has Planned Trips")
+
+        if intervention.date_sent_to_partner:
+            raise ValidationError("PD has already been sent to Partner.")
 
         else:
             # get the history of this PD and make sure it wasn't manually moved back to draft before allowing deletion
