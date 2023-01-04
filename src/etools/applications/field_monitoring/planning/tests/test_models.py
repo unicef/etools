@@ -33,7 +33,7 @@ from etools.applications.partners.tests.factories import (
 )
 from etools.applications.reports.models import CountryProgramme, ResultType
 from etools.applications.reports.tests.factories import CountryProgrammeFactory, ResultFactory, SectionFactory
-from etools.applications.tpm.tests.factories import TPMPartnerFactory, TPMPartnerStaffMemberFactory
+from etools.applications.tpm.tests.factories import TPMPartnerFactory, TPMUserFactory
 from etools.libraries.pythonlib.datetime import get_quarter
 
 
@@ -71,13 +71,13 @@ class TestMonitoringActivityValidations(BaseTenantTestCase):
         tpm_partner = TPMPartnerFactory()
         activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.draft, monitor_type='tpm',
                                              tpm_partner=tpm_partner)
-        activity.team_members.add(TPMPartnerStaffMemberFactory(tpm_partner=tpm_partner).user)
+        activity.team_members.add(TPMUserFactory(tpm_partner=tpm_partner))
         self.assertTrue(ActivityValid(activity, user=self.user).is_valid)
 
     def test_staff_member_from_other_partner(self):
         activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.draft, monitor_type='tpm',
                                              tpm_partner=TPMPartnerFactory())
-        activity.team_members.add(TPMPartnerStaffMemberFactory(tpm_partner=TPMPartnerFactory()).user)
+        activity.team_members.add(TPMUserFactory(tpm_partner=TPMPartnerFactory()))
         self.assertFalse(ActivityValid(activity, user=self.user).is_valid)
 
     def test_interventions_without_partner(self):

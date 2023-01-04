@@ -447,6 +447,8 @@ class UserProfile(models.Model):
     oic = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, verbose_name=_('OIC'),
                             null=True, blank=True)  # related oic_set
 
+    receive_tpm_notifications = models.BooleanField(verbose_name=_('Receive Notifications on TPM Tasks'), default=False)
+
     # TODO: figure this out when we need to automatically map to groups
     # vision_roles = ArrayField(models.CharField(max_length=20, blank=True, choices=VISION_ROLES),
     #                           blank=True, null=True)

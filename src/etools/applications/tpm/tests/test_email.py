@@ -19,14 +19,14 @@ class TPMVisitEmailsTestCase(BaseTenantTestCase):
         visit = TPMVisitFactory(status='pre_assigned', tpm_partner_focal_points__count=3)
 
         first_partner = visit.tpm_partner_focal_points.first()
-        first_partner.user.is_active = False
-        first_partner.user.save()
+        first_partner.is_active = False
+        first_partner.save()
 
         self.assertEqual(len(mail.outbox), 0)
         visit.assign()
         self.assertEqual(
             len(mail.outbox),
-            visit.tpm_partner_focal_points.filter(user__email__isnull=False).count() - 1 + 1
+            visit.tpm_partner_focal_points.filter(email__isnull=False).count() - 1 + 1
         )
 
     def test_cancel(self):
@@ -66,7 +66,7 @@ class TPMVisitEmailsTestCase(BaseTenantTestCase):
         visit = TPMVisitFactory(status='pre_tpm_report_rejected')
 
         visit.reject_report('Just because')
-        self.assertEqual(len(mail.outbox), visit.tpm_partner_focal_points.filter(user__email__isnull=False).count())
+        self.assertEqual(len(mail.outbox), visit.tpm_partner_focal_points.filter(email__isnull=False).count())
 
     def test_approve(self):
         visit = TPMVisitFactory(status='pre_unicef_approved')
@@ -76,5 +76,5 @@ class TPMVisitEmailsTestCase(BaseTenantTestCase):
             len(mail.outbox),
 
             len(visit.unicef_focal_points_with_emails) +
-            visit.tpm_partner_focal_points.filter(user__email__isnull=False).count()
+            visit.tpm_partner_focal_points.filter(email__isnull=False).count()
         )

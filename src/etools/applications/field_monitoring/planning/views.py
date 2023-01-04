@@ -270,7 +270,7 @@ class FMUsersViewSet(
 
     filter_backends = (SearchFilter, UserTypeFilter, UserTPMPartnerFilter)
     search_fields = ('email',)
-    queryset = get_user_model().objects.select_related('tpmpartners_tpmpartnerstaffmember__tpm_partner')
+    queryset = get_user_model().objects.select_related('profile__organization__tpmpartner')
     queryset = queryset.order_by('first_name', 'middle_name', 'last_name')
     serializer_class = FMUserSerializer
 

@@ -10,8 +10,6 @@ from etools.applications.users.models import Realm
 
 class ExternalUserValidator:
     def __call__(self, value):
-        from etools.applications.tpm.tpmpartners.models import TPMPartnerStaffMember
-
         # email cannot end with UNICEF domain
         if value.endswith("@unicef.org"):
             raise ValidationError(
@@ -22,7 +20,11 @@ class ExternalUserValidator:
             raise ValidationError(_("Email needs to be lower case."))
 
         # make sure user is not staff member
-        tpm_staff_qs = TPMPartnerStaffMember.objects.filter(user__email=value)
+        tpm_staff_qs = Realm.objects.filter(
+            user__email=value,
+            country=connection.tenant,
+            organization__tpmpartner__isnull=False,
+        )
         audit_staff = Realm.objects.filter(
             user__email=value,
             country=connection.tenant,
