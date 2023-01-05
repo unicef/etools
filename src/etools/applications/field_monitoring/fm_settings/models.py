@@ -14,7 +14,7 @@ from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation
 
 from etools.applications.core.i18n.fields import TranslatedTextField
-from etools.applications.core.i18n.utils import get_default_translated
+from etools.applications.core.i18n.utils import get_default_translated, get_translated_field
 from etools.applications.locations.models import Location
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.reports.models import Result, Section
@@ -142,7 +142,7 @@ class Question(models.Model):
         self._template = value
 
     def __str__(self):
-        return self.text
+        return get_translated_field(self, 'text')
 
 
 class Option(models.Model):

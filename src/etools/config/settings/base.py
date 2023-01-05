@@ -111,6 +111,7 @@ MEDIA_URL = '/media/'
 
 # DJANGO: GLOBALIZATION (I18N/L10N)
 LANGUAGE_CODE = 'en-us'
+DEFAULT_LANGUAGE = 'en'
 LANGUAGES = [
     ('en', _('English')),
     ('fr', _('Français')),

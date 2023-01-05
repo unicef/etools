@@ -7,7 +7,7 @@ def get_default_translated():
 
 
 def get_language_code():
-    code = settings.LANGUAGE_CODE
+    code = settings.DEFAULT_LANGUAGE
     try:
         lang = translation.get_language_info(translation.get_language())
     except TypeError:
@@ -38,5 +38,5 @@ def get_translated_field(obj, field):
         return str(field_value)
 
     if code in field_value:
-        return field_value[code] if field_value[code] else field_value[settings.LANGUAGE_CODE]
+        return field_value[code] if field_value[code] else field_value[settings.DEFAULT_LANGUAGE]
     return field_value
