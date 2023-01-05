@@ -17,7 +17,7 @@ from unicef_restlib.serializers import UserContextSerializerMixin
 from unicef_snapshot.serializers import SnapshotModelSerializer
 
 from etools.applications.action_points.serializers import HistorySerializer
-from etools.applications.core.i18n.utils import get_translated_field
+from etools.applications.core.i18n.utils import get_language_code, get_translated_field
 from etools.applications.field_monitoring.fm_settings.models import (
     Category,
     LocationSite,
@@ -61,7 +61,7 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class QuestionLightSerializer(serializers.ModelSerializer):
-    text = serializers.SerializerMethodField()
+    text = serializers.CharField()
 
     class Meta:
         model = Question
@@ -71,8 +71,10 @@ class QuestionLightSerializer(serializers.ModelSerializer):
             'is_hact', 'is_active', 'is_custom'
         )
 
-    def get_text(self, obj):
-        return get_translated_field(obj, 'text')
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['text'] = get_translated_field(instance, 'text')
+        return data
 
 
 class QuestionSerializer(QuestionLightSerializer):
@@ -97,8 +99,10 @@ class QuestionSerializer(QuestionLightSerializer):
         validated_data['is_custom'] = True
         self.check_hact_questions(validated_data)
         options = validated_data.pop('options', None)
+        text = validated_data.pop('text', None)
         instance = super().create(validated_data)
         self.set_options(instance, options)
+        self.set_text(instance, text)
         return instance
 
     def update(self, instance, validated_data):
@@ -109,9 +113,16 @@ class QuestionSerializer(QuestionLightSerializer):
 
         self.check_hact_questions(validated_data, instance)
         options = validated_data.pop('options', None)
+        text = validated_data.pop('text', None)
         instance = super().update(instance, validated_data)
         self.set_options(instance, options)
+        self.set_text(instance, text)
         return instance
+
+    def set_text(self, instance, text):
+        language = get_language_code()
+        instance.text[language] = text
+        instance.save(update_fields=['text'])
 
     def set_options(self, instance, options):
         if options is None:

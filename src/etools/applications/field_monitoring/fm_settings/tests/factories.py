@@ -5,6 +5,7 @@ from factory import fuzzy, LazyAttribute
 from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.attachments.tests.factories import AttachmentFactory
+from etools.applications.core.i18n.utils import get_default_translated
 from etools.applications.field_monitoring.fm_settings.models import (
     Category,
     LocationSite,
@@ -54,7 +55,7 @@ class QuestionFactory(factory.django.DjangoModelFactory):
     is_custom = True
     choices_size = factory.Maybe(LazyAttribute(lambda self: self.answer_type == Question.ANSWER_TYPES.likert_scale), 3)
     level = fuzzy.FuzzyChoice(dict(Question.LEVELS).keys())
-    text = fuzzy.FuzzyText()
+    text = factory.Dict(get_default_translated())
 
     class Meta:
         model = Question
