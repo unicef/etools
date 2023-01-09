@@ -61,7 +61,8 @@ def migrate_partnerstaffmembers(apps, schema_editor):
             profile.save(update_fields=['organization_id'])
 
     unique_realms = [dict(t) for t in {tuple(sorted(d.items())) for d in realm_list}]
-    Realm.objects.bulk_create([Realm(**realm_dict) for realm_dict in unique_realms])
+    for realm_dict in unique_realms:
+        Realm.objects.get_or_create(**realm_dict)
 
     # cleanup from external psea group created during 0021_migrate_to_realms
     Realm.objects.filter(

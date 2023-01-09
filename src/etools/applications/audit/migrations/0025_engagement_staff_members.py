@@ -11,7 +11,7 @@ def migrate_engagement_staff_members_to_users(apps, schema_editor):
     Engagement = apps.get_model('audit', 'Engagement')
 
     for e in Engagement.objects.all():
-        e.staff_members.add(*[staff_member.user for staff_member in e.old_staff_members.all().select_related('user')])
+        e.staff_members.add(*[staff_member.user for staff_member in e.old_staff_members.all().select_related('user') if staff_member.user])
 
 
 def migrate_engagement_authorized_officers_to_users(apps, schema_editor):
@@ -21,7 +21,7 @@ def migrate_engagement_authorized_officers_to_users(apps, schema_editor):
     Engagement = apps.get_model('audit', 'Engagement')
 
     for e in Engagement.objects.all():
-        e.authorized_officers.add(*[staff_member.user for staff_member in e.old_authorized_officers.all().select_related('user')])
+        e.authorized_officers.add(*[staff_member.user for staff_member in e.old_authorized_officers.all().select_related('user') if staff_member.user])
 
 
 class Migration(migrations.Migration):
