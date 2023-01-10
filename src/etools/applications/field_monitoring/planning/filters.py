@@ -8,7 +8,7 @@ from etools.applications.field_monitoring.planning.models import MonitoringActiv
 from etools.applications.field_monitoring.utils.filters import M2MInFilter
 from etools.applications.partners.models import Intervention
 from etools.applications.reports.models import Result
-from etools.applications.tpm.models import ThirdPartyMonitor
+from etools.applications.users.mixins import TPM_ACTIVE_GROUPS
 
 
 class MonitoringActivitiesFilterSet(filters.FilterSet):
@@ -60,7 +60,7 @@ class UserTypeFilter(BaseFilterBackend):
             return queryset.filter(
                 realms__country=connection.tenant,
                 realms__organization__tpmpartner__isnull=False,
-                realms__group=ThirdPartyMonitor.as_group(),
+                realms__group__name__in=TPM_ACTIVE_GROUPS,
             )
         else:
             return queryset.filter(is_staff=True)
@@ -73,7 +73,9 @@ class UserTPMPartnerFilter(BaseFilterBackend):
             return queryset
 
         return queryset.filter(
-            realms__organization__tpmpartner=value
+            realms__country=connection.tenant,
+            realms__organization__tpmpartner=value,
+            realms__group__name__in=TPM_ACTIVE_GROUPS,
         )
 
 

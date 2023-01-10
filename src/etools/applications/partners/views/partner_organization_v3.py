@@ -1,8 +1,11 @@
+from django.db import connection
+
 from etools.applications.partners.views.partner_organization_v2 import (
     PartnerOrganizationListAPIView,
     PartnerStaffMemberListAPIVIew,
 )
 from etools.applications.partners.views.v3 import PMPBaseViewMixin
+from etools.applications.users.mixins import PARTNER_ACTIVE_GROUPS
 
 
 class PMPPartnerOrganizationListAPIView(
@@ -21,7 +24,11 @@ class PMPPartnerStaffMemberMixin(PMPBaseViewMixin):
     def get_queryset(self):
         qs = self.queryset
         if self.is_partner_staff():
-            qs = qs.filter(realms__organization__partner=self.current_partner())
+            qs = qs.filter(
+                realms__country=connection.tenant,
+                realms__organization__partner=self.current_partner(),
+                realms__group__name__in=PARTNER_ACTIVE_GROUPS,
+            )
         return qs
 
 

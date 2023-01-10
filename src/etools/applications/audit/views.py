@@ -107,6 +107,7 @@ from etools.applications.permissions2.conditions import ObjectStatusCondition
 from etools.applications.permissions2.drf_permissions import get_permission_for_targets, NestedPermission
 from etools.applications.permissions2.metadata import BaseMetadata, PermissionBasedMetadata
 from etools.applications.permissions2.views import PermittedFSMActionMixin, PermittedSerializerMixin
+from etools.applications.users.mixins import AUDIT_ACTIVE_GROUPS
 from etools.applications.users.serializers_v3 import MinimalUserSerializer
 
 
@@ -530,7 +531,7 @@ class AuditorStaffMembersViewSet(
         queryset = queryset.filter(
             realms__country=connection.tenant,
             realms__organization=self.get_parent_object().organization,
-            realms__group=Auditor.as_group(),
+            realms__group__name__in=AUDIT_ACTIVE_GROUPS,
         )
         return queryset
 

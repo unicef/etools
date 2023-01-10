@@ -25,7 +25,7 @@ from etools.applications.organizations.models import Organization
 from etools.applications.partners.permissions import user_group_permission
 from etools.applications.partners.views.v3 import PMPBaseViewMixin
 from etools.applications.users import views as v1, views_v2 as v2
-from etools.applications.users.mixins import GroupEditPermissionMixin
+from etools.applications.users.mixins import AUDIT_ACTIVE_GROUPS, GroupEditPermissionMixin, TPM_ACTIVE_GROUPS
 from etools.applications.users.models import Country, IPAdmin, IPAuthorizedOfficer, IPEditor, Realm
 from etools.applications.users.permissions import IsActiveInRealm, IsPartnershipManager
 from etools.applications.users.serializers import SimpleGroupSerializer, SimpleOrganizationSerializer
@@ -342,11 +342,13 @@ class ExternalUserViewSet(
             pk=OuterRef("pk"),
             realms__country=connection.tenant,
             realms__organization__tpmpartner__isnull=False,
+            realms__group__name__in=TPM_ACTIVE_GROUPS,
         )
         audit_staff = get_user_model().objects.filter(
             pk=OuterRef("pk"),
             realms__country=connection.tenant,
             realms__organization__auditorfirm__isnull=False,
+            realms__group__name__in=AUDIT_ACTIVE_GROUPS,
         )
         qs = qs.exclude(
             pk__in=Subquery(tpm_staff.values("pk"))

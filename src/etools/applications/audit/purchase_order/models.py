@@ -8,6 +8,7 @@ from model_utils.models import TimeStampedModel
 
 from etools.applications.environment.notifications import send_notification_with_template
 from etools.applications.firms.models import BaseFirm, BaseStaffMember
+from etools.applications.users.mixins import AUDIT_ACTIVE_GROUPS
 from etools.libraries.djangolib.utils import get_environment
 
 
@@ -21,7 +22,6 @@ class AuditorFirm(BaseFirm):
 
     @classmethod
     def get_for_user(cls, user):
-        # TODO: REALMS. should we additionally check user has valid realm to access auditorfirm?
         try:
             return user.profile.organization.auditorfirm
         except AuditorFirm.DoesNotExist:
@@ -29,12 +29,11 @@ class AuditorFirm(BaseFirm):
 
     @property
     def staff_members(self) -> models.QuerySet:
-        # TODO: REALMS - it may be heavy for specific firms like unicef. check performance
         return get_user_model().objects.filter(
             pk__in=self.organization.realms.filter(
                 is_active=True,
                 country=connection.tenant,
-                # group=Auditor.as_group(),
+                group__name__in=AUDIT_ACTIVE_GROUPS,
             ).values_list('user_id', flat=True)
         )
 
