@@ -319,29 +319,19 @@ class TestTransitionToSigned(BaseTenantTestCase):
                 ):
                     transition_to_signed(intervention)
 
-    def test_data_processing_agreement_flag_require_attachment(self):
+    def test_data_processing_agreement_flag_doesnt_require_attachment(self):
         intervention = InterventionFactory(agreement__status=Agreement.DRAFT,
                                            has_data_processing_agreement=True)
-        with self.assertRaisesRegexp(TransitionError, r".* should be provided in attachments."):
-            transition_to_signed(intervention)
-        InterventionAttachmentFactory(intervention=intervention, type__name=FileType.DATA_PROCESSING_AGREEMENT)
         self.assertTrue(transition_to_signed(intervention))
 
-    def test_activities_involving_children_flag_require_attachment(self):
+    def test_activities_involving_children_flag_doesnt_require_attachment(self):
         intervention = InterventionFactory(agreement__status=Agreement.DRAFT,
                                            has_activities_involving_children=True)
-        with self.assertRaisesRegexp(TransitionError, r".* should be provided in attachments."):
-            transition_to_signed(intervention)
-        InterventionAttachmentFactory(intervention=intervention, type__name=FileType.ACTIVITIES_INVOLVING_CHILDREN)
         self.assertTrue(transition_to_signed(intervention))
 
-    def test_special_conditions_for_construction_flag_require_attachment(self):
+    def test_special_conditions_for_construction_flag_doesnt_require_attachment(self):
         intervention = InterventionFactory(agreement__status=Agreement.DRAFT,
                                            has_special_conditions_for_construction=True)
-        with self.assertRaisesRegexp(TransitionError, r".* should be provided in attachments."):
-            transition_to_signed(intervention)
-        InterventionAttachmentFactory(intervention=intervention,
-                                      type__name=FileType.SPECIAL_CONDITIONS_FOR_CONSTRUCTION)
         self.assertTrue(transition_to_signed(intervention))
 
     def test_valid(self):
