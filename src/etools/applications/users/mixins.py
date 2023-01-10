@@ -1,6 +1,9 @@
 from django.contrib.auth.models import Group
 
 PARTNER_ACTIVE_GROUPS = ["IP Viewer", "IP Editor", "IP Authorized Officer", "IP Admin"]
+# todo: create single source of truth here and for wrappers like tpm.models.ThirdPartyMonitor. GroupWrapper for caching
+AUDIT_ACTIVE_GROUPS = ["UNICEF Audit Focal Point", "Auditor"]
+TPM_ACTIVE_GROUPS = ["Third Party Monitor"]
 
 
 class GroupEditPermissionMixin:

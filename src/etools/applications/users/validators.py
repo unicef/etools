@@ -5,6 +5,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework.exceptions import ValidationError
 from rest_framework.validators import UniqueValidator
 
+from etools.applications.users.mixins import AUDIT_ACTIVE_GROUPS, TPM_ACTIVE_GROUPS
 from etools.applications.users.models import Realm
 
 
@@ -24,11 +25,13 @@ class ExternalUserValidator:
             user__email=value,
             country=connection.tenant,
             organization__tpmpartner__isnull=False,
+            group__name__in=TPM_ACTIVE_GROUPS,
         )
         audit_staff = Realm.objects.filter(
             user__email=value,
             country=connection.tenant,
             organization__auditorfirm__isnull=False,
+            group__name__in=AUDIT_ACTIVE_GROUPS,
         )
         if tpm_staff_qs.exists() or audit_staff.exists():
             raise ValidationError(_("User is a staff member."))

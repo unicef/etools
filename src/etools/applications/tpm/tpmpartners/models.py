@@ -8,6 +8,7 @@ from django.utils.translation import gettext_lazy as _
 from unicef_attachments.models import Attachment
 
 from etools.applications.firms.models import BaseFirm, BaseFirmManager, BaseStaffMember
+from etools.applications.users.mixins import TPM_ACTIVE_GROUPS
 
 
 class TPMPartnerQueryset(models.QuerySet):
@@ -38,6 +39,7 @@ class TPMPartner(BaseFirm):
             pk__in=self.organization.realms.filter(
                 is_active=True,
                 country=connection.tenant,
+                group__name__in=TPM_ACTIVE_GROUPS,
             ).values_list('user_id', flat=True)
         )
 

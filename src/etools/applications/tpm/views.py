@@ -87,6 +87,7 @@ from etools.applications.tpm.serializers.visit import (
 )
 from etools.applications.tpm.tpmpartners.models import TPMPartner
 from etools.applications.tpm.tpmpartners.synchronizers import TPMPartnerSynchronizer
+from etools.applications.users.mixins import TPM_ACTIVE_GROUPS
 
 
 class BaseTPMViewSet(
@@ -230,7 +231,7 @@ class TPMStaffMembersViewSet(
         queryset = queryset.filter(
             realms__country=connection.tenant,
             realms__organization=self.get_parent_object().organization,
-            realms__group=ThirdPartyMonitor.as_group(),
+            realms__group__name__in=TPM_ACTIVE_GROUPS,
         )
         return queryset
 

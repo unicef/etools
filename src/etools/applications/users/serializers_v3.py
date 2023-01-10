@@ -10,7 +10,7 @@ from rest_framework.exceptions import PermissionDenied
 
 from etools.applications.audit.models import Auditor
 from etools.applications.organizations.models import Organization
-from etools.applications.users.mixins import GroupEditPermissionMixin
+from etools.applications.users.mixins import AUDIT_ACTIVE_GROUPS, GroupEditPermissionMixin
 from etools.applications.users.models import Country, Realm, UserProfile
 from etools.applications.users.serializers import GroupSerializer, SimpleCountrySerializer, SimpleOrganizationSerializer
 from etools.applications.users.tasks import notify_user_on_realm_update
@@ -385,8 +385,9 @@ class ExternalUserSerializer(MinimalUserSerializer):
             user=instance,
             country=country,
             organization=self._get_external_psea_org(),
-            group=Auditor.as_group(),
-            is_active=True)
+            group__name__in=AUDIT_ACTIVE_GROUPS,
+            is_active=True
+        )
         if not realm_qs.exists():
             return False, country
         return True, country

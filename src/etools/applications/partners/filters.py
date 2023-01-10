@@ -4,6 +4,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework.filters import BaseFilterBackend
 
 from etools.applications.partners.models import PartnerOrganization
+from etools.applications.users.mixins import PARTNER_ACTIVE_GROUPS
 
 
 class PartnerScopeFilter(BaseFilterBackend):
@@ -12,7 +13,9 @@ class PartnerScopeFilter(BaseFilterBackend):
             partner = get_object_or_404(PartnerOrganization, pk=request.parser_context['kwargs']['partner_pk'])
             return queryset.filter(
                 realms__country=connection.tenant,
-                realms__organization=partner.organization)
+                realms__organization=partner.organization,
+                realms__group__name__in=PARTNER_ACTIVE_GROUPS,
+            )
         return queryset
 
 
