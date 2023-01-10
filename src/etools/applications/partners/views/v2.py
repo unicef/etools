@@ -103,7 +103,7 @@ class PMPStaticDropdownsListAPIView(APIView):
         )
         attachment_types_active = AttachmentFlat.get_file_types()
         partner_file_types = FileType.objects.values_list("name", flat=True)
-        sea_risk_ratings = choices_to_json_ready(PartnerOrganization.PSEA_RISK_RATING)
+        sea_risk_ratings = choices_to_json_ready(PartnerOrganization.ALL_COMBINED_RISK_RATING)
         gender_equity_sustainability_ratings = choices_to_json_ready(Intervention.RATING_CHOICES, sort_choices=False)
         risk_types = choices_to_json_ready(InterventionRisk.RISK_TYPE_CHOICES, sort_choices=False)
         cash_transfer_modalities = choices_to_json_ready(Intervention.CASH_TRANSFER_CHOICES, sort_choices=False)

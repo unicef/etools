@@ -46,6 +46,7 @@ class UserManagementSerializer(serializers.Serializer):
                                                                               "PME",
                                                                               "Travel Administrator",
                                                                               "UNICEF Audit Focal Point",
+                                                                              "Travel Focal Point",
                                                                               "FM User",
                                                                               "Driver"]), required=True)
     workspace = serializers.CharField(required=True)
