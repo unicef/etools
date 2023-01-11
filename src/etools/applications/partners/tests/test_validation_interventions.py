@@ -7,11 +7,10 @@ from etools_validator.exceptions import BasicValidationError, StateValidationErr
 from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
-from etools.applications.partners.models import Agreement, FileType, Intervention, InterventionAmendment
+from etools.applications.partners.models import Agreement, Intervention, InterventionAmendment
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
     InterventionAmendmentFactory,
-    InterventionAttachmentFactory,
     InterventionFactory,
     PartnerStaffFactory,
 )

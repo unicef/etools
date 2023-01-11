@@ -167,7 +167,7 @@ def transition_to_signature(i):
 
 
 def transition_to_signed(i):
-    from etools.applications.partners.models import Agreement, FileType, InterventionAmendment
+    from etools.applications.partners.models import Agreement, InterventionAmendment
 
     if i.has_active_amendment(InterventionAmendment.KIND_NORMAL):
         raise TransitionError([_('Cannot Transition status while adding an amendment')])
@@ -259,7 +259,7 @@ def ssfa_agreement_has_no_other_intervention(i):
     the only intervention for that ssfa agreement
     """
     if i.document_type == i.SSFA:
-        if not(i.agreement.agreement_type == i.agreement.SSFA):
+        if not (i.agreement.agreement_type == i.agreement.SSFA):
             raise BasicValidationError(_('Agreement selected is not of type SSFA'))
         return i.agreement.interventions.count() <= 1
     return True
