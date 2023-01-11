@@ -10,7 +10,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('partners', '0111_realms_partnerstaffmembers'),
+        ('partners', '0113_realms_partnerstaffmembers'),
     ]
 
     operations = [

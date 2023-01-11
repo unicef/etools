@@ -46,7 +46,7 @@ def migrate_staff_members_to_users(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('partners', '0112_auto_20221102_1045'),
+        ('partners', '0114_auto_20221102_1045'),
     ]
 
     operations = [
