@@ -96,6 +96,26 @@ class SyncViewTestCase(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
         self.assertIn('Intervention is not ready for import yet', response.data['non_field_errors'])
 
+    @patch('etools.applications.ecn.api.ECNAPI.get_intervention')
+    def test_sync_not_found(self, request_intervention_mock):
+        request_intervention_mock.return_value = None
+
+        response = self.forced_auth_req(
+            'post',
+            reverse('ecn_v1:intervention-import-ecn'),
+            user=UserFactory(groups__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
+            data={
+                'agreement': AgreementFactory().pk,
+                'number': 'test',
+                'cfei_number': 'test',
+                'sections': [SectionFactory().pk],
+                'locations': [LocationFactory().pk for _i in range(10)],
+                'offices': [OfficeFactory().pk],
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND, response.data)
+        self.assertIn('The provided eCN number could not be found', response.data['non_field_errors'])
+
     def test_permissions(self):
         agreement = AgreementFactory()
         response = self.forced_auth_req(
