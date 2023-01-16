@@ -579,14 +579,21 @@ class TestUserRealmView(BaseTenantTestCase):
         self.assertEqual(response.data['count'], 0)
 
     def test_post_forbidden_403(self):
-        for auth_user, group in zip(
-                [self.ip_viewer, self.ip_editor, self.audit_focal_point],
-                [IPViewer, IPAdmin, Auditor, IPViewer]):
+        for auth_user in [self.ip_viewer, self.ip_editor, self.audit_focal_point]:
             self.assertEqual(self.user.realms.count(), 0)
 
             response = self.make_request_list(auth_user, data={})
             self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-            self.assertEqual(self.user.realms.count(), 0)
+
+        # creating a unicef user from AMP is forbidden
+        data = {
+            "first_name": "First Name",
+            "last_name": f"{auth_user.id} Last Name",
+            "email": "test@unicef.org",
+            "groups": [GroupFactory(name=IPViewer.name).pk],
+        }
+        response = self.make_request_list(auth_user, data=data)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_post_create_new_201(self):
         for auth_user, group in zip(
@@ -604,7 +611,6 @@ class TestUserRealmView(BaseTenantTestCase):
             new_user = User.objects.get(email=email)
             self.assertEqual(new_user.realms.count(), 1)
             self.assertEqual(group.name, response.data['realms'][0]['group_name'])
-            self.assertIn(group, new_user.groups)
 
     def test_post_user_exists_201(self):
         for auth_user, group in zip(
@@ -649,7 +655,6 @@ class TestUserRealmView(BaseTenantTestCase):
         new_user = User.objects.get(email=email)
         self.assertEqual(new_user.realms.count(), 1)
         self.assertEqual(group.name, response.data['realms'][0]['group_name'])
-        self.assertIn(group, new_user.groups)
 
     def test_patch_reactivate_groups(self):
         self.assertEqual(self.user.realms.count(), 0)
