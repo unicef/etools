@@ -15,6 +15,7 @@ from unicef_locations.models import GatewayType
 
 from etools.applications.attachments.models import AttachmentFlat
 from etools.applications.funds.models import FundsReservationItem
+from etools.applications.organizations.models import Organization
 from etools.applications.partners.models import (
     Agreement,
     AgreementAmendment,
@@ -144,7 +145,7 @@ class PMPDropdownsListApiView(APIView):
         )
 
     def get_cso_types(self):
-        cso_types = PartnerOrganization.objects.values_list(
+        cso_types = Organization.objects.values_list(
             'cso_type',
             flat=True,
         ).exclude(
@@ -152,7 +153,7 @@ class PMPDropdownsListApiView(APIView):
         ).exclude(
             cso_type__exact='',
         ).order_by('cso_type').distinct('cso_type')
-        return choices_to_json_ready([(ct, PartnerOrganization.CSO_TYPES[ct]) for ct in cso_types])
+        return choices_to_json_ready([(ct, Organization.CSO_TYPES[ct]) for ct in cso_types])
 
     def get_local_currency(self):
         local_workspace = self.request.user.profile.country
