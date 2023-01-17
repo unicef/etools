@@ -182,7 +182,7 @@ class UserRealmBaseSerializer(GroupEditPermissionMixin, serializers.ModelSeriali
 
 class UserRealmCreateSerializer(UserRealmBaseSerializer):
     email = serializers.CharField(required=True, write_only=True)
-    job_title = serializers.CharField(required=False, write_only=True)
+    job_title = serializers.CharField(required=False, allow_blank=True, write_only=True)
 
     class Meta(UserRealmBaseSerializer.Meta):
         model = get_user_model()

@@ -203,17 +203,18 @@ class OrganizationListView(ListAPIView):
     model = Organization
     serializer_class = SimpleOrganizationSerializer
     permission_classes = (IsAuthenticated, IsPartnershipManager)
-    organization_type_filter = {
-        "pmp": dict(partner__isnull=False, partner__hidden=False),
-        "audit": dict(auditorfirm__purchase_orders__engagement__isnull=False, auditorfirm__hidden=False),
-        "tpm": dict(tpmpartner__tpmvisit__isnull=False, tpmpartner__hidden=False)
-    }
 
     def get_queryset(self):
         if not self.request.user.is_partnership_manager:
             return self.model.objects.none()
+        organization_type_filter = {
+            "pmp": dict(partner__isnull=False, partner__hidden=False),
+            "audit": dict(auditorfirm__purchase_orders__engagement__isnull=False,
+                          auditorfirm__hidden=False),
+            "tpm": dict(tpmpartner__countries=connection.tenant, tpmpartner__hidden=False)
+        }
         return self.model.objects\
-            .filter(**self.organization_type_filter[self.request.query_params.get('organization_type', 'pmp')])\
+            .filter(**organization_type_filter[self.request.query_params.get('organization_type', 'pmp')])\
             .distinct()
 
 

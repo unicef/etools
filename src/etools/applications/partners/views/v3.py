@@ -45,17 +45,14 @@ class PMPBaseViewMixin:
         return self.request.user.is_authenticated and self.request.user.get_partner()
 
     def current_partner(self):
-        """List of partners user associated with"""
+        """List of partners the user is associated with"""
         if not self.is_partner_staff():
             return None
-        try:
-            return PartnerOrganization.objects.get(
-                organization=self.request.user.profile.organization,
-                organization__realms__user=self.request.user,
-                organization__realms__is_active=True,
-            )
-        except PartnerOrganization.DoesNotExist:
-            return None
+        return PartnerOrganization.objects.filter(
+            organization=self.request.user.profile.organization,
+            organization__realms__user=self.request.user,
+            organization__realms__is_active=True,
+        ).first()
 
     def get_pd(self, pd_pk):
         try:
