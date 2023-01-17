@@ -26,7 +26,7 @@ from etools.applications.partners.permissions import user_group_permission
 from etools.applications.partners.views.v3 import PMPBaseViewMixin
 from etools.applications.users import views as v1, views_v2 as v2
 from etools.applications.users.mixins import AUDIT_ACTIVE_GROUPS, GroupEditPermissionMixin, TPM_ACTIVE_GROUPS
-from etools.applications.users.models import Country, IPAdmin, IPAuthorizedOfficer, IPEditor, Realm
+from etools.applications.users.models import IPAdmin, IPAuthorizedOfficer, IPEditor, Realm
 from etools.applications.users.permissions import IsActiveInRealm, IsPartnershipManager
 from etools.applications.users.serializers import SimpleGroupSerializer, SimpleOrganizationSerializer
 from etools.applications.users.serializers_v3 import (
@@ -195,26 +195,25 @@ class CountryView(v2.CountryView):
     serializer_class = CountryDetailSerializer
 
 
-class PartnerOrganizationListView(ListAPIView):
+class OrganizationListView(ListAPIView):
     """
-    Gets a list of organizations from partners given a country id for
-    the Partnership Manager currently logged in.
+    Gets a list of organizations given an organization_type(default is partner type) as query param
+    for the Partnership Manager currently logged in.
     """
     model = Organization
     serializer_class = SimpleOrganizationSerializer
     permission_classes = (IsAuthenticated, IsPartnershipManager)
-
-    def get_root_object(self):
-        return get_object_or_404(Country, pk=self.kwargs.get('country_pk'))
+    organization_type_filter = {
+        "pmp": dict(partner__isnull=False, partner__hidden=False),
+        "audit": dict(auditorfirm__purchase_orders__engagement__isnull=False, auditorfirm__hidden=False),
+        "tpm": dict(tpmpartner__tpmvisit__isnull=False, tpmpartner__hidden=False)
+    }
 
     def get_queryset(self):
-        country = self.get_root_object()
-
         if not self.request.user.is_partnership_manager:
             return self.model.objects.none()
-        # returns only Partner Organizations that are not marked for deletion
         return self.model.objects\
-            .filter(partner__isnull=False, partner__deleted_flag=False, realms__country=country)\
+            .filter(**self.organization_type_filter[self.request.query_params.get('organization_type', 'pmp')])\
             .distinct()
 
 
