@@ -30,11 +30,13 @@ class Organization(TimeStampedModel, models.Model):
     CSO_TYPE_NATIONAL = "National"
     CSO_TYPE_COMMUNITY = "Community Based Organization"
     CSO_TYPE_ACADEMIC = "Academic Institution"
+    CSO_TYPE_REDCROSS = 'Red Cross/Red Crescent National Societies'
     CSO_TYPES = Choices(
         (CSO_TYPE_INTERNATIONAL, _(CSO_TYPE_INTERNATIONAL)),
         (CSO_TYPE_NATIONAL, _(CSO_TYPE_NATIONAL)),
         (CSO_TYPE_COMMUNITY, _(CSO_TYPE_COMMUNITY)),
         (CSO_TYPE_ACADEMIC, _(CSO_TYPE_ACADEMIC)),
+        (CSO_TYPE_REDCROSS, _('Red Cross/Red Crescent National Societies')),
     )
     parent = models.ForeignKey(
         'self',
