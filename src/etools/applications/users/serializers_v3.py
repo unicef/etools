@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, ValidationError
 
 from etools.applications.audit.models import Auditor
 from etools.applications.organizations.models import Organization
@@ -182,7 +182,7 @@ class UserRealmBaseSerializer(GroupEditPermissionMixin, serializers.ModelSeriali
 
 class UserRealmCreateSerializer(UserRealmBaseSerializer):
     email = serializers.CharField(required=True, write_only=True)
-    job_title = serializers.CharField(required=False, write_only=True)
+    job_title = serializers.CharField(required=False, allow_blank=True, write_only=True)
 
     class Meta(UserRealmBaseSerializer.Meta):
         model = get_user_model()
@@ -197,6 +197,11 @@ class UserRealmCreateSerializer(UserRealmBaseSerializer):
             'last_name': {'required': True},
             'email': {'required': True}
         }
+
+    def validate_email(self, value):
+        if value.endswith('@unicef.org'):
+            raise ValidationError(_('UNICEF users cannot be added through Access Management Portal.'))
+        return value
 
     def create(self, validated_data):
         organization_id = validated_data.pop('organization', self.context['request'].user.profile.organization.id)
@@ -214,9 +219,7 @@ class UserRealmCreateSerializer(UserRealmBaseSerializer):
 
         if job_title:
             instance.profile.job_title = job_title
-        instance.profile.country = connection.tenant
-        instance.profile.organization_id = organization_id
-        instance.profile.save(update_fields=['country', 'organization_id', 'job_title'])
+            instance.profile.save(update_fields=['job_title'])
 
         self.create_realms(instance, organization_id, group_ids)
         notify_user_on_realm_update.delay(instance.id)
