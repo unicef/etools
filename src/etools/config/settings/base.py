@@ -568,6 +568,7 @@ SCHEMA_OVERRIDE_PARAM = "schema"
 
 # Number of days before PCA required notification
 PCA_REQUIRED_NOTIFICATION_LEAD = 30
+PCA_SKIP_FINANCIAL_DATA = get_from_secrets_or_env('PCA_SKIP_FINANCIAL_DATA', False)
 
 UNICEF_NOTIFICATION_TEMPLATE_DIR = "notifications"
 UNICEF_LOCATIONS_GET_CACHE_KEY = 'etools.applications.locations.views.cache_key'

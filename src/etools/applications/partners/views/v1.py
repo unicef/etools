@@ -66,40 +66,41 @@ class PCAPDFView(LoginRequiredMixin, PDFTemplateView):
             url += '&key={key}'
             data["key"] = settings.INSIGHT_BANK_KEY
 
-        valid_response, response = get_data_from_insight(url, data)
-        if not valid_response:
-            return {"error": response}
-        try:
-            banks_records = response["ROWSET"]["ROW"]["VENDOR_BANK"]["VENDOR_BANK_ROW"]
-            if isinstance(banks_records, dict):
-                banks_records = [banks_records]
-        except (KeyError, TypeError):
-            return {"error": 'Response returned by the Server does not have the necessary values to generate PCA'}
-
-        bank_key_values = [
-            ('bank_address', "STREET"),
-            ('bank_name', 'BANK_NAME'),
-            ('account_title', "ACCT_HOLDER"),
-            ('routing_details', "SWIFT_CODE"),
-            ('account_number', "BANK_ACCOUNT_NO"),
-            ('account_currency', "BANK_ACCOUNT_CURRENCY"),
-            ('tax_number_5', "TAX_NUMBER_5"),
-        ]
-        Bank = namedtuple('Bank', ' '.join([i[0] for i in bank_key_values]))
         bank_objects = []
+        if not settings.PCA_SKIP_FINANCIAL_DATA:
+            valid_response, response = get_data_from_insight(url, data)
+            if not valid_response:
+                return {"error": response}
+            try:
+                banks_records = response["ROWSET"]["ROW"]["VENDOR_BANK"]["VENDOR_BANK_ROW"]
+                if isinstance(banks_records, dict):
+                    banks_records = [banks_records]
+            except (KeyError, TypeError):
+                return {"error": 'Response returned by the Server does not have the necessary values to generate PCA'}
 
-        tax_number_5 = None
-        if self.request.tenant.business_area_code == '3920' and response["ROWSET"]["ROW"]['TAX_NUMBER_5']:
-            tax_number_5 = response["ROWSET"]["ROW"]['TAX_NUMBER_5']
-        for b in banks_records:
-            if isinstance(b, dict):
-                b["BANK_ADDRESS"] = ', '.join(b[key] for key in ['STREET', 'CITY'] if key in b and b[key])
-                b["ACCT_HOLDER"] = b["ACCT_HOLDER"] if "ACCT_HOLDER" in b else ""
-                # TODO: fix currency field name when we have it
-                b["BANK_ACCOUNT_CURRENCY"] = b["BANK_ACCOUNT_CURRENCY"] if "BANK_ACCOUNT_CURRENCY" in b else ""
-                b["TAX_NUMBER_5"] = tax_number_5
+            bank_key_values = [
+                ('bank_address', "STREET"),
+                ('bank_name', 'BANK_NAME'),
+                ('account_title', "ACCT_HOLDER"),
+                ('routing_details', "SWIFT_CODE"),
+                ('account_number', "BANK_ACCOUNT_NO"),
+                ('account_currency', "BANK_ACCOUNT_CURRENCY"),
+                ('tax_number_5', "TAX_NUMBER_5"),
+            ]
+            Bank = namedtuple('Bank', ' '.join([i[0] for i in bank_key_values]))
 
-                bank_objects.append(Bank(*[b[i[1]] for i in bank_key_values]))
+            tax_number_5 = None
+            if self.request.tenant.business_area_code == '3920' and response["ROWSET"]["ROW"]['TAX_NUMBER_5']:
+                tax_number_5 = response["ROWSET"]["ROW"]['TAX_NUMBER_5']
+            for b in banks_records:
+                if isinstance(b, dict):
+                    b["BANK_ADDRESS"] = ', '.join(b[key] for key in ['STREET', 'CITY'] if key in b and b[key])
+                    b["ACCT_HOLDER"] = b["ACCT_HOLDER"] if "ACCT_HOLDER" in b else ""
+                    # TODO: fix currency field name when we have it
+                    b["BANK_ACCOUNT_CURRENCY"] = b["BANK_ACCOUNT_CURRENCY"] if "BANK_ACCOUNT_CURRENCY" in b else ""
+                    b["TAX_NUMBER_5"] = tax_number_5
+
+                    bank_objects.append(Bank(*[b[i[1]] for i in bank_key_values]))
 
         officers_list = []
         for officer in self.agreement.authorized_officers.filter(active=True):
