@@ -9,7 +9,8 @@ from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
-from unicef_attachments.fields import AttachmentSingleFileField
+from unicef_attachments.fields import AttachmentSingleFileField, FileTypeModelChoiceField
+from unicef_attachments.models import Attachment, FileType as AttachmentFileType
 
 from etools.applications.field_monitoring.fm_settings.serializers import LocationSiteSerializer
 from etools.applications.partners.models import (
@@ -31,6 +32,7 @@ from etools.applications.partners.permissions import (
 from etools.applications.partners.serializers.exports.vision.export_mixin import InterventionVisionSynchronizerMixin
 from etools.applications.partners.serializers.intervention_snapshot import FullInterventionSnapshotSerializerMixin
 from etools.applications.partners.serializers.interventions_v2 import (
+    AttachmentField,
     FRsSerializer,
     InterventionAmendmentCUSerializer,
     InterventionAttachmentSerializer,
@@ -689,11 +691,31 @@ class InterventionDetailResultsStructureSerializer(serializers.ModelSerializer):
         )
 
 
-class PMPInterventionAttachmentSerializer(InterventionAttachmentSerializer):
-    class Meta(InterventionAttachmentSerializer.Meta):
-        extra_kwargs = {
-            'intervention': {'read_only': True},
-        }
+class PMPInterventionAttachmentSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(read_only=True)
+    intervention = serializers.IntegerField(read_only=True, source='object_id')
+    attachment = serializers.IntegerField(read_only=True, source='pk')
+    attachment_file = serializers.FileField(read_only=True, source='file')
+    attachment_document = AttachmentField(source='pk')
+    type = FileTypeModelChoiceField(
+        label=_('Document Type'),
+        queryset=AttachmentFileType.objects.group_by('intervention_attachments'),
+        source='file_type'
+    )
+    active = serializers.BooleanField(source='is_active')
+
+    class Meta:
+        model = Attachment
+        fields = (
+            'id',
+            'intervention',
+            'created',
+            'type',
+            'active',
+            'attachment',
+            'attachment_file',
+            'attachment_document',
+        )
 
 
 class InterventionListSerializer(InterventionV2ListSerializer):

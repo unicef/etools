@@ -12,7 +12,6 @@ from etools.applications.partners.tests.factories import (
     AgreementFactory,
     AssessmentFactory,
     InterventionAmendmentFactory,
-    InterventionAttachmentFactory,
     InterventionFactory,
     InterventionResultLinkFactory,
     PartnerFactory,
@@ -61,8 +60,12 @@ class TestAttachmentListView(BaseTenantTestCase):
         cls.intervention_amendment = InterventionAmendmentFactory(
             intervention=cls.intervention
         )
-        cls.intervention_attachment = InterventionAttachmentFactory(
-            intervention=cls.intervention
+        cls.intervention_attachment = AttachmentFactory(
+            file_type=cls.file_type_1,
+            code=cls.code_1,
+            file="sample1.pdf",
+            content_object=cls.file_type_1,
+            uploaded_by=cls.unicef_staff
         )
 
         cls.tpm_partner = SimpleTPMPartnerFactory(vendor_number="V432")

@@ -1012,7 +1012,7 @@ class PartnerStaffMember(TimeStampedModel):
         return full_name.strip()
 
     def __str__(self):
-        return'{} {} ({})'.format(
+        return '{} {} ({})'.format(
             self.first_name,
             self.last_name,
             self.partner.name
@@ -1215,12 +1215,12 @@ class Assessment(TimeStampedModel):
     tracker = FieldTracker()
 
     def __str__(self):
-        return'{type}: {partner} {rating} {date}'.format(
+        return '{type}: {partner} {rating} {date}'.format(
             type=self.type,
             partner=self.partner.name,
             rating=self.rating,
             date=self.completed_date.strftime("%d-%m-%Y") if
-            self.completed_date else'NOT COMPLETED'
+            self.completed_date else 'NOT COMPLETED'
         )
 
 
@@ -1390,7 +1390,7 @@ class Agreement(TimeStampedModel):
         ordering = ['-created']
 
     def __str__(self):
-        return'{} for {} ({} - {})'.format(
+        return '{} for {} ({} - {})'.format(
             self.agreement_type,
             self.partner.name,
             self.start.strftime('%d-%m-%Y') if self.start else '',
@@ -2208,6 +2208,13 @@ class Intervention(TimeStampedModel):
         verbose_name=_("Special Conditions for Construction Works by Implementing Partners"),
         default=False,
     )
+    attachments = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Attachments'),
+        code='partners_intervention_attachments',
+        blank=True,
+        null=True
+    )
 
     # Flag if this has been migrated to a status that is not correct
     # previous status
@@ -2407,7 +2414,7 @@ class Intervention(TimeStampedModel):
     @property
     def final_partnership_review(self):
         # to be used only to track changes in validator mixin
-        return self.attachments.filter(type__name=FileType.FINAL_PARTNERSHIP_REVIEW, active=True)
+        return self.attachments.filter(file_type__name='partner_report')
 
     @property
     def document_currency(self):
@@ -3343,7 +3350,7 @@ class InterventionAttachment(TimeStampedModel):
     Relates to :model:`partners.WorkspaceFileType`
     """
     intervention = models.ForeignKey(
-        Intervention, related_name='attachments', verbose_name=_('Intervention'),
+        Intervention, related_name='old_attachments', verbose_name=_('Intervention'),
         on_delete=models.CASCADE,
     )
     type = models.ForeignKey(

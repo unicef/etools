@@ -2,6 +2,7 @@ import functools
 from copy import copy
 
 from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
 from django.db import transaction, utils
 from django.http import HttpResponse
 from django.utils.translation import ugettext_lazy as _
@@ -13,6 +14,7 @@ from rest_framework.generics import (
     CreateAPIView,
     DestroyAPIView,
     GenericAPIView,
+    get_object_or_404,
     ListAPIView,
     ListCreateAPIView,
     RetrieveAPIView,
@@ -24,6 +26,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.status import is_success
 from rest_framework.views import APIView
+from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CURRENCY_LIST
 
 from etools.applications.field_monitoring.permissions import IsEditAction, IsReadAction
@@ -31,7 +34,6 @@ from etools.applications.partners.exports_v2 import InterventionXLSRenderer
 from etools.applications.partners.filters import InterventionEditableByFilter
 from etools.applications.partners.models import (
     Intervention,
-    InterventionAttachment,
     InterventionManagementBudget,
     InterventionReview,
     InterventionReviewNotification,
@@ -74,7 +76,6 @@ from etools.applications.partners.serializers.v3 import (
 from etools.applications.partners.validation.interventions import InterventionValid
 from etools.applications.partners.views.intervention_snapshot import FullInterventionSnapshotDeleteMixin
 from etools.applications.partners.views.interventions_v2 import (
-    InterventionAttachmentUpdateDeleteView,
     InterventionDeleteView,
     InterventionDetailAPIView,
     InterventionIndicatorsListView,
@@ -572,63 +573,62 @@ class InterventionRiskDeleteView(FullInterventionSnapshotDeleteMixin, DestroyAPI
         return super().get_queryset().filter(intervention=self.get_root_object())
 
 
-class PMPInterventionAttachmentListCreateView(
+class BasePMPInterventionAttachmentsView(
     InterventionAutoTransitionsMixin,
     DetailedInterventionResponseMixin,
-    ListCreateAPIView,
+    GenericAPIView,
 ):
     serializer_class = PMPInterventionAttachmentSerializer
     permission_classes = [
         IsAuthenticated,
         IsReadAction | (IsEditAction & intervention_field_is_editable_permission('attachments')),
     ]
-    queryset = InterventionAttachment.objects.all()
+    queryset = Attachment.objects.filter(code='partners_intervention_attachments')
 
     def get_root_object(self):
         if not hasattr(self, '_intervention'):
             self._intervention = Intervention.objects.filter(pk=self.kwargs.get('intervention_pk')).first()
         return self._intervention
 
-    def get_queryset(self):
-        return super().get_queryset().filter(intervention=self.get_root_object())
+    def get_intervention(self):
+        return self.get_root_object()
 
+    def get_queryset(self):
+        intervention = self.get_root_object()
+        return super().get_queryset().filter(
+            content_type_id=ContentType.objects.get_for_model(Intervention).id,
+            object_id=intervention.pk,
+        )
+
+
+class PMPInterventionAttachmentListCreateView(
+    ListCreateAPIView,
+    BasePMPInterventionAttachmentsView,
+):
     @transaction.atomic
     def perform_create(self, serializer):
         intervention = self.get_root_object()
-        serializer.save(intervention=intervention)
+        serializer.instance = get_object_or_404(Attachment, pk=serializer.validated_data.get("pk"))
+        serializer.save(content_object=intervention, code='partners_intervention_attachments')
         self.perform_auto_transitions(intervention, self.request.user)
-
-    def get_intervention(self):
-        return self.get_root_object()
 
 
 class PMPInterventionAttachmentUpdateDeleteView(
-    InterventionAutoTransitionsMixin,
-    DetailedInterventionResponseMixin,
-    InterventionAttachmentUpdateDeleteView,
+    RetrieveUpdateDestroyAPIView,
+    BasePMPInterventionAttachmentsView,
 ):
-    serializer_class = PMPInterventionAttachmentSerializer
-    queryset = InterventionAttachment.objects.all()
-    permission_classes = [
-        IsAuthenticated,
-        IsReadAction | (IsEditAction & intervention_field_is_editable_permission('attachments')),
-    ]
-
-    def get_root_object(self):
-        if not hasattr(self, '_intervention'):
-            self._intervention = Intervention.objects.filter(pk=self.kwargs.get('intervention_pk')).first()
-        return self._intervention
-
-    def get_queryset(self):
-        return super().get_queryset().filter(intervention=self.get_root_object())
-
-    def get_intervention(self):
-        return self.get_root_object()
-
     @transaction.atomic
     def perform_update(self, serializer):
         super().perform_update(serializer)
         self.perform_auto_transitions(self.get_root_object(), self.request.user)
+
+    def delete(self, request, *args, **kwargs):
+        intervention = self.get_root_object()
+
+        if intervention.status in [Intervention.DRAFT]:
+            return super().delete(request, *args, **kwargs)
+        else:
+            raise ValidationError("Deleting an attachment can only be done in Draft status")
 
 
 class PMPInterventionIndicatorsUpdateView(

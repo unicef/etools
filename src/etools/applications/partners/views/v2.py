@@ -155,8 +155,10 @@ class PMPDropdownsListApiView(APIView):
                                                                                         'from_date', 'to_date'))
         cp_outputs = [{"id": r.id, "name": r.output_name, "wbs": r.wbs, "country_programme": r.country_programme.id}
                       for r in Result.objects.filter(result_type__name=ResultType.OUTPUT, wbs__isnull=False)]
-        file_types = list(FileType.objects.filter(name__in=[i[0] for i in FileType.NAME_CHOICES])
-                          .all().values())
+        file_types = [
+            {'id': ft['id'], 'name': ft['label']}
+            for ft in AttachmentFileType.objects.group_by('intervention_attachments').values('id', 'label')
+        ]
 
         donors = FundsReservationItem.objects.filter(donor__isnull=False).\
             order_by('donor').values_list('donor', flat=True).distinct('donor')

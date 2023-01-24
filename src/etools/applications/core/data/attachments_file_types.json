@@ -551,7 +551,7 @@
             "name": "Partners Intervention Activation Letter",
             "label": "Partners Intervention Activation Letter",
             "code": "partners_intervention_activation_letter",
-            "group": "[\"pmp_documents\"]"
+            "group": ["pmp_documents"]
         }
     },
     {
@@ -562,7 +562,7 @@
             "name": "Partners Intervention Termination Doc",
             "label": "Partners Intervention Termination Doc",
             "code": "partners_intervention_termination_doc",
-            "group": "[\"pmp_documents\"]"
+            "group": ["pmp_documents"]
         }
     },
     {
@@ -573,7 +573,7 @@
             "name": "Partners Intervention Amendment Signed",
             "label": "Partners Intervention Amendment Signed",
             "code": "partners_intervention_amendment_signed",
-            "group": "[\"pmp_documents\"]"
+            "group": ["pmp_documents"]
         }
     },
     {
@@ -584,7 +584,7 @@
             "name": "Partners Intervention Amendment Internal Prc Review",
             "label": "Partners Intervention Amendment Internal Prc Review",
             "code": "partners_intervention_amendment_internal_prc_review",
-            "group": "[\"pmp_documents\"]"
+            "group": ["pmp_documents"]
         }
     },
     {
@@ -595,7 +595,7 @@
             "name": "Partners Partner Assessment",
             "label": "Partners Partner Assessment",
             "code": "partners_partner_assessment",
-            "group": "[\"pmp_documents\"]"
+            "group": ["pmp_documents"]
         }
     },
     {
@@ -606,7 +606,7 @@
             "name": "Partners Intervention Attachment",
             "label": "Partners Intervention Attachment",
             "code": "partners_intervention_attachment",
-            "group": "[\"pmp_documents\"]"
+            "group": ["pmp_documents"]
         }
     },
     {
@@ -617,7 +617,7 @@
             "name": "Partners Assessment Report",
             "label": "Partners Assessment Report",
             "code": "partners_assessment_report",
-            "group": "[\"pmp_documents\"]"
+            "group": ["pmp_documents"]
         }
     },
     {
@@ -628,7 +628,7 @@
             "name": "Partners Agreement",
             "label": "Partners Agreement",
             "code": "partners_agreement",
-            "group": "[\"pmp_documents\"]"
+            "group": ["pmp_documents"]
         }
     },
     {
@@ -639,7 +639,7 @@
             "name": "Partners Agreement Termination Doc",
             "label": "Partners Agreement Termination Doc",
             "code": "partners_agreement_termination_doc",
-            "group": "[\"pmp_documents\"]"
+            "group": ["pmp_documents"]
         }
     },
     {
@@ -650,7 +650,7 @@
             "name": "Partners Agreement Amendment",
             "label": "Partners Agreement Amendment",
             "code": "partners_agreement_amendment",
-            "group": "[\"pmp_documents\"]"
+            "group": ["pmp_documents"]
         }
     },
     {
@@ -661,7 +661,7 @@
             "name": "Partners Intervention Prc Review",
             "label": "Partners Intervention Prc Review",
             "code": "partners_intervention_prc_review",
-            "group": "[\"pmp_documents\"]"
+            "group": ["pmp_documents"]
         }
     },
     {
@@ -672,40 +672,106 @@
             "name": "Partners Intervention Signed Pd",
             "label": "Partners Intervention Signed Pd",
             "code": "partners_intervention_signed_pd",
-            "group": "[\"pmp_documents\"]"
+            "group": ["pmp_documents"]
         }
     },
     {
         "model": "unicef_attachments.filetype",
         "pk": 2012,
         "fields": {
-            "order": 5,
-            "name": "Data Processing Agreement",
+            "order": 6,
+            "name": "data_processing_agreement",
             "label": "Data Processing Agreement",
-            "code": "data_processing_agreement",
-            "group": ["pmp_documents"]
+            "code": "pmp_documents",
+            "group": ["pmp_documents", "intervention_attachments"]
         }
     },
     {
         "model": "unicef_attachments.filetype",
         "pk": 2013,
         "fields": {
-            "order": 5,
-            "name": "Activities involving children and young people",
+            "order": 7,
+            "name": "activities_involving_children",
             "label": "Activities involving children and young people",
-            "code": "activities_involving_children",
-            "group": ["pmp_documents"]
+            "code": "pmp_documents",
+            "group": ["pmp_documents", "intervention_attachments"]
         }
     },
     {
         "model": "unicef_attachments.filetype",
         "pk": 2014,
         "fields": {
-            "order": 5,
-            "name": "Special Conditions for Construction Works",
+            "order": 8,
+            "name": "special_conditions_for_constriction",
             "label": "Special Conditions for Construction Works",
-            "code": "special_conditions_for_construction",
-            "group": ["pmp_documents"]
+            "code": "pmp_documents",
+            "group": ["pmp_documents", "intervention_attachments"]
+        }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 2015,
+        "fields": {
+            "order": 1,
+            "name": "face",
+            "label": "FACE",
+            "code": "pmp_documents",
+            "group": ["pmp_documents", "intervention_attachments"]
+        }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 2016,
+        "fields": {
+            "order": 2,
+            "name": "progress_report",
+            "label": "Progress Report",
+            "code": "pmp_documents",
+            "group": ["pmp_documents", "intervention_attachments"]
+        }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 2017,
+        "fields": {
+            "order": 3,
+            "name": "final_partnership_review",
+            "label": "(Legacy) Final Partnership Review",
+            "code": "pmp_documents",
+            "group": ["pmp_documents", "intervention_attachments"]
+        }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 2018,
+        "fields": {
+            "order": 4,
+            "name": "correspondence",
+            "label": "Correspondence",
+            "code": "pmp_documents",
+            "group": ["pmp_documents", "intervention_attachments"]
+        }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 2019,
+        "fields": {
+            "order": 5,
+            "name": "supply_plan",
+            "label": "Supply/Distribution Plan",
+            "code": "pmp_documents",
+            "group": ["pmp_documents", "intervention_attachments"]
+        }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 2020,
+        "fields": {
+            "order": 9,
+            "name": "other",
+            "label": "Other",
+            "code": "pmp_documents",
+            "group": ["pmp_documents", "intervention_attachments"]
         }
     },
     {

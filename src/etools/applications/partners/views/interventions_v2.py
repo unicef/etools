@@ -18,6 +18,7 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_csv import renderers as r
+from unicef_attachments.models import Attachment
 from unicef_restlib.views import QueryStringFilterMixin
 from unicef_snapshot.models import Activity
 
@@ -36,7 +37,6 @@ from etools.applications.partners.models import (
     Agreement,
     Intervention,
     InterventionAmendment,
-    InterventionAttachment,
     InterventionPlannedVisits,
     InterventionReportingPeriod,
     InterventionResultLink,
@@ -345,26 +345,34 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
 
 
 class InterventionAttachmentListCreateView(ListCreateAPIView):
-
     serializer_class = InterventionAttachmentSerializer
     permission_classes = (PartnershipManagerPermission,)
     filter_backends = (InterventionFilter,)
     renderer_classes = (JSONRenderer,)
-    queryset = InterventionAttachment.objects.all()
+    queryset = Attachment.objects.filter(code='partners_intervention_attachments')
 
-    def create(self, request, *args, **kwargs):
-        request.data.__setitem__("intervention", kwargs.get('intervention_pk', None))
+    def get_root_object(self):
+        if not hasattr(self, '_intervention'):
+            self._intervention = Intervention.objects.filter(pk=self.kwargs.get('intervention_pk')).first()
+        return self._intervention
 
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+    def get_queryset(self):
+        intervention = self.get_root_object()
+        return super().get_queryset().filter(
+            content_type_id=ContentType.objects.get_for_model(Intervention).id,
+            object_id=intervention.pk,
+        )
+
+    @transaction.atomic
+    def perform_create(self, serializer):
+        intervention = self.get_root_object()
+        serializer.instance = get_object_or_404(Attachment, pk=serializer.validated_data.get("pk"))
+        serializer.save(content_object=intervention, code='partners_intervention_attachments')
 
 
 class InterventionAttachmentUpdateDeleteView(RetrieveUpdateDestroyAPIView):
     serializer_class = InterventionAttachmentSerializer
-    queryset = InterventionAttachment.objects.all()
+    queryset = Attachment.objects.filter(code='partners_intervention_attachments')
     permission_classes = (PartnershipManagerRepPermission,)
 
     def delete(self, request, *args, **kwargs):

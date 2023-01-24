@@ -9,8 +9,8 @@ from django.utils.translation import gettext as _
 from rest_framework import serializers
 from rest_framework.serializers import ValidationError
 from rest_framework.validators import UniqueTogetherValidator
-from unicef_attachments.fields import AttachmentSingleFileField
-from unicef_attachments.models import Attachment
+from unicef_attachments.fields import AttachmentSingleFileField, FileTypeModelChoiceField
+from unicef_attachments.models import Attachment, FileType as AttachmentFileType
 from unicef_attachments.serializers import AttachmentSerializerMixin
 from unicef_locations.serializers import LocationSerializer
 from unicef_snapshot.serializers import SnapshotModelSerializer
@@ -397,21 +397,46 @@ class InterventionToIndicatorsListSerializer(serializers.ModelSerializer):
         )
 
 
-class InterventionAttachmentSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
-    attachment_file = serializers.FileField(source="attachment", read_only=True)
-    attachment_document = AttachmentSingleFileField(
-        source="attachment_file",
-        override="attachment",
+class AttachmentField(serializers.Field):
+    def to_representation(self, value):
+        if not value:
+            return None
+
+        attachment = Attachment.objects.get(pk=value)
+        if not getattr(attachment.file, "url", None):
+            return None
+
+        url = attachment.file.url
+        request = self.context.get('request', None)
+        if request is not None:
+            return request.build_absolute_uri(url)
+        return url
+
+    def to_internal_value(self, data):
+        return data
+
+
+class InterventionAttachmentSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(read_only=True)
+    intervention = serializers.IntegerField(read_only=True, source='object_id')
+    attachment = serializers.IntegerField(read_only=True, source='pk')
+    attachment_file = serializers.FileField(read_only=True, source='file')
+    attachment_document = AttachmentField(source='pk')
+    type = FileTypeModelChoiceField(
+        label=_('Document Type'),
+        queryset=AttachmentFileType.objects.group_by('intervention_attachments'),
+        source='file_type'
     )
+    active = serializers.BooleanField(source='is_active')
 
     def update(self, instance, validated_data):
-        intervention = validated_data.get('intervention', instance.intervention)
+        intervention = instance.content_object
         if intervention and intervention.status in [Intervention.ENDED, Intervention.CLOSED, Intervention.TERMINATED]:
             raise ValidationError('An attachment cannot be changed in statuses "Ended, Closed or Terminated"')
         return super().update(instance, validated_data)
 
     class Meta:
-        model = InterventionAttachment
+        model = Attachment
         fields = (
             'id',
             'intervention',
