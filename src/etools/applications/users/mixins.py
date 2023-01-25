@@ -32,11 +32,13 @@ class GroupEditPermissionMixin:
         if not user:
             user = self.request.user
         amp_groups = user.groups.filter(name__in=self.GROUPS_ALLOWED_MAP.keys()).values_list('name', flat=True)
+
         for amp_group in amp_groups:
             if organization_type and organization_type in ORGANIZATION_GROUP_MAP.keys():
                 groups_allowed_editing = self.GROUPS_ALLOWED_MAP.get(amp_group).get(organization_type)
             else:
                 groups_allowed_editing.extend(self.GROUPS_ALLOWED_MAP.get(amp_group))
+
         return Group.objects.filter(name__in=list(set(groups_allowed_editing)))
 
     def can_add_user(self):

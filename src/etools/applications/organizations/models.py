@@ -1,4 +1,5 @@
-from django.db import models
+from django.db import connection, models
+from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 
 from model_utils import Choices
@@ -22,6 +23,17 @@ class OrganizationType:
 class OrganizationManager(models.Manager):
     def get_by_natural_key(self, vendor_number):
         return self.get(vendor_number=vendor_number)
+
+    def get_queryset(self):
+        return super().get_queryset() \
+            .select_related(
+                'partner',
+                'auditorfirm',
+                'tpmpartner')\
+            .prefetch_related(
+                'auditorfirm__purchase_orders',
+                'tpmpartner__countries'
+        )
 
 
 class Organization(TimeStampedModel, models.Model):
@@ -92,3 +104,17 @@ class Organization(TimeStampedModel, models.Model):
 
     def __str__(self):
         return self.name if self.name else self.vendor_number
+
+    @cached_property
+    def partner_type(self):
+        if hasattr(self, 'partner') and \
+                not self.partner.hidden:
+            return 'partner'
+        elif hasattr(self, 'auditorfirm') and \
+                self.auditorfirm.purchase_orders.filter(engagement__isnull=False).exists() and \
+                not self.auditorfirm.hidden:
+            return 'audit'
+        elif hasattr(self, 'tpmpartner') and \
+                self.tpmpartner.countries.filter(id=connection.tenant.id).exists() and \
+                not self.tpmpartner.hidden:
+            return 'tpm'

@@ -21,11 +21,17 @@ from unicef_restlib.pagination import DynamicPageNumberPagination
 from unicef_restlib.views import QueryStringFilterMixin, SafeTenantViewSetMixin
 
 from etools.applications.audit.models import UNICEFAuditFocalPoint
+from etools.applications.core.permissions import IsUNICEFUser
 from etools.applications.organizations.models import Organization
 from etools.applications.partners.permissions import user_group_permission
 from etools.applications.partners.views.v3 import PMPBaseViewMixin
 from etools.applications.users import views as v1, views_v2 as v2
-from etools.applications.users.mixins import AUDIT_ACTIVE_GROUPS, GroupEditPermissionMixin, TPM_ACTIVE_GROUPS
+from etools.applications.users.mixins import (
+    AUDIT_ACTIVE_GROUPS,
+    GroupEditPermissionMixin,
+    ORGANIZATION_GROUP_MAP,
+    TPM_ACTIVE_GROUPS,
+)
 from etools.applications.users.models import IPAdmin, IPAuthorizedOfficer, IPEditor, Realm
 from etools.applications.users.permissions import IsActiveInRealm, IsPartnershipManager
 from etools.applications.users.serializers import SimpleGroupSerializer, SimpleOrganizationSerializer
@@ -198,15 +204,13 @@ class CountryView(v2.CountryView):
 class OrganizationListView(ListAPIView):
     """
     Gets a list of organizations given an organization_type(default is partner type) as query param
-    for the Partnership Manager currently logged in.
+    for the Unicef User currently logged in.
     """
     model = Organization
     serializer_class = SimpleOrganizationSerializer
-    permission_classes = (IsAuthenticated, IsPartnershipManager)
+    permission_classes = (IsAuthenticated, IsUNICEFUser | IsPartnershipManager)
 
     def get_queryset(self):
-        if not self.request.user.is_partnership_manager:
-            return self.model.objects.none()
         organization_type_filter = {
             "partner": dict(partner__isnull=False, partner__hidden=False),
             "audit": dict(auditorfirm__purchase_orders__engagement__isnull=False,
@@ -231,6 +235,31 @@ class GroupPermissionsViewSet(GroupEditPermissionMixin, APIView):
                 self.get_user_allowed_groups(organization_type=organization_type), many=True
             ).data,
             "can_add_user": self.can_add_user()
+        }
+        return Response(response_data)
+
+
+class GroupFilterViewSet(APIView):
+    """
+    Returns a list of group roles filters to be used on AMP list of users
+    """
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        if request.user.is_unicef_user():
+            organization_type = request.query_params.get('organization_type')
+            group_qs = Group.objects.filter(
+                name__in=ORGANIZATION_GROUP_MAP.get(organization_type, [])
+            )
+        elif request.user.profile.organization.partner_type:
+            group_qs = Group.objects.filter(
+                name__in=ORGANIZATION_GROUP_MAP.get(request.user.profile.organization.partner_type, [])
+            )
+        else:
+            group_qs = []
+
+        response_data = {
+            "group_filters": SimpleGroupSerializer(group_qs, many=True).data
         }
         return Response(response_data)
 
@@ -277,18 +306,30 @@ class UserRealmViewSet(
 
     def get_queryset(self):
         organization_id = self.request.query_params.get('organization_id')
+        organization_type = self.request.query_params.get('organization_type')
         if organization_id:
-            if self.request.user.is_partnership_manager:
+            if self.request.user.is_unicef_user():
                 organization = get_object_or_404(Organization, pk=organization_id)
+                if organization_type != organization.partner_type:
+                    logger.error(f"The provided organization id {organization_id} and type {organization_type} do not match.")
+                    return self.model.objects.none()
             else:
                 return self.model.objects.none()
         else:
             organization = self.request.user.profile.organization
 
-        context_realms_qs = Realm.objects.filter(
-            country=connection.tenant,
-            organization=organization,
-        )
+        qs_context = {
+            "country": connection.tenant,
+            "organization": organization,
+        }
+        if organization_type:
+            qs_context.update({"group__name__in": ORGANIZATION_GROUP_MAP.get(organization_type)})
+
+        if self.request.query_params.get('roles'):
+            qs_context.update({"group_id__in": (self.request.query_params.get('roles')).split(',')})
+
+        context_realms_qs = Realm.objects.filter(**qs_context)
+
         return self.model.objects \
             .filter(realms__in=context_realms_qs) \
             .prefetch_related(Prefetch('realms', queryset=context_realms_qs))\
