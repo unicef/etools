@@ -208,13 +208,13 @@ class OrganizationListView(ListAPIView):
         if not self.request.user.is_partnership_manager:
             return self.model.objects.none()
         organization_type_filter = {
-            "pmp": dict(partner__isnull=False, partner__hidden=False),
+            "partner": dict(partner__isnull=False, partner__hidden=False),
             "audit": dict(auditorfirm__purchase_orders__engagement__isnull=False,
                           auditorfirm__hidden=False),
             "tpm": dict(tpmpartner__countries=connection.tenant, tpmpartner__hidden=False)
         }
         return self.model.objects\
-            .filter(**organization_type_filter[self.request.query_params.get('organization_type', 'pmp')])\
+            .filter(**organization_type_filter[self.request.query_params.get('organization_type', 'partner')])\
             .distinct()
 
 
@@ -225,8 +225,11 @@ class GroupPermissionsViewSet(GroupEditPermissionMixin, APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request):
+        organization_type = request.query_params.get('organization_type')
         response_data = {
-            "groups": SimpleGroupSerializer(self.get_user_allowed_groups(), many=True).data,
+            "groups": SimpleGroupSerializer(
+                self.get_user_allowed_groups(organization_type=organization_type), many=True
+            ).data,
             "can_add_user": self.can_add_user()
         }
         return Response(response_data)
