@@ -37,7 +37,7 @@ class Command(BaseCommand):
         for old_ft_name, new_file_type_name in file_types_mapping_abstract.items():
             try:
                 old_file_type = FileType.objects.get(name=old_ft_name)
-            except AttachmentFileType.DoesNotExist:
+            except FileType.DoesNotExist:
                 raise RuntimeError(f'Unable to find partners.FileType for "{old_ft_name}". '
                                    f'Run `init-partner-file-type` management command first.')
 
