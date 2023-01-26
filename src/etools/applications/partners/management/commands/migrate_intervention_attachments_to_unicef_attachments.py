@@ -55,7 +55,12 @@ class Command(BaseCommand):
             if not attachment:
                 continue
 
-            attachment.file_type_id = file_types_mapping[intervention_attachment.type].id
+            try:
+                attachment.file_type_id = file_types_mapping[intervention_attachment.type].id
+            except KeyError:
+                logger.warning(f'Unable to find proper file type for "{intervention_attachment.type.name}". '
+                               f'Intervention: {intervention_attachment.intervention_id}. Attachment: {attachment.pk}. '
+                               f'InterventionAttachment: {intervention_attachment.pk}. Defaulting to "Other"')
             attachments_to_update.append(attachment)
 
         Attachment.objects.bulk_update(attachments_to_update, fields=['file_type_id'])
@@ -72,8 +77,8 @@ class Command(BaseCommand):
             for intervention_attachment in InterventionAttachment.objects.filter(intervention_id=intervention_id):
                 attachment = intervention_attachment.attachment_file.first()
                 if not attachment:
-                    logger.info(f'No unicef_attachment object linked to '
-                                f'InterventionAttachment {intervention_attachment.pk}')
+                    logger.warning(f'No unicef_attachment object linked to '
+                                   f'InterventionAttachment {intervention_attachment.pk}. Skipping.')
                     continue
 
                 is_active_map[attachment.pk] = intervention_attachment.active
