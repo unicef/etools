@@ -1,4 +1,5 @@
 import logging
+from argparse import BooleanOptionalAction
 
 from django.contrib.contenttypes.models import ContentType
 from django.core.management import BaseCommand
@@ -18,6 +19,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('--schema', dest='schema')
+        parser.add_argument('--simulate', dest='simulate', action=BooleanOptionalAction)
 
     def migrate_file_types(self):
         logger.info('Migrating file types for schema %s' % connection.schema_name)
@@ -65,9 +67,13 @@ class Command(BaseCommand):
 
         Attachment.objects.bulk_update(attachments_to_update, fields=['file_type_id'])
 
-    def migrate_documents(self):
-        logger.info('Copying attachments from InterventionAttachment to Intervention '
-                    'for schema %s' % connection.schema_name)
+    def migrate_documents(self, simulate=False):
+        if simulate:
+            logger.info('Simulating attachments copy from InterventionAttachment to Intervention '
+                        'for schema %s' % connection.schema_name)
+        else:
+            logger.info('Copying attachments from InterventionAttachment to Intervention '
+                        'for schema %s' % connection.schema_name)
 
         intervention_ct = ContentType.objects.get_for_model(Intervention)
         intervention_attachment_ct = ContentType.objects.get_for_model(InterventionAttachment)
@@ -103,8 +109,11 @@ class Command(BaseCommand):
 
             attachments.extend(intervention_attachments)
 
-        objs = Attachment.objects.bulk_create(attachments)
-        logger.info(f'Created {len(objs)} attachments')
+        if simulate:
+            logger.info(f'{len(attachments)} attachments will be created')
+        else:
+            objs = Attachment.objects.bulk_create(attachments)
+            logger.info(f'Created {len(objs)} attachments')
 
     def handle(self, *args, **options):
 
@@ -118,6 +127,6 @@ class Command(BaseCommand):
             self.migrate_documents()
         else:
             run_on_all_tenants(self.migrate_file_types)
-            run_on_all_tenants(self.migrate_documents)
+            run_on_all_tenants(self.migrate_documents, simulate=options['simulate'])
 
         logger.info('Command finished')
