@@ -1004,7 +1004,7 @@ class PartnerStaffMember(TimeStampedModel):
         return full_name.strip()
 
     def __str__(self):
-        return'{} {} ({})'.format(
+        return '{} {} ({})'.format(
             self.first_name,
             self.last_name,
             self.partner.name
@@ -1208,12 +1208,12 @@ class Assessment(TimeStampedModel):
     tracker = FieldTracker()
 
     def __str__(self):
-        return'{type}: {partner} {rating} {date}'.format(
+        return '{type}: {partner} {rating} {date}'.format(
             type=self.type,
             partner=self.partner.name,
             rating=self.rating,
             date=self.completed_date.strftime("%d-%m-%Y") if
-            self.completed_date else'NOT COMPLETED'
+            self.completed_date else 'NOT COMPLETED'
         )
 
 
@@ -1404,7 +1404,7 @@ class Agreement(TimeStampedModel):
         ordering = ['-created']
 
     def __str__(self):
-        return'{} for {} ({} - {})'.format(
+        return '{} for {} ({} - {})'.format(
             self.agreement_type,
             self.partner.name,
             self.start.strftime('%d-%m-%Y') if self.start else '',

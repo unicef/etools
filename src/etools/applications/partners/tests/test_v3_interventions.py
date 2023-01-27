@@ -1722,9 +1722,10 @@ class TestSupplyItem(BaseInterventionTestCase):
 
 
 class TestInterventionUpdate(BaseInterventionTestCase):
-    def _test_patch(self, mapping):
-        intervention = InterventionFactory()
-        intervention.unicef_focal_points.add(self.unicef_user)
+    def _test_patch(self, mapping, intervention=None):
+        if intervention is None:
+            intervention = InterventionFactory()
+        intervention.unicef_focal_points.add(self.user)
         data = {}
         for field, value in mapping:
             self.assertNotEqual(getattr(intervention, field), value)
@@ -1735,7 +1736,7 @@ class TestInterventionUpdate(BaseInterventionTestCase):
             user=self.unicef_user,
             data=data,
         )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         intervention.refresh_from_db()
         for field, value in mapping:
             self.assertIn(field, response.data)
@@ -1856,6 +1857,61 @@ class TestInterventionUpdate(BaseInterventionTestCase):
             ("other_info", "Other info"),
         )
         self._test_patch(mapping)
+
+    def test_update_flags_intervention_active(self):
+        mapping = (
+            ('has_data_processing_agreement', True),
+            ('has_activities_involving_children', True),
+            ('has_special_conditions_for_construction', True),
+        )
+
+        today = timezone.now().date()
+        partner = PartnerFactory()
+        active_agreement = AgreementFactory(
+            partner=partner,
+            status='active',
+            signed_by_unicef_date=today - datetime.timedelta(days=10),
+            signed_by_partner_date=today - datetime.timedelta(days=10),
+        )
+
+        active_intervention = InterventionFactory(
+            agreement=active_agreement,
+            title='Active Intervention',
+            document_type=Intervention.PD,
+            start=today - datetime.timedelta(days=1),
+            end=today + datetime.timedelta(days=365),
+            status=Intervention.ACTIVE,
+            budget_owner=self.user,
+            date_sent_to_partner=today - datetime.timedelta(days=1),
+            signed_by_unicef_date=today - datetime.timedelta(days=1),
+            signed_by_partner_date=today - datetime.timedelta(days=1),
+            unicef_signatory=self.user,
+            partner_authorized_officer_signatory=partner.staff_members.all().first(),
+            cash_transfer_modalities=[Intervention.CASH_TRANSFER_DIRECT],
+            has_data_processing_agreement=False,
+            has_activities_involving_children=False,
+            has_special_conditions_for_construction=False,
+        )
+        ReportingRequirementFactory(intervention=active_intervention)
+        AttachmentFactory(
+            code='partners_intervention_signed_pd',
+            content_object=active_intervention,
+        )
+
+        result_link = InterventionResultLinkFactory(
+            intervention=active_intervention,
+            cp_output__result_type__name=ResultType.OUTPUT,
+        )
+        pd_output = LowerResultFactory(result_link=result_link)
+        activity = InterventionActivityFactory(result=pd_output)
+        activity.time_frames.add(active_intervention.quarters.first())
+        active_intervention.flat_locations.add(LocationFactory())
+        active_intervention.partner_focal_points.add(partner.staff_members.all().first())
+        active_intervention.unicef_focal_points.add(self.user)
+        active_intervention.offices.add(OfficeFactory())
+        active_intervention.sections.add(SectionFactory())
+        FundsReservationHeaderFactory(intervention=active_intervention)
+        self._test_patch(mapping, intervention=active_intervention)
 
 
 class BaseInterventionActionTestCase(BaseInterventionTestCase):
@@ -3277,6 +3333,67 @@ class TestInterventionAttachments(BaseTenantTestCase):
 
         intervention.refresh_from_db()
         self.assertEqual(intervention.status, Intervention.SIGNED)
+
+    def test_attachments_editable_in_active_intervention(self):
+        user = UserFactory(is_staff=True)
+
+        today = timezone.now().date()
+        partner = PartnerFactory()
+        active_agreement = AgreementFactory(
+            partner=partner,
+            status='active',
+            signed_by_unicef_date=today - datetime.timedelta(days=10),
+            signed_by_partner_date=today - datetime.timedelta(days=10),
+        )
+
+        active_intervention = InterventionFactory(
+            agreement=active_agreement,
+            title='Active Intervention',
+            document_type=Intervention.PD,
+            start=today - datetime.timedelta(days=1),
+            end=today + datetime.timedelta(days=365),
+            status=Intervention.ACTIVE,
+            budget_owner=user,
+            date_sent_to_partner=today - datetime.timedelta(days=1),
+            signed_by_unicef_date=today - datetime.timedelta(days=1),
+            signed_by_partner_date=today - datetime.timedelta(days=1),
+            unicef_signatory=user,
+            partner_authorized_officer_signatory=partner.staff_members.all().first(),
+            cash_transfer_modalities=[Intervention.CASH_TRANSFER_DIRECT],
+            has_data_processing_agreement=False,
+            has_activities_involving_children=False,
+            has_special_conditions_for_construction=False,
+        )
+        ReportingRequirementFactory(intervention=active_intervention)
+        AttachmentFactory(
+            code='partners_intervention_signed_pd',
+            content_object=active_intervention,
+        )
+
+        result_link = InterventionResultLinkFactory(
+            intervention=active_intervention,
+            cp_output__result_type__name=ResultType.OUTPUT,
+        )
+        pd_output = LowerResultFactory(result_link=result_link)
+        activity = InterventionActivityFactory(result=pd_output)
+        activity.time_frames.add(active_intervention.quarters.first())
+        active_intervention.flat_locations.add(LocationFactory())
+        active_intervention.partner_focal_points.add(partner.staff_members.all().first())
+        active_intervention.unicef_focal_points.add(user)
+        active_intervention.offices.add(OfficeFactory())
+        active_intervention.sections.add(SectionFactory())
+        FundsReservationHeaderFactory(intervention=active_intervention)
+
+        response = self.forced_auth_req(
+            'post',
+            reverse('pmp_v3:intervention-attachment-list', args=[active_intervention.id]),
+            user=user,
+            data={
+                "type": FileTypeFactory().pk,
+                "attachment_document": AttachmentFactory(file="test_file.pdf", file_type=None, code="").pk,
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
 
 
 class TestPMPInterventionIndicatorsUpdateView(BaseTenantTestCase):
