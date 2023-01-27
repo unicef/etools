@@ -96,6 +96,7 @@ class EToolsTenantMiddlewareTest(TestCase):
         self.assertEqual(self.request.urlconf, 'foo')
 
 
+@override_settings(LANGUAGE_CODE="fr")
 class EToolsLocaleMiddlewareTest(TestCase):
     request_factory = RequestFactory()
 

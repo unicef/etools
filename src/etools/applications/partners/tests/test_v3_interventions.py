@@ -1725,7 +1725,7 @@ class TestInterventionUpdate(BaseInterventionTestCase):
     def _test_patch(self, mapping, intervention=None):
         if intervention is None:
             intervention = InterventionFactory()
-        intervention.unicef_focal_points.add(self.user)
+        intervention.unicef_focal_points.add(self.unicef_user)
         data = {}
         for field, value in mapping:
             self.assertNotEqual(getattr(intervention, field), value)
@@ -1867,6 +1867,11 @@ class TestInterventionUpdate(BaseInterventionTestCase):
 
         today = timezone.now().date()
         partner = PartnerFactory()
+        UserFactory(
+            is_staff=False,
+            realms__data=['IP Viewer'],
+            profile__organization=partner.organization
+        )
         active_agreement = AgreementFactory(
             partner=partner,
             status='active',
@@ -1881,12 +1886,12 @@ class TestInterventionUpdate(BaseInterventionTestCase):
             start=today - datetime.timedelta(days=1),
             end=today + datetime.timedelta(days=365),
             status=Intervention.ACTIVE,
-            budget_owner=self.user,
+            budget_owner=self.unicef_user,
             date_sent_to_partner=today - datetime.timedelta(days=1),
             signed_by_unicef_date=today - datetime.timedelta(days=1),
             signed_by_partner_date=today - datetime.timedelta(days=1),
-            unicef_signatory=self.user,
-            partner_authorized_officer_signatory=partner.staff_members.all().first(),
+            unicef_signatory=self.unicef_user,
+            partner_authorized_officer_signatory=partner.active_staff_members.all().first(),
             cash_transfer_modalities=[Intervention.CASH_TRANSFER_DIRECT],
             has_data_processing_agreement=False,
             has_activities_involving_children=False,
@@ -1906,8 +1911,8 @@ class TestInterventionUpdate(BaseInterventionTestCase):
         activity = InterventionActivityFactory(result=pd_output)
         activity.time_frames.add(active_intervention.quarters.first())
         active_intervention.flat_locations.add(LocationFactory())
-        active_intervention.partner_focal_points.add(partner.staff_members.all().first())
-        active_intervention.unicef_focal_points.add(self.user)
+        active_intervention.partner_focal_points.add(partner.active_staff_members.all().first())
+        active_intervention.unicef_focal_points.add(self.unicef_user)
         active_intervention.offices.add(OfficeFactory())
         active_intervention.sections.add(SectionFactory())
         FundsReservationHeaderFactory(intervention=active_intervention)
@@ -3339,6 +3344,11 @@ class TestInterventionAttachments(BaseTenantTestCase):
 
         today = timezone.now().date()
         partner = PartnerFactory()
+        UserFactory(
+            is_staff=False,
+            realms__data=['IP Viewer'],
+            profile__organization=partner.organization
+        )
         active_agreement = AgreementFactory(
             partner=partner,
             status='active',
@@ -3358,7 +3368,7 @@ class TestInterventionAttachments(BaseTenantTestCase):
             signed_by_unicef_date=today - datetime.timedelta(days=1),
             signed_by_partner_date=today - datetime.timedelta(days=1),
             unicef_signatory=user,
-            partner_authorized_officer_signatory=partner.staff_members.all().first(),
+            partner_authorized_officer_signatory=partner.active_staff_members.all().first(),
             cash_transfer_modalities=[Intervention.CASH_TRANSFER_DIRECT],
             has_data_processing_agreement=False,
             has_activities_involving_children=False,
@@ -3378,7 +3388,7 @@ class TestInterventionAttachments(BaseTenantTestCase):
         activity = InterventionActivityFactory(result=pd_output)
         activity.time_frames.add(active_intervention.quarters.first())
         active_intervention.flat_locations.add(LocationFactory())
-        active_intervention.partner_focal_points.add(partner.staff_members.all().first())
+        active_intervention.partner_focal_points.add(partner.active_staff_members.all().first())
         active_intervention.unicef_focal_points.add(user)
         active_intervention.offices.add(OfficeFactory())
         active_intervention.sections.add(SectionFactory())

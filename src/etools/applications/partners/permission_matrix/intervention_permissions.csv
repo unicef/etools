@@ -53,13 +53,9 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,has_data_processing_agreement,Unicef Focal Point,,Signature,Edit,TRUE
 ,has_data_processing_agreement,Partner User,,Signature,Edit,TRUE
 ,has_data_processing_agreement,Unicef Focal Point,,Signed,Edit,TRUE
-,has_data_processing_agreement,Partner User,,Signed,Edit,TRUE
 ,has_data_processing_agreement,Unicef Focal Point,,Active,Edit,TRUE
-,has_data_processing_agreement,Partner User,,Active,Edit,TRUE
 ,has_data_processing_agreement,Unicef Focal Point,,Ended,Edit,TRUE
-,has_data_processing_agreement,Partner User,,Ended,Edit,TRUE
 ,has_data_processing_agreement,Unicef Focal Point,,Suspended,Edit,TRUE
-,has_data_processing_agreement,Partner User,,Suspended,Edit,TRUE
 ,has_activities_involving_children,Unicef Focal Point,,Draft,Edit,TRUE
 ,has_activities_involving_children,Partner User,,Draft,Edit,TRUE
 ,has_activities_involving_children,Unicef Focal Point,,Review,Edit,TRUE
@@ -67,13 +63,9 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,has_activities_involving_children,Unicef Focal Point,,Signature,Edit,TRUE
 ,has_activities_involving_children,Partner User,,Signature,Edit,TRUE
 ,has_activities_involving_children,Unicef Focal Point,,Signed,Edit,TRUE
-,has_activities_involving_children,Partner User,,Signed,Edit,TRUE
 ,has_activities_involving_children,Unicef Focal Point,,Active,Edit,TRUE
-,has_activities_involving_children,Partner User,,Active,Edit,TRUE
 ,has_activities_involving_children,Unicef Focal Point,,Ended,Edit,TRUE
-,has_activities_involving_children,Partner User,,Ended,Edit,TRUE
 ,has_activities_involving_children,Unicef Focal Point,,Suspended,Edit,TRUE
-,has_activities_involving_children,Partner User,,Suspended,Edit,TRUE
 ,has_special_conditions_for_construction,Unicef Focal Point,,Draft,Edit,TRUE
 ,has_special_conditions_for_construction,Partner User,,Draft,Edit,TRUE
 ,has_special_conditions_for_construction,Unicef Focal Point,,Review,Edit,TRUE
@@ -81,13 +73,9 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,has_special_conditions_for_construction,Unicef Focal Point,,Signature,Edit,TRUE
 ,has_special_conditions_for_construction,Partner User,,Signature,Edit,TRUE
 ,has_special_conditions_for_construction,Unicef Focal Point,,Signed,Edit,TRUE
-,has_special_conditions_for_construction,Partner User,,Signed,Edit,TRUE
 ,has_special_conditions_for_construction,Unicef Focal Point,,Active,Edit,TRUE
-,has_special_conditions_for_construction,Partner User,,Active,Edit,TRUE
 ,has_special_conditions_for_construction,Unicef Focal Point,,Ended,Edit,TRUE
-,has_special_conditions_for_construction,Partner User,,Ended,Edit,TRUE
 ,has_special_conditions_for_construction,Unicef Focal Point,,Suspended,Edit,TRUE
-,has_special_conditions_for_construction,Partner User,,Suspended,Edit,TRUE
 3.4.1,contingency_pd,Unicef Focal Point,,Draft,Edit,TRUE
 3.5,country_programme,Unicef Focal Point,,Draft,Edit,TRUE
 3.5,country_programme,Unicef Focal Point,user_adds_amendment,*,Edit,TRUE
