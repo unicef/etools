@@ -8,11 +8,7 @@ from rest_framework import status
 
 from etools.applications.action_points.models import PME
 from etools.applications.audit.models import Auditor, UNICEFAuditFocalPoint, UNICEFUser
-from etools.applications.audit.tests.factories import (
-    AuditFocalPointUserFactory,
-    AuditorUserFactory,
-    EngagementFactory,
-)
+from etools.applications.audit.tests.factories import AuditFocalPointUserFactory, AuditorUserFactory, EngagementFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, UNICEF_USER
