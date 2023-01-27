@@ -24,16 +24,6 @@ class OrganizationManager(models.Manager):
     def get_by_natural_key(self, vendor_number):
         return self.get(vendor_number=vendor_number)
 
-    def get_queryset(self):
-        return super().get_queryset() \
-            .select_related(
-                'auditorfirm',
-                'tpmpartner')\
-            .prefetch_related(
-                'auditorfirm__purchase_orders',
-                'tpmpartner__countries'
-        )
-
 
 class Organization(TimeStampedModel, models.Model):
 

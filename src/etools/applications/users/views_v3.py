@@ -211,13 +211,22 @@ class OrganizationListView(ListAPIView):
     permission_classes = (IsAuthenticated, IsUNICEFUser | IsPartnershipManager)
 
     def get_queryset(self):
+        queryset = Organization.objects.all() \
+            .select_related(
+                'partner',
+                'auditorfirm',
+                'tpmpartner')\
+            .prefetch_related(
+                'auditorfirm__purchase_orders',
+                'tpmpartner__countries'
+        )
         organization_type_filter = {
             "partner": dict(partner__isnull=False, partner__hidden=False),
             "audit": dict(auditorfirm__purchase_orders__engagement__isnull=False,
                           auditorfirm__hidden=False),
             "tpm": dict(tpmpartner__countries=connection.tenant, tpmpartner__hidden=False)
         }
-        return self.model.objects\
+        return queryset\
             .filter(**organization_type_filter[self.request.query_params.get('organization_type', 'partner')])\
             .distinct()
 
