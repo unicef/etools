@@ -238,36 +238,27 @@ class GroupPermissionsViewSet(GroupEditPermissionMixin, APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request):
-        organization_type = request.query_params.get('organization_type', request.user.profile.organization.partner_type)
+        organization_types = list(request.query_params.get('organization_type')) if \
+            request.query_params.get('organization_type') else request.user.profile.organization.relationship_types
+
+        allowed_groups = self.get_user_allowed_groups(organization_types)
+
         response_data = {
-            "groups": SimpleGroupSerializer(
-                self.get_user_allowed_groups(organization_type), many=True
-            ).data,
-            "can_add_user": self.can_add_user()
+            "groups": SimpleGroupSerializer(allowed_groups, many=True).data,
+            "can_add_user": False if not allowed_groups else self.can_add_user()
         }
         return Response(response_data)
 
 
 class GroupFilterViewSet(APIView):
     """
-    Returns a list of group roles filters to be used on AMP list of users
+    Returns an organization.relationship_types mapping
+    for group roles to be used on AMP list of users
     """
     permission_classes = (IsAuthenticated,)
 
     def get(self, request):
-        group_qs = []
-        if request.user.is_unicef_user():
-            organization_type = request.query_params.get('organization_type')
-            group_qs = Group.objects.filter(
-                name__in=ORGANIZATION_GROUP_MAP.get(organization_type, [])
-            )
-        elif request.user.profile.organization.partner_type:
-            group_qs = Group.objects.filter(
-                name__in=ORGANIZATION_GROUP_MAP.get(request.user.profile.organization.partner_type, [])
-            )
-        return Response({
-            "group_filters": SimpleGroupSerializer(group_qs, many=True).data
-        })
+        return Response(ORGANIZATION_GROUP_MAP)
 
 
 class UserRealmViewSet(
@@ -312,12 +303,12 @@ class UserRealmViewSet(
 
     def get_queryset(self):
         organization_id = self.request.query_params.get('organization_id')
-        organization_type = self.request.query_params.get('organization_type')
+        relationship_type = self.request.query_params.get('organization_type')
         if organization_id:
             if self.request.user.is_unicef_user():
                 organization = get_object_or_404(Organization, pk=organization_id)
-                if not organization.partner_type or organization_type != organization.partner_type:
-                    logger.error(f"The provided organization id {organization_id} and type {organization_type} do not match.")
+                if not organization.relationship_types or relationship_type not in organization.relationship_types:
+                    logger.error(f"The provided organization id {organization_id} and type {relationship_type} do not match.")
                     return self.model.objects.none()
             else:
                 return self.model.objects.none()
@@ -328,9 +319,10 @@ class UserRealmViewSet(
             "country": connection.tenant,
             "organization": organization,
         }
-        qs_context.update(
-            {"group__name__in": ORGANIZATION_GROUP_MAP.get(organization_type or organization.partner_type)}
-        )
+        group_names = ORGANIZATION_GROUP_MAP.get(relationship_type) if relationship_type else \
+            [group for _type in organization.relationship_types for group in ORGANIZATION_GROUP_MAP.get(_type)]
+        qs_context.update({"group__name__in": group_names})
+
         if self.request.query_params.get('roles'):
             qs_context.update(
                 {"group_id__in": self.request.query_params.getlist('roles')}

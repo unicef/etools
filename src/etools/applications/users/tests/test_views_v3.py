@@ -11,7 +11,6 @@ from etools.applications.audit.models import Auditor, UNICEFAuditFocalPoint, UNI
 from etools.applications.audit.tests.factories import (
     AuditFocalPointUserFactory,
     AuditorUserFactory,
-    AuditPartnerFactory,
     EngagementFactory,
 )
 from etools.applications.core.tests.cases import BaseTenantTestCase
@@ -497,11 +496,6 @@ class TestGroupFiltersViewSet(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.organization = OrganizationFactory()
-        cls.partner = PartnerFactory(organization=cls.organization)
-        cls.audit = AuditPartnerFactory(organization=cls.organization)
-        cls.tpm = SimpleTPMPartnerFactory(organization=cls.organization)
-
-        cls.unicef_staff = UserFactory(is_staff=True)
 
     def setUp(self):
         super().setUp()
@@ -517,37 +511,12 @@ class TestGroupFiltersViewSet(BaseTenantTestCase):
                 )
             )
             self.assertEqual(response.status_code, status.HTTP_200_OK)
-            expected_groups = sorted(ORGANIZATION_GROUP_MAP.get(self.organization.partner_type, []))
-            actual_groups = sorted([group['name'] for group in response.data['group_filters']])
-            self.assertEqual(expected_groups, actual_groups)
-
-    def test_get_group_filters_unicef_users(self):
-        for user_group in [PartnershipManager, UNICEFAuditFocalPoint]:
-            for org_type in ['audit', 'partner', 'tpm']:
-                response = self.forced_auth_req(
-                    "get",
-                    self.url,
-                    user=UserFactory(
-                        realms__data=[user_group.name, UNICEFUser.name], profile__organization=self.organization
-                    ),
-                    data={"organization_type": org_type}
-                )
-                self.assertEqual(response.status_code, status.HTTP_200_OK)
-                expected_groups = sorted(ORGANIZATION_GROUP_MAP.get(org_type, []))
-                actual_groups = sorted([group['name'] for group in response.data['group_filters']])
-                self.assertEqual(expected_groups, actual_groups)
-
-    def test_get_group_filters_empty(self):
-        response = self.forced_auth_req(
-            "get",
-            self.url,
-            user=UserFactory(realms__data=[], profile__organization=OrganizationFactory())
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['group_filters'], [])
+            self.assertEqual(ORGANIZATION_GROUP_MAP, response.data)
 
 
 class TestGroupPermissionsViewSet(BaseTenantTestCase):
+    fixtures = ['amp_groups', 'audit_groups']
+
     @classmethod
     def setUpTestData(cls):
         cls.organization = OrganizationFactory()
@@ -558,11 +527,8 @@ class TestGroupPermissionsViewSet(BaseTenantTestCase):
         super().setUp()
         self.url = reverse("users_v3:amp-group-permissions")
 
-    def test_get_allowed_amp_groups(self):
-        GroupFactory(name=Auditor.name)
-
-        for user_group in [IPViewer, IPEditor, IPAuthorizedOfficer, IPAdmin,
-                           PartnershipManager, UNICEFAuditFocalPoint]:
+    def test_get_allowed_amp_groups_partner(self):
+        for user_group in [IPViewer, IPEditor, IPAuthorizedOfficer, IPAdmin, PartnershipManager]:
             response = self.forced_auth_req(
                 "get",
                 self.url,
@@ -572,13 +538,30 @@ class TestGroupPermissionsViewSet(BaseTenantTestCase):
             )
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             expected_groups = sorted(
-                GroupEditPermissionMixin.GROUPS_ALLOWED_MAP.get(user_group.name, {}).get(self.organization.partner_type, []))
+                GroupEditPermissionMixin.GROUPS_ALLOWED_MAP.get(user_group.name, {}).get(self.organization.relationship_types[0], []))
             actual_groups = sorted([group['name'] for group in response.data['groups']])
             self.assertEqual(expected_groups, actual_groups)
             self.assertEqual(
                 response.data['can_add_user'],
                 True if user_group in [IPAdmin, IPAuthorizedOfficer, PartnershipManager] else False
             )
+
+    def test_get_allowed_amp_groups_audit(self):
+        engagement = EngagementFactory()
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=UserFactory(
+                realms__data=[UNICEFAuditFocalPoint.name],
+                profile__organization=engagement.agreement.auditor_firm.organization
+            )
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        expected_groups = sorted(
+            GroupEditPermissionMixin.GROUPS_ALLOWED_MAP.get(UNICEFAuditFocalPoint.name, {}).get('audit', []))
+        actual_groups = sorted([group['name'] for group in response.data['groups']])
+        self.assertEqual(expected_groups, actual_groups)
+        self.assertEqual(response.data['can_add_user'], True)
 
     def test_get_no_groups_allowed_empty(self):
         for user_group in [UNICEFUser, Auditor, PME, ThirdPartyMonitor]:
@@ -660,7 +643,7 @@ class TestUserRealmView(BaseTenantTestCase):
         for auth_user in [self.unicef_user, self.partnership_manager, self.audit_focal_point]:
             data = {
                 "organization_id": self.organization.id,
-                "organization_type": self.organization.partner_type
+                "organization_type": self.organization.relationship_types[0]
             }
             response = self.make_request_list(auth_user, method='get', data=data)
             self.assertEqual(response.status_code, status.HTTP_200_OK)

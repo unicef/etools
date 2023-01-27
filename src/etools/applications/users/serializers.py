@@ -17,7 +17,15 @@ class SimpleCountrySerializer(serializers.ModelSerializer):
 class SimpleOrganizationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
-        fields = ('id', 'name')
+        fields = ['id', 'name']
+
+
+class OrganizationSerializer(SimpleOrganizationSerializer):
+    type = serializers.ListSerializer(child=serializers.CharField(), source='relationship_types', read_only=True)
+
+    class Meta(SimpleOrganizationSerializer.Meta):
+        model = Organization
+        fields = SimpleOrganizationSerializer.Meta.fields + ['type']
 
 
 class UserProfileSerializer(serializers.ModelSerializer):

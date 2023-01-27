@@ -97,15 +97,17 @@ class Organization(TimeStampedModel, models.Model):
         return self.name if self.name else self.vendor_number
 
     @cached_property
-    def partner_type(self):
+    def relationship_types(self):
+        _list = []
         if hasattr(self, 'partner') and \
                 not self.partner.hidden:
-            return 'partner'
+            _list.append('partner')
         elif hasattr(self, 'auditorfirm') and \
                 self.auditorfirm.purchase_orders.filter(engagement__isnull=False).exists() and \
                 not self.auditorfirm.hidden:
-            return 'audit'
+            _list.append('audit')
         elif hasattr(self, 'tpmpartner') and \
                 self.tpmpartner.countries.filter(id=connection.tenant.id).exists() and \
                 not self.tpmpartner.hidden:
-            return 'tpm'
+            _list.append('tpm')
+        return _list

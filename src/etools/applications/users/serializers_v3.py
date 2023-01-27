@@ -12,7 +12,12 @@ from etools.applications.audit.models import Auditor
 from etools.applications.organizations.models import Organization
 from etools.applications.users.mixins import AUDIT_ACTIVE_GROUPS, GroupEditPermissionMixin
 from etools.applications.users.models import Country, Realm, UserProfile
-from etools.applications.users.serializers import GroupSerializer, SimpleCountrySerializer, SimpleOrganizationSerializer
+from etools.applications.users.serializers import (
+    GroupSerializer,
+    OrganizationSerializer,
+    SimpleCountrySerializer,
+    SimpleOrganizationSerializer,
+)
 from etools.applications.users.tasks import notify_user_on_realm_update
 from etools.applications.users.validators import EmailValidator, ExternalUserValidator
 
@@ -157,7 +162,7 @@ class UserRealmBaseSerializer(GroupEditPermissionMixin, serializers.ModelSeriali
         organization_id = value
         if organization_id:
             organization = get_object_or_404(Organization, pk=organization_id)
-            if not organization.partner_type:
+            if not organization.relationship_types:
                 raise PermissionDenied(
                     _('You cannot set roles for %(name)s organization without a partner type.'
                       % {'name': organization.name}))
@@ -171,7 +176,7 @@ class UserRealmBaseSerializer(GroupEditPermissionMixin, serializers.ModelSeriali
             id=data.get('organization', self.context['request'].user.profile.organization.id))
         allowed_group_ids = set(
             self.get_user_allowed_groups(
-                organization.partner_type,
+                organization.relationship_types,
                 user=self.context['request'].user,
             ).values_list('id', flat=True)
         )
@@ -256,7 +261,7 @@ class UserRealmUpdateSerializer(UserRealmBaseSerializer):
         # the group ids the authenticated user is allowed to update
         allowed_group_ids = set(
             self.get_user_allowed_groups(
-                organization.partner_type,
+                organization.relationship_types,
                 user=self.context['request'].user,
             ).values_list('id', flat=True)
         )
@@ -310,7 +315,7 @@ class ProfileRetrieveUpdateSerializer(serializers.ModelSerializer):
     is_staff = serializers.BooleanField(source='user.is_staff', read_only=True)
     is_active = serializers.BooleanField(source='user.is_active', read_only=True)
     country = DashboardCountrySerializer(read_only=True)
-    organization = SimpleOrganizationSerializer(read_only=True)
+    organization = OrganizationSerializer(read_only=True)
     show_ap = serializers.SerializerMethodField()
     is_unicef_user = serializers.SerializerMethodField()
     _partner_staff_member = serializers.SerializerMethodField()
