@@ -16,18 +16,18 @@ ORGANIZATION_GROUP_MAP = {
 class GroupEditPermissionMixin:
 
     GROUPS_ALLOWED_MAP = {
-        "IP Editor": ["IP Viewer"],
-        "IP Admin": ["IP Viewer", "IP Editor", "IP Authorized Officer"],
-        "IP Authorized Officer": ["IP Viewer", "IP Editor", "IP Authorized Officer"],
-        "UNICEF User:": [],
-        "PME": [],
+        "IP Editor": {"partner": ["IP Viewer"]},
+        "IP Admin": {"partner": ["IP Viewer", "IP Editor", "IP Authorized Officer"]},
+        "IP Authorized Officer": {"partner": ["IP Viewer", "IP Editor", "IP Authorized Officer"]},
+        "UNICEF User:": {},
+        "PME": {},
         "Partnership Manager": ORGANIZATION_GROUP_MAP,
-        "UNICEF Audit Focal Point": ["Auditor"],
+        "UNICEF Audit Focal Point": {"audit": ["Auditor"]},
     }
 
     CAN_ADD_USER = ["IP Admin", "IP Authorized Officer", "Partnership Manager"]
 
-    def get_user_allowed_groups(self, user=None, organization_type=None):
+    def get_user_allowed_groups(self, organization_type, user=None):
         groups_allowed_editing = []
         if not user:
             user = self.request.user
@@ -35,9 +35,7 @@ class GroupEditPermissionMixin:
 
         for amp_group in amp_groups:
             if organization_type and organization_type in ORGANIZATION_GROUP_MAP.keys():
-                groups_allowed_editing = self.GROUPS_ALLOWED_MAP.get(amp_group).get(organization_type)
-            else:
-                groups_allowed_editing.extend(self.GROUPS_ALLOWED_MAP.get(amp_group))
+                groups_allowed_editing = self.GROUPS_ALLOWED_MAP.get(amp_group).get(organization_type, [])
 
         return Group.objects.filter(name__in=list(set(groups_allowed_editing)))
 

@@ -35,7 +35,7 @@ urlpatterns = (
             name="amp-group-permissions"),
     re_path(r'^amp-filters/$',
             GroupFilterViewSet.as_view(http_method_names=['get']),
-            name="amp-group-filter"),
+            name="amp-group-filters"),
     re_path(r'^(?P<pk>[0-9]+)/$', UsersDetailAPIView.as_view(http_method_names=['get']), name="user-detail"),
     re_path(r'^AD/(?P<username>.*)$', ADUserAPIView.as_view(http_method_names=['get', ]), name="ad-user-api-view"),
     re_path(r'^', include(root_api.urls)),

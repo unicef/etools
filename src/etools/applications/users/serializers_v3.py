@@ -157,21 +157,35 @@ class UserRealmBaseSerializer(GroupEditPermissionMixin, serializers.ModelSeriali
         organization_id = value
         if organization_id:
             organization = get_object_or_404(Organization, pk=organization_id)
-            if not self.context['request'].user.is_partnership_manager:
+            if not organization.partner_type:
                 raise PermissionDenied(
-                    _('You do not have permissions to change groups for %(name)s organization.'
+                    _('You cannot set roles for %(name)s organization without a partner type.'
                       % {'name': organization.name}))
+
         return value
 
-    def validate_groups(self, value):
-        group_ids = set(value)
-        allowed_group_ids = set(self.get_user_allowed_groups(self.context['request'].user).values_list('id', flat=True))
+    def validate(self, data):
+        data = super().validate(data)
+        group_ids = set(data['groups'])
+        organization = Organization.objects.get(
+            id=data.get('organization', self.context['request'].user.profile.organization.id))
+        allowed_group_ids = set(
+            self.get_user_allowed_groups(
+                organization.partner_type,
+                user=self.context['request'].user,
+            ).values_list('id', flat=True)
+        )
+        if not allowed_group_ids:
+            raise PermissionDenied(
+                _('You do not have permissions to change groups for %(name)s organization.'
+                  % {'name': organization.name}))
+
         if not group_ids or not group_ids.issubset(allowed_group_ids):
             raise PermissionDenied(
                 _('Permission denied. Only %(groups)s roles can be assigned.'
                   % {'groups': ', '.join(Group.objects.filter(id__in=allowed_group_ids).values_list('name', flat=True))})
             )
-        return group_ids
+        return data
 
     def create_realms(self, instance, organization_id, group_ids):
         for group_id in group_ids:
@@ -229,7 +243,7 @@ class UserRealmCreateSerializer(UserRealmBaseSerializer):
 class UserRealmUpdateSerializer(UserRealmBaseSerializer):
     def update(self, instance, validated_data):
         organization_id = validated_data.get('organization', instance.profile.organization.id)
-        requested_group_ids = validated_data.get('groups')
+        requested_group_ids = set(validated_data.get('groups'))
         context_qs_params = {'country': connection.tenant, 'organization_id': organization_id}
         realm_qs = instance.realms.filter(**context_qs_params)
 
@@ -237,11 +251,20 @@ class UserRealmUpdateSerializer(UserRealmBaseSerializer):
             realm_qs.update(is_active=False)
             return
 
-        # the group ids the authenticated user is allowed to update
-        allowed_group_ids = set(self.get_user_allowed_groups(self.context['request'].user).values_list('id', flat=True))
-        # the existing group ids of the user that are allowed to be updated
-        existing_group_ids = set(instance.get_groups_for_organization_id(organization_id).filter(id__in=allowed_group_ids).values_list('id', flat=True))
+        organization = Organization.objects.get(id=organization_id)
 
+        # the group ids the authenticated user is allowed to update
+        allowed_group_ids = set(
+            self.get_user_allowed_groups(
+                organization.partner_type,
+                user=self.context['request'].user,
+            ).values_list('id', flat=True)
+        )
+        # the existing group ids of the user that are allowed to be updated
+        existing_group_ids = set(
+            instance.get_groups_for_organization_id(organization_id)
+            .filter(id__in=allowed_group_ids).values_list('id', flat=True)
+        )
         _to_add = requested_group_ids.difference(existing_group_ids)
         _to_deactivate = existing_group_ids.difference(requested_group_ids)
         _to_reactivate = requested_group_ids.difference(_to_add)
