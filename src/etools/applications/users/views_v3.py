@@ -258,7 +258,12 @@ class GroupFilterViewSet(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request):
-        return Response(ORGANIZATION_GROUP_MAP)
+        response = dict()
+        for _type, groups in ORGANIZATION_GROUP_MAP.items():
+            response.update(
+                {_type: SimpleGroupSerializer(Group.objects.filter(name__in=groups), many=True).data}
+            )
+        return Response(response)
 
 
 class UserRealmViewSet(
@@ -325,7 +330,7 @@ class UserRealmViewSet(
 
         if self.request.query_params.get('roles'):
             qs_context.update(
-                {"group__name__in": self.request.query_params.getlist('roles')}
+                {"group__id__in": self.request.query_params.getlist('roles')}
             )
         context_realms_qs = Realm.objects.filter(**qs_context)
 

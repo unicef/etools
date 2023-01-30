@@ -2,6 +2,7 @@ import json
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.urls import reverse
 
 from rest_framework import status
@@ -487,7 +488,7 @@ class TestMyProfileAPIView(BaseTenantTestCase):
 
 
 class TestGroupFiltersViewSet(BaseTenantTestCase):
-    fixtures = ['amp_groups']
+    fixtures = ['amp_groups', 'audit_groups', 'tpm_groups']
 
     @classmethod
     def setUpTestData(cls):
@@ -507,7 +508,11 @@ class TestGroupFiltersViewSet(BaseTenantTestCase):
                 )
             )
             self.assertEqual(response.status_code, status.HTTP_200_OK)
-            self.assertEqual(ORGANIZATION_GROUP_MAP, response.data)
+            for _type in ORGANIZATION_GROUP_MAP.keys():
+                self.assertEqual(
+                    list(Group.objects.filter(name__in=ORGANIZATION_GROUP_MAP[_type]).values_list('id', flat=True)),
+                    [item['id'] for item in response.data[_type]]
+                )
 
 
 class TestGroupPermissionsViewSet(BaseTenantTestCase):
@@ -638,8 +643,8 @@ class TestUserRealmView(BaseTenantTestCase):
 
     def test_get_list_filter_by_roles(self):
         data = {"roles": [
-            IPEditor.name,
-            IPViewer.name
+            IPEditor.as_group().pk,
+            IPViewer.as_group().pk
         ]}
         for auth_user in [self.ip_viewer, self.ip_editor, self.ip_admin,
                           self.ip_auth_officer]:
