@@ -21,11 +21,17 @@ from unicef_restlib.pagination import DynamicPageNumberPagination
 from unicef_restlib.views import QueryStringFilterMixin, SafeTenantViewSetMixin
 
 from etools.applications.audit.models import UNICEFAuditFocalPoint
+from etools.applications.core.permissions import IsUNICEFUser
 from etools.applications.organizations.models import Organization
 from etools.applications.partners.permissions import user_group_permission
 from etools.applications.partners.views.v3 import PMPBaseViewMixin
 from etools.applications.users import views as v1, views_v2 as v2
-from etools.applications.users.mixins import AUDIT_ACTIVE_GROUPS, GroupEditPermissionMixin, TPM_ACTIVE_GROUPS
+from etools.applications.users.mixins import (
+    AUDIT_ACTIVE_GROUPS,
+    GroupEditPermissionMixin,
+    ORGANIZATION_GROUP_MAP,
+    TPM_ACTIVE_GROUPS,
+)
 from etools.applications.users.models import IPAdmin, IPAuthorizedOfficer, IPEditor, Realm
 from etools.applications.users.permissions import IsActiveInRealm, IsPartnershipManager
 from etools.applications.users.serializers import SimpleGroupSerializer, SimpleOrganizationSerializer
@@ -198,23 +204,30 @@ class CountryView(v2.CountryView):
 class OrganizationListView(ListAPIView):
     """
     Gets a list of organizations given an organization_type(default is partner type) as query param
-    for the Partnership Manager currently logged in.
+    for the Unicef User currently logged in.
     """
     model = Organization
     serializer_class = SimpleOrganizationSerializer
-    permission_classes = (IsAuthenticated, IsPartnershipManager)
+    permission_classes = (IsAuthenticated, IsUNICEFUser | IsPartnershipManager)
 
     def get_queryset(self):
-        if not self.request.user.is_partnership_manager:
-            return self.model.objects.none()
+        queryset = Organization.objects.all() \
+            .select_related(
+                'partner',
+                'auditorfirm',
+                'tpmpartner')\
+            .prefetch_related(
+                'auditorfirm__purchase_orders',
+                'tpmpartner__countries'
+        )
         organization_type_filter = {
-            "pmp": dict(partner__isnull=False, partner__hidden=False),
+            "partner": dict(partner__isnull=False, partner__hidden=False),
             "audit": dict(auditorfirm__purchase_orders__engagement__isnull=False,
                           auditorfirm__hidden=False),
             "tpm": dict(tpmpartner__countries=connection.tenant, tpmpartner__hidden=False)
         }
-        return self.model.objects\
-            .filter(**organization_type_filter[self.request.query_params.get('organization_type', 'pmp')])\
+        return queryset\
+            .filter(**organization_type_filter[self.request.query_params.get('organization_type', 'partner')])\
             .distinct()
 
 
@@ -225,11 +238,32 @@ class GroupPermissionsViewSet(GroupEditPermissionMixin, APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request):
+        organization_types = [request.query_params.get('organization_type')] if \
+            request.query_params.get('organization_type') else request.user.profile.organization.relationship_types
+
+        allowed_groups = self.get_user_allowed_groups(organization_types)
+
         response_data = {
-            "groups": SimpleGroupSerializer(self.get_user_allowed_groups(), many=True).data,
-            "can_add_user": self.can_add_user()
+            "groups": SimpleGroupSerializer(allowed_groups, many=True).data,
+            "can_add_user": False if not allowed_groups else self.can_add_user()
         }
         return Response(response_data)
+
+
+class GroupFilterViewSet(APIView):
+    """
+    Returns an organization.relationship_types mapping
+    for group roles to be used on AMP list of users
+    """
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        response = dict()
+        for _type, groups in ORGANIZATION_GROUP_MAP.items():
+            response.update(
+                {_type: SimpleGroupSerializer(Group.objects.filter(name__in=groups), many=True).data}
+            )
+        return Response(response)
 
 
 class UserRealmViewSet(
@@ -274,18 +308,32 @@ class UserRealmViewSet(
 
     def get_queryset(self):
         organization_id = self.request.query_params.get('organization_id')
+        relationship_type = self.request.query_params.get('organization_type')
         if organization_id:
-            if self.request.user.is_partnership_manager:
+            if self.request.user.is_unicef_user():
                 organization = get_object_or_404(Organization, pk=organization_id)
+                if not organization.relationship_types or relationship_type not in organization.relationship_types:
+                    logger.error(f"The provided organization id {organization_id} and type {relationship_type} do not match.")
+                    return self.model.objects.none()
             else:
                 return self.model.objects.none()
         else:
             organization = self.request.user.profile.organization
 
-        context_realms_qs = Realm.objects.filter(
-            country=connection.tenant,
-            organization=organization,
-        )
+        qs_context = {
+            "country": connection.tenant,
+            "organization": organization,
+        }
+        group_names = ORGANIZATION_GROUP_MAP.get(relationship_type) if relationship_type else \
+            [group for _type in organization.relationship_types for group in ORGANIZATION_GROUP_MAP.get(_type)]
+        qs_context.update({"group__name__in": group_names})
+
+        if self.request.query_params.get('roles'):
+            qs_context.update(
+                {"group__id__in": self.request.query_params.getlist('roles')}
+            )
+        context_realms_qs = Realm.objects.filter(**qs_context)
+
         return self.model.objects \
             .filter(realms__in=context_realms_qs) \
             .prefetch_related(Prefetch('realms', queryset=context_realms_qs))\

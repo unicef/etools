@@ -24,7 +24,7 @@ class IsPartnershipManager(BasePermission):
 
 
 class IsActiveInRealm(BasePermission):
-    """Allows access to users who are in the current realm, despite of their groups"""
+    """Allows access to users who are in the current realm, despite their groups"""
 
     def has_permission(self, request, view):
         return request.user.realms \

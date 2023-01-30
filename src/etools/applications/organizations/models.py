@@ -1,4 +1,5 @@
-from django.db import models
+from django.db import connection, models
+from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 
 from model_utils import Choices
@@ -94,3 +95,19 @@ class Organization(TimeStampedModel, models.Model):
 
     def __str__(self):
         return self.name if self.name else self.vendor_number
+
+    @cached_property
+    def relationship_types(self):
+        _list = []
+        if hasattr(self, 'partner') and \
+                not self.partner.hidden:
+            _list.append('partner')
+        elif hasattr(self, 'auditorfirm') and \
+                self.auditorfirm.purchase_orders.filter(engagement__isnull=False).exists() and \
+                not self.auditorfirm.hidden:
+            _list.append('audit')
+        elif hasattr(self, 'tpmpartner') and \
+                self.tpmpartner.countries.filter(id=connection.tenant.id).exists() and \
+                not self.tpmpartner.hidden:
+            _list.append('tpm')
+        return _list

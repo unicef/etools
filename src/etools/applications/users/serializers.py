@@ -17,7 +17,15 @@ class SimpleCountrySerializer(serializers.ModelSerializer):
 class SimpleOrganizationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
-        fields = ('id', 'name')
+        fields = ['id', 'name']
+
+
+class OrganizationSerializer(SimpleOrganizationSerializer):
+    relationship_types = serializers.ListSerializer(child=serializers.CharField(), read_only=True)
+
+    class Meta(SimpleOrganizationSerializer.Meta):
+        model = Organization
+        fields = SimpleOrganizationSerializer.Meta.fields + ['relationship_types']
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
@@ -48,7 +56,8 @@ class UserManagementSerializer(serializers.Serializer):
                                                                               "UNICEF Audit Focal Point",
                                                                               "Travel Focal Point",
                                                                               "FM User",
-                                                                              "Driver"]), required=True)
+                                                                              "Driver",
+                                                                              "PRC Secretary"]), required=True)
     workspace = serializers.CharField(required=True)
     access_type = serializers.ChoiceField(choices=["grant", "revoke", "set"], required=True)
 

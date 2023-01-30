@@ -76,6 +76,8 @@ class ChangeUserRoleView(CreateAPIView, GenericAPIView):
             roles = []
             for desired_role_name in data["roles"]:
                 roles.append(get_object_or_404(Group, name=desired_role_name))
+                # add unicef user role to roles list by default
+                roles.append(Group.objects.get(name="UNICEF User"))
         except Http404 as e:
             raise ValidationError({"error": e})
 
@@ -83,33 +85,24 @@ class ChangeUserRoleView(CreateAPIView, GenericAPIView):
             raise ValidationError({"error": "only users with UNICEF email addresses can be updated"})
 
         details["previous_roles"] = list(user.groups.all().values_list("name", flat=True))
-        realms = []
-        for role in roles:
-            realms.append(Realm.objects.get_or_create(
-                user=user,
-                country=workspace,
-                organization=user.profile.organization,
-                group=role)[0])
-        if data["access_type"] == "grant":
-            # add unicef user role to roles list by default
-            realms.append(Realm.objects.get_or_create(
-                user=user,
-                country=workspace,
-                organization=user.profile.organization,
-                group=Group.objects.get(name="UNICEF User"))[0])
-            user.realms.add(*realms)
-        elif data["access_type"] == "set":
-            # add unicef user role to roles list by default
-            realms.append(Realm.objects.get_or_create(
-                user=user,
-                country=workspace,
-                organization=user.profile.organization,
-                group=Group.objects.get(name="UNICEF User"))[0])
-            user.realms_set.set(realms)
-        else:
+        unicef_organization = Organization.objects.get(name='UNICEF', vendor_number='UNICEF')
+
+        if data["access_type"] == "revoke":
             user.realms\
-                .filter(group__in=roles, country=workspace, organization=user.profile.organization)\
+                .filter(group__in=roles, country=workspace, organization=unicef_organization)\
                 .update(is_active=False)
+        else:
+            realms = []
+            for role in roles:
+                realms.append(Realm.objects.update_or_create(
+                    user=user,
+                    country=workspace,
+                    organization=unicef_organization,
+                    group=role,
+                    is_active=True
+                )[0])
+            if data["access_type"] == "set":
+                user.realms.exclude(id__in=[realm.id for realm in realms]).update(is_active=False)
 
         if user.profile.country_override and user.profile.country_override != workspace:
             user.profile.country_override = None

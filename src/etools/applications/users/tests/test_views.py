@@ -9,6 +9,7 @@ from django.urls import reverse
 from rest_framework import status
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.organizations.models import Organization
 from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, UNICEF_USER
 from etools.applications.publics.tests.factories import PublicsBusinessAreaFactory
 from etools.applications.users.models import Group, UserProfile
@@ -55,25 +56,49 @@ class TestChangeUserCountry(BaseTenantTestCase):
 
 
 class TestChangeUserRoleView(BaseTenantTestCase):
+    fixtures = ['organizations', 'audit_groups']
+
     @classmethod
     def setUpTestData(cls):
         cls.superuser = UserFactory(is_superuser=True)
+        cls.unicef_organization = Organization.objects.get(vendor_number='UNICEF')
+        cls.partnership_manager = UserFactory(
+            realms__data=["Partnership Manager"], email='test@unicef.org',
+            profile__organization=cls.unicef_organization
+        )
 
     def setUp(self):
         super().setUp()
         self.url = reverse("users:user-change")
 
     def test_post_revoke_200(self):
-        partnership_manager = UserFactory(realms__data=["Partnership Manager"], email='test@unicef.org')
         response = self.forced_auth_req(
             "post",
             self.url,
             user=self.superuser,
             data={
-                "user_email": partnership_manager.email,
+                "user_email": self.partnership_manager.email,
                 "roles": ["Partnership Manager"],
                 "workspace": f"{self.tenant.business_area_code}",
                 "access_type": "revoke"
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response = json.loads(response.content)
+        self.assertEqual(response['status'], 'success')
+        self.assertEqual(response['details']['previous_roles'], ["Partnership Manager"])
+        self.assertEqual(response['details']['current_roles'], [])
+
+    def test_post_grant_200(self):
+        response = self.forced_auth_req(
+            "post",
+            self.url,
+            user=self.superuser,
+            data={
+                "user_email": self.partnership_manager.email,
+                "roles": ["UNICEF Audit Focal Point"],
+                "workspace": f"{self.tenant.business_area_code}",
+                "access_type": "grant"
             }
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -81,9 +106,31 @@ class TestChangeUserRoleView(BaseTenantTestCase):
         response = json.loads(response.content)
         self.assertEqual(response['status'], 'success')
         self.assertEqual(response['details']['previous_roles'], ["Partnership Manager"])
-        self.assertEqual(response['details']['current_roles'], [])
+        self.assertEqual(
+            response['details']['current_roles'],
+            ['Partnership Manager', 'UNICEF Audit Focal Point', 'UNICEF User']
+        )
 
-    def test_post_invalid_uppercase_email(self):
+    def test_post_set_200(self):
+        response = self.forced_auth_req(
+            "post",
+            self.url,
+            user=self.superuser,
+            data={
+                "user_email": self.partnership_manager.email,
+                "roles": ["UNICEF Audit Focal Point"],
+                "workspace": f"{self.tenant.business_area_code}",
+                "access_type": "set"
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        response = json.loads(response.content)
+        self.assertEqual(response['status'], 'success')
+        self.assertEqual(response['details']['previous_roles'], ["Partnership Manager"])
+        self.assertEqual(response['details']['current_roles'], ["UNICEF Audit Focal Point", "UNICEF User"])
+
+    def test_invalid_uppercase_email(self):
         response = self.forced_auth_req(
             "post",
             self.url,
@@ -97,7 +144,7 @@ class TestChangeUserRoleView(BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_post_invalid_not_unicef(self):
+    def test_invalid_not_unicef(self):
         response = self.forced_auth_req(
             "post",
             self.url,
