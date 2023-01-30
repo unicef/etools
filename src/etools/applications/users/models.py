@@ -596,6 +596,13 @@ class Realm(TimeStampedModel):
             data = "[Inactive] " + data
         return data
 
+    def save(self, **kwargs):
+        super().save(**kwargs)
+
+        if not self.user.realms.filter(is_active=True).exists():
+            self.user.is_active = False
+            self.user.save(update_fields=['is_active'])
+
 
 # TODO REALMS: clean up: drop the wrappers
 IPViewer = GroupWrapper(code='ip_viewer', name='IP Viewer')
