@@ -21,11 +21,11 @@ class SimpleOrganizationSerializer(serializers.ModelSerializer):
 
 
 class OrganizationSerializer(SimpleOrganizationSerializer):
-    type = serializers.ListSerializer(child=serializers.CharField(), source='relationship_types', read_only=True)
+    relationship_types = serializers.ListSerializer(child=serializers.CharField(), read_only=True)
 
     class Meta(SimpleOrganizationSerializer.Meta):
         model = Organization
-        fields = SimpleOrganizationSerializer.Meta.fields + ['type']
+        fields = SimpleOrganizationSerializer.Meta.fields + ['relationship_types']
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
