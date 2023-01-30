@@ -596,6 +596,7 @@ class Realm(TimeStampedModel):
             data = "[Inactive] " + data
         return data
 
+    @transaction.atomic()
     def save(self, **kwargs):
         super().save(**kwargs)
 
