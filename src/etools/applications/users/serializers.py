@@ -56,7 +56,8 @@ class UserManagementSerializer(serializers.Serializer):
                                                                               "UNICEF Audit Focal Point",
                                                                               "Travel Focal Point",
                                                                               "FM User",
-                                                                              "Driver"]), required=True)
+                                                                              "Driver",
+                                                                              "PRC Secretary"]), required=True)
     workspace = serializers.CharField(required=True)
     access_type = serializers.ChoiceField(choices=["grant", "revoke", "set"], required=True)
 
