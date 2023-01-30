@@ -523,8 +523,28 @@ class TestGroupPermissionsViewSet(BaseTenantTestCase):
         super().setUp()
         self.url = reverse("users_v3:amp-group-permissions")
 
+    def test_get_allowed_amp_groups_unicef(self):
+        for user_group, org_type in zip(
+                [UNICEFAuditFocalPoint, PartnershipManager],
+                ['audit', 'partner', 'tpm']):
+            response = self.forced_auth_req(
+                "get",
+                self.url,
+                data={'organization_type': org_type},
+                user=UserFactory(
+                    realms__data=[user_group.name], profile__organization=self.organization
+                )
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            expected_groups = sorted(
+                GroupEditPermissionMixin.GROUPS_ALLOWED_MAP.get(user_group.name, {}).get(org_type))
+
+            actual_groups = sorted([group['name'] for group in response.data['groups']])
+            self.assertEqual(expected_groups, actual_groups)
+            self.assertEqual(response.data['can_add_user'], True)
+
     def test_get_allowed_amp_groups_partner(self):
-        for user_group in [IPViewer, IPEditor, IPAuthorizedOfficer, IPAdmin, PartnershipManager]:
+        for user_group in [IPViewer, IPEditor, IPAuthorizedOfficer, IPAdmin]:
             response = self.forced_auth_req(
                 "get",
                 self.url,
@@ -539,7 +559,7 @@ class TestGroupPermissionsViewSet(BaseTenantTestCase):
             self.assertEqual(expected_groups, actual_groups)
             self.assertEqual(
                 response.data['can_add_user'],
-                True if user_group in [IPAdmin, IPAuthorizedOfficer, PartnershipManager] else False
+                True if user_group in [IPAdmin, IPAuthorizedOfficer] else False
             )
 
     def test_get_allowed_amp_groups_audit(self):
@@ -618,8 +638,8 @@ class TestUserRealmView(BaseTenantTestCase):
 
     def test_get_list_filter_by_roles(self):
         data = {"roles": [
-            IPEditor.as_group().id,
-            IPViewer.as_group().id
+            IPEditor.name,
+            IPViewer.name
         ]}
         for auth_user in [self.ip_viewer, self.ip_editor, self.ip_admin,
                           self.ip_auth_officer]:

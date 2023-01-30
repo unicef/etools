@@ -238,7 +238,7 @@ class GroupPermissionsViewSet(GroupEditPermissionMixin, APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request):
-        organization_types = list(request.query_params.get('organization_type')) if \
+        organization_types = [request.query_params.get('organization_type')] if \
             request.query_params.get('organization_type') else request.user.profile.organization.relationship_types
 
         allowed_groups = self.get_user_allowed_groups(organization_types)
@@ -325,7 +325,7 @@ class UserRealmViewSet(
 
         if self.request.query_params.get('roles'):
             qs_context.update(
-                {"group_id__in": self.request.query_params.getlist('roles')}
+                {"group__name__in": self.request.query_params.getlist('roles')}
             )
         context_realms_qs = Realm.objects.filter(**qs_context)
 
