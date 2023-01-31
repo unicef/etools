@@ -14,6 +14,14 @@ ORGANIZATION_GROUP_MAP = {
 
 
 class GroupEditPermissionMixin:
+    """
+    Mixin that handles roles for editing/adding in AMP based on the authenticated user roles.
+    GROUPS_ALLOWED_MAP structure:
+     - the keys are used for matching the current auth user roles
+     - the values {'partner': [...]} map the organization relationship_type to its specific roles:
+     e.g. An authenticated IP Admin can change roles only for a partner organization,
+     the roles being limited to IP Viewer, Editor, IP Authorized Officer
+    """
 
     GROUPS_ALLOWED_MAP = {
         "IP Editor": {"partner": ["IP Viewer"]},
