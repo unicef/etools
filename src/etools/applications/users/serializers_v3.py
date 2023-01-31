@@ -149,7 +149,7 @@ class UserRealmRetrieveSerializer(serializers.ModelSerializer):
 
 class UserRealmBaseSerializer(GroupEditPermissionMixin, serializers.ModelSerializer):
     organization = serializers.IntegerField(required=False, allow_null=False, write_only=True)
-    groups = serializers.ListField(child=serializers.IntegerField(), required=True, write_only=True)
+    groups = serializers.ListField(child=serializers.IntegerField(), required=True, allow_null=False, write_only=True)
 
     class Meta:
         model = get_user_model()
@@ -185,7 +185,10 @@ class UserRealmBaseSerializer(GroupEditPermissionMixin, serializers.ModelSeriali
                 _('You do not have permissions to change groups for %(name)s organization.'
                   % {'name': organization.name}))
 
-        if not group_ids or not group_ids.issubset(allowed_group_ids):
+        if data['groups'] == []:
+            return data
+
+        if not group_ids.issubset(allowed_group_ids):
             raise PermissionDenied(
                 _('Permission denied. Only %(groups)s roles can be assigned.'
                   % {'groups': ', '.join(Group.objects.filter(id__in=allowed_group_ids).values_list('name', flat=True))})
@@ -241,20 +244,17 @@ class UserRealmCreateSerializer(UserRealmBaseSerializer):
             instance.profile.save(update_fields=['job_title'])
 
         self.create_realms(instance, organization_id, group_ids)
+        instance.update_active_state()
         notify_user_on_realm_update.delay(instance.id)
         return instance
 
 
 class UserRealmUpdateSerializer(UserRealmBaseSerializer):
     def update(self, instance, validated_data):
-        organization_id = validated_data.get('organization', instance.profile.organization.id)
+        organization_id = validated_data.get('organization', self.context['request'].user.profile.organization.id)
         requested_group_ids = set(validated_data.get('groups'))
         context_qs_params = {'country': connection.tenant, 'organization_id': organization_id}
         realm_qs = instance.realms.filter(**context_qs_params)
-
-        if requested_group_ids == []:
-            realm_qs.update(is_active=False)
-            return
 
         organization = Organization.objects.get(id=organization_id)
 
@@ -286,8 +286,10 @@ class UserRealmUpdateSerializer(UserRealmBaseSerializer):
         realm_qs.filter(group__id__in=_to_deactivate).update(is_active=False)
         realm_qs.filter(group__id__in=_to_reactivate).update(is_active=True)
 
+        instance.update_active_state()
+
         # clean up profile organization if no realm is active for context country and organization
-        if not instance.realms.filter(is_active=True, **context_qs_params).count():
+        if not instance.realms.filter(is_active=True, **context_qs_params).exists():
             instance.profile.organization = None
             instance.profile.save(update_fields=['organization'])
         notify_user_on_realm_update.delay(instance.id)

@@ -239,6 +239,15 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
         info = (self._meta.app_label, self._meta.model_name)
         return reverse('admin:%s_%s_change' % info, args=(self.pk,))
 
+    def update_active_state(self):
+        # inactivate an active user if no active realms available:
+        if self.is_active and not self.realms.filter(is_active=True).exists():
+            self.is_active = False
+        # activate an inactive user if it has active realms
+        elif not self.is_active and self.realms.filter(is_active=True).exists():
+            self.is_active = True
+        self.save(update_fields=['is_active'])
+
     @transaction.atomic
     def save(self, *args, **kwargs):
         if self.email != self.email.lower():
@@ -600,9 +609,7 @@ class Realm(TimeStampedModel):
     def save(self, **kwargs):
         super().save(**kwargs)
 
-        if not self.user.realms.filter(is_active=True).exists():
-            self.user.is_active = False
-            self.user.save(update_fields=['is_active'])
+        self.user.update_active_state()
 
 
 # TODO REALMS: clean up: drop the wrappers

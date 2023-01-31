@@ -782,18 +782,30 @@ class TestUserRealmView(BaseTenantTestCase):
         self.assertEqual(len(response.data['realms']), 2)
         self.assertEqual(self.user.realms.filter(is_active=True).count(), 2)
 
-        # deactivate IPViewer and IPEditor
+        # deactivate IPViewer and IPEditor and activate IPAuthorizedOfficer
         data["groups"] = [GroupFactory(name=IPAuthorizedOfficer.name).pk]
         response = self.make_request_detail(self.ip_admin, self.user.id, data=data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(self.user.realms.count(), 3)
         self.assertEqual(self.user.realms.filter(is_active=True).count(), 1)
 
-        # reactivate IPViewer and IPEditor and deactivate IPAuthorizedOfficer
+        # deactivate all groups
+        data["groups"] = []
+        response = self.make_request_detail(self.ip_admin, self.user.id, data=data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(self.user.realms.count(), 3)
+        self.assertEqual(self.user.realms.filter(is_active=True).count(), 0)
+        self.user.refresh_from_db()
+        self.assertFalse(self.user.is_active)
+        self.assertFalse(self.user.profile.organization)
+
+        # reactivate IPViewer and IPEditor
         data["groups"] = [GroupFactory(name=IPViewer.name).pk, GroupFactory(name=IPEditor.name).pk]
         response = self.make_request_detail(self.ip_admin, self.user.id, data=data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(self.user.realms.filter(is_active=True).count(), 2)
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.is_active)
 
     def test_patch_partnership_manager_200(self):
         new_user = UserFactory(realms__data=[], profile__organization=self.organization)
