@@ -2619,7 +2619,7 @@ class Intervention(TimeStampedModel):
 
     def get_cash_transfer_modalities_display(self):
         choices = dict(self.CASH_TRANSFER_CHOICES)
-        return ', '.join(choices.get(choices[m], 'Unknown') for m in self.cash_transfer_modalities)
+        return ', '.join([choices.get(m, 'Unknown') for m in self.cash_transfer_modalities])
 
     def was_active_before(self):
         """
