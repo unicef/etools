@@ -135,7 +135,7 @@ class AuditUsersViewSet(generics.ListAPIView):
     filter_backends = (SearchFilter, DjangoFilterBackend, UnicefUsersAllowedFilter)
     filter_fields = ('email',)
     search_fields = ('email',)
-    queryset = get_user_model().objects.all().select_related('profile')
+    queryset = get_user_model().objects.all().select_related('profile', 'profile__organization')
     serializer_class = AuditUserSerializer
 
     def get_serializer_class(self):

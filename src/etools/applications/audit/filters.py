@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.db import models
+from django.db import connection, models
 from django.db.models.functions import TruncYear
 
 from django_filters import rest_framework as filters
@@ -7,6 +7,8 @@ from rest_framework.filters import BaseFilterBackend, OrderingFilter
 
 from etools.applications.audit.models import Engagement
 from etools.applications.organizations.models import Organization
+from etools.applications.users.mixins import AUDIT_ACTIVE_GROUPS
+from etools.applications.users.models import Realm
 
 
 class DisplayStatusFilter(BaseFilterBackend):
@@ -103,13 +105,20 @@ class UnicefUsersAllowedFilter(BaseFilterBackend):
         ).lower()
         if unicef_users_allowed not in ['true', 'false']:
             return queryset
-
-        unicef_filter = models.Q(profile__organization=Organization.objects.get(name='UNICEF'))
-
+        qs_context = {
+            "country": connection.tenant,
+        }
         if unicef_users_allowed == 'true':
-            return queryset.filter(unicef_filter)
+            qs_context.update({
+                "organization_id__in": Organization.objects.filter(vendor_number__in=['UNICEF', '000']).values_list('id', flat=True),
+                "group__name__in": AUDIT_ACTIVE_GROUPS})
         else:
-            return queryset.filter(~unicef_filter)
+            qs_context.update({
+                "organization": request.user.profile.organization,
+                "group__name": "Auditor"
+            })
+        context_realms_qs = Realm.objects.filter(**qs_context)
+        return queryset.filter(realms__in=context_realms_qs).distinct()
 
 
 class StaffMembersOrderingFilter(OrderingFilter):

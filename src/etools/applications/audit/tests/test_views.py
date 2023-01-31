@@ -1026,13 +1026,13 @@ class TestAuditorFirmViewSet(AuditTestCaseMixin, BaseTenantTestCase):
     def test_unicef_users_filter_view(self):
         AuditorUserFactory(partner_firm=self.auditor_firm)
         another_unicef_user = UserFactory(email='test@unicef.com')
-
-        response = self.forced_auth_req(
-            'get',
-            '/api/audit/audit-firms/users/',
-            user=self.unicef_user,
-            data={'purchase_order_auditorstaffmember__auditor_firm__unicef_users_allowed': 'true'}
-        )
+        with self.assertNumQueries(1):
+            response = self.forced_auth_req(
+                'get',
+                '/api/audit/audit-firms/users/',
+                user=self.unicef_user,
+                data={'purchase_order_auditorstaffmember__auditor_firm__unicef_users_allowed': 'true'}
+            )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertCountEqual(
             [u['email'] for u in response.data],
