@@ -88,7 +88,7 @@ class CommentsViewSet(
     def export_csv(self, request, *args, **kwargs):
         instance = self.get_related_instance()
         instance_identifier = getattr(instance, 'reference_number', str(instance))
-        serializer = CommentCSVSerializer(instance=self.get_queryset(), many=True)
+        serializer = CommentCSVSerializer(instance=self.get_queryset().exclude(state=Comment.STATES.deleted), many=True)
 
         return Response(serializer.data, headers={
             'Content-Disposition': 'attachment;filename={}.csv'.format(instance_identifier)
