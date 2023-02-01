@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-01 16:31+0000\n"
+"POT-Creation-Date: 2023-02-01 16:50+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -692,8 +692,8 @@ msgstr ""
 msgid "Prog effectiveness"
 msgstr ""
 
-#: exports_v2.py:567
-msgid "HQ cost"
+#: exports_v2.py:567 templates/pd/detail.html:172 templates/pd/detail.html:391
+msgid "Capacity Strengthening Costs"
 msgstr ""
 
 #: exports_v2.py:572 exports_v2.py:597
@@ -780,7 +780,7 @@ msgstr ""
 #: exports_v2.py:813
 #, python-format
 msgid ""
-"HQ Support/Capacity Building  ({%(cost)d}%% of UNICEF the cash component)"
+"Capacity Strengthening Costs ({%(cost)d}%% of UNICEF the cash component)"
 msgstr ""
 
 #: exports_v2.py:833
@@ -2162,10 +2162,6 @@ msgstr ""
 msgid "Supplies"
 msgstr ""
 
-#: templates/pd/detail.html:172
-msgid "HQ Cash"
-msgstr ""
-
 #: templates/pd/detail.html:178
 msgid "Partner Cash"
 msgstr ""
@@ -2255,10 +2251,6 @@ msgstr ""
 #: templates/pd/detail.html:385
 msgid "Sub-total for programme costs"
 msgstr ""
-
-#: templates/pd/detail.html:391
-msgid "HQ support costs"
-msgstr "تكلفة دعم المقر"
 
 #: templates/pd/detail.html:397
 msgid "Total Cash budget"
