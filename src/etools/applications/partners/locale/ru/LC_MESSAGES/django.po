@@ -653,7 +653,7 @@ msgid "Location"
 msgstr ""
 
 #: exports_v2.py:386
-msgid "PD Ref Number)"
+msgid "PD Ref Number"
 msgstr ""
 
 #: exports_v2.py:502 templates/pd/detail.html:155
