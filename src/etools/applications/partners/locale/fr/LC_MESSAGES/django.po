@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-01 11:45+0000\n"
+"POT-Creation-Date: 2023-02-01 16:24+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -94,6 +94,837 @@ msgstr ""
 "Veuillez supprimer toutes les interventions associées à cet accord avant de "
 "supprimer l'accord."
 
+#: exports_v2.py:24 exports_v2.py:88 exports_v2.py:177 exports_v2.py:220
+#: exports_v2.py:335 exports_v2.py:382 models.py:434
+#: serializers/exports/interventions.py:232
+msgid "Vendor Number"
+msgstr "Numéro du fournisseur"
+
+#: exports_v2.py:25 serializers/exports/partner_organization.py:34
+msgid "Organizations Full Name"
+msgstr "Nom complet de l'organisation"
+
+#: exports_v2.py:26 models.py:373
+msgid "Short Name"
+msgstr "Nom court"
+
+#: exports_v2.py:27 models.py:446
+msgid "Alternate Name"
+msgstr "Nom alternatif"
+
+#: exports_v2.py:28 exports_v2.py:89 exports_v2.py:178 exports_v2.py:254
+#: models.py:354 serializers/exports/interventions.py:237
+#: serializers/exports/partner_organization.py:69
+msgid "Partner Type"
+msgstr "Type de partenaire"
+
+#: exports_v2.py:29 models.py:384
+#: serializers/exports/partner_organization.py:68
+msgid "Shared Partner"
+msgstr "Partenaire partagé"
+
+#: exports_v2.py:30 models.py:416
+msgid "Address"
+msgstr "Adresse"
+
+#: exports_v2.py:31 models.py:428 models.py:996
+msgid "Phone Number"
+msgstr "Numéro de téléphone"
+
+#: exports_v2.py:32 models.py:423 models.py:990
+#: serializers/exports/partner_organization.py:38
+msgid "Email Address"
+msgstr "Adresse e-mail"
+
+#: exports_v2.py:33 serializers/exports/partner_organization.py:41
+msgid "HACT Risk Rating"
+msgstr "Évaluation des risques HACT"
+
+#: exports_v2.py:34 serializers/exports/partner_organization.py:48
+msgid "Date Last Assessed Against Core Values"
+msgstr "Date de la dernière évaluation par rapport aux valeurs fondamentales"
+
+#: exports_v2.py:35 serializers/exports/partner_organization.py:52
+msgid "Actual Cash Transfer for CP (USD)"
+msgstr "Transfert en espèces réel pour CP (USD)"
+
+#: exports_v2.py:36 serializers/exports/partner_organization.py:56
+msgid "Actual Cash Transfer for Current Year (USD)"
+msgstr "Transfert en espèces réel pour l'année en cours (USD)"
+
+#: exports_v2.py:37 serializers/exports/partner_organization.py:60
+msgid "Marked for Deletion"
+msgstr "Marqué pour suppression"
+
+#: exports_v2.py:38 models.py:477
+#: serializers/exports/partner_organization.py:62
+msgid "Blocked"
+msgstr "Bloqué"
+
+#: exports_v2.py:39 exports_v2.py:91 exports_v2.py:181 models.py:459
+msgid "Assessment Type"
+msgstr "Type d'évaluation"
+
+#: exports_v2.py:40 serializers/exports/partner_organization.py:64
+msgid "Date Assessed"
+msgstr "Date d'évaluation"
+
+#: exports_v2.py:41 serializers/exports/partner_organization.py:31
+msgid "Assessment Type (Date Assessed)"
+msgstr "Type d'évaluation (date d'évaluation)"
+
+#: exports_v2.py:42 serializers/exports/partner_organization.py:29
+msgid "Staff Members"
+msgstr "Membres du personnel"
+
+#: exports_v2.py:44 exports_v2.py:281 serializers/exports/interventions.py:274
+#: serializers/exports/interventions.py:563
+#: serializers/exports/partner_organization.py:71
+msgid "Planned Programmatic Visits"
+msgstr "Visites programmatiques planifiées"
+
+#: exports_v2.py:87 exports_v2.py:139 exports_v2.py:176
+msgid "Implementing Partner"
+msgstr ""
+
+#: exports_v2.py:90 exports_v2.py:179
+msgid "Shared IP"
+msgstr ""
+
+#: exports_v2.py:92
+msgid "Cash Transfer 1 OCT - 30 SEP"
+msgstr ""
+
+#: exports_v2.py:93
+msgid "Liquidations 1 OCT - 30 SEP"
+msgstr ""
+
+#: exports_v2.py:94 exports_v2.py:180
+msgid "Cash Transfers Jan - Dec"
+msgstr "Transfert en espèces de janvier à décembre"
+
+#: exports_v2.py:95 exports_v2.py:182 models.py:452
+msgid "Risk Rating"
+msgstr "Évaluation du risque"
+
+#: exports_v2.py:96 exports_v2.py:183
+msgid "Expiring Threshold"
+msgstr ""
+
+#: exports_v2.py:97 exports_v2.py:184
+msgid "Approach Threshold"
+msgstr ""
+
+#: exports_v2.py:98
+msgid "Programmatic Visits Planned Q1"
+msgstr "Visites programmatiques planifiées Q1"
+
+#: exports_v2.py:99 exports_v2.py:104 exports_v2.py:108 exports_v2.py:114
+msgid "Q2"
+msgstr ""
+
+#: exports_v2.py:100 exports_v2.py:105 exports_v2.py:109 exports_v2.py:115
+msgid "Q3"
+msgstr ""
+
+#: exports_v2.py:101 exports_v2.py:106 exports_v2.py:110 exports_v2.py:116
+msgid "Q4"
+msgstr ""
+
+#: exports_v2.py:102 exports_v2.py:186
+msgid "Programmatic Visits M.R"
+msgstr ""
+
+#: exports_v2.py:103
+msgid "Programmatic Visits Completed Q1"
+msgstr ""
+
+#: exports_v2.py:107
+msgid "Spot Checks Planned Q1"
+msgstr ""
+
+#: exports_v2.py:111
+msgid "Spot Checks M.R"
+msgstr ""
+
+#: exports_v2.py:112
+msgid "Follow Up"
+msgstr ""
+
+#: exports_v2.py:113
+msgid "Spot Checks Completed Q1"
+msgstr ""
+
+#: exports_v2.py:117 exports_v2.py:190
+msgid "Audits M.R"
+msgstr ""
+
+#: exports_v2.py:118 exports_v2.py:191
+msgid "Audit Completed"
+msgstr ""
+
+#: exports_v2.py:119 exports_v2.py:192
+msgid "Audits Outstanding Findings"
+msgstr ""
+
+#: exports_v2.py:140 exports_v2.py:264 models.py:2035
+#: serializers/exports/interventions.py:255
+msgid "Sections"
+msgstr ""
+
+#: exports_v2.py:141 exports_v2.py:265 models.py:2046
+#: serializers/exports/interventions.py:256
+msgid "Locations"
+msgstr "Emplacements"
+
+#: exports_v2.py:142
+msgid "Action Points #"
+msgstr ""
+
+#: exports_v2.py:143
+msgid "$ Cash in the Current CP Cycle"
+msgstr ""
+
+#: exports_v2.py:144
+msgid "$ Cash in the Current Year"
+msgstr ""
+
+#: exports_v2.py:145 exports_v2.py:355
+msgid "Days Since Last PV"
+msgstr ""
+
+#: exports_v2.py:146
+msgid "Alert: No Recent PV"
+msgstr ""
+
+#: exports_v2.py:147
+msgid "Alert: No PV"
+msgstr ""
+
+#: exports_v2.py:148
+msgid "Outstanding DCT Amount between 6 and 9 months"
+msgstr ""
+
+#: exports_v2.py:149
+msgid "Outstanding DCT Amount more than 9 months"
+msgstr ""
+
+#: exports_v2.py:185
+msgid "Programmatic Visits Planned"
+msgstr "Visites programmatiques planifiées"
+
+#: exports_v2.py:187
+msgid "Programmatic Visits Completed"
+msgstr ""
+
+#: exports_v2.py:188
+msgid "Spot Check Required"
+msgstr ""
+
+#: exports_v2.py:189
+msgid "Spot Checks Completed"
+msgstr ""
+
+#: exports_v2.py:217 exports_v2.py:259 models.py:1300 models.py:1873
+#: models.py:2678 serializers/exports/interventions.py:48
+#: serializers/exports/interventions.py:86
+#: serializers/exports/interventions.py:197
+#: serializers/exports/interventions.py:209
+msgid "Reference Number"
+msgstr "Numéro de référence"
+
+#: exports_v2.py:218 exports_v2.py:253 exports_v2.py:339 exports_v2.py:387
+#: models.py:1378 models.py:1881
+msgid "Status"
+msgstr "Statut"
+
+#: exports_v2.py:219
+msgid "Partner Name"
+msgstr ""
+
+#: exports_v2.py:221 models.py:1295
+msgid "Agreement Type"
+msgstr "Type d'accord"
+
+#: exports_v2.py:222 exports_v2.py:261 exports_v2.py:340 exports_v2.py:386
+#: models.py:1326 models.py:1889
+msgid "Start Date"
+msgstr "Date de début"
+
+#: exports_v2.py:223 exports_v2.py:262 exports_v2.py:341 exports_v2.py:377
+#: models.py:1331 models.py:1895
+msgid "End Date"
+msgstr "Date de fin"
+
+#: exports_v2.py:224 serializers/exports/agreements.py:44
+msgid "Signed By Partner"
+msgstr "Signé par le partenaire"
+
+#: exports_v2.py:225 models.py:1355
+msgid "Signed By Partner Date"
+msgstr "Signé par le partenaire Date"
+
+#: exports_v2.py:226 models.py:1349 serializers/exports/agreements.py:50
+msgid "Signed By UNICEF"
+msgstr "Signé par l'UNICEF"
+
+#: exports_v2.py:227 models.py:1340
+msgid "Signed By UNICEF Date"
+msgstr "Signé par l'UNICEF Date"
+
+#: exports_v2.py:228 models.py:1291 serializers/exports/agreements.py:31
+msgid "Partner Authorized Officer"
+msgstr "Officier autorisé associé"
+
+#: exports_v2.py:229 serializers/exports/agreements.py:54
+msgid "Amendments"
+msgstr "Modifications"
+
+#: exports_v2.py:231 models.py:1337 serializers/exports/agreements.py:57
+msgid "Special Conditions PCA"
+msgstr "Conditions particulières PCA"
+
+#: exports_v2.py:232 models.py:1370 serializers/exports/agreements.py:60
+msgid "Terms Acknowledged By"
+msgstr "Conditions reconnues par"
+
+#: exports_v2.py:251 exports_v2.py:381 exports_v2.py:498 models.py:937
+#: models.py:969 models.py:1057 models.py:1132 models.py:1278 models.py:3443
+#: models.py:3599 serializers/exports/interventions.py:227
+msgid "Partner"
+msgstr "Partenaire"
+
+#: exports_v2.py:252
+msgid "Vendor no."
+msgstr "Numéro du fournisseur"
+
+#: exports_v2.py:255 models.py:361 serializers/exports/interventions.py:242
+msgid "CSO Type"
+msgstr "Type OSC"
+
+#: exports_v2.py:256 exports_v2.py:383 models.py:1566 models.py:1850
+#: serializers/exports/interventions.py:247
+msgid "Agreement"
+msgstr "Accord"
+
+#: exports_v2.py:257 models.py:1283 models.py:1859
+#: serializers/exports/agreements.py:114
+#: serializers/exports/interventions.py:91
+#: serializers/exports/interventions.py:509
+msgid "Country Programme"
+msgstr "Programme de pays"
+
+#: exports_v2.py:258 models.py:1844 templates/pd/detail.html:137
+#: templates/pd/detail.html:480
+msgid "Document Type"
+msgstr "Type de document"
+
+#: exports_v2.py:260 models.py:1879
+msgid "Document Title"
+msgstr "Titre du document"
+
+#: exports_v2.py:263 serializers/exports/interventions.py:254
+#: templates/pd/detail.html:141
+msgid "UNICEF Office"
+msgstr "Bureau de l'UNICEF"
+
+#: exports_v2.py:266
+msgid "Contingency PD?"
+msgstr "PD de contingence?"
+
+#: exports_v2.py:267 serializers/exports/interventions.py:259
+msgid "Cluster"
+msgstr "Grappe"
+
+#: exports_v2.py:268 models.py:1985 serializers/exports/interventions.py:316
+msgid "UNICEF Focal Points"
+msgstr "Points focaux de l'UNICEF"
+
+#: exports_v2.py:269 models.py:1992 serializers/exports/interventions.py:313
+msgid "CSO Authorized Officials"
+msgstr "Agents autorisés de la CSO"
+
+#: exports_v2.py:270 serializers/exports/interventions.py:277
+msgid "Budget Currency"
+msgstr "Devise du budget"
+
+#: exports_v2.py:271
+msgid "Total CSO Budget (USD)"
+msgstr ""
+
+#: exports_v2.py:272
+msgid "UNICEF Cash (USD)"
+msgstr ""
+
+#: exports_v2.py:273
+msgid "UNICEF Supply (USD)"
+msgstr ""
+
+#: exports_v2.py:274
+msgid "Total PD/SPD Budget (USD)"
+msgstr ""
+
+#: exports_v2.py:275 serializers/exports/interventions.py:261
+msgid "FR Number(s)"
+msgstr "Numéro(s) FR"
+
+#: exports_v2.py:276 exports_v2.py:346 serializers/exports/interventions.py:262
+msgid "FR Currency"
+msgstr "FR Devise"
+
+#: exports_v2.py:277 serializers/exports/interventions.py:263
+msgid "FR Posting Date"
+msgstr "FR Date de publication"
+
+#: exports_v2.py:278 serializers/exports/interventions.py:265
+msgid "FR Amount"
+msgstr "FR Montant"
+
+#: exports_v2.py:279 serializers/exports/interventions.py:268
+msgid "FR Actual CT"
+msgstr "FR Réel CT"
+
+#: exports_v2.py:280 exports_v2.py:350 serializers/exports/interventions.py:271
+msgid "Outstanding DCT"
+msgstr "DCT exceptionnel"
+
+#: exports_v2.py:282
+msgid "Planned Spot Checks"
+msgstr ""
+
+#: exports_v2.py:283
+msgid "Planned Audits"
+msgstr ""
+
+#: exports_v2.py:284 models.py:1901
+msgid "Document Submission Date by CSO"
+msgstr "Date de soumission du document par le CSO"
+
+#: exports_v2.py:285 models.py:1907
+msgid "Submission Date to PRC"
+msgstr "Date de soumission au CRP"
+
+#: exports_v2.py:286 models.py:1919
+msgid "Review Date by PRC"
+msgstr "Date de révision par la RPC"
+
+#: exports_v2.py:287 models.py:1976 models.py:2745
+#: serializers/exports/interventions.py:319
+msgid "Signed by Partner"
+msgstr "Signé par le partenaire"
+
+#: exports_v2.py:288 models.py:1960 models.py:2729
+msgid "Signed by Partner Date"
+msgstr "Signé par le partenaire Date"
+
+#: exports_v2.py:289 models.py:1967 models.py:2736
+#: serializers/exports/interventions.py:310
+msgid "Signed by UNICEF"
+msgstr "Signé par l'UNICEF"
+
+#: exports_v2.py:290 models.py:1955 models.py:2724
+msgid "Signed by UNICEF Date"
+msgstr "Signé par l'UNICEF Date"
+
+#: exports_v2.py:291 serializers/exports/interventions.py:324
+msgid "Days from Submission to Signed"
+msgstr "Jours entre la soumission et la signature"
+
+#: exports_v2.py:292 serializers/exports/interventions.py:327
+msgid "Days from Review to Signed"
+msgstr "Jours entre la révision et la signature"
+
+#: exports_v2.py:293 serializers/exports/interventions.py:330
+msgid "Total no. of amendments"
+msgstr "Nb total. "
+
+#: exports_v2.py:294 serializers/exports/interventions.py:333
+msgid "Last amendment date"
+msgstr "Date de la dernière modification"
+
+#: exports_v2.py:295
+msgid "Attachment Type"
+msgstr "Type de pièce jointe"
+
+#: exports_v2.py:296 serializers/exports/interventions.py:339
+msgid "# of attachments"
+msgstr "# Nombre d'annexes"
+
+#: exports_v2.py:297 serializers/exports/interventions.py:321
+msgid "CP Outputs"
+msgstr "Sorties CP"
+
+#: exports_v2.py:299 models.py:2092
+msgid "UNPP Number"
+msgstr "Numéro UNPP"
+
+#: exports_v2.py:300 models.py:2200 models.py:3325 templates/pd/detail.html:224
+msgid "Data Processing Agreement"
+msgstr "Accord de traitement des données"
+
+#: exports_v2.py:301 models.py:2204 models.py:3326 templates/pd/detail.html:227
+msgid "Activities involving children and young people"
+msgstr "Activités impliquant des enfants et des jeunes"
+
+#: exports_v2.py:302 models.py:2208 templates/pd/detail.html:230
+msgid "Special Conditions for Construction Works by Implementing Partners"
+msgstr ""
+"Conditions particulières pour les travaux de construction par les "
+"partenaires de mise en œuvre"
+
+#: exports_v2.py:334
+msgid "IP Name"
+msgstr ""
+
+#: exports_v2.py:336
+msgid "PD/SPD Ref #"
+msgstr ""
+
+#: exports_v2.py:337 exports_v2.py:385 serializers/exports/interventions.py:102
+msgid "Section"
+msgstr ""
+
+#: exports_v2.py:338
+msgid "Field Office"
+msgstr ""
+
+#: exports_v2.py:342
+msgid "PD Currency"
+msgstr ""
+
+#: exports_v2.py:343
+msgid "CSO Contribution (PD Currency)"
+msgstr ""
+
+#: exports_v2.py:344
+msgid "Total UNICEF Supplies (PD Currency)"
+msgstr ""
+
+#: exports_v2.py:345
+msgid "Total UNICEF Cash (PD Currency)"
+msgstr ""
+
+#: exports_v2.py:347
+msgid "FR Grand Total"
+msgstr ""
+
+#: exports_v2.py:348
+msgid "Actual Disbursements"
+msgstr ""
+
+#: exports_v2.py:349
+msgid "Multi-currency Transaction"
+msgstr ""
+
+#: exports_v2.py:351
+msgid "FR Grand Total (USD)"
+msgstr ""
+
+#: exports_v2.py:352
+msgid "Actual Disbursement (USD)"
+msgstr ""
+
+#: exports_v2.py:353
+msgid "Outstanding DCT (USD)"
+msgstr ""
+
+#: exports_v2.py:354
+msgid "Disbursement To Date (%)"
+msgstr ""
+
+#: exports_v2.py:356
+msgid "Link"
+msgstr ""
+
+#: exports_v2.py:376
+msgid "CP output"
+msgstr ""
+
+#: exports_v2.py:378
+msgid "Name of UNICEF Focal Point"
+msgstr ""
+
+#: exports_v2.py:379
+msgid "Hyperlink"
+msgstr ""
+
+#: exports_v2.py:380 templates/pd/detail.html:267
+msgid "Location"
+msgstr "Emplacement"
+
+#: exports_v2.py:384
+msgid "PD Ref Number)"
+msgstr ""
+
+#: exports_v2.py:500 templates/pd/detail.html:155
+msgid "Start date"
+msgstr "Date de début"
+
+#: exports_v2.py:501
+#, python-format
+msgid "Currency %(currency)s"
+msgstr ""
+
+#: exports_v2.py:505
+msgid "Vendor #: "
+msgstr "Numéro du fournisseur"
+
+#: exports_v2.py:506 templates/pd/detail.html:156
+msgid "End date"
+msgstr "Date de fin"
+
+#: exports_v2.py:509
+msgid "PD Reference"
+msgstr ""
+
+#: exports_v2.py:511
+msgid "Duration"
+msgstr ""
+
+#: exports_v2.py:539
+msgid "Total PD Budget"
+msgstr "Budget total DP"
+
+#: exports_v2.py:546 exports_v2.py:1132
+msgid "UNICEF Contribution"
+msgstr ""
+
+#: exports_v2.py:554 exports_v2.py:584
+msgid "Total Cash"
+msgstr ""
+
+#: exports_v2.py:560 exports_v2.py:590
+msgid "Prog effectiveness"
+msgstr "Efficacité du programme"
+
+#: exports_v2.py:565
+msgid "HQ cost"
+msgstr ""
+
+#: exports_v2.py:570 exports_v2.py:595
+msgid "Supplies in-kind"
+msgstr ""
+
+#: exports_v2.py:576 exports_v2.py:1135 models.py:2961
+msgid "Partner Contribution"
+msgstr "Cotisation du partenaire"
+
+#: exports_v2.py:625
+msgid "PD Output/ PD Activity"
+msgstr ""
+
+#: exports_v2.py:626
+#, python-format
+msgid "Total (%s)"
+msgstr ""
+
+#: exports_v2.py:627 exports_v2.py:862
+msgid "CSO"
+msgstr ""
+
+#: exports_v2.py:627 exports_v2.py:628 exports_v2.py:862 exports_v2.py:863
+msgid "contribution"
+msgstr "Contribution des OSC"
+
+#: exports_v2.py:628 exports_v2.py:863 models.py:3598
+msgid "UNICEF"
+msgstr ""
+
+#: exports_v2.py:629 exports_v2.py:865
+msgid "PD Quarters"
+msgstr ""
+
+#: exports_v2.py:645 templates/pd/detail.html:324
+msgid "Result Level"
+msgstr "Type de résultat"
+
+#: exports_v2.py:658 exports_v2.py:896
+msgid "CP Output "
+msgstr ""
+
+#: exports_v2.py:670
+msgid "PD Output"
+msgstr ""
+
+#: exports_v2.py:730 exports_v2.py:978
+msgid "EEPM"
+msgstr ""
+
+#: exports_v2.py:730 exports_v2.py:978 templates/pd/detail.html:358
+msgid "Effective and efficient programme management"
+msgstr ""
+
+#: exports_v2.py:754 exports_v2.py:992
+msgid "EEPM.1"
+msgstr ""
+
+#: exports_v2.py:754 templates/pd/detail.html:365
+msgid "In-country management & support"
+msgstr ""
+
+#: exports_v2.py:767 exports_v2.py:1017
+msgid "EEPM.2"
+msgstr ""
+
+#: exports_v2.py:767 templates/pd/detail.html:372
+msgid "Operational costs"
+msgstr ""
+
+#: exports_v2.py:780 exports_v2.py:1042
+msgid "EEPM.3"
+msgstr ""
+
+#: exports_v2.py:780 templates/pd/detail.html:379
+msgid "Planning, monitoring, evaluation, and communication"
+msgstr ""
+
+#: exports_v2.py:790
+msgid "Subtotal for the programme costs"
+msgstr ""
+
+#: exports_v2.py:811
+#, python-format
+msgid ""
+"HQ Support/Capacity Building  ({%(cost)d}%% of UNICEF the cash component)"
+msgstr ""
+
+#: exports_v2.py:831
+msgid "Total PD budget cash"
+msgstr ""
+
+#: exports_v2.py:857
+msgid "No."
+msgstr ""
+
+#: exports_v2.py:858
+msgid "PD Output/ PD Activity / Item Description"
+msgstr ""
+
+#: exports_v2.py:859
+msgid "Unit Type"
+msgstr ""
+
+#: exports_v2.py:860 exports_v2.py:1100
+msgid "Number of Units"
+msgstr ""
+
+#: exports_v2.py:861
+msgid "Price/Unit"
+msgstr ""
+
+#: exports_v2.py:864 models.py:2969 serializers/exports/interventions.py:557
+#: templates/pd/detail.html:174 templates/pd/detail.html:195
+msgid "Total"
+msgstr "Totale"
+
+#: exports_v2.py:866
+msgid "Other Notes"
+msgstr ""
+
+#: exports_v2.py:913
+msgid "PD OUTPUT "
+msgstr ""
+
+#: exports_v2.py:938 templates/pd/detail.html:364 templates/pd/detail.html:371
+#: templates/pd/detail.html:378
+msgid "Activity"
+msgstr ""
+
+#: exports_v2.py:992
+msgid "Activity: In-country management & support"
+msgstr ""
+
+#: exports_v2.py:1008
+#, python-format
+msgid "EEPM.1.{%d}"
+msgstr ""
+
+#: exports_v2.py:1017
+msgid "Activity: Operational costs"
+msgstr ""
+
+#: exports_v2.py:1033
+#, python-format
+msgid "EEPM.2.{%d}"
+msgstr ""
+
+#: exports_v2.py:1042
+msgid "Activity: Planning, monitoring, evaluation, and communication"
+msgstr ""
+
+#: exports_v2.py:1058
+#, python-format
+msgid "EEPM.3.{%d}"
+msgstr ""
+
+#: exports_v2.py:1071
+msgid "Total Cost for all outputs"
+msgstr ""
+
+#: exports_v2.py:1100 templates/pd/detail.html:412
+msgid "Item"
+msgstr ""
+
+#: exports_v2.py:1100 templates/pd/detail.html:414
+msgid "Price/unit"
+msgstr ""
+
+#: exports_v2.py:1100 models.py:3632 templates/pd/detail.html:415
+msgid "Total Price"
+msgstr "Prix total"
+
+#: exports_v2.py:1101 models.py:3646
+msgid "Provided By"
+msgstr "Fourni par"
+
+#: exports_v2.py:1101 models.py:2906
+msgid "CP Output"
+msgstr "Sortie CP"
+
+#: exports_v2.py:1101 models.py:3639
+msgid "Other Mentions"
+msgstr "Autres mentions"
+
+#: exports_v2.py:1101 models.py:3649
+msgid "UNICEF Product Number"
+msgstr "Numéro de produit UNICEF"
+
+#: exports_v2.py:1128
+msgid "Total Value"
+msgstr ""
+
+#: exports_v2.py:1152
+msgid "Partner non-financial contribution:"
+msgstr "Contribution non financière du partenaire:"
+
+#: exports_v2.py:1166 exports_v2.py:1175
+msgid "Budget Summary"
+msgstr ""
+
+#: exports_v2.py:1168
+msgid "Activity Budget"
+msgstr ""
+
+#: exports_v2.py:1170
+msgid "Detailed Budget"
+msgstr ""
+
+#: exports_v2.py:1172
+msgid "Supply Cost"
+msgstr ""
+
+#: exports_v2.py:1178 templates/pd/detail.html:321
+msgid "Workplan Budget"
+msgstr ""
+
+#: exports_v2.py:1181
+msgid "Detailed Workplan Budget"
+msgstr ""
+
+#: exports_v2.py:1184
+msgid "Supply Contribution (Planned)"
+msgstr ""
+
 #: forms.py:38
 msgid "You must select a type for this CSO"
 msgstr "Vous devez sélectionner un type pour ce CSO"
@@ -166,26 +997,9 @@ msgstr "Établissement universitaire"
 msgid "Red Cross/Red Crescent National Societies"
 msgstr ""
 
-#: models.py:354 serializers/exports/interventions.py:237
-#: serializers/exports/partner_organization.py:69
-msgid "Partner Type"
-msgstr "Type de partenaire"
-
-#: models.py:361 serializers/exports/interventions.py:242
-msgid "CSO Type"
-msgstr "Type OSC"
-
-#: models.py:373
-msgid "Short Name"
-msgstr "Nom court"
-
 #: models.py:378 models.py:2698
 msgid "Description"
 msgstr ""
-
-#: models.py:384 serializers/exports/partner_organization.py:68
-msgid "Shared Partner"
-msgstr "Partenaire partagé"
 
 #: models.py:389
 msgid "Street Address"
@@ -203,37 +1017,9 @@ msgstr "Code postal"
 msgid "Country"
 msgstr "Pays"
 
-#: models.py:416
-msgid "Address"
-msgstr "Adresse"
-
-#: models.py:423 models.py:990 serializers/exports/partner_organization.py:38
-msgid "Email Address"
-msgstr "Adresse e-mail"
-
-#: models.py:428 models.py:996
-msgid "Phone Number"
-msgstr "Numéro de téléphone"
-
-#: models.py:434 serializers/exports/interventions.py:232
-msgid "Vendor Number"
-msgstr "Numéro du fournisseur"
-
 #: models.py:441
 msgid "Alternate ID"
 msgstr "ID alternatif"
-
-#: models.py:446
-msgid "Alternate Name"
-msgstr "Nom alternatif"
-
-#: models.py:452
-msgid "Risk Rating"
-msgstr "Évaluation du risque"
-
-#: models.py:459
-msgid "Assessment Type"
-msgstr "Type d'évaluation"
 
 #: models.py:464
 msgid "Last Assessment Date"
@@ -246,10 +1032,6 @@ msgstr "Date évaluée positivement par rapport aux valeurs fondamentales"
 #: models.py:474 serializers/exports/partner_organization.py:125
 msgid "VISION Synced"
 msgstr "VISION synchronisée"
-
-#: models.py:477 serializers/exports/partner_organization.py:62
-msgid "Blocked"
-msgstr "Bloqué"
 
 #: models.py:479
 msgid "Marked for deletion"
@@ -318,11 +1100,6 @@ msgstr "Bureau principal"
 #: models.py:562
 msgid "Lead Section"
 msgstr "Section principale"
-
-#: models.py:937 models.py:969 models.py:1057 models.py:1132 models.py:1278
-#: models.py:3443 models.py:3599 serializers/exports/interventions.py:227
-msgid "Partner"
-msgstr "Partenaire"
 
 #: models.py:941 models.py:944
 msgid "Core Values Assessment"
@@ -472,28 +1249,6 @@ msgstr "Suspendu"
 msgid "Terminated"
 msgstr "Terminé"
 
-#: models.py:1283 models.py:1859 serializers/exports/agreements.py:114
-#: serializers/exports/interventions.py:91
-#: serializers/exports/interventions.py:509
-msgid "Country Programme"
-msgstr "Programme de pays"
-
-#: models.py:1291 serializers/exports/agreements.py:31
-msgid "Partner Authorized Officer"
-msgstr "Officier autorisé associé"
-
-#: models.py:1295
-msgid "Agreement Type"
-msgstr "Type d'accord"
-
-#: models.py:1300 models.py:1873 models.py:2678
-#: serializers/exports/interventions.py:48
-#: serializers/exports/interventions.py:86
-#: serializers/exports/interventions.py:197
-#: serializers/exports/interventions.py:209
-msgid "Reference Number"
-msgstr "Numéro de référence"
-
 #: models.py:1307 models.py:1314 serializers/exports/agreements.py:109
 msgid "Attached Agreement"
 msgstr "Accord ci-joint"
@@ -502,41 +1257,9 @@ msgstr "Accord ci-joint"
 msgid "Termination document for PCAs"
 msgstr "Document de résiliation des PCA"
 
-#: models.py:1326 models.py:1889
-msgid "Start Date"
-msgstr "Date de début"
-
-#: models.py:1331 models.py:1895
-msgid "End Date"
-msgstr "Date de fin"
-
-#: models.py:1337 serializers/exports/agreements.py:57
-msgid "Special Conditions PCA"
-msgstr "Conditions particulières PCA"
-
-#: models.py:1340
-msgid "Signed By UNICEF Date"
-msgstr "Signé par l'UNICEF Date"
-
-#: models.py:1349 serializers/exports/agreements.py:50
-msgid "Signed By UNICEF"
-msgstr "Signé par l'UNICEF"
-
-#: models.py:1355
-msgid "Signed By Partner Date"
-msgstr "Signé par le partenaire Date"
-
 #: models.py:1363
 msgid "Signed by partner"
 msgstr "Signé par le partenaire"
-
-#: models.py:1370 serializers/exports/agreements.py:60
-msgid "Terms Acknowledged By"
-msgstr "Conditions reconnues par"
-
-#: models.py:1378 models.py:1881
-msgid "Status"
-msgstr "Statut"
 
 #: models.py:1557
 msgid "Change in Legal Name of Implementing Partner"
@@ -557,10 +1280,6 @@ msgstr "Modification de la clause"
 #: models.py:1563 models.py:2710
 msgid "Number"
 msgstr "Numéro"
-
-#: models.py:1566 models.py:1850 serializers/exports/interventions.py:247
-msgid "Agreement"
-msgstr "Accord"
 
 #: models.py:1585 models.py:2694 models.py:3203
 #: serializers/exports/interventions.py:17
@@ -635,61 +1354,17 @@ msgstr "Remboursement"
 msgid "Direct Cash Transfer"
 msgstr "Transfert direct d'espèces"
 
-#: models.py:1844 templates/pd/detail.html:137 templates/pd/detail.html:480
-msgid "Document Type"
-msgstr "Type de document"
-
 #: models.py:1867 serializers/exports/interventions.py:252
 msgid "Country Programmes"
 msgstr "Programmes nationaux"
-
-#: models.py:1879
-msgid "Document Title"
-msgstr "Titre du document"
-
-#: models.py:1901
-msgid "Document Submission Date by CSO"
-msgstr "Date de soumission du document par le CSO"
-
-#: models.py:1907
-msgid "Submission Date to PRC"
-msgstr "Date de soumission au CRP"
 
 #: models.py:1914
 msgid "Date Final Partnership Review Performed"
 msgstr "Date d'exécution de l'examen final du partenariat"
 
-#: models.py:1919
-msgid "Review Date by PRC"
-msgstr "Date de révision par la RPC"
-
 #: models.py:1938
 msgid "Final Review Approved"
 msgstr ""
-
-#: models.py:1955 models.py:2724
-msgid "Signed by UNICEF Date"
-msgstr "Signé par l'UNICEF Date"
-
-#: models.py:1960 models.py:2729
-msgid "Signed by Partner Date"
-msgstr "Signé par le partenaire Date"
-
-#: models.py:1967 models.py:2736 serializers/exports/interventions.py:310
-msgid "Signed by UNICEF"
-msgstr "Signé par l'UNICEF"
-
-#: models.py:1976 models.py:2745 serializers/exports/interventions.py:319
-msgid "Signed by Partner"
-msgstr "Signé par le partenaire"
-
-#: models.py:1985 serializers/exports/interventions.py:316
-msgid "UNICEF Focal Points"
-msgstr "Points focaux de l'UNICEF"
-
-#: models.py:1992 serializers/exports/interventions.py:313
-msgid "CSO Authorized Officials"
-msgstr "Agents autorisés de la CSO"
 
 #: models.py:1998 serializers/exports/interventions.py:257
 msgid "Contingency PD"
@@ -707,17 +1382,9 @@ msgstr "Protocole d'activation"
 msgid "Termination document for PDs"
 msgstr "Document de résiliation pour les DP"
 
-#: models.py:2035 serializers/exports/interventions.py:255
-msgid "Sections"
-msgstr ""
-
 #: models.py:2041
 msgid "Office"
 msgstr "Bureau"
-
-#: models.py:2046 serializers/exports/interventions.py:256
-msgid "Locations"
-msgstr "Emplacements"
 
 #: models.py:2051
 msgid "Sites"
@@ -738,10 +1405,6 @@ msgstr "Humanitaire"
 #: models.py:2075
 msgid "Date first sent to Partner"
 msgstr "Date du premier envoi au partenaire"
-
-#: models.py:2092
-msgid "UNPP Number"
-msgstr "Numéro UNPP"
 
 #: models.py:2099 templates/pd/detail.html:210
 msgid "Context"
@@ -815,20 +1478,6 @@ msgstr "Conseils techniques"
 msgid "Cancel Justification"
 msgstr "Annuler la justification"
 
-#: models.py:2200 models.py:3325 templates/pd/detail.html:224
-msgid "Data Processing Agreement"
-msgstr "Accord de traitement des données"
-
-#: models.py:2204 models.py:3326 templates/pd/detail.html:227
-msgid "Activities involving children and young people"
-msgstr "Activités impliquant des enfants et des jeunes"
-
-#: models.py:2208 templates/pd/detail.html:230
-msgid "Special Conditions for Construction Works by Implementing Partners"
-msgstr ""
-"Conditions particulières pour les travaux de construction par les "
-"partenaires de mise en œuvre"
-
 #: models.py:2215
 msgid "Metadata"
 msgstr "Métadonnées"
@@ -836,6 +1485,10 @@ msgstr "Métadonnées"
 #: models.py:2221
 msgid "Confidential"
 msgstr "Confidentiel"
+
+#: models.py:2622
+msgid "Unknown"
+msgstr ""
 
 #: models.py:2655
 msgid "Type 1: Administrative error (correction)"
@@ -922,17 +1575,9 @@ msgstr "Visites d'intervention planifiées"
 msgid "Code"
 msgstr ""
 
-#: models.py:2906
-msgid "CP Output"
-msgstr "Sortie CP"
-
 #: models.py:2909
 msgid "RAM Indicators"
 msgstr "Indicateurs de RAM"
-
-#: models.py:2961
-msgid "Partner Contribution"
-msgstr "Cotisation du partenaire"
 
 #: models.py:2962
 msgid "Unicef Cash"
@@ -941,11 +1586,6 @@ msgstr "Espèces de l'UNICEF"
 #: models.py:2967
 msgid "UNICEF Supplies"
 msgstr "Fournitures de l'UNICEF"
-
-#: models.py:2969 serializers/exports/interventions.py:557
-#: templates/pd/detail.html:174 templates/pd/detail.html:195
-msgid "Total"
-msgstr "Totale"
 
 #: models.py:2973
 msgid "Partner Contribution Local"
@@ -1266,10 +1906,6 @@ msgstr ""
 "et la communication, au prorata de leur contribution au programme (lieu, "
 "déplacements, etc.)"
 
-#: models.py:3598
-msgid "UNICEF"
-msgstr ""
-
 #: models.py:3613
 msgid "Unit Number"
 msgstr "Numéro d'unité"
@@ -1281,22 +1917,6 @@ msgstr "Prix unitaire"
 #: models.py:3626
 msgid "Result"
 msgstr "Résultat"
-
-#: models.py:3632 templates/pd/detail.html:415
-msgid "Total Price"
-msgstr "Prix total"
-
-#: models.py:3639
-msgid "Other Mentions"
-msgstr "Autres mentions"
-
-#: models.py:3646
-msgid "Provided By"
-msgstr "Fourni par"
-
-#: models.py:3649
-msgid "UNICEF Product Number"
-msgstr "Numéro de produit UNICEF"
 
 #: models.py:3675
 msgid ""
@@ -1348,14 +1968,6 @@ msgstr "CSO Cash Locale"
 msgid "Accessing this item is not allowed."
 msgstr "L'accès à cet élément n'est pas autorisé."
 
-#: serializers/exports/agreements.py:44
-msgid "Signed By Partner"
-msgstr "Signé par le partenaire"
-
-#: serializers/exports/agreements.py:54
-msgid "Amendments"
-msgstr "Modifications"
-
 #: serializers/exports/agreements.py:55
 #: serializers/exports/interventions.py:322
 #: serializers/exports/partner_organization.py:67
@@ -1365,10 +1977,6 @@ msgstr ""
 #: serializers/exports/interventions.py:97
 msgid "Result Type"
 msgstr "Type de résultat"
-
-#: serializers/exports/interventions.py:102
-msgid "Section"
-msgstr ""
 
 #: serializers/exports/interventions.py:118
 msgid "From Date"
@@ -1415,48 +2023,6 @@ msgstr "Code de mise au point d'activité"
 msgid "Activity Focus Name"
 msgstr "Nom du focus d'activité"
 
-#: serializers/exports/interventions.py:254 templates/pd/detail.html:141
-msgid "UNICEF Office"
-msgstr "Bureau de l'UNICEF"
-
-#: serializers/exports/interventions.py:259
-msgid "Cluster"
-msgstr "Grappe"
-
-#: serializers/exports/interventions.py:261
-msgid "FR Number(s)"
-msgstr "Numéro(s) FR"
-
-#: serializers/exports/interventions.py:262
-msgid "FR Currency"
-msgstr "FR Devise"
-
-#: serializers/exports/interventions.py:263
-msgid "FR Posting Date"
-msgstr "FR Date de publication"
-
-#: serializers/exports/interventions.py:265
-msgid "FR Amount"
-msgstr "FR Montant"
-
-#: serializers/exports/interventions.py:268
-msgid "FR Actual CT"
-msgstr "FR Réel CT"
-
-#: serializers/exports/interventions.py:271
-msgid "Outstanding DCT"
-msgstr "DCT exceptionnel"
-
-#: serializers/exports/interventions.py:274
-#: serializers/exports/interventions.py:563
-#: serializers/exports/partner_organization.py:71
-msgid "Planned Programmatic Visits"
-msgstr "Visites programmatiques planifiées"
-
-#: serializers/exports/interventions.py:277
-msgid "Budget Currency"
-msgstr "Devise du budget"
-
 #: serializers/exports/interventions.py:282
 msgid "Total CSO Contribution"
 msgstr "Contribution totale des OSC"
@@ -1474,33 +2040,9 @@ msgstr "Approvisionnement de l'UNICEF"
 msgid "Total PD/SPD Budget"
 msgstr "Budget total DP/DOCUP"
 
-#: serializers/exports/interventions.py:321
-msgid "CP Outputs"
-msgstr "Sorties CP"
-
-#: serializers/exports/interventions.py:324
-msgid "Days from Submission to Signed"
-msgstr "Jours entre la soumission et la signature"
-
-#: serializers/exports/interventions.py:327
-msgid "Days from Review to Signed"
-msgstr "Jours entre la révision et la signature"
-
-#: serializers/exports/interventions.py:330
-msgid "Total no. of amendments"
-msgstr "Nb total. "
-
-#: serializers/exports/interventions.py:333
-msgid "Last amendment date"
-msgstr "Date de la dernière modification"
-
 #: serializers/exports/interventions.py:336
 msgid "Attachment type"
 msgstr "Type de pièce jointe"
-
-#: serializers/exports/interventions.py:339
-msgid "# of attachments"
-msgstr "# Nombre d'annexes"
 
 #: serializers/exports/interventions.py:491
 #: serializers/exports/interventions.py:578
@@ -1531,45 +2073,9 @@ msgstr "UNICEF Cash Locale"
 msgid "In Kind Amount (Local)"
 msgstr "Montant en nature (Locale)"
 
-#: serializers/exports/partner_organization.py:29
-msgid "Staff Members"
-msgstr "Membres du personnel"
-
-#: serializers/exports/partner_organization.py:31
-msgid "Assessment Type (Date Assessed)"
-msgstr "Type d'évaluation (date d'évaluation)"
-
-#: serializers/exports/partner_organization.py:34
-msgid "Organizations Full Name"
-msgstr "Nom complet de l'organisation"
-
-#: serializers/exports/partner_organization.py:41
-msgid "HACT Risk Rating"
-msgstr "Évaluation des risques HACT"
-
 #: serializers/exports/partner_organization.py:42
 msgid "SEA Risk Rating"
 msgstr "Évaluation du risque MER"
-
-#: serializers/exports/partner_organization.py:48
-msgid "Date Last Assessed Against Core Values"
-msgstr "Date de la dernière évaluation par rapport aux valeurs fondamentales"
-
-#: serializers/exports/partner_organization.py:52
-msgid "Actual Cash Transfer for CP (USD)"
-msgstr "Transfert en espèces réel pour CP (USD)"
-
-#: serializers/exports/partner_organization.py:56
-msgid "Actual Cash Transfer for Current Year (USD)"
-msgstr "Transfert en espèces réel pour l'année en cours (USD)"
-
-#: serializers/exports/partner_organization.py:60
-msgid "Marked for Deletion"
-msgstr "Marqué pour suppression"
-
-#: serializers/exports/partner_organization.py:64
-msgid "Date Assessed"
-msgstr "Date d'évaluation"
 
 #: serializers/exports/partner_organization.py:127
 msgid "HACT"
@@ -1660,82 +2166,50 @@ msgid "eTools ref no"
 msgstr ""
 
 #: templates/pd/detail.html:145
-#, fuzzy
-#| msgid "Organizations Full Name"
 msgid "Organization Name"
-msgstr "Nom complet de l'organisation"
+msgstr "Nom de l'organisation"
 
 #: templates/pd/detail.html:149
-#, fuzzy
-#| msgid "Programme Document"
 msgid "Programme Title"
-msgstr "Document de programme"
+msgstr ""
 
 #: templates/pd/detail.html:153
-#, fuzzy
-#| msgid "Planned amount"
 msgid "Planned duration"
-msgstr "Montant prévu"
-
-#: templates/pd/detail.html:155
-#, fuzzy
-#| msgid "Start Date"
-msgid "Start date"
-msgstr "Date de début"
-
-#: templates/pd/detail.html:156
-#, fuzzy
-#| msgid "End Date"
-msgid "End date"
-msgstr "Date de fin"
+msgstr ""
 
 #: templates/pd/detail.html:160
 msgid "Geographical coverage"
 msgstr ""
 
 #: templates/pd/detail.html:170
-#, fuzzy
-#| msgid "UNICEF Supplies"
 msgid "Supplies"
-msgstr "Fournitures de l'UNICEF"
+msgstr ""
 
 #: templates/pd/detail.html:172
 msgid "HQ Cash"
 msgstr ""
 
 #: templates/pd/detail.html:178
-#, fuzzy
-#| msgid "Partner Details"
 msgid "Partner Cash"
-msgstr "Détails du partenaire"
+msgstr ""
 
 #: templates/pd/detail.html:180
-#, fuzzy
-#| msgid "UNICEF Supplies"
 msgid "Supplies:"
-msgstr "Fournitures de l'UNICEF"
+msgstr ""
 
 #: templates/pd/detail.html:182
-#, fuzzy
-#| msgid "Total"
 msgid "Total:"
 msgstr "Totale"
 
 #: templates/pd/detail.html:207
-#, fuzzy
-#| msgid "Strategic"
 msgid "Strategy"
-msgstr "Stratégique"
+msgstr ""
 
 #: templates/pd/detail.html:214
-#, fuzzy
-#| msgid "Implementation Strategy"
 msgid "Implementation Strategy & Technical Guidance"
-msgstr "Stratégie de mise en œuvre"
+msgstr ""
 
 #: templates/pd/detail.html:221
-#, fuzzy
-#| msgid "Other Partners Involved"
 msgid "Other Partners involved"
 msgstr "Autres partenaires impliqués"
 
@@ -1746,10 +2220,8 @@ msgstr ""
 
 #: templates/pd/detail.html:224 templates/pd/detail.html:227
 #: templates/pd/detail.html:230 templates/pd/detail.html:489
-#, fuzzy
-#| msgid "None"
 msgid "No"
-msgstr "Aucun"
+msgstr ""
 
 #: templates/pd/detail.html:249
 msgid "Risk & Proposed Mitigation Measures"
@@ -1760,20 +2232,12 @@ msgid "Workplan Result"
 msgstr ""
 
 #: templates/pd/detail.html:265
-#, fuzzy
-#| msgid "Reimbursement"
 msgid "Result statement"
-msgstr "Remboursement"
+msgstr ""
 
 #: templates/pd/detail.html:266
 msgid "Performance indicator/s"
 msgstr ""
-
-#: templates/pd/detail.html:267
-#, fuzzy
-#| msgid "Locations"
-msgid "Location"
-msgstr "Emplacements"
 
 #: templates/pd/detail.html:268
 msgid "Baseline"
@@ -1787,21 +2251,9 @@ msgstr ""
 msgid "Means of Verification"
 msgstr ""
 
-#: templates/pd/detail.html:321
-msgid "Workplan Budget"
-msgstr ""
-
-#: templates/pd/detail.html:324
-#, fuzzy
-#| msgid "Result Type"
-msgid "Result Level"
-msgstr "Type de résultat"
-
 #: templates/pd/detail.html:325
-#, fuzzy
-#| msgid "Results section is empty"
 msgid "Result/activity"
-msgstr "La section des résultats est vide"
+msgstr ""
 
 #: templates/pd/detail.html:326
 msgid "Timeframe"
@@ -1812,46 +2264,15 @@ msgid "Total (CSO + UNICEF)"
 msgstr ""
 
 #: templates/pd/detail.html:328
-#, fuzzy
-#| msgid "CSO Contribution"
 msgid "CSO contribution"
-msgstr "Contribution des OSC"
+msgstr ""
 
 #: templates/pd/detail.html:329
-#, fuzzy
-#| msgid "CSO Contribution"
 msgid "UNICEF contribution"
-msgstr "Contribution des OSC"
+msgstr ""
 
 #: templates/pd/detail.html:334 templates/pd/detail.html:357
-#, fuzzy
-#| msgid "CP Output"
 msgid "Prog. Output"
-msgstr "Sortie CP"
-
-#: templates/pd/detail.html:358
-msgid "Effective and efficient programme management"
-msgstr ""
-
-#: templates/pd/detail.html:364 templates/pd/detail.html:371
-#: templates/pd/detail.html:378
-#, fuzzy
-#| msgid "Active"
-msgid "Activity"
-msgstr "Actif"
-
-#: templates/pd/detail.html:365
-msgid "In-country management & support"
-msgstr ""
-
-#: templates/pd/detail.html:372
-#, fuzzy
-#| msgid "Operational"
-msgid "Operational costs"
-msgstr "Opérationnel"
-
-#: templates/pd/detail.html:379
-msgid "Planning, monitoring, evaluation, and communication"
 msgstr ""
 
 #: templates/pd/detail.html:385
@@ -1859,39 +2280,23 @@ msgid "Sub-total for programme costs"
 msgstr ""
 
 #: templates/pd/detail.html:391
-#, fuzzy
-#| msgid "HQ Support Cost"
 msgid "HQ support costs"
-msgstr "Coût de soutien du QG"
+msgstr ""
 
 #: templates/pd/detail.html:397
-#, fuzzy
-#| msgid "Total PD/SPD Budget"
 msgid "Total Cash budget"
-msgstr "Budget total DP/DOCUP"
+msgstr ""
 
 #: templates/pd/detail.html:408
-#, fuzzy
-#| msgid "Supply/Distribution Plan"
 msgid "Supply Contribution Plan"
-msgstr "Plan d'approvisionnement/de distribution"
+msgstr ""
 
 #: templates/pd/detail.html:411
-#, fuzzy
-#| msgid "Provided By"
 msgid "Provided by"
 msgstr "Fourni par"
 
-#: templates/pd/detail.html:412
-msgid "Item"
-msgstr ""
-
 #: templates/pd/detail.html:413
 msgid "No. of units"
-msgstr ""
-
-#: templates/pd/detail.html:414
-msgid "Price/unit"
 msgstr ""
 
 #: templates/pd/detail.html:427
@@ -1899,56 +2304,40 @@ msgid "Total supply Cost"
 msgstr ""
 
 #: templates/pd/detail.html:436
-#, fuzzy
-#| msgid "Other"
 msgid "Others"
 msgstr "Autre"
 
 #: templates/pd/detail.html:439
-#, fuzzy
-#| msgid "Partner Non-Financial Contribution to Programme"
 msgid "Partner non-financial contribution"
 msgstr "Contribution non financière du partenaire au programme"
 
 #: templates/pd/detail.html:443
-#, fuzzy
-#| msgid "Cash Transfer Modalities"
 msgid "Cash Transfer modality"
 msgstr "Modalités de transfert d'espèces"
 
 #: templates/pd/detail.html:456 templates/pd/detail.html:476
-#, fuzzy
-#| msgid "Signed Date"
 msgid "Signatures and date"
-msgstr "Date de signature"
+msgstr ""
 
 #: templates/pd/detail.html:460
-#, fuzzy
-#| msgid "CSO Authorized Officials"
 msgid "CSO Authorized Officer"
-msgstr "Agents autorisés de la CSO"
+msgstr ""
 
 #: templates/pd/detail.html:462 templates/pd/detail.html:467
-#, fuzzy
-#| msgid "To Date"
 msgid "Date"
-msgstr "À ce jour"
+msgstr ""
 
 #: templates/pd/detail.html:465
-#, fuzzy
-#| msgid "Change Authorized Officer(s)"
 msgid "UNICEF Authorized Officer"
-msgstr "Modifier le(s) responsable(s) autorisé(s)"
+msgstr ""
 
 #: templates/pd/detail.html:479
 msgid "Date Uploaded"
 msgstr ""
 
 #: templates/pd/detail.html:481
-#, fuzzy
-#| msgid "Document Type"
 msgid "Document"
-msgstr "Type de document"
+msgstr ""
 
 #: templates/pd/detail.html:482
 msgid "Invalid"
@@ -2191,65 +2580,3 @@ msgstr "Aujourd'hui n'est pas après la date de début"
 #: views/interventions_v3.py:358
 msgid "Meeting date is not available."
 msgstr "La date de la réunion n'est pas disponible."
-
-#, fuzzy
-#~| msgid "Gender Rating"
-#~ msgid "Gender Rating:"
-#~ msgstr "Classement par sexe"
-
-#, fuzzy
-#~| msgid "UNICEF Cash"
-#~ msgid "UNICEF Cash:"
-#~ msgstr "Espèces de l'UNICEF"
-
-#, fuzzy
-#~| msgid "Currency"
-#~ msgid "Currency:"
-#~ msgstr "Monnaie"
-
-#, fuzzy
-#~| msgid "Context"
-#~ msgid "Context:"
-#~ msgstr "Contexte"
-
-#, fuzzy
-#~| msgid "Capacity Development"
-#~ msgid "Capacity Development:"
-#~ msgstr "Développement des capacités"
-
-#, fuzzy
-#~| msgid "Data Processing Agreement"
-#~ msgid "Data Processing Agreement:"
-#~ msgstr "Accord de traitement des données"
-
-#, fuzzy
-#~| msgid "Special Conditions for Construction Works by Implementing Partners"
-#~ msgid "Special Conditions for Construction Works by Implementing Partners:"
-#~ msgstr ""
-#~ "Conditions particulières pour les travaux de construction par les "
-#~ "partenaires de mise en œuvre"
-
-#, fuzzy
-#~| msgid "Equity Rating"
-#~ msgid "Equity Rating:"
-#~ msgstr "Notation des actions"
-
-#, fuzzy
-#~| msgid "Sustainability Rating"
-#~ msgid "Sustainability Rating:"
-#~ msgstr "Évaluation de la durabilité"
-
-#, fuzzy
-#~| msgid "Signed Date"
-#~ msgid "Signature:"
-#~ msgstr "Date de signature"
-
-#~ msgid " %(file_type)s should be provided in attachments."
-#~ msgstr "%(file_type)s doivent être fournis dans les pièces jointes."
-
-#~ msgid ""
-#~ "Total amount transferred greater than 100,000 and no Final Partnership "
-#~ "Review was attached"
-#~ msgstr ""
-#~ "Montant total transféré supérieur à 100 000 et aucun examen final du "
-#~ "partenariat n'a été joint"
