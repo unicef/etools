@@ -383,7 +383,7 @@ class InterventionLocationCSVRenderer(r.CSVRenderer):
         'partner': _('Partner'),
         "partner_vendor_number": _("Vendor Number"),
         'partnership': _('Agreement'),
-        'pd_ref_number': _('PD Ref Number)'),
+        'pd_ref_number': _('PD Ref Number'),
         'section': _('Section'),
         'start': _('Start Date'),
         'status': _('Status')
