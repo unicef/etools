@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-01 16:24+0000\n"
+"POT-Creation-Date: 2023-02-01 16:31+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -94,238 +94,238 @@ msgstr ""
 "Veuillez supprimer toutes les interventions associées à cet accord avant de "
 "supprimer l'accord."
 
-#: exports_v2.py:24 exports_v2.py:88 exports_v2.py:177 exports_v2.py:220
-#: exports_v2.py:335 exports_v2.py:382 models.py:434
+#: exports_v2.py:26 exports_v2.py:90 exports_v2.py:179 exports_v2.py:222
+#: exports_v2.py:337 exports_v2.py:384 models.py:434
 #: serializers/exports/interventions.py:232
 msgid "Vendor Number"
 msgstr "Numéro du fournisseur"
 
-#: exports_v2.py:25 serializers/exports/partner_organization.py:34
+#: exports_v2.py:27 serializers/exports/partner_organization.py:34
 msgid "Organizations Full Name"
 msgstr "Nom complet de l'organisation"
 
-#: exports_v2.py:26 models.py:373
+#: exports_v2.py:28 models.py:373
 msgid "Short Name"
 msgstr "Nom court"
 
-#: exports_v2.py:27 models.py:446
+#: exports_v2.py:29 models.py:446
 msgid "Alternate Name"
 msgstr "Nom alternatif"
 
-#: exports_v2.py:28 exports_v2.py:89 exports_v2.py:178 exports_v2.py:254
+#: exports_v2.py:30 exports_v2.py:91 exports_v2.py:180 exports_v2.py:256
 #: models.py:354 serializers/exports/interventions.py:237
 #: serializers/exports/partner_organization.py:69
 msgid "Partner Type"
 msgstr "Type de partenaire"
 
-#: exports_v2.py:29 models.py:384
+#: exports_v2.py:31 models.py:384
 #: serializers/exports/partner_organization.py:68
 msgid "Shared Partner"
 msgstr "Partenaire partagé"
 
-#: exports_v2.py:30 models.py:416
+#: exports_v2.py:32 models.py:416
 msgid "Address"
 msgstr "Adresse"
 
-#: exports_v2.py:31 models.py:428 models.py:996
+#: exports_v2.py:33 models.py:428 models.py:996
 msgid "Phone Number"
 msgstr "Numéro de téléphone"
 
-#: exports_v2.py:32 models.py:423 models.py:990
+#: exports_v2.py:34 models.py:423 models.py:990
 #: serializers/exports/partner_organization.py:38
 msgid "Email Address"
 msgstr "Adresse e-mail"
 
-#: exports_v2.py:33 serializers/exports/partner_organization.py:41
+#: exports_v2.py:35 serializers/exports/partner_organization.py:41
 msgid "HACT Risk Rating"
 msgstr "Évaluation des risques HACT"
 
-#: exports_v2.py:34 serializers/exports/partner_organization.py:48
+#: exports_v2.py:36 serializers/exports/partner_organization.py:48
 msgid "Date Last Assessed Against Core Values"
 msgstr "Date de la dernière évaluation par rapport aux valeurs fondamentales"
 
-#: exports_v2.py:35 serializers/exports/partner_organization.py:52
+#: exports_v2.py:37 serializers/exports/partner_organization.py:52
 msgid "Actual Cash Transfer for CP (USD)"
 msgstr "Transfert en espèces réel pour CP (USD)"
 
-#: exports_v2.py:36 serializers/exports/partner_organization.py:56
+#: exports_v2.py:38 serializers/exports/partner_organization.py:56
 msgid "Actual Cash Transfer for Current Year (USD)"
 msgstr "Transfert en espèces réel pour l'année en cours (USD)"
 
-#: exports_v2.py:37 serializers/exports/partner_organization.py:60
+#: exports_v2.py:39 serializers/exports/partner_organization.py:60
 msgid "Marked for Deletion"
 msgstr "Marqué pour suppression"
 
-#: exports_v2.py:38 models.py:477
+#: exports_v2.py:40 models.py:477
 #: serializers/exports/partner_organization.py:62
 msgid "Blocked"
 msgstr "Bloqué"
 
-#: exports_v2.py:39 exports_v2.py:91 exports_v2.py:181 models.py:459
+#: exports_v2.py:41 exports_v2.py:93 exports_v2.py:183 models.py:459
 msgid "Assessment Type"
 msgstr "Type d'évaluation"
 
-#: exports_v2.py:40 serializers/exports/partner_organization.py:64
+#: exports_v2.py:42 serializers/exports/partner_organization.py:64
 msgid "Date Assessed"
 msgstr "Date d'évaluation"
 
-#: exports_v2.py:41 serializers/exports/partner_organization.py:31
+#: exports_v2.py:43 serializers/exports/partner_organization.py:31
 msgid "Assessment Type (Date Assessed)"
 msgstr "Type d'évaluation (date d'évaluation)"
 
-#: exports_v2.py:42 serializers/exports/partner_organization.py:29
+#: exports_v2.py:44 serializers/exports/partner_organization.py:29
 msgid "Staff Members"
 msgstr "Membres du personnel"
 
-#: exports_v2.py:44 exports_v2.py:281 serializers/exports/interventions.py:274
+#: exports_v2.py:46 exports_v2.py:283 serializers/exports/interventions.py:274
 #: serializers/exports/interventions.py:563
 #: serializers/exports/partner_organization.py:71
 msgid "Planned Programmatic Visits"
 msgstr "Visites programmatiques planifiées"
 
-#: exports_v2.py:87 exports_v2.py:139 exports_v2.py:176
+#: exports_v2.py:89 exports_v2.py:141 exports_v2.py:178
 msgid "Implementing Partner"
 msgstr ""
 
-#: exports_v2.py:90 exports_v2.py:179
+#: exports_v2.py:92 exports_v2.py:181
 msgid "Shared IP"
 msgstr ""
 
-#: exports_v2.py:92
+#: exports_v2.py:94
 msgid "Cash Transfer 1 OCT - 30 SEP"
 msgstr ""
 
-#: exports_v2.py:93
+#: exports_v2.py:95
 msgid "Liquidations 1 OCT - 30 SEP"
 msgstr ""
 
-#: exports_v2.py:94 exports_v2.py:180
+#: exports_v2.py:96 exports_v2.py:182
 msgid "Cash Transfers Jan - Dec"
 msgstr "Transfert en espèces de janvier à décembre"
 
-#: exports_v2.py:95 exports_v2.py:182 models.py:452
+#: exports_v2.py:97 exports_v2.py:184 models.py:452
 msgid "Risk Rating"
 msgstr "Évaluation du risque"
 
-#: exports_v2.py:96 exports_v2.py:183
+#: exports_v2.py:98 exports_v2.py:185
 msgid "Expiring Threshold"
 msgstr ""
 
-#: exports_v2.py:97 exports_v2.py:184
+#: exports_v2.py:99 exports_v2.py:186
 msgid "Approach Threshold"
 msgstr ""
 
-#: exports_v2.py:98
+#: exports_v2.py:100
 msgid "Programmatic Visits Planned Q1"
 msgstr "Visites programmatiques planifiées Q1"
 
-#: exports_v2.py:99 exports_v2.py:104 exports_v2.py:108 exports_v2.py:114
+#: exports_v2.py:101 exports_v2.py:106 exports_v2.py:110 exports_v2.py:116
 msgid "Q2"
 msgstr ""
 
-#: exports_v2.py:100 exports_v2.py:105 exports_v2.py:109 exports_v2.py:115
+#: exports_v2.py:102 exports_v2.py:107 exports_v2.py:111 exports_v2.py:117
 msgid "Q3"
 msgstr ""
 
-#: exports_v2.py:101 exports_v2.py:106 exports_v2.py:110 exports_v2.py:116
+#: exports_v2.py:103 exports_v2.py:108 exports_v2.py:112 exports_v2.py:118
 msgid "Q4"
 msgstr ""
 
-#: exports_v2.py:102 exports_v2.py:186
+#: exports_v2.py:104 exports_v2.py:188
 msgid "Programmatic Visits M.R"
 msgstr ""
 
-#: exports_v2.py:103
+#: exports_v2.py:105
 msgid "Programmatic Visits Completed Q1"
 msgstr ""
 
-#: exports_v2.py:107
+#: exports_v2.py:109
 msgid "Spot Checks Planned Q1"
 msgstr ""
 
-#: exports_v2.py:111
+#: exports_v2.py:113
 msgid "Spot Checks M.R"
 msgstr ""
 
-#: exports_v2.py:112
+#: exports_v2.py:114
 msgid "Follow Up"
 msgstr ""
 
-#: exports_v2.py:113
+#: exports_v2.py:115
 msgid "Spot Checks Completed Q1"
 msgstr ""
 
-#: exports_v2.py:117 exports_v2.py:190
+#: exports_v2.py:119 exports_v2.py:192
 msgid "Audits M.R"
 msgstr ""
 
-#: exports_v2.py:118 exports_v2.py:191
+#: exports_v2.py:120 exports_v2.py:193
 msgid "Audit Completed"
 msgstr ""
 
-#: exports_v2.py:119 exports_v2.py:192
+#: exports_v2.py:121 exports_v2.py:194
 msgid "Audits Outstanding Findings"
 msgstr ""
 
-#: exports_v2.py:140 exports_v2.py:264 models.py:2035
+#: exports_v2.py:142 exports_v2.py:266 models.py:2035
 #: serializers/exports/interventions.py:255
 msgid "Sections"
 msgstr ""
 
-#: exports_v2.py:141 exports_v2.py:265 models.py:2046
+#: exports_v2.py:143 exports_v2.py:267 models.py:2046
 #: serializers/exports/interventions.py:256
 msgid "Locations"
 msgstr "Emplacements"
 
-#: exports_v2.py:142
+#: exports_v2.py:144
 msgid "Action Points #"
 msgstr ""
 
-#: exports_v2.py:143
+#: exports_v2.py:145
 msgid "$ Cash in the Current CP Cycle"
 msgstr ""
 
-#: exports_v2.py:144
+#: exports_v2.py:146
 msgid "$ Cash in the Current Year"
 msgstr ""
 
-#: exports_v2.py:145 exports_v2.py:355
+#: exports_v2.py:147 exports_v2.py:357
 msgid "Days Since Last PV"
 msgstr ""
 
-#: exports_v2.py:146
+#: exports_v2.py:148
 msgid "Alert: No Recent PV"
 msgstr ""
 
-#: exports_v2.py:147
+#: exports_v2.py:149
 msgid "Alert: No PV"
 msgstr ""
 
-#: exports_v2.py:148
+#: exports_v2.py:150
 msgid "Outstanding DCT Amount between 6 and 9 months"
 msgstr ""
 
-#: exports_v2.py:149
+#: exports_v2.py:151
 msgid "Outstanding DCT Amount more than 9 months"
 msgstr ""
 
-#: exports_v2.py:185
+#: exports_v2.py:187
 msgid "Programmatic Visits Planned"
 msgstr "Visites programmatiques planifiées"
 
-#: exports_v2.py:187
+#: exports_v2.py:189
 msgid "Programmatic Visits Completed"
 msgstr ""
 
-#: exports_v2.py:188
+#: exports_v2.py:190
 msgid "Spot Check Required"
 msgstr ""
 
-#: exports_v2.py:189
+#: exports_v2.py:191
 msgid "Spot Checks Completed"
 msgstr ""
 
-#: exports_v2.py:217 exports_v2.py:259 models.py:1300 models.py:1873
+#: exports_v2.py:219 exports_v2.py:261 models.py:1300 models.py:1873
 #: models.py:2678 serializers/exports/interventions.py:48
 #: serializers/exports/interventions.py:86
 #: serializers/exports/interventions.py:197
@@ -333,595 +333,595 @@ msgstr ""
 msgid "Reference Number"
 msgstr "Numéro de référence"
 
-#: exports_v2.py:218 exports_v2.py:253 exports_v2.py:339 exports_v2.py:387
+#: exports_v2.py:220 exports_v2.py:255 exports_v2.py:341 exports_v2.py:389
 #: models.py:1378 models.py:1881
 msgid "Status"
 msgstr "Statut"
 
-#: exports_v2.py:219
+#: exports_v2.py:221
 msgid "Partner Name"
 msgstr ""
 
-#: exports_v2.py:221 models.py:1295
+#: exports_v2.py:223 models.py:1295
 msgid "Agreement Type"
 msgstr "Type d'accord"
 
-#: exports_v2.py:222 exports_v2.py:261 exports_v2.py:340 exports_v2.py:386
+#: exports_v2.py:224 exports_v2.py:263 exports_v2.py:342 exports_v2.py:388
 #: models.py:1326 models.py:1889
 msgid "Start Date"
 msgstr "Date de début"
 
-#: exports_v2.py:223 exports_v2.py:262 exports_v2.py:341 exports_v2.py:377
+#: exports_v2.py:225 exports_v2.py:264 exports_v2.py:343 exports_v2.py:379
 #: models.py:1331 models.py:1895
 msgid "End Date"
 msgstr "Date de fin"
 
-#: exports_v2.py:224 serializers/exports/agreements.py:44
+#: exports_v2.py:226 serializers/exports/agreements.py:44
 msgid "Signed By Partner"
 msgstr "Signé par le partenaire"
 
-#: exports_v2.py:225 models.py:1355
+#: exports_v2.py:227 models.py:1355
 msgid "Signed By Partner Date"
 msgstr "Signé par le partenaire Date"
 
-#: exports_v2.py:226 models.py:1349 serializers/exports/agreements.py:50
+#: exports_v2.py:228 models.py:1349 serializers/exports/agreements.py:50
 msgid "Signed By UNICEF"
 msgstr "Signé par l'UNICEF"
 
-#: exports_v2.py:227 models.py:1340
+#: exports_v2.py:229 models.py:1340
 msgid "Signed By UNICEF Date"
 msgstr "Signé par l'UNICEF Date"
 
-#: exports_v2.py:228 models.py:1291 serializers/exports/agreements.py:31
+#: exports_v2.py:230 models.py:1291 serializers/exports/agreements.py:31
 msgid "Partner Authorized Officer"
 msgstr "Officier autorisé associé"
 
-#: exports_v2.py:229 serializers/exports/agreements.py:54
+#: exports_v2.py:231 serializers/exports/agreements.py:54
 msgid "Amendments"
 msgstr "Modifications"
 
-#: exports_v2.py:231 models.py:1337 serializers/exports/agreements.py:57
+#: exports_v2.py:233 models.py:1337 serializers/exports/agreements.py:57
 msgid "Special Conditions PCA"
 msgstr "Conditions particulières PCA"
 
-#: exports_v2.py:232 models.py:1370 serializers/exports/agreements.py:60
+#: exports_v2.py:234 models.py:1370 serializers/exports/agreements.py:60
 msgid "Terms Acknowledged By"
 msgstr "Conditions reconnues par"
 
-#: exports_v2.py:251 exports_v2.py:381 exports_v2.py:498 models.py:937
+#: exports_v2.py:253 exports_v2.py:383 exports_v2.py:500 models.py:937
 #: models.py:969 models.py:1057 models.py:1132 models.py:1278 models.py:3443
 #: models.py:3599 serializers/exports/interventions.py:227
 msgid "Partner"
 msgstr "Partenaire"
 
-#: exports_v2.py:252
+#: exports_v2.py:254
 msgid "Vendor no."
 msgstr "Numéro du fournisseur"
 
-#: exports_v2.py:255 models.py:361 serializers/exports/interventions.py:242
+#: exports_v2.py:257 models.py:361 serializers/exports/interventions.py:242
 msgid "CSO Type"
 msgstr "Type OSC"
 
-#: exports_v2.py:256 exports_v2.py:383 models.py:1566 models.py:1850
+#: exports_v2.py:258 exports_v2.py:385 models.py:1566 models.py:1850
 #: serializers/exports/interventions.py:247
 msgid "Agreement"
 msgstr "Accord"
 
-#: exports_v2.py:257 models.py:1283 models.py:1859
+#: exports_v2.py:259 models.py:1283 models.py:1859
 #: serializers/exports/agreements.py:114
 #: serializers/exports/interventions.py:91
 #: serializers/exports/interventions.py:509
 msgid "Country Programme"
 msgstr "Programme de pays"
 
-#: exports_v2.py:258 models.py:1844 templates/pd/detail.html:137
+#: exports_v2.py:260 models.py:1844 templates/pd/detail.html:137
 #: templates/pd/detail.html:480
 msgid "Document Type"
 msgstr "Type de document"
 
-#: exports_v2.py:260 models.py:1879
+#: exports_v2.py:262 models.py:1879
 msgid "Document Title"
 msgstr "Titre du document"
 
-#: exports_v2.py:263 serializers/exports/interventions.py:254
+#: exports_v2.py:265 serializers/exports/interventions.py:254
 #: templates/pd/detail.html:141
 msgid "UNICEF Office"
 msgstr "Bureau de l'UNICEF"
 
-#: exports_v2.py:266
+#: exports_v2.py:268
 msgid "Contingency PD?"
 msgstr "PD de contingence?"
 
-#: exports_v2.py:267 serializers/exports/interventions.py:259
+#: exports_v2.py:269 serializers/exports/interventions.py:259
 msgid "Cluster"
 msgstr "Grappe"
 
-#: exports_v2.py:268 models.py:1985 serializers/exports/interventions.py:316
+#: exports_v2.py:270 models.py:1985 serializers/exports/interventions.py:316
 msgid "UNICEF Focal Points"
 msgstr "Points focaux de l'UNICEF"
 
-#: exports_v2.py:269 models.py:1992 serializers/exports/interventions.py:313
+#: exports_v2.py:271 models.py:1992 serializers/exports/interventions.py:313
 msgid "CSO Authorized Officials"
 msgstr "Agents autorisés de la CSO"
 
-#: exports_v2.py:270 serializers/exports/interventions.py:277
+#: exports_v2.py:272 serializers/exports/interventions.py:277
 msgid "Budget Currency"
 msgstr "Devise du budget"
 
-#: exports_v2.py:271
+#: exports_v2.py:273
 msgid "Total CSO Budget (USD)"
 msgstr ""
 
-#: exports_v2.py:272
+#: exports_v2.py:274
 msgid "UNICEF Cash (USD)"
 msgstr ""
 
-#: exports_v2.py:273
+#: exports_v2.py:275
 msgid "UNICEF Supply (USD)"
 msgstr ""
 
-#: exports_v2.py:274
+#: exports_v2.py:276
 msgid "Total PD/SPD Budget (USD)"
 msgstr ""
 
-#: exports_v2.py:275 serializers/exports/interventions.py:261
+#: exports_v2.py:277 serializers/exports/interventions.py:261
 msgid "FR Number(s)"
 msgstr "Numéro(s) FR"
 
-#: exports_v2.py:276 exports_v2.py:346 serializers/exports/interventions.py:262
+#: exports_v2.py:278 exports_v2.py:348 serializers/exports/interventions.py:262
 msgid "FR Currency"
 msgstr "FR Devise"
 
-#: exports_v2.py:277 serializers/exports/interventions.py:263
+#: exports_v2.py:279 serializers/exports/interventions.py:263
 msgid "FR Posting Date"
 msgstr "FR Date de publication"
 
-#: exports_v2.py:278 serializers/exports/interventions.py:265
+#: exports_v2.py:280 serializers/exports/interventions.py:265
 msgid "FR Amount"
 msgstr "FR Montant"
 
-#: exports_v2.py:279 serializers/exports/interventions.py:268
+#: exports_v2.py:281 serializers/exports/interventions.py:268
 msgid "FR Actual CT"
 msgstr "FR Réel CT"
 
-#: exports_v2.py:280 exports_v2.py:350 serializers/exports/interventions.py:271
+#: exports_v2.py:282 exports_v2.py:352 serializers/exports/interventions.py:271
 msgid "Outstanding DCT"
 msgstr "DCT exceptionnel"
 
-#: exports_v2.py:282
+#: exports_v2.py:284
 msgid "Planned Spot Checks"
 msgstr ""
 
-#: exports_v2.py:283
+#: exports_v2.py:285
 msgid "Planned Audits"
 msgstr ""
 
-#: exports_v2.py:284 models.py:1901
+#: exports_v2.py:286 models.py:1901
 msgid "Document Submission Date by CSO"
 msgstr "Date de soumission du document par le CSO"
 
-#: exports_v2.py:285 models.py:1907
+#: exports_v2.py:287 models.py:1907
 msgid "Submission Date to PRC"
 msgstr "Date de soumission au CRP"
 
-#: exports_v2.py:286 models.py:1919
+#: exports_v2.py:288 models.py:1919
 msgid "Review Date by PRC"
 msgstr "Date de révision par la RPC"
 
-#: exports_v2.py:287 models.py:1976 models.py:2745
+#: exports_v2.py:289 models.py:1976 models.py:2745
 #: serializers/exports/interventions.py:319
 msgid "Signed by Partner"
 msgstr "Signé par le partenaire"
 
-#: exports_v2.py:288 models.py:1960 models.py:2729
+#: exports_v2.py:290 models.py:1960 models.py:2729
 msgid "Signed by Partner Date"
 msgstr "Signé par le partenaire Date"
 
-#: exports_v2.py:289 models.py:1967 models.py:2736
+#: exports_v2.py:291 models.py:1967 models.py:2736
 #: serializers/exports/interventions.py:310
 msgid "Signed by UNICEF"
 msgstr "Signé par l'UNICEF"
 
-#: exports_v2.py:290 models.py:1955 models.py:2724
+#: exports_v2.py:292 models.py:1955 models.py:2724
 msgid "Signed by UNICEF Date"
 msgstr "Signé par l'UNICEF Date"
 
-#: exports_v2.py:291 serializers/exports/interventions.py:324
+#: exports_v2.py:293 serializers/exports/interventions.py:324
 msgid "Days from Submission to Signed"
 msgstr "Jours entre la soumission et la signature"
 
-#: exports_v2.py:292 serializers/exports/interventions.py:327
+#: exports_v2.py:294 serializers/exports/interventions.py:327
 msgid "Days from Review to Signed"
 msgstr "Jours entre la révision et la signature"
 
-#: exports_v2.py:293 serializers/exports/interventions.py:330
+#: exports_v2.py:295 serializers/exports/interventions.py:330
 msgid "Total no. of amendments"
 msgstr "Nb total. "
 
-#: exports_v2.py:294 serializers/exports/interventions.py:333
+#: exports_v2.py:296 serializers/exports/interventions.py:333
 msgid "Last amendment date"
 msgstr "Date de la dernière modification"
 
-#: exports_v2.py:295
+#: exports_v2.py:297
 msgid "Attachment Type"
 msgstr "Type de pièce jointe"
 
-#: exports_v2.py:296 serializers/exports/interventions.py:339
+#: exports_v2.py:298 serializers/exports/interventions.py:339
 msgid "# of attachments"
 msgstr "# Nombre d'annexes"
 
-#: exports_v2.py:297 serializers/exports/interventions.py:321
+#: exports_v2.py:299 serializers/exports/interventions.py:321
 msgid "CP Outputs"
 msgstr "Sorties CP"
 
-#: exports_v2.py:299 models.py:2092
+#: exports_v2.py:301 models.py:2092
 msgid "UNPP Number"
 msgstr "Numéro UNPP"
 
-#: exports_v2.py:300 models.py:2200 models.py:3325 templates/pd/detail.html:224
+#: exports_v2.py:302 models.py:2200 models.py:3325 templates/pd/detail.html:224
 msgid "Data Processing Agreement"
 msgstr "Accord de traitement des données"
 
-#: exports_v2.py:301 models.py:2204 models.py:3326 templates/pd/detail.html:227
+#: exports_v2.py:303 models.py:2204 models.py:3326 templates/pd/detail.html:227
 msgid "Activities involving children and young people"
 msgstr "Activités impliquant des enfants et des jeunes"
 
-#: exports_v2.py:302 models.py:2208 templates/pd/detail.html:230
+#: exports_v2.py:304 models.py:2208 templates/pd/detail.html:230
 msgid "Special Conditions for Construction Works by Implementing Partners"
 msgstr ""
 "Conditions particulières pour les travaux de construction par les "
 "partenaires de mise en œuvre"
 
-#: exports_v2.py:334
+#: exports_v2.py:336
 msgid "IP Name"
 msgstr ""
 
-#: exports_v2.py:336
+#: exports_v2.py:338
 msgid "PD/SPD Ref #"
 msgstr ""
 
-#: exports_v2.py:337 exports_v2.py:385 serializers/exports/interventions.py:102
+#: exports_v2.py:339 exports_v2.py:387 serializers/exports/interventions.py:102
 msgid "Section"
 msgstr ""
 
-#: exports_v2.py:338
+#: exports_v2.py:340
 msgid "Field Office"
 msgstr ""
 
-#: exports_v2.py:342
+#: exports_v2.py:344
 msgid "PD Currency"
 msgstr ""
 
-#: exports_v2.py:343
+#: exports_v2.py:345
 msgid "CSO Contribution (PD Currency)"
 msgstr ""
 
-#: exports_v2.py:344
+#: exports_v2.py:346
 msgid "Total UNICEF Supplies (PD Currency)"
 msgstr ""
 
-#: exports_v2.py:345
+#: exports_v2.py:347
 msgid "Total UNICEF Cash (PD Currency)"
 msgstr ""
 
-#: exports_v2.py:347
+#: exports_v2.py:349
 msgid "FR Grand Total"
 msgstr ""
 
-#: exports_v2.py:348
+#: exports_v2.py:350
 msgid "Actual Disbursements"
 msgstr ""
 
-#: exports_v2.py:349
+#: exports_v2.py:351
 msgid "Multi-currency Transaction"
 msgstr ""
 
-#: exports_v2.py:351
+#: exports_v2.py:353
 msgid "FR Grand Total (USD)"
 msgstr ""
 
-#: exports_v2.py:352
+#: exports_v2.py:354
 msgid "Actual Disbursement (USD)"
 msgstr ""
 
-#: exports_v2.py:353
+#: exports_v2.py:355
 msgid "Outstanding DCT (USD)"
 msgstr ""
 
-#: exports_v2.py:354
+#: exports_v2.py:356
 msgid "Disbursement To Date (%)"
 msgstr ""
 
-#: exports_v2.py:356
+#: exports_v2.py:358
 msgid "Link"
 msgstr ""
 
-#: exports_v2.py:376
+#: exports_v2.py:378
 msgid "CP output"
 msgstr ""
 
-#: exports_v2.py:378
+#: exports_v2.py:380
 msgid "Name of UNICEF Focal Point"
 msgstr ""
 
-#: exports_v2.py:379
+#: exports_v2.py:381
 msgid "Hyperlink"
 msgstr ""
 
-#: exports_v2.py:380 templates/pd/detail.html:267
+#: exports_v2.py:382 templates/pd/detail.html:267
 msgid "Location"
 msgstr "Emplacement"
 
-#: exports_v2.py:384
+#: exports_v2.py:386
 msgid "PD Ref Number)"
 msgstr ""
 
-#: exports_v2.py:500 templates/pd/detail.html:155
+#: exports_v2.py:502 templates/pd/detail.html:155
 msgid "Start date"
 msgstr "Date de début"
 
-#: exports_v2.py:501
+#: exports_v2.py:503
 #, python-format
 msgid "Currency %(currency)s"
 msgstr ""
 
-#: exports_v2.py:505
+#: exports_v2.py:507
 msgid "Vendor #: "
 msgstr "Numéro du fournisseur"
 
-#: exports_v2.py:506 templates/pd/detail.html:156
+#: exports_v2.py:508 templates/pd/detail.html:156
 msgid "End date"
 msgstr "Date de fin"
 
-#: exports_v2.py:509
+#: exports_v2.py:511
 msgid "PD Reference"
 msgstr ""
 
-#: exports_v2.py:511
+#: exports_v2.py:513
 msgid "Duration"
 msgstr ""
 
-#: exports_v2.py:539
+#: exports_v2.py:541
 msgid "Total PD Budget"
 msgstr "Budget total DP"
 
-#: exports_v2.py:546 exports_v2.py:1132
+#: exports_v2.py:548 exports_v2.py:1134
 msgid "UNICEF Contribution"
 msgstr ""
 
-#: exports_v2.py:554 exports_v2.py:584
+#: exports_v2.py:556 exports_v2.py:586
 msgid "Total Cash"
 msgstr ""
 
-#: exports_v2.py:560 exports_v2.py:590
+#: exports_v2.py:562 exports_v2.py:592
 msgid "Prog effectiveness"
 msgstr "Efficacité du programme"
 
-#: exports_v2.py:565
+#: exports_v2.py:567
 msgid "HQ cost"
 msgstr ""
 
-#: exports_v2.py:570 exports_v2.py:595
+#: exports_v2.py:572 exports_v2.py:597
 msgid "Supplies in-kind"
 msgstr ""
 
-#: exports_v2.py:576 exports_v2.py:1135 models.py:2961
+#: exports_v2.py:578 exports_v2.py:1137 models.py:2961
 msgid "Partner Contribution"
 msgstr "Cotisation du partenaire"
 
-#: exports_v2.py:625
+#: exports_v2.py:627
 msgid "PD Output/ PD Activity"
 msgstr ""
 
-#: exports_v2.py:626
+#: exports_v2.py:628
 #, python-format
 msgid "Total (%s)"
 msgstr ""
 
-#: exports_v2.py:627 exports_v2.py:862
+#: exports_v2.py:629 exports_v2.py:864
 msgid "CSO"
 msgstr ""
 
-#: exports_v2.py:627 exports_v2.py:628 exports_v2.py:862 exports_v2.py:863
+#: exports_v2.py:629 exports_v2.py:630 exports_v2.py:864 exports_v2.py:865
 msgid "contribution"
 msgstr "Contribution des OSC"
 
-#: exports_v2.py:628 exports_v2.py:863 models.py:3598
+#: exports_v2.py:630 exports_v2.py:865 models.py:3598
 msgid "UNICEF"
 msgstr ""
 
-#: exports_v2.py:629 exports_v2.py:865
+#: exports_v2.py:631 exports_v2.py:867
 msgid "PD Quarters"
 msgstr ""
 
-#: exports_v2.py:645 templates/pd/detail.html:324
+#: exports_v2.py:647 templates/pd/detail.html:324
 msgid "Result Level"
 msgstr "Type de résultat"
 
-#: exports_v2.py:658 exports_v2.py:896
+#: exports_v2.py:660 exports_v2.py:898
 msgid "CP Output "
 msgstr ""
 
-#: exports_v2.py:670
+#: exports_v2.py:672
 msgid "PD Output"
 msgstr ""
 
-#: exports_v2.py:730 exports_v2.py:978
+#: exports_v2.py:732 exports_v2.py:980
 msgid "EEPM"
 msgstr ""
 
-#: exports_v2.py:730 exports_v2.py:978 templates/pd/detail.html:358
+#: exports_v2.py:732 exports_v2.py:980 templates/pd/detail.html:358
 msgid "Effective and efficient programme management"
 msgstr ""
 
-#: exports_v2.py:754 exports_v2.py:992
+#: exports_v2.py:756 exports_v2.py:994
 msgid "EEPM.1"
 msgstr ""
 
-#: exports_v2.py:754 templates/pd/detail.html:365
+#: exports_v2.py:756 templates/pd/detail.html:365
 msgid "In-country management & support"
 msgstr ""
 
-#: exports_v2.py:767 exports_v2.py:1017
+#: exports_v2.py:769 exports_v2.py:1019
 msgid "EEPM.2"
 msgstr ""
 
-#: exports_v2.py:767 templates/pd/detail.html:372
+#: exports_v2.py:769 templates/pd/detail.html:372
 msgid "Operational costs"
 msgstr ""
 
-#: exports_v2.py:780 exports_v2.py:1042
+#: exports_v2.py:782 exports_v2.py:1044
 msgid "EEPM.3"
 msgstr ""
 
-#: exports_v2.py:780 templates/pd/detail.html:379
+#: exports_v2.py:782 templates/pd/detail.html:379
 msgid "Planning, monitoring, evaluation, and communication"
 msgstr ""
 
-#: exports_v2.py:790
+#: exports_v2.py:792
 msgid "Subtotal for the programme costs"
 msgstr ""
 
-#: exports_v2.py:811
+#: exports_v2.py:813
 #, python-format
 msgid ""
 "HQ Support/Capacity Building  ({%(cost)d}%% of UNICEF the cash component)"
 msgstr ""
 
-#: exports_v2.py:831
+#: exports_v2.py:833
 msgid "Total PD budget cash"
 msgstr ""
 
-#: exports_v2.py:857
+#: exports_v2.py:859
 msgid "No."
 msgstr ""
 
-#: exports_v2.py:858
+#: exports_v2.py:860
 msgid "PD Output/ PD Activity / Item Description"
 msgstr ""
 
-#: exports_v2.py:859
+#: exports_v2.py:861
 msgid "Unit Type"
 msgstr ""
 
-#: exports_v2.py:860 exports_v2.py:1100
+#: exports_v2.py:862 exports_v2.py:1102
 msgid "Number of Units"
 msgstr ""
 
-#: exports_v2.py:861
+#: exports_v2.py:863
 msgid "Price/Unit"
 msgstr ""
 
-#: exports_v2.py:864 models.py:2969 serializers/exports/interventions.py:557
+#: exports_v2.py:866 models.py:2969 serializers/exports/interventions.py:557
 #: templates/pd/detail.html:174 templates/pd/detail.html:195
 msgid "Total"
 msgstr "Totale"
 
-#: exports_v2.py:866
+#: exports_v2.py:868
 msgid "Other Notes"
 msgstr ""
 
-#: exports_v2.py:913
+#: exports_v2.py:915
 msgid "PD OUTPUT "
 msgstr ""
 
-#: exports_v2.py:938 templates/pd/detail.html:364 templates/pd/detail.html:371
+#: exports_v2.py:940 templates/pd/detail.html:364 templates/pd/detail.html:371
 #: templates/pd/detail.html:378
 msgid "Activity"
 msgstr ""
 
-#: exports_v2.py:992
+#: exports_v2.py:994
 msgid "Activity: In-country management & support"
 msgstr ""
 
-#: exports_v2.py:1008
+#: exports_v2.py:1010
 #, python-format
 msgid "EEPM.1.{%d}"
 msgstr ""
 
-#: exports_v2.py:1017
+#: exports_v2.py:1019
 msgid "Activity: Operational costs"
 msgstr ""
 
-#: exports_v2.py:1033
+#: exports_v2.py:1035
 #, python-format
 msgid "EEPM.2.{%d}"
 msgstr ""
 
-#: exports_v2.py:1042
+#: exports_v2.py:1044
 msgid "Activity: Planning, monitoring, evaluation, and communication"
 msgstr ""
 
-#: exports_v2.py:1058
+#: exports_v2.py:1060
 #, python-format
 msgid "EEPM.3.{%d}"
 msgstr ""
 
-#: exports_v2.py:1071
+#: exports_v2.py:1073
 msgid "Total Cost for all outputs"
 msgstr ""
 
-#: exports_v2.py:1100 templates/pd/detail.html:412
+#: exports_v2.py:1102 templates/pd/detail.html:412
 msgid "Item"
 msgstr ""
 
-#: exports_v2.py:1100 templates/pd/detail.html:414
+#: exports_v2.py:1102 templates/pd/detail.html:414
 msgid "Price/unit"
 msgstr ""
 
-#: exports_v2.py:1100 models.py:3632 templates/pd/detail.html:415
+#: exports_v2.py:1102 models.py:3632 templates/pd/detail.html:415
 msgid "Total Price"
 msgstr "Prix total"
 
-#: exports_v2.py:1101 models.py:3646
+#: exports_v2.py:1103 models.py:3646
 msgid "Provided By"
 msgstr "Fourni par"
 
-#: exports_v2.py:1101 models.py:2906
+#: exports_v2.py:1103 models.py:2906
 msgid "CP Output"
 msgstr "Sortie CP"
 
-#: exports_v2.py:1101 models.py:3639
+#: exports_v2.py:1103 models.py:3639
 msgid "Other Mentions"
 msgstr "Autres mentions"
 
-#: exports_v2.py:1101 models.py:3649
+#: exports_v2.py:1103 models.py:3649
 msgid "UNICEF Product Number"
 msgstr "Numéro de produit UNICEF"
 
-#: exports_v2.py:1128
+#: exports_v2.py:1130
 msgid "Total Value"
 msgstr ""
 
-#: exports_v2.py:1152
+#: exports_v2.py:1154
 msgid "Partner non-financial contribution:"
 msgstr "Contribution non financière du partenaire:"
 
-#: exports_v2.py:1166 exports_v2.py:1175
+#: exports_v2.py:1168 exports_v2.py:1177
 msgid "Budget Summary"
 msgstr ""
 
-#: exports_v2.py:1168
+#: exports_v2.py:1170
 msgid "Activity Budget"
 msgstr ""
 
-#: exports_v2.py:1170
+#: exports_v2.py:1172
 msgid "Detailed Budget"
 msgstr ""
 
-#: exports_v2.py:1172
+#: exports_v2.py:1174
 msgid "Supply Cost"
 msgstr ""
 
-#: exports_v2.py:1178 templates/pd/detail.html:321
+#: exports_v2.py:1180 templates/pd/detail.html:321
 msgid "Workplan Budget"
 msgstr ""
 
-#: exports_v2.py:1181
+#: exports_v2.py:1183
 msgid "Detailed Workplan Budget"
 msgstr ""
 
-#: exports_v2.py:1184
+#: exports_v2.py:1186
 msgid "Supply Contribution (Planned)"
 msgstr ""
 
