@@ -10,7 +10,7 @@ from django.db.models import Case, CharField, Count, F, Max, Min, OuterRef, Pref
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.functional import cached_property
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext, gettext_lazy as _
 
 from django_fsm import FSMField, transition
 from django_tenants.utils import get_public_schema_name
@@ -2619,7 +2619,7 @@ class Intervention(TimeStampedModel):
 
     def get_cash_transfer_modalities_display(self):
         choices = dict(self.CASH_TRANSFER_CHOICES)
-        return ', '.join(choices.get(choices[m], 'Unknown') for m in self.cash_transfer_modalities)
+        return ', '.join([gettext(choices.get(m, _('Unknown'))) for m in self.cash_transfer_modalities])
 
     def was_active_before(self):
         """
