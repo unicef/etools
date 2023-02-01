@@ -417,6 +417,11 @@ class InterventionAdmin(
 
     attachments_link.short_description = 'attachments'
 
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        form.base_fields['hq_support_cost'].label = _('Capacity Strengthening Costs')
+        return form
+
     def save_formset(self, request, form, formset, change):
         instances = formset.save()
         for instance in instances:

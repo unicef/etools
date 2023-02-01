@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-01 16:50+0000\n"
+"POT-Creation-Date: 2023-02-01 18:05+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -27,7 +27,7 @@ msgstr "مرفق موقع"
 msgid "PRC Reviewed Attachment"
 msgstr "مرفق مراجعة جمهورية الصين الشعبية"
 
-#: admin.py:188 admin.py:734 models.py:3357
+#: admin.py:188 admin.py:739 models.py:3357
 msgid "Attachment"
 msgstr "التعلق"
 
@@ -59,33 +59,38 @@ msgstr "PD ليس جاهزًا لمزامنة Vision."
 msgid "PD was sent to Vision."
 msgstr "تم إرسال PD إلى Vision."
 
-#: admin.py:438 models.py:1195 models.py:1203
+#: admin.py:422 exports_v2.py:567 templates/pd/detail.html:172
+#: templates/pd/detail.html:391
+msgid "Capacity Strengthening Costs"
+msgstr ""
+
+#: admin.py:443 models.py:1195 models.py:1203
 msgid "Report"
 msgstr "تقرير"
 
-#: admin.py:575
+#: admin.py:580
 msgid "Partner Details"
 msgstr "تفاصيل الشريك"
 
-#: admin.py:604
+#: admin.py:609
 msgid "Hact"
 msgstr "صحيح"
 
-#: admin.py:693 models.py:1571 models.py:1578
+#: admin.py:698 models.py:1571 models.py:1578
 msgid "Signed Amendment"
 msgstr "التوقيع على التعديل"
 
-#: admin.py:768
+#: admin.py:773
 msgid "Agreement Details"
 msgstr "تفاصيل الاتفاقية"
 
-#: admin.py:804
+#: admin.py:809
 msgid ""
 "Please delete all interventions associated with the selected Agreements "
 "before deleting them."
 msgstr "يرجى حذف جميع التدخلات المرتبطة بالاتفاقيات المحددة قبل حذفها."
 
-#: admin.py:810
+#: admin.py:815
 msgid ""
 "Please delete all interventions associated with this Agreement before "
 "deleting the agreement."
@@ -690,10 +695,6 @@ msgstr ""
 
 #: exports_v2.py:562 exports_v2.py:592
 msgid "Prog effectiveness"
-msgstr ""
-
-#: exports_v2.py:567 templates/pd/detail.html:172 templates/pd/detail.html:391
-msgid "Capacity Strengthening Costs"
 msgstr ""
 
 #: exports_v2.py:572 exports_v2.py:597
