@@ -419,7 +419,11 @@ class InterventionAdmin(
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
-        form.base_fields['hq_support_cost'].label = _('Capacity Strengthening Costs')
+        _new_hq_cost_label = _('Capacity Strengthening Costs')
+        if 'hq_support_cost' in form.base_fields:  # when user has change permissions
+            form.base_fields['hq_support_cost'].label = _new_hq_cost_label
+        else:  # in view only more
+            form._meta.labels = {'hq_support_cost': _new_hq_cost_label}
         return form
 
     def save_formset(self, request, form, formset, change):

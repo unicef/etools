@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-01 18:05+0000\n"
+"POT-Creation-Date: 2023-02-02 13:00+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -28,7 +28,7 @@ msgstr "Подписанное вложение"
 msgid "PRC Reviewed Attachment"
 msgstr "КНР рассмотрела приложение"
 
-#: admin.py:188 admin.py:739 models.py:3357
+#: admin.py:188 admin.py:743 models.py:3357
 msgid "Attachment"
 msgstr "Приложение"
 
@@ -65,34 +65,34 @@ msgstr "PD был отправлен в Vision."
 msgid "Capacity Strengthening Costs"
 msgstr ""
 
-#: admin.py:443 models.py:1195 models.py:1203
+#: admin.py:447 models.py:1195 models.py:1203
 msgid "Report"
 msgstr "Отчет"
 
-#: admin.py:580
+#: admin.py:584
 msgid "Partner Details"
 msgstr "Сведения о партнере"
 
-#: admin.py:609
+#: admin.py:613
 msgid "Hact"
 msgstr "Действие"
 
-#: admin.py:698 models.py:1571 models.py:1578
+#: admin.py:702 models.py:1571 models.py:1578
 msgid "Signed Amendment"
 msgstr "Подписанная поправка"
 
-#: admin.py:773
+#: admin.py:777
 msgid "Agreement Details"
 msgstr "Детали соглашения"
 
-#: admin.py:809
+#: admin.py:813
 msgid ""
 "Please delete all interventions associated with the selected Agreements "
 "before deleting them."
 msgstr ""
 "Перед удалением удалите все действия, связанные с выбранными соглашениями."
 
-#: admin.py:815
+#: admin.py:819
 msgid ""
 "Please delete all interventions associated with this Agreement before "
 "deleting the agreement."
