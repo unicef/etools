@@ -27,7 +27,8 @@ RUN apk add --no-cache --virtual .build-deps --update \
     geos-dev \
     gdal-dev \
     gcc \
-    g++
+    g++ \
+    gettext
 
 RUN pip install --no-cache-dir --upgrade \
     pip \
