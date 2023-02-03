@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-12-28 09:02+0000\n"
+"POT-Creation-Date: 2023-02-03 14:34+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -29,14 +29,17 @@ msgid "Site ID"
 msgstr "Идентификатор сайта"
 
 #: export/renderers.py:20
+#, python-format
 msgid "Admin %s - Name"
 msgstr "Админ %s - Имя"
 
 #: export/renderers.py:21
+#, python-format
 msgid "Admin %s - Type"
 msgstr "Админ %s - Тип"
 
 #: export/renderers.py:22
+#, python-format
 msgid "Admin %s - Pcode"
 msgstr "Админ %s — Pcode"
 
@@ -250,7 +253,8 @@ msgstr "Должен быть предоставлен максимум один
 
 #: serializers.py:85
 msgid "HACT questions can only be related at the Partner Organization Level"
-msgstr "Вопросы HACT могут быть связаны только на уровне партнерской организации."
+msgstr ""
+"Вопросы HACT могут быть связаны только на уровне партнерской организации."
 
 #: serializers.py:88
 msgid "Only one hact question can be active at any time."

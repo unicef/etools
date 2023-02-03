@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-12-28 09:02+0000\n"
+"POT-Creation-Date: 2023-02-03 14:34+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -28,14 +28,17 @@ msgid "Site ID"
 msgstr "معرف الموقع"
 
 #: export/renderers.py:20
+#, python-format
 msgid "Admin %s - Name"
 msgstr "المسؤول %s - الاسم"
 
 #: export/renderers.py:21
+#, python-format
 msgid "Admin %s - Type"
 msgstr "المسؤول %s - النوع"
 
 #: export/renderers.py:22
+#, python-format
 msgid "Admin %s - Pcode"
 msgstr "المسؤول %s - Pcode"
 
