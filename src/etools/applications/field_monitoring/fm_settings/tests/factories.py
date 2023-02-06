@@ -55,7 +55,8 @@ class QuestionFactory(factory.django.DjangoModelFactory):
     is_custom = True
     choices_size = factory.Maybe(LazyAttribute(lambda self: self.answer_type == Question.ANSWER_TYPES.likert_scale), 3)
     level = fuzzy.FuzzyChoice(dict(Question.LEVELS).keys())
-    text = factory.Dict(get_default_translated())
+    text = fuzzy.FuzzyText()
+    translations = factory.Dict(get_default_translated('text'))
 
     class Meta:
         model = Question

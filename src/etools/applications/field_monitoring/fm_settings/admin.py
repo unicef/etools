@@ -3,7 +3,6 @@ from django.utils.translation import gettext_lazy as _
 
 from ordered_model.admin import OrderedModelAdmin
 
-from etools.applications.core.i18n.utils import get_translated_field
 from etools.applications.field_monitoring.fm_settings.models import (
     Category,
     LocationSite,
@@ -30,13 +29,10 @@ class QuestionOptionsInline(admin.StackedInline):
 
 @admin.register(Question)
 class QuestionAdmin(admin.ModelAdmin):
-    list_display = ('get_text', 'level', 'methods_list', 'is_hact')
+    list_display = ('text', 'level', 'methods_list', 'is_hact')
     search_fields = ('text',)
     list_filter = ('level', 'methods', 'sections', 'is_hact')
     inlines = (QuestionOptionsInline,)
-
-    def get_text(self, obj):
-        return get_translated_field(obj, 'text')
 
     def methods_list(self, obj):
         return [str(m) for m in obj.methods.all()]

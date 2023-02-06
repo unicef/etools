@@ -13,8 +13,6 @@ from ordered_model.models import OrderedModel
 from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation
 
-from etools.applications.core.i18n.fields import TranslatedTextField
-from etools.applications.core.i18n.utils import get_default_translated, get_translated_field
 from etools.applications.locations.models import Location
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.reports.models import Result, Section
@@ -105,7 +103,9 @@ class Question(models.Model):
     methods = models.ManyToManyField(Method, verbose_name=_('Methods'))
     category = models.ForeignKey(Category, on_delete=models.CASCADE, verbose_name=_('Category'))
     sections = models.ManyToManyField(Section, verbose_name=_('Sections'), blank=True)
-    text = TranslatedTextField(verbose_name=_('Question Text'), default=get_default_translated)
+    text = models.TextField(verbose_name=_('Question Text'))
+    translations = models.JSONField(verbose_name=_('Translations'), default=dict)
+
     is_hact = models.BooleanField(default=False, verbose_name=_('Count as HACT'))
     is_custom = models.BooleanField(default=False, verbose_name=_('Is Custom'))
     is_active = models.BooleanField(default=True, verbose_name=_('Is Active'))
@@ -142,7 +142,7 @@ class Question(models.Model):
         self._template = value
 
     def __str__(self):
-        return get_translated_field(self, 'text')
+        return self.text
 
 
 class Option(models.Model):
