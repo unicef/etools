@@ -168,7 +168,7 @@
                 <td class="w-p12">{{ pd.planned_budget.unicef_cash_local | currency }}</td>
                 <td class="w-p12">{% translate "Supplies" %}:</td>
                 <td class="w-p12">{{ pd.planned_budget.in_kind_amount_local | currency}}</td>
-                <td class="w-p12">{% translate "HQ Cash" %}:</td>
+                <td class="w-p12">{% translate "Capacity Strengthening Costs" %}:</td>
                 <td class="w-p12">{{ pd.planned_budget.total_hq_cash_local | currency }}</td>
                 <td class="w-p12">{% translate "Total" %}:</td>
                 <td class="w-p12">{{ pd.planned_budget.total_unicef_contribution_local | currency }}</td>
@@ -387,7 +387,7 @@
             <td class="b-blue">{{ pd.planned_budget.total_unicef_cash_local_wo_hq | currency }}</td>
           </tr>
           <tr>
-            <td colspan="3" class="b-blue">{% translate "HQ support costs" %}</td>
+            <td colspan="3" class="b-blue">{% translate "Capacity Strengthening Costs" %}</td>
             <td class="b-blue">{{ pd.planned_budget.total_hq_cash_local | currency }}</td>
             <td class="b-blue"></td>
             <td class="b-blue">{{ pd.planned_budget.total_hq_cash_local | currency }}</td>
