@@ -14,7 +14,7 @@ from unicef_attachments.models import Attachment
 from unicef_locations.tests.factories import LocationFactory
 from unicef_snapshot.models import Activity
 
-from etools.applications.attachments.tests.factories import AttachmentFactory
+from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.core.tests.mixins import URLAssertionMixin
 from etools.applications.environment.helpers import tenant_switch_is_active
@@ -24,9 +24,7 @@ from etools.applications.partners.models import Intervention, InterventionResult
 from etools.applications.partners.permissions import InterventionPermissions
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
-    FileTypeFactory,
     InterventionAmendmentFactory,
-    InterventionAttachmentFactory,
     InterventionFactory,
     InterventionResultLinkFactory,
     PartnerFactory,
@@ -135,6 +133,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
             "monitoring_activities",
             "number",
             "offices",
+            "old_attachments",
             "other_info",
             "other_partners_involved",
             "partner_accepted",
@@ -298,7 +297,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
             file_type=None,
             code="",
         )
-        file_type = FileTypeFactory()
+        file_type = AttachmentFileTypeFactory(group=['intervention_attachments'])
         self.assertIsNone(attachment.file_type)
         self.assertIsNone(attachment.content_object)
         self.assertFalse(attachment.code)
@@ -307,7 +306,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
             "attachment_document": attachment.pk,
         }
         status_code, response = self.run_request_attachment_create_ep(intervention_id, data, user=self.partnership_manager_user)
-        self.assertEqual(status_code, status.HTTP_201_CREATED)
+        self.assertEqual(status_code, status.HTTP_201_CREATED, response)
         attachment.refresh_from_db()
         return attachment
 
@@ -331,11 +330,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
 
         attachment_updated = Attachment.objects.get(pk=attachment.pk)
         self.assertEqual(
-            attachment_updated.file_type.code,
-            self.file_type_attachment.code
-        )
-        self.assertEqual(
-            attachment_updated.object_id,
+            attachment_updated.id,
             response["attachments"][0]["id"]
         )
         self.assertEqual(
@@ -373,20 +368,12 @@ class TestInterventionsAPI(BaseTenantTestCase):
         status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
         self.assertEqual(status_code, status.HTTP_201_CREATED)
         attachment_prc_updated = Attachment.objects.get(pk=attachment_prc.pk)
-        self.assertEqual(
-            attachment_prc_updated.file_type.code,
-            self.file_type_prc.code
-        )
         self.assertEqual(attachment_prc_updated.object_id, response["id"])
         self.assertEqual(
             attachment_prc_updated.code,
             self.file_type_prc.code
         )
         attachment_pd_updated = Attachment.objects.get(pk=attachment_pd.pk)
-        self.assertEqual(
-            attachment_pd_updated.file_type.code,
-            self.file_type_pd.code
-        )
         self.assertEqual(attachment_pd_updated.object_id, response["id"])
         self.assertEqual(
             attachment_pd_updated.code,
@@ -1591,9 +1578,10 @@ class TestInterventionAttachmentDeleteView(BaseTenantTestCase):
         cls.partnership_manager = UserFactory(is_staff=True)
         cls.partnership_manager.groups.add(GroupFactory())
         cls.intervention = InterventionFactory(status=Intervention.DRAFT)
-        cls.attachment = InterventionAttachmentFactory(
-            intervention=cls.intervention,
-            attachment="random_attachment.pdf",
+        cls.attachment = AttachmentFactory(
+            content_object=cls.intervention,
+            file="random_attachment.pdf",
+            code='partners_intervention_attachments',
         )
         cls.url = reverse(
             "partners_api:intervention-attachments-update",

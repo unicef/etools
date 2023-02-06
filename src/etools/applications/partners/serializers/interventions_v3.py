@@ -14,7 +14,6 @@ from unicef_attachments.models import Attachment, FileType as AttachmentFileType
 
 from etools.applications.field_monitoring.fm_settings.serializers import LocationSiteSerializer
 from etools.applications.partners.models import (
-    FileType,
     Intervention,
     InterventionAmendment,
     InterventionManagementBudget,
@@ -33,6 +32,7 @@ from etools.applications.partners.serializers.exports.vision.export_mixin import
 from etools.applications.partners.serializers.intervention_snapshot import FullInterventionSnapshotSerializerMixin
 from etools.applications.partners.serializers.interventions_v2 import (
     AttachmentField,
+    FinalPartnershipReviewAttachmentField,
     FRsSerializer,
     InterventionAmendmentCUSerializer,
     InterventionAttachmentSerializer,
@@ -41,7 +41,6 @@ from etools.applications.partners.serializers.interventions_v2 import (
     InterventionResultNestedSerializer,
     InterventionResultsStructureSerializer,
     PlannedVisitsNestedSerializer,
-    SingleInterventionAttachmentField,
 )
 from etools.applications.partners.serializers.partner_organization_v2 import PartnerStaffMemberUserSerializer
 from etools.applications.partners.serializers.v3 import InterventionReviewSerializer
@@ -300,8 +299,7 @@ class InterventionDetailSerializer(
     submitted_to_prc = serializers.ReadOnlyField()
     termination_doc_attachment = AttachmentSingleFileField(read_only=True)
     termination_doc_file = serializers.FileField(source='termination_doc', read_only=True)
-    final_partnership_review = SingleInterventionAttachmentField(
-        type_name=FileType.FINAL_PARTNERSHIP_REVIEW,
+    final_partnership_review = FinalPartnershipReviewAttachmentField(
         read_field=InterventionAttachmentSerializer()
     )
     risks = InterventionRiskSerializer(many=True, read_only=True)
@@ -558,6 +556,17 @@ class InterventionDetailSerializer(
                 return None
         return None
 
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        final_partnership_review = validated_data.pop('final_partnership_review', None)
+
+        updated = super().update(instance, validated_data)
+
+        if final_partnership_review:
+            self.get_fields()['final_partnership_review'].set_attachment(instance, final_partnership_review)
+
+        return updated
+
     class Meta:
         model = Intervention
         fields = (
@@ -702,7 +711,7 @@ class PMPInterventionAttachmentSerializer(serializers.ModelSerializer):
         queryset=AttachmentFileType.objects.group_by('intervention_attachments'),
         source='file_type'
     )
-    active = serializers.BooleanField(source='is_active')
+    active = serializers.BooleanField(source='is_active', required=False)
 
     class Meta:
         model = Attachment

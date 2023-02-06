@@ -2414,7 +2414,7 @@ class Intervention(TimeStampedModel):
     @property
     def final_partnership_review(self):
         # to be used only to track changes in validator mixin
-        return self.attachments.filter(file_type__name='partner_report')
+        return self.attachments.filter(file_type__name='final_partnership_review')
 
     @property
     def document_currency(self):

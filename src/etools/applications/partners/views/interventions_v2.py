@@ -375,10 +375,15 @@ class InterventionAttachmentUpdateDeleteView(RetrieveUpdateDestroyAPIView):
     queryset = Attachment.objects.filter(code='partners_intervention_attachments')
     permission_classes = (PartnershipManagerRepPermission,)
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        queryset = queryset.filter(content_type=ContentType.objects.get_for_model(Intervention))
+        return queryset
+
     def delete(self, request, *args, **kwargs):
         obj = self.get_object()
 
-        if obj.intervention.status in [Intervention.DRAFT]:
+        if obj.content_object.status in [Intervention.DRAFT]:
             return super().delete(request, *args, **kwargs)
         else:
             raise ValidationError("Deleting an attachment can only be done in Draft status")

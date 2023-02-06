@@ -98,7 +98,7 @@ def setup_intervention_test_data(test_case, include_results_and_indicators=False
         test_case.disaggregation = test_case.applied_indicator.disaggregation.create(name='A Disaggregation')
 
     test_case.file_type_attachment = AttachmentFileTypeFactory(
-        code="partners_intervention_attachment"
+        code="partners_intervention_attachments"
     )
     test_case.file_type_prc = AttachmentFileTypeFactory(
         code="partners_intervention_prc_review"
