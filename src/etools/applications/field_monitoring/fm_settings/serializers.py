@@ -3,7 +3,7 @@ from copy import copy
 
 from django.contrib.gis.db.models import Collect
 from django.core.exceptions import ValidationError as DjangoValidationError
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext as _
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -82,10 +82,10 @@ class QuestionSerializer(QuestionLightSerializer):
         if question_is_active and question_is_hact:
             question_target = validated_data.get("level", None) or getattr(instance, "level", None)
             if question_target != Question.LEVELS.partner:
-                raise ValidationError("HACT questions can only be related at the Partner Organization Level")
+                raise ValidationError(_("HACT questions can only be related at the Partner Organization Level"))
             question_id = getattr(instance, "id", None)
             if Question.objects.filter(is_hact=True, is_active=True).exclude(id=question_id).exists():
-                raise ValidationError("Only one hact question can be active at any time.")
+                raise ValidationError(_("Only one hact question can be active at any time."))
 
     def create(self, validated_data):
         validated_data['is_custom'] = True
@@ -99,7 +99,7 @@ class QuestionSerializer(QuestionLightSerializer):
         # For non-custom questions the only option we have is to modify is_active
         custom_changes_allowed = not validated_data or list(validated_data.keys()) == ["is_active"]
         if not instance.is_custom and not custom_changes_allowed:
-            raise ValidationError("The system provided questions cannot be edited.")
+            raise ValidationError(_("The system provided questions cannot be edited."))
 
         self.check_hact_questions(validated_data, instance)
         options = validated_data.pop('options', None)

@@ -16,120 +16,120 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: models.py:25 models.py:49 models.py:135 models.py:182
 msgid "Activity"
-msgstr "Activité"
+msgstr "Actividad"
 
 #: models.py:27
 msgid "Question"
-msgstr "Question"
+msgstr "Pregunta"
 
 #: models.py:31
 msgid "Question Text"
-msgstr "Texte de la question"
+msgstr "Texto de la pregunta"
 
 #: models.py:32
 msgid "Count as HACT"
-msgstr "Compter comme HACT"
+msgstr "Contar como HACT"
 
 #: models.py:34
 msgid "Specific Details To Probe"
-msgstr "Détails spécifiques à sonder"
+msgstr "Detalles específicos para sondear"
 
 #: models.py:35
 msgid "Enabled"
-msgstr "Activé"
+msgstr "Activado"
 
 #: models.py:40 models.py:113
 msgid "Activity Question"
-msgstr "Question d'activité"
+msgstr "Pregunta de actividad"
 
 #: models.py:41
 msgid "Activity Questions"
-msgstr "Questions d'activité"
+msgstr "Preguntas de actividad"
 
 #: models.py:51
 msgid "Methods"
-msgstr "Méthodes"
+msgstr "Métodos"
 
 #: models.py:52
 msgid "Information Source"
-msgstr "Source d'informatioon"
+msgstr "Fuente de información"
 
 #: models.py:53
 msgid "Author"
-msgstr "Auteur"
+msgstr "Autor"
 
 #: models.py:57
 msgid "Started Checklist"
-msgstr "Liste de contrôle commencée"
+msgstr "Lista de verificación iniciada"
 
 #: models.py:58
 msgid "Started Checklists"
-msgstr "Listes de contrôle commencées"
+msgstr "Listas de verificación iniciadas"
 
 #: models.py:110 models.py:157
 msgid "Checklist"
-msgstr "Liste de contrôle"
+msgstr "Lista de Verificación"
 
 #: models.py:114 models.py:136
 msgid "Value"
-msgstr "Valeur"
+msgstr "Valor"
 
 #: models.py:119
 msgid "Checklist Finding"
-msgstr "Liste de vérification"
+msgstr "Hallazgo de lista de verificación"
 
 #: models.py:120
 msgid "Checklist Findings"
-msgstr "Liste de vérifications"
+msgstr "Hallazgos de la lista de verificación"
 
 #: models.py:139
 msgid "Overall Activity Question Finding"
-msgstr "Conclusion générale relative à la question"
+msgstr "Resultado general de la pregunta de actividad"
 
 #: models.py:140
 msgid "Overall Activity Question Findings"
-msgstr "Conclusions générales relatives à la question"
+msgstr "Resultados generales de la pregunta de actividad"
 
 #: models.py:158 models.py:183
 msgid "Narrative Finding"
-msgstr "Conclusion narrative"
+msgstr "Hallazgo narrativo"
 
 #: models.py:159
 msgid "Attachments"
-msgstr "Pièces jointes"
+msgstr "Archivos adjuntos"
 
 #: models.py:164
 msgid "Checklist Overall Finding"
-msgstr "Liste de conclusion générale"
+msgstr "Lista de verificación Hallazgo general"
 
 #: models.py:165
 msgid "Checklist Overall Findings"
-msgstr "Liste de conclusions générales"
+msgstr "Hallazgos generales de la lista de verificación"
 
 #: models.py:189
 msgid "Activity Overall Finding"
-msgstr "Conclusion générale de l'activité"
+msgstr "Hallazgo general de la actividad"
 
 #: models.py:190
 msgid "Activity Overall Findings"
-msgstr "Conclusions générales de l'activité"
+msgstr "Actividad Hallazgos generales"
 
 #: offline/blueprint.py:48
 msgid "Source of Information"
-msgstr "Source d'information"
+msgstr "Fuente de información"
 
 #: offline/blueprint.py:70
 msgid "Overall Finding"
-msgstr "Conclusion générale"
+msgstr "Hallazgo general"
 
 #: offline/helpers.py:55
 #, python-format
 msgid "Unable to find %(level)s with id %(target_id)s"
-msgstr "Impossible de trouver %(level)s avec id %(target_id)s"
+msgstr "No se puede encontrar %(level)s con id %(target_id)s"
 
 #: offline/helpers.py:74
 #, python-format
@@ -137,40 +137,41 @@ msgid ""
 "Unable to find finding for question %(question_id)s for %(level)s "
 "%(target_id)s"
 msgstr ""
-"Impossible de trouver les résultats pour la question %(question_id)s pour "
+"No se pudo encontrar el resultado de la pregunta %(question_id)s para "
 "%(level)s %(target_id)s"
 
 #: offline/helpers.py:91
 msgid "Ensure this field has no more than 100 characters."
-msgstr "Assurez-vous que ce champ ne comporte pas plus de 100 caractères."
+msgstr "Asegúrese de que este campo no tenga más de 100 caracteres."
 
 #: serializers.py:79
 msgid "Document Type"
-msgstr "Type de document"
+msgstr "Tipo de Documento"
 
 #: serializers.py:102
 msgid "Information source is required"
-msgstr "La source d'information est requise"
+msgstr "Se requiere fuente de información"
 
 #: views.py:84
 #, python-format
 msgid "Workspace code provided is not a valid business_area_code: %s"
 msgstr ""
-"Le code d'espace de travail fourni n'est pas un code de zone d'activité "
-"valide : %s"
+"El código de espacio de trabajo proporcionado no es un "
+"código_de_área_de_negocio válido: %s"
 
 #: views.py:92
 msgid "Workspace is required"
-msgstr "Un espace de travail est nécessaire"
+msgstr "Se requiere espacio de trabajo"
 
 #: views.py:102
 msgid "User is required"
-msgstr "L'utilisateur est requis"
+msgstr "Se requiere usuario"
 
 #: views.py:114
 msgid "Unable to fill checklists for current activity"
-msgstr "Impossible de remplir les listes de contrôle pour l'activité en cours"
+msgstr ""
+"No se pueden completar las listas de verificación para la actividad actual"
 
 #: views.py:136
 msgid "Report Attachments"
-msgstr "Pièces jointes du rapport"
+msgstr "Adjuntos del informe"

@@ -16,161 +16,158 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 "
+"&& n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
 
 #: models.py:25 models.py:49 models.py:135 models.py:182
 msgid "Activity"
-msgstr "Activité"
+msgstr "نشاط"
 
 #: models.py:27
 msgid "Question"
-msgstr "Question"
+msgstr "سؤال"
 
 #: models.py:31
 msgid "Question Text"
-msgstr "Texte de la question"
+msgstr "نص السؤال"
 
 #: models.py:32
 msgid "Count as HACT"
-msgstr "Compter comme HACT"
+msgstr "عد على أنها HACT"
 
 #: models.py:34
 msgid "Specific Details To Probe"
-msgstr "Détails spécifiques à sonder"
+msgstr "تفاصيل محددة للتحقيق"
 
 #: models.py:35
 msgid "Enabled"
-msgstr "Activé"
+msgstr "ممكن"
 
 #: models.py:40 models.py:113
 msgid "Activity Question"
-msgstr "Question d'activité"
+msgstr "سؤال النشاط"
 
 #: models.py:41
 msgid "Activity Questions"
-msgstr "Questions d'activité"
+msgstr "أسئلة النشاط"
 
 #: models.py:51
 msgid "Methods"
-msgstr "Méthodes"
+msgstr "أساليب"
 
 #: models.py:52
 msgid "Information Source"
-msgstr "Source d'informatioon"
+msgstr "مصدر المعلومات"
 
 #: models.py:53
 msgid "Author"
-msgstr "Auteur"
+msgstr "مؤلف"
 
 #: models.py:57
 msgid "Started Checklist"
-msgstr "Liste de contrôle commencée"
+msgstr "بدأت قائمة التحقق"
 
 #: models.py:58
 msgid "Started Checklists"
-msgstr "Listes de contrôle commencées"
+msgstr "بدأت قوائم المراجعة"
 
 #: models.py:110 models.py:157
 msgid "Checklist"
-msgstr "Liste de contrôle"
+msgstr "قائمة تدقيق"
 
 #: models.py:114 models.py:136
 msgid "Value"
-msgstr "Valeur"
+msgstr "قيمة"
 
 #: models.py:119
 msgid "Checklist Finding"
-msgstr "Liste de vérification"
+msgstr "البحث عن قائمة التحقق"
 
 #: models.py:120
 msgid "Checklist Findings"
-msgstr "Liste de vérifications"
+msgstr "نتائج قائمة التحقق"
 
 #: models.py:139
 msgid "Overall Activity Question Finding"
-msgstr "Conclusion générale relative à la question"
+msgstr "إجمالي نشاط البحث عن الأسئلة"
 
 #: models.py:140
 msgid "Overall Activity Question Findings"
-msgstr "Conclusions générales relatives à la question"
+msgstr "نتائج أسئلة النشاط العام"
 
 #: models.py:158 models.py:183
 msgid "Narrative Finding"
-msgstr "Conclusion narrative"
+msgstr "اكتشاف السرد"
 
 #: models.py:159
 msgid "Attachments"
-msgstr "Pièces jointes"
+msgstr "المرفقات"
 
 #: models.py:164
 msgid "Checklist Overall Finding"
-msgstr "Liste de conclusion générale"
+msgstr "قائمة التحقق الشاملة"
 
 #: models.py:165
 msgid "Checklist Overall Findings"
-msgstr "Liste de conclusions générales"
+msgstr "النتائج العامة قائمة التحقق"
 
 #: models.py:189
 msgid "Activity Overall Finding"
-msgstr "Conclusion générale de l'activité"
+msgstr "الاكتشاف العام للنشاط"
 
 #: models.py:190
 msgid "Activity Overall Findings"
-msgstr "Conclusions générales de l'activité"
+msgstr "النتائج العامة للنشاط"
 
 #: offline/blueprint.py:48
 msgid "Source of Information"
-msgstr "Source d'information"
+msgstr "مصدر المعلومات"
 
 #: offline/blueprint.py:70
 msgid "Overall Finding"
-msgstr "Conclusion générale"
+msgstr "النتيجة الشاملة"
 
 #: offline/helpers.py:55
 #, python-format
 msgid "Unable to find %(level)s with id %(target_id)s"
-msgstr "Impossible de trouver %(level)s avec id %(target_id)s"
+msgstr "تعذر العثور على %(level)s بالمعرف %(target_id)s"
 
 #: offline/helpers.py:74
 #, python-format
 msgid ""
 "Unable to find finding for question %(question_id)s for %(level)s "
 "%(target_id)s"
-msgstr ""
-"Impossible de trouver les résultats pour la question %(question_id)s pour "
-"%(level)s %(target_id)s"
+msgstr "تعذر العثور على السؤا %(question_id)s لـ %(level)s %(target_id)s"
 
 #: offline/helpers.py:91
 msgid "Ensure this field has no more than 100 characters."
-msgstr "Assurez-vous que ce champ ne comporte pas plus de 100 caractères."
+msgstr "تأكد من أن هذا الحقل لا يحتوي على أكثر من 100 حرف."
 
 #: serializers.py:79
 msgid "Document Type"
-msgstr "Type de document"
+msgstr "نوع الوثيقة"
 
 #: serializers.py:102
 msgid "Information source is required"
-msgstr "La source d'information est requise"
+msgstr "مطلوب مصدر المعلومات"
 
 #: views.py:84
 #, python-format
 msgid "Workspace code provided is not a valid business_area_code: %s"
-msgstr ""
-"Le code d'espace de travail fourni n'est pas un code de zone d'activité "
-"valide : %s"
+msgstr "رمز مساحة العمل الذي تم توفيره ليس رمز منطقة_عمل صالحًا :%s"
 
 #: views.py:92
 msgid "Workspace is required"
-msgstr "Un espace de travail est nécessaire"
+msgstr "مساحة العمل مطلوبة"
 
 #: views.py:102
 msgid "User is required"
-msgstr "L'utilisateur est requis"
+msgstr "المستخدم مطلوب"
 
 #: views.py:114
 msgid "Unable to fill checklists for current activity"
-msgstr "Impossible de remplir les listes de contrôle pour l'activité en cours"
+msgstr "غير قادر على ملء قوائم المراجعة للنشاط الحالي"
 
 #: views.py:136
 msgid "Report Attachments"
-msgstr "Pièces jointes du rapport"
+msgstr "تقرير المرفقات"
