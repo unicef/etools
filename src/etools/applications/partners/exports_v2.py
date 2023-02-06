@@ -564,7 +564,7 @@ class InterventionXLSRenderer:
             '{:.2f}'.format(prog_effectivness_p)
         ])
         worksheet.append([
-            _('HQ cost'),
+            _('Capacity Strengthening Costs'),
             currency_format(budget.total_hq_cash_local),
             '{:.2f}'.format(self.intervention.hq_support_cost)
         ])
@@ -810,7 +810,7 @@ class InterventionXLSRenderer:
             start_row=worksheet.max_row, start_column=6, end_row=worksheet.max_row, end_column=total_columns
         )
         worksheet.append([
-            _('HQ Support/Capacity Building  ({%(cost)d}%% of UNICEF the cash component)')
+            _('Capacity Strengthening Costs ({%(cost)d}%% of UNICEF the cash component)')
             % {'cost': self.intervention.hq_support_cost},
             '', '', '',
             currency_format(self.intervention.planned_budget.total_hq_cash_local),

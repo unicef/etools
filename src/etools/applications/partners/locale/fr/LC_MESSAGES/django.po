@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-01 17:34+0000\n"
+"POT-Creation-Date: 2023-02-02 13:00+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -26,7 +26,7 @@ msgstr "Pièce jointe signée"
 msgid "PRC Reviewed Attachment"
 msgstr "pièce jointe examinée par la PRC"
 
-#: admin.py:188 admin.py:734 models.py:3357
+#: admin.py:188 admin.py:743 models.py:3357
 msgid "Attachment"
 msgstr "Pièce jointe"
 
@@ -58,27 +58,32 @@ msgstr "PD n'est pas prêt pour la synchronisation Vision."
 msgid "PD was sent to Vision."
 msgstr "PD a été envoyé à Vision."
 
-#: admin.py:438 models.py:1195 models.py:1203
+#: admin.py:422 exports_v2.py:567 templates/pd/detail.html:172
+#: templates/pd/detail.html:391
+msgid "Capacity Strengthening Costs"
+msgstr ""
+
+#: admin.py:447 models.py:1195 models.py:1203
 msgid "Report"
 msgstr "Rapport"
 
-#: admin.py:575
+#: admin.py:584
 msgid "Partner Details"
 msgstr "Détails du partenaire"
 
-#: admin.py:604
+#: admin.py:613
 msgid "Hact"
 msgstr ""
 
-#: admin.py:693 models.py:1571 models.py:1578
+#: admin.py:702 models.py:1571 models.py:1578
 msgid "Signed Amendment"
 msgstr "Amendement signé"
 
-#: admin.py:768
+#: admin.py:777
 msgid "Agreement Details"
 msgstr "Détails de l'accord"
 
-#: admin.py:804
+#: admin.py:813
 msgid ""
 "Please delete all interventions associated with the selected Agreements "
 "before deleting them."
@@ -86,7 +91,7 @@ msgstr ""
 "Veuillez supprimer toutes les interventions associées aux accords "
 "sélectionnés avant de les supprimer."
 
-#: admin.py:810
+#: admin.py:819
 msgid ""
 "Please delete all interventions associated with this Agreement before "
 "deleting the agreement."
@@ -697,10 +702,6 @@ msgstr ""
 msgid "Prog effectiveness"
 msgstr "Efficacité du programme"
 
-#: exports_v2.py:567
-msgid "HQ cost"
-msgstr ""
-
 #: exports_v2.py:572 exports_v2.py:597
 msgid "Supplies in-kind"
 msgstr ""
@@ -785,7 +786,7 @@ msgstr ""
 #: exports_v2.py:813
 #, python-format
 msgid ""
-"HQ Support/Capacity Building  ({%(cost)d}%% of UNICEF the cash component)"
+"Capacity Strengthening Costs ({%(cost)d}%% of UNICEF the cash component)"
 msgstr ""
 
 #: exports_v2.py:833
@@ -2185,10 +2186,6 @@ msgstr ""
 msgid "Supplies"
 msgstr ""
 
-#: templates/pd/detail.html:172
-msgid "HQ Cash"
-msgstr ""
-
 #: templates/pd/detail.html:178
 msgid "Partner Cash"
 msgstr ""
@@ -2277,10 +2274,6 @@ msgstr ""
 
 #: templates/pd/detail.html:385
 msgid "Sub-total for programme costs"
-msgstr ""
-
-#: templates/pd/detail.html:391
-msgid "HQ support costs"
 msgstr ""
 
 #: templates/pd/detail.html:397
