@@ -115,32 +115,6 @@ class Command(BaseCommand):
             objs = Attachment.objects.bulk_create(attachments)
             logger.info(f'Created {len(objs)} attachments')
 
-    def migrate_final_partnership_review(self, simulate=False):
-        if simulate:
-            logger.info('Simulating final_partnership_review migration '
-                        'for schema %s' % connection.schema_name)
-        else:
-            logger.info('Migrating final_partnership_review file types '
-                        'for schema %s' % connection.schema_name)
-
-        final_partnership_review_file_type = AttachmentFileType.objects.get(
-            name='final_partnership_review',
-            code='pmp_documents',
-        )
-        intervention_ct = ContentType.objects.get_for_model(Intervention)
-
-        attachments_to_update = Attachment.objects.filter(
-            content_type=intervention_ct,
-            file_type__name='partner_report'
-        )
-        update_count = attachments_to_update.count()
-
-        if simulate:
-            logger.info(f'{update_count} attachments to be updated')
-        else:
-            attachments_to_update.update(file_type=final_partnership_review_file_type)
-            logger.info(f'{update_count} attachments updated')
-
     def handle(self, *args, **options):
 
         logger.info('Command started')
@@ -151,10 +125,8 @@ class Command(BaseCommand):
             connection.set_tenant(country)
             self.migrate_file_types()
             self.migrate_documents()
-            self.migrate_final_partnership_review()
         else:
             run_on_all_tenants(self.migrate_file_types)
-            # run_on_all_tenants(self.migrate_documents, simulate=options['simulate'])
-            run_on_all_tenants(self.migrate_final_partnership_review, simulate=options['simulate'])
+            run_on_all_tenants(self.migrate_documents, simulate=options['simulate'])
 
         logger.info('Command finished')
