@@ -8,7 +8,17 @@
     "intervention": null,
     "question": 1034,
     "is_active": true,
-    "specific_details": "Minimum criteria for PSEA training include the following :1) a definition of SEA (that is aligned with the UN's definition); 2) explanation on prohibition of SEA; and 3) actions that personnel are required to take (i.e. prompt reporting of allegations and X- partner staff X- partner staff Scale -5 None 1-25% have received training. 26%-50% have received training. 51-75% have received training. 76-100% have received training. Corresponds to indicator in Output 2.3, Results Monitoring Framework referral of victims)."
+    "specific_details": "Minimum criteria for PSEA training include the following :1) a definition of SEA (that is aligned with the UN's definition); 2) explanation on prohibition of SEA; and 3) actions that personnel are required to take (i.e. prompt reporting of allegations and X- partner staff X- partner staff Scale -5 None 1-25% have received training. 26%-50% have received training. 51-75% have received training. 76-100% have received training. Corresponds to indicator in Output 2.3, Results Monitoring Framework referral of victims).",
+    "translations": {
+      "specific_details": {
+        "en": "Minimum criteria for PSEA training include the following :1) a definition of SEA (that is aligned with the UN's definition); 2) explanation on prohibition of SEA; and 3) actions that personnel are required to take (i.e. prompt reporting of allegations and X- partner staff X- partner staff Scale -5 None 1-25% have received training. 26%-50% have received training. 51-75% have received training. 76-100% have received training. Corresponds to indicator in Output 2.3, Results Monitoring Framework referral of victims).",
+        "fr": "Les critères minimaux pour la formation PEAS comprennent les éléments suivants : 1) une définition de l'EAS (qui est alignée sur la définition de l'ONU) ; 2) explication sur l'interdiction de l'EAS ; et 3) les actions que le personnel est tenu de prendre (c'est-à-dire le signalement rapide des allégations et le personnel du partenaire X. Le personnel du partenaire X. ont reçu une formation. 76 à 100 % ont reçu une formation. Correspond à l'indicateur du Produit 2.3, cadre de suivi des résultats, orientation des victimes).",
+        "ru": "",
+        "pt": "",
+        "es": "",
+        "ar": ""
+      }
+    }
   }
 },
 {
@@ -20,7 +30,17 @@
     "intervention": null,
     "question": 1035,
     "is_active": true,
-    "specific_details": "Necessary elements include: 1. Available in the local language; 2. Adapted for different levels of literacy; 3. Contact information is clear (SMS, email or phone number); 4. Design is child-sensitive."
+    "specific_details": "Necessary elements include: 1. Available in the local language; 2. Adapted for different levels of literacy; 3. Contact information is clear (SMS, email or phone number); 4. Design is child-sensitive.",
+    "translations": {
+      "specific_details": {
+        "en": "Necessary elements include: 1. Available in the local language; 2. Adapted for different levels of literacy; 3. Contact information is clear (SMS, email or phone number); 4. Design is child-sensitive.",
+        "fr": "Les éléments nécessaires incluent : 1. Disponible dans la langue locale ; 2. Adapté aux différents niveaux d'alphabétisation ; 3. Les coordonnées sont claires (SMS, email ou numéro de téléphone) ; 4. Le design est adapté aux enfants.",
+        "ru": "",
+        "pt": "",
+        "es": "",
+        "ar": ""
+      }
+    }
   }
 }
 ]

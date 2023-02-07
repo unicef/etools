@@ -89,10 +89,13 @@ class QuestionTargetMixin(models.Model):
 
 
 class QuestionTemplate(QuestionTargetMixin, models.Model):
+    TRANSLATABLE_FIELDS = ('specific_details',)
+
     question = models.ForeignKey(Question, on_delete=models.CASCADE, verbose_name=_('Question'),
                                  related_name='templates')
     is_active = models.BooleanField(default=True, verbose_name=_('Is Active'))
     specific_details = models.TextField(verbose_name=_('Specific Details To Probe'), blank=True)
+    translations = models.JSONField(verbose_name=_('Translations'), default=dict)
 
     class Meta:
         verbose_name = _('Question Template')

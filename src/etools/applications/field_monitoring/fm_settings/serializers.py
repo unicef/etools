@@ -31,7 +31,7 @@ from etools.applications.reports.serializers.v2 import OutputListSerializer
 from etools.applications.users.serializers_v3 import MinimalUserSerializer
 
 
-class MethodSerializer(serializers.ModelSerializer):
+class MethodSerializer(TranslationFieldsMixin, serializers.ModelSerializer):
     class Meta:
         model = Method
         fields = ('id', 'name', 'short_name', 'use_information_source')
@@ -54,16 +54,13 @@ class OptionSerializer(serializers.ModelSerializer):
         }
 
 
-class CategorySerializer(serializers.ModelSerializer):
+class CategorySerializer(TranslationFieldsMixin, serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = ('id', 'name')
 
 
 class QuestionLightSerializer(TranslationFieldsMixin, serializers.ModelSerializer):
-    # translatable_fields marks which fields have entries in translations JSONField
-    translatable_fields = ('text', )
-
     class Meta:
         model = Question
         fields = (

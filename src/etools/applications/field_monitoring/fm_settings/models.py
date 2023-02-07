@@ -36,8 +36,11 @@ class GlobalConfig(models.Model):
 
 
 class Method(models.Model):
+    TRANSLATABLE_FIELDS = ('name', 'short_name')
+
     name = models.CharField(verbose_name=_('Name'), max_length=100)
     short_name = models.CharField(verbose_name=_('Short Name'), max_length=10)
+    translations = models.JSONField(verbose_name=_('Translations'), default=dict)
     use_information_source = models.BooleanField(verbose_name=_('Ask for information source in checklist?'),
                                                  default=False)
 
@@ -51,7 +54,10 @@ class Method(models.Model):
 
 
 class Category(OrderedModel):
+    TRANSLATABLE_FIELDS = ('name',)
+
     name = models.CharField(max_length=100, verbose_name=_('Name'))
+    translations = models.JSONField(verbose_name=_('Translations'), default=dict)
 
     class Meta:
         verbose_name = _('Question Category')
@@ -96,6 +102,8 @@ class Question(models.Model):
         ('output', _('Output')),
         ('intervention', _('PD/SPD')),
     )
+    # translatable_fields marks which fields have entries in translations JSONField
+    TRANSLATABLE_FIELDS = ('text', )
 
     answer_type = models.CharField(max_length=15, choices=ANSWER_TYPES, verbose_name=_('Answer Type'))
     choices_size = models.PositiveSmallIntegerField(verbose_name=_('Choices Size'), null=True, blank=True)

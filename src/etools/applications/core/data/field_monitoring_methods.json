@@ -5,7 +5,25 @@
         "fields": {
             "name": "Key Informant Interview",
             "short_name": "KII",
-            "use_information_source": true
+            "use_information_source": true,
+            "translations": {
+              "name": {
+                "en": "Key Informant Interview",
+                "fr": "Entretien avec un Informateur Clé",
+                "ru": "",
+                "pt": "",
+                "es": "",
+                "ar": ""
+              },
+              "short_name": {
+                "en": "KII",
+                "fr": "EIC",
+                "ru": "",
+                "pt": "",
+                "es": "",
+                "ar": ""
+              }
+            }
         }
     },
     {
@@ -14,7 +32,25 @@
         "fields": {
             "name": "Focus Group Discussion",
             "short_name": "FGD",
-            "use_information_source": true
+            "use_information_source": true,
+            "translations": {
+              "name": {
+                "en": "Focus Group Discussion",
+                "fr": "Groupe de Discussion",
+                "ru": "",
+                "pt": "",
+                "es": "",
+                "ar": ""
+              },
+              "short_name": {
+                "en": "FGD",
+                "fr": "GD",
+                "ru": "",
+                "pt": "",
+                "es": "",
+                "ar": ""
+              }
+            }
         }
     },
     {
@@ -23,7 +59,25 @@
         "fields": {
             "name": "Observation",
             "short_name": "Obs.",
-            "use_information_source": false
+            "use_information_source": false,
+            "translations": {
+              "name": {
+                "en": "",
+                "fr": "",
+                "ru": "",
+                "pt": "",
+                "es": "",
+                "ar": ""
+              },
+              "short_name": {
+                "en": "",
+                "fr": "",
+                "ru": "",
+                "pt": "",
+                "es": "",
+                "ar": ""
+              }
+            }
         }
     }
 ]
