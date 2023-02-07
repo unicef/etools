@@ -3,7 +3,8 @@ from django.utils import timezone
 from django.utils.translation import gettext as _
 
 from model_utils.models import TimeStampedModel
-from unicef_djangolib.fields import CurrencyField
+
+from etools.libraries.djangolib.fields import CurrencyField
 
 
 class Donor(TimeStampedModel):

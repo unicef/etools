@@ -7,8 +7,9 @@ from django.db import migrations, models
 
 import django_fsm
 import model_utils.fields
-from unicef_djangolib.fields import CurrencyField, QuarterField
+from unicef_djangolib.fields import QuarterField
 
+from etools.libraries.djangolib.fields import CurrencyField
 import etools.applications.core.urlresolvers
 import etools.applications.partners.models
 
