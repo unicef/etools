@@ -9,10 +9,10 @@
       "name": {
         "en": "Community Engagement and Accountability",
         "fr": "Engagement Communautaire et Responsabilité",
-        "ru": "Сколько детей, по разумным оценкам, получают непосредственную пользу от поддержки ЮНИСЕФ в этом месте?",
-        "pt": "Quantas crianças podem ser razoavelmente estimadas para se beneficiarem diretamente do apoio do UNICEF neste local?",
-        "es": "¿Cuántos niños se puede estimar razonablemente que se beneficiarán directamente del apoyo de UNICEF en este lugar?",
-        "ar": "كم عدد الأطفال الذين يمكن تقديرهم بشكل معقول للاستفادة بشكل مباشر من دعم اليونيسف في هذا الموقع؟"
+        "ru": "Вовлечение сообщества и подотчетность",
+        "pt": "Engajamento Comunitário e Prestação de Contas",
+        "es": "Participación comunitaria y rendición de cuentas",
+        "ar": "المشاركة المجتمعية والمساءلة"
       }
     }
   }
@@ -45,10 +45,10 @@
       "name": {
         "en": "Quality",
         "fr": "Qualité",
-        "ru": "",
-        "pt": "",
-        "es": "",
-        "ar": ""
+        "ru": "Качество",
+        "pt": "Qualidade",
+        "es": "Calidad",
+        "ar": "جودة"
       }
     }
   }
@@ -63,10 +63,10 @@
       "name": {
         "en": "Reach",
         "fr": "Atteindre",
-        "ru": "",
-        "pt": "",
-        "es": "",
-        "ar": ""
+        "ru": "Достигать",
+        "pt": "Alcançar",
+        "es": "Alcanzar",
+        "ar": "يصل"
       }
     }
   }
@@ -81,10 +81,10 @@
       "name": {
         "en": "Enabling Environment",
         "fr": "Environnement Favorable",
-        "ru": "",
-        "pt": "",
-        "es": "",
-        "ar": ""
+        "ru": "Создание благоприятных условий",
+        "pt": "Ambiente favorável",
+        "es": "Ambiente apto",
+        "ar": "احفظ البيئة"
       }
     }
   }
@@ -117,10 +117,10 @@
       "name": {
         "en": "Supplies",
         "fr": "Produits",
-        "ru": "",
-        "pt": "",
-        "es": "",
-        "ar": ""
+        "ru": "Запасы",
+        "pt": "Suprimentos",
+        "es": "Suministros",
+        "ar": "لوازم"
       }
     }
   }
@@ -135,10 +135,10 @@
       "name": {
         "en": "Acceptability",
         "fr": "Acceptabilité",
-        "ru": "",
-        "pt": "",
-        "es": "",
-        "ar": ""
+        "ru": "Приемлемость",
+        "pt": "Aceitabilidade",
+        "es": "Aceptabilidad",
+        "ar": "القبول"
       }
     }
   }

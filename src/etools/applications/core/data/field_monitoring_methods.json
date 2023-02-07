@@ -10,17 +10,17 @@
               "name": {
                 "en": "Key Informant Interview",
                 "fr": "Entretien avec un Informateur Clé",
-                "ru": "",
-                "pt": "",
-                "es": "",
-                "ar": ""
+                "ru": "Интервью с ключевым информатором",
+                "pt": "Entrevista com o Informante-Chave",
+                "es": "Entrevista con informante clave",
+                "ar": "مقابلة المخبر الرئيسي"
               },
               "short_name": {
                 "en": "KII",
                 "fr": "EIC",
                 "ru": "",
-                "pt": "",
-                "es": "",
+                "pt": "EIC",
+                "es": "EIC",
                 "ar": ""
               }
             }
@@ -37,17 +37,17 @@
               "name": {
                 "en": "Focus Group Discussion",
                 "fr": "Groupe de Discussion",
-                "ru": "",
-                "pt": "",
-                "es": "",
-                "ar": ""
+                "ru": "Обсуждение в фокус-группе",
+                "pt": "Discussão em Grupo de Foco",
+                "es": "Discusión de grupos focales",
+                "ar": "مناقشة جماعية فى موضوع محدد"
               },
               "short_name": {
                 "en": "FGD",
                 "fr": "GD",
                 "ru": "",
-                "pt": "",
-                "es": "",
+                "pt": "DGF",
+                "es": "DGF",
                 "ar": ""
               }
             }
@@ -62,12 +62,12 @@
             "use_information_source": false,
             "translations": {
               "name": {
-                "en": "",
-                "fr": "",
-                "ru": "",
-                "pt": "",
-                "es": "",
-                "ar": ""
+                "en": "Observation",
+                "fr": "Observation",
+                "ru": "Наблюдение",
+                "pt": "Observação",
+                "es": "Observación",
+                "ar": "ملاحظة"
               },
               "short_name": {
                 "en": "",
