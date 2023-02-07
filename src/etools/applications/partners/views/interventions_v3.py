@@ -5,7 +5,7 @@ from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction, utils
 from django.http import HttpResponse
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import ugettext as _
 
 from easy_pdf.rendering import render_to_pdf_response
 from rest_framework import status

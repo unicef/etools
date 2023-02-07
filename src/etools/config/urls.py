@@ -7,7 +7,7 @@ from rest_framework_nested import routers
 from rest_framework_swagger.renderers import OpenAPIRenderer
 
 from etools.applications.core.schemas import get_schema_view, get_swagger_view
-from etools.applications.core.views import IssueJWTRedirectView, logout_view, MainView
+from etools.applications.core.views import IssueJWTRedirectView, logout_view, MainView, SocialLogoutView
 from etools.applications.locations.views import (
     CartoDBTablesView,
     LocationQuerySetView,
@@ -126,6 +126,7 @@ urlpatterns = [
     re_path(r'^api/jwt/get/$', IssueJWTRedirectView.as_view(), name='issue JWT'),
 
     re_path('^social/', include('social_django.urls', namespace='social')),
+    re_path(r'^social/unicef-logout/', SocialLogoutView.as_view(), name='social-logout'),
     re_path('^monitoring/', include('etools.libraries.monitoring.urls')),
 ]
 

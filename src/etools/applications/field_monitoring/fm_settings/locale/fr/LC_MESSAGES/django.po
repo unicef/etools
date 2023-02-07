@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-07-18 09:09+0000\n"
+"POT-Creation-Date: 2023-02-03 14:34+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -27,16 +27,19 @@ msgid "Site ID"
 msgstr "ID du Site"
 
 #: export/renderers.py:20
-msgid "Admin {} - Name"
-msgstr "Admin {} - Nom"
+#, python-format
+msgid "Admin %s - Name"
+msgstr "Admin %s - Nom"
 
 #: export/renderers.py:21
-msgid "Admin {} - Type"
-msgstr "Admin {} - Type"
+#, python-format
+msgid "Admin %s - Type"
+msgstr "Admin %s - Type"
 
 #: export/renderers.py:22
-msgid "Admin {} - Pcode"
-msgstr "Admin {} - Pcode"
+#, python-format
+msgid "Admin %s - Pcode"
+msgstr "Admin %s - Pcode"
 
 #: export/renderers.py:26 models.py:245
 msgid "Site"
@@ -44,7 +47,7 @@ msgstr "Site"
 
 #: export/renderers.py:27
 msgid "Lat"
-msgstr ""
+msgstr "Lat"
 
 #: export/renderers.py:28
 msgid "Long"
@@ -70,11 +73,11 @@ msgstr "Sujet d'attention"
 msgid "Status"
 msgstr "Statut"
 
-#: export/renderers.py:44 models.py:251 views.py:198
+#: export/renderers.py:44 models.py:251 views.py:206
 msgid "Attachments"
 msgstr "Pièces jointes"
 
-#: models.py:22 views.py:73
+#: models.py:22 views.py:76
 msgid "Global Attachments"
 msgstr "Pièces jointes globales"
 
@@ -131,8 +134,8 @@ msgid "Output"
 msgstr "Produit"
 
 #: models.py:97
-msgid "PD/SSFA"
-msgstr "PD/SSFA"
+msgid "PD/SPD"
+msgstr ""
 
 #: models.py:100
 msgid "Answer Type"
@@ -246,6 +249,20 @@ msgstr "Objet connexe non fourni"
 msgid "Maximum one related object should be provided"
 msgstr "Un seul objet connexe doit être fourni au maximum"
 
+#: serializers.py:85
+msgid "HACT questions can only be related at the Partner Organization Level"
+msgstr ""
+"Les questions de HACT ne peuvent être liées qu'au niveau de l'organisation "
+"partenaire."
+
+#: serializers.py:88
+msgid "Only one hact question can be active at any time."
+msgstr "Une seule question de hact peut être active à la fois."
+
+#: serializers.py:102
+msgid "The system provided questions cannot be edited."
+msgstr "Les questions fournies par le système ne peuvent pas être modifiées."
+
 #: serializers.py:131
 msgid "Inactive"
 msgstr "Inactif"
@@ -258,6 +275,6 @@ msgstr "Question fermée par"
 msgid "Issue Related To"
 msgstr "Question liée à"
 
-#: views.py:107
+#: views.py:110
 msgid "Site Specific Locations"
 msgstr "Sites spécifiques"

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-07-18 09:10+0000\n"
+"POT-Creation-Date: 2023-02-03 14:35+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -23,34 +23,37 @@ msgid "TPM Partner selected for staff activity"
 msgstr "Partenaire TPM sélectionné pour l'activité du personnel"
 
 #: activity_validation/validations/basic.py:23
-msgid "Staff members doesn't belong to the selected partner"
+msgid "Staff members do not belong to the selected partner"
 msgstr "Les membres du personnel n'appartiennent pas au partenaire sélectionné"
 
-#: activity_validation/validations/basic.py:33
+#: activity_validation/validations/basic.py:36
+#, python-format
 msgid ""
-"You've selected a PD/SSFA and unselected some of it's corresponding "
-"partners, please either remove the PD or add the partners back before "
-"saving: {}"
+"You've selected a PD/SPD and unselected some of it's corresponding partners, "
+"please either remove the PD or add the partners back before saving: %s"
 msgstr ""
-"Vous avez sélectionné un PD/SSFA et désélectionné certains de ses partenaires "
-"correspondants, veuillez supprimer le PD ou rajouter les partenaires avant de "
-"sauvegarder: {}"
+"Vous avez sélectionné un PD/SSFA et désélectionné certains de ses "
+"partenaires correspondants, veuillez supprimer le PD ou rajouter les "
+"partenaires avant de sauvegarder: %s"
 
-#: activity_validation/validations/basic.py:50
+#: activity_validation/validations/basic.py:55
+#, python-format
 msgid ""
-"You've selected a PD/SSFA and unselected some of it's corresponding outputs, "
-"please either remove the PD or add the outputs back before saving: {}"
+"You've selected a PD/SPD and unselected some of it's corresponding outputs, "
+"please either remove the PD or add the outputs back before saving: %s"
 msgstr ""
-"Vous avez sélectionné un PD/SSFA et désélectionné certaines de ses produits correspondantes, "
-"veuillez supprimer le PD ou rajouter les produits avant d'enregistrer: {}"
+"Vous avez sélectionné un PD/SSFA et désélectionné certaines de ses produits "
+"correspondantes, veuillez supprimer le PD ou rajouter les produits avant "
+"d'enregistrer: %s"
 
 #: activity_validation/validations/state.py:11
 msgid "Partner is not defined for TPM activity"
 msgstr "Le partenaire n'est pas défini pour l'activité TPM"
 
 #: activity_validation/validations/state.py:17
-msgid "At least one Partner, CP Output, or PD/SSFA should be added"
-msgstr "Au moins un partenaire, un produit du CP ou un PD/SSFA doit être ajouté"
+msgid "At least one Partner, CP Output or PD/SPD should be added"
+msgstr ""
+"Au moins un partenaire, un produit du CP ou un PD/SSFA doit être ajouté"
 
 #: activity_validation/validations/state.py:23
 msgid "Rejection reason should be provided."
@@ -75,6 +78,16 @@ msgstr "Au moins une liste de contrôle doit être complétée."
 #: activity_validation/validations/state.py:59
 msgid "At least one summary finding should be completed."
 msgstr "Au moins une conclusion sommaire doit être complétée."
+
+#: activity_validation/validator.py:42
+#, python-format
+msgid "Required fields not completed in %(status)s: %(fields)s"
+msgstr "Champs obligatoires non renseignés dans %(status)s: %(fields)s"
+
+#: activity_validation/validator.py:55
+#, python-format
+msgid "Cannot change fields while in %(status)s: %(field)s"
+msgstr "Impossible de modifier les champs dans %(status)s: %(field)s"
 
 #: models.py:44
 msgid "Prioritization Criteria"
@@ -108,7 +121,7 @@ msgstr "Plan annuel"
 msgid "Year Plans"
 msgstr "Plans annuels"
 
-#: models.py:76 models.py:251
+#: models.py:76 models.py:252
 msgid "Partner"
 msgstr "Partenaires"
 
@@ -184,91 +197,91 @@ msgstr "Complété"
 msgid "Cancelled"
 msgstr "Annulé"
 
-#: models.py:222
+#: models.py:223
 msgid "Reference Number"
 msgstr "Numéro de réference"
 
-#: models.py:232
+#: models.py:233
 msgid "TPM Partner"
 msgstr "Partenaire TPM"
 
-#: models.py:234
+#: models.py:235
 msgid "Team Members"
 msgstr "Membres de l'équipe"
 
-#: models.py:237
+#: models.py:238
 msgid "Person Responsible"
 msgstr "Personne responsable"
 
-#: models.py:240
+#: models.py:241
 msgid "Field Office"
 msgstr "Bureau de terrain"
 
-#: models.py:242
+#: models.py:243
 msgid "Field Offices"
 msgstr "Bureaux de terrain"
 
-#: models.py:244
+#: models.py:245
 msgid "Sections"
 msgstr "Sections"
 
-#: models.py:246
+#: models.py:247
 msgid "Location"
 msgstr "Localisation"
 
-#: models.py:248
+#: models.py:249
 msgid "Site"
 msgstr "Site"
 
-#: models.py:254
-msgid "PD/SSFA"
+#: models.py:255
+msgid "PD/SPD"
 msgstr "PD/SSFA"
 
-#: models.py:255
+#: models.py:256
 msgid "Outputs"
 msgstr "Produits"
 
-#: models.py:258
+#: models.py:259
 msgid "Start Date"
 msgstr "Date de début"
 
-#: models.py:259
+#: models.py:260
 msgid "End Date"
 msgstr "Date de fin"
 
-#: models.py:261
+#: models.py:262
 msgid "Status"
 msgstr "Statut"
 
-#: models.py:263 models.py:265
+#: models.py:264 models.py:266
 msgid "Activity Attachments"
 msgstr "Pièces jointes d'activité"
 
-#: models.py:268
+#: models.py:269
 msgid "Rejection reason"
 msgstr "Motif de rejet"
 
-#: models.py:269
+#: models.py:270
 msgid "Report rejection reason"
 msgstr "Signaler le motif du rejet"
 
-#: models.py:270
+#: models.py:271
 msgid "Cancellation reason"
 msgstr "Motif d'annulation"
 
-#: models.py:277
+#: models.py:278
 msgid "Monitoring Activity"
 msgstr "Activité de suivi"
 
-#: models.py:278
+#: models.py:279
 msgid "Monitoring Activities"
 msgstr "Activités de suivi"
 
-#: models.py:705
+#: models.py:719
 msgid "Monitoring Activity Action Point"
 msgstr "Point d'action de l'activité de suivi"
 
-#: models.py:706
+#: models.py:720
 msgid "Monitoring Activity Action Points"
 msgstr "Points d'action de l'activité de suivi"
 
@@ -281,8 +294,9 @@ msgid "Document Type"
 msgstr "Type de document"
 
 #: serializers.py:191
-msgid "[Inactive] {}"
-msgstr "[Inactif] {}"
+#, python-format
+msgid "[Inactive] %s"
+msgstr "[Inactif] %s"
 
 #: serializers.py:213
 msgid "Reference No."
@@ -290,11 +304,11 @@ msgstr "Numéro de référence."
 
 #: serializers.py:216
 msgid "Related Partner"
-msgstr ""
+msgstr "Partenaire associé"
 
 #: serializers.py:219
-msgid "Related PD/SSFA"
-msgstr ""
+msgid "Related PD/SPD"
+msgstr "PD/SPD associés"
 
 #: serializers.py:222
 msgid "Related CP Output"
