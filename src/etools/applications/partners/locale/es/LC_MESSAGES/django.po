@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-02 13:00+0000\n"
+"POT-Creation-Date: 2023-02-07 11:01+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,72 +18,72 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: admin.py:82
+#: admin.py:83
 msgid "Signed Attachment"
 msgstr "Adjunto firmado"
 
-#: admin.py:87
+#: admin.py:88
 msgid "PRC Reviewed Attachment"
 msgstr "Adjunto revisado por la RPC"
 
-#: admin.py:188 admin.py:743 models.py:3357
+#: admin.py:189 admin.py:759 models.py:3357
 msgid "Attachment"
 msgstr "Adjunto"
 
-#: admin.py:252 models.py:1925 models.py:1933
+#: admin.py:253 models.py:1925 models.py:1933
 msgid "Review Document by PRC"
 msgstr "Documento de revisión por parte de PRC"
 
-#: admin.py:257 models.py:1941 models.py:1949
+#: admin.py:258 models.py:1941 models.py:1949
 msgid "Signed PD Document"
 msgstr "Documento de PD firmado"
 
-#: admin.py:317
+#: admin.py:319
 msgid "Intervention Details"
 msgstr "Detalles de la intervención"
 
-#: admin.py:334
+#: admin.py:336
 msgid "Dates and Signatures"
 msgstr "Fechas y Firmas"
 
-#: admin.py:350
+#: admin.py:352
 msgid "ePD"
 msgstr "ePD"
 
-#: admin.py:390
+#: admin.py:392
 msgid "PD is not ready for Vision synchronization."
 msgstr "PD no está listo para la sincronización de Vision."
 
-#: admin.py:393
+#: admin.py:395
 msgid "PD was sent to Vision."
 msgstr "PD fue enviado a Visión."
 
-#: admin.py:422 exports_v2.py:567 templates/pd/detail.html:172
+#: admin.py:438 exports_v2.py:567 templates/pd/detail.html:172
 #: templates/pd/detail.html:391
 msgid "Capacity Strengthening Costs"
 msgstr ""
 
-#: admin.py:447 models.py:1195 models.py:1203
+#: admin.py:463 models.py:1195 models.py:1203
 msgid "Report"
 msgstr "Informe"
 
-#: admin.py:584
+#: admin.py:600
 msgid "Partner Details"
 msgstr "Detalles del socio"
 
-#: admin.py:613
+#: admin.py:629
 msgid "Hact"
 msgstr ""
 
-#: admin.py:702 models.py:1571 models.py:1578
+#: admin.py:718 models.py:1571 models.py:1578
 msgid "Signed Amendment"
 msgstr "Enmienda firmada"
 
-#: admin.py:777
+#: admin.py:793
 msgid "Agreement Details"
 msgstr "Detalles del Acuerdo"
 
-#: admin.py:813
+#: admin.py:829
 msgid ""
 "Please delete all interventions associated with the selected Agreements "
 "before deleting them."
@@ -91,7 +91,7 @@ msgstr ""
 "Por favor, elimine todas las intervenciones asociadas a los Acuerdos "
 "seleccionados antes de eliminarlos."
 
-#: admin.py:819
+#: admin.py:835
 msgid ""
 "Please delete all interventions associated with this Agreement before "
 "deleting the agreement."
