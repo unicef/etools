@@ -3,6 +3,7 @@ from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
 from django.urls import reverse
+from django.utils import translation
 
 from factory import fuzzy
 from rest_framework import status
@@ -849,8 +850,19 @@ class TestLogIssueAttachmentsView(FMBaseTestCaseMixin, APIViewSetTestCase):
 
 
 class TestCategoriesView(FMBaseTestCaseMixin, BaseTenantTestCase):
+    fixtures = ['field_monitoring_categories']
+
     def test_list(self):
-        CategoryFactory.create_batch(5)
+        response = self.forced_auth_req(
+            'get',
+            reverse('field_monitoring_settings:categories-list'),
+            user=self.usual_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 8)
+
+    def test_list_translated(self):
+        translation.activate('fr')
 
         response = self.forced_auth_req(
             'get',
@@ -858,13 +870,27 @@ class TestCategoriesView(FMBaseTestCaseMixin, BaseTenantTestCase):
             user=self.usual_user
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data['results']), 5)
+        self.assertEqual(len(response.data['results']), 8)
+        self.assertEqual(response.data['results'][0]['name'], 'Engagement Communautaire et Responsabilité')
+        translation.deactivate()
 
 
 class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
+    fixtures = ['field_monitoring_methods',
+                'field_monitoring_categories',
+                'field_monitoring_questions']
+
     def test_list(self):
-        QuestionFactory.create_batch(2)
-        QuestionFactory.create_batch(3, answer_type=Question.ANSWER_TYPES.likert_scale, options__count=2)
+        response = self.forced_auth_req(
+            'get',
+            reverse('field_monitoring_settings:questions-list'),
+            user=self.usual_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 10)
+
+    def test_list_translated(self):
+        translation.activate('fr')
 
         response = self.forced_auth_req(
             'get',
@@ -872,11 +898,15 @@ class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
             user=self.usual_user
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data['results']), 5)
+        self.assertEqual(len(response.data['results']), 10)
+        self.assertEqual(
+            response.data['results'][0]['text'],
+            "Proportion de bénéficiaires dans le lieu du programme qui peuvent expliquer au moins "
+            "un canal pour signaler l'EAS (tel que SMS, hotline téléphonique, email, boîte de commentaires, "
+            "point focal PSEA de l'organisation partenaire)")
+        translation.deactivate()
 
     def test_default_ordering(self):
-        questions = list(QuestionFactory.create_batch(2))
-
         response = self.forced_auth_req(
             'get',
             reverse('field_monitoring_settings:questions-list'),
@@ -885,15 +915,10 @@ class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertListEqual(
             [r['id'] for r in response.data['results']],
-            [q.id for q in reversed(questions)]
+            [q.id for q in Question.objects.all().order_by('-id')[:10]]
         )
 
     def test_ordering_by_text(self):
-        questions = [
-            QuestionFactory(text='a'),
-            QuestionFactory(text='b'),
-        ]
-
         response = self.forced_auth_req(
             'get',
             reverse('field_monitoring_settings:questions-list'),
@@ -905,7 +930,7 @@ class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertListEqual(
             [r['id'] for r in response.data['results']],
-            [q.id for q in questions]
+            [q.id for q in Question.objects.all().order_by('text')[:10]]
         )
 
     def test_filter_by_methods(self):
@@ -987,6 +1012,29 @@ class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
+    def test_create_translated(self):
+        translation.activate('fr')
+        response = self.forced_auth_req(
+            'post',
+            reverse('field_monitoring_settings:questions-list'),
+            user=self.pme,
+            data={
+                'answer_type': 'text',
+                'level': 'partner',
+                'methods': [MethodFactory().id, ],
+                'category': CategoryFactory().id,
+                'sections': [SectionFactory().id],
+                'text': 'Test Question FR',
+                'is_hact': False
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['text'], 'Test Question FR')
+        question = Question.objects.get(id=response.data['id'])
+        self.assertEqual(question.translations['text']['fr'], 'Test Question FR')
+        translation.deactivate()
+
     def test_methods_required(self):
         response = self.forced_auth_req(
             'post',
@@ -1063,24 +1111,45 @@ class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
         question = QuestionFactory(answer_type=Question.ANSWER_TYPES.likert_scale, options__count=2)
         first_option, second_option = question.options.all()
 
+        data = {
+            'text': 'New title',
+            'options': [
+                {'label': first_option.label, 'value': first_option.value},
+                {'label': '1', 'value': '1'},
+                {'label': '2', 'value': '2'},
+            ]
+        }
         response = self.forced_auth_req(
             'patch',
             reverse('field_monitoring_settings:questions-detail', args=[question.id, ]),
             user=self.pme,
-            data={
-                'title': 'New title',
-                'options': [
-                    {'label': first_option.label, 'value': first_option.value},
-                    {'label': '1', 'value': '1'},
-                    {'label': '2', 'value': '2'},
-                ]
-            }
+            data=data
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['options']), 3)
+        self.assertEqual(response.data['text'], data['text'])
         self.assertTrue(question.options.filter(pk=first_option.pk).exists())
         self.assertFalse(question.options.filter(pk=second_option.pk).exists())
+
+    def test_update_translated(self):
+        question = QuestionFactory(answer_type=Question.ANSWER_TYPES.likert_scale, options__count=2)
+        translation.activate('fr')
+        data = {
+            'text': 'New title FR',
+        }
+        response = self.forced_auth_req(
+            'patch',
+            reverse('field_monitoring_settings:questions-detail', args=[question.id, ]),
+            user=self.pme,
+            data=data
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['text'], data['text'])
+        question.refresh_from_db()
+        self.assertEqual(question.text, data['text'])
+        self.assertEqual(question.translations['text']['fr'], data['text'])
+        translation.deactivate()
 
     def test_deactivate_default_question(self):
         question = QuestionFactory(is_custom=False, is_active=True)

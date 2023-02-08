@@ -53,5 +53,6 @@ class TranslationFieldsMixin:
         return instance
 
     def update(self, instance, validated_data):
+        super().update(instance, validated_data)
         self.set_translations(instance)
-        return super().update(instance, validated_data)
+        return instance
