@@ -100,12 +100,14 @@ class AuditorFirmSerializer(WritableNestedSerializerMixin, AuditorFirmLightSeria
 
 
 class AuditorFirmExportSerializer(serializers.ModelSerializer):
+    organization_id = serializers.IntegerField(read_only=True, source='organization.id')
+
     class Meta:
         model = AuditorFirm
         fields = [
             'id', 'vendor_number', 'name',
             'street_address', 'city', 'postal_code', 'country',
-            'email', 'phone_number',
+            'email', 'phone_number', 'organization_id'
         ]
 
 
