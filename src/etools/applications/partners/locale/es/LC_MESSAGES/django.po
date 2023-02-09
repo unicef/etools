@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-07 11:01+0200\n"
+"POT-Creation-Date: 2023-02-09 04:38+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -2573,6 +2573,10 @@ msgstr "Solo el PD original puede estar activo"
 #: validation/interventions.py:466
 msgid "Today is not after the start date"
 msgstr "Hoy no es posterior a la fecha de inicio"
+
+#: views/interventions_v2.py:390 views/interventions_v3.py:631
+msgid "Deleting an attachment can only be done in Draft status"
+msgstr ""
 
 #: views/interventions_v3.py:359
 msgid "Meeting date is not available."
