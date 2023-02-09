@@ -628,7 +628,7 @@ class PMPInterventionAttachmentUpdateDeleteView(
         if intervention.status in [Intervention.DRAFT]:
             return super().delete(request, *args, **kwargs)
         else:
-            raise ValidationError("Deleting an attachment can only be done in Draft status")
+            raise ValidationError(_("Deleting an attachment can only be done in Draft status"))
 
 
 class PMPInterventionIndicatorsUpdateView(

@@ -8,6 +8,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import connection, transaction
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
+from django.utils.translation import ugettext as _
 
 from etools_validator.mixins import ValidatorViewMixin
 from rest_framework import status
@@ -386,7 +387,7 @@ class InterventionAttachmentUpdateDeleteView(RetrieveUpdateDestroyAPIView):
         if obj.content_object.status in [Intervention.DRAFT]:
             return super().delete(request, *args, **kwargs)
         else:
-            raise ValidationError("Deleting an attachment can only be done in Draft status")
+            raise ValidationError(_("Deleting an attachment can only be done in Draft status"))
 
 
 class InterventionResultListAPIView(ExportModelMixin, ListAPIView):

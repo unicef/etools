@@ -703,7 +703,7 @@ class InterventionDetailResultsStructureSerializer(serializers.ModelSerializer):
 class PMPInterventionAttachmentSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(read_only=True)
     intervention = serializers.IntegerField(read_only=True, source='object_id')
-    attachment = serializers.IntegerField(read_only=True, source='pk')
+    attachment = serializers.FileField(read_only=True, source='file')
     attachment_file = serializers.FileField(read_only=True, source='file')
     attachment_document = AttachmentField(source='pk')
     type = FileTypeModelChoiceField(
