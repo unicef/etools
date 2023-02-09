@@ -44,7 +44,6 @@ from etools.applications.audit.filters import (
     DisplayStatusFilter,
     EngagementFilter,
     StaffMembersOrderingFilter,
-    UnicefUsersAllowedFilter,
     UniqueIDOrderingFilter,
 )
 from etools.applications.audit.models import (
@@ -101,6 +100,7 @@ from etools.applications.audit.serializers.export import (
     SpotCheckDetailCSVSerializer,
     SpotCheckPDFSerializer,
 )
+from etools.applications.organizations.models import Organization
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.permissions2.conditions import ObjectStatusCondition
@@ -108,6 +108,7 @@ from etools.applications.permissions2.drf_permissions import get_permission_for_
 from etools.applications.permissions2.metadata import BaseMetadata, PermissionBasedMetadata
 from etools.applications.permissions2.views import PermittedFSMActionMixin, PermittedSerializerMixin
 from etools.applications.users.mixins import AUDIT_ACTIVE_GROUPS
+from etools.applications.users.models import Realm
 from etools.applications.users.serializers_v3 import MinimalUserSerializer
 
 
@@ -132,7 +133,7 @@ class AuditUsersViewSet(generics.ListAPIView):
     """
 
     permission_classes = (IsAuthenticated, )
-    filter_backends = (SearchFilter, DjangoFilterBackend, UnicefUsersAllowedFilter)
+    filter_backends = (SearchFilter, DjangoFilterBackend)
     filter_fields = ('email',)
     search_fields = ('email',)
     queryset = get_user_model().objects.all().select_related('profile', 'profile__organization')
@@ -149,7 +150,16 @@ class AuditUsersViewSet(generics.ListAPIView):
         if self.request.query_params.get('verbosity', 'full') != 'minimal':
             queryset = queryset.select_related('profile__organization__auditorfirm')
 
-        return queryset
+        realm_context = {
+            "country": connection.tenant,
+            "organization_id__in": Organization.objects.filter(
+                vendor_number__in=['UNICEF', '000']).values_list('id', flat=True),
+        }
+        context_realms_qs = Realm.objects.filter(**realm_context)
+        return queryset.filter(
+            realms__in=context_realms_qs,
+            engagements__isnull=False)\
+            .distinct()
 
 
 class AuditorFirmViewSet(
