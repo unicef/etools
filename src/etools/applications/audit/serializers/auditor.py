@@ -81,12 +81,14 @@ class AuditorStaffMemberSerializer(UserSerializer):
 
 
 class AuditorFirmLightSerializer(PermissionsBasedSerializerMixin, serializers.ModelSerializer):
+    organization_id = serializers.IntegerField(read_only=True, source='organization.id')
+
     class Meta:
         model = AuditorFirm
         fields = [
             'id', 'vendor_number', 'name',
             'street_address', 'city', 'postal_code', 'country',
-            'email', 'phone_number', 'unicef_users_allowed',
+            'email', 'phone_number', 'unicef_users_allowed', 'organization_id'
         ]
 
 
@@ -100,14 +102,13 @@ class AuditorFirmSerializer(WritableNestedSerializerMixin, AuditorFirmLightSeria
 
 
 class AuditorFirmExportSerializer(serializers.ModelSerializer):
-    organization_id = serializers.IntegerField(read_only=True, source='organization.id')
 
     class Meta:
         model = AuditorFirm
         fields = [
             'id', 'vendor_number', 'name',
             'street_address', 'city', 'postal_code', 'country',
-            'email', 'phone_number', 'organization_id'
+            'email', 'phone_number'
         ]
 
 
