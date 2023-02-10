@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-01 16:36+0000\n"
+"POT-Creation-Date: 2023-02-10 10:08+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -20,70 +20,53 @@ msgstr ""
 "%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || (n"
 "%100>=11 && n%100<=14)? 2 : 3);\n"
 
-#: export/renderers.py:13
 msgid "ID"
 msgstr ""
 
-#: export/renderers.py:14
 msgid "Created"
 msgstr ""
 
-#: export/renderers.py:15 models.py:19
 msgid "User"
 msgstr ""
 
-#: export/renderers.py:16 models.py:22
 msgid "State"
 msgstr ""
 
-#: export/renderers.py:17
 msgid "Users Related"
 msgstr ""
 
-#: export/renderers.py:18
 msgid "Related To"
 msgstr ""
 
-#: export/renderers.py:19
 msgid "Related To (description)"
 msgstr ""
 
-#: export/renderers.py:20
 msgid "Text"
 msgstr ""
 
-#: models.py:14
 msgid "Active"
 msgstr ""
 
-#: models.py:15
 msgid "Resolved"
 msgstr ""
 
-#: models.py:16
 msgid "Deleted"
 msgstr ""
 
-#: models.py:23
 msgid "Content Type"
 msgstr ""
 
-#: models.py:24
 msgid "Object ID"
 msgstr ""
 
-#: models.py:32
 msgid "Comment"
 msgstr ""
 
-#: models.py:33
 msgid "Comments"
 msgstr ""
 
-#: models.py:41
 msgid "Unable to resolve deleted comment"
 msgstr ""
 
-#: models.py:48
 msgid "This comment has answers. Unable to delete."
 msgstr ""

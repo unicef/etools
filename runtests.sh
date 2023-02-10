@@ -14,12 +14,16 @@ fi
 
 # Ensure translations are up-to-date.
 cwd=$(pwd)
-app_dirs="${cwd}/src/etools/applications/comments/ ${cwd}/src/etools/applications/partners/"
+app_dirs="${cwd}/src/etools/applications/field_monitoring/data_collection/
+          ${cwd}/src/etools/applications/field_monitoring/fm_settings/
+          ${cwd}/src/etools/applications/field_monitoring/planning/
+          ${cwd}/src/etools/applications/comments/
+          ${cwd}/src/etools/applications/partners/"
 for app_dir in ${app_dirs};
 do
     echo ${app_dir}
     cd ${app_dir}
-    django-admin makemessages -a
+    django-admin makemessages -a --no-location
     git diff --ignore-matching-lines=POT-Creation-Date --exit-code
 done
 cd ${cwd}
