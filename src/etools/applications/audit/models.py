@@ -299,6 +299,12 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
             self.reference_number = self.get_reference_number()
             self.save()
 
+    def get_related_third_party_users(self):
+        return get_user_model().filter(
+            models.Q(pk__in=self.authorized_officers.values_list('user_id')) |
+            models.Q(pk__in=self.staff_members.values_list('user_id'))
+        )
+
 
 class RiskCategory(OrderedModel, models.Model):
     """Group of questions"""

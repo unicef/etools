@@ -1,6 +1,7 @@
 import itertools
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.db import connection, models
 from django.utils import timezone
 from django.utils.encoding import force_str
@@ -354,6 +355,9 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
 
     def get_object_url(self, **kwargs):
         return build_frontend_url('tpm', 'visits', self.id, 'details', **kwargs)
+
+    def get_related_third_party_users(self):
+        return get_user_model().filter(pk__in=self.tpm_partner_focal_points.values_list('user_id'))
 
 
 class TPMVisitReportRejectComment(models.Model):
