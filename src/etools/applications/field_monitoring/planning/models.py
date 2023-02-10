@@ -1,6 +1,7 @@
 import logging
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import connection, models, transaction
 from django.db.models import Count, Exists, OuterRef, Q
@@ -701,6 +702,13 @@ class MonitoringActivity(
                 checklist_dict['overall'].append(overall_dict)
 
             yield checklist_dict
+
+    def get_related_third_party_users(self):
+        return get_user_model().objects.filter(
+            Q(pk=self.visit_lead_id) |
+            Q(pk__in=self.team_members.through.objects
+              .filter(monitoringactivity_id=self.pk).values_list('user_id', flat=True))
+        )
 
 
 class MonitoringActivityActionPointManager(models.Manager):

@@ -9,10 +9,13 @@ class IsInSchema(IsAuthenticated):
         # make sure user has schema/tenant set
         return bool(hasattr(request, "tenant") and request.tenant)
 
+    def has_object_permission(self, request, view, obj):
+        return self.has_permission(request, view)
+
 
 class IsRelatedThirdPartyUser(BasePermission):
     def has_permission(self, request, view):
-        return False
+        return True
 
     def has_object_permission(self, request, view, obj):
         content_object = obj.content_object

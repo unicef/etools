@@ -357,7 +357,10 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
         return build_frontend_url('tpm', 'visits', self.id, 'details', **kwargs)
 
     def get_related_third_party_users(self):
-        return get_user_model().filter(pk__in=self.tpm_partner_focal_points.values_list('user_id'))
+        return get_user_model().objects.filter(
+            models.Q(pk__in=self.tpm_partner.staff_members.values_list('user_id')) |
+            models.Q(pk__in=self.tpm_partner_focal_points.values_list('user_id'))
+        )
 
 
 class TPMVisitReportRejectComment(models.Model):
