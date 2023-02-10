@@ -27,7 +27,6 @@ from rest_framework.response import Response
 from rest_framework.status import is_success
 from rest_framework.views import APIView
 from unicef_attachments.models import Attachment
-from unicef_djangolib.fields import CURRENCY_LIST
 
 from etools.applications.field_monitoring.permissions import IsEditAction, IsReadAction
 from etools.applications.partners.exports_v2 import InterventionXLSRenderer
@@ -86,6 +85,7 @@ from etools.applications.partners.views.interventions_v2 import (
 from etools.applications.partners.views.v3 import PMPBaseViewMixin
 from etools.applications.reports.models import InterventionActivity, LowerResult
 from etools.applications.reports.serializers.v2 import InterventionActivityDetailSerializer
+from etools.libraries.djangolib.fields import CURRENCY_LIST
 from etools.libraries.djangolib.utils import get_current_site
 
 
