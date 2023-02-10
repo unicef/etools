@@ -94,11 +94,12 @@ class TestOrganizationListView(BaseTenantTestCase):
         organization = OrganizationFactory()
         PartnerFactory(organization=organization)
 
-        response = self.forced_auth_req(
-            "get",
-            self.url,
-            user=self.partnership_manager,
-        )
+        with self.assertNumQueries(2):
+            response = self.forced_auth_req(
+                "get",
+                self.url,
+                user=self.partnership_manager,
+            )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]['id'], organization.id)
@@ -106,12 +107,13 @@ class TestOrganizationListView(BaseTenantTestCase):
     def test_get_auditor_firms(self):
         PartnerFactory(organization=OrganizationFactory())
         engagement = EngagementFactory()
-        response = self.forced_auth_req(
-            "get",
-            self.url,
-            data={"organization_type": "audit"},
-            user=self.partnership_manager,
-        )
+        with self.assertNumQueries(3):
+            response = self.forced_auth_req(
+                "get",
+                self.url,
+                data={"organization_type": "audit"},
+                user=self.partnership_manager,
+            )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]['id'], engagement.agreement.auditor_firm.organization.id)
@@ -120,12 +122,13 @@ class TestOrganizationListView(BaseTenantTestCase):
         PartnerFactory(organization=OrganizationFactory())
         EngagementFactory()
         tpm_visit = BaseTPMVisitFactory()
-        response = self.forced_auth_req(
-            "get",
-            self.url,
-            data={"organization_type": "tpm"},
-            user=self.partnership_manager,
-        )
+        with self.assertNumQueries(3):
+            response = self.forced_auth_req(
+                "get",
+                self.url,
+                data={"organization_type": "tpm"},
+                user=self.partnership_manager,
+            )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]['id'], tpm_visit.tpm_partner.organization.id)
@@ -220,7 +223,8 @@ class TestUsersListAPIView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_api_users_list(self):
-        response = self.forced_auth_req('get', self.url, user=self.unicef_staff)
+        with self.assertNumQueries(3):
+            response = self.forced_auth_req('get', self.url, user=self.unicef_staff)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)
@@ -500,13 +504,13 @@ class TestGroupFiltersViewSet(BaseTenantTestCase):
 
     def test_get_group_filters_partner_users(self):
         for user_group in [IPViewer, IPEditor, IPAuthorizedOfficer, IPAdmin]:
-            response = self.forced_auth_req(
-                "get",
-                self.url,
-                user=UserFactory(
-                    realms__data=[user_group.name], profile__organization=self.organization
+            user = UserFactory(realms__data=[user_group.name], profile__organization=self.organization)
+            with self.assertNumQueries(3):
+                response = self.forced_auth_req(
+                    "get",
+                    self.url,
+                    user=user
                 )
-            )
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             for _type in ORGANIZATION_GROUP_MAP.keys():
                 self.assertEqual(
@@ -532,14 +536,14 @@ class TestGroupPermissionsViewSet(BaseTenantTestCase):
         for user_group, org_type in zip(
                 [UNICEFAuditFocalPoint, PartnershipManager],
                 ['audit', 'partner', 'tpm']):
-            response = self.forced_auth_req(
-                "get",
-                self.url,
-                data={'organization_type': org_type},
-                user=UserFactory(
-                    realms__data=[user_group.name], profile__organization=self.organization
+            user = UserFactory(realms__data=[user_group.name], profile__organization=self.organization)
+            with self.assertNumQueries(3):
+                response = self.forced_auth_req(
+                    "get",
+                    self.url,
+                    data={'organization_type': org_type},
+                    user=user
                 )
-            )
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             expected_groups = sorted(
                 GroupEditPermissionMixin.GROUPS_ALLOWED_MAP.get(user_group.name, {}).get(org_type))
@@ -656,7 +660,8 @@ class TestUserRealmView(BaseTenantTestCase):
         # uses profile.organization = self.organization
         for auth_user in [self.ip_viewer, self.ip_editor, self.ip_admin,
                           self.ip_auth_officer]:
-            response = self.make_request_list(auth_user, method='get')
+            with self.assertNumQueries(4):
+                response = self.make_request_list(auth_user, method='get')
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             self.assertEqual(response.data['count'], 4, "Number of users in realm")
 
@@ -666,7 +671,8 @@ class TestUserRealmView(BaseTenantTestCase):
                 "organization_id": self.organization.id,
                 "organization_type": self.organization.relationship_types[0]
             }
-            response = self.make_request_list(auth_user, method='get', data=data)
+            with self.assertNumQueries(5):
+                response = self.make_request_list(auth_user, method='get', data=data)
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             self.assertEqual(response.data['count'], 4)
 
@@ -835,11 +841,12 @@ class TestExternalUserAPIView(BaseTenantTestCase):
         )
 
     def test_list(self):
-        response = self.forced_auth_req(
-            'get',
-            reverse("users_v3:external-list"),
-            user=self.unicef_staff,
-        )
+        with self.assertNumQueries(2):
+            response = self.forced_auth_req(
+                'get',
+                reverse("users_v3:external-list"),
+                user=self.unicef_staff,
+            )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)

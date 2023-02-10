@@ -311,7 +311,9 @@ class UserRealmViewSet(
         relationship_type = self.request.query_params.get('organization_type')
         if organization_id:
             if self.request.user.is_unicef_user():
-                organization = get_object_or_404(Organization, pk=organization_id)
+                organization = get_object_or_404(
+                    Organization.objects.all().select_related('partner', 'auditorfirm', 'tpmpartner'),
+                    pk=organization_id)
                 if not organization.relationship_types or relationship_type not in organization.relationship_types:
                     logger.error(f"The provided organization id {organization_id} and type {relationship_type} do not match.")
                     return self.model.objects.none()
@@ -332,7 +334,7 @@ class UserRealmViewSet(
             qs_context.update(
                 {"group__id__in": self.request.query_params.getlist('roles')}
             )
-        context_realms_qs = Realm.objects.filter(**qs_context)
+        context_realms_qs = Realm.objects.filter(**qs_context).select_related('group')
 
         return self.model.objects \
             .filter(realms__in=context_realms_qs) \
