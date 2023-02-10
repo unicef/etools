@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-03 14:33+0000\n"
+"POT-Creation-Date: 2023-02-10 10:07+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,120 +18,91 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: models.py:25 models.py:49 models.py:135 models.py:182
 msgid "Activity"
 msgstr "Actividad"
 
-#: models.py:27
 msgid "Question"
 msgstr "Pregunta"
 
-#: models.py:31
 msgid "Question Text"
 msgstr "Texto de la pregunta"
 
-#: models.py:32
 msgid "Count as HACT"
 msgstr "Contar como HACT"
 
-#: models.py:34
 msgid "Specific Details To Probe"
 msgstr "Detalles específicos para sondear"
 
-#: models.py:35
 msgid "Enabled"
 msgstr "Activado"
 
-#: models.py:40 models.py:113
 msgid "Activity Question"
 msgstr "Pregunta de actividad"
 
-#: models.py:41
 msgid "Activity Questions"
 msgstr "Preguntas de actividad"
 
-#: models.py:51
 msgid "Methods"
 msgstr "Métodos"
 
-#: models.py:52
 msgid "Information Source"
 msgstr "Fuente de información"
 
-#: models.py:53
 msgid "Author"
 msgstr "Autor"
 
-#: models.py:57
 msgid "Started Checklist"
 msgstr "Lista de verificación iniciada"
 
-#: models.py:58
 msgid "Started Checklists"
 msgstr "Listas de verificación iniciadas"
 
-#: models.py:110 models.py:157
 msgid "Checklist"
 msgstr "Lista de Verificación"
 
-#: models.py:114 models.py:136
 msgid "Value"
 msgstr "Valor"
 
-#: models.py:119
 msgid "Checklist Finding"
 msgstr "Hallazgo de lista de verificación"
 
-#: models.py:120
 msgid "Checklist Findings"
 msgstr "Hallazgos de la lista de verificación"
 
-#: models.py:139
 msgid "Overall Activity Question Finding"
 msgstr "Resultado general de la pregunta de actividad"
 
-#: models.py:140
 msgid "Overall Activity Question Findings"
 msgstr "Resultados generales de la pregunta de actividad"
 
-#: models.py:158 models.py:183
 msgid "Narrative Finding"
 msgstr "Hallazgo narrativo"
 
-#: models.py:159
 msgid "Attachments"
 msgstr "Archivos adjuntos"
 
-#: models.py:164
 msgid "Checklist Overall Finding"
 msgstr "Lista de verificación Hallazgo general"
 
-#: models.py:165
 msgid "Checklist Overall Findings"
 msgstr "Hallazgos generales de la lista de verificación"
 
-#: models.py:189
 msgid "Activity Overall Finding"
 msgstr "Hallazgo general de la actividad"
 
-#: models.py:190
 msgid "Activity Overall Findings"
 msgstr "Actividad Hallazgos generales"
 
-#: offline/blueprint.py:48
 msgid "Source of Information"
 msgstr "Fuente de información"
 
-#: offline/blueprint.py:70
 msgid "Overall Finding"
 msgstr "Hallazgo general"
 
-#: offline/helpers.py:55
 #, python-format
 msgid "Unable to find %(level)s with id %(target_id)s"
 msgstr "No se puede encontrar %(level)s con id %(target_id)s"
 
-#: offline/helpers.py:74
 #, python-format
 msgid ""
 "Unable to find finding for question %(question_id)s for %(level)s "
@@ -140,38 +111,30 @@ msgstr ""
 "No se pudo encontrar el resultado de la pregunta %(question_id)s para "
 "%(level)s %(target_id)s"
 
-#: offline/helpers.py:91
 msgid "Ensure this field has no more than 100 characters."
 msgstr "Asegúrese de que este campo no tenga más de 100 caracteres."
 
-#: serializers.py:79
 msgid "Document Type"
 msgstr "Tipo de Documento"
 
-#: serializers.py:102
 msgid "Information source is required"
 msgstr "Se requiere fuente de información"
 
-#: views.py:84
 #, python-format
 msgid "Workspace code provided is not a valid business_area_code: %s"
 msgstr ""
 "El código de espacio de trabajo proporcionado no es un "
 "código_de_área_de_negocio válido: %s"
 
-#: views.py:92
 msgid "Workspace is required"
 msgstr "Se requiere espacio de trabajo"
 
-#: views.py:102
 msgid "User is required"
 msgstr "Se requiere usuario"
 
-#: views.py:114
 msgid "Unable to fill checklists for current activity"
 msgstr ""
 "No se pueden completar las listas de verificación para la actividad actual"
 
-#: views.py:136
 msgid "Report Attachments"
 msgstr "Adjuntos del informe"
