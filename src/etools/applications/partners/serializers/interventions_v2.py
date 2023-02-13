@@ -761,6 +761,9 @@ class InterventionCreateUpdateSerializer(
     def validate_capacity_development(self, value):
         return self._validate_character_limitation(value)
 
+    def validate_other_info(self, value):
+        return self._validate_character_limitation(value)
+
     def validate(self, attrs):
         validated_data = super().validate(attrs)
         if self.instance and ('start' in validated_data or 'end' in validated_data):
