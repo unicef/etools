@@ -116,7 +116,7 @@ class TPMPartnerViewSet(
     viewsets.GenericViewSet
 ):
     metadata_class = PermissionBasedMetadata
-    queryset = TPMPartner.objects.all()
+    queryset = TPMPartner.objects.all().select_related('organization')
     serializer_class = TPMPartnerSerializer
     serializer_action_classes = {
         'list': TPMPartnerLightSerializer
@@ -134,12 +134,12 @@ class TPMPartnerViewSet(
         if getattr(self, 'action', None) == 'list':
             queryset = queryset.country_partners()
 
-        user_groups = self.request.user.groups.all()
+        user_groups = self.request.user.groups.values_list('name', flat=True)
 
-        if UNICEFUser.as_group() in user_groups or PME.as_group() in user_groups:
+        if UNICEFUser.name in user_groups or PME.name in user_groups:
             # no need to filter queryset
             pass
-        elif ThirdPartyMonitor.as_group() in user_groups:
+        elif ThirdPartyMonitor.name in user_groups:
             queryset = queryset.filter(organization=self.request.user.profile.organization)
         else:
             queryset = queryset.none()
@@ -169,12 +169,12 @@ class TPMPartnerViewSet(
         Fetch TPM Partner by vendor number. Load from etools.applications.vision if not found.
         """
         queryset = self.filter_queryset(self.get_queryset())
-        instance = queryset.filter(vendor_number=kwargs.get('vendor_number')).first()
+        instance = queryset.filter(organization__vendor_number=kwargs.get('vendor_number')).first()
 
         if not instance:
             handler = TPMPartnerSynchronizer(vendor=kwargs.get('vendor_number'))
             handler.sync()
-            instance = queryset.filter(vendor_number=kwargs.get('vendor_number')).first()
+            instance = queryset.filter(organization__vendor_number=kwargs.get('vendor_number')).first()
 
         if not instance:
             raise Http404
@@ -232,7 +232,7 @@ class TPMStaffMembersViewSet(
             realms__country=connection.tenant,
             realms__organization=self.get_parent_object().organization,
             realms__group__name__in=TPM_ACTIVE_GROUPS,
-        )
+        ).distinct()
         return queryset
 
     def get_parent_filter(self):

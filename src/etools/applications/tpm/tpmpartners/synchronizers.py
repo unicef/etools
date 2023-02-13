@@ -1,6 +1,8 @@
 import logging
 
-from etools.applications.organizations.models import Organization, OrganizationType
+from django.db import connection
+
+from etools.applications.organizations.models import Organization
 from etools.applications.tpm.tpmpartners.models import TPMPartner
 from etools.applications.users.mixins import TPM_ACTIVE_GROUPS
 from etools.applications.users.models import Country, Realm
@@ -34,11 +36,10 @@ class TPMPartnerSynchronizer(VisionDataTenantSynchronizer):
         processed = 0
 
         try:
-            organization = Organization.objects.update_or_create(
+            organization, _ = Organization.objects.update_or_create(
                 vendor_number=partner['VENDOR_CODE'],
                 defaults={
                     'name': partner['VENDOR_NAME'],
-                    'organization_type': OrganizationType.TPM_PARTNER
                 }
             )
             defaults = {
@@ -54,6 +55,10 @@ class TPMPartnerSynchronizer(VisionDataTenantSynchronizer):
                 'hidden': True if partner['POSTING_BLOCK'] or partner['MARKED_FOR_DELETION'] else False,
             }
             partner, _ = TPMPartner.objects.update_or_create(organization=organization, defaults=defaults)
+
+            country = Country.objects.get(schema_name=defaults['country'] if defaults['country'] else connection.tenant.schema_name)
+            partner.countries.add(country)
+
             if partner.deleted_flag:
                 self.deactivate_staff_members(partner)
             processed = 1
@@ -93,9 +98,8 @@ class TPMPartnerSynchronizer(VisionDataTenantSynchronizer):
         # users_deactivate = User.objects.filter(tpmpartners_tpmpartnerstaffmember__in=staff_members)
         # users_deactivate.update(is_active=False)
         try:
-            country = Country.objects.get(name=partner.country)
             Realm.objects.filter(
-                country=country,
+                country__in=partner.countries.all(),
                 organization=partner.organization,
                 group__name__in=TPM_ACTIVE_GROUPS,
             ).update(is_active=False)

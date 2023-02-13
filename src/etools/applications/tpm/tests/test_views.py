@@ -1,7 +1,9 @@
 from datetime import datetime
 from unittest import skip
+from unittest.mock import Mock, patch
 
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.db import connection
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -29,6 +31,7 @@ from etools.applications.tpm.tests.factories import (
     TPMUserFactory,
     TPMVisitFactory,
 )
+from etools.applications.tpm.tpmpartners.models import TPMPartner
 from etools.applications.users.tests.factories import UserFactory
 from etools.libraries.djangolib.tests.utils import TestExportMixin
 
@@ -657,6 +660,35 @@ class TestTPMPartnerViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCas
         else:
             self.assertNotIn('PUT', response.data['actions'])
 
+    @patch("etools.applications.vision.synchronizers.get_public_schema_name", Mock(return_value="test"))
+    def test_sync(self):
+        self._test_list_view(self.pme_user, [self.tpm_partner, self.second_tpm_partner])
+        mock_data = {
+            "ROWSET": {
+                "ROW": {
+                    "VENDOR_CODE": "1234",
+                    "VENDOR_NAME": "TPM Partner",
+                    "COUNTRY": connection.tenant.schema_name,
+                    "STREET": "",
+                    "CITY": "",
+                    "POSTAL_CODE": "",
+                    "EMAIL": "",
+                    "PHONE_NUMBER": "",
+                    "POSTING_BLOCK": "",
+                    "MARKED_FOR_DELETION": "",
+                }
+            }
+        }
+        with patch("unicef_vision.loaders.VisionDataLoader.get", Mock(return_value=mock_data)):
+            response = self.forced_auth_req(
+                'get',
+                reverse('tpm:partners-sync', args=('1234',)),
+                user=self.pme_user
+            )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        new_tpm_partner = TPMPartner.objects.get(organization__vendor_number='1234')
+        self._test_list_view(self.pme_user, [self.tpm_partner, self.second_tpm_partner, new_tpm_partner])
+
     def test_activation(self):
         partner = TPMPartnerFactory(countries=[])
         # partner is deactivated yet, so wouldn't appear in list
@@ -672,13 +704,16 @@ class TestTPMPartnerViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCas
         self._test_list_view(self.pme_user, [self.tpm_partner, self.second_tpm_partner, partner])
 
     def test_pme_list_view(self):
-        self._test_list_view(self.pme_user, [self.tpm_partner, self.second_tpm_partner])
+        with self.assertNumQueries(6):
+            self._test_list_view(self.pme_user, [self.tpm_partner, self.second_tpm_partner])
 
     def test_unicef_list_view(self):
-        self._test_list_view(self.unicef_user, [self.tpm_partner, self.second_tpm_partner])
+        with self.assertNumQueries(6):
+            self._test_list_view(self.unicef_user, [self.tpm_partner, self.second_tpm_partner])
 
     def test_tpm_partner_list_view(self):
-        self._test_list_view(self.tpm_user, [self.tpm_partner])
+        with self.assertNumQueries(7):
+            self._test_list_view(self.tpm_user, [self.tpm_partner])
 
     def test_pme_list_options(self):
         self._test_list_options(
