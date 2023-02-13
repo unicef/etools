@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-08 14:47+0000\n"
+"POT-Creation-Date: 2023-02-10 10:08+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -20,79 +20,60 @@ msgstr ""
 "%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || (n"
 "%100>=11 && n%100<=14)? 2 : 3);\n"
 
-#: admin.py:83
 msgid "Signed Attachment"
 msgstr "Подписанное вложение"
 
-#: admin.py:88
 msgid "PRC Reviewed Attachment"
 msgstr "КНР рассмотрела приложение"
 
-#: admin.py:189 admin.py:759 models.py:3365
 msgid "Attachment"
 msgstr "Приложение"
 
-#: admin.py:253 models.py:1926 models.py:1934
 msgid "Review Document by PRC"
 msgstr "Просмотр документа PRC"
 
-#: admin.py:258 models.py:1942 models.py:1950
 msgid "Signed PD Document"
 msgstr "Подписанный документ PD"
 
-#: admin.py:319
 msgid "Intervention Details"
 msgstr "Детали вмешательства"
 
-#: admin.py:336
 msgid "Dates and Signatures"
 msgstr "Даты и подписи"
 
-#: admin.py:352
 msgid "ePD"
 msgstr "ЭПД"
 
-#: admin.py:392
 msgid "PD is not ready for Vision synchronization."
 msgstr "PD не готов к синхронизации Vision."
 
-#: admin.py:395
 msgid "PD was sent to Vision."
 msgstr "PD был отправлен в Vision."
 
-#: admin.py:438 exports_v2.py:567 templates/pd/detail.html:172
-#: templates/pd/detail.html:391
 msgid "Capacity Strengthening Costs"
 msgstr ""
 
-#: admin.py:463 models.py:1196 models.py:1204
 msgid "Report"
 msgstr "Отчет"
 
-#: admin.py:600
 msgid "Partner Details"
 msgstr "Сведения о партнере"
 
-#: admin.py:629
 msgid "Hact"
 msgstr "Действие"
 
-#: admin.py:718 models.py:1572 models.py:1579
 msgid "Signed Amendment"
 msgstr "Подписанная поправка"
 
-#: admin.py:793
 msgid "Agreement Details"
 msgstr "Детали соглашения"
 
-#: admin.py:829
 msgid ""
 "Please delete all interventions associated with the selected Agreements "
 "before deleting them."
 msgstr ""
 "Перед удалением удалите все действия, связанные с выбранными соглашениями."
 
-#: admin.py:835
 msgid ""
 "Please delete all interventions associated with this Agreement before "
 "deleting the agreement."
@@ -100,1560 +81,1144 @@ msgstr ""
 "Перед удалением соглашения удалите все действия, связанные с этим "
 "Соглашением."
 
-#: exports_v2.py:26 exports_v2.py:90 exports_v2.py:179 exports_v2.py:222
-#: exports_v2.py:337 exports_v2.py:384 models.py:435
-#: serializers/exports/interventions.py:232
 msgid "Vendor Number"
 msgstr "Номер поставщика"
 
-#: exports_v2.py:27 serializers/exports/partner_organization.py:34
 msgid "Organizations Full Name"
 msgstr "Полное название организации"
 
-#: exports_v2.py:28 models.py:374
 msgid "Short Name"
 msgstr "Короткое имя"
 
-#: exports_v2.py:29 models.py:447
 msgid "Alternate Name"
 msgstr "Альтернативное имя"
 
-#: exports_v2.py:30 exports_v2.py:91 exports_v2.py:180 exports_v2.py:256
-#: models.py:355 serializers/exports/interventions.py:237
-#: serializers/exports/partner_organization.py:69
 msgid "Partner Type"
 msgstr "Тип партнера"
 
-#: exports_v2.py:31 models.py:385
-#: serializers/exports/partner_organization.py:68
 msgid "Shared Partner"
 msgstr "Общий партнер"
 
-#: exports_v2.py:32 models.py:417
 msgid "Address"
 msgstr "Адрес"
 
-#: exports_v2.py:33 models.py:429 models.py:997
 msgid "Phone Number"
 msgstr "Номер телефона"
 
-#: exports_v2.py:34 models.py:424 models.py:991
-#: serializers/exports/partner_organization.py:38
 msgid "Email Address"
 msgstr "Адрес электронной почты"
 
-#: exports_v2.py:35 serializers/exports/partner_organization.py:41
 msgid "HACT Risk Rating"
 msgstr "HACT-рейтинг риска"
 
-#: exports_v2.py:36 serializers/exports/partner_organization.py:48
 msgid "Date Last Assessed Against Core Values"
 msgstr "Дата последней оценки основных ценностей"
 
-#: exports_v2.py:37 serializers/exports/partner_organization.py:52
 msgid "Actual Cash Transfer for CP (USD)"
 msgstr "Фактический денежный перевод для CP (доллары США)"
 
-#: exports_v2.py:38 serializers/exports/partner_organization.py:56
 msgid "Actual Cash Transfer for Current Year (USD)"
 msgstr "Фактический денежный перевод за текущий год (долл. США)"
 
-#: exports_v2.py:39 serializers/exports/partner_organization.py:60
 msgid "Marked for Deletion"
 msgstr "Помечено для удаления"
 
-#: exports_v2.py:40 models.py:478
-#: serializers/exports/partner_organization.py:62
 msgid "Blocked"
 msgstr "заблокировано"
 
-#: exports_v2.py:41 exports_v2.py:93 exports_v2.py:183 models.py:460
 msgid "Assessment Type"
 msgstr "Тип оценки"
 
-#: exports_v2.py:42 serializers/exports/partner_organization.py:64
 msgid "Date Assessed"
 msgstr "Дата оценки"
 
-#: exports_v2.py:43 serializers/exports/partner_organization.py:31
 msgid "Assessment Type (Date Assessed)"
 msgstr "Тип оценки (дата оценки)"
 
-#: exports_v2.py:44 serializers/exports/partner_organization.py:29
 msgid "Staff Members"
 msgstr "Штатные сотрудники"
 
-#: exports_v2.py:46 exports_v2.py:283 serializers/exports/interventions.py:274
-#: serializers/exports/interventions.py:563
-#: serializers/exports/partner_organization.py:71
 msgid "Planned Programmatic Visits"
 msgstr "Запланированные программные посещения"
 
-#: exports_v2.py:89 exports_v2.py:141 exports_v2.py:178
 msgid "Implementing Partner"
 msgstr ""
 
-#: exports_v2.py:92 exports_v2.py:181
 msgid "Shared IP"
 msgstr ""
 
-#: exports_v2.py:94
 msgid "Cash Transfer 1 OCT - 30 SEP"
 msgstr ""
 
-#: exports_v2.py:95
 msgid "Liquidations 1 OCT - 30 SEP"
 msgstr ""
 
-#: exports_v2.py:96 exports_v2.py:182
 msgid "Cash Transfers Jan - Dec"
 msgstr ""
 
-#: exports_v2.py:97 exports_v2.py:184 models.py:453
 msgid "Risk Rating"
 msgstr "Рейтинг риска"
 
-#: exports_v2.py:98 exports_v2.py:185
 msgid "Expiring Threshold"
 msgstr ""
 
-#: exports_v2.py:99 exports_v2.py:186
 msgid "Approach Threshold"
 msgstr ""
 
-#: exports_v2.py:100
 msgid "Programmatic Visits Planned Q1"
 msgstr "Запланированные программные посещения Q1"
 
-#: exports_v2.py:101 exports_v2.py:106 exports_v2.py:110 exports_v2.py:116
 msgid "Q2"
 msgstr ""
 
-#: exports_v2.py:102 exports_v2.py:107 exports_v2.py:111 exports_v2.py:117
 msgid "Q3"
 msgstr ""
 
-#: exports_v2.py:103 exports_v2.py:108 exports_v2.py:112 exports_v2.py:118
 msgid "Q4"
 msgstr ""
 
-#: exports_v2.py:104 exports_v2.py:188
 msgid "Programmatic Visits M.R"
 msgstr ""
 
-#: exports_v2.py:105
 msgid "Programmatic Visits Completed Q1"
 msgstr ""
 
-#: exports_v2.py:109
 msgid "Spot Checks Planned Q1"
 msgstr ""
 
-#: exports_v2.py:113
 msgid "Spot Checks M.R"
 msgstr ""
 
-#: exports_v2.py:114
 msgid "Follow Up"
 msgstr ""
 
-#: exports_v2.py:115
 msgid "Spot Checks Completed Q1"
 msgstr ""
 
-#: exports_v2.py:119 exports_v2.py:192
 msgid "Audits M.R"
 msgstr ""
 
-#: exports_v2.py:120 exports_v2.py:193
 msgid "Audit Completed"
 msgstr ""
 
-#: exports_v2.py:121 exports_v2.py:194
 msgid "Audits Outstanding Findings"
 msgstr ""
 
-#: exports_v2.py:142 exports_v2.py:266 models.py:2036
-#: serializers/exports/interventions.py:255
 msgid "Sections"
 msgstr "Разделы"
 
-#: exports_v2.py:143 exports_v2.py:267 models.py:2047
-#: serializers/exports/interventions.py:256
 msgid "Locations"
 msgstr "Местоположения"
 
-#: exports_v2.py:144
 msgid "Action Points #"
 msgstr ""
 
-#: exports_v2.py:145
 msgid "$ Cash in the Current CP Cycle"
 msgstr ""
 
-#: exports_v2.py:146
 msgid "$ Cash in the Current Year"
 msgstr ""
 
-#: exports_v2.py:147 exports_v2.py:357
 msgid "Days Since Last PV"
 msgstr ""
 
-#: exports_v2.py:148
 msgid "Alert: No Recent PV"
 msgstr ""
 
-#: exports_v2.py:149
 msgid "Alert: No PV"
 msgstr ""
 
-#: exports_v2.py:150
 msgid "Outstanding DCT Amount between 6 and 9 months"
 msgstr ""
 
-#: exports_v2.py:151
 msgid "Outstanding DCT Amount more than 9 months"
 msgstr "Задолженность по DCT более 9 месяцев."
 
-#: exports_v2.py:187
 msgid "Programmatic Visits Planned"
 msgstr "Запланированные программные посещения"
 
-#: exports_v2.py:189
 msgid "Programmatic Visits Completed"
 msgstr ""
 
-#: exports_v2.py:190
 msgid "Spot Check Required"
 msgstr ""
 
-#: exports_v2.py:191
 msgid "Spot Checks Completed"
 msgstr ""
 
-#: exports_v2.py:219 exports_v2.py:261 models.py:1301 models.py:1874
-#: models.py:2686 serializers/exports/interventions.py:48
-#: serializers/exports/interventions.py:86
-#: serializers/exports/interventions.py:197
-#: serializers/exports/interventions.py:209
 msgid "Reference Number"
 msgstr "Ссылочный номер"
 
-#: exports_v2.py:220 exports_v2.py:255 exports_v2.py:341 exports_v2.py:389
-#: models.py:1379 models.py:1882
 msgid "Status"
 msgstr "Статус"
 
-#: exports_v2.py:221
 msgid "Partner Name"
 msgstr ""
 
-#: exports_v2.py:223 models.py:1296
 msgid "Agreement Type"
 msgstr "Тип соглашения"
 
-#: exports_v2.py:224 exports_v2.py:263 exports_v2.py:342 exports_v2.py:388
-#: models.py:1327 models.py:1890
 msgid "Start Date"
 msgstr "Дата начала"
 
-#: exports_v2.py:225 exports_v2.py:264 exports_v2.py:343 exports_v2.py:379
-#: models.py:1332 models.py:1896
 msgid "End Date"
 msgstr "Дата окончания"
 
-#: exports_v2.py:226 serializers/exports/agreements.py:44
 msgid "Signed By Partner"
 msgstr "Подписано партнером"
 
-#: exports_v2.py:227 models.py:1356
 msgid "Signed By Partner Date"
 msgstr "Дата подписания партнером"
 
-#: exports_v2.py:228 models.py:1350 serializers/exports/agreements.py:50
 msgid "Signed By UNICEF"
 msgstr "Подписано ЮНИСЕФ"
 
-#: exports_v2.py:229 models.py:1341
 msgid "Signed By UNICEF Date"
 msgstr "Подписано ЮНИСЕФ Дата"
 
-#: exports_v2.py:230 models.py:1292 serializers/exports/agreements.py:31
 msgid "Partner Authorized Officer"
 msgstr "Уполномоченный партнер партнера"
 
-#: exports_v2.py:231 serializers/exports/agreements.py:54
 msgid "Amendments"
 msgstr "Поправки"
 
-#: exports_v2.py:233 models.py:1338 serializers/exports/agreements.py:57
 msgid "Special Conditions PCA"
 msgstr "Особые условия PCA"
 
-#: exports_v2.py:234 models.py:1371 serializers/exports/agreements.py:60
 msgid "Terms Acknowledged By"
 msgstr "Условия, подтвержденные"
 
-#: exports_v2.py:253 exports_v2.py:383 exports_v2.py:500 models.py:938
-#: models.py:970 models.py:1058 models.py:1133 models.py:1279 models.py:3451
-#: models.py:3607 serializers/exports/interventions.py:227
 msgid "Partner"
 msgstr "Партнер"
 
-#: exports_v2.py:254
 msgid "Vendor no."
 msgstr "Номер поставщика"
 
-#: exports_v2.py:257 models.py:362 serializers/exports/interventions.py:242
 msgid "CSO Type"
 msgstr "Тип ОГО"
 
-#: exports_v2.py:258 exports_v2.py:385 models.py:1567 models.py:1851
-#: serializers/exports/interventions.py:247
 msgid "Agreement"
 msgstr "Согласие"
 
-#: exports_v2.py:259 models.py:1284 models.py:1860
-#: serializers/exports/agreements.py:114
-#: serializers/exports/interventions.py:91
-#: serializers/exports/interventions.py:509
 msgid "Country Programme"
 msgstr "Программа страны"
 
-#: exports_v2.py:260 models.py:1845 serializers/interventions_v2.py:425
-#: serializers/interventions_v3.py:710 templates/pd/detail.html:137
-#: templates/pd/detail.html:480
 msgid "Document Type"
 msgstr "Тип документа"
 
-#: exports_v2.py:262 models.py:1880
 msgid "Document Title"
 msgstr "Название документа"
 
-#: exports_v2.py:265 serializers/exports/interventions.py:254
-#: templates/pd/detail.html:141
 msgid "UNICEF Office"
 msgstr "Офис ЮНИСЕФ"
 
-#: exports_v2.py:268
 msgid "Contingency PD?"
 msgstr "Защита от непредвиденных обстоятельств?"
 
-#: exports_v2.py:269 serializers/exports/interventions.py:259
 msgid "Cluster"
 msgstr "Кластер"
 
-#: exports_v2.py:270 models.py:1986 serializers/exports/interventions.py:316
 msgid "UNICEF Focal Points"
 msgstr "Координаторы ЮНИСЕФ"
 
-#: exports_v2.py:271 models.py:1993 serializers/exports/interventions.py:313
 msgid "CSO Authorized Officials"
 msgstr "Уполномоченные представители ОГО"
 
-#: exports_v2.py:272 serializers/exports/interventions.py:277
 msgid "Budget Currency"
 msgstr "Бюджетная валюта"
 
-#: exports_v2.py:273
 msgid "Total CSO Budget (USD)"
 msgstr ""
 
-#: exports_v2.py:274
 msgid "UNICEF Cash (USD)"
 msgstr "Денежные средства ЮНИСЕФ (USD)"
 
-#: exports_v2.py:275
 msgid "UNICEF Supply (USD)"
 msgstr "Поставка ЮНИСЕФc (USD)"
 
-#: exports_v2.py:276
 msgid "Total PD/SPD Budget (USD)"
 msgstr "Общий бюджет PD/SPD (USD)"
 
-#: exports_v2.py:277 serializers/exports/interventions.py:261
 msgid "FR Number(s)"
 msgstr "Номер(а) FR"
 
-#: exports_v2.py:278 exports_v2.py:348 serializers/exports/interventions.py:262
 msgid "FR Currency"
 msgstr "Валюта Франции"
 
-#: exports_v2.py:279 serializers/exports/interventions.py:263
 msgid "FR Posting Date"
 msgstr "Дата публикации FR"
 
-#: exports_v2.py:280 serializers/exports/interventions.py:265
 msgid "FR Amount"
 msgstr "Количество фр."
 
-#: exports_v2.py:281 serializers/exports/interventions.py:268
 msgid "FR Actual CT"
 msgstr "FR Текущая ТТ"
 
-#: exports_v2.py:282 exports_v2.py:352 serializers/exports/interventions.py:271
 msgid "Outstanding DCT"
 msgstr "Выдающийся DCT"
 
-#: exports_v2.py:284
 msgid "Planned Spot Checks"
 msgstr ""
 
-#: exports_v2.py:285
 msgid "Planned Audits"
 msgstr ""
 
-#: exports_v2.py:286 models.py:1902
 msgid "Document Submission Date by CSO"
 msgstr "Дата подачи документа ОГО"
 
-#: exports_v2.py:287 models.py:1908
 msgid "Submission Date to PRC"
 msgstr "Дата отправки в КНР"
 
-#: exports_v2.py:288 models.py:1920
 msgid "Review Date by PRC"
 msgstr "Дата проверки PRC"
 
-#: exports_v2.py:289 models.py:1977 models.py:2753
-#: serializers/exports/interventions.py:319
 msgid "Signed by Partner"
 msgstr "Подписано партнером"
 
-#: exports_v2.py:290 models.py:1961 models.py:2737
 msgid "Signed by Partner Date"
 msgstr "Подписано партнером Дата"
 
-#: exports_v2.py:291 models.py:1968 models.py:2744
-#: serializers/exports/interventions.py:310
 msgid "Signed by UNICEF"
 msgstr "Подписано ЮНИСЕФ"
 
-#: exports_v2.py:292 models.py:1956 models.py:2732
 msgid "Signed by UNICEF Date"
 msgstr "Подписано ЮНИСЕФ Дата"
 
-#: exports_v2.py:293 serializers/exports/interventions.py:324
 msgid "Days from Submission to Signed"
 msgstr "дней от отправки до подписания"
 
-#: exports_v2.py:294 serializers/exports/interventions.py:327
 msgid "Days from Review to Signed"
 msgstr "дней от просмотра до подписания"
 
-#: exports_v2.py:295 serializers/exports/interventions.py:330
 msgid "Total no. of amendments"
 msgstr "Общее количество. "
 
-#: exports_v2.py:296 serializers/exports/interventions.py:333
 msgid "Last amendment date"
 msgstr "Дата последней поправки"
 
-#: exports_v2.py:297
 msgid "Attachment Type"
 msgstr "Тип вложения"
 
-#: exports_v2.py:298 serializers/exports/interventions.py:339
 msgid "# of attachments"
 msgstr "# вложений"
 
-#: exports_v2.py:299 serializers/exports/interventions.py:321
 msgid "CP Outputs"
 msgstr "Выходы CP"
 
-#: exports_v2.py:301 models.py:2093
 msgid "UNPP Number"
 msgstr "Номер УНЭС"
 
-#: exports_v2.py:302 models.py:2201 models.py:3333 templates/pd/detail.html:224
 msgid "Data Processing Agreement"
 msgstr "Соглашение об обработке данных"
 
-#: exports_v2.py:303 models.py:2205 models.py:3334 templates/pd/detail.html:227
 msgid "Activities involving children and young people"
 msgstr "Мероприятия с участием детей и молодежи"
 
-#: exports_v2.py:304 models.py:2209 templates/pd/detail.html:230
 msgid "Special Conditions for Construction Works by Implementing Partners"
 msgstr ""
 "Особые условия для строительных работ со стороны партнеров-исполнителей"
 
-#: exports_v2.py:336
 msgid "IP Name"
 msgstr ""
 
-#: exports_v2.py:338
 msgid "PD/SPD Ref #"
 msgstr ""
 
-#: exports_v2.py:339 exports_v2.py:387 serializers/exports/interventions.py:102
 msgid "Section"
 msgstr "Раздел"
 
-#: exports_v2.py:340
 msgid "Field Office"
 msgstr ""
 
-#: exports_v2.py:344
 msgid "PD Currency"
 msgstr ""
 
-#: exports_v2.py:345
 msgid "CSO Contribution (PD Currency)"
 msgstr ""
 
-#: exports_v2.py:346
 msgid "Total UNICEF Supplies (PD Currency)"
 msgstr ""
 
-#: exports_v2.py:347
 msgid "Total UNICEF Cash (PD Currency)"
 msgstr ""
 
-#: exports_v2.py:349
 msgid "FR Grand Total"
 msgstr ""
 
-#: exports_v2.py:350
 msgid "Actual Disbursements"
 msgstr ""
 
-#: exports_v2.py:351
 msgid "Multi-currency Transaction"
 msgstr ""
 
-#: exports_v2.py:353
 msgid "FR Grand Total (USD)"
 msgstr ""
 
-#: exports_v2.py:354
 msgid "Actual Disbursement (USD)"
 msgstr ""
 
-#: exports_v2.py:355
 msgid "Outstanding DCT (USD)"
 msgstr ""
 
-#: exports_v2.py:356
 msgid "Disbursement To Date (%)"
 msgstr ""
 
-#: exports_v2.py:358
 msgid "Link"
 msgstr ""
 
-#: exports_v2.py:378
 msgid "CP output"
 msgstr "Выход СР"
 
-#: exports_v2.py:380
 msgid "Name of UNICEF Focal Point"
 msgstr ""
 
-#: exports_v2.py:381
 msgid "Hyperlink"
 msgstr ""
 
-#: exports_v2.py:382 templates/pd/detail.html:267
 msgid "Location"
 msgstr ""
 
-#: exports_v2.py:386
 msgid "PD Ref Number"
 msgstr ""
 
-#: exports_v2.py:502 templates/pd/detail.html:155
 msgid "Start date"
 msgstr "Дата начала"
 
-#: exports_v2.py:503
 #, python-format
 msgid "Currency %(currency)s"
 msgstr ""
 
-#: exports_v2.py:507
 msgid "Vendor #: "
 msgstr "Номер поставщика"
 
-#: exports_v2.py:508 templates/pd/detail.html:156
 msgid "End date"
 msgstr "Дата окончания"
 
-#: exports_v2.py:511
 msgid "PD Reference"
 msgstr ""
 
-#: exports_v2.py:513
 msgid "Duration"
 msgstr ""
 
-#: exports_v2.py:541
 msgid "Total PD Budget"
 msgstr "Общий бюджет PD"
 
-#: exports_v2.py:548 exports_v2.py:1134
 msgid "UNICEF Contribution"
 msgstr ""
 
-#: exports_v2.py:556 exports_v2.py:586
 msgid "Total Cash"
 msgstr ""
 
-#: exports_v2.py:562 exports_v2.py:592
 msgid "Prog effectiveness"
 msgstr ""
 
-#: exports_v2.py:572 exports_v2.py:597
 msgid "Supplies in-kind"
 msgstr ""
 
-#: exports_v2.py:578 exports_v2.py:1137 models.py:2969
 msgid "Partner Contribution"
 msgstr "Вклад партнера"
 
-#: exports_v2.py:627
 msgid "PD Output/ PD Activity"
 msgstr ""
 
-#: exports_v2.py:628
 #, python-format
 msgid "Total (%s)"
 msgstr ""
 
-#: exports_v2.py:629 exports_v2.py:864
 msgid "CSO"
 msgstr ""
 
-#: exports_v2.py:629 exports_v2.py:630 exports_v2.py:864 exports_v2.py:865
 msgid "contribution"
 msgstr ""
 
-#: exports_v2.py:630 exports_v2.py:865 models.py:3606
 msgid "UNICEF"
 msgstr "ЮНИСЕФ"
 
-#: exports_v2.py:631 exports_v2.py:867
 msgid "PD Quarters"
 msgstr ""
 
-#: exports_v2.py:647 templates/pd/detail.html:324
 msgid "Result Level"
 msgstr ""
 
-#: exports_v2.py:660 exports_v2.py:898
 msgid "CP Output "
 msgstr "Выход СР"
 
-#: exports_v2.py:672
 msgid "PD Output"
 msgstr ""
 
-#: exports_v2.py:732 exports_v2.py:980
 msgid "EEPM"
 msgstr ""
 
-#: exports_v2.py:732 exports_v2.py:980 templates/pd/detail.html:358
 msgid "Effective and efficient programme management"
 msgstr ""
 
-#: exports_v2.py:756 exports_v2.py:994
 msgid "EEPM.1"
 msgstr ""
 
-#: exports_v2.py:756 templates/pd/detail.html:365
 msgid "In-country management & support"
 msgstr ""
 
-#: exports_v2.py:769 exports_v2.py:1019
 msgid "EEPM.2"
 msgstr ""
 
-#: exports_v2.py:769 templates/pd/detail.html:372
 msgid "Operational costs"
 msgstr ""
 
-#: exports_v2.py:782 exports_v2.py:1044
 msgid "EEPM.3"
 msgstr ""
 
-#: exports_v2.py:782 templates/pd/detail.html:379
 msgid "Planning, monitoring, evaluation, and communication"
 msgstr ""
 
-#: exports_v2.py:792
 msgid "Subtotal for the programme costs"
 msgstr ""
 
-#: exports_v2.py:813
 #, python-format
 msgid ""
 "Capacity Strengthening Costs ({%(cost)d}%% of UNICEF the cash component)"
 msgstr ""
 
-#: exports_v2.py:833
 msgid "Total PD budget cash"
 msgstr ""
 
-#: exports_v2.py:859
 msgid "No."
 msgstr ""
 
-#: exports_v2.py:860
 msgid "PD Output/ PD Activity / Item Description"
 msgstr ""
 
-#: exports_v2.py:861
 msgid "Unit Type"
 msgstr ""
 
-#: exports_v2.py:862 exports_v2.py:1102
 msgid "Number of Units"
 msgstr ""
 
-#: exports_v2.py:863
 msgid "Price/Unit"
 msgstr ""
 
-#: exports_v2.py:866 models.py:2977 serializers/exports/interventions.py:557
-#: templates/pd/detail.html:174 templates/pd/detail.html:195
 msgid "Total"
 msgstr "Всего"
 
-#: exports_v2.py:868
 msgid "Other Notes"
 msgstr ""
 
-#: exports_v2.py:915
 msgid "PD OUTPUT "
 msgstr ""
 
-#: exports_v2.py:940 templates/pd/detail.html:364 templates/pd/detail.html:371
-#: templates/pd/detail.html:378
 msgid "Activity"
 msgstr ""
 
-#: exports_v2.py:994
 msgid "Activity: In-country management & support"
 msgstr ""
 
-#: exports_v2.py:1010
 #, python-format
 msgid "EEPM.1.{%d}"
 msgstr ""
 
-#: exports_v2.py:1019
 msgid "Activity: Operational costs"
 msgstr ""
 
-#: exports_v2.py:1035
 #, python-format
 msgid "EEPM.2.{%d}"
 msgstr ""
 
-#: exports_v2.py:1044
 msgid "Activity: Planning, monitoring, evaluation, and communication"
 msgstr ""
 
-#: exports_v2.py:1060
 #, python-format
 msgid "EEPM.3.{%d}"
 msgstr ""
 
-#: exports_v2.py:1073
 msgid "Total Cost for all outputs"
 msgstr ""
 
-#: exports_v2.py:1102 templates/pd/detail.html:412
 msgid "Item"
 msgstr ""
 
-#: exports_v2.py:1102 templates/pd/detail.html:414
 msgid "Price/unit"
 msgstr ""
 
-#: exports_v2.py:1102 models.py:3640 templates/pd/detail.html:415
 msgid "Total Price"
 msgstr "Общая стоимость"
 
-#: exports_v2.py:1103 models.py:3654
 msgid "Provided By"
 msgstr "Предоставлено"
 
-#: exports_v2.py:1103 models.py:2914
 msgid "CP Output"
 msgstr "Выход СР"
 
-#: exports_v2.py:1103 models.py:3647
 msgid "Other Mentions"
 msgstr "Другие упоминания"
 
-#: exports_v2.py:1103 models.py:3657
 msgid "UNICEF Product Number"
 msgstr "Номер продукта ЮНИСЕФ"
 
-#: exports_v2.py:1130
 msgid "Total Value"
 msgstr ""
 
-#: exports_v2.py:1154
 msgid "Partner non-financial contribution:"
 msgstr "Нефинансовый вклад партнера в программу"
 
-#: exports_v2.py:1168 exports_v2.py:1177
 msgid "Budget Summary"
 msgstr ""
 
-#: exports_v2.py:1170
 msgid "Activity Budget"
 msgstr ""
 
-#: exports_v2.py:1172
 msgid "Detailed Budget"
 msgstr ""
 
-#: exports_v2.py:1174
 msgid "Supply Cost"
 msgstr ""
 
-#: exports_v2.py:1180 templates/pd/detail.html:321
 msgid "Workplan Budget"
 msgstr ""
 
-#: exports_v2.py:1183
 msgid "Detailed Workplan Budget"
 msgstr ""
 
-#: exports_v2.py:1186
 msgid "Supply Contribution (Planned)"
 msgstr ""
 
-#: forms.py:38
 msgid "You must select a type for this CSO"
 msgstr "Вы должны выбрать тип для этого CSO"
 
-#: forms.py:42
 msgid ""
 "\"CSO Type\" does not apply to non-CSO organizations, please remove type"
 msgstr ""
 "«Тип ОГО» не применяется к организациям, не являющимся ОГО, удалите тип"
 
-#: models.py:154 models.py:369 models.py:3338 models.py:3696
-#: serializers/exports/interventions.py:108
 msgid "Name"
 msgstr "Имя"
 
-#: models.py:167
 msgid "Bilateral / Multilateral"
 msgstr "двусторонний/многосторонний"
 
-#: models.py:168
 msgid "Civil Society Organization"
 msgstr "Организация гражданского общества"
 
-#: models.py:169
 msgid "Government"
 msgstr "Правительство"
 
-#: models.py:170
 msgid "UN Agency"
 msgstr "Агентство ООН"
 
-#: models.py:267
 msgid "High"
 msgstr "Высокий"
 
-#: models.py:268 models.py:1819
 msgid "Significant"
 msgstr "Значительный"
 
-#: models.py:269
 msgid "Medium"
 msgstr "средний"
 
-#: models.py:270
 msgid "Low"
 msgstr "Низкий"
 
-#: models.py:271
 msgid "Not Required"
 msgstr "Не требуется"
 
-#: models.py:343
 msgid "International"
 msgstr "Международный"
 
-#: models.py:344
 msgid "National"
 msgstr "Национальный"
 
-#: models.py:345
 msgid "Community Based Organization"
 msgstr "Общественная организация"
 
-#: models.py:346
 msgid "Academic Institution"
 msgstr "Академическое учреждение"
 
-#: models.py:347
 msgid "Red Cross/Red Crescent National Societies"
 msgstr ""
 
-#: models.py:379 models.py:2706
 msgid "Description"
 msgstr "Описание"
 
-#: models.py:390
 msgid "Street Address"
 msgstr "Адрес улицы"
 
-#: models.py:396
 msgid "City"
 msgstr "Город"
 
-#: models.py:402
 msgid "Postal Code"
 msgstr "Почтовый индекс"
 
-#: models.py:408
 msgid "Country"
 msgstr "Страна"
 
-#: models.py:442
 msgid "Alternate ID"
 msgstr "Альтернативный идентификатор"
 
-#: models.py:465
 msgid "Last Assessment Date"
 msgstr "Дата последней оценки"
 
-#: models.py:470 models.py:941
 msgid "Date positively assessed against core values"
 msgstr "Дата, получившая положительную оценку основных ценностей"
 
-#: models.py:475 serializers/exports/partner_organization.py:125
 msgid "VISION Synced"
 msgstr "ВИДЕНИЕ синхронизировано"
 
-#: models.py:480
 msgid "Marked for deletion"
 msgstr "Отмечено для удаления"
 
-#: models.py:483
 msgid "Manually Hidden"
 msgstr "Скрыто вручную"
 
-#: models.py:485 serializers/exports/partner_organization.py:126
 msgid "Hidden"
 msgstr "Скрытый"
 
-#: models.py:488
 msgid "Total Cash Transferred for Country Programme"
 msgstr "Общая сумма денежных переводов для страновой программы"
 
-#: models.py:496
 msgid "Total Cash Transferred per Current Year"
 msgstr "Общая сумма денежных переводов за текущий год"
 
-#: models.py:507
 msgid "Net Cash Transferred"
 msgstr "Чистые переведенные денежные средства"
 
-#: models.py:513
 msgid "Liquidation"
 msgstr "Ликвидация"
 
-#: models.py:519
 msgid "Cash Transfer Jan - Dec"
 msgstr "Денежные переводы с января по декабрь"
 
-#: models.py:525
 msgid "Outstanding DCT 6/9 months"
 msgstr "Непогашенный DCT 6/9 месяцев"
 
-#: models.py:531
 msgid "Outstanding DCT more than 9 months"
 msgstr "Задолженность по DCT более 9 месяцев."
 
-#: models.py:536
 msgid "Basis for Risk Rating"
 msgstr "Основа для рейтинга риска"
 
-#: models.py:538
 msgid "Last PSEA Assess. Date"
 msgstr "Последняя оценка PSEA. "
 
-#: models.py:544
 msgid "PSEA Risk Rating"
 msgstr "Рейтинг риска PSEA"
 
-#: models.py:550
 msgid "Highest Risk Rating Type"
 msgstr "Тип с наивысшим рейтингом риска"
 
-#: models.py:556
 msgid "Highest Risk Rating Name"
 msgstr "Имя с самым высоким рейтингом риска"
 
-#: models.py:561
 msgid "Lead Office"
 msgstr "Главный офис"
 
-#: models.py:563
 msgid "Lead Section"
 msgstr "Ведущая секция"
 
-#: models.py:942 models.py:945
 msgid "Core Values Assessment"
 msgstr "Оценка основных ценностей"
 
-#: models.py:976 models.py:3257 models.py:3301
 msgid "User"
 msgstr "Пользователь"
 
-#: models.py:983 models.py:3617
 msgid "Title"
 msgstr "Заголовок"
 
-#: models.py:988
 msgid "First Name"
 msgstr "Имя"
 
-#: models.py:989
 msgid "Last Name"
 msgstr "Фамилия"
 
-#: models.py:1004 models.py:1795
 msgid "Active"
 msgstr "Активный"
 
-#: models.py:1060
 msgid "Spot Check Follow Up Required"
 msgstr "Требуется последующая проверка после выборочной проверки"
 
-#: models.py:1061
 msgid "Spot Check Q1"
 msgstr "Выборочная проверка Q1"
 
-#: models.py:1062
 msgid "Spot Check Q2"
 msgstr "Выборочная проверка Q2"
 
-#: models.py:1063
 msgid "Spot Check Q3"
 msgstr "Выборочная проверка Q3"
 
-#: models.py:1064
 msgid "Spot Check Q4"
 msgstr "Выборочная проверка Q4"
 
-#: models.py:1065
 msgid "Scheduled Audit"
 msgstr "Запланированный аудит"
 
-#: models.py:1066
 msgid "Special Audit"
 msgstr "Специальный аудит"
 
-#: models.py:1124
 msgid "Micro Assessment"
 msgstr "Микрооценка"
 
-#: models.py:1125
 msgid "Simplified Checklist"
 msgstr "Упрощенный контрольный список"
 
-#: models.py:1126
 msgid "Scheduled Audit report"
 msgstr "Отчет о запланированном аудите"
 
-#: models.py:1127
 msgid "Special Audit report"
 msgstr "Специальный аудиторский отчет"
 
-#: models.py:1128 models.py:3336
 msgid "Other"
 msgstr "Другое"
 
-#: models.py:1138 models.py:3358
 msgid "Type"
 msgstr "Тип"
 
-#: models.py:1143
 msgid "Other Agencies"
 msgstr "Другие агентства"
 
-#: models.py:1150
 msgid "Planned amount"
 msgstr "Запланированная сумма"
 
-#: models.py:1156
 msgid "Special requests"
 msgstr "Особые запросы"
 
-#: models.py:1160
 msgid "Requested Date"
 msgstr "Запрошенная дата"
 
-#: models.py:1165
 msgid "Requesting Officer"
 msgstr "Офицер по запросу"
 
-#: models.py:1173
 msgid "Approving Officer"
 msgstr "Утверждающий сотрудник"
 
-#: models.py:1179
 msgid "Planned Date"
 msgstr "Запланированная дата"
 
-#: models.py:1184
 msgid "Completed Date"
 msgstr "Дата завершения"
 
-#: models.py:1189
 msgid "Rating"
 msgstr "Рейтинг"
 
-#: models.py:1211
 msgid "Basis for risk rating"
 msgstr "Основа для рейтинга риска"
 
-#: models.py:1253
 msgid "Programme Cooperation Agreement"
 msgstr "Соглашение о сотрудничестве по программе"
 
-#: models.py:1254
 msgid "Small Scale Funding Agreement"
 msgstr "Соглашение о малом финансировании"
 
-#: models.py:1255
 msgid "Memorandum of Understanding"
 msgstr "Меморандум о взаимопонимании"
 
-#: models.py:1264
 msgid "Draft"
 msgstr "Черновик"
 
-#: models.py:1265 models.py:1794
 msgid "Signed"
 msgstr "Подписано"
 
-#: models.py:1266 models.py:1797
 msgid "Ended"
 msgstr "Завершено"
 
-#: models.py:1267 models.py:1799
 msgid "Suspended"
 msgstr "Приостановлено"
 
-#: models.py:1268 models.py:1800
 msgid "Terminated"
 msgstr "Прекращено"
 
-#: models.py:1308 models.py:1315 serializers/exports/agreements.py:109
 msgid "Attached Agreement"
 msgstr "Прикрепленное соглашение"
 
-#: models.py:1321
 msgid "Termination document for PCAs"
 msgstr "Документ о расторжении для PCA"
 
-#: models.py:1364
 msgid "Signed by partner"
 msgstr "Подписано партнером"
 
-#: models.py:1558
 msgid "Change in Legal Name of Implementing Partner"
 msgstr "Изменение юридического названия партнера-исполнителя"
 
-#: models.py:1559
 msgid "Change Authorized Officer(s)"
 msgstr "Сменить уполномоченного(ых) сотрудника(ов)"
 
-#: models.py:1560
 msgid "Banking Information"
 msgstr "Банковская информация"
 
-#: models.py:1561
 msgid "Change in clause"
 msgstr "Изменение в пункте"
 
-#: models.py:1564 models.py:2718
 msgid "Number"
 msgstr "число"
 
-#: models.py:1586 models.py:2702 models.py:3211
-#: serializers/exports/interventions.py:17
 msgid "Types"
 msgstr "Типы"
 
-#: models.py:1589 models.py:2713
 msgid "Signed Date"
 msgstr "Дата подписи"
 
-#: models.py:1600 models.py:2823 models.py:3204
 msgid "Amendment"
 msgstr "Поправка"
 
-#: models.py:1601
 msgid "Agreement amendments"
 msgstr "Поправки к соглашению"
 
-#: models.py:1791
 msgid "Development"
 msgstr "Развитие"
 
-#: models.py:1792
 msgid "Review"
 msgstr "Обзор"
 
-#: models.py:1793 templates/pd/detail.html:461 templates/pd/detail.html:466
 msgid "Signature"
 msgstr "Подпись"
 
-#: models.py:1796
 msgid "Cancelled"
 msgstr "Отменено"
 
-#: models.py:1798
 msgid "Closed"
 msgstr "Закрыто"
 
-#: models.py:1801
 msgid "Expired"
 msgstr "Срок действия истек"
 
-#: models.py:1807
 msgid "Programme Document"
 msgstr "Программный документ"
 
-#: models.py:1808
 msgid "Simplified Programme Document"
 msgstr "Упрощенный программный документ"
 
-#: models.py:1817
 msgid "None"
 msgstr "Нет"
 
-#: models.py:1818
 msgid "Marginal"
 msgstr "маргинальный"
 
-#: models.py:1820
 msgid "Principal"
 msgstr "Директор"
 
-#: models.py:1827
 msgid "Direct Payment"
 msgstr "Прямой платеж"
 
-#: models.py:1828
 msgid "Reimbursement"
 msgstr "Возмещение"
 
-#: models.py:1829
 msgid "Direct Cash Transfer"
 msgstr "Прямой денежный перевод"
 
-#: models.py:1868 serializers/exports/interventions.py:252
 msgid "Country Programmes"
 msgstr "Программы для стран"
 
-#: models.py:1915
 msgid "Date Final Partnership Review Performed"
 msgstr "Дата проведения окончательной проверки партнерства"
 
-#: models.py:1939
 msgid "Final Review Approved"
 msgstr ""
 
-#: models.py:1999 serializers/exports/interventions.py:257
 msgid "Contingency PD"
 msgstr "Защита от непредвиденных обстоятельств"
 
-#: models.py:2003 models.py:2011
 msgid "Activation Document for Contingency PDs"
 msgstr "Документ активации для резервных PD"
 
-#: models.py:2017 templates/pd/detail.html:447
 msgid "Activation Protocol"
 msgstr "Протокол активации"
 
-#: models.py:2021 models.py:2029
 msgid "Termination document for PDs"
 msgstr "Документ о расторжении для PD"
 
-#: models.py:2042
 msgid "Office"
 msgstr "Офис"
 
-#: models.py:2052
 msgid "Sites"
 msgstr "Сайты"
 
-#: models.py:2055
 msgid "Population Focus"
 msgstr "Фокус населения"
 
-#: models.py:2063
 msgid "Amendment Open"
 msgstr "Поправка открыта"
 
-#: models.py:2068
 msgid "Humanitarian"
 msgstr "Гуманитарная"
 
-#: models.py:2076
 msgid "Date first sent to Partner"
 msgstr "Дата первой отправки партнеру"
 
-#: models.py:2100 templates/pd/detail.html:210
 msgid "Context"
 msgstr "Контекст"
 
-#: models.py:2105
 msgid "Implementation Strategy"
 msgstr "Стратегия реализации"
 
-#: models.py:2110 templates/pd/detail.html:233
 msgid "Gender Rating"
 msgstr "Половой рейтинг"
 
-#: models.py:2116
 msgid "Gender Narrative"
 msgstr "Гендерное повествование"
 
-#: models.py:2121 templates/pd/detail.html:238
 msgid "Equity Rating"
 msgstr "Рейтинг акций"
 
-#: models.py:2127
 msgid "Equity Narrative"
 msgstr "Рассказ о справедливости"
 
-#: models.py:2132 templates/pd/detail.html:243
 msgid "Sustainability Rating"
 msgstr "Рейтинг устойчивого развития"
 
-#: models.py:2138
 msgid "Sustainability Narrative"
 msgstr "Рассказ об устойчивом развитии"
 
-#: models.py:2143
 msgid "Partner Non-Financial Contribution to Programme"
 msgstr "Нефинансовый вклад партнера в программу"
 
-#: models.py:2149
 msgid "Budget Owner"
 msgstr "Владелец бюджета"
 
-#: models.py:2156
 msgid "HQ Support Cost"
 msgstr "Стоимость поддержки штаб-квартиры"
 
-#: models.py:2163
 msgid "Cash Transfer Modalities"
 msgstr "Способы денежных переводов"
 
-#: models.py:2170
 msgid "UNICEF Review Type"
 msgstr "Тип обзора ЮНИСЕФ"
 
-#: models.py:2176 templates/pd/detail.html:218
 msgid "Capacity Development"
 msgstr "Развитие потенциала"
 
-#: models.py:2181
 msgid "Other Info"
 msgstr "Другая информация"
 
-#: models.py:2186
 msgid "Other Partners Involved"
 msgstr "Участвуют другие партнеры"
 
-#: models.py:2191
 msgid "Technical Guidance"
 msgstr "Техническое руководство"
 
-#: models.py:2196
 msgid "Cancel Justification"
 msgstr "Отменить обоснование"
 
-#: models.py:2214 serializers/exports/interventions.py:507
-msgid "Attachments"
-msgstr "Вложения"
-
-#: models.py:2223
 msgid "Metadata"
 msgstr "Метаданные"
 
-#: models.py:2229
 msgid "Confidential"
 msgstr "Конфиденциально"
 
-#: models.py:2630
 msgid "Unknown"
 msgstr ""
 
-#: models.py:2663
 msgid "Type 1: Administrative error (correction)"
 msgstr "Тип 1: Административная ошибка (исправление)"
 
-#: models.py:2664
 msgid "Type 2: Budget <= 20%"
 msgstr "Тип 2: Бюджет <= 20%"
 
-#: models.py:2665
 msgid "Type 3: Budget > 20%"
 msgstr "Тип 3: Бюджет > 20%"
 
-#: models.py:2666
 msgid "Type 4: Changes to planned results"
 msgstr "Тип 4: Изменения запланированных результатов"
 
-#: models.py:2667
 msgid "Type 5: No cost extension"
 msgstr "Тип 5: бесплатное расширение"
 
-#: models.py:2668
 msgid "Type 6: Other"
 msgstr "Тип 6: Другое"
 
-#: models.py:2680
 msgid "Normal"
 msgstr "Нормальный"
 
-#: models.py:2681
 msgid "Contingency"
 msgstr "Непредвиденные обстоятельства"
 
-#: models.py:2693 models.py:3714
 msgid "Kind"
 msgstr "Вид"
 
-#: models.py:2724 models.py:2761
 msgid "Amendment Document"
 msgstr "Документ о поправках"
 
-#: models.py:2768
 msgid "Internal PRC Review"
 msgstr "Внутренний обзор PRC"
 
-#: models.py:2774
 msgid "Amended Intervention"
 msgstr "Исправленное вмешательство"
 
-#: models.py:2824
 msgid "Intervention amendments"
 msgstr "Поправки к вмешательству"
 
-#: models.py:2888 models.py:2910 models.py:2965 models.py:3195 models.py:3354
-#: models.py:3407 models.py:3504 models.py:3525 models.py:3612
 msgid "Intervention"
 msgstr "Вмешательство"
 
-#: models.py:2891 models.py:3454
 msgid "Year"
 msgstr "Год"
 
-#: models.py:2892 models.py:3455
 msgid "Programmatic Q1"
 msgstr "Программный Q1"
 
-#: models.py:2893 models.py:3456
 msgid "Programmatic Q2"
 msgstr "Программный Q2"
 
-#: models.py:2894 models.py:3457
 msgid "Programmatic Q3"
 msgstr "Программный Q3"
 
-#: models.py:2895 models.py:3458
 msgid "Programmatic Q4"
 msgstr "Программный Q4"
 
-#: models.py:2901
 msgid "Intervention Planned Visits"
 msgstr "Запланированные визиты вмешательства"
 
-#: models.py:2908 serializers/exports/interventions.py:113
 msgid "Code"
 msgstr "Код"
 
-#: models.py:2917
 msgid "RAM Indicators"
 msgstr "Индикаторы оперативной памяти"
 
-#: models.py:2970
 msgid "Unicef Cash"
 msgstr "Денежные средства ЮНИСЕФ"
 
-#: models.py:2975
 msgid "UNICEF Supplies"
 msgstr "Поставки ЮНИСЕФ"
 
-#: models.py:2981
 msgid "Partner Contribution Local"
 msgstr "Местный вклад партнера"
 
-#: models.py:2985
 msgid "Partner Supplies Local"
 msgstr "Местные поставки партнеров"
 
-#: models.py:2989
 msgid "Total Partner Contribution"
 msgstr "Общий вклад партнера"
 
-#: models.py:2994 models.py:2998
 msgid "Total HQ Cash Local"
 msgstr "Всего наличных в штаб-квартире"
 
-#: models.py:3002
 msgid "Unicef Cash Local"
 msgstr "Местные денежные средства ЮНИСЕФ"
 
-#: models.py:3006
 msgid "UNICEF Supplies Local"
 msgstr "Местные поставки ЮНИСЕФ"
 
-#: models.py:3008 serializers/exports/interventions.py:551
-#: templates/pd/detail.html:193
 msgid "Currency"
 msgstr "Валюта"
 
-#: models.py:3009
 msgid "Total Local"
 msgstr "Всего местных"
 
-#: models.py:3013
 msgid "Programme Effectiveness (%)"
 msgstr "Эффективность программы (%)"
 
-#: models.py:3020
 msgid "Intervention budget"
 msgstr "Бюджет вмешательства"
 
-#: models.py:3115
 msgid "Not decided yet"
 msgstr "Ещё не решено"
 
-#: models.py:3116
 msgid "Yes, strongly agree"
 msgstr "Да, полностью согласен"
 
-#: models.py:3117
 msgid "Yes, agree"
 msgstr "Да, согласен"
 
-#: models.py:3118
 msgid "No, disagree"
 msgstr "Нет, не согласен"
 
-#: models.py:3119
 msgid "No, strongly disagree"
 msgstr "Нет, категорически не согласен"
 
-#: models.py:3124
 msgid ""
 "The proposed relationship is best represented and regulated by partnership "
 "(as opposed to procurement), with both UNICEF and the CSO making clear "
@@ -1663,7 +1228,6 @@ msgstr ""
 "(в отличие от закупок), при этом как ЮНИСЕФ, так и ОГО вносят явный вклад в "
 "PD/SPD."
 
-#: models.py:3131
 msgid ""
 "The partner selection evidences the CSO’s comparative advantage and value "
 "for money in relation to the planned results"
@@ -1671,13 +1235,11 @@ msgstr ""
 "Выбор партнера свидетельствует о сравнительных преимуществах ОГО и "
 "соотношении цены и качества по сравнению с запланированными результатами."
 
-#: models.py:3137
 msgid ""
 "Previous UNICEF/UN relationships with the proposed CSO have been positive"
 msgstr ""
 "Предыдущие отношения ЮНИСЕФ/ООН с предлагаемой ОГО были положительными."
 
-#: models.py:3142
 msgid ""
 "The proposed PD/SPD is relevant to achieving results in the country "
 "programme document, the relevant sector workplan and or humanitarian "
@@ -1687,20 +1249,17 @@ msgstr ""
 "страновой программы, соответствующем отраслевом плане работы и/или плане "
 "гуманитарного реагирования."
 
-#: models.py:3148
 msgid ""
 "The results framework of the proposed PD/SPD has been guided by M&E feedback "
 "during the drafting process"
 msgstr "Структура результатов предлагаемого PD/SPD была разработана М."
 
-#: models.py:3154
 msgid ""
 "Gender, equity and sustainability have been considered in the programme "
 "design process"
 msgstr ""
 "Гендер, равенство и устойчивость учитывались в процессе разработки программы."
 
-#: models.py:3159
 msgid ""
 "The budget of the proposed PD/SPD is aligned with the principles of value "
 "for money with the effective and efficient programme management costs "
@@ -1710,147 +1269,111 @@ msgstr ""
 "цены и качества с эффективными и действенными затратами на управление "
 "программой в пределах, установленных офисом."
 
-#: models.py:3165
 msgid "The relevant supply issues have been duly considered"
 msgstr "Соответствующие проблемы с поставками рассмотрены должным образом."
 
-#: models.py:3182
 msgid "PRC Review"
 msgstr "Обзор КНР"
 
-#: models.py:3183
 msgid "Non-PRC Review"
 msgstr "Проверка за пределами КНР"
 
-#: models.py:3189
 msgid "No Review Required"
 msgstr "Проверка не требуется"
 
-#: models.py:3215
 msgid "Actions List"
 msgstr "Список действий"
 
-#: models.py:3219
 msgid "PRC Submitted By"
 msgstr "КНР отправлено"
 
-#: models.py:3225 models.py:3307
 msgid "Review Date"
 msgstr "Дата проверки"
 
-#: models.py:3227
 msgid "Meeting Date"
 msgstr "Дата встречи"
 
-#: models.py:3230
 msgid "PRC Officers"
 msgstr "Офицеры КНР"
 
-#: models.py:3236
 msgid "Overall Approver"
 msgstr "Общий утверждающий"
 
-#: models.py:3243
 msgid "Sent Back by Secretary Comment"
 msgstr "Отправлено секретарем Комментарий"
 
-#: models.py:3328
 msgid "FACE"
 msgstr "ЛИЦО"
 
-#: models.py:3329
 msgid "Progress Report"
 msgstr "Отчет о ходе выполнения"
 
-#: models.py:3330
 msgid "(Legacy) Final Partnership Review"
 msgstr "(Устаревший) Окончательный обзор партнерства"
 
-#: models.py:3331
 msgid "Correspondence"
 msgstr "Переписка"
 
-#: models.py:3332
 msgid "Supply/Distribution Plan"
 msgstr "План снабжения/распределения"
 
-#: models.py:3335
 msgid "Special Conditions for Construction Works"
 msgstr "Особые условия для строительных работ"
 
-#: models.py:3369
 msgid "Intervention Attachment"
 msgstr "Приложение для вмешательства"
 
-#: models.py:3428
 msgid "Fund Commitment Reference"
 msgstr "Ссылка на обязательство фонда"
 
-#: models.py:3429
 msgid "Amount (USD)"
 msgstr "Сумма (долл. США)"
 
-#: models.py:3430
 msgid "Liquidation (USD)"
 msgstr "Ликвидация (долл. США)"
 
-#: models.py:3432
 msgid "Outstanding Balance (USD)"
 msgstr "Непогашенный остаток (долл. США)"
 
-#: models.py:3434
 msgid "Amount less than 3 months (USD)"
 msgstr "Сумма беспорядок, чем 3 месяца (доллары США)"
 
-#: models.py:3436
 msgid "Amount between 3 and 6 months (USD)"
 msgstr "Сумма от 3 до 6 месяцев (доллары США)"
 
-#: models.py:3438
 msgid "Amount between 6 and 9 months (USD)"
 msgstr "Сумма от 6 до 9 месяцев (доллары США)"
 
-#: models.py:3440
 msgid "Amount more than 9 months (USD)"
 msgstr "Сумма более 9 месяцев (доллары США)"
 
-#: models.py:3464
 msgid "Partner Planned Visits"
 msgstr "Запланированные визиты партнера"
 
-#: models.py:3493
 msgid "Social & Environmental"
 msgstr "Социальные"
 
-#: models.py:3494
 msgid "Financial"
 msgstr "финансовый"
 
-#: models.py:3495
 msgid "Operational"
 msgstr "рабочий"
 
-#: models.py:3496
 msgid "Organizational"
 msgstr "Организационный"
 
-#: models.py:3497
 msgid "Political"
 msgstr "политический"
 
-#: models.py:3498
 msgid "Strategic"
 msgstr "Стратегический"
 
-#: models.py:3499
 msgid "Safety & security"
 msgstr "безопасность"
 
-#: models.py:3509
 msgid "Risk Type"
 msgstr "Тип риска"
 
-#: models.py:3530
 msgid ""
 "UNICEF contribution for In-country management and support staff prorated to "
 "their contribution to the programme (representation, planning, coordination, "
@@ -1860,7 +1383,6 @@ msgstr ""
 "пропорционально их вкладу в программу (представление, планирование, "
 "координация, материально-техническое обеспечение, администрация, финансы)."
 
-#: models.py:3536
 msgid ""
 "Partner contribution for In-country management and support staff prorated to "
 "their contribution to the programme (representation, planning, coordination, "
@@ -1870,7 +1392,6 @@ msgstr ""
 "пропорционально их вкладу в программу (представление, планирование, "
 "координация, логистика, администрация, финансы)"
 
-#: models.py:3542
 msgid ""
 "UNICEF contribution for Operational costs prorated to their contribution to "
 "the programme (office space, equipment, office supplies, maintenance)"
@@ -1879,7 +1400,6 @@ msgstr ""
 "(офисные помещения, оборудование, канцелярские принадлежности, техническое "
 "обслуживание)."
 
-#: models.py:3548
 msgid ""
 "Partner contribution for Operational costs prorated to their contribution to "
 "the programme (office space, equipment, office supplies, maintenance)"
@@ -1888,7 +1408,6 @@ msgstr ""
 "программу (офисные помещения, оборудование, канцелярские принадлежности, "
 "техническое обслуживание)."
 
-#: models.py:3554
 msgid ""
 "UNICEF contribution for Planning, monitoring, evaluation and communication, "
 "prorated to their contribution to the programme (venue, travels, etc.)"
@@ -1896,7 +1415,6 @@ msgstr ""
 "Вклад ЮНИСЕФ в планирование, мониторинг, оценку и коммуникацию "
 "пропорционально их вкладу в программу (место проведения, поездки и т. д.)"
 
-#: models.py:3560
 msgid ""
 "Partner contribution for Planning, monitoring, evaluation and communication, "
 "prorated to their contribution to the programme (venue, travels, etc.)"
@@ -1904,19 +1422,15 @@ msgstr ""
 "Вклад партнера в планирование, мониторинг, оценку и коммуникацию, "
 "пропорциональный их вкладу в программу (место проведения, поездки и т. д.)"
 
-#: models.py:3621
 msgid "Unit Number"
 msgstr "номер блока"
 
-#: models.py:3627 models.py:3704
 msgid "Unit Price"
 msgstr "Цена за единицу"
 
-#: models.py:3634
 msgid "Result"
 msgstr "Результат"
 
-#: models.py:3683
 msgid ""
 "In-country management and support staff prorated to their contribution to "
 "the programme (representation, planning, coordination, logistics, "
@@ -1926,7 +1440,6 @@ msgstr ""
 "в программу (представление, планирование, координация, логистика, "
 "администрация, финансы)"
 
-#: models.py:3685
 msgid ""
 "Operational costs prorated to their contribution to the programme (office "
 "space, equipment, office supplies, maintenance)"
@@ -1935,7 +1448,6 @@ msgstr ""
 "помещения, оборудование, канцелярские принадлежности, техническое "
 "обслуживание)."
 
-#: models.py:3687
 msgid ""
 "Planning, monitoring, evaluation and communication, prorated to their "
 "contribution to the programme (venue, travels, etc.)"
@@ -1943,140 +1455,105 @@ msgstr ""
 "Планирование, мониторинг, оценка и общение пропорционально их вкладу в "
 "программу (место проведения, поездки и т. д.)"
 
-#: models.py:3692 templates/pd/detail.html:164
 msgid "Budget"
 msgstr "Бюджет"
 
-#: models.py:3700
 msgid "Unit"
 msgstr "Ед. изм"
 
-#: models.py:3709
 msgid "Units Number"
 msgstr "Количество единиц"
 
-#: models.py:3716
 msgid "UNICEF Cash Local"
 msgstr "ЮНИСЕФ Наличные Местные"
 
-#: models.py:3722
 msgid "CSO Cash Local"
 msgstr "CSO Cash Local"
 
-#: permissions.py:329 permissions.py:365 permissions.py:388
 msgid "Accessing this item is not allowed."
 msgstr "Доступ к этому элементу запрещен."
 
-#: serializers/exports/agreements.py:55
-#: serializers/exports/interventions.py:322
-#: serializers/exports/partner_organization.py:67
 msgid "URL"
 msgstr "URL-адрес"
 
-#: serializers/exports/interventions.py:97
 msgid "Result Type"
 msgstr "Тип результата"
 
-#: serializers/exports/interventions.py:118
 msgid "From Date"
 msgstr "С даты"
 
-#: serializers/exports/interventions.py:123
 msgid "To Date"
 msgstr "На сегодняшний день"
 
-#: serializers/exports/interventions.py:128
-#: serializers/exports/interventions.py:184
 msgid "Parent"
 msgstr "Родитель"
 
-#: serializers/exports/interventions.py:134
 msgid "WBS"
 msgstr "WBS"
 
-#: serializers/exports/interventions.py:139
 msgid "VISION ID"
 msgstr "ИДЕНТИФИКАТОР ВИДЕНИЯ"
 
-#: serializers/exports/interventions.py:144
 msgid "GIC Code"
 msgstr "Код GIC"
 
-#: serializers/exports/interventions.py:149
 msgid "GIC Name"
 msgstr "Имя ГИК"
 
-#: serializers/exports/interventions.py:154
 msgid "SIC Code"
 msgstr "Код SIC"
 
-#: serializers/exports/interventions.py:159
 msgid "SIC Name"
 msgstr "Имя SIC"
 
-#: serializers/exports/interventions.py:164
 msgid "Activity Focus Code"
 msgstr "Код фокуса активности"
 
-#: serializers/exports/interventions.py:169
 msgid "Activity Focus Name"
 msgstr "Имя фокуса активности"
 
-#: serializers/exports/interventions.py:282
 msgid "Total CSO Contribution"
 msgstr "Общий вклад ОГО"
 
-#: serializers/exports/interventions.py:289
-#: serializers/exports/interventions.py:521 templates/pd/detail.html:168
 msgid "UNICEF Cash"
 msgstr "Денежные средства ЮНИСЕФ"
 
-#: serializers/exports/interventions.py:296
 msgid "UNICEF Supply"
 msgstr "Поставка ЮНИСЕФ"
 
-#: serializers/exports/interventions.py:303
 msgid "Total PD/SPD Budget"
 msgstr "Общий бюджет PD/SPD"
 
-#: serializers/exports/interventions.py:336
 msgid "Attachment type"
 msgstr "Тип вложения"
 
-#: serializers/exports/interventions.py:491
-#: serializers/exports/interventions.py:578
 msgid "N/A"
 msgstr "Н/Д"
 
-#: serializers/exports/interventions.py:515
+msgid "Attachments"
+msgstr "Вложения"
+
 msgid "CSO Contribution"
 msgstr "Вклад ОГО"
 
-#: serializers/exports/interventions.py:527
 msgid "In Kind Amount"
 msgstr "Натуральная сумма"
 
-#: serializers/exports/interventions.py:533
 msgid "CSO Contribution (Local)"
 msgstr "Вклад ОГО (местный)"
 
-#: serializers/exports/interventions.py:539
 msgid "UNICEF Cash (Local)"
 msgstr "Денежные средства ЮНИСЕФ (местные)"
 
-#: serializers/exports/interventions.py:545
 msgid "In Kind Amount (Local)"
 msgstr "Сумма в натуральном выражении (местная)"
 
-#: serializers/exports/partner_organization.py:42
 msgid "SEA Risk Rating"
 msgstr "Рейтинг риска SEA"
 
-#: serializers/exports/partner_organization.py:127
 msgid "HACT"
 msgstr "HACT"
 
-#: serializers/interventions_v2.py:140
 msgid ""
 "Cannot add a new amendment while another amendment of same kind is in "
 "progress."
@@ -2084,60 +1561,44 @@ msgstr ""
 "Невозможно добавить новую поправку, пока выполняется другая поправка того же "
 "типа."
 
-#: serializers/interventions_v2.py:453
-msgid "Unable to find corresponding file type."
-msgstr ""
-
-#: serializers/interventions_v2.py:557 serializers/v3.py:34
 msgid "Invalid CP Output provided."
 msgstr "Предоставлен неверный вывод CP."
 
-#: serializers/interventions_v2.py:816
 #, python-format
 msgid ""
 "Please adjust activities to not use the quarters to be removed (%(names)s)."
 msgstr ""
 "Измените действия, чтобы не использовать удаляемые четверти (%(names)s)."
 
-#: serializers/interventions_v2.py:1104
 msgid "Indicator needs to be either cluster or high frequency."
 msgstr "Индикатор должен быть либо кластерным, либо высокочастотным."
 
-#: serializers/interventions_v2.py:1118
 msgid "Start date needs to be on or after PD start date."
 msgstr "Дата начала должна быть не ниже даты начала PD."
 
-#: serializers/interventions_v2.py:1130
 msgid "End date needs to be on or before PD end date."
 msgstr "Дата окончания должна быть не ниже даты окончания PD."
 
-#: serializers/interventions_v2.py:1142
 msgid "End date needs to be after the start date."
 msgstr "Дата окончания должна быть позже даты начала."
 
-#: serializers/interventions_v2.py:1152
 msgid "Next start date needs to be one day after previous end date."
 msgstr ""
 "Следующая дата начала должна быть на один день позже предыдущей даты "
 "окончания."
 
-#: serializers/interventions_v2.py:1226
 msgid "Changes not allowed when PD is terminated."
 msgstr "Изменения не допускаются при прекращении ПД."
 
-#: serializers/interventions_v2.py:1233
 msgid "Changes not allowed when PD not in amendment state."
 msgstr "Изменения не разрешены, если PD не находится в состоянии изменения."
 
-#: serializers/interventions_v2.py:1238
 msgid "PD needs to have a start date."
 msgstr "PD должна иметь дату начала."
 
-#: serializers/interventions_v2.py:1244
 msgid "This field cannot be empty."
 msgstr "Это поле не может быть пустым."
 
-#: serializers/interventions_v3.py:156
 msgid ""
 "Invalid budget data. Total cash should be equal to items number * price per "
 "item."
@@ -2145,218 +1606,163 @@ msgstr ""
 "Неверные данные бюджета. Общая сумма денежных средств должна быть равна "
 "количеству товаров * цене за товар."
 
-#: serializers/v3.py:150 serializers/v3.py:189
 msgid "Unknown intervention."
 msgstr "Неизвестное вмешательство."
 
-#: synchronizers.py:416
 msgid "EZHACT Vision integration disabled"
 msgstr "Интеграция EZHACT Vision отключена"
 
-#: templates/pd/detail.html:127
 msgid "PDF could not be generated properly"
 msgstr ""
 
-#: templates/pd/detail.html:133
 msgid "eTools ref no"
 msgstr ""
 
-#: templates/pd/detail.html:145
 msgid "Organization Name"
 msgstr ""
 
-#: templates/pd/detail.html:149
 msgid "Programme Title"
 msgstr ""
 
-#: templates/pd/detail.html:153
 msgid "Planned duration"
 msgstr ""
 
-#: templates/pd/detail.html:160
 msgid "Geographical coverage"
 msgstr ""
 
-#: templates/pd/detail.html:170
 msgid "Supplies"
 msgstr ""
 
-#: templates/pd/detail.html:178
 msgid "Partner Cash"
 msgstr ""
 
-#: templates/pd/detail.html:180
 msgid "Supplies:"
 msgstr ""
 
-#: templates/pd/detail.html:182
 msgid "Total:"
 msgstr "Всего:"
 
-#: templates/pd/detail.html:207
 msgid "Strategy"
 msgstr ""
 
-#: templates/pd/detail.html:214
 msgid "Implementation Strategy & Technical Guidance"
 msgstr ""
 
-#: templates/pd/detail.html:221
 msgid "Other Partners involved"
 msgstr "Участвуют другие партнеры"
 
-#: templates/pd/detail.html:224 templates/pd/detail.html:227
-#: templates/pd/detail.html:230 templates/pd/detail.html:489
 msgid "Yes"
 msgstr ""
 
-#: templates/pd/detail.html:224 templates/pd/detail.html:227
-#: templates/pd/detail.html:230 templates/pd/detail.html:489
 msgid "No"
 msgstr ""
 
-#: templates/pd/detail.html:249
 msgid "Risk & Proposed Mitigation Measures"
 msgstr ""
 
-#: templates/pd/detail.html:262
 msgid "Workplan Result"
 msgstr ""
 
-#: templates/pd/detail.html:265
 msgid "Result statement"
 msgstr ""
 
-#: templates/pd/detail.html:266
 msgid "Performance indicator/s"
 msgstr ""
 
-#: templates/pd/detail.html:268
 msgid "Baseline"
 msgstr ""
 
-#: templates/pd/detail.html:269
 msgid "Target"
 msgstr ""
 
-#: templates/pd/detail.html:270
 msgid "Means of Verification"
 msgstr ""
 
-#: templates/pd/detail.html:325
 msgid "Result/activity"
 msgstr ""
 
-#: templates/pd/detail.html:326
 msgid "Timeframe"
 msgstr ""
 
-#: templates/pd/detail.html:327
 msgid "Total (CSO + UNICEF)"
 msgstr ""
 
-#: templates/pd/detail.html:328
 msgid "CSO contribution"
 msgstr ""
 
-#: templates/pd/detail.html:329
 msgid "UNICEF contribution"
 msgstr ""
 
-#: templates/pd/detail.html:334 templates/pd/detail.html:357
 msgid "Prog. Output"
 msgstr ""
 
-#: templates/pd/detail.html:385
 msgid "Sub-total for programme costs"
 msgstr ""
 
-#: templates/pd/detail.html:397
 msgid "Total Cash budget"
 msgstr ""
 
-#: templates/pd/detail.html:408
 msgid "Supply Contribution Plan"
 msgstr ""
 
-#: templates/pd/detail.html:411
 msgid "Provided by"
 msgstr "Предоставлено"
 
-#: templates/pd/detail.html:413
 msgid "No. of units"
 msgstr ""
 
-#: templates/pd/detail.html:427
 msgid "Total supply Cost"
 msgstr ""
 
-#: templates/pd/detail.html:436
 msgid "Others"
 msgstr "Другое"
 
-#: templates/pd/detail.html:439
 msgid "Partner non-financial contribution"
 msgstr ""
 
-#: templates/pd/detail.html:443
 msgid "Cash Transfer modality"
 msgstr "Способы денежных переводов"
 
-#: templates/pd/detail.html:456 templates/pd/detail.html:476
 msgid "Signatures and date"
 msgstr ""
 
-#: templates/pd/detail.html:460
 msgid "CSO Authorized Officer"
 msgstr ""
 
-#: templates/pd/detail.html:462 templates/pd/detail.html:467
 msgid "Date"
 msgstr ""
 
-#: templates/pd/detail.html:465
 msgid "UNICEF Authorized Officer"
 msgstr ""
 
-#: templates/pd/detail.html:479
 msgid "Date Uploaded"
 msgstr ""
 
-#: templates/pd/detail.html:481
 msgid "Document"
 msgstr ""
 
-#: templates/pd/detail.html:482
 msgid "Invalid"
 msgstr ""
 
-#: validation/agreements.py:49 validation/interventions.py:117
 msgid "Cannot Transition without termination doc attached"
 msgstr "Невозможно выполнить переход без прикрепленного документа завершения"
 
-#: validation/agreements.py:103
 msgid "None of the signatures can be dated in the future"
 msgstr "Ни одна из подписей не может быть датирована в будущем."
 
-#: validation/agreements.py:120
 msgid "Start and end dates don't match the Document's start and end"
 msgstr ""
 "Даты начала и окончания не совпадают с датами начала и окончания документа."
 
-#: validation/agreements.py:206 validation/interventions.py:481
 msgid "Today is not after the end date"
 msgstr "Сегодня не после даты окончания"
 
-#: validation/interventions.py:74
 msgid "End date is in the future"
 msgstr "Дата окончания в будущем"
 
-#: validation/interventions.py:82
 msgid "Total Outstanding DCTs need to equal to 0"
 msgstr "Общее количество непогашенных DCT должно быть равно 0"
 
-#: validation/interventions.py:91
 msgid ""
 "Total FR amount needs to equal total actual amount, and Total Outstanding "
 "DCTs need to equal to 0"
@@ -2364,42 +1770,32 @@ msgstr ""
 "Общая сумма FR должна быть равна общей фактической сумме, а общая "
 "непогашенная сумма DCT должна быть равна 0"
 
-#: validation/interventions.py:98
 msgid ""
 "Final Review must be approved for documents having amount transferred "
 "greater than 100,000"
 msgstr ""
 
-#: validation/interventions.py:104 validation/interventions.py:119
-#: validation/interventions.py:129 validation/interventions.py:143
-#: validation/interventions.py:173
 msgid "Cannot Transition status while adding an amendment"
 msgstr "Невозможно изменить статус при добавлении поправки"
 
-#: validation/interventions.py:108
 msgid "PD cannot be closed if the Partner is Blocked in Vision"
 msgstr "PD нельзя закрыть, если партнер заблокирован в Vision"
 
-#: validation/interventions.py:127 validation/interventions.py:194
 msgid "Cannot Transition to ended if termination_doc attached"
 msgstr ""
 "Невозможно выполнить переход к завершению, если прикреплен "
 "терминtermination_doc"
 
-#: validation/interventions.py:133
 msgid "PD cannot transition to ended if the Partner is Blocked in Vision"
 msgstr ""
 "PD не может перейти в завершение, если партнер заблокирован в поле зрения."
 
-#: validation/interventions.py:147
 msgid "PD cannot be suspended if the Partner is Blocked in Vision"
 msgstr "PD нельзя приостановить, если партнер заблокирован в Vision."
 
-#: validation/interventions.py:159
 msgid "Justification required for cancellation"
 msgstr "Для отмены требуется обоснование"
 
-#: validation/interventions.py:177
 msgid ""
 "The PCA related to this record is Draft, Suspended or Terminated. This "
 "Programme Document will not change status until the related PCA is in Signed "
@@ -2409,24 +1805,19 @@ msgstr ""
 "«Прекращено». Этот программный документ не изменит статус до тех пор, пока "
 "соответствующий PCA не перейдет в статус «Подписан»."
 
-#: validation/interventions.py:183
 msgid "PD cannot transition to signed if the Partner is Blocked in Vision"
 msgstr ""
 "PD не может перейти на подписанный, если партнер заблокирован в Vision."
 
-#: validation/interventions.py:199
 msgid "PD cannot be activated if the associated Agreement is not active"
 msgstr "PD не может быть активирован, если связанное соглашение не активно"
 
-#: validation/interventions.py:204
 msgid "PD cannot be activated if the Partner is Blocked in Vision"
 msgstr "PD нельзя активировать, если напарник заблокирован в Vision"
 
-#: validation/interventions.py:263
 msgid "Agreement selected is not of type SSFA"
 msgstr "Выбранное соглашение не относится к типу SSFA."
 
-#: validation/interventions.py:283
 #, python-format
 msgid ""
 "The following sections have been selected on the PD/SPD indicators and "
@@ -2435,7 +1826,6 @@ msgstr ""
 "Следующие секции были выбраны на индикаторах PD/SPD и не могут быть удалены "
 "%(sections)s "
 
-#: validation/interventions.py:297
 #, python-format
 msgid ""
 "The following locations have been selected on the PD/SPD indicators and "
@@ -2445,7 +1835,6 @@ msgstr ""
 "Следующие местоположения были выбраны на индикаторах PD/SPD и не могут быть "
 "удалены без предварительного удаления их из индикаторов: %(locations)s"
 
-#: validation/interventions.py:315
 #, python-format
 msgid ""
 "The Country Programme selected on this PD is not the same as the Country "
@@ -2454,7 +1843,6 @@ msgstr ""
 "Страновая программа, выбранная в этом PD, не совпадает со страновой "
 "программой, выбранной в Соглашении, выберите %(cp)s"
 
-#: validation/interventions.py:365
 msgid ""
 "State suspended cannot be modified since the end date of the intervention "
 "surpasses today"
@@ -2462,35 +1850,27 @@ msgstr ""
 "Состояние приостановлено не может быть изменено, так как дата окончания "
 "вмешательства превышает сегодняшний день."
 
-#: validation/interventions.py:367
 msgid "Start date must precede end date"
 msgstr "Дата начала должна предшествовать дате окончания"
 
-#: validation/interventions.py:368
 msgid "Signatures cannot be dated in the future"
 msgstr "Подписи не могут быть датированы будущим."
 
-#: validation/interventions.py:369
 msgid "Document type PD or HPD can only be associated with a PCA agreement."
 msgstr "Тип документа PD или HPD может быть связан только с соглашением PCA."
 
-#: validation/interventions.py:370
 msgid "The agreement selected has at least one other SSFA Document connected"
 msgstr "К выбранному соглашению подключен как минимум еще один документ SSFA."
 
-#: validation/interventions.py:372
 msgid "The start date cannot be before the later of signature dates."
 msgstr "Дата начала не может быть раньше более поздней из дат подписания."
 
-#: validation/interventions.py:373
 msgid "PD start date cannot be earlier than the Start Date of the related PCA"
 msgstr "Дата начала PD не может быть раньше даты начала соответствующего PCA."
 
-#: validation/interventions.py:374
 msgid "Amendment Flag cannot be turned on without adding an amendment"
 msgstr "Флаг поправки не может быть включен без добавления поправки"
 
-#: validation/interventions.py:375
 msgid ""
 "The sections selected on the PD/SPD are not a subset of all sections "
 "selected for this PD/SPD's indicators"
@@ -2498,7 +1878,6 @@ msgstr ""
 "Секции, выбранные на PD/SPD, не являются подмножеством всех секций, "
 "выбранных для индикаторов этого PD/SPD."
 
-#: validation/interventions.py:377
 msgid ""
 "The locations selected on the PD/SPD are not a subset of all locations "
 "selected for this PD/SPD's indicators"
@@ -2506,65 +1885,44 @@ msgstr ""
 "Местоположения, выбранные на PD/SPD, не являются подмножеством всех "
 "местоположений, выбранных для индикаторов этого PD/SPD."
 
-#: validation/interventions.py:389
 #, python-format
 msgid "Required fields not completed in %(status)s: %(fields)s"
 msgstr "Не заполнены обязательные поля в %(status)s: %(fields)s"
 
-#: validation/interventions.py:402
 #, python-format
 msgid "Cannot change fields while in %(status)s: %(field)s"
 msgstr "Невозможно изменить поля, находясь в %(status)s: %(field)s"
 
-#: validation/interventions.py:409 validation/interventions.py:427
-#: validation/interventions.py:443 validation/interventions.py:461
-#: validation/interventions.py:475
 msgid "All activities must have at least one time frame"
 msgstr "Все действия должны иметь хотя бы один временной интервал."
 
-#: validation/interventions.py:411
 msgid "Results section is empty"
 msgstr "Раздел результатов пуст"
 
-#: validation/interventions.py:413
 msgid "All PD Outputs need to have at least one indicator"
 msgstr "Все выходы PD должны иметь хотя бы один индикатор."
 
-#: validation/interventions.py:415
 msgid "Total UNICEF Contribution must be greater than 0"
 msgstr "Общий взнос ЮНИСЕФ должен быть больше 0"
 
-#: validation/interventions.py:418 validation/interventions.py:429
-#: validation/interventions.py:445 validation/interventions.py:463
-#: validation/interventions.py:477
 msgid "All PD Outputs need to be associated to a CP Output"
 msgstr "Все выходы PD должны быть связаны с выходом CP."
 
-#: validation/interventions.py:425
 msgid "Unicef and Partner both need to accept"
 msgstr "Юнисеф и Партнер должны принять"
 
-#: validation/interventions.py:436
 msgid "Review needs to be approved"
 msgstr "Обзор должен быть одобрен"
 
-#: validation/interventions.py:447 validation/interventions.py:468
 msgid "UNICEF Cash $ or UNICEF Supplies $ should not be 0"
 msgstr ""
 "Денежные средства ЮНИСЕФ или товары ЮНИСЕФ в долларах не должны быть равны 0."
 
-#: validation/interventions.py:459
 msgid "Only original PD can be active"
 msgstr "Активен может быть только оригинальный PD"
 
-#: validation/interventions.py:466
 msgid "Today is not after the start date"
 msgstr "Сегодня не после даты начала"
 
-#: views/interventions_v2.py:390 views/interventions_v3.py:631
-msgid "Deleting an attachment can only be done in Draft status"
-msgstr ""
-
-#: views/interventions_v3.py:359
 msgid "Meeting date is not available."
 msgstr "Дата собрания недоступна."

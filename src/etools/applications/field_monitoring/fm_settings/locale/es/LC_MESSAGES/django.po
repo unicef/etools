@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-03 14:34+0000\n"
+"POT-Creation-Date: 2023-02-10 10:07+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,263 +18,199 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: admin.py:39 models.py:46 models.py:103
 msgid "Methods"
 msgstr "Métodos"
 
-#: export/renderers.py:14
 msgid "Site ID"
 msgstr "ID del sitio"
 
-#: export/renderers.py:20
 #, python-format
 msgid "Admin %s - Name"
 msgstr "Admin %s - Nombre"
 
-#: export/renderers.py:21
 #, python-format
 msgid "Admin %s - Type"
 msgstr "Admin %s - Tipo"
 
-#: export/renderers.py:22
 #, python-format
 msgid "Admin %s - Pcode"
 msgstr "Admin %s - Pcode"
 
-#: export/renderers.py:26 models.py:245
 msgid "Site"
 msgstr "Página web"
 
-#: export/renderers.py:27
 msgid "Lat"
 msgstr "Lat"
 
-#: export/renderers.py:28
 msgid "Long"
 msgstr "Largo"
 
-#: export/renderers.py:29 models.py:189 serializers.py:130
 msgid "Active"
 msgstr "Activo"
 
-#: export/renderers.py:40
 msgid "Related To"
 msgstr "Relacionado"
 
-#: export/renderers.py:41 models.py:39 models.py:54 models.py:180
 msgid "Name"
 msgstr "Nombre"
 
-#: export/renderers.py:42
 msgid "Issue for Attention"
 msgstr "Tema de atención"
 
-#: export/renderers.py:43 serializers.py:132
 msgid "Status"
 msgstr "Estado"
 
-#: export/renderers.py:44 models.py:251 views.py:206
 msgid "Attachments"
 msgstr "Archivos adjuntos"
 
-#: models.py:22 views.py:76
 msgid "Global Attachments"
 msgstr "Anexos globales"
 
-#: models.py:25
 msgid "Global Config"
 msgstr "Configuración global"
 
-#: models.py:26
 msgid "Global Configs"
 msgstr "Configuración global"
 
-#: models.py:40
 msgid "Short Name"
 msgstr "Nombre corto"
 
-#: models.py:41
 msgid "Ask for information source in checklist?"
 msgstr "¿Pedir la fuente de información en la lista de control?"
 
-#: models.py:45
 msgid "Method"
 msgstr "Método"
 
-#: models.py:57
 msgid "Question Category"
 msgstr "Categoría de preguntas"
 
-#: models.py:58
 msgid "Questions Categories"
 msgstr "Categorías de preguntas"
 
-#: models.py:88
 msgid "Text"
 msgstr "Texto"
 
-#: models.py:89
 msgid "Number"
 msgstr "Número"
 
-#: models.py:90
 msgid "Boolean"
 msgstr "Booleano"
 
-#: models.py:91
 msgid "Likert Scale"
 msgstr "Escala Likert"
 
-#: models.py:95 models.py:232 models.py:241
 msgid "Partner"
 msgstr "Socio"
 
-#: models.py:96
 msgid "Output"
 msgstr "Salida"
 
-#: models.py:97
 msgid "PD/SPD"
 msgstr "PD/SPD"
 
-#: models.py:100
 msgid "Answer Type"
 msgstr "Tipo de respuesta"
 
-#: models.py:101
 msgid "Choices Size"
 msgstr "Opciones Tamaño"
 
-#: models.py:102
 msgid "Level"
 msgstr "Nivel"
 
-#: models.py:104
 msgid "Category"
 msgstr "Categoría"
 
-#: models.py:105
 msgid "Sections"
 msgstr "Secciones"
 
-#: models.py:106
 msgid "Question Text"
 msgstr "Texto de la pregunta"
 
-#: models.py:107
 msgid "Count as HACT"
 msgstr "Cuenta como HACT"
 
-#: models.py:108
 msgid "Is Custom"
 msgstr "Está personalizado"
 
-#: models.py:109
 msgid "Is Active"
 msgstr "Está activo"
 
-#: models.py:114 models.py:151
 msgid "Question"
 msgstr "Pregunta"
 
-#: models.py:115
 msgid "Questions"
 msgstr "Preguntas"
 
-#: models.py:152
 msgid "Label"
 msgstr "Etiqueta"
 
-#: models.py:155
 msgid "Value"
 msgstr "Valor"
 
-#: models.py:158 models.py:159
 msgid "Option"
 msgstr "Opción"
 
-#: models.py:175
 msgid "Parent Location"
 msgstr "Ubicación de los padres"
 
-#: models.py:182
 msgid "P Code"
 msgstr "Código P"
 
-#: models.py:188
 msgid "Point"
 msgstr "Punto"
 
-#: models.py:194
 msgid "Location Site"
 msgstr "Ubicación"
 
-#: models.py:195
 msgid "Location Sites"
 msgstr "Emplazamientos"
 
-#: models.py:231 models.py:239
 msgid "CP Output"
 msgstr "Salida CP"
 
-#: models.py:233
 msgid "Location/Site"
 msgstr "Localización"
 
-#: models.py:237
 msgid "Issue Raised By"
 msgstr "Cuestión planteada por"
 
-#: models.py:243
 msgid "Location"
 msgstr "Ubicación"
 
-#: models.py:248
 msgid "Issue For Attention/Probing"
 msgstr "Cuestión de atención"
 
-#: models.py:256
 msgid "Log Issue"
 msgstr "Problema de registro"
 
-#: models.py:257
 msgid "Log Issues"
 msgstr "Problemas de registro"
 
-#: models.py:268
 msgid "Related object not provided"
 msgstr "Objeto relacionado no proporcionado"
 
-#: models.py:271
 msgid "Maximum one related object should be provided"
 msgstr "Debe proporcionarse como máximo un objeto relacionado"
 
-#: serializers.py:85
 msgid "HACT questions can only be related at the Partner Organization Level"
 msgstr ""
 "Las preguntas HACT sólo pueden relacionarse a nivel de la Organización "
 "Asociada"
 
-#: serializers.py:88
 msgid "Only one hact question can be active at any time."
 msgstr "Sólo puede haber una pregunta hact activa en cada momento."
 
-#: serializers.py:102
 msgid "The system provided questions cannot be edited."
 msgstr "Las preguntas proporcionadas por el sistema no pueden editarse."
 
-#: serializers.py:131
 msgid "Inactive"
 msgstr "Inactivo"
 
-#: serializers.py:188
 msgid "Issue Closed By"
 msgstr "Asunto cerrado por"
 
-#: serializers.py:190
 msgid "Issue Related To"
 msgstr "Asunto relacionado con"
 
-#: views.py:110
 msgid "Site Specific Locations"
 msgstr "Emplazamientos específicos"
