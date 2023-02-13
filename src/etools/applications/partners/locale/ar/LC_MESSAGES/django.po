@@ -1089,6 +1089,9 @@ msgstr "الارشاد الفني"
 msgid "Cancel Justification"
 msgstr "إلغاء التبرير"
 
+msgid "Attachments"
+msgstr "المرفقات"
+
 msgid "Metadata"
 msgstr "البيانات الوصفية"
 
@@ -1521,9 +1524,6 @@ msgstr "نوع المرفق"
 msgid "N/A"
 msgstr "غير متاح"
 
-msgid "Attachments"
-msgstr "المرفقات"
-
 msgid "CSO Contribution"
 msgstr "مساهمة منظمات المجتمع المدني"
 
@@ -1549,6 +1549,9 @@ msgid ""
 "Cannot add a new amendment while another amendment of same kind is in "
 "progress."
 msgstr "لا يمكن إضافة تعديل جديد أثناء إجراء تعديل آخر من نفس النوع."
+
+msgid "Unable to find corresponding file type."
+msgstr ""
 
 msgid "Invalid CP Output provided."
 msgstr "تم توفير إخراج CP غير صالح."
@@ -1902,6 +1905,9 @@ msgstr "يمكن تنشيط PD الأصلي فقط"
 
 msgid "Today is not after the start date"
 msgstr "اليوم ليس بعد تاريخ البدء"
+
+msgid "Deleting an attachment can only be done in Draft status"
+msgstr ""
 
 msgid "Meeting date is not available."
 msgstr "تاريخ الاجتماع غير متوفر."

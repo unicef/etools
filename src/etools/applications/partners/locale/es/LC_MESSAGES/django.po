@@ -1094,6 +1094,9 @@ msgstr "Orientación técnica"
 msgid "Cancel Justification"
 msgstr "Cancelar justificación"
 
+msgid "Attachments"
+msgstr "Archivos adjuntos"
+
 msgid "Metadata"
 msgstr "Metadatos"
 
@@ -1535,9 +1538,6 @@ msgstr "Tipo de archivo adjunto"
 msgid "N/A"
 msgstr ""
 
-msgid "Attachments"
-msgstr "Archivos adjuntos"
-
 msgid "CSO Contribution"
 msgstr "Contribución de las OSC"
 
@@ -1565,6 +1565,9 @@ msgid ""
 msgstr ""
 "No se puede añadir una nueva enmienda mientras esté en curso otra enmienda "
 "del mismo tipo."
+
+msgid "Unable to find corresponding file type."
+msgstr ""
 
 msgid "Invalid CP Output provided."
 msgstr "Salida de CP proporcionada no válida."
@@ -1936,6 +1939,9 @@ msgstr "Solo el PD original puede estar activo"
 
 msgid "Today is not after the start date"
 msgstr "Hoy no es posterior a la fecha de inicio"
+
+msgid "Deleting an attachment can only be done in Draft status"
+msgstr ""
 
 msgid "Meeting date is not available."
 msgstr "La fecha de la reunión no está disponible."

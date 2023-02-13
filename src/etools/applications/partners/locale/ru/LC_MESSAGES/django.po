@@ -1093,6 +1093,9 @@ msgstr "Техническое руководство"
 msgid "Cancel Justification"
 msgstr "Отменить обоснование"
 
+msgid "Attachments"
+msgstr "Вложения"
+
 msgid "Metadata"
 msgstr "Метаданные"
 
@@ -1530,9 +1533,6 @@ msgstr "Тип вложения"
 msgid "N/A"
 msgstr "Н/Д"
 
-msgid "Attachments"
-msgstr "Вложения"
-
 msgid "CSO Contribution"
 msgstr "Вклад ОГО"
 
@@ -1560,6 +1560,9 @@ msgid ""
 msgstr ""
 "Невозможно добавить новую поправку, пока выполняется другая поправка того же "
 "типа."
+
+msgid "Unable to find corresponding file type."
+msgstr ""
 
 msgid "Invalid CP Output provided."
 msgstr "Предоставлен неверный вывод CP."
@@ -1923,6 +1926,9 @@ msgstr "Активен может быть только оригинальный
 
 msgid "Today is not after the start date"
 msgstr "Сегодня не после даты начала"
+
+msgid "Deleting an attachment can only be done in Draft status"
+msgstr ""
 
 msgid "Meeting date is not available."
 msgstr "Дата собрания недоступна."

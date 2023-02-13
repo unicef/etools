@@ -1094,6 +1094,9 @@ msgstr "Conseils techniques"
 msgid "Cancel Justification"
 msgstr "Annuler la justification"
 
+msgid "Attachments"
+msgstr "pièces jointes"
+
 msgid "Metadata"
 msgstr "Métadonnées"
 
@@ -1537,9 +1540,6 @@ msgstr "Type de pièce jointe"
 msgid "N/A"
 msgstr ""
 
-msgid "Attachments"
-msgstr "pièces jointes"
-
 msgid "CSO Contribution"
 msgstr "Contribution des OSC"
 
@@ -1567,6 +1567,9 @@ msgid ""
 msgstr ""
 "Impossible d'ajouter un nouvel amendement alors qu'un autre amendement du "
 "même type est en cours."
+
+msgid "Unable to find corresponding file type."
+msgstr ""
 
 msgid "Invalid CP Output provided."
 msgstr "Sortie CP non valide fournie."
@@ -1937,6 +1940,9 @@ msgstr "Seul le PD d'origine peut être actif"
 
 msgid "Today is not after the start date"
 msgstr "Aujourd'hui n'est pas après la date de début"
+
+msgid "Deleting an attachment can only be done in Draft status"
+msgstr ""
 
 msgid "Meeting date is not available."
 msgstr "La date de la réunion n'est pas disponible."
