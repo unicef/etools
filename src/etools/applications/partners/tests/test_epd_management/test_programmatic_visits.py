@@ -4,8 +4,9 @@ from django.urls import reverse
 
 from rest_framework import status
 
-from etools.applications.partners.tests.factories import InterventionPlannedVisitsFactory
+from etools.applications.partners.tests.factories import InterventionFactory, InterventionPlannedVisitsFactory
 from etools.applications.partners.tests.test_epd_management.base import BaseTestCase
+from etools.applications.users.tests.factories import PMEUserFactory, UserFactory
 
 
 class TestProgrammaticVisitsManagement(BaseTestCase):
@@ -29,6 +30,66 @@ class TestProgrammaticVisitsManagement(BaseTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertEqual(response.data['permissions']['view']['planned_visits'], True)
         self.assertEqual(response.data['permissions']['edit']['planned_visits'], True)
+
+    def test_unicef_focal_point_permissions(self):
+        unicef_focal_point = UserFactory(is_staff=True)
+        active_intervention = InterventionFactory(status='active')
+
+        # view and edit permissions for draft, review, signed, signature, active interventions
+        for intervention in [self.draft_intervention, self.review_intervention,
+                             self.signed_intervention, self.signature_intervention,
+                             active_intervention]:
+            intervention.unicef_focal_points.add(unicef_focal_point)
+            response = self.forced_auth_req(
+                'get',
+                reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+                user=unicef_focal_point,
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+            self.assertEqual(response.data['permissions']['view']['planned_visits'], True)
+            self.assertEqual(response.data['permissions']['edit']['planned_visits'], True)
+
+        # view and no edit permissions for Cancelled, Ended, Closed, Suspended, Terminated, Expired
+        for _status in ["cancelled", "ended", "closed", "suspended", "terminated", "expired"]:
+            intervention = InterventionFactory(status=_status)
+            intervention.unicef_focal_points.add(unicef_focal_point)
+            response = self.forced_auth_req(
+                'get',
+                reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+                user=unicef_focal_point,
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+            self.assertEqual(response.data['permissions']['view']['planned_visits'], True)
+            self.assertEqual(response.data['permissions']['edit']['planned_visits'], False)
+
+    def test_pme_permissions(self):
+        pme_user = PMEUserFactory()
+        active_intervention = InterventionFactory(status='active')
+
+        # view and edit permissions for draft, review, signed, signature, active interventions
+        for intervention in [self.draft_intervention, self.review_intervention,
+                             self.signed_intervention, self.signature_intervention,
+                             active_intervention]:
+            response = self.forced_auth_req(
+                'get',
+                reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+                user=pme_user,
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+            self.assertEqual(response.data['permissions']['view']['planned_visits'], True)
+            self.assertEqual(response.data['permissions']['edit']['planned_visits'], True)
+
+        # view and no edit permissions for Cancelled, Ended, Closed, Suspended, Terminated, Expired
+        for _status in ["cancelled", "ended", "closed", "suspended", "terminated", "expired"]:
+            intervention = InterventionFactory(status=_status)
+            response = self.forced_auth_req(
+                'get',
+                reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+                user=pme_user,
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+            self.assertEqual(response.data['permissions']['view']['planned_visits'], True)
+            self.assertEqual(response.data['permissions']['edit']['planned_visits'], False)
 
     def test_partner_permissions(self):
         response = self.forced_auth_req(
