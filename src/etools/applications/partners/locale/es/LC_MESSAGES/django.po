@@ -1085,6 +1085,11 @@ msgstr "Desarrollo de capacidades"
 msgid "Other Info"
 msgstr "Otra información"
 
+#, fuzzy
+#| msgid "Agreement Details"
+msgid "Other Document Details"
+msgstr "Detalles del Acuerdo"
+
 msgid "Other Partners Involved"
 msgstr "Otros socios involucrados"
 

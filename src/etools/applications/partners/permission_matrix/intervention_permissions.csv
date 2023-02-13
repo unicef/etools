@@ -150,9 +150,11 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.7,offices,Unicef Focal Point,,Signature,Edit,TRUE
 3.5,offices,Unicef Focal Point,user_adds_amendment,*,Edit,TRUE
 3.6,offices,*,unicef_not_accepted,Draft,Required,FALSE
-,other_info,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
-,other_info,Partner User,partner_court,Draft,Edit,TRUE
-,other_info,*,unlocked,Draft,Required,FALSE
+3.6,other_info,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
+3.2.2,other_info,Partner User,partner_court,Draft,Edit,TRUE
+,other_details,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
+,other_details,Partner User,partner_court,Draft,Edit,TRUE
+,other_details,*,unlocked,Draft,Required,FALSE
 3.2.3,other_partners_involved,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
 3.2.4,other_partners_involved,Partner User,partner_court,Draft,Edit,TRUE
 3.2.4,other_partners_involved,*,unlocked,Draft,Required,FALSE
