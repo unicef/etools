@@ -23,7 +23,7 @@ class IsRelatedThirdPartyUser(BasePermission):
             return False
 
         if hasattr(content_object, 'get_related_third_party_users'):
-            return request.user in content_object.get_related_third_party_users()
+            return content_object.get_related_third_party_users().filter(pk=request.user.pk).exists()
 
         return False
 

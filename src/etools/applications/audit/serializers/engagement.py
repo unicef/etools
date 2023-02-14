@@ -72,10 +72,7 @@ class AttachmentField(serializers.Field):
             return None
 
         attachment = Attachment.objects.get(pk=value)
-        if not getattr(attachment.file, "url", None):
-            return None
-
-        url = attachment.file.url
+        url = attachment.file_link
         request = self.context.get('request', None)
         if request is not None:
             return request.build_absolute_uri(url)

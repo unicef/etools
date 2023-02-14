@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import connection, models
 from django.utils.translation import gettext_lazy as _
@@ -28,6 +29,9 @@ class TPMPartner(BaseFirm):
         if self.hidden:
             self.hidden = False
             self.save()
+
+    def get_related_third_party_users(self):
+        return get_user_model().objects.filter(models.Q(pk__in=self.staff_members.values_list('user_id')))
 
 
 class TPMPartnerStaffMember(BaseStaffMember):
