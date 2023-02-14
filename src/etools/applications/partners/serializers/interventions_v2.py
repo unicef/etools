@@ -350,6 +350,7 @@ class InterventionListSerializer(BaseInterventionListSerializer):
             'cfei_number',
             'context',
             'implementation_strategy',
+            'other_details',
             'gender_rating',
             'gender_narrative',
             'equity_rating',
