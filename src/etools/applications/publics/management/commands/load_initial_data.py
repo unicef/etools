@@ -434,7 +434,7 @@ class Command(BaseCommand):
                      ('Senegal', '3810, 381R', 'Senegal', 'SEN', '381', 'SN', 'SEN',
                       'XOF', '28.09.1960', '31.12.9999', 'THE REPUBLIC OF SENEGAL'),
                      ('Sierra Leone', '3900', 'Sierra Leone', 'SIL', '390', 'SL', 'SLE',
-                      'SLL', '27.09.1961', '31.12.9999', 'THE REPUBLIC OF SIERRA LEONE'),
+                      'SLE', '27.09.1961', '31.12.9999', 'THE REPUBLIC OF SIERRA LEONE'),
                      ('Somalia', '3920', 'Somalia', 'SOM', '392', 'SO', 'SOM', 'SOS',
                       '20.09.1960', '31.12.9999', 'THE SOMALI DEMOCRATIC REPUBLIC'),
                      ('South Africa', '3930', 'South Africa', 'SAF', '393', 'ZA', 'ZAF',

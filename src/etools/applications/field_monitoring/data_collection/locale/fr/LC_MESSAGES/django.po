@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-03 14:33+0000\n"
+"POT-Creation-Date: 2023-02-10 10:07+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,120 +18,91 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: models.py:25 models.py:49 models.py:135 models.py:182
 msgid "Activity"
 msgstr "Activité"
 
-#: models.py:27
 msgid "Question"
 msgstr "Question"
 
-#: models.py:31
 msgid "Question Text"
 msgstr "Texte de la question"
 
-#: models.py:32
 msgid "Count as HACT"
 msgstr "Compter comme HACT"
 
-#: models.py:34
 msgid "Specific Details To Probe"
 msgstr "Détails spécifiques à sonder"
 
-#: models.py:35
 msgid "Enabled"
 msgstr "Activé"
 
-#: models.py:40 models.py:113
 msgid "Activity Question"
 msgstr "Question d'activité"
 
-#: models.py:41
 msgid "Activity Questions"
 msgstr "Questions d'activité"
 
-#: models.py:51
 msgid "Methods"
 msgstr "Méthodes"
 
-#: models.py:52
 msgid "Information Source"
 msgstr "Source d'informatioon"
 
-#: models.py:53
 msgid "Author"
 msgstr "Auteur"
 
-#: models.py:57
 msgid "Started Checklist"
 msgstr "Liste de contrôle commencée"
 
-#: models.py:58
 msgid "Started Checklists"
 msgstr "Listes de contrôle commencées"
 
-#: models.py:110 models.py:157
 msgid "Checklist"
 msgstr "Liste de contrôle"
 
-#: models.py:114 models.py:136
 msgid "Value"
 msgstr "Valeur"
 
-#: models.py:119
 msgid "Checklist Finding"
 msgstr "Liste de vérification"
 
-#: models.py:120
 msgid "Checklist Findings"
 msgstr "Liste de vérifications"
 
-#: models.py:139
 msgid "Overall Activity Question Finding"
 msgstr "Conclusion générale relative à la question"
 
-#: models.py:140
 msgid "Overall Activity Question Findings"
 msgstr "Conclusions générales relatives à la question"
 
-#: models.py:158 models.py:183
 msgid "Narrative Finding"
 msgstr "Conclusion narrative"
 
-#: models.py:159
 msgid "Attachments"
 msgstr "Pièces jointes"
 
-#: models.py:164
 msgid "Checklist Overall Finding"
 msgstr "Liste de conclusion générale"
 
-#: models.py:165
 msgid "Checklist Overall Findings"
 msgstr "Liste de conclusions générales"
 
-#: models.py:189
 msgid "Activity Overall Finding"
 msgstr "Conclusion générale de l'activité"
 
-#: models.py:190
 msgid "Activity Overall Findings"
 msgstr "Conclusions générales de l'activité"
 
-#: offline/blueprint.py:48
 msgid "Source of Information"
 msgstr "Source d'information"
 
-#: offline/blueprint.py:70
 msgid "Overall Finding"
 msgstr "Conclusion générale"
 
-#: offline/helpers.py:55
 #, python-format
 msgid "Unable to find %(level)s with id %(target_id)s"
 msgstr "Impossible de trouver %(level)s avec id %(target_id)s"
 
-#: offline/helpers.py:74
 #, python-format
 msgid ""
 "Unable to find finding for question %(question_id)s for %(level)s "
@@ -140,37 +111,29 @@ msgstr ""
 "Impossible de trouver les résultats pour la question %(question_id)s pour "
 "%(level)s %(target_id)s"
 
-#: offline/helpers.py:91
 msgid "Ensure this field has no more than 100 characters."
 msgstr "Assurez-vous que ce champ ne comporte pas plus de 100 caractères."
 
-#: serializers.py:79
 msgid "Document Type"
 msgstr "Type de document"
 
-#: serializers.py:102
 msgid "Information source is required"
 msgstr "La source d'information est requise"
 
-#: views.py:84
 #, python-format
 msgid "Workspace code provided is not a valid business_area_code: %s"
 msgstr ""
 "Le code d'espace de travail fourni n'est pas un code de zone d'activité "
 "valide : %s"
 
-#: views.py:92
 msgid "Workspace is required"
 msgstr "Un espace de travail est nécessaire"
 
-#: views.py:102
 msgid "User is required"
 msgstr "L'utilisateur est requis"
 
-#: views.py:114
 msgid "Unable to fill checklists for current activity"
 msgstr "Impossible de remplir les listes de contrôle pour l'activité en cours"
 
-#: views.py:136
 msgid "Report Attachments"
 msgstr "Pièces jointes du rapport"
