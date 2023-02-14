@@ -1080,6 +1080,11 @@ msgstr "تنمية القدرات"
 msgid "Other Info"
 msgstr "معلومات أخرى"
 
+#, fuzzy
+#| msgid "Agreement Details"
+msgid "Other Document Details"
+msgstr "تفاصيل الاتفاقية"
+
 msgid "Other Partners Involved"
 msgstr "شركاء آخرون منخرطون"
 

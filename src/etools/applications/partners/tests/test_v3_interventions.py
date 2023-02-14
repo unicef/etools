@@ -698,6 +698,7 @@ class TestCreate(BaseInterventionTestCase):
             "context": "long text" * 5000,
             "implementation_strategy": "long text" * 5000,
             "ip_program_contribution": "long text" * 5000,
+            "other_details": "*" * 5001,
         }
         response = self.forced_auth_req(
             "post",
@@ -710,6 +711,7 @@ class TestCreate(BaseInterventionTestCase):
             ("context", 7000),
             ("implementation_strategy", 5000),
             ("ip_program_contribution", 5000),
+            ("other_details", 5000),
         ]:
             self.assertEqual(
                 response.data[field_name],
