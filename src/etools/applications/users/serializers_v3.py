@@ -161,6 +161,10 @@ class UserRealmBaseSerializer(GroupEditPermissionMixin, serializers.ModelSeriali
     def validate_organization(self, value):
         organization_id = value
         if organization_id:
+            if not self.context['request'].user.is_unicef_user():
+                raise PermissionDenied(
+                    _('You do not have permission to set roles for organization with %(id)s.'
+                      % {'id': organization_id}))
             organization = get_object_or_404(Organization, pk=organization_id)
             if not organization.relationship_types:
                 raise PermissionDenied(
@@ -241,7 +245,12 @@ class UserRealmCreateSerializer(UserRealmBaseSerializer):
 
         if job_title:
             instance.profile.job_title = job_title
-            instance.profile.save(update_fields=['job_title'])
+        instance.profile.country = connection.tenant
+
+        if not instance.profile.organization and instance != self.context['request'].user:
+            instance.profile.organization_id = organization_id
+
+        instance.profile.save(update_fields=['country', 'organization_id', 'job_title'])
 
         self.create_realms(instance, organization_id, group_ids)
         instance.update_active_state()
@@ -288,10 +297,13 @@ class UserRealmUpdateSerializer(UserRealmBaseSerializer):
 
         instance.update_active_state()
 
+        if not instance.profile.organization and instance != self.context['request'].user:
+            instance.profile.organization = organization
         # clean up profile organization if no realm is active for context country and organization
         if not instance.realms.filter(is_active=True, **context_qs_params).exists():
             instance.profile.organization = None
-            instance.profile.save(update_fields=['organization'])
+        instance.profile.save(update_fields=['organization'])
+
         notify_user_on_realm_update.delay(instance.id)
         return instance
 

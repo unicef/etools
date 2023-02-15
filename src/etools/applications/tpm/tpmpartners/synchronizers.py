@@ -99,7 +99,6 @@ class TPMPartnerSynchronizer(VisionDataTenantSynchronizer):
         # users_deactivate.update(is_active=False)
         try:
             Realm.objects.filter(
-                country__in=partner.countries.all(),
                 organization=partner.organization,
                 group__name__in=TPM_ACTIVE_GROUPS,
             ).update(is_active=False)

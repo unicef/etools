@@ -26,9 +26,9 @@ def staff_member_changed(sender, instance, action, reverse, pk_set, *args, **kwa
                 group=Auditor.as_group(),
                 defaults={"is_active": True}
             )
-            # TBD
-            # member.profile.organization = instance.agreement.auditor_firm.organization
-            # member.profile.save(update_fields=['organization'])
+            if not member.profile.organization:
+                member.profile.organization = instance.agreement.auditor_firm.organization
+                member.profile.save(update_fields=['organization'])
 
 
 @receiver(post_save, sender=EngagementActionPoint)

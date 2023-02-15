@@ -196,7 +196,7 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
         """
         return self.get_partner()
 
-    @property
+    @cached_property
     def groups(self):
         current_country_realms = self.realms.filter(
             country=connection.tenant, organization=self.profile.organization, is_active=True)
