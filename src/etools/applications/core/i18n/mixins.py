@@ -37,11 +37,9 @@ class TranslationFieldsMixin:
         translations_values = getattr(instance, self.TRANSLATIONS_FIELD)
 
         for translatable in self.get_translatable_fields(instance):
-            translations_values = getattr(instance, self.TRANSLATIONS_FIELD)
-            if not translations_values:
-                translations_values = get_default_translated(translatable)
-            if translatable not in translations_values:
-                translations_values.update(get_default_translated(translatable))
+            # resets all translations for translatable field
+            translations_values.update(get_default_translated(translatable))
+            # set the translatable field value for the active language
             translations_values[translatable][language] = getattr(instance, translatable)
 
         setattr(instance, self.TRANSLATIONS_FIELD, translations_values)

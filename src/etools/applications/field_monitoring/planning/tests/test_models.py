@@ -217,6 +217,40 @@ class TestMonitoringActivityQuestionsFlow(BaseTenantTestCase):
         )
         self.assertFalse(ActivityQuestionOverallFinding.objects.filter(activity_question=disabled_question).exists())
 
+    def test_questions_prepare_questions_structure_with_translations(self):
+        self.assertEqual(self.activity.questions.count(), 0)
+        _translated = {'ar': 'ar', 'en': 'en', 'es': 'es', 'fr': 'fr', 'pt': 'pt', 'ru': 'ru'}
+        self.specific_question.translations = {'text': _translated}
+        self.specific_question.save(update_fields=['translations'])
+
+        self.specific_question_specific_template.translations = {'specific_details': _translated}
+        self.specific_question_specific_template.save(update_fields=['translations'])
+
+        self.activity.prepare_questions_structure()
+        self.activity.mark_details_configured()
+        self.activity.save()
+
+        specific_activity_questions = self.activity.questions.filter(question=self.specific_question)
+        activity_question = specific_activity_questions.filter(partner=self.second_partner).get()
+
+        self.assertEqual(
+            activity_question.specific_details,
+            self.specific_question_specific_template.specific_details
+        )
+        self.assertEqual(
+            activity_question.translations['specific_details'],
+            _translated
+        )
+
+        self.assertEqual(
+            activity_question.text,
+            self.specific_question.text
+        )
+        self.assertEqual(
+            activity_question.translations['text'],
+            _translated
+        )
+
 
 class TestMonitoringActivityGroups(BaseTenantTestCase):
     @classmethod

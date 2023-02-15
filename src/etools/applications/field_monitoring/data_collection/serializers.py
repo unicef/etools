@@ -9,6 +9,7 @@ from unicef_attachments.models import FileType
 from unicef_attachments.serializers import BaseAttachmentSerializer
 from unicef_restlib.serializers import UserContextSerializerMixin
 
+from etools.applications.core.i18n.mixins import TranslationFieldsMixin
 from etools.applications.field_monitoring.data_collection.models import (
     ActivityOverallFinding,
     ActivityQuestion,
@@ -34,7 +35,7 @@ class ActivityDataCollectionSerializer(serializers.ModelSerializer):
         fields = ('id',)
 
 
-class ActivityQuestionSerializer(serializers.ModelSerializer):
+class ActivityQuestionSerializer(TranslationFieldsMixin, serializers.ModelSerializer):
     partner = MinimalPartnerOrganizationListSerializer(read_only=True)
     cp_output = MinimalOutputListSerializer(read_only=True)
     intervention = MinimalInterventionListSerializer(read_only=True)

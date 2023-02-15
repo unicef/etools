@@ -6,6 +6,7 @@ from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.action_points.categories.models import Category
 from etools.applications.action_points.tests.factories import ActionPointFactory
+from etools.applications.core.i18n.utils import get_default_translated
 from etools.applications.field_monitoring.fm_settings.tests.factories import QuestionFactory
 from etools.applications.field_monitoring.planning.models import (
     MonitoringActivity,
@@ -151,6 +152,7 @@ class MonitoringActivityFactory(BaseMonitoringActivityFactory, metaclass=StatusF
 class QuestionTemplateFactory(factory.django.DjangoModelFactory):
     question = factory.SubFactory(QuestionFactory)
     specific_details = fuzzy.FuzzyText()
+    translations = factory.Dict(get_default_translated('specific_details'))
 
     class Meta:
         model = QuestionTemplate

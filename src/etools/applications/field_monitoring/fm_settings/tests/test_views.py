@@ -1033,6 +1033,8 @@ class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.data['text'], 'Test Question FR')
         question = Question.objects.get(id=response.data['id'])
         self.assertEqual(question.translations['text']['fr'], 'Test Question FR')
+        for lang in ['en', 'ar', 'es', 'pt', 'ru']:
+            self.assertEqual(question.translations['text'][lang], '')
         translation.deactivate()
 
     def test_methods_required(self):
@@ -1149,6 +1151,8 @@ class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
         question.refresh_from_db()
         self.assertEqual(question.text, data['text'])
         self.assertEqual(question.translations['text']['fr'], data['text'])
+        for lang in ['en', 'ar', 'es', 'pt', 'ru']:
+            self.assertEqual(question.translations['text'][lang], '')
         translation.deactivate()
 
     def test_deactivate_default_question(self):

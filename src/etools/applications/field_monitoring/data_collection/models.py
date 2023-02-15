@@ -22,6 +22,8 @@ class ActivityQuestionQuerySet(models.QuerySet):
 
 
 class ActivityQuestion(QuestionTargetMixin, models.Model):
+    TRANSLATABLE_FIELDS = ('text', 'specific_details')
+
     monitoring_activity = models.ForeignKey(MonitoringActivity, related_name='questions', verbose_name=_('Activity'),
                                             on_delete=models.CASCADE)
     question = models.ForeignKey(Question, related_name='activity_questions', verbose_name=_('Question'),
@@ -33,6 +35,8 @@ class ActivityQuestion(QuestionTargetMixin, models.Model):
 
     specific_details = models.TextField(verbose_name=_('Specific Details To Probe'), blank=True)
     is_enabled = models.BooleanField(verbose_name=_('Enabled'), default=True)
+
+    translations = models.JSONField(verbose_name=_('Translations'), default=dict)
 
     objects = models.Manager.from_queryset(ActivityQuestionQuerySet)()
 
