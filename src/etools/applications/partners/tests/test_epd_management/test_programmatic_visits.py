@@ -34,11 +34,12 @@ class TestProgrammaticVisitsManagement(BaseTestCase):
     def test_unicef_focal_point_permissions(self):
         unicef_focal_point = UserFactory(is_staff=True)
         active_intervention = InterventionFactory(status='active')
+        suspended_intervention = InterventionFactory(status="suspended")
 
-        # view and edit permissions for draft, review, signed, signature, active interventions
+        # view and edit permissions for draft, review, signed, signature, active, suspended interventions
         for intervention in [self.draft_intervention, self.review_intervention,
                              self.signed_intervention, self.signature_intervention,
-                             active_intervention]:
+                             active_intervention, suspended_intervention]:
             intervention.unicef_focal_points.add(unicef_focal_point)
             response = self.forced_auth_req(
                 'get',
@@ -49,8 +50,8 @@ class TestProgrammaticVisitsManagement(BaseTestCase):
             self.assertEqual(response.data['permissions']['view']['planned_visits'], True)
             self.assertEqual(response.data['permissions']['edit']['planned_visits'], True)
 
-        # view and no edit permissions for Cancelled, Ended, Closed, Suspended, Terminated, Expired
-        for _status in ["cancelled", "ended", "closed", "suspended", "terminated", "expired"]:
+        # view and no edit permissions for Cancelled, Ended, Closed, Terminated, Expired
+        for _status in ["cancelled", "ended", "closed", "terminated", "expired"]:
             intervention = InterventionFactory(status=_status)
             intervention.unicef_focal_points.add(unicef_focal_point)
             response = self.forced_auth_req(
@@ -65,11 +66,12 @@ class TestProgrammaticVisitsManagement(BaseTestCase):
     def test_pme_permissions(self):
         pme_user = PMEUserFactory()
         active_intervention = InterventionFactory(status='active')
+        suspended_intervention = InterventionFactory(status="suspended")
 
-        # view and edit permissions for draft, review, signed, signature, active interventions
+        # view and edit permissions for draft, review, signed, signature, active, suspended interventions
         for intervention in [self.draft_intervention, self.review_intervention,
                              self.signed_intervention, self.signature_intervention,
-                             active_intervention]:
+                             active_intervention, suspended_intervention]:
             response = self.forced_auth_req(
                 'get',
                 reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
@@ -79,8 +81,8 @@ class TestProgrammaticVisitsManagement(BaseTestCase):
             self.assertEqual(response.data['permissions']['view']['planned_visits'], True)
             self.assertEqual(response.data['permissions']['edit']['planned_visits'], True)
 
-        # view and no edit permissions for Cancelled, Ended, Closed, Suspended, Terminated, Expired
-        for _status in ["cancelled", "ended", "closed", "suspended", "terminated", "expired"]:
+        # view and no edit permissions for Cancelled, Ended, Closed, Terminated, Expired
+        for _status in ["cancelled", "ended", "closed", "terminated", "expired"]:
             intervention = InterventionFactory(status=_status)
             response = self.forced_auth_req(
                 'get',
