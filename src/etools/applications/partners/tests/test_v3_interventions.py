@@ -11,7 +11,7 @@ from django.core.management import call_command
 from django.db import connection
 from django.test import override_settings, SimpleTestCase
 from django.urls import reverse
-from django.utils import timezone
+from django.utils import timezone, translation
 
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -826,6 +826,25 @@ class TestUpdate(BaseInterventionTestCase):
         budget.refresh_from_db()
         self.assertEqual(budget.total_hq_cash_local, 10)
         self.assertEqual(budget.unicef_cash_local, 50)
+
+    def test_update_hq_cash_local_translated_label(self):
+        intervention = InterventionFactory()
+        intervention.unicef_focal_points.add(self.user)
+        budget = intervention.planned_budget
+        translation.activate('fr')
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+            user=self.user,
+            data={'planned_budget': {
+                "id": budget.pk,
+                "total_hq_cash_local": None,
+            }}
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual('{"planned_budget":{"Coûts de renforcement des capacités":'
+                         '["Ce champ ne peut être nul."]}}', response.content.decode())
+        translation.deactivate()
 
     def test_fields_required_on_unicef_accept(self):
         intervention = InterventionFactory(

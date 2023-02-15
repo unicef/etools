@@ -45,12 +45,14 @@ from etools.applications.reports.serializers.v2 import (
     ReportingRequirementSerializer,
 )
 from etools.applications.users.serializers import MinimalUserSerializer
+from etools.libraries.djangolib.serializers import TranslatedLabelMixin
 from etools.libraries.pythonlib.hash import h11
 
 
 class InterventionBudgetCUSerializer(
     InterventionVisionSynchronizerMixin,
     FullInterventionSnapshotSerializerMixin,
+    TranslatedLabelMixin,
     serializers.ModelSerializer,
 ):
     partner_contribution_local = serializers.DecimalField(max_digits=20, decimal_places=2)
@@ -60,6 +62,8 @@ class InterventionBudgetCUSerializer(
     total_cash_local = serializers.DecimalField(max_digits=20, decimal_places=2)
     total_local = serializers.DecimalField(max_digits=20, decimal_places=2)
     total_supply = serializers.DecimalField(max_digits=20, decimal_places=2)
+    total_hq_cash_local = serializers.DecimalField(max_digits=20, decimal_places=2,
+                                                   label=_('Capacity Strengthening Costs'))
 
     class Meta:
         model = InterventionBudget
