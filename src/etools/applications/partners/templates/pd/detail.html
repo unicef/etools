@@ -220,6 +220,9 @@
           <td class=""><span class="bold">{% translate "Other Partners involved" %}:</span> {{ pd.other_partners_involved|escape|linebreaks }}</td>
         </tr>
         <tr>
+          <td class=""><span class="bold">{% translate "Other Document Details" %}:</span> {{ pd.other_details|escape|linebreaks }}</td>
+        </tr>
+        <tr>
             <td class=""><span class="bold">{% translate "Data Processing Agreement" %}:</span> {% if pd.has_data_processing_agreement %}{% translate "Yes" %}{% else %}{% translate "No" %}{% endif %}</td>
         </tr>
         <tr>

@@ -350,6 +350,7 @@ class InterventionListSerializer(BaseInterventionListSerializer):
             'cfei_number',
             'context',
             'implementation_strategy',
+            'other_details',
             'gender_rating',
             'gender_narrative',
             'equity_rating',
@@ -759,6 +760,9 @@ class InterventionCreateUpdateSerializer(
         return self._validate_character_limitation(value)
 
     def validate_capacity_development(self, value):
+        return self._validate_character_limitation(value)
+
+    def validate_other_details(self, value):
         return self._validate_character_limitation(value)
 
     def validate(self, attrs):
