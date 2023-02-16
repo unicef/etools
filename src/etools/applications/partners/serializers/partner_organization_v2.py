@@ -251,7 +251,6 @@ class AssessmentDetailSerializer(AttachmentSerializerMixin, serializers.ModelSer
 
 
 class PartnerOrganizationListSerializer(serializers.ModelSerializer):
-    rating = serializers.CharField(source='get_rating_display')
 
     class Meta:
         model = PartnerOrganization
