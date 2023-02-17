@@ -19,52 +19,52 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 msgid "ID"
-msgstr ""
+msgstr "ID"
 
 msgid "Created"
-msgstr ""
+msgstr "Creada"
 
 msgid "User"
-msgstr ""
+msgstr "Usuario"
 
 msgid "State"
-msgstr ""
+msgstr "Estado"
 
 msgid "Users Related"
-msgstr ""
+msgstr "Usuarios relacionados"
 
 msgid "Related To"
-msgstr ""
+msgstr "Relacionado con"
 
 msgid "Related To (description)"
-msgstr ""
+msgstr "Relacionado con (descripción)"
 
 msgid "Text"
-msgstr ""
+msgstr "Texto"
 
 msgid "Active"
-msgstr ""
+msgstr "Activo"
 
 msgid "Resolved"
-msgstr ""
+msgstr "Resueltas"
 
 msgid "Deleted"
-msgstr ""
+msgstr "Eliminada"
 
 msgid "Content Type"
-msgstr ""
+msgstr "Tipo de contenido"
 
 msgid "Object ID"
-msgstr ""
+msgstr "ID de objeto"
 
 msgid "Comment"
-msgstr ""
+msgstr "Comentario"
 
 msgid "Comments"
-msgstr ""
+msgstr "Comentarios"
 
 msgid "Unable to resolve deleted comment"
-msgstr ""
+msgstr "No se puede resolver el comentario eliminado"
 
 msgid "This comment has answers. Unable to delete."
-msgstr ""
+msgstr "Este comentario tiene respuestas. No se puede eliminar."
