@@ -5,7 +5,7 @@
     "fields": {
       "parent": null,
       "name": "UNICEF",
-      "vendor_number": "UNICEF",
+      "vendor_number": "000",
       "organization_type": "UN Agency",
       "cso_type": "International",
       "short_name": "",

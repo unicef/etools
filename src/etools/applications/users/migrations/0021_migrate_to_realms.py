@@ -50,7 +50,7 @@ def fwd_migrate_to_user_realms(apps, schema_editor):
     no_profile, no_countries, no_realms = 0, 0, 0
     unicef_org, _ = Organization.objects.get_or_create(
         name='UNICEF',
-        vendor_number='UNICEF',
+        vendor_number='000',
         defaults={
             'organization_type': 'UN Agency',
             'cso_type': 'International'

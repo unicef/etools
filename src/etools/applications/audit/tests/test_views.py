@@ -1016,7 +1016,7 @@ class TestAuditorFirmViewSet(AuditTestCaseMixin, BaseTenantTestCase):
             user = UserFactory()
             self.engagement.staff_members.add(user)
 
-        with self.assertNumQueries(1):
+        with self.assertNumQueries(2):
             response = self.forced_auth_req(
                 'get',
                 '/api/audit/audit-firms/users/',
@@ -1030,7 +1030,7 @@ class TestAuditorFirmViewSet(AuditTestCaseMixin, BaseTenantTestCase):
             user = UserFactory()
             self.engagement.staff_members.add(user)
 
-        with self.assertNumQueries(1):
+        with self.assertNumQueries(2):
             response = self.forced_auth_req(
                 'get',
                 '/api/audit/audit-firms/users/',

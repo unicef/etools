@@ -1,9 +1,15 @@
 [
   {
     "model": "organizations.organization",
+    "pk": 1,
     "fields": {
+      "parent": null,
+      "name": "UNICEF",
       "vendor_number": "000",
-      "name": "UNICEF Staff Org."
+      "organization_type": "UN Agency",
+      "cso_type": "International",
+      "short_name": "",
+      "other": null
     }
   },
   {

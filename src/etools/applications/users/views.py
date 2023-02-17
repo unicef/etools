@@ -85,7 +85,7 @@ class ChangeUserRoleView(CreateAPIView, GenericAPIView):
             raise ValidationError({"error": "only users with UNICEF email addresses can be updated"})
 
         details["previous_roles"] = list(user.groups.all().values_list("name", flat=True))
-        unicef_organization = Organization.objects.get(name='UNICEF', vendor_number='UNICEF')
+        unicef_organization = Organization.objects.get(name='UNICEF', vendor_number='000')
 
         if data["access_type"] == "revoke":
             user.realms\

@@ -152,8 +152,7 @@ class AuditUsersViewSet(generics.ListAPIView):
 
         realm_context = {
             "country": connection.tenant,
-            "organization_id__in": Organization.objects.filter(
-                vendor_number__in=['UNICEF', '000']).values_list('id', flat=True),
+            "organization": Organization.objects.get(name='UNICEF', vendor_number='000')
         }
         context_realms_qs = Realm.objects.filter(**realm_context)
         return queryset.filter(

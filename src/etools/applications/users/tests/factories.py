@@ -105,7 +105,7 @@ class UserFactory(factory.django.DjangoModelFactory):
                 self.email = f"user{self.id}{settings.UNICEF_USER_EMAIL}"
                 self.save(update_fields=['email'])
 
-                organization = OrganizationFactory(name='UNICEF', vendor_number='UNICEF')
+                organization = OrganizationFactory(name='UNICEF', vendor_number='000')
                 if hasattr(self, 'profile') and self.profile:
                     self.profile.organization = organization
                     self.profile.save(update_fields=['organization'])

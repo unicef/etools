@@ -61,7 +61,7 @@ class TestChangeUserRoleView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.superuser = UserFactory(is_superuser=True)
-        cls.unicef_organization = Organization.objects.get(vendor_number='UNICEF')
+        cls.unicef_organization = Organization.objects.get(name='UNICEF', vendor_number='000')
         cls.partnership_manager = UserFactory(
             realms__data=["Partnership Manager"], email='test@unicef.org',
             profile__organization=cls.unicef_organization

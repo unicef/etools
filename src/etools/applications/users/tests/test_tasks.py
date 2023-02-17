@@ -146,7 +146,7 @@ class TestUserMapper(BaseTenantTestCase):
         self.assertEqual(user.realms.count(), 1)
         self.assertEqual(
             user.profile.organization,
-            Organization.objects.get(vendor_number='UNICEF')
+            Organization.objects.get(name='UNICEF', vendor_number='000')
         )
 
     def test_create_or_update_user_exists(self):
