@@ -1944,12 +1944,3 @@ msgstr "Hoy no es después de la fecha de inicio"
 
 msgid "Meeting date is not available."
 msgstr "La fecha de la reunión no está disponible."
-
-#~ msgid "HQ Cash"
-#~ msgstr "HQ Cash"
-
-#~ msgid "HQ cost"
-#~ msgstr "Coste de la sede"
-
-#~ msgid "HQ support costs"
-#~ msgstr "Gastos de apoyo a la sede"

@@ -1910,12 +1910,3 @@ msgstr "اليوم ليس بعد تاريخ البدء"
 
 msgid "Meeting date is not available."
 msgstr "تاريخ الاجتماع غير متاح."
-
-#~ msgid "HQ Cash"
-#~ msgstr "HQ Cash"
-
-#~ msgid "HQ cost"
-#~ msgstr "تكلفة المقر"
-
-#~ msgid "HQ support costs"
-#~ msgstr "تكاليف دعم المقر"
