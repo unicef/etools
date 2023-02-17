@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-10 10:08+0000\n"
+"POT-Creation-Date: 2023-02-17 15:40+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -573,11 +573,11 @@ msgstr "Планирование, мониторинг, оценка и комм
 msgid "Subtotal for the programme costs"
 msgstr "Промежуточный итог по расходам на программу"
 
+#, python-format
 msgid ""
 "Capacity Strengthening Costs ({%(cost)d}%% of UNICEF the cash component)"
 msgstr ""
-"Затраты на укрепление потенциала ({%(cost)d}%%  денежного "
-"компонента ЮНИСЕФ)"
+"Затраты на укрепление потенциала ({%(cost)d}%%  денежного компонента ЮНИСЕФ)"
 
 msgid "Total PD budget cash"
 msgstr "Общая сумма денежных средств бюджета ПД"
