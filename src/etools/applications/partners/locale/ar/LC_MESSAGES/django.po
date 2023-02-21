@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-10 10:08+0000\n"
+"POT-Creation-Date: 2023-02-17 15:21+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -26,13 +26,13 @@ msgid "PRC Reviewed Attachment"
 msgstr "مرفق مراجعة جمهورية الصين الشعبية"
 
 msgid "Attachment"
-msgstr "التعلق"
+msgstr "المرفق"
 
 msgid "Review Document by PRC"
 msgstr "مراجعة الوثيقة من قبل جمهورية الصين الشعبية"
 
 msgid "Signed PD Document"
-msgstr "مستند PD موقع"
+msgstr "وثيقة PD موقعة"
 
 msgid "Intervention Details"
 msgstr "تفاصيل التدخل"
@@ -44,7 +44,7 @@ msgid "ePD"
 msgstr "ePD"
 
 msgid "PD is not ready for Vision synchronization."
-msgstr "PD ليس جاهزًا لمزامنة Vision."
+msgstr "PD غير جاهز لمزامنة الرؤية."
 
 msgid "PD was sent to Vision."
 msgstr "تم إرسال PD إلى Vision."
@@ -62,7 +62,7 @@ msgid "Hact"
 msgstr "صحيح"
 
 msgid "Signed Amendment"
-msgstr "التوقيع على التعديل"
+msgstr "التعديل الموقع"
 
 msgid "Agreement Details"
 msgstr "تفاصيل الاتفاقية"
@@ -87,7 +87,7 @@ msgid "Short Name"
 msgstr "اسم قصير"
 
 msgid "Alternate Name"
-msgstr "الاسم البديل"
+msgstr "أسم بديل"
 
 msgid "Partner Type"
 msgstr "نوع الشريك"
@@ -96,7 +96,7 @@ msgid "Shared Partner"
 msgstr "شريك مشترك"
 
 msgid "Address"
-msgstr "العنوان"
+msgstr "عنوان"
 
 msgid "Phone Number"
 msgstr "رقم الهاتف"
@@ -111,10 +111,10 @@ msgid "Date Last Assessed Against Core Values"
 msgstr "تاريخ آخر تقييم مقابل القيم الأساسية"
 
 msgid "Actual Cash Transfer for CP (USD)"
-msgstr "التحويل النقدي الفعلي مقابل CP (بالدولار الأمريكي)"
+msgstr "التحويل النقدي الفعلي لـ CP (بالدولار الأمريكي)"
 
 msgid "Actual Cash Transfer for Current Year (USD)"
-msgstr "التحويل النقدي الفعلي للسنة الحالية (دولار أمريكي)"
+msgstr "التحويل النقدي الفعلي للسنة الحالية (بالدولار الأمريكي)"
 
 msgid "Marked for Deletion"
 msgstr "تم وضع علامة للحذف"
@@ -135,70 +135,70 @@ msgid "Staff Members"
 msgstr "طاقم العمل"
 
 msgid "Planned Programmatic Visits"
-msgstr "زيارات برنامجية مخططة"
+msgstr "الزيارات المبرمجة المخططة"
 
 msgid "Implementing Partner"
-msgstr ""
+msgstr "الشريك المنفذ"
 
 msgid "Shared IP"
-msgstr ""
+msgstr "IP مشترك"
 
 msgid "Cash Transfer 1 OCT - 30 SEP"
-msgstr ""
+msgstr "تحويل نقدي 1 أكتوبر - 30 سبتمبر"
 
 msgid "Liquidations 1 OCT - 30 SEP"
-msgstr ""
+msgstr "التخليص 1 أكتوبر - 30 سبتمبر"
 
 msgid "Cash Transfers Jan - Dec"
-msgstr "التحويل النقدي يناير - ديسمبر"
+msgstr "التحويلات النقدية يناير - ديسمبر"
 
 msgid "Risk Rating"
-msgstr "تصنيف المخاطر"
+msgstr "تقييم المخاطرة"
 
 msgid "Expiring Threshold"
-msgstr ""
+msgstr "عتبة انتهاء الصلاحية"
 
 msgid "Approach Threshold"
-msgstr ""
+msgstr "عتبة الاقتراب"
 
 msgid "Programmatic Visits Planned Q1"
-msgstr ""
+msgstr "الزيارات المبرمجة المخطط لها ، الربع الأول"
 
 msgid "Q2"
-msgstr ""
+msgstr "Q2"
 
 msgid "Q3"
-msgstr ""
+msgstr "س 3"
 
 msgid "Q4"
-msgstr ""
+msgstr "س 4"
 
 msgid "Programmatic Visits M.R"
-msgstr ""
+msgstr "الزيارات الآلية MR"
 
 msgid "Programmatic Visits Completed Q1"
-msgstr ""
+msgstr "الزيارات البرمجية المنجزة في الربع الأول"
 
 msgid "Spot Checks Planned Q1"
-msgstr ""
+msgstr "الشيكات الفورية المخطط لها ، Q1"
 
 msgid "Spot Checks M.R"
-msgstr ""
+msgstr "بقعة الشيكات MR"
 
 msgid "Follow Up"
-msgstr ""
+msgstr "متابعة"
 
 msgid "Spot Checks Completed Q1"
-msgstr ""
+msgstr "اكتمل الفحص الفوري ، Q1"
 
 msgid "Audits M.R"
-msgstr ""
+msgstr "عمليات التدقيق MR"
 
 msgid "Audit Completed"
-msgstr ""
+msgstr "اكتمل التدقيق"
 
 msgid "Audits Outstanding Findings"
-msgstr ""
+msgstr "نتائج المدققات المعلقة"
 
 msgid "Sections"
 msgstr "الأقسام"
@@ -207,49 +207,49 @@ msgid "Locations"
 msgstr "المواقع"
 
 msgid "Action Points #"
-msgstr ""
+msgstr "نقاط العمل #"
 
 msgid "$ Cash in the Current CP Cycle"
-msgstr ""
+msgstr "النقد بالدولار في دورة CP الحالية"
 
 msgid "$ Cash in the Current Year"
-msgstr ""
+msgstr "كاش في السنة الحالية"
 
 msgid "Days Since Last PV"
-msgstr ""
+msgstr "الأيام المنقضية منذ آخر PV"
 
 msgid "Alert: No Recent PV"
-msgstr ""
+msgstr "تنبيه: لا يوجد PV الأخير"
 
 msgid "Alert: No PV"
-msgstr ""
+msgstr "تنبيه: لا يوجد PV"
 
 msgid "Outstanding DCT Amount between 6 and 9 months"
-msgstr ""
+msgstr "مبلغ DCT المستحق بين 6 و 9 أشهر"
 
 msgid "Outstanding DCT Amount more than 9 months"
-msgstr ""
+msgstr "مبلغ DCT المستحق أكثر من 9 أشهر"
 
 msgid "Programmatic Visits Planned"
-msgstr "زيارات برنامجية مخططة"
+msgstr "الزيارات المبرمجة المخطط لها"
 
 msgid "Programmatic Visits Completed"
-msgstr ""
+msgstr "الزيارات البرمجية المنجزة"
 
 msgid "Spot Check Required"
-msgstr ""
+msgstr "Spot Check مطلوب"
 
 msgid "Spot Checks Completed"
-msgstr ""
+msgstr "اكتمل الفحص الفوري"
 
 msgid "Reference Number"
-msgstr "الرقم المرجعي"
+msgstr "رقم المرجع"
 
 msgid "Status"
-msgstr "الحالة"
+msgstr "حالة"
 
 msgid "Partner Name"
-msgstr ""
+msgstr "اسم شريك"
 
 msgid "Agreement Type"
 msgstr "نوع الاتفاقية"
@@ -264,7 +264,7 @@ msgid "Signed By Partner"
 msgstr "وقعه الشريك"
 
 msgid "Signed By Partner Date"
-msgstr "تاريخ توقيع الشريك"
+msgstr "تاريخ التوقيع الشريك"
 
 msgid "Signed By UNICEF"
 msgstr "وقعه اليونيسف"
@@ -273,7 +273,7 @@ msgid "Signed By UNICEF Date"
 msgstr "موقعة من قبل اليونيسف التاريخ"
 
 msgid "Partner Authorized Officer"
-msgstr "مسؤول الشريك المعتمد"
+msgstr "موظف شريك معتمد"
 
 msgid "Amendments"
 msgstr "تعديلات"
@@ -282,19 +282,19 @@ msgid "Special Conditions PCA"
 msgstr "شروط خاصة PCA"
 
 msgid "Terms Acknowledged By"
-msgstr "الشروط التي أقرها"
+msgstr "تم إقرار الشروط بواسطة"
 
 msgid "Partner"
 msgstr "شريك"
 
 msgid "Vendor no."
-msgstr "رقم البائع"
+msgstr "البائع لا."
 
 msgid "CSO Type"
 msgstr "نوع CSO"
 
 msgid "Agreement"
-msgstr "اتفاقية"
+msgstr "اتفاق"
 
 msgid "Country Programme"
 msgstr "البرنامج القطري"
@@ -303,16 +303,16 @@ msgid "Document Type"
 msgstr "نوع الوثيقة"
 
 msgid "Document Title"
-msgstr "عنوان المستند"
+msgstr "عنوان الوثيقة"
 
 msgid "UNICEF Office"
 msgstr "مكتب اليونيسف"
 
 msgid "Contingency PD?"
-msgstr ""
+msgstr "الطوارئ PD؟"
 
 msgid "Cluster"
-msgstr "الكتلة"
+msgstr "تَجَمَّع"
 
 msgid "UNICEF Focal Points"
 msgstr "نقاط اتصال اليونيسف"
@@ -321,28 +321,28 @@ msgid "CSO Authorized Officials"
 msgstr "مسؤولو منظمات المجتمع المدني المعتمدون"
 
 msgid "Budget Currency"
-msgstr "عملة الموازنة"
+msgstr "عملة الميزانية"
 
 msgid "Total CSO Budget (USD)"
-msgstr ""
+msgstr "إجمالي ميزانية منظمات المجتمع المدني (بالدولار الأمريكي)"
 
 msgid "UNICEF Cash (USD)"
-msgstr ""
+msgstr "اليونيسف النقدية (بالدولار الأمريكي)"
 
 msgid "UNICEF Supply (USD)"
-msgstr ""
+msgstr "إمدادات اليونيسف (دولار أمريكي)"
 
 msgid "Total PD/SPD Budget (USD)"
-msgstr ""
+msgstr "إجمالي ميزانية PD / SPD (بالدولار الأمريكي)"
 
 msgid "FR Number(s)"
-msgstr "عدد (أرقام) FR"
+msgstr "رقم (أرقام) FR"
 
 msgid "FR Currency"
-msgstr "عملة فرنسا"
+msgstr "عملة FR"
 
 msgid "FR Posting Date"
-msgstr "تاريخ الإرسال FR"
+msgstr "تاريخ نشر FR"
 
 msgid "FR Amount"
 msgstr "مبلغ FR"
@@ -351,13 +351,13 @@ msgid "FR Actual CT"
 msgstr "FR الفعلية CT"
 
 msgid "Outstanding DCT"
-msgstr "DCT المتميز"
+msgstr "DCT المعلقة"
 
 msgid "Planned Spot Checks"
-msgstr ""
+msgstr "الفحوصات الموضعية المخططة"
 
 msgid "Planned Audits"
-msgstr ""
+msgstr "عمليات التدقيق المخطط لها"
 
 msgid "Document Submission Date by CSO"
 msgstr "تاريخ تقديم الوثيقة من قبل CSO"
@@ -366,16 +366,16 @@ msgid "Submission Date to PRC"
 msgstr "تاريخ التقديم إلى جمهورية الصين الشعبية"
 
 msgid "Review Date by PRC"
-msgstr "تاريخ المراجعة بواسطة جمهورية الصين الشعبية"
+msgstr "تاريخ المراجعة من قبل جمهورية الصين الشعبية"
 
 msgid "Signed by Partner"
 msgstr "وقعه الشريك"
 
 msgid "Signed by Partner Date"
-msgstr "وقعه الشريك التاريخ"
+msgstr "تاريخ التوقيع الشريك"
 
 msgid "Signed by UNICEF"
-msgstr "بتوقيع اليونيسف"
+msgstr "وقعه اليونيسف"
 
 msgid "Signed by UNICEF Date"
 msgstr "موقعة من قبل اليونيسف التاريخ"
@@ -384,10 +384,10 @@ msgid "Days from Submission to Signed"
 msgstr "أيام من التقديم إلى التوقيع"
 
 msgid "Days from Review to Signed"
-msgstr "أيام من المراجعة إلى التوقيع"
+msgstr "الأيام من المراجعة إلى التوقيع"
 
 msgid "Total no. of amendments"
-msgstr "العدد الإجمالي. "
+msgstr "مجموع لا. من التعديلات"
 
 msgid "Last amendment date"
 msgstr "تاريخ آخر تعديل"
@@ -414,224 +414,225 @@ msgid "Special Conditions for Construction Works by Implementing Partners"
 msgstr "الشروط الخاصة بأعمال البناء من قبل الشركاء المنفذين"
 
 msgid "IP Name"
-msgstr ""
+msgstr "اسم IP"
 
 msgid "PD/SPD Ref #"
-msgstr ""
+msgstr "PD / SPD المرجع #"
 
 msgid "Section"
 msgstr "الجزء"
 
 msgid "Field Office"
-msgstr ""
+msgstr "المكتب الميداني"
 
 msgid "PD Currency"
-msgstr "العملة"
+msgstr "عملة PD"
 
 msgid "CSO Contribution (PD Currency)"
-msgstr ""
+msgstr "مساهمة منظمات المجتمع المدني (عملة PD)"
 
 msgid "Total UNICEF Supplies (PD Currency)"
-msgstr ""
+msgstr "إجمالي إمدادات اليونيسف (عملة PD)"
 
 msgid "Total UNICEF Cash (PD Currency)"
-msgstr ""
+msgstr "إجمالي النقد لليونيسيف (عملة PD)"
 
 msgid "FR Grand Total"
-msgstr ""
+msgstr "المجموع الكلي للفرنسية"
 
 msgid "Actual Disbursements"
-msgstr ""
+msgstr "المدفوعات الفعلية"
 
 msgid "Multi-currency Transaction"
-msgstr ""
+msgstr "معاملة متعددة العملات"
 
 msgid "FR Grand Total (USD)"
-msgstr ""
+msgstr "المجموع الكلي للفرنسية (بالدولار الأمريكي)"
 
 msgid "Actual Disbursement (USD)"
-msgstr ""
+msgstr "الصرف الفعلي (بالدولار الأمريكي)"
 
 msgid "Outstanding DCT (USD)"
-msgstr ""
+msgstr "DCT المعلقة (بالدولار الأمريكي)"
 
 msgid "Disbursement To Date (%)"
-msgstr ""
+msgstr "الصرف حتى تاريخه (%)"
 
 msgid "Link"
-msgstr ""
+msgstr "وصلة"
 
 msgid "CP output"
-msgstr "إخراج CP"
+msgstr "خرج CP"
 
 msgid "Name of UNICEF Focal Point"
-msgstr ""
+msgstr "اسم منسق اليونيسف"
 
 msgid "Hyperlink"
-msgstr ""
+msgstr "ارتباط تشعبي"
 
 msgid "Location"
-msgstr ""
+msgstr "موقع"
 
 msgid "PD Ref Number"
-msgstr ""
+msgstr "رقم مرجع PD"
 
 msgid "Start date"
 msgstr "تاريخ البدء"
 
 #, python-format
 msgid "Currency %(currency)s"
-msgstr ""
+msgstr "%(currency)s العملة"
 
 msgid "Vendor #: "
-msgstr "رقم البائع"
+msgstr "بائع #:"
 
 msgid "End date"
 msgstr "تاريخ الانتهاء"
 
 msgid "PD Reference"
-msgstr ""
+msgstr "مرجع PD"
 
 msgid "Duration"
-msgstr ""
+msgstr "مدة"
 
 msgid "Total PD Budget"
-msgstr "إجمالي ميزانية PD"
+msgstr "إجمالي الميزانية PD"
 
 msgid "UNICEF Contribution"
-msgstr ""
+msgstr "مساهمة اليونيسف"
 
 msgid "Total Cash"
-msgstr ""
+msgstr "مجموع المبالغ النقدية"
 
 msgid "Prog effectiveness"
-msgstr ""
+msgstr "فعالية البرنامج"
 
 msgid "Supplies in-kind"
-msgstr ""
+msgstr "التوريدات العينية"
 
 msgid "Partner Contribution"
 msgstr "مساهمة الشريك"
 
 msgid "PD Output/ PD Activity"
-msgstr ""
+msgstr "إخراج PD / نشاط PD"
 
 #, python-format
 msgid "Total (%s)"
-msgstr ""
+msgstr "(%s) الإجمالي"
 
 msgid "CSO"
-msgstr ""
+msgstr "CSO"
 
 msgid "contribution"
-msgstr ""
+msgstr "مساهمة"
 
 msgid "UNICEF"
 msgstr "اليونيسف"
 
 msgid "PD Quarters"
-msgstr ""
+msgstr "أرباع PD"
 
 msgid "Result Level"
-msgstr ""
+msgstr "مستوى النتيجة"
 
 msgid "CP Output "
-msgstr "إخراج CP"
+msgstr "خرج CP"
 
 msgid "PD Output"
-msgstr ""
+msgstr "إخراج PD"
 
 msgid "EEPM"
-msgstr ""
+msgstr "EEPM"
 
 msgid "Effective and efficient programme management"
-msgstr ""
+msgstr "إدارة برنامج فعالة وكفؤة"
 
 msgid "EEPM.1"
-msgstr ""
+msgstr "EEPM.1"
 
 msgid "In-country management & support"
-msgstr ""
+msgstr "الإدارة والدعم داخل الدولة"
 
 msgid "EEPM.2"
-msgstr ""
+msgstr "EEPM.2"
 
 msgid "Operational costs"
-msgstr ""
+msgstr "تكاليف التشغيل"
 
 msgid "EEPM.3"
-msgstr ""
+msgstr "EEPM.3"
 
 msgid "Planning, monitoring, evaluation, and communication"
-msgstr ""
+msgstr "التخطيط والمراقبة والتقييم والاتصال"
 
 msgid "Subtotal for the programme costs"
-msgstr ""
+msgstr "المجموع الفرعي لتكاليف البرنامج"
 
 #, python-format
 msgid ""
 "Capacity Strengthening Costs ({%(cost)d}%% of UNICEF the cash component)"
 msgstr ""
+"من المكون النقدي %% {%(cost)d} دعم المقر الرئيسي / بناء القدرات لليونيسيف"
 
 msgid "Total PD budget cash"
-msgstr ""
+msgstr "إجمالي ميزانية PD النقدية"
 
 msgid "No."
-msgstr ""
+msgstr "لا."
 
 msgid "PD Output/ PD Activity / Item Description"
-msgstr ""
+msgstr "إخراج PD / نشاط PD / وصف العنصر"
 
 msgid "Unit Type"
-msgstr ""
+msgstr "نوع الوحدة"
 
 msgid "Number of Units"
-msgstr ""
+msgstr "عدد الوحدات"
 
 msgid "Price/Unit"
-msgstr ""
+msgstr "السعر / الوحدة"
 
 msgid "Total"
 msgstr "المجموع"
 
 msgid "Other Notes"
-msgstr ""
+msgstr "الملاحظات الأخرى"
 
 msgid "PD OUTPUT "
-msgstr ""
+msgstr "إخراج PD"
 
 msgid "Activity"
-msgstr ""
+msgstr "نشاط"
 
 msgid "Activity: In-country management & support"
-msgstr ""
+msgstr "النشاط: الإدارة والدعم داخل الدولة"
 
 #, python-format
 msgid "EEPM.1.{%d}"
 msgstr ""
 
 msgid "Activity: Operational costs"
-msgstr ""
+msgstr "النشاط: تكاليف التشغيل"
 
 #, python-format
 msgid "EEPM.2.{%d}"
 msgstr ""
 
 msgid "Activity: Planning, monitoring, evaluation, and communication"
-msgstr ""
+msgstr "النشاط: التخطيط والمراقبة والتقييم والتواصل"
 
 #, python-format
 msgid "EEPM.3.{%d}"
 msgstr ""
 
 msgid "Total Cost for all outputs"
-msgstr ""
+msgstr "التكلفة الإجمالية لجميع النواتج"
 
 msgid "Item"
-msgstr ""
+msgstr "العنصر"
 
 msgid "Price/unit"
-msgstr ""
+msgstr "السعر / الوحدة"
 
 msgid "Total Price"
 msgstr "السعر الكلي"
@@ -640,7 +641,7 @@ msgid "Provided By"
 msgstr "مقدمة من"
 
 msgid "CP Output"
-msgstr "إخراج CP"
+msgstr "خرج CP"
 
 msgid "Other Mentions"
 msgstr "إشارات أخرى"
@@ -649,31 +650,31 @@ msgid "UNICEF Product Number"
 msgstr "رقم منتج اليونيسف"
 
 msgid "Total Value"
-msgstr ""
+msgstr "القيمة الإجمالية"
 
 msgid "Partner non-financial contribution:"
-msgstr ""
+msgstr "مساهمة الشريك غير المالية:"
 
 msgid "Budget Summary"
-msgstr ""
+msgstr "ملخص الميزانية"
 
 msgid "Activity Budget"
-msgstr ""
+msgstr "ميزانية النشاط"
 
 msgid "Detailed Budget"
-msgstr ""
+msgstr "الميزانية التفصيلية"
 
 msgid "Supply Cost"
-msgstr ""
+msgstr "تكلفة التوريد"
 
 msgid "Workplan Budget"
-msgstr ""
+msgstr "ميزانية خطة العمل"
 
 msgid "Detailed Workplan Budget"
-msgstr ""
+msgstr "ميزانية خطة العمل التفصيلية"
 
 msgid "Supply Contribution (Planned)"
-msgstr "خطة التوريد / التوزيع"
+msgstr "مساهمة التوريد (مخطط لها)"
 
 msgid "You must select a type for this CSO"
 msgstr "يجب عليك تحديد نوع CSO هذا"
@@ -681,11 +682,11 @@ msgstr "يجب عليك تحديد نوع CSO هذا"
 msgid ""
 "\"CSO Type\" does not apply to non-CSO organizations, please remove type"
 msgstr ""
-"لا ينطبق \"نوع CSO\" على المنظمات غير التابعة لمنظمات المجتمع المدني ، يرجى "
-"إزالة النوع"
+"لا ينطبق &quot;نوع CSO&quot; على المنظمات غير التابعة لمنظمات المجتمع "
+"المدني ، يرجى إزالة النوع"
 
 msgid "Name"
-msgstr "الاسم"
+msgstr "اسم"
 
 msgid "Bilateral / Multilateral"
 msgstr "ثنائي / متعدد الأطراف"
@@ -694,22 +695,22 @@ msgid "Civil Society Organization"
 msgstr "منظمة المجتمع المدني"
 
 msgid "Government"
-msgstr "الحكومة"
+msgstr "الحكومي"
 
 msgid "UN Agency"
-msgstr "وكالة الامم المتحدة"
+msgstr "وكالة الأمم المتحدة"
 
 msgid "High"
-msgstr "مرتفع"
+msgstr "عالٍ"
 
 msgid "Significant"
-msgstr "مهم"
+msgstr "بارِز"
 
 msgid "Medium"
 msgstr "متوسط"
 
 msgid "Low"
-msgstr "منخفض"
+msgstr "قليل"
 
 msgid "Not Required"
 msgstr "غير مطلوب"
@@ -727,22 +728,22 @@ msgid "Academic Institution"
 msgstr "المؤسسة الأكاديمية"
 
 msgid "Red Cross/Red Crescent National Societies"
-msgstr ""
+msgstr "الجمعيات الوطنية للصليب الأحمر والهلال الأحمر"
 
 msgid "Description"
-msgstr "الوصف"
+msgstr "وصف"
 
 msgid "Street Address"
 msgstr "عنوان الشارع"
 
 msgid "City"
-msgstr "المدينة"
+msgstr "مدينة"
 
 msgid "Postal Code"
-msgstr "الرمز البريدي"
+msgstr "رمز بريدي"
 
 msgid "Country"
-msgstr "الدولة"
+msgstr "دولة"
 
 msgid "Alternate ID"
 msgstr "معرف بديل"
@@ -757,25 +758,25 @@ msgid "VISION Synced"
 msgstr "مزامنة الرؤية"
 
 msgid "Marked for deletion"
-msgstr "وضع علامة للحذف"
+msgstr "تم وضع علامة للحذف"
 
 msgid "Manually Hidden"
 msgstr "مخفي يدويًا"
 
 msgid "Hidden"
-msgstr "مخفي"
+msgstr "مختفي"
 
 msgid "Total Cash Transferred for Country Programme"
 msgstr "إجمالي المبالغ المحولة للبرنامج القطري"
 
 msgid "Total Cash Transferred per Current Year"
-msgstr "إجمالي النقد المحوّل لكل سنة حالية"
+msgstr "إجمالي المبالغ المحولة في السنة الحالية"
 
 msgid "Net Cash Transferred"
 msgstr "صافي النقدية المحولة"
 
 msgid "Liquidation"
-msgstr "التصفية"
+msgstr "تصفية"
 
 msgid "Cash Transfer Jan - Dec"
 msgstr "التحويل النقدي يناير - ديسمبر"
@@ -790,13 +791,13 @@ msgid "Basis for Risk Rating"
 msgstr "أساس تصنيف المخاطر"
 
 msgid "Last PSEA Assess. Date"
-msgstr "آخر تقييم للحماية من الاستغلال والانتهاك الجنسيين. "
+msgstr "آخر تقييم للحماية من الاستغلال والانتهاك الجنسيين. تاريخ"
 
 msgid "PSEA Risk Rating"
-msgstr "تصنيف مخاطر الحماية من الاستغلال والانتهاك الجنسيين"
+msgstr "تصنيف مخاطر PSEA"
 
 msgid "Highest Risk Rating Type"
-msgstr "نوع التصنيف الأعلى مخاطرة"
+msgstr "نوع التصنيف الأعلى خطورة"
 
 msgid "Highest Risk Rating Name"
 msgstr "اسم التصنيف الأكثر خطورة"
@@ -814,7 +815,7 @@ msgid "User"
 msgstr "مستخدم"
 
 msgid "Title"
-msgstr "العنوان"
+msgstr "عنوان"
 
 msgid "First Name"
 msgstr "الاسم الاول"
@@ -823,28 +824,28 @@ msgid "Last Name"
 msgstr "اسم العائلة"
 
 msgid "Active"
-msgstr "نشط"
+msgstr "نشيط"
 
 msgid "Spot Check Follow Up Required"
 msgstr "مطلوب متابعة الفحص الفوري"
 
 msgid "Spot Check Q1"
-msgstr "فحص موضعي ، Q1"
+msgstr "فحص بقعة Q1"
 
 msgid "Spot Check Q2"
 msgstr "بقعة فحص Q2"
 
 msgid "Spot Check Q3"
-msgstr "بقعة فحص Q3"
+msgstr "التحقق الفوري Q3"
 
 msgid "Spot Check Q4"
-msgstr "فحص بقعة Q4"
+msgstr "التحقق الفوري Q4"
 
 msgid "Scheduled Audit"
-msgstr "التدقيق المجدول"
+msgstr "التدقيق المقرر"
 
 msgid "Special Audit"
-msgstr "تدقيق خاص"
+msgstr "المراجعة الخاصة"
 
 msgid "Micro Assessment"
 msgstr "التقييم الجزئي"
@@ -859,16 +860,16 @@ msgid "Special Audit report"
 msgstr "تقرير المراجعة الخاص"
 
 msgid "Other"
-msgstr "أخرى"
+msgstr "آخر"
 
 msgid "Type"
-msgstr "النوع"
+msgstr "اكتب"
 
 msgid "Other Agencies"
 msgstr "وكالات أخرى"
 
 msgid "Planned amount"
-msgstr "الكمية المخطط لها"
+msgstr "المبلغ المخطط"
 
 msgid "Special requests"
 msgstr "طلبات خاصة"
@@ -883,16 +884,16 @@ msgid "Approving Officer"
 msgstr "موظف اعتماد"
 
 msgid "Planned Date"
-msgstr "التاريخ المخطط"
+msgstr "التاريخ المحدد"
 
 msgid "Completed Date"
 msgstr "تاريخ الانتهاء"
 
 msgid "Rating"
-msgstr "التقييم"
+msgstr "تقييم"
 
 msgid "Basis for risk rating"
-msgstr "أسس تصنيف المخاطر"
+msgstr "أساس تصنيف المخاطر"
 
 msgid "Programme Cooperation Agreement"
 msgstr "اتفاقية تعاون البرنامج"
@@ -904,10 +905,10 @@ msgid "Memorandum of Understanding"
 msgstr "مذكرة تفاهم"
 
 msgid "Draft"
-msgstr "مسودة"
+msgstr "مشروع"
 
 msgid "Signed"
-msgstr "التوقيع"
+msgstr "وقعت"
 
 msgid "Ended"
 msgstr "انتهى"
@@ -916,7 +917,7 @@ msgid "Suspended"
 msgstr "معلق"
 
 msgid "Terminated"
-msgstr "تم الإنهاء"
+msgstr "تم إنهاؤه"
 
 msgid "Attached Agreement"
 msgstr "الاتفاقية المرفقة"
@@ -925,7 +926,7 @@ msgid "Termination document for PCAs"
 msgstr "وثيقة إنهاء PCA"
 
 msgid "Signed by partner"
-msgstr "موقعة من الشريك"
+msgstr "وقعه الشريك"
 
 msgid "Change in Legal Name of Implementing Partner"
 msgstr "تغيير الاسم القانوني للشريك المنفذ"
@@ -940,7 +941,7 @@ msgid "Change in clause"
 msgstr "تغيير في البند"
 
 msgid "Number"
-msgstr "رقم"
+msgstr "عدد"
 
 msgid "Types"
 msgstr "أنواع"
@@ -958,43 +959,43 @@ msgid "Development"
 msgstr "تطوير"
 
 msgid "Review"
-msgstr "مراجعة"
+msgstr "إعادة النظر"
 
 msgid "Signature"
 msgstr "التوقيع"
 
 msgid "Cancelled"
-msgstr "ملغاة"
+msgstr "ألغيت"
 
 msgid "Closed"
 msgstr "مغلق"
 
 msgid "Expired"
-msgstr "منتهية الصلاحية"
+msgstr "منتهي الصلاحية"
 
 msgid "Programme Document"
 msgstr "وثيقة البرنامج"
 
 msgid "Simplified Programme Document"
-msgstr "مستند برنامج مبسط"
+msgstr "وثيقة البرنامج المبسطة"
 
 msgid "None"
-msgstr "لا شيء"
+msgstr "لا أحد"
 
 msgid "Marginal"
-msgstr "هامشي"
+msgstr "هامش"
 
 msgid "Principal"
-msgstr "مدير"
+msgstr "رئيسي"
 
 msgid "Direct Payment"
-msgstr "الدفع المباشر"
+msgstr "دفع مباشر"
 
 msgid "Reimbursement"
 msgstr "السداد"
 
 msgid "Direct Cash Transfer"
-msgstr "تحويل نقدي مباشر"
+msgstr "التحويل النقدي المباشر"
 
 msgid "Country Programmes"
 msgstr "البرامج القطرية"
@@ -1003,13 +1004,13 @@ msgid "Date Final Partnership Review Performed"
 msgstr "تاريخ إجراء مراجعة الشراكة النهائية"
 
 msgid "Final Review Approved"
-msgstr ""
+msgstr "تمت الموافقة على المراجعة النهائية"
 
 msgid "Contingency PD"
 msgstr "الطوارئ PD"
 
 msgid "Activation Document for Contingency PDs"
-msgstr "مستند التنشيط لحالات PDs"
+msgstr "وثيقة التفعيل لحالات الطوارئ PDs"
 
 msgid "Activation Protocol"
 msgstr "بروتوكول التنشيط"
@@ -1018,22 +1019,22 @@ msgid "Termination document for PDs"
 msgstr "وثيقة إنهاء PD"
 
 msgid "Office"
-msgstr "مكتب"
+msgstr "مكتب. مقر. مركز"
 
 msgid "Sites"
 msgstr "المواقع"
 
 msgid "Population Focus"
-msgstr "التركيز على السكان"
+msgstr "التركيز السكاني"
 
 msgid "Amendment Open"
-msgstr "فتح التعديل"
+msgstr "التعديل مفتوح"
 
 msgid "Humanitarian"
 msgstr "إنساني"
 
 msgid "Date first sent to Partner"
-msgstr "تاريخ الإرسال الأول للشريك"
+msgstr "تاريخ الإرسال الأول إلى الشريك"
 
 msgid "Context"
 msgstr "سياق"
@@ -1045,19 +1046,19 @@ msgid "Gender Rating"
 msgstr "تصنيف الجنس"
 
 msgid "Gender Narrative"
-msgstr "سرد النوع الاجتماعي"
+msgstr "سرد الجنس"
 
 msgid "Equity Rating"
 msgstr "تصنيف حقوق الملكية"
 
 msgid "Equity Narrative"
-msgstr "سرد حقوق الملكية"
+msgstr "سرد الأسهم"
 
 msgid "Sustainability Rating"
 msgstr "تقييم الاستدامة"
 
 msgid "Sustainability Narrative"
-msgstr "الاستدامة السرد"
+msgstr "سرد الاستدامة"
 
 msgid "Partner Non-Financial Contribution to Programme"
 msgstr "مساهمة الشريك غير المالية في البرنامج"
@@ -1078,13 +1079,16 @@ msgid "Capacity Development"
 msgstr "تنمية القدرات"
 
 msgid "Other Info"
-msgstr "معلومات أخرى"
+msgstr "معلومات اخرى"
+
+msgid "Other Document Details"
+msgstr "تفاصيل المستند الأخرى"
 
 msgid "Other Partners Involved"
 msgstr "شركاء آخرون منخرطون"
 
 msgid "Technical Guidance"
-msgstr "الارشاد الفني"
+msgstr "التوجيه الفني"
 
 msgid "Cancel Justification"
 msgstr "إلغاء التبرير"
@@ -1093,22 +1097,22 @@ msgid "Metadata"
 msgstr "البيانات الوصفية"
 
 msgid "Confidential"
-msgstr "سري"
+msgstr "مؤتمن"
 
 msgid "Unknown"
-msgstr ""
+msgstr "غير معروف"
 
 msgid "Type 1: Administrative error (correction)"
 msgstr "النوع 1: خطأ إداري (تصحيح)"
 
 msgid "Type 2: Budget <= 20%"
-msgstr "النوع 2: الميزانية <= 20٪"
+msgstr "النوع 2: الميزانية &lt;= 20٪"
 
 msgid "Type 3: Budget > 20%"
-msgstr "النوع 3: الميزانية> 20٪"
+msgstr "النوع 3: الميزانية&gt; 20٪"
 
 msgid "Type 4: Changes to planned results"
-msgstr "النوع 4: تغييرات على النتائج المخطط لها"
+msgstr "النوع 4: التغييرات على النتائج المخطط لها"
 
 msgid "Type 5: No cost extension"
 msgstr "النوع 5: بدون تمديد للتكلفة"
@@ -1117,13 +1121,13 @@ msgid "Type 6: Other"
 msgstr "النوع 6: أخرى"
 
 msgid "Normal"
-msgstr "عادي"
+msgstr "طبيعي"
 
 msgid "Contingency"
-msgstr "طوارئ"
+msgstr "طارئ"
 
 msgid "Kind"
-msgstr "عيني"
+msgstr "عطوف"
 
 msgid "Amendment Document"
 msgstr "وثيقة التعديل"
@@ -1132,16 +1136,16 @@ msgid "Internal PRC Review"
 msgstr "المراجعة الداخلية لجمعية الصين الشعبية"
 
 msgid "Amended Intervention"
-msgstr "تدخل معدل"
+msgstr "التدخل المعدل"
 
 msgid "Intervention amendments"
 msgstr "تعديلات التدخل"
 
 msgid "Intervention"
-msgstr "مداخلة"
+msgstr "تدخل"
 
 msgid "Year"
-msgstr "سنة"
+msgstr "عام"
 
 msgid "Programmatic Q1"
 msgstr "برمجي Q1"
@@ -1153,19 +1157,19 @@ msgid "Programmatic Q3"
 msgstr "برمجي Q3"
 
 msgid "Programmatic Q4"
-msgstr "آلي Q4"
+msgstr "برمجي Q4"
 
 msgid "Intervention Planned Visits"
-msgstr "زيارات مخططة التدخل"
+msgstr "التدخلات المخطط لها"
 
 msgid "Code"
-msgstr "كود"
+msgstr "رمز"
 
 msgid "RAM Indicators"
 msgstr "مؤشرات RAM"
 
 msgid "Unicef Cash"
-msgstr "Unicef ​​Cash"
+msgstr "يونيسيف كاش"
 
 msgid "UNICEF Supplies"
 msgstr "لوازم اليونيسف"
@@ -1180,34 +1184,34 @@ msgid "Total Partner Contribution"
 msgstr "إجمالي مساهمة الشريك"
 
 msgid "Total HQ Cash Local"
-msgstr "إجمالي المقر النقدي المحلي"
+msgstr "إجمالي HQ النقدية المحلية"
 
 msgid "Unicef Cash Local"
-msgstr "Unicef ​​Cash Local"
+msgstr "منظمة اليونيسف النقدية المحلية"
 
 msgid "UNICEF Supplies Local"
 msgstr "مستلزمات اليونيسف محلية"
 
 msgid "Currency"
-msgstr "العملة"
+msgstr "عملة"
 
 msgid "Total Local"
 msgstr "إجمالي محلي"
 
 msgid "Programme Effectiveness (%)"
-msgstr "فعالية البرنامج (٪)"
+msgstr "فعالية البرنامج (%)"
 
 msgid "Intervention budget"
 msgstr "ميزانية التدخل"
 
 msgid "Not decided yet"
-msgstr "لم تقرر بعد"
+msgstr "لم اقرر بعد"
 
 msgid "Yes, strongly agree"
 msgstr "نعم ، أوافق بشدة"
 
 msgid "Yes, agree"
-msgstr "نعم ، أوافق"
+msgstr "نعم أوافق"
 
 msgid "No, disagree"
 msgstr "لا ، غير موافق"
@@ -1287,7 +1291,7 @@ msgid "Review Date"
 msgstr "تاريخ المراجعة"
 
 msgid "Meeting Date"
-msgstr "موعد الاجتماع"
+msgstr "تاريخ الاجتماع"
 
 msgid "PRC Officers"
 msgstr "ضباط جمهورية الصين الشعبية"
@@ -1299,16 +1303,16 @@ msgid "Sent Back by Secretary Comment"
 msgstr "أعادها السكرتير تعليق"
 
 msgid "FACE"
-msgstr "الوجه"
+msgstr "وجه"
 
 msgid "Progress Report"
-msgstr "تقرير مرحلي"
+msgstr "تقرير التطور"
 
 msgid "(Legacy) Final Partnership Review"
 msgstr "(قديم) مراجعة الشراكة النهائية"
 
 msgid "Correspondence"
-msgstr "المراسلات"
+msgstr "مراسلة"
 
 msgid "Supply/Distribution Plan"
 msgstr "خطة التوريد / التوزيع"
@@ -1320,34 +1324,34 @@ msgid "Intervention Attachment"
 msgstr "مرفق التدخل"
 
 msgid "Fund Commitment Reference"
-msgstr "مرجع الالتزام الصندوق"
+msgstr "مرجع الالتزام بالصندوق"
 
 msgid "Amount (USD)"
-msgstr "المبلغ (دولار أمريكي)"
+msgstr "المبلغ (بالدولار الأمريكي)"
 
 msgid "Liquidation (USD)"
 msgstr "التصفية (بالدولار الأمريكي)"
 
 msgid "Outstanding Balance (USD)"
-msgstr "الرصيد القائم (بالدولار الأمريكي)"
+msgstr "الرصيد المستحق (بالدولار الأمريكي)"
 
 msgid "Amount less than 3 months (USD)"
-msgstr "مقدار فوضى أكبر من 3 أشهر (بالدولار الأمريكي)"
+msgstr "المبلغ أقل من 3 أشهر (بالدولار الأمريكي)"
 
 msgid "Amount between 3 and 6 months (USD)"
-msgstr "مبلغ يتراوح بين 3 و 6 أشهر (دولار أمريكي)"
+msgstr "المبلغ بين 3 و 6 أشهر (بالدولار الأمريكي)"
 
 msgid "Amount between 6 and 9 months (USD)"
-msgstr "مبلغ يتراوح بين 6 و 9 أشهر (بالدولار الأمريكي)"
+msgstr "المبلغ بين 6 و 9 أشهر (بالدولار الأمريكي)"
 
 msgid "Amount more than 9 months (USD)"
-msgstr "المبلغ أكثر من 9 أشهر (دولار أمريكي)"
+msgstr "المبلغ أكثر من 9 أشهر (بالدولار الأمريكي)"
 
 msgid "Partner Planned Visits"
-msgstr "زيارات مخططة من قبل الشركاء"
+msgstr "الزيارات المخططة للشركاء"
 
 msgid "Social & Environmental"
-msgstr "اجتماعي"
+msgstr "الاجتماعية والبيئية"
 
 msgid "Financial"
 msgstr "الأمور المالية"
@@ -1368,7 +1372,7 @@ msgid "Safety & security"
 msgstr "سلامة الامن"
 
 msgid "Risk Type"
-msgstr "نوع المخاطرة"
+msgstr "نوع الخطر"
 
 msgid ""
 "UNICEF contribution for In-country management and support staff prorated to "
@@ -1456,7 +1460,7 @@ msgid "Units Number"
 msgstr "عدد الوحدات"
 
 msgid "UNICEF Cash Local"
-msgstr "اليونيسف المحلية النقدية"
+msgstr "منظمة اليونيسف النقدية المحلية"
 
 msgid "CSO Cash Local"
 msgstr "CSO Cash Local"
@@ -1465,7 +1469,7 @@ msgid "Accessing this item is not allowed."
 msgstr "الوصول إلى هذا العنصر غير مسموح به."
 
 msgid "URL"
-msgstr "URL"
+msgstr "عنوان Url"
 
 msgid "Result Type"
 msgstr "نوع النتيجة"
@@ -1474,7 +1478,7 @@ msgid "From Date"
 msgstr "من التاريخ"
 
 msgid "To Date"
-msgstr "حتي اليوم"
+msgstr "ان يذهب في موعد"
 
 msgid "Parent"
 msgstr "الأبوين"
@@ -1507,13 +1511,13 @@ msgid "Total CSO Contribution"
 msgstr "إجمالي مساهمة منظمات المجتمع المدني"
 
 msgid "UNICEF Cash"
-msgstr "أموال اليونيسف"
+msgstr "يونيسيف كاش"
 
 msgid "UNICEF Supply"
 msgstr "إمدادات اليونيسف"
 
 msgid "Total PD/SPD Budget"
-msgstr "إجمالي ميزانية PD / SPD"
+msgstr "إجمالي الميزانية PD / SPD"
 
 msgid "Attachment type"
 msgstr "نوع المرفق"
@@ -1543,7 +1547,7 @@ msgid "SEA Risk Rating"
 msgstr "تصنيف مخاطر SEA"
 
 msgid "HACT"
-msgstr "HACT"
+msgstr "صحيح"
 
 msgid ""
 "Cannot add a new amendment while another amendment of same kind is in "
@@ -1557,7 +1561,7 @@ msgstr "تم توفير إخراج CP غير صالح."
 msgid ""
 "Please adjust activities to not use the quarters to be removed (%(names)s)."
 msgstr ""
-"الرجاء ضبط الأنشطة بحيث لا تستخدم أرباع السنة المراد إزالتها (%(names)s)."
+".(%(names)s) يُرجى ضبط الأنشطة بحيث لا تستخدم أرباع العمل المراد إزالتها "
 
 msgid "Indicator needs to be either cluster or high frequency."
 msgstr "يجب أن يكون المؤشر إما عنقوديًا أو عالي التردد."
@@ -1578,13 +1582,13 @@ msgid "Changes not allowed when PD is terminated."
 msgstr "التغييرات غير مسموح بها عند إنهاء PD."
 
 msgid "Changes not allowed when PD not in amendment state."
-msgstr "التغييرات غير مسموح بها عندما لا يكون PD في حالة التعديل."
+msgstr "التغييرات غير مسموح بها عندما لا تكون PD في حالة التعديل."
 
 msgid "PD needs to have a start date."
 msgstr "يحتاج PD إلى تاريخ بدء."
 
 msgid "This field cannot be empty."
-msgstr "لا يمكن ترك هذا الحقل فارغًا."
+msgstr "هذا الحقل لا يمكن ان يكون فارغا."
 
 msgid ""
 "Invalid budget data. Total cash should be equal to items number * price per "
@@ -1600,136 +1604,136 @@ msgid "EZHACT Vision integration disabled"
 msgstr "تم تعطيل تكامل رؤية EZHACT"
 
 msgid "PDF could not be generated properly"
-msgstr ""
+msgstr "لا يمكن إنشاء PDF بشكل صحيح"
 
 msgid "eTools ref no"
-msgstr ""
+msgstr "eTools المرجع لا"
 
 msgid "Organization Name"
-msgstr ""
+msgstr "اسم المنظمة"
 
 msgid "Programme Title"
-msgstr ""
+msgstr "عنوان البرنامج"
 
 msgid "Planned duration"
-msgstr ""
+msgstr "المدة المقررة"
 
 msgid "Geographical coverage"
-msgstr ""
+msgstr "التغطية الجغرافية"
 
 msgid "Supplies"
-msgstr ""
+msgstr "لوازم"
 
 msgid "Partner Cash"
-msgstr ""
+msgstr "الشريك النقدية"
 
 msgid "Supplies:"
-msgstr ""
+msgstr "لوازم:"
 
 msgid "Total:"
-msgstr ""
+msgstr "المجموع:"
 
 msgid "Strategy"
-msgstr ""
+msgstr "إستراتيجية"
 
 msgid "Implementation Strategy & Technical Guidance"
-msgstr ""
+msgstr "إستراتيجية التنفيذ والإرشاد الفني"
 
 msgid "Other Partners involved"
 msgstr "شركاء آخرون منخرطون"
 
 msgid "Yes"
-msgstr ""
+msgstr "نعم"
 
 msgid "No"
-msgstr "لا شيء"
+msgstr "لا"
 
 msgid "Risk & Proposed Mitigation Measures"
-msgstr ""
+msgstr "المخاطر وإجراءات التخفيف المقترحة"
 
 msgid "Workplan Result"
-msgstr ""
+msgstr "نتيجة خطة العمل"
 
 msgid "Result statement"
-msgstr ""
+msgstr "بيان النتيجة"
 
 msgid "Performance indicator/s"
-msgstr ""
+msgstr "مؤشرات الأداء"
 
 msgid "Baseline"
-msgstr ""
+msgstr "حدود"
 
 msgid "Target"
-msgstr ""
+msgstr "استهداف"
 
 msgid "Means of Verification"
-msgstr ""
+msgstr "يعني من التحقق"
 
 msgid "Result/activity"
-msgstr ""
+msgstr "النتيجة / النشاط"
 
 msgid "Timeframe"
-msgstr ""
+msgstr "إطار زمني"
 
 msgid "Total (CSO + UNICEF)"
-msgstr ""
+msgstr "المجموع (منظمات المجتمع المدني + اليونيسيف)"
 
 msgid "CSO contribution"
 msgstr "مساهمة منظمات المجتمع المدني"
 
 msgid "UNICEF contribution"
-msgstr ""
+msgstr "مساهمة اليونيسف"
 
 msgid "Prog. Output"
-msgstr ""
+msgstr "بروغ. انتاج |"
 
 msgid "Sub-total for programme costs"
-msgstr ""
+msgstr "المجموع الفرعي لتكاليف البرنامج"
 
 msgid "Total Cash budget"
-msgstr ""
+msgstr "إجمالي الميزانية النقدية"
 
 msgid "Supply Contribution Plan"
-msgstr ""
+msgstr "خطة مساهمة التوريد"
 
 msgid "Provided by"
 msgstr "مقدمة من"
 
 msgid "No. of units"
-msgstr ""
+msgstr "عدد الوحدات"
 
 msgid "Total supply Cost"
-msgstr ""
+msgstr "إجمالي تكلفة التوريد"
 
 msgid "Others"
-msgstr "أخرى"
+msgstr "آحرون"
 
 msgid "Partner non-financial contribution"
-msgstr ""
+msgstr "مساهمة الشريك غير المالية"
 
 msgid "Cash Transfer modality"
-msgstr "طرق التحويل النقدي"
+msgstr "طريقة التحويل النقدي"
 
 msgid "Signatures and date"
-msgstr ""
+msgstr "التوقيعات والتاريخ"
 
 msgid "CSO Authorized Officer"
-msgstr ""
+msgstr "موظف مفوض من منظمات المجتمع المدني"
 
 msgid "Date"
-msgstr ""
+msgstr "تاريخ"
 
 msgid "UNICEF Authorized Officer"
-msgstr ""
+msgstr "مسؤول اليونيسف المعتمد"
 
 msgid "Date Uploaded"
-msgstr ""
+msgstr "تاريخ الرفع"
 
 msgid "Document"
-msgstr ""
+msgstr "وثيقة"
 
 msgid "Invalid"
-msgstr ""
+msgstr "غير صالح"
 
 msgid "Cannot Transition without termination doc attached"
 msgstr "لا يمكن الانتقال بدون إرفاق مستند الإنهاء"
@@ -1738,7 +1742,7 @@ msgid "None of the signatures can be dated in the future"
 msgstr "لا يمكن تأريخ أي من التوقيعات في المستقبل"
 
 msgid "Start and end dates don't match the Document's start and end"
-msgstr "لا يتطابق تاريخا البدء والانتهاء مع بداية المستند ونهايته"
+msgstr "لا يتطابق تاريخا البدء والانتهاء مع بداية المستند وانتهائه"
 
 msgid "Today is not after the end date"
 msgstr "اليوم ليس بعد تاريخ الانتهاء"
@@ -1760,6 +1764,8 @@ msgid ""
 "Final Review must be approved for documents having amount transferred "
 "greater than 100,000"
 msgstr ""
+"يجب الموافقة على المراجعة النهائية للمستندات التي يزيد المبلغ المحول عنها عن "
+"100،000"
 
 msgid "Cannot Transition status while adding an amendment"
 msgstr "لا يمكن نقل الحالة أثناء إضافة تعديل"
@@ -1774,7 +1780,7 @@ msgid "PD cannot transition to ended if the Partner is Blocked in Vision"
 msgstr "لا يمكن أن ينتقل PD إلى منتهي إذا كان الشريك محظورًا في الرؤية"
 
 msgid "PD cannot be suspended if the Partner is Blocked in Vision"
-msgstr "لا يمكن تعليق PD إذا تم حظر الشريك في الرؤية"
+msgstr "لا يمكن تعليق PD إذا كان الشريك محظورًا في الرؤية"
 
 msgid "Justification required for cancellation"
 msgstr "التبرير المطلوب للإلغاء"
@@ -1791,7 +1797,7 @@ msgid "PD cannot transition to signed if the Partner is Blocked in Vision"
 msgstr "لا يمكن أن ينتقل PD إلى التوقيع إذا كان الشريك محظورًا في الرؤية"
 
 msgid "PD cannot be activated if the associated Agreement is not active"
-msgstr "لا يمكن تنشيط PD إذا كانت الاتفاقية المرتبطة بها غير نشطة"
+msgstr "لا يمكن تنشيط PD إذا كانت الاتفاقية ذات الصلة غير نشطة"
 
 msgid "PD cannot be activated if the Partner is Blocked in Vision"
 msgstr "لا يمكن تنشيط PD إذا كان الشريك محظورًا في الرؤية"
@@ -1804,7 +1810,7 @@ msgid ""
 "The following sections have been selected on the PD/SPD indicators and "
 "cannot be removed %(sections)s "
 msgstr ""
-"%(sections)s تم تحديد الأقسام التالية على مؤشرات PD / SPD ولا يمكن إزالتها"
+" %(sections)s تم تحديد الأقسام التالية على مؤشرات PD / SPD ولا يمكن إزالت "
 
 #, python-format
 msgid ""
@@ -1812,16 +1818,16 @@ msgid ""
 "cannot be removed without removing them from the indicators first: "
 "%(locations)s"
 msgstr ""
-"%(locations)s تم تحديد المواقع التالية على مؤشرات PD / SPD ولا يمكن إزالتها "
-"دون إزالتها من المؤشرات أولاً:"
+"تم تحديد المواقع التالية على مؤشرات PD / SPD ولا يمكن إزالتها دون إزالتها من "
+"%(locations)s : المؤشرات أولاً"
 
 #, python-format
 msgid ""
 "The Country Programme selected on this PD is not the same as the Country "
 "Programme selected on the Agreement, please select %(cp)s"
 msgstr ""
-"البرنامج القطري المحدد في PD ليس هو نفسه البرنامج القطري المحدد في "
-"الاتفاقية ، يرجى تحديد %(cp)s"
+"البرنامج القطري المحدد في PD ليس هو نفسه البرنامج القطري المحدد في %(cp)s "
+"الاتفاقية ، يرجى تحديد "
 
 msgid ""
 "State suspended cannot be modified since the end date of the intervention "
@@ -1832,13 +1838,13 @@ msgid "Start date must precede end date"
 msgstr "يجب أن يسبق تاريخ البدء تاريخ الانتهاء"
 
 msgid "Signatures cannot be dated in the future"
-msgstr "لا يمكن تأريخ أي من التوقيعات في المستقبل"
+msgstr "لا يمكن تأريخ التوقيعات في المستقبل"
 
 msgid "Document type PD or HPD can only be associated with a PCA agreement."
 msgstr "لا يمكن ربط نوع المستند PD أو HPD إلا باتفاقية PCA."
 
 msgid "The agreement selected has at least one other SSFA Document connected"
-msgstr "الاتفاقية المختارة لها وثيقة SSFA أخرى متصلة"
+msgstr "الاتفاقية المحددة لها وثيقة SSFA أخرى متصلة"
 
 msgid "The start date cannot be before the later of signature dates."
 msgstr "لا يمكن أن يكون تاريخ البدء قبل تاريخ لاحق للتوقيع."
@@ -1853,7 +1859,7 @@ msgid ""
 "The sections selected on the PD/SPD are not a subset of all sections "
 "selected for this PD/SPD's indicators"
 msgstr ""
-"الأقسام المحددة في PD / SPD ليست مجموعة فرعية من جميع الأقسام المختارة "
+"الأقسام المحددة في PD / SPD ليست مجموعة فرعية من جميع الأقسام المحددة "
 "لمؤشرات PD / SPD"
 
 msgid ""
@@ -1865,11 +1871,11 @@ msgstr ""
 
 #, python-format
 msgid "Required fields not completed in %(status)s: %(fields)s"
-msgstr "الحقول المطلوبة غير مكتملة في %(status)s: %(fields)s"
+msgstr "الحقول المطلوبة غير مكتملة في %(status)s: %(fields)s "
 
 #, python-format
 msgid "Cannot change fields while in %(status)s: %(field)s"
-msgstr "لا يمكن تغيير الحقول أثناء وجود %(status) s: %(field) s"
+msgstr "لا يمكن تغيير الحقول أثناء وجود %(status)s: %(field)s"
 
 msgid "All activities must have at least one time frame"
 msgstr "يجب أن يكون لجميع الأنشطة إطار زمني واحد على الأقل"
@@ -1881,27 +1887,26 @@ msgid "All PD Outputs need to have at least one indicator"
 msgstr "يجب أن تحتوي جميع مخرجات PD على مؤشر واحد على الأقل"
 
 msgid "Total UNICEF Contribution must be greater than 0"
-msgstr "يجب أن يكون إجمالي مساهمة اليونيسف أكبر من صفر"
+msgstr "يجب أن يكون إجمالي مساهمة اليونيسف أكبر من 0"
 
 msgid "All PD Outputs need to be associated to a CP Output"
 msgstr "يجب ربط جميع مخرجات PD بإخراج CP"
 
 msgid "Unicef and Partner both need to accept"
-msgstr "يتعين على كل من اليونيسف والشريك الموافقة"
+msgstr "يجب أن تقبل كل من اليونيسف والشريك"
 
 msgid "Review needs to be approved"
-msgstr "المراجعة تحتاج للموافقة عليها"
+msgstr "مراجعة يحتاج إلى الموافقة"
 
 msgid "UNICEF Cash $ or UNICEF Supplies $ should not be 0"
 msgstr ""
-"يجب ألا تكون قيمة الأموال النقدية لليونيسيف بالدولار الأمريكي أو لوازم "
-"اليونيسف بالدولار صفرًا"
+"لا يجب أن تكون قيمة أموال اليونيسف النقدية بالدولار أو لوازم اليونيسف صفرًا"
 
 msgid "Only original PD can be active"
-msgstr "يمكن تنشيط PD الأصلي فقط"
+msgstr "يمكن فقط تنشيط PD الأصلي"
 
 msgid "Today is not after the start date"
 msgstr "اليوم ليس بعد تاريخ البدء"
 
 msgid "Meeting date is not available."
-msgstr "تاريخ الاجتماع غير متوفر."
+msgstr "تاريخ الاجتماع غير متاح."

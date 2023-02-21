@@ -21,52 +21,52 @@ msgstr ""
 "%100>=11 && n%100<=14)? 2 : 3);\n"
 
 msgid "ID"
-msgstr ""
+msgstr "ID"
 
 msgid "Created"
-msgstr ""
+msgstr "Создано"
 
 msgid "User"
-msgstr ""
+msgstr "Пользователь"
 
 msgid "State"
-msgstr ""
+msgstr "Штат"
 
 msgid "Users Related"
-msgstr ""
+msgstr "Связанные с пользователями"
 
 msgid "Related To"
-msgstr ""
+msgstr "Связано с"
 
 msgid "Related To (description)"
-msgstr ""
+msgstr "Связано с (описание)"
 
 msgid "Text"
-msgstr ""
+msgstr "Текст"
 
 msgid "Active"
-msgstr ""
+msgstr "Активный"
 
 msgid "Resolved"
-msgstr ""
+msgstr "решены"
 
 msgid "Deleted"
-msgstr ""
+msgstr "Удалено"
 
 msgid "Content Type"
-msgstr ""
+msgstr "Тип содержимого"
 
 msgid "Object ID"
-msgstr ""
+msgstr "Идентификатор объекта"
 
 msgid "Comment"
-msgstr ""
+msgstr "Комментарий"
 
 msgid "Comments"
-msgstr ""
+msgstr "Комментарии"
 
 msgid "Unable to resolve deleted comment"
-msgstr ""
+msgstr "Не удалось решить удаленный комментарий"
 
 msgid "This comment has answers. Unable to delete."
-msgstr ""
+msgstr "В этом комментарии есть ответы. Невозможно удалить."

@@ -2183,6 +2183,11 @@ class Intervention(TimeStampedModel):
         blank=True,
         null=True,
     )
+    other_details = models.TextField(
+        verbose_name=_("Other Document Details"),
+        blank=True,
+        null=True,
+    )
     other_partners_involved = models.TextField(
         verbose_name=_("Other Partners Involved"),
         blank=True,

@@ -276,6 +276,7 @@ class InterventionSerializer(UserContextSerializerMixin, serializers.ModelSerial
             'start', 'end',
             'context', 'implementation_strategy',
             'capacity_development', 'other_info', 'other_partners_involved',
+            'other_details',
             'gender_rating', 'gender_narrative',
             'equity_rating', 'equity_narrative',
             'sustainability_rating', 'sustainability_narrative',

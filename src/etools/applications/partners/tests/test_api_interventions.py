@@ -135,6 +135,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
             "monitoring_activities",
             "number",
             "offices",
+            "other_details",
             "other_info",
             "other_partners_involved",
             "partner_accepted",
