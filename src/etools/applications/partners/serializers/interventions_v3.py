@@ -635,6 +635,7 @@ class InterventionDetailSerializer(
             "number",
             "offices",
             # "offices_names",
+            "other_details",
             "other_info",
             "other_partners_involved",
             "partner",

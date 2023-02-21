@@ -20,52 +20,52 @@ msgstr ""
 "&& n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
 
 msgid "ID"
-msgstr ""
+msgstr "المعرف"
 
 msgid "Created"
-msgstr ""
+msgstr "تم الإنشاء"
 
 msgid "User"
-msgstr ""
+msgstr "المستخدم"
 
 msgid "State"
-msgstr ""
+msgstr "الحالة"
 
 msgid "Users Related"
-msgstr ""
+msgstr "المستخدمون ذو الصلة"
 
 msgid "Related To"
-msgstr ""
+msgstr "متعلق بـ"
 
 msgid "Related To (description)"
-msgstr ""
+msgstr "متعلق بـ (الوصف)"
 
 msgid "Text"
-msgstr ""
+msgstr "النص"
 
 msgid "Active"
-msgstr ""
+msgstr "نشط"
 
 msgid "Resolved"
-msgstr ""
+msgstr "تم الحل"
 
 msgid "Deleted"
-msgstr ""
+msgstr "تم الحذف"
 
 msgid "Content Type"
-msgstr ""
+msgstr "نوع المحتوى"
 
 msgid "Object ID"
-msgstr ""
+msgstr "تعريف الغاية"
 
 msgid "Comment"
-msgstr ""
+msgstr "تعليق"
 
 msgid "Comments"
-msgstr ""
+msgstr "التعليقات"
 
 msgid "Unable to resolve deleted comment"
-msgstr ""
+msgstr "تعذر حل التعليق المحذوف"
 
 msgid "This comment has answers. Unable to delete."
-msgstr ""
+msgstr "هذا التعليق له إجابات. تعذر الحذف."
