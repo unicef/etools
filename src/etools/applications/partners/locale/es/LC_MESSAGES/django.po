@@ -916,7 +916,7 @@ msgid "Signed"
 msgstr "Firmado"
 
 msgid "Ended"
-msgstr "Terminado"
+msgstr "Finalizado"
 
 msgid "Suspended"
 msgstr "Suspendido"

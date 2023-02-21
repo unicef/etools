@@ -919,7 +919,7 @@ msgid "Signed"
 msgstr "Signé"
 
 msgid "Ended"
-msgstr "Terminé"
+msgstr "Fini"
 
 msgid "Suspended"
 msgstr "Suspendu"
