@@ -1755,11 +1755,11 @@ msgstr "Oficial autorizado de UNICEF"
 msgid "Date Uploaded"
 msgstr "Fecha de carga"
 
-msgid "Document"
-msgstr "Documento"
-
 msgid "Invalid"
 msgstr "INVALID"
+
+msgid "Document"
+msgstr "Documento"
 
 msgid "Cannot Transition without termination doc attached"
 msgstr ""

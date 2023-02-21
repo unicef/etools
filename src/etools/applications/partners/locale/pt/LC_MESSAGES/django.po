@@ -1768,11 +1768,11 @@ msgstr "Oficial autorizado do UNICEF"
 msgid "Date Uploaded"
 msgstr "Data de upload"
 
-msgid "Document"
-msgstr "Documento"
-
 msgid "Invalid"
 msgstr "Inválido"
+
+msgid "Document"
+msgstr "Documento"
 
 msgid "Cannot Transition without termination doc attached"
 msgstr "Não é possível fazer a transição sem o documento de rescisão anexado"

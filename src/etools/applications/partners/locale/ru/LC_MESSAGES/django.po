@@ -1750,11 +1750,11 @@ msgstr "Уполномоченный сотрудник ЮНИСЕФ"
 msgid "Date Uploaded"
 msgstr "Дата загрузки"
 
-msgid "Document"
-msgstr "Документ"
-
 msgid "Invalid"
 msgstr "Неверный"
+
+msgid "Document"
+msgstr "Документ"
 
 msgid "Cannot Transition without termination doc attached"
 msgstr ""

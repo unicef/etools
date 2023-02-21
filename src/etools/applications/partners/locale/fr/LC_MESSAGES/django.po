@@ -1103,6 +1103,9 @@ msgstr "Conseils techniques"
 msgid "Cancel Justification"
 msgstr "Justification de l'annulation"
 
+msgid "Attachments"
+msgstr "Pièces jointes"
+
 msgid "Metadata"
 msgstr "Métadonnées"
 
@@ -1546,9 +1549,6 @@ msgstr "Type de pièce jointe"
 msgid "N/A"
 msgstr "N/A"
 
-msgid "Attachments"
-msgstr "Pièces jointes"
-
 msgid "CSO Contribution"
 msgstr "Contribution des OSC"
 
@@ -1576,6 +1576,9 @@ msgid ""
 msgstr ""
 "On ne peut pas ajouter un nouvel amendement alors qu'un autre amendement du "
 "même type est en cours."
+
+msgid "Unable to find corresponding file type."
+msgstr ""
 
 msgid "Invalid CP Output provided."
 msgstr "Sortie CP invalide fournie."
@@ -1757,11 +1760,11 @@ msgstr "Agent autorisé de l'UNICEF"
 msgid "Date Uploaded"
 msgstr "Date du téléchargement"
 
-msgid "Document"
-msgstr "Document"
-
 msgid "Invalid"
 msgstr "Invalide"
+
+msgid "Document"
+msgstr "Document"
 
 msgid "Cannot Transition without termination doc attached"
 msgstr "Impossible de faire la transition sans document de résiliation joint"
@@ -1952,6 +1955,9 @@ msgstr "Seul le DP d'origine peut être actif"
 
 msgid "Today is not after the start date"
 msgstr "La date d'aujourd'hui n'est pas postérieure à la date de début"
+
+msgid "Deleting an attachment can only be done in Draft status"
+msgstr ""
 
 msgid "Meeting date is not available."
 msgstr "La date de la réunion n'est pas disponible."

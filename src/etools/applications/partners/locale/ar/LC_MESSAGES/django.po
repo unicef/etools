@@ -1732,11 +1732,11 @@ msgstr "مسؤول اليونيسف المعتمد"
 msgid "Date Uploaded"
 msgstr "تاريخ الرفع"
 
-msgid "Document"
-msgstr "وثيقة"
-
 msgid "Invalid"
 msgstr "غير صالح"
+
+msgid "Document"
+msgstr "وثيقة"
 
 msgid "Cannot Transition without termination doc attached"
 msgstr "لا يمكن الانتقال بدون إرفاق مستند الإنهاء"
