@@ -117,6 +117,7 @@ class InterventionFactory(factory.django.DjangoModelFactory):
     )
     capacity_development = "capacity_development"
     other_partners_involved = "other_partners_involved"
+    other_details = "other_details"
 
     @factory.post_generation
     def country_programmes(self, create, extracted, **kwargs):

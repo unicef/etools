@@ -1,6 +1,6 @@
 from copy import copy
 
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext as _
 
 from rest_framework import serializers
 from unicef_attachments.fields import FileTypeModelChoiceField
@@ -188,7 +188,7 @@ class FMUserSerializer(MinimalUserSerializer):
     def get_name(self, obj):
         if obj.is_active:
             return obj.get_full_name()
-        return _('[Inactive] {}').format(obj.get_full_name())
+        return _('[Inactive] %s') % obj.get_full_name()
 
 
 class CPOutputListSerializer(MinimalOutputListSerializer):

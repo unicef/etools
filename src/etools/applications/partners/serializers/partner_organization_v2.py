@@ -238,7 +238,6 @@ class AssessmentDetailSerializer(AttachmentSerializerMixin, serializers.ModelSer
 
 
 class PartnerOrganizationListSerializer(serializers.ModelSerializer):
-    rating = serializers.CharField(source='get_rating_display')
     name = serializers.CharField(source='organization.name')
     vendor_number = serializers.CharField(source='organization.vendor_number')
     short_name = serializers.CharField(source='organization.short_name')

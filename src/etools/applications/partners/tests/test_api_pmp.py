@@ -6,7 +6,6 @@ from django.urls import reverse
 
 from django_tenants.test.client import TenantClient
 from rest_framework import status
-from unicef_djangolib.fields import CURRENCY_LIST
 from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
@@ -24,6 +23,7 @@ from etools.applications.partners.models import (
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.publics.tests.factories import PublicsCurrencyFactory
 from etools.applications.users.tests.factories import UserFactory
+from etools.libraries.djangolib.fields import CURRENCY_LIST
 
 
 class URLsTestCase(URLAssertionMixin, SimpleTestCase):

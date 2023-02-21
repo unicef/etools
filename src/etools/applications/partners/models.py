@@ -11,14 +11,14 @@ from django.db.models import Case, CharField, Count, F, Max, Min, OuterRef, Pref
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.functional import cached_property
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext, gettext_lazy as _
 
 from django_fsm import FSMField, transition
 from django_tenants.utils import get_public_schema_name
 from model_utils import Choices, FieldTracker
 from model_utils.models import TimeStampedModel
 from unicef_attachments.models import Attachment, FileType as AttachmentFileType
-from unicef_djangolib.fields import CodedGenericRelation, CurrencyField
+from unicef_djangolib.fields import CodedGenericRelation
 from unicef_snapshot.models import Activity
 
 from etools.applications.core.permissions import import_permissions
@@ -51,6 +51,7 @@ from etools.applications.t2f.models import Travel, TravelActivity, TravelType
 from etools.applications.tpm.models import TPMActivity, TPMVisit
 from etools.applications.users.mixins import PARTNER_ACTIVE_GROUPS
 from etools.applications.users.models import Country, Realm, User
+from etools.libraries.djangolib.fields import CurrencyField
 from etools.libraries.djangolib.models import MaxDistinct, StringConcat
 from etools.libraries.djangolib.utils import get_environment
 from etools.libraries.pythonlib.datetime import get_current_year, get_quarter
@@ -2211,6 +2212,11 @@ class Intervention(TimeStampedModel):
         blank=True,
         null=True,
     )
+    other_details = models.TextField(
+        verbose_name=_("Other Document Details"),
+        blank=True,
+        null=True,
+    )
     other_partners_involved = models.TextField(
         verbose_name=_("Other Partners Involved"),
         blank=True,
@@ -2649,7 +2655,7 @@ class Intervention(TimeStampedModel):
 
     def get_cash_transfer_modalities_display(self):
         choices = dict(self.CASH_TRANSFER_CHOICES)
-        return ', '.join(choices.get(choices[m], 'Unknown') for m in self.cash_transfer_modalities)
+        return ', '.join([gettext(choices.get(m, _('Unknown'))) for m in self.cash_transfer_modalities])
 
     def was_active_before(self):
         """

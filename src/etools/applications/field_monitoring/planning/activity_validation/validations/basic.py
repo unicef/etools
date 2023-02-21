@@ -1,4 +1,4 @@
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext as _
 
 from etools_validator.exceptions import BasicValidationError
 
@@ -20,7 +20,7 @@ def tpm_staff_members_belongs_to_the_partner(i):
     team_members = set(i.team_members.values_list('id', flat=True))
     partner_staff_members = set(i.tpm_partner.staff_members.all().values_list('id', flat=True))
     if team_members - partner_staff_members:
-        raise BasicValidationError(_('Staff members doesn\'t belong to the selected partner'))
+        raise BasicValidationError(_('Staff members do not belong to the selected partner'))
 
     return True
 
@@ -30,10 +30,12 @@ def interventions_connected_with_partners(i):
 
     diff = set(partners) - set(i.partners.values_list('id', flat=True))
     if diff:
-        error_text = _("You've selected a PD/SPD and unselected some of it's corresponding partners, "
-                       "please either remove the PD or add the partners back before saving: {}")
+
         wrong_partners = PartnerOrganization.objects.filter(id__in=diff).values_list('name', flat=True)
-        raise BasicValidationError(error_text.format(', '.join(wrong_partners)))
+        error_text = _(
+            "You've selected a PD/SPD and unselected some of it's corresponding partners, "
+            "please either remove the PD or add the partners back before saving: %s")
+        raise BasicValidationError(error_text % ', '.join(wrong_partners))
 
     return True
 
@@ -47,9 +49,11 @@ def interventions_connected_with_cp_outputs(i):
 
     diff = set(cp_outputs) - set(i.cp_outputs.values_list('id', flat=True))
     if diff:
-        error_text = _("You've selected a PD/SPD and unselected some of it's corresponding outputs, "
-                       "please either remove the PD or add the outputs back before saving: {}")
+
         wrong_cp_outputs = Result.objects.filter(id__in=diff).values_list('name', flat=True)
-        raise BasicValidationError(error_text.format(', '.join(wrong_cp_outputs)))
+        error_text = _(
+            "You've selected a PD/SPD and unselected some of it's corresponding outputs, "
+            "please either remove the PD or add the outputs back before saving: %s")
+        raise BasicValidationError(error_text % ', '.join(wrong_cp_outputs))
 
     return True

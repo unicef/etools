@@ -3,6 +3,7 @@ from typing import Dict, List
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
 from django.urls import reverse
+from django.utils.translation import gettext as _
 
 from rest_framework.exceptions import ValidationError
 from unicef_attachments.models import AttachmentLink
@@ -51,7 +52,8 @@ def _save_values_to_checklist(value: dict, checklist: StartedChecklist) -> None:
                     **{relation_name: target_id}
                 ).prefetch_related('attachments').get()
             except ChecklistOverallFinding.DoesNotExist:
-                raise BadValueError(f'Unable to find {level} with id {target_id}')
+                raise BadValueError(_('Unable to find %(level)s with id %(target_id)s') %
+                                    {'level': level, 'target_id': target_id})
 
             overall_finding.narrative_finding = target_value.get('overall', '')
             overall_finding.save()
@@ -68,8 +70,11 @@ def _save_values_to_checklist(value: dict, checklist: StartedChecklist) -> None:
                         activity_question__question=question_id
                     )
                 except Finding.DoesNotExists:
-                    raise BadValueError(f'Unable to find finding for question {question_id} for {level} {target_id}')
-
+                    raise BadValueError(
+                        _('Unable to find finding for question %(question_id)s for %(level)s %(target_id)s') %
+                        {'question_id': question_id,
+                         'level': level,
+                         'target_id': target_id})
                 finding.value = question_value
                 finding.save()
 
@@ -83,7 +88,7 @@ def update_checklist(checklist: StartedChecklist, value: dict) -> StartedCheckli
     information_source = validated_value.get('information_source', {}).get('name', '')
     if len(information_source) > 100:
         raise ValidationError({
-            "information_source": "Ensure this field has no more than 100 characters.",
+            "information_source": _("Ensure this field has no more than 100 characters."),
         })
     checklist.information_source = information_source
     checklist.save()

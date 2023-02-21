@@ -1,0 +1,140 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-02-10 10:07+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
+"%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || (n"
+"%100>=11 && n%100<=14)? 2 : 3);\n"
+
+msgid "Activity"
+msgstr "Активность"
+
+msgid "Question"
+msgstr "Вопрос"
+
+msgid "Question Text"
+msgstr "Текст вопроса"
+
+msgid "Count as HACT"
+msgstr "Считать как HACT"
+
+msgid "Specific Details To Probe"
+msgstr "Конкретные детали для исследования"
+
+msgid "Enabled"
+msgstr "Включено"
+
+msgid "Activity Question"
+msgstr "Вопрос об активности"
+
+msgid "Activity Questions"
+msgstr "Вопросы об активности"
+
+msgid "Methods"
+msgstr "Методы"
+
+msgid "Information Source"
+msgstr "Источник информации"
+
+msgid "Author"
+msgstr "Автор"
+
+msgid "Started Checklist"
+msgstr "Начат контрольный список"
+
+msgid "Started Checklists"
+msgstr "Начатые контрольные списки"
+
+msgid "Checklist"
+msgstr "Контрольный список"
+
+msgid "Value"
+msgstr "Стоимость"
+
+msgid "Checklist Finding"
+msgstr "Контрольный список"
+
+msgid "Checklist Findings"
+msgstr "Контрольный список результатов"
+
+msgid "Overall Activity Question Finding"
+msgstr "Общий поиск вопросов по активности"
+
+msgid "Overall Activity Question Findings"
+msgstr "Общие выводы по вопросам деятельности"
+
+msgid "Narrative Finding"
+msgstr "Повествование"
+
+msgid "Attachments"
+msgstr "Вложения"
+
+msgid "Checklist Overall Finding"
+msgstr "Общий вывод контрольного списка"
+
+msgid "Checklist Overall Findings"
+msgstr "Контрольный список общих выводов"
+
+msgid "Activity Overall Finding"
+msgstr "Общий вывод о деятельности"
+
+msgid "Activity Overall Findings"
+msgstr "Общие результаты деятельности"
+
+msgid "Source of Information"
+msgstr "Источник информации"
+
+msgid "Overall Finding"
+msgstr "Общий вывод"
+
+#, python-format
+msgid "Unable to find %(level)s with id %(target_id)s"
+msgstr "Не удалось найти %(level)s с идентификатором %(target_id)s"
+
+#, python-format
+msgid ""
+"Unable to find finding for question %(question_id)s for %(level)s "
+"%(target_id)s"
+msgstr ""
+"Не удалось найти ответ на вопрос %(question_id)s для %(level)s %(target_id)s"
+
+msgid "Ensure this field has no more than 100 characters."
+msgstr "Убедитесь, что это поле содержит не более 100 символов."
+
+msgid "Document Type"
+msgstr "тип документа"
+
+msgid "Information source is required"
+msgstr "Укажите источник информации."
+
+#, python-format
+msgid "Workspace code provided is not a valid business_area_code: %s"
+msgstr ""
+"Предоставленный код рабочей области не является допустимым "
+"business_area_code: %s"
+
+msgid "Workspace is required"
+msgstr "Требуется рабочее место"
+
+msgid "User is required"
+msgstr "Требуется пользователь"
+
+msgid "Unable to fill checklists for current activity"
+msgstr "Невозможно заполнить контрольные списки для текущей деятельности"
+
+msgid "Report Attachments"
+msgstr "Приложения к отчету"

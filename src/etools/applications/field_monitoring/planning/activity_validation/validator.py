@@ -1,3 +1,5 @@
+from django.utils.translation import gettext as _
+
 from etools_validator.exceptions import StateValidationError
 from etools_validator.utils import check_required_fields, check_rigid_fields
 from etools_validator.validation import CompleteValidation
@@ -37,8 +39,11 @@ class ActivityValid(CompleteValidation):
         required_fields = [f for f in self.permissions['required'] if self.permissions['required'][f]]
         required_valid, fields = check_required_fields(intervention, required_fields)
         if not required_valid:
-            raise StateValidationError(['Required fields not completed in {}: {}'.format(
-                intervention.status, ', '.join(f for f in fields))])
+            raise StateValidationError([_('Required fields not completed in %(status)s: %(fields)s')
+                                        % {'status': intervention.status,
+                                           'fields': ', '.join(f for f in fields)
+                                           }
+                                        ])
 
     def check_rigid_fields(self, intervention, related=False):
         # this can be set if running in a task and old_instance is not set
@@ -47,7 +52,11 @@ class ActivityValid(CompleteValidation):
         rigid_fields = [f for f in self.permissions['edit'] if not self.permissions['edit'][f]]
         rigid_valid, field = check_rigid_fields(intervention, rigid_fields, related=related)
         if not rigid_valid:
-            raise StateValidationError(['Cannot change fields while in {}: {}'.format(intervention.status, field)])
+            raise StateValidationError([_('Cannot change fields while in %(status)s: %(field)s')
+                                        % {'status': intervention.status,
+                                           'field': field
+                                           }
+                                        ])
 
     def state_draft_valid(self, instance, user=None):
         self.check_required_fields(instance)
