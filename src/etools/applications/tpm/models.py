@@ -464,6 +464,9 @@ class TPMActivity(Activity):
 
         return context
 
+    def get_related_third_party_users(self):
+        return self.tpm_visit.get_related_third_party_users()
+
 
 class TPMActionPointManager(models.Manager):
     def get_queryset(self):

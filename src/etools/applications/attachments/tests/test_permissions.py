@@ -18,7 +18,12 @@ from etools.applications.field_monitoring.planning.tests.factories import Monito
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.psea.models import Assessor
 from etools.applications.psea.tests.factories import AnswerFactory, AssessmentFactory, AssessorFactory
-from etools.applications.tpm.tests.factories import TPMPartnerFactory, TPMUserFactory, TPMVisitFactory
+from etools.applications.tpm.tests.factories import (
+    TPMActivityFactory,
+    TPMPartnerFactory,
+    TPMUserFactory,
+    TPMVisitFactory,
+)
 from etools.applications.users.tests.factories import UserFactory
 from etools.libraries.djangolib.models import GroupWrapper
 
@@ -78,6 +83,34 @@ class DownloadTPMVisitAttachmentTestCase(DownloadAttachmentsBaseTestCase):
                                         profile__country=connection.tenant)
         self.visit = TPMVisitFactory(tpm_partner=self.tpm_organization)
         self.attachment.content_object = self.visit
+        self.attachment.save()
+
+    def test_attachment_user_not_in_schema(self):
+        another_schema_user = UserFactory(is_staff=True, profile__countries_available=[], profile__country=None)
+        self._test_download(self.attachment, another_schema_user, status.HTTP_403_FORBIDDEN)
+
+    def test_attachment_unicef(self):
+        self._test_download(self.attachment, self.unicef_user, status.HTTP_302_FOUND)
+
+    def test_attachment_staff_member(self):
+        self._test_download(self.attachment, self.tpm_staff, status.HTTP_302_FOUND)
+
+    def test_attachment_unrelated_staff(self):
+        another_tpm_staff = TPMUserFactory(is_staff=False, profile__countries_available=[connection.tenant],
+                                           profile__country=connection.tenant)
+        self._test_download(self.attachment, another_tpm_staff, status.HTTP_403_FORBIDDEN)
+
+
+class DownloadTPMVisitActivityAttachmentTestCase(DownloadAttachmentsBaseTestCase):
+    def setUp(self):
+        super().setUp()
+        self.tpm_organization = TPMPartnerFactory()
+        self.tpm_staff = TPMUserFactory(tpm_partner=self.tpm_organization, is_staff=False,
+                                        profile__countries_available=[connection.tenant],
+                                        profile__country=connection.tenant)
+        self.visit = TPMVisitFactory(tpm_partner=self.tpm_organization)
+        self.activity = TPMActivityFactory(tpm_visit=self.visit)
+        self.attachment.content_object = self.activity
         self.attachment.save()
 
     def test_attachment_user_not_in_schema(self):
