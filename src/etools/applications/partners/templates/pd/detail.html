@@ -477,15 +477,15 @@
           <tr>
             <td class="bold w-p20">{% translate "Date Uploaded" %}</td>
             <td class="bold w-p30">{% translate "Document Type" %}</td>
-            <td class="bold w-p40">{% translate "Document" %}</td>
             <td class="bold w-p10">{% translate "Invalid" %}</td>
+            <td class="bold w-p40">{% translate "Document" %}</td>
           </tr>
           {% for attachment in pd.attachments.all %}
             <tr>
               <td>{{ attachment.created }}</td>
-              <td>{{ attachment.type.get_name_display }}</td>
-              <td>{% if attachment.attachment_file.last %}{{ domain }}{{ attachment.attachment_file.last.file_link }}{% else %}{{ attachment.attachment.url }}{% endif %}</td>
-              <td>{% if not attachment.active %}{% translate "Yes" %}{% else %}{% translate "No" %}{% endif %}</td>
+              <td>{{ attachment.file_type.label }}</td>
+              <td>{% if not attachment.is_active %}{% translate "Yes" %}{% else %}{% translate "No" %}{% endif %}</td>
+              <td><a href="{{ domain|add:attachment.file_link }}">{{ domain|add:attachment.file_link|text_wrap }}</a></td>
             </tr>
           {% endfor %}
         <tbody>
