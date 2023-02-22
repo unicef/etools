@@ -1,7 +1,7 @@
 from copy import copy
 from tempfile import NamedTemporaryFile
 
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
