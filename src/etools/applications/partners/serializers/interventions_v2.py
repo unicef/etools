@@ -744,7 +744,7 @@ class InterventionCreateUpdateSerializer(
     def _validate_character_limitation(self, value, limit=5000):
         if value and len(value) > limit:
             raise serializers.ValidationError(
-                _("This field is limited to %d or less characters.)" % limit)
+                _("This field is limited to %d or less characters.") % limit
             )
         return value
 

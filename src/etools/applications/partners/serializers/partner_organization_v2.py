@@ -142,7 +142,7 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
                     raise ValidationError(
                         {
                             'active': _(
-                                'The email for the partner contact is used by another partner contact.'
+                                'The email for the partner contact is used by another partner contact. '
                                 'Email has to be unique to proceed %s') % email
                         }
                     )

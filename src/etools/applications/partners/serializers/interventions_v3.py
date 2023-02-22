@@ -57,9 +57,7 @@ class InterventionRiskSerializer(FullInterventionSnapshotSerializerMixin, serial
     def validate_mitigation_measures(self, value):
         if value and len(value) > 2500:
             raise serializers.ValidationError(
-                "This field is limited to {} or less characters.".format(
-                    2500,
-                ),
+                _("This field is limited to %d or less characters.") % 2500
             )
         return value
 
