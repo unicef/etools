@@ -1,9 +1,10 @@
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import connection
+from django.urls import reverse
 
 from rest_framework import status
 
-from etools.applications.attachments.tests.factories import AttachmentFactory
+from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentLinkFactory
 from etools.applications.audit.tests.factories import AuditorUserFactory, AuditPartnerFactory, SpecialAuditFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.field_monitoring.data_collection.tests.factories import (
@@ -46,6 +47,20 @@ class DownloadAttachmentsBaseTestCase(BaseTenantTestCase):
         response = self.forced_auth_req('get', attachment.file_link, user=user)
         self.assertEqual(response.status_code, expected_status)
         return response
+
+
+class DownloadUnlinkedAttachmentTestCase(DownloadAttachmentsBaseTestCase):
+    def test_attachment_user_not_in_schema(self):
+        another_schema_user = UserFactory(is_staff=True, profile__countries_available=[], profile__country=None)
+        self._test_download(self.attachment, another_schema_user, status.HTTP_403_FORBIDDEN)
+
+    def test_attachment_unicef(self):
+        self._test_download(self.attachment, self.unicef_user, status.HTTP_302_FOUND)
+
+    def test_attachment_auditor(self):
+        auditor = AuditorUserFactory(is_staff=False, profile__countries_available=[connection.tenant],
+                                     profile__country=connection.tenant)
+        self._test_download(self.attachment, auditor, status.HTTP_302_FOUND)
 
 
 class DownloadAPAttachmentTestCase(DownloadAttachmentsBaseTestCase):
@@ -391,3 +406,54 @@ class DownloadPSEAAnswerAttachmentTestCase(DownloadAttachmentsBaseTestCase):
         )
         assessor.auditor_firm_staff.add(self.auditor.purchase_order_auditorstaffmember)
         self._test_download(self.attachment, self.auditor, status.HTTP_302_FOUND)
+
+
+class AttachmentLinkBaseTestCase(BaseTenantTestCase):
+    def setUp(self):
+        super().setUp()
+        # clearing groups cache
+        GroupWrapper.invalidate_instances()
+
+        self.unicef_user = UserFactory(is_staff=True)
+        self.attachment_link = AttachmentLinkFactory(
+            attachment__file=SimpleUploadedFile(
+                'simple_file.txt',
+                b'these are the file contents!'
+            )
+        )
+
+    def _test_delete(self, attachment_link, user, expected_status):
+        response = self.forced_auth_req(
+            'delete',
+            reverse('attachments:link-delete', args=[attachment_link.pk]),
+            user=user,
+        )
+        self.assertEqual(response.status_code, expected_status)
+        return response
+
+
+class TPMVisitAttachmentLinkTestCase(AttachmentLinkBaseTestCase):
+    def setUp(self):
+        super().setUp()
+        self.tpm_organization = TPMPartnerFactory()
+        self.tpm_staff = TPMUserFactory(tpm_partner=self.tpm_organization, is_staff=False,
+                                        profile__countries_available=[connection.tenant],
+                                        profile__country=connection.tenant)
+        self.visit = TPMVisitFactory(tpm_partner=self.tpm_organization)
+        self.attachment_link.content_object = self.visit
+        self.attachment_link.save()
+
+    def test_attachment_user_not_in_schema(self):
+        another_schema_user = UserFactory(is_staff=True, profile__countries_available=[], profile__country=None)
+        self._test_delete(self.attachment_link, another_schema_user, status.HTTP_403_FORBIDDEN)
+
+    def test_attachment_unicef(self):
+        self._test_delete(self.attachment_link, self.unicef_user, status.HTTP_204_NO_CONTENT)
+
+    def test_attachment_staff_member(self):
+        self._test_delete(self.attachment_link, self.tpm_staff, status.HTTP_204_NO_CONTENT)
+
+    def test_attachment_unrelated_staff(self):
+        another_tpm_staff = TPMUserFactory(is_staff=False, profile__countries_available=[connection.tenant],
+                                           profile__country=connection.tenant)
+        self._test_delete(self.attachment_link, another_tpm_staff, status.HTTP_403_FORBIDDEN)

@@ -20,7 +20,7 @@ class IsRelatedThirdPartyUser(BasePermission):
     def has_object_permission(self, request, view, obj):
         content_object = obj.content_object
         if not content_object:
-            return False
+            return True
 
         if hasattr(content_object, 'get_related_third_party_users'):
             return content_object.get_related_third_party_users().filter(pk=request.user.pk).exists()
