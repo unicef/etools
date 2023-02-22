@@ -6,16 +6,16 @@ from model_utils.models import TimeStampedModel
 
 
 class OrganizationType:
-    BILATERAL_MULTILATERAL = "Bilateral / Multilateral"
-    CIVIL_SOCIETY_ORGANIZATION = "Civil Society Organization"
-    GOVERNMENT = "Government"
-    UN_AGENCY = "UN Agency"
+    BILATERAL_MULTILATERAL = 'Bilateral / Multilateral'
+    CIVIL_SOCIETY_ORGANIZATION = 'Civil Society Organization'
+    GOVERNMENT = 'Government'
+    UN_AGENCY = 'UN Agency'
 
     CHOICES = Choices(
-        (BILATERAL_MULTILATERAL, _(BILATERAL_MULTILATERAL)),
-        (CIVIL_SOCIETY_ORGANIZATION, _(CIVIL_SOCIETY_ORGANIZATION)),
-        (GOVERNMENT, _(GOVERNMENT)),
-        (UN_AGENCY, _(UN_AGENCY)),
+        (BILATERAL_MULTILATERAL, _('Bilateral / Multilateral')),
+        (CIVIL_SOCIETY_ORGANIZATION, _('Civil Society Organization')),
+        (GOVERNMENT, _('Government')),
+        (UN_AGENCY, _('UN Agency'))
     )
 
 
@@ -26,16 +26,16 @@ class OrganizationManager(models.Manager):
 
 class Organization(TimeStampedModel, models.Model):
 
-    CSO_TYPE_INTERNATIONAL = "International"
-    CSO_TYPE_NATIONAL = "National"
-    CSO_TYPE_COMMUNITY = "Community Based Organization"
-    CSO_TYPE_ACADEMIC = "Academic Institution"
+    CSO_TYPE_INTERNATIONAL = 'International'
+    CSO_TYPE_NATIONAL = 'National'
+    CSO_TYPE_COMMUNITY = 'Community Based Organization'
+    CSO_TYPE_ACADEMIC = 'Academic Institution'
     CSO_TYPE_REDCROSS = 'Red Cross/Red Crescent National Societies'
     CSO_TYPES = Choices(
-        (CSO_TYPE_INTERNATIONAL, _(CSO_TYPE_INTERNATIONAL)),
-        (CSO_TYPE_NATIONAL, _(CSO_TYPE_NATIONAL)),
-        (CSO_TYPE_COMMUNITY, _(CSO_TYPE_COMMUNITY)),
-        (CSO_TYPE_ACADEMIC, _(CSO_TYPE_ACADEMIC)),
+        (CSO_TYPE_INTERNATIONAL, _('International')),
+        (CSO_TYPE_NATIONAL, _('National')),
+        (CSO_TYPE_COMMUNITY, _('Community Based Organization')),
+        (CSO_TYPE_ACADEMIC, _('Academic Institution')),
         (CSO_TYPE_REDCROSS, _('Red Cross/Red Crescent National Societies')),
     )
     parent = models.ForeignKey(

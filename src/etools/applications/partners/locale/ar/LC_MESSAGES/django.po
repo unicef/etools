@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-17 15:21+0000\n"
+"POT-Creation-Date: 2023-02-22 08:05+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -676,29 +676,8 @@ msgstr "ميزانية خطة العمل التفصيلية"
 msgid "Supply Contribution (Planned)"
 msgstr "مساهمة التوريد (مخطط لها)"
 
-msgid "You must select a type for this CSO"
-msgstr "يجب عليك تحديد نوع CSO هذا"
-
-msgid ""
-"\"CSO Type\" does not apply to non-CSO organizations, please remove type"
-msgstr ""
-"لا ينطبق &quot;نوع CSO&quot; على المنظمات غير التابعة لمنظمات المجتمع "
-"المدني ، يرجى إزالة النوع"
-
 msgid "Name"
 msgstr "اسم"
-
-msgid "Bilateral / Multilateral"
-msgstr "ثنائي / متعدد الأطراف"
-
-msgid "Civil Society Organization"
-msgstr "منظمة المجتمع المدني"
-
-msgid "Government"
-msgstr "الحكومي"
-
-msgid "UN Agency"
-msgstr "وكالة الأمم المتحدة"
 
 msgid "High"
 msgstr "عالٍ"
@@ -714,21 +693,6 @@ msgstr "قليل"
 
 msgid "Not Required"
 msgstr "غير مطلوب"
-
-msgid "International"
-msgstr "دولي"
-
-msgid "National"
-msgstr "وطني"
-
-msgid "Community Based Organization"
-msgstr "منظمة مجتمعية"
-
-msgid "Academic Institution"
-msgstr "المؤسسة الأكاديمية"
-
-msgid "Red Cross/Red Crescent National Societies"
-msgstr "الجمعيات الوطنية للصليب الأحمر والهلال الأحمر"
 
 msgid "Description"
 msgstr "وصف"
@@ -919,11 +883,21 @@ msgstr "معلق"
 msgid "Terminated"
 msgstr "تم إنهاؤه"
 
+#, fuzzy
+#| msgid "Partner Authorized Officer"
+msgid "(old)Partner Authorized Officer"
+msgstr "موظف شريك معتمد"
+
 msgid "Attached Agreement"
 msgstr "الاتفاقية المرفقة"
 
 msgid "Termination document for PCAs"
 msgstr "وثيقة إنهاء PCA"
+
+#, fuzzy
+#| msgid "Signed by partner"
+msgid "(old)Signed by partner"
+msgstr "وقعه الشريك"
 
 msgid "Signed by partner"
 msgstr "وقعه الشريك"
@@ -1005,6 +979,16 @@ msgstr "تاريخ إجراء مراجعة الشراكة النهائية"
 
 msgid "Final Review Approved"
 msgstr "تمت الموافقة على المراجعة النهائية"
+
+#, fuzzy
+#| msgid "Signed by Partner"
+msgid "(old)Signed by Partner"
+msgstr "وقعه الشريك"
+
+#, fuzzy
+#| msgid "CSO Authorized Officials"
+msgid "(old)CSO Authorized Officials"
+msgstr "مسؤولو منظمات المجتمع المدني المعتمدون"
 
 msgid "Contingency PD"
 msgstr "الطوارئ PD"
@@ -1910,3 +1894,39 @@ msgstr "اليوم ليس بعد تاريخ البدء"
 
 msgid "Meeting date is not available."
 msgstr "تاريخ الاجتماع غير متاح."
+
+#~ msgid "You must select a type for this CSO"
+#~ msgstr "يجب عليك تحديد نوع CSO هذا"
+
+#~ msgid ""
+#~ "\"CSO Type\" does not apply to non-CSO organizations, please remove type"
+#~ msgstr ""
+#~ "لا ينطبق &quot;نوع CSO&quot; على المنظمات غير التابعة لمنظمات المجتمع "
+#~ "المدني ، يرجى إزالة النوع"
+
+#~ msgid "Bilateral / Multilateral"
+#~ msgstr "ثنائي / متعدد الأطراف"
+
+#~ msgid "Civil Society Organization"
+#~ msgstr "منظمة المجتمع المدني"
+
+#~ msgid "Government"
+#~ msgstr "الحكومي"
+
+#~ msgid "UN Agency"
+#~ msgstr "وكالة الأمم المتحدة"
+
+#~ msgid "International"
+#~ msgstr "دولي"
+
+#~ msgid "National"
+#~ msgstr "وطني"
+
+#~ msgid "Community Based Organization"
+#~ msgstr "منظمة مجتمعية"
+
+#~ msgid "Academic Institution"
+#~ msgstr "المؤسسة الأكاديمية"
+
+#~ msgid "Red Cross/Red Crescent National Societies"
+#~ msgstr "الجمعيات الوطنية للصليب الأحمر والهلال الأحمر"

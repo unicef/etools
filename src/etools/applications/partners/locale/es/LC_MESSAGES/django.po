@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-17 15:21+0000\n"
+"POT-Creation-Date: 2023-02-22 08:05+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -681,29 +681,8 @@ msgstr "Plan de trabajo detallado Presupuesto"
 msgid "Supply Contribution (Planned)"
 msgstr "Contribución de la oferta (prevista)"
 
-msgid "You must select a type for this CSO"
-msgstr "Debe seleccionar un tipo para este CSO"
-
-msgid ""
-"\"CSO Type\" does not apply to non-CSO organizations, please remove type"
-msgstr ""
-"\"Tipo de OSC\" no se aplica a las organizaciones que no son OSC, por favor, "
-"elimine el tipo"
-
 msgid "Name"
 msgstr "Nombre"
-
-msgid "Bilateral / Multilateral"
-msgstr "Bilateral / Multilateral"
-
-msgid "Civil Society Organization"
-msgstr "Organización de la Sociedad Civil"
-
-msgid "Government"
-msgstr "Gobierno"
-
-msgid "UN Agency"
-msgstr "Agencia de la ONU"
 
 msgid "High"
 msgstr "Alto"
@@ -719,21 +698,6 @@ msgstr "Bajo"
 
 msgid "Not Required"
 msgstr "No es necesario"
-
-msgid "International"
-msgstr "Internacional"
-
-msgid "National"
-msgstr "Nacional"
-
-msgid "Community Based Organization"
-msgstr "Organización de base comunitaria"
-
-msgid "Academic Institution"
-msgstr "Institución académica"
-
-msgid "Red Cross/Red Crescent National Societies"
-msgstr "Sociedades Nacionales de la Cruz Roja y de la Media Luna Roja"
 
 msgid "Description"
 msgstr "Descripción"
@@ -924,11 +888,21 @@ msgstr "Suspendido"
 msgid "Terminated"
 msgstr "Terminado"
 
+#, fuzzy
+#| msgid "Partner Authorized Officer"
+msgid "(old)Partner Authorized Officer"
+msgstr "Socio Funcionario autorizado"
+
 msgid "Attached Agreement"
 msgstr "Acuerdo adjunto"
 
 msgid "Termination document for PCAs"
 msgstr "Documento de cese de los AAC"
+
+#, fuzzy
+#| msgid "Signed by partner"
+msgid "(old)Signed by partner"
+msgstr "Firmado por el socio"
 
 msgid "Signed by partner"
 msgstr "Firmado por el socio"
@@ -1010,6 +984,16 @@ msgstr "Fecha de la revisión final de la asociación"
 
 msgid "Final Review Approved"
 msgstr "Revisión final aprobada"
+
+#, fuzzy
+#| msgid "Signed by Partner"
+msgid "(old)Signed by Partner"
+msgstr "Firmado por el socio"
+
+#, fuzzy
+#| msgid "CSO Authorized Officials"
+msgid "(old)CSO Authorized Officials"
+msgstr "CSO Funcionarios autorizados"
 
 msgid "Contingency PD"
 msgstr "Contingencia PD"
