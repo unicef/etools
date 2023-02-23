@@ -812,6 +812,9 @@ class InterventionCreateUpdateSerializer(
 
         return updated
 
+    def get_intervention(self):
+        return self.instance
+
 
 class InterventionStandardSerializer(serializers.ModelSerializer):
 
