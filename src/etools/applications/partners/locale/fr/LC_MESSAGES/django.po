@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-17 15:40+0000\n"
+"POT-Creation-Date: 2023-02-24 13:12+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -614,22 +614,22 @@ msgid "Activity: In-country management & support"
 msgstr "Activité : Gestion et soutien dans le pays"
 
 #, python-format
-msgid "EEPM.1.{%d}"
-msgstr "EEPM.1.{%d}"
+msgid "EEPM.1.%d"
+msgstr ""
 
 msgid "Activity: Operational costs"
 msgstr "Activité : Coûts opérationnels"
 
 #, python-format
-msgid "EEPM.2.{%d}"
-msgstr "EEPM.2.{%d}"
+msgid "EEPM.2.%d"
+msgstr ""
 
 msgid "Activity: Planning, monitoring, evaluation, and communication"
 msgstr "Activité : Planification, suivi, évaluation et communication"
 
 #, python-format
-msgid "EEPM.3.{%d}"
-msgstr "EEPM.3.{%d}"
+msgid "EEPM.3.%d"
+msgstr ""
 
 msgid "Total Cost for all outputs"
 msgstr "Coût total pour tous les produits"
