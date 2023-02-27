@@ -28,7 +28,6 @@ from etools.applications.partners.permissions import (
     PRC_SECRETARY,
     SENIOR_MANAGEMENT_GROUP,
 )
-from etools.applications.partners.serializers.exports.vision.export_mixin import InterventionVisionSynchronizerMixin
 from etools.applications.partners.serializers.intervention_snapshot import FullInterventionSnapshotSerializerMixin
 from etools.applications.partners.serializers.interventions_v2 import (
     FRsSerializer,
@@ -185,7 +184,6 @@ class InterventionManagementBudgetItemSerializer(serializers.ModelSerializer):
 
 
 class InterventionManagementBudgetSerializer(
-    InterventionVisionSynchronizerMixin,
     FullInterventionSnapshotSerializerMixin,
     serializers.ModelSerializer,
 ):
@@ -260,7 +258,6 @@ class InterventionManagementBudgetSerializer(
 
 
 class InterventionDetailSerializer(
-    InterventionVisionSynchronizerMixin,
     FullInterventionSnapshotSerializerMixin,
     serializers.ModelSerializer,
 ):

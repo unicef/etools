@@ -30,7 +30,6 @@ from etools.applications.partners.models import (
     PartnerType,
 )
 from etools.applications.partners.permissions import InterventionPermissions
-from etools.applications.partners.serializers.exports.vision.export_mixin import InterventionVisionSynchronizerMixin
 from etools.applications.partners.serializers.intervention_snapshot import FullInterventionSnapshotSerializerMixin
 from etools.applications.partners.utils import get_quarters_range
 from etools.applications.reports.models import AppliedIndicator, LowerResult, ReportingRequirement
@@ -49,7 +48,6 @@ from etools.libraries.pythonlib.hash import h11
 
 
 class InterventionBudgetCUSerializer(
-    InterventionVisionSynchronizerMixin,
     FullInterventionSnapshotSerializerMixin,
     serializers.ModelSerializer,
 ):
@@ -687,7 +685,6 @@ class FundingCommitmentNestedSerializer(serializers.ModelSerializer):
 
 
 class InterventionCreateUpdateSerializer(
-    InterventionVisionSynchronizerMixin,
     AttachmentSerializerMixin,
     SnapshotModelSerializer,
 ):
@@ -1053,7 +1050,6 @@ class InterventionRAMIndicatorsListSerializer(serializers.ModelSerializer):
 
 
 class InterventionReportingRequirementCreateSerializer(
-    InterventionVisionSynchronizerMixin,
     FullInterventionSnapshotSerializerMixin,
     serializers.ModelSerializer,
 ):

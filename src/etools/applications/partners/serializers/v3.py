@@ -6,7 +6,6 @@ from rest_framework.exceptions import ValidationError
 from unicef_restlib.fields import SeparatedReadWriteField
 
 from etools.applications.partners.models import InterventionResultLink, InterventionReview, PRCOfficerInterventionReview
-from etools.applications.partners.serializers.exports.vision.export_mixin import InterventionVisionSynchronizerMixin
 from etools.applications.partners.serializers.intervention_snapshot import FullInterventionSnapshotSerializerMixin
 from etools.applications.reports.models import (
     InterventionActivity,
@@ -132,7 +131,6 @@ class PRCOfficerInterventionReviewSerializer(FullInterventionSnapshotSerializerM
 
 
 class PartnerInterventionLowerResultSerializer(
-    InterventionVisionSynchronizerMixin,
     FullInterventionSnapshotSerializerMixin,
     InterventionLowerResultBaseSerializer,
 ):
@@ -162,7 +160,6 @@ class PartnerInterventionLowerResultSerializer(
 
 
 class UNICEFInterventionLowerResultSerializer(
-    InterventionVisionSynchronizerMixin,
     FullInterventionSnapshotSerializerMixin,
     InterventionLowerResultBaseSerializer,
 ):
