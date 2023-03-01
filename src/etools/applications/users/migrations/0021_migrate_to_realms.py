@@ -2,7 +2,7 @@
 import sys
 import logging
 
-from django.db import migrations, transaction, connection, models
+from django.db import migrations, models, utils
 
 
 def check_user_profile_exists(apps, user):
@@ -102,7 +102,7 @@ def fwd_migrate_to_user_realms(apps, schema_editor):
                         is_active=user.is_active
                     ))
 
-        if auditor_staff:
+        if auditor_staff and not is_unicef_user:
             auditor_organization = auditor_staff.auditor_firm.organization
             if not auditor_organization:
                 logging.info(
@@ -110,16 +110,16 @@ def fwd_migrate_to_user_realms(apps, schema_editor):
                     f"has no organization set. Skipping..")
             else:
                 for country in countries:
-                    for group in groups + [auditor_group]:
-                        realm_list.append(dict(
-                            user_id=user.id,
-                            country_id=country.id,
-                            organization_id=auditor_organization.id,
-                            group_id=group.id,
-                            is_active=not auditor_staff.hidden
-                        ))
+                    # Add Auditor in realms
+                    realm_list.append(dict(
+                        user_id=user.id,
+                        country_id=country.id,
+                        organization_id=auditor_organization.id,
+                        group_id=auditor_group.id,
+                        is_active=not auditor_staff.hidden
+                    ))
 
-        if tpm_staff:
+        if tpm_staff and not is_unicef_user:
             tpm_organization = tpm_staff.tpm_partner.organization
             if not tpm_organization:
                 logging.info(
@@ -127,16 +127,16 @@ def fwd_migrate_to_user_realms(apps, schema_editor):
                     f"has no organization set. Skipping..")
             else:
                 for country in countries:
-                    for group in groups + [tpm_group]:
-                        realm_list.append(dict(
-                            user_id=user.id,
-                            country_id=country.id,
-                            organization_id=tpm_organization.id,
-                            group_id=group.id,
-                            is_active=user.is_active
-                        ))
+                    # add Third Party Monitor in realms
+                    realm_list.append(dict(
+                        user_id=user.id,
+                        country_id=country.id,
+                        organization_id=tpm_organization.id,
+                        group_id=tpm_group.id,
+                        is_active=user.is_active
+                    ))
 
-        # assign external pca group even for partner staff members since we cannot access tenants from here.
+        # assign external psea group even for partner staff members since we cannot access tenants from here.
         # partners.0108 will remove this group if staff member exists
         if not any([is_unicef_user, auditor_staff, tpm_staff]):
             for country in countries:
@@ -159,7 +159,6 @@ def fwd_migrate_to_user_realms(apps, schema_editor):
         else:
             unique_realms = [dict(t) for t in {tuple(sorted(d.items())) for d in realm_list}]
             Realm.objects.bulk_create([Realm(**realm_dict) for realm_dict in unique_realms])
-
             # update user profile with organization from current country
             active_country_realm = user.realms.filter(country=user_active_country).first()
             if active_country_realm is None:
