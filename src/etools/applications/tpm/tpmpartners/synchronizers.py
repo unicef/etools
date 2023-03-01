@@ -1,7 +1,5 @@
 import logging
 
-from django.db import connection
-
 from etools.applications.organizations.models import Organization
 from etools.applications.tpm.tpmpartners.models import TPMPartner
 from etools.applications.users.mixins import TPM_ACTIVE_GROUPS
