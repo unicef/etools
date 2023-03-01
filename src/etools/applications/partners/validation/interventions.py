@@ -482,4 +482,14 @@ class InterventionValid(CompleteValidation):
         return True
 
     def map_errors(self, errors):
-        return [_(self.VALID_ERRORS.get(error, error)) if isinstance(error, str) else error for error in errors]
+        error_list = []
+        for error in errors:
+            error_value = self.VALID_ERRORS.get(error, error)
+            if isinstance(error, str):
+                if isinstance(error_value, str):
+                    error_list.append(_(error_value))
+                else:
+                    error_list.append(error_value)
+            else:
+                error_list.append(error)
+        return error_list
