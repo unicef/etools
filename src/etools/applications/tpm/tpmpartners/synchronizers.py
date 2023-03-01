@@ -56,9 +56,6 @@ class TPMPartnerSynchronizer(VisionDataTenantSynchronizer):
             }
             partner, _ = TPMPartner.objects.update_or_create(organization=organization, defaults=defaults)
 
-            country = Country.objects.get(schema_name=defaults['country'] if defaults['country'] else connection.tenant.schema_name)
-            partner.countries.add(country)
-
             if partner.deleted_flag:
                 self.deactivate_staff_members(partner)
             processed = 1

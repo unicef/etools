@@ -485,11 +485,13 @@ class TestTPMActionPointViewSet(TPMTestCaseMixin, BaseTenantTestCase):
 
 class TestTPMStaffMembersViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase):
     def test_list_view(self):
-        response = self.forced_auth_req(
-            'get',
-            reverse('tpm:tpmstaffmembers-list', args=(self.tpm_partner.id,)),
-            user=self.pme_user
-        )
+        # TODO REALMS improve queries perf
+        with self.assertNumQueries(21):
+            response = self.forced_auth_req(
+                'get',
+                reverse('tpm:tpmstaffmembers-list', args=(self.tpm_partner.id,)),
+                user=self.pme_user
+            )
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
         response = self.forced_auth_req(
@@ -507,12 +509,14 @@ class TestTPMStaffMembersViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTe
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
     def test_detail_view(self):
-        response = self.forced_auth_req(
-            'get',
-            reverse('tpm:tpmstaffmembers-detail',
-                    args=(self.tpm_partner.id, self.tpm_partner.staff_members.first().id)),
-            user=self.pme_user
-        )
+        # TODO REALMS improve queries perf
+        with self.assertNumQueries(28):
+            response = self.forced_auth_req(
+                'get',
+                reverse('tpm:tpmstaffmembers-detail',
+                        args=(self.tpm_partner.id, self.tpm_partner.staff_members.first().id)),
+                user=self.pme_user
+            )
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
         response = self.forced_auth_req(
@@ -687,7 +691,9 @@ class TestTPMPartnerViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCas
             )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         new_tpm_partner = TPMPartner.objects.get(organization__vendor_number='1234')
-        self._test_list_view(self.pme_user, [self.tpm_partner, self.second_tpm_partner, new_tpm_partner])
+        self.assertTrue(new_tpm_partner.vision_synced)
+        # new_tpm_partner has not been activated (no countries set), so partner list is unchanged
+        self._test_list_view(self.pme_user, [self.tpm_partner, self.second_tpm_partner])
 
     def test_activation(self):
         partner = TPMPartnerFactory(countries=[])
