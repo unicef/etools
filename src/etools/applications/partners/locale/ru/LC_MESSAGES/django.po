@@ -1,24 +1,15 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
-#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
+"Project-Id-Version: et-partners2-bk\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-03-02 10:32+0000\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
+"POT-Creation-Date: 2023-03-02 23:11+0200\n"
+"Language: ru\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
-"%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || (n"
-"%100>=11 && n%100<=14)? 2 : 3);\n"
+"X-Generator: Localazy (https://localazy.com)\n"
+"Plural-Forms: nplurals=3; plural=((n%10==1) && (n%100!=11)) ? 0 : ((n%10>=2 "
+"&& n%10<=4) && ((n%100<12 || n%100>14))) ? 1 : 2;\n"
 
 msgid "Signed Attachment"
 msgstr "Подписанное вложение"
@@ -51,7 +42,7 @@ msgid "PD was sent to Vision."
 msgstr "ПД был отправлен в VISION."
 
 msgid "Capacity Strengthening Costs"
-msgstr ""
+msgstr "Затраты на укрепление потенциала"
 
 msgid "Report"
 msgstr "Отчет"
@@ -689,19 +680,21 @@ msgstr ""
 "удалите тип"
 
 msgid "Unable to associate staff member to UNICEF user"
-msgstr ""
+msgstr "Не удалось связать сотрудника с пользователем ЮНИСЕФ"
 
 #, python-format
 msgid "This user already exists under a different partnership: %s"
-msgstr ""
+msgstr "Этот пользователь уже существует в рамках другого партнерства: %s"
 
 #, python-format
 msgid ""
 "User emails cannot be changed, please remove the user and add another one: %s"
 msgstr ""
+"Адреса электронной почты пользователей не могут быть изменены, пожалуйста, "
+"удалите пользователя и добавьте другого: %s"
 
 msgid "User already synced to PRP and cannot be disabled."
-msgstr ""
+msgstr "Пользователь уже синхронизирован с PRP и не может быть отключен."
 
 msgid "Name"
 msgstr "Имя"
@@ -1100,7 +1093,7 @@ msgid "Other Info"
 msgstr "Другая информация"
 
 msgid "Other Document Details"
-msgstr ""
+msgstr "Другие сведения о документе"
 
 msgid "Other Partners Involved"
 msgstr "Другие привлеченные партнеры"
@@ -1496,7 +1489,7 @@ msgid "Accessing this item is not allowed."
 msgstr "Доступ к этому элементу запрещен."
 
 msgid "Country Programme is required for PCAs!"
-msgstr ""
+msgstr "Страновая программа обязательна для СПС!"
 
 msgid "URL"
 msgstr "url"
@@ -1587,53 +1580,59 @@ msgstr ""
 "типа."
 
 msgid "Date cannot be in the future!"
-msgstr ""
+msgstr "Дата не может быть в будущем!"
 
 msgid "Cannot add a new amendment while the partner is blocked in Vision."
 msgstr ""
+"Невозможно добавить новую поправку, пока партнер заблокирован в Vision."
 
 msgid "Other description required, if type 'Other' selected."
-msgstr ""
+msgstr "Требуется другое описание, если выбран тип «Другое»."
 
 msgid "Planned Visit to be set only at Partner level"
-msgstr ""
+msgstr "Запланированный визит устанавливается только на уровне партнера"
 
 msgid "Planned Visit cannot be set for Terminated interventions"
 msgstr ""
+"Запланированный визит не может быть установлен для прекращенных вмешательств"
 
 msgid ""
 "An attachment cannot be changed in statuses \"Ended, Closed or Terminated\""
 msgstr ""
+"Вложение не может быть изменено в статусах «Завершено», «Закрыто» или "
+"«Прервано»."
 
 msgid "An Output cannot be updated for a partner that is blocked in Vision"
 msgstr ""
+"Выход не может быть обновлен для партнера, который заблокирован в Vision."
 
 msgid "Invalid CP Output provided."
 msgstr "Предоставлен неверный промежуточный результат СП"
 
 msgid "lower_result has an id but cannot be found in the db"
-msgstr ""
+msgstr "нижний_результат имеет идентификатор, но не может быть найден в БД"
 
 msgid ""
 "Cannot change the intervention that this reporting period is associated with."
 msgstr ""
+"Невозможно изменить вмешательство, с которым связан этот отчетный период."
 
 msgid "end_date must be on or after start_date"
-msgstr ""
+msgstr "end_date должен быть не позднее start_date"
 
 msgid "due_date must be on or after end_date"
-msgstr ""
+msgstr "due_date должно быть не позднее end_date"
 
 msgid "This period overlaps an existing reporting period."
-msgstr ""
+msgstr "Этот период перекрывается с существующим отчетным периодом."
 
 #, python-format
 msgid "One or more of the FRs selected is related to a different PD/SPD, %s"
-msgstr ""
+msgstr "Один или несколько выбранных FR связаны с другим PD/SPD, %s"
 
 #, python-format
 msgid "This field is limited to %d or less characters."
-msgstr ""
+msgstr "Это поле ограничено %d или меньше символов."
 
 #, python-format
 msgid ""
@@ -1673,17 +1672,19 @@ msgid "This field cannot be empty."
 msgstr "Это поле не может быть пустым."
 
 msgid "Requirement ID passed in does not exist"
-msgstr ""
+msgstr "Переданный идентификатор требования не существует"
 
 msgid "Requirement ID passed in belongs to a different intervention"
-msgstr ""
+msgstr "Переданный идентификатор требования относится к другому вмешательству"
 
 msgid "You're trying to delete a record that has a start date in the past"
-msgstr ""
+msgstr "Вы пытаетесь удалить запись, дата начала которой находится в прошлом."
 
 msgid ""
 "A record that starts in the passed cannot be modified on a non-draft PD/SPD"
 msgstr ""
+"Запись, которая начинается в переданном, не может быть изменена на "
+"нечерновом PD/SPD."
 
 msgid ""
 "Invalid budget data. Total cash should be equal to items number * price per "
@@ -1697,33 +1698,45 @@ msgid ""
 "The email for the partner contact is used by another partner contact. Email "
 "has to be unique to proceed %s"
 msgstr ""
+"Электронная почта контактного лица партнера используется другим контактным "
+"лицом партнера. Электронная почта должна быть уникальной, чтобы продолжить %s"
 
 msgid ""
 "The Partner Staff member you are trying to activate is associated with a "
 "different Partner Organization"
 msgstr ""
+"Партнерский сотрудник, которого вы пытаетесь активировать, связан с другой "
+"партнерской организацией."
 
 msgid ""
 "User already synced to PRP and cannot be disabled. Please instruct the "
 "partner to disable from PRP"
 msgstr ""
+"Пользователь уже синхронизирован с PRP и не может быть отключен. Попросите "
+"партнера отключить PRP"
 
 msgid "The Date of Report cannot be in the future"
-msgstr ""
+msgstr "Дата отчета не может быть в будущем"
 
 msgid "Planned Visit can be set only for Government partners"
 msgstr ""
+"Запланированный визит может быть установлен только для государственных "
+"партнеров"
 
 msgid "The basis for risk rating has to be blank if Type is Low or High"
 msgstr ""
+"Основание для рейтинга риска должно быть пустым, если Тип имеет значение "
+"Низкий или Высокий."
 
 msgid ""
 "The basis for risk rating has to be blank if rating is Not Required and type "
 "is Micro Assessment"
 msgstr ""
+"Основание для оценки риска должно быть пустым, если оценка не требуется, а "
+"тип — микрооценка."
 
 msgid "Vendor number must belong to PRG2 account group"
-msgstr ""
+msgstr "Номер поставщика должен принадлежать к группе учетных записей PRG2."
 
 msgid "Unknown intervention."
 msgstr "Неизвестное вмешательство."
@@ -1867,9 +1880,12 @@ msgid ""
 "Agreement cannot transition to signed until the start date is less than or "
 "equal to today"
 msgstr ""
+"Соглашение не может стать подписанным, пока дата начала не будет меньше или "
+"равна сегодняшнему дню"
 
 msgid "Agreement cannot transition to signed unless the end date is defined"
 msgstr ""
+"Соглашение не может стать подписанным, если не определена дата окончания"
 
 msgid "Cannot Transition without termination doc attached"
 msgstr ""
@@ -1886,21 +1902,25 @@ msgid ""
 "A PCA with this partner already exists for this Country Programme Cycle. If "
 "the record is in \"Draft\" status please edit that record."
 msgstr ""
+"PCA с этим партнером уже существует для этого цикла страновой программы. "
+"Если запись находится в статусе «Черновик», отредактируйте эту запись."
 
 msgid ""
 "Agreement start date needs to be earlier than or the same as the end date"
 msgstr ""
+"Дата начала действия соглашения должна быть раньше или совпадать с датой "
+"окончания."
 
 msgid "You cannot have more than 1 PCA active per Partner within 1 CP"
-msgstr ""
+msgstr "У вас не может быть более 1 активного PCA на Партнера в рамках 1 CP."
 
 msgid "Partner must be CSO in order to create a PCA."
-msgstr ""
+msgstr "Чтобы создать PCA, партнер должен быть CSO."
 
 msgid ""
 "Please check that the Document is attached and signatures are not in the "
 "future"
-msgstr ""
+msgstr "Пожалуйста, проверьте, что Документ прикреплен и подписи не в будущем"
 
 #, python-format
 msgid "Required fields not completed in %(status)s: %(field)s"
@@ -1914,7 +1934,7 @@ msgid "Today is not after the end date"
 msgstr "\"Сегодня\" не можеть быть после даты окончания"
 
 msgid "Only Partnership Managers can execute this transition"
-msgstr ""
+msgstr "Только менеджеры по партнерству могут выполнить этот переход"
 
 msgid "End date is in the future"
 msgstr "Дата окончания в будущем"
@@ -1979,7 +1999,7 @@ msgid "Agreement selected is not of type SSFA"
 msgstr "Выбранное соглашение не относится к типу ДФМП"
 
 msgid " without deleting the indicators first"
-msgstr ""
+msgstr "без предварительного удаления индикаторов"
 
 #, python-format
 msgid ""
@@ -2088,98 +2108,113 @@ msgid "Only original PD can be active"
 msgstr "Только исходный ПД может быть активным"
 
 msgid "Today is not after the start date"
-msgstr ""
+msgstr "Сегодня не после даты начала"
 
 msgid "Cannot delete a signed amendment"
-msgstr ""
+msgstr "Невозможно удалить подписанную поправку"
 
 msgid ""
 "Cannot delete an agreement that is not Draft or has PDs/SSFAs associated "
 "with it"
 msgstr ""
+"Невозможно удалить соглашение, которое не является черновиком или с которым "
+"связаны PD/SSFA."
 
 msgid "Workspace is required as a queryparam"
-msgstr ""
+msgstr "Рабочая область требуется в качестве параметра запроса"
 
 #, python-format
 msgid "Workspace code provided is not a valid business_area_code: %s"
 msgstr ""
+"Предоставленный код рабочей области не является допустимым "
+"business_area_code: %s"
 
 msgid "ID values must be integers"
-msgstr ""
+msgstr "Значения ID должны быть целыми числами."
 
 msgid "Deleting an attachment can only be done in Draft status"
-msgstr ""
+msgstr "Удаление вложения возможно только в статусе «Черновик»."
 
 msgid ""
 "This PD Output has indicators related, please remove the indicators first"
 msgstr ""
+"Этот вывод PD имеет связанные индикаторы, пожалуйста, сначала удалите "
+"индикаторы"
 
 msgid ""
 "This CP Output cannot be removed from this Intervention because there are "
 "nested Results, please remove all Document Results to continue"
 msgstr ""
+"Этот результат CP нельзя удалить из этого вмешательства, поскольку есть "
+"вложенные результаты. Чтобы продолжить, удалите все документированные "
+"результаты."
 
 msgid "Deleting an indicator is only possible in status Draft."
-msgstr ""
+msgstr "Удаление индикатора возможно только в статусе Черновик."
 
 msgid "Cannot delete a PD or SSFA that is not Draft"
-msgstr ""
+msgstr "Невозможно удалить PD или SSFA, которые не являются черновиками"
 
 msgid "Cannot delete a PD or SSFA that has Planned Trips"
-msgstr ""
+msgstr "Невозможно удалить PD или SSFA с запланированными поездками"
 
 msgid "Cannot delete a PD or SSFA that was manually moved back to Draft"
 msgstr ""
+"Невозможно удалить PD или SSFA, которые были вручную перемещены обратно в "
+"черновик"
 
 msgid "PD has already been sent to Partner."
-msgstr ""
+msgstr "PD уже отправлен партнеру."
 
 msgid "Meeting date is not available."
 msgstr "Дата встречи неизвестна."
 
 msgid "Action is not allowed"
-msgstr ""
+msgstr "Действие не разрешено"
 
 msgid "You need to be a focal point in order to perform this action"
-msgstr ""
+msgstr "Вы должны быть в центре внимания, чтобы выполнить это действие."
 
 msgid "Partner has already accepted this PD."
-msgstr ""
+msgstr "Партнер уже принял этот PD."
 
 msgid ""
 "You cannot perform this action while the PD is not available for partner to "
 "edit"
 msgstr ""
+"Вы не можете выполнить это действие, пока PD недоступен для редактирования "
+"партнером."
 
 msgid ""
 "You cannot perform this action while the PD is not available for UNICEF to "
 "edit"
 msgstr ""
+"Вы не можете выполнить это действие, пока PD недоступен для редактирования "
+"ЮНИСЕФ."
 
 msgid "UNICEF has already accepted this PD."
-msgstr ""
+msgstr "ЮНИСЕФ уже принял этот ПД."
 
 msgid "Only focal points or budget owners can accept"
-msgstr ""
+msgstr "Только координаторы или владельцы бюджета могут принимать"
 
 msgid "Only focal points can accept"
-msgstr ""
+msgstr "Только координационные центры могут принимать"
 
 msgid "PD needs to be in Review state"
-msgstr ""
+msgstr "PD должен находиться в состоянии проверки"
 
 msgid "PD review is missing"
-msgstr ""
+msgstr "Отсутствует обзор ПД"
 
 msgid "Only overall approver can reject review."
-msgstr ""
+msgstr "Только общий утверждающий может отклонить проверку."
 
 msgid "PD review already approved"
-msgstr ""
+msgstr "Проверка ПД уже одобрена"
 
 msgid "PD is already in Review status."
-msgstr ""
+msgstr "PD уже находится в статусе проверки."
 
 #, python-format
 msgid ""
@@ -2187,105 +2222,105 @@ msgid ""
 "This can be caused by parallel merged amendment or changed original "
 "intervention. Amendment should be re-created."
 msgstr ""
+"Ошибка слияния: исправленное поле уже было изменено (%(field)s в "
+"%(instance)s). Это может быть вызвано параллельным слиянием поправок или "
+"изменением первоначального вмешательства. Поправку следует создать заново."
 
 msgid "PD has already been cancelled."
-msgstr ""
+msgstr "ПД уже отменили."
 
 msgid "Only focal points or budget owners can cancel"
-msgstr ""
+msgstr "Только координаторы или владельцы бюджета могут отменить"
 
 msgid "PD has already been terminated."
-msgstr ""
+msgstr "ПД уже прекращено."
 
 msgid "Only focal points or budget owners can terminate"
-msgstr ""
+msgstr "Только координаторы или владельцы бюджета могут прекратить"
 
 msgid "PD has already been suspended."
-msgstr ""
+msgstr "ПД уже приостановлено."
 
 msgid "Only focal points or budget owners can suspend"
-msgstr ""
+msgstr "Только координаторы или владельцы бюджета могут приостанавливать"
 
 msgid "PD is not suspended."
-msgstr ""
+msgstr "ПД не приостановлено."
 
 msgid "Only focal points or budget owners can unsuspend"
-msgstr ""
+msgstr "Разблокировать могут только координаторы или владельцы бюджета."
 
 msgid "PD is already in Signature status."
-msgstr ""
+msgstr "ПД уже находится в статусе подписи."
 
 msgid "Only overall approver can accept review."
-msgstr ""
+msgstr "Только общий утверждающий может принять отзыв."
 
 msgid "PD is already unlocked."
-msgstr ""
+msgstr "ПД уже разблокирован."
 
 msgid "PD is currently with Partner"
-msgstr ""
+msgstr "PD в настоящее время с партнером"
 
 msgid "Only focal points or budget owners can send to partner"
-msgstr ""
+msgstr "Только координаторы или владельцы бюджета могут отправлять партнеру"
 
 msgid "PD is currently with UNICEF"
-msgstr ""
+msgstr "PD в настоящее время работает в ЮНИСЕФ"
 
 msgid "Only partner focal points can send to UNICEF"
-msgstr ""
+msgstr "Только контактные лица партнеров могут отправлять в ЮНИСЕФ"
 
 msgid "Only amended interventions can be merged"
-msgstr ""
+msgstr "Только измененные вмешательства могут быть объединены"
 
 msgid "Amendment cannot be merged yet"
-msgstr ""
+msgstr "Поправка еще не может быть объединена"
 
 msgid "Amendment does not exist for this pd"
-msgstr ""
+msgstr "Поправка не существует для этого pd"
 
 msgid "Cannot delete a completed assessment"
-msgstr ""
+msgstr "Невозможно удалить завершенную оценку"
 
 msgid "No vendor number provided for Partner Organization"
-msgstr ""
+msgstr "Не указан номер поставщика для партнерской организации"
 
 msgid ""
 "There was a PCA/SSFA signed with this partner or a transaction was performed "
 "against this partner. The Partner record cannot be deleted"
 msgstr ""
+"С этим партнером было подписано соглашение PCA/SSFA или с ним была проведена "
+"транзакция. Запись партнера не может быть удалена"
 
 msgid "This partner has trips associated to it"
-msgstr ""
+msgstr "С этим партнером связаны поездки"
 
 msgid "This partner has cash transactions associated to it"
-msgstr ""
+msgstr "С этим партнером связаны операции с наличными"
 
 msgid "Terms to be acknowledged"
-msgstr ""
+msgstr "Условия, которые необходимо принять"
 
 msgid "Agreement with specified ID does not exist"
-msgstr ""
+msgstr "Соглашение с указанным идентификатором не существует"
 
 msgid ""
 "Partner Organization has no vendor number stored, please report to an etools "
 "focal point"
 msgstr ""
+"Партнерская организация не имеет сохраненного номера поставщика, сообщите об "
+"этом координатору по etools."
 
 msgid "Partner Organization has no \"Authorized Officers selected\" selected"
-msgstr ""
+msgstr "В партнерской организации не выбраны «уполномоченные лица»."
 
 msgid ""
 "Response returned by the Server does not have the necessary values to "
 "generate PCA"
 msgstr ""
+"Ответ, возвращенный сервером, не имеет необходимых значений для генерации "
+"PCA."
 
 msgid "Partnership Manager role required for pca export."
-msgstr ""
-
-#~ msgid "HQ Cash"
-#~ msgstr "Вклад в стоимость укрепления потенциала"
-
-#~ msgid "HQ cost"
-#~ msgstr "Расходы на укрепление потенциала"
-
-#~ msgid "HQ support costs"
-#~ msgstr "Расходы на укрепление потенциала"
+msgstr "Для экспорта PCA требуется роль менеджера по партнерству."
