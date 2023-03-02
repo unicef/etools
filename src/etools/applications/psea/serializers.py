@@ -4,7 +4,7 @@ from urllib.parse import urljoin
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
 from django.urls import reverse
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext as _
 
 from rest_framework import serializers
 from unicef_attachments.fields import AttachmentSingleFileField, FileTypeModelChoiceField
