@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-24 13:12+0000\n"
+"POT-Creation-Date: 2023-03-02 10:22+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -608,28 +608,28 @@ msgid "PD OUTPUT "
 msgstr "SORTIE PD"
 
 msgid "Activity"
-msgstr "activité"
+msgstr "Activité"
 
 msgid "Activity: In-country management & support"
 msgstr "Activité : Gestion et soutien dans le pays"
 
 #, python-format
 msgid "EEPM.1.%d"
-msgstr ""
+msgstr "EEPM.1.%d"
 
 msgid "Activity: Operational costs"
 msgstr "Activité : Coûts opérationnels"
 
 #, python-format
 msgid "EEPM.2.%d"
-msgstr ""
+msgstr "EEPM.2.%d"
 
 msgid "Activity: Planning, monitoring, evaluation, and communication"
 msgstr "Activité : Planification, suivi, évaluation et communication"
 
 #, python-format
 msgid "EEPM.3.%d"
-msgstr ""
+msgstr "EEPM.3.%d"
 
 msgid "Total Cost for all outputs"
 msgstr "Coût total pour tous les produits"
@@ -824,9 +824,7 @@ msgid "Title"
 msgstr "Titre"
 
 msgid "First Name"
-msgstr ""
-"          Prénom\n"
-"        "
+msgstr "Prénom"
 
 msgid "Last Name"
 msgstr "Nom de famille"
@@ -919,7 +917,7 @@ msgid "Signed"
 msgstr "Signé"
 
 msgid "Ended"
-msgstr "Terminé"
+msgstr "Fini"
 
 msgid "Suspended"
 msgstr "Suspendu"
@@ -1089,10 +1087,8 @@ msgstr "Développement des capacités"
 msgid "Other Info"
 msgstr "Autres informations"
 
-#, fuzzy
-#| msgid "Agreement Details"
 msgid "Other Document Details"
-msgstr "Détails de l'accord"
+msgstr ""
 
 msgid "Other Partners Involved"
 msgstr "Autres partenaires impliqués"
@@ -1155,7 +1151,7 @@ msgid "Intervention"
 msgstr "Intervention"
 
 msgid "Year"
-msgstr "année"
+msgstr "Année"
 
 msgid "Programmatic Q1"
 msgstr "Programmation Q1"
@@ -1372,7 +1368,7 @@ msgid "Financial"
 msgstr "Financier"
 
 msgid "Operational"
-msgstr "opérationnel"
+msgstr "Opérationnel"
 
 msgid "Organizational"
 msgstr "Organisation"
@@ -1955,3 +1951,12 @@ msgstr "La date d'aujourd'hui n'est pas postérieure à la date de début"
 
 msgid "Meeting date is not available."
 msgstr "La date de la réunion n'est pas disponible."
+
+#~ msgid "HQ Cash"
+#~ msgstr "HQ Cash"
+
+#~ msgid "HQ cost"
+#~ msgstr "Coût du siège"
+
+#~ msgid "HQ support costs"
+#~ msgstr "Coûts de soutien du siège"

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-24 13:12+0000\n"
+"POT-Creation-Date: 2023-03-02 10:22+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -204,7 +204,7 @@ msgid "Audits Outstanding Findings"
 msgstr "Auditorías Conclusiones pendientes"
 
 msgid "Sections"
-msgstr "secciones"
+msgstr "Secciones"
 
 msgid "Locations"
 msgstr "Ubicaciones"
@@ -607,28 +607,28 @@ msgid "PD OUTPUT "
 msgstr "Salida PD"
 
 msgid "Activity"
-msgstr "actividad"
+msgstr "Actividad"
 
 msgid "Activity: In-country management & support"
 msgstr "Actividad: Gestión y apoyo en el país"
 
 #, python-format
 msgid "EEPM.1.%d"
-msgstr ""
+msgstr "EEPM.1.%d"
 
 msgid "Activity: Operational costs"
 msgstr "Actividad: Costes operativos"
 
 #, python-format
 msgid "EEPM.2.%d"
-msgstr ""
+msgstr "EEPM.2.%d"
 
 msgid "Activity: Planning, monitoring, evaluation, and communication"
 msgstr "Actividad: Planificación, seguimiento, evaluación y comunicación"
 
 #, python-format
 msgid "EEPM.3.%d"
-msgstr ""
+msgstr "EEPM.3.%d"
 
 msgid "Total Cost for all outputs"
 msgstr "Coste total de todos los productos"
@@ -916,7 +916,7 @@ msgid "Signed"
 msgstr "Firmado"
 
 msgid "Ended"
-msgstr "Terminado"
+msgstr "Finalizado"
 
 msgid "Suspended"
 msgstr "Suspendido"
@@ -1944,3 +1944,12 @@ msgstr "Hoy no es después de la fecha de inicio"
 
 msgid "Meeting date is not available."
 msgstr "La fecha de la reunión no está disponible."
+
+#~ msgid "HQ Cash"
+#~ msgstr "HQ Cash"
+
+#~ msgid "HQ cost"
+#~ msgstr "Coste de la sede"
+
+#~ msgid "HQ support costs"
+#~ msgstr "Gastos de apoyo a la sede"
