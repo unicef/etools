@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-24 13:12+0000\n"
+"POT-Creation-Date: 2023-03-02 10:32+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1151,7 +1151,7 @@ msgid "Type 6: Other"
 msgstr "Tipo 6: Outra"
 
 msgid "Normal"
-msgstr "normal"
+msgstr "Normal"
 
 msgid "Contingency"
 msgstr "Contingência"
@@ -1553,7 +1553,7 @@ msgid "Activity Focus Code"
 msgstr "Identificação da Atividade Foco"
 
 msgid "Activity Focus Name"
-msgstr "nome da Atividade Foco"
+msgstr "Nome da Atividade Foco"
 
 msgid "Total CSO Contribution"
 msgstr "Contribuição total da OSC"
@@ -2307,3 +2307,12 @@ msgstr ""
 
 msgid "Partnership Manager role required for pca export."
 msgstr ""
+
+#~ msgid "HQ Cash"
+#~ msgstr "Valor repasse financeiro para a sede"
+
+#~ msgid "HQ cost"
+#~ msgstr "Custo de apoio à sede"
+
+#~ msgid "HQ support costs"
+#~ msgstr "Custos de suporte à sede"
