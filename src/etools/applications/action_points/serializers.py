@@ -1,5 +1,5 @@
 from django.utils import timezone
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext as _
 
 from django_comments.models import Comment
 from rest_framework import serializers

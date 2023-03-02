@@ -3,7 +3,7 @@ import re
 from decimal import Decimal, InvalidOperation
 
 from django import forms
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext as _
 
 from rest_framework.exceptions import ValidationError
 from rest_framework.utils.representation import smart_repr

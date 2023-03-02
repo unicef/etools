@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-03-02 10:22+0000\n"
+"POT-Creation-Date: 2023-03-02 23:11+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -50,7 +50,7 @@ msgid "PD was sent to Vision."
 msgstr "تم إرسال وثيقة البرامج إلى برنامج فيجين."
 
 msgid "Capacity Strengthening Costs"
-msgstr ""
+msgstr "تكاليف تعزيز القدرات"
 
 msgid "Report"
 msgstr "تقرير"
@@ -684,6 +684,23 @@ msgid ""
 msgstr ""
 "لا ينطبق &quot;نوع CSO&quot; على المنظمات غير التابعة لمنظمات المجتمع "
 "المدني ، يرجى إزالة النوع"
+
+msgid "Unable to associate staff member to UNICEF user"
+msgstr "تعذر ربط الموظف بمستخدم اليونيسف"
+
+#, python-format
+msgid "This user already exists under a different partnership: %s"
+msgstr "هذا المستخدم موجود بالفعل ضمن شراكة مختلفة: %s"
+
+#, python-format
+msgid ""
+"User emails cannot be changed, please remove the user and add another one: %s"
+msgstr ""
+"لا يمكن تغيير عناوين البريد الإلكتروني للمستخدم ، يرجى إزالة المستخدم وإضافة "
+"مستخدم آخر: %s"
+
+msgid "User already synced to PRP and cannot be disabled."
+msgstr "قام المستخدم بالفعل بمزامنة PRP ولا يمكن تعطيله."
 
 msgid "Name"
 msgstr "اسم"
@@ -1470,6 +1487,9 @@ msgstr "مساهمة منظمة المجتمع المدني النقدية"
 msgid "Accessing this item is not allowed."
 msgstr "الوصول إلى هذا العنصر غير مسموح به."
 
+msgid "Country Programme is required for PCAs!"
+msgstr "البرنامج القطري مطلوب من أجل PCAs!"
+
 msgid "URL"
 msgstr "عنوان Url"
 
@@ -1556,8 +1576,54 @@ msgid ""
 "progress."
 msgstr "لا يمكن إضافة تعديل جديد أثناء إجراء تعديل آخر من نفس النوع."
 
+msgid "Date cannot be in the future!"
+msgstr "لا يمكن أن يكون التاريخ في المستقبل!"
+
+msgid "Cannot add a new amendment while the partner is blocked in Vision."
+msgstr "لا يمكن إضافة تعديل جديد أثناء حظر الشريك في Vision."
+
+msgid "Other description required, if type 'Other' selected."
+msgstr "مطلوب وصف آخر ، إذا تم تحديد نوع &quot;أخرى&quot;."
+
+msgid "Planned Visit to be set only at Partner level"
+msgstr "سيتم تعيين الزيارة المخططة على مستوى الشريك فقط"
+
+msgid "Planned Visit cannot be set for Terminated interventions"
+msgstr "لا يمكن تعيين الزيارة المخططة للتدخلات المنتهية"
+
+msgid ""
+"An attachment cannot be changed in statuses \"Ended, Closed or Terminated\""
+msgstr "لا يمكن تغيير المرفق في الحالات &quot;منتهي أو مغلق أو منتهي&quot;"
+
+msgid "An Output cannot be updated for a partner that is blocked in Vision"
+msgstr "لا يمكن تحديث الإخراج لشريك محظور في Vision"
+
 msgid "Invalid CP Output provided."
 msgstr "تم توفير مخرج برنامج قطري غير صالح."
+
+msgid "lower_result has an id but cannot be found in the db"
+msgstr "low_result لها معرف ولكن لا يمكن العثور عليها في db"
+
+msgid ""
+"Cannot change the intervention that this reporting period is associated with."
+msgstr "لا يمكن تغيير التدخل الذي ترتبط به فترة التقرير هذه."
+
+msgid "end_date must be on or after start_date"
+msgstr "يجب أن يكون تاريخ الانتهاء في تاريخ البدء أو بعده"
+
+msgid "due_date must be on or after end_date"
+msgstr "يجب أن يكون تاريخ الاستحقاق في تاريخ الانتهاء أو بعده"
+
+msgid "This period overlaps an existing reporting period."
+msgstr "تتداخل هذه الفترة مع فترة إعداد التقارير الحالية."
+
+#, python-format
+msgid "One or more of the FRs selected is related to a different PD/SPD, %s"
+msgstr "يرتبط واحد أو أكثر من FRs المحددة بـ PD / SPD مختلفة ،%s"
+
+#, python-format
+msgid "This field is limited to %d or less characters."
+msgstr "هذا الحقل محدد بـ %d أو أقل من الأحرف."
 
 #, python-format
 msgid ""
@@ -1592,12 +1658,64 @@ msgstr "تحتاج وثيقة البرامج إلى تاريخ بدء."
 msgid "This field cannot be empty."
 msgstr "هذا الحقل لا يمكن ان يكون فارغا."
 
+msgid "Requirement ID passed in does not exist"
+msgstr "معرف المتطلبات الذي تم تمريره غير موجود"
+
+msgid "Requirement ID passed in belongs to a different intervention"
+msgstr "معرف المتطلبات الذي تم تمريره ينتمي إلى تدخل مختلف"
+
+msgid "You're trying to delete a record that has a start date in the past"
+msgstr "أنت تحاول حذف سجل له تاريخ بدء في الماضي"
+
+msgid ""
+"A record that starts in the passed cannot be modified on a non-draft PD/SPD"
+msgstr "لا يمكن تعديل السجل الذي يبدأ في تمرير على PD / SPD غير المسودة"
+
 msgid ""
 "Invalid budget data. Total cash should be equal to items number * price per "
 "item."
 msgstr ""
 "بيانات الميزانية غير صالحة. يجب أن يكون إجمالي النقد مساويًا لرقم العناصر * "
 "السعر لكل عنصر."
+
+#, python-format
+msgid ""
+"The email for the partner contact is used by another partner contact. Email "
+"has to be unique to proceed %s"
+msgstr ""
+"يتم استخدام البريد الإلكتروني لجهة اتصال الشريك من قبل جهة اتصال شريك أخرى. "
+"يجب أن يكون البريد الإلكتروني فريدًا للمتابعة %s"
+
+msgid ""
+"The Partner Staff member you are trying to activate is associated with a "
+"different Partner Organization"
+msgstr "الموظف الشريك الذي تحاول تنشيطه مرتبط بمنظمة شريكة مختلفة"
+
+msgid ""
+"User already synced to PRP and cannot be disabled. Please instruct the "
+"partner to disable from PRP"
+msgstr ""
+"قام المستخدم بالفعل بمزامنة PRP ولا يمكن تعطيله. يرجى توجيه الشريك للتعطيل "
+"من PRP"
+
+msgid "The Date of Report cannot be in the future"
+msgstr "لا يمكن أن يكون تاريخ التقرير في المستقبل"
+
+msgid "Planned Visit can be set only for Government partners"
+msgstr "يمكن تعيين الزيارة المخططة للشركاء الحكوميين فقط"
+
+msgid "The basis for risk rating has to be blank if Type is Low or High"
+msgstr "يجب أن يكون أساس تصنيف المخاطر فارغًا إذا كان النوع منخفضًا أو مرتفعًا"
+
+msgid ""
+"The basis for risk rating has to be blank if rating is Not Required and type "
+"is Micro Assessment"
+msgstr ""
+"يجب أن يكون أساس تصنيف المخاطر فارغًا إذا كان التصنيف غير مطلوب والنوع هو "
+"التقييم الدقيق"
+
+msgid "Vendor number must belong to PRG2 account group"
+msgstr "يجب أن ينتمي رقم البائع إلى مجموعة حسابات PRG2"
 
 msgid "Unknown intervention."
 msgstr "تدخل غير معروف."
@@ -1737,6 +1855,15 @@ msgstr "وثيقة"
 msgid "Invalid"
 msgstr "غير صالح"
 
+msgid ""
+"Agreement cannot transition to signed until the start date is less than or "
+"equal to today"
+msgstr ""
+"لا يمكن نقل الاتفاقية إلى موقع حتى يكون تاريخ البدء أقل من أو يساوي اليوم"
+
+msgid "Agreement cannot transition to signed unless the end date is defined"
+msgstr "لا يمكن نقل الاتفاقية إلى موقع ما لم يتم تحديد تاريخ الانتهاء"
+
 msgid "Cannot Transition without termination doc attached"
 msgstr "لا يمكن الانتقال بدون إرفاق مستند الإنهاء"
 
@@ -1746,8 +1873,41 @@ msgstr "لا يمكن تأريخ أي من التوقيعات في المستق�
 msgid "Start and end dates don't match the Document's start and end"
 msgstr "لا يتطابق تاريخا البدء والانتهاء مع بداية المستند وانتهائه"
 
+msgid ""
+"A PCA with this partner already exists for this Country Programme Cycle. If "
+"the record is in \"Draft\" status please edit that record."
+msgstr ""
+"يوجد بالفعل PCA مع هذا الشريك لدورة البرنامج القطري هذه. إذا كان السجل في "
+"حالة &quot;مسودة&quot; يرجى تعديل ذلك السجل."
+
+msgid ""
+"Agreement start date needs to be earlier than or the same as the end date"
+msgstr "يجب أن يكون تاريخ بدء الاتفاقية قبل تاريخ الانتهاء أو نفس تاريخه"
+
+msgid "You cannot have more than 1 PCA active per Partner within 1 CP"
+msgstr "لا يمكن أن يكون لديك أكثر من 1 PCA نشط لكل شريك في حدود 1 CP"
+
+msgid "Partner must be CSO in order to create a PCA."
+msgstr "يجب أن يكون الشريك CSO من أجل إنشاء PCA."
+
+msgid ""
+"Please check that the Document is attached and signatures are not in the "
+"future"
+msgstr "يرجى التحقق من إرفاق المستند وأن التوقيعات ليست في المستقبل"
+
+#, python-format
+msgid "Required fields not completed in %(status)s: %(field)s"
+msgstr "الحقول المطلوبة غير مكتملة في %(status)s: %(field)s "
+
+#, python-format
+msgid "Cannot change fields while in %(status)s: %(field)s"
+msgstr "لا يمكن تغيير الحقول أثناء وجود %(status)s: %(field)s"
+
 msgid "Today is not after the end date"
 msgstr "اليوم ليس بعد تاريخ الانتهاء"
+
+msgid "Only Partnership Managers can execute this transition"
+msgstr "يمكن لمديري الشراكة فقط تنفيذ هذا النقل"
 
 msgid "End date is in the future"
 msgstr "تاريخ الانتهاء في المستقبل"
@@ -1812,13 +1972,15 @@ msgstr "لا يمكن تنشيط وثيقة البرامج إذا كان الش�
 msgid "Agreement selected is not of type SSFA"
 msgstr "الاتفاقية المختارة ليست من نوع اتفاقية التمويل الصغير"
 
+msgid " without deleting the indicators first"
+msgstr "دون حذف المؤشرات أولا"
+
 #, python-format
 msgid ""
 "The following sections have been selected on the PD/SPD indicators and "
 "cannot be removed %(sections)s "
 msgstr ""
 "%(sections)s ديد الأقسام التالية على مؤشرات وثيقة البرامج ولا يمكن إزالتها"
-"٪قسام) s"
 
 #, python-format
 msgid ""
@@ -1887,10 +2049,6 @@ msgstr ""
 msgid "Required fields not completed in %(status)s: %(fields)s"
 msgstr "الحقول المطلوبة غير مكتملة في %(status)s: %(fields)s "
 
-#, python-format
-msgid "Cannot change fields while in %(status)s: %(field)s"
-msgstr "لا يمكن تغيير الحقول أثناء وجود %(status)s: %(field)s"
-
 msgid "All activities must have at least one time frame"
 msgstr "يجب أن يكون لجميع الأنشطة إطار زمني واحد على الأقل"
 
@@ -1922,14 +2080,201 @@ msgstr "يمكن فقط تنشيط وثيقة البرامج الأصلية"
 msgid "Today is not after the start date"
 msgstr "اليوم ليس بعد تاريخ البدء"
 
+msgid "Cannot delete a signed amendment"
+msgstr "لا يمكن حذف تعديل موقع"
+
+msgid ""
+"Cannot delete an agreement that is not Draft or has PDs/SSFAs associated "
+"with it"
+msgstr "لا يمكن حذف اتفاقية ليست مسودة أو بها PDs / SSFAs مرتبطة بها"
+
+msgid "Workspace is required as a queryparam"
+msgstr "مساحة العمل مطلوبة كمعلمة استعلام"
+
+#, python-format
+msgid "Workspace code provided is not a valid business_area_code: %s"
+msgstr "رمز مساحة العمل الذي تم توفيره ليس رمز منطقة_عمل صالحًا:  %s"
+
+msgid "ID values must be integers"
+msgstr "يجب أن تكون قيم المعرفات أعدادًا صحيحة"
+
+msgid "Deleting an attachment can only be done in Draft status"
+msgstr "لا يمكن حذف المرفق إلا في حالة المسودة"
+
+msgid ""
+"This PD Output has indicators related, please remove the indicators first"
+msgstr "يحتوي إخراج PD هذا على مؤشرات ذات صلة ، يرجى إزالة المؤشرات أولاً"
+
+msgid ""
+"This CP Output cannot be removed from this Intervention because there are "
+"nested Results, please remove all Document Results to continue"
+msgstr ""
+"لا يمكن إزالة إخراج CP هذا من هذا التدخل نظرًا لوجود نتائج متداخلة ، يرجى "
+"إزالة جميع نتائج المستند للمتابعة"
+
+msgid "Deleting an indicator is only possible in status Draft."
+msgstr "حذف المؤشر ممكن فقط في حالة المسودة."
+
+msgid "Cannot delete a PD or SSFA that is not Draft"
+msgstr "لا يمكن حذف PD أو SSFA الذي ليس مسودة"
+
+msgid "Cannot delete a PD or SSFA that has Planned Trips"
+msgstr "لا يمكن حذف PD أو SSFA الذي يحتوي على رحلات مخططة"
+
+msgid "Cannot delete a PD or SSFA that was manually moved back to Draft"
+msgstr "لا يمكن حذف PD أو SSFA الذي تم إرجاعه يدويًا إلى المسودة"
+
+msgid "PD has already been sent to Partner."
+msgstr "تم إرسال PD بالفعل إلى الشريك."
+
 msgid "Meeting date is not available."
 msgstr "تاريخ الاجتماع غير متاح."
 
-#~ msgid "HQ Cash"
-#~ msgstr "دعم المقر الرئيسي"
+msgid "Action is not allowed"
+msgstr "الإجراء غير مسموح به"
 
-#~ msgid "HQ cost"
-#~ msgstr "تكلفة المقر الرئيسي"
+msgid "You need to be a focal point in order to perform this action"
+msgstr "يجب أن تكون نقطة محورية من أجل تنفيذ هذا الإجراء"
 
-#~ msgid "HQ support costs"
-#~ msgstr "تكاليف دعم المقر الرئيسي"
+msgid "Partner has already accepted this PD."
+msgstr "قبل الشريك بالفعل هذا PD."
+
+msgid ""
+"You cannot perform this action while the PD is not available for partner to "
+"edit"
+msgstr "لا يمكنك تنفيذ هذا الإجراء أثناء عدم توفر PD للشريك لتحريره"
+
+msgid ""
+"You cannot perform this action while the PD is not available for UNICEF to "
+"edit"
+msgstr "لا يمكنك تنفيذ هذا الإجراء عندما يكون PD غير متاح لليونيسيف لتحريره"
+
+msgid "UNICEF has already accepted this PD."
+msgstr "قبلت اليونيسف بالفعل هذا PD."
+
+msgid "Only focal points or budget owners can accept"
+msgstr "يمكن فقط قبول جهات الاتصال أو مالكي الميزانية"
+
+msgid "Only focal points can accept"
+msgstr "يمكن فقط قبول النقاط المحورية"
+
+msgid "PD needs to be in Review state"
+msgstr "يجب أن يكون PD في حالة المراجعة"
+
+msgid "PD review is missing"
+msgstr "مراجعة PD مفقودة"
+
+msgid "Only overall approver can reject review."
+msgstr "يمكن للموافق العام فقط رفض المراجعة."
+
+msgid "PD review already approved"
+msgstr "تمت الموافقة على مراجعة PD بالفعل"
+
+msgid "PD is already in Review status."
+msgstr "PD موجود بالفعل في حالة المراجعة."
+
+#, python-format
+msgid ""
+"Merge Error: Amended field was already changed (%(field)s at %(instance)s). "
+"This can be caused by parallel merged amendment or changed original "
+"intervention. Amendment should be re-created."
+msgstr ""
+"خطأ في الدمج: تم تغيير الحقل المعدل بالفعل (%(field)s في %(instance)s). يمكن "
+"أن يحدث هذا بسبب التعديل المدمج الموازي أو التدخل الأصلي المتغير. يجب إعادة "
+"إنشاء التعديل."
+
+msgid "PD has already been cancelled."
+msgstr "تم بالفعل إلغاء PD."
+
+msgid "Only focal points or budget owners can cancel"
+msgstr "يمكن فقط للنقاط المحورية أو مالكي الميزانية الإلغاء"
+
+msgid "PD has already been terminated."
+msgstr "تم بالفعل إنهاء PD."
+
+msgid "Only focal points or budget owners can terminate"
+msgstr "يمكن فقط لجهات الاتصال أو مالكي الميزانية إنهاء الخدمة"
+
+msgid "PD has already been suspended."
+msgstr "تم بالفعل تعليق PD."
+
+msgid "Only focal points or budget owners can suspend"
+msgstr "فقط نقاط الاتصال أو مالكو الميزانية يمكنهم التعليق"
+
+msgid "PD is not suspended."
+msgstr "لم يتم تعليق PD."
+
+msgid "Only focal points or budget owners can unsuspend"
+msgstr "يمكن فقط لجهات الاتصال أو مالكي الميزانية إلغاء التعليق"
+
+msgid "PD is already in Signature status."
+msgstr "PD موجود بالفعل في حالة التوقيع."
+
+msgid "Only overall approver can accept review."
+msgstr "يمكن للموافق العام فقط قبول المراجعة."
+
+msgid "PD is already unlocked."
+msgstr "تم إلغاء تأمين PD بالفعل."
+
+msgid "PD is currently with Partner"
+msgstr "PD حاليا مع شريك"
+
+msgid "Only focal points or budget owners can send to partner"
+msgstr "يمكن فقط لنقاط الاتصال أو مالكي الميزانية الإرسال إلى الشريك"
+
+msgid "PD is currently with UNICEF"
+msgstr "PD يعمل حاليًا مع اليونيسف"
+
+msgid "Only partner focal points can send to UNICEF"
+msgstr "يمكن لنقاط الاتصال الشريكة فقط الإرسال إلى اليونيسف"
+
+msgid "Only amended interventions can be merged"
+msgstr "يمكن دمج التدخلات المعدلة فقط"
+
+msgid "Amendment cannot be merged yet"
+msgstr "لا يمكن دمج التعديل حتى الآن"
+
+msgid "Amendment does not exist for this pd"
+msgstr "التعديل غير موجود لهذا pd"
+
+msgid "Cannot delete a completed assessment"
+msgstr "لا يمكن حذف تقييم مكتمل"
+
+msgid "No vendor number provided for Partner Organization"
+msgstr "لم يتم توفير رقم البائع للمؤسسة الشريكة"
+
+msgid ""
+"There was a PCA/SSFA signed with this partner or a transaction was performed "
+"against this partner. The Partner record cannot be deleted"
+msgstr ""
+"كان هناك PCA / SSFA موقعة مع هذا الشريك أو تم إجراء معاملة ضد هذا الشريك. لا "
+"يمكن حذف سجل الشريك"
+
+msgid "This partner has trips associated to it"
+msgstr "هذا الشريك لديه رحلات مرتبطة به"
+
+msgid "This partner has cash transactions associated to it"
+msgstr "هذا الشريك لديه معاملات نقدية مرتبطة به"
+
+msgid "Terms to be acknowledged"
+msgstr "يجب الاعتراف بالشروط"
+
+msgid "Agreement with specified ID does not exist"
+msgstr "اتفاقية مع المعرف المحدد غير موجودة"
+
+msgid ""
+"Partner Organization has no vendor number stored, please report to an etools "
+"focal point"
+msgstr ""
+"لا يوجد لدى المؤسسة الشريكة رقم بائع مخزن ، يرجى إبلاغ نقطة اتصال etools"
+
+msgid "Partner Organization has no \"Authorized Officers selected\" selected"
+msgstr "لم يتم تحديد &quot;موظفون مفوضون&quot; محددون لدى المؤسسة الشريكة"
+
+msgid ""
+"Response returned by the Server does not have the necessary values to "
+"generate PCA"
+msgstr "لا تحتوي الاستجابة التي أرجعها الخادم على القيم اللازمة لإنشاء PCA"
+
+msgid "Partnership Manager role required for pca export."
+msgstr "دور مدير الشراكة المطلوب لتصدير pca."
