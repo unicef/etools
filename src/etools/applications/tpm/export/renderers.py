@@ -1,6 +1,6 @@
 from copy import copy
 
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext as _
 
 from rest_framework_csv.renderers import CSVRenderer
 from unicef_rest_export.renderers import FriendlyCSVRenderer

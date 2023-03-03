@@ -8,6 +8,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import connection, transaction
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
+from django.utils.translation import gettext as _
 
 from etools_validator.mixins import ValidatorViewMixin
 from rest_framework import status
@@ -208,7 +209,7 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
                 try:
                     ids = [int(x) for x in query_params.get("values").split(",")]
                 except ValueError:
-                    raise ValidationError("ID values must be integers")
+                    raise ValidationError(_("ID values must be integers"))
                 else:
                     return q.filter(id__in=ids)
             if query_params.get("my_partnerships", "").lower() == "true":
@@ -373,7 +374,7 @@ class InterventionAttachmentUpdateDeleteView(RetrieveUpdateDestroyAPIView):
         if obj.intervention.status in [Intervention.DRAFT]:
             return super().delete(request, *args, **kwargs)
         else:
-            raise ValidationError("Deleting an attachment can only be done in Draft status")
+            raise ValidationError(_("Deleting an attachment can only be done in Draft status"))
 
 
 class InterventionResultListAPIView(ExportModelMixin, ListAPIView):
@@ -602,7 +603,7 @@ class InterventionLowerResultUpdateView(RetrieveUpdateDestroyAPIView):
         # make sure there are no indicators added to this LLO
         obj = self.get_object()
         if obj.applied_indicators.exists():
-            raise ValidationError('This PD Output has indicators related, please remove the indicators first')
+            raise ValidationError(_('This PD Output has indicators related, please remove the indicators first'))
         return super().delete(request, *args, **kwargs)
 
 
@@ -640,8 +641,8 @@ class InterventionResultLinkUpdateView(FullInterventionSnapshotDeleteMixin, Retr
         # make sure there are no indicators added to this LLO
         obj = self.get_object()
         if obj.ll_results.exists():
-            raise ValidationError('This CP Output cannot be removed from this Intervention because there are nested'
-                                  ' Results, please remove all Document Results to continue')
+            raise ValidationError(_('This CP Output cannot be removed from this Intervention because there are nested'
+                                  ' Results, please remove all Document Results to continue'))
         return super().delete(request, *args, **kwargs)
 
 
@@ -696,7 +697,7 @@ class InterventionIndicatorsUpdateView(FullInterventionSnapshotDeleteMixin, Retr
         ai = self.get_object()
         intervention = ai.lower_result.result_link.intervention
         if not intervention.status == Intervention.DRAFT:
-            raise ValidationError('Deleting an indicator is only possible in status Draft.')
+            raise ValidationError(_('Deleting an indicator is only possible in status Draft.'))
         return super().delete(request, *args, **kwargs)
 
 
@@ -791,10 +792,10 @@ class InterventionDeleteView(DestroyAPIView):
     def delete(self, request, *args, **kwargs):
         intervention = self.get_object()
         if intervention.status != Intervention.DRAFT:
-            raise ValidationError("Cannot delete a PD or SSFA that is not Draft")
+            raise ValidationError(_("Cannot delete a PD or SSFA that is not Draft"))
 
         if intervention.travel_activities.count():
-            raise ValidationError("Cannot delete a PD or SSFA that has Planned Trips")
+            raise ValidationError(_("Cannot delete a PD or SSFA that has Planned Trips"))
 
         else:
             # get the history of this PD and make sure it wasn't manually moved back to draft before allowing deletion
@@ -803,7 +804,7 @@ class InterventionDeleteView(DestroyAPIView):
             historical_statuses = set(a.data.get('status', Intervention.DRAFT) for a in act.all())
             if len(historical_statuses) > 1 or \
                     (len(historical_statuses) == 1 and historical_statuses.pop() != Intervention.DRAFT):
-                raise ValidationError("Cannot delete a PD or SSFA that was manually moved back to Draft")
+                raise ValidationError(_("Cannot delete a PD or SSFA that was manually moved back to Draft"))
 
             # do not delete any PDs that have been sent to a partner before
             date_sent_to_partner_qs = Activity.objects.filter(
@@ -814,7 +815,7 @@ class InterventionDeleteView(DestroyAPIView):
                 change__has_key="date_sent_to_partner"
             )
             if date_sent_to_partner_qs.exists():
-                raise ValidationError("PD has already been sent to Partner.")
+                raise ValidationError(_("PD has already been sent to Partner."))
 
             intervention.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
